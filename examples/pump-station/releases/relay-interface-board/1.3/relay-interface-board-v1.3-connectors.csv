@@ -1,0 +1,7 @@
+designation,style,pincount,gender,mate_designation,marking,net,mate_port_designation
+-J1,mstb-header-3p,3,female,,1,,
+-J1,mstb-header-3p,3,female,,2,,
+-J1,mstb-header-3p,3,female,,3,,
+-J2,mstb-header-3p,3,female,,1,,
+-J2,mstb-header-3p,3,female,,2,,
+-J2,mstb-header-3p,3,female,,3,,

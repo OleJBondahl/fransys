@@ -1,0 +1,83 @@
+schema = 1
+
+# Schneider Electric TeSys D contactor LC1D09BD. Datasheet (read in full; page 7 "Connections and
+# Schema" read as an image): https://www.se.com/ww/en/product/download-pdf/LC1D09BD
+# Printed markings: coil A1/A2; power poles 1/L1-2/T1, 3/L2-4/T2, 5/L3-6/T3; built-in auxiliary
+# contacts 13/NO-14 and 21/NC-22 (1 NO + 1 NC). The coil carries a "built-in bidirectional peak
+# limiting diode suppressor", so no external suppressor is fitted.
+# Ratings: 9 A AC-3 at <= 440 V, Ue <= 690 V AC and <= 300 V DC on the power circuit; Uc = 24 V DC,
+# operational range 0.7...1.25 Uc.
+[part]
+mpn = "LC1D09BD"
+manufacturer = "Schneider Electric"
+description = "TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "main"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "1/L1", role = "generic", side = "line", symbol_port = "1.in" },
+    { name = "2/T1", role = "generic", side = "load", symbol_port = "1.out" },
+    { name = "3/L2", role = "generic", side = "line", symbol_port = "2.in" },
+    { name = "4/T2", role = "generic", side = "load", symbol_port = "2.out" },
+    { name = "5/L3", role = "generic", side = "line", symbol_port = "3.in" },
+    { name = "6/T3", role = "generic", side = "load", symbol_port = "3.out" },
+]
+links = [
+    { a = "1/L1", b = "2/T1", kind = "switched" },
+    { a = "3/L2", b = "4/T2", kind = "switched" },
+    { a = "5/L3", b = "6/T3", kind = "switched" },
+]
+
+[function.rating]
+voltage_ac_v = "690"
+voltage_dc_v = "300"
+current_ac_a = "9"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [
+    { name = "A1", role = "generic", symbol_port = "in" },
+    { name = "A2", role = "generic", symbol_port = "out" },
+]
+
+[function.rating]
+voltage_dc_v = "24"
+
+[function.operating]
+nominal_voltage_v = "24"
+min_voltage_v = "16.8"
+max_voltage_v = "30"
+
+[[function]]
+name = "aux"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "13/NO", role = "generic", symbol_port = "in" },
+    { name = "14", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "13/NO", b = "14", kind = "switched" }]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "10"
+
+[[function]]
+name = "aux_nc"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "21/NC", role = "generic", symbol_port = "in" },
+    { name = "22", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "21/NC", b = "22", kind = "switched" }]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "10"

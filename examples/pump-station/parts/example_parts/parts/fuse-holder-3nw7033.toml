@@ -1,0 +1,48 @@
+schema = 1
+
+# Siemens datasheet https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3NW7033
+# (dated 9/11/2026): dimension drawing + circuit diagram (designator "-F") print plain numerals,
+# no letters: input "1","3","5", output "2","4","6", one pair per pole. Three independent
+# conductive poles (not a mechanically ganged switch), so three functions, each with the "fuse"
+# symbol (E5). The fuse links themselves are child items with no function (G6).
+[part]
+mpn = "3NW7033"
+manufacturer = "Siemens"
+description = "Fuse holder, 3-pole, 10x38 mm; 32 A"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "pole_1"
+kind = "protection"
+symbol = "fuse"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "conductive" }]
+
+[[function]]
+name = "pole_2"
+kind = "protection"
+symbol = "fuse"
+ports = [
+    { name = "3", role = "generic", symbol_port = "in" },
+    { name = "4", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "3", b = "4", kind = "conductive" }]
+
+[[function]]
+name = "pole_3"
+kind = "protection"
+symbol = "fuse"
+ports = [
+    { name = "5", role = "generic", symbol_port = "in" },
+    { name = "6", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "5", b = "6", kind = "conductive" }]
+
+# Ratings: 690 V AC (datasheet), 32 A.
+[rating]
+voltage_ac_v = "690"
+current_ac_a = "32"

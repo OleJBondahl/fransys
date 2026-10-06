@@ -1,0 +1,20 @@
+schema = 1
+
+# Lapp OELFLEX CLASSIC 110 5G2,5, order no. 1119405, confirmed on Lapp's own product page
+# (https://www.lapp.com/en_US/us/oelflex-classic-110/p/1119405) and article table PN0456/02_03.16
+# (https://products.lappgroup.com/artno=1119405PDF). Core colours per Lapp's own family datasheet
+# DB1119752EN: NOT the brown/black/grey/blue/green-yellow sequence assumed before checking --
+# cores are black with printed white numbers per EN 50334/VDE 0293-1, plus one green-yellow PE
+# core. Encoded here as "BK1".."BK4" (black core, printed number) plus "GNYE".
+[part]
+mpn = "1119405"
+manufacturer = "Lapp"
+description = "OELFLEX CLASSIC 110, 5G2.5"
+category = "cable"
+class_code = "W"
+
+[cable_product]
+core_count = 5
+core_colours = ["BK1", "BK2", "BK3", "BK4", "GNYE"]
+gauge_mm2 = "2.5"
+shielded = false

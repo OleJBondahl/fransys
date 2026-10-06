@@ -1,0 +1,33 @@
+schema = 1
+
+# Lapp EPIC DATA RJ45, Cat.6A, T568B. The spec's order number to verify, 21700616, is rated for
+# stranded 27-24 AWG / solid 26-24 AWG conductors (Lapp Tannehill catalogue p.258): too fine for
+# the ETHERLINE Cat.6A cable's solid AWG22/1 conductor. The closest current Lapp order number in
+# the same EPIC DATA RJ45 Cat.6A family rated for solid 24-22 AWG is 21700601, used here instead
+# (family/rating cross-check only; this specific SKU's own datasheet was not independently
+# re-read). Pins are the universal RJ45 8P8C pinout (1-8), not a manufacturer-specific marking.
+[part]
+mpn = "21700601"
+manufacturer = "Lapp"
+description = "EPIC DATA RJ45, Cat.6A, T568B, field-installable plug"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "rj45"
+pincount = 8
+gender = "male"

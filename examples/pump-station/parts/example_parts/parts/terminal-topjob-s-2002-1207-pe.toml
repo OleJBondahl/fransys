@@ -1,0 +1,23 @@
+schema = 1
+
+# TOPJOB S ground terminal block, green-yellow, the PE terminals of E4. Internal/external
+# ports, the same form as the other TOPJOB S terminals (not role "pe"): the terminal plan
+# (E3) needs an inner and an outer side for this terminal too, and PE-ness is carried by the
+# net the terminal lands on, not by the port role.
+# https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-ground-terminal-block/p/2002-1207
+[part]
+mpn = "2002-1207"
+manufacturer = "WAGO"
+description = "TOPJOB S ground terminal block, 2.5 mm2, green-yellow"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]

@@ -1,0 +1,38 @@
+schema = 1
+
+# The MLFB originally given for F01 (5SY6106-7) turned out to be a plain 1-pole C6 breaker, not
+# 1P+N; 5SY6606-7 turned out to be a 3+N-pole device. The correct current Siemens 1P+N, C6 MCB is
+# 5SY6506-7 ("Miniature circuit breaker 230 V 6kA, 1+N-pole C, 6 A"), confirmed from its own
+# datasheet: https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=5SY6506-7
+# Connection diagram: phase pole "1" (line) / "2" (load); neutral link "3 N" / "N 4". The
+# datasheet does not state whether the neutral link trips with the phase pole or is a fixed
+# link, so it is modelled here as a plain conductive link. The neutral pair "3 N" / "N 4" is
+# now ports of the one `pole` function: two conductive links make it a two-pole function, so
+# the symbol ports carry the pole prefix (part-file spec P3): the breaker is one device.
+[part]
+mpn = "5SY6506-7"
+manufacturer = "Siemens"
+description = "Miniature circuit breaker, 1P+N, curve C; 6 A"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "pole"
+kind = "protection"
+symbol = "circuit-breaker"
+ports = [
+    { name = "1", role = "generic", symbol_port = "1.in" },
+    { name = "2", role = "generic", symbol_port = "1.out" },
+    { name = "3 N", role = "generic", symbol_port = "2.in" },
+    { name = "N 4", role = "generic", symbol_port = "2.out" },
+]
+links = [
+    { a = "1", b = "2", kind = "conductive" },
+    { a = "3 N", b = "N 4", kind = "conductive" },
+]
+
+# Ratings from the datasheet: 250 V AC single-phase, 60 V DC, 6 A.
+[rating]
+voltage_ac_v = "250"
+voltage_dc_v = "60"
+current_ac_a = "6"

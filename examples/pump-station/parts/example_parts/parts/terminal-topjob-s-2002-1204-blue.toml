@@ -1,0 +1,26 @@
+schema = 1
+
+# Blue TOPJOB S feed-through, the N terminals of E4. Same body as 2002-1201, blue insulation;
+# no printed per-clamp marking (see 2002-1201's note).
+# https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-feedthrough-terminal-block/p/2002-1204
+[part]
+mpn = "2002-1204"
+manufacturer = "WAGO"
+description = "TOPJOB S feed-through terminal block, 2.5 mm2, blue; 24 A; 800 V"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+# Ratings from the part description (WAGO catalogue): 800 V, 24 A.
+[rating]
+voltage_ac_v = "800"
+current_ac_a = "24"

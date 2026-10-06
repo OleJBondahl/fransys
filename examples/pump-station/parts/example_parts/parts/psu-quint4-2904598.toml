@@ -1,0 +1,46 @@
+schema = 1
+
+# Phoenix Contact QUINT4-PS/1AC/24DC/2.5/SC, order no. 2904598 (1-phase in, 24 V DC / 2.5 A / 60 W
+# out, screw connection) -- the closest current QUINT4 order number to the spec's "~60 W/2.5 A"
+# target. Datasheet 107721_en_00: input terminals printed "L/+" and "N/-" (dual AC/DC rating, no
+# separate PE screw -- PE is via DIN rail/housing); output terminals printed "SIG", "+", "-", "-"
+# (the "-" marking repeats on two physical screws, the same output rail -- only one is modelled,
+# since a second port on the same net adds nothing a wire couldn't already share).
+# https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/929/2904598_Ds.pdf
+[part]
+mpn = "QUINT4-PS/1AC/24DC/2.5/SC"
+manufacturer = "Phoenix Contact"
+description = "Power supply, 1-phase, 24 V DC; 2.5 A"
+category = "generic"
+class_code = "T"
+
+[[function]]
+name = "input"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "L/+", role = "generic" },
+    { name = "N/-", role = "generic" },
+]
+
+# Input 100...240 V AC (-15 %...+10 %).
+[function.rating]
+voltage_ac_v = "240"
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+# Nominal output 24 V DC, 2.5 A (static boost 3.125 A up to 40 degC is not counted as continuous).
+[function.operating]
+nominal_voltage_v = "24"
+max_current_dc_a = "2.5"
+
+[[function]]
+name = "signal"
+kind = "generic"
+ports = [{ name = "SIG", role = "generic" }]

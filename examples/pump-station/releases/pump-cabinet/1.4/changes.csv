@@ -1,0 +1,85 @@
+section,change,subject,field,before,after
+unit,changed,pump-cabinet,revision,1.3,1.4
+items,removed,=CTL-X01:L1:2,,,
+items,removed,=P1-Q12,,,
+items,removed,=P1-X01:L1:3,,,
+items,removed,=P1-X01:L2:3,,,
+items,removed,=P1-X01:L3:3,,,
+items,removed,=P2-Q22,,,
+items,removed,=P2-X01:L1:4,,,
+items,removed,=P2-X01:L2:4,,,
+items,removed,=P2-X01:L3:4,,,
+items,added,=SUP-X01:L1:2,,,
+items,added,=SUP-X01:L1:3,,,
+items,added,=SUP-X01:L1:4,,,
+items,added,=SUP-X01:L2:2,,,
+items,added,=SUP-X01:L2:3,,,
+items,added,=SUP-X01:L3:2,,,
+items,added,=SUP-X01:L3:3,,,
+items,changed,=SUP-X1:N:1,mpn,2002-1204,2002-1201
+units,changed,relay-interface-board =PLC-U2,revision,1.2,1.3
+conductors,added,-X01:L2:1 -X01:L2:2,,,
+conductors,removed,-X01:L2:1 -X01:L2:3,,,
+conductors,added,-X01:L2:2 -X01:L2:3,,,
+conductors,added,-X01:L2:2 =P1-F11:3,,,
+conductors,removed,-X01:L2:3 -X01:L2:4,,,
+conductors,removed,-X01:L2:3 =P1-F11:3,,,
+conductors,added,-X01:L2:3 =P2-F21:3,,,
+conductors,removed,-X01:L2:4 =P2-F21:3,,,
+conductors,added,-X01:L3:1 -X01:L3:2,,,
+conductors,removed,-X01:L3:1 -X01:L3:3,,,
+conductors,added,-X01:L3:2 -X01:L3:3,,,
+conductors,added,-X01:L3:2 =P1-F11:5,,,
+conductors,removed,-X01:L3:3 -X01:L3:4,,,
+conductors,removed,-X01:L3:3 =P1-F11:5,,,
+conductors,added,-X01:L3:3 =P2-F21:5,,,
+conductors,removed,-X01:L3:4 =P2-F21:5,,,
+conductors,changed,-X1:PE:1 -X3:PE:1,colour,GNYE,
+conductors,changed,-X1:PE:1 -X3:PE:1,gauge_mm2,2.5,
+conductors,changed,-X1:PE:1 -X3:PE:1,kind,wire,rail
+conductors,changed,-X1:PE:1 -X3:PE:2,colour,GNYE,
+conductors,changed,-X1:PE:1 -X3:PE:2,gauge_mm2,2.5,
+conductors,changed,-X1:PE:1 -X3:PE:2,kind,wire,rail
+conductors,added,-X2:24V:5 =P1-Q11:53/NO,,,
+conductors,removed,-X2:24V:5 =P1-Q12:53/NO,,,
+conductors,added,-X2:24V:8 =P2-Q21:53/NO,,,
+conductors,removed,-X2:24V:8 =P2-Q22:53/NO,,,
+conductors,changed,=P1-B12:1/L1 =P1-Q11:2/T1,colour,BN,
+conductors,changed,=P1-B12:1/L1 =P1-Q11:2/T1,gauge_mm2,1.5,
+conductors,changed,=P1-B12:1/L1 =P1-Q11:2/T1,kind,wire,mount
+conductors,changed,=P1-B12:3/L2 =P1-Q11:4/T2,colour,BK,
+conductors,changed,=P1-B12:3/L2 =P1-Q11:4/T2,gauge_mm2,1.5,
+conductors,changed,=P1-B12:3/L2 =P1-Q11:4/T2,kind,wire,mount
+conductors,changed,=P1-B12:5/L3 =P1-Q11:6/T3,colour,GY,
+conductors,changed,=P1-B12:5/L3 =P1-Q11:6/T3,gauge_mm2,1.5,
+conductors,changed,=P1-B12:5/L3 =P1-Q11:6/T3,kind,wire,mount
+conductors,added,=P1-P1:X1 =P1-Q11:54,,,
+conductors,removed,=P1-P1:X1 =P1-Q12:54,,,
+conductors,changed,=P2-B22:1/L1 =P2-Q21:2/T1,colour,BN,
+conductors,changed,=P2-B22:1/L1 =P2-Q21:2/T1,gauge_mm2,1.5,
+conductors,changed,=P2-B22:1/L1 =P2-Q21:2/T1,kind,wire,mount
+conductors,changed,=P2-B22:3/L2 =P2-Q21:4/T2,colour,BK,
+conductors,changed,=P2-B22:3/L2 =P2-Q21:4/T2,gauge_mm2,1.5,
+conductors,changed,=P2-B22:3/L2 =P2-Q21:4/T2,kind,wire,mount
+conductors,changed,=P2-B22:5/L3 =P2-Q21:6/T3,colour,GY,
+conductors,changed,=P2-B22:5/L3 =P2-Q21:6/T3,gauge_mm2,1.5,
+conductors,changed,=P2-B22:5/L3 =P2-Q21:6/T3,kind,wire,mount
+conductors,added,=P2-P2:X1 =P2-Q21:54,,,
+conductors,removed,=P2-P2:X1 =P2-Q22:54,,,
+conductors,changed,=PLC-C1:+ =PLC-DI1:24V,colour,WH,
+conductors,changed,=PLC-C1:+ =PLC-DI1:24V,gauge_mm2,1.5,
+conductors,changed,=PLC-C1:+ =PLC-DI1:24V,kind,wire,busbar
+conductors,changed,=PLC-C1:+ =PLC-DO1:24V,colour,WH,
+conductors,changed,=PLC-C1:+ =PLC-DO1:24V,gauge_mm2,1.5,
+conductors,changed,=PLC-C1:+ =PLC-DO1:24V,kind,wire,busbar
+conductors,changed,=PLC-C1:- =PLC-DI1:0V,colour,WH,
+conductors,changed,=PLC-C1:- =PLC-DI1:0V,gauge_mm2,1.5,
+conductors,changed,=PLC-C1:- =PLC-DI1:0V,kind,wire,busbar
+conductors,changed,=PLC-C1:- =PLC-DO1:0V,colour,WH,
+conductors,changed,=PLC-C1:- =PLC-DO1:0V,gauge_mm2,1.5,
+conductors,changed,=PLC-C1:- =PLC-DO1:0V,kind,wire,busbar
+mates,added,-U2/=PLC-J1:x =PLC-J1:x,,,
+mates,added,-U2/=PLC-J2:x =PLC-J2:x,,,
+mates,removed,=PLC-J1:x =PLC-U2/=PLC-J1:x,,,
+mates,removed,=PLC-J2:x =PLC-U2/=PLC-J2:x,,,
+nets,changed,PE,potential,PE,

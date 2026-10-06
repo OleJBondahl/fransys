@@ -1,0 +1,61 @@
+schema = 1
+
+# WAGO 750-402, 4-channel digital input, 24 V DC. Datasheet (read as rendered images, WAGO's PDF
+# is text-extraction-protected):
+# https://www.alldataresource.com/assets/Wago_Corporation/Wago-Corporation-750-402-4-Channel-Digital-Input-Module-Dc-24V-3-0Ms-Specification-Sheet.pdf
+# Field terminals printed DI1, DI2, 24V, 24V, 0V, 0V, DI3, DI4: the 24V/0V pair are power-jumper
+# contacts, the same internal rail exposed at two clamps for daisy-chaining -- one port per
+# marking is modelled, not one per physical screw. Two more bus-side "data contact" pairs (13/14,
+# 15/16) continue the internal module bus to the next module; they carry no field wiring and are
+# not modelled. No symbol: G5 (no symbol for a PLC module in this library).
+[part]
+mpn = "750-402"
+manufacturer = "WAGO"
+description = "4-channel digital input module, 24 V DC"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "di_1"
+kind = "plc_channel"
+ports = [{ name = "DI1", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 1
+
+[[function]]
+name = "di_2"
+kind = "plc_channel"
+ports = [{ name = "DI2", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[[function]]
+name = "di_3"
+kind = "plc_channel"
+ports = [{ name = "DI3", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 3
+
+[[function]]
+name = "di_4"
+kind = "plc_channel"
+ports = [{ name = "DI4", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 4
+
+[[function]]
+name = "power"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "24V", role = "generic" },
+    { name = "0V", role = "generic" },
+]

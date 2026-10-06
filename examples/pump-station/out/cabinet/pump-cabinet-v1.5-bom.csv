@@ -1,0 +1,18 @@
+mpn,revision,manufacturer,description,count,designations
+1757022,,Phoenix Contact,"PCB connector plug, 3-pin, 5.08 mm pitch",2,-J1; -J2
+2002-1201,,WAGO,"TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V",39,-X01:L1:1; -X01:L1:2; -X01:L1:3; -X01:L1:4; -X01:L2:1; -X01:L2:2; -X01:L2:3; -X01:L2:4; -X01:L3:1; -X01:L3:2; -X01:L3:3; -X01:L3:4; -X1:L1:1; -X1:L2:1; -X1:L3:1; -X1:N:1; -X2:24V:1; -X2:24V:2; -X2:24V:3; -X2:24V:4; -X2:24V:5; -X2:24V:6; -X2:24V:7; -X2:24V:8; -X2:24V:9; -X2:24V:10; -X2:GND:1; -X2:GND:2; -X2:GND:3; -X2:GND:4; -X2:GND:5; -X2:GND:6; -X2:GND:7; -X3:U:1; -X3:U:2; -X3:V:1; -X3:V:2; -X3:W:1; -X3:W:2
+2002-1207,,WAGO,"TOPJOB S ground terminal block, 2.5 mm2, green-yellow",3,-X1:PE:1; -X3:PE:1; -X3:PE:2
+3LD2054-0TK51,,Siemens,"Switch-disconnector, 3-pole; 16 A",1,-Q1
+3NW7033,,Siemens,"Fuse holder, 3-pole, 10x38 mm; 32 A",2,-F11; -F21
+3NW8004-1,,Siemens,"SENTRON cylindrical fuse link, 10x38 mm, aM; 4 A",6,-F11; -F21
+3SU1102-6AA40-1AA0,,Siemens,"Pilot light 22 mm, green, integrated LED 24 V AC/DC",2,-P1; -P2
+5SY6506-7,,Siemens,"Miniature circuit breaker, 1P+N, curve C; 6 A",1,-F01
+750-402,,WAGO,"4-channel digital input module, 24 V DC",1,-DI1
+750-504,,WAGO,"4-channel digital output module, 24 V DC; 0.5 A",1,-DO1
+750-600,,WAGO,"End module, terminates the internal data bus; no data contacts",1,-E1
+750-8212,,WAGO,"PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485",1,-C1
+LADN11,,Schneider Electric,"TeSys D front-mount auxiliary contact block, 1 NO + 1 NC",2,-Q11; -Q21
+LC1D09BD,,Schneider Electric,"TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil",2,-Q11; -Q21
+LRD08,,Schneider Electric,"TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC",2,-B12; -B22
+QUINT4-PS/1AC/24DC/2.5/SC,,Phoenix Contact,"Power supply, 1-phase, 24 V DC; 2.5 A",1,-T1
+SKX-RIB-2,1.3,,Relay interface board,1,-U2

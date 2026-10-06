@@ -1,0 +1,9 @@
+label,end_a_designation,end_b_designation
+,-J1:1,-K1:A1
+,-J1:2,-K2:A1
+,-J1:3,-K1:A2
+,-J2:1,-K1:11
+,-J2:2,-K1:14
+,-K2:11,-J2:1
+,-K2:14,-J2:3
+,-K2:A2,-J1:3

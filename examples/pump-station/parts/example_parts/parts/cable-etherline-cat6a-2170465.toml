@@ -1,0 +1,22 @@
+schema = 1
+
+# Lapp ETHERLINE Cat.6A P, SKU 2170465, confirmed on Lapp's own product page
+# (https://www.lapp.com/en_US/us/etherline-cat-6a/p/2170465): 4 pairs / 8 cores, conductor
+# 4x2xAWG22/1 solid, S/FTP shielded (foil per pair + overall copper braid; the shield is not a
+# core, per E3). Core colours in T568B pin order (1-8): white/orange, orange, white/green, blue,
+# white/blue, green, white/brown, brown, written as IEC 60757 codes (WHOG, OG, WHGN, BU, WHBU,
+# GN, WHBN, BN). gauge_mm2 "0.33" is the nominal cross-section of a solid
+# AWG22 conductor (~0.326 mm2), converted from the datasheet's AWG figure since the contract
+# field is metric.
+[part]
+mpn = "2170465"
+manufacturer = "Lapp"
+description = "ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP"
+category = "cable"
+class_code = "W"
+
+[cable_product]
+core_count = 8
+core_colours = ["WHOG", "OG", "WHGN", "BU", "WHBU", "GN", "WHBN", "BN"]
+gauge_mm2 = "0.33"
+shielded = true

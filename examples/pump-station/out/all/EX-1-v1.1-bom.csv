@@ -1,0 +1,25 @@
+mpn,revision,manufacturer,description,count,designations
+1119304,,Lapp,"OELFLEX CLASSIC 110, 4G1.5",2,-W11; -W21
+1119405,,Lapp,"OELFLEX CLASSIC 110, 5G2.5",1,-W1
+1757022,,Phoenix Contact,"PCB connector plug, 3-pin, 5.08 mm pitch",2,-U1-J1; -U1-J2
+1757255,,Phoenix Contact,"PCB header, 3-pin, 5.08 mm pitch",2,-U1-U2-J1; -U1-U2-J2
+1LE1003-0EB42-2AA4,,Innomotics,"Induction motor, 4-pole, IE3, 400 V Y, frame 90, foot B3; 3.15 A; 1.5 kW",2,-M1; -M2
+2002-1201,,WAGO,"TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V",39,-U1-X01:L1:1; -U1-X01:L1:2; -U1-X01:L1:3; -U1-X01:L1:4; -U1-X01:L2:1; -U1-X01:L2:2; -U1-X01:L2:3; -U1-X01:L2:4; -U1-X01:L3:1; -U1-X01:L3:2; -U1-X01:L3:3; -U1-X01:L3:4; -U1-X1:L1:1; -U1-X1:L2:1; -U1-X1:L3:1; -U1-X1:N:1; -U1-X2:24V:1; -U1-X2:24V:2; -U1-X2:24V:3; -U1-X2:24V:4; -U1-X2:24V:5; -U1-X2:24V:6; -U1-X2:24V:7; -U1-X2:24V:8; -U1-X2:24V:9; -U1-X2:24V:10; -U1-X2:GND:1; -U1-X2:GND:2; -U1-X2:GND:3; -U1-X2:GND:4; -U1-X2:GND:5; -U1-X2:GND:6; -U1-X2:GND:7; -U1-X3:U:1; -U1-X3:U:2; -U1-X3:V:1; -U1-X3:V:2; -U1-X3:W:1; -U1-X3:W:2
+2002-1207,,WAGO,"TOPJOB S ground terminal block, 2.5 mm2, green-yellow",3,-U1-X1:PE:1; -U1-X3:PE:1; -U1-X3:PE:2
+21700601,,Lapp,"EPIC DATA RJ45, Cat.6A, T568B, field-installable plug",2,-W3-J1; -W3-J2
+2170465,,Lapp,"ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP",1,-W3-W1
+3LD2054-0TK51,,Siemens,"Switch-disconnector, 3-pole; 16 A",1,-U1-Q1
+3NW7033,,Siemens,"Fuse holder, 3-pole, 10x38 mm; 32 A",2,-U1-F11; -U1-F21
+3NW8004-1,,Siemens,"SENTRON cylindrical fuse link, 10x38 mm, aM; 4 A",6,-U1-F11; -U1-F21
+3SU1102-6AA40-1AA0,,Siemens,"Pilot light 22 mm, green, integrated LED 24 V AC/DC",2,-U1-P1; -U1-P2
+40.61.9.024.1000,,Finder,"PCB relay, 1 changeover contact, 16 A, 24 V DC coil",2,-U1-U2-K1; -U1-U2-K2
+5SY6506-7,,Siemens,"Miniature circuit breaker, 1P+N, curve C; 6 A",1,-U1-F01
+750-402,,WAGO,"4-channel digital input module, 24 V DC",1,-U1-DI1
+750-504,,WAGO,"4-channel digital output module, 24 V DC; 0.5 A",1,-U1-DO1
+750-600,,WAGO,"End module, terminates the internal data bus; no data contacts",1,-U1-E1
+750-8212,,WAGO,"PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485",1,-U1-C1
+LADN11,,Schneider Electric,"TeSys D front-mount auxiliary contact block, 1 NO + 1 NC",2,-U1-Q11; -U1-Q21
+LC1D09BD,,Schneider Electric,"TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil",2,-U1-Q11; -U1-Q21
+LRD08,,Schneider Electric,"TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC",2,-U1-B12; -U1-B22
+QUINT4-PS/1AC/24DC/2.5/SC,,Phoenix Contact,"Power supply, 1-phase, 24 V DC; 2.5 A",1,-U1-T1
+SKX-RIB-2,,this repo,"Relay interface board, 2 channels, revision 01",1,-U1-U2

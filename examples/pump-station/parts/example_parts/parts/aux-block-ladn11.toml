@@ -1,0 +1,41 @@
+schema = 1
+
+# Schneider Electric TeSys D front-mount instantaneous auxiliary contact block LADN11, 1 NO + 1 NC.
+# Datasheet: https://www.se.com/ww/en/product/download-pdf/LADN11 (no connections page). Markings
+# from the Schneider catalogue "TeSys contactors, Schemes" (24532-EN Ver2.11, page 2, LAD-N11):
+# 53/NO-54 and 61/NC-62.
+# Ratings from the datasheet: Ue 690 V AC, Ith 10 A.
+[part]
+mpn = "LADN11"
+manufacturer = "Schneider Electric"
+description = "TeSys D front-mount auxiliary contact block, 1 NO + 1 NC"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "no"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "53/NO", role = "generic", symbol_port = "in" },
+    { name = "54", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "53/NO", b = "54", kind = "switched" }]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "10"
+
+[[function]]
+name = "nc"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "61/NC", role = "generic", symbol_port = "in" },
+    { name = "62", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "61/NC", b = "62", kind = "switched" }]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "10"

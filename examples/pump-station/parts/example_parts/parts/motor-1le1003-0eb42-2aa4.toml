@@ -1,0 +1,37 @@
+schema = 1
+
+# Innomotics (Siemens' spun-off LV motors business) current catalogue D 81.1 ed. 04/2024 lists
+# the base order code 1LE1003-0EB4 (frame 90L, 4-pole, 1.5 kW); the "-2AA4" suffix decodes per
+# that catalogue's own MLFB legend to 230VD/400VY + IM B3 foot, matching this row. Rated current
+# at 400 V star: 3.15 A (same value in both the 2018 Siemens datasheet for the
+# sibling MLFB 1LE1003-0EB42-2FA4-Z (same base code and winding; B5 flange + brake options in
+# place of this article's B3 foot mount) and
+# the 2024 Innomotics catalogue row for this base code) -- inside the LRD08's 2.5-4 A setting range.
+# The exact article's own datasheet could not be fetched (Siemens Mall docuservice error for this
+# MLFB); manufacturer is recorded as "Innomotics" since that is the brand on the current (2024)
+# catalogue this motor is listed under. Terminal markings U1/V1/W1/PE are E3's own naming and
+# match the standard IEC 60034-8 scheme the motor's operating instructions cite (U/V/W phase,
+# index 1 = winding start); the physical star-bridge diagram inside the terminal box cover was
+# not itself read (Siemens ships it only as a label inside the box, not in any PDF).
+[part]
+mpn = "1LE1003-0EB42-2AA4"
+manufacturer = "Innomotics"
+description = "Induction motor, 4-pole, IE3, 400 V Y, frame 90, foot B3; 3.15 A; 1.5 kW"
+category = "generic"
+class_code = "M"
+
+[[function]]
+name = "motor"
+kind = "actuator"
+symbol = "motor-3ph-pe"
+ports = [
+    { name = "U1", role = "generic", symbol_port = "u" },
+    { name = "V1", role = "generic", symbol_port = "v" },
+    { name = "W1", role = "generic", symbol_port = "w" },
+    { name = "PE", role = "pe", symbol_port = "pe" },
+]
+
+# Ratings: 400 V Y, 3.15 A (parts/README.md names the source).
+[rating]
+voltage_ac_v = "400"
+current_ac_a = "3.15"

@@ -1,0 +1,25 @@
+schema = 1
+
+# Phoenix Contact MSTB 2,5/3-ST-5,08, 3-pin mating plug (off-board, wired to the cabinet's -J1
+# and -J2) for the MSTBA 2,5/3-G-5,08 header. Order no. 1757022 confirmed real/current on
+# phoenixcontact.com. No footprint: this plug is not populated on the board.
+[part]
+mpn = "1757022"
+manufacturer = "Phoenix Contact"
+description = "PCB connector plug, 3-pin, 5.08 mm pitch"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+]
+
+[function.connector]
+style = "mstb-header-3p"
+pincount = 3
+gender = "male"

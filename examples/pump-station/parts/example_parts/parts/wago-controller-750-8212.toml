@@ -1,0 +1,88 @@
+schema = 1
+
+# WAGO 750-8212, PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485. Manual 2100861323 /
+# 2 / 8.6.2024 (FW 04.05.08) with data sheet v31.07.2024, mirror:
+# https://assets.heizung-billiger.de/documents/wago_26f8d7572ae6c272.pdf
+# Supply connector (manual 3.2.1): 1 "24 V" and 5 "0V" are the system supply; 2/6 "+", 3/7 "-",
+# 4/8 "Ground" are the field supply, passed on to the I/O modules through the power jumper
+# contacts (10 A). Each marking appears twice; one port per marking is modelled, as for the I/O
+# modules. The controller's own field supply terminals feed the first I/O segment, so no 750-602
+# supply module is needed. Both supplies: 24 V DC -25...+30 % (18 V to 31.2 V).
+# RJ-45 sockets "X1" and "X2". No symbol: G5.
+[part]
+mpn = "750-8212"
+manufacturer = "WAGO"
+description = "PFC200 controller, 2nd generation, 2x ETHERNET, RS-232/-485"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "x1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "rj45"
+pincount = 8
+gender = "female"
+marking = "X1"
+
+[[function]]
+name = "x2"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "rj45"
+pincount = 8
+gender = "female"
+marking = "X2"
+
+[[function]]
+name = "system"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "24 V", role = "generic" },
+    { name = "0V", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "24"
+min_voltage_v = "18"
+max_voltage_v = "31.2"
+
+[[function]]
+name = "field"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.rating]
+current_dc_a = "10"
+
+[function.operating]
+nominal_voltage_v = "24"
+min_voltage_v = "18"
+max_voltage_v = "31.2"

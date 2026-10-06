@@ -1,0 +1,12 @@
+schema = 1
+
+# WAGO 750-600 end module. Datasheet (10 pages, all read):
+# https://pim.galco.com/Manufacturer/Wago/TechDocument/Data%20Sheet/750-600_dat.pdf
+# No data contacts, no supply terminals, no printed electrical markings: it only terminates the
+# internal data bus. No functions.
+[part]
+mpn = "750-600"
+manufacturer = "WAGO"
+description = "End module, terminates the internal data bus; no data contacts"
+category = "plc_module"
+class_code = "K"

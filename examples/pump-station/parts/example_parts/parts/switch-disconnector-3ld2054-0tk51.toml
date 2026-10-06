@@ -1,0 +1,33 @@
+schema = 1
+
+# Siemens datasheet https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3LD20540TK51
+# (dated 9/12/2026), device circuit diagram: input "1L1","3L2","5L3", output "2T1","4T2","6T3".
+# No symbol: G5 (no symbol for a switch-disconnector in this library).
+[part]
+mpn = "3LD2054-0TK51"
+manufacturer = "Siemens"
+description = "Switch-disconnector, 3-pole; 16 A"
+category = "protection"
+class_code = "Q"
+
+[[function]]
+name = "main"
+kind = "switch"
+ports = [
+    { name = "1L1", role = "generic" },
+    { name = "2T1", role = "generic" },
+    { name = "3L2", role = "generic" },
+    { name = "4T2", role = "generic" },
+    { name = "5L3", role = "generic" },
+    { name = "6T3", role = "generic" },
+]
+links = [
+    { a = "1L1", b = "2T1", kind = "switched", rest = "open" },
+    { a = "3L2", b = "4T2", kind = "switched", rest = "open" },
+    { a = "5L3", b = "6T3", kind = "switched", rest = "open" },
+]
+
+# Ratings from the datasheet: rated voltage 690 V AC, AC-21 16 A at 690 V.
+[rating]
+voltage_ac_v = "690"
+current_ac_a = "16"

@@ -1,0 +1,18 @@
+schema = 1
+
+# Lapp OELFLEX CLASSIC 110 4G1,5, order no. 1119304, confirmed on Lapp's own product page
+# (https://e.lapp.com/in/p/cables-for-standard-applications/oelflex-classic-110-4g1-5-1119304)
+# and the same PN0456 article table. Same core-colour family as the 5G2,5 cable (datasheet
+# DB1119752EN): black cores with printed white numbers, plus green-yellow PE.
+[part]
+mpn = "1119304"
+manufacturer = "Lapp"
+description = "OELFLEX CLASSIC 110, 4G1.5"
+category = "cable"
+class_code = "W"
+
+[cable_product]
+core_count = 4
+core_colours = ["BK1", "BK2", "BK3", "GNYE"]
+gauge_mm2 = "1.5"
+shielded = false

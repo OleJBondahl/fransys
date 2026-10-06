@@ -1,0 +1,4 @@
+schema = 1
+name = "example-parts"
+version = "0.1.0"
+description = "Real catalogue parts for the fransys-examples two-pump station."

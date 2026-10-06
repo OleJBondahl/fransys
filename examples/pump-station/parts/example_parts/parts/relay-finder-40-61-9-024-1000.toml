@@ -1,0 +1,54 @@
+schema = 1
+
+# Finder 40 Series PCB/Plug-in relays datasheet, https://cdn.findernet.com/app/uploads/S40EN.pdf
+# (footer-dated VIII-2026, i.e. current), p.3 (type 40.61 dimension/pinout diagram) and p.5
+# (ordering-information decode table). Order code 40.61.9.024.1000 decodes as: type 40.61 (1 CO,
+# 16 A, 5.0 mm pitch), coil version 9 (Standard DC, 0.65 W), coil voltage 024 (24 V DC), then
+# A=1 (AgNi contact material), B=0 (CO/nPDT), C=0 (5.2 mm pin length, PCB or socket mount),
+# D=0 (standard, no wash-tight option) -- an exact row of the ordering table (p.5), so orderable.
+# AgNi over the table's bold/preferred AgSnO2 (A=4), because this relay switches one contactor
+# coil, 24 V DC, ~0.17 A -- a light, low-inrush load; AgSnO2 is for high-inrush loads.
+# Replaces the Omron G2RL-1-E (E4): its own datasheet never
+# states, by pin number, which throw is NO (see git history for that part's research). The
+# datasheet's own pinout diagram (p.3) prints "A1  12  11  14" / "A2  22  21  24" -- terminals 11,
+# 12, 14 are duplicated at 21, 22, 24 for higher current; only the primary set is modelled here,
+# matching this file's footprint's own pad names exactly (kicad-footprints tag 9.0.0,
+# Relay_THT.pretty/Relay_SPDT_Finder_40.61.kicad_mod: pads "11","12","14","21","22","24","A1","A2").
+# The terminal numbers' meaning (11=common, 12=NC, 14=NO, A1/A2=coil) is not read off this drawing
+# alone: it is the EN 50005 standard, which Finder's own "General technical information"
+# (https://cdn.findernet.com/app/uploads/TecEN.pdf, "Terminal marking" section) states explicitly:
+# ".1" for common, ".2" for NC, ".4" for NO, "A1"/"A2" for coil terminals -- so, unlike the Omron
+# part this replaces, the NO/NC assignment is confirmed, not a guess.
+[part]
+mpn = "40.61.9.024.1000"
+manufacturer = "Finder"
+description = "PCB relay, 1 changeover contact, 16 A, 24 V DC coil"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [
+    { name = "A1", role = "generic", symbol_port = "in" },
+    { name = "A2", role = "generic", symbol_port = "out" },
+]
+
+[[function]]
+name = "contact"
+kind = "contact_co"
+symbol = "change-over-contact"
+ports = [
+    { name = "11", role = "common" },
+    { name = "12", role = "break" },
+    { name = "14", role = "make" },
+]
+links = [
+    { a = "11", b = "12", kind = "switched" },
+    { a = "11", b = "14", kind = "switched" },
+]
+
+[footprint]
+library = "Relay_THT"
+name = "Relay_SPDT_Finder_40.61"

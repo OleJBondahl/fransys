@@ -1,0 +1,32 @@
+schema = 1
+
+# Phoenix Contact MSTBA 2,5/3-G-5,08, 3-pin PCB header, 5.08 mm pitch (on-board, mates with the
+# MSTB 2,5/3-ST-5,08 plug). Order no. 1757255 confirmed real/current on phoenixcontact.com.
+# Footprint Connector_Phoenix_MSTB:PhoenixContact_MSTBA_2,5_3-G-5,08_1x03_P5.08mm_Horizontal
+# confirmed byte-exact against KiCad 9 (kicad-footprints tag 9.0.0; a similarly-named
+# 5.00 mm-pitch variant also exists in that library and is NOT this one). Pins numbered 1-3 by
+# position, the generic pin-header convention (as examples/demo-parts' connector-header-2p.toml).
+[part]
+mpn = "1757255"
+manufacturer = "Phoenix Contact"
+description = "PCB header, 3-pin, 5.08 mm pitch"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+]
+
+[function.connector]
+style = "mstb-header-3p"
+pincount = 3
+gender = "female"
+
+[footprint]
+library = "Connector_Phoenix_MSTB"
+name = "PhoenixContact_MSTBA_2,5_3-G-5,08_1x03_P5.08mm_Horizontal"

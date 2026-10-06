@@ -1,0 +1,18 @@
+schema = 1
+
+# Fuse link for -Fn1: the type 2 value for LC1D09 + LRD08 at 400 V in Schneider's coordination
+# table (catalogue A6, page A6/5) is a 4 A aM fuse, 10x38 mm. The matching IEC 60269-2 link is
+# the Siemens SENTRON 3NW8004-1 ("cylindrical fuse link, 10 x 38 mm, 4 A, aM, Un AC: 500 V",
+# 250 V DC): https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3NW8004-1&language=en&caller=SIOS
+# A child item of the fuse holder, no function (G6).
+[part]
+mpn = "3NW8004-1"
+manufacturer = "Siemens"
+description = "SENTRON cylindrical fuse link, 10x38 mm, aM; 4 A"
+category = "protection"
+class_code = "F"
+
+[rating]
+voltage_ac_v = "500"
+voltage_dc_v = "250"
+current_ac_a = "4"

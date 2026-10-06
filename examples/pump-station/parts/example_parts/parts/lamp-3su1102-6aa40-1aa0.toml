@@ -1,0 +1,38 @@
+schema = 1
+
+# Siemens datasheet https://apim.industry.siemens.cloud/ted/datasheet?format=pdf&mlfbs=3SU1102-6AA40-1AA0&language=en&caller=SIOS
+# (4 pages, dated 9/19/2026 in its footer). Page 1 title: "indicator light, 22 mm, round, plastic,
+# green, lens, smooth, with holder, LED module, with integrated LED 24 V AC/DC, screw terminal",
+# SIRIUS ACT 3SU1, supply voltage of the light source 24 V AC/DC, screw-type terminals. Page 4,
+# the device circuit diagram: the lamp is drawn as "-P", terminal "X1" above it and "X2" below it,
+# labelled "24 V AC/DC" -- the two markings this file's ports carry. Confirmed against the actual
+# PDF. The designation letter P is the diagram's own.
+#
+# The order number is 3SU1102-..., not the spec E4's "3SU1106-6AA40-1AA0, verify": Siemens' own
+# datasheet for 3SU1106-6AA40-1AA0 (same URL form, page 1) reads "... with integrated LED 230 V AC,
+# screw terminal", a mains lamp that cannot stand on the 24 V DC `-X2` strip. 3SU1102-6AA40-1AA0 is
+# the same lamp for 24 V AC/DC: same holder (3SU1001-6AA40-0AA0), same plastic, green, smooth lens;
+# only the LED module differs (3SU1500-0AA10-0AA0). Designer's ruling 2026-09-24: this article
+# replaces the spec's. The metal-bezel 24 V AC/DC alternative is 3SU1152-6AA40-1AA0.
+#
+# The lamp is one two-terminal load: X1 is the diagram's upper terminal, X2 the lower one. Being
+# AC/DC, the LED has no polarity the datasheet states.
+[part]
+mpn = "3SU1102-6AA40-1AA0"
+manufacturer = "Siemens"
+description = "Pilot light 22 mm, green, integrated LED 24 V AC/DC"
+category = "generic"
+class_code = "P"
+
+[[function]]
+name = "lamp"
+kind = "load"
+symbol = "lamp"
+ports = [
+    { name = "X1", role = "generic", symbol_port = "in" },
+    { name = "X2", role = "generic", symbol_port = "out" },
+]
+
+[function.rating]
+voltage_ac_v = "24"
+voltage_dc_v = "24"

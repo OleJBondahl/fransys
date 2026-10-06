@@ -1,0 +1,11 @@
+schema = 1
+
+[part]
+mpn = "SKX-RIB-2"
+manufacturer = "this repo"
+description = "Relay interface board, 2 channels, revision 01"
+category = "board"
+class_code = "U"
+
+[pcb]
+revision = "01"

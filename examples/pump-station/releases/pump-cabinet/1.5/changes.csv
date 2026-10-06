@@ -1,0 +1,14 @@
+section,change,subject,field,before,after
+unit,changed,pump-cabinet,revision,1.4,1.5
+items,added,=SUP-X01:L2:4,,,
+items,added,=SUP-X01:L3:4,,,
+conductors,removed,-X01:L2:2 =P1-F11:3,,,
+conductors,added,-X01:L2:3 -X01:L2:4,,,
+conductors,added,-X01:L2:3 =P1-F11:3,,,
+conductors,removed,-X01:L2:3 =P2-F21:3,,,
+conductors,added,-X01:L2:4 =P2-F21:3,,,
+conductors,removed,-X01:L3:2 =P1-F11:5,,,
+conductors,added,-X01:L3:3 -X01:L3:4,,,
+conductors,added,-X01:L3:3 =P1-F11:5,,,
+conductors,removed,-X01:L3:3 =P2-F21:5,,,
+conductors,added,-X01:L3:4 =P2-F21:5,,,

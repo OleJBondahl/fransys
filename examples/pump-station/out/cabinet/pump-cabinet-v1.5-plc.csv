@@ -1,0 +1,9 @@
+channel_designation,signal,wired_to,signal_name
+-DI1:1,di,-B12:98,P1_OVERLOAD
+-DI1:2,di,-Q11:14,P1_RUNNING
+-DI1:3,di,-B22:98,P2_OVERLOAD
+-DI1:4,di,-Q21:14,P2_RUNNING
+-DO1:1,do,-J1:1,P1_RUN
+-DO1:2,do,-J1:2,P2_RUN
+-DO1:3,do,,
+-DO1:4,do,,

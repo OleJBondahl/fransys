@@ -1,0 +1,54 @@
+schema = 1
+
+# Phoenix Contact FL SWITCH 1005N, order no. 1085039 -- unmanaged 5-port DIN-rail Ethernet
+# switch, by others (G3): appears in the BOM, but E3 also mates -W3's far end to "port 1 of the
+# switch," so it needs one connection point to keep that mate representable. Confirmed
+# real/current from Phoenix Contact's own catalog sheet and user manual "UM EN FL SWITCH 1000"
+# rev. A (https://docs.rs-online.com/ef73/A700000010361010.pdf, read in full): 5 RJ45 ports, the
+# manual's LED section ties a Link/ACT LED to "the port number" for each of the 5 ports, but no
+# legible photo or diagram of the physical front-panel silkscreen was found anywhere reachable
+# (product page 403s, no port-numbering figure in the manual). The digit "1" for the used port
+# is carried over from that documented LED/port-number convention, not read off a diagram --
+# flagged in the hand-back as not fully confirmed. No symbol: G5 (no symbol for RJ45).
+#
+# port_1 port count (orchestrator ruling, fixing a MATE_PORT_MISMATCH bug): originally modelled
+# with a single port "1", even though [function.connector] already declared pincount = 8 -- this
+# mismatched the RJ45 plug part (rj45-plug-epic-data-21700601.toml), which correctly models all
+# 8 pins of the universal RJ45 8P8C pinout, and produced a MATE_PORT_MISMATCH finding at
+# d.mate(). Re-checked whether this switch's RJ45 jacks actually carry 8 wired contacts: the
+# user manual PDF above could not be re-read as text (binary/compressed extraction failed); web
+# search (RS Online's own listing title, "Unmanaged Switch 5 X RJ45 ports, 10/100 Mbps") and
+# other retailer summaries confirm the FL SWITCH 1005N is a 10/100 Mbps (Fast Ethernet) device,
+# not Gigabit -- so only 4 of the 8 pins (1, 2, 3, 6) are electrically used end-to-end. The
+# Phoenix Contact product page and Mouser/alldatasheet pages all returned 403/timeout (same
+# dead end the prior research hit), so no port-numbering or pinout diagram was found. Per the
+# ruling: the physical RJ45 female jack is still an 8-contact 8P8C modular jack regardless of
+# how many pins the switch's ASIC uses electrically (true of virtually every RJ45 jack, Fast
+# Ethernet or Gigabit) -- it is the mechanical/physical shape, not the electrical wiring, that
+# d.mate() needs to match against the plug's 8-pin model. No evidence was found of fewer than 8
+# physical contacts, so port_1 now models all 8, role = "generic", same shape as the plug part.
+[part]
+mpn = "1085039"
+manufacturer = "Phoenix Contact"
+description = "Unmanaged Ethernet switch, 5x RJ45, DIN rail"
+category = "generic"
+class_code = "K"
+
+[[function]]
+name = "port_1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "rj45"
+pincount = 8
+gender = "female"

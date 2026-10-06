@@ -1,0 +1,58 @@
+schema = 1
+
+# WAGO 750-504, 4-channel digital output, 24 V DC, 0.5 A. Datasheet (read as rendered images):
+# https://docs.rs-online.com/537f/0900766b80b765a7.pdf
+# Field terminals printed DO1, DO2, 24V, 24V, 0V, 0V, DO3, DO4 -- same power-jumper-contact
+# pattern as 750-402 (see its note): one port per marking, not per physical screw. Bus-side data
+# contacts (13/14, 15/16) not modelled (see 750-402). No symbol: G5.
+[part]
+mpn = "750-504"
+manufacturer = "WAGO"
+description = "4-channel digital output module, 24 V DC; 0.5 A"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "do_1"
+kind = "plc_channel"
+ports = [{ name = "DO1", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 1
+
+[[function]]
+name = "do_2"
+kind = "plc_channel"
+ports = [{ name = "DO2", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 2
+
+[[function]]
+name = "do_3"
+kind = "plc_channel"
+ports = [{ name = "DO3", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 3
+
+[[function]]
+name = "do_4"
+kind = "plc_channel"
+ports = [{ name = "DO4", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 4
+
+[[function]]
+name = "power"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "24V", role = "generic" },
+    { name = "0V", role = "generic" },
+]

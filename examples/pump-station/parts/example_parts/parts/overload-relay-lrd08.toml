@@ -1,0 +1,65 @@
+schema = 1
+
+# Schneider Electric TeSys LRD08 thermal overload relay, class 10A, setting range 2.5...4 A,
+# 1 NO + 1 NC, direct mount on LC1D09: https://www.se.com/ww/en/product/download-pdf/LRD08
+# Ratings from that datasheet: Ue 690 V AC power circuit; signalling circuit Ith 5 A.
+# The datasheet has no connections page and no Schneider document read prints this relay's
+# terminal markings, so they follow IEC 60947-4-1 / EN 50012: 95-96 NC (trip contact), 97-98 NO
+# (trip signal), main-circuit 1/L1..6/T3. The input side of the main circuit is not printed
+# either, as it direct-mounts onto the contactor's T1/T2/T3 (gap G8, parts/README.md).
+[part]
+mpn = "LRD08"
+manufacturer = "Schneider Electric"
+description = "TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC"
+category = "protection"
+class_code = "B"
+
+[[function]]
+name = "main"
+kind = "protection"
+ports = [
+    { name = "1/L1", role = "generic", side = "line" },
+    { name = "2/T1", role = "generic", side = "load" },
+    { name = "3/L2", role = "generic", side = "line" },
+    { name = "4/T2", role = "generic", side = "load" },
+    { name = "5/L3", role = "generic", side = "line" },
+    { name = "6/T3", role = "generic", side = "load" },
+]
+links = [
+    { a = "1/L1", b = "2/T1", kind = "conductive" },
+    { a = "3/L2", b = "4/T2", kind = "conductive" },
+    { a = "5/L3", b = "6/T3", kind = "conductive" },
+]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "4"
+
+[function.protection]
+type = "overload"
+
+[[function]]
+name = "nc"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "95", role = "generic", symbol_port = "in" },
+    { name = "96", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "95", b = "96", kind = "switched" }]
+
+[function.rating]
+current_ac_a = "5"
+
+[[function]]
+name = "no"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "97", role = "generic", symbol_port = "in" },
+    { name = "98", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "97", b = "98", kind = "switched" }]
+
+[function.rating]
+current_ac_a = "5"

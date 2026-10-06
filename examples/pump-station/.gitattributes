@@ -1,0 +1,4 @@
+# LF everywhere: sk.write always emits LF, and with core.autocrlf=true a fresh Windows clone
+# would check text files out as CRLF, failing the out/-freshness test. Binary files (PDFs)
+# are left alone by git's own detection.
+* text=auto eol=lf

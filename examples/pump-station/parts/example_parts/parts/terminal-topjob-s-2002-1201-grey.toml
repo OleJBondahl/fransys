@@ -1,0 +1,27 @@
+schema = 1
+
+# WAGO TOPJOB S push-in terminal blocks carry no printed per-clamp marking on the terminal
+# body itself (a clip-in WMB marking strip is a separate accessory); ports are named
+# internal/external, mirroring examples/demo-parts/parts/terminal-feedthrough-2_5.toml, not a
+# printed marking. https://www.wago.com/us/rail-chassis-terminal-blocks/topjobs-feedthrough-terminal-block/p/2002-1201
+[part]
+mpn = "2002-1201"
+manufacturer = "WAGO"
+description = "TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+# Ratings from the part description (WAGO catalogue): 800 V, 24 A.
+[rating]
+voltage_ac_v = "800"
+current_ac_a = "24"

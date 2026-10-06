@@ -1,0 +1,41 @@
+schema = 1
+name = "DC/DC converter"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "converter-dc-dc" }
+
+ports = [
+  { id = "in_plus",   at = [-1, -3], dir = "N", description = "input side, positive" },
+  { id = "in_minus",  at = [1, -3],  dir = "N", description = "input side, negative" },
+  { id = "out_plus",  at = [-1, 3],  dir = "S", description = "output side, positive" },
+  { id = "out_minus", at = [1, 3],   dir = "S", description = "output side, negative" },
+]
+
+paths = [
+  { from = "in_plus", to = "in_minus", kind = "impedance" },
+  { from = "out_minus", to = "out_plus", kind = "source" },
+]
+
+elements = [
+  { line = [[-1, -3], [-1, -2]] },
+  { line = [[1, -3], [1, -2]] },
+  { line = [[-1, 3], [-1, 2]] },
+  { line = [[1, 3], [1, 2]] },
+  { polyline = [[-2, -2], [2, -2], [2, 2], [-2, 2]], closed = true },
+  { line = [[-2, 2], [2, -2]] },
+  { line = [[-1.5, -1.5], [0.5, -1.5]] },
+  { line = [[-1.5, -1], [0.5, -1]], style = "dashed" },
+  { line = [[-0.5, 1], [1.5, 1]] },
+  { line = [[-0.5, 1.5], [1.5, 1.5]], style = "dashed" },
+]
+
+lint_allow = [
+  { rule = "through-missing", reason = "the input pair sits at x = -1 and x = 1 and so does the output pair: no path has its ports at (0, -a) N and (0, a) S on x = 0, so no path can be the through path" },
+]
+
+[slots]
+tag                 = { at = [-2.5, 0],      side = "W", box = [6, 1] }
+"marking.in_plus"   = { at = [-0.75, -2.75], side = "E", box = [1.5, 1] }
+"marking.in_minus"  = { at = [1.25, -2.75],  side = "E", box = [1.5, 1] }
+"marking.out_plus"  = { at = [-0.75, 2.75],  side = "E", box = [1.5, 1] }
+"marking.out_minus" = { at = [1.25, 2.75],   side = "E", box = [1.5, 1] }

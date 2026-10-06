@@ -1,0 +1,41 @@
+schema = 1
+name = "Induction motor, three-phase, squirrel cage, with protective earth terminal"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "motor-3ph-pe" }
+
+ports = [
+  { id = "u", at = [-2, -5], dir = "N", description = "phase U" },
+  { id = "v", at = [0, -5],  dir = "N", description = "phase V" },
+  { id = "w", at = [2, -5],  dir = "N", description = "phase W" },
+  { id = "pe", at = [4, -5], dir = "N", description = "protective earth" },
+]
+
+paths = [
+  { from = "u", to = "v", kind = "impedance" },
+  { from = "v", to = "w", kind = "impedance" },
+  { from = "w", to = "u", kind = "impedance" },
+]
+
+nodes = [
+  { ports = ["pe"], potential = "protective_earth" },
+]
+
+elements = [
+  { line = [[-2, -5], [-2, -2.25]] },
+  { line = [[0, -5], [0, -3]] },
+  { line = [[2, -5], [2, -2.25]] },
+  { circle = [0, 0], r = 3, fill = "none" },
+  { text = "M", at = [0, -0.75], height = 1 },
+  { text = "3", at = [-1.125, 0.75], height = 1 },
+  { arc = [-0.125, 0.75], r = 0.5, start = 180, end = 0 },
+  { arc = [0.875, 0.75],  r = 0.5, start = 0, end = 180 },
+  { polyline = [[2.625, -1.5], [4, -3.25], [4, -5]] },
+]
+
+[slots]
+tag          = { at = [-3.5, 0],      side = "W", box = [6, 1] }
+"marking.u"  = { at = [-1.75, -4.5], side = "E", box = [1.5, 1] }
+"marking.v"  = { at = [0.25, -4.5],  side = "E", box = [1.5, 1] }
+"marking.w"  = { at = [2.25, -4.5],  side = "E", box = [1.5, 1] }
+"marking.pe" = { at = [4.25, -4.5], side = "E", box = [1.5, 1] }

@@ -1,0 +1,83 @@
+schema = 1
+
+[part]
+mpn = "DEMO-IO-CLAMPS"
+manufacturer = "Demo"
+description = "I/O module with a clamp strip and three plug sockets"
+category = "generic"
+class_code = "U"
+
+[[function]]
+name = "clamps"
+kind = "generic"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[[function]]
+name = "x1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "plug-8p"
+pincount = 8
+gender = "female"
+marking = "X1"
+
+[[function]]
+name = "x2"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "plug-8p"
+pincount = 8
+gender = "female"
+marking = "X2"
+
+[[function]]
+name = "x4"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+    { name = "9", role = "generic" },
+]
+
+[function.connector]
+style = "plug-9p"
+pincount = 9
+gender = "female"
+marking = "X4"

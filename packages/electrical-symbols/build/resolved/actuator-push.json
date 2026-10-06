@@ -1,0 +1,84 @@
+{
+  "anchors": [
+    {
+      "at": [
+        0,
+        0
+      ],
+      "dir": "E",
+      "id": "link"
+    }
+  ],
+  "body_box": [
+    [
+      -1,
+      -0.5
+    ],
+    [
+      0,
+      0.5
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          0
+        ],
+        [
+          -1,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          -0.5,
+          -0.5
+        ],
+        [
+          -1,
+          -0.5
+        ],
+        [
+          -1,
+          0.5
+        ],
+        [
+          -0.5,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -1,
+      -0.5
+    ],
+    [
+      0,
+      0.5
+    ]
+  ],
+  "kind": "qualifier",
+  "name": "Actuator (operated by pushing)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "actuator-push",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {},
+  "status": "unverified"
+}

@@ -1,0 +1,17 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CBL-4G1.5"
+manufacturer = "Demo"
+description = "Control cable, 4 cores including PE, 1.5 mm2"
+category = "cable"
+class_code = "W"
+
+[rating]
+voltage_ac_v = "500"
+
+[cable_product]
+core_count = 4
+core_colours = ["BN", "BK", "GY", "GNYE"]
+gauge_mm2 = "1.5"
+shielded = false

@@ -1,0 +1,4 @@
+schema = 1
+name = "demo-parts"
+version = "0.1.0"
+description = "Invented parts for Fransys's tests and documentation."

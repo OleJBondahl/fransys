@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="9.375mm" height="8.75mm" viewBox="-1 -1.75 3.75 3.5">
+<title>Actuator (mushroom head, operated by pushing)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="0" x2="1" y2="0" stroke-width="0.1"/>
+<line x1="1" y1="-0.75" x2="1" y2="0.75" stroke-width="0.1"/>
+<path d="M 1 -0.75 A 0.75 0.75 0 0 1 1 0.75" stroke-width="0.1"/>
+</g>
+</svg>

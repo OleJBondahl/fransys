@@ -1,0 +1,44 @@
+schema = 1
+
+[part]
+mpn = "DEMO-RLY-2CO-24"
+manufacturer = "Demo"
+description = "Relay, 2 changeover contacts, 24 V DC coil"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[function.operating]
+nominal_voltage_v = "24"
+resistance_ohm = "1600"
+
+[[function]]
+name = "co_1"
+kind = "contact_co"
+symbol = "change-over-contact"
+ports = [
+    { name = "11", role = "common" },
+    { name = "12", role = "break" },
+    { name = "14", role = "make" },
+]
+links = [{ a = "11", b = "12", kind = "switched" }, { a = "11", b = "14", kind = "switched" }]
+
+[[function]]
+name = "co_2"
+kind = "contact_co"
+symbol = "change-over-contact"
+ports = [
+    { name = "21", role = "common" },
+    { name = "22", role = "break" },
+    { name = "24", role = "make" },
+]
+links = [{ a = "21", b = "22", kind = "switched" }, { a = "21", b = "24", kind = "switched" }]
+
+[[supply]]
+supplier = "Demo Supply"
+supplier_part_number = "DS-0001"

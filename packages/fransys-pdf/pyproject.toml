@@ -1,0 +1,16 @@
+[project]
+name = "fransys-pdf"
+version = "0.7.0"
+description = "Fransys output: document assembly to PDF."
+requires-python = ">=3.15"
+dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.7.0#subdirectory=packages/fransys-model"]
+
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fransys_pdf"]

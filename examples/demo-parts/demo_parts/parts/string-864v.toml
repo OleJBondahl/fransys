@@ -1,0 +1,21 @@
+schema = 1
+
+[part]
+mpn = "DEMO-STRING-864V"
+manufacturer = "Demo"
+description = "Battery string, 864 V nominal, 186 A continuous"
+category = "generic"
+class_code = "G"
+
+[[function]]
+name = "string"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "864"
+max_voltage_v = "985.5"
+max_current_dc_a = "186"

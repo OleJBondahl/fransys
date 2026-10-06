@@ -1,0 +1,38 @@
+schema = 1
+
+[part]
+mpn = "DEMO-OVERLOAD-3P"
+manufacturer = "Demo"
+description = "Thermal overload relay, 3-pole, for direct mounting"
+category = "protection"
+class_code = "B"
+
+[[function]]
+name = "main"
+kind = "protection"
+ports = [
+    { name = "1", role = "generic", side = "line", conductor = "L1" },
+    { name = "2", role = "generic", side = "load", conductor = "L1" },
+    { name = "3", role = "generic", side = "line", conductor = "L2" },
+    { name = "4", role = "generic", side = "load", conductor = "L2" },
+    { name = "5", role = "generic", side = "line", conductor = "L3" },
+    { name = "6", role = "generic", side = "load", conductor = "L3" },
+]
+links = [
+    { a = "1", b = "2", kind = "conductive" },
+    { a = "3", b = "4", kind = "conductive" },
+    { a = "5", b = "6", kind = "conductive" },
+]
+
+[function.protection]
+type = "overload"
+
+[[function]]
+name = "aux"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "95", role = "generic", symbol_port = "in" },
+    { name = "96", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "95", b = "96", kind = "switched", rest = "closed" }]

@@ -1,0 +1,21 @@
+schema = 1
+
+# category = "board" with a [pcb] facet, closed (decision model-0040, author-0002's KNOWN
+# DEVIATION): the board-black-box work package's B1 draws a CONNECTOR on or under a board
+# (schematic_functions' one exception) and B2 (layout-0044) skips a connection or net group
+# wholly on or under one board silently instead of failing the drawn-function checks
+# (fransys_layout.engines.schematic.replicate/stages.links used to raise LayoutError for
+# io_board's own internal wiring, whether authored as wire() conductors or u.net(...), before
+# this package landed -- the base-commit quote is in the STEP 4b hand-back). This part
+# carries the board's components as a real, numbered assembly (class letter "A"), not a
+# part-less container; the board-document view that would draw them is units spec U10,
+# explicitly out of scope.
+[part]
+mpn = "DEMO-PCB-IO"
+manufacturer = "Demo"
+description = "I/O board assembly (units spec U1's worked example, io_board)"
+category = "board"
+class_code = "U"
+
+[pcb]
+revision = "A"

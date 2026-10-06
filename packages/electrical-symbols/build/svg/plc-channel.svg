@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="12.5mm" height="11.25mm" viewBox="-2.5 -2 5 4.5">
+<title>PLC channel (column end)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-1" x2="0" y2="0" stroke-width="0.1"/>
+<polygon points="-1.5,0 1.5,0 1.5,1.5 -1.5,1.5" stroke-width="0.1"/>
+</g>
+</svg>

@@ -1,0 +1,184 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -2
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -7.5,
+      -2.75
+    ],
+    [
+      1.75,
+      2.75
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Semiconductor diode, general symbol",
+  "nodes": [
+    {
+      "ports": [
+        "anode"
+      ]
+    },
+    {
+      "ports": [
+        "cathode"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "anode",
+      "kind": "diode",
+      "through": true,
+      "to": "cathode"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "anode"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "cathode"
+    }
+  ],
+  "reference": {
+    "number": "diode",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.anode": {
+      "at": [
+        0.25,
+        -2.25
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.cathode": {
+      "at": [
+        0.25,
+        2.25
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -1.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

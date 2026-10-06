@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CONN-2P"
+manufacturer = "Demo"
+description = "Connector housing, 2-pin header"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"

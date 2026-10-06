@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="6.25mm" height="15mm" viewBox="-1.25 -3 2.5 6">
+<title>Connector contact, male (plug)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-2" x2="0" y2="0.5" stroke-width="0.1"/>
+<polygon points="-0.25,0.5 0.25,0.5 0.25,2 -0.25,2" stroke-width="0.1" fill="#000"/>
+</g>
+</svg>

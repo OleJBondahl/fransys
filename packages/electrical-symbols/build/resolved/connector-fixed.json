@@ -1,0 +1,146 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -2,
+      -2
+    ],
+    [
+      2,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -2,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          -2,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8.25,
+      -2
+    ],
+    [
+      2,
+      3.25
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Connector, fixed portion of an assembly",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    },
+    {
+      "ports": [
+        "out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "in",
+      "kind": "conductor",
+      "through": true,
+      "to": "out"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "wire side",
+      "dir": "N",
+      "id": "in"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "far edge of the box",
+      "dir": "S",
+      "id": "out"
+    }
+  ],
+  "reference": {
+    "number": "connector-fixed",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.out": {
+      "at": [
+        0.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2.25,
+        1
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

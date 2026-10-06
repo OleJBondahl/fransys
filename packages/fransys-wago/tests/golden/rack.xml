@@ -1,0 +1,24 @@
+<Modules>
+  <Module Model="WagoIOModules.IOModule" Name="750-1405_3DI_a" Description="16-channel digital input">
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="B1_Door" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="B2_Gate" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="A1_2" NetworkConvert="1" Nr="2" Type="bool" Value="0" Description="Digital input channel"></Channel>
+  </Module>
+  <Module Model="WagoIOModules.IOModule" Name="750-1504_2DO_a" Description="4-channel digital output">
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="K1_Fan" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital output channel"></Channel>
+    <Channel Input="1" Model="CDPSignalChannel&lt;bool&gt;" Name="A2_1" NetworkConvert="1" Nr="1" Type="bool" Value="0" Description="Digital output channel"></Channel>
+  </Module>
+  <Module Model="WagoIOModules.IOModule" Name="750-455_3AI_a" Description="4-channel 4-20 mA">
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="T1_Level" NetworkConvert="1" Nr="0" Type="short" Value="0" Description="Analog input channel" Unit="percent">
+      <Operator Interpolation="Linear" Model="Automation.ScalingOperator&lt;double&gt;" Name="Scale" Type="double">
+        <ScalingPoint InValue="4" OutValue="0" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint" Type="double"></ScalingPoint>
+        <ScalingPoint InValue="20" OutValue="100" Model="Automation.ScalingPoint&lt;double&gt;" Name="ScalingPoint1" Type="double"></ScalingPoint>
+      </Operator>
+    </Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="T2_Flow" NetworkConvert="1" Nr="1" Type="short" Value="0" Description="Analog input channel"></Channel>
+    <Channel Input="0" Model="CDPSignalChannel&lt;short&gt;" Name="A3_2" NetworkConvert="1" Nr="2" Type="short" Value="0" Description="Analog input channel"></Channel>
+  </Module>
+  <Module Model="WagoIOModules.IOModule" Name="750-1405_1DI_b" Description="16-channel digital input">
+    <Channel Input="0" Model="CDPSignalChannel&lt;bool&gt;" Name="A4_0" NetworkConvert="1" Nr="0" Type="bool" Value="0" Description="Digital input channel"></Channel>
+  </Module>
+</Modules>

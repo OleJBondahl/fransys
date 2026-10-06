@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="7.5mm" height="7.5mm" viewBox="-1.5 -1.5 3 3">
+<title>Circuit breaker function</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="-0.5" y1="-0.5" x2="0.5" y2="0.5" stroke-width="0.1"/>
+<line x1="-0.5" y1="0.5" x2="0.5" y2="-0.5" stroke-width="0.1"/>
+</g>
+<g class="annotation">
+<circle class="grid" cx="-1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<rect class="body-box" x="-0.5" y="-0.5" width="1" height="1" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
+<rect class="keepout-box" x="-0.5" y="-0.5" width="1" height="1" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+</g>
+</svg>

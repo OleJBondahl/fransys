@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22.5mm" height="25mm" viewBox="-4 -6 9 10">
+<title>Induction motor, three-phase, squirrel cage, with protective earth terminal</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="-2" y1="-5" x2="-2" y2="-2.25" stroke-width="0.1"/>
+<line x1="0" y1="-5" x2="0" y2="-3" stroke-width="0.1"/>
+<line x1="2" y1="-5" x2="2" y2="-2.25" stroke-width="0.1"/>
+<circle cx="0" cy="0" r="3" stroke-width="0.1"/>
+<text x="0" y="-0.39" font-size="1" text-anchor="middle" fill="#000" stroke="none" font-family="sans-serif">M</text>
+<text x="-1.125" y="1.11" font-size="1" text-anchor="middle" fill="#000" stroke="none" font-family="sans-serif">3</text>
+<path d="M -0.625 0.75 A 0.5 0.5 0 0 1 0.375 0.75" stroke-width="0.1"/>
+<path d="M 1.375 0.75 A 0.5 0.5 0 0 1 0.375 0.75" stroke-width="0.1"/>
+<polyline points="2.625,-1.5 4,-3.25 4,-5" stroke-width="0.1"/>
+</g>
+</svg>

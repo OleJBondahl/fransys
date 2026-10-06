@@ -1,0 +1,116 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -2
+    ],
+    [
+      1,
+      1.5
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -1,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8,
+      -2
+    ],
+    [
+      1.75,
+      1.5
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "0 V reference ground; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Ground, reference (0 V) symbol",
+  "nodes": [
+    {
+      "ports": [
+        "ground"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "ground"
+    }
+  ],
+  "reference": {
+    "number": "ground",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.ground": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2,
+        0.5
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

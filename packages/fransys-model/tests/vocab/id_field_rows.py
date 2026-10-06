@@ -1,0 +1,187 @@
+"""The M4 table: one `Row` per `Id` field of every `vocab` and `layout` kind (REVIEW-M).
+
+Data only; `test_id_field_table.py` documents the columns and checks every row against the code.
+Keyed `(kind, "field")`, or `(kind, "field.subfield")` for an `Id` inside a nested `@value`.
+"""
+
+from typing import NamedTuple
+
+
+class Row(NamedTuple):
+    """One `Id` field: is it resolved by freeze, how many ids it holds, is it unique."""
+
+    resolved: bool
+    cardinality: str
+    unique: bool
+    why: str = ""
+
+
+ONE = Row(resolved=True, cardinality="one", unique=False)
+OPT = Row(resolved=True, cardinality="optional", unique=False)
+# A tuple of ids: freeze checks each item; it neither orders nor forbids repeats. A record's own
+# `__post_init__` may (`KeepTogether` sorts and refuses a repeat, hints.py:80-86); freeze does not.
+MANY = Row(resolved=True, cardinality="many", unique=False, why="items checked; no order, no dups")
+PK = Row(resolved=False, cardinality="one", unique=True, why="primary key: it defines the id set")
+SUBJECT = Row(resolved=True, cardinality="one", unique=True, why="subject of a unique=True facet")
+SUPPLY = Row(resolved=True, cardinality="one", unique=False, why="SupplyFacet: several per subject")
+RESERVED = Row(
+    resolved=True,
+    cardinality="one",
+    unique=False,
+    why="ReservedDesignationFacet: several per subject",
+)
+SINGLETON = Row(resolved=True, cardinality="optional", unique=True, why="singleton kind")
+
+# Every registered `vocab` and `layout` kind: each has an `id` row.
+KINDS = [
+    "aspect_node",
+    "boundary",
+    "conductor",
+    "document",
+    "facet.assigned_designation",
+    "facet.assigned_unit_tag",
+    "facet.boundary_values",
+    "facet.cable",
+    "facet.cable_product",
+    "facet.connector",
+    "facet.core",
+    "facet.footprint",
+    "facet.operating",
+    "facet.part_rating",
+    "facet.pcb",
+    "facet.plc_binding",
+    "facet.plc_channel",
+    "facet.plc_request",
+    "facet.rating",
+    "facet.reserved_designation",
+    "facet.scaling",
+    "facet.supply",
+    "facet.terminal",
+    "facet.wire",
+    "function",
+    "function_template",
+    "internal_link",
+    "item",
+    "layout.break_before",
+    "layout.chain",
+    "layout.drawing_set",
+    "layout.group_hint",
+    "layout.keep_together",
+    "layout.label",
+    "layout.link_marker",
+    "layout.order_hint",
+    "layout.outline",
+    "layout.page",
+    "layout.power_symbol",
+    "layout.profile",
+    "layout.route",
+    "layout.sheet_format",
+    "layout.symbol_choice",
+    "layout.symbol_placement",
+    "mate",
+    "net",
+    "part",
+    "part_library",
+    "placement",
+    "port",
+    "port_template",
+    "project",
+    "revision",
+    "supply_system",
+    "unit",
+    "unit_release",
+    "unused_boundary",
+]
+
+TABLE: dict[tuple[str, str], Row] = {
+    **{(kind, "id"): PK for kind in KINDS},
+    ("aspect_node", "parent"): OPT,
+    ("boundary", "unit"): ONE,
+    ("boundary", "function"): ONE,
+    ("conductor", "a"): ONE,
+    ("conductor", "b"): ONE,
+    ("conductor", "carrier"): OPT,
+    ("document", "location"): OPT,
+    ("document", "item"): OPT,
+    ("document", "unit"): OPT,
+    ("facet.assigned_designation", "subject"): SUBJECT,
+    ("facet.assigned_unit_tag", "subject"): SUBJECT,
+    ("facet.boundary_values", "subject"): SUBJECT,
+    ("facet.cable", "subject"): SUBJECT,
+    ("facet.cable_product", "subject"): SUBJECT,
+    ("facet.connector", "subject"): SUBJECT,
+    ("facet.core", "subject"): SUBJECT,
+    ("facet.footprint", "subject"): SUBJECT,
+    ("facet.operating", "subject"): SUBJECT,
+    ("facet.part_rating", "subject"): SUBJECT,
+    ("facet.pcb", "subject"): SUBJECT,
+    ("facet.plc_binding", "subject"): SUBJECT,
+    ("facet.plc_binding", "channel"): ONE,
+    ("facet.plc_channel", "subject"): SUBJECT,
+    ("facet.plc_request", "subject"): SUBJECT,
+    ("facet.rating", "subject"): SUBJECT,
+    ("facet.reserved_designation", "subject"): RESERVED,
+    ("facet.scaling", "subject"): SUBJECT,
+    ("facet.supply", "subject"): SUPPLY,
+    ("facet.terminal", "subject"): SUBJECT,
+    ("facet.wire", "subject"): SUBJECT,
+    ("function", "item"): ONE,
+    ("function", "template"): OPT,
+    ("function_template", "part"): ONE,
+    ("internal_link", "a"): ONE,
+    ("internal_link", "b"): ONE,
+    ("item", "part"): OPT,
+    ("item", "parent"): OPT,
+    ("item", "unit"): OPT,
+    ("layout.break_before", "group"): SUBJECT,
+    ("layout.chain", "entries.function"): MANY,
+    ("layout.drawing_set", "location"): OPT,
+    ("layout.drawing_set", "unit"): OPT,
+    ("layout.group_hint", "function"): SUBJECT,
+    ("layout.group_hint", "group"): ONE,
+    ("layout.keep_together", "groups"): MANY,
+    ("layout.label", "page"): ONE,
+    ("layout.label", "function"): OPT,
+    ("layout.label", "port"): OPT,
+    ("layout.label", "conductor"): OPT,
+    ("layout.label", "partners.port"): MANY,
+    ("layout.label", "partners.page"): MANY,
+    ("layout.link_marker", "page"): ONE,
+    ("layout.link_marker", "port"): ONE,
+    ("layout.link_marker", "partner"): ONE,
+    ("layout.link_marker", "far"): OPT,
+    ("layout.link_marker", "carrier"): OPT,
+    ("layout.order_hint", "before"): ONE,
+    ("layout.order_hint", "after"): ONE,
+    ("layout.outline", "unit"): ONE,
+    ("layout.outline", "page"): ONE,
+    ("layout.page", "drawing_set"): ONE,
+    ("layout.page", "sheet_format"): OPT,
+    ("layout.page", "groups.group"): MANY,
+    ("layout.power_symbol", "page"): ONE,
+    ("layout.power_symbol", "port"): ONE,
+    ("layout.profile", "sheet_format"): SINGLETON,
+    ("layout.route", "page"): ONE,
+    ("layout.route", "conductor"): OPT,
+    ("layout.route", "net"): OPT,
+    ("layout.route", "a"): ONE,
+    ("layout.route", "b"): ONE,
+    ("layout.symbol_choice", "function"): OPT,
+    ("layout.symbol_choice", "template"): OPT,
+    ("layout.symbol_choice", "part"): OPT,
+    ("layout.symbol_placement", "function"): ONE,
+    ("layout.symbol_placement", "page"): ONE,
+    ("mate", "a"): ONE,
+    ("mate", "b"): ONE,
+    ("net", "ports"): MANY,
+    ("part", "library"): OPT,
+    ("placement", "item"): ONE,
+    ("placement", "node"): ONE,
+    ("port", "function"): ONE,
+    ("port", "template"): OPT,
+    ("port_template", "function"): ONE,
+    ("revision", "release"): OPT,
+    ("unit", "release"): ONE,
+    ("unit", "parent"): OPT,
+    ("unused_boundary", "function"): ONE,
+}

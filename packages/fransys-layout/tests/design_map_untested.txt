@@ -1,0 +1,77 @@
+# Rules with no test yet: one dotted.module.func per line (the row's first function). Only shrinks.
+# step 2
+replicate.drop_attached_replicas
+arrange.same_unit_connectivity
+tags.row_labels
+_sides.located
+# step 4
+onepage.keep_chosen_edges
+references.references
+references.clear_runs.run_clearance
+references.marker_boxes.stub_size
+references.markers.split_markers
+# step 5
+room.room_offset
+sizing.with_rooms
+# step 6
+firstlabels.labelled_pages
+texts.marker_row.marker_shapes
+texts.power.held_shapes
+texts.power.without_power_findings
+# step 7 and shared support
+_routing.shortest_path
+_routing.axes_of
+space.run_of
+slices.connection_ends
+pagerun.plan_pages
+finish.finish_pages
+# caller-only (layout-0095 R4): the row's test reaches the rule through a caller, not hand-made values
+# step 1
+resolve.throw_port
+# step 2
+_chain_walk.walk_chains
+_chain_walk.drop_unwired_poles
+_chain_walk.bundle_chains
+_chain_sides.build_nets
+_chain_sides.find_sides
+_chain_poles.build_poles
+_chain_reach.vote_columns
+_chain_cells.build_cells
+columns.build_column
+arrange.rack_order
+_sides.retarget
+_sides.joined
+# step 3
+_ordering.column_order
+_ordering.buckets
+_ordering.membership
+_ordering.base_order
+_ordering.reorder
+_packing.merge
+_packing.placements
+_packing.pack
+# step 4
+references.cuts.link_placements
+references.joins.joined_runs
+references.joins.turns_back
+# step 5
+box_power.pinned_sides
+images.rooms
+place.axis_offset
+stack_room.make_room
+stacking.blocks
+stacking.gaps_below
+# step 6
+_labelling.slot_box
+markers.stand_against_content_edge
+texts.power.turned
+texts.power.with_power_labels
+texts.stand.end_boxes
+texts.stand.reach_at
+texts.stand.leave_port
+texts.stand.candidate_box
+texts.stand.vertical
+texts.stand.joined_box
+tidy.turned
+# shared support
+pagerun.place_pages

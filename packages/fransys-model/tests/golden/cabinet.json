@@ -1,0 +1,5152 @@
+{
+  "aliases": [],
+  "schema_version": 8,
+  "tables": {
+    "aspect_node": [
+      {
+        "aspect": "location",
+        "description": "main enclosure",
+        "ext": {},
+        "id": "aspect_node:7be722a473e857488038a1d0e32dc5ca",
+        "key": [
+          "c1"
+        ],
+        "label": "C1",
+        "parent": null
+      }
+    ],
+    "conductor": [
+      {
+        "a": "port:475857bb38165c0fa161e4ce1f755476",
+        "b": "port:5c1d4c2abc2251cf91f4d9516970c563",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:05eada4c7f6b57d6844d164e945b7312",
+        "key": [
+          "w-l3-k2"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:2286ce3f0cc95939877e69e534ecc784",
+        "b": "port:beffb2dda17857cba7e652a3357bfbde",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:07f2e20324bd5f81943865123ec72b30",
+        "key": [
+          "w-24v",
+          "k2"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:43931a1671d251408ad7194394b2f7d2",
+        "b": "port:d7899f7100125226b303e6faaba48b11",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:0a8a2ae85321523694b9346228454322",
+        "key": [
+          "x2",
+          "tt01-2",
+          "panel"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:a1dd4b1d79435a4fbed898c19a599de2",
+        "b": "port:e5abec664cf75f4a87741701d0aa8ee2",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:197bbbea835f5b5e9fa765c366620792",
+        "key": [
+          "x2",
+          "pt01-2",
+          "panel"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:9a32c7bda25b5e03a4b6620792386cd7",
+        "b": "port:fa96d22e400658c0ac416dbc64acb768",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:20cff4bf9aac5d74834d2c0df749f2b1",
+        "key": [
+          "s1",
+          "wire",
+          "1"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:78fff93379435eaa817a11cb7655d674",
+        "b": "port:f2dca6787160541991649d294795d2f6",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:33193fca96c5503c848a298c37b2ae77",
+        "key": [
+          "w-0v",
+          "k1"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:26f00789592959b9a42c54a6f38506ad",
+        "b": "port:7be1561310955306a4509a21dadea863",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:355aeaa35d195981aa9f868af570670d",
+        "key": [
+          "x2",
+          "s1-1",
+          "panel"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:45c039b58bab52c5ad97057a474a3898",
+        "b": "port:cf903b70e68454b6b682dcbb1da9defa",
+        "carrier": "item:bffa1752a6515edda32a4a1b9fb0fd15",
+        "ext": {},
+        "id": "conductor:418787a667b55cf1b53a6ab52828aac7",
+        "key": [
+          "w1",
+          "core",
+          "1"
+        ],
+        "kind": "core"
+      },
+      {
+        "a": "port:4592cd05cbe85582b6f21852e5aa1faa",
+        "b": "port:9a2805036f4e5a63991690b5fb1f011c",
+        "carrier": "item:3227b2a948df5c718c31c124300ef02d",
+        "ext": {},
+        "id": "conductor:534fdb025e7c5494837b2fcc9f1bcaed",
+        "key": [
+          "w2",
+          "core",
+          "1"
+        ],
+        "kind": "core"
+      },
+      {
+        "a": "port:13f1b493cfbd597ebb9940a04e787e0e",
+        "b": "port:633d2fef6584521a8ce15b93fa58a933",
+        "carrier": "item:bffa1752a6515edda32a4a1b9fb0fd15",
+        "ext": {},
+        "id": "conductor:5902eb7e12f35484a0d951fdcdb0d561",
+        "key": [
+          "w1",
+          "core",
+          "2"
+        ],
+        "kind": "core"
+      },
+      {
+        "a": "port:2286ce3f0cc95939877e69e534ecc784",
+        "b": "port:db3063d91dd4511f8db137f6fc700f4f",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:5e16e00ad89e55eb944fdad6ab7550de",
+        "key": [
+          "w-24v",
+          "k1"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:4ff89baa53a25514a8aa7acfef103389",
+        "b": "port:ee0a20d957ad520abef4b226ec7728e6",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:6cfdb65523c95724b92520d167b8c06b",
+        "key": [
+          "w-l2-k1"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:fa52e29e578c5b12a13fc2c36d12a200",
+        "b": "port:fc03505544b55eb097fe19210de59cf3",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:7267440bc104506bbcea6b5d0a5b85d2",
+        "key": [
+          "w-24v-in"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:f292c6ee75475b3c857435618e67ece9",
+        "b": "port:fcd769aca63753fa8aa58a296d0ad6fe",
+        "carrier": "item:3227b2a948df5c718c31c124300ef02d",
+        "ext": {},
+        "id": "conductor:83113456b0405d01888633f5bae4b253",
+        "key": [
+          "w2",
+          "core",
+          "2"
+        ],
+        "kind": "core"
+      },
+      {
+        "a": "port:6076d5dff1a959039f367ce509373def",
+        "b": "port:7723d3c410c356708ff672cffbca76a5",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:8d6fa9a0372c5301af4f3db601e9dd9b",
+        "key": [
+          "s1",
+          "wire",
+          "2"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:7e489833128c500aa5a829a9cd3494ee",
+        "b": "port:d49c6e9bcd0152f1871ad59c9550a37e",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:bfb4ad30bced5870851b1e43aa139db0",
+        "key": [
+          "x2",
+          "pt01-1",
+          "panel"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:255534b8b95c55279be8a167bb555373",
+        "b": "port:78fff93379435eaa817a11cb7655d674",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:c3ea8f273a1c588590d5dc720f62270c",
+        "key": [
+          "w-0v",
+          "k2"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:262a27b57e4b57978b26ec55643269d6",
+        "b": "port:f70ae6ddbfd25f8fb665493073e2edd4",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:c9e675c2846f55aa89d71744552259b0",
+        "key": [
+          "x2",
+          "s1-2",
+          "panel"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:16822f30ebfe5db39567bc2069031f04",
+        "b": "port:fb931487580e5fa59d03225c0fc094db",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:e99814fc3c1a5718a92f5917fabc4612",
+        "key": [
+          "x2",
+          "tt01-1",
+          "panel"
+        ],
+        "kind": "wire"
+      },
+      {
+        "a": "port:54a6de27b2a05169b13f964cb915b885",
+        "b": "port:cfd333a7fe1f5800b1b4591f1016b57d",
+        "carrier": null,
+        "ext": {},
+        "id": "conductor:fda666e816d153dfb294849642300ff6",
+        "key": [
+          "x1",
+          "jumper-l1"
+        ],
+        "kind": "jumper"
+      }
+    ],
+    "facet.cable_product": [
+      {
+        "core_colours": [
+          "BN",
+          "BU"
+        ],
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.cable_product:29003bb477525775b65adeb91bf50ebe",
+        "key": [
+          "cable",
+          "cable_product"
+        ],
+        "shielded": true,
+        "subject": "part:414a2d0371f75f89b4ba3d47a37c56cf"
+      }
+    ],
+    "facet.core": [
+      {
+        "ext": {},
+        "id": "facet.core:3b5ee004b9bd50ea80662a1a70caede0",
+        "index": 1,
+        "key": [
+          "w2",
+          "core",
+          "1",
+          "facet"
+        ],
+        "subject": "conductor:534fdb025e7c5494837b2fcc9f1bcaed"
+      },
+      {
+        "ext": {},
+        "id": "facet.core:3d773e93aa0658d49842111cb13d3f77",
+        "index": 2,
+        "key": [
+          "w2",
+          "core",
+          "2",
+          "facet"
+        ],
+        "subject": "conductor:83113456b0405d01888633f5bae4b253"
+      },
+      {
+        "ext": {},
+        "id": "facet.core:7fa28658a52d52e9a1bc192580633979",
+        "index": 2,
+        "key": [
+          "w1",
+          "core",
+          "2",
+          "facet"
+        ],
+        "subject": "conductor:5902eb7e12f35484a0d951fdcdb0d561"
+      },
+      {
+        "ext": {},
+        "id": "facet.core:bf39169a6f005653a1c92e25ca8e2fc9",
+        "index": 1,
+        "key": [
+          "w1",
+          "core",
+          "1",
+          "facet"
+        ],
+        "subject": "conductor:418787a667b55cf1b53a6ab52828aac7"
+      }
+    ],
+    "facet.plc_binding": [
+      {
+        "channel": "function:e827bef046065ee295796701d00c9cfd",
+        "ext": {},
+        "id": "facet.plc_binding:969f6322e1e9542184f75eab30e37a78",
+        "key": [
+          "b1",
+          "fn",
+          "signal",
+          "plc_binding"
+        ],
+        "subject": "function:2331fc6abd2d5bdd83ee7c82c959b460"
+      },
+      {
+        "channel": "function:f3bba81dc72b525cadf106a833864a61",
+        "ext": {},
+        "id": "facet.plc_binding:adff9b352569598393d474b43d1e7006",
+        "key": [
+          "s1",
+          "fn",
+          "signal",
+          "plc_binding"
+        ],
+        "subject": "function:427ae0350c885b2f9e2727ddec20ab68"
+      },
+      {
+        "channel": "function:3a5623765c4f53a48b92ced6652a2e3a",
+        "ext": {},
+        "id": "facet.plc_binding:dc9c98a68e1959dd8d6bb85a891ec521",
+        "key": [
+          "b2",
+          "fn",
+          "signal",
+          "plc_binding"
+        ],
+        "subject": "function:07a04a3879e455f9af41c3be971ed48a"
+      }
+    ],
+    "facet.plc_channel": [
+      {
+        "channel": 1,
+        "ext": {},
+        "id": "facet.plc_channel:09509577e02e591db26fd58026b9a38d",
+        "key": [
+          "module-sim-ai4-020",
+          "ch1",
+          "plc_channel"
+        ],
+        "signal": "ai_current",
+        "subject": "function_template:212aa4694a60537cb67e8884fbcc0790"
+      },
+      {
+        "channel": 3,
+        "ext": {},
+        "id": "facet.plc_channel:444abc79d7d6582b82b53c5f3f117c16",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch3",
+          "plc_channel"
+        ],
+        "signal": "rtd",
+        "subject": "function_template:19d53012bedf5e53b3b76ecdbe94d53f"
+      },
+      {
+        "channel": 2,
+        "ext": {},
+        "id": "facet.plc_channel:47ffb597e9e75abeb963ee484e2a6ca5",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch2",
+          "plc_channel"
+        ],
+        "signal": "rtd",
+        "subject": "function_template:c80f3015e0ae5da1b01c4087fa8d3206"
+      },
+      {
+        "channel": 4,
+        "ext": {},
+        "id": "facet.plc_channel:71611dfd30d65e36a87baacd5452243e",
+        "key": [
+          "module-sim-di8-024",
+          "ch4",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:7bab8128fdb25743b11ced12f4e49c9d"
+      },
+      {
+        "channel": 7,
+        "ext": {},
+        "id": "facet.plc_channel:7bba4aea60505ed8bcb26852c53f7d11",
+        "key": [
+          "module-sim-di8-024",
+          "ch7",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:4b9a03a23c4c5479969832e161acd2a6"
+      },
+      {
+        "channel": 3,
+        "ext": {},
+        "id": "facet.plc_channel:8ac890492e1f59b285bbe68da31a61bd",
+        "key": [
+          "module-sim-ai4-020",
+          "ch3",
+          "plc_channel"
+        ],
+        "signal": "ai_current",
+        "subject": "function_template:f8eaacda28225c47b9c5fd62951f5c6a"
+      },
+      {
+        "channel": 2,
+        "ext": {},
+        "id": "facet.plc_channel:90d18f22b70557aba3dc53f43706d182",
+        "key": [
+          "module-sim-di8-024",
+          "ch2",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2"
+      },
+      {
+        "channel": 5,
+        "ext": {},
+        "id": "facet.plc_channel:95f9045b378e5a00b3c7da83104e5511",
+        "key": [
+          "module-sim-di8-024",
+          "ch5",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:a751c20b3bb95d4d9501cbbd65bb9736"
+      },
+      {
+        "channel": 1,
+        "ext": {},
+        "id": "facet.plc_channel:a32e4b3d6238599c87a28342dbe4c8c0",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch1",
+          "plc_channel"
+        ],
+        "signal": "rtd",
+        "subject": "function_template:ee15d75ff1cd563cb99c4709ca4009c4"
+      },
+      {
+        "channel": 1,
+        "ext": {},
+        "id": "facet.plc_channel:acfbe658b6c35b28ae90ddfbb9388a87",
+        "key": [
+          "module-sim-di8-024",
+          "ch1",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:1acf18bc0fab5014ba3a88a8e714d84c"
+      },
+      {
+        "channel": 6,
+        "ext": {},
+        "id": "facet.plc_channel:cacd1c4e06055eed9ac4d7c5b0b29d71",
+        "key": [
+          "module-sim-di8-024",
+          "ch6",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:ac249f511714535c85486451c042444e"
+      },
+      {
+        "channel": 3,
+        "ext": {},
+        "id": "facet.plc_channel:d3bb6453e82b577ab0352673a49a21e5",
+        "key": [
+          "module-sim-di8-024",
+          "ch3",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:905c6457168d557596dfd029717acda5"
+      },
+      {
+        "channel": 2,
+        "ext": {},
+        "id": "facet.plc_channel:d8a5256fb0955ccea8d1c887ec037963",
+        "key": [
+          "module-sim-ai4-020",
+          "ch2",
+          "plc_channel"
+        ],
+        "signal": "ai_current",
+        "subject": "function_template:bbd9ebd867775f97905f82e701c45f0e"
+      },
+      {
+        "channel": 4,
+        "ext": {},
+        "id": "facet.plc_channel:dc8abd626285535587437f46ea7639f9",
+        "key": [
+          "module-sim-ai4-020",
+          "ch4",
+          "plc_channel"
+        ],
+        "signal": "ai_current",
+        "subject": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad"
+      },
+      {
+        "channel": 4,
+        "ext": {},
+        "id": "facet.plc_channel:e3e4b951fb5f5251b9d2d13414104c1d",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch4",
+          "plc_channel"
+        ],
+        "signal": "rtd",
+        "subject": "function_template:f91ae0795a0255d8ab916f40bcc6f765"
+      },
+      {
+        "channel": 8,
+        "ext": {},
+        "id": "facet.plc_channel:f300a668869e5d5d906b140f5c12200c",
+        "key": [
+          "module-sim-di8-024",
+          "ch8",
+          "plc_channel"
+        ],
+        "signal": "di",
+        "subject": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0"
+      }
+    ],
+    "facet.plc_request": [
+      {
+        "ext": {},
+        "id": "facet.plc_request:2f47a22a2107547ea81366ada1dc87df",
+        "key": [
+          "b2",
+          "fn",
+          "signal",
+          "plc_request"
+        ],
+        "priority": 2,
+        "signal": "rtd",
+        "signal_name": "TT01_Temp",
+        "subject": "function:07a04a3879e455f9af41c3be971ed48a"
+      },
+      {
+        "ext": {},
+        "id": "facet.plc_request:8cdd022aa1315e47b55d2181efe73f84",
+        "key": [
+          "b1",
+          "fn",
+          "signal",
+          "plc_request"
+        ],
+        "priority": 1,
+        "signal": "ai_current",
+        "signal_name": "PT01_Pressure",
+        "subject": "function:2331fc6abd2d5bdd83ee7c82c959b460"
+      },
+      {
+        "ext": {},
+        "id": "facet.plc_request:f3a3568ec6925850b16e3e130ac39b43",
+        "key": [
+          "s1",
+          "fn",
+          "signal",
+          "plc_request"
+        ],
+        "priority": 1,
+        "signal": "di",
+        "signal_name": "Start_PB",
+        "subject": "function:427ae0350c885b2f9e2727ddec20ab68"
+      }
+    ],
+    "facet.scaling": [
+      {
+        "eng_max": "10",
+        "eng_min": "0",
+        "ext": {},
+        "id": "facet.scaling:608778e41db654af96f9351713129c39",
+        "key": [
+          "b1",
+          "fn",
+          "signal",
+          "scaling"
+        ],
+        "raw_max": 20,
+        "raw_min": 4,
+        "subject": "function:2331fc6abd2d5bdd83ee7c82c959b460",
+        "unit": "bar"
+      }
+    ],
+    "facet.terminal": [
+      {
+        "ext": {},
+        "group": "TT01",
+        "id": "facet.terminal:0ff046d2b5445b2d88585ef2fb390ba3",
+        "index": 1,
+        "key": [
+          "x2",
+          "tt01-1",
+          "terminal"
+        ],
+        "subject": "item:98f30e5fdb6f5e43bae66da74bc72ff9"
+      },
+      {
+        "ext": {},
+        "group": "PT01",
+        "id": "facet.terminal:19b00aa49038595b9a7916935426807e",
+        "index": 2,
+        "key": [
+          "x2",
+          "pt01-2",
+          "terminal"
+        ],
+        "subject": "item:47a9760dfc1c5d15b1654563314327b4"
+      },
+      {
+        "ext": {},
+        "group": "PE",
+        "id": "facet.terminal:87ae5b58983f579d94a41ad02a357a00",
+        "index": 1,
+        "key": [
+          "x1",
+          "pe-1",
+          "terminal"
+        ],
+        "subject": "item:49a40c23c78b559eb2e43ce22607bd44"
+      },
+      {
+        "ext": {},
+        "group": "PT01",
+        "id": "facet.terminal:9447b732733c56d4b44cc0f898117a82",
+        "index": 1,
+        "key": [
+          "x2",
+          "pt01-1",
+          "terminal"
+        ],
+        "subject": "item:a60a77833578586182d5a0f8f8f8b586"
+      },
+      {
+        "ext": {},
+        "group": "L3",
+        "id": "facet.terminal:b064f91a04b453ec95849e5710c9f2ad",
+        "index": 1,
+        "key": [
+          "x1",
+          "l3-1",
+          "terminal"
+        ],
+        "subject": "item:a29cd4491d6455e0823792c855e0d2c9"
+      },
+      {
+        "ext": {},
+        "group": "TT01",
+        "id": "facet.terminal:b6fa21dad0b95f6d8b99107178e891f4",
+        "index": 2,
+        "key": [
+          "x2",
+          "tt01-2",
+          "terminal"
+        ],
+        "subject": "item:ed1aa66f9c695855927bbba1309afd3c"
+      },
+      {
+        "ext": {},
+        "group": "L1",
+        "id": "facet.terminal:c32bdb4280ca528b8def20bbb7e4d21d",
+        "index": 1,
+        "key": [
+          "x1",
+          "l1-1",
+          "terminal"
+        ],
+        "subject": "item:e9d29cb3e80d597da0e17ea187e17414"
+      },
+      {
+        "ext": {},
+        "group": "S1",
+        "id": "facet.terminal:cd14f3e56a125971bf07a38bef21ef25",
+        "index": 1,
+        "key": [
+          "x2",
+          "s1-1",
+          "terminal"
+        ],
+        "subject": "item:be626f765e3055e684a92cbb8852e7e1"
+      },
+      {
+        "ext": {},
+        "group": "L1",
+        "id": "facet.terminal:d49350b1e8465290961c8da45c388dba",
+        "index": 2,
+        "key": [
+          "x1",
+          "l1-2",
+          "terminal"
+        ],
+        "subject": "item:8444a2d18a3e5c06a359c9b2041433a4"
+      },
+      {
+        "ext": {},
+        "group": "L2",
+        "id": "facet.terminal:d5a54706c94f5818add8eb76a3592045",
+        "index": 1,
+        "key": [
+          "x1",
+          "l2-1",
+          "terminal"
+        ],
+        "subject": "item:af74d04b5f90586391e41fbb5296f083"
+      },
+      {
+        "ext": {},
+        "group": "S1",
+        "id": "facet.terminal:db6df59a1e605795a302ed0a5458ebd1",
+        "index": 2,
+        "key": [
+          "x2",
+          "s1-2",
+          "terminal"
+        ],
+        "subject": "item:432000278ab85ae9a8ea99092939b867"
+      }
+    ],
+    "facet.wire": [
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:010399a4f4e7514e8685c84f09e17186",
+        "key": [
+          "x2",
+          "pt01-1",
+          "panel",
+          "wire"
+        ],
+        "label": "X2-PT01-1-PANEL",
+        "length_mm": null,
+        "subject": "conductor:bfb4ad30bced5870851b1e43aa139db0"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:0a86d9ff400d5638a8d7b12ef1e0dc49",
+        "key": [
+          "x2",
+          "s1-2",
+          "panel",
+          "wire"
+        ],
+        "label": "X2-S1-2-PANEL",
+        "length_mm": null,
+        "subject": "conductor:c9e675c2846f55aa89d71744552259b0"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:2be6e465029d5e48a108f22bf8b6cee9",
+        "key": [
+          "w-24v",
+          "k1",
+          "wire"
+        ],
+        "label": "W-24V-K1",
+        "length_mm": null,
+        "subject": "conductor:5e16e00ad89e55eb944fdad6ab7550de"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:51becd412d895771a1dcaf46792e7228",
+        "key": [
+          "x2",
+          "pt01-2",
+          "panel",
+          "wire"
+        ],
+        "label": "X2-PT01-2-PANEL",
+        "length_mm": null,
+        "subject": "conductor:197bbbea835f5b5e9fa765c366620792"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:5eba5312d53e52109cb9c4647bab94b8",
+        "key": [
+          "x2",
+          "tt01-1",
+          "panel",
+          "wire"
+        ],
+        "label": "X2-TT01-1-PANEL",
+        "length_mm": null,
+        "subject": "conductor:e99814fc3c1a5718a92f5917fabc4612"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:61afe552cd665fd2b55ddbcf7743a2c3",
+        "key": [
+          "s1",
+          "wire",
+          "2",
+          "wire"
+        ],
+        "label": "S1-WIRE-2",
+        "length_mm": null,
+        "subject": "conductor:8d6fa9a0372c5301af4f3db601e9dd9b"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:639b178217c250569144d2251c16993d",
+        "key": [
+          "x2",
+          "tt01-2",
+          "panel",
+          "wire"
+        ],
+        "label": "X2-TT01-2-PANEL",
+        "length_mm": null,
+        "subject": "conductor:0a8a2ae85321523694b9346228454322"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:87a488191f905f8bb01b049db5179185",
+        "key": [
+          "w-0v",
+          "k1",
+          "wire"
+        ],
+        "label": "W-0V-K1",
+        "length_mm": null,
+        "subject": "conductor:33193fca96c5503c848a298c37b2ae77"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:9b3734bcaed65c14bc23d096af6f9acb",
+        "key": [
+          "s1",
+          "wire",
+          "1",
+          "wire"
+        ],
+        "label": "S1-WIRE-1",
+        "length_mm": null,
+        "subject": "conductor:20cff4bf9aac5d74834d2c0df749f2b1"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:a004ea0d23975c87a72fab1050119658",
+        "key": [
+          "w-l3-k2",
+          "wire"
+        ],
+        "label": "W-L3-K2",
+        "length_mm": null,
+        "subject": "conductor:05eada4c7f6b57d6844d164e945b7312"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:a4fb5fbf8388585a83f5d3d3ef4ff272",
+        "key": [
+          "w-24v",
+          "k2",
+          "wire"
+        ],
+        "label": "W-24V-K2",
+        "length_mm": null,
+        "subject": "conductor:07f2e20324bd5f81943865123ec72b30"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:baa296562f9e5b33881191906fbde32d",
+        "key": [
+          "x2",
+          "s1-1",
+          "panel",
+          "wire"
+        ],
+        "label": "X2-S1-1-PANEL",
+        "length_mm": null,
+        "subject": "conductor:355aeaa35d195981aa9f868af570670d"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:bdfb1a3d459e50408aca401dc0256774",
+        "key": [
+          "w-24v-in",
+          "wire"
+        ],
+        "label": "W-24V-IN",
+        "length_mm": null,
+        "subject": "conductor:7267440bc104506bbcea6b5d0a5b85d2"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:cf44122148135005be3e7c8e5a75724c",
+        "key": [
+          "w-l2-k1",
+          "wire"
+        ],
+        "label": "W-L2-K1",
+        "length_mm": null,
+        "subject": "conductor:6cfdb65523c95724b92520d167b8c06b"
+      },
+      {
+        "colour": "BU",
+        "ext": {},
+        "gauge_mm2": "0.75",
+        "id": "facet.wire:dacc8f18e2a150c98728e2d743007008",
+        "key": [
+          "w-0v",
+          "k2",
+          "wire"
+        ],
+        "label": "W-0V-K2",
+        "length_mm": null,
+        "subject": "conductor:c3ea8f273a1c588590d5dc720f62270c"
+      }
+    ],
+    "function": [
+      {
+        "ext": {},
+        "id": "function:07a04a3879e455f9af41c3be971ed48a",
+        "item": "item:1d30424ae7d154918a7e0ab7bb5a1f62",
+        "key": [
+          "b2",
+          "fn",
+          "signal"
+        ],
+        "kind": "sensor",
+        "name": "signal",
+        "template": "function_template:ef753a8c952c567ead0f4696d0c16186"
+      },
+      {
+        "ext": {},
+        "id": "function:0e5089df66cf5e8699b5fdd5c91e2378",
+        "item": "item:96f986edad5d556d946dce6890b38251",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch3"
+        ],
+        "kind": "plc_channel",
+        "name": "ch3",
+        "template": "function_template:f8eaacda28225c47b9c5fd62951f5c6a"
+      },
+      {
+        "ext": {},
+        "id": "function:103aa0b20ce057a88be15f2d4a4b7de5",
+        "item": "item:47a9760dfc1c5d15b1654563314327b4",
+        "key": [
+          "x2",
+          "pt01-2",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:19c5413d062f55c9ac01936f3bf6e941",
+        "item": "item:4ee4b6dbeafd537db767e228ff5f56a6",
+        "key": [
+          "k1",
+          "fn",
+          "no_1"
+        ],
+        "kind": "contact_no",
+        "name": "no_1",
+        "template": "function_template:58f57676b64554b0834a6475334ca2e8"
+      },
+      {
+        "ext": {},
+        "id": "function:2331fc6abd2d5bdd83ee7c82c959b460",
+        "item": "item:d2e2890fc0c155e8aa9c52f129fe6a3b",
+        "key": [
+          "b1",
+          "fn",
+          "signal"
+        ],
+        "kind": "sensor",
+        "name": "signal",
+        "template": "function_template:6249ea67c02d5f9782b992037665eeac"
+      },
+      {
+        "ext": {},
+        "id": "function:2c094bf44bde56c1ae03bbde17bb52f9",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch4"
+        ],
+        "kind": "plc_channel",
+        "name": "ch4",
+        "template": "function_template:7bab8128fdb25743b11ced12f4e49c9d"
+      },
+      {
+        "ext": {},
+        "id": "function:315c414bb56452578b4ba6f34652768f",
+        "item": "item:f31038cb9b235414bc8ffcec102c0a71",
+        "key": [
+          "g1",
+          "fn",
+          "output"
+        ],
+        "kind": "supply",
+        "name": "output",
+        "template": "function_template:35e91e76a7d65a83884b8b7694cb450c"
+      },
+      {
+        "ext": {},
+        "id": "function:3a5623765c4f53a48b92ced6652a2e3a",
+        "item": "item:c6802b05b7c1588f9e785197526eeaa1",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch1"
+        ],
+        "kind": "plc_channel",
+        "name": "ch1",
+        "template": "function_template:ee15d75ff1cd563cb99c4709ca4009c4"
+      },
+      {
+        "ext": {},
+        "id": "function:3b7f6e31c2825fb2a098802504018cab",
+        "item": "item:432000278ab85ae9a8ea99092939b867",
+        "key": [
+          "x2",
+          "s1-2",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:427ae0350c885b2f9e2727ddec20ab68",
+        "item": "item:740c89df6731516d8dcea0805b52d27e",
+        "key": [
+          "s1",
+          "fn",
+          "signal"
+        ],
+        "kind": "switch",
+        "name": "signal",
+        "template": "function_template:c299578b3da453aabb18b9440591f22b"
+      },
+      {
+        "ext": {},
+        "id": "function:42dd9b9c26ce59f6909a74960fe1e421",
+        "item": "item:a60a77833578586182d5a0f8f8f8b586",
+        "key": [
+          "x2",
+          "pt01-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:4e1465ca4d255ea4bcdde76093dbbca0",
+        "item": "item:6d527ea815ea5400953f164d61fe2840",
+        "key": [
+          "k2",
+          "fn",
+          "co_1"
+        ],
+        "kind": "contact_co",
+        "name": "co_1",
+        "template": "function_template:3120a6f7344357798fbfaf0ee7689f20"
+      },
+      {
+        "ext": {},
+        "id": "function:58f690d7c43454aaaec6b83134f87919",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch6"
+        ],
+        "kind": "plc_channel",
+        "name": "ch6",
+        "template": "function_template:ac249f511714535c85486451c042444e"
+      },
+      {
+        "ext": {},
+        "id": "function:5e1bb19d2c18512c8639e890fc65d94a",
+        "item": "item:b4bc237ddf6e534aa147378a17895eee",
+        "key": [
+          "k3",
+          "fn",
+          "no_1"
+        ],
+        "kind": "contact_no",
+        "name": "no_1",
+        "template": "function_template:58f57676b64554b0834a6475334ca2e8"
+      },
+      {
+        "ext": {},
+        "id": "function:6a0221b01c0b50e48d2db0f6a0903b81",
+        "item": "item:4ee4b6dbeafd537db767e228ff5f56a6",
+        "key": [
+          "k1",
+          "fn",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "template": "function_template:54979341d66450d4b2618477d7fa7ce9"
+      },
+      {
+        "ext": {},
+        "id": "function:79d0000f400a5c2797efdfedcd2e0771",
+        "item": "item:c6802b05b7c1588f9e785197526eeaa1",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch2"
+        ],
+        "kind": "plc_channel",
+        "name": "ch2",
+        "template": "function_template:c80f3015e0ae5da1b01c4087fa8d3206"
+      },
+      {
+        "ext": {},
+        "id": "function:7c3439bd460b5676bcb4e8a79b87fce4",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch8"
+        ],
+        "kind": "plc_channel",
+        "name": "ch8",
+        "template": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0"
+      },
+      {
+        "ext": {},
+        "id": "function:893d24700b2a5851b152b913cc15a1e3",
+        "item": "item:c6802b05b7c1588f9e785197526eeaa1",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch3"
+        ],
+        "kind": "plc_channel",
+        "name": "ch3",
+        "template": "function_template:19d53012bedf5e53b3b76ecdbe94d53f"
+      },
+      {
+        "ext": {},
+        "id": "function:8af3a3ae9ed15c0d867d5f1603342f0e",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch2"
+        ],
+        "kind": "plc_channel",
+        "name": "ch2",
+        "template": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2"
+      },
+      {
+        "ext": {},
+        "id": "function:8b9e402d95815c21be99cc4f3c4697ec",
+        "item": "item:ed1aa66f9c695855927bbba1309afd3c",
+        "key": [
+          "x2",
+          "tt01-2",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:8c80d99ad11d5d268bf1aa904e68a8df",
+        "item": "item:98f30e5fdb6f5e43bae66da74bc72ff9",
+        "key": [
+          "x2",
+          "tt01-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:a92c70dccb3e5501992dbe6c780d2e34",
+        "item": "item:b4bc237ddf6e534aa147378a17895eee",
+        "key": [
+          "k3",
+          "fn",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "template": "function_template:54979341d66450d4b2618477d7fa7ce9"
+      },
+      {
+        "ext": {},
+        "id": "function:af0b1311907d5b0da338c85246099f44",
+        "item": "item:a29cd4491d6455e0823792c855e0d2c9",
+        "key": [
+          "x1",
+          "l3-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:b15606483e7753d3a109e1361c7c5982",
+        "item": "item:be626f765e3055e684a92cbb8852e7e1",
+        "key": [
+          "x2",
+          "s1-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:b6c5cc676ffc595f8ee26c87a6a1f248",
+        "item": "item:8444a2d18a3e5c06a359c9b2041433a4",
+        "key": [
+          "x1",
+          "l1-2",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:ba02d240ee6c59abacea6526696436b9",
+        "item": "item:e9d29cb3e80d597da0e17ea187e17414",
+        "key": [
+          "x1",
+          "l1-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:bd48f731fa9658a79fa2ec3ea08a5257",
+        "item": "item:49a40c23c78b559eb2e43ce22607bd44",
+        "key": [
+          "x1",
+          "pe-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:bf9858e83b5b5750b769e2d3df5f1690",
+        "item": "item:6d527ea815ea5400953f164d61fe2840",
+        "key": [
+          "k2",
+          "fn",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "template": "function_template:e710a0c60879507fb77cf4e453ff4350"
+      },
+      {
+        "ext": {},
+        "id": "function:c04d02eea4395adcb43863702a1b21d8",
+        "item": "item:c6802b05b7c1588f9e785197526eeaa1",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch4"
+        ],
+        "kind": "plc_channel",
+        "name": "ch4",
+        "template": "function_template:f91ae0795a0255d8ab916f40bcc6f765"
+      },
+      {
+        "ext": {},
+        "id": "function:d6280cb1fc3f57c69133d1283aea3028",
+        "item": "item:50242651777557e69ed0b0b8954650da",
+        "key": [
+          "f1",
+          "fn",
+          "element"
+        ],
+        "kind": "protection",
+        "name": "element",
+        "template": "function_template:f77216b8d20759fd99a30d984e501fd5"
+      },
+      {
+        "ext": {},
+        "id": "function:dabc1ef7a98351f3878a2bde0585c0c0",
+        "item": "item:96f986edad5d556d946dce6890b38251",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch2"
+        ],
+        "kind": "plc_channel",
+        "name": "ch2",
+        "template": "function_template:bbd9ebd867775f97905f82e701c45f0e"
+      },
+      {
+        "ext": {},
+        "id": "function:dc4ffccfd6e65ebda2c950ad601f1b92",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch5"
+        ],
+        "kind": "plc_channel",
+        "name": "ch5",
+        "template": "function_template:a751c20b3bb95d4d9501cbbd65bb9736"
+      },
+      {
+        "ext": {},
+        "id": "function:dce8458a1f0d5106a348c07260b090cd",
+        "item": "item:96f986edad5d556d946dce6890b38251",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch4"
+        ],
+        "kind": "plc_channel",
+        "name": "ch4",
+        "template": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad"
+      },
+      {
+        "ext": {},
+        "id": "function:e07dd8df259056388e97a323016c1db5",
+        "item": "item:af74d04b5f90586391e41fbb5296f083",
+        "key": [
+          "x1",
+          "l2-1",
+          "fn",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "template": "function_template:b9a2531e7ab355b39231b97b1313041d"
+      },
+      {
+        "ext": {},
+        "id": "function:e827bef046065ee295796701d00c9cfd",
+        "item": "item:96f986edad5d556d946dce6890b38251",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch1"
+        ],
+        "kind": "plc_channel",
+        "name": "ch1",
+        "template": "function_template:212aa4694a60537cb67e8884fbcc0790"
+      },
+      {
+        "ext": {},
+        "id": "function:ef2ca5aa2e0f5673ae315cd8685d09b7",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch7"
+        ],
+        "kind": "plc_channel",
+        "name": "ch7",
+        "template": "function_template:4b9a03a23c4c5479969832e161acd2a6"
+      },
+      {
+        "ext": {},
+        "id": "function:f3bba81dc72b525cadf106a833864a61",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch1"
+        ],
+        "kind": "plc_channel",
+        "name": "ch1",
+        "template": "function_template:1acf18bc0fab5014ba3a88a8e714d84c"
+      },
+      {
+        "ext": {},
+        "id": "function:f930d0b5bc4c5ce2b134fcc3c9a251d5",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch3"
+        ],
+        "kind": "plc_channel",
+        "name": "ch3",
+        "template": "function_template:905c6457168d557596dfd029717acda5"
+      }
+    ],
+    "function_template": [
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2",
+        "key": [
+          "module-sim-di8-024",
+          "ch2"
+        ],
+        "kind": "plc_channel",
+        "name": "ch2",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:19d53012bedf5e53b3b76ecdbe94d53f",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch3"
+        ],
+        "kind": "plc_channel",
+        "name": "ch3",
+        "part": "part:208b4b1c91705eef939a4d64c8848d97",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad",
+        "key": [
+          "module-sim-ai4-020",
+          "ch4"
+        ],
+        "kind": "plc_channel",
+        "name": "ch4",
+        "part": "part:51850f0c71b555b5b299d9533997b6e5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:1acf18bc0fab5014ba3a88a8e714d84c",
+        "key": [
+          "module-sim-di8-024",
+          "ch1"
+        ],
+        "kind": "plc_channel",
+        "name": "ch1",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:212aa4694a60537cb67e8884fbcc0790",
+        "key": [
+          "module-sim-ai4-020",
+          "ch1"
+        ],
+        "kind": "plc_channel",
+        "name": "ch1",
+        "part": "part:51850f0c71b555b5b299d9533997b6e5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:3120a6f7344357798fbfaf0ee7689f20",
+        "key": [
+          "contactor-1co",
+          "co_1"
+        ],
+        "kind": "contact_co",
+        "name": "co_1",
+        "part": "part:3b2b266db4cf583fb00753256568904d",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0",
+        "key": [
+          "module-sim-di8-024",
+          "ch8"
+        ],
+        "kind": "plc_channel",
+        "name": "ch8",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:35e91e76a7d65a83884b8b7694cb450c",
+        "key": [
+          "psu",
+          "output"
+        ],
+        "kind": "supply",
+        "name": "output",
+        "part": "part:4bb0ef205e265586abd67202e7aee3d8",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:4b9a03a23c4c5479969832e161acd2a6",
+        "key": [
+          "module-sim-di8-024",
+          "ch7"
+        ],
+        "kind": "plc_channel",
+        "name": "ch7",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:54979341d66450d4b2618477d7fa7ce9",
+        "key": [
+          "contactor-1no",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "part": "part:c854e69389e751d999ed9fa90ee70ea1",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:58f57676b64554b0834a6475334ca2e8",
+        "key": [
+          "contactor-1no",
+          "no_1"
+        ],
+        "kind": "contact_no",
+        "name": "no_1",
+        "part": "part:c854e69389e751d999ed9fa90ee70ea1",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:6249ea67c02d5f9782b992037665eeac",
+        "key": [
+          "pt",
+          "signal"
+        ],
+        "kind": "sensor",
+        "name": "signal",
+        "part": "part:d2470f64b89f581cb8c449d6674437e6",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:7bab8128fdb25743b11ced12f4e49c9d",
+        "key": [
+          "module-sim-di8-024",
+          "ch4"
+        ],
+        "kind": "plc_channel",
+        "name": "ch4",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:905c6457168d557596dfd029717acda5",
+        "key": [
+          "module-sim-di8-024",
+          "ch3"
+        ],
+        "kind": "plc_channel",
+        "name": "ch3",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:a751c20b3bb95d4d9501cbbd65bb9736",
+        "key": [
+          "module-sim-di8-024",
+          "ch5"
+        ],
+        "kind": "plc_channel",
+        "name": "ch5",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:ac249f511714535c85486451c042444e",
+        "key": [
+          "module-sim-di8-024",
+          "ch6"
+        ],
+        "kind": "plc_channel",
+        "name": "ch6",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:b9a2531e7ab355b39231b97b1313041d",
+        "key": [
+          "terminal",
+          "terminal"
+        ],
+        "kind": "terminal",
+        "name": "terminal",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:bbd9ebd867775f97905f82e701c45f0e",
+        "key": [
+          "module-sim-ai4-020",
+          "ch2"
+        ],
+        "kind": "plc_channel",
+        "name": "ch2",
+        "part": "part:51850f0c71b555b5b299d9533997b6e5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:c299578b3da453aabb18b9440591f22b",
+        "key": [
+          "pb",
+          "signal"
+        ],
+        "kind": "switch",
+        "name": "signal",
+        "part": "part:2b092f6a0fb25b5ca7b0fff6e32a8169",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:c80f3015e0ae5da1b01c4087fa8d3206",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch2"
+        ],
+        "kind": "plc_channel",
+        "name": "ch2",
+        "part": "part:208b4b1c91705eef939a4d64c8848d97",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:e710a0c60879507fb77cf4e453ff4350",
+        "key": [
+          "contactor-1co",
+          "coil"
+        ],
+        "kind": "coil",
+        "name": "coil",
+        "part": "part:3b2b266db4cf583fb00753256568904d",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:ee15d75ff1cd563cb99c4709ca4009c4",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch1"
+        ],
+        "kind": "plc_channel",
+        "name": "ch1",
+        "part": "part:208b4b1c91705eef939a4d64c8848d97",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:ef753a8c952c567ead0f4696d0c16186",
+        "key": [
+          "rtd",
+          "signal"
+        ],
+        "kind": "sensor",
+        "name": "signal",
+        "part": "part:ecdda89b2a515a1a972eb98bf912c655",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:f77216b8d20759fd99a30d984e501fd5",
+        "key": [
+          "fuse-2a",
+          "element"
+        ],
+        "kind": "protection",
+        "name": "element",
+        "part": "part:1a6d1cf3f42b5d76bc20563475c5b730",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:f8eaacda28225c47b9c5fd62951f5c6a",
+        "key": [
+          "module-sim-ai4-020",
+          "ch3"
+        ],
+        "kind": "plc_channel",
+        "name": "ch3",
+        "part": "part:51850f0c71b555b5b299d9533997b6e5",
+        "protection_type": null
+      },
+      {
+        "energy": null,
+        "ext": {},
+        "id": "function_template:f91ae0795a0255d8ab916f40bcc6f765",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch4"
+        ],
+        "kind": "plc_channel",
+        "name": "ch4",
+        "part": "part:208b4b1c91705eef939a4d64c8848d97",
+        "protection_type": null
+      }
+    ],
+    "internal_link": [
+      {
+        "a": "port_template:30e6413838f45f3e90cc8dc94c519c37",
+        "b": "port_template:322018d4d3e158c1996165ce241852be",
+        "ext": {},
+        "id": "internal_link:0882a7157acf5732bebeada5cfbb0074",
+        "key": [
+          "contactor-1co",
+          "link",
+          "1"
+        ],
+        "kind": "switched",
+        "rest": null
+      },
+      {
+        "a": "port_template:8e49394765925e0fae2e0b4561881d2f",
+        "b": "port_template:c31012870ece56ddb95f89ea2822191e",
+        "ext": {},
+        "id": "internal_link:1ac5d146aa53523da391ae86498a0029",
+        "key": [
+          "fuse-2a",
+          "link",
+          "1"
+        ],
+        "kind": "conductive",
+        "rest": null
+      },
+      {
+        "a": "port_template:491b3af15e5a536aa87b9887b1caeedf",
+        "b": "port_template:58b11d0461fe5a9a9a7a908d56519f8b",
+        "ext": {},
+        "id": "internal_link:5c6abcdd40455f7d89908c0bb151106d",
+        "key": [
+          "terminal",
+          "link",
+          "1"
+        ],
+        "kind": "conductive",
+        "rest": null
+      },
+      {
+        "a": "port_template:1b9983e053f05c57845df56d97f5da6a",
+        "b": "port_template:732e0a98c9df5789bcc5d6d22b5bd3e7",
+        "ext": {},
+        "id": "internal_link:70e08a588d9a585ab014bc9e29e53e40",
+        "key": [
+          "contactor-1no",
+          "link",
+          "1"
+        ],
+        "kind": "switched",
+        "rest": null
+      },
+      {
+        "a": "port_template:322018d4d3e158c1996165ce241852be",
+        "b": "port_template:9777a324e3fe5b2b9a62ec79945884e1",
+        "ext": {},
+        "id": "internal_link:f5fdffcce35a5d8fb2eb20518f0c44a7",
+        "key": [
+          "contactor-1co",
+          "link",
+          "2"
+        ],
+        "kind": "switched",
+        "rest": null
+      }
+    ],
+    "item": [
+      {
+        "description": "Invented SIM-DI8-024",
+        "ext": {},
+        "external": false,
+        "id": "item:1c65c39628a657fc93dc140a194b7e10",
+        "installed": true,
+        "key": [
+          "a1",
+          "m2"
+        ],
+        "parent": "item:2bc5773fd9915e7eb7e63dcbf0eaec1e",
+        "part": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "position": 2,
+        "tag": "A1-2",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-PT100-2W",
+        "ext": {},
+        "external": false,
+        "id": "item:1d30424ae7d154918a7e0ab7bb5a1f62",
+        "installed": true,
+        "key": [
+          "b2"
+        ],
+        "parent": null,
+        "part": "part:ecdda89b2a515a1a972eb98bf912c655",
+        "position": null,
+        "tag": "B2",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-RACK-8",
+        "ext": {},
+        "external": false,
+        "id": "item:2bc5773fd9915e7eb7e63dcbf0eaec1e",
+        "installed": true,
+        "key": [
+          "a1"
+        ],
+        "parent": null,
+        "part": "part:851a1385e29d5e06a677ab9d613f7995",
+        "position": null,
+        "tag": "A1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-CABLE-2X0.75-SH",
+        "ext": {},
+        "external": false,
+        "id": "item:3227b2a948df5c718c31c124300ef02d",
+        "installed": true,
+        "key": [
+          "w2"
+        ],
+        "parent": null,
+        "part": "part:414a2d0371f75f89b4ba3d47a37c56cf",
+        "position": null,
+        "tag": "W2",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:432000278ab85ae9a8ea99092939b867",
+        "installed": true,
+        "key": [
+          "x2",
+          "s1-2"
+        ],
+        "parent": "item:dabf88ba9c6158a39977dc93179581ce",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:47a9760dfc1c5d15b1654563314327b4",
+        "installed": true,
+        "key": [
+          "x2",
+          "pt01-2"
+        ],
+        "parent": "item:dabf88ba9c6158a39977dc93179581ce",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:49a40c23c78b559eb2e43ce22607bd44",
+        "installed": true,
+        "key": [
+          "x1",
+          "pe-1"
+        ],
+        "parent": "item:fc26244b53395d3094c907d3200690b9",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-CONTACTOR-9A-1NO",
+        "ext": {},
+        "external": false,
+        "id": "item:4ee4b6dbeafd537db767e228ff5f56a6",
+        "installed": true,
+        "key": [
+          "k1"
+        ],
+        "parent": null,
+        "part": "part:c854e69389e751d999ed9fa90ee70ea1",
+        "position": null,
+        "tag": "K1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-FUSE-2A",
+        "ext": {},
+        "external": false,
+        "id": "item:50242651777557e69ed0b0b8954650da",
+        "installed": true,
+        "key": [
+          "f1"
+        ],
+        "parent": null,
+        "part": "part:1a6d1cf3f42b5d76bc20563475c5b730",
+        "position": null,
+        "tag": "F1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-CONTACTOR-9A-1CO",
+        "ext": {},
+        "external": false,
+        "id": "item:6d527ea815ea5400953f164d61fe2840",
+        "installed": true,
+        "key": [
+          "k2"
+        ],
+        "parent": null,
+        "part": "part:3b2b266db4cf583fb00753256568904d",
+        "position": null,
+        "tag": "K2",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-PB-NO",
+        "ext": {},
+        "external": false,
+        "id": "item:740c89df6731516d8dcea0805b52d27e",
+        "installed": true,
+        "key": [
+          "s1"
+        ],
+        "parent": null,
+        "part": "part:2b092f6a0fb25b5ca7b0fff6e32a8169",
+        "position": null,
+        "tag": "S1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:8444a2d18a3e5c06a359c9b2041433a4",
+        "installed": true,
+        "key": [
+          "x1",
+          "l1-2"
+        ],
+        "parent": "item:fc26244b53395d3094c907d3200690b9",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-AI4-020",
+        "ext": {},
+        "external": false,
+        "id": "item:96f986edad5d556d946dce6890b38251",
+        "installed": true,
+        "key": [
+          "a1",
+          "m1"
+        ],
+        "parent": "item:2bc5773fd9915e7eb7e63dcbf0eaec1e",
+        "part": "part:51850f0c71b555b5b299d9533997b6e5",
+        "position": 1,
+        "tag": "A1-1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:98f30e5fdb6f5e43bae66da74bc72ff9",
+        "installed": true,
+        "key": [
+          "x2",
+          "tt01-1"
+        ],
+        "parent": "item:dabf88ba9c6158a39977dc93179581ce",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:a29cd4491d6455e0823792c855e0d2c9",
+        "installed": true,
+        "key": [
+          "x1",
+          "l3-1"
+        ],
+        "parent": "item:fc26244b53395d3094c907d3200690b9",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:a60a77833578586182d5a0f8f8f8b586",
+        "installed": true,
+        "key": [
+          "x2",
+          "pt01-1"
+        ],
+        "parent": "item:dabf88ba9c6158a39977dc93179581ce",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:af74d04b5f90586391e41fbb5296f083",
+        "installed": true,
+        "key": [
+          "x1",
+          "l2-1"
+        ],
+        "parent": "item:fc26244b53395d3094c907d3200690b9",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-CONTACTOR-9A-1NO",
+        "ext": {},
+        "external": false,
+        "id": "item:b4bc237ddf6e534aa147378a17895eee",
+        "installed": false,
+        "key": [
+          "k3"
+        ],
+        "parent": null,
+        "part": "part:c854e69389e751d999ed9fa90ee70ea1",
+        "position": null,
+        "tag": "K3",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:be626f765e3055e684a92cbb8852e7e1",
+        "installed": true,
+        "key": [
+          "x2",
+          "s1-1"
+        ],
+        "parent": "item:dabf88ba9c6158a39977dc93179581ce",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-CABLE-2X0.75-SH",
+        "ext": {},
+        "external": false,
+        "id": "item:bffa1752a6515edda32a4a1b9fb0fd15",
+        "installed": true,
+        "key": [
+          "w1"
+        ],
+        "parent": null,
+        "part": "part:414a2d0371f75f89b4ba3d47a37c56cf",
+        "position": null,
+        "tag": "W1",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-RTD4-PT100",
+        "ext": {},
+        "external": false,
+        "id": "item:c6802b05b7c1588f9e785197526eeaa1",
+        "installed": true,
+        "key": [
+          "a1",
+          "m3"
+        ],
+        "parent": "item:2bc5773fd9915e7eb7e63dcbf0eaec1e",
+        "part": "part:208b4b1c91705eef939a4d64c8848d97",
+        "position": 3,
+        "tag": "A1-3",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-PT-4-20MA",
+        "ext": {},
+        "external": false,
+        "id": "item:d2e2890fc0c155e8aa9c52f129fe6a3b",
+        "installed": true,
+        "key": [
+          "b1"
+        ],
+        "parent": null,
+        "part": "part:d2470f64b89f581cb8c449d6674437e6",
+        "position": null,
+        "tag": "B1",
+        "unit": null
+      },
+      {
+        "description": "Invented container",
+        "ext": {},
+        "external": false,
+        "id": "item:dabf88ba9c6158a39977dc93179581ce",
+        "installed": true,
+        "key": [
+          "x2"
+        ],
+        "parent": null,
+        "part": null,
+        "position": null,
+        "tag": "X2",
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:e9d29cb3e80d597da0e17ea187e17414",
+        "installed": true,
+        "key": [
+          "x1",
+          "l1-1"
+        ],
+        "parent": "item:fc26244b53395d3094c907d3200690b9",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "external": false,
+        "id": "item:ed1aa66f9c695855927bbba1309afd3c",
+        "installed": true,
+        "key": [
+          "x2",
+          "tt01-2"
+        ],
+        "parent": "item:dabf88ba9c6158a39977dc93179581ce",
+        "part": "part:2c51d369223657448640dbe8e4fb722d",
+        "position": null,
+        "tag": null,
+        "unit": null
+      },
+      {
+        "description": "Invented SIM-PSU-24VDC-5A",
+        "ext": {},
+        "external": false,
+        "id": "item:f31038cb9b235414bc8ffcec102c0a71",
+        "installed": true,
+        "key": [
+          "g1"
+        ],
+        "parent": null,
+        "part": "part:4bb0ef205e265586abd67202e7aee3d8",
+        "position": null,
+        "tag": "G1",
+        "unit": null
+      },
+      {
+        "description": "Invented container",
+        "ext": {},
+        "external": false,
+        "id": "item:fc26244b53395d3094c907d3200690b9",
+        "installed": true,
+        "key": [
+          "x1"
+        ],
+        "parent": null,
+        "part": null,
+        "position": null,
+        "tag": "X1",
+        "unit": null
+      }
+    ],
+    "net": [
+      {
+        "ext": {},
+        "id": "net:110b8b6223ea5cb4b218a4c7a3c5679d",
+        "key": [
+          "N0V"
+        ],
+        "name": "N0V",
+        "net_class": "power",
+        "ports": [
+          "port:255534b8b95c55279be8a167bb555373",
+          "port:78fff93379435eaa817a11cb7655d674",
+          "port:f2dca6787160541991649d294795d2f6"
+        ],
+        "potential": "0V"
+      },
+      {
+        "ext": {},
+        "id": "net:2e46c374cd145ef9b3650530876a79f4",
+        "key": [
+          "TT01_LOOP-"
+        ],
+        "name": "TT01_LOOP-",
+        "net_class": "signal",
+        "ports": [
+          "port:43931a1671d251408ad7194394b2f7d2",
+          "port:d7899f7100125226b303e6faaba48b11",
+          "port:f292c6ee75475b3c857435618e67ece9",
+          "port:fcd769aca63753fa8aa58a296d0ad6fe"
+        ],
+        "potential": null
+      },
+      {
+        "ext": {},
+        "id": "net:3ca2a64c9876560b85264296a64bc64e",
+        "key": [
+          "P24V"
+        ],
+        "name": "P24V",
+        "net_class": "power",
+        "ports": [
+          "port:2286ce3f0cc95939877e69e534ecc784",
+          "port:beffb2dda17857cba7e652a3357bfbde",
+          "port:db3063d91dd4511f8db137f6fc700f4f",
+          "port:fa52e29e578c5b12a13fc2c36d12a200",
+          "port:fc03505544b55eb097fe19210de59cf3"
+        ],
+        "potential": "+24V"
+      },
+      {
+        "ext": {},
+        "id": "net:4c63cfd6154058d189b2279f3df73ecd",
+        "key": [
+          "TT01_LOOP+"
+        ],
+        "name": "TT01_LOOP+",
+        "net_class": "signal",
+        "ports": [
+          "port:16822f30ebfe5db39567bc2069031f04",
+          "port:4592cd05cbe85582b6f21852e5aa1faa",
+          "port:9a2805036f4e5a63991690b5fb1f011c",
+          "port:fb931487580e5fa59d03225c0fc094db"
+        ],
+        "potential": null
+      },
+      {
+        "ext": {},
+        "id": "net:603f9c6d06a65bb394f7a01a08c484a2",
+        "key": [
+          "L1"
+        ],
+        "name": "L1",
+        "net_class": "power",
+        "ports": [
+          "port:391d9d1a87115443815c75af942dfa76",
+          "port:54a6de27b2a05169b13f964cb915b885",
+          "port:cfd333a7fe1f5800b1b4591f1016b57d",
+          "port:dd4d2c6bbefd5d6bba48f42e82c0d190"
+        ],
+        "potential": "L1"
+      },
+      {
+        "ext": {},
+        "id": "net:6eb3762e5e055eb19152c3bd4fe2a84f",
+        "key": [
+          "S1_LOOP-"
+        ],
+        "name": "S1_LOOP-",
+        "net_class": "signal",
+        "ports": [
+          "port:262a27b57e4b57978b26ec55643269d6",
+          "port:6076d5dff1a959039f367ce509373def",
+          "port:7723d3c410c356708ff672cffbca76a5",
+          "port:f70ae6ddbfd25f8fb665493073e2edd4"
+        ],
+        "potential": null
+      },
+      {
+        "ext": {},
+        "id": "net:779738e028c159fb9a8420445daa7be2",
+        "key": [
+          "PT01_LOOP+"
+        ],
+        "name": "PT01_LOOP+",
+        "net_class": "signal",
+        "ports": [
+          "port:45c039b58bab52c5ad97057a474a3898",
+          "port:7e489833128c500aa5a829a9cd3494ee",
+          "port:cf903b70e68454b6b682dcbb1da9defa",
+          "port:d49c6e9bcd0152f1871ad59c9550a37e"
+        ],
+        "potential": null
+      },
+      {
+        "ext": {},
+        "id": "net:8a94c1a2864f54b894763c8f0df9706e",
+        "key": [
+          "L2"
+        ],
+        "name": "L2",
+        "net_class": "power",
+        "ports": [
+          "port:bcb3457df5d9589ba644c2355da3f7ed",
+          "port:ee0a20d957ad520abef4b226ec7728e6"
+        ],
+        "potential": "L2"
+      },
+      {
+        "ext": {},
+        "id": "net:a9192c34d15955f3be34d2967873e013",
+        "key": [
+          "PE"
+        ],
+        "name": "PE",
+        "net_class": "pe",
+        "ports": [
+          "port:a3a2e26b773150dea4844f8e8e23d389",
+          "port:d4895ece79925d22bb6c5a826054cc13"
+        ],
+        "potential": "PE"
+      },
+      {
+        "ext": {},
+        "id": "net:b1e04734fd0751f68393ef9955708190",
+        "key": [
+          "L3"
+        ],
+        "name": "L3",
+        "net_class": "power",
+        "ports": [
+          "port:5c1d4c2abc2251cf91f4d9516970c563",
+          "port:a92ae32ef7d75138ade905f2f3653ba4"
+        ],
+        "potential": "L3"
+      },
+      {
+        "ext": {},
+        "id": "net:bb60da39557159bc8b3f7bba153bd977",
+        "key": [
+          "S1_LOOP+"
+        ],
+        "name": "S1_LOOP+",
+        "net_class": "signal",
+        "ports": [
+          "port:26f00789592959b9a42c54a6f38506ad",
+          "port:7be1561310955306a4509a21dadea863",
+          "port:9a32c7bda25b5e03a4b6620792386cd7",
+          "port:fa96d22e400658c0ac416dbc64acb768"
+        ],
+        "potential": null
+      },
+      {
+        "ext": {},
+        "id": "net:d92bdaac338d52249fc03a3a7cb4eb0d",
+        "key": [
+          "PT01_LOOP-"
+        ],
+        "name": "PT01_LOOP-",
+        "net_class": "signal",
+        "ports": [
+          "port:13f1b493cfbd597ebb9940a04e787e0e",
+          "port:633d2fef6584521a8ce15b93fa58a933",
+          "port:a1dd4b1d79435a4fbed898c19a599de2",
+          "port:e5abec664cf75f4a87741701d0aa8ee2"
+        ],
+        "potential": null
+      }
+    ],
+    "part": [
+      {
+        "category": "protection",
+        "class_code": "F",
+        "description": "Invented SIM-FUSE-2A",
+        "ext": {},
+        "id": "part:1a6d1cf3f42b5d76bc20563475c5b730",
+        "key": [
+          "fuse-2a"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-FUSE-2A"
+      },
+      {
+        "category": "plc_module",
+        "class_code": "A",
+        "description": "Invented SIM-DI8-024",
+        "ext": {},
+        "id": "part:1e17a78bdbb3502d80cb725360d1a9bf",
+        "key": [
+          "module-sim-di8-024"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-DI8-024"
+      },
+      {
+        "category": "plc_module",
+        "class_code": "A",
+        "description": "Invented SIM-RTD4-PT100",
+        "ext": {},
+        "id": "part:208b4b1c91705eef939a4d64c8848d97",
+        "key": [
+          "module-sim-rtd4-pt100"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-RTD4-PT100"
+      },
+      {
+        "category": "generic",
+        "class_code": "S",
+        "description": "Invented SIM-PB-NO",
+        "ext": {},
+        "id": "part:2b092f6a0fb25b5ca7b0fff6e32a8169",
+        "key": [
+          "pb"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-PB-NO"
+      },
+      {
+        "category": "terminal",
+        "class_code": "X",
+        "description": "Invented SIM-TERMINAL-2.5MM",
+        "ext": {},
+        "id": "part:2c51d369223657448640dbe8e4fb722d",
+        "key": [
+          "terminal"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-TERMINAL-2.5MM"
+      },
+      {
+        "category": "electromechanical",
+        "class_code": "K",
+        "description": "Invented SIM-CONTACTOR-9A-1CO",
+        "ext": {},
+        "id": "part:3b2b266db4cf583fb00753256568904d",
+        "key": [
+          "contactor-1co"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-CONTACTOR-9A-1CO"
+      },
+      {
+        "category": "cable",
+        "class_code": "W",
+        "description": "Invented SIM-CABLE-2X0.75-SH",
+        "ext": {},
+        "id": "part:414a2d0371f75f89b4ba3d47a37c56cf",
+        "key": [
+          "cable"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-CABLE-2X0.75-SH"
+      },
+      {
+        "category": "generic",
+        "class_code": "G",
+        "description": "Invented SIM-PSU-24VDC-5A",
+        "ext": {},
+        "id": "part:4bb0ef205e265586abd67202e7aee3d8",
+        "key": [
+          "psu"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-PSU-24VDC-5A"
+      },
+      {
+        "category": "plc_module",
+        "class_code": "A",
+        "description": "Invented SIM-AI4-020",
+        "ext": {},
+        "id": "part:51850f0c71b555b5b299d9533997b6e5",
+        "key": [
+          "module-sim-ai4-020"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-AI4-020"
+      },
+      {
+        "category": "plc_module",
+        "class_code": "A",
+        "description": "Invented SIM-RACK-8",
+        "ext": {},
+        "id": "part:851a1385e29d5e06a677ab9d613f7995",
+        "key": [
+          "rack"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-RACK-8"
+      },
+      {
+        "category": "electromechanical",
+        "class_code": "K",
+        "description": "Invented SIM-CONTACTOR-9A-1NO",
+        "ext": {},
+        "id": "part:c854e69389e751d999ed9fa90ee70ea1",
+        "key": [
+          "contactor-1no"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-CONTACTOR-9A-1NO"
+      },
+      {
+        "category": "generic",
+        "class_code": "B",
+        "description": "Invented SIM-PT-4-20MA",
+        "ext": {},
+        "id": "part:d2470f64b89f581cb8c449d6674437e6",
+        "key": [
+          "pt"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-PT-4-20MA"
+      },
+      {
+        "category": "generic",
+        "class_code": "B",
+        "description": "Invented SIM-PT100-2W",
+        "ext": {},
+        "id": "part:ecdda89b2a515a1a972eb98bf912c655",
+        "key": [
+          "rtd"
+        ],
+        "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "manufacturer": "Example Co",
+        "mpn": "SIM-PT100-2W"
+      }
+    ],
+    "part_library": [
+      {
+        "ext": {},
+        "id": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
+        "key": [
+          "part_library",
+          "invented-parts"
+        ],
+        "name": "invented-parts",
+        "version": "1.0.0"
+      }
+    ],
+    "placement": [
+      {
+        "ext": {},
+        "id": "placement:05c2a5c0f2345339861639cfbf289339",
+        "item": "item:fc26244b53395d3094c907d3200690b9",
+        "key": [
+          "x1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:0cd22685251456d3b93db53f9ba64446",
+        "item": "item:e9d29cb3e80d597da0e17ea187e17414",
+        "key": [
+          "x1",
+          "l1-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:11da6eaf85915f1cb977a7e5cae3727f",
+        "item": "item:be626f765e3055e684a92cbb8852e7e1",
+        "key": [
+          "x2",
+          "s1-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:12976de2f5af5f298dccba89cbd55fe9",
+        "item": "item:ed1aa66f9c695855927bbba1309afd3c",
+        "key": [
+          "x2",
+          "tt01-2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:16282e27c00f5d7cb90b475f5fd5f94d",
+        "item": "item:bffa1752a6515edda32a4a1b9fb0fd15",
+        "key": [
+          "w1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:215e37f25f255579bf281bc65047241a",
+        "item": "item:50242651777557e69ed0b0b8954650da",
+        "key": [
+          "f1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:256e7a18af9e5039a9858d4574755088",
+        "item": "item:3227b2a948df5c718c31c124300ef02d",
+        "key": [
+          "w2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:34ce9582ac67557a84f5e5bdee308497",
+        "item": "item:2bc5773fd9915e7eb7e63dcbf0eaec1e",
+        "key": [
+          "a1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:3ed20cfe6cb45dffa338b82760089be4",
+        "item": "item:432000278ab85ae9a8ea99092939b867",
+        "key": [
+          "x2",
+          "s1-2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:4c6da4e91cc55740acf5daaca2c02921",
+        "item": "item:a29cd4491d6455e0823792c855e0d2c9",
+        "key": [
+          "x1",
+          "l3-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:569eb77d31b55364a7d8444e20c6dd55",
+        "item": "item:c6802b05b7c1588f9e785197526eeaa1",
+        "key": [
+          "a1",
+          "m3",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:7bcd3531ba285b9fa84457710d2f9545",
+        "item": "item:a60a77833578586182d5a0f8f8f8b586",
+        "key": [
+          "x2",
+          "pt01-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:81b17124659e517a9207403f8da887dc",
+        "item": "item:f31038cb9b235414bc8ffcec102c0a71",
+        "key": [
+          "g1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:84d8b6a3649f5f32a04f169029197287",
+        "item": "item:1c65c39628a657fc93dc140a194b7e10",
+        "key": [
+          "a1",
+          "m2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:859813e370e1536cb196439a000e9fd4",
+        "item": "item:d2e2890fc0c155e8aa9c52f129fe6a3b",
+        "key": [
+          "b1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:8784f6e186055447adb90b502d90d783",
+        "item": "item:6d527ea815ea5400953f164d61fe2840",
+        "key": [
+          "k2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:8853a872a37750edb73e0c86c105f275",
+        "item": "item:dabf88ba9c6158a39977dc93179581ce",
+        "key": [
+          "x2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:9eb5755a6a4252a787983f9d55d0878a",
+        "item": "item:1d30424ae7d154918a7e0ab7bb5a1f62",
+        "key": [
+          "b2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:a78beaee6b8c593dbfe6b725aa49117e",
+        "item": "item:98f30e5fdb6f5e43bae66da74bc72ff9",
+        "key": [
+          "x2",
+          "tt01-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:add395a902c95507b0e682ee9a06f98d",
+        "item": "item:49a40c23c78b559eb2e43ce22607bd44",
+        "key": [
+          "x1",
+          "pe-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:afd6c3f53abd5085ac572a39fd18b03f",
+        "item": "item:af74d04b5f90586391e41fbb5296f083",
+        "key": [
+          "x1",
+          "l2-1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:dc2b3405a0395c73bcc0a80906905f10",
+        "item": "item:96f986edad5d556d946dce6890b38251",
+        "key": [
+          "a1",
+          "m1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:f23179bb4f495cac9d3fb3baa1d59bcb",
+        "item": "item:47a9760dfc1c5d15b1654563314327b4",
+        "key": [
+          "x2",
+          "pt01-2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:f6c43b5717215abd80d18ad3377aa39f",
+        "item": "item:b4bc237ddf6e534aa147378a17895eee",
+        "key": [
+          "k3",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:f7dd329e98525be5bfbd1365fd547f71",
+        "item": "item:4ee4b6dbeafd537db767e228ff5f56a6",
+        "key": [
+          "k1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:fd7ae2a010f759bebecb19707fa35509",
+        "item": "item:8444a2d18a3e5c06a359c9b2041433a4",
+        "key": [
+          "x1",
+          "l1-2",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      },
+      {
+        "ext": {},
+        "id": "placement:fda57c8bb4be5a3a817d702b714d3093",
+        "item": "item:740c89df6731516d8dcea0805b52d27e",
+        "key": [
+          "s1",
+          "at",
+          "c1"
+        ],
+        "node": "aspect_node:7be722a473e857488038a1d0e32dc5ca"
+      }
+    ],
+    "port": [
+      {
+        "ext": {},
+        "function": "function:dabc1ef7a98351f3878a2bde0585c0c0",
+        "id": "port:0e1176bfbc1e52f1b9b27100e2af786c",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch2",
+          "port",
+          "2+"
+        ],
+        "marking": null,
+        "name": "2+",
+        "role": "generic",
+        "template": "port_template:9361bc1e7d1d5ab3a5702a50cdc87f34"
+      },
+      {
+        "ext": {},
+        "function": "function:f930d0b5bc4c5ce2b134fcc3c9a251d5",
+        "id": "port:0e3d7a5c160f5bd4afb648a59815860c",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch3",
+          "port",
+          "M3"
+        ],
+        "marking": null,
+        "name": "M3",
+        "role": "generic",
+        "template": "port_template:8ceb5a71c3815f0282a9850e387eb0e7"
+      },
+      {
+        "ext": {},
+        "function": "function:103aa0b20ce057a88be15f2d4a4b7de5",
+        "id": "port:13f1b493cfbd597ebb9940a04e787e0e",
+        "key": [
+          "x2",
+          "pt01-2",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:3a5623765c4f53a48b92ced6652a2e3a",
+        "id": "port:16822f30ebfe5db39567bc2069031f04",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch1",
+          "port",
+          "R1+"
+        ],
+        "marking": null,
+        "name": "R1+",
+        "role": "generic",
+        "template": "port_template:6e7e1811463856d9a54b4a35b4bdf9af"
+      },
+      {
+        "ext": {},
+        "function": "function:c04d02eea4395adcb43863702a1b21d8",
+        "id": "port:1e3a2242b8175231862d7cf12f6b62f2",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch4",
+          "port",
+          "R4-"
+        ],
+        "marking": null,
+        "name": "R4-",
+        "role": "generic",
+        "template": "port_template:55560ea1ced7548dae281a467dcaae45"
+      },
+      {
+        "ext": {},
+        "function": "function:d6280cb1fc3f57c69133d1283aea3028",
+        "id": "port:2286ce3f0cc95939877e69e534ecc784",
+        "key": [
+          "f1",
+          "fn",
+          "element",
+          "port",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "role": "generic",
+        "template": "port_template:8e49394765925e0fae2e0b4561881d2f"
+      },
+      {
+        "ext": {},
+        "function": "function:bf9858e83b5b5750b769e2d3df5f1690",
+        "id": "port:255534b8b95c55279be8a167bb555373",
+        "key": [
+          "k2",
+          "fn",
+          "coil",
+          "port",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "role": "generic",
+        "template": "port_template:a431d05fd1975dccbe758996eb70547d"
+      },
+      {
+        "ext": {},
+        "function": "function:f3bba81dc72b525cadf106a833864a61",
+        "id": "port:262a27b57e4b57978b26ec55643269d6",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch1",
+          "port",
+          "M1"
+        ],
+        "marking": null,
+        "name": "M1",
+        "role": "generic",
+        "template": "port_template:4a635193345a560895de8f932857ab1c"
+      },
+      {
+        "ext": {},
+        "function": "function:f3bba81dc72b525cadf106a833864a61",
+        "id": "port:26f00789592959b9a42c54a6f38506ad",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch1",
+          "port",
+          "I1"
+        ],
+        "marking": null,
+        "name": "I1",
+        "role": "generic",
+        "template": "port_template:cbcdc072514451fea84a642008c4faa3"
+      },
+      {
+        "ext": {},
+        "function": "function:4e1465ca4d255ea4bcdde76093dbbca0",
+        "id": "port:2abc787b58c153fb917b1f78796883ed",
+        "key": [
+          "k2",
+          "fn",
+          "co_1",
+          "port",
+          "14"
+        ],
+        "marking": null,
+        "name": "14",
+        "role": "generic",
+        "template": "port_template:322018d4d3e158c1996165ce241852be"
+      },
+      {
+        "ext": {},
+        "function": "function:c04d02eea4395adcb43863702a1b21d8",
+        "id": "port:2ba44b3fe66a5a5fa673203941e38870",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch4",
+          "port",
+          "R4+"
+        ],
+        "marking": null,
+        "name": "R4+",
+        "role": "generic",
+        "template": "port_template:d372baf943f851599b818961dcda5241"
+      },
+      {
+        "ext": {},
+        "function": "function:8af3a3ae9ed15c0d867d5f1603342f0e",
+        "id": "port:2d4d618a2e6a5a538d66572234bbef8e",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch2",
+          "port",
+          "I2"
+        ],
+        "marking": null,
+        "name": "I2",
+        "role": "generic",
+        "template": "port_template:ddb8cfe206b151ad9d7d7ec01944760b"
+      },
+      {
+        "ext": {},
+        "function": "function:4e1465ca4d255ea4bcdde76093dbbca0",
+        "id": "port:2d9cbceaa2db5756b339ffe2682f028b",
+        "key": [
+          "k2",
+          "fn",
+          "co_1",
+          "port",
+          "12"
+        ],
+        "marking": null,
+        "name": "12",
+        "role": "generic",
+        "template": "port_template:9777a324e3fe5b2b9a62ec79945884e1"
+      },
+      {
+        "ext": {},
+        "function": "function:79d0000f400a5c2797efdfedcd2e0771",
+        "id": "port:2f648b7901c8539a879b51abad5e78be",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch2",
+          "port",
+          "R2-"
+        ],
+        "marking": null,
+        "name": "R2-",
+        "role": "generic",
+        "template": "port_template:71bf8d3969315c7c90f3d527892a31a5"
+      },
+      {
+        "ext": {},
+        "function": "function:b6c5cc676ffc595f8ee26c87a6a1f248",
+        "id": "port:391d9d1a87115443815c75af942dfa76",
+        "key": [
+          "x1",
+          "l1-2",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:58f690d7c43454aaaec6b83134f87919",
+        "id": "port:3c7b7ff7bbdc50b79412ffb82f4efa62",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch6",
+          "port",
+          "I6"
+        ],
+        "marking": null,
+        "name": "I6",
+        "role": "generic",
+        "template": "port_template:7137b8b7a71b5c61aff56532b6e34fe1"
+      },
+      {
+        "ext": {},
+        "function": "function:3a5623765c4f53a48b92ced6652a2e3a",
+        "id": "port:43931a1671d251408ad7194394b2f7d2",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch1",
+          "port",
+          "R1-"
+        ],
+        "marking": null,
+        "name": "R1-",
+        "role": "generic",
+        "template": "port_template:a32ebe8ba3685ad1b84f4f0a651c2c00"
+      },
+      {
+        "ext": {},
+        "function": "function:0e5089df66cf5e8699b5fdd5c91e2378",
+        "id": "port:44671bb93ced5285b2fcb1025f6a81ff",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch3",
+          "port",
+          "3-"
+        ],
+        "marking": null,
+        "name": "3-",
+        "role": "generic",
+        "template": "port_template:3bf40d49562455659bb23d1ef358e22e"
+      },
+      {
+        "ext": {},
+        "function": "function:79d0000f400a5c2797efdfedcd2e0771",
+        "id": "port:449654c6f674524897e76ffa066d486d",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch2",
+          "port",
+          "R2+"
+        ],
+        "marking": null,
+        "name": "R2+",
+        "role": "generic",
+        "template": "port_template:5d38d0e7a6225cb3bb069df52607bd23"
+      },
+      {
+        "ext": {},
+        "function": "function:8c80d99ad11d5d268bf1aa904e68a8df",
+        "id": "port:4592cd05cbe85582b6f21852e5aa1faa",
+        "key": [
+          "x2",
+          "tt01-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:2331fc6abd2d5bdd83ee7c82c959b460",
+        "id": "port:45c039b58bab52c5ad97057a474a3898",
+        "key": [
+          "b1",
+          "fn",
+          "signal",
+          "port",
+          "+"
+        ],
+        "marking": null,
+        "name": "+",
+        "role": "generic",
+        "template": "port_template:da900a4e2db05140a57f5458efa5c72d"
+      },
+      {
+        "ext": {},
+        "function": "function:4e1465ca4d255ea4bcdde76093dbbca0",
+        "id": "port:475857bb38165c0fa161e4ce1f755476",
+        "key": [
+          "k2",
+          "fn",
+          "co_1",
+          "port",
+          "11"
+        ],
+        "marking": null,
+        "name": "11",
+        "role": "generic",
+        "template": "port_template:30e6413838f45f3e90cc8dc94c519c37"
+      },
+      {
+        "ext": {},
+        "function": "function:dc4ffccfd6e65ebda2c950ad601f1b92",
+        "id": "port:4c1322bf599c5cbf8dd20dfe8adaad6b",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch5",
+          "port",
+          "M5"
+        ],
+        "marking": null,
+        "name": "M5",
+        "role": "generic",
+        "template": "port_template:e8fa76d698eb5895b8a478aba228c54c"
+      },
+      {
+        "ext": {},
+        "function": "function:58f690d7c43454aaaec6b83134f87919",
+        "id": "port:4e39bca238c35fcdaa08e113a636e151",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch6",
+          "port",
+          "M6"
+        ],
+        "marking": null,
+        "name": "M6",
+        "role": "generic",
+        "template": "port_template:897263d05c8a5d0bb28bc02ed4719c0e"
+      },
+      {
+        "ext": {},
+        "function": "function:19c5413d062f55c9ac01936f3bf6e941",
+        "id": "port:4ff89baa53a25514a8aa7acfef103389",
+        "key": [
+          "k1",
+          "fn",
+          "no_1",
+          "port",
+          "13"
+        ],
+        "marking": null,
+        "name": "13",
+        "role": "generic",
+        "template": "port_template:732e0a98c9df5789bcc5d6d22b5bd3e7"
+      },
+      {
+        "ext": {},
+        "function": "function:dabc1ef7a98351f3878a2bde0585c0c0",
+        "id": "port:5201c6515f0a5248b1ff5a4090d258e5",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch2",
+          "port",
+          "2-"
+        ],
+        "marking": null,
+        "name": "2-",
+        "role": "generic",
+        "template": "port_template:afacfac8abdd57c8896d35eb62c00d80"
+      },
+      {
+        "ext": {},
+        "function": "function:ba02d240ee6c59abacea6526696436b9",
+        "id": "port:54a6de27b2a05169b13f964cb915b885",
+        "key": [
+          "x1",
+          "l1-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:dce8458a1f0d5106a348c07260b090cd",
+        "id": "port:57ec44e98a3f583db8be95114d847091",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch4",
+          "port",
+          "4+"
+        ],
+        "marking": null,
+        "name": "4+",
+        "role": "generic",
+        "template": "port_template:5c3e0ed4b3ac54949cff9205597f4953"
+      },
+      {
+        "ext": {},
+        "function": "function:af0b1311907d5b0da338c85246099f44",
+        "id": "port:5c1d4c2abc2251cf91f4d9516970c563",
+        "key": [
+          "x1",
+          "l3-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:3b7f6e31c2825fb2a098802504018cab",
+        "id": "port:6076d5dff1a959039f367ce509373def",
+        "key": [
+          "x2",
+          "s1-2",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:2331fc6abd2d5bdd83ee7c82c959b460",
+        "id": "port:633d2fef6584521a8ce15b93fa58a933",
+        "key": [
+          "b1",
+          "fn",
+          "signal",
+          "port",
+          "-"
+        ],
+        "marking": null,
+        "name": "-",
+        "role": "generic",
+        "template": "port_template:deb78c58806d5177bdf1db5d5ea79e7e"
+      },
+      {
+        "ext": {},
+        "function": "function:7c3439bd460b5676bcb4e8a79b87fce4",
+        "id": "port:64d5e077ac945ff2839ca48202003d05",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch8",
+          "port",
+          "M8"
+        ],
+        "marking": null,
+        "name": "M8",
+        "role": "generic",
+        "template": "port_template:c1022cc31e455b8183c92b397b011c63"
+      },
+      {
+        "ext": {},
+        "function": "function:f930d0b5bc4c5ce2b134fcc3c9a251d5",
+        "id": "port:6678b8d530d45997a4f79d05507becac",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch3",
+          "port",
+          "I3"
+        ],
+        "marking": null,
+        "name": "I3",
+        "role": "generic",
+        "template": "port_template:1a3b310f65815f9383fe860352e93d8f"
+      },
+      {
+        "ext": {},
+        "function": "function:2c094bf44bde56c1ae03bbde17bb52f9",
+        "id": "port:67830166a5d35d319d4dce5e8092f5d0",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch4",
+          "port",
+          "I4"
+        ],
+        "marking": null,
+        "name": "I4",
+        "role": "generic",
+        "template": "port_template:a2e7317d0e005f06a6f1488b4117e30c"
+      },
+      {
+        "ext": {},
+        "function": "function:19c5413d062f55c9ac01936f3bf6e941",
+        "id": "port:688bb9ba3a835acb92a480cf5f7fd89d",
+        "key": [
+          "k1",
+          "fn",
+          "no_1",
+          "port",
+          "14"
+        ],
+        "marking": null,
+        "name": "14",
+        "role": "generic",
+        "template": "port_template:1b9983e053f05c57845df56d97f5da6a"
+      },
+      {
+        "ext": {},
+        "function": "function:893d24700b2a5851b152b913cc15a1e3",
+        "id": "port:6ace58ff85355f4d830e1b656eca6156",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch3",
+          "port",
+          "R3+"
+        ],
+        "marking": null,
+        "name": "R3+",
+        "role": "generic",
+        "template": "port_template:6b628fa80e4e5677bcb3628d7b7524e0"
+      },
+      {
+        "ext": {},
+        "function": "function:8af3a3ae9ed15c0d867d5f1603342f0e",
+        "id": "port:6c7fabe2736e5c7891ec4fa516fd1718",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch2",
+          "port",
+          "M2"
+        ],
+        "marking": null,
+        "name": "M2",
+        "role": "generic",
+        "template": "port_template:be6bac89a78c52f59839174e27adc314"
+      },
+      {
+        "ext": {},
+        "function": "function:427ae0350c885b2f9e2727ddec20ab68",
+        "id": "port:7723d3c410c356708ff672cffbca76a5",
+        "key": [
+          "s1",
+          "fn",
+          "signal",
+          "port",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "role": "generic",
+        "template": "port_template:42c2864eb81d5ebeb8f7a7b840bb7c6e"
+      },
+      {
+        "ext": {},
+        "function": "function:315c414bb56452578b4ba6f34652768f",
+        "id": "port:78fff93379435eaa817a11cb7655d674",
+        "key": [
+          "g1",
+          "fn",
+          "output",
+          "port",
+          "0V"
+        ],
+        "marking": null,
+        "name": "0V",
+        "role": "generic",
+        "template": "port_template:62ede4627f3451f18111c1b5008ed3c4"
+      },
+      {
+        "ext": {},
+        "function": "function:b15606483e7753d3a109e1361c7c5982",
+        "id": "port:7be1561310955306a4509a21dadea863",
+        "key": [
+          "x2",
+          "s1-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:42dd9b9c26ce59f6909a74960fe1e421",
+        "id": "port:7e489833128c500aa5a829a9cd3494ee",
+        "key": [
+          "x2",
+          "pt01-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:5e1bb19d2c18512c8639e890fc65d94a",
+        "id": "port:8c20effed3805f85b4002db087f31127",
+        "key": [
+          "k3",
+          "fn",
+          "no_1",
+          "port",
+          "14"
+        ],
+        "marking": null,
+        "name": "14",
+        "role": "generic",
+        "template": "port_template:1b9983e053f05c57845df56d97f5da6a"
+      },
+      {
+        "ext": {},
+        "function": "function:ef2ca5aa2e0f5673ae315cd8685d09b7",
+        "id": "port:8d6ca028033a5c34906f25d6f157dee1",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch7",
+          "port",
+          "M7"
+        ],
+        "marking": null,
+        "name": "M7",
+        "role": "generic",
+        "template": "port_template:a971f4db217958ec8085031dc97cf0a8"
+      },
+      {
+        "ext": {},
+        "function": "function:dc4ffccfd6e65ebda2c950ad601f1b92",
+        "id": "port:965c38ba56fa5fa8bd775a5771351a19",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch5",
+          "port",
+          "I5"
+        ],
+        "marking": null,
+        "name": "I5",
+        "role": "generic",
+        "template": "port_template:e9cb171737b65973815cc84cb0f3d750"
+      },
+      {
+        "ext": {},
+        "function": "function:893d24700b2a5851b152b913cc15a1e3",
+        "id": "port:969dcded39935f8fac923c83dc0d5a42",
+        "key": [
+          "a1",
+          "m3",
+          "fn",
+          "ch3",
+          "port",
+          "R3-"
+        ],
+        "marking": null,
+        "name": "R3-",
+        "role": "generic",
+        "template": "port_template:5e5b775e2ac85a6e8ba06f13ac268a3e"
+      },
+      {
+        "ext": {},
+        "function": "function:0e5089df66cf5e8699b5fdd5c91e2378",
+        "id": "port:997d860b41855520be79d3d5db71338a",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch3",
+          "port",
+          "3+"
+        ],
+        "marking": null,
+        "name": "3+",
+        "role": "generic",
+        "template": "port_template:e8b2b42ab4b85a20b1c490126c98674f"
+      },
+      {
+        "ext": {},
+        "function": "function:07a04a3879e455f9af41c3be971ed48a",
+        "id": "port:9a2805036f4e5a63991690b5fb1f011c",
+        "key": [
+          "b2",
+          "fn",
+          "signal",
+          "port",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "role": "generic",
+        "template": "port_template:394ac6913ccf53c197ee268fdac4b2ba"
+      },
+      {
+        "ext": {},
+        "function": "function:427ae0350c885b2f9e2727ddec20ab68",
+        "id": "port:9a32c7bda25b5e03a4b6620792386cd7",
+        "key": [
+          "s1",
+          "fn",
+          "signal",
+          "port",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "role": "generic",
+        "template": "port_template:85e6d1fb898f5666800ec59299353196"
+      },
+      {
+        "ext": {},
+        "function": "function:103aa0b20ce057a88be15f2d4a4b7de5",
+        "id": "port:a1dd4b1d79435a4fbed898c19a599de2",
+        "key": [
+          "x2",
+          "pt01-2",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:bd48f731fa9658a79fa2ec3ea08a5257",
+        "id": "port:a3a2e26b773150dea4844f8e8e23d389",
+        "key": [
+          "x1",
+          "pe-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:af0b1311907d5b0da338c85246099f44",
+        "id": "port:a92ae32ef7d75138ade905f2f3653ba4",
+        "key": [
+          "x1",
+          "l3-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:ef2ca5aa2e0f5673ae315cd8685d09b7",
+        "id": "port:b5b29279671d57e5804f153c0d255328",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch7",
+          "port",
+          "I7"
+        ],
+        "marking": null,
+        "name": "I7",
+        "role": "generic",
+        "template": "port_template:3e1c7ab3b57650f394f5867f39388099"
+      },
+      {
+        "ext": {},
+        "function": "function:e07dd8df259056388e97a323016c1db5",
+        "id": "port:bcb3457df5d9589ba644c2355da3f7ed",
+        "key": [
+          "x1",
+          "l2-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:bf9858e83b5b5750b769e2d3df5f1690",
+        "id": "port:beffb2dda17857cba7e652a3357bfbde",
+        "key": [
+          "k2",
+          "fn",
+          "coil",
+          "port",
+          "A1"
+        ],
+        "marking": null,
+        "name": "A1",
+        "role": "generic",
+        "template": "port_template:4e4315c460f957bf9aeeae4ceb36f2bc"
+      },
+      {
+        "ext": {},
+        "function": "function:7c3439bd460b5676bcb4e8a79b87fce4",
+        "id": "port:c5f37c4ced695eada5aec9c47f899e7d",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch8",
+          "port",
+          "I8"
+        ],
+        "marking": null,
+        "name": "I8",
+        "role": "generic",
+        "template": "port_template:4b2ec9073fa75eb1bc1e7791ead326fd"
+      },
+      {
+        "ext": {},
+        "function": "function:42dd9b9c26ce59f6909a74960fe1e421",
+        "id": "port:cf903b70e68454b6b682dcbb1da9defa",
+        "key": [
+          "x2",
+          "pt01-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:b6c5cc676ffc595f8ee26c87a6a1f248",
+        "id": "port:cfd333a7fe1f5800b1b4591f1016b57d",
+        "key": [
+          "x1",
+          "l1-2",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:dce8458a1f0d5106a348c07260b090cd",
+        "id": "port:d3b778cf19d653fb982c64d44e279c67",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch4",
+          "port",
+          "4-"
+        ],
+        "marking": null,
+        "name": "4-",
+        "role": "generic",
+        "template": "port_template:a8c1d70602eb5ce08aede2c74a4f8328"
+      },
+      {
+        "ext": {},
+        "function": "function:bd48f731fa9658a79fa2ec3ea08a5257",
+        "id": "port:d4895ece79925d22bb6c5a826054cc13",
+        "key": [
+          "x1",
+          "pe-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:e827bef046065ee295796701d00c9cfd",
+        "id": "port:d49c6e9bcd0152f1871ad59c9550a37e",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch1",
+          "port",
+          "1+"
+        ],
+        "marking": null,
+        "name": "1+",
+        "role": "generic",
+        "template": "port_template:30cf0f1862cd56f0899b322e97120046"
+      },
+      {
+        "ext": {},
+        "function": "function:a92c70dccb3e5501992dbe6c780d2e34",
+        "id": "port:d7695e1e328d58ebaff7b63686ee8067",
+        "key": [
+          "k3",
+          "fn",
+          "coil",
+          "port",
+          "A1"
+        ],
+        "marking": null,
+        "name": "A1",
+        "role": "generic",
+        "template": "port_template:a20b36de7f945de8a4c11da0261087e1"
+      },
+      {
+        "ext": {},
+        "function": "function:8b9e402d95815c21be99cc4f3c4697ec",
+        "id": "port:d7899f7100125226b303e6faaba48b11",
+        "key": [
+          "x2",
+          "tt01-2",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:6a0221b01c0b50e48d2db0f6a0903b81",
+        "id": "port:db3063d91dd4511f8db137f6fc700f4f",
+        "key": [
+          "k1",
+          "fn",
+          "coil",
+          "port",
+          "A1"
+        ],
+        "marking": null,
+        "name": "A1",
+        "role": "generic",
+        "template": "port_template:a20b36de7f945de8a4c11da0261087e1"
+      },
+      {
+        "ext": {},
+        "function": "function:ba02d240ee6c59abacea6526696436b9",
+        "id": "port:dd4d2c6bbefd5d6bba48f42e82c0d190",
+        "key": [
+          "x1",
+          "l1-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:e827bef046065ee295796701d00c9cfd",
+        "id": "port:e5abec664cf75f4a87741701d0aa8ee2",
+        "key": [
+          "a1",
+          "m1",
+          "fn",
+          "ch1",
+          "port",
+          "1-"
+        ],
+        "marking": null,
+        "name": "1-",
+        "role": "generic",
+        "template": "port_template:d664be1042105559bbd9730bdb34a959"
+      },
+      {
+        "ext": {},
+        "function": "function:2c094bf44bde56c1ae03bbde17bb52f9",
+        "id": "port:e717e3e7469654c489849787e8694a71",
+        "key": [
+          "a1",
+          "m2",
+          "fn",
+          "ch4",
+          "port",
+          "M4"
+        ],
+        "marking": null,
+        "name": "M4",
+        "role": "generic",
+        "template": "port_template:832d93151f405c0fb877c8ead5af8a78"
+      },
+      {
+        "ext": {},
+        "function": "function:e07dd8df259056388e97a323016c1db5",
+        "id": "port:ee0a20d957ad520abef4b226ec7728e6",
+        "key": [
+          "x1",
+          "l2-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:5e1bb19d2c18512c8639e890fc65d94a",
+        "id": "port:f25cb3fb5bd55b2289d53be16f897fd2",
+        "key": [
+          "k3",
+          "fn",
+          "no_1",
+          "port",
+          "13"
+        ],
+        "marking": null,
+        "name": "13",
+        "role": "generic",
+        "template": "port_template:732e0a98c9df5789bcc5d6d22b5bd3e7"
+      },
+      {
+        "ext": {},
+        "function": "function:07a04a3879e455f9af41c3be971ed48a",
+        "id": "port:f292c6ee75475b3c857435618e67ece9",
+        "key": [
+          "b2",
+          "fn",
+          "signal",
+          "port",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "role": "generic",
+        "template": "port_template:50244542732b575695afdfbebd9096ef"
+      },
+      {
+        "ext": {},
+        "function": "function:6a0221b01c0b50e48d2db0f6a0903b81",
+        "id": "port:f2dca6787160541991649d294795d2f6",
+        "key": [
+          "k1",
+          "fn",
+          "coil",
+          "port",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "role": "generic",
+        "template": "port_template:03cf1c9fcf7f5fe493728c8a300fd8d0"
+      },
+      {
+        "ext": {},
+        "function": "function:3b7f6e31c2825fb2a098802504018cab",
+        "id": "port:f70ae6ddbfd25f8fb665493073e2edd4",
+        "key": [
+          "x2",
+          "s1-2",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:315c414bb56452578b4ba6f34652768f",
+        "id": "port:fa52e29e578c5b12a13fc2c36d12a200",
+        "key": [
+          "g1",
+          "fn",
+          "output",
+          "port",
+          "+24V"
+        ],
+        "marking": null,
+        "name": "+24V",
+        "role": "generic",
+        "template": "port_template:916d21f505a15fe299dd6a163d0a9041"
+      },
+      {
+        "ext": {},
+        "function": "function:b15606483e7753d3a109e1361c7c5982",
+        "id": "port:fa96d22e400658c0ac416dbc64acb768",
+        "key": [
+          "x2",
+          "s1-1",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:8c80d99ad11d5d268bf1aa904e68a8df",
+        "id": "port:fb931487580e5fa59d03225c0fc094db",
+        "key": [
+          "x2",
+          "tt01-1",
+          "fn",
+          "terminal",
+          "port",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "role": "internal",
+        "template": "port_template:58b11d0461fe5a9a9a7a908d56519f8b"
+      },
+      {
+        "ext": {},
+        "function": "function:d6280cb1fc3f57c69133d1283aea3028",
+        "id": "port:fc03505544b55eb097fe19210de59cf3",
+        "key": [
+          "f1",
+          "fn",
+          "element",
+          "port",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "role": "generic",
+        "template": "port_template:c31012870ece56ddb95f89ea2822191e"
+      },
+      {
+        "ext": {},
+        "function": "function:8b9e402d95815c21be99cc4f3c4697ec",
+        "id": "port:fcd769aca63753fa8aa58a296d0ad6fe",
+        "key": [
+          "x2",
+          "tt01-2",
+          "fn",
+          "terminal",
+          "port",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "role": "external",
+        "template": "port_template:491b3af15e5a536aa87b9887b1caeedf"
+      },
+      {
+        "ext": {},
+        "function": "function:a92c70dccb3e5501992dbe6c780d2e34",
+        "id": "port:fe22a88c7c895520ad1d4026e759a996",
+        "key": [
+          "k3",
+          "fn",
+          "coil",
+          "port",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "role": "generic",
+        "template": "port_template:03cf1c9fcf7f5fe493728c8a300fd8d0"
+      }
+    ],
+    "port_template": [
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:54979341d66450d4b2618477d7fa7ce9",
+        "id": "port_template:03cf1c9fcf7f5fe493728c8a300fd8d0",
+        "key": [
+          "contactor-1no",
+          "coil",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:905c6457168d557596dfd029717acda5",
+        "id": "port_template:1a3b310f65815f9383fe860352e93d8f",
+        "key": [
+          "module-sim-di8-024",
+          "ch3",
+          "I3"
+        ],
+        "marking": null,
+        "name": "I3",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:58f57676b64554b0834a6475334ca2e8",
+        "id": "port_template:1b9983e053f05c57845df56d97f5da6a",
+        "key": [
+          "contactor-1no",
+          "no_1",
+          "14"
+        ],
+        "marking": null,
+        "name": "14",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:212aa4694a60537cb67e8884fbcc0790",
+        "id": "port_template:30cf0f1862cd56f0899b322e97120046",
+        "key": [
+          "module-sim-ai4-020",
+          "ch1",
+          "1+"
+        ],
+        "marking": null,
+        "name": "1+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:3120a6f7344357798fbfaf0ee7689f20",
+        "id": "port_template:30e6413838f45f3e90cc8dc94c519c37",
+        "key": [
+          "contactor-1co",
+          "co_1",
+          "11"
+        ],
+        "marking": null,
+        "name": "11",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:3120a6f7344357798fbfaf0ee7689f20",
+        "id": "port_template:322018d4d3e158c1996165ce241852be",
+        "key": [
+          "contactor-1co",
+          "co_1",
+          "14"
+        ],
+        "marking": null,
+        "name": "14",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:ef753a8c952c567ead0f4696d0c16186",
+        "id": "port_template:394ac6913ccf53c197ee268fdac4b2ba",
+        "key": [
+          "rtd",
+          "signal",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:f8eaacda28225c47b9c5fd62951f5c6a",
+        "id": "port_template:3bf40d49562455659bb23d1ef358e22e",
+        "key": [
+          "module-sim-ai4-020",
+          "ch3",
+          "3-"
+        ],
+        "marking": null,
+        "name": "3-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:4b9a03a23c4c5479969832e161acd2a6",
+        "id": "port_template:3e1c7ab3b57650f394f5867f39388099",
+        "key": [
+          "module-sim-di8-024",
+          "ch7",
+          "I7"
+        ],
+        "marking": null,
+        "name": "I7",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:c299578b3da453aabb18b9440591f22b",
+        "id": "port_template:42c2864eb81d5ebeb8f7a7b840bb7c6e",
+        "key": [
+          "pb",
+          "signal",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:b9a2531e7ab355b39231b97b1313041d",
+        "id": "port_template:491b3af15e5a536aa87b9887b1caeedf",
+        "key": [
+          "terminal",
+          "terminal",
+          "external"
+        ],
+        "marking": null,
+        "name": "external",
+        "pole_side": null,
+        "role": "external"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:1acf18bc0fab5014ba3a88a8e714d84c",
+        "id": "port_template:4a635193345a560895de8f932857ab1c",
+        "key": [
+          "module-sim-di8-024",
+          "ch1",
+          "M1"
+        ],
+        "marking": null,
+        "name": "M1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0",
+        "id": "port_template:4b2ec9073fa75eb1bc1e7791ead326fd",
+        "key": [
+          "module-sim-di8-024",
+          "ch8",
+          "I8"
+        ],
+        "marking": null,
+        "name": "I8",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:e710a0c60879507fb77cf4e453ff4350",
+        "id": "port_template:4e4315c460f957bf9aeeae4ceb36f2bc",
+        "key": [
+          "contactor-1co",
+          "coil",
+          "A1"
+        ],
+        "marking": null,
+        "name": "A1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:ef753a8c952c567ead0f4696d0c16186",
+        "id": "port_template:50244542732b575695afdfbebd9096ef",
+        "key": [
+          "rtd",
+          "signal",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:f91ae0795a0255d8ab916f40bcc6f765",
+        "id": "port_template:55560ea1ced7548dae281a467dcaae45",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch4",
+          "R4-"
+        ],
+        "marking": null,
+        "name": "R4-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:b9a2531e7ab355b39231b97b1313041d",
+        "id": "port_template:58b11d0461fe5a9a9a7a908d56519f8b",
+        "key": [
+          "terminal",
+          "terminal",
+          "internal"
+        ],
+        "marking": null,
+        "name": "internal",
+        "pole_side": null,
+        "role": "internal"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad",
+        "id": "port_template:5c3e0ed4b3ac54949cff9205597f4953",
+        "key": [
+          "module-sim-ai4-020",
+          "ch4",
+          "4+"
+        ],
+        "marking": null,
+        "name": "4+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:c80f3015e0ae5da1b01c4087fa8d3206",
+        "id": "port_template:5d38d0e7a6225cb3bb069df52607bd23",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch2",
+          "R2+"
+        ],
+        "marking": null,
+        "name": "R2+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:19d53012bedf5e53b3b76ecdbe94d53f",
+        "id": "port_template:5e5b775e2ac85a6e8ba06f13ac268a3e",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch3",
+          "R3-"
+        ],
+        "marking": null,
+        "name": "R3-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:35e91e76a7d65a83884b8b7694cb450c",
+        "id": "port_template:62ede4627f3451f18111c1b5008ed3c4",
+        "key": [
+          "psu",
+          "output",
+          "0V"
+        ],
+        "marking": null,
+        "name": "0V",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:19d53012bedf5e53b3b76ecdbe94d53f",
+        "id": "port_template:6b628fa80e4e5677bcb3628d7b7524e0",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch3",
+          "R3+"
+        ],
+        "marking": null,
+        "name": "R3+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:ee15d75ff1cd563cb99c4709ca4009c4",
+        "id": "port_template:6e7e1811463856d9a54b4a35b4bdf9af",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch1",
+          "R1+"
+        ],
+        "marking": null,
+        "name": "R1+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:ac249f511714535c85486451c042444e",
+        "id": "port_template:7137b8b7a71b5c61aff56532b6e34fe1",
+        "key": [
+          "module-sim-di8-024",
+          "ch6",
+          "I6"
+        ],
+        "marking": null,
+        "name": "I6",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:c80f3015e0ae5da1b01c4087fa8d3206",
+        "id": "port_template:71bf8d3969315c7c90f3d527892a31a5",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch2",
+          "R2-"
+        ],
+        "marking": null,
+        "name": "R2-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:58f57676b64554b0834a6475334ca2e8",
+        "id": "port_template:732e0a98c9df5789bcc5d6d22b5bd3e7",
+        "key": [
+          "contactor-1no",
+          "no_1",
+          "13"
+        ],
+        "marking": null,
+        "name": "13",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:7bab8128fdb25743b11ced12f4e49c9d",
+        "id": "port_template:832d93151f405c0fb877c8ead5af8a78",
+        "key": [
+          "module-sim-di8-024",
+          "ch4",
+          "M4"
+        ],
+        "marking": null,
+        "name": "M4",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:c299578b3da453aabb18b9440591f22b",
+        "id": "port_template:85e6d1fb898f5666800ec59299353196",
+        "key": [
+          "pb",
+          "signal",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:ac249f511714535c85486451c042444e",
+        "id": "port_template:897263d05c8a5d0bb28bc02ed4719c0e",
+        "key": [
+          "module-sim-di8-024",
+          "ch6",
+          "M6"
+        ],
+        "marking": null,
+        "name": "M6",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:905c6457168d557596dfd029717acda5",
+        "id": "port_template:8ceb5a71c3815f0282a9850e387eb0e7",
+        "key": [
+          "module-sim-di8-024",
+          "ch3",
+          "M3"
+        ],
+        "marking": null,
+        "name": "M3",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:f77216b8d20759fd99a30d984e501fd5",
+        "id": "port_template:8e49394765925e0fae2e0b4561881d2f",
+        "key": [
+          "fuse-2a",
+          "element",
+          "2"
+        ],
+        "marking": null,
+        "name": "2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:35e91e76a7d65a83884b8b7694cb450c",
+        "id": "port_template:916d21f505a15fe299dd6a163d0a9041",
+        "key": [
+          "psu",
+          "output",
+          "+24V"
+        ],
+        "marking": null,
+        "name": "+24V",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:bbd9ebd867775f97905f82e701c45f0e",
+        "id": "port_template:9361bc1e7d1d5ab3a5702a50cdc87f34",
+        "key": [
+          "module-sim-ai4-020",
+          "ch2",
+          "2+"
+        ],
+        "marking": null,
+        "name": "2+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:3120a6f7344357798fbfaf0ee7689f20",
+        "id": "port_template:9777a324e3fe5b2b9a62ec79945884e1",
+        "key": [
+          "contactor-1co",
+          "co_1",
+          "12"
+        ],
+        "marking": null,
+        "name": "12",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:54979341d66450d4b2618477d7fa7ce9",
+        "id": "port_template:a20b36de7f945de8a4c11da0261087e1",
+        "key": [
+          "contactor-1no",
+          "coil",
+          "A1"
+        ],
+        "marking": null,
+        "name": "A1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:7bab8128fdb25743b11ced12f4e49c9d",
+        "id": "port_template:a2e7317d0e005f06a6f1488b4117e30c",
+        "key": [
+          "module-sim-di8-024",
+          "ch4",
+          "I4"
+        ],
+        "marking": null,
+        "name": "I4",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:ee15d75ff1cd563cb99c4709ca4009c4",
+        "id": "port_template:a32ebe8ba3685ad1b84f4f0a651c2c00",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch1",
+          "R1-"
+        ],
+        "marking": null,
+        "name": "R1-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:e710a0c60879507fb77cf4e453ff4350",
+        "id": "port_template:a431d05fd1975dccbe758996eb70547d",
+        "key": [
+          "contactor-1co",
+          "coil",
+          "A2"
+        ],
+        "marking": null,
+        "name": "A2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad",
+        "id": "port_template:a8c1d70602eb5ce08aede2c74a4f8328",
+        "key": [
+          "module-sim-ai4-020",
+          "ch4",
+          "4-"
+        ],
+        "marking": null,
+        "name": "4-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:4b9a03a23c4c5479969832e161acd2a6",
+        "id": "port_template:a971f4db217958ec8085031dc97cf0a8",
+        "key": [
+          "module-sim-di8-024",
+          "ch7",
+          "M7"
+        ],
+        "marking": null,
+        "name": "M7",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:bbd9ebd867775f97905f82e701c45f0e",
+        "id": "port_template:afacfac8abdd57c8896d35eb62c00d80",
+        "key": [
+          "module-sim-ai4-020",
+          "ch2",
+          "2-"
+        ],
+        "marking": null,
+        "name": "2-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2",
+        "id": "port_template:be6bac89a78c52f59839174e27adc314",
+        "key": [
+          "module-sim-di8-024",
+          "ch2",
+          "M2"
+        ],
+        "marking": null,
+        "name": "M2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0",
+        "id": "port_template:c1022cc31e455b8183c92b397b011c63",
+        "key": [
+          "module-sim-di8-024",
+          "ch8",
+          "M8"
+        ],
+        "marking": null,
+        "name": "M8",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:f77216b8d20759fd99a30d984e501fd5",
+        "id": "port_template:c31012870ece56ddb95f89ea2822191e",
+        "key": [
+          "fuse-2a",
+          "element",
+          "1"
+        ],
+        "marking": null,
+        "name": "1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:1acf18bc0fab5014ba3a88a8e714d84c",
+        "id": "port_template:cbcdc072514451fea84a642008c4faa3",
+        "key": [
+          "module-sim-di8-024",
+          "ch1",
+          "I1"
+        ],
+        "marking": null,
+        "name": "I1",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:f91ae0795a0255d8ab916f40bcc6f765",
+        "id": "port_template:d372baf943f851599b818961dcda5241",
+        "key": [
+          "module-sim-rtd4-pt100",
+          "ch4",
+          "R4+"
+        ],
+        "marking": null,
+        "name": "R4+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:212aa4694a60537cb67e8884fbcc0790",
+        "id": "port_template:d664be1042105559bbd9730bdb34a959",
+        "key": [
+          "module-sim-ai4-020",
+          "ch1",
+          "1-"
+        ],
+        "marking": null,
+        "name": "1-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:6249ea67c02d5f9782b992037665eeac",
+        "id": "port_template:da900a4e2db05140a57f5458efa5c72d",
+        "key": [
+          "pt",
+          "signal",
+          "+"
+        ],
+        "marking": null,
+        "name": "+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2",
+        "id": "port_template:ddb8cfe206b151ad9d7d7ec01944760b",
+        "key": [
+          "module-sim-di8-024",
+          "ch2",
+          "I2"
+        ],
+        "marking": null,
+        "name": "I2",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:6249ea67c02d5f9782b992037665eeac",
+        "id": "port_template:deb78c58806d5177bdf1db5d5ea79e7e",
+        "key": [
+          "pt",
+          "signal",
+          "-"
+        ],
+        "marking": null,
+        "name": "-",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:f8eaacda28225c47b9c5fd62951f5c6a",
+        "id": "port_template:e8b2b42ab4b85a20b1c490126c98674f",
+        "key": [
+          "module-sim-ai4-020",
+          "ch3",
+          "3+"
+        ],
+        "marking": null,
+        "name": "3+",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:a751c20b3bb95d4d9501cbbd65bb9736",
+        "id": "port_template:e8fa76d698eb5895b8a478aba228c54c",
+        "key": [
+          "module-sim-di8-024",
+          "ch5",
+          "M5"
+        ],
+        "marking": null,
+        "name": "M5",
+        "pole_side": null,
+        "role": "generic"
+      },
+      {
+        "conductor_mark": null,
+        "ext": {},
+        "function": "function_template:a751c20b3bb95d4d9501cbbd65bb9736",
+        "id": "port_template:e9cb171737b65973815cc84cb0f3d750",
+        "key": [
+          "module-sim-di8-024",
+          "ch5",
+          "I5"
+        ],
+        "marking": null,
+        "name": "I5",
+        "pole_side": null,
+        "role": "generic"
+      }
+    ],
+    "supply_system": [
+      {
+        "current": "ac",
+        "earthing": "earthed",
+        "ext": {},
+        "id": "supply_system:2409e77f9e7450828229854bd34aba1e",
+        "key": [
+          "400V"
+        ],
+        "name": "400V",
+        "rails": {
+          "L1": {
+            "max_v": "230",
+            "phase": 0
+          },
+          "L2": {
+            "max_v": "230",
+            "phase": 120
+          },
+          "L3": {
+            "max_v": "230",
+            "phase": 240
+          }
+        }
+      },
+      {
+        "current": "dc",
+        "earthing": "earthed",
+        "ext": {},
+        "id": "supply_system:82cf3f4b59a7591a8fdddf4ce522a058",
+        "key": [
+          "24V"
+        ],
+        "name": "24V",
+        "rails": {
+          "+24V": {
+            "max_v": "24",
+            "phase": null
+          },
+          "+5V": {
+            "max_v": "5",
+            "phase": null
+          },
+          "0V": {
+            "max_v": "0",
+            "phase": null
+          }
+        }
+      }
+    ]
+  }
+}

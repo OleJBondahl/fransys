@@ -1,0 +1,357 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      -3
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -2,
+          -3
+        ],
+        [
+          -2,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -3
+        ],
+        [
+          0,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2,
+          3
+        ],
+        [
+          -2,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -3,
+          -2
+        ],
+        [
+          3,
+          -2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          -3,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -3,
+          2
+        ],
+        [
+          3,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -1.75,
+        -1.125
+      ],
+      "end": 0,
+      "r": 0.375,
+      "start": 180,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -1,
+        -1.125
+      ],
+      "end": 180,
+      "r": 0.375,
+      "start": 0,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          1
+        ],
+        [
+          2.5,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          1.5
+        ],
+        [
+          2.5,
+          1.5
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -9.5,
+      -3.25
+    ],
+    [
+      3.75,
+      3.25
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "the status signal is a contact of the unit's monitor, not on the power path",
+      "rule": "port-isolated"
+    },
+    {
+      "reason": "an isolated converter: no conductive path joins its input to its output, so no path can be the through path",
+      "rule": "through-missing"
+    }
+  ],
+  "name": "Power supply unit (a.c./d.c. in, d.c. out)",
+  "nodes": [
+    {
+      "ports": [
+        "l"
+      ]
+    },
+    {
+      "ports": [
+        "n"
+      ]
+    },
+    {
+      "ports": [
+        "plus"
+      ]
+    },
+    {
+      "ports": [
+        "minus"
+      ]
+    },
+    {
+      "ports": [
+        "sig"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "l",
+      "kind": "impedance",
+      "through": false,
+      "to": "n"
+    },
+    {
+      "from": "minus",
+      "kind": "source",
+      "through": false,
+      "to": "plus"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -2,
+        -3
+      ],
+      "description": "input, line or d.c. positive",
+      "dir": "N",
+      "id": "l"
+    },
+    {
+      "at": [
+        0,
+        -3
+      ],
+      "description": "input, neutral or d.c. negative",
+      "dir": "N",
+      "id": "n"
+    },
+    {
+      "at": [
+        -2,
+        3
+      ],
+      "description": "d.c. output, positive",
+      "dir": "S",
+      "id": "plus"
+    },
+    {
+      "at": [
+        0,
+        3
+      ],
+      "description": "d.c. output, negative",
+      "dir": "S",
+      "id": "minus"
+    },
+    {
+      "at": [
+        2,
+        3
+      ],
+      "description": "status signal output",
+      "dir": "S",
+      "id": "sig"
+    }
+  ],
+  "reference": {
+    "number": "psu",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.l": {
+      "at": [
+        -1.75,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.minus": {
+      "at": [
+        0.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.n": {
+      "at": [
+        0.25,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.plus": {
+      "at": [
+        -1.75,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.sig": {
+      "at": [
+        2.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -3.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

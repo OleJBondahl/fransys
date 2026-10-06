@@ -1,0 +1,110 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8,
+      -1
+    ],
+    [
+      1.75,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "supply rail marker; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Power supply, rail symbol",
+  "nodes": [
+    {
+      "ports": [
+        "supply"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        1
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "supply"
+    }
+  ],
+  "reference": {
+    "number": "power-supply",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.supply": {
+      "at": [
+        0.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

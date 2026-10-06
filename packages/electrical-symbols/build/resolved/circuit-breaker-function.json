@@ -1,0 +1,65 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -0.5,
+      -0.5
+    ],
+    [
+      0.5,
+      0.5
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -0.5,
+          -0.5
+        ],
+        [
+          0.5,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.5,
+          0.5
+        ],
+        [
+          0.5,
+          -0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -0.5,
+      -0.5
+    ],
+    [
+      0.5,
+      0.5
+    ]
+  ],
+  "kind": "qualifier",
+  "name": "Circuit breaker function",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "circuit-breaker-function",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {},
+  "status": "unverified"
+}

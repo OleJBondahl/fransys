@@ -1,0 +1,85 @@
+{
+  "anchors": [
+    {
+      "at": [
+        0,
+        0
+      ],
+      "dir": "W",
+      "id": "link"
+    }
+  ],
+  "body_box": [
+    [
+      0,
+      -0.75
+    ],
+    [
+      1.75,
+      0.75
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          -0.75
+        ],
+        [
+          1,
+          0.75
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        1,
+        0
+      ],
+      "end": 90,
+      "r": 0.75,
+      "start": -90,
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      -0.75
+    ],
+    [
+      1.75,
+      0.75
+    ]
+  ],
+  "kind": "qualifier",
+  "name": "Actuator (mushroom head, operated by pushing)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "actuator-mushroom",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {},
+  "status": "unverified"
+}

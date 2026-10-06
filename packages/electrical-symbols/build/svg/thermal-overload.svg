@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="10mm" height="20mm" viewBox="-2 -4 4 8">
+<title>Thermal overload relay, thermally operated release</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-3" x2="0" y2="-1.5" stroke-width="0.1"/>
+<line x1="0" y1="3" x2="0" y2="1.5" stroke-width="0.1"/>
+<polygon points="-1,-1.5 1,-1.5 1,1.5 -1,1.5" stroke-width="0.1"/>
+<polyline points="-0.5,0.75 -0.5,-0.75 0.5,-0.75 0.5,0.75" stroke-width="0.1"/>
+</g>
+</svg>

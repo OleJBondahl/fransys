@@ -1,0 +1,7 @@
+designation,style,pincount,gender,mate_designation,marking,net,mate_port_designation
+-J1,header,4,male,-P1,1,V5,-P1:1
+-J1,header,4,male,-P1,2,gnd,-P1:2
+-J1,header,4,male,-P1,10,,-P1:10
+-J1,header,4,male,-P1,A1,,-P1:A1
+-J2,header,2,female,,1,V5,
+-J2,header,2,female,,2,gnd,

@@ -1,0 +1,10 @@
+schema = 1
+name = "Circuit breaker function"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "circuit-breaker-function" }
+
+elements = [
+  { line = [[-0.5, -0.5], [0.5, 0.5]] },
+  { line = [[-0.5, 0.5], [0.5, -0.5]] },
+]

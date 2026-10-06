@@ -1,0 +1,21 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MCB-C6"
+manufacturer = "Demo"
+description = "Miniature circuit breaker, 1-pole, C6"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "element"
+kind = "protection"
+symbol = "circuit-breaker"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "protective" }]
+
+[function.protection]
+type = "mcb"

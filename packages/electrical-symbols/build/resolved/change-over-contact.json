@@ -1,0 +1,219 @@
+{
+  "anchors": [
+    {
+      "at": [
+        -0.5,
+        0
+      ],
+      "dir": "W",
+      "id": "link"
+    }
+  ],
+  "body_box": [
+    [
+      -2,
+      -2
+    ],
+    [
+      0,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2,
+          2
+        ],
+        [
+          -2,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -1
+        ],
+        [
+          -1.125,
+          1.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -10,
+      -2
+    ],
+    [
+      1.75,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Change-over break before make contact",
+  "nodes": [
+    {
+      "ports": [
+        "com"
+      ]
+    },
+    {
+      "ports": [
+        "no"
+      ]
+    },
+    {
+      "ports": [
+        "nc"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "com",
+      "kind": "switch_open",
+      "through": true,
+      "to": "no"
+    },
+    {
+      "from": "nc",
+      "kind": "switch_closed",
+      "through": false,
+      "to": "com"
+    }
+  ],
+  "pole_pitch": 8,
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "common",
+      "dir": "N",
+      "id": "com"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "closes on actuation",
+      "dir": "S",
+      "id": "no"
+    },
+    {
+      "at": [
+        -2,
+        2
+      ],
+      "description": "opens on actuation",
+      "dir": "S",
+      "id": "nc"
+    }
+  ],
+  "reference": {
+    "number": "change-over-contact",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.com": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.nc": {
+      "at": [
+        -2.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "W"
+    },
+    "marking.no": {
+      "at": [
+        0.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -4,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

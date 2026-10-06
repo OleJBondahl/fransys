@@ -1,0 +1,163 @@
+# The lean gates' ceilings (decision 0087). `just ceil-lower` rewrites this file,
+# so every comment here comes from scripts/lean_ceilings.py and scripts/lean_check.py.
+
+[limits]
+branches = 12
+complexity = 8
+docstring_lines = 5  # summary, blank, two why lines, closing quotes (LC3)
+md_tokens = 5000
+module_code_lines = 300
+sentence_words = 30
+statements = 15
+surface_docstring_lines = 15
+
+[nested_defs]
+"packages/fransys-layout/src/fransys_layout/engines/schematic/write/markers.py::link_markers" = 7
+"packages/fransys-layout/src/fransys_layout/lint/_texts.py::text_overlaps" = 1
+"packages/fransys-layout/src/fransys_layout/stages/arrange.py::_location_runs" = 1
+"packages/fransys-layout/src/fransys_layout/stages/arrange.py::rack_order" = 1
+"packages/fransys-layout/src/fransys_layout/stages/exempt.py::boundary_exempt" = 1
+"packages/fransys-layout/src/fransys_layout/stages/place.py::_gaps_of" = 1
+"packages/fransys-layout/src/fransys_layout/stages/texts/stand.py::run_box" = 1
+"packages/fransys-layout/src/fransys_layout/stages/tidy.py::shift_pages" = 1
+"packages/fransys-model/src/fransys_model/derive/drawing_text.py::unit_tag_text" = 1
+"packages/fransys-model/src/fransys_model/derive/reports.py::cable_rows" = 1
+"packages/fransys-model/src/fransys_model/derive/structure.py::_board_nets" = 1
+"packages/fransys-model/src/fransys_model/derive/structure.py::_undeclared_net_name" = 1
+"packages/fransys-model/src/fransys_model/derive/structure.py::schematic_functions" = 1
+"packages/fransys-model/src/fransys_model/derive/wiring.py::_far_ends" = 1
+"packages/fransys-model/src/fransys_model/kernel/cache.py::digest_cached" = 1
+"packages/fransys-model/src/fransys_model/kernel/record.py::record" = 1
+"packages/fransys-model/src/fransys_model/vocab/closure.py::_adjacency" = 1
+"packages/fransys-model/src/fransys_model/vocab/closure.py::_conditional_adjacency" = 1
+"packages/fransys-model/src/fransys_model/vocab/current_states.py::_by_component" = 1
+"packages/fransys-pdf/src/fransys_pdf/_lists.py::_ends_without_jumpers" = 1
+"packages/fransys-render/src/fransys_render/_junctions.py::junction_locations" = 1
+"packages/fransys-render/src/fransys_render/_labels.py::_contact_image" = 3
+"packages/fransys-render/src/fransys_render/_leads.py::visible_symbol" = 1
+
+[module_code_lines]
+"packages/fransys-author/src/fransys_author/design.py" = 735
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 391
+"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 310
+"packages/fransys-layout/src/fransys_layout/stages/place.py" = 643
+"packages/fransys-model/src/fransys_model/derive/designation.py" = 378
+"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 510
+"packages/fransys-model/src/fransys_model/derive/rows.py" = 345
+"packages/fransys-parts/src/fransys_parts/lint.py" = 530
+"packages/fransys-pdf/src/fransys_pdf/_frame.py" = 486
+"packages/fransys-pdf/src/fransys_pdf/_lists.py" = 348
+"packages/fransys-pdf/src/fransys_pdf/checks.py" = 439
+"packages/fransys/src/fransys/pipeline.py" = 806
+
+[docstring_lines]
+"packages/fransys-author/src/fransys_author/handles.py::Item.__getitem__" = 6
+"packages/fransys-author/src/fransys_author/surface/_pairing.py::poles" = 6
+
+[surface_docstring_lines]
+"packages/fransys-reports/src/fransys_reports/csv.py::bom_csv" = 16
+"packages/fransys-reports/src/fransys_reports/csv.py::connectors_csv" = 16
+"packages/fransys-reports/src/fransys_reports/csv.py::terminal_csv" = 16
+
+[surface_types]
+"packages/fransys-model/src/fransys_model/derive/list_cells.py::cell_parts" = 1
+"packages/fransys-model/src/fransys_model/derive/list_cells.py::cell_text" = 1
+"packages/fransys-model/src/fransys_model/derive/list_cells.py::column_rows" = 2
+"packages/fransys-model/src/fransys_model/derive/list_cells.py::column_values" = 2
+"packages/fransys-model/src/fransys_model/derive/list_cells.py::pin_lines" = 1
+"packages/fransys-model/src/fransys_model/kernel/decode.py::from_data" = 1
+"packages/fransys-model/src/fransys_model/kernel/draft.py::Draft.alias" = 2
+"packages/fransys-model/src/fransys_model/kernel/draft.py::Draft.alias_map" = 1
+"packages/fransys-model/src/fransys_model/kernel/draft.py::Draft.key_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/draft.py::Draft.origin_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/draft.py::Draft.origins" = 1
+"packages/fransys-model/src/fransys_model/kernel/draft.py::Draft.record_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/encode.py::to_data" = 1
+"packages/fransys-model/src/fransys_model/kernel/errors.py::MergeConflict.__init__" = 1
+"packages/fransys-model/src/fransys_model/kernel/errors.py::RefError.__init__" = 2
+"packages/fransys-model/src/fransys_model/kernel/errors.py::SchemaError.__init__" = 1
+"packages/fransys-model/src/fransys_model/kernel/errors.py::ValueTypeError.__init__" = 1
+"packages/fransys-model/src/fransys_model/kernel/evolve.py::evolve" = 1
+"packages/fransys-model/src/fransys_model/kernel/grouping.py::index_ids" = 2
+"packages/fransys-model/src/fransys_model/kernel/model.py::Model.key_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/model.py::Model.origin_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/origin.py::OriginSource.key_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/origin.py::OriginSource.origin_of" = 1
+"packages/fransys-model/src/fransys_model/kernel/record.py::Record.id" = 1
+"packages/fransys-model/src/fransys_model/kernel/values.py::check_value" = 1
+"packages/fransys-model/src/fransys_model/layout/tables.py::derived_layout_ids" = 1
+"packages/fransys-model/src/fransys_model/vocab/tables.py::facet_subject" = 1
+"packages/fransys/src/fransys/documents.py::document" = 1
+"packages/fransys/src/fransys/pipeline.py::diff" = 1
+"packages/fransys/src/fransys/pipeline.py::release" = 1
+"packages/fransys/src/fransys/pipeline.py::write" = 1
+
+[md_tokens]
+"docs/DESIGN.md" = 5021
+"packages/fransys-model/docs/design/connectivity.md" = 5474
+"packages/fransys/src/fransys/guide/findings.md" = 6696
+
+[md_long_sentences]
+"CLAUDE.md" = 9
+"docs/DESIGN.md" = 4
+"docs/ROADMAP.md" = 2
+"docs/contracts/part-file.md" = 5
+"packages/electrical-symbols/CLAUDE.md" = 7
+"packages/electrical-symbols/README.md" = 2
+"packages/electrical-symbols/docs/IEC_HANDLING.md" = 4
+"packages/fransys-author/README.md" = 2
+"packages/fransys-kicad/README.md" = 1
+"packages/fransys-kicad/docs/WORKFLOW.md" = 2
+"packages/fransys-layout/CLAUDE.md" = 3
+"packages/fransys-layout/README.md" = 1
+"packages/fransys-layout/docs/TWEAKS.md" = 4
+"packages/fransys-layout/docs/design/columns.md" = 31
+"packages/fransys-layout/docs/design/engine.md" = 29
+"packages/fransys-layout/docs/design/foundations.md" = 4
+"packages/fransys-layout/docs/design/geometry.md" = 6
+"packages/fransys-layout/docs/design/labels.md" = 11
+"packages/fransys-layout/docs/design/links.md" = 34
+"packages/fransys-layout/docs/design/lint.md" = 39
+"packages/fransys-layout/docs/design/open-questions.md" = 22
+"packages/fransys-layout/docs/design/package-layout.md" = 4
+"packages/fransys-layout/docs/design/pages.md" = 19
+"packages/fransys-layout/docs/design/place.md" = 27
+"packages/fransys-layout/docs/design/route.md" = 13
+"packages/fransys-layout/docs/design/stages.md" = 14
+"packages/fransys-layout/docs/rules/shared-support.md" = 5
+"packages/fransys-layout/docs/rules/step-1-resolve.md" = 1
+"packages/fransys-layout/docs/rules/step-3-partition.md" = 6
+"packages/fransys-layout/docs/rules/step-4-references.md" = 1
+"packages/fransys-layout/docs/rules/step-5-place.md" = 1
+"packages/fransys-layout/docs/rules/step-6-texts.md" = 1
+"packages/fransys-layout/docs/rules/step-7-route.md" = 1
+"packages/fransys-model/CLAUDE.md" = 3
+"packages/fransys-model/docs/ROADMAP.md" = 19
+"packages/fransys-model/docs/design/connectivity.md" = 28
+"packages/fransys-model/docs/design/derive-queries-structure.md" = 34
+"packages/fransys-model/docs/design/derive-queries.md" = 23
+"packages/fransys-model/docs/design/derive-release.md" = 2
+"packages/fransys-model/docs/design/derive-text.md" = 28
+"packages/fransys-model/docs/design/derive.md" = 25
+"packages/fransys-model/docs/design/examples.md" = 2
+"packages/fransys-model/docs/design/facets.md" = 3
+"packages/fransys-model/docs/design/foundations.md" = 5
+"packages/fransys-model/docs/design/kernel-model.md" = 22
+"packages/fransys-model/docs/design/kernel-records.md" = 18
+"packages/fransys-model/docs/design/layout-namespace.md" = 9
+"packages/fransys-model/docs/design/vocabulary.md" = 9
+"packages/fransys-parts/README.md" = 1
+"packages/fransys-pdf/README.md" = 2
+"packages/fransys-render/README.md" = 1
+"packages/fransys-wago/docs/SPEC.md" = 3
+"packages/fransys/src/fransys/guide/authoring.md" = 1
+"packages/fransys/src/fransys/guide/build.md" = 10
+"packages/fransys/src/fransys/guide/documents.md" = 4
+"packages/fransys/src/fransys/guide/index.md" = 1
+"packages/fransys/src/fransys/guide/parts.md" = 5
+"packages/fransys/src/fransys/guide/reading.md" = 3
+
+[exempt]
+"packages/fransys-layout/src/fransys_layout/geometry/text_metrics.py" = "D8 exemption, unchanged (LC2)"
+"packages/fransys-layout/src/fransys_layout/stages/types.py" = "D8 exemption, unchanged (LC2)"
+"packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py" = "generated (overview-0001)"

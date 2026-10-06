@@ -1,0 +1,170 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -1
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "none",
+      "r": 0.25,
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -0.25
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "port": "n",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0.25,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "port": "e",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          0.25
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "port": "s",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.25,
+          0
+        ],
+        [
+          -1,
+          0
+        ]
+      ],
+      "port": "w",
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -1,
+      -3.75
+    ],
+    [
+      6.5,
+      1
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "all four ports are one electrical point and a terminal is designated by its tag only, so it carries a tag slot and no marking slots",
+      "rule": "slot-missing"
+    }
+  ],
+  "name": "Terminal",
+  "nodes": [
+    {
+      "ports": [
+        "n",
+        "e",
+        "s",
+        "w"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        -1
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "n"
+    },
+    {
+      "at": [
+        1,
+        0
+      ],
+      "description": "",
+      "dir": "E",
+      "id": "e"
+    },
+    {
+      "at": [
+        0,
+        1
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "s"
+    },
+    {
+      "at": [
+        -1,
+        0
+      ],
+      "description": "",
+      "dir": "W",
+      "id": "w"
+    }
+  ],
+  "reference": {
+    "number": "terminal",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "tag": {
+      "at": [
+        0.5,
+        -3.25
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

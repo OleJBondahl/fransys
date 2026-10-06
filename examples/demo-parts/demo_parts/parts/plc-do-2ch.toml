@@ -1,0 +1,26 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PLC-DO-2"
+manufacturer = "Demo"
+description = "PLC digital output module, 2 channels"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "do_1"
+kind = "plc_channel"
+ports = [{ name = "1", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 1
+
+[[function]]
+name = "do_2"
+kind = "plc_channel"
+ports = [{ name = "2", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 2

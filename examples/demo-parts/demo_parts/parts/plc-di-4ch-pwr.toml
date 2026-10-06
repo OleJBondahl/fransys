@@ -1,0 +1,56 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PLC-DI-4P"
+manufacturer = "Demo"
+description = "PLC digital input module, 4 channels, 24 V DC field power"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "24V", role = "generic", conductor = "L+" },
+    { name = "0V", role = "generic", conductor = "L-" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_current_a = "0.15"
+
+[[function]]
+name = "di_1"
+kind = "plc_channel"
+ports = [{ name = "1", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 1
+
+[[function]]
+name = "di_2"
+kind = "plc_channel"
+ports = [{ name = "2", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[[function]]
+name = "di_3"
+kind = "plc_channel"
+ports = [{ name = "3", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 3
+
+[[function]]
+name = "di_4"
+kind = "plc_channel"
+ports = [{ name = "4", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 4

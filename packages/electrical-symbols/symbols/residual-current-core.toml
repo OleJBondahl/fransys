@@ -1,0 +1,9 @@
+schema = 1
+name = "Residual current sensing core"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "residual-current-core" }
+
+elements = [
+  { circle = [0, 0], r = 0.5, fill = "none" },
+]

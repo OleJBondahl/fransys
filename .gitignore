@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.eggs/
+secret_external/
+dist/
+claude-tools/
+.fransys/
+.superpowers/

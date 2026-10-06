@@ -1,0 +1,258 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -2
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "arc": [
+        -1,
+        -1.5
+      ],
+      "end": 90,
+      "r": 0.5,
+      "start": 270,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -1,
+        -0.5
+      ],
+      "end": 90,
+      "r": 0.5,
+      "start": 270,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -1,
+        0.5
+      ],
+      "end": 90,
+      "r": 0.5,
+      "start": 270,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -1,
+        1.5
+      ],
+      "end": 90,
+      "r": 0.5,
+      "start": 270,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        1,
+        -1.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        1,
+        -0.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        1,
+        0.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        1,
+        1.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -7.5,
+      -3.25
+    ],
+    [
+      2.75,
+      3.25
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "the two windings are side by side at x = -1 and x = 1: neither winding path can be the through path (through-axis needs its ports at (0, -a) N and (0, a) S on x = 0) and no path spans both windings",
+      "rule": "through-missing"
+    }
+  ],
+  "name": "Transformer with two windings, general symbol",
+  "nodes": [
+    {
+      "ports": [
+        "pri_in"
+      ]
+    },
+    {
+      "ports": [
+        "pri_out"
+      ]
+    },
+    {
+      "ports": [
+        "sec_in"
+      ]
+    },
+    {
+      "ports": [
+        "sec_out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "pri_in",
+      "kind": "impedance",
+      "through": false,
+      "to": "pri_out"
+    },
+    {
+      "from": "sec_in",
+      "kind": "impedance",
+      "through": false,
+      "to": "sec_out"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -1,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "pri_in"
+    },
+    {
+      "at": [
+        -1,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "pri_out"
+    },
+    {
+      "at": [
+        1,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "sec_in"
+    },
+    {
+      "at": [
+        1,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "sec_out"
+    }
+  ],
+  "reference": {
+    "number": "transformer",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.pri_in": {
+      "at": [
+        -0.75,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.pri_out": {
+      "at": [
+        -0.75,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.sec_in": {
+      "at": [
+        1.25,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.sec_out": {
+      "at": [
+        1.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -1.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

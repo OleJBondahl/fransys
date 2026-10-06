@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="13.25mm" height="8.75mm" viewBox="-2.55 -1.75 5.3 3.5">
+<title>Actuator (mushroom head, operated by pushing)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="0" x2="1" y2="0" stroke-width="0.1"/>
+<line x1="1" y1="-0.75" x2="1" y2="0.75" stroke-width="0.1"/>
+<path d="M 1 -0.75 A 0.75 0.75 0 0 1 1 0.75" stroke-width="0.1"/>
+</g>
+<g class="annotation">
+<circle class="grid" cx="-2" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="1" r="0.06" fill="#888" stroke="none"/>
+<rect class="body-box" x="0" y="-0.75" width="1.75" height="1.5" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
+<rect class="keepout-box" x="0" y="-0.75" width="1.75" height="1.5" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+<path class="anchor" d="M -0.2 0 L 0 -0.2 L 0.2 0 L 0 0.2 Z" fill="#088" stroke="none"/>
+<text class="anchor-id" x="-0.75" y="0.144" font-size="0.4" text-anchor="middle" fill="#088" stroke="none" font-family="sans-serif">link</text>
+</g>
+</svg>

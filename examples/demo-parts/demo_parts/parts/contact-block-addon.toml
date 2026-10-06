@@ -1,0 +1,32 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CTR-BLOCK-1NO1NC"
+manufacturer = "Demo"
+description = "Add-on contact block for a contactor, 1 NO and 1 NC auxiliary contact"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "no"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "53", role = "generic", symbol_port = "in" },
+    { name = "54", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "53", b = "54", kind = "switched" }]
+
+[[function]]
+name = "nc"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "61", role = "generic", symbol_port = "in" },
+    { name = "62", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "61", b = "62", kind = "switched" }]
+
+[[supply]]
+supplier = "Demo Supply"
+supplier_part_number = "DS-0011"

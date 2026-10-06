@@ -1,0 +1,333 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -4.5,
+      -2
+    ],
+    [
+      3,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -1
+        ],
+        [
+          1.25,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          1
+        ],
+        [
+          1.125,
+          -1.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2.75,
+          0
+        ],
+        [
+          -3.75,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -3.75,
+          -0.75
+        ],
+        [
+          -3.75,
+          0.75
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -3.75,
+        0
+      ],
+      "end": 270,
+      "r": 0.75,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0.5,
+          0
+        ],
+        [
+          -1.75,
+          0
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2.75,
+          0
+        ],
+        [
+          -1.75,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          -3,
+          0
+        ],
+        [
+          -3,
+          -0.5
+        ],
+        [
+          -1.75,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1.125,
+          -1.5
+        ],
+        [
+          -1.125,
+          0
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          -1.75,
+          -2
+        ],
+        [
+          -1.75,
+          -1.5
+        ],
+        [
+          -0.5,
+          -1.5
+        ],
+        [
+          -0.5,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        2.25,
+        0
+      ],
+      "fill": "none",
+      "r": 0.75,
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1.75,
+          0
+        ],
+        [
+          2.75,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          2.5,
+          -0.25
+        ],
+        [
+          2.75,
+          0
+        ],
+        [
+          2.5,
+          0.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -11,
+      -2.75
+    ],
+    [
+      3,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Emergency stop, mushroom push-button with latching break contact",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    },
+    {
+      "ports": [
+        "out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "in",
+      "kind": "switch_closed",
+      "through": true,
+      "to": "out"
+    }
+  ],
+  "pole_pitch": 8,
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "in"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "out"
+    }
+  ],
+  "reference": {
+    "number": "emergency-stop",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -2.25
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.out": {
+      "at": [
+        0.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

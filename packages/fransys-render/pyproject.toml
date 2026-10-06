@@ -1,0 +1,20 @@
+[project]
+name = "fransys-render"
+version = "0.7.0"
+description = "Fransys output: laid-out model to SVG pages."
+requires-python = ">=3.15"
+dependencies = [
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.7.0#subdirectory=packages/fransys-model",
+    "graphical-symbols @ git+https://github.com/OleJBondahl/graphical-symbols@v0.3.0",
+    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.7.0#subdirectory=packages/electrical-symbols",
+]
+
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fransys_render"]

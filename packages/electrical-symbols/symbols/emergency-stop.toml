@@ -1,0 +1,33 @@
+schema = 1
+name = "Emergency stop, mushroom push-button with latching break contact"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "emergency-stop" }
+pole_pitch = 8
+
+parts = [
+  { as = "contact",  use = "break-contact" },
+  { as = "actuator", use = "actuator-mushroom", at = [-2.75, 0], orient = "MR0" },
+]
+
+ports = { in = "contact.in", out = "contact.out" }
+
+# The link from the blade to the mushroom head is drawn here, not by `via`, because the latching
+# mark sits on it. Both marks follow Siemens' datasheet drawing (D46): a wedge on the link beside
+# the head with a stepped detent above it, joined by a dashed riser; the positive-opening
+# arrow-in-circle to the right of the break contact, centred on the link's height.
+elements = [
+  { line = [[0.5, 0], [-1.75, 0]], style = "dashed" },
+  { line = [[-2.75, 0], [-1.75, 0]] },
+  { polyline = [[-3, 0], [-3, -0.5], [-1.75, 0]] },
+  { line = [[-1.125, -1.5], [-1.125, 0]], style = "dashed" },
+  { polyline = [[-1.75, -2], [-1.75, -1.5], [-0.5, -1.5], [-0.5, -1]] },
+  { circle = [2.25, 0], r = 0.75, fill = "none" },
+  { line = [[1.75, 0], [2.75, 0]] },
+  { polyline = [[2.5, -0.25], [2.75, 0], [2.5, 0.25]] },
+]
+
+[slots]
+tag           = { at = [-5, 0], side = "W", box = [6, 1] }
+"marking.in"  = "contact.marking.in"
+"marking.out" = "contact.marking.out"

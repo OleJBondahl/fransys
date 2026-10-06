@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="11.375mm" height="7.5mm" viewBox="-2 -1.5 4.55 3">
+<title>Actuator (operated by pushing)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="0" x2="-1" y2="0" stroke-width="0.1"/>
+<polyline points="-0.5,-0.5 -1,-0.5 -1,0.5 -0.5,0.5" stroke-width="0.1"/>
+</g>
+<g class="annotation">
+<circle class="grid" cx="-2" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="1" r="0.06" fill="#888" stroke="none"/>
+<rect class="body-box" x="-1" y="-0.5" width="1" height="1" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
+<rect class="keepout-box" x="-1" y="-0.5" width="1" height="1" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+<path class="anchor" d="M -0.2 0 L 0 -0.2 L 0.2 0 L 0 0.2 Z" fill="#088" stroke="none"/>
+<text class="anchor-id" x="0.75" y="0.144" font-size="0.4" text-anchor="middle" fill="#088" stroke="none" font-family="sans-serif">link</text>
+</g>
+</svg>

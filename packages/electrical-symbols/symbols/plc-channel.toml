@@ -1,0 +1,26 @@
+schema = 1
+name = "PLC channel (column end)"
+kind = "symbol"
+status = "unverified"
+# our own symbol (deep dive C6): the reference field stays "IEC 60617" (the library's one
+# standard), but this is not one of IEC 60617's own symbols
+reference = { standard = "IEC 60617", number = "plc-channel" }
+
+# a column end: one port on top; the channel name (its marking) sits inside the box
+ports = [
+  { id = "in", at = [0, -1], dir = "N", description = "wire side" },
+]
+
+elements = [
+  { line = [[0, -1], [0, 0]] },
+  { polyline = [[-1.5, 0], [1.5, 0], [1.5, 1.5], [-1.5, 1.5]], closed = true },
+]
+
+lint_allow = [
+  { rule = "port-isolated", reason = "a PLC channel ends its circuit at the module; no path of this symbol continues it" },
+  { rule = "slot-overlap-body", reason = "the channel name is written inside the end box" },
+]
+
+[slots]
+tag          = { at = [-2, 0.75],    side = "W", box = [6, 1] }
+"marking.in" = { at = [-1.25, 0.75], side = "E", box = [2.5, 1] }

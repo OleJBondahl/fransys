@@ -1,0 +1,14 @@
+schema = 1
+
+[part]
+mpn = "DEMO-OVERLOAD-A2"
+manufacturer = "Demo"
+description = "Overload relay with one pass-through terminal, A2"
+category = "protection"
+class_code = "B"
+
+[[function]]
+name = "a2"
+kind = "terminal"
+symbol = "terminal"
+ports = [{ name = "A2", role = "generic", symbol_port = "n" }]

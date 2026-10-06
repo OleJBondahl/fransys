@@ -1,0 +1,38 @@
+schema = 1
+
+[part]
+mpn = "DEMO-IO-2X"
+manufacturer = "Demo"
+description = "I/O device with two connectors"
+category = "generic"
+class_code = "U"
+
+[[function]]
+name = "x1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "X1"
+
+[[function]]
+name = "x2"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "X2"

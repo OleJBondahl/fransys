@@ -1,0 +1,142 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1.625,
+      -2
+    ],
+    [
+      1.625,
+      2.625
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1.5,
+          0.5
+        ],
+        [
+          1.5,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.5,
+          1.5
+        ],
+        [
+          0.5,
+          1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        0,
+        1
+      ],
+      "fill": "none",
+      "r": 1.625,
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8,
+      -2
+    ],
+    [
+      1.75,
+      2.625
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Protective earth",
+  "nodes": [
+    {
+      "ports": [
+        "pe"
+      ],
+      "potential": "protective_earth"
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "pe"
+    }
+  ],
+  "reference": {
+    "number": "protective-earth",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.pe": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2,
+        0.5
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

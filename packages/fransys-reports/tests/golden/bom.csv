@@ -1,0 +1,3 @@
+mpn,revision,manufacturer,description,count,designations
+EXAMPLE-mod,,Example Co,Module,1,-A1
+R-1,,Example Co,"Relay, 24 V",2,-K1; -K2

@@ -1,0 +1,354 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -2,
+      -3
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -1,
+          -3
+        ],
+        [
+          -1,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          -3
+        ],
+        [
+          1,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1,
+          3
+        ],
+        [
+          -1,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -2,
+          -2
+        ],
+        [
+          2,
+          -2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          -2,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2,
+          2
+        ],
+        [
+          2,
+          -2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -1,
+        -1.125
+      ],
+      "end": 0,
+      "r": 0.5,
+      "start": 180,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0,
+        -1.125
+      ],
+      "end": 180,
+      "r": 0.5,
+      "start": 0,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.5,
+          1
+        ],
+        [
+          1.5,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.5,
+          1.5
+        ],
+        [
+          1.5,
+          1.5
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          3,
+          -3
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8.5,
+      -3.25
+    ],
+    [
+      4.75,
+      3.25
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Rectifier, with protective earth terminal",
+  "nodes": [
+    {
+      "ports": [
+        "pe"
+      ],
+      "potential": "protective_earth"
+    },
+    {
+      "ports": [
+        "u"
+      ]
+    },
+    {
+      "ports": [
+        "v"
+      ]
+    },
+    {
+      "ports": [
+        "plus"
+      ]
+    },
+    {
+      "ports": [
+        "minus"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "u",
+      "kind": "impedance",
+      "through": false,
+      "to": "v"
+    },
+    {
+      "from": "minus",
+      "kind": "source",
+      "through": false,
+      "to": "plus"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -1,
+        -3
+      ],
+      "description": "a.c. input, first conductor",
+      "dir": "N",
+      "id": "u"
+    },
+    {
+      "at": [
+        1,
+        -3
+      ],
+      "description": "a.c. input, second conductor",
+      "dir": "N",
+      "id": "v"
+    },
+    {
+      "at": [
+        3,
+        -3
+      ],
+      "description": "protective earth",
+      "dir": "N",
+      "id": "pe"
+    },
+    {
+      "at": [
+        -1,
+        3
+      ],
+      "description": "d.c. output, positive",
+      "dir": "S",
+      "id": "plus"
+    },
+    {
+      "at": [
+        1,
+        3
+      ],
+      "description": "d.c. output, negative",
+      "dir": "S",
+      "id": "minus"
+    }
+  ],
+  "reference": {
+    "number": "rectifier-pe",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.minus": {
+      "at": [
+        1.25,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.pe": {
+      "at": [
+        3.25,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.plus": {
+      "at": [
+        -0.75,
+        2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.u": {
+      "at": [
+        -0.75,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.v": {
+      "at": [
+        1.25,
+        -2.75
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

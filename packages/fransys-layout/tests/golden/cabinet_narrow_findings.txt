@@ -1,0 +1,5 @@
+WARNING CHAIN_BROKEN cabinet/wire/18,cabinet/k2/fn/aux,cabinet/k1/fn/aux a connection between two cells was cut into a marker pair
+INFO FUNCTION_UNPLACED_IN_COLUMN cabinet/h1/fn/lamp function is in no chain: placed alone in a column of its own
+WARNING GROUP_SPLIT sup group is wider than a page: split between its columns
+WARNING GROUP_SPLIT p1 group is wider than a page: split between its columns
+INFO SYMBOL_DEFAULTED cabinet/h1/fn/lamp no symbol for function kind 'load': drawn as a labelled box

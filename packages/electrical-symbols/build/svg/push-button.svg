@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="13.75mm" height="15mm" viewBox="-4.5 -3 5.5 6">
+<title>Switch, manually operated, push-button, automatic return</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-2" x2="0" y2="-1" stroke-width="0.1"/>
+<line x1="0" y1="2" x2="0" y2="1" stroke-width="0.1"/>
+<line x1="0" y1="1" x2="-1" y2="-1" stroke-width="0.1"/>
+<line x1="-0.5" y1="0" x2="-2.5" y2="0" stroke-width="0.1" stroke-dasharray="0.5 0.25"/>
+<line x1="-2.5" y1="0" x2="-3.5" y2="0" stroke-width="0.1"/>
+<polyline points="-3,-0.5 -3.5,-0.5 -3.5,0.5 -3,0.5" stroke-width="0.1"/>
+</g>
+</svg>

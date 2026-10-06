@@ -1,0 +1,2 @@
+INFO FUNCTION_UNPLACED_IN_COLUMN cabinet/h1/fn/lamp function is in no chain: placed alone in a column of its own
+INFO SYMBOL_DEFAULTED cabinet/h1/fn/lamp no symbol for function kind 'load': drawn as a labelled box

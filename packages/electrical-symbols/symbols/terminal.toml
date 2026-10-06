@@ -1,0 +1,31 @@
+schema = 1
+name = "Terminal"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "terminal" }
+
+ports = [
+  { id = "n", at = [0, -1], dir = "N" },
+  { id = "e", at = [1, 0],  dir = "E" },
+  { id = "s", at = [0, 1],  dir = "S" },
+  { id = "w", at = [-1, 0], dir = "W" },
+]
+
+nodes = [
+  { ports = ["n", "e", "s", "w"] },
+]
+
+elements = [
+  { circle = [0, 0], r = 0.25, fill = "none" },
+  { line = [[0, -0.25], [0, -1]], port = "n" },
+  { line = [[0.25, 0], [1, 0]],   port = "e" },
+  { line = [[0, 0.25], [0, 1]],   port = "s" },
+  { line = [[-0.25, 0], [-1, 0]], port = "w" },
+]
+
+lint_allow = [
+  { rule = "slot-missing", reason = "all four ports are one electrical point and a terminal is designated by its tag only, so it carries a tag slot and no marking slots" },
+]
+
+[slots]
+tag = { at = [0.5, -3.25], side = "E", box = [6, 1] }

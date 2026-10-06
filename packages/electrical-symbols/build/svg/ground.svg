@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="10mm" height="13.75mm" viewBox="-2 -3 4 5.5">
+<title>Ground, reference (0 V) symbol</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-2" x2="0" y2="0" stroke-width="0.1"/>
+<polygon points="-1,0 1,0 0,1.5" stroke-width="0.1"/>
+</g>
+</svg>

@@ -1,0 +1,5 @@
+designation,group,index,side_a,side_b,jumper_group
+-X1:L:1,L,1,-X1:L:2; -K1:1,-B1:1,1
+-X1:L:2,L,2,-X1:L:1,,1
+-X1:N:1,N,1,,,
+-X1:S:1,S,1,-F1:1,+C1-B7:1,

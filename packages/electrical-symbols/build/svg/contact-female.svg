@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="10mm" height="15mm" viewBox="-2 -3 4 6">
+<title>Connector contact, female (socket)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-2" x2="0" y2="1" stroke-width="0.1"/>
+<path d="M -1 2 A 1 1 0 0 1 1 2" stroke-width="0.1"/>
+</g>
+</svg>

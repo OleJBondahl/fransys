@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PB-NC"
+manufacturer = "Demo"
+description = "Push button, one break contact (stop)"
+category = "electromechanical"
+class_code = "S"
+
+[[function]]
+name = "sw"
+kind = "switch"
+symbol = "break-contact"
+ports = [
+    { name = "A", role = "generic", symbol_port = "in" },
+    { name = "B", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "A", b = "B", kind = "switched", rest = "closed" }]

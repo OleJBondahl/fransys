@@ -1,0 +1,4 @@
+channel_designation,signal,wired_to,signal_name
+-A1:1,di,,tag_dev
+-A1:2,ai_current,,
+-A1:3,di,,

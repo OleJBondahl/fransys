@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15mm" height="20mm" viewBox="-3 -4 6 8">
+<title>Operating device, general symbol; relay coil, general symbol</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-3" x2="0" y2="-1" stroke-width="0.1"/>
+<line x1="0" y1="3" x2="0" y2="1" stroke-width="0.1"/>
+<polygon points="-2,-1 2,-1 2,1 -2,1" stroke-width="0.1"/>
+</g>
+</svg>

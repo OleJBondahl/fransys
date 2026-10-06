@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="20mm" viewBox="-4 -4 8 8">
+<title>Power supply unit (a.c./d.c. in, d.c. out)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="-2" y1="-3" x2="-2" y2="-2" stroke-width="0.1"/>
+<line x1="0" y1="-3" x2="0" y2="-2" stroke-width="0.1"/>
+<line x1="-2" y1="3" x2="-2" y2="2" stroke-width="0.1"/>
+<line x1="0" y1="3" x2="0" y2="2" stroke-width="0.1"/>
+<line x1="2" y1="3" x2="2" y2="2" stroke-width="0.1"/>
+<polygon points="-3,-2 3,-2 3,2 -3,2" stroke-width="0.1"/>
+<line x1="-3" y1="2" x2="3" y2="-2" stroke-width="0.1"/>
+<path d="M -2.125 -1.125 A 0.375 0.375 0 0 1 -1.375 -1.125" stroke-width="0.1"/>
+<path d="M -0.625 -1.125 A 0.375 0.375 0 0 1 -1.375 -1.125" stroke-width="0.1"/>
+<line x1="1" y1="1" x2="2.5" y2="1" stroke-width="0.1"/>
+<line x1="1" y1="1.5" x2="2.5" y2="1.5" stroke-width="0.1" stroke-dasharray="0.5 0.25"/>
+</g>
+</svg>

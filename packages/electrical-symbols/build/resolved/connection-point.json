@@ -1,0 +1,106 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -0.25,
+      -0.25
+    ],
+    [
+      0.25,
+      0.25
+    ]
+  ],
+  "elements": [
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "solid",
+      "r": 0.25,
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -0.25,
+      -0.25
+    ],
+    [
+      0.25,
+      0.25
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "junction: wires meet at the centre of the dot",
+      "rule": "port-on-body-edge"
+    },
+    {
+      "reason": "junction: wires start inside the dot",
+      "rule": "port-lane-clear"
+    },
+    {
+      "reason": "a junction carries no tag or markings",
+      "rule": "slot-missing"
+    }
+  ],
+  "name": "Connection point",
+  "nodes": [
+    {
+      "ports": [
+        "n",
+        "e",
+        "s",
+        "w"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        0
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "n"
+    },
+    {
+      "at": [
+        0,
+        0
+      ],
+      "description": "",
+      "dir": "E",
+      "id": "e"
+    },
+    {
+      "at": [
+        0,
+        0
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "s"
+    },
+    {
+      "at": [
+        0,
+        0
+      ],
+      "description": "",
+      "dir": "W",
+      "id": "w"
+    }
+  ],
+  "reference": {
+    "number": "connection-point",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {},
+  "status": "unverified"
+}

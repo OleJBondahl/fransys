@@ -1,0 +1,133 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1.5,
+      -2
+    ],
+    [
+      1.5,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1.5,
+          0
+        ],
+        [
+          1.5,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -1,
+          0.5
+        ],
+        [
+          1,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.5,
+          1
+        ],
+        [
+          0.5,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8,
+      -2
+    ],
+    [
+      1.75,
+      1
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Earth, general symbol",
+  "nodes": [
+    {
+      "ports": [
+        "earth"
+      ],
+      "potential": "earth"
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "earth"
+    }
+  ],
+  "reference": {
+    "number": "earth",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.earth": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

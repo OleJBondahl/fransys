@@ -1,0 +1,231 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      -5
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -1,
+          -5
+        ],
+        [
+          -1,
+          -2.875
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          -5
+        ],
+        [
+          1,
+          -2.875
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "none",
+      "r": 3,
+      "weight": "normal"
+    },
+    {
+      "at": [
+        0,
+        -0.75
+      ],
+      "height": 1,
+      "text": "M",
+      "weight": "normal"
+    },
+    {
+      "at": [
+        -1.125,
+        0.75
+      ],
+      "height": 1,
+      "text": "1",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -0.125,
+        0.75
+      ],
+      "end": 0,
+      "r": 0.5,
+      "start": 180,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0.875,
+        0.75
+      ],
+      "end": 180,
+      "r": 0.5,
+      "start": 0,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          2,
+          -2.25
+        ],
+        [
+          3,
+          -3.25
+        ],
+        [
+          3,
+          -5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -9.5,
+      -5
+    ],
+    [
+      4.75,
+      3
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Induction motor, single-phase, squirrel-cage, with protective earth terminal",
+  "nodes": [
+    {
+      "ports": [
+        "pe"
+      ],
+      "potential": "protective_earth"
+    },
+    {
+      "ports": [
+        "u"
+      ]
+    },
+    {
+      "ports": [
+        "v"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "u",
+      "kind": "impedance",
+      "through": false,
+      "to": "v"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -1,
+        -5
+      ],
+      "description": "supply conductor U",
+      "dir": "N",
+      "id": "u"
+    },
+    {
+      "at": [
+        1,
+        -5
+      ],
+      "description": "supply conductor V",
+      "dir": "N",
+      "id": "v"
+    },
+    {
+      "at": [
+        3,
+        -5
+      ],
+      "description": "protective earth",
+      "dir": "N",
+      "id": "pe"
+    }
+  ],
+  "reference": {
+    "number": "motor-1ph-pe",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.pe": {
+      "at": [
+        3.25,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.u": {
+      "at": [
+        -0.75,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.v": {
+      "at": [
+        1.25,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -3.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

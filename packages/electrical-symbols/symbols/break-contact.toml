@@ -1,0 +1,30 @@
+schema = 1
+name = "Break contact"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "break-contact" }
+
+ports = [
+  { id = "in",  at = [0, -2], dir = "N" },
+  { id = "out", at = [0, 2],  dir = "S" },
+]
+
+paths = [
+  { from = "in", to = "out", kind = "switch_closed", through = true },
+]
+
+anchors = [
+  { id = "link", at = [0.5, 0], dir = "E" },
+]
+
+elements = [
+  { line = [[0, -2], [0, -1]] },
+  { line = [[0, -1], [1.25, -1]] },
+  { line = [[0, 2], [0, 1]] },
+  { line = [[0, 1], [1.125, -1.25]] },
+]
+
+[slots]
+tag           = { at = [-0.5, 0],     side = "W", box = [6, 1] }
+"marking.in"  = { at = [0.25, -2.25], side = "E", box = [1.5, 1] }
+"marking.out" = { at = [0.25, 1.5],   side = "E", box = [1.5, 1] }

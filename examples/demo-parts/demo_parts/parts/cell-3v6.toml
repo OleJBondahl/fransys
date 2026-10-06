@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CELL-3V6"
+manufacturer = "Demo"
+description = "Lithium primary cell, 3.6 V, 3 Ah"
+category = "generic"
+class_code = "G"
+
+[[function]]
+name = "cell"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "3.6"
+max_voltage_v = "4.2"
+min_voltage_v = "0"
+capacity_ah = "3"

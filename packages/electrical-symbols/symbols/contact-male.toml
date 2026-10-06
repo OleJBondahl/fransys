@@ -1,0 +1,24 @@
+schema = 1
+name = "Connector contact, male (plug)"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "contact-male" }
+
+# one contact per pole; the mating face is the south edge, geometry and not a port
+# (mated-pair spec J1): a mate makes equal pin names conductive, no conductor crosses it
+ports = [
+  { id = "in", at = [0, -2], dir = "N", description = "wire side" },
+]
+
+elements = [
+  { line = [[0, -2], [0, 0.5]] },
+  { polyline = [[-0.25, 0.5], [0.25, 0.5], [0.25, 2], [-0.25, 2]], closed = true, fill = "solid" },
+]
+
+lint_allow = [
+  { rule = "port-isolated", reason = "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol" },
+]
+
+[slots]
+tag          = { at = [-2.25, 1],   side = "W", box = [6, 1] }
+"marking.in" = { at = [0.25, -1.5], side = "E", box = [1.5, 1] }

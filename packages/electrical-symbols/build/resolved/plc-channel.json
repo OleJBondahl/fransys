@@ -1,0 +1,124 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1.5,
+      -1
+    ],
+    [
+      1.5,
+      1.5
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -1.5,
+          0
+        ],
+        [
+          1.5,
+          0
+        ],
+        [
+          1.5,
+          1.5
+        ],
+        [
+          -1.5,
+          1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8,
+      -1
+    ],
+    [
+      1.5,
+      1.5
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "a PLC channel ends its circuit at the module; no path of this symbol continues it",
+      "rule": "port-isolated"
+    },
+    {
+      "reason": "the channel name is written inside the end box",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "PLC channel (column end)",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        -1
+      ],
+      "description": "wire side",
+      "dir": "N",
+      "id": "in"
+    }
+  ],
+  "reference": {
+    "number": "plc-channel",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        -1.25,
+        0.75
+      ],
+      "box": [
+        2.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2,
+        0.75
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

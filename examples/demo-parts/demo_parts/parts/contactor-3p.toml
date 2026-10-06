@@ -1,0 +1,50 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CTR-3P-24"
+manufacturer = "Demo"
+description = "Contactor, 3-pole main circuit, 24 V DC coil"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[[function]]
+name = "main"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "1", role = "generic", symbol_port = "1.in" },
+    { name = "2", role = "generic", symbol_port = "1.out" },
+    { name = "3", role = "generic", symbol_port = "2.in" },
+    { name = "4", role = "generic", symbol_port = "2.out" },
+    { name = "5", role = "generic", symbol_port = "3.in" },
+    { name = "6", role = "generic", symbol_port = "3.out" },
+]
+links = [
+    { a = "1", b = "2", kind = "switched" },
+    { a = "3", b = "4", kind = "switched" },
+    { a = "5", b = "6", kind = "switched" },
+]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "25"
+
+[[function]]
+name = "aux"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "13", role = "generic", symbol_port = "in" },
+    { name = "14", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "13", b = "14", kind = "switched" }]
+
+[[supply]]
+supplier = "Demo Supply"
+supplier_part_number = "DS-0002"

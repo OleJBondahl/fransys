@@ -1,0 +1,39 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PSU-24-OK"
+manufacturer = "Demo"
+description = "Power supply, 24 V DC out, AC in, DC-OK signal contact"
+category = "generic"
+class_code = "T"
+
+[[function]]
+name = "input"
+kind = "load"
+ports = [
+    { name = "L", role = "generic" },
+    { name = "N", role = "generic" },
+]
+
+[function.rating]
+voltage_ac_v = "264"
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "24"
+
+[[function]]
+name = "dc_ok"
+kind = "generic"
+ports = [
+    { name = "13", role = "generic" },
+    { name = "14", role = "generic" },
+]
+links = [{ a = "13", b = "14", kind = "switched", rest = "open" }]

@@ -1,0 +1,24 @@
+schema = 1
+name = "Connector, fixed portion of an assembly"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "connector-fixed" }
+
+ports = [
+  { id = "in",  at = [0, -2], dir = "N", description = "wire side" },
+  { id = "out", at = [0, 2],  dir = "S", description = "far edge of the box" },
+]
+
+paths = [
+  { from = "in", to = "out", kind = "conductor", through = true },
+]
+
+elements = [
+  { line = [[0, -2], [0, 0]] },
+  { polyline = [[-2, 0], [2, 0], [2, 2], [-2, 2]], closed = true },
+]
+
+[slots]
+tag           = { at = [-2.25, 1],   side = "W", box = [6, 1] }
+"marking.in"  = { at = [0.25, -1.5], side = "E", box = [1.5, 1] }
+"marking.out" = { at = [0.25, 2.75], side = "E", box = [1.5, 1] }

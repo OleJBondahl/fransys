@@ -1,0 +1,25 @@
+schema = 1
+
+[part]
+mpn = "DEMO-TBLK-2P-DUAL"
+manufacturer = "Demo"
+description = "Feed-through terminal block, 2 ports, rated 250 V AC as a terminal, 500 V AC or 400 V DC as a part"
+category = "terminal"
+class_code = "X"
+
+[rating]
+voltage_ac_v = "500"
+voltage_dc_v = "400"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]
+
+[function.rating]
+voltage_ac_v = "250"

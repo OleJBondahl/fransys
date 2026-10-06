@@ -1,0 +1,282 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      -5
+    ],
+    [
+      4,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -2,
+          -5
+        ],
+        [
+          -2,
+          -2.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -5
+        ],
+        [
+          0,
+          -3
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          2,
+          -5
+        ],
+        [
+          2,
+          -2.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "none",
+      "r": 3,
+      "weight": "normal"
+    },
+    {
+      "at": [
+        0,
+        -0.75
+      ],
+      "height": 1,
+      "text": "M",
+      "weight": "normal"
+    },
+    {
+      "at": [
+        -1.125,
+        0.75
+      ],
+      "height": 1,
+      "text": "3",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -0.125,
+        0.75
+      ],
+      "end": 0,
+      "r": 0.5,
+      "start": 180,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0.875,
+        0.75
+      ],
+      "end": 180,
+      "r": 0.5,
+      "start": 0,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          2.625,
+          -1.5
+        ],
+        [
+          4,
+          -3.25
+        ],
+        [
+          4,
+          -5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -9.5,
+      -5
+    ],
+    [
+      5.75,
+      3
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Induction motor, three-phase, squirrel cage, with protective earth terminal",
+  "nodes": [
+    {
+      "ports": [
+        "pe"
+      ],
+      "potential": "protective_earth"
+    },
+    {
+      "ports": [
+        "u"
+      ]
+    },
+    {
+      "ports": [
+        "v"
+      ]
+    },
+    {
+      "ports": [
+        "w"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "u",
+      "kind": "impedance",
+      "through": false,
+      "to": "v"
+    },
+    {
+      "from": "v",
+      "kind": "impedance",
+      "through": false,
+      "to": "w"
+    },
+    {
+      "from": "w",
+      "kind": "impedance",
+      "through": false,
+      "to": "u"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -2,
+        -5
+      ],
+      "description": "phase U",
+      "dir": "N",
+      "id": "u"
+    },
+    {
+      "at": [
+        0,
+        -5
+      ],
+      "description": "phase V",
+      "dir": "N",
+      "id": "v"
+    },
+    {
+      "at": [
+        2,
+        -5
+      ],
+      "description": "phase W",
+      "dir": "N",
+      "id": "w"
+    },
+    {
+      "at": [
+        4,
+        -5
+      ],
+      "description": "protective earth",
+      "dir": "N",
+      "id": "pe"
+    }
+  ],
+  "reference": {
+    "number": "motor-3ph-pe",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.pe": {
+      "at": [
+        4.25,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.u": {
+      "at": [
+        -1.75,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.v": {
+      "at": [
+        0.25,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.w": {
+      "at": [
+        2.25,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -3.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

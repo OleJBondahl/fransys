@@ -1,0 +1,203 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3.5,
+      -2
+    ],
+    [
+      0,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -0.5,
+          0
+        ],
+        [
+          -2.5,
+          0
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2.5,
+          0
+        ],
+        [
+          -3.5,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          -3,
+          -0.5
+        ],
+        [
+          -3.5,
+          -0.5
+        ],
+        [
+          -3.5,
+          0.5
+        ],
+        [
+          -3,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -9.5,
+      -2
+    ],
+    [
+      1.75,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Switch, manually operated, push-button, automatic return",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    },
+    {
+      "ports": [
+        "out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "in",
+      "kind": "switch_open",
+      "through": true,
+      "to": "out"
+    }
+  ],
+  "pole_pitch": 8,
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "in"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "out"
+    }
+  ],
+  "reference": {
+    "number": "push-button",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.out": {
+      "at": [
+        0.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -3.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

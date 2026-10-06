@@ -1,0 +1,152 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -0.5,
+      -2
+    ],
+    [
+      0,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "arc": [
+        0,
+        -1.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0,
+        -0.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0,
+        0.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0,
+        1.5
+      ],
+      "end": 270,
+      "r": 0.5,
+      "start": 90,
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -7,
+      -2
+    ],
+    [
+      1.75,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Coil, general symbol",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    },
+    {
+      "ports": [
+        "out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "in",
+      "kind": "impedance",
+      "through": true,
+      "to": "out"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "in"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "out"
+    }
+  ],
+  "reference": {
+    "number": "coil",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.out": {
+      "at": [
+        0.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -1,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="6.25mm" height="15mm" viewBox="-1.5 -3 2.5 6">
+<title>Coil, general symbol</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<path d="M 0 -1 A 0.5 0.5 0 0 1 0 -2" stroke-width="0.1"/>
+<path d="M 0 0 A 0.5 0.5 0 0 1 0 -1" stroke-width="0.1"/>
+<path d="M 0 1 A 0.5 0.5 0 0 1 0 0" stroke-width="0.1"/>
+<path d="M 0 2 A 0.5 0.5 0 0 1 0 1" stroke-width="0.1"/>
+</g>
+</svg>

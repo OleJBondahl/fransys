@@ -1,0 +1,28 @@
+schema = 1
+name = "Transformer with two windings, general symbol"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "transformer" }
+
+parts = [
+  { as = "pri", use = "coil", orient = "MR0", at = [-1, 0] },
+  { as = "sec", use = "coil", at = [1, 0] },
+]
+
+ports = { pri_in = "pri.in", pri_out = "pri.out", sec_in = "sec.in", sec_out = "sec.out" }
+
+paths = [
+  { from = "pri_in", to = "pri_out", kind = "impedance" },
+  { from = "sec_in", to = "sec_out", kind = "impedance" },
+]
+
+lint_allow = [
+  { rule = "through-missing", reason = "the two windings are side by side at x = -1 and x = 1: neither winding path can be the through path (through-axis needs its ports at (0, -a) N and (0, a) S on x = 0) and no path spans both windings" },
+]
+
+[slots]
+tag               = { at = [-1.5, 0],   side = "W", box = [6, 1] }
+"marking.pri_in"  = { at = [-0.75, -2.75], side = "E", box = [1.5, 1] }
+"marking.pri_out" = { at = [-0.75, 2.75],  side = "E", box = [1.5, 1] }
+"marking.sec_in"  = { at = [1.25, -2.75],  side = "E", box = [1.5, 1] }
+"marking.sec_out" = { at = [1.25, 2.75],   side = "E", box = [1.5, 1] }

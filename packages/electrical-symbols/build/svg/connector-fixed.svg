@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15mm" height="15mm" viewBox="-3 -3 6 6">
+<title>Connector, fixed portion of an assembly</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-2" x2="0" y2="0" stroke-width="0.1"/>
+<polygon points="-2,0 2,0 2,2 -2,2" stroke-width="0.1"/>
+</g>
+</svg>

@@ -1,0 +1,27 @@
+schema = 1
+name = "Semiconductor diode, general symbol"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "diode" }
+
+ports = [
+  { id = "anode",   at = [0, -2], dir = "N" },
+  { id = "cathode", at = [0, 2],  dir = "S" },
+]
+
+paths = [
+  { from = "anode", to = "cathode", kind = "diode", through = true },
+]
+
+elements = [
+  { line = [[0, -2], [0, -1]] },
+  { line = [[0, 2], [0, 1]] },
+  { polyline = [[-1, -1], [1, -1], [0, 1]], closed = true },
+  { line = [[-1, 1], [1, 1]] },
+  { line = [[0, -1], [0, 1]] },
+]
+
+[slots]
+tag               = { at = [-1.5, 0],  side = "W", box = [6, 1] }
+"marking.anode"   = { at = [0.25, -2.25], side = "E", box = [1.5, 1] }
+"marking.cathode" = { at = [0.25, 2.25],  side = "E", box = [1.5, 1] }

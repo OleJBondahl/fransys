@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "electrical-symbols"
+version = "0.7.0"
+description = "Electrical graphical symbols as data, drawn after the conventions of IEC 60617"
+readme = "README.md"
+requires-python = ">=3.15"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ole Johan Bondahl" }]
+dependencies = ["graphical-symbols @ git+https://github.com/OleJBondahl/graphical-symbols@v0.3.0"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/electrical_symbols"]

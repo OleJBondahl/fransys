@@ -1,0 +1,191 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      -5
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -1,
+          -5
+        ],
+        [
+          -1,
+          -2.875
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          1,
+          -5
+        ],
+        [
+          1,
+          -2.875
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "none",
+      "r": 3,
+      "weight": "normal"
+    },
+    {
+      "at": [
+        0,
+        -0.75
+      ],
+      "height": 1,
+      "text": "M",
+      "weight": "normal"
+    },
+    {
+      "at": [
+        -1.125,
+        0.75
+      ],
+      "height": 1,
+      "text": "1",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        -0.125,
+        0.75
+      ],
+      "end": 0,
+      "r": 0.5,
+      "start": 180,
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0.875,
+        0.75
+      ],
+      "end": 180,
+      "r": 0.5,
+      "start": 0,
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -9.5,
+      -5
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "both terminals are on the top side and joined by one winding path: no path is a series axis with its ports at (0, -a) N and (0, a) S",
+      "rule": "through-missing"
+    }
+  ],
+  "name": "Induction motor, single-phase, squirrel-cage",
+  "nodes": [
+    {
+      "ports": [
+        "u"
+      ]
+    },
+    {
+      "ports": [
+        "v"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "u",
+      "kind": "impedance",
+      "through": false,
+      "to": "v"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -1,
+        -5
+      ],
+      "description": "supply conductor U",
+      "dir": "N",
+      "id": "u"
+    },
+    {
+      "at": [
+        1,
+        -5
+      ],
+      "description": "supply conductor V",
+      "dir": "N",
+      "id": "v"
+    }
+  ],
+  "reference": {
+    "number": "motor-1ph",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.u": {
+      "at": [
+        -0.75,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.v": {
+      "at": [
+        1.25,
+        -4.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -3.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

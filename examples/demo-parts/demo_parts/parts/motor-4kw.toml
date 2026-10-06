@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MOTOR-4KW"
+manufacturer = "Demo"
+description = "Three-phase motor, 4 kW"
+category = "generic"
+class_code = "M"
+
+[[function]]
+name = "motor"
+kind = "actuator"
+ports = [
+    { name = "U", role = "generic" },
+    { name = "V", role = "generic" },
+    { name = "W", role = "generic" },
+    { name = "PE", role = "pe" },
+]

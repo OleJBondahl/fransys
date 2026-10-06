@@ -1,0 +1,221 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1.25,
+      -3
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "none",
+      "r": 1.25,
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0.75,
+          -1
+        ],
+        [
+          3,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0.75,
+          1
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -7.75,
+      -3
+    ],
+    [
+      4.5,
+      3
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "the secondary leads leave the ring sideways, so the primary path cannot carry the through flag: a side port on a through symbol fails the repeat(symbol, 3) gate (C8), and the secondary path has both ports on the east side, so it is no series axis with its ports at (0, -a) N and (0, a) S",
+      "rule": "through-missing"
+    }
+  ],
+  "name": "Current transformer, general symbol",
+  "nodes": [
+    {
+      "ports": [
+        "pri_in"
+      ]
+    },
+    {
+      "ports": [
+        "pri_out"
+      ]
+    },
+    {
+      "ports": [
+        "sec_in"
+      ]
+    },
+    {
+      "ports": [
+        "sec_out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "pri_in",
+      "kind": "conductor",
+      "through": false,
+      "to": "pri_out"
+    },
+    {
+      "from": "sec_in",
+      "kind": "impedance",
+      "through": false,
+      "to": "sec_out"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -3
+      ],
+      "description": "primary conductor, top",
+      "dir": "N",
+      "id": "pri_in"
+    },
+    {
+      "at": [
+        0,
+        3
+      ],
+      "description": "primary conductor, bottom",
+      "dir": "S",
+      "id": "pri_out"
+    },
+    {
+      "at": [
+        3,
+        -1
+      ],
+      "description": "secondary winding, first conductor",
+      "dir": "E",
+      "id": "sec_in"
+    },
+    {
+      "at": [
+        3,
+        1
+      ],
+      "description": "secondary winding, second conductor",
+      "dir": "E",
+      "id": "sec_out"
+    }
+  ],
+  "reference": {
+    "number": "current-transformer",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.pri_in": {
+      "at": [
+        0.25,
+        -2.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.pri_out": {
+      "at": [
+        0.25,
+        2.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.sec_in": {
+      "at": [
+        3,
+        -2
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.sec_out": {
+      "at": [
+        3,
+        2
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -1.75,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

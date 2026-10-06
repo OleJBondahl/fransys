@@ -1,0 +1,7266 @@
+{
+  "schema": 1,
+  "standard": "IEC 60617",
+  "symbols": {
+    "actuator-mushroom": {
+      "anchors": [
+        {
+          "at": [
+            0,
+            0
+          ],
+          "dir": "W",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          0,
+          -0.75
+        ],
+        [
+          1.75,
+          0.75
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              -0.75
+            ],
+            [
+              1,
+              0.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            1,
+            0
+          ],
+          "end": 90,
+          "r": 0.75,
+          "start": -90,
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          -0.75
+        ],
+        [
+          1.75,
+          0.75
+        ]
+      ],
+      "kind": "qualifier",
+      "name": "Actuator (mushroom head, operated by pushing)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "actuator-mushroom",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
+      "status": "unverified"
+    },
+    "actuator-push": {
+      "anchors": [
+        {
+          "at": [
+            0,
+            0
+          ],
+          "dir": "E",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          -1,
+          -0.5
+        ],
+        [
+          0,
+          0.5
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              0
+            ],
+            [
+              -1,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              -0.5,
+              -0.5
+            ],
+            [
+              -1,
+              -0.5
+            ],
+            [
+              -1,
+              0.5
+            ],
+            [
+              -0.5,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -1,
+          -0.5
+        ],
+        [
+          0,
+          0.5
+        ]
+      ],
+      "kind": "qualifier",
+      "name": "Actuator (operated by pushing)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "actuator-push",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
+      "status": "unverified"
+    },
+    "break-contact": {
+      "anchors": [
+        {
+          "at": [
+            0.5,
+            0
+          ],
+          "dir": "E",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          0,
+          -2
+        ],
+        [
+          1.25,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -1
+            ],
+            [
+              1.25,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              1.125,
+              -1.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -6.5,
+          -2.75
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Break contact",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "switch_closed",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "break-contact",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -0.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "capacitor": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -0.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              0.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              -0.25
+            ],
+            [
+              1,
+              -0.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              0.25
+            ],
+            [
+              1,
+              0.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Capacitor, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "impedance",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "capacitor",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "change-over-contact": {
+      "anchors": [
+        {
+          "at": [
+            -0.5,
+            0
+          ],
+          "dir": "W",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          -2,
+          -2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2,
+              2
+            ],
+            [
+              -2,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2,
+              1
+            ],
+            [
+              -1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -1
+            ],
+            [
+              -1.125,
+              1.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -10,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Change-over break before make contact",
+      "nodes": [
+        {
+          "ports": [
+            "com"
+          ]
+        },
+        {
+          "ports": [
+            "no"
+          ]
+        },
+        {
+          "ports": [
+            "nc"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "com",
+          "kind": "switch_open",
+          "through": true,
+          "to": "no"
+        },
+        {
+          "from": "nc",
+          "kind": "switch_closed",
+          "through": false,
+          "to": "com"
+        }
+      ],
+      "pole_pitch": 8,
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "common",
+          "dir": "N",
+          "id": "com"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "closes on actuation",
+          "dir": "S",
+          "id": "no"
+        },
+        {
+          "at": [
+            -2,
+            2
+          ],
+          "description": "opens on actuation",
+          "dir": "S",
+          "id": "nc"
+        }
+      ],
+      "reference": {
+        "number": "change-over-contact",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.com": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.nc": {
+          "at": [
+            -2.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "W"
+        },
+        "marking.no": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -4,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "circuit-breaker": {
+      "anchors": [
+        {
+          "at": [
+            -0.5,
+            0
+          ],
+          "dir": "W",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          0.5,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              -0.5
+            ],
+            [
+              0.5,
+              -1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -2.75
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Circuit breaker",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "switch_open",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "circuit-breaker",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "circuit-breaker-function": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.5,
+          -0.5
+        ],
+        [
+          0.5,
+          0.5
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -0.5,
+              -0.5
+            ],
+            [
+              0.5,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              0.5
+            ],
+            [
+              0.5,
+              -0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -0.5,
+          -0.5
+        ],
+        [
+          0.5,
+          0.5
+        ]
+      ],
+      "kind": "qualifier",
+      "name": "Circuit breaker function",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "circuit-breaker-function",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
+      "status": "unverified"
+    },
+    "coil": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.5,
+          -2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "arc": [
+            0,
+            -1.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0,
+            -0.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0,
+            0.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0,
+            1.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Coil, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "impedance",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "coil",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "connection-point": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.25,
+          -0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ],
+      "elements": [
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "solid",
+          "r": 0.25,
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -0.25,
+          -0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "junction: wires meet at the centre of the dot",
+          "rule": "port-on-body-edge"
+        },
+        {
+          "reason": "junction: wires start inside the dot",
+          "rule": "port-lane-clear"
+        },
+        {
+          "reason": "a junction carries no tag or markings",
+          "rule": "slot-missing"
+        }
+      ],
+      "name": "Connection point",
+      "nodes": [
+        {
+          "ports": [
+            "n",
+            "e",
+            "s",
+            "w"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            0
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "n"
+        },
+        {
+          "at": [
+            0,
+            0
+          ],
+          "description": "",
+          "dir": "E",
+          "id": "e"
+        },
+        {
+          "at": [
+            0,
+            0
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "s"
+        },
+        {
+          "at": [
+            0,
+            0
+          ],
+          "description": "",
+          "dir": "W",
+          "id": "w"
+        }
+      ],
+      "reference": {
+        "number": "connection-point",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
+      "status": "unverified"
+    },
+    "connector-fixed": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          -2
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.25,
+          -2
+        ],
+        [
+          2,
+          3.25
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Connector, fixed portion of an assembly",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "conductor",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "wire side",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "far edge of the box",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "connector-fixed",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.25,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "contact": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              2
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.25,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Connector contact, no stated gender",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "wire side",
+          "dir": "N",
+          "id": "in"
+        }
+      ],
+      "reference": {
+        "number": "contact",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.25,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "contact-female": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0,
+            2
+          ],
+          "end": 0,
+          "r": 1,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.25,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Connector contact, female (socket)",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "wire side",
+          "dir": "N",
+          "id": "in"
+        }
+      ],
+      "reference": {
+        "number": "contact-female",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.25,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "contact-male": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.25,
+          -2
+        ],
+        [
+          0.25,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "solid",
+          "polyline": [
+            [
+              -0.25,
+              0.5
+            ],
+            [
+              0.25,
+              0.5
+            ],
+            [
+              0.25,
+              2
+            ],
+            [
+              -0.25,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.25,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Connector contact, male (plug)",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "wire side",
+          "dir": "N",
+          "id": "in"
+        }
+      ],
+      "reference": {
+        "number": "contact-male",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.25,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "converter-dc-dc": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          -3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -1,
+              -3
+            ],
+            [
+              -1,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              -3
+            ],
+            [
+              1,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              3
+            ],
+            [
+              -1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2,
+              2
+            ],
+            [
+              2,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1.5,
+              -1
+            ],
+            [
+              0.5,
+              -1
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1
+            ],
+            [
+              1.5,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.5,
+          -3.25
+        ],
+        [
+          2.75,
+          3.25
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the input pair sits at x = -1 and x = 1 and so does the output pair: no path has its ports at (0, -a) N and (0, a) S on x = 0, so no path can be the through path",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "DC/DC converter",
+      "nodes": [
+        {
+          "ports": [
+            "in_plus"
+          ]
+        },
+        {
+          "ports": [
+            "in_minus"
+          ]
+        },
+        {
+          "ports": [
+            "out_plus"
+          ]
+        },
+        {
+          "ports": [
+            "out_minus"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in_plus",
+          "kind": "impedance",
+          "through": false,
+          "to": "in_minus"
+        },
+        {
+          "from": "out_minus",
+          "kind": "source",
+          "through": false,
+          "to": "out_plus"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -1,
+            -3
+          ],
+          "description": "input side, positive",
+          "dir": "N",
+          "id": "in_plus"
+        },
+        {
+          "at": [
+            1,
+            -3
+          ],
+          "description": "input side, negative",
+          "dir": "N",
+          "id": "in_minus"
+        },
+        {
+          "at": [
+            -1,
+            3
+          ],
+          "description": "output side, positive",
+          "dir": "S",
+          "id": "out_plus"
+        },
+        {
+          "at": [
+            1,
+            3
+          ],
+          "description": "output side, negative",
+          "dir": "S",
+          "id": "out_minus"
+        }
+      ],
+      "reference": {
+        "number": "converter-dc-dc",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in_minus": {
+          "at": [
+            1.25,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.in_plus": {
+          "at": [
+            -0.75,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out_minus": {
+          "at": [
+            1.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out_plus": {
+          "at": [
+            -0.75,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "current-transformer": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1.25,
+          -3
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 1.25,
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0.75,
+              -1
+            ],
+            [
+              3,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0.75,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.75,
+          -3
+        ],
+        [
+          4.5,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the secondary leads leave the ring sideways, so the primary path cannot carry the through flag: a side port on a through symbol fails the repeat(symbol, 3) gate (C8), and the secondary path has both ports on the east side, so it is no series axis with its ports at (0, -a) N and (0, a) S",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "Current transformer, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "pri_in"
+          ]
+        },
+        {
+          "ports": [
+            "pri_out"
+          ]
+        },
+        {
+          "ports": [
+            "sec_in"
+          ]
+        },
+        {
+          "ports": [
+            "sec_out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "pri_in",
+          "kind": "conductor",
+          "through": false,
+          "to": "pri_out"
+        },
+        {
+          "from": "sec_in",
+          "kind": "impedance",
+          "through": false,
+          "to": "sec_out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "primary conductor, top",
+          "dir": "N",
+          "id": "pri_in"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "primary conductor, bottom",
+          "dir": "S",
+          "id": "pri_out"
+        },
+        {
+          "at": [
+            3,
+            -1
+          ],
+          "description": "secondary winding, first conductor",
+          "dir": "E",
+          "id": "sec_in"
+        },
+        {
+          "at": [
+            3,
+            1
+          ],
+          "description": "secondary winding, second conductor",
+          "dir": "E",
+          "id": "sec_out"
+        }
+      ],
+      "reference": {
+        "number": "current-transformer",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.pri_in": {
+          "at": [
+            0.25,
+            -2.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.pri_out": {
+          "at": [
+            0.25,
+            2.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.sec_in": {
+          "at": [
+            3,
+            -2
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.sec_out": {
+          "at": [
+            3,
+            2
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.75,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "diode": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -2.75
+        ],
+        [
+          1.75,
+          2.75
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Semiconductor diode, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "anode"
+          ]
+        },
+        {
+          "ports": [
+            "cathode"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "anode",
+          "kind": "diode",
+          "through": true,
+          "to": "cathode"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "anode"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "cathode"
+        }
+      ],
+      "reference": {
+        "number": "diode",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.anode": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.cathode": {
+          "at": [
+            0.25,
+            2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "earth": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1.5,
+          -2
+        ],
+        [
+          1.5,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1.5,
+              0
+            ],
+            [
+              1.5,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              0.5
+            ],
+            [
+              1,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1
+            ],
+            [
+              0.5,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8,
+          -2
+        ],
+        [
+          1.75,
+          1
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Earth, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "earth"
+          ],
+          "potential": "earth"
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "earth"
+        }
+      ],
+      "reference": {
+        "number": "earth",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.earth": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "emergency-stop": {
+      "anchors": [],
+      "body_box": [
+        [
+          -4.5,
+          -2
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -1
+            ],
+            [
+              1.25,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              1.125,
+              -1.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2.75,
+              0
+            ],
+            [
+              -3.75,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -3.75,
+              -0.75
+            ],
+            [
+              -3.75,
+              0.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -3.75,
+            0
+          ],
+          "end": 270,
+          "r": 0.75,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0.5,
+              0
+            ],
+            [
+              -1.75,
+              0
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2.75,
+              0
+            ],
+            [
+              -1.75,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              -3,
+              0
+            ],
+            [
+              -3,
+              -0.5
+            ],
+            [
+              -1.75,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1.125,
+              -1.5
+            ],
+            [
+              -1.125,
+              0
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              -1.75,
+              -2
+            ],
+            [
+              -1.75,
+              -1.5
+            ],
+            [
+              -0.5,
+              -1.5
+            ],
+            [
+              -0.5,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            2.25,
+            0
+          ],
+          "fill": "none",
+          "r": 0.75,
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1.75,
+              0
+            ],
+            [
+              2.75,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              2.5,
+              -0.25
+            ],
+            [
+              2.75,
+              0
+            ],
+            [
+              2.5,
+              0.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -11,
+          -2.75
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Emergency stop, mushroom push-button with latching break contact",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "switch_closed",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "pole_pitch": 8,
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "emergency-stop",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "fuse": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.5,
+          -3
+        ],
+        [
+          0.5,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              1.5
+            ],
+            [
+              -0.5,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "solid",
+          "polyline": [
+            [
+              -0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -1
+            ],
+            [
+              -0.5,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7,
+          -3
+        ],
+        [
+          1.75,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Fuse",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "conductor",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "fuse",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "ground": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          1.5
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8,
+          -2
+        ],
+        [
+          1.75,
+          1.5
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "0 V reference ground; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Ground, reference (0 V) symbol",
+      "nodes": [
+        {
+          "ports": [
+            "ground"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "ground"
+        }
+      ],
+      "reference": {
+        "number": "ground",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.ground": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2,
+            0.5
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "lamp": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 1,
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.75,
+              -0.75
+            ],
+            [
+              0.75,
+              0.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0.75,
+              -0.75
+            ],
+            [
+              -0.75,
+              0.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -2.25
+        ],
+        [
+          1.75,
+          2.25
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Lamp, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "impedance",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "lamp",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "make-contact": {
+      "anchors": [
+        {
+          "at": [
+            -0.5,
+            0
+          ],
+          "dir": "W",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Make contact, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "switch_open",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "make-contact",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "motor-1ph": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          -5
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -1,
+              -5
+            ],
+            [
+              -1,
+              -2.875
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              -5
+            ],
+            [
+              1,
+              -2.875
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 3,
+          "weight": "normal"
+        },
+        {
+          "at": [
+            0,
+            -0.75
+          ],
+          "height": 1,
+          "text": "M",
+          "weight": "normal"
+        },
+        {
+          "at": [
+            -1.125,
+            0.75
+          ],
+          "height": 1,
+          "text": "1",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -0.125,
+            0.75
+          ],
+          "end": 0,
+          "r": 0.5,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0.875,
+            0.75
+          ],
+          "end": 180,
+          "r": 0.5,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -9.5,
+          -5
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "both terminals are on the top side and joined by one winding path: no path is a series axis with its ports at (0, -a) N and (0, a) S",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "Induction motor, single-phase, squirrel-cage",
+      "nodes": [
+        {
+          "ports": [
+            "u"
+          ]
+        },
+        {
+          "ports": [
+            "v"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "u",
+          "kind": "impedance",
+          "through": false,
+          "to": "v"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -1,
+            -5
+          ],
+          "description": "supply conductor U",
+          "dir": "N",
+          "id": "u"
+        },
+        {
+          "at": [
+            1,
+            -5
+          ],
+          "description": "supply conductor V",
+          "dir": "N",
+          "id": "v"
+        }
+      ],
+      "reference": {
+        "number": "motor-1ph",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.u": {
+          "at": [
+            -0.75,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.v": {
+          "at": [
+            1.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -3.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "motor-1ph-pe": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          -5
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -1,
+              -5
+            ],
+            [
+              -1,
+              -2.875
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              -5
+            ],
+            [
+              1,
+              -2.875
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 3,
+          "weight": "normal"
+        },
+        {
+          "at": [
+            0,
+            -0.75
+          ],
+          "height": 1,
+          "text": "M",
+          "weight": "normal"
+        },
+        {
+          "at": [
+            -1.125,
+            0.75
+          ],
+          "height": 1,
+          "text": "1",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -0.125,
+            0.75
+          ],
+          "end": 0,
+          "r": 0.5,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0.875,
+            0.75
+          ],
+          "end": 180,
+          "r": 0.5,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              2,
+              -2.25
+            ],
+            [
+              3,
+              -3.25
+            ],
+            [
+              3,
+              -5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -9.5,
+          -5
+        ],
+        [
+          4.75,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Induction motor, single-phase, squirrel-cage, with protective earth terminal",
+      "nodes": [
+        {
+          "ports": [
+            "pe"
+          ],
+          "potential": "protective_earth"
+        },
+        {
+          "ports": [
+            "u"
+          ]
+        },
+        {
+          "ports": [
+            "v"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "u",
+          "kind": "impedance",
+          "through": false,
+          "to": "v"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -1,
+            -5
+          ],
+          "description": "supply conductor U",
+          "dir": "N",
+          "id": "u"
+        },
+        {
+          "at": [
+            1,
+            -5
+          ],
+          "description": "supply conductor V",
+          "dir": "N",
+          "id": "v"
+        },
+        {
+          "at": [
+            3,
+            -5
+          ],
+          "description": "protective earth",
+          "dir": "N",
+          "id": "pe"
+        }
+      ],
+      "reference": {
+        "number": "motor-1ph-pe",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.pe": {
+          "at": [
+            3.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.u": {
+          "at": [
+            -0.75,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.v": {
+          "at": [
+            1.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -3.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "motor-3ph": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          -5
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -2,
+              -5
+            ],
+            [
+              -2,
+              -2.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -5
+            ],
+            [
+              0,
+              -3
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              2,
+              -5
+            ],
+            [
+              2,
+              -2.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 3,
+          "weight": "normal"
+        },
+        {
+          "at": [
+            0,
+            -0.75
+          ],
+          "height": 1,
+          "text": "M",
+          "weight": "normal"
+        },
+        {
+          "at": [
+            -1.125,
+            0.75
+          ],
+          "height": 1,
+          "text": "3",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -0.125,
+            0.75
+          ],
+          "end": 0,
+          "r": 0.5,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0.875,
+            0.75
+          ],
+          "end": 180,
+          "r": 0.5,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -9.5,
+          -5
+        ],
+        [
+          3.75,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the three phase terminals are parallel: every pair is joined by a winding path and no path is a series axis with its ports at (0, -a) N and (0, a) S",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "Induction motor, three-phase, squirrel cage",
+      "nodes": [
+        {
+          "ports": [
+            "u"
+          ]
+        },
+        {
+          "ports": [
+            "v"
+          ]
+        },
+        {
+          "ports": [
+            "w"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "u",
+          "kind": "impedance",
+          "through": false,
+          "to": "v"
+        },
+        {
+          "from": "v",
+          "kind": "impedance",
+          "through": false,
+          "to": "w"
+        },
+        {
+          "from": "w",
+          "kind": "impedance",
+          "through": false,
+          "to": "u"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -2,
+            -5
+          ],
+          "description": "phase U",
+          "dir": "N",
+          "id": "u"
+        },
+        {
+          "at": [
+            0,
+            -5
+          ],
+          "description": "phase V",
+          "dir": "N",
+          "id": "v"
+        },
+        {
+          "at": [
+            2,
+            -5
+          ],
+          "description": "phase W",
+          "dir": "N",
+          "id": "w"
+        }
+      ],
+      "reference": {
+        "number": "motor-3ph",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.u": {
+          "at": [
+            -1.75,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.v": {
+          "at": [
+            0.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.w": {
+          "at": [
+            2.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -3.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "motor-3ph-pe": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          -5
+        ],
+        [
+          4,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -2,
+              -5
+            ],
+            [
+              -2,
+              -2.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -5
+            ],
+            [
+              0,
+              -3
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              2,
+              -5
+            ],
+            [
+              2,
+              -2.25
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 3,
+          "weight": "normal"
+        },
+        {
+          "at": [
+            0,
+            -0.75
+          ],
+          "height": 1,
+          "text": "M",
+          "weight": "normal"
+        },
+        {
+          "at": [
+            -1.125,
+            0.75
+          ],
+          "height": 1,
+          "text": "3",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -0.125,
+            0.75
+          ],
+          "end": 0,
+          "r": 0.5,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0.875,
+            0.75
+          ],
+          "end": 180,
+          "r": 0.5,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              2.625,
+              -1.5
+            ],
+            [
+              4,
+              -3.25
+            ],
+            [
+              4,
+              -5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -9.5,
+          -5
+        ],
+        [
+          5.75,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Induction motor, three-phase, squirrel cage, with protective earth terminal",
+      "nodes": [
+        {
+          "ports": [
+            "pe"
+          ],
+          "potential": "protective_earth"
+        },
+        {
+          "ports": [
+            "u"
+          ]
+        },
+        {
+          "ports": [
+            "v"
+          ]
+        },
+        {
+          "ports": [
+            "w"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "u",
+          "kind": "impedance",
+          "through": false,
+          "to": "v"
+        },
+        {
+          "from": "v",
+          "kind": "impedance",
+          "through": false,
+          "to": "w"
+        },
+        {
+          "from": "w",
+          "kind": "impedance",
+          "through": false,
+          "to": "u"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -2,
+            -5
+          ],
+          "description": "phase U",
+          "dir": "N",
+          "id": "u"
+        },
+        {
+          "at": [
+            0,
+            -5
+          ],
+          "description": "phase V",
+          "dir": "N",
+          "id": "v"
+        },
+        {
+          "at": [
+            2,
+            -5
+          ],
+          "description": "phase W",
+          "dir": "N",
+          "id": "w"
+        },
+        {
+          "at": [
+            4,
+            -5
+          ],
+          "description": "protective earth",
+          "dir": "N",
+          "id": "pe"
+        }
+      ],
+      "reference": {
+        "number": "motor-3ph-pe",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.pe": {
+          "at": [
+            4.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.u": {
+          "at": [
+            -1.75,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.v": {
+          "at": [
+            0.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.w": {
+          "at": [
+            2.25,
+            -4.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -3.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "operating-device": {
+      "anchors": [
+        {
+          "at": [
+            2,
+            0
+          ],
+          "dir": "E",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          -2,
+          -3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              -1
+            ],
+            [
+              2,
+              -1
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              -2,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.5,
+          -3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Operating device, general symbol; relay coil, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "impedance",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "operating-device",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            2
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "plc-channel": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1.5,
+          -1
+        ],
+        [
+          1.5,
+          1.5
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1.5,
+              0
+            ],
+            [
+              1.5,
+              0
+            ],
+            [
+              1.5,
+              1.5
+            ],
+            [
+              -1.5,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8,
+          -1
+        ],
+        [
+          1.5,
+          1.5
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "a PLC channel ends its circuit at the module; no path of this symbol continues it",
+          "rule": "port-isolated"
+        },
+        {
+          "reason": "the channel name is written inside the end box",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "PLC channel (column end)",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -1
+          ],
+          "description": "wire side",
+          "dir": "N",
+          "id": "in"
+        }
+      ],
+      "reference": {
+        "number": "plc-channel",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            -1.25,
+            0.75
+          ],
+          "box": [
+            2.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2,
+            0.75
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "power-supply": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8,
+          -1
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "supply rail marker; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Power supply, rail symbol",
+      "nodes": [
+        {
+          "ports": [
+            "supply"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            1
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "supply"
+        }
+      ],
+      "reference": {
+        "number": "power-supply",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.supply": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "protective-earth": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1.625,
+          -2
+        ],
+        [
+          1.625,
+          2.625
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1.5,
+              0.5
+            ],
+            [
+              1.5,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1.5
+            ],
+            [
+              0.5,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            1
+          ],
+          "fill": "none",
+          "r": 1.625,
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8,
+          -2
+        ],
+        [
+          1.75,
+          2.625
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Protective earth",
+      "nodes": [
+        {
+          "ports": [
+            "pe"
+          ],
+          "potential": "protective_earth"
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "pe"
+        }
+      ],
+      "reference": {
+        "number": "protective-earth",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.pe": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2,
+            0.5
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "psu": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          -3
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -2,
+              -3
+            ],
+            [
+              -2,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2,
+              3
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -3,
+              -2
+            ],
+            [
+              3,
+              -2
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              -3,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -3,
+              2
+            ],
+            [
+              3,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1.75,
+            -1.125
+          ],
+          "end": 0,
+          "r": 0.375,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1,
+            -1.125
+          ],
+          "end": 180,
+          "r": 0.375,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              1
+            ],
+            [
+              2.5,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              1.5
+            ],
+            [
+              2.5,
+              1.5
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -9.5,
+          -3.25
+        ],
+        [
+          3.75,
+          3.25
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the status signal is a contact of the unit's monitor, not on the power path",
+          "rule": "port-isolated"
+        },
+        {
+          "reason": "an isolated converter: no conductive path joins its input to its output, so no path can be the through path",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "Power supply unit (a.c./d.c. in, d.c. out)",
+      "nodes": [
+        {
+          "ports": [
+            "l"
+          ]
+        },
+        {
+          "ports": [
+            "n"
+          ]
+        },
+        {
+          "ports": [
+            "plus"
+          ]
+        },
+        {
+          "ports": [
+            "minus"
+          ]
+        },
+        {
+          "ports": [
+            "sig"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "l",
+          "kind": "impedance",
+          "through": false,
+          "to": "n"
+        },
+        {
+          "from": "minus",
+          "kind": "source",
+          "through": false,
+          "to": "plus"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -2,
+            -3
+          ],
+          "description": "input, line or d.c. positive",
+          "dir": "N",
+          "id": "l"
+        },
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "input, neutral or d.c. negative",
+          "dir": "N",
+          "id": "n"
+        },
+        {
+          "at": [
+            -2,
+            3
+          ],
+          "description": "d.c. output, positive",
+          "dir": "S",
+          "id": "plus"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "d.c. output, negative",
+          "dir": "S",
+          "id": "minus"
+        },
+        {
+          "at": [
+            2,
+            3
+          ],
+          "description": "status signal output",
+          "dir": "S",
+          "id": "sig"
+        }
+      ],
+      "reference": {
+        "number": "psu",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.l": {
+          "at": [
+            -1.75,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.minus": {
+          "at": [
+            0.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.n": {
+          "at": [
+            0.25,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.plus": {
+          "at": [
+            -1.75,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.sig": {
+          "at": [
+            2.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -3.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "push-button": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3.5,
+          -2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              0
+            ],
+            [
+              -2.5,
+              0
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2.5,
+              0
+            ],
+            [
+              -3.5,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              -3,
+              -0.5
+            ],
+            [
+              -3.5,
+              -0.5
+            ],
+            [
+              -3.5,
+              0.5
+            ],
+            [
+              -3,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -9.5,
+          -2
+        ],
+        [
+          1.75,
+          2
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Switch, manually operated, push-button, automatic return",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "switch_open",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "pole_pitch": 8,
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "push-button",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            1.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -3.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "rcd": {
+      "anchors": [
+        {
+          "at": [
+            -0.5,
+            0
+          ],
+          "dir": "W",
+          "id": "link"
+        }
+      ],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          0.5,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -2
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              -1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              -0.5
+            ],
+            [
+              0.5,
+              -1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "circle": [
+            0,
+            1.5
+          ],
+          "fill": "none",
+          "r": 0.5,
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -2.75
+        ],
+        [
+          2.25,
+          2.75
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Residual current operated circuit breaker",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "switch_open",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "rcd",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.75,
+            2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "rectifier": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          -3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -1,
+              -3
+            ],
+            [
+              -1,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              -3
+            ],
+            [
+              1,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              3
+            ],
+            [
+              -1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2,
+              2
+            ],
+            [
+              2,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1,
+            -1.125
+          ],
+          "end": 0,
+          "r": 0.5,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0,
+            -1.125
+          ],
+          "end": 180,
+          "r": 0.5,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1
+            ],
+            [
+              1.5,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.5,
+          -3.25
+        ],
+        [
+          2.75,
+          3.25
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the a.c. pair sits at x = -1 and x = 1 and so does the d.c. pair: no path has its ports at (0, -a) N and (0, a) S on x = 0, so no path can be the through path",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "Rectifier",
+      "nodes": [
+        {
+          "ports": [
+            "u"
+          ]
+        },
+        {
+          "ports": [
+            "v"
+          ]
+        },
+        {
+          "ports": [
+            "plus"
+          ]
+        },
+        {
+          "ports": [
+            "minus"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "u",
+          "kind": "impedance",
+          "through": false,
+          "to": "v"
+        },
+        {
+          "from": "minus",
+          "kind": "source",
+          "through": false,
+          "to": "plus"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -1,
+            -3
+          ],
+          "description": "a.c. input, first conductor",
+          "dir": "N",
+          "id": "u"
+        },
+        {
+          "at": [
+            1,
+            -3
+          ],
+          "description": "a.c. input, second conductor",
+          "dir": "N",
+          "id": "v"
+        },
+        {
+          "at": [
+            -1,
+            3
+          ],
+          "description": "d.c. output, positive",
+          "dir": "S",
+          "id": "plus"
+        },
+        {
+          "at": [
+            1,
+            3
+          ],
+          "description": "d.c. output, negative",
+          "dir": "S",
+          "id": "minus"
+        }
+      ],
+      "reference": {
+        "number": "rectifier",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.minus": {
+          "at": [
+            1.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.plus": {
+          "at": [
+            -0.75,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.u": {
+          "at": [
+            -0.75,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.v": {
+          "at": [
+            1.25,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "rectifier-pe": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          -3
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -1,
+              -3
+            ],
+            [
+              -1,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              -3
+            ],
+            [
+              1,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -1,
+              3
+            ],
+            [
+              -1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -2,
+              2
+            ],
+            [
+              2,
+              -2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1,
+            -1.125
+          ],
+          "end": 0,
+          "r": 0.5,
+          "start": 180,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            0,
+            -1.125
+          ],
+          "end": 180,
+          "r": 0.5,
+          "start": 0,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1
+            ],
+            [
+              1.5,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              3,
+              -3
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -8.5,
+          -3.25
+        ],
+        [
+          4.75,
+          3.25
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Rectifier, with protective earth terminal",
+      "nodes": [
+        {
+          "ports": [
+            "pe"
+          ],
+          "potential": "protective_earth"
+        },
+        {
+          "ports": [
+            "u"
+          ]
+        },
+        {
+          "ports": [
+            "v"
+          ]
+        },
+        {
+          "ports": [
+            "plus"
+          ]
+        },
+        {
+          "ports": [
+            "minus"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "u",
+          "kind": "impedance",
+          "through": false,
+          "to": "v"
+        },
+        {
+          "from": "minus",
+          "kind": "source",
+          "through": false,
+          "to": "plus"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -1,
+            -3
+          ],
+          "description": "a.c. input, first conductor",
+          "dir": "N",
+          "id": "u"
+        },
+        {
+          "at": [
+            1,
+            -3
+          ],
+          "description": "a.c. input, second conductor",
+          "dir": "N",
+          "id": "v"
+        },
+        {
+          "at": [
+            3,
+            -3
+          ],
+          "description": "protective earth",
+          "dir": "N",
+          "id": "pe"
+        },
+        {
+          "at": [
+            -1,
+            3
+          ],
+          "description": "d.c. output, positive",
+          "dir": "S",
+          "id": "plus"
+        },
+        {
+          "at": [
+            1,
+            3
+          ],
+          "description": "d.c. output, negative",
+          "dir": "S",
+          "id": "minus"
+        }
+      ],
+      "reference": {
+        "number": "rectifier-pe",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.minus": {
+          "at": [
+            1.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.pe": {
+          "at": [
+            3.25,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.plus": {
+          "at": [
+            -0.75,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.u": {
+          "at": [
+            -0.75,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.v": {
+          "at": [
+            1.25,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -2.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "residual-current-core": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.5,
+          -0.5
+        ],
+        [
+          0.5,
+          0.5
+        ]
+      ],
+      "elements": [
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 0.5,
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -0.5,
+          -0.5
+        ],
+        [
+          0.5,
+          0.5
+        ]
+      ],
+      "kind": "qualifier",
+      "name": "Residual current sensing core",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "residual-current-core",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
+      "status": "unverified"
+    },
+    "resistor": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.5,
+          -3
+        ],
+        [
+          0.5,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              -1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              -1.5
+            ],
+            [
+              0.5,
+              1.5
+            ],
+            [
+              -0.5,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7,
+          -3
+        ],
+        [
+          1.75,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Resistor, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "impedance",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "resistor",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "terminal": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "none",
+          "r": 0.25,
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              -0.25
+            ],
+            [
+              0,
+              -1
+            ]
+          ],
+          "port": "n",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0.25,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "port": "e",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              0.25
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "port": "s",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -0.25,
+              0
+            ],
+            [
+              -1,
+              0
+            ]
+          ],
+          "port": "w",
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -1,
+          -3.75
+        ],
+        [
+          6.5,
+          1
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "all four ports are one electrical point and a terminal is designated by its tag only, so it carries a tag slot and no marking slots",
+          "rule": "slot-missing"
+        }
+      ],
+      "name": "Terminal",
+      "nodes": [
+        {
+          "ports": [
+            "n",
+            "e",
+            "s",
+            "w"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            0,
+            -1
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "n"
+        },
+        {
+          "at": [
+            1,
+            0
+          ],
+          "description": "",
+          "dir": "E",
+          "id": "e"
+        },
+        {
+          "at": [
+            0,
+            1
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "s"
+        },
+        {
+          "at": [
+            -1,
+            0
+          ],
+          "description": "",
+          "dir": "W",
+          "id": "w"
+        }
+      ],
+      "reference": {
+        "number": "terminal",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "tag": {
+          "at": [
+            0.5,
+            -3.25
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
+    },
+    "thermal-overload": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              -1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              -1.5
+            ],
+            [
+              1,
+              -1.5
+            ],
+            [
+              1,
+              1.5
+            ],
+            [
+              -1,
+              1.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": false,
+          "fill": "none",
+          "polyline": [
+            [
+              -0.5,
+              0.75
+            ],
+            [
+              -0.5,
+              -0.75
+            ],
+            [
+              0.5,
+              -0.75
+            ],
+            [
+              0.5,
+              0.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -3
+        ],
+        [
+          1.75,
+          3
+        ]
+      ],
+      "kind": "symbol",
+      "name": "Thermal overload relay, thermally operated release",
+      "nodes": [
+        {
+          "ports": [
+            "in"
+          ]
+        },
+        {
+          "ports": [
+            "out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "in",
+          "kind": "impedance",
+          "through": true,
+          "to": "out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "in"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "out"
+        }
+      ],
+      "reference": {
+        "number": "thermal-overload",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.in": {
+          "at": [
+            0.25,
+            -2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.out": {
+          "at": [
+            0.25,
+            2.25
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "transformer": {
+      "anchors": [],
+      "body_box": [
+        [
+          -1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "arc": [
+            -1,
+            -1.5
+          ],
+          "end": 90,
+          "r": 0.5,
+          "start": 270,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1,
+            -0.5
+          ],
+          "end": 90,
+          "r": 0.5,
+          "start": 270,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1,
+            0.5
+          ],
+          "end": 90,
+          "r": 0.5,
+          "start": 270,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            -1,
+            1.5
+          ],
+          "end": 90,
+          "r": 0.5,
+          "start": 270,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            1,
+            -1.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            1,
+            -0.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            1,
+            0.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "arc": [
+            1,
+            1.5
+          ],
+          "end": 270,
+          "r": 0.5,
+          "start": 90,
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -7.5,
+          -3.25
+        ],
+        [
+          2.75,
+          3.25
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the two windings are side by side at x = -1 and x = 1: neither winding path can be the through path (through-axis needs its ports at (0, -a) N and (0, a) S on x = 0) and no path spans both windings",
+          "rule": "through-missing"
+        }
+      ],
+      "name": "Transformer with two windings, general symbol",
+      "nodes": [
+        {
+          "ports": [
+            "pri_in"
+          ]
+        },
+        {
+          "ports": [
+            "pri_out"
+          ]
+        },
+        {
+          "ports": [
+            "sec_in"
+          ]
+        },
+        {
+          "ports": [
+            "sec_out"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "pri_in",
+          "kind": "impedance",
+          "through": false,
+          "to": "pri_out"
+        },
+        {
+          "from": "sec_in",
+          "kind": "impedance",
+          "through": false,
+          "to": "sec_out"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -1,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "pri_in"
+        },
+        {
+          "at": [
+            -1,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "pri_out"
+        },
+        {
+          "at": [
+            1,
+            -2
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "sec_in"
+        },
+        {
+          "at": [
+            1,
+            2
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "sec_out"
+        }
+      ],
+      "reference": {
+        "number": "transformer",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.pri_in": {
+          "at": [
+            -0.75,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.pri_out": {
+          "at": [
+            -0.75,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.sec_in": {
+          "at": [
+            1.25,
+            -2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.sec_out": {
+          "at": [
+            1.25,
+            2.75
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            -1.5,
+            0
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    }
+  }
+}

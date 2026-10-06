@@ -1,0 +1,28 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MCB-3P"
+manufacturer = "Demo"
+description = "Miniature circuit breaker, 3-pole"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "element"
+kind = "protection"
+ports = [
+    { name = "1", role = "generic", side = "line", conductor = "L1" },
+    { name = "2", role = "generic", side = "load", conductor = "L1" },
+    { name = "3", role = "generic", side = "line", conductor = "L2" },
+    { name = "4", role = "generic", side = "load", conductor = "L2" },
+    { name = "5", role = "generic", side = "line", conductor = "L3" },
+    { name = "6", role = "generic", side = "load", conductor = "L3" },
+]
+links = [
+    { a = "1", b = "2", kind = "protective" },
+    { a = "3", b = "4", kind = "protective" },
+    { a = "5", b = "6", kind = "protective" },
+]
+
+[function.protection]
+type = "mcb"

@@ -1,0 +1,26 @@
+schema = 1
+name = "Power supply, rail symbol"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "power-supply" }
+
+ports = [
+  { id = "supply", at = [0, 1], dir = "S" },
+]
+
+nodes = [
+  { ports = ["supply"] },
+]
+
+elements = [
+  { line = [[-1, -1], [1, -1]] },
+  { line = [[0, -1], [0, 1]] },
+]
+
+lint_allow = [
+  { rule = "port-isolated", reason = "supply rail marker; none of the toolkit's node potentials (earth, protective_earth, functional_earth, frame) names a plain rail reference (see the decisions file)" },
+]
+
+[slots]
+tag              = { at = [-2, 0],     side = "W", box = [6, 1] }
+"marking.supply" = { at = [0.25, 1.5], side = "E", box = [1.5, 1] }

@@ -1,0 +1,4 @@
+from,to,colour,cross_section_mm2,label
+-X1:L:1,-B1:1,black,0.75,-X1:L:1 -B1:1
+-X1:L:1,-K1:1,black,0.75,-X1:L:1 -K1:1
+-X1:S:1,-F1:1,black,0.75,-X1:S:1 -F1:1

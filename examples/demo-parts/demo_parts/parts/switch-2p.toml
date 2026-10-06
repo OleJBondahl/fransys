@@ -1,0 +1,32 @@
+schema = 1
+
+[part]
+mpn = "DEMO-SWITCH-2P"
+manufacturer = "Demo"
+description = "Field switch, 2-pole, with connector"
+category = "electromechanical"
+class_code = "B"
+
+[[function]]
+name = "sw"
+kind = "switch"
+symbol = "make-contact"
+ports = [
+    { name = "A", role = "generic", symbol_port = "in" },
+    { name = "B", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "A", b = "B", kind = "switched", rest = "open" }]
+
+[[function]]
+name = "x1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"

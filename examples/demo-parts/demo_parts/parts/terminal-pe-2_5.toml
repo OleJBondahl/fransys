@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-TB-PE-2.5"
+manufacturer = "Demo"
+description = "Protective conductor terminal block, 2.5 mm2 (IEC 60947-7-2)"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "conductive" }]

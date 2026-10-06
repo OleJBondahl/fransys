@@ -1,0 +1,107 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -2
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "arc": [
+        0,
+        2
+      ],
+      "end": 0,
+      "r": 1,
+      "start": 180,
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -8.25,
+      -2
+    ],
+    [
+      1.75,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "a contact continues through its mate, which makes equal pin names conductive (model Mate), not through a path of this symbol",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Connector contact, female (socket)",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "wire side",
+      "dir": "N",
+      "id": "in"
+    }
+  ],
+  "reference": {
+    "number": "contact-female",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -2.25,
+        1
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

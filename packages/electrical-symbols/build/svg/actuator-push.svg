@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="7.5mm" height="7.5mm" viewBox="-2 -1.5 3 3">
+<title>Actuator (operated by pushing)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="0" x2="-1" y2="0" stroke-width="0.1"/>
+<polyline points="-0.5,-0.5 -1,-0.5 -1,0.5 -0.5,0.5" stroke-width="0.1"/>
+</g>
+</svg>

@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CONTACTOR-DC"
+manufacturer = "Demo"
+description = "DC contactor pole, 1500 V DC, 150 A"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "pole"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "switched" }]
+
+[function.rating]
+voltage_dc_v = "1500"
+current_dc_a = "150"

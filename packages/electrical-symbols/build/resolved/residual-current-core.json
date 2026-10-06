@@ -1,0 +1,46 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -0.5,
+      -0.5
+    ],
+    [
+      0.5,
+      0.5
+    ]
+  ],
+  "elements": [
+    {
+      "circle": [
+        0,
+        0
+      ],
+      "fill": "none",
+      "r": 0.5,
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -0.5,
+      -0.5
+    ],
+    [
+      0.5,
+      0.5
+    ]
+  ],
+  "kind": "qualifier",
+  "name": "Residual current sensing core",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "residual-current-core",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {},
+  "status": "unverified"
+}

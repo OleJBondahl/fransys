@@ -1,0 +1,44 @@
+schema = 1
+name = "Rectifier, with protective earth terminal"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "rectifier-pe" }
+
+ports = [
+  { id = "u",     at = [-1, -3], dir = "N", description = "a.c. input, first conductor" },
+  { id = "v",     at = [1, -3],  dir = "N", description = "a.c. input, second conductor" },
+  { id = "pe",    at = [3, -3],  dir = "N", description = "protective earth" },
+  { id = "plus",  at = [-1, 3],  dir = "S", description = "d.c. output, positive" },
+  { id = "minus", at = [1, 3],   dir = "S", description = "d.c. output, negative" },
+]
+
+paths = [
+  { from = "u", to = "v", kind = "impedance" },
+  { from = "minus", to = "plus", kind = "source" },
+]
+
+nodes = [
+  { ports = ["pe"], potential = "protective_earth" },
+]
+
+elements = [
+  { line = [[-1, -3], [-1, -2]] },
+  { line = [[1, -3], [1, -2]] },
+  { line = [[-1, 3], [-1, 2]] },
+  { line = [[1, 3], [1, 2]] },
+  { polyline = [[-2, -2], [2, -2], [2, 2], [-2, 2]], closed = true },
+  { line = [[-2, 2], [2, -2]] },
+  { arc = [-1, -1.125], r = 0.5, start = 180, end = 0 },
+  { arc = [0, -1.125],  r = 0.5, start = 0, end = 180 },
+  { line = [[-0.5, 1], [1.5, 1]] },
+  { line = [[-0.5, 1.5], [1.5, 1.5]], style = "dashed" },
+  { polyline = [[3, -3], [3, 0], [2, 0]] },
+]
+
+[slots]
+tag             = { at = [-2.5, 0],     side = "W", box = [6, 1] }
+"marking.u"     = { at = [-0.75, -2.75], side = "E", box = [1.5, 1] }
+"marking.v"     = { at = [1.25, -2.75],  side = "E", box = [1.5, 1] }
+"marking.pe"    = { at = [3.25, -2.75],  side = "E", box = [1.5, 1] }
+"marking.plus"  = { at = [-0.75, 2.75],  side = "E", box = [1.5, 1] }
+"marking.minus" = { at = [1.25, 2.75],   side = "E", box = [1.5, 1] }

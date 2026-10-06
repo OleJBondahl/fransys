@@ -1,0 +1,14 @@
+# Fixed at 95.0 per package (decision 0048): a high industry-standard bar, set once and never
+# raised. No ratchet, no `cov-raise`; a lower floor needs a designer ruling in its own commit.
+electrical_symbols = 95.0
+fransys = 95.0
+fransys_author = 95.0
+fransys_kicad = 95.0
+fransys_layout = 95.0
+fransys_model = 95.0
+fransys_overview = 95.0
+fransys_parts = 95.0
+fransys_pdf = 95.0
+fransys_render = 95.0
+fransys_reports = 95.0
+fransys_wago = 95.0

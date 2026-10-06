@@ -1,0 +1,25 @@
+schema = 1
+name = "Protective earth"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "protective-earth" }
+
+ports = [
+  { id = "pe", at = [0, -2], dir = "N" },
+]
+
+nodes = [
+  { ports = ["pe"], potential = "protective_earth" },
+]
+
+elements = [
+  { line = [[0, -2], [0, 0.5]] },
+  { line = [[-1.5, 0.5], [1.5, 0.5]] },
+  { line = [[-1, 1], [1, 1]] },
+  { line = [[-0.5, 1.5], [0.5, 1.5]] },
+  { circle = [0, 1], r = 1.625, fill = "none" },
+]
+
+[slots]
+tag          = { at = [-2, 0.5],    side = "W", box = [6, 1] }
+"marking.pe" = { at = [0.25, -1.5], side = "E", box = [1.5, 1] }

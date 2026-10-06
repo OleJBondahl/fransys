@@ -1,0 +1,14 @@
+schema = 1
+name = "Actuator (operated by pushing)"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "actuator-push" }
+
+anchors = [
+  { id = "link", at = [0, 0], dir = "E" },
+]
+
+elements = [
+  { line = [[0, 0], [-1, 0]] },
+  { polyline = [[-0.5, -0.5], [-1, -0.5], [-1, 0.5], [-0.5, 0.5]] },
+]

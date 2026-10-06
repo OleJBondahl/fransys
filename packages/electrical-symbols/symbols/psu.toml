@@ -1,0 +1,47 @@
+schema = 1
+name = "Power supply unit (a.c./d.c. in, d.c. out)"
+kind = "symbol"
+status = "unverified"
+# our own symbol (deep dive C4), after the IEC 60617 converter symbol: the reference says so
+reference = { standard = "IEC 60617", number = "psu" }
+
+# inputs on top, outputs and the status signal below, so a supply column reads top to bottom
+ports = [
+  { id = "l",     at = [-2, -3], dir = "N", description = "input, line or d.c. positive" },
+  { id = "n",     at = [0, -3],  dir = "N", description = "input, neutral or d.c. negative" },
+  { id = "plus",  at = [-2, 3],  dir = "S", description = "d.c. output, positive" },
+  { id = "minus", at = [0, 3],   dir = "S", description = "d.c. output, negative" },
+  { id = "sig",   at = [2, 3],   dir = "S", description = "status signal output" },
+]
+
+paths = [
+  { from = "l", to = "n", kind = "impedance" },
+  { from = "minus", to = "plus", kind = "source" },
+]
+
+elements = [
+  { line = [[-2, -3], [-2, -2]] },
+  { line = [[0, -3], [0, -2]] },
+  { line = [[-2, 3], [-2, 2]] },
+  { line = [[0, 3], [0, 2]] },
+  { line = [[2, 3], [2, 2]] },
+  { polyline = [[-3, -2], [3, -2], [3, 2], [-3, 2]], closed = true },
+  { line = [[-3, 2], [3, -2]] },
+  { arc = [-1.75, -1.125], r = 0.375, start = 180, end = 0 },
+  { arc = [-1.0, -1.125],  r = 0.375, start = 0, end = 180 },
+  { line = [[1, 1], [2.5, 1]] },
+  { line = [[1, 1.5], [2.5, 1.5]], style = "dashed" },
+]
+
+lint_allow = [
+  { rule = "port-isolated", reason = "the status signal is a contact of the unit's monitor, not on the power path" },
+  { rule = "through-missing", reason = "an isolated converter: no conductive path joins its input to its output, so no path can be the through path" },
+]
+
+[slots]
+tag             = { at = [-3.5, 0],     side = "W", box = [6, 1] }
+"marking.l"     = { at = [-1.75, -2.75], side = "E", box = [1.5, 1] }
+"marking.n"     = { at = [0.25, -2.75],  side = "E", box = [1.5, 1] }
+"marking.plus"  = { at = [-1.75, 2.75],  side = "E", box = [1.5, 1] }
+"marking.minus" = { at = [0.25, 2.75],   side = "E", box = [1.5, 1] }
+"marking.sig"   = { at = [2.25, 2.75],   side = "E", box = [1.5, 1] }

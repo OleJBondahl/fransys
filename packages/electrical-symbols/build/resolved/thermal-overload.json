@@ -1,0 +1,184 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -1,
+      -3
+    ],
+    [
+      1,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -3
+        ],
+        [
+          0,
+          -1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -1,
+          -1.5
+        ],
+        [
+          1,
+          -1.5
+        ],
+        [
+          1,
+          1.5
+        ],
+        [
+          -1,
+          1.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          -0.5,
+          0.75
+        ],
+        [
+          -0.5,
+          -0.75
+        ],
+        [
+          0.5,
+          -0.75
+        ],
+        [
+          0.5,
+          0.75
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -7.5,
+      -3
+    ],
+    [
+      1.75,
+      3
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Thermal overload relay, thermally operated release",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    },
+    {
+      "ports": [
+        "out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "in",
+      "kind": "impedance",
+      "through": true,
+      "to": "out"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -3
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "in"
+    },
+    {
+      "at": [
+        0,
+        3
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "out"
+    }
+  ],
+  "reference": {
+    "number": "thermal-overload",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -2.25
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.out": {
+      "at": [
+        0.25,
+        2.25
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -1.5,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

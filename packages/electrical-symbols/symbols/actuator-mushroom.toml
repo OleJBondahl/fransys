@@ -1,0 +1,15 @@
+schema = 1
+name = "Actuator (mushroom head, operated by pushing)"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "actuator-mushroom" }
+
+anchors = [
+  { id = "link", at = [0, 0], dir = "W" },
+]
+
+elements = [
+  { line = [[0, 0], [1, 0]] },
+  { line = [[1, -0.75], [1, 0.75]] },
+  { arc = [1, 0], r = 0.75, start = -90, end = 90 },
+]

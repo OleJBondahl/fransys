@@ -265,3 +265,29 @@ def test_a_model_with_no_unit_cuts_at_the_earliest_pages() -> None:
     assert _in_unit(AT_HOME, function_units=NO_UNITS) == sorted(
         _unpaired(CUT_ID, CUT_ID, subjects(C1, port(12)), subjects(C1, port(21)))
     )
+
+
+def _across_sets(unit_a, unit_b):
+    """Function 1 on page 1 of set 2 (unit `unit_a`), function 2 on page 2 of set 3 (`unit_b`)."""
+    pages = (
+        dataclasses.replace(page_plan(("a",), number=1), drawing_set=2, unit=unit_a),
+        dataclasses.replace(page_plan(("b",), number=2), drawing_set=3, unit=unit_b),
+    )
+    functions = (
+        dataclasses.replace(placed(1, x=104, y=96, page=1), drawing_set=2),
+        dataclasses.replace(placed(2, x=104, y=304, page=2), drawing_set=3),
+    )
+    layout = dataclasses.replace(
+        layout_of(decisions=(SEVERED,), markers=(), functions=functions), pages=pages
+    )
+    return named(
+        check_coherence(layout, (connection(1, 1, 2),), (), DRAWN, function_units=NO_UNITS)
+    )
+
+
+def test_an_unpaired_cut_between_two_units_is_silent_and_inside_one_unit_is_not() -> None:
+    """T7.1: a cut between two units' sets has no markers to miss; the same cut in one unit has."""
+    # UNDO: drop the unit condition in `_markers` (coherence.py): the cross-unit cut is expected
+    # to have markers and the first assertion fails
+    assert _across_sets(UNIT, hid("unit", 2)) == []
+    assert _across_sets(UNIT, UNIT) == _unpaired(CUT_ID, CUT_ID)

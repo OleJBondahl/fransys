@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CONN-2P-LETTERED"
+manufacturer = "Demo"
+description = "Connector housing, 2-pin header, lettered markings of two digits"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "A10", role = "generic", symbol_port = "in" },
+    { name = "A2", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"

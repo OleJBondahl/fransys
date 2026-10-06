@@ -178,3 +178,16 @@ def test_a_plc_channel_wired_only_through_a_net_group_or_a_stranded_conductor_is
     assert box.kind == "item"
     assert {port.name for port in box.ports} == {"do_1.1", "do_2.1"}
     assert {port.port for port in box.ports} == {p1.id, p2.id}
+
+
+def test_the_item_box_carries_the_item_view_and_channel_facts() -> None:
+    """The box is the spec whose function is an item id: `roles.item_view` says so (RR-O1)."""
+    module = _item("do", designation="DO1")
+    do_1, do_2 = (_function("do", name, FunctionKind.PLC_CHANNEL) for name in ("do_1", "do_2"))
+    p1, p2 = _port(do_1, "1"), _port(do_2, "1")
+    model = _model((module, do_1, do_2, p1, p2))
+
+    specs = read_inputs(model).functions
+    assert [s.function for s in specs] == [module.id]
+    assert specs[0].roles.item_view
+    assert specs[0].roles.plc_channel

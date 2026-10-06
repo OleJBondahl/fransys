@@ -81,20 +81,24 @@ def mark_unused(
         msg = f"unused= takes a tuple of names, such as ({names!r},), not a string"
         raise AuthorError(msg)
     boundary = _boundary_names(design, scope.unit_id)
-    listed = ", ".join(sorted(boundary.values())) or "none"
     for name in names:
-        match = _NAME.fullmatch(name)
-        field, index, only = match.groups() if match else (name, None, None)
-        if field not in result._fields:
-            msg = f"unused= names {name!r}; the unit's fields: {', '.join(result._fields)}"
-            raise AuthorError(msg)
-        found = _functions(getattr(result, field), name, index, only)
-        chosen = [f for f in found if f.id in boundary]
-        if not chosen:
-            msg = (
-                f"unused= names {name!r}, which is no boundary function; "
-                f"the boundary functions: {listed}"
-            )
-            raise AuthorError(msg)
-        for function in chosen:
+        for function in _chosen(boundary, result, name):
             design._engine.unused(function)
+
+
+def _chosen(boundary: dict[Any, str], result: Any, name: str) -> list[Any]:  # noqa: ANN401 -- the unit's own NamedTuple
+    """The boundary functions `name` takes from `result`; a name that takes none is refused."""
+    match = _NAME.fullmatch(name)
+    field, index, only = match.groups() if match else (name, None, None)
+    if field not in result._fields:
+        msg = f"unused= names {name!r}; the unit's fields: {', '.join(result._fields)}"
+        raise AuthorError(msg)
+    chosen = [f for f in _functions(getattr(result, field), name, index, only) if f.id in boundary]
+    if not chosen:
+        listed = ", ".join(sorted(boundary.values())) or "none"
+        msg = (
+            f"unused= names {name!r}, which is no boundary function; "
+            f"the boundary functions: {listed}"
+        )
+        raise AuthorError(msg)
+    return chosen

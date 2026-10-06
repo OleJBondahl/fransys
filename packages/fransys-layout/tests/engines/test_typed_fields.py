@@ -100,8 +100,7 @@ def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawin
     _, results, out = _laid_out()
     generic = _generic_box(results)
     drawn = sorted(generic.geometry.ports, key=lambda port: (port.at.x, port.facing.value != "n"))
-    view, names, sides, offsets = _placement_fields(generic, None)
-    assert view is PlacementView.FUNCTION
+    names, sides, offsets = _placement_fields(generic, PlacementView.FUNCTION)
     assert names == tuple(port.name for port in drawn)
     assert sides == tuple(Side[port.facing.value.upper()] for port in drawn)
     (written,) = (p for p in dict(out.tables["layout.symbol_placement"]).values() if p.ports)

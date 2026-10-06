@@ -89,7 +89,8 @@ def test_pin_order_sorts_numeric_markings_by_value_before_any_alphabetic_marking
     port = make_id(Port, ("p",))
     assert pin_order("10", port) < pin_order("A1", port)
     assert pin_order("2", port) < pin_order("10", port)
-    assert pin_order("A1", port) == (1, 0, "A1", port)
+    assert pin_order("A2", port) < pin_order("A10", port)
+    assert pin_order("9A", port) < pin_order("10A", port) < pin_order("A2", port)
 
 
 def test_position_rank_puts_every_integer_position_before_none() -> None:

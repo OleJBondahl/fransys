@@ -1,0 +1,12 @@
+schema = 1
+
+[part]
+mpn = "DEMO-FUSE-LINK-4A-T"
+manufacturer = "Demo"
+description = "Replaceable fuse link for a PCB holder, 4 A time-lag, 1000 V DC"
+category = "protection"
+class_code = "F"
+
+[rating]
+voltage_dc_v = "1000"
+current_dc_a = "4"

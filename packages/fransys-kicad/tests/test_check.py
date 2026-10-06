@@ -2,7 +2,7 @@ import pytest
 from fransys_kicad import check, netlist
 
 from fransys_model.derive import board_netlist
-from fransys_model.derive.designation import item_label
+from fransys_model.derive.designation import item_designation, item_label
 from fransys_model.derive.passes.numbering import number
 from fransys_model.kernel import SchemaError, Severity
 from fransys_model.vocab.tables import items
@@ -292,3 +292,34 @@ def test_parts_that_all_have_footprints_raise_no_footprint_finding(new_design):
     design, board, part = _board_with(new_design, {"main": ("1", "2")}, footprint=("Lib", "R"))
     design.item(part, "jb1-r1", "R1", parent=board)
     assert "PART_WITHOUT_FOOTPRINT" not in _codes(check(design.freeze(), board.item))
+
+
+def _holder_with_link(new_design):
+    """A board with a footprinted holder `F1` and a function-less link item under it."""
+    design = new_design()
+    board = design.item(design.part("board", "SIM-BOARD-DEMO", "A", board=True), "jb1", "JB1")
+    holder_part = design.part(
+        "holder", "SIM-HOLDER", "F", {"main": ("1", "2")}, footprint=("L", "H")
+    )
+    link_part = design.part("link", "SIM-LINK", "F")
+    holder = design.item(holder_part, "jb1-f1", "F1", parent=board)
+    link = design.item(link_part, "jb1-f1-link", None, parent=holder)
+    return design, board, holder, link
+
+
+def test_an_accessory_without_a_footprint_gives_no_part_without_footprint(new_design):
+    """kicad-0003: a fuse link sits in its holder, which carries the footprint."""
+    design, board, _, link = _holder_with_link(new_design)
+    model = design.freeze()
+    assert "PART_WITHOUT_FOOTPRINT" not in _codes(check(model, board.item))
+    assert board_netlist(model, board.item).without_footprint == ()
+    assert item_designation(model, link.item) == "JB1-F1"
+
+
+def test_a_link_with_its_own_designation_is_an_ordinary_item_and_is_reported(new_design):
+    """An authored tag makes it no accessory (model-0058), so it is a part without a footprint."""
+    design, board, holder, _ = _holder_with_link(new_design)
+    link_part = design.part("link2", "SIM-LINK-2", "F")
+    tagged = design.item(link_part, "jb1-f1-tagged", "F9", parent=holder)
+    finding = _only(check(design.freeze(), board.item), "PART_WITHOUT_FOOTPRINT")
+    assert finding.subjects == (tagged.item,)

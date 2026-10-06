@@ -20,6 +20,7 @@ from .closure import physical_nets
 from .designation import end_outside_nested_unit, terminal_designation, unit_list_context
 from .drawing_text import port_designation_in
 from .indexes import build_indexes
+from .list_order import in_designation_order
 from .lookups import conductors_by_role, item_of_port, require, terminal_items
 from .rows import TerminalRow
 
@@ -226,7 +227,7 @@ def unconnected_ports(model: Model) -> tuple[Id[Port], ...]:
 
 
 def terminal_strips(model: Model) -> tuple[Id[Item], ...]:
-    """Every item that at least one `terminal` facet names as its strip, in `Id` order.
+    """Every item that at least one `terminal` facet names as its strip, in designation order.
 
     A terminal's strip is its parent item: `TerminalFacet` carries no strip field of its
     own. Shared by `fransys`'s export enumeration and the
@@ -237,7 +238,7 @@ def terminal_strips(model: Model) -> tuple[Id[Item], ...]:
         model: The model to read.
 
     Returns:
-        Every strip item's id, sorted.
+        Every strip item's id, by natural designation, then id.
     """
     all_items = items(model)
     strips: set[Id[Item]] = set()
@@ -245,7 +246,7 @@ def terminal_strips(model: Model) -> tuple[Id[Item], ...]:
         strip = all_items[terminal].parent
         if strip is not None:
             strips.add(strip)
-    return tuple(sorted(strips))
+    return in_designation_order(model, strips)
 
 
 def unused_terminals(model: Model, strip: Id[Item]) -> tuple[Id[Item], ...]:

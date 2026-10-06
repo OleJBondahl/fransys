@@ -32,10 +32,8 @@ from fransys_model.derive import (
     designation_list,
     document_unit,
     is_own_unit_root,
-    item_designation,
     items_at,
     list_context,
-    natural_key,
     pin_lines,
     plc_channel_rows,
     printed_designation,
@@ -215,12 +213,11 @@ def bom_page(model: Model, record: Document) -> str:
 def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
     """The TERMINAL_LIST strips: a unit's own, never a nested unit's (U6), else the location's."""
     if (unit := document_unit(model, record)) is not None:
-        selected = set(unit_strips(model, unit))
-        return tuple(sorted(selected, key=lambda s: (natural_key(item_designation(model, s)), s)))
+        return unit_strips(model, unit)
     if record.location is None:
         return ()
-    selected = set(terminal_strips(model)) & set(items_at(model, record.location))
-    return tuple(sorted(selected, key=lambda s: (natural_key(item_designation(model, s)), s)))
+    at_location = set(items_at(model, record.location))
+    return tuple(strip for strip in terminal_strips(model) if strip in at_location)
 
 
 def _list_heading(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
@@ -440,14 +437,12 @@ def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
     if record.item is not None:
         return (record.item,) if record.item in boards(model) else ()
     if (unit := document_unit(model, record)) is not None:
-        selected = set(unit_boards(model, unit))
-        return tuple(sorted(selected, key=lambda s: (natural_key(item_designation(model, s)), s)))
+        return unit_boards(model, unit)
     location = record.location
     if location is None:
         return ()
     at_location = set(items_at(model, location))
-    selected = set(boards(model)) & at_location
-    return tuple(sorted(selected, key=lambda s: (natural_key(item_designation(model, s)), s)))
+    return tuple(board for board in boards(model) if board in at_location)
 
 
 def connector_list_page(model: Model, record: Document) -> str:

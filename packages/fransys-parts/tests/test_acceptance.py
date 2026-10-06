@@ -133,16 +133,21 @@ def test_demo_library_record_counts_and_keys():
     DRAWN-ENDS gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links;
     BOX-CONTACT gave `redundancy-2in.toml` a DC-OK contact: 83 functions, 194 ports, 42 links;
     GROUP-FUNCTION-ID adds `redundancy-2in-net.toml` (4/8/1 symbol choice), so 37;
-    the guide's current check adds `fuse-dc-160.toml` (1/2/1/1), so 38)."""
+    the guide's current check adds `fuse-dc-160.toml` (1/2/1/1), so 38; FUSE-LINK adds
+    `fuse-holder-pcb.toml` (1 function/2 ports/1 link/1 symbol choice), `switch-dc-2a.toml`
+    (1/2/1/1) and two function-less fuse links (`fuse-link-4a-t.toml`, `fuse-link-500ma-t.toml`);
+    RR-O6 adds `connector-header-2p-lettered.toml` (1/2/0/1),
+    FEEDER-PORTS adds `psu-24v-5out.toml` (2 functions/7 ports),
+    so 44 parts, 93 templates, 217 ports, 45 links, 40 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 38
-    assert len(function_templates(model)) == 88
-    assert len(port_templates(model)) == 204
-    assert len(internal_links(model)) == 43
-    assert len(model.tables["layout.symbol_choice"]) == 37
+    assert len(parts(model)) == 44
+    assert len(function_templates(model)) == 93
+    assert len(port_templates(model)) == 217
+    assert len(internal_links(model)) == 45
+    assert len(model.tables["layout.symbol_choice"]) == 40
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")

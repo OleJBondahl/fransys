@@ -10,6 +10,7 @@ from .types import ROLE_ORDER, Cell, Column, Role
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
+    from collections.abc import Set as AbstractSet
 
     from fransys_model.kernel import AuthoringKey
 
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
         DrawnFunction,
         FunctionSpec,
         Handle,
+        PortSpec,
     )
 
 FUNCTION_UNPLACED_IN_COLUMN = "FUNCTION_UNPLACED_IN_COLUMN"
@@ -107,48 +109,81 @@ def _check_series(chain: Chain, steps: Sequence[tuple[ChainEntry, FunctionSpec]]
             raise HintError(msg, subjects=(chain.chain, upper.function, lower.function))
 
 
+def _joined_ports(connections: tuple[Connection, ...]) -> set[tuple[Handle, Handle]]:
+    """Every connected port pair, in both orders."""
+    return {(c.a.port, c.b.port) for c in connections} | {(c.b.port, c.a.port) for c in connections}
+
+
+def _terminal_drawing(
+    spec: FunctionSpec, drawn_of: Mapping[Handle, DrawnFunction]
+) -> DrawnFunction | None:
+    """The drawing of a strip terminal, None for any other function or when nothing is drawn."""
+    if not spec.roles.terminal or len(spec.ports) != _TERMINAL_PORTS:
+        return None
+    drawing = drawn_of.get(spec.function)
+    if drawing is None and drawn_of:
+        msg = "a terminal of a chain has no drawn function to read its facing from"
+        raise LayoutError(msg)
+    return drawing
+
+
+def _entry_ports(
+    steps: Sequence[tuple[ChainEntry, FunctionSpec]],
+    at: int,
+    joined: AbstractSet[tuple[Handle, Handle]],
+) -> list[PortSpec]:
+    """The ports of step `at` that face its chain neighbour; empty for a lone step."""
+    spec = steps[at][1]
+    if at > 0:
+        neighbour = {port.port for port in steps[at - 1][1].ports}
+        return [p for p in spec.ports if any((p.port, n) in joined for n in neighbour)]
+    if len(steps) > 1:
+        neighbour = {port.port for port in steps[1][1].ports}
+        return [p for p in spec.ports if all((p.port, n) not in joined for n in neighbour)]
+    return []
+
+
+def _enters_south(spec: FunctionSpec, entry: PortSpec, drawing: DrawnFunction) -> bool:
+    """Whether the terminal's entry port faces S and its other port faces N in the drawing."""
+    (other,) = (port for port in spec.ports if port is not entry)
+    symbol_port = {dp.port: dp.symbol_port for dp in drawing.ports}
+    if entry.port not in symbol_port or other.port not in symbol_port:
+        msg = "a terminal port of a chain does not map to a symbol port"
+        raise LayoutError(msg)
+    facing = {g.name: g.facing.value for g in drawing.geometry.ports}
+    return facing.get(symbol_port[entry.port]) == "s" and facing.get(symbol_port[other.port]) == "n"
+
+
 def _entered_from_south(
     steps: Sequence[tuple[ChainEntry, FunctionSpec]],
     drawn_of: Mapping[Handle, DrawnFunction],
     connections: tuple[Connection, ...],
 ) -> set[Handle]:
     """The terminals of a chain entered by their S-facing port (D1); an ambiguous one stays."""
-    joined = {(c.a.port, c.b.port) for c in connections} | {
-        (c.b.port, c.a.port) for c in connections
-    }
+    joined = _joined_ports(connections)
     flipped: set[Handle] = set()
     for at, (_, spec) in enumerate(steps):
-        drawing = drawn_of.get(spec.function)
-        if not spec.roles.terminal or len(spec.ports) != _TERMINAL_PORTS:
-            continue
+        drawing = _terminal_drawing(spec, drawn_of)
         if drawing is None:
-            if drawn_of:
-                msg = "a terminal of a chain has no drawn function to read its facing from"
-                raise LayoutError(msg)
             continue
-        if at > 0:
-            neighbour = {port.port for port in steps[at - 1][1].ports}
-            entries = [p for p in spec.ports if any((p.port, n) in joined for n in neighbour)]
-        elif len(steps) > 1:
-            neighbour = {port.port for port in steps[1][1].ports}
-            entries = [p for p in spec.ports if all((p.port, n) not in joined for n in neighbour)]
-        else:
-            continue
-        if len(entries) != 1:
-            continue
-        (entry,) = entries
-        (other,) = (port for port in spec.ports if port is not entry)
-        symbol_port = {dp.port: dp.symbol_port for dp in drawing.ports}
-        if entry.port not in symbol_port or other.port not in symbol_port:
-            msg = "a terminal port of a chain does not map to a symbol port"
-            raise LayoutError(msg)
-        facing = {g.name: g.facing.value for g in drawing.geometry.ports}
-        if (
-            facing.get(symbol_port[entry.port]) == "s"
-            and facing.get(symbol_port[other.port]) == "n"
-        ):
+        entries = _entry_ports(steps, at, joined)
+        if len(entries) == 1 and _enters_south(spec, entries[0], drawing):
             flipped.add(spec.function)
     return flipped
+
+
+def _group_devices(members: Sequence[FunctionSpec]) -> Sequence[FunctionSpec]:
+    """The members whose group the column takes, narrowed by three rules."""
+    # C21 (deep dive): a column's group is its devices' group; a terminal at its end is a
+    # boundary of another group (X01 of =SUP heading =P1's chain), not a member
+    # (nor a PLC channel end: F12 97/98 -> DI1 is P1's feedback column, designer ruling)
+    devices = [
+        spec for spec in members if spec.roles.sets_group and spec.pin_function is None
+    ] or members
+    # layout-0103: a column holding an item box takes the box's group, whatever stands under it
+    devices = [s for s in devices if s.roles.item_view] or devices
+    # layout-0103: an external member (no group of its own, +EXT by others) does not count
+    return [s for s in devices if s.group_path] or devices
 
 
 def build_column(
@@ -162,16 +197,7 @@ def build_column(
     if clash is not None:
         msg = "two cells of one column carry different group hints"
         raise HintError(msg, subjects=tuple(sorted((hinted[0].function, clash.function))))
-    # C21 (deep dive): a column's group is its devices' group; a terminal at its end is a
-    # boundary of another group (X01 of =SUP heading =P1's chain), not a member
-    # (nor a PLC channel end: F12 97/98 -> DI1 is P1's feedback column, designer ruling)
-    devices = [
-        spec for spec in members if spec.roles.sets_group and spec.pin_function is None
-    ] or members
-    # layout-0103: a column holding an item box takes the box's group, whatever stands under it
-    devices = [s for s in devices if s.function.kind == "item"] or devices
-    # layout-0103: an external member (no group of its own, +EXT by others) does not count
-    devices = [s for s in devices if s.group_path] or devices
+    devices = _group_devices(members)
     groups = _common_prefix([spec.group_path for spec in devices])
     locations = _common_prefix([spec.location_path for spec in members])
     units = {spec.unit for spec in members}

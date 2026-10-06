@@ -52,6 +52,7 @@ from fransys_model.derive import (
     cable_list_rows,
     designation_list,
     document_unit,
+    item_designation,
     terminal_rows,
     terminal_strips,
 )
@@ -1497,7 +1498,7 @@ def test_boards_for_location_branch_orders_by_designation_not_by_raw_id():
     record = documents(m)[doc.id]
     raw_order = tuple(sorted([board_a.id, board_b.id]))
     designation_order = tuple(
-        sorted([board_a.id, board_b.id], key=lambda board: _lists.item_designation(m, board))
+        sorted([board_a.id, board_b.id], key=lambda board: item_designation(m, board))
     )
     # The fixture's own discriminating power: the two orders genuinely disagree, so a sort that
     # fell back to raw `Id`s could not coincidentally pass the assertion below.

@@ -51,7 +51,7 @@ _ = _Whitelist()
 # canonical JSON (FIELDS, `kernel/schema.py:37`, sufficient alone) -- never within
 # fransys-model/src itself.
 _.nets_by_port  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/roles.py:48
-_.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/__init__.py:151
+_.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/steps.py:129
 _.internal_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
 _.external_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
 _.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:576

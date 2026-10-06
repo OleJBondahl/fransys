@@ -395,6 +395,9 @@ FORBIDDEN_CALLS: frozenset[str] = frozenset(
         "write_bytes",
         "mkdir",
         "unlink",
+        "open",
+        "touch",
+        "print",
         "rename",
         "exists",
         "is_file",
@@ -434,8 +437,8 @@ def purity_violations(source: str) -> set[str]:
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.Call):
             func = node.func
-            if isinstance(func, ast.Name) and func.id == "open":
-                found.add("open")
+            if isinstance(func, ast.Name) and func.id in {"open", "print"}:
+                found.add(func.id)
             elif isinstance(func, ast.Attribute) and func.attr in FORBIDDEN_CALLS:
                 found.add(func.attr)
         elif isinstance(node, ast.Attribute) and node.attr == "environ":
@@ -472,6 +475,12 @@ def test_the_purity_check_can_fail():
     assert purity_violations('from pathlib import Path\nPath("x").read_text()') == {"read_text"}
     # `sys.argv` in a fransys_reports source is a violation (the process environment).
     assert purity_violations("import sys\nsys.argv") == {"sys.argv"}
+    # `Path.open`, `io.open`, `builtins.open`, `Path.touch` and `print` are violations too.
+    assert purity_violations('from pathlib import Path\nPath("x").open()') == {"open"}
+    assert purity_violations('import io\nio.open("x")') == {"open"}
+    assert purity_violations('import builtins\nbuiltins.open("x")') == {"open"}
+    assert purity_violations('from pathlib import Path\nPath("x").touch()') == {"touch"}
+    assert purity_violations('print("x")') == {"print"}
 
 
 def test_the_purity_check_does_not_fire_on_deterministic_or_allowed_code():

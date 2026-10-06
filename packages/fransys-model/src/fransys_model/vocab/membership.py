@@ -179,3 +179,21 @@ def is_harness(model: Model, item: Id[Item]) -> bool:
     A container with no cable child reads flat, whatever else it holds (a rack, a strip).
     """
     return bool(cable_children(model, item))
+
+
+def in_unit_subtree(model: Model, item: Id[Item], unit: Id[Unit]) -> bool:
+    """Whether `item`'s unit is `unit` or a unit nested under it; an item in no unit is not.
+
+    An unknown `unit` is refused like `unit_subtree` refuses it.
+    """
+    return items(model)[item].unit in unit_subtree(model, unit)
+
+
+def crosses_unit(model: Model, one: Id[Item], other: Id[Item]) -> bool:
+    """Whether the two items lie in different units, strictly (model-0152).
+
+    A sub-unit is a different unit from its parent, so a nested unit's item crosses against
+    the parent's. An item in no unit differs from one in a unit, and equals another in none.
+    """
+    all_items = items(model)
+    return all_items[one].unit != all_items[other].unit

@@ -1,0 +1,36 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PSU-24-5OUT"
+manufacturer = "Demo"
+description = "Power supply, 24 V DC out on five terminals, AC in"
+category = "generic"
+class_code = "T"
+
+[rating]
+power_loss_w = "12"
+
+[[function]]
+name = "input"
+kind = "load"
+ports = [
+    { name = "L", role = "generic" },
+    { name = "N", role = "generic" },
+]
+
+[function.rating]
+voltage_ac_v = "264"
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "+1", role = "generic" },
+    { name = "+2", role = "generic" },
+    { name = "-1", role = "generic" },
+    { name = "-2", role = "generic" },
+    { name = "-3", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "24"

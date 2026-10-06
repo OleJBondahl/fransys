@@ -179,6 +179,7 @@ class KindRoles:
     contact_closed: bool = False
     contact_changeover: bool = False
     plc_channel: bool = False
+    item_view: bool = False  # stands for a whole item: its function is the item's id
 
 
 @value

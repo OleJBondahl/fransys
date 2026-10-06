@@ -6,7 +6,6 @@ from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import (
-    GENERIC_BOX_KEY,
     WIRING_GRID,
     Box,
     Facing,
@@ -357,7 +356,7 @@ def _cells(
                     face=cell.face,
                     span_port=cell.span_port,
                     # R6 D4, R7 B6a: generic boxes, connectors and terminals are not stretched
-                    boxy=function.geometry.key == GENERIC_BOX_KEY or function.roles.boxy,
+                    boxy=function.geometry.generic_box or function.roles.boxy,
                 )
             )
         _fit_row(row, drawn_of, label_boxes)
@@ -367,7 +366,7 @@ def _cells(
 
 def _turned_function(function: DrawnFunction, cell: Cell) -> DrawnFunction:
     """`function`, its symbol turned when `cell` is a flipped one (`references.joins` reads it)."""
-    if not cell.flip or function.geometry.key == GENERIC_BOX_KEY:
+    if not cell.flip or function.geometry.generic_box:
         return function
     # R5 rule 3: the side element's other port on top. D1: a turned directed pole
     # is mirrored as well (MR180), so top and bottom swap and its poles, markings

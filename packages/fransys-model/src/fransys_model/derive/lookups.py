@@ -16,6 +16,7 @@ from fransys_model.kernel import (
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
+from fransys_model.vocab.markings import marking_key
 from fransys_model.vocab.membership import item_chain, require
 from fransys_model.vocab.tables import (
     aspect_nodes,
@@ -70,15 +71,15 @@ def net_name(net: Net) -> str:
     return net.name if net.name is not None else key_text(net)
 
 
-def pin_order(marking: str, port: Id[Port]) -> tuple[int, int, str, Id[Port]]:
-    """The sort key of a pin: markings of decimal digits first by value, the rest after by string.
+def pin_order(
+    marking: str, port: Id[Port]
+) -> tuple[tuple[tuple[int, int, str], ...], str, Id[Port]]:
+    """The sort key of a pin: `marking_key` (digit runs by value, `A2` before `A10`), then the port.
 
-    The port id is the last tie-break (`1, 2, 10, A1, B2`); no designation is parsed.
-    Shared by `connector_rows`, `harness_cables` and `overview_graph`.
+    The marking text and the port id break ties; no designation is parsed. Shared by
+    `connector_rows`, `harness_cables`, `overview_graph` and `fn.pins`.
     """
-    if marking.isascii() and marking.isdecimal():
-        return (0, int(marking), marking, port)
-    return (1, 0, marking, port)
+    return (marking_key(marking), marking, port)
 
 
 def connector_facets(model: Model) -> frozendict[Id[FunctionTemplate], ConnectorFacet]:

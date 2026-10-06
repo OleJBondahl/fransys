@@ -347,6 +347,13 @@ def _markers(world: _World) -> list[Finding]:
     ]
     for group in world.net_groups:
         cuts.extend(group_cuts(group, world.ports))
+    # T7.1: a cut between two units' drawing sets is cross-unit and has no markers, though a net
+    # group drawn in two sets shares its identity with its severed cuts (layout-0127)
+    cuts = [
+        cut
+        for cut in cuts
+        if world.set_units.get(cut.owner[1][0]) == world.set_units.get(cut.user[1][0])
+    ]
     return [
         _error(MARKER_UNPAIRED, subjects, "a marker has no partner, or a severed cut lacks one")
         for subjects in unpaired(tuple(cuts), severed, world.layout.markers, world.ports)

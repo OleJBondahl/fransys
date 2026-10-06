@@ -7,7 +7,7 @@ group's column moves its home there, above an N pin or below an S pin, if the co
 from functools import partial
 from typing import TYPE_CHECKING, NamedTuple
 
-from fransys_layout.geometry import GENERIC_BOX_KEY, WIRING_GRID
+from fransys_layout.geometry import WIRING_GRID
 from fransys_layout.geometry.box_reach import Reach, Row, extent, spread
 from fransys_layout.geometry.symbols import channel_pitch
 from fransys_layout.stages.attach import _entry
@@ -166,7 +166,7 @@ def _fits(
 def _span(drawn_of: Mapping[Handle, DrawnFunction], column: Column) -> int:
     """V5: the width of a generic box with its contacts under all pins (the keep-out's own span)."""
     box = next((drawn_of[c.function] for c in column.cells if c.host is None), None)
-    if box is None or box.geometry.key != GENERIC_BOX_KEY:
+    if box is None or not box.geometry.generic_box:
         return 0
     held: dict[str, list[Row]] = {}
     for cell in column.cells:

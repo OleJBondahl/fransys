@@ -10,17 +10,21 @@ lives in `ratings.effective_rating`.
 
 import dataclasses
 from typing import TYPE_CHECKING
+lazy from decimal import Decimal
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 
+from .enums import FunctionKind
 from .facets.rating import BoundaryValuesFacet, OperatingFacet, PartRatingFacet, RatingFacet
 from .ratings import Operating, Rating, effective_rating
 from .tables import boundaries, facets_of, function_templates, functions, items
-lazy from .core import Function
+lazy from .core import Function, Item
 lazy from .templates import Part
 lazy from .units import Boundary
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from .core import Unit
     from .templates import FunctionTemplate
 
@@ -45,6 +49,30 @@ class _Index:
     operating: frozendict[Id[FunctionTemplate], Operating]
     boundary_values: frozendict[Id[Boundary], BoundaryValuesFacet]
     boundaries_of: frozendict[Id[Function], tuple[Boundary, ...]]
+    link_of: frozendict[Id[Item], Rating]
+
+
+def _fitted_rating_by_holder(
+    model: Model, part_ratings: Mapping[Id[Part], Rating]
+) -> dict[Id[Item], Rating]:
+    """The fuse link of each holder item, decision model-0151: its highest-rated link's rating.
+
+    A link is a child item with a part rating and no function. Full-range links come before
+    partial-range ones, then the highest current, then the item id, so the choice is stable.
+    """
+    with_function = {record.item for record in functions(model).values()}
+    found: dict[Id[Item], list[tuple[Id[Item], Rating]]] = {}
+    for item in items(model).values():
+        rating = None if item.part is None else part_ratings.get(item.part)
+        if item.parent is not None and rating is not None and item.id not in with_function:
+            found.setdefault(item.parent, []).append((item.id, rating))
+    return {holder: max(links, key=_link_rank)[1] for holder, links in found.items()}
+
+
+def _link_rank(link: tuple[Id[Item], Rating]) -> tuple[bool, Decimal, Id[Item]]:
+    item, rating = link
+    currents = [c for c in (rating.current_ac_a, rating.current_dc_a) if c is not None]
+    return (rating.min_breaking_current_a is None, max(currents, default=Decimal(0)), item)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -52,13 +80,15 @@ def _index(model: Model) -> _Index:
     of_function: dict[Id[Function], list[Boundary]] = {}
     for boundary in sorted(boundaries(model).values(), key=lambda b: b.id):
         of_function.setdefault(boundary.function, []).append(boundary)
+    part_ratings = {
+        facet.subject: facet.rating for facet in facets_of(model, PartRatingFacet).values()
+    }
     return _Index(
         template_ratings=frozendict(
             {facet.subject: facet.rating for facet in facets_of(model, RatingFacet).values()}
         ),
-        part_ratings=frozendict(
-            {facet.subject: facet.rating for facet in facets_of(model, PartRatingFacet).values()}
-        ),
+        part_ratings=frozendict(part_ratings),
+        link_of=frozendict(_fitted_rating_by_holder(model, part_ratings)),
         operating=frozendict(
             {facet.subject: facet.operating for facet in facets_of(model, OperatingFacet).values()}
         ),
@@ -102,8 +132,8 @@ def function_rating(model: Model, function: Id[Function]) -> Rating | None:
 def function_ratings(model: Model, function: Id[Function]) -> tuple[FunctionRating, ...]:
     """Every rating `function` is checked against in `model`, each with its source.
 
-    The part or template rating (`unit` is `None`), then one per `Boundary` in id order stating one.
-    Each boundary is its own source, read with no fallback to the part's; an unknown id gives none.
+    The part or template rating, then a protection function's highest fuse link (model-0151), then
+    one per `Boundary` in id order stating one. Each boundary has no fallback.
     """
     if function not in functions(model):
         return ()
@@ -111,6 +141,9 @@ def function_ratings(model: Model, function: Id[Function]) -> tuple[FunctionRati
     own = function_rating(model, function)
     if own is not None:
         found.append(FunctionRating(own, None))
+    link = _index(model).link_of.get(functions(model)[function].item)
+    if link is not None and functions(model)[function].kind is FunctionKind.PROTECTION:
+        found.append(FunctionRating(link, None))
     for boundary in _index(model).boundaries_of.get(function, ()):
         rating = boundary_rating(model, boundary.id)
         if rating is not None:

@@ -86,16 +86,34 @@ def _feeder_order(
     )
 
 
-def _fed_over(
+def _pin_step(fed: DrawnFunction) -> int:
+    """The fed box's pin pitch: the smallest gap between two of its pin columns."""
+    xs = sorted(g.at.x for g in fed.geometry.ports)
+    return next((b - a for a, b in pairwise(xs) if b > a), _PIN_ORIGIN)
+
+
+def _open_slot(feeder: DrawnFunction, cursor: int, profile: Profile) -> tuple[int, int]:
+    """The slot's start and the cursor after it: the feeder's keep-out width plus the column gap."""
+    body, keep = feeder.geometry.body, feeder.geometry.keepout
+    start = cursor - _PIN_ORIGIN + max(0, body.x - keep.x)
+    reach = keep.x + keep.width - body.x
+    return start, int(snap_up(start + reach + profile.column_gap)) + _PIN_ORIGIN
+
+
+def _pin_x(feeder: DrawnFunction, mate: str, start: int) -> int:
+    """Where the feeder's pin `mate` stands, counted from its slot's start."""
+    pin = next(g.at.x for g in feeder.geometry.ports if g.name == mate)
+    return start + pin - feeder.geometry.body.x
+
+
+def _pin_columns(
     fed: DrawnFunction,
     blocks: Sequence[tuple[BoxFeed, DrawnFunction, Sequence[tuple[str, str]]]],
     order: Sequence[str],
     profile: Profile,
-) -> DrawnFunction:
-    """`fed` with each feeder's pins' x for its group's pins, a slot a feeder's width apart."""
-    own = {g.name: g for g in fed.geometry.ports}
-    xs = [g.at.x for g in own.values()]
-    step = next((b - a for a, b in pairwise(sorted(xs)) if b > a), _PIN_ORIGIN)
+) -> dict[str, int]:
+    """Each fed pin's x: a paired pin under its feeder's pin, a free pin one step on."""
+    step = _pin_step(fed)
     at: dict[str, int] = {g.name: g.at.x for g in fed.geometry.ports if g.facing.value != _NORTH}
     slot_of = {a: (feeder, b) for _, feeder, names in blocks for a, b in names}
     cursor = 0
@@ -106,15 +124,21 @@ def _fed_over(
             cursor += step
             continue
         feeder, mate = slot_of[name]
-        body, keep = feeder.geometry.body, feeder.geometry.keepout
         if feeder.function not in start:
-            lead = max(0, body.x - keep.x)
-            start[feeder.function] = cursor - _PIN_ORIGIN + lead
-            reach = keep.x + keep.width - body.x
-            cursor = int(snap_up(start[feeder.function] + reach + profile.column_gap)) + _PIN_ORIGIN
-        pin = next(g.at.x for g in feeder.geometry.ports if g.name == mate)
-        at[name] = start[feeder.function] + pin - body.x
-    names = [*order, *(n for n in own if n not in order)]
+            start[feeder.function], cursor = _open_slot(feeder, cursor, profile)
+        at[name] = _pin_x(feeder, mate, start[feeder.function])
+    return at
+
+
+def _fed_over(
+    fed: DrawnFunction,
+    blocks: Sequence[tuple[BoxFeed, DrawnFunction, Sequence[tuple[str, str]]]],
+    order: Sequence[str],
+    profile: Profile,
+) -> DrawnFunction:
+    """`fed` with each feeder's pins' x for its group's pins, a slot a feeder's width apart."""
+    at = _pin_columns(fed, blocks, order, profile)
+    names = [*order, *(g.name for g in fed.geometry.ports if g.name not in order)]
     face = _facing(fed)
     offsets = tuple(at[n] / G_PER_MODULE for n in names)
     geometry = generic_box_geometry(tuple(names), tuple(face[n] for n in names), offsets=offsets)

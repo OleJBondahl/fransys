@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Mapping
 
-from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry, port_page_at
+from fransys_layout.geometry import generic_box_geometry, port_page_at
 
 from .box_pairing import paired_boxes
 from .box_power import item_pins, pinned_sides, power_geometry
@@ -41,7 +41,7 @@ def potential_sides(
     # V1: an item box takes its side in `sides`; layout-0107: `pairing` (feeds, profile) pairs boxes
     kind_of, sides = kind_of or {}, sides or {}
     boxes = tuple(
-        power_geometry(one, rank_of, kind_of, sides) if one.geometry.key == GENERIC_BOX_KEY else one
+        power_geometry(one, rank_of, kind_of, sides) if one.geometry.generic_box else one
         for one in drawn
     )
     return paired_boxes(boxes, *pairing) if pairing and pairing[0] else boxes
@@ -87,7 +87,7 @@ def box_sides(
     home = first_placed(placed)
     found = []
     for one in drawn:
-        if one.geometry.key != GENERIC_BOX_KEY or one.function not in home or _paired(one):
+        if not one.geometry.generic_box or one.function not in home or _paired(one):
             found.append(one)
             continue
         found.append(_turned_box(one, home[one.function], where, partners, power))

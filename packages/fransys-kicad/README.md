@@ -4,7 +4,7 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 
 - `netlist(model, board) -> str`: the KiCad 9.0 s-expression netlist of one board, formatted from `board_netlist`: one net per connected group of the board's own conductors and board-only declared nets (decision model-0042). Format and what it leaves out: decision kicad-0001.
 - `check(model, board) -> tuple[Finding, ...]`: what the importer would otherwise leave to chance, as findings. The rules read the rows `netlist` writes and repeat nothing the model's validators report (`NET_SHORTED`, `PORT_UNCONNECTED`, `DESIGNATION_DUPLICATE`). The codes:
-  - `PART_WITHOUT_FOOTPRINT` (warning): a part of the board with no footprint; the netlist omits it.
+  - `PART_WITHOUT_FOOTPRINT` (warning): a part of the board with no footprint, an accessory excepted (kicad-0003); the netlist omits it.
   - `NET_SINGLE_PIN` (warning): a net of one pin.
   - `NODE_WITHOUT_COMPONENT` (warning): a net pin of an item with no footprint, or of the board itself; KiCad drops the node.
   - `REFERENCE_DUPLICATE` (error): two parts of the board with one designation.

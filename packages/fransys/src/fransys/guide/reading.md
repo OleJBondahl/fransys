@@ -59,8 +59,8 @@ a function that takes or gives energy above a signal function.
 `fransys.derive.no_conductor_at(model, port)` is `True` when no conductor (wire, jumper, cable core
 or link) ends at `port`. Unlike `unconnected_ports`, a mate or a declared net does not count.
 
-`fransys.derive.box_pairs(model)` maps each function wired pin to pin to one function of another
-item, to a `BoxPair` (`function`, `partner`, `port_pairs`). Every port needs a two-port net to the partner, one to one.
+`fransys.derive.box_pairs(model, drawn=None)` maps each function wired pin to pin to one function of another
+item, to a `BoxPair` (`function`, `partner`, `port_pairs`). Every port needs a two-port net to the partner, one to one. With `drawn`, a collection of ports, only those ports count on either side. Layout passes the ports `port_is_unused` leaves when a profile hides unused pins, so pass that same set rather than a count of your own.
 
 `fransys.derive.port_is_unused(model, port)` is `True` when no conductor ends at `port` and no declared
 net has it. A mate does not count. `fransys.derive.function_is_unused(model, function)` is `True` when

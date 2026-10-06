@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-SWITCH-DC-2A"
+manufacturer = "Demo"
+description = "Small DC switch pole, 1000 V DC, 2 A"
+category = "electromechanical"
+class_code = "S"
+
+[[function]]
+name = "pole"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "switched" }]
+
+[function.rating]
+voltage_dc_v = "1000"
+current_dc_a = "2"

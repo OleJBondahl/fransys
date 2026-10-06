@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 def _drawn_apart(specs: Iterable[FunctionSpec]) -> set[Id[Any]]:
     """layout-0123: the functions that stand on their own beside an item view of their item."""
-    views = {spec.function for spec in specs if spec.function.kind == "item"}
-    return {s.function for s in specs if s.function.kind != "item" and s.item in views}
+    views = {spec.item for spec in specs if spec.roles.item_view}
+    return {s.function for s in specs if not s.roles.item_view and s.item in views}
 
 
 def write_keys(model: Model, specs: Iterable[FunctionSpec] = ()) -> WriteKeys:

@@ -1,19 +1,19 @@
 [project]
 name = "fransys"
-version = "0.11.0"
+version = "0.11.1"
 description = "Fransys facade: pipeline, findings policy, file writing, CLI."
 requires-python = ">=3.15"
 dependencies = [
-    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-model",
-    "fransys-parts @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-parts",
-    "fransys-author @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-author",
-    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-layout",
-    "fransys-render @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-render",
-    "fransys-reports @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-reports",
-    "fransys-pdf @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-pdf",
-    "fransys-kicad @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-kicad",
-    "fransys-wago @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-wago",
-    "fransys-overview @ git+https://github.com/OleJBondahl/fransys@v0.11.0#subdirectory=packages/fransys-overview",
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-model",
+    "fransys-parts @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-parts",
+    "fransys-author @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-author",
+    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-layout",
+    "fransys-render @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-render",
+    "fransys-reports @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-reports",
+    "fransys-pdf @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-pdf",
+    "fransys-kicad @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-kicad",
+    "fransys-wago @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-wago",
+    "fransys-overview @ git+https://github.com/OleJBondahl/fransys@v0.11.1#subdirectory=packages/fransys-overview",
     "typst==0.15.0",
 ]
 

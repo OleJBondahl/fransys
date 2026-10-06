@@ -14,21 +14,22 @@ Enums, `Decimal`, `str`, `bytes`, numbers, `UUID`, dates and classes are leaves.
 visited once by identity (cycles and shared objects), with an explicit stack, so depth never
 reaches the recursion limit.
 
-N = 1 is the smallest that works: the fixture builds 20 record kinds at N = 0 and 40 at N = 1, 2
+N = 1 is the smallest that works: the fixture builds 21 record kinds at N = 0 and 41 at N = 1, 2
 and 3 (`test_n_is_the_smallest_build_that_reaches_every_kind` below re-proves it; the demo parts'
 rating tables added `facet.rating`, `facet.part_rating` and `facet.operating`, model-0079; the
 project's `Revision` entry added `revision`, schema SC4; the numbering pass's
 `facet.assigned_designation` added one, the SC3 split; a unit's release record added
-`unit_release`, SC2), and
+`unit_release`, SC2; FUSE-LINK's PCB fuse holder added `facet.footprint`, the demo
+library's first), and
 immutability is a property of a type, not of how many instances a build has. Two of the two
 kind-counting tests below build through `_build_scale_with_document`, not `build_scale`
 directly: decision 0037 (PS1) gates layout on the model holding a `Document`, and `build_scale`
 itself must stay document-free (acceptance 6 of MODEL-BUILD -- the examples' largest build with
 its documents left out), so this file's own document-bearing variant is what reaches the
 `layout.*` kinds and adds `document` itself (one more kind than the pre-0037 39, since no build
-here ever held a document before). Fourteen of the 54 registered kinds are still not built by
+here ever held a document before). Thirteen of the 54 registered kinds are still not built by
 this fixture, so this walk does not reach them: `supply_system`, `facet.boundary_values`,
-`facet.footprint`, `facet.plc_binding`, `facet.plc_request`, `facet.scaling`, and the `layout.*`
+`facet.plc_binding`, `facet.plc_request`, `facet.scaling`, and the `layout.*`
 hints `break_before`, `chain`, `group_hint`, `keep_together`, `link_marker`, `order_hint`,
 `profile`, `sheet_format`.
 """
@@ -191,7 +192,7 @@ def test_n_is_the_smallest_build_that_reaches_every_kind():
     assert _built_kinds(N - 1) < kinds_at_n
     assert _built_kinds(N + 1) == kinds_at_n
     assert kinds_at_n >= REQUIRED_KINDS
-    assert len(kinds_at_n) == 40
+    assert len(kinds_at_n) == 41
 
 
 def test_a_mutable_value_smuggled_into_a_real_record_is_found_by_its_path():

@@ -36,8 +36,9 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Function, Item
 
 from .closure import port_groups
-from .designation import footprint_facet, item_designation
+from .designation import footprint_facet, item_designation, takes_parents_designation
 from .indexes import build_indexes
+from .list_order import in_designation_order
 from .lookups import descendants, effective_placement, item_of_port, net_name, require
 from .natural_order import natural_key
 from .rows import BoardNetlist, ExtUsage, NetlistNet, NetlistPart
@@ -89,7 +90,7 @@ def board_netlist(model: Model, board: Id[Item]) -> BoardNetlist:
     without_footprint = []
     for item_id in below:
         item = items(model)[item_id]
-        if item.part is None:
+        if item.part is None or takes_parents_designation(model, item_id):
             continue
         footprint = footprint_facet(model, item.part)
         if footprint is None:
@@ -166,7 +167,7 @@ def _undeclared_net_name(model: Model, board: Id[Item], pins: tuple[Id[Port], ..
 
 
 def boards(model: Model) -> tuple[Id[Item], ...]:
-    """Every item whose `Part` carries a `pcb` facet, in `Id` order.
+    """Every item whose `Part` carries a `pcb` facet, in designation order.
 
     `PcbFacet.subject` is a `Part`, not an item: an item is a board when its own `part` is one
     that carries the facet. Shared by `fransys`'s export enumeration
@@ -176,10 +177,12 @@ def boards(model: Model) -> tuple[Id[Item], ...]:
         model: The model to read.
 
     Returns:
-        Every board item's id, sorted.
+        Every board item's id, by natural designation, then id.
     """
     pcb_parts = unit_index(model).pcb_parts
-    return tuple(sorted(item.id for item in items(model).values() if item.part in pcb_parts))
+    return in_designation_order(
+        model, (item.id for item in items(model).values() if item.part in pcb_parts)
+    )
 
 
 def schematic_functions(model: Model) -> tuple[Id[Function], ...]:

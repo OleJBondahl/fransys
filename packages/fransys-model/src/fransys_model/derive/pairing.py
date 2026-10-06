@@ -4,6 +4,7 @@ Layout reads it to stand a box over the pin group it feeds (CONVENTIONS-V06 V1).
 """
 
 import dataclasses
+lazy from collections.abc import Collection
 
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.vocab.closure import physical_nets
@@ -42,11 +43,22 @@ def _item_of(model: Model, function: Id[Function]) -> Id[Item]:
     return functions(model)[function].item
 
 
+def _ports_of(
+    model: Model, function: Id[Function], drawn: Collection[Id[Port]] | None
+) -> tuple[Id[Port], ...]:
+    """`function`'s ports, or only those in `drawn` when it is given."""
+    every = build_indexes(model).ports_by_function.get(function, ())
+    return every if drawn is None else tuple(port for port in every if port in drawn)
+
+
 def _pair_of(
-    model: Model, nets: dict[Id[Port], tuple[Id[Port], ...]], function: Id[Function]
+    model: Model,
+    nets: dict[Id[Port], tuple[Id[Port], ...]],
+    function: Id[Function],
+    drawn: Collection[Id[Port]] | None,
 ) -> BoxPair | None:
     """The pairing of `function`, or `None`: one partner, one to one, no port left over."""
-    own = build_indexes(model).ports_by_function.get(function, ())
+    own = _ports_of(model, function, drawn)
     far = _far_ports(nets, own)
     if far is None:
         return None
@@ -54,20 +66,23 @@ def _pair_of(
     if len(partners) != 1 or len(set(far)) != len(far):
         return None
     (partner,) = partners
-    same_size = len(build_indexes(model).ports_by_function[partner]) == len(own)
+    same_size = len(_ports_of(model, partner, drawn)) == len(own)
     if not same_size or _item_of(model, partner) == _item_of(model, function):
         return None
     return BoxPair(function, partner, tuple(zip(own, far, strict=True)))
 
 
-def box_pairs(model: Model) -> dict[Id[Function], BoxPair]:
+def box_pairs(
+    model: Model, drawn: Collection[Id[Port]] | None = None
+) -> dict[Id[Function], BoxPair]:
     """Each function wired point to point to one function of another item, and the port pairs.
 
     Every port of the function has a two-port net to a port of that one function, one to one, and
     that function has no other port. Two partners, a split group, a third member or a net of
     three ports leave the function out. The relation is symmetric; which box is fed is layout's
-    reading of the box sides.
+    reading of the box sides. With `drawn`, only the ports in it count on either
+    side: a port the profile leaves off the page is no member of its function.
     """
     nets = {port: net.ports for net in physical_nets(model) for port in net.ports}
-    pairs = {f: _pair_of(model, nets, f) for f in build_indexes(model).ports_by_function}
+    pairs = {f: _pair_of(model, nets, f, drawn) for f in build_indexes(model).ports_by_function}
     return {function: pair for function, pair in pairs.items() if pair is not None}

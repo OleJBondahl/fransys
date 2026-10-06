@@ -3,9 +3,14 @@
 Every expected value is worked by hand from the shape of the graph (vertices are letters).
 """
 
-import time
+import sys
+from typing import TYPE_CHECKING
 
+import fransys_model.vocab.current_blocks as module
 from fransys_model.vocab.current_blocks import blocks
+
+if TYPE_CHECKING:
+    from types import FrameType
 
 
 def _sets(*edges: tuple[str, str]) -> set[frozenset[int]]:
@@ -67,14 +72,33 @@ def test_the_result_does_not_depend_on_the_order_of_the_edges() -> None:
     assert forward == backward == {frozenset(edges[:3]), frozenset(edges[3:])}
 
 
+def _lines_run_by_blocks(edges: list[tuple[int, int]]) -> int:
+    """Source lines `blocks` executes on `edges`: an operation count, not a clock."""
+    lines = 0
+
+    def trace(frame: FrameType, event: str, _arg: object):
+        nonlocal lines
+        if frame.f_code.co_filename != module.__file__:
+            return None
+        lines += event == "line"
+        return trace
+
+    previous = sys.gettrace()
+    sys.settrace(trace)
+    try:
+        blocks(edges)
+    finally:
+        sys.settrace(previous)
+    return lines
+
+
 def test_a_long_path_of_bridges_is_found_in_linear_time() -> None:
-    """50000 bridges in a row: each one is popped from the top of the edge stack. Scanning the
-    stack from its bottom would cost about 1.25 billion steps here."""
-    size = 50_000
-    started = time.perf_counter()
-    found = blocks([(n, n + 1) for n in range(size)])
-    assert time.perf_counter() - started < 3
-    assert found == tuple(frozenset({n}) for n in range(size))
+    """Each bridge is popped from the top of the edge stack: 28 lines per bridge (measured), where
+    scanning the stack from its bottom would cost the square of the length."""
+    size = 2000
+    edges = [(n, n + 1) for n in range(size)]
+    assert _lines_run_by_blocks(edges) <= 30 * size
+    assert blocks(edges) == tuple(frozenset({n}) for n in range(size))
 
 
 def test_a_long_string_does_not_recurse() -> None:

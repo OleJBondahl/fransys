@@ -114,7 +114,12 @@ def device(  # noqa: PLR0913 -- one keyword per thing a test varies
 
 
 def fuse(
-    plant: Plant, key: str, amps: str = "400", *, partial: bool = False, amps_ac: str | None = None
+    plant: Plant,
+    key: str,
+    amps: str | None = "400",
+    *,
+    partial: bool = False,
+    amps_ac: str | None = None,
 ) -> Ports:
     """A `protection` device with a conductive link, rated `amps` DC (`partial`: partial-range)."""
     kind = FunctionKind.PROTECTION

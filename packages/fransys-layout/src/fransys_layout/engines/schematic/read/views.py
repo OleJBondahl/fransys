@@ -10,7 +10,7 @@ import dataclasses
 from collections import defaultdict
 from functools import partial
 from typing import TYPE_CHECKING, Any
-lazy from collections.abc import Mapping
+lazy from collections.abc import Mapping, Sequence
 lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES, kind_roles
@@ -49,8 +49,15 @@ def box_drawn(
 ) -> bool:
     """Whether `spec` is a generic box: a PLC channel or a function no symbol rule names."""
     return spec.pin_function is None and (
-        spec.kind == "plc_channel" or _symbol_for(spec, table, index, None)[0] is None
+        spec.roles.plc_channel or _symbol_for(spec, table, index, None)[0] is None
     )
+
+
+def _view_kind(group: Sequence[FunctionSpec], wired: AbstractSet[Id[Any]]) -> str:
+    """The kind the wired functions of `group` share unless it is a PLC channel, else "item"."""
+    on_wire = [spec for spec in group if any(p.port in wired for p in spec.ports)]
+    shared = len({spec.kind for spec in on_wire}) == 1 and not on_wire[0].roles.plc_channel
+    return on_wire[0].kind if shared else "item"
 
 
 def item_views(
@@ -93,10 +100,10 @@ def item_views(
         # generic box of its own (an item view would stand on the item's min-id function, which
         # may be a wired channel's)
         lone = group[0]
-        if len(group) == 1 and lone.kind == "plc_channel" and lone.ports[0].port not in wired:
+        if len(group) == 1 and lone.roles.plc_channel and lone.ports[0].port not in wired:
             found.append(dataclasses.replace(lone, kind="item", roles=kind_roles("item")))
             continue
-        lone_pair = len(group) == 1 and lone.kind == "plc_channel" and len(lone.ports) > 1
+        lone_pair = len(group) == 1 and lone.roles.plc_channel and len(lone.ports) > 1
         if (len(group) < 2 and not lone_pair) or not (defaulted or named):  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
             found.extend(group)
             continue
@@ -107,7 +114,7 @@ def item_views(
                 port,
                 name=f"{name[spec.function]}.{port.name}",
                 group=order[spec.function],
-                channel=spec.kind == "plc_channel",
+                channel=spec.roles.plc_channel,
             )
             for spec in group
             for port in spec.ports
@@ -115,8 +122,7 @@ def item_views(
         view_of.update((port.port, item) for port in view_ports)
         first = min(group, key=lambda spec: spec.key)
         # C3 (a): the view takes the kind (so the band) its wired functions share, else "item"
-        kinds = {spec.kind for spec in group if any(p.port in wired for p in spec.ports)}
-        view_kind = kinds.pop() if len(kinds) == 1 and kinds != {"plc_channel"} else "item"
+        view_kind = _view_kind(group, wired)
         found.append(
             dataclasses.replace(
                 first,
@@ -125,7 +131,8 @@ def item_views(
                 kind=view_kind,
                 roles=dataclasses.replace(
                     kind_roles(view_kind),
-                    plc_channel=all(s.kind == "plc_channel" for s in group),
+                    plc_channel=all(s.roles.plc_channel for s in group),
+                    item_view=True,
                     contacts_apart=any(
                         s.roles.contact for s in apart
                     ),  # layout-0123: the contact image

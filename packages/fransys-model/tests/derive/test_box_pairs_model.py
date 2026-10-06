@@ -83,3 +83,16 @@ def test_a_function_wired_to_itself_or_its_own_item_is_not_paired() -> None:
     two = _group(plant, "box", "f2", "a", "b")
     _wire(plant, one, two)
     assert box_pairs(plant.model()) == {}
+
+
+def test_a_port_left_out_of_drawn_is_no_member_of_its_function() -> None:
+    """layout-0128: a third pin on the feeder blocks the pairing until `drawn` leaves it out."""
+    # UNDO: derive/pairing.py:_ports_of, the `drawn` filter dropped (every port counts)
+    plant, out, inp = _paired_plant()
+    spare = plant.pin("psu", "out", "ok")
+    model = plant.model()
+    assert box_pairs(model) == {}
+    drawn = {*out, *inp}
+    assert spare not in drawn
+    pairs = box_pairs(model, drawn)
+    assert pairs[Plant.function_id("red", "in1")].partner == Plant.function_id("psu", "out")

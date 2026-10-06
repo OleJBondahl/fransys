@@ -3,7 +3,7 @@
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.geometry import GENERIC_BOX_KEY, Box, generic_box_geometry
+from fransys_layout.geometry import Box, generic_box_geometry
 from fransys_layout.geometry.box_reach import Reach, Row, extent
 
 from .box_fed import fed_geometry
@@ -86,7 +86,7 @@ def _feeder_port(feeder: DrawnFunction, host: DrawnFunction) -> tuple[Handle, st
 
 def _widened(one: DrawnFunction, room: Mapping[str, tuple[Row, ...]] | None) -> DrawnFunction:
     """`one` redrawn with `room`'s pins apart; any other function untouched."""
-    if not room or one.geometry.key != GENERIC_BOX_KEY:
+    if not room or not one.geometry.generic_box:
         return one
     reach = tuple(Reach(name=name, rows=rows) for name, rows in sorted(room.items()))
     names = tuple(

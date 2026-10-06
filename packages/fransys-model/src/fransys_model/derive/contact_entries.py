@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive.accessory_blocks import CONTACT_KINDS
 from fransys_model.derive.contacts import changeover_throws, owned_contacts
 from fransys_model.derive.unused import function_is_unused
-from fransys_model.vocab import function_poles, unlinked_poles
+from fransys_model.vocab import function_poles, marking_key, unlinked_poles
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
 
@@ -86,12 +86,12 @@ def printed_name(model: Model, port: Id[Port]) -> str:
     return ports(model)[port].name.split("/")[0]
 
 
-def image_order(entry: Entry) -> tuple[bool, bool, int, str, str]:
+def image_order(entry: Entry) -> tuple[bool, tuple[tuple[int, int, str], ...], str]:
     """A contact image entry's order: main first, then numbered terminals, then named commons."""
     # an entry is `(main, key, text)`; `key` is the terminal number, or the common's name when it
     # is no number: named commons sort after every numbered one, by name, then by text
     main, key, text = entry
-    return (not main, isinstance(key, str), key if isinstance(key, int) else 0, str(key), text)
+    return (not main, marking_key(str(key)), text)
 
 
 def spare_entries(

@@ -236,7 +236,7 @@ def _boundary_changes(
                 before="",
                 after="",
                 parts=(designation,),
-                detail="ports " + ", ".join(sorted(r.ports)),
+                detail="ports " + ", ".join(sorted(r.ports, key=natural_key)),
             )
         )
     for designation in set(b_index) - set(a_index):
@@ -250,7 +250,7 @@ def _boundary_changes(
                 before="",
                 after="",
                 parts=(designation,),
-                detail="ports " + ", ".join(sorted(r.ports)),
+                detail="ports " + ", ".join(sorted(r.ports, key=natural_key)),
             )
         )
     for designation in set(a_index) & set(b_index):
@@ -268,7 +268,7 @@ def _boundary_changes(
                     parts=(designation,),
                     detail="",
                 )
-                for port in sorted(b_ports - a_ports)
+                for port in sorted(b_ports - a_ports, key=natural_key)
             )
             changes.extend(
                 Change(
@@ -281,7 +281,7 @@ def _boundary_changes(
                     parts=(designation,),
                     detail="",
                 )
-                for port in sorted(a_ports - b_ports)
+                for port in sorted(a_ports - b_ports, key=natural_key)
             )
         changes.extend(_rating_changes(designation, "rating", a_row.rating, b_row.rating))
         changes.extend(_rating_changes(designation, "operating", a_row.operating, b_row.operating))

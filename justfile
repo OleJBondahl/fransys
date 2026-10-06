@@ -31,7 +31,7 @@ build-electrical-symbols:
 
 # the full suite; electrical-symbols, fransys-model, fransys-layout, fransys-parts,
 # fransys-author and the reports, kicad, wago, overview and pdf output packages and
-# the fransys facade are measured in the same run and have no gate
+# the fransys facade are measured in the same run; each has a fixed 95% floor in coverage-floors.toml
 cov:
     uv run pytest -n {{pytest_workers}} --dist worksteal --cov=electrical_symbols --cov=fransys_model --cov=fransys_layout --cov=fransys_parts --cov=fransys_author --cov=fransys_reports --cov=fransys_kicad --cov=fransys_wago --cov=fransys_overview --cov=fransys_pdf --cov=fransys_render --cov=fransys --cov-report=term-missing --cov-report=json:.fransys/coverage.json --durations=20
 

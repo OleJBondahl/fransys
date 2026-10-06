@@ -157,7 +157,7 @@ def test_the_box_stands_on_a_function_drawn_in_it_not_on_one_drawn_apart() -> No
     (view,) = (s for s in inputs.functions if s.function == m1)
     ids = sorted(f.id for f in functions(model).values() if f.item == m1)
     apart = dataclasses.replace(
-        view, function=ids[0]
+        view, function=ids[0], roles=dataclasses.replace(view.roles, item_view=False)
     )  # a spec of the lowest function, standing alone
     assert write_keys(model).item_function[m1] == ids[0]
     assert write_keys(model, (view, apart)).item_function[m1] == ids[1]

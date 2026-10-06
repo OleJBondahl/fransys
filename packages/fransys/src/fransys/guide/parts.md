@@ -160,3 +160,29 @@ often states its rating as a C-rate against the part's capacity rather than as a
 on 310 Ah is 310 A. Do that multiplication yourself before writing the part file. A
 `[function.operating]` table's `max_current_dc_a` is a current, in amps, never a C-rate.
 Fransys stores whatever number you give it and does not compute this conversion.
+
+A replaceable part, such as a fuse link in its holder, is its own part file. It states a top-level
+`[rating]` and has no `[[function]]`. The holder keeps the pads and the footprint.
+
+```toml
+[part]
+mpn = "DEMO-FUSE-LINK-4A-T"
+manufacturer = "Demo"
+description = "Replaceable fuse link for a PCB holder, 4 A time-lag, 1000 V DC"
+category = "protection"
+class_code = "F"
+
+[rating]
+voltage_dc_v = "1000"
+current_dc_a = "4"
+```
+
+`d.rating("DEMO-FUSE-LINK-4A-T")` reads that rating. Put the link in its holder with `parent=`, as `authoring.md`
+shows. A link with `min_breaking_current_a` is partial-range and bounds no current.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+assert d.rating("DEMO-FUSE-LINK-4A-T").current_dc_a == 4
+```

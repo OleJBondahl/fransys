@@ -1,7 +1,8 @@
 """layout-0107: which item box stands over the pin group it feeds, read from V1's sides.
 
-The model says which functions are wired pin to pin (`derive.box_pairs`, model-0130); V1's side
-split (`item_sides`, via `pin_sides`) says which end is fed: its group on top, the feeder's below.
+The model says which functions are wired pin to pin (`derive.box_pairs`, model-0130), counting the
+ports the specs draw (layout-0128); V1's side split (`item_sides`, via `pin_sides`) says which end
+is fed: its group on top, the feeder's below.
 """
 
 from typing import TYPE_CHECKING, Any
@@ -25,7 +26,7 @@ def box_feeds(
     """Each pairing whose fed group is on its box's top and feeder group on its box's bottom."""
     box_of = {port.port: spec.function for spec in specs for port in spec.ports}
     found: dict[tuple[Id[Any], Id[Any]], list[FedPin]] = {}
-    for pair in box_pairs(model).values():
+    for pair in box_pairs(model, box_of.keys()).values():
         own, far = zip(*pair.port_pairs, strict=True)
         if not all(p in box_of for p in (*own, *far)):
             continue

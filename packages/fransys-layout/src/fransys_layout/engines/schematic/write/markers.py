@@ -12,7 +12,7 @@ from fransys_model.layout import LinkMarker, Side, StarKind
 from fransys_model.layout import MarkerSide as ModelMarkerSide
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     from fransys_layout.engines.schematic.engine import StageResults
     from fransys_layout.engines.schematic.write.keys import PageId, WriteKeys
@@ -32,7 +32,6 @@ def link_markers(
 ) -> list[LinkMarker]:
     """Each severed signal's two markers, each pointing at the other by record id."""
     layout = without_power(results.layout)  # a power end is a `PowerSymbol`, not a marker
-    port_key = keys.port
     # an off stub finds its end by `(port, end_text)`; any other marker's `end_text` is `None`
     end_of: dict[tuple[Id[Any], StubText | None], OffEnd] = {
         (end.port, end.text): end for end in results.off_ends
@@ -52,9 +51,9 @@ def link_markers(
         return (
             *PREFIX,
             "link_marker",
-            *port_key[one.port],
+            *keys.port[one.port],
             one.side.value,
-            *port_key[partner_port],
+            *keys.port[partner_port],
         )
 
     reached = Counter((end.port, end.far) for end in end_of.values())
@@ -69,10 +68,12 @@ def link_markers(
     def star_key_of(one: StageMarker) -> AuthoringKey:
         """D17: the port key, `star`, the placement's discriminator; no role, partner or page."""
         where = stands_on[one.port, one.drawing_set, one.page]
-        return (*PREFIX, "link_marker", *port_key[one.port], "star", *where)
+        return (*PREFIX, "link_marker", *keys.port[one.port], "star", *where)
+
+    pairs, doubled = _pairs_and_doubled(layout.markers, key_to)
 
     def key_of(one: StageMarker, other: StageMarker) -> AuthoringKey:
-        return key_to(one, other.port)
+        return _placed(key_to(one, other.port), (one, stands_on), doubled)
 
     def record(one: StageMarker, other: StageMarker) -> LinkMarker:
         box_x, lead, stub_extra, via_x, via_y = _marker_fields(one)
@@ -149,11 +150,30 @@ def link_markers(
     return [
         *(
             record(one, other)
-            for owner, user in _pairs(tuple(m for m in layout.markers if not m.star))
+            for owner, user in pairs
             for one, other in ((owner, user), (user, owner))
         ),
         *stars,
     ]
+
+
+def _pairs_and_doubled(
+    markers: tuple[StageMarker, ...], key_to: Callable[[StageMarker, Id[Any]], AuthoringKey]
+) -> tuple[list[tuple[StageMarker, StageMarker]], frozenset[AuthoringKey]]:
+    """The cut pairs, and the keys a cut drawn in two drawing sets gives twice (layout-0127)."""
+    pairs = _pairs(tuple(m for m in markers if not m.star))
+    counts = Counter(key_to(one, other.port) for pair in pairs for one, other in (pair, pair[::-1]))
+    return pairs, frozenset(key for key, count in counts.items() if count > 1)
+
+
+def _placed(
+    key: AuthoringKey,
+    on: tuple[StageMarker, Mapping[tuple[Id[Any], int, int], AuthoringKey]],
+    doubled: frozenset[AuthoringKey],
+) -> AuthoringKey:
+    """A key given twice also names the placement its port stands on (layout-0127)."""
+    one, stands_on = on
+    return (*key, "on", *stands_on[one.port, one.drawing_set, one.page]) if key in doubled else key
 
 
 def _marker_fields(one: StageMarker) -> tuple[int | None, bool, int, int | None, int | None]:

@@ -22,7 +22,7 @@ def _pairs(own: tuple[int, int], far: tuple[int, int]) -> dict[Any, BoxPair]:
 
 
 def _feeds(monkeypatch: pytest.MonkeyPatch, north: set[int], south: set[int]):
-    monkeypatch.setattr(pairs, "box_pairs", lambda _model: _pairs((11, 12), (21, 22)))
+    monkeypatch.setattr(pairs, "box_pairs", lambda _model, _drawn: _pairs((11, 12), (21, 22)))
     specs = (function_spec(1), function_spec(2))
     return pairs.box_feeds(
         _NO_MODEL, specs, {hid("port", n) for n in north}, {hid("port", n) for n in south}
@@ -68,7 +68,7 @@ def test_in_a_chain_the_upper_pair_stays_and_the_lower_is_no_pairing(
             port_pairs=((hid("port", 21), hid("port", 31)),),
         ),
     }
-    monkeypatch.setattr(pairs, "box_pairs", lambda _model: both)
+    monkeypatch.setattr(pairs, "box_pairs", lambda _model, _drawn: both)
     specs = tuple(function_spec(n) for n in (1, 2, 3))
     top = {hid("port", 11), hid("port", 21)}
     below = {hid("port", 21), hid("port", 31)}

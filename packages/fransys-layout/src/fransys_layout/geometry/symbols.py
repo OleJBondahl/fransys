@@ -94,6 +94,11 @@ class SymbolGeometry:
     slots: tuple[SlotGeometry, ...]
     nodes: tuple[tuple[str, ...], ...] = ()
 
+    @property
+    def generic_box(self) -> bool:
+        """Whether this is the labelled-box placeholder: the one compare of `GENERIC_BOX_KEY`."""
+        return self.key == GENERIC_BOX_KEY
+
 
 def symbol_geometry(
     key: str, *, poles: int = 1, orientation: Orientation = Orientation.R0

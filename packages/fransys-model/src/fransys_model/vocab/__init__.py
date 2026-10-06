@@ -63,6 +63,7 @@ from .markings import (
     port_order_key,
     unlinked_poles,
 )
+from .membership import crosses_unit
 from .project import Project
 from .rating_readers import (
     boundary_operating,
@@ -189,6 +190,7 @@ __all__ = [
     "cable_items",
     "changeover_throws",
     "conductors",
+    "crosses_unit",
     "documents",
     "effective_rating",
     "facet_subject",

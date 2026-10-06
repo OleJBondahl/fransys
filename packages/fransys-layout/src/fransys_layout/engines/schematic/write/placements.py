@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.schematic.write.keys import PREFIX, real_function
-from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry
+from fransys_layout.engines.schematic.write.keys import PREFIX, real_function, view_of
+from fransys_layout.geometry import generic_box_geometry
 from fransys_layout.geometry import library_version as symbol_library_version
 from fransys_model.kernel import make_id
 from fransys_model.layout import PlacementView, Side, SymbolPlacement
@@ -47,10 +47,11 @@ def placements(
         real, pin = real_function(keys, placed.function)
         if pin is not None:
             extra = (*extra, "pin", pin)
-        if placed.function.kind == "item":  # an item view stands on a function drawn apart too
-            extra = (*extra, "view")
+        view = view_of(keys, placed.function)
+        # an item view stands on a function drawn apart too
+        extra = (*extra, "view") if view is PlacementView.ITEM else extra
         discriminator[placed.function, placed.drawing_set, placed.page] = extra
-        view, port_names, port_sides, offsets = _placement_fields(placed, pin)
+        port_names, port_sides, offsets = _placement_fields(placed, view)
         key = (*PREFIX, "symbol_placement", *keys.function[real], *extra)
         records.append(
             SymbolPlacement(
@@ -77,16 +78,12 @@ def placements(
 
 def _placement_fields(
     placed: PlacedFunction,
-    pin: object,
-) -> tuple[PlacementView, tuple[str, ...], tuple[Side, ...], tuple[int, ...]]:
-    """R7 B2 the view; R7 C5 a generic box's names and sides, model-0129 its pin x when wide."""
-    if placed.function.kind == "item":
-        view = PlacementView.ITEM
-    else:
-        view = PlacementView.PIN if pin is not None else PlacementView.FUNCTION
+    view: PlacementView,
+) -> tuple[tuple[str, ...], tuple[Side, ...], tuple[int, ...]]:
+    """R7 C5 a generic box's names and sides, model-0129 its pin x when wide."""
     geometry = placed.geometry
-    if geometry.key != GENERIC_BOX_KEY:
-        return view, (), (), ()
+    if not geometry.generic_box:
+        return (), (), ()
     # C2/C5: the box's own port list, in drawing order (left to right, N before S at one
     # x), and each port's side: render rebuilds exactly this box
     drawn = sorted(geometry.ports, key=lambda port: (port.at.x, port.facing.value != "n"))
@@ -96,11 +93,10 @@ def _placement_fields(
     offsets = tuple(port.at.x for port in drawn)  # grid units, model-0129
     wide = any(plain[port.name] != port.at.x for port in drawn)
     alternating = ["n" if i % 2 == 0 else "s" for i in range(len(drawn))]
-    if wide or placed.function.kind == "item" or names != sorted(names) or sides != alternating:
+    if wide or view is PlacementView.ITEM or names != sorted(names) or sides != alternating:
         return (
-            view,
             tuple(names),
             tuple(Side[side.upper()] for side in sides),
             offsets if wide else (),
         )
-    return view, (), (), ()
+    return (), (), ()

@@ -97,7 +97,7 @@ def _item_belongs(model: Model, item_id: Id[Item], unit: Id[Unit]) -> bool:
 
 
 def unit_strips(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:
-    """The terminal strips `unit` owns directly, in `Id` order, never a nested unit's.
+    """The terminal strips `unit` owns directly, in designation order, never a nested unit's.
 
     The strips of `terminal_strips` whose `item.unit` is `unit`; one test of a unit's own strips.
     """
@@ -105,7 +105,7 @@ def unit_strips(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:
 
 
 def unit_boards(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:
-    """The boards `unit` owns directly, in `Id` order, never a nested unit's.
+    """The boards `unit` owns directly, in designation order, never a nested unit's.
 
     The boards of `boards` whose `item.unit` is `unit`; the one test of a unit's own boards.
     """

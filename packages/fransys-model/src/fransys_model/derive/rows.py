@@ -205,7 +205,8 @@ class BoardNetlist:
     """A board's parts, footprints and nets: one more Fransys output.
 
     `without_footprint` are the board's descendants with a part whose part carries no
-    `footprint`: the parts a netlist cannot place, which the query omits from `parts`.
+    `footprint`: the parts a netlist cannot place, which the query omits from `parts`. An accessory,
+    which prints its holder's designation, is no part of its own and is never listed.
     """
 
     board: Id[Item]

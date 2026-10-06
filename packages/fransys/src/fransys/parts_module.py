@@ -7,7 +7,7 @@ from fransys_author import AuthorError
 from fransys_parts import load as parts_load
 
 from fransys_model.kernel import Model, freeze, merge
-from fransys_model.vocab import Part, function_templates, parts, port_templates
+from fransys_model.vocab import Part, function_templates, marking_key, parts, port_templates
 
 _TRIPLE = '"' * 3
 
@@ -24,11 +24,6 @@ def library_digest(*sources: str) -> str:
 def _ident(text: str) -> str:
     name = re.sub(r"\W", "_", text)
     return f"P_{name}" if name[0].isdigit() else name
-
-
-def _natural(text: str) -> list[tuple[int, int, str]]:
-    """Sort key: digit runs by value, so pin 2 sorts before pin 10."""
-    return [(0, int(x), "") if x.isdigit() else (1, 0, x) for x in re.split(r"(\d+)", text) if x]
 
 
 def _literal(names: list[str]) -> str:
@@ -58,7 +53,9 @@ def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) ->
     unique = [pin for pin in all_pins if all_pins.count(pin) == 1]
     fn_names = {fn for fn, _ in functions}
     names = (
-        f"Literal[{', '.join(map(repr, sorted(fn_names, key=_natural)))}]" if fn_names else "Never"
+        f"Literal[{', '.join(map(repr, sorted(fn_names, key=marking_key)))}]"
+        if fn_names
+        else "Never"
     )
     lines = [
         f"class {cls}(TypedDevice[{names}, {cls!r}]):",
@@ -75,11 +72,11 @@ def _functions_of(model: Model) -> dict[object, list[tuple[str, list[str]]]]:
     for port in port_templates(model).values():
         pins_of[port.function].append(port.name)
     for pins in pins_of.values():
-        pins.sort(key=_natural)
+        pins.sort(key=marking_key)
     by_part = defaultdict(list)
     for template in function_templates(model).values():
         by_part[template.part].append((template.name, pins_of[template.id]))
-    return {part: sorted(fns, key=lambda fn: _natural(fn[0])) for part, fns in by_part.items()}
+    return {part: sorted(fns, key=lambda fn: marking_key(fn[0])) for part, fns in by_part.items()}
 
 
 def _named_parts(model: Model) -> list[tuple[str, Part]]:

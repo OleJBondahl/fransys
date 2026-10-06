@@ -15,7 +15,7 @@ STAGE_FACTS = frozenset({"function_kind", "part_category", "connector_gender"})
 
 ENGINE_NAME = "schematic"
 # The package's `pyproject.toml` version: a test keeps the two equal (decision layout-0029).
-ENGINE_VERSION = "0.11.0"
+ENGINE_VERSION = "0.11.1"
 
 # Whole routing lanes (`WIRING_GRID` each) `place` leaves between the content-box top and
 # row 0, so a north-facing port of row 0 routes inside the content box (decision layout-0031).

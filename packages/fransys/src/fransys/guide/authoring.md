@@ -31,6 +31,7 @@ tag raises.
 Floating tags: every item call takes `None` for the tag, `d.add` too, and numbers the item from
 its class code. The letter comes from the part file's `class_code`, or from the release's for a unit.
 Pass `name=`, the identity a released number holds to. A floating call with no `name=` raises.
+An accessory takes its holder's designation and uses up no number.
 
 `external=True` marks an item supplied by others. Every call that makes an item takes it: `d.device`,
 `d.terminal_strip`, `d.cable` and `d.harness`. The item has no BOM line. A strip's terminals are external
@@ -372,6 +373,25 @@ request to a channel later; you never pick the channel.
 
 `d.project(title=, number=, customer=, ...)` fills the title block and `d.revision(1, date=, text=)`
 adds a history line. Both are optional and appear on the drawings and in the reports.
+
+## An accessory in its holder
+
+A part with no function, put in another device with `parent=`, is an accessory of it. A fuse link in its
+PCB fuse holder is one: the holder carries the pads and the footprint, and the link carries the rated current.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+f1 = d.device("F1", "DEMO-FUSE-HOLDER-PCB")
+link = d.device(None, "DEMO-FUSE-LINK-4A-T", name="link", parent=f1)
+model = fr.build(d).model
+assert fr.derive.item_designation(model, link.id) == fr.derive.item_designation(model, f1.id)
+```
+
+The link prints `F1` and has no number or row of its own. An authored tag makes it an ordinary item. The
+holder's protection function then bounds its branch at the link's rated current. The part page shows the
+link's `[rating]`, and `reading.md` shows the branch check ("Checking a branch's current").
 
 ## Reading a part's rating
 

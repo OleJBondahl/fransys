@@ -2,7 +2,7 @@ Fransys output: derive rows formatted as CSV.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.
 
-Status: all six reports implemented (`terminal_csv`, `plc_csv`, `bom_csv`, `wires_csv`, `designations_csv`, `connectors_csv`). How a row becomes CSV is recorded in `docs/decisions/reports-0001-csv-format-rulings.md`. `changes_markdown`/`changes_csv` render a `derive.baseline.diff` result (a `ListingDiff`), not a `Model` (decision reports-0004).
+Status: implemented. Each name in `__all__` is one report, and `just api fransys-reports` lists them. The CSV reports take a `Model`. How a row becomes CSV is recorded in `docs/decisions/reports-0001-csv-format-rulings.md`. `changes_markdown`/`changes_csv` render a `derive.baseline.diff` result (a `ListingDiff`), not a `Model` (decision reports-0004).
 
 ## Rules moved from docstrings
 

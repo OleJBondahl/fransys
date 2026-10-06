@@ -13,11 +13,12 @@ from fransys_layout.stages.types import RailEnd
 from fransys_model.derive import is_rail_terminal, port_power_kind, terminal_items
 from fransys_model.vocab import PowerKind
 from fransys_model.vocab.enums import ConductorKind
+from fransys_model.vocab.membership import crosses_unit
 from fransys_model.vocab.tables import functions as functions_table
 from fransys_model.vocab.tables import ports as ports_table
 
 if TYPE_CHECKING:
-    from collections.abc import Collection, Mapping
+    from collections.abc import Collection
 
     from fransys_layout.stages.types import Connection, FunctionSpec, NetGroup, PortRef
     from fransys_model.kernel import Id, Model
@@ -65,13 +66,12 @@ def rail_wires(
     """`connections` without the rail wires, and the `RailEnd` of each drawn pin they leave."""
     strip_terminals = terminal_items(model)
     pins = {spec.function for spec in specs if spec.item not in strip_terminals}
-    unit_of = {spec.function: spec.unit for spec in specs}
     boundary = {spec.function for spec in specs if spec.rail}
     kept: list[Connection] = []
     ends: list[RailEnd] = []
     for connection in connections:
         pair = (connection.a, connection.b)
-        if _is_rail_wire(model, pair, pins, undrawn) and not _enters_unit(pair, boundary, unit_of):
+        if _is_rail_wire(model, pair, pins, undrawn) and not _enters_unit(model, pair, boundary):
             ends += [
                 RailEnd(ref=ref, connection=connection.handle)
                 for ref in pair
@@ -83,13 +83,13 @@ def rail_wires(
 
 
 def _enters_unit(
-    pair: tuple[PortRef, PortRef],
-    boundary: Collection[Id[Any]],
-    unit_of: Mapping[Id[Any], Id[Any] | None],
+    model: Model, pair: tuple[PortRef, PortRef], boundary: Collection[Id[Any]]
 ) -> bool:
     """RB2: a conductor from outside a unit to its boundary rail terminal is the parent's wire."""
-    one, other = (unit_of.get(ref.function) for ref in pair)
-    return one != other and any(ref.function in boundary for ref in pair)
+    if not any(ref.function in boundary for ref in pair):
+        return False
+    one, other = (functions_table(model)[ref.function].item for ref in pair)
+    return crosses_unit(model, one, other)
 
 
 def _is_rail_wire(

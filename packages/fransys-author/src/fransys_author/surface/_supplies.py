@@ -9,13 +9,13 @@ from fransys_author.handles import Terminal
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import End, Ends
 from fransys_model.vocab import ConductorMark, Earthing
+lazy from fransys_author.handles import Port
+lazy from fransys_author.surface._device import Device
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from fransys_author.handles import Fn as EngineFn
-    from fransys_author.handles import Port
-    from fransys_author.surface._device import Device
     from fransys_author.surface.design import Design
     from fransys_model.vocab import Part
 
@@ -229,7 +229,7 @@ class Supplies:
     """The supply calls of `Design`: `ac_supply` and `dc_supply`."""
 
     def ac_supply(
-        self: Design,
+        self: "Design",
         name: str,
         voltage: str | int | Decimal,
         *phases: Port | Terminal,
@@ -250,7 +250,7 @@ class Supplies:
         return AcSupply(name, (rail for rail, _ in rails))
 
     def dc_supply(  # noqa: PLR0913 -- the call's own spec signature (EA6, EA15)
-        self: Design,
+        self: "Design",
         name: str,
         source: Device | Fn | None = None,
         *,

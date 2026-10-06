@@ -68,12 +68,12 @@ class Series(Supplies, Cables):
     """The calls of this mixin: `series` and `parallel`."""
 
     @cached_property
-    def _pairing_facts(self: Design) -> PartFacts:
+    def _pairing_facts(self: "Design") -> PartFacts:
         """The part facts of this design, indexed once (poles, sides, conductor marks)."""
         return PartFacts(self.library, self._engine._design.draft())
 
     def series(
-        self: Design,
+        self: "Design",
         *elements: object,
         wire: tuple[Colour, float],
     ) -> None:
@@ -90,7 +90,7 @@ class Series(Supplies, Cables):
         _wire_pairs(maker, found, elements)
         _land_bridges(self, elements, found)
 
-    def parallel(self: Design, *members: object) -> Parallel:
+    def parallel(self: "Design", *members: object) -> Parallel:
         """Group `members` so a series puts each between the previous load and the next line.
 
         Does not connect anything by itself.

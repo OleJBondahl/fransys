@@ -125,6 +125,7 @@ runtime-evaluated-decorators = [
 "conftest.py" = ["SLF001", "PLC2701"]  # root conftest reaches into private modules by design
 "packages/*/src/**" = ["C901", "PLR0912", "PLR0915"]  # the lean check (decision 0087) owns function size, with ceilings
 "packages/fransys-author/src/**" = ["SLF001"]  # the model's draft builder (`_add`, `_extend`, `_draft`, `_catalogue`) is the author role's by design (invariant 1: an input produces a Draft); public names would put builder methods on `Draft`, which `fransys` re-exports to consumers
+"packages/fransys-author/src/fransys_author/surface/_{cable,device,facts,layout,links,series,strip,supplies,units,wire}.py" = ["UP037"]  # self: 'Design' is quoted on purpose: Design imports these mixins, and inspect.signature must not resolve it (decision 0111)
 # These two fransys-model tests build a backwards order on purpose: reversed(sorted(...)).
 "packages/fransys-model/tests/vocab/examples.py" = ["C413"]
 "packages/fransys-model/tests/vocab/test_core_vocabulary.py" = ["C413"]

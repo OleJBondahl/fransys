@@ -129,14 +129,15 @@ def test_demo_library_record_counts_and_keys():
     the 16-channel DI module adds `plc-di-16ch.toml` (16 functions/16 ports), so 33;
     CONTAINER-GAPS adds `connector-header-4p.toml` and `connector-header-4p-mixed.toml`
     (1 function/4 ports/1 symbol choice each), so 35;
+    HIDDEN-PINS adds `plc-ai-4ch.toml` (4 functions/8 ports, no link or symbol choice), so 36;
     DRAWN-ENDS gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 35
-    assert len(function_templates(model)) == 78
-    assert len(port_templates(model)) == 184
+    assert len(parts(model)) == 36
+    assert len(function_templates(model)) == 82
+    assert len(port_templates(model)) == 192
     assert len(internal_links(model)) == 41
     assert len(model.tables["layout.symbol_choice"]) == 35
 

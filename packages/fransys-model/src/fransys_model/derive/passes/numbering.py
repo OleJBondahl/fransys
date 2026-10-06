@@ -20,7 +20,11 @@ from fransys_model.derive.designation import (
 from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import terminal_items
-from fransys_model.derive.passes.numbering_units import instance_tags_in, number_unit_tags
+from fransys_model.derive.passes.numbering_units import (
+    instance_tags_in,
+    number_unit_tags,
+    unit_tag_duplicates,
+)
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
@@ -384,6 +388,7 @@ def number(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     else:
         result = model
     result = number_unit_tags(result, _reserved_texts)
+    findings.extend(unit_tag_duplicates(result, DESIGNATION_DUPLICATE))
     findings.extend(_reference_duplicates(result, terminals))
     findings.extend(_product_duplicates(result, terminals))
     findings.extend(_harness_end_ambiguities(result))

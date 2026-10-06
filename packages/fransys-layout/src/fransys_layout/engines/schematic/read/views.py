@@ -93,7 +93,8 @@ def item_views(
         if len(group) == 1 and lone.kind == "plc_channel" and lone.ports[0].port not in wired:
             found.append(dataclasses.replace(lone, kind="item", roles=kind_roles("item")))
             continue
-        if len(group) < 2 or not (defaulted or named):  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
+        lone_pair = len(group) == 1 and lone.kind == "plc_channel" and len(lone.ports) > 1
+        if (len(group) < 2 and not lone_pair) or not (defaulted or named):  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
             found.extend(group)
             continue
         name = {spec.function: functions_table(model)[spec.function].name for spec in group}

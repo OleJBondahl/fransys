@@ -149,6 +149,26 @@ d.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
 `X1.run(label, n, bridged=True)` takes `n` terminals as a named run, joined by jumpers when
 `bridged=True`. A run is the one spelling for a bridge. Two terminals are a run of two.
 
+`bridged=(first, last)` bridges terminals `first` to `last` only, one jumper between each
+consecutive pair. A pair outside 1 to `n`, or with `first >= last`, raises and names the range.
+
+`X1.run(label, bridged=True)` takes no size. The run grows as connections take its terminals, and
+each new one is bridged to the one before. `feed[n]` names a terminal already taken; a higher `n`
+raises. A strip or a run is also a pin of `d.wire` and a core's end: each place takes its next free
+terminal, `d.wire` on the inner side and `W1.core` on the outer side.
+
+```python
+# a growing bridged run fed by d.wire
+import fransys as fr
+from fransys.colours import BU
+
+d = fr.design("demo_parts", place="C1")
+d.location("C1", "Pump hall")
+feed = d.terminal_strip("X1", "DEMO-TB-2.5").run("24V", bridged=True)
+for tag in ("H1", "H2", "H3"):
+    d.wire(feed, d.device(tag, "DEMO-LAMP-24")["1"], wire=(BU, 0.75))
+```
+
 ## Wiring and cables
 
 `d.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire; more than two pins draw a daisy chain.

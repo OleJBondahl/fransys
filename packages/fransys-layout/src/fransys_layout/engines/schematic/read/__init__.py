@@ -21,6 +21,7 @@ from fransys_layout.engines.schematic.read.offstubs import far_maps, off_reads
 from fransys_layout.engines.schematic.read.pairs import box_feeds
 from fransys_layout.engines.schematic.read.power import power_ends
 from fransys_layout.engines.schematic.read.rails import (
+    mark_boundary_rails,
     rail_groups,
     rail_terminal_functions,
     rail_wires,
@@ -116,7 +117,8 @@ def read_inputs(model: Model) -> StageInputs:
     specs = reading.drawn_functions(model, indexes)
     # V3: a rail terminal is not drawn; its wires and the pins' rail wires become `rail_ends`
     undrawn = rail_terminal_functions(model, specs)
-    specs = tuple(spec for spec in specs if spec.function not in undrawn)
+    specs = mark_boundary_rails(model, specs, undrawn)  # RB2: the parent's page draws these
+    specs = tuple(spec for spec in specs if spec.function not in undrawn or spec.rail)
     drawn = {spec.function for spec in specs}
     wires, rail_ends = rail_wires(model, reading.connections(model, indexes), specs, undrawn)
     profile, sheet, sheet_format = reading.profile_and_sheet(model)

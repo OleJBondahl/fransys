@@ -11,10 +11,11 @@ from fransys_author.surface._signals import CONTROL
 from fransys_author.surface._tags import bare
 from fransys_author.surface._wire import _port
 from fransys_model.vocab import NetClass
+lazy from fransys_author.handles import Port
 
 if TYPE_CHECKING:
     from fransys_author.handles import Fn as EngineFn
-    from fransys_author.handles import Item, Port
+    from fransys_author.handles import Item
     from fransys_author.surface.design import Design
 
 
@@ -48,7 +49,7 @@ def _kind(kind: object) -> NetClass:
 class Links:
     """The link calls of the surface `Design`."""
 
-    def earth(self: Design, *pins: Port | Terminal) -> None:
+    def earth(self: "Design", *pins: Port | Terminal) -> None:
         """Join the pins to protective earth, one `PE` net.
 
         Does not take a name or a net kind; a terminal lands on its inner side.
@@ -58,7 +59,7 @@ class Links:
             raise AuthorError(msg)
         self._engine.net("PE", *[_port(pin) for pin in pins], cls="pe")
 
-    def net(self: Design, name: str, *pins: Port | Terminal, kind: NetClass = CONTROL) -> None:
+    def net(self: "Design", name: str, *pins: Port | Terminal, kind: NetClass = CONTROL) -> None:
         """Declare the signal net `name` over the pins, of the `NetClass` `kind`.
 
         Does not make a `PE` or `POWER` net (earth and supplies own those) or take a potential.
@@ -66,21 +67,21 @@ class Links:
         net_class = _kind(kind)
         self._engine.net(name, *[_port(pin) for pin in pins], cls=net_class.value)
 
-    def busbar(self: Design, a: Port | Terminal, b: Port | Terminal) -> None:
+    def busbar(self: "Design", a: Port | Terminal, b: Port | Terminal) -> None:
         """Join two pins by a busbar: a conductor of kind `bus`.
 
         Does not make a wire; the same pin twice raises.
         """
         self._engine.link(_port(a), _port(b), kind="bus")
 
-    def rail_bond(self: Design, a: Port | Terminal, b: Port | Terminal) -> None:
+    def rail_bond(self: "Design", a: Port | Terminal, b: Port | Terminal) -> None:
         """Join two pins of one rail by a bond: a conductor of kind `rail`.
 
         Does not make a wire; the same pin twice raises.
         """
         self._engine.link(_port(a), _port(b), kind="rail")
 
-    def mate(self: Design, a: Device | Fn, b: Device | Fn) -> None:
+    def mate(self: "Design", a: Device | Fn, b: Device | Fn) -> None:
         """Plug connector `a` into connector `b`.
 
         Does not take pins, strings or terminals; a device needs exactly one function.
@@ -88,7 +89,7 @@ class Links:
         self._engine.mate(engine_handle(a, "d.mate"), engine_handle(b, "d.mate"))  # ty: ignore[invalid-argument-type] -- Item | Fn | Terminal narrowed by the call's own check
 
     def harness(
-        self: Design,
+        self: "Design",
         tag: str | None = None,
         *,
         name: str | None = None,

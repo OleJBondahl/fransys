@@ -142,7 +142,7 @@ class Devices:
 
     @overload
     def device[N: str, S](
-        self: Design,
+        self: "Design",
         tag: str | None,
         part: type[TypedDevice[N, S]],
         *,
@@ -159,7 +159,7 @@ class Devices:
     ) -> S: ...
     @overload
     def device[D: Device](
-        self: Design,
+        self: "Design",
         tag: str | None,
         part: type[D],
         *,
@@ -176,7 +176,7 @@ class Devices:
     ) -> D: ...
     @overload
     def device(
-        self: Design,
+        self: "Design",
         tag: str | None,
         part: str,
         *,
@@ -192,7 +192,7 @@ class Devices:
         external: bool = False,
     ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design (EA4)
     def device(  # noqa: PLR0913 -- the call's own spec signature (EA4)
-        self: Design,
+        self: "Design",
         tag: str | None,
         part: str | type[Device],
         *,

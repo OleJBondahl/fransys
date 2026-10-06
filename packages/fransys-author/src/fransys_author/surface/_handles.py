@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
 lazy from decimal import Decimal
 
+from fransys_author._limits import state_limits
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port
 lazy from fransys_author.design import Scope
@@ -100,12 +101,5 @@ class Fn:
 
         Does not mark the boundary: interface=True on the device does.
         """
-        if rating is None and operating is None:
-            msg = (
-                f"{self._label}.{self._fn.name}.limits states a rating or an operating value; "
-                "to mark a boundary, use interface=True on the device"
-            )
-            raise AuthorError(msg)
-        scope = self._scope or self._fn._recorder  # the unit scope; the root design raises
-        scope.boundary(self._fn, rating=rating, operating=operating)  # ty: ignore[unresolved-attribute] -- the recorder fallback is the root design, which has boundary
+        state_limits(self._label, self._fn, self._scope, rating, operating)
         return self

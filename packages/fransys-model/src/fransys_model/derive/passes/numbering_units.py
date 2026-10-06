@@ -7,7 +7,7 @@ from fransys_model.derive.designation import designating_ancestors, own_designat
 from fransys_model.derive.instance_tag import unit_tag
 from fransys_model.derive.lookups import terminal_items
 from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Id, Model, evolve, make_id
+from fransys_model.kernel import Finding, Id, Model, Severity, evolve, make_id
 from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
 from fransys_model.vocab.tables import items
@@ -80,3 +80,23 @@ def number_unit_tags(model: Model, reserved: Reserved) -> Model:
     evolved = evolve(model, put=facets, origin=authored[facets[0].id])
     origins = type(evolved.origins)({**evolved.origins, **authored})
     return dataclasses.replace(evolved, origins=origins)
+
+
+def unit_tag_duplicates(model: Model, code: str) -> list[Finding]:
+    """One finding per instance whose tag another instance under the same parent also has (UD1)."""
+    groups: dict[tuple[Id[Unit] | None, str], list[Unit]] = {}
+    for unit in units_table(model).values():
+        if (tag := unit_tag(model, unit.id)) is not None:
+            groups.setdefault((unit.parent, tag), []).append(unit)
+    return [
+        Finding(
+            code=code,
+            severity=Severity.ERROR,
+            subjects=(unit.id,),
+            message=f"unit instance {'/'.join(unit.key)} has the tag {tag!r}, "
+            "which another instance under the same parent has too",
+        )
+        for (_, tag), same in groups.items()
+        if len(same) > 1
+        for unit in same
+    ]

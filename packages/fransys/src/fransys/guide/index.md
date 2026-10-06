@@ -22,6 +22,7 @@ from `fransys.colours`.
 | read a function or pin | `Q1.coil`, `Q1["A1"]`, `Q1[2]` | authoring.md, read a function or pin |
 | add a terminal strip, take a terminal | `d.terminal_strip("X1", P.X, n)`, `X1[3]` | authoring.md, Strips and terminals |
 | a named, bridged run on a strip | `X1.run(label, n, bridged=True)` | authoring.md, Bridges |
+| bridge a set of auto-numbered terminals | `X1.run(label, bridged=True)`, then `d.wire(feed, pin, ...)` | authoring.md, Bridges |
 | wire two or more pins | `d.wire(a, b, wire=(BU, 0.75))` | authoring.md, Wiring and cables |
 | wire along a current path | `d.series(a, b, c, wire=(BU, 0.75))` | authoring.md, wire along a current path |
 | branch inside a series | `d.parallel(a, b)` | authoring.md, branch inside a series |

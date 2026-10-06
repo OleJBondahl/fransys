@@ -9,6 +9,7 @@ from fransys_author.surface._device import Device, _mark_boundary, _one_maker, p
 from fransys_author.surface._runs import check_run
 from fransys_author.surface._tags import floating_name
 lazy from fransys_author._origin import caller_origin
+lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Group, Strip, Terminal, _write_placement
 lazy from fransys_author.surface._pairing import End, Ends
 
@@ -44,11 +45,12 @@ class TerminalStrip:
         bridge: Callable[..., None] | None = None,
         group: Callable[[], Group | None] = lambda: None,
         boundary: Callable[[Terminal], None] | None = None,
+        scope: Scope | None = None,
     ) -> None:
         """Wrap the engine `strip` of `tag`; `group` reads the open block, `boundary` marks."""
         self._tag, self._strip, self._mpn, self._count = tag, strip, mpn, count
         self._pe_mpn, self._bridge = pe_mpn, bridge
-        self._now, self._boundary = group, boundary
+        self._now, self._boundary, self._scope = group, boundary, scope
         self._runs: set[str] = set()
         self._made: dict[int, Terminal] = {}
         self._used: set[int] = set()
@@ -56,15 +58,19 @@ class TerminalStrip:
         for number in range(1, (count or 0) + 1):
             self._terminal(number)
 
+    _grows = False  # a run with no size: its terminals come in order, each bridged to the last
     _group = ""  # the engine group text its terminals count up in; a run sets its label
 
     def _terminal(self, number: int, mpn: str | None = None) -> Terminal:
         """Terminal `number`, made on first use with `mpn` (the strip's part by default)."""
         if number not in self._made:
             made = self._strip.terminal(mpn or self._mpn, self._group, index=number)
+            object.__setattr__(made, "_scope", self._scope)  # frozen, init=False field
             if self._boundary is not None:
                 self._boundary(made)
             self._made[number] = made
+            if self._grows and number > 1 and self._bridge is not None:
+                self._bridge(self._made[number - 1], made)
         return self._made[number]
 
     def _claim(self, *numbers: int) -> None:
@@ -89,6 +95,9 @@ class TerminalStrip:
             raise AuthorError(msg)
         if self._count is not None and number > self._count:
             msg = f"{self._tag} has {self._count} terminals; {number} is past the last"
+            raise AuthorError(msg)
+        if self._grows and number not in self._made:
+            msg = f"{self._tag} has {len(self._made)} so far; give the run a size for {number}"
             raise AuthorError(msg)
         self._used.add(number)
         terminal = self._terminal(number)
@@ -125,9 +134,13 @@ class TerminalStrip:
         self._claim(number)
         return terminal
 
-    def run(self, label: str, count: int, *, bridged: bool = False) -> Run:
+    def run(
+        self, label: str, count: int | None = None, *, bridged: bool | tuple[int, int] = False
+    ) -> Run:
         """A named run of `count` terminals that counts inside `label`, bridged when asked.
 
+        `bridged=True` jumpers the whole run; `bridged=(first, last)` terminals `first` to `last`.
+        With no `count` the run is `bridged=True` and grows, each new terminal bridged to the last.
         Does not shift, or get shifted by, the strip's own numbering or another run.
         A run labelled exactly "PE" takes the strip's `pe=` part and raises without one.
         """
@@ -156,9 +169,17 @@ class Run(TerminalStrip):
     Does not share numbering with the strip or another run; a series may name it as a strip.
     """
 
-    def __init__(self, strip: TerminalStrip, label: str, count: int, *, bridged: bool) -> None:
+    def __init__(
+        self,
+        strip: TerminalStrip,
+        label: str,
+        count: int | None,
+        *,
+        bridged: bool | tuple[int, int],
+    ) -> None:
         """Declare the run `label` on `strip`; `X3.run` makes these."""
         self._group = label
+        self._grows = count is None
         tag = f"{strip._tag}.run({label!r})"
         super().__init__(
             tag,
@@ -169,9 +190,11 @@ class Run(TerminalStrip):
             bridge=strip._bridge,
             group=strip._now,
             boundary=strip._boundary,
+            scope=strip._scope,
         )
-        if bridged and strip._bridge is not None:
-            numbers = range(1, count + 1)
+        if bridged and count is not None and strip._bridge is not None:
+            first, last = (1, count) if bridged is True else bridged
+            numbers = range(first, last + 1)
             strip._bridge(*(self._terminal(number) for number in numbers))
             self._claim(*numbers)
 
@@ -194,7 +217,7 @@ class Strips:
     """The `terminal_strip` call of `Design`."""
 
     def terminal_strip(  # noqa: PLR0913 -- one keyword per strip fact, as `device` has
-        self: Design,
+        self: "Design",
         tag: str | None,
         part: str | type[Device],
         count: int | None = None,
@@ -231,4 +254,5 @@ class Strips:
             bridge=self._engine.bridge,
             group=lambda: self._group,
             boundary=_boundary_marker(self, interface=interface, unused=unused),
+            scope=self._engine,
         )

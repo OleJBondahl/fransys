@@ -45,6 +45,24 @@ functions; a part class from `fr.parts` rejects it when the type checker runs.
 `X1.x1.limits(rating=, operating=)` states the values the unit promises on one boundary
 function. Read them from a part with `d.rating(part, fn)` and `d.operating(part, fn)`. It does not
 mark the boundary: `interface=True` on the device does. Calling it with no value raises.
+`X1[1].limits(rating=, operating=)` does the same for a terminal's boundary, with the same refusals.
+
+```python
+from typing import NamedTuple
+
+import fransys as fr
+
+
+class Feed(NamedTuple):
+    X1: fr.TerminalStrip
+
+
+@fr.unit("demo-supply-strip", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def supply_strip(d):
+    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=True)
+    x1[1].limits(rating=d.rating("DEMO-PSU-24", "input"))
+    return Feed(x1)
+```
 
 ```python
 from typing import NamedTuple
@@ -88,6 +106,10 @@ function of the device in the unit's field `X1`. `unused=("X1.x1",)` takes that 
 misspelt field raises and lists the fields. A name that is no boundary raises and lists the boundary
 functions. A boundary both mated and declared unused still gives `UNUSED_CONTRADICTED`.
 
+A field typed `fr.Terminal` names that terminal's one function: `unused=("X1",)`. A field typed
+`fr.Run` or `fr.TerminalStrip` names every boundary terminal it holds. `"X1[1].f"` on a terminal
+raises. A run or strip with no boundary terminal raises, as a device that is no boundary does.
+
 ```python
 from typing import NamedTuple
 
@@ -124,6 +146,12 @@ A unit built alone, with nothing outside it, leaves its interface unconnected, a
 `BOUNDARY_UNCONNECTED` stays silent: an open interface is what the next integrator connects.
 The finding fires once the unit sits inside something larger and an interface device is neither
 mated nor `unused`.
+
+## Tags and places
+
+Instance tags count up inside their parent, the cabinet unit: `-U1`, `-U2`. A circuit, such as one
+pump's or one string's, is a function block (`with d.function(...)`), never a place. A place is where
+units and field devices stand.
 
 ## Task: a board unit in a cabinet
 

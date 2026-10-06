@@ -131,7 +131,7 @@ class Layouts:
     """The `layout` property of the surface `Design`."""
 
     @property
-    def layout(self: Design) -> Layout:
+    def layout(self: "Design") -> Layout:
         """The drawing hints: `d.layout.chain`, `order`, `symbol` and the rest.
 
         Does not draw anything: its hints only advise the layout engine.

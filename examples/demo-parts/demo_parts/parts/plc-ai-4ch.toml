@@ -1,0 +1,44 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PLC-AI-4"
+manufacturer = "Demo"
+description = "PLC analog current input module, 4 channels with two pins each"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "ai_1"
+kind = "plc_channel"
+ports = [{ name = "1", role = "generic" }, { name = "2", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 1
+
+[[function]]
+name = "ai_2"
+kind = "plc_channel"
+ports = [{ name = "5", role = "generic" }, { name = "6", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 2
+
+[[function]]
+name = "ai_3"
+kind = "plc_channel"
+ports = [{ name = "3", role = "generic" }, { name = "4", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 3
+
+[[function]]
+name = "ai_4"
+kind = "plc_channel"
+ports = [{ name = "7", role = "generic" }, { name = "8", role = "generic" }]
+
+[function.plc_channel]
+signal = "ai_current"
+channel = 4

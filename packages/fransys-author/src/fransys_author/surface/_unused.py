@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device
+from fransys_author.surface._strip import TerminalStrip
+lazy from fransys_author.handles import Terminal
 lazy from fransys_author.surface._handles import Fn
 lazy from fransys_model.vocab import Boundary, Function, Item
 
@@ -34,7 +36,7 @@ def _handles(value: object, name: str, index: str | None) -> list[Any]:
     """The handles `name` takes from a field `value`: itself, or the elements of a tuple field."""
     if not isinstance(value, tuple):
         if index is not None:
-            msg = f"unused= names {name!r}, but that field is not a tuple of devices"
+            msg = f"unused= names {name!r}, but that field is not a tuple"
             raise AuthorError(msg)
         return [value]
     if index is None:
@@ -45,18 +47,27 @@ def _handles(value: object, name: str, index: str | None) -> list[Any]:
     return [value[int(index)]]
 
 
-def _functions(value: object, name: str, index: str | None, only: str | None) -> list[Any]:
-    """The engine functions `name` takes: each handle's, narrowed to `only` when it is given."""
-    functions = []
-    for handle in _handles(value, name, index):
-        if isinstance(handle, Device):
-            functions.extend(handle._item.functions)
-        elif isinstance(handle, Fn):
-            functions.append(handle._fn)
-        else:
-            msg = f"unused= names {name!r}, which is not a device or a function"
+def _own(handle: object, name: str, only: str | None) -> list[Any]:
+    """The engine functions one handle names; a terminal has one function, so `only` raises."""
+    if isinstance(handle, Device):
+        functions = list(handle._item.functions)
+    elif isinstance(handle, Fn):
+        functions = [handle._fn]
+    elif isinstance(handle, Terminal | TerminalStrip):
+        if only is not None:
+            msg = f"unused= names {name!r}, but a terminal has one function: drop the suffix"
             raise AuthorError(msg)
+        held = [handle] if isinstance(handle, Terminal) else handle._made.values()
+        return [t.function for t in held]
+    else:
+        msg = f"unused= names {name!r}, which is not a device, function, terminal, run or strip"
+        raise AuthorError(msg)
     return [f for f in functions if only is None or f.name == only]
+
+
+def _functions(value: object, name: str, index: str | None, only: str | None) -> list[Any]:
+    """The engine functions `name` takes, from each handle of the field."""
+    return [f for h in _handles(value, name, index) for f in _own(h, name, only)]
 
 
 def mark_unused(

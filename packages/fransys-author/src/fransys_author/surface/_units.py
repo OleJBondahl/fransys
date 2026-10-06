@@ -11,7 +11,7 @@ from ._unit_tags import check_add, class_code_of
 from ._unused import mark_unused
 
 if TYPE_CHECKING:
-    from fransys_author.surface.design import Design as SurfaceDesign
+    from fransys_author.surface.design import Design
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,7 +74,7 @@ class Units:
     """The `add` call of `Design`."""
 
     def add[R: tuple[Any, ...]](
-        self: SurfaceDesign,
+        self: "Design",
         definition: UnitDef[R],
         tag: str | None,
         *,
@@ -85,7 +85,7 @@ class Units:
         """Build the unit `definition` as instance `tag` (printed `-tag`), `None` to be numbered.
 
         Does not take a lowercase tag. Returns the unit function's result; `name=` as in `device`.
-        `unused=` names fields (`"X1"`) or functions (`"X1.x1"`) of the result, left open here only.
+        `unused=` names fields (`"X1"`, a terminal, run or strip) or functions (`"X1.x1"`).
         """
         key = self._claim(
             check_add(definition.name, definition.class_code, tag, name), per_function=True

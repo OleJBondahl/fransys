@@ -8,6 +8,7 @@ end is a `RailEnd` that takes the rail's symbol. The terminal table reads the mo
 import dataclasses
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.engines.schematic.read.units import boundary_edge_set
 from fransys_layout.stages.types import RailEnd
 from fransys_model.derive import is_rail_terminal, port_power_kind, terminal_items
 from fransys_model.vocab import PowerKind
@@ -16,7 +17,7 @@ from fransys_model.vocab.tables import functions as functions_table
 from fransys_model.vocab.tables import ports as ports_table
 
 if TYPE_CHECKING:
-    from collections.abc import Collection
+    from collections.abc import Collection, Mapping
 
     from fransys_layout.stages.types import Connection, FunctionSpec, NetGroup, PortRef
     from fransys_model.kernel import Id, Model
@@ -31,6 +32,19 @@ def rail_terminal_functions(model: Model, specs: tuple[FunctionSpec, ...]) -> fr
         spec.function
         for spec in specs
         if spec.kind == "terminal" and is_rail_terminal(model, spec.item)
+    )
+
+
+def mark_boundary_rails(
+    model: Model, specs: tuple[FunctionSpec, ...], undrawn: Collection[Id[Any]]
+) -> tuple[FunctionSpec, ...]:
+    """RB2: `specs`, each rail terminal on a unit boundary marked `rail`: its parent draws it."""
+    boundary = boundary_edge_set(model)
+    return tuple(
+        dataclasses.replace(spec, rail=True)
+        if spec.function in undrawn and spec.function in boundary
+        else spec
+        for spec in specs
     )
 
 
@@ -51,11 +65,13 @@ def rail_wires(
     """`connections` without the rail wires, and the `RailEnd` of each drawn pin they leave."""
     strip_terminals = terminal_items(model)
     pins = {spec.function for spec in specs if spec.item not in strip_terminals}
+    unit_of = {spec.function: spec.unit for spec in specs}
+    boundary = {spec.function for spec in specs if spec.rail}
     kept: list[Connection] = []
     ends: list[RailEnd] = []
     for connection in connections:
         pair = (connection.a, connection.b)
-        if _is_rail_wire(model, pair, pins, undrawn):
+        if _is_rail_wire(model, pair, pins, undrawn) and not _enters_unit(pair, boundary, unit_of):
             ends += [
                 RailEnd(ref=ref, connection=connection.handle)
                 for ref in pair
@@ -64,6 +80,16 @@ def rail_wires(
         else:
             kept.append(connection)
     return tuple(kept), tuple(sorted(ends, key=lambda end: (end.ref.port, end.connection)))
+
+
+def _enters_unit(
+    pair: tuple[PortRef, PortRef],
+    boundary: Collection[Id[Any]],
+    unit_of: Mapping[Id[Any], Id[Any] | None],
+) -> bool:
+    """RB2: a conductor from outside a unit to its boundary rail terminal is the parent's wire."""
+    one, other = (unit_of.get(ref.function) for ref in pair)
+    return one != other and any(ref.function in boundary for ref in pair)
 
 
 def _is_rail_wire(

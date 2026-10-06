@@ -12,10 +12,10 @@ from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface.colours import GNYE
 from fransys_model.vocab import PortRole
+lazy from fransys_author.surface._device import Device
 
 if TYPE_CHECKING:
     from fransys_author.handles import Cable as EngineCable
-    from fransys_author.surface._device import Device
     from fransys_author.surface.design import Design
 
 _MM_PER_M = 1000
@@ -40,8 +40,13 @@ def _length_mm(length_m: float | str | Decimal | None) -> int | None:
     return int(mm)
 
 
-def _outer(end: Port | Terminal) -> Port:
-    """A terminal stands for its field side, `.outer`: a cable core goes to the field."""
+def _outer(end: Port | Terminal | TerminalStrip) -> Port:
+    """A terminal stands for its field side, `.outer`: a cable core goes to the field.
+
+    A strip or run stands for its next free terminal, the step `d.series` takes.
+    """
+    if isinstance(end, TerminalStrip):
+        end = end._take(1)[0]
     return end.outer if isinstance(end, Terminal) else end
 
 
@@ -84,7 +89,12 @@ class Cable:
             msg = f"core {index} is {self._colours[index - 1]}: the PE core is GNYE (IEC 60204-1)"
             raise AuthorError(msg)
 
-    def core(self, which: str | int, a: Port | Terminal, b: Port | Terminal) -> None:
+    def core(
+        self,
+        which: str | int,
+        a: Port | Terminal | TerminalStrip,
+        b: Port | Terminal | TerminalStrip,
+    ) -> None:
         """Wire core `which` (a colour code or a 1-based number) between `a` and `b`.
 
         Does not accept a non-GNYE core on a PE port, or a colour twice in the part: say the number.
@@ -127,7 +137,7 @@ class Cables:
     """The `cable` call of `Design`."""
 
     def cable(  # noqa: PLR0913 -- the call's own spec signature (EA5), keyword-only facts
-        self: Design,
+        self: "Design",
         tag: str | None,
         part: str | type[Device],
         *,

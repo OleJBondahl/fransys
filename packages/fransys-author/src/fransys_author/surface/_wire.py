@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
+from fransys_author.surface._strip import TerminalStrip
 from fransys_model.vocab import COLOUR_GRAMMAR, split_colour
 
 if TYPE_CHECKING:
@@ -43,6 +44,8 @@ def wiring_for(design: Design, wire: object) -> Wiring:
 
 
 def _port(pin: object) -> Port:
+    if isinstance(pin, TerminalStrip):
+        pin = pin._take(1)[0]  # the step `d.series` takes: the strip's next free terminal
     if isinstance(pin, Terminal):
         return pin.inner
     if isinstance(pin, Port):
@@ -55,8 +58,8 @@ class Wires:
     """The `wire` call of the surface `Design`."""
 
     def wire(
-        self: Design,
-        *pins: Port | Terminal,
+        self: "Design",
+        *pins: Port | Terminal | TerminalStrip,
         wire: tuple[Colour, float],
         label: str | None = None,
         n: int | None = None,
@@ -64,6 +67,7 @@ class Wires:
         """Wire the pins: two make one wire, more make a daisy chain, one wire per pair.
 
         Does not pick a wire or find pins; a terminal lands on its inner side.
+        A strip or run as a pin stands for its next free terminal, each place it appears.
         """
         if len(pins) < _MINIMUM_PINS:
             msg = f"d.wire joins at least {_MINIMUM_PINS} pins, got {len(pins)}"

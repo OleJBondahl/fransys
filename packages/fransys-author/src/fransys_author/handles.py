@@ -4,7 +4,7 @@ Later calls take handles, never a designation string: no code parses a designati
 """
 
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, make_id
@@ -32,10 +32,12 @@ from fransys_model.vocab import (
 )
 from fransys_model.vocab import Unit as ModelUnit
 from fransys_model.vocab import instantiate as instantiate_
+lazy from fransys_model.vocab import Operating, Rating
 
 from ._decimal import as_decimal
 from ._enums import member
 from ._keys import scoped
+from ._limits import state_limits
 from ._origin import caller_origin
 from .errors import AuthorError
 
@@ -254,6 +256,9 @@ class Terminal:
     id: Id[ModelItem]
     key: AuthoringKey
     function: Fn
+    _scope: Any = field(
+        default=None, init=False, compare=False, repr=False
+    )  # the unit scope `limits` writes to; the surface sets it after making the terminal
 
     @property
     def inner(self) -> Port:
@@ -278,6 +283,19 @@ class Terminal:
             AuthorError: this terminal's function has no `external` port.
         """
         return _port_by_role(self.function.ports, PortRole.EXTERNAL)
+
+    def limits(
+        self, *, rating: Rating | None = None, operating: Operating | None = None
+    ) -> Terminal:
+        """State the values a unit says about this terminal's boundary: `X1[1].limits(rating=...)`.
+
+        Does not mark the boundary: `interface=True` on the strip does.
+
+        Raises:
+            AuthorError: no value is given, or the terminal is not in a unit.
+        """
+        state_limits("/".join(self.key), self.function, self._scope, rating, operating)
+        return self
 
 
 def as_port(value: Port | Terminal) -> Port:

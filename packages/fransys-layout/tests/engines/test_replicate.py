@@ -529,6 +529,21 @@ def test_an_unused_boundary_function_with_no_spec_is_skipped() -> None:
         replicate_boundaries((home,), (unit,), frozenset(), (), (home,))
 
 
+def test_a_boundary_rail_terminal_keeps_its_replica_and_loses_its_home_cell() -> None:
+    """RB2 (layout-0120): the parent draws the terminal; the unit's own pages do not."""
+    # UNDO: stages/replicate.py, `replicate_boundaries`: `_without_rail_homes(columns, functions)`
+    #     -> `columns`
+    spec = dataclasses.replace(function_spec(1), rail=True)
+    home = column("home", (1,), group=1)
+    unit = UnitBoundary(functions=(spec.function,), parent=_PARENT, parent_key=_PARENT_KEY)
+
+    result = replicate_boundaries((home,), (unit,), frozenset(), (spec,), (home,))
+
+    (only,) = result
+    assert only.unit == _PARENT
+    assert only.cells == (Cell(function=spec.function, index=0),)
+
+
 def _replicate_boundaries(
     columns: tuple[Column, ...], model: Model, functions: tuple[Any, ...], homes: tuple[Column, ...]
 ) -> tuple[Column, ...]:

@@ -169,3 +169,23 @@ def test_an_unnumbered_strip_also_gets_the_strip_without_tag_error() -> None:
     _strip(plant, "empty")
     findings = check_strip_without_tag(number(plant.model())[0])
     assert [f.code for f in findings] == ["STRIP_WITHOUT_TAG"] * 2
+
+
+def test_two_instances_with_one_tag_under_one_parent_are_a_duplicate() -> None:
+    plant = Plant()
+    cab = plant.unit("cab", name="cabinet", tag="C1")
+    plant.unit("a", name="board", tag="U1", parent=cab)
+    plant.unit("b", name="board", tag="U1", parent=cab)
+    plant.unit("c", name="board", tag="U2", parent=cab)
+    _, findings = number(plant.model())
+    assert [f.code for f in findings] == ["DESIGNATION_DUPLICATE"] * 2
+    assert {f.subjects[0] for f in findings} == {make_id(Unit, (k,)) for k in ("a", "b")}
+
+
+def test_one_tag_under_two_parents_is_no_duplicate() -> None:
+    plant = Plant()
+    one = plant.unit("one", name="cabinet", tag="C1")
+    two = plant.unit("two", name="cabinet", tag="C2")
+    plant.unit("a", name="board", tag="U1", parent=one)
+    plant.unit("b", name="board", tag="U1", parent=two)
+    assert number(plant.model())[1] == ()

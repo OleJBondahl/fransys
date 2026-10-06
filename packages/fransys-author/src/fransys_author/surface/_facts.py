@@ -5,18 +5,18 @@ from typing import TYPE_CHECKING
 from fransys_author.design import Design as EngineDesign
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import _one_maker, part_mpn
+lazy from fransys_author.surface._device import Device
+lazy from fransys_model.vocab import Operating, Rating
 
 if TYPE_CHECKING:
-    from fransys_author.surface._device import Device
     from fransys_author.surface.design import Design
-    from fransys_model.vocab import Operating, Rating
 
 
 class Facts:
     """The fact calls of the surface `Design`."""
 
     def project(  # noqa: PLR0913 -- the engine's own title-block keywords, passed through
-        self: Design,
+        self: "Design",
         *,
         title: str,
         number: str,
@@ -41,7 +41,7 @@ class Facts:
         )
 
     def revision(  # noqa: PLR0913 -- the engine's own history keywords, passed through
-        self: Design,
+        self: "Design",
         revision: int,
         *,
         date: str,
@@ -69,7 +69,7 @@ class Facts:
         )
 
     def rating(
-        self: Design, part: str | type[Device], function: str | None = None
+        self: "Design", part: str | type[Device], function: str | None = None
     ) -> Rating | None:
         """Read the rating of a part, or of one of its function templates.
 
@@ -79,7 +79,7 @@ class Facts:
         _one_maker(self, mpn)
         return self._engine.rating(mpn, function)
 
-    def operating(self: Design, part: str | type[Device], function: str) -> Operating | None:
+    def operating(self: "Design", part: str | type[Device], function: str) -> Operating | None:
         """Read the operating envelope of one function template of a part.
 
         Does not take a `(manufacturer, mpn)` pair: an MPN made by two makers raises.

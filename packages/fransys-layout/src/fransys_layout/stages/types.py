@@ -214,6 +214,7 @@ class FunctionSpec:
     item_parent: Id[Any] | None = None
     rest: str | None = None  # layout-0105: `link_state` of the first switched link
     protection_type: str | None = None  # layout-0105: a protection's type value
+    rail: bool = False  # layout-0120: a unit-boundary rail terminal, drawn only as a replica
 
     def __post_init__(self) -> None:
         """Sort `ports` by name and `pole_pairs` by index; the paths keep their order."""

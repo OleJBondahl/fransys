@@ -78,7 +78,7 @@ def replicate_terminals(
         )
     return tuple(
         sorted(
-            (*columns, *replicas),
+            (*_without_rail_homes(columns, functions), *replicas),
             key=lambda column: (column.key, tuple(cell.function for cell in column.cells)),
         )
     )
@@ -166,10 +166,24 @@ def replicate_boundaries(
                 )
     return tuple(
         sorted(
-            (*columns, *replicas),
+            (*_without_rail_homes(columns, functions), *replicas),
             key=lambda column: (column.key, tuple(cell.function for cell in column.cells)),
         )
     )
+
+
+def _without_rail_homes(
+    columns: tuple[Column, ...], functions: tuple[FunctionSpec, ...]
+) -> tuple[Column, ...]:
+    """RB2: columns without the home cells of boundary rail terminals (the parent draws them)."""
+    rails = {spec.function for spec in functions if spec.rail}
+    kept = (
+        replace(
+            column, cells=tuple(c for c in column.cells if c.replica or c.function not in rails)
+        )
+        for column in columns
+    )
+    return tuple(column for column in kept if column.cells)
 
 
 def drop_replicas(

@@ -115,7 +115,7 @@ def test_bridged_is_keyword_only_and_a_bool(lib) -> None:
     x3 = design(lib).terminal_strip("X3", "TEST-TERM")
     with pytest.raises(TypeError):
         x3.run("a", 2, True)  # noqa: FBT003 -- planted fault  # ty: ignore[too-many-positional-arguments] -- planted fault
-    with pytest.raises(AuthorError, match="bridged is True or False"):
+    with pytest.raises(AuthorError, match="bridged is True, False or a"):
         x3.run("a", 2, bridged=1)  # ty: ignore[invalid-argument-type] -- planted fault
 
 

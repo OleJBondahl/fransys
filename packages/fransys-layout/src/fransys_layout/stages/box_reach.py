@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from fransys_layout.geometry import GENERIC_BOX_KEY, Box, generic_box_geometry
 from fransys_layout.geometry.box_reach import Reach, Row, extent
 
+from .box_fed import fed_geometry
 from .partition import column_widths
 from .place import axis_offset
 from .room import grow_keepout
@@ -59,11 +60,28 @@ def _with_reach(
     for column in columns:
         for cell in column.cells:
             if cell.host is None or by_function[cell.function].feeds is not None:
-                continue  # layout-0107: a feeder box over its group is no contact under a pin
+                continue  # a feeder is no contact: _feeder_rows gives it its own pin
             rows = rows_of(by_function[cell.function], [b for _, b in boxes.get(cell.function, ())])
             held = room.setdefault(cell.host, {})
             held[cell.port] = (*held.get(cell.port, ()), *rows)
+    for one in drawn:
+        if one.feeds is not None:
+            host, port = _feeder_port(one, by_function[one.feeds])
+            held = room.setdefault(host, {})
+            held[port] = (
+                *held.get(port, ()),
+                *rows_of(one, [b for _, b in boxes.get(one.function, ())]),
+            )
     return tuple(_widened(one, room.get(one.function)) for one in drawn)
+
+
+def _feeder_port(feeder: DrawnFunction, host: DrawnFunction) -> tuple[Handle, str]:
+    """layout-0124: the fed box and its symbol port that stands over the feeder's axis pin."""
+    (feed,) = (f for f in host.fed_by if f.feeder == feeder.function)
+    mine = {p.port: p.symbol_port for p in feeder.ports}
+    theirs = {p.port: p.symbol_port for p in host.ports}
+    mate = next(p.fed for p in feed.ports if mine[p.feeder] == feeder.primary_out)
+    return host.function, theirs[mate]
 
 
 def _widened(one: DrawnFunction, room: Mapping[str, tuple[Row, ...]] | None) -> DrawnFunction:
@@ -75,7 +93,11 @@ def _widened(one: DrawnFunction, room: Mapping[str, tuple[Row, ...]] | None) -> 
         p.name for p in sorted(one.geometry.ports, key=lambda p: (p.at.x, p.facing.value))
     )
     sides = tuple(g.facing.value for name in names for g in one.geometry.ports if g.name == name)
-    geometry = generic_box_geometry(names, sides, reach)
+    geometry = (
+        fed_geometry(one, names, sides, reach)
+        if one.fed_by
+        else generic_box_geometry(names, sides, reach)
+    )
     return replace(one, reach=reach, geometry=_with_hung(geometry, room))
 
 

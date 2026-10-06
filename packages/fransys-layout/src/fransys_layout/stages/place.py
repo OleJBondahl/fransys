@@ -23,6 +23,7 @@ from fransys_model.kernel import Finding, Severity
 
 from . import lookups
 from ._bands import band_of
+from .host_offsets import _next_slot, attachment_offsets
 from .references.marker_boxes import reference_box_width
 from .room import grow_keepout, room_offset
 from .stack_room import make_room
@@ -513,19 +514,22 @@ def _lane_offsets(rows: Sequence[list[_Cell]]) -> None:
         if pitch and not row[0].side:  # C1 (iii): a row's first cell may sit in a later lane
             row[0].dx = row[0].lane * pitch
         for previous, cell in pairwise(row):
-            packed = snap_up(
-                previous.dx
-                + previous.left_of_axis
-                + previous.geometry.keepout.width
-                + WIRING_GRID
-                - cell.left_of_axis
-            )
+            packed = _next_slot(previous, cell)
             # R5 rule 2: pole lanes sit exactly at the pole pitch, never inside the cell before
             # (a multi-pole cell's keep-out spans several lanes, D2); a lane after a multi-pole
             # cell gives up the exact pole pitch to avoid that overlap
             cell.dx = max(cell.lane * pitch, packed) if pitch and not cell.side else packed
     _span_offsets(rows, pitch)
-    _attachment_offsets(rows)
+    _keep_gap(rows)
+    attachment_offsets(rows)
+
+
+def _keep_gap(rows: Sequence[list[_Cell]]) -> None:
+    """Two neighbours never touch: a cell the span offsets left too close moves right."""
+    for row in rows:
+        free = [cell for cell in row if cell.host is None]
+        for previous, cell in pairwise(free):
+            cell.dx = max(cell.dx, _next_slot(previous, cell))
 
 
 def _span_offsets(rows: Sequence[list[_Cell]], pitch: int | None) -> None:
@@ -537,27 +541,10 @@ def _span_offsets(rows: Sequence[list[_Cell]], pitch: int | None) -> None:
                 cell.dx = (cell.lane * pitch if pitch else 0) + cell.axis_offset - port_x
 
 
-def _attachment_offsets(rows: Sequence[list[_Cell]]) -> None:
-    """R7.1: an attachment sits at its host port's x."""
-    by_function = {cell.function: cell for row in rows for cell in row}
-    for row in rows:
-        for cell in row:
-            if cell.host is None:
-                continue
-            host = by_function[cell.host]
-            port_x = next(p.at.x for p in host.geometry.ports if p.name == cell.port)
-            cell.dx = host.dx - host.axis_offset + port_x
-
-
 def _widest_step(rows: Sequence[list[_Cell]]) -> int | None:
     """R7 A6: with no pole pitch, one pitch for every pole-lane row: the widest packed step."""
     steps = [
-        snap_up(
-            previous.left_of_axis
-            + previous.geometry.keepout.width
-            + WIRING_GRID
-            - cell.left_of_axis
-        )
+        _next_slot(previous, cell, 0)
         for row in rows
         if not all(cell.host is not None for cell in row)
         for previous, cell in pairwise(row)

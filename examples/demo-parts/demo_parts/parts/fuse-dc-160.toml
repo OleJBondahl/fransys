@@ -1,0 +1,25 @@
+schema = 1
+
+[part]
+mpn = "DEMO-FUSE-DC-160"
+manufacturer = "Demo"
+description = "Full-range DC fuse, 1500 V DC, 160 A"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "element"
+kind = "protection"
+symbol = "fuse"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "1", b = "2", kind = "protective" }]
+
+[function.protection]
+type = "fuse"
+
+[function.rating]
+voltage_dc_v = "1500"
+current_dc_a = "160"

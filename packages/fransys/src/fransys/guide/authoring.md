@@ -342,8 +342,11 @@ dc = d.dc_supply("24VDC", plus=x1[1], minus=x1[2], voltage=24)
 ## Add a harness
 
 `d.harness("W5")` adds a part-less harness item and returns its handle, which a document can take
-as its subject (see `documents.md`). A harness with no tag takes `name=` as its key:
-`d.harness(name="loom")`.
+as its subject (see `documents.md`). A harness holding a cable needs a tag: `d.harness(name="loom")`
+with no tag builds, then fails with `HARNESS_WITHOUT_TAG`. A part-less harness holding exactly one
+cable prints that cable as its own designation (`-W5`, its cores `-W5:1`); its plugs stay `-W5-J1`.
+With two cables they print `-W5-W1` and `-W5-W2`.
+A harness with one cable prints the cable with the harness's designation. The cable's own tag is not printed.
 
 ## Read a model id
 

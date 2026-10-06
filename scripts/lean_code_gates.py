@@ -99,7 +99,9 @@ def measure_ruff_sections(root: Path) -> dict[str, dict[str, int]]:
 
     One `uv run ruff check` subprocess (JSON output, `--ignore-noqa` so a real suppression still
     shows up), at `RUFF_SECTIONS`'s own thresholds layered onto the root `pyproject.toml` via
-    `--config` (never a replacement scratch config, which would lose the root's excludes and
+    `--config`, with the root's `per-file-ignores` emptied: they ignore these three rules under
+    `packages/*/src/**` (the lean gate owns them), and `--ignore-noqa` does not lift them
+    (never a replacement scratch config, which would lose the root's excludes and
     `target-version`). Each returned dict is keyed `"root/relative/path.py::qualname"` and holds
     only sites already over that section's threshold -- ruff itself never reports a within-limit
     site, so this satisfies `lean_ceilings`'s "measured holds only over-limit sites" contract for
@@ -115,6 +117,8 @@ def measure_ruff_sections(root: Path) -> dict[str, dict[str, int]]:
         [  # noqa: S607 -- `uv` resolved from PATH, same as every `just` recipe in this repo
             "uv",
             "run",
+            "--project",
+            str(_SCRIPTS_DIR.parent),  # the repo's own env, so `root` need not be a uv project
             "ruff",
             "check",
             *(str(path) for path in src_dirs),
@@ -129,6 +133,8 @@ def measure_ruff_sections(root: Path) -> dict[str, dict[str, int]]:
             f"lint.pylint.max-statements={RUFF_SECTIONS['PLR0915'][1]}",
             "--config",
             f"lint.pylint.max-branches={RUFF_SECTIONS['PLR0912'][1]}",
+            "--config",
+            "lint.per-file-ignores={}",  # the root's ignores of these rules must not hide a site
         ],
         cwd=root,
         capture_output=True,
@@ -142,6 +148,9 @@ def measure_ruff_sections(root: Path) -> dict[str, dict[str, int]]:
         )
         raise RuntimeError(msg)
     findings = json.loads(completed.stdout or "[]")
+    if completed.returncode == 1 and not findings:
+        msg = f"ruff check exited 1 with no parsed finding; stderr: {completed.stderr}"
+        raise RuntimeError(msg)
 
     qualname_cache: dict[Path, dict[int, str]] = {}
     for finding in findings:

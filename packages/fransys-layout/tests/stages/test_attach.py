@@ -18,6 +18,11 @@ if TYPE_CHECKING:
     from fransys_layout.geometry import SymbolGeometry
 
 
+def _attach(columns, homes, drawn_, wires):
+    """`attach_replicas` with a sheet every column fits."""
+    return attach_replicas(columns, homes, drawn_, wires, lambda _: True)
+
+
 def _ref(number: int, end: str) -> PortRef:
     """The `in` (model port 13) or `out` (model port 14) end of function `number`."""
     return PortRef(
@@ -69,7 +74,7 @@ def test_a_replica_wired_to_a_host_s_port_lands_below_it_and_its_own_column_goes
     home, replica = column("hub", (1,)), column("rep", (5,))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
-    result = attach_replicas((home, replica), (home,), (drawn(1), drawn(5)), wires)
+    result = _attach((home, replica), (home,), (drawn(1), drawn(5)), wires)
 
     assert result == (replace(home, cells=(_cell(1, 0), _attached(5, 1, 1, "out"))),)
 
@@ -81,7 +86,7 @@ def test_a_replica_wired_to_a_host_n_port_lands_above_it() -> None:
     home, replica = column("hub", (1,)), column("rep", (5,))
     wires = (_wire(1, _ref(1, "in"), _ref(5, "out")),)
 
-    result = attach_replicas((home, replica), (home,), (drawn(1), drawn(5)), wires)
+    result = _attach((home, replica), (home,), (drawn(1), drawn(5)), wires)
 
     assert result == (replace(home, cells=(_attached(5, 0, 1, "in"), _cell(1, 1))),)
 
@@ -92,7 +97,7 @@ def test_a_replica_whose_port_faces_the_same_way_as_its_host_port_is_flipped() -
     home, replica = column("hub", (1,)), column("rep", (5,))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "out")),)
 
-    result = attach_replicas((home, replica), (home,), (drawn(1), drawn(5)), wires)
+    result = _attach((home, replica), (home,), (drawn(1), drawn(5)), wires)
 
     turned = replace(_attached(5, 1, 1, "out"), flip=True)
     assert result == (replace(home, cells=(_cell(1, 0), turned)),)
@@ -110,7 +115,7 @@ def test_replicas_of_one_row_take_their_lanes_in_the_order_of_the_host_port_x() 
     replicas = (column("r5", (5,)), column("r6", (6,)))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")), _wire(2, _ref(2, "out"), _ref(6, "in")))
 
-    result = attach_replicas((home, *replicas), (home,), (*hosts, drawn(5), drawn(6)), wires)
+    result = _attach((home, *replicas), (home,), (*hosts, drawn(5), drawn(6)), wires)
 
     first, second = _attached(6, 1, 2, "out"), replace(_attached(5, 1, 1, "out"), lane=1)
     assert result == (replace(home, cells=(*row, first, second)),)
@@ -123,7 +128,7 @@ def test_attachments_above_and_below_renumber_the_rows_of_the_column() -> None:
     home = column("hub", (1, 2))
     wires = (_wire(1, _ref(1, "in"), _ref(5, "out")), _wire(2, _ref(1, "out"), _ref(6, "in")))
 
-    result = attach_replicas(
+    result = _attach(
         (home, column("r5", (5,)), column("r6", (6,))),
         (home,),
         (drawn(1), drawn(2), drawn(5), drawn(6)),
@@ -146,7 +151,7 @@ def test_a_replica_with_wires_to_two_home_functions_is_attached_to_the_first_col
     replica = column("rep", (5,))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")), _wire(2, _ref(2, "out"), _ref(5, "out")))
 
-    result = attach_replicas((*homes, replica), homes, (drawn(1), drawn(2), drawn(5)), wires)
+    result = _attach((*homes, replica), homes, (drawn(1), drawn(2), drawn(5)), wires)
 
     assert result == (replace(homes[0], cells=(_cell(1, 0), _attached(5, 1, 1, "out"))), homes[1])
 
@@ -158,7 +163,7 @@ def test_a_wire_between_two_other_functions_is_not_one_of_the_replica_s_wires() 
     home, replica = column("hub", (1, 2)), column("rep", (5,))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")), _wire(2, _ref(1, "in"), _ref(2, "in")))
 
-    result = attach_replicas((home, replica), (home,), (drawn(1), drawn(2), drawn(5)), wires)
+    result = _attach((home, replica), (home,), (drawn(1), drawn(2), drawn(5)), wires)
 
     assert result == (replace(home, cells=(_cell(1, 0), _attached(5, 1, 1, "out"), _cell(2, 2))),)
 
@@ -170,7 +175,7 @@ def test_a_replica_wired_to_a_side_port_of_its_host_is_not_attached() -> None:
     host = replace(drawn(1), geometry=_out_at(0, facing=Facing.E))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
-    result = attach_replicas((home, replica), (home,), (host, drawn(5)), wires)
+    result = _attach((home, replica), (home,), (host, drawn(5)), wires)
 
     assert result == (home, replica)
 
@@ -182,7 +187,7 @@ def test_a_replica_in_another_group_than_its_host_is_not_attached() -> None:
     home, replica = column("hub", (1,)), column("rep", (5,), group=2)
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
-    result = attach_replicas((home, replica), (home,), (drawn(1), drawn(5)), wires)
+    result = _attach((home, replica), (home,), (drawn(1), drawn(5)), wires)
 
     assert result == (home, replica)
 
@@ -195,7 +200,7 @@ def test_a_replica_in_another_unit_than_its_host_is_not_attached() -> None:
     replica = replace(column("rep", (5,)), unit=hid("unit", 1))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
-    result = attach_replicas((home, replica), (home,), (drawn(1), drawn(5)), wires)
+    result = _attach((home, replica), (home,), (drawn(1), drawn(5)), wires)
 
     assert result == (home, replica)
 
@@ -206,7 +211,7 @@ def test_a_column_of_several_cells_is_not_attached() -> None:
     home, several = column("hub", (1,)), column("rep", (5, 6))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
-    result = attach_replicas((home, several), (home,), (drawn(1), drawn(5), drawn(6)), wires)
+    result = _attach((home, several), (home,), (drawn(1), drawn(5), drawn(6)), wires)
 
     assert result == (home, several)
 
@@ -218,6 +223,6 @@ def test_a_one_cell_home_column_is_never_attached_to_another_home_column() -> No
     homes = (column("hub", (1,)), column("other", (5,)))
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
-    result = attach_replicas(homes, homes, (drawn(1), drawn(5)), wires)
+    result = _attach(homes, homes, (drawn(1), drawn(5)), wires)
 
     assert result == homes

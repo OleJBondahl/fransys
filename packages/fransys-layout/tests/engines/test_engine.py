@@ -31,6 +31,7 @@ from fransys_layout.stages import (
 from fransys_layout.stages.pagerun import PageInputs, PageState, finish_page
 from fransys_layout.stages.references import LINK_PARTNER_UNLOCATED
 from fransys_layout.stages.space import crosses
+from fransys_model.derive import natural_key
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import GroupHint, Profile, SheetFormat
@@ -466,4 +467,4 @@ def test_the_terminal_sort_keys_tolerate_an_unnumbered_item() -> None:
     specs = reading.drawn_functions(model, build_indexes(model))
     keys = reading.terminal_sort_keys(model, specs)
     (k8,) = (spec.function for spec in specs if spec.key == ("cabinet", "k8", "fn", "coil"))
-    assert keys[k8] == (1, "", "", 0)
+    assert keys[k8] == (1, natural_key(""), "", 0)

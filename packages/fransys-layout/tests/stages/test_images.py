@@ -1,21 +1,30 @@
 """The contact-image rules: hand-made values, no model and no engine."""
 
 from dataclasses import replace
-from types import SimpleNamespace
 
 import pytest
 from samples import PROFILE, SHEET, column, function_spec, hid, page_plan, placed
 
-from fransys_layout.geometry import WIRING_GRID, Box
-from fransys_layout.stages import FunctionSpec, LabelKind, PortSpec, RequestPartner, Role
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, PortGeometry
+from fransys_layout.stages import (
+    FunctionSpec,
+    LabelKind,
+    LinkMarker,
+    MarkerSide,
+    PortSpec,
+    RequestPartner,
+    Role,
+)
 from fransys_layout.stages.images import (
     ImageInputs,
+    _anchor_x,
     _image_marks,
     _image_width,
     _page_marker_boxes,
     contact_images,
     image_reserves,
 )
+from fransys_layout.stages.texts.power import held_shapes
 from fransys_layout.stages.types import Cell
 
 
@@ -171,14 +180,28 @@ def test_a_coil_held_by_two_pages_hangs_its_image_by_the_first_page() -> None:
     assert label.box.y == keepout.y + keepout.height + PROFILE.marker_padding
 
 
-def test_the_markers_of_a_page_are_grouped_once_in_their_order() -> None:
-    """Each `(drawing_set, page)` maps to its markers' boxes in `markers` order."""
+def _marker(page: int, x: int) -> LinkMarker:
+    """A marker at (x, 200) on `page`, its box above so its stub runs up."""
+    return LinkMarker(
+        connection=hid("conductor", 9),
+        port=hid("port", 92),
+        side=MarkerSide.OWNER,
+        drawing_set=1,
+        page=page,
+        at=Point(x=x, y=200),
+        box=Box(x=x - 24, y=100, width=48, height=12),
+        partner_page=0,
+    )
+
+
+def test_the_ink_of_a_page_is_grouped_once_in_marker_order() -> None:
+    """Each `(drawing_set, page)` maps to its markers' boxes and stubs in `markers` order."""
     # UNDO: stages/slices.py:page_of, `item.drawing_set, item.page` -> `item.drawing_set, 1`
-    marks = [
-        SimpleNamespace(drawing_set=1, page=page, box=box)
-        for page, box in ((1, "a"), (2, "b"), (1, "c"))
-    ]
-    assert _page_marker_boxes(tuple(marks)) == {(1, 1): ["a", "c"], (1, 2): ["b"]}
+    a, b, c = _marker(1, 64), _marker(2, 96), _marker(1, 128)
+    found = _page_marker_boxes((a, b, c))
+    assert found == {(1, 1): held_shapes((a, c)), (1, 2): held_shapes((b,))}
+    assert [box for box in found[1, 1] if box in (a.box, c.box)] == [a.box, c.box]
+    assert len(found[1, 1]) > 2, "the stubs are ink too"
 
 
 def test_a_spare_contact_counts_in_the_room_the_coil_reserves() -> None:
@@ -309,3 +332,17 @@ def test_a_contact_in_another_drawing_set_marks_the_image_cross_set() -> None:
     key = cells.key, coil.function
     assert [cross for *_, cross in near[key].images] == [False]
     assert [cross for *_, cross in apart[key].images] == [True]
+
+
+def test_the_image_starts_at_the_rightmost_bottom_port() -> None:
+    """layout-0123 F1: a box's image hangs from its rightmost S port; a port on top is no anchor."""
+    # UNDO: stages/images.py:_anchor_x, `max(...)` -> the first port, `ports[0]`
+    one = placed(1, x=96, y=48)
+    ports = (
+        PortGeometry(name="a", at=Point(x=0, y=16), facing=Facing.S),
+        PortGeometry(name="b", at=Point(x=48, y=16), facing=Facing.S),
+        PortGeometry(name="c", at=Point(x=96, y=-16), facing=Facing.N),
+    )
+    box = replace(one, geometry=replace(one.geometry, ports=ports))
+    assert _anchor_x(box) == 144
+    assert _anchor_x(one) == 96, "a coil's one bottom port is its anchor"

@@ -13,13 +13,19 @@ box: the channel pins are flagged per port. The main contact has one wire, so it
 The rule (CONVENTIONS-V06 V5, decision layout-0099): a contact whose one wire goes to a pin in
 another group is homed under that pin, once, and references its coil; a contact with a second
 wire stays home.
+
+layout-0125: a keep-out holds the ink drawn, so contacts under adjacent channel pins (33 wide on a
+48 pitch) raise no SYMBOL_OVERLAP; the drawing itself is unchanged.
 """
 
 import tempfile
+from dataclasses import astuple
+from hashlib import sha256
 from itertools import combinations, pairwise
 from pathlib import Path
 
 import fransys as fr
+import pytest
 from fransys.colours import BU
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -242,3 +248,61 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
         (contact,) = _placed(model, layout, f"K{number + 1}", "aux")
         assert (contact.drawing_set, contact.page) == (box.drawing_set, box.page), number
         assert _pin_x(contact, "out") == _pin_x(box, f"di_{number}.{number}"), number
+
+
+def _built_16() -> tuple:
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    _plant_16(d)
+    cover = Path(tempfile.mkdtemp()) / "cover.md"
+    cover.write_text("# Cabinet\n", encoding="utf-8")
+    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
+    model = fr.build(d, doc).model
+    results, findings = stage_results(model, read_inputs(model))
+    return results.layout, findings
+
+
+def _built_with_findings(*, split: bool = False) -> tuple:
+    model, _ = _built(split=split)
+    results, findings = stage_results(model, read_inputs(model))
+    return results.layout, findings
+
+
+def _drawing(layout) -> str:
+    """A digest of what is drawn: placements, label boxes and routes, no keep-out."""
+    placed = sorted(
+        (p.function.value, p.drawing_set, p.page, p.at.x, p.at.y) for p in layout.placed
+    )
+    texts = sorted(
+        (o.subject.value, o.slot, o.kind.value, o.drawing_set, o.page, *astuple(o.box))
+        for o in layout.labels
+    )
+    routes = sorted(repr(r) for r in layout.routes)
+    return sha256(repr((placed, texts, routes)).encode()).hexdigest()[:16]
+
+
+_DRAWING = {"plain": "fc083d6bb336af14", "split": "9bd59eb7c6dff73f", "sixteen": "f9b72cc2f05b4386"}
+
+
+@pytest.fixture(scope="module")
+def builds() -> dict:
+    """The three circuits, built once for the digest and overlap tests."""
+    return {
+        "plain": _built_with_findings(),
+        "split": _built_with_findings(split=True),
+        "sixteen": _built_16(),
+    }
+
+
+@pytest.mark.parametrize("name", list(_DRAWING))
+def test_the_contact_drawing_is_as_it_was_before_the_keep_out_fix(name: str, builds: dict) -> None:
+    """layout-0125: the keep-out is cut after placing, so placements, texts and routes stay."""
+    layout, _ = builds[name]
+    assert _drawing(layout) == _DRAWING[name]
+
+
+@pytest.mark.parametrize("name", list(_DRAWING))
+def test_contacts_under_adjacent_channel_pins_overlap_nowhere(name: str, builds: dict) -> None:
+    """layout-0125: a keep-out holds the ink drawn (33 wide), not the 74 of its slots."""
+    _, findings = builds[name]
+    assert [f for f in findings if f.code == "SYMBOL_OVERLAP"] == []

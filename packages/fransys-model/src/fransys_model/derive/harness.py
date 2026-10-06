@@ -42,6 +42,7 @@ from .lookups import (
     pin_order,
     require,
 )
+from .natural_order import natural_key
 from .reports import cable_rows
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
 
@@ -235,7 +236,7 @@ def _sorted_cables(
     """
     facts = _facts_of(model, unit)
     found = [_cable_facts(model, cable, facts) for cable in cables]
-    return tuple(sorted(found, key=lambda cable: (cable.designation, cable.cable)))
+    return tuple(sorted(found, key=lambda cable: (natural_key(cable.designation), cable.cable)))
 
 
 def cable_title(cable: HarnessCable) -> str:
@@ -270,7 +271,7 @@ def harness_cables(model: Model, harness: Id[Item]) -> tuple[HarnessCable, ...]:
     require(items(model).get(harness), "item", harness)
     facts = _facts_of(model)
     found = [_cable_facts(model, child, facts) for child in cable_children(model, harness)]
-    return tuple(sorted(found, key=lambda cable: (cable.designation, cable.cable)))
+    return tuple(sorted(found, key=lambda cable: (natural_key(cable.designation), cable.cable)))
 
 
 def top_level_cables(model: Model) -> tuple[HarnessCable, ...]:
@@ -378,7 +379,7 @@ def _readable_cables(
             found.append(_cable_facts(model, cable, facts_by_unit[unit]))
         except SchemaError:
             continue
-    return tuple(sorted(found, key=lambda cable: (cable.designation, cable.cable)))
+    return tuple(sorted(found, key=lambda cable: (natural_key(cable.designation), cable.cable)))
 
 
 def cable_list_rows(model: Model) -> tuple[CableListRow, ...]:
@@ -416,7 +417,7 @@ def cable_list_rows(model: Model) -> tuple[CableListRow, ...]:
                 to_label=kept[1].designation if kept[1:] else "",
             )
         )
-    return tuple(sorted(found, key=lambda row: (row.designation, row.cable)))
+    return tuple(sorted(found, key=lambda row: (natural_key(row.designation), row.cable)))
 
 
 def contents_rows(cables: tuple[HarnessCable, ...]) -> tuple[ContentsRow, ...]:

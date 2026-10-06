@@ -14,6 +14,7 @@ lazy from collections.abc import Mapping
 lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES, kind_roles
+from fransys_layout.engines.schematic.read.box_split import split_box
 from fransys_layout.engines.schematic.read.item_sides import function_groups
 from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
@@ -68,7 +69,9 @@ def item_views(
     found: list[FunctionSpec] = []
     view_of: dict[Id[Any], Id[Any]] = {}
     view_choices: list[SymbolChoice] = []
-    for item, group in by_item.items():
+    for item, whole in by_item.items():
+        group, apart = split_box(whole, partial(box_drawn, table=table, index=index))
+        found.extend(apart)  # layout-0123: they draw on their own, a contact in its circuit
         chosen = {spec.function: first_choice.get(spec.function) for spec in group}
         resolved = {function: one for function, one in chosen.items() if one is not None}
         named = (
@@ -121,7 +124,11 @@ def item_views(
                 key=items_table(model)[item].key,
                 kind=view_kind,
                 roles=dataclasses.replace(
-                    kind_roles(view_kind), plc_channel=all(s.kind == "plc_channel" for s in group)
+                    kind_roles(view_kind),
+                    plc_channel=all(s.kind == "plc_channel" for s in group),
+                    contacts_apart=any(
+                        s.roles.contact for s in apart
+                    ),  # layout-0123: the contact image
                 ),
                 poles=1,
                 pole_pairs=(),

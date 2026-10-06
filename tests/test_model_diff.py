@@ -555,3 +555,25 @@ def test_a_change_on_a_blank_designation_row_names_the_unit_in_items_and_boundar
         ("items", "u 1.2", ("u 1.2",), "mpn"),
         ("boundary", "u 1.2", ("u 1.2",), "rating.voltage_dc_v"),
     ]
+
+
+def test_change_rows_print_numbers_in_numeric_order():
+    """Items `=BRD-X10` and `=BRD-X2` added: the change list prints `:2` before `:10` (model-0149).
+
+    The stored listing keeps its plain order, the digest's; only the printed rows sort naturally.
+    """
+    before = _before_listing()
+    extra = tuple(
+        BaselineItem(
+            designation=designation,
+            mpn="DEMO-CONN-2P",
+            manufacturer="Demo",
+            installed=True,
+            external=False,
+            position=None,
+        )
+        for designation in ("=BRD-X10", "=BRD-X2")
+    )
+    after = dataclasses.replace(before, items=(*before.items, *extra))
+    rows = [c.subject for c in diff(before, after).changes if c.section == "items"]
+    assert rows == ["=BRD-X2", "=BRD-X10"]

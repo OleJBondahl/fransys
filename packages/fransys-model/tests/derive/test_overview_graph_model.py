@@ -65,13 +65,13 @@ def test_an_unnumbered_item_is_a_node_with_no_designation_and_raises_nothing() -
     assert [node.item for node in nodes[2:]] == sorted(_ids("bare-1", "bare-2"))
 
 
-def test_nodes_are_sorted_by_designation_as_a_whole_string_then_id() -> None:
-    """`-K10` before `-K2`; one designation twice falls to the item id."""
+def test_nodes_are_sorted_by_designation_in_natural_order_then_id() -> None:
+    """`-K2` before `-K10`; one designation twice falls to the item id."""
     plant = Plant()
     for key, designation in (("k2", "K2"), ("k10", "K10"), ("twin-b", "T"), ("twin-a", "T")):
         plant.item(key, designation=designation)
     nodes = overview_graph(plant.model()).nodes
-    assert [node.designation for node in nodes] == ["-K10", "-K2", "-T", "-T"]
+    assert [node.designation for node in nodes] == ["-K2", "-K10", "-T", "-T"]
     assert [node.item for node in nodes[2:]] == sorted(_ids("twin-a", "twin-b"))
 
 

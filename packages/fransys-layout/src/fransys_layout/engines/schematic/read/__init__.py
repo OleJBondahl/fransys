@@ -8,6 +8,7 @@ requests once `resolve` has chosen the symbols.
 
 import dataclasses
 from typing import TYPE_CHECKING, Any
+lazy from collections.abc import Mapping
 
 from fransys_layout.engines.schematic.read import labels, offstubs, reading
 from fransys_layout.engines.schematic.read.connections import (
@@ -111,6 +112,13 @@ class StageInputs:
     feeds: tuple[BoxFeed, ...] = ()
 
 
+def _boxed(
+    specs: tuple[FunctionSpec, ...], view_of: Mapping[Id[Any], Id[Any]]
+) -> tuple[FunctionSpec, ...]:
+    """The specs with a port in an item box."""
+    return tuple(s for s in specs if any(p.port in view_of for p in s.ports))
+
+
 def read_inputs(model: Model) -> StageInputs:
     """Read the drawn functions, their connections and every authored hint (WP13)."""
     indexes = build_indexes(model)
@@ -159,10 +167,11 @@ def read_inputs(model: Model) -> StageInputs:
         else drawn - {s.function for s in spares}
     )
     # R7 B2: an item whose every drawn function is symbol-defaulted is one box
-    boxed = specs
+    drawn_specs = specs
     specs, view_of, view_choices = item_views(model, specs, reading.symbol_choices(model), wired)
-    # V1: each item box's pins on the side of their function's rank
-    north, south = pin_sides(model, boxed, set(view_of.values()))
+    # V1: each item box's pins on the side of their function's rank; the functions that stand
+    # apart from the box (a contact, a connector's pin views) are no part of it
+    north, south = pin_sides(model, _boxed(drawn_specs, view_of), set(view_of.values()))
     connections = tuple(
         dataclasses.replace(c, a=reitem(c.a, view_of), b=reitem(c.b, view_of)) for c in connections
     )

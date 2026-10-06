@@ -176,7 +176,7 @@ def test_a_nested_units_cable_prints_its_outside_end_as_empty() -> None:
     design = _design()
     (cable,) = unit_cables(design.model, design.hu)
     assert cable.cable == design.w1
-    assert cable.designation == "-WH1-W1"
+    assert cable.designation == "-WH1"
     assert [end.designation for end in cable.ends] == ["-WH1-X1", "-WH1-X2", ""]
     assert [(core.end_a_designation, core.end_b_designation) for core in cable.cores] == [
         ("-WH1-X1:1", ""),
@@ -236,7 +236,7 @@ def test_a_top_level_units_outside_end_prints_by_path_not_blank() -> None:
     """`top` is not nested: `M1` at `+EXT` reads `+EXT-M1`, as a top-level unit's lists print it."""
     design = _design()
     (cable,) = unit_cables(design.model, design.top)
-    assert cable.designation == "-WH2-W2"
+    assert cable.designation == "-WH2"
     assert [end.designation for end in cable.ends] == ["-WH2-X3", "+EXT-M1"]
     assert [(core.end_a_designation, core.end_b_designation) for core in cable.cores] == [
         ("-WH2-X3:1", "+EXT-M1:3")
@@ -257,13 +257,13 @@ def test_the_same_cable_read_as_a_harness_cable_still_prints_absolute() -> None:
     """The item document's text, written out by hand: full tags, full location paths."""
     design = _design()
     (cable,) = harness_cables(design.model, design.wh1)
-    assert cable.designation == "-WH1-W1"
+    assert cable.designation == "-WH1"
     assert [end.designation for end in cable.ends] == ["+C1-WH1-X1", "+C1-WH1-X2", "+EXT-M1"]
     assert [(core.end_a_designation, core.end_b_designation) for core in cable.cores] == [
         ("-WH1-X1:1", "-M1:1"),
         ("-WH1-X2:L:1", "-M1:2"),
     ]
-    assert cable_rows(design.model, design.w1)[0].cable_designation == "-WH1-W1"
+    assert cable_rows(design.model, design.w1)[0].cable_designation == "-WH1"
 
 
 def test_the_other_absolute_queries_stay_absolute() -> None:

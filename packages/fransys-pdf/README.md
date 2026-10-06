@@ -29,9 +29,9 @@ Harness pages (decisions pdf-0015 to pdf-0018). CONTENTS's rows are
 `derive.rows.ContentsRow` (model-0106): this package holds no copy of the row shape or the ends
 join. `requests_harness_pages(pages)` is true when a
 page list holds `CONTENTS` or `HARNESS_DRAWING`, the kinds that show cables; the cable choice
-reads it. A `HARNESS_DRAWING` page is a table page per cable, built from `derive`'s
-`HarnessCable` row, with no SVG (pdf-0018, cable-tables spec CT2 and CT3). Its heading holds the
-cable's fields, and the table has one row per core. On the system document only, the heading
+reads it. A `HARNESS_DRAWING` page is a run of table pages per cable part (pdf-0020), built from `derive`'s
+`HarnessCable` row, with no SVG (pdf-0018, cable-tables spec CT2 and CT3). Its page header is the part line (mpn, description, cores x gauge, pdf-0021); each cable is
+headed by its designation, and the table has one row per core. On the system document only, the heading
 also carries the `by others` note (`derive.drawing_text.external_note()`), naming the cable or
 the ends supplied by others. WireViz drew these pages until decision 0055 archived it; our own
 cable drawings come later (0056). A unit document keys its cable pages by

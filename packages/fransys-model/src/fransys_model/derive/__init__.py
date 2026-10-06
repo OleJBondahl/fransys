@@ -77,6 +77,7 @@ from .list_cells import (
 )
 from .lookups import connector_facets, item_of_port, pin_order, terminal_items
 from .mate_rows import mates
+from .natural_order import natural_key
 from .pairing import BoxPair, box_pairs
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
@@ -315,6 +316,7 @@ __all__ = [
     "list_context",
     "location_node_designation",
     "mates",
+    "natural_key",
     "net_of",
     "nets",
     "no_conductor_at",

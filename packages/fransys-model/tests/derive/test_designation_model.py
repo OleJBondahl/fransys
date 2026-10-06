@@ -523,7 +523,7 @@ def test_the_spec_worked_example_asserts_verbatim() -> None:
     strip = plant.item("x1p", designation="X1")
     _place(plant, "x1p", _node(plant, "c1", Aspect.LOCATION, label="C1"), "p-loc")
     model = plant.model()
-    assert item_designation(model, w1) == "W3-W1"
+    assert item_designation(model, w1) == "W3"
     assert item_designation(model, x1) == "W3-X1"
     assert port_designation(model, x1_pin_1) == "-W3-X1:1"
     assert reference_designation(model, x1) == "-W3-X1"

@@ -20,6 +20,7 @@ from .designation import (
 from .drawing_text import port_designation_in, product_designation_in
 from .indexes import build_indexes
 from .lookups import connector_facets, descendants, net_name, pin_order, require
+from .natural_order import natural_key
 from .rows import ConnectorPin, ConnectorRow
 from .unit_nodes import outside_unit
 
@@ -93,7 +94,7 @@ def connector_rows(
                 pins=_pins(model, idx, function.id, mate, declared, unit=unit, context=context),
             )
         )
-    return tuple(sorted(rows, key=lambda row: (row.designation, row.connector)))
+    return tuple(sorted(rows, key=lambda row: (natural_key(row.designation), row.connector)))
 
 
 def _mate_text(

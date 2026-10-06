@@ -39,7 +39,7 @@ from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
 from fransys_layout.stages.chains import ChainRecords, discover_chains
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
 from fransys_layout.stages.far_ends import FarInputs, group_map, move_far_ends, sheet_fits
-from fransys_layout.stages.finish import FinishRun, finish_pages
+from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
 from fransys_layout.stages.firstlabels import labelled_pages
 from fransys_layout.stages.images import contact_images, image_reserves
 from fransys_layout.stages.offstubs import OffEnd
@@ -220,7 +220,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
 
     layout = Layout(
         pages=plans,
-        placed=placed_all,
+        placed=ink_keepouts(placed_all, labels, drawn),
         routes=tuple(routes),
         decisions=decided.decisions,
         markers=markers,
@@ -357,8 +357,8 @@ def _arranged(
     columns = replicate_boundaries(
         columns, unit_boundaries(model), unused_functions(model), inputs.functions, all_columns
     )
-    columns = attach_replicas(columns, all_columns, drawn, inputs.connections)
     fits = sheet_fits(drawn, inputs.profile, inputs.sheet)
+    columns = attach_replicas(columns, all_columns, drawn, inputs.connections, fits)
     far = FarInputs(drawn, inputs.connections, group_map(inputs.functions))
     columns = move_far_ends(columns, all_columns, far, fits)
     added = frozenset(column.key for column in columns) - frozenset(
@@ -471,6 +471,6 @@ def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     `(code, subjects, message)`. A half-finished design still lays out; only structural
     problems raise (`LayoutError`).
     """
-    results, findings = stage_results(model, read_inputs(model))
-    keys = write_keys(model)
+    results, findings = stage_results(model, inputs := read_inputs(model))
+    keys = write_keys(model, inputs.functions)
     return write_layout(model, results, keys), findings

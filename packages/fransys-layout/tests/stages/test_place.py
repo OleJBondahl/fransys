@@ -1043,6 +1043,39 @@ def test_an_attachment_row_under_a_lowered_band_row_keeps_the_row_gap_from_its_h
     )
 
 
+def _with_out_at(one, x: int):
+    """`one` with its `out` port `x` right of its axis."""
+    ports = tuple(
+        dataclasses.replace(p, at=Point(x=x, y=p.at.y)) if p.name == "out" else p
+        for p in one.geometry.ports
+    )
+    return dataclasses.replace(one, geometry=dataclasses.replace(one.geometry, ports=ports))
+
+
+def test_an_attachment_of_an_attachment_sits_at_its_hosts_port_x() -> None:
+    """layout-0122: function 3 hangs on function 2, which hangs on function 1; each is one step
+    of the `out` port offset right of its host, whichever row the host is in."""
+    # UNDO: host_offsets._attach_at_host, drop the `_attach_at_host(host, by_function)` line, and
+    #     function 3 is placed from function 2's x before function 2 has moved
+    functions = tuple(_with_out_at(drawn(n), 16) for n in (1, 2, 3))
+    chain = Column(
+        key=("invented", "a"),
+        cells=(
+            Cell(function=hid("function", 3), index=0, host=hid("function", 2), port="out"),
+            Cell(function=hid("function", 2), index=1, host=hid("function", 1), port="out"),
+            Cell(function=hid("function", 1), index=2),
+        ),
+        group=hid("aspect_node", 1),
+        role=Role.CONTROL,
+        location=hid("aspect_node", 100),
+    )
+    placed, _ = place(page_plan(("a",)), (chain,), functions, profile=PROFILE, sheet=SHEET)
+    by = _by_function(placed)
+    step = by[hid("function", 2)].at.x - by[hid("function", 1)].at.x
+    assert step != 0
+    assert by[hid("function", 3)].at.x - by[hid("function", 2)].at.x == step
+
+
 def test_a_second_attachment_row_under_one_host_keeps_the_row_gap() -> None:
     """S13, R7.1: a changeover's second throw row is glued to its host as the first row is.
 

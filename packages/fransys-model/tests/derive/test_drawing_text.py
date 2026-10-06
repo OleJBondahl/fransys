@@ -12,7 +12,6 @@ import pytest
 from derive_helpers import add_all
 
 from fransys_model.derive.drawing_text import (
-    _placements_by_function_page,
     _position_between,
     content_extent,
     cross_reference_text,
@@ -30,6 +29,7 @@ from fransys_model.derive.drawing_text import (
     unit_label,
     wire_label_text,
 )
+from fransys_model.derive.view_placements import placements_by_function_page
 from fransys_model.kernel import Draft, Id, Model, Origin, SchemaError, freeze, make_id
 from fransys_model.layout import (
     CrossReferencePartner,
@@ -1356,7 +1356,7 @@ def test_cross_reference_text_changes_when_a_partner_x_crosses_a_column_boundary
 
 
 def test_a_replicas_colliding_function_is_never_a_cross_reference_partner(origin: Origin) -> None:
-    """`_placements_by_function_page`'s known ambiguity (layout-0076 replicas) never lands on a
+    """`placements_by_function_page`'s known ambiguity (layout-0076 replicas) never lands on a
     function a cross-reference or contact-image label names as a partner (step4 Part 3
     measurement): across every fixture measured -- the three usecase goldens, the units worked
     example (7 collisions) and a synthetic 16-unit scale build (48 collisions) -- the colliding
@@ -1379,7 +1379,7 @@ def test_a_replicas_colliding_function_is_never_a_cross_reference_partner(origin
     fn_coil = _function(new_id, item=item_coil.id)
     port_coil = _port(new_id, function=fn_coil.id)
     # Two placements of `fn_dup` on the same page (a replica's own discriminator, layout-0076):
-    # the exact ambiguity `_placements_by_function_page`'s docstring names.
+    # the exact ambiguity `placements_by_function_page`'s docstring names.
     placement_dup_1 = _placement(new_id, function=fn_dup.id, page=page.id, y=0)
     placement_dup_2 = _placement(new_id, function=fn_dup.id, page=page.id, y=100)
     placement_coil = _placement(new_id, function=fn_coil.id, page=page_b.id, y=0)
@@ -1403,7 +1403,7 @@ def test_a_replicas_colliding_function_is_never_a_cross_reference_partner(origin
 
     colliding = {
         function
-        for function, _page in _placements_by_function_page(model)
+        for function, _page in placements_by_function_page(model)
         if sum(1 for p in layout_of(model, SymbolPlacement).values() if p.function == function) > 1
     }
     label = Label(

@@ -43,6 +43,7 @@ from .lookups import (
     require,
     unit_chain,
 )
+from .natural_order import natural_key
 from .rows import CableRow, DesignationRow, PlcChannelRow, WireRow
 from .structure import boards
 from .wire_ends import ordered_wire_ends
@@ -219,7 +220,7 @@ def plc_channel_rows(
                 signal_name=None if request is None else request.signal_name,
             )
         )
-    return tuple(sorted(rows, key=lambda row: (row.channel_designation, row.channel)))
+    return tuple(sorted(rows, key=lambda row: (natural_key(row.channel_designation), row.channel)))
 
 
 def _oriented_ends(model: Model, a: Id[Port], b: Id[Port]) -> tuple[Id[Port], Id[Port]]:
@@ -407,4 +408,4 @@ def designation_list(model: Model, *, unit: Id[Unit] | None = None) -> tuple[Des
         and not takes_parents_designation(model, item.id)
         and not is_own_unit_root(model, item.id, unit)
     ]
-    return tuple(sorted(rows, key=lambda row: (row.designation, row.item)))
+    return tuple(sorted(rows, key=lambda row: (natural_key(row.designation), row.item)))

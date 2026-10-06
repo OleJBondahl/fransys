@@ -15,7 +15,7 @@ STAGE_FACTS = frozenset({"function_kind", "part_category", "connector_gender"})
 
 ENGINE_NAME = "schematic"
 # The package's `pyproject.toml` version: a test keeps the two equal (decision layout-0029).
-ENGINE_VERSION = "0.10.0"
+ENGINE_VERSION = "0.11.0"
 
 # Whole routing lanes (`WIRING_GRID` each) `place` leaves between the content-box top and
 # row 0, so a north-facing port of row 0 routes inside the content box (decision layout-0031).
@@ -69,7 +69,7 @@ KIND_ROLES: frozendict[str, KindRoles] = frozendict(
         "terminal": KindRoles(terminal=True, narrow=True, boxy=True, sets_group=False),
         "connector": KindRoles(narrow=True, boxy=True, gendered=True),
         "plc_channel": KindRoles(boxy=True, sets_group=False, plc_channel=True),
-        "coil": KindRoles(coil=True),
+        "coil": KindRoles(coil=True, contacts_apart=True),
         "contact_no": KindRoles(contact=True),
         "contact_nc": KindRoles(contact=True, contact_closed=True),
         "contact_co": KindRoles(contact=True, contact_changeover=True),

@@ -1,0 +1,64 @@
+schema = 1
+
+[part]
+mpn = "DEMO-RED-2IN-NET"
+manufacturer = "Demo"
+description = "Redundancy module, two 24 V DC inputs, one output, a service connector"
+category = "generic"
+class_code = "R"
+
+[[function]]
+name = "in_1"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "1+", role = "generic" },
+    { name = "1-", role = "generic" },
+]
+
+[function.rating]
+current_dc_a = "10"
+
+[function.operating]
+voltage_dc_v = "24"
+
+[[function]]
+name = "in_2"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "2+", role = "generic" },
+    { name = "2-", role = "generic" },
+]
+
+[function.rating]
+current_dc_a = "10"
+
+[function.operating]
+voltage_dc_v = "24"
+
+[[function]]
+name = "out"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "24"
+
+[[function]]
+name = "svc"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "X9"

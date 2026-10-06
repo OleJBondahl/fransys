@@ -130,16 +130,19 @@ def test_demo_library_record_counts_and_keys():
     CONTAINER-GAPS adds `connector-header-4p.toml` and `connector-header-4p-mixed.toml`
     (1 function/4 ports/1 symbol choice each), so 35;
     HIDDEN-PINS adds `plc-ai-4ch.toml` (4 functions/8 ports, no link or symbol choice), so 36;
-    DRAWN-ENDS gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links)."""
+    DRAWN-ENDS gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links;
+    BOX-CONTACT gave `redundancy-2in.toml` a DC-OK contact: 83 functions, 194 ports, 42 links;
+    GROUP-FUNCTION-ID adds `redundancy-2in-net.toml` (4/8/1 symbol choice), so 37;
+    the guide's current check adds `fuse-dc-160.toml` (1/2/1/1), so 38)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 36
-    assert len(function_templates(model)) == 82
-    assert len(port_templates(model)) == 192
-    assert len(internal_links(model)) == 41
-    assert len(model.tables["layout.symbol_choice"]) == 35
+    assert len(parts(model)) == 38
+    assert len(function_templates(model)) == 88
+    assert len(port_templates(model)) == 204
+    assert len(internal_links(model)) == 43
+    assert len(model.tables["layout.symbol_choice"]) == 37
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")
@@ -540,5 +543,5 @@ def test_demo_redundancy_module_takes_class_code_r():
 
     model = freeze(fransys_parts.load_path(DEMO))
     codes = {p.mpn: p.class_code for p in parts(model).values() if p.mpn.startswith("DEMO-RED")}
-    assert codes == {"DEMO-RED-2IN": "R"}
+    assert codes == {"DEMO-RED-2IN": "R", "DEMO-RED-2IN-NET": "R"}
     assert {p.class_code for p in parts(model).values() if p.mpn.startswith("DEMO-IO-")} == {"U"}

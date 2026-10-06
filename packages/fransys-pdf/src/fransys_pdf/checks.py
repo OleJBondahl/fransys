@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import (
     bom_lines,
     cable_list_rows,
-    cable_title,
     designation_list,
     document_unit,
     item_designation,
@@ -35,6 +34,7 @@ from fransys_model.derive.drawing_text import page_title
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import PageKind, documents, projects
 
+from ._cable_runs import part_groups
 from ._cover_checks import cover_overflow_findings
 from ._drawings import (
     _page_title_labels,
@@ -264,10 +264,9 @@ def _harness_page_overflow_findings(ctx: _OverflowContext) -> tuple[Finding, ...
     )
     if finding is not None:
         findings.append(finding)
-    for cable in cables_found:
-        title = cable_title(cable)
+    for heading, _group in part_groups(cables_found):
         finding = _one_line_overflow_finding(
-            target, "page_title", title, where=cable.designation, fallback=None
+            target, "page_title", heading, where=heading, fallback=None
         )
         if finding is not None:
             findings.append(finding)

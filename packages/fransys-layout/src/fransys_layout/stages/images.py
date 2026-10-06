@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.geometry import (
     WIRING_GRID,
     Box,
+    Facing,
     port_page_at,
     push_clear,
     text_width,
@@ -26,6 +27,7 @@ from .lookups import placed_keepout
 from .place import axis_offset
 from .room import grow_keepout
 from .slices import by_key, page_of
+from .texts.power import held_shapes
 from .types import LabelKind, LabelRequest, PlacedLabel, RequestPartner
 
 if TYPE_CHECKING:
@@ -132,7 +134,7 @@ def image_reserves(
     for column in columns:
         for cell in column.cells:
             spec = spec_of.get(cell.function)
-            if cell.replica or spec is None or not spec.roles.coil or _hosted(cell):
+            if cell.replica or spec is None or not spec.roles.contacts_apart or _hosted(cell):
                 continue
             no, nc = _image_marks(by_item.get(spec.item, []), marks)
             if not (no or nc):
@@ -224,6 +226,12 @@ def unreserve(
     return tuple(found)
 
 
+def _anchor_x(at: PlacedFunction) -> int:
+    """layout-0123 F1: the page x of the item's rightmost bottom port (a coil has one)."""
+    ports = [p for p in at.geometry.ports if p.facing is Facing.S] or list(at.geometry.ports)
+    return max(port_page_at(at.at, p).x for p in ports)
+
+
 def _image_top(
     at: PlacedFunction, placed_page: tuple[PlacedFunction, ...], profile: Profile
 ) -> int:
@@ -266,11 +274,9 @@ def _page_holding(
     return found
 
 
-def _page_marker_boxes(markers: tuple[Any, ...]) -> dict[tuple[int, int], list[Box]]:
-    """The boxes of the markers of each `(drawing_set, page)`, in `markers` order, grouped once."""
-    return {
-        here: [marker.box for marker in group] for here, group in by_key(markers, page_of).items()
-    }
+def _page_marker_boxes(markers: tuple[Any, ...]) -> dict[tuple[int, int], tuple[Box, ...]]:
+    """layout-0123: the ink below an item per `(drawing_set, page)`: markers, stubs, power."""
+    return {here: held_shapes(group) for here, group in by_key(markers, page_of).items()}
 
 
 def contact_images(
@@ -295,7 +301,7 @@ def contact_images(
     tables: dict[tuple[int, int], list[PlacedLabel]] = {}
     requests = []
     for owner, group in sorted(by_item.items(), key=lambda e: min(s.function for s in e[1])):
-        coil = next((s for s in group if s.roles.coil), None)
+        coil = next((s for s in group if s.roles.contacts_apart), None)
         contacts = sorted((s for s in group if s.roles.contact), key=attrgetter("function"))
         main = coil or next(
             (s for s in sorted(group, key=attrgetter("function")) if not s.roles.contact), None
@@ -322,10 +328,10 @@ def contact_images(
         nc.extend(_entry_text(mark, inputs.no_place) for mark in spare_nc)
         width = _image_width([*no, *nc], profile)
         height = (1 + max(len(no), len(nc))) * profile.text_height + 3 * profile.marker_padding
-        x = port_page_at(at.at, at.geometry.ports[0]).x + WIRING_GRID // 2
+        x = _anchor_x(at) + WIRING_GRID // 2
         y = _image_top(at, holding[at.function, at.drawing_set, at.page], profile)
-        # I4: nor on a marker (a star marker under the coil's A2)
-        here = marker_boxes.get((at.drawing_set, at.page), [])
+        # I4, layout-0123: nor on a marker, a stub or a power symbol (a star marker under A2)
+        here = marker_boxes.get((at.drawing_set, at.page), ())
         box = push_clear(
             Box(x=x, y=y, width=width, height=height), here, gap=profile.marker_padding, axis="y"
         )

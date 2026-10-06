@@ -112,7 +112,8 @@ contact that no conductor reaches, in place of a page position.
 
 `fransys.derive.bom_sort_key(model, item)` is the sort key `bom_lines` orders a line's
 `designations` by: a terminal by its strip, group and index; any other item by its whole
-designation string.
+designation in `fransys.derive.natural_key` order. Digit runs compare as numbers, so `-K2` sorts
+before `-K10`. Every list that sorts by designation uses that order.
 
 `fransys.derive.is_cable(model, item)` returns whether `item` is a cable: whether its part
 carries a `cable_product` facet (decision model-0108). `fransys.derive.cable_items(model)`
@@ -203,6 +204,49 @@ its boundaries. `None` when the unit states none.
 
 `fransys.derive.boundary_operating(model, boundary)` returns the operating envelope a unit
 states on one of its boundaries. `None` when the unit states none.
+
+## Checking a branch's current
+
+`RATING_CURRENT_BELOW_BRANCH` compares each rated function with the current its branch can carry.
+A branch is bounded by a full-range protective device's rated current and by a source's
+`max_current_ac_a` or `max_current_dc_a`. A partial-range fuse, one with a minimum breaking current,
+bounds nothing. A load's draw is not an input.
+
+Every device on the branch must be rated at least the bound. Below it, the finding is an `ERROR`.
+Here a 160 A fuse protects a branch of a 186 A source, and the contactor pole is rated 150 A.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+g1 = d.device("G1", "DEMO-STRING-864V")
+f1 = d.device("F1", "DEMO-FUSE-DC-160")
+k1 = d.device("K1", "DEMO-CONTACTOR-DC")
+x1 = d.device("X1", "DEMO-TB-2.5", external=True)
+x2 = d.device("X2", "DEMO-TB-2.5", external=True)
+dc = d.dc_supply("HV", g1.string)
+d.wire(dc.plus.pin, f1[1], wire=("BK", 1.5))
+d.wire(f1[2], k1[1], wire=("BK", 1.5))
+d.wire(k1[2], x1["internal"], wire=("BK", 1.5))
+d.wire(dc.minus.pin, x2["internal"], wire=("BK", 1.5))
+
+result = fr.build(d)
+(finding,) = [f for f in fr.check(result) if f.code == "RATING_CURRENT_BELOW_BRANCH"]
+assert finding.severity is fr.Severity.ERROR
+```
+
+`fr.derive.current_chains(model)` returns the rated paths, grouped by loop, in order from the supply
+end. Each position names its functions and its bounds. A bound holds the value, the function that set
+it and its role, `source` or `protection`. Here the fuse's 160 A is the smallest limit reaching the pole.
+
+```python
+bounds = {b for c in fr.derive.current_chains(result.model) for p in c.positions for b in p.bounds}
+assert {(b.value, b.role.value) for b in bounds} == {(160, "protection")}
+```
+
+Not checked: breaking capacity, a load against its protection, isolation, a cable against its
+installation, busbar authoring, a through-hole sensor, and per-path ratings across the functions of one part.
+A rated busbar item is checked like any other device.
 
 ## A worked example
 

@@ -633,13 +633,12 @@ def test_harness_drawing_renders_one_table_page_per_cable():
     text = source(m, doc.id, {})
     assert "<svg>" not in text
     assert "#align(center)" not in text  # P8's caption is gone (page-frame R3, R4)
-    assert '"-WH1-W1 SIM-CAB1"' in text  # designation + MPN, in the title block instead
-    # Both cables carry an MPN: a real cable always has a part with a cable_product facet
-    # (is_cable, decision model-0108), and Part.mpn is a plain str, never None -- the
-    # designation-alone title block cell cable_title's docstring still names is no longer
-    # reachable through a real harness_cables()-selected cable.
-    assert '"-WH1-W2 SIM-CAB2"' in text
-    assert text.index('"-WH1-W1 SIM-CAB1"') < text.index('"-WH1-W2 SIM-CAB2"')
+    # One run per part number; the title block names the part, the cable keeps its own heading.
+    assert '"SIM-CAB1"' in text
+    assert '"SIM-CAB2"' in text
+    assert text.index('"SIM-CAB1"') < text.index('"SIM-CAB2"')
+    assert '#strong(text("-WH1-W1, 1500 mm"))' in text
+    assert "SIM-CAB1, Invented 4-core cable" in text  # the part line, once, in the run header
 
 
 def test_harness_drawing_never_falls_back_to_no_drawings_once_a_cable_is_found():

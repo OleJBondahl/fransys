@@ -4,6 +4,7 @@ from fransys_model.vocab.tables import mates as mates_table
 lazy from fransys_model.kernel import Model
 
 from .designation import connector_designation
+from .natural_order import natural_key
 from .rows import MateRow
 
 
@@ -27,4 +28,14 @@ def mates(model: Model) -> tuple[MateRow, ...]:
         )
         for record in mates_table(model).values()
     )
-    return tuple(sorted(rows, key=lambda row: (row.a_designation, row.b_designation, row.a, row.b)))
+    return tuple(
+        sorted(
+            rows,
+            key=lambda row: (
+                natural_key(row.a_designation),
+                natural_key(row.b_designation),
+                row.a,
+                row.b,
+            ),
+        )
+    )

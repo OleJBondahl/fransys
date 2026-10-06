@@ -15,6 +15,7 @@ from samples import SHEET, column, function_spec, hid, page_plan, placed
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import (
     Cell,
+    KindRoles,
     LabelKind,
     LabelRequest,
     LinkMarker,
@@ -67,7 +68,9 @@ def test_a_tag_no_stub_runs_through_stays() -> None:
 def test_a_channel_row_on_its_items_view_page_carries_no_item_tag() -> None:
     view = dataclasses.replace(function_spec(1), function=hid("item", 1))  # the item's box
     channel = function_spec(2)
-    channel = dataclasses.replace(channel, item=hid("item", 1))  # the same item's channel
+    channel = dataclasses.replace(
+        channel, item=hid("item", 1), kind="plc_channel", roles=KindRoles(plc_channel=True)
+    )  # the same item's channel
     columns = (
         dataclasses.replace(column("a", ()), cells=(Cell(function=hid("item", 1), index=0),)),
         column("b", (2,)),
@@ -78,3 +81,19 @@ def test_a_channel_row_on_its_items_view_page_carries_no_item_tag() -> None:
     )
     kept = one_item_tag(columns, (view, channel), requests)
     assert [r.subject for r in kept] == [hid("item", 1)]
+
+
+def test_a_contact_of_an_item_view_keeps_its_item_tag() -> None:
+    """layout-0123: a contact stands apart from its box and prints the item tag like any contact."""
+    view = dataclasses.replace(function_spec(1), function=hid("item", 1))
+    contact = dataclasses.replace(function_spec(2), item=hid("item", 1))  # a contact_no
+    columns = (
+        dataclasses.replace(column("a", ()), cells=(Cell(function=hid("item", 1), index=0),)),
+        column("b", (2,)),
+    )
+    requests = tuple(
+        LabelRequest(kind=LabelKind.TAG, subject=subject, slot="tag", text="-M1")
+        for subject in (hid("item", 1), hid("function", 2))
+    )
+    kept = one_item_tag(columns, (view, contact), requests)
+    assert [r.subject for r in kept] == [hid("item", 1), hid("function", 2)]

@@ -170,7 +170,7 @@ def _span(drawn_of: Mapping[Handle, DrawnFunction], column: Column) -> int:
         return 0
     held: dict[str, list[Row]] = {}
     for cell in column.cells:
-        if cell.host is not None:
+        if cell.host == box.function:  # layout-0122: a moved chain hosts on its feeder, not here
             held.setdefault(cell.port, []).extend(
                 rows_of(drawn_of[cell.function], [drawn_of[cell.function].geometry.keepout])
             )

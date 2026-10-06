@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import OPPOSITE
 from fransys_layout.stages.columns import is_rack_key
+from fransys_layout.stages.feeder_chains import chain_of, chain_rows
 from fransys_layout.stages.slices import by_key
 from fransys_layout.stages.types import Cell, Column
 
@@ -33,6 +34,7 @@ def attach_replicas(
     homes: tuple[Column, ...],
     drawn: tuple[DrawnFunction, ...],
     connections: tuple[Connection, ...],
+    fits: Callable[[Column], bool],
 ) -> tuple[Column, ...]:
     """R7 B8, L9: a replica terminal with one wire in its group to an N or S port is attached."""
     home_keys = {column.key for column in homes}
@@ -70,26 +72,31 @@ def attach_replicas(
             result.append(column)
             continue
         result.append(_with_attached(column, found[column.key]))
-    return attach_feeders(tuple(result), drawn)
+    return attach_feeders(tuple(result), drawn, fits)
 
 
 def attach_feeders(
-    columns: tuple[Column, ...], drawn: tuple[DrawnFunction, ...]
+    columns: tuple[Column, ...], drawn: tuple[DrawnFunction, ...], fits: Callable[[Column], bool]
 ) -> tuple[Column, ...]:
-    """layout-0107: a feeder box takes the row above the box it feeds, pin over pin (R7 B8)."""
+    """layout-0107, 0122: a feeder at the bottom of its column takes the row above the box it feeds.
+
+    Its column moves with it; the box's column keeps the old markers where the result does not fit.
+    """
     drawn_of = {one.function: one for one in drawn}
     feeder_of = {feed.feeder: feed for one in drawn if one.fed_by for feed in one.fed_by}
     home_of = {cell.function: column for column in columns for cell in column.cells}
     found: dict[AuthoringKey, list[tuple[Handle, str, int, Handle, str, bool]]] = {}
-    drop = set()
+    chains: dict[Handle, tuple[Cell, ...]] = {}
+    keys: dict[Handle, AuthoringKey] = {}
     for column in columns:
-        feed = feeder_of.get(column.cells[0].function) if len(column.cells) == 1 else None
+        chain = chain_of(column.cells)
+        feed = feeder_of.get(column.cells[-1].function) if chain is not None else None
         host = home_of.get(feed.fed) if feed is not None else None
-        if feed is None or host is None or host is column:
+        if feed is None or host is None or host is column or chain is None:
             continue
         if (host.group, host.unit) != (column.group, column.unit):
             continue
-        feeder = drawn_of[column.cells[0].function]
+        feeder = drawn_of[column.cells[-1].function]
         mate = next(
             a
             for a, b in ((p.fed, p.feeder) for p in feed.ports)
@@ -98,12 +105,21 @@ def attach_feeders(
         symbol = _symbol_of(drawn_of[feed.fed], mate)
         x = next(g.at.x for g in drawn_of[feed.fed].geometry.ports if g.name == symbol)
         found.setdefault(host.key, []).append((feed.fed, "n", x, feeder.function, symbol, False))
-        drop.add(column.key)
-    return tuple(
-        _with_attached(column, found[column.key], replica=False) if column.key in found else column
-        for column in columns
-        if column.key not in drop
-    )
+        chains[feeder.function], keys[feeder.function] = chain, column.key
+    result: list[Column] = []
+    drop: set[AuthoringKey] = set()
+    for column in columns:
+        if column.key not in found:
+            result.append(column)
+            continue
+        attached = _with_attached(column, found[column.key], replica=False, chains=chains)
+        entries = found[column.key]
+        if not fits(attached):
+            entries = [e for e in entries if not chains[e[3]]]
+            attached = _with_attached(column, entries, replica=False) if entries else column
+        drop.update(keys[e[3]] for e in entries)
+        result.append(attached)
+    return tuple(column for column in result if column.key not in drop)
 
 
 def _symbol_of(one: DrawnFunction, port: Handle) -> str:
@@ -169,8 +185,12 @@ def _with_attached(
     attached: Sequence[tuple[Handle, str, int, Handle, str, bool]],
     *,
     replica: bool = True,
+    chains: Mapping[Handle, tuple[Cell, ...]] | None = None,
 ) -> Column:
-    """R7 B8: `column` with each attached replica above its N host or below its S host (L9)."""
+    """R7 B8: `column` with each attached replica above its N host or below its S host (L9).
+
+    layout-0122: a feeder's `chains` rows stand above its row, bottom-aligned.
+    """
     rows = by_key(column.cells, lambda cell: cell.index)
     cells = []
     index = 0
@@ -186,6 +206,12 @@ def _with_attached(
                 continue
             if not group:
                 continue
+            ordered = sorted(group, key=itemgetter(2))
+            for chain in chain_rows([a[3] for a in ordered], chains or {}):
+                cells.extend(
+                    replace(cell, index=index, lane=lane) for lane, cell in enumerate(chain)
+                )
+                index += 1
             cells.extend(
                 Cell(
                     function=terminal,
@@ -196,9 +222,7 @@ def _with_attached(
                     port=symbol,
                     replica=replica,
                 )
-                for lane, (host, _, _, terminal, symbol, flip) in enumerate(
-                    sorted(group, key=lambda a: a[2])
-                )
+                for lane, (host, _, _, terminal, symbol, flip) in enumerate(ordered)
             )
             index += 1
     return replace(column, cells=tuple(cells))

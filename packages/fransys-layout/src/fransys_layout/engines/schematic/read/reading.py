@@ -27,7 +27,7 @@ from fransys_layout.stages import (
     SymbolChoice,
     UnitInfo,
 )
-from fransys_model.derive import schematic_functions
+from fransys_model.derive import natural_key, schematic_functions
 from fransys_model.derive.designation import bom_sort_key, unit_location
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.derive.drawing_text import location_path as model_location_path
@@ -81,12 +81,17 @@ def terminal_sort_keys(model: Model, specs: tuple[FunctionSpec, ...]) -> dict[Id
     return {spec.function: _sort_key(model, spec) for spec in specs}
 
 
-def _sort_key(model: Model, spec: FunctionSpec) -> tuple[int, str, str, int]:
+def _sort_key(model: Model, spec: FunctionSpec) -> tuple[int, Any, str, int]:
     """`bom_sort_key` of the spec's item; before numbering an empty designation's key (R5)."""
     try:
         return bom_sort_key(model, spec.item)
     except SchemaError:
-        return (1, "", "", 0)  # bom_sort_key's own key for an item with an empty designation
+        return (
+            1,
+            natural_key(""),
+            "",
+            0,
+        )  # bom_sort_key's own key for an item with an empty designation
 
 
 def connections(model: Model, indexes: Indexes) -> tuple[Connection, ...]:

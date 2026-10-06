@@ -45,6 +45,7 @@ from fransys_model.derive.port_marking import marking_text, port_marking
 from fransys_model.derive.revision_text import revision_text
 from fransys_model.derive.unit_nodes import chain_up, end_context, stub_place
 from fransys_model.derive.unit_release import unit_release
+from fransys_model.derive.view_placements import placements_by_function_page
 from fransys_model.derive.wire_ends import ordered_wire_ends
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
 from fransys_model.layout import (
@@ -57,7 +58,6 @@ from fransys_model.layout import (
     SheetFormat,
     Side,
     StarKind,
-    SymbolPlacement,
     layout_of,
     sheet_format_of,
 )
@@ -512,21 +512,9 @@ def _partner_row(model: Model, page: Page, port: Id[Port]) -> str:
     It is the function's own placement, not the exact port's, so callers read the same one.
     """
     function = ports(model)[port].function
-    placement = _placements_by_function_page(model)[function, page.id]
+    placement = placements_by_function_page(model)[function, page.id]
     sheet = sheet_format_of(model, page.sheet_format)
     return frame_row(_content_height_grid(sheet), sheet.frame_rows, placement.y)
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _placements_by_function_page(
-    model: Model,
-) -> Mapping[tuple[Id[Function], Id[Page]], SymbolPlacement]:
-    """Every `SymbolPlacement`, once, by its function and page: known ambiguous, not raised.
-
-    `(function, page)` is not unique: a replica placement can add a second one on the same page.
-    Last write wins, in `layout_of`'s iteration order, so `_partner_row`'s row is never exact.
-    """
-    return {(one.function, one.page): one for one in layout_of(model, SymbolPlacement).values()}
 
 
 def cross_reference_text(model: Model, label: Label) -> str:

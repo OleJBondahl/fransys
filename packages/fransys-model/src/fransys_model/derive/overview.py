@@ -11,6 +11,7 @@ lazy from fransys_model.kernel import Model
 from .closure import physical_nets
 from .designation import designation_holder, own_designation_or_none, printed_designation
 from .lookups import item_description, item_of_port, location_label, pin_order, terminal_items
+from .natural_order import natural_key
 from .rows import (
     OverviewGraph,
     OverviewLink,
@@ -57,7 +58,12 @@ def _nodes(model: Model) -> tuple[OverviewNode, ...]:
     ]
     return tuple(
         sorted(
-            nodes, key=lambda node: (node.designation is None, node.designation or "", node.item)
+            nodes,
+            key=lambda node: (
+                node.designation is None,
+                natural_key(node.designation or ""),
+                node.item,
+            ),
         )
     )
 

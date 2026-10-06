@@ -93,7 +93,7 @@ def test_a_cable_carries_its_product_facts_and_its_length() -> None:
     """Part fields, the `cable_product` facet and the item's `cable` facet, as one row."""
     harness = _Harness()
     (cable,) = harness_cables(harness.model(), harness.harness)
-    assert (cable.cable, cable.designation) == (harness.cable, "-WH1-W1")
+    assert (cable.cable, cable.designation) == (harness.cable, "-WH1")
     assert (cable.mpn, cable.description) == ("MPN-cab4", "Invented cab4")
     assert (cable.core_count, cable.gauge_mm2, cable.shielded) == (4, Decimal("0.5"), True)
     assert cable.length_mm == 1500
@@ -303,7 +303,7 @@ def test_only_the_harnesss_children_with_a_cable_facet_are_cables() -> None:
         )
     )
     rows = harness_cables(harness.model(), harness.harness)
-    assert [row.designation for row in rows] == ["-WH1-W1"]
+    assert [row.designation for row in rows] == ["-WH1"]
 
 
 def test_a_harness_with_no_cable_gives_the_empty_tuple() -> None:
@@ -315,13 +315,13 @@ def test_a_harness_with_no_cable_gives_the_empty_tuple() -> None:
 
 
 def test_cables_are_sorted_by_designation_then_id_and_ends_likewise() -> None:
-    """`W10` sorts before `W2` as whole strings; the ends of each cable by designation."""
+    """`W2` sorts before `W10` by digit value; the ends of each cable by designation."""
     harness = _Harness()
     for key, designation in (("w10", "W10"), ("w02", "W02")):
         harness.cable_item(key, designation, part="cab4", length=None)
     rows = harness_cables(harness.model(), harness.harness)
-    assert [row.designation for row in rows] == ["-WH1-W02", "-WH1-W1", "-WH1-W10"]
-    ends = [end.designation for end in rows[1].ends]
+    assert [row.designation for row in rows] == ["-WH1-W1", "-WH1-W02", "-WH1-W10"]
+    ends = [end.designation for end in rows[0].ends]
     assert ends == sorted(ends)
 
 

@@ -14,7 +14,7 @@ def test_links_terminal_kind_is_the_models_terminal_function_kind() -> None:
         ),
         FunctionKind.CONNECTOR.value: KindRoles(narrow=True, boxy=True, gendered=True),
         FunctionKind.PLC_CHANNEL.value: KindRoles(boxy=True, sets_group=False, plc_channel=True),
-        FunctionKind.COIL.value: KindRoles(coil=True),
+        FunctionKind.COIL.value: KindRoles(coil=True, contacts_apart=True),
         FunctionKind.CONTACT_NO.value: KindRoles(contact=True),
         FunctionKind.CONTACT_NC.value: KindRoles(contact=True, contact_closed=True),
         FunctionKind.CONTACT_CO.value: KindRoles(contact=True, contact_changeover=True),

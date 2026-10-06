@@ -47,3 +47,12 @@ ports = [
 
 [function.operating]
 nominal_voltage_v = "24"
+
+[[function]]
+name = "dc_ok"
+kind = "contact_no"
+ports = [
+    { name = "13", role = "generic" },
+    { name = "14", role = "generic" },
+]
+links = [{ a = "13", b = "14", kind = "switched", rest = "open" }]

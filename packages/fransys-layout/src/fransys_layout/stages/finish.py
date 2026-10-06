@@ -1,13 +1,17 @@
 """The second half of a page, over every page: `finish_page` for each plan, handed its own slices.
 
 `finish_pages` cuts what finishing reads of the run into pages once (D10, `slices`) and runs
-`pagerun.finish_page` on each.
+`pagerun.finish_page` on each. `ink_keepouts` cuts each keep-out to the ink (layout-0125).
 """
 
+from collections import defaultdict
 from dataclasses import dataclass, replace
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
+from fransys_layout.geometry import Box, hull, translate
+
+from .lookups import owner_of
 from .pagerun import PageState, finish_page
 from .slices import (
     FUNCTION,
@@ -21,7 +25,7 @@ from .slices import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from fransys_model.kernel import Finding
 
@@ -95,3 +99,43 @@ def finish_pages(
 def _group_ends(group: NetGroup) -> tuple[Handle, ...]:
     """The functions a net group has a port on."""
     return tuple(ref.function for ref in group.ports)
+
+
+def _clip(box: Box, within: Box) -> Box | None:
+    """`box` cut to `within`, or None when they share no interior."""
+    x0, y0 = max(box.x, within.x), max(box.y, within.y)
+    x1 = min(box.x + box.width, within.x + within.width)
+    y1 = min(box.y + box.height, within.y + within.height)
+    return Box(x=x0, y=y0, width=x1 - x0, height=y1 - y0) if x0 < x1 and y0 < y1 else None
+
+
+def ink_keepouts(
+    placed: Iterable[PlacedFunction],
+    labels: Iterable[PlacedLabel],
+    drawn: Iterable[DrawnFunction],
+) -> tuple[PlacedFunction, ...]:
+    """The symbol and the labels it took, in place of the room of every slot (layout-0125).
+
+    A keep-out grown beyond its symbol's body and slots stays as it is; a trimmed one never
+    exceeds the old, so no overlap appears.
+    """
+    owner = owner_of(drawn)
+    taken: dict[tuple[object, int, int], list[Box]] = defaultdict(list)
+    for label in labels:
+        if not label.unplaced:
+            key = (owner.get(label.subject, label.subject), label.drawing_set, label.page)
+            taken[key].append(label.box)
+    found = []
+    for one in placed:
+        geometry = one.geometry
+        if geometry.keepout != hull([geometry.body, *(s.box for s in geometry.slots)]):
+            found.append(one)
+            continue
+        near = [
+            translate(b, dx=-one.at.x, dy=-one.at.y)
+            for b in taken[one.function, one.drawing_set, one.page]
+        ]
+        inside = [c for b in near if (c := _clip(b, geometry.keepout)) is not None]
+        keepout = hull([geometry.body, *inside])
+        found.append(replace(one, geometry=replace(geometry, keepout=keepout)))
+    return tuple(found)

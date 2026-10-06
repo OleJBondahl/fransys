@@ -10,8 +10,12 @@ the `check`-wiring probe use plain in-memory data, no subprocess needed for thos
 from __future__ import annotations
 
 import importlib.util
+import shutil
+import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location(
@@ -88,6 +92,45 @@ def test_measure_ruff_sections_wired_through_check(tmp_path: Path) -> None:
             site="packages/fakepkg/src/mod.py::over_limit", measured=16, limit=15, listed=False
         ),
     )
+
+
+def _complexity_function(name: str, branches: int) -> str:
+    """Source text for a `def` with cyclomatic complexity `branches + 1` and few statements."""
+    body = "".join(f"    if x == {i}:\n        return {i}\n" for i in range(branches))
+    return f'def {name}(x):\n    """Docstring."""\n{body}    return -1\n'
+
+
+def test_measure_ruff_sections_ignores_the_projects_per_file_ignores(tmp_path: Path) -> None:
+    """LEAN-GATE-FIX (decision 0114): the real root `pyproject.toml` ignores C901, PLR0912 and
+    PLR0915 under `packages/*/src/**`; the gate still measures a 16-statement and a complexity-9
+    function there.
+    """
+    shutil.copy(ROOT / "pyproject.toml", tmp_path / "pyproject.toml")
+    src = tmp_path / "packages" / "fakepkg" / "src"
+    _write(src / "stmts.py", '"""Fixture."""\n\n\n' + _statement_function("long_one", 16))
+    _write(src / "cx.py", '"""Fixture."""\n\n\n' + _complexity_function("branchy", 8))
+
+    sections = lean_code_gates.measure_ruff_sections(tmp_path)
+
+    assert sections["statements"] == {"packages/fakepkg/src/stmts.py::long_one": 16}
+    assert sections["complexity"] == {"packages/fakepkg/src/cx.py::branchy": 9}
+
+
+def test_measure_ruff_sections_fails_when_the_call_fails_without_findings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """LEAN-GATE-FIX: a uv or ruff failure (exit 1, empty stdout, an error on stderr) is not
+    "no findings"; the gate raises instead of passing clean.
+    """
+    _write(
+        tmp_path / "packages" / "fakepkg" / "src" / "mod.py",
+        '"""Fixture."""\n\n\n' + _statement_function("over_limit", 16),
+    )
+    failed = subprocess.CompletedProcess([], 1, stdout="", stderr="error: Failed to build")
+    monkeypatch.setattr(lean_code_gates.subprocess, "run", lambda *_a, **_k: failed)
+
+    with pytest.raises(RuntimeError, match="no parsed finding"):
+        lean_code_gates.measure_ruff_sections(tmp_path)
 
 
 # --- Check 2: the noqa/ty:ignore reason rule ------------------------------------------------

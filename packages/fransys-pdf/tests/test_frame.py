@@ -236,7 +236,7 @@ def _harness_with_one_cable():
 
 
 def test_harness_table_page_keeps_the_content_box_margin():
-    """CT2: `_cable_page`'s table page keeps the same 5 mm content-box margin (R3, R4;
+    """CT2: a cable run's page keeps the same 5 mm content-box margin (R3, R4;
     decision pdf-0009, RULING W3's clearance) the WireViz image used, even with no image left
     to protect the frame border from -- the house text-page padding, not a bare content-box
     fit.
@@ -253,10 +253,10 @@ def test_harness_table_page_keeps_the_content_box_margin():
         f"(left: {content_left}mm, top: {content_top}mm, "
         f"right: {content_right}mm, bottom: {content_bottom}mm)"
     )
-    assert f"#page(margin: {margin}" in text
+    assert f"#page(margin: {{ let m = {margin};" in text
     assert 'fit: "contain"' not in text  # no image anywhere on this page any more
     # P8's caption is gone, replaced by CT3's own heading line: the cable's designation now
-    # appears in the table page's body itself (`#strong(text(...))`, `_cable_heading_line`),
+    # appears in the table page's body itself (`#strong(text(...))`, the designation alone),
     # not only inside the title block -- the opposite of what this test pinned before CT2.
     (found,) = harness_cables_for(m, documents(m)[doc.id], (K.HARNESS_DRAWING,))
     assert found.cable == cable.id

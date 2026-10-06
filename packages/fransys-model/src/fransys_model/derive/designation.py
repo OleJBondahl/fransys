@@ -15,7 +15,9 @@ lazy from collections.abc import Iterable
 from fransys_model.derive.accessory_blocks import is_contact_block, items_with_a_function_below
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import instance_designation, unit_root
+from fransys_model.derive.lone_cable import printing_item
 from fransys_model.derive.lookups import effective_placement, require
+from fransys_model.derive.natural_order import NaturalKey, natural_key
 from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
 from fransys_model.vocab.enums import Aspect, FunctionKind
@@ -238,16 +240,14 @@ def _render_item_designation(
         return tagged  # UT2: the instance tags in front
     if unit is not None and relative_to is None:  # L4: printed in `unit`'s own document
         relative_to = unit_root(model, item, unit)
-    ancestors = designating_ancestors(model, item)
+    ancestors = designating_ancestors(model, item := printing_item(model, item))  # model-0148
     # `enclosing_boards` does not tolerate an unknown item (unlike `designating_ancestors`);
     # skip it when there are no ancestors to classify, so an absent `item` still raises
     # through `_own_designation` below, not a `KeyError` here.
     boards = frozenset(enclosing_boards(model, item)) if ancestors else frozenset()
     if relative_to is not None and relative_to in ancestors and relative_to in boards:
         ancestors = ancestors[ancestors.index(relative_to) + 1 :]
-    labels = [
-        _ancestor_label(model, ancestor, is_board=ancestor in boards) for ancestor in ancestors
-    ]
+    labels = [_ancestor_label(model, node, is_board=node in boards) for node in ancestors]
     labels.append(_own_designation(model, designation_holder(model, item)))
     return "-".join(labels)
 
@@ -308,7 +308,7 @@ def designation_refusal(
     """
     if unit is not None and relative_to is None:
         relative_to = unit_root(model, item, unit)
-    ancestors = designating_ancestors(model, item)
+    ancestors = designating_ancestors(model, item := printing_item(model, item))  # model-0148
     boards = frozenset(enclosing_boards(model, item)) if ancestors else frozenset()
     if relative_to is not None and relative_to in ancestors and relative_to in boards:
         ancestors = ancestors[ancestors.index(relative_to) + 1 :]
@@ -697,23 +697,23 @@ def unit_list_context(
     return context if own is None else own
 
 
-def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, str, str, int]:
+def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, int]:
     """Sort key for one item within a `bom_lines` line's `designations`.
 
     A terminal with a parent sorts `(0, its strip's item_designation, its own group, its own
     index)`: by strip, then group, then index. `group`/`index` come straight off the
-    `TerminalFacet`, never re-parsed from rendered text, so
-    `"L1:10"` sorts after `"L1:2"` numerically rather than as strings. Any other item sorts
-    `(1, its own item_designation, "", 0)`: the plain order of whole strings, nothing parsed.
+    `TerminalFacet`, never re-parsed from rendered text, so `"L1:10"` sorts after `"L1:2"`. Any
+    other item sorts
+    `(1, natural_key(its own item_designation), "", 0)`: digit runs by value (`-K2`, `-K10`).
 
     Raises:
         SchemaError: as `item_designation`.
     """
     record = items(model).get(item)
-    terminal = terminal_of(model, item)
-    if record is not None and record.parent is not None and terminal is not None:
-        return (0, item_designation(model, record.parent), terminal.group, terminal.index)
-    return (1, item_designation(model, item), "", 0)
+    t = terminal_of(model, item)
+    if record is not None and record.parent is not None and t is not None:
+        return (0, natural_key(item_designation(model, record.parent)), t.group, t.index)
+    return (1, natural_key(item_designation(model, item)), "", 0)
 
 
 def location_node_designation(model: Model, node: Id[AspectNode]) -> str:

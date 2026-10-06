@@ -55,8 +55,8 @@ def _board_part(plant: Plant, key: str) -> Id[Part]:
     return part.id
 
 
-def test_board_netlist_lists_footprinted_descendants_sorted_by_designation_string() -> None:
-    """Grandchildren count, an item without a footprint and a foreign item do not; `R10` < `R2`."""
+def test_board_netlist_lists_footprinted_descendants_sorted_by_designation_naturally() -> None:
+    """Grandchildren count, an item without a footprint and a foreign item do not; `R2` < `R10`."""
     plant = Plant()
     board = make_board(plant)
     sub = plant.item("sub", parent=board, designation="B1")
@@ -70,8 +70,8 @@ def test_board_netlist_lists_footprinted_descendants_sorted_by_designation_strin
         (p.designation, p.mpn, p.footprint_library, p.footprint_name) for p in netlist.parts
     ] == [
         ("C1", "MPN-c", "ExampleLib", "C_0603"),
-        ("R10", "MPN-r", "ExampleLib", "R_0603"),
         ("R2", "MPN-r", "ExampleLib", "R_0603"),
+        ("R10", "MPN-r", "ExampleLib", "R_0603"),
     ]
 
 

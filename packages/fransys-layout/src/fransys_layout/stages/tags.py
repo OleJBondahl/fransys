@@ -164,7 +164,7 @@ def one_item_tag(
     specs: tuple[FunctionSpec, ...],
     requests: tuple[LabelRequest, ...],
 ) -> tuple[LabelRequest, ...]:
-    """R4 (designer): one item tag per item per page, on its main view."""
+    """R4 (designer): one item tag per item per page, on its main view; a contact keeps its own."""
     spec_of = {spec.function: spec for spec in specs}
     views = {
         cell.function
@@ -179,6 +179,7 @@ def one_item_tag(
             r.kind is LabelKind.TAG
             and r.subject in spec_of
             and r.subject not in views
+            and not spec_of[r.subject].roles.contact  # layout-0123: a contact prints its tag
             and spec_of[r.subject].item in views
         )
     )

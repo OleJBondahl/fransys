@@ -1,7 +1,7 @@
 """The cable table page's own pieces: heading line, "by others" note and per-core table (cable
 tables spec CT2-CT4, `docs/archive/specs/2026-09-27-cable-tables.md`).
 
-`_cable_heading_line` and `_cable_table` are pure over a bare `HarnessCable`/`HarnessCore`, so
+`_part_line` and `_cable_table` are pure over a bare `HarnessCable`/`HarnessCore`, so
 most tests below build one by hand, `test_signed_scope.py`'s own pattern -- no model at all.
 `_cable_external_note` calls `derive.external`, which resolves its argument against a real
 model, so its tests build one with `_build`'s helpers plus `dataclasses.replace(item(...),
@@ -26,8 +26,9 @@ from _build import (
 from fransys_pdf import source
 from fransys_pdf._drawings import (
     _cable_external_note,
-    _cable_heading_line,
+    _cable_heading,
     _cable_table,
+    _part_line,
     harness_cables_for,
 )
 from fransys_pdf._typst import literal
@@ -90,16 +91,18 @@ def _core(
     )
 
 
-# -- `_cable_heading_line` (CT3) -------------------------------------------------------------
+# -- `_part_line` (pdf-0021) ------------------------------------------------------------------
 
 
-def test_cable_heading_line_is_the_bare_designation_when_every_other_field_is_none():
-    """Every optional field `None`: the line is the designation alone, no separators at all."""
-    assert _cable_heading_line(_cable(designation="-W1")) == "-W1"
+def test_part_line_is_empty_when_every_field_is_none():
+    """Every optional field unset: no text, no separators."""
+    assert _part_line(_cable(designation="-W1")) == ""
 
 
-def test_cable_heading_line_joins_every_field_when_all_are_set():
-    """CT3's order: designation, mpn, description, the core/gauge composite, then length."""
+def test_part_line_joins_mpn_description_and_the_composite():
+    """The order is mpn, description, the core/gauge composite; the designation and the
+    length are not part of it.
+    """
     cable = _cable(
         designation="-W1",
         mpn="ACME-1",
@@ -108,35 +111,27 @@ def test_cable_heading_line_joins_every_field_when_all_are_set():
         gauge_mm2=Decimal("1.5"),
         length_mm=1500,
     )
-    assert _cable_heading_line(cable) == "-W1, ACME-1, A cable, 4 x 1.5 mm², 1500 mm"
+    assert _part_line(cable) == "ACME-1, A cable, 4 x 1.5 mm²"
 
 
-def test_cable_heading_line_omits_the_composite_when_only_core_count_is_set():
+def test_part_line_omits_the_composite_when_only_core_count_is_set():
     """`core_count` and `gauge_mm2` are one field: `gauge_mm2=None` drops the whole composite,
     proving it is not printed from `core_count` alone.
     """
-    cable = _cable(designation="-W1", core_count=4, gauge_mm2=None)
-    assert _cable_heading_line(cable) == "-W1"
+    cable = _cable(designation="-W1", mpn="ACME-1", core_count=4, gauge_mm2=None)
+    assert _part_line(cable) == "ACME-1"
 
 
-def test_cable_heading_line_omits_the_composite_when_only_gauge_is_set():
+def test_part_line_omits_the_composite_when_only_gauge_is_set():
     """The other half of the same proof: `core_count=None` alone also drops the composite."""
-    cable = _cable(designation="-W1", core_count=None, gauge_mm2=Decimal("1.5"))
-    assert _cable_heading_line(cable) == "-W1"
+    cable = _cable(designation="-W1", mpn="ACME-1", core_count=None, gauge_mm2=Decimal("1.5"))
+    assert _part_line(cable) == "ACME-1"
 
 
-def test_cable_heading_line_omits_length_when_none():
-    """`length_mm=None` drops the trailing `"... mm"` field, the other fields left untouched."""
-    cable = _cable(designation="-W1", mpn="ACME-1", length_mm=None)
-    assert _cable_heading_line(cable) == "-W1, ACME-1"
-
-
-def test_cable_heading_line_omits_mpn_and_description_when_falsy():
-    """`mpn=""` and `description=None` are both falsy: `if cable.mpn`/`if cable.description`
-    drop an empty string exactly like `None`.
-    """
-    cable = _cable(designation="-W1", mpn="", description=None, length_mm=1500)
-    assert _cable_heading_line(cable) == "-W1, 1500 mm"
+def test_part_line_omits_mpn_and_description_when_falsy():
+    """`mpn=""` and `description=None` are both falsy and drop like `None`."""
+    cable = _cable(designation="-W1", mpn="", description=None, core_count=2, gauge_mm2=Decimal(1))
+    assert _part_line(cable) == "2 x 1 mm²"
 
 
 # -- `_cable_external_note` (Y3) -------------------------------------------------------------
@@ -332,17 +327,21 @@ def test_a_zero_core_cable_builds_with_no_data_row():
     assert _cable_table(found) in text
 
 
-def test_a_cable_with_no_length_omits_it_from_the_heading():
-    """A `cable` facet with `length_mm=None`: the heading line `source` embeds has no trailing
-    `"... mm"` field.
-    """
-    m, doc = _harness_document(length_mm=None)
+def _heading_of(length_mm: int | None) -> str:
+    """The cable heading text `source` writes for one cable with `length_mm`."""
+    m, doc = _harness_document(length_mm=length_mm)
     text = source(m, doc.id, {})
-    record = documents(m)[doc.id]
-    (found,) = harness_cables_for(m, record, (K.HARNESS_DRAWING,))
-    heading = _cable_heading_line(found)
-    assert not heading.endswith(" mm")
-    assert f"#strong(text({literal(heading)}))" in text
+    return text.split("#strong(text(")[1].split("))")[0]
+
+
+def test_a_cable_heading_is_its_designation_and_length_when_it_has_one():
+    """Designer ruling (pdf-0021): `-W1, 1500 mm` with a length."""
+    assert _heading_of(1500) == literal("-WH1, 1500 mm")
+
+
+def test_a_cable_heading_is_its_designation_alone_without_a_length():
+    """No `length_mm`: the designation and nothing after it."""
+    assert _heading_of(None) == literal("-WH1")
 
 
 def _system_document_with_one_external_end():
@@ -394,6 +393,6 @@ def test_source_prints_the_by_others_note_on_its_own_line_after_the_heading():
     text = source(m, doc.id, {})
     record = documents(m)[doc.id]
     (found,) = harness_cables_for(m, record, (K.HARNESS_DRAWING,))
-    heading = _cable_heading_line(found)
+    heading = _cable_heading(found)
     note = "by others: -X3"
     assert f"#strong(text({literal(heading)}))\n#linebreak()#text({literal(note)})" in text

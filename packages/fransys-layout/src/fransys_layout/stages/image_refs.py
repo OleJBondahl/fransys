@@ -26,7 +26,9 @@ def unplaced_coil_owners(
     home: Mapping[Handle, PlacedFunction],
 ) -> set[Handle]:
     """The owners whose coils are all unplaced: their contacts get no reference (V10)."""
-    coils = {o: [s for s in g if s.roles.coil] for o, g in by_owner(specs, owners).items()}
+    coils = {
+        o: [s for s in g if s.roles.contacts_apart] for o, g in by_owner(specs, owners).items()
+    }
     return {o for o, c in coils.items() if c and not any(s.function in home for s in c)}
 
 

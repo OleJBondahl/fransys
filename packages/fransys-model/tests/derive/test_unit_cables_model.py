@@ -107,7 +107,7 @@ def test_a_harness_unit_gives_its_own_harness_cable() -> None:
         )
     )
     (row,) = unit_cables(plant.model(), unit)
-    assert (row.cable, row.designation) == (cable, "-WH1-W1")
+    assert (row.cable, row.designation) == (cable, "-WH1")
 
 
 def test_a_unit_cable_is_a_real_harness_cable_with_cores_and_ends() -> None:

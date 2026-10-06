@@ -29,6 +29,7 @@ from .baseline_designation import (
     _net_port_text,
     unit_designation,
 )
+from .lone_cable import lone_cable
 from .mate_rows import mates
 from .reports import _conductor_unit, _lowest_common_unit
 from .rows import (
@@ -70,7 +71,7 @@ def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
     parts_table = parts(model)
     rows = []
     for item in items(model).values():
-        if item.unit != unit:
+        if item.unit != unit or lone_cable(model, item.id) is not None:  # model-0150
             continue
         designation = (
             "" if is_sole_unit_root(model, item.id) else unit_designation(model, unit, item.id)

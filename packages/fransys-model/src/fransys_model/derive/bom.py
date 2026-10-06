@@ -24,6 +24,7 @@ from .external import external
 from .indexes import Indexes, build_indexes
 from .instance_tag import instance_name, unit_tag
 from .lookups import descendants, require
+from .natural_order import natural_key
 from .release_order import release_order
 from .revision_text import revision_text
 from .rows import BomLine
@@ -90,7 +91,7 @@ def _instance_designations(model: Model, unit: Id[Unit]) -> list[str]:
         return [printed_designation(model, roots[0])]
     locations = {loc for r in roots if (loc := location_designation(model, r)) is not None}
     if locations:
-        return sorted(locations)
+        return sorted(locations, key=natural_key)
     return [
         printed_designation(model, r) for r in sorted(roots, key=lambda i: bom_sort_key(model, i))
     ]
@@ -118,7 +119,7 @@ def _unit_lines(model: Model, children: tuple[Unit, ...]) -> list[tuple[ReleaseO
             manufacturer="",
             description=first.title,
             count=len(instances),
-            designations=tuple(sorted(designations)),
+            designations=tuple(sorted(designations, key=natural_key)),
             revision=revision_text(version, revision),
         )
         lines.append((release_order(version, revision), line))

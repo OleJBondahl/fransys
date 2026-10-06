@@ -19,6 +19,7 @@ from fransys_model.derive.designation import (
 )
 from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.lone_cable import lone_cable_harness
 from fransys_model.derive.lookups import terminal_items
 from fransys_model.derive.passes.numbering_units import (
     instance_tags_in,
@@ -100,6 +101,7 @@ def _reference_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[
             )
             # guards the shared text; cannot fail on the base, an accessory has no designation
             and not takes_parents_designation(model, item.id)
+            and lone_cable_harness(model, item.id) is None  # model-0148: it prints as its harness
             and _renders_a_segment(model, item.id)
             # an ancestor board or harness with no designation of its own (model-0107, an
             # untagged structural harness) leaves nothing to compare here either
@@ -146,6 +148,7 @@ def _product_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Fi
         if (
             item.id in terminals
             or own_designation_or_none(model, item) is None
+            or lone_cable_harness(model, item.id) is not None  # model-0148: prints as its harness
             # model-0107: an ancestor board or harness with no designation of its own leaves
             # nothing to compare here either
             or not can_print_designation(model, item.id)

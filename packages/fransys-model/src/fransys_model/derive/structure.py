@@ -39,6 +39,7 @@ from .closure import port_groups
 from .designation import footprint_facet, item_designation
 from .indexes import build_indexes
 from .lookups import descendants, effective_placement, item_of_port, net_name, require
+from .natural_order import natural_key
 from .rows import BoardNetlist, ExtUsage, NetlistNet, NetlistPart
 
 if TYPE_CHECKING:
@@ -107,7 +108,7 @@ def board_netlist(model: Model, board: Id[Item]) -> BoardNetlist:
     return BoardNetlist(
         board=board,
         board_designation=board_designation,
-        parts=tuple(sorted(listed, key=lambda part: (part.designation, part.item))),
+        parts=tuple(sorted(listed, key=lambda part: (natural_key(part.designation), part.item))),
         nets=_board_nets(model, board, on_board),
         without_footprint=tuple(without_footprint),
     )
@@ -158,7 +159,9 @@ def _undeclared_net_name(model: Model, board: Id[Item], pins: tuple[Id[Port], ..
         item = item_of_port(model, port)
         return (item_designation(model, item, relative_to=board), all_ports[port].name, port)
 
-    designation, marking, _ = min(_key(port) for port in pins)
+    designation, marking, _ = min(
+        (_key(port) for port in pins), key=lambda k: (natural_key(k[0]), *k[1:])
+    )
     return f"Net-({designation}-{marking})"
 
 

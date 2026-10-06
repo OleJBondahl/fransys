@@ -21,7 +21,7 @@ from _build import (
     sheet_format,
 )
 from fransys_pdf import source
-from fransys_pdf._drawings import _cable_page
+from fransys_pdf._drawings import _cable_runs
 from fransys_pdf._geometry import document_heading, preamble, subject_label
 
 from fransys_model.derive import HarnessCable
@@ -104,5 +104,5 @@ def test_a_harness_drawing_pages_scope_cell_reads_the_bare_harness():
         cores=(),
         ends=(),
     )
-    text = preamble(sheet) + _cable_page(m, documents(m)[doc.id], sheet, cable)
+    text = preamble(sheet) + _cable_runs(m, documents(m)[doc.id], sheet, (cable,))
     assert 'text(size: 8pt, "Scope"), text(size: 10pt, text("H1"))' in text

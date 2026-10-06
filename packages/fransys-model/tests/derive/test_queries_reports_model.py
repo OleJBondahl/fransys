@@ -42,8 +42,8 @@ from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.templates import Part
 
 
-def test_bom_lines_group_installed_items_by_part_and_sort_designations_as_strings() -> None:
-    """Count is the installed items; `K10` sorts before `K2` (whole strings, nothing parsed)."""
+def test_bom_lines_group_installed_items_by_part_and_sort_designations_in_natural_order() -> None:
+    """Count is the installed items; `K2` sorts before `K10` (digit runs by value)."""
     plant = Plant()
     relay = make_part(plant, "relay", "R-1")
     plant.item("k2", part=relay, designation="K2")
@@ -57,7 +57,7 @@ def test_bom_lines_group_installed_items_by_part_and_sort_designations_as_string
         "Invented relay",
     )
     assert line.count == 2
-    assert line.designations == ("-K10", "-K2")
+    assert line.designations == ("-K2", "-K10")
 
 
 def test_bom_lines_leave_out_uninstalled_only_parts_and_items_without_a_part() -> None:
@@ -166,14 +166,14 @@ def test_plc_channel_rows_of_an_unbound_channel_have_every_device_field_none() -
     assert row.wired_to is None
 
 
-def test_plc_channel_rows_hold_channels_only_and_sort_by_designation_as_a_string() -> None:
-    """`A10` before `A2` (whole strings); functions that are not channels are not rows."""
+def test_plc_channel_rows_hold_channels_only_and_sort_by_designation_naturally() -> None:
+    """`A2` before `A10`; functions that are not channels are not rows."""
     plant = Plant()
     make_channels(plant, "m-two", "A2", (SignalType.DI,))
     make_channels(plant, "m-ten", "A10", (SignalType.DI, SignalType.DI))
     plant.function(plant.item("dev", designation="B1"), "signal")
     rows = plc_channel_rows(plant.model())
-    assert [r.channel_designation for r in rows] == ["-A10:1", "-A10:2", "-A2:1"]
+    assert [r.channel_designation for r in rows] == ["-A2:1", "-A10:1", "-A10:2"]
 
 
 def test_plc_channel_rows_take_the_smallest_id_device_when_two_are_bound() -> None:
@@ -338,11 +338,11 @@ def test_wire_rows_with_the_same_two_ends_fall_to_the_conductor_id() -> None:
     assert {row.label for row in rows} == {"-K1:1 -K2:1"}
 
 
-def test_designation_list_has_every_item_terminals_included_sorted_as_strings() -> None:
-    """`-K10` before `-K2`; the reference form and description are carried; nothing is parsed.
+def test_designation_list_has_every_item_terminals_included_sorted_naturally() -> None:
+    """`-K2` before `-K10`; the reference form and description are carried.
 
     The terminal's designation is `terminal_designation` (`"-X1:L:1"`, decision model-0052)
-    and every other item is dashed too (decision model-0054): one uniform string sort.
+    and every other item is dashed too (decision model-0054): one natural-order sort.
     """
     plant = Plant()
     plant.item("k2", designation="K2")
@@ -352,7 +352,7 @@ def test_designation_list_has_every_item_terminals_included_sorted_as_strings() 
     terminal = make_terminal(plant, "x1", "t1", group="L", index=1)
     model = plant.model()
     rows = designation_list(model)
-    assert [row.designation for row in rows] == ["-A1", "-K10", "-K2", "-X1", "-X1:L:1"]
+    assert [row.designation for row in rows] == ["-A1", "-K2", "-K10", "-X1", "-X1:L:1"]
     by_item = {row.item: row for row in rows}
     assert terminal.item in by_item
     for row in rows:

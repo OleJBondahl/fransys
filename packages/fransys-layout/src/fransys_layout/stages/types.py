@@ -174,6 +174,7 @@ class KindRoles:
     sets_group: bool = True
     gendered: bool = False
     coil: bool = False
+    contacts_apart: bool = False  # owns contacts drawn apart: a coil, or a box (layout-0123)
     contact: bool = False
     contact_closed: bool = False
     contact_changeover: bool = False

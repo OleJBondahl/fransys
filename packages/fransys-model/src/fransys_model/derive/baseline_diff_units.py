@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, cast
 
 from .baseline_codec import _decimal_dict
+from .natural_order import natural_key
 from .revision_text import revision_text
 from .rows import (
     BaselineBoundary,
@@ -154,7 +155,7 @@ def _item_changes(
                         detail="",
                     )
                 )
-    changes.sort(key=lambda c: (c.subject, c.field))
+    changes.sort(key=lambda c: (natural_key(c.subject), c.field))
     return changes
 
 
@@ -214,7 +215,7 @@ def _nested_unit_changes(
                 (b_row.interface, b_row.version, b_row.revision),
             )
         )
-    changes.sort(key=lambda c: (c.subject, c.field))
+    changes.sort(key=lambda c: (natural_key(c.subject), c.field))
     return changes
 
 
@@ -284,7 +285,7 @@ def _boundary_changes(
             )
         changes.extend(_rating_changes(designation, "rating", a_row.rating, b_row.rating))
         changes.extend(_rating_changes(designation, "operating", a_row.operating, b_row.operating))
-    changes.sort(key=lambda c: (c.subject, c.field))
+    changes.sort(key=lambda c: (natural_key(c.subject), c.field))
     return changes
 
 

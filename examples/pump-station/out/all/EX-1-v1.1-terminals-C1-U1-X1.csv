@@ -1,6 +1,0 @@
-designation,group,index,side_a,side_b,jumper_group
--U1-X1:L1:1,L1,1,+C1-U1-Q1:1L1,+EXT-X0:L1:1,
--U1-X1:L2:1,L2,1,+C1-U1-Q1:3L2,+EXT-X0:L2:1,
--U1-X1:L3:1,L3,1,+C1-U1-Q1:5L3,+EXT-X0:L3:1,
--U1-X1:N:1,N,1,+C1-U1-F01:3 N,+EXT-X0:N:1,
--U1-X1:PE:1,PE,1,+C1-U1-X3:PE:1; +C1-U1-X3:PE:2,+EXT-X0:PE:1,

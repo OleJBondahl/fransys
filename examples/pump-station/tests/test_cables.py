@@ -4,7 +4,7 @@ It reads the rows the WireViz cable drawings are drawn from, `fr.derive.top_leve
 checks -W11 and -W21 against E3: four cores from the `-X3` strip to the motor, each core joining
 the pump's terminal to the motor pin in E3's order (U to U1, V to V1, W to W1, PE to PE). The
 cable and each core end carry the printed designation (`-W11`, `-X3:U:1`, `-M1:U1`); an end is
-named by its product designation (`+C1-U1-X3`, `+EXT-M1`). A strip end lists its terminals by their
+named by its product designation (`-U1-X3`, `+EXT-M1`). A strip end lists its terminals by their
 bare `group:index` designation (`U:1`); the motor end lists its own port names. The expected
 strings stay literals: computing them with `fr.derive.printed_designation` would test the
 function against itself.
@@ -38,9 +38,9 @@ def test_motor_cable_ends(
     cable = _cable(result, designation)
     assert len(cable.ends) == 2
     ends = {end.designation: end for end in cable.ends}
-    assert set(ends) == {"+C1-U1-X3", f"+EXT{motor}"}
-    strip_pins = {pin.marking for pin in ends["+C1-U1-X3"].pins}
-    assert len(ends["+C1-U1-X3"].pins) == 4
+    assert set(ends) == {"-U1-X3", f"+EXT{motor}"}
+    strip_pins = {pin.marking for pin in ends["-U1-X3"].pins}
+    assert len(ends["-U1-X3"].pins) == 4
     assert strip_pins == {f"U:{pump}", f"V:{pump}", f"W:{pump}", f"PE:{pump}"}
     motor_pins = {pin.marking for pin in ends[f"+EXT{motor}"].pins}
     assert len(ends[f"+EXT{motor}"].pins) == 4
@@ -57,19 +57,20 @@ def test_motor_cable_cores(
     assert cable.core_count == 4
     cores = sorted(cable.cores, key=lambda core: core.index)
     assert [core.index for core in cores] == [1, 2, 3, 4]
+    # The ends are ordered by designation: `-Mn` sorts before `-U1-X3`.
     expected = [
-        (1, f"-U1-X3:U:{pump}", f"{motor}:U1"),
-        (2, f"-U1-X3:V:{pump}", f"{motor}:V1"),
-        (3, f"-U1-X3:W:{pump}", f"{motor}:W1"),
-        (4, f"-U1-X3:PE:{pump}", f"{motor}:PE"),
+        (1, f"{motor}:U1", f"-U1-X3:U:{pump}"),
+        (2, f"{motor}:V1", f"-U1-X3:V:{pump}"),
+        (3, f"{motor}:W1", f"-U1-X3:W:{pump}"),
+        (4, f"{motor}:PE", f"-U1-X3:PE:{pump}"),
     ]
     assert [(c.index, c.end_a_designation, c.end_b_designation) for c in cores] == expected
 
 
 def test_system_pdf_written(built: tuple[fr.BuildResult, Path, Path]) -> None:
-    """The system document lands in `out/all/` as `EX-1-v1.1.pdf`."""
+    """The system document lands in `out/all/` as `EX-1-v1.2.pdf`."""
     _, out_dir, _ = built
-    assert (out_dir / "all" / "EX-1-v1.1.pdf").is_file()
+    assert (out_dir / "all" / "EX-1-v1.2.pdf").is_file()
 
 
 def test_cable_list_one_row_per_top_level_cable(
@@ -77,7 +78,7 @@ def test_cable_list_one_row_per_top_level_cable(
 ) -> None:
     """`all/cables.csv`: -W1, -W11, -W21 and the harness cable, one row each, no unit column."""
     _, out_dir, _ = built
-    with (out_dir / "all" / "EX-1-v1.1-cables.csv").open(newline="", encoding="utf-8") as handle:
+    with (out_dir / "all" / "EX-1-v1.2-cables.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert [row["designation"] for row in rows] == ["-W1", "-W11", "-W21", "-W3-W1"]
     assert not any("unit" in column for column in rows[0])

@@ -1,0 +1,5 @@
+designation,mpn,description,core_count,gauge_mm2,length_mm,from_label,to_label
+-W1,1119405,"OELFLEX CLASSIC 110, 5G2.5",5,2.5,10000,+EXT-X0,-U1-X1
+-W11,1119304,"OELFLEX CLASSIC 110, 4G1.5",4,1.5,15000,+EXT-M1,-U1-X3
+-W21,1119304,"OELFLEX CLASSIC 110, 4G1.5",4,1.5,15000,+EXT-M2,-U1-X3
+-W3-W1,2170465,"ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP",8,0.33,3000,+EXT-W3-J1,+EXT-W3-J2

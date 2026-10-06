@@ -13,7 +13,7 @@ RELEASES = Path(__file__).resolve().parent.parent / "releases"
 
 def test_both_units_are_released() -> None:
     assert (RELEASES / "relay-interface-board" / "1.3" / "baseline" / "listing.json").is_file()
-    assert (RELEASES / "pump-cabinet" / "1.5" / "baseline" / "listing.json").is_file()
+    assert (RELEASES / "pump-cabinet" / "1.6" / "baseline" / "listing.json").is_file()
 
 
 def test_verify_finds_no_difference_from_the_releases(built: tuple) -> None:
@@ -30,7 +30,7 @@ def test_verify_fails_when_a_released_listing_changes(built: tuple, tmp_path: Pa
             target = copy / source.relative_to(RELEASES)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(source.read_bytes())
-    listing = copy / "pump-cabinet" / "1.5" / "baseline" / "listing.json"
+    listing = copy / "pump-cabinet" / "1.6" / "baseline" / "listing.json"
     text = listing.read_text(encoding="utf-8")
     assert "LC1D09BD" in text
     listing.write_text(text.replace("LC1D09BD", "LC1D09BX", 1), encoding="utf-8")

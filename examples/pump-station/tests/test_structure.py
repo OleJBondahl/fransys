@@ -5,7 +5,7 @@ Three things this design decided and nothing else pins down:
 - Every item outside the cabinet is at the one location `+EXT` (owner ruling 2026-09-24). No
   location `FLD`, `DB` or `NET` exists, and an item added outside the cabinet at any other
   location fails the first test.
-- The cabinet is the unit `pump-cabinet` revision `1.5`, with its five revisions in order; the
+- The cabinet is the unit `pump-cabinet` revision `1.6`, with its six revisions in order; the
   relay board is a unit nested in it, and the cabinet's parts list shows the board as one line
   (its own relays belong to the board's list).
 - the three `fr.write` calls produce exactly the three folders `cabinet/`, `board/` and `all/`, each with
@@ -31,16 +31,16 @@ units = fr.derive.units
 EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3", "W3-J1", "W3-J2", "W3-W1"}
 
 CABINET_FILES = {
-    "pump-cabinet-v1.5-bom.csv",
-    "pump-cabinet-v1.5.pdf",
-    "pump-cabinet-v1.5-designations.csv",
-    "pump-cabinet-v1.5-plc.csv",
-    "pump-cabinet-v1.5-terminals-X01.csv",
-    "pump-cabinet-v1.5-terminals-X1.csv",
-    "pump-cabinet-v1.5-terminals-X2.csv",
-    "pump-cabinet-v1.5-terminals-X3.csv",
-    "pump-cabinet-v1.5-wago-U1.xml",
-    "pump-cabinet-v1.5-wires.csv",
+    "pump-cabinet-v1.6-bom.csv",
+    "pump-cabinet-v1.6.pdf",
+    "pump-cabinet-v1.6-designations.csv",
+    "pump-cabinet-v1.6-plc.csv",
+    "pump-cabinet-v1.6-terminals-X01.csv",
+    "pump-cabinet-v1.6-terminals-X1.csv",
+    "pump-cabinet-v1.6-terminals-X2.csv",
+    "pump-cabinet-v1.6-terminals-X3.csv",
+    "pump-cabinet-v1.6-wago-U1.xml",
+    "pump-cabinet-v1.6-wires.csv",
 }
 BOARD_FILES = {
     "relay-interface-board-v1.3-bom.csv",
@@ -51,22 +51,22 @@ BOARD_FILES = {
     "relay-interface-board-v1.3-wires.csv",
 }
 ALL_FILES = {
-    "EX-1-v1.1-bom.csv",
-    "pump-cabinet-v1.5.pdf",
-    "EX-1-v1.1-cables.csv",
-    "EX-1-v1.1-connectors-PLC-C1-U1-U2.csv",
-    "EX-1-v1.1-designations.csv",
-    "EX-1-v1.1-overview.html",
-    "EX-1-v1.1-plc.csv",
+    "EX-1-v1.2-bom.csv",
+    "pump-cabinet-v1.6.pdf",
+    "EX-1-v1.2-cables.csv",
+    "EX-1-v1.2-connectors-PLC-U1-U2.csv",
+    "EX-1-v1.2-designations.csv",
+    "EX-1-v1.2-overview.html",
+    "EX-1-v1.2-plc.csv",
     "relay-interface-board-v1.3.pdf",
-    "EX-1-v1.1.pdf",
-    "EX-1-v1.1-terminals-C1-U1-X01.csv",
-    "EX-1-v1.1-terminals-C1-U1-X1.csv",
-    "EX-1-v1.1-terminals-C1-U1-X2.csv",
-    "EX-1-v1.1-terminals-C1-U1-X3.csv",
-    "EX-1-v1.1-terminals-EXT-X0.csv",
-    "EX-1-v1.1-wago-PLC-C1-U1-U1.xml",
-    "EX-1-v1.1-wires.csv",
+    "EX-1-v1.2.pdf",
+    "EX-1-v1.2-terminals-U1-X01.csv",
+    "EX-1-v1.2-terminals-U1-X1.csv",
+    "EX-1-v1.2-terminals-U1-X2.csv",
+    "EX-1-v1.2-terminals-U1-X3.csv",
+    "EX-1-v1.2-terminals-EXT-X0.csv",
+    "EX-1-v1.2-wago-PLC-U1-U1.xml",
+    "EX-1-v1.2-wires.csv",
 }
 EXPECTED_FILES = {"cabinet": CABINET_FILES, "board": BOARD_FILES, "all": ALL_FILES}
 
@@ -98,7 +98,7 @@ def test_every_item_outside_the_cabinet_is_at_ext(built: tuple[fr.BuildResult, P
         f"unexpected: {sorted(placed_at_ext - EXT_ITEMS)}"
     )
 
-    # `C1` (the cabinet's panel) sits under `EXT`, so a unit item is under `EXT` too; what
+    # The cabinet is a unit with no place of its own, so its items stand at `EXT`; what
     # must not happen is a unit item placed directly at `EXT`.
     at_ext = set(fr.derive.items_at(model, ext.id))
     placed_directly = {
@@ -114,10 +114,10 @@ def test_every_item_outside_the_cabinet_is_at_ext(built: tuple[fr.BuildResult, P
     assert not outside_ext, f"items with no unit and not at +EXT: {sorted(outside_ext)}"
 
 
-def test_cabinet_is_unit_pump_cabinet_rev_1_5_with_all_revisions(
+def test_cabinet_is_unit_pump_cabinet_rev_1_6_with_all_revisions(
     built: tuple[fr.BuildResult, Path, Path],
 ) -> None:
-    """`pump-cabinet` rev `1.5` has revisions `1` to `5`, oldest first; the board is its child.
+    """`pump-cabinet` rev `1.6` has revisions `1` to `6`, oldest first; the board is its child.
 
     The cabinet's `bom.csv` lists the board as one unit line (its number `SKX-RIB-2` in `mpn`,
     its title in `description`) and none of the board's own parts.
@@ -134,7 +134,7 @@ def test_cabinet_is_unit_pump_cabinet_rev_1_5_with_all_revisions(
     board = by_release_name["relay-interface-board"]
     cabinet_release = fr.derive.unit_release(model, cabinet.id)
     board_release = fr.derive.unit_release(model, board.id)
-    assert cabinet_release.revision == 5, f"cabinet revision is {cabinet_release.revision!r}"
+    assert cabinet_release.revision == 6, f"cabinet revision is {cabinet_release.revision!r}"
     assert cabinet.parent is None, "the cabinet unit must be a top-level unit"
     assert board_release.revision == 3, f"board revision is {board_release.revision!r}"
     assert board.parent == cabinet.id, "the relay board must be nested in the cabinet unit"
@@ -147,9 +147,19 @@ def test_cabinet_is_unit_pump_cabinet_rev_1_5_with_all_revisions(
         (3, "2026-10-02", "TeSys D parts, 24V and GND rails, IEC wire colours", "SK"),
         (4, "2026-10-05", "Unit tags, links, busbars and rail bonds, energy on fed supplies", "SK"),
         (5, "2026-10-06", "Three phases on four terminals each, pump n on terminal n+2", "SK"),
+        (
+            6,
+            "2026-10-06",
+            (
+                "Owner ruling 2026-10-06, a cabinet is a unit: the place C1 is gone. The change list "
+                "reads No changes. because the listing drops a place that holds the whole unit, "
+                "baseline L2, kept by design (REL-DIFF-PLACE)"
+            ),
+            "SK",
+        ),
     ]
 
-    with (out_dir / "cabinet" / "pump-cabinet-v1.5-bom.csv").open(
+    with (out_dir / "cabinet" / "pump-cabinet-v1.6-bom.csv").open(
         newline="", encoding="utf-8"
     ) as handle:
         rows = list(csv.DictReader(handle))

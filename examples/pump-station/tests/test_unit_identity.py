@@ -40,20 +40,20 @@ DOCUMENTS = {
     "cabinet.typ": {
         "Title": "Pump cabinet",
         "Number": "SKX-PC-2",
-        "Revision": "1.5",
+        "Revision": "1.6",
         "Customer": "",
     },
     "system.typ": {
         "Title": "Two-pump station",
         "Number": "EX-1",
-        "Revision": "1.1",
+        "Revision": "1.2",
         "Customer": "Example works",
     },
 }
 BOARD_TAG = "-U2"
 TEXT_SUFFIXES = {".csv", ".xml", ".html"}  # not .pdf: compressed bytes can hold "-U2" by chance
 CABINET_ROW = (
-    'text("SKX-PC-2"), text("1.5"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
+    'text("SKX-PC-2"), text("1.6"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
 )
 
 
@@ -156,7 +156,7 @@ def test_board_set_never_names_its_own_tag(built: Built) -> None:
     assert {"-K1", "-K2", "-J1", "-J2"} <= designations, sorted(designations)
     parent_lines = [
         row
-        for row in read_csv(out_dir / "cabinet" / "pump-cabinet-v1.5-bom.csv")
+        for row in read_csv(out_dir / "cabinet" / "pump-cabinet-v1.6-bom.csv")
         if row["mpn"] == "SKX-RIB-2"
     ]
     assert [row["designations"] for row in parent_lines] == ["-U2"], (
@@ -197,7 +197,7 @@ def assert_cabinet_unit_line(lines: tuple, system_typ: str) -> None:
         for line in lines
         if line.mpn == "SKX-PC-2"
     ]
-    assert found == [(None, "SKX-PC-2", "1.5", "", "Pump cabinet", 1, ("-U1",))], found
+    assert found == [(None, "SKX-PC-2", "1.6", "", "Pump cabinet", 1, ("-U1",))], found
     assert CABINET_ROW in system_typ, "the system document's BOM lacks the cabinet row"
 
 

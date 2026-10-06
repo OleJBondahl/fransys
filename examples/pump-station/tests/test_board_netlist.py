@@ -1,8 +1,8 @@
 """Board netlist check (spec E9): the relay board's KiCad netlist intermediate.
 
 `fr.write`'s intermediates naming writes one `netlist-{ref}.net` per board, `ref` being the
-board item's product designation with its group and tag (`PLC-C1-U1-U2` in this design: the
-board sits in the PLC function group of the system, tagged `U2` in the cabinet `U1`, at `C1`) -- look
+board item's product designation with its group and tag (`PLC-U1-U2` in this design: the
+board sits in the PLC function group of the system, tagged `U2` in the cabinet `U1`) -- look
 for it under the fresh `intermediates` dir rather than hardcoding the exact tmp-path root.
 """
 
@@ -19,15 +19,15 @@ EXPECTED_FOOTPRINTS_BY_REF = {
 def test_board_netlist_is_named_for_the_full_ref(built: tuple) -> None:
     """The board's export file names carry its group, cabinet tag and own tag, not the bare ref."""
     _result, out_dir, intermediates = built
-    assert (intermediates / "netlist-PLC-C1-U1-U2.net").is_file()
+    assert (intermediates / "netlist-PLC-U1-U2.net").is_file()
     assert not (intermediates / "netlist-U2.net").exists()
-    assert (out_dir / "all" / "EX-1-v1.1-connectors-PLC-C1-U1-U2.csv").is_file()
-    assert not (out_dir / "all" / "EX-1-v1.1-connectors-U2.csv").exists()
+    assert (out_dir / "all" / "EX-1-v1.2-connectors-PLC-U1-U2.csv").is_file()
+    assert not (out_dir / "all" / "EX-1-v1.2-connectors-U2.csv").exists()
 
 
 def test_board_netlist_has_four_components_with_footprints(built: tuple) -> None:
     _result, _out_dir, intermediates = built
-    net_files = list(intermediates.glob("netlist-PLC-C1-U1-U2.net"))
+    net_files = list(intermediates.glob("netlist-PLC-U1-U2.net"))
     assert len(net_files) == 1, f"expected exactly 1 board netlist file, found {net_files}"
     text = net_files[0].read_text(encoding="utf-8")
 

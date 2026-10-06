@@ -68,15 +68,13 @@ def pump(u, n, *, phases, colours, motor_terminals, v24, gnd, di_overload, di_ru
     `di_overload` and `di_running` the PLC input pins, `board_pin` the relay board output that
     drives the coil.
     """
-    fuse_holder = u.device(f"F{n}1", P.P_3NW7033, place="C1")
+    fuse_holder = u.device(f"F{n}1", P.P_3NW7033)
     for pole in (1, 2, 3):
-        u.device(
-            None, P.P_3NW8004_1, name=f"f{n}1_pole_{pole}_link", parent=fuse_holder, place="C1"
-        )
-    contactor = u.device(f"Q{n}1", P.LC1D09BD, place="C1")
-    aux_block = u.device(None, P.LADN11, name=f"q{n}_aux_block", parent=contactor, place="C1")
-    overload = u.device(f"B{n}2", P.LRD08, place="C1", mounted_on=contactor.main)
-    lamp = u.device(None, P.P_3SU1102_6AA40_1AA0, name=f"run_lamp{n}", place="C1")
+        u.device(None, P.P_3NW8004_1, name=f"f{n}1_pole_{pole}_link", parent=fuse_holder)
+    contactor = u.device(f"Q{n}1", P.LC1D09BD)
+    aux_block = u.device(None, P.LADN11, name=f"q{n}_aux_block", parent=contactor)
+    overload = u.device(f"B{n}2", P.LRD08, mounted_on=contactor.main)
+    lamp = u.device(None, P.P_3SU1102_6AA40_1AA0, name=f"run_lamp{n}")
 
     # The motor branch: feed, fuse links, contactor, overload relay, motor terminals. The
     # overload relay plugs onto the contactor's output blades (`mounted_on`), so no wire joins them.
@@ -150,10 +148,14 @@ def relay_board(b):
 
 @fr.unit(
     "pump-cabinet",
-    revision=5,
+    revision=6,
     interface_version=1,
     date="2026-10-06",
-    text="Three phases on four terminals each, pump n on terminal n+2",
+    text=(
+        "Owner ruling 2026-10-06, a cabinet is a unit: the place C1 is gone. The change list "
+        "reads No changes. because the listing drops a place that holds the whole unit, "
+        "baseline L2, kept by design (REL-DIFF-PLACE)"
+    ),
     by="SK",
     title="Pump cabinet",
     number="SKX-PC-2",
@@ -177,16 +179,20 @@ def relay_board(b):
             "text": "Unit tags, links, busbars and rail bonds, energy on fed supplies",
             "created": "SK",
         },
+        {
+            "revision": 5,
+            "date": "2026-10-06",
+            "text": "Three phases on four terminals each, pump n on terminal n+2",
+            "created": "SK",
+        },
     ],
 )
 def cabinet(u):
     """The pump cabinet: incoming feed, control supply, PLC, relay board and two pump starters."""
-    u.location("C1", "Pump cabinet")
-
     # -- =SUP: incoming terminals and main switch ------------------------------------------
     with u.function("SUP", "Incoming supply"):
         # One strip, one run per conductor: a run is a named group of terminals (L1, N, PE).
-        x1 = u.terminal_strip("X1", P.P_2002_1201, pe=P.P_2002_1207, place="C1", interface=True)
+        x1 = u.terminal_strip("X1", P.P_2002_1201, pe=P.P_2002_1207, interface=True)
         x1_l1, x1_l2, x1_l3, x1_n, x1_pe = (
             x1.run(kind, 1) for kind in ("L1", "L2", "L3", "N", "PE")
         )
@@ -194,7 +200,7 @@ def cabinet(u):
         u.ac_supply("mains", 230, x1_l1[1], x1_l2[1], x1_l3[1], n=x1_n[1])
         incoming_pe = x1_pe[1]  # taken here, so the PE terminal joins this block
 
-        q1 = u.device("Q1", P.P_3LD2054_0TK51, place="C1")
+        q1 = u.device("Q1", P.P_3LD2054_0TK51)
         for run, pin, colour in ((x1_l1, "1L1", BN), (x1_l2, "3L2", BK), (x1_l3, "5L3", GY)):
             u.wire(run[1], q1.main[pin], wire=(colour, 2.5))
 
@@ -202,7 +208,7 @@ def cabinet(u):
         # each phase one bridged run, as on the real strip. Wires land on the bridged side.
         # Every phase has four terminals: pump n takes terminal n+2 on L1, L2 and L3; terminal 2
         # on L2 and L3 is a bridged spare, so the three phases follow one pattern.
-        x01 = u.terminal_strip("X01", P.P_2002_1201, place="C1")
+        x01 = u.terminal_strip("X01", P.P_2002_1201)
         l1 = x01.run("L1", 4, bridged=True)
         l2 = x01.run("L2", 4, bridged=True)
         l3 = x01.run("L3", 4, bridged=True)
@@ -211,11 +217,11 @@ def cabinet(u):
 
     # -- =CTL: miniature circuit breaker and the 24 V DC power supply ----------------------
     with u.function("CTL", "Control supply"):
-        f01 = u.device("F01", P.P_5SY6506_7, place="C1")
+        f01 = u.device("F01", P.P_5SY6506_7)
         u.wire(l1[2], f01.pole["1"], wire=(BN, 1.5))
         u.wire(x1_n[1], f01.pole["3 N"], wire=(BU, 1.5))
 
-        t1 = u.device("T1", P.QUINT4_PS_1AC_24DC_2_5_SC, place="C1")
+        t1 = u.device("T1", P.QUINT4_PS_1AC_24DC_2_5_SC)
         u.wire(f01.pole["2"], t1.input["L/+"], wire=(BN, 1.5))
         u.wire(f01.pole["N 4"], t1.input["N/-"], wire=(BU, 1.5))
 
@@ -223,7 +229,7 @@ def cabinet(u):
         # on the other, and each consumer lands on its own terminal. The supply's output lands on
         # the first. 24V: supply, controller system, controller field, board, then three per
         # pump. GND: supply, controller system, controller field, then two per pump.
-        x2 = u.terminal_strip("X2", P.P_2002_1201, place="C1")
+        x2 = u.terminal_strip("X2", P.P_2002_1201)
         v24, gnd = x2.run("24V", 10, bridged=True), x2.run("GND", 7, bridged=True)
         u.dc_supply("24V", plus=v24[1], minus=gnd[1], voltage=24, names=("24V", "GND"))
         u.wire(t1.output["+"], v24[1], wire=(RD, 1.5))
@@ -231,7 +237,7 @@ def cabinet(u):
 
     # -- =PLC: WAGO controller and I/O modules ---------------------------------------------
     with u.function("PLC", "WAGO PLC"):
-        rack = u.harness("U1", place="C1")
+        rack = u.harness("U1")
         # The rack container is -U1; its modules carry the rack scheme as explicit tags,
         # counting up per type (C1 controller, DI1, DO1, E1 end module).
         # The controller's first RJ45 port is the cabinet's interface, where the cable from outside
@@ -242,13 +248,12 @@ def cabinet(u):
             name="controller",
             parent=rack,
             position=1,
-            place="C1",
             interface=("x1",),
             unused=("x2",),
         )
-        di = u.device("DI1", P.P_750_402, name="di", parent=rack, position=2, place="C1")
-        do = u.device("DO1", P.P_750_504, name="do", parent=rack, position=3, place="C1")
-        u.device("E1", P.P_750_600, name="end", parent=rack, position=4, place="C1")
+        di = u.device("DI1", P.P_750_402, name="di", parent=rack, position=2)
+        do = u.device("DO1", P.P_750_504, name="do", parent=rack, position=3)
+        u.device("E1", P.P_750_600, name="end", parent=rack, position=4)
 
         # The controller takes the system supply and the field supply separately.
         u.wire(v24[2], controller.system["24 V"], wire=(RD, 1.5))
@@ -263,9 +268,9 @@ def cabinet(u):
 
         # The relay-interface board, a unit nested in the cabinet, and the cabinet's plugs
         # that mate its two headers.
-        board = u.add(relay_board, "U2", place="C1")
-        j1 = u.device("J1", P.P_1757022, place="C1")
-        j2 = u.device("J2", P.P_1757022, place="C1")
+        board = u.add(relay_board, "U2")
+        j1 = u.device("J1", P.P_1757022)
+        j2 = u.device("J2", P.P_1757022)
         u.mate(j1, board.J1)
         u.mate(j2, board.J2)
         u.wire(j1["1"], do["DO1"], wire=(WH, 0.5))
@@ -274,7 +279,7 @@ def cabinet(u):
         u.wire(v24[4], j2["1"], wire=(RD, 0.5))
 
     # -- per-pump power and control circuits -----------------------------------------------
-    x3 = u.terminal_strip("X3", P.P_2002_1201, pe=P.P_2002_1207, place="C1", interface=True)
+    x3 = u.terminal_strip("X3", P.P_2002_1201, pe=P.P_2002_1207, interface=True)
     motor_u, motor_v, motor_w, motor_pe = (x3.run(kind, 2) for kind in ("U", "V", "W", "PE"))
     feeds = {1: (l1[3], l2[3], l3[3]), 2: (l1[4], l2[4], l3[4])}
     pump_pe = []
@@ -316,10 +321,16 @@ d.project(
     title="Two-pump station",
     number="EX-1",
     customer="Example works",
-    revision=1,
+    revision=2,
     author="fransys-examples",
 )
 d.revision(1, date="2026-09-23", text="First issue", created="SK")
+d.revision(
+    2,
+    date="2026-10-06",
+    text="The cabinet is a unit with no place of its own (owner ruling 2026-10-06)",
+    created="SK",
+)
 
 cab = d.add(cabinet, "U1", place=None)
 

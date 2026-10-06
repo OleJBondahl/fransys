@@ -1,7 +1,7 @@
 # Gaps
 
 The places where this example is not drawn or authored the way a real cabinet would be, because
-Fransys, at the pinned v0.9.0 line, cannot say it yet. Open gaps come first, then the closed ones
+Fransys, at the pinned v0.10.0 line, cannot say it yet. Open gaps come first, then the closed ones
 with the version that closed them. Evidence is in the three `out/` folders: `out/cabinet/` (the
 cabinet unit's set), `out/board/` (the relay board's) and `out/all/` (everything, with the system
 document). A `wires.csv` row lists its two ends in the model's id order, so its order can
@@ -99,6 +99,7 @@ layout warnings of G29.
 - **G26.** A device with two functions could not take `interface=True`. Closed at v0.6.0: the
   controller takes `interface=("x1",), unused=("x2",)`, and `build.py` makes no private call.
 - **G27.** A nested unit instance took no place or function group. Closed at v0.6.0:
-  `u.add(relay_board, "U2", place="C1")`; the board sits in the `=PLC` group at `+C1`.
+  `u.add(relay_board, "U2")` takes a function group; the board sits in the `=PLC` group. Since
+  CU7 (2026-10-06) the cabinet is a unit with no place, so the instance names none.
 - **G28.** The 3LD2054 part's three links had no `rest` state; at 0.6 that read as three lint
   errors. They now carry `rest = "open"` in the part file.

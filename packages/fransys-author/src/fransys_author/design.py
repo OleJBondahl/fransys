@@ -185,11 +185,11 @@ class Scope(LinkScope):
 
     # -- structure --------------------------------------------------------------
 
-    def location(self, name: str, description: str = "") -> Location:
+    def location(self, name: str, description: str = "", outer: Location | None = None) -> Location:
         """A `+` aspect node (spec A2).
 
-        Nests under the scope's own `at` node when it has one (units spec U6): a location
-        a unit creates hangs under the location the unit was instantiated at
+        Nests under `outer`, else under the scope's own `at` node when it has one (units spec
+        U6): a location a unit creates hangs under the location the unit was instantiated at
         (`+ER+C1-K1`). A `Design` has no `at`, so a script's top-level locations stay at
         the root, as before.
         """
@@ -198,7 +198,7 @@ class Scope(LinkScope):
             id=make_id(AspectNode, key),
             key=key,
             aspect=Aspect.LOCATION,
-            parent=self._at.id if self._at is not None else None,
+            parent=at.id if (at := outer or self._at) else None,
             label=name,
             description=description,
         )
@@ -370,7 +370,7 @@ class Scope(LinkScope):
 
         `target` is an `Fn`, or a handle whose item has exactly one `TERMINAL` or
         `CONNECTOR` function (the rule `d.mate` already uses for items). `rating` and
-        `operating` (`fr.author.Rating`, `fr.author.Operating`) state what the unit says about
+        `operating` (`fr.derive.Rating`, `fr.derive.Operating`) state what the unit says about
         this boundary; given either, one `BoundaryValuesFacet` is written beside the record.
 
         Raises:

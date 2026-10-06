@@ -132,6 +132,10 @@ a unit nested in it.
 `fransys.derive.terminal_items(model)` returns every item that carries a `terminal` facet, as a
 `frozenset[Id[Item]]`. Select terminals through it, so no script rebuilds the set from the facets.
 
+`fransys.derive.pin_order(marking, port)` returns the sort key of a pin: markings of decimal digits
+first by value, the rest after by string (`1, 2, 10, A1`). The connector list, `harness_cables` and
+the overview sort by it, and `fn.pins` follows it. Sort pins through it, so no script keeps a second order.
+
 `fransys.derive.cable_list_rows(model)` returns one `CableListRow` per top-level cable
 (every cable item, `is_cable`, with `unit=None`, harness cables included), with its product
 facts and the designations of its two lowest-ranked ends.

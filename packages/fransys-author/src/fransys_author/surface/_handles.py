@@ -8,6 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
+lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Function as ModelFunction
 lazy from fransys_model.vocab import Operating, Rating, SignalType
@@ -46,6 +47,14 @@ class Fn:
         Does not change between the draft and the built model.
         """
         return self._fn.id
+
+    @property
+    def pins(self) -> tuple[Pin, ...]:
+        """The function's pins in the connector list's order: `1, 2, 10, A1`.
+
+        Does not follow the part file's order. `a.pins[i]` is the i-th pin, counted from 0.
+        """
+        return tuple(sorted(self._fn.ports, key=lambda pin: pin_order(pin.name, pin.id)))
 
     def _pins(self) -> list[tuple[str, Pin]]:
         return [(self._fn.name, pin) for pin in self._fn.ports]

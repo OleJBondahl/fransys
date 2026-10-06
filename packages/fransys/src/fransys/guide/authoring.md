@@ -67,6 +67,21 @@ with d.function("RUN", "Pump run"):
 
 A device with one function and a marked pin is read the short way: `h1[1]`.
 
+### A place inside a place
+
+`d.location("BATT", text, within="HOLD")` puts the place `BATT` inside `HOLD`, named by its tag.
+`HOLD` must exist already, or the call raises and lists the places. A device placed in `BATT`
+prints `+HOLD+BATT`. Without `within=` a place sits at the root.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+d.location("HOLD", "Hold")
+d.location("BATT", "Battery bay", within="HOLD")
+d.device("Q1", "DEMO-MCB-C6", place="BATT")
+```
+
 ### Read a function or pin
 
 A device has functions, and a function has pins. Both are plain attributes and brackets.
@@ -229,6 +244,22 @@ lamps = {tag: d.device(tag, "DEMO-LAMP-24") for tag in ("H1", "H2")}
 w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
 for colour, terminal, lamp, pin in CORES:
     w1.core(colour, x1[terminal], lamps[lamp][pin])
+```
+
+`fn.pins` gives a function's pins as a tuple, in the order the connector list prints (`1, 2, 10, A1`),
+never the part file's. To land a cable's cores on two connectors pin by pin, loop over it. The
+pairing rule stays yours.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts", place="C1")
+d.location("C1", "Pump cabinet")
+a = d.device("J1", "DEMO-CONN-4P")
+b = d.device("J2", "DEMO-CONN-4P")
+w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
+for core, (pin_a, pin_b) in enumerate(zip(a.x1.pins, b.x1.pins, strict=True), start=1):
+    w1.core(core, pin_a, pin_b)
 ```
 
 ## Wire colours

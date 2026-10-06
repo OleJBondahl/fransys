@@ -31,6 +31,8 @@ from `fransys.colours`.
 | a named signal net | `d.net(name, *pins, kind=)` | authoring.md, a named signal net |
 | a busbar, a rail bond | `d.busbar(a, b)`, `d.rail_bond(a, b)` | authoring.md, a busbar, a rail bond |
 | AC or DC supply and rails | `d.ac_supply(...)`, `d.dc_supply(...)` | authoring.md, AC or DC supply and rails |
+| name a place inside a place | `d.location("BATT", text, within="HOLD")` | authoring.md, A place inside a place |
+| list a function's pins in order | `fn.pins` | authoring.md, Cables |
 | plug a connector | `d.mate(a, b)` | authoring.md, plug a connector |
 | add a harness | `d.harness("W5")` | authoring.md, add a harness |
 | request a PLC channel, scale it | `K1.coil.plc(fr.DO, name)`, `.scale(...)` | authoring.md, request a PLC channel |
@@ -40,6 +42,7 @@ from `fransys.colours`.
 | define a unit | `@fr.unit(name, revision=, interface_version=, ...)` | units.md, define a unit |
 | add a unit instance, reach its boundary | `d.add(fn, "U1")` returns the unit's `NamedTuple`, `io.X1` | units.md, Nesting units |
 | mark a boundary device | `interface=True`, `unused=True` on `d.device` | units.md, The boundary |
+| leave one placed instance's boundary open | `d.add(fn, "U2", unused=("X1",))` | units.md, Leaving one instance open |
 | state a boundary's values | `X1.power.limits(rating=, operating=)` | units.md, The boundary |
 | build the model | `fr.build(d, *documents)` | build.md |
 | add a document | `fr.document(preset, subject, cover=)` | documents.md |

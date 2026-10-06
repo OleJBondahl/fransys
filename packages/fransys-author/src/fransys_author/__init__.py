@@ -1,10 +1,11 @@
-"""Fransys input: the authoring API, reached as ``fr.author`` (spec R11).
+"""Fransys input: the authoring engine under the `fr.design` surface (spec R11).
 
 Worked example::
 
     import fransys as fr
+    import fransys_author
     parts = fr.parts("demo_parts")
-    d = fr.author.Design(parts)
+    d = fransys_author.Design(parts)
     d.project(title="Pump station", number="P-1001", customer="Example Co",
               revision=1, author="OJB")
     d.revision(1, date="2026-09-21", text="First issue", created="OJB")

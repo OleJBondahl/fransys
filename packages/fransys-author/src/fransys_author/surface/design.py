@@ -42,26 +42,46 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
         self._group: Group | None = None
         self._claimed: set[tuple[str | None, str]] = set()
 
-    def location(self, name: str, text: str) -> Location:
+    def location(self, name: str, text: str, *, within: str | None = None) -> Location:
         """Declare the place `name` (printed `+name`) with its `text`.
 
+        `within` names the outer place, which must exist: the place prints `+outer+name`.
         Does not place anything: a device takes the default place or its own `place=`.
         """
         bare(name, "location")
+        outer = None if within is None else self._outer_place(name, within)
         known = self._locations.get(name)
         if known is None:
-            node = self._engine.location(name, text)
+            node = self._engine.location(name, text, outer)
             self._locations[name] = (node, text)
             return node
+        return self._known_place(name, text, known, outer)
+
+    def _outer_place(self, name: str, within: str) -> Location:
+        """The place `within`, or a raise listing the places made so far."""
+        bare(within, "location")
+        if within not in self._locations:
+            have = ", ".join(sorted(self._locations)) or "none"
+            msg = f"no place {within!r} to put {name!r} within; places: {have}"
+            raise AuthorError(msg)
+        return self._locations[within][0]
+
+    def _known_place(
+        self, name: str, text: str, known: tuple[Location, str], outer: Location | None
+    ) -> Location:
+        """A repeat call for `name`: it may add its text once, and never moves the place."""
         node, had = known
+        records = self._engine._design.draft()._records  # N4: a place a device made first
+        old = records[node.id]
+        if outer is not None and old.parent != outer.id:  # ty: ignore[unresolved-attribute] -- the record of a place is an AspectNode
+            msg = f"place {name!r} already exists elsewhere; give within= when it is first made"
+            raise AuthorError(msg)
         if had and text and had != text:
             msg = (
                 f"place {name!r} has the text {had!r} and was given {text!r}; a place has one text"
             )
             raise AuthorError(msg)
         if text and not had:
-            records = self._engine._design.draft()._records  # N4: a place a device made first
-            old = records[node.id]
             records[node.id] = dataclasses.replace(old, description=text)  # ty: ignore[invalid-argument-type] -- every Record is a dataclass
             self._locations[name] = (node, text)
         return node

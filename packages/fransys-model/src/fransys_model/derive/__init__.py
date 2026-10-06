@@ -75,7 +75,7 @@ from .list_cells import (
     column_values,
     pin_lines,
 )
-from .lookups import connector_facets, item_of_port, terminal_items
+from .lookups import connector_facets, item_of_port, pin_order, terminal_items
 from .pairing import BoxPair, box_pairs
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
@@ -321,6 +321,7 @@ __all__ = [
     "part_rating",
     "physical_nets",
     "pin_lines",
+    "pin_order",
     "placements",
     "plc_channel_rows",
     "plc_rack_modules",

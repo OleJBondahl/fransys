@@ -8,6 +8,7 @@ lazy from types import EllipsisType
 from fransys_author.errors import AuthorError
 
 from ._unit_tags import check_add, class_code_of
+from ._unused import mark_unused
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design as SurfaceDesign
@@ -79,10 +80,12 @@ class Units:
         *,
         place: str | EllipsisType | None = ...,
         name: str | None = None,
+        unused: tuple[str, ...] = (),
     ) -> R:
         """Build the unit `definition` as instance `tag` (printed `-tag`), `None` to be numbered.
 
         Does not take a lowercase tag. Returns the unit function's result; `name=` as in `device`.
+        `unused=` names fields (`"X1"`) or functions (`"X1.x1"`) of the result, left open here only.
         """
         key = self._claim(
             check_add(definition.name, definition.class_code, tag, name), per_function=True
@@ -108,4 +111,5 @@ class Units:
                 "then return Io(X1=d.device(...))"
             )
             raise AuthorError(msg)
+        mark_unused(self, scope, result, unused)
         return result

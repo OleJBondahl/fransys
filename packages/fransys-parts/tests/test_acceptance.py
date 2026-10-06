@@ -127,16 +127,18 @@ def test_demo_library_record_counts_and_keys():
     `overload-3p.toml` (2/8/4/1 symbol choice) and `pb-nc.toml` (1/2/1/1), so 31;
     EA-SERIES-FIX adds `terminal-pe-2_5.toml` (1/2/1/1), so 32;
     the 16-channel DI module adds `plc-di-16ch.toml` (16 functions/16 ports), so 33;
+    CONTAINER-GAPS adds `connector-header-4p.toml` and `connector-header-4p-mixed.toml`
+    (1 function/4 ports/1 symbol choice each), so 35;
     DRAWN-ENDS gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 33
-    assert len(function_templates(model)) == 76
-    assert len(port_templates(model)) == 176
+    assert len(parts(model)) == 35
+    assert len(function_templates(model)) == 78
+    assert len(port_templates(model)) == 184
     assert len(internal_links(model)) == 41
-    assert len(model.tables["layout.symbol_choice"]) == 33
+    assert len(model.tables["layout.symbol_choice"]) == 35
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")

@@ -25,7 +25,7 @@ class Boundary:
 class UnusedBoundary:
     """An integrator's declaration that a boundary function is left unconnected on purpose.
 
-    Example: a cabinet's spare field terminal, declared via `d.unused(t)`.
+    Example: a cabinet's spare field terminal, declared via `unused=` on `d.add`.
     """
 
     id: Id[UnusedBoundary]

@@ -1,16 +1,16 @@
 # Windows runs recipes in PowerShell, so no `sh` is needed on PATH; Linux keeps its default shell
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
-# decision 0013's 6 workers locally; a CI runner sets PYTEST_WORKERS
+# 6 test workers locally; a CI runner sets PYTEST_WORKERS
 pytest_workers := env_var_or_default("PYTEST_WORKERS", "6")
 
 check:
     uv run ruff check .
     uv run ruff format --check .
-    # ty keyed by the cwd's real case (LEAN LC5), resolved in Python so no recipe needs sh
+    # ty keyed by the cwd's real case, resolved in Python so no recipe needs sh
     uv run python scripts/ty_check.py
 
-# dead code sweep: confidence 60 for every package, whitelist.py fed to every line (decision 0050)
+# dead code sweep: confidence 60 for every package, whitelist.py fed to every line
 dead-code:
     uv run vulture packages/fransys-model/src whitelist.py --min-confidence 60
     uv run vulture packages/fransys-layout/src whitelist.py --min-confidence 60
@@ -46,20 +46,20 @@ fmt:
     uv run ruff check --fix .
 
 # tests only, in parallel; ARGS narrows them (paths, -k, ...). Set PYTEST_WORKERS=4 when three or more
-# test jobs run at once (owner 2026-09-26)
+# test jobs run at once
 test *ARGS:
     uv run pytest -n {{pytest_workers}} --dist worksteal {{ARGS}}
 
-# rewrite the tracked model and layout goldens on a work branch, then their diff stat; refused on main (decision 0101)
+# rewrite the tracked model and layout goldens on a work branch, then their diff stat; refused on main
 regen-goldens *PKG:
     uv run python scripts/regen_goldens.py {{PKG}}
 
-# just api PACKAGE: prints one package's API surface, built on demand, never stored (MS9,
-# decision 0053) -- read this before another package's source, per root CLAUDE.md
+# just api PACKAGE: prints one package's API surface, built on demand, never stored;
+# read this before another package's source
 api PACKAGE:
     uv run python scripts/lean_api.py {{PACKAGE}}
 
-# the docs site (decision 0105, experimental): stages into .fransys/site-src/, builds strict into .fransys/site/
+# the docs site (experimental): stages into .fransys/site-src/, builds strict into .fransys/site/
 site EXAMPLES_DIR:
     uv run --group site python scripts/build_site.py {{EXAMPLES_DIR}}
 

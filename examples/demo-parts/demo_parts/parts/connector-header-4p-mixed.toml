@@ -1,0 +1,24 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CONN-4P-MIXED"
+manufacturer = "Demo"
+description = "Connector housing, 4-pin header, pins listed out of marking order"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "A1", role = "generic", symbol_port = "in" },
+    { name = "10", role = "generic", symbol_port = "out" },
+    { name = "2", role = "generic", symbol_port = "in" },
+    { name = "1", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-4p"
+pincount = 4
+gender = "male"

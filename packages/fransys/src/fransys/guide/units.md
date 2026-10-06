@@ -63,6 +63,55 @@ def box(d):
     return Io(x1)
 ```
 
+A unit may hand back a value beside its devices. Annotate the field with its `fr.derive` type, for
+example `fr.derive.Operating`.
+
+```python
+class Supply(NamedTuple):
+    X1: fr.Device
+    rated: fr.derive.Operating
+
+
+@fr.unit("demo-supply-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def supply_box(d):
+    x1 = d.device("X1", "DEMO-CONN-2P", interface=True)
+    operating = d.operating("DEMO-STRING-864V", "string")
+    x1.x1.limits(operating=operating)
+    return Supply(x1, operating)
+```
+
+## Leaving one instance open
+
+`unused=True` on `d.device` sits inside the unit, so it marks every instance. To leave the boundary
+of one placed instance open, the container names it on `d.add`. `unused=("X1",)` takes every boundary
+function of the device in the unit's field `X1`. `unused=("X1.x1",)` takes that one function. A field that holds a tuple of devices takes an index, `"X[0]"` or `"X[0].x1"`. The bare `"X"` takes every element. A
+misspelt field raises and lists the fields. A name that is no boundary raises and lists the boundary
+functions. A boundary both mated and declared unused still gives `UNUSED_CONTRADICTED`.
+
+```python
+from typing import NamedTuple
+
+import fransys as fr
+
+
+class Io(NamedTuple):
+    X1: fr.Device
+
+
+@fr.unit("demo-io-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def board(d):
+    return Io(d.device("X1", "DEMO-CONN-2P", interface=True))
+
+
+d = fr.design("demo_parts", place="C1")
+io1 = d.add(board, "U1")
+io2 = d.add(board, "U2", unused=("X1",))
+d.mate(d.device("B1", "DEMO-CONN-2P"), io1.X1)
+```
+
+The build holds no `BOUNDARY_UNCONNECTED` and no `UNUSED_CONTRADICTED`. U1's `X1` is mated, and U2's
+prints `N/A` in its table only.
+
 ## Reaching a unit from outside
 
 A container reaches a unit's connector through a plug and `d.mate(plug, io.X1)`. Do not wire

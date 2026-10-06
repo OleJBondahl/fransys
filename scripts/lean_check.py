@@ -46,8 +46,8 @@ CEILINGS_PATH = ROOT / "ceilings.toml"
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
 _HEADER = (
-    "# The lean gates' ceilings (decision 0087). `just ceil-lower` rewrites this file,\n"
-    "# so every comment here comes from scripts/lean_ceilings.py and scripts/lean_check.py.\n\n"
+    "# The lean gates' ceilings: a ceiling only goes down; the dev checkout lowers them with its\n"
+    "# ceil-lower tool. Every comment here comes from lean_ceilings.py and lean_check.py.\n\n"
 )
 
 #: LC1's own worked example, hand-authored (Part A): the starting `[limits]`, this order's only.

@@ -195,7 +195,7 @@ def first_run(
 ) -> dict[str, int]:
     """Write a ceilings baseline entry for every measured site.
 
-    LC6 step 3's baseline-writer mode, never called by `just ceil-lower` itself (the caller, not
+    LC6 step 3's baseline-writer mode, never called by the lowering run (the caller, not
     this function, enforces that -- just implement the pure logic): every site in `measured`
     (already over-limit, by the same contract as `check`/`lower`) gets a ceilings entry at its
     own measured value, except sites in `exempt`.

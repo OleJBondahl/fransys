@@ -1,5 +1,5 @@
-# The lean gates' ceilings (decision 0087). `just ceil-lower` rewrites this file,
-# so every comment here comes from scripts/lean_ceilings.py and scripts/lean_check.py.
+# The lean gates' ceilings: a ceiling only goes down; the dev checkout lowers them with its
+# ceil-lower tool. Every comment here comes from lean_ceilings.py and lean_check.py.
 
 [limits]
 branches = 12

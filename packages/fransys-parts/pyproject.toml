@@ -1,9 +1,9 @@
 [project]
 name = "fransys-parts"
-version = "0.7.0"
+version = "0.8.0"
 description = "Fransys input: part-file loader and linter."
 requires-python = ">=3.15"
-dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.7.0#subdirectory=packages/fransys-model"]
+dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.8.0#subdirectory=packages/fransys-model"]
 
 [build-system]
 requires = ["hatchling==1.32.4"]

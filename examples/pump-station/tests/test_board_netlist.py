@@ -21,8 +21,8 @@ def test_board_netlist_is_named_for_the_full_ref(built: tuple) -> None:
     _result, out_dir, intermediates = built
     assert (intermediates / "netlist-PLC-U1-U2.net").is_file()
     assert not (intermediates / "netlist-U2.net").exists()
-    assert (out_dir / "all" / "EX-1-v1.2-connectors-PLC-U1-U2.csv").is_file()
-    assert not (out_dir / "all" / "EX-1-v1.2-connectors-U2.csv").exists()
+    assert (out_dir / "all" / "EX-1-v1.3-connectors-PLC-U1-U2.csv").is_file()
+    assert not (out_dir / "all" / "EX-1-v1.3-connectors-U2.csv").exists()
 
 
 def test_board_netlist_has_four_components_with_footprints(built: tuple) -> None:

@@ -321,7 +321,7 @@ d.project(
     title="Two-pump station",
     number="EX-1",
     customer="Example works",
-    revision=2,
+    revision=3,
     author="fransys-examples",
 )
 d.revision(1, date="2026-09-23", text="First issue", created="SK")
@@ -329,6 +329,12 @@ d.revision(
     2,
     date="2026-10-06",
     text="The cabinet is a unit with no place of its own (owner ruling 2026-10-06)",
+    created="SK",
+)
+d.revision(
+    3,
+    date="2026-10-06",
+    text="-W3-W1 prints as -W3 (Fransys 0.11.0, R129 lone cable)",
     created="SK",
 )
 

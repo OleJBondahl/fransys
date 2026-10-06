@@ -423,7 +423,7 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
 
 def test_ext_x0_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "all" / "EX-1-v1.2-terminals-EXT-X0.csv")
+    rows = _read_rows(out_dir / "all" / "EX-1-v1.3-terminals-EXT-X0.csv")
     assert len(rows) == 5, f"expected exactly 5 rows on +EXT-X0, got {len(rows)}: {rows}"
     assert rows == EXPECTED_EXT_X0
 

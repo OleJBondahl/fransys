@@ -68,17 +68,17 @@ def test_motor_cable_cores(
 
 
 def test_system_pdf_written(built: tuple[fr.BuildResult, Path, Path]) -> None:
-    """The system document lands in `out/all/` as `EX-1-v1.2.pdf`."""
+    """The system document lands in `out/all/` as `EX-1-v1.3.pdf`."""
     _, out_dir, _ = built
-    assert (out_dir / "all" / "EX-1-v1.2.pdf").is_file()
+    assert (out_dir / "all" / "EX-1-v1.3.pdf").is_file()
 
 
 def test_cable_list_one_row_per_top_level_cable(
     built: tuple[fr.BuildResult, Path, Path],
 ) -> None:
-    """`all/cables.csv`: -W1, -W11, -W21 and the harness cable, one row each, no unit column."""
+    """`all/cables.csv`: -W1, -W11, -W21 and the harness cable (-W3), one row each, in natural order, no unit column."""
     _, out_dir, _ = built
-    with (out_dir / "all" / "EX-1-v1.2-cables.csv").open(newline="", encoding="utf-8") as handle:
+    with (out_dir / "all" / "EX-1-v1.3-cables.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    assert [row["designation"] for row in rows] == ["-W1", "-W11", "-W21", "-W3-W1"]
+    assert [row["designation"] for row in rows] == ["-W1", "-W3", "-W11", "-W21"]
     assert not any("unit" in column for column in rows[0])

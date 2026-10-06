@@ -1,11 +1,11 @@
 # Gaps
 
 The places where this example is not drawn or authored the way a real cabinet would be, because
-Fransys, at the pinned v0.10.0 line, cannot say it yet. Open gaps come first, then the closed ones
+Fransys, at the pinned v0.11.0 line, cannot say it yet. Open gaps come first, then the closed ones
 with the version that closed them. Evidence is in the three `out/` folders: `out/cabinet/` (the
 cabinet unit's set), `out/board/` (the relay board's) and `out/all/` (everything, with the system
 document). A `wires.csv` row lists its two ends in the model's id order, so its order can
-flip when an authoring key changes. `fr.check` on this build holds 0 ERROR and six WARNING, the
+flip when an authoring key changes. `fr.check` on this build holds 0 ERROR and three WARNING, the
 layout warnings of G29.
 
 ## Open
@@ -50,7 +50,7 @@ layout warnings of G29.
   the open ends of the `-X2` terminal wires on the pump and supply pages. An observation on the
   v0.5.1 layout, not a finding.
 
-- **G29.** Six layout warnings remain (three `POWER_SYMBOL_UNPLACED`, three `SYMBOL_OVERLAP`), all on
+- **G29.** Three layout warnings remain (`POWER_SYMBOL_UNPLACED`; `SYMBOL_OVERLAP` is 0 since v0.11.0), all on
   the pump's 24 V auxiliary-contact pins. v0.6.1: the -J1:3 ground placed (layout-0117).
 
 ## Closed

@@ -27,8 +27,8 @@ units = fr.derive.units
 
 # Items placed directly at +EXT: the upstream strip, both motors, the Ethernet switch, and
 # every cable that runs from the cabinet to something outside it: `-W1`, `-W11`, `-W21` and the
-# `-W3` harness with its two plugs and its cable (designer ruling 2026-09-24).
-EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3", "W3-J1", "W3-J2", "W3-W1"}
+# `-W3` harness with its two plugs and its cable, which prints as `-W3` (designer ruling 2026-09-24, R129).
+EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3", "W3-J1", "W3-J2"}
 
 CABINET_FILES = {
     "pump-cabinet-v1.6-bom.csv",
@@ -51,22 +51,22 @@ BOARD_FILES = {
     "relay-interface-board-v1.3-wires.csv",
 }
 ALL_FILES = {
-    "EX-1-v1.2-bom.csv",
+    "EX-1-v1.3-bom.csv",
     "pump-cabinet-v1.6.pdf",
-    "EX-1-v1.2-cables.csv",
-    "EX-1-v1.2-connectors-PLC-U1-U2.csv",
-    "EX-1-v1.2-designations.csv",
-    "EX-1-v1.2-overview.html",
-    "EX-1-v1.2-plc.csv",
+    "EX-1-v1.3-cables.csv",
+    "EX-1-v1.3-connectors-PLC-U1-U2.csv",
+    "EX-1-v1.3-designations.csv",
+    "EX-1-v1.3-overview.html",
+    "EX-1-v1.3-plc.csv",
     "relay-interface-board-v1.3.pdf",
-    "EX-1-v1.2.pdf",
-    "EX-1-v1.2-terminals-U1-X01.csv",
-    "EX-1-v1.2-terminals-U1-X1.csv",
-    "EX-1-v1.2-terminals-U1-X2.csv",
-    "EX-1-v1.2-terminals-U1-X3.csv",
-    "EX-1-v1.2-terminals-EXT-X0.csv",
-    "EX-1-v1.2-wago-PLC-U1-U1.xml",
-    "EX-1-v1.2-wires.csv",
+    "EX-1-v1.3.pdf",
+    "EX-1-v1.3-terminals-U1-X01.csv",
+    "EX-1-v1.3-terminals-U1-X1.csv",
+    "EX-1-v1.3-terminals-U1-X2.csv",
+    "EX-1-v1.3-terminals-U1-X3.csv",
+    "EX-1-v1.3-terminals-EXT-X0.csv",
+    "EX-1-v1.3-wago-PLC-U1-U1.xml",
+    "EX-1-v1.3-wires.csv",
 }
 EXPECTED_FILES = {"cabinet": CABINET_FILES, "board": BOARD_FILES, "all": ALL_FILES}
 

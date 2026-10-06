@@ -103,7 +103,7 @@ def _read_plc_rows(path: Path) -> list[dict[str, str]]:
 
 def test_all_plc_csv_matches_io_list(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    path = out_dir / "all" / "EX-1-v1.2-plc.csv"
+    path = out_dir / "all" / "EX-1-v1.3-plc.csv"
     rows = _read_plc_rows(path)
     with path.open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
@@ -136,6 +136,6 @@ def test_all_do1_1_wired_to_reads_c1_j1_1(built: tuple) -> None:
     (model DESIGN 12), `-U1-J1:1`, as `all/wires.csv` does.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_plc_rows(out_dir / "all" / "EX-1-v1.2-plc.csv")
+    rows = _read_plc_rows(out_dir / "all" / "EX-1-v1.3-plc.csv")
     row = next(r for r in rows if r["channel_designation"] == "-U1-DO1:1")
     assert row["wired_to"] == "-U1-J1:1", row

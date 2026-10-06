@@ -7,7 +7,7 @@ mpn,revision,manufacturer,description,count,designations
 2002-1201,,WAGO,"TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V",39,-U1-X01:L1:1; -U1-X01:L1:2; -U1-X01:L1:3; -U1-X01:L1:4; -U1-X01:L2:1; -U1-X01:L2:2; -U1-X01:L2:3; -U1-X01:L2:4; -U1-X01:L3:1; -U1-X01:L3:2; -U1-X01:L3:3; -U1-X01:L3:4; -U1-X1:L1:1; -U1-X1:L2:1; -U1-X1:L3:1; -U1-X1:N:1; -U1-X2:24V:1; -U1-X2:24V:2; -U1-X2:24V:3; -U1-X2:24V:4; -U1-X2:24V:5; -U1-X2:24V:6; -U1-X2:24V:7; -U1-X2:24V:8; -U1-X2:24V:9; -U1-X2:24V:10; -U1-X2:GND:1; -U1-X2:GND:2; -U1-X2:GND:3; -U1-X2:GND:4; -U1-X2:GND:5; -U1-X2:GND:6; -U1-X2:GND:7; -U1-X3:U:1; -U1-X3:U:2; -U1-X3:V:1; -U1-X3:V:2; -U1-X3:W:1; -U1-X3:W:2
 2002-1207,,WAGO,"TOPJOB S ground terminal block, 2.5 mm2, green-yellow",3,-U1-X1:PE:1; -U1-X3:PE:1; -U1-X3:PE:2
 21700601,,Lapp,"EPIC DATA RJ45, Cat.6A, T568B, field-installable plug",2,-W3-J1; -W3-J2
-2170465,,Lapp,"ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP",1,-W3-W1
+2170465,,Lapp,"ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP",1,-W3
 3LD2054-0TK51,,Siemens,"Switch-disconnector, 3-pole; 16 A",1,-U1-Q1
 3NW7033,,Siemens,"Fuse holder, 3-pole, 10x38 mm; 32 A",2,-U1-F11; -U1-F21
 3NW8004-1,,Siemens,"SENTRON cylindrical fuse link, 10x38 mm, aM; 4 A",6,-U1-F11; -U1-F21

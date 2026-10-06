@@ -45,4 +45,4 @@ def test_board_designations_reference_ends_with_designation(built: tuple) -> Non
 
 def test_all_designations_reference_ends_with_designation(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    _assert_references_end_with_their_designation(out_dir / "all" / "EX-1-v1.2-designations.csv")
+    _assert_references_end_with_their_designation(out_dir / "all" / "EX-1-v1.3-designations.csv")

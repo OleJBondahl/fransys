@@ -46,7 +46,7 @@ DOCUMENTS = {
     "system.typ": {
         "Title": "Two-pump station",
         "Number": "EX-1",
-        "Revision": "1.2",
+        "Revision": "1.3",
         "Customer": "Example works",
     },
 }
@@ -223,10 +223,10 @@ def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built
 
 
 # The 0.6 layout draws a power symbol on a pin and keeps it clear of its neighbours; the two
-# auxiliary-contact pins of each pump's 24 V rail cannot be cleared (six warnings). v0.6.1 placed
+# auxiliary-contact pins of each pump's 24 V rail cannot be cleared (three warnings at v0.11.0). v0.6.1 placed
 # the ground symbol at -J1:3 (layout-0117, GAPS.md G29). Exactly these
 # remain, counted by code. They are layout notes, not wiring faults.
-LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 3, "SYMBOL_OVERLAP": 3}
+LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 3, "SYMBOL_OVERLAP": 0}
 
 
 def assert_no_error_or_warning(findings: tuple[fr.Finding, ...]) -> None:

@@ -53,7 +53,7 @@ class OffReads:
 
     edges: frozenset[Id[Any]]
     top_unit: Callable[[Id[Any] | None], Id[Any] | None]
-    end_text: Callable[[Connection, Id[Any]], tuple[PortText, OffEnd]]
+    end_text: Callable[[Connection, Id[Any], Id[Any]], tuple[PortText, OffEnd]]
     designation: Callable[[Id[Any]], str]
 
 
@@ -182,7 +182,7 @@ def mate_stub(
     )
     if not ending:
         return None
-    text, end = reads.end_text(ending[0], far)
+    text, end = reads.end_text(ending[0], far, near)
     return (
         bridge(ending[0], near, far),
         dataclasses.replace(text, port=near),

@@ -86,8 +86,9 @@ def test_pe_takes_a_string_or_a_part_class(lib) -> None:
 
 
 def test_series_ends_are_inner_line_and_outer_load(lib) -> None:
-    x1 = design(lib).terminal_strip("X1", "TEST-TERM")
-    ends = x1._series_ends(None, 2)  # ty: ignore[invalid-argument-type] -- design is unused
+    d = design(lib)
+    x1 = d.terminal_strip("X1", "TEST-TERM")
+    ends = x1._series_ends(d, 2)
     ts = (x1[1], x1[2])
     assert x1._series_width() is None
     assert ends.line == tuple(End(t.inner, None) for t in ts)

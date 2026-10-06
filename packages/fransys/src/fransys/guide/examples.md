@@ -13,14 +13,14 @@ contact to the contactor coil. The latch is the start contact in parallel with t
 auxiliary make contact.
 
 `d.series(a, b, ...)` is the one spelling for a chain of connections, and `d.parallel(...)` puts
-branches between two neighbours. Each device sits in the place `C1` given to `fr.design`.
+branches between two neighbours. The design is a plain top design: no place and no cabinet.
 
 ```python
 # easy: motor starter
 import fransys as fr
 from fransys.colours import BK, BU
 
-d = fr.design("demo_parts", place="C1")
+d = fr.design("demo_parts")
 x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
 ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3])
 g1 = d.device("G1", "DEMO-PSU-24")
@@ -32,7 +32,7 @@ s1 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC")
 s2 = d.device("S2", "DEMO-CTR-BLOCK-1NO1NC")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
 w1 = d.cable("W1", "DEMO-CBL-4G1.5")
-m1 = d.device("M1", "DEMO-MOTOR-4KW", place=None)
+m1 = d.device("M1", "DEMO-MOTOR-4KW")
 d.series(ac, q0.element, q1.main, f1.main, x1, w1, m1, wire=(BK, 2.5))
 d.series(dc.plus, s1.nc, d.parallel(s2.no, q1.aux), f1.aux, q1.coil, dc.minus, wire=(BU, 0.75))
 ```
@@ -54,14 +54,14 @@ PARTS = {
     "S2": "DEMO-CTR-BLOCK-1NO1NC",
 }
 
-d = fr.design("demo_parts", place="C1")
+d = fr.design("demo_parts")
 x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
 ac = d.ac_supply("400V", "230", *(x0[n] for n in (1, 2, 3)))
 i = {tag: d.device(tag, mpn) for tag, mpn in PARTS.items()}
 dc = d.dc_supply("24VDC", i["G1"])
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
 w1 = d.cable("W1", "DEMO-CBL-4G1.5")
-m1 = d.device("M1", "DEMO-MOTOR-4KW", place=None)
+m1 = d.device("M1", "DEMO-MOTOR-4KW")
 d.series(ac, i["Q0"].element, i["Q1"].main, i["F1"].main, x1, w1, m1, wire=(BK, 2.5))
 latch = d.parallel(i["S2"].no, i["Q1"].aux)
 d.series(dc.plus, i["S1"].nc, latch, i["F1"].aux, i["Q1"].coil, dc.minus, wire=(BU, 0.75))
@@ -78,7 +78,7 @@ takes terminals by number: `x1[3]` is the terminal numbered 3. The task has one 
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
+d = fr.design("demo_parts")
 with d.function("SENS", "Sensors"):
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     b1 = d.device("B1", "DEMO-SWITCH-2P")
@@ -124,7 +124,7 @@ from fransys.colours import BU
 
 SENSORS = {f"B{n}": 17 - n for n in range(1, 17)}
 
-d = fr.design("demo_parts", place="C1")
+d = fr.design("demo_parts")
 with d.function("SENS", "Sensors"):
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     for tag, terminal in SENSORS.items():

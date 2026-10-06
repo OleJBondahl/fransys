@@ -226,7 +226,7 @@ def _old_end(model, c, near):
     by_name = {(p.function, p.name): p.id for p in ports(model).values()}
     far = record.b if near == record.a else record.a
     far = by_name.get((mated.get(ports(model)[far].function), ports(model)[far].name), far)
-    head, tail = stub_far_end(model, far)
+    head, tail = stub_far_end(model, far, near)
     return StubText(cable=cable, far=head, port=tail), carrier, far
 
 
@@ -246,7 +246,8 @@ def test_far_maps_map_by_function_and_name_and_end_text_equals_the_inline_build(
         assert all(maps.partner[b] == a and maps.partner[a] == b for a, b in maps.partner.items())
         assert len(maps.partner) == 2 * len(mates(model))
         for c in read_inputs(model).connections:
-            for near in (c.a.port, c.b.port):
+            # a bridge's synthetic end is no model port; no stub text is asked of it
+            for near in (n for n in (c.a.port, c.b.port) if n in ports(model)):
                 text, end = end_text(model, maps, c, near)
                 assert (text.text, end.carrier, end.far) == _old_end(model, c, near)
 

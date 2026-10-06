@@ -15,8 +15,8 @@ from schematika.colours import BU
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
-d.device("Q1", "DEMO-RLY-2CO-24", place="C1")
+d = fr.design("demo_parts")
+d.device("Q1", "DEMO-RLY-2CO-24")
 model = fr.build(d)
 ```
 

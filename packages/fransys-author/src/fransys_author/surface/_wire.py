@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._strip import TerminalStrip
+from fransys_author.surface._unit_strip import is_unit_strip, take
 from fransys_model.vocab import COLOUR_GRAMMAR, split_colour
 
 if TYPE_CHECKING:
@@ -43,15 +44,23 @@ def wiring_for(design: Design, wire: object) -> Wiring:
     return design._engine.wiring(colour=_colour(wire[0]), gauge=_gauge(wire[1]))
 
 
-def _port(pin: object) -> Port:
+def _port(design: Design, pin: object) -> Port:
+    """The port a pin argument stands for; a nested unit's terminal is its outer side (0023)."""
     if isinstance(pin, TerminalStrip):
         pin = pin._take(1)[0]  # the step `d.series` takes: the strip's next free terminal
     if isinstance(pin, Terminal):
-        return pin.inner
+        return pin.outer if is_unit_strip(pin, design) else pin.inner
     if isinstance(pin, Port):
         return pin
     msg = f"d.wire joins pins: name one pin, got {type(pin).__name__}"
     raise AuthorError(msg)
+
+
+def _wire_port(design: Design, pin: object) -> Port:
+    """`_port`, but a unit's strip gives the next free boundary terminal's outer side (0023)."""
+    if isinstance(pin, TerminalStrip) and is_unit_strip(pin, design):
+        return take(pin, design, 1)[0].outer
+    return _port(design, pin)
 
 
 class Wires:
@@ -72,5 +81,5 @@ class Wires:
         if len(pins) < _MINIMUM_PINS:
             msg = f"d.wire joins at least {_MINIMUM_PINS} pins, got {len(pins)}"
             raise AuthorError(msg)
-        ports = [_port(pin) for pin in pins]
+        ports = [_wire_port(self, pin) for pin in pins]
         wiring_for(self, wire).run(*ports, n=n, label=label)

@@ -18,8 +18,7 @@ list can come from a table or a file.
 # easy: start a design
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Cabinet")
+d = fr.design("demo_parts")
 d.device("H1", "DEMO-LAMP-24")
 d.device("H2", "DEMO-LAMP-24")
 ```
@@ -59,8 +58,7 @@ subprocess.run(
 sys.path.insert(0, ".")
 import demo_typed as P
 
-d = fr.design(P, place="C1")
-d.location("C1", "Cabinet")
+d = fr.design(P)
 for tag in ("H1", "H2"):
     d.device(tag, P.DEMO_LAMP_24)
 ```

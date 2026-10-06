@@ -10,6 +10,7 @@ from fransys_author.surface._device import part_mpn
 from fransys_author.surface._pairing import Ends, pair
 from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
+from fransys_author.surface._unit_strip import take, take_pe
 from fransys_author.surface.colours import GNYE
 from fransys_model.vocab import PortRole
 lazy from fransys_author.surface._device import Device
@@ -40,13 +41,13 @@ def _length_mm(length_m: float | str | Decimal | None) -> int | None:
     return int(mm)
 
 
-def _outer(end: Port | Terminal | TerminalStrip) -> Port:
+def _outer(end: Port | Terminal | TerminalStrip, design: Design | None = None) -> Port:
     """A terminal stands for its field side, `.outer`: a cable core goes to the field.
 
     A strip or run stands for its next free terminal, the step `d.series` takes.
     """
     if isinstance(end, TerminalStrip):
-        end = end._take(1)[0]
+        end = take(end, design, 1)[0]
     return end.outer if isinstance(end, Terminal) else end
 
 
@@ -61,9 +62,9 @@ class Cable:
     Does not guess a core: a doubled or missing colour raises and lists the candidates.
     """
 
-    def __init__(self, label: str, cable: EngineCable) -> None:
-        """Wrap the engine `cable` under `label`; `d.cable` makes these."""
-        self._label, self._cable = label, cable
+    def __init__(self, label: str, cable: EngineCable, design: Design | None = None) -> None:
+        """Wrap the engine `cable` under `label`; `d.cable` makes these, `design` its own."""
+        self._label, self._cable, self._design = label, cable, design
 
     @property
     def _colours(self) -> tuple[str, ...]:
@@ -100,27 +101,27 @@ class Cable:
         Does not accept a non-GNYE core on a PE port, or a colour twice in the part: say the number.
         """
         index = self._index(which)
-        ends = (_outer(a), _outer(b))
+        ends = (_outer(a, self._design), _outer(b, self._design))
         self._refuse_pe(index, ends)
         self._cable.core(index, *ends)
 
     def _series_width(self) -> None:
         """A cable sets no width: its neighbours do."""
 
-    def _pe_end(self, element: object, ends: Ends) -> Port:
+    def _pe_end(self, design: Design, element: object, ends: Ends) -> Port:
         if ends.pe is not None:
             return ends.pe
         if isinstance(element, TerminalStrip):
-            return element._take_pe().outer
+            return take_pe(element, design).outer
         msg = f"{self._label} has a GNYE core, but {_name(element)} has no PE port"
         raise AuthorError(msg)
 
-    def _land_pe(self, pe_core: int | None, before: _Side, after: _Side) -> None:
+    def _land_pe(self, design: Design, pe_core: int | None, before: _Side, after: _Side) -> None:
         """Wire the GNYE core when a neighbour has a PE port; else it stays spare."""
         if pe_core is not None and any(ends.pe is not None for _, ends in (before, after)):
-            self.core(pe_core, *(self._pe_end(el, ends) for el, ends in (before, after)))
+            self.core(pe_core, *(self._pe_end(design, el, ends) for el, ends in (before, after)))
 
-    def _series_between(self, design: Design, before: _Side, after: _Side) -> None:  # noqa: ARG002 -- protocol
+    def _series_between(self, design: Design, before: _Side, after: _Side) -> None:
         """Core i joins `before`'s load i to `after`'s line i, in core order without GNYE."""
         pairs = pair(before[1].load, after[1].line)
         pe_core = next((i for i, c in enumerate(self._colours, 1) if c == GNYE), None)
@@ -130,7 +131,7 @@ class Cable:
             raise AuthorError(msg)
         for index, (a, b) in zip(plain, pairs, strict=False):
             self.core(index, a, b)
-        self._land_pe(pe_core, before, after)
+        self._land_pe(design, pe_core, before, after)
 
 
 class Cables:
@@ -165,4 +166,4 @@ class Cables:
             parent=None if parent is None else parent._item,
             external=external,
         )
-        return Cable(name or tag or "", engine)
+        return Cable(name or tag or "", engine, self)

@@ -60,16 +60,17 @@ d.project(title="Pump station", number="P-1001", customer="Example Co",
           revision=1, author="OJB")                  # version=1 by default: prints 1.1
 d.revision(1, date="2026-09-21", text="First issue", created="OJB")  # the date lives here
 
-c1  = d.location("C1", "Pump cabinet")              # a + node
 sup = d.group("SUP", "24 V supply")                 # a = node: a functional group
 p1  = d.group("P1", "Pump 1")
+f1  = d.location("F1", "Field")                     # a + node: where field devices stand;
+                                                     # a cabinet is a unit, never a + node
 
-q1 = d.item("DEMO-MCB-C6", tag="Q1", at=c1, group=p1)        # tag written by the author
-k1 = d.item("DEMO-RLY-2CO-24", name="run", at=c1, group=p1)  # tag given by numbering: K1
-h1 = d.item("DEMO-LAMP-24", name="lamp", at=c1, group=p1, installed=False)
-m1 = d.item("DEMO-MOTOR-4KW", tag="M1", at=d.location("F1", "Field"), group=p1)
+q1 = d.item("DEMO-MCB-C6", tag="Q1", group=p1)               # tag written by the author
+k1 = d.item("DEMO-RLY-2CO-24", name="run", group=p1)         # tag given by numbering: K1
+h1 = d.item("DEMO-LAMP-24", name="lamp", group=p1, installed=False)
+m1 = d.item("DEMO-MOTOR-4KW", tag="M1", at=f1, group=p1)
 
-x1 = d.strip("X1", at=c1)                           # a terminal strip
+x1 = d.strip("X1")                                  # a terminal strip
 t1 = x1.terminal("DEMO-TB-2.5", group=sup)          # X1:1
 t2 = x1.terminal("DEMO-TB-2.5", group=p1)           # X1:2, pump 1's return terminal
 l1 = x1.terminal("DEMO-TB-2.5", "L", group=p1)      # X1:L:1

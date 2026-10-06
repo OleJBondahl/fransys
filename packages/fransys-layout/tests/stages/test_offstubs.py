@@ -51,7 +51,7 @@ def _spec(n: int, *, location: int | None = 100, unit=None, pin_function=None) -
     )
 
 
-def _end_text(c, near):
+def _end_text(c, near, _at=None):
     """A fake `end_text`: the text names the conductor, the `OffEnd` its near port."""
     text = StubText(cable="", far=f"far-of-{c.handle.value[-2:]}", port="")
     return PortText(port=near, text=text), OffEnd(port=near, text=text, carrier=None, far=near)
@@ -297,8 +297,8 @@ def test_a_mate_stub_carries_the_conductors_end_text_moved_to_the_pin() -> None:
     # UNDO: stages/offstubs.py `mate_stub`: `dataclasses.replace(end, port=near)` -> `end`
     asked = []
 
-    def spy(c, near):
-        asked.append((c.handle, near))
+    def spy(c, near, at):
+        asked.append((c.handle, near, at))
         return _end_text(c, near)
 
     reads = _reads(edges=(1,), designations={_port(3, 2): "B"}, end_text=spy)
@@ -307,7 +307,7 @@ def test_a_mate_stub_carries_the_conductors_end_text_moved_to_the_pin() -> None:
     found = mate_stub([wire], _stubbed_pair(), (near, far), reads)
     assert found is not None
     connection_, text, end = found
-    assert asked == [(wire.handle, far)]
+    assert asked == [(wire.handle, far, near)]
     assert connection_ == bridge(wire, near, far)
     named = StubText(cable="", far="far-of-05", port="")
     assert text == PortText(port=near, text=named)

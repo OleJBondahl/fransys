@@ -2,7 +2,8 @@
 
 A unit is a released, independently built part of a design: a board, a cabinet, a box, anything
 built and delivered on its own revision. This page shows how to write one, mark its interface,
-record its revisions and nest it in a cabinet.
+record its revisions and nest it in a cabinet. A cabinet is itself a unit: it holds components,
+units and wires, and it is never split into places.
 
 `@fr.unit(name, revision=, interface_version=, date=, text=, by=)` turns a Python function into a unit.
 The function builds the unit's devices on the design it receives and returns an instance of a
@@ -37,6 +38,7 @@ so the build does not ask for it to be wired. `unused=True` on a device that is 
 interface marks it as one too. The tuple the function returns names the devices a
 container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field that holds a strip, a run or a terminal is
 typed `fr.TerminalStrip`, `fr.Run` or `fr.Terminal`.
+`d.series` and `d.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
 
 A device with several functions takes the names of the boundary ones: `interface=("x1",),
 unused=("x2",)`. `True` takes every function. A name the part lacks raises and lists its
@@ -125,10 +127,29 @@ def board(d):
     return Io(d.device("X1", "DEMO-CONN-2P", interface=True))
 
 
-d = fr.design("demo_parts", place="C1")
-io1 = d.add(board, "U1")
-io2 = d.add(board, "U2", unused=("X1",))
-d.mate(d.device("B1", "DEMO-CONN-2P"), io1.X1)
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit(
+    "demo-cabinet",
+    revision=1,
+    interface_version=1,
+    date="2026-01-01",
+    text="first release",
+    by="AB",
+    title="Demo cabinet",
+    number="DC-1",
+)
+def cabinet(c):
+    io1 = c.add(board, "U1")
+    io2 = c.add(board, "U2", unused=("X1",))
+    c.mate(c.device("B1", "DEMO-CONN-2P"), io1.X1)
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(cabinet, "U1")
 ```
 
 The build holds no `BOUNDARY_UNCONNECTED` and no `UNUSED_CONTRADICTED`. U1's `X1` is mated, and U2's
@@ -149,16 +170,17 @@ mated nor `unused`.
 
 ## Tags and places
 
-Instance tags count up inside their parent, the cabinet unit: `-U1`, `-U2`. A circuit, such as one
+Instance tags count up inside their parent, the cabinet unit: `-U1`, `-U2`, with no prefix. One level
+up, in the top design, they print behind the cabinet's own tag: `-U1-U2-X1`. A circuit, such as one
 pump's or one string's, is a function block (`with d.function(...)`), never a place. A place is where
-units and field devices stand.
+units and field devices stand: a room, a site, a ship's hold.
 
 ## Task: a board unit in a cabinet
 
-The cabinet holds two identical io boards, `U1` and `U2`. A board has one connector the cabinet
-plugs into and one spare connector left open. Both boards share one release and sit in one cabinet;
-each instance prints its own tag, so no designation repeats. The same tag twice at one place gives
-`PRODUCT_DESIGNATION_DUPLICATE`.
+The cabinet is the unit that holds the boards. It holds two identical io boards, `U1` and `U2`. A
+board has one connector the cabinet plugs into and one spare connector left open. Both boards share
+one release; each instance prints its own tag, so no designation repeats. The same tag twice in one
+unit gives `PRODUCT_DESIGNATION_DUPLICATE`. The cabinet is added to the top design.
 
 ```python
 # easy: board units in a cabinet
@@ -178,14 +200,32 @@ def board(d):
     return Io(x1)
 
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
-io1 = d.add(board, "U1")
-io2 = d.add(board, "U2")
-p1 = d.device("P1", "DEMO-CONN-2P")
-p2 = d.device("P2", "DEMO-CONN-2P")
-d.mate(p1, io1.X1)
-d.mate(p2, io2.X1)
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit(
+    "demo-cabinet",
+    revision=1,
+    interface_version=1,
+    date="2026-01-01",
+    text="first release",
+    by="AB",
+    title="Demo cabinet",
+    number="DC-1",
+)
+def cabinet(c):
+    io1 = c.add(board, "U1")
+    io2 = c.add(board, "U2")
+    p1 = c.device("P1", "DEMO-CONN-2P")
+    p2 = c.device("P2", "DEMO-CONN-2P")
+    c.mate(p1, io1.X1)
+    c.mate(p2, io2.X1)
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(cabinet, "U1")
 ```
 
 The efficient level builds the same model. The cabinet's boards and plugs come from one loop.
@@ -208,11 +248,29 @@ def board(d):
     return Io(x1)
 
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
-for n in (1, 2):
-    io = d.add(board, f"U{n}")
-    d.mate(d.device(f"P{n}", "DEMO-CONN-2P"), io.X1)
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit(
+    "demo-cabinet",
+    revision=1,
+    interface_version=1,
+    date="2026-01-01",
+    text="first release",
+    by="AB",
+    title="Demo cabinet",
+    number="DC-1",
+)
+def cabinet(c):
+    for n in (1, 2):
+        io = c.add(board, f"U{n}")
+        c.mate(c.device(f"P{n}", "DEMO-CONN-2P"), io.X1)
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(cabinet, "U1")
 ```
 
 A loop of boards can leave the numbers to the build. Give the release a `class_code` and each
@@ -232,9 +290,24 @@ def numbered_board(d):
     return Io(d.device("X1", "DEMO-CONN-2P", interface=True))
 
 
-floating = fr.design("demo_parts", place="C1")
-floating.location("C1", "Pump cabinet")
-modules = [floating.add(numbered_board, None, name=f"module{n}") for n in (1, 2)]
+@fr.unit(
+    "demo-numbered-cabinet",
+    revision=1,
+    interface_version=1,
+    date="2026-01-01",
+    text="first release",
+    by="AB",
+    title="Numbered cabinet",
+    number="NC-1",
+)
+def numbered_cabinet(c):
+    for n in (1, 2):
+        c.add(numbered_board, None, name=f"module{n}")
+    return Cabinet()
+
+
+floating = fr.design("demo_parts")
+floating.add(numbered_cabinet, "U1")
 ```
 
 Check that the cabinet build has no errors.
@@ -271,8 +344,7 @@ def board_r2(d):
     return Io(d.device("X1", "DEMO-CONN-2P", interface=True))
 
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 d.add(board_r2, "U1")
 ```
 

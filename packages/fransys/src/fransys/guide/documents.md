@@ -18,24 +18,46 @@ read the same way; leaving it out (the default) leaves that cell empty.
 
 ```python
 from pathlib import Path
+from typing import NamedTuple
 
 import fransys as fr
 from fransys.colours import BK
 
-d = fr.design("demo_parts", place="C1")
-cabinet = d.location("C1", "Terminal cabinet")
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, description="Field strip")
-k1 = d.device("K1", "DEMO-CO-4P-24")
-d.wire(x1[1], k1["32"], wire=(BK, 1.5))
+
+
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit(
+    "terminal-cabinet",
+    revision=1,
+    interface_version=1,
+    date="2026-02-02",
+    text="First",
+    by="XX",
+    title="Terminal cabinet",
+    number="TC-1",
+)
+def terminal_cabinet(c):
+    x1 = c.terminal_strip("X1", "DEMO-TB-2.5", 2, description="Field strip")
+    k1 = c.device("K1", "DEMO-CO-4P-24")
+    c.wire(x1[1], k1.coil["A1"], wire=(BK, 1.5))
+    c.wire(x1[2], k1.coil["A2"], wire=(BK, 1.5))
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(terminal_cabinet, "U1")
 
 cover = Path("cabinet.md")
 cover.write_text("# Cabinet\n", encoding="utf-8")
 Path("cabinet.notes.md").write_text("Site notes for the installer.\n", encoding="utf-8")
 
-cabinet_document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)
+cabinet_document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "terminal-cabinet", cover=cover)
 result = fr.build(d, cabinet_document)
 findings = fr.check(result)
-assert not [f for f in findings if f.severity is fr.Severity.ERROR]
+assert not [f for f in findings if f.severity in (fr.Severity.ERROR, fr.Severity.WARNING)]
 written = fr.write(result, Path("out"))
 assert any(p.suffix == ".pdf" for p in written)
 ```
@@ -45,28 +67,24 @@ ahead of the schematic.
 
 ## Subjects
 
-A document's `subject` names what it draws. It is one of:
+A document's `subject` is a unit, an item, or a place where units stand. It is one of:
 
-- A location handle, what `d.location(...)` returns: a cabinet or another top-level place.
+- A location handle, what `d.location(...)` returns: a place where units stand.
 - A device handle, what `d.device(...)` or `d.harness(...)` returns.
-- A unit release's name, a plain `str`: resolved to the one instance of that release at build
+- A unit release's name, a plain `str`, such as a cabinet's: resolved to the one instance of that release at build
   and write time, not at the `fr.document` call itself.
 
 Any other value, such as a bare design, is a `TypeError` at the call. The cabinet example above
-passes the location `cabinet`. A unit added with `d.add(fn, "U1")` is named by its release name:
+passes its release name. A unit added with `d.add(fn, "U1")` is named by its release name:
 
 ```python
-from typing import Any, NamedTuple
-
 class Io(NamedTuple):
     X1: fr.Device
-    B1: Any
 
 
 @fr.unit("demo-io-board", revision=1, interface_version=1, date="2026-02-02", text="First", by="XX")
 def board(u):
-    b1 = u.location("B1", "Board")
-    return Io(u.device("X1", "DEMO-CONN-2P", interface=True), b1)
+    return Io(u.device("X1", "DEMO-CONN-2P", interface=True))
 
 
 d2 = fr.design("demo_parts")
@@ -84,20 +102,19 @@ The PDF is named after the unit and its release, `demo-io-board-v1.1.pdf`.
 Each `fr.document(...)` call, and each resulting PDF, is one drawing: a cabinet schematic, a
 harness drawing, or a PCB schematic, never several combined into one file. A unit follows the
 same rule at the unit's own level: a unit is one physical thing in one place, so its own items
-make one drawing set, whatever sub-locations they stand in inside it. **A unit's drawings take
-the unit as subject; a location inside a unit is not a drawing.** Locations only split
-drawing sets at the top level, outside any unit.
+make one drawing set. **A unit's drawings take the unit as subject; an item inside a unit is not a
+drawing.** Places only split drawing sets at the top level, outside any unit.
 
 Concretely: naming the unit's release (as `"demo-io-board"` above) draws that unit's one
-schematic. Naming a location that sits inside a unit (`B1`, not the unit) matches no
-drawing set at all, because the layout that location's items belong to is attributed to the
-unit, not to the bare location. `check` reports `DOCUMENT_NO_DRAWINGS` (an `ERROR`), and `write`
+schematic. Naming a device that sits inside a unit (`X1`, not the unit) matches no
+drawing set at all, because the layout that device belongs to is attributed to the
+unit, not to the bare device. `check` reports `DOCUMENT_NO_DRAWINGS` (an `ERROR`), and `write`
 turns any `ERROR` into `fr.BuildErrors` with no export written.
 
 ```python
 d3 = fr.design("demo_parts")
 io = d3.add(board, "U1")
-inner_document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, io.B1, cover=cover)
+inner_document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, io.X1, cover=cover)
 inner_result = fr.build(d3, inner_document)
 inner_findings = fr.check(inner_result)
 assert "DOCUMENT_NO_DRAWINGS" in {f.code for f in inner_findings}

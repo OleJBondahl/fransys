@@ -8,6 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device, _mark_boundary, _one_maker, part_mpn
 from fransys_author.surface._runs import check_run
 from fransys_author.surface._tags import floating_name
+from fransys_author.surface._unit_strip import take
 lazy from fransys_author._origin import caller_origin
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Group, Strip, Terminal, _write_placement
@@ -52,6 +53,8 @@ class TerminalStrip:
         self._pe_mpn, self._bridge = pe_mpn, bridge
         self._now, self._boundary, self._scope = group, boundary, scope
         self._runs: set[str] = set()
+        self._outside: set[int] = set()  # numbers a container took through `d.series` or `d.wire`
+        self._pe_run: Run | None = None
         self._made: dict[int, Terminal] = {}
         self._used: set[int] = set()
         self._placed: set[int] = set()
@@ -147,16 +150,19 @@ class TerminalStrip:
         if label == PE_LABEL:
             _need_pe(self)
         check_run(self, label, count, bridged)
-        return Run(self, label, count, bridged=bridged)
+        run = Run(self, label, count, bridged=bridged)
+        if label == PE_LABEL:
+            self._pe_run = run
+        return run
 
     _enters_from_field = True  # a series that comes from a cable enters at the outer side
 
     def _series_width(self) -> None:
         """A strip has no width of its own: the series gives it one."""
 
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- protocol
+    def _series_ends(self, design: Design, width: int | None) -> Ends:
         """The line ends (inner) and load ends (outer) of `width` taken terminals."""
-        terminals = self._take(width or 1)
+        terminals = take(self, design, width or 1)
         return Ends(
             line=tuple(End(t.inner, None) for t in terminals),
             load=tuple(End(t.outer, None) for t in terminals),

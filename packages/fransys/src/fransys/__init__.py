@@ -3,6 +3,7 @@
 The CLI is deferred (F10).
 """
 
+from fransys_author import AuthorError
 from fransys_author.surface import (
     AI,
     AO,
@@ -57,6 +58,7 @@ __all__ = [
     "GENERIC",
     "IT",
     "SIGNAL",
+    "AuthorError",
     "BuildErrors",
     "BuildResult",
     "Design",

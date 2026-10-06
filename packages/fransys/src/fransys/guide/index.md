@@ -16,7 +16,7 @@ from `fransys.colours`.
 | load a library, start a design | `d = fr.design("demo_parts")` | parts.md, Loading a library |
 | load a library, no design | `fr.parts(*names)` | parts.md |
 | lint a library | `fr.lint(*names)` | parts.md, Linting a library |
-| name a place | `d.location("C1", text)`, then `place="C1"` | authoring.md, name a place |
+| name a place | `d.location("HOLD", text)`, then `place="HOLD"` | authoring.md, name a place |
 | name a function block | `with d.function("M1", text):` | authoring.md, name a function block |
 | add a device | `d.device("Q1", P.X, place=, parent=, mounted_on=)` | authoring.md, add a device |
 | read a function or pin | `Q1.coil`, `Q1["A1"]`, `Q1[2]` | authoring.md, read a function or pin |
@@ -73,20 +73,31 @@ Replace `vX.Y.Z` with the release you pin.
 ## The shape of a build script
 
 A script starts a design from an installed part library (`fr.design`), authors it with
-`d.location` (a place), `d.device` and wiring, and passes it to `fr.build`, which merges,
-freezes and lays out a model. `fr.check` collects every finding about the built model;
+`d.device` and wiring, adds a cabinet as a unit (`@fr.unit`, `d.add`), and passes the design to
+`fr.build`, which merges, freezes and lays out a model. `fr.check` collects every finding about the built model;
 `fr.write` writes the exports to a directory, raising instead of writing anything if `check`
 found an `ERROR`. A design with no document has nothing to draw, so `build` still succeeds and
 `write` still produces the parts-list exports.
 
 ```python
 from pathlib import Path
+from typing import NamedTuple
 
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
-d.device("X1", "DEMO-TB-2.5")
+
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit("pump-cabinet", revision=1, interface_version=1, date="2026-01-01", text="First", by="AB")
+def cabinet(c):
+    c.device("X1", "DEMO-TB-2.5")
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(cabinet, "U1")
 
 result = fr.build(d)  # no document: no layout
 findings = fr.check(result)

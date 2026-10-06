@@ -9,7 +9,8 @@ finding is an `ERROR`.
 
 ## Where a build can fail
 
-Four stages. Each fails differently.
+Four stages. Each fails differently. A mistake in an authoring call itself, such as a design call
+the builder refuses, raises `fr.AuthorError` at that call, so a test catches it by name.
 
 **1. Loading a part library.** `fr.design(...)` and `fr.parts(...)` lint every library they load
 and raise `PartLibraryError` if linting finds an `ERROR`. Nothing is built from a library that fails its
@@ -69,9 +70,8 @@ draft, `d.draft()`, leaves it out, and building that shows what a missing librar
 reference to a part is left dangling.
 
 ```python
-d = fr.design("demo_parts", place="C1")
-c1 = d.location("C1", "Cabinet")
-d.device("K1", "DEMO-TB-2.5")
+d = fr.design("demo_parts")
+x1 = d.device("X1", "DEMO-CONN-2P")
 
 try:
     fr.build(d.draft())  # the authored records without the library
@@ -107,7 +107,7 @@ from pathlib import Path
 
 cabinet_cover = Path("cabinet.md")
 cabinet_cover.write_text("# Cabinet\n")
-doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cabinet_cover)
+doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, x1, cover=cabinet_cover)
 
 result = fr.build(d, doc)
 assert len(fr.check(result)) == 6
@@ -205,6 +205,8 @@ listing, a manifest of file hashes and package/tool versions, and the model itse
 is `<into>/<unit release name>/<version>.<revision>/`, or `<into>/<project number>/<version>.
 <revision>/` for the system (`unit=None`). Every check runs first -- the same gate `write` uses,
 plus five checks of its own -- and any `ERROR` writes nothing, the same as `write`.
+
+A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.
 
 ```python
 from typing import NamedTuple

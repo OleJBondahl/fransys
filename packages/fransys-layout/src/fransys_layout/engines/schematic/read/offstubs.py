@@ -61,7 +61,9 @@ def boundary_offs(
                 continue
             leaving = [c for c in crossing if far in (c.a.port, c.b.port)]
             found.extend(bridge(c, near, far) for c in leaving)
-            texts.extend(dataclasses.replace(reads.end_text(c, far)[0], port=near) for c in leaving)
+            texts.extend(
+                dataclasses.replace(reads.end_text(c, far, near)[0], port=near) for c in leaving
+            )
             if not leaving and (stub := mate_stub(within, (spec, other), (near, far), reads)):
                 found.append(stub[0])
                 texts.append(stub[1])
@@ -88,14 +90,17 @@ def far_maps(model: Model) -> FarMaps:
     )
 
 
-def end_text(model: Model, maps: FarMaps, c: Connection, near: Id[Any]) -> tuple[PortText, OffEnd]:
-    """C21: the off stub text and `OffEnd` of `near`, one end of conductor `c`."""
+def end_text(
+    model: Model, maps: FarMaps, c: Connection, near: Id[Any], at: Id[Any] | None = None
+) -> tuple[PortText, OffEnd]:
+    """C21: the off stub text and `OffEnd` of `near`, one end of `c`, printed at port `at`."""
     record = conductors(model)[c.handle]
     all_items = items(model)
     chain = tuple(parent_chain(lambda node: all_items[node].parent, record.carrier))
     carrier = chain[-1] if chain else None
     far = record.b if near == record.a else record.a
-    return _stub_end(model, maps, near, far, carrier)
+    text, end = _stub_end(model, maps, at or near, far, carrier)
+    return dataclasses.replace(text, port=near), dataclasses.replace(end, port=near)
 
 
 def _join_text(
@@ -112,7 +117,7 @@ def _stub_end(
     function = ports(model)[far].function
     far = maps.by_name.get((maps.partner.get(function), ports(model)[far].name), far)
     cable = "" if carrier is None else "-" + item_designation(model, carrier)
-    head, tail = stub_far_end(model, far)
+    head, tail = stub_far_end(model, far, near)
     text = StubText(cable=cable, far=head, port=tail)
     return PortText(port=near, text=text), OffEnd(port=near, text=text, carrier=carrier, far=far)
 

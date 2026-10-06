@@ -129,6 +129,12 @@ what a cable is.
 return the terminal strips and the boards that `unit` owns directly, sorted by id, never those of
 a unit nested in it.
 
+`fransys.derive.mates(model)` returns one `MateRow` per `d.mate` in the model, at every level: a mate
+on a board, and a plug mated to a unit's interface connector. A row holds the two connector functions
+`a` and `b` in the authored order, and `a_designation` and `b_designation`, the text the connector
+list prints. Rows sort by those two texts. Reach an item through the function. `connector_rows` covers
+board connectors only.
+
 `fransys.derive.terminal_items(model)` returns every item that carries a `terminal` facet, as a
 `frozenset[Id[Item]]`. Select terminals through it, so no script rebuilds the set from the facets.
 
@@ -220,8 +226,7 @@ def power_tap(u):
     return Io(u.device("P1", "DEMO-CONN-2P", interface=True))
 
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Demo cabinet")
+d = fr.design("demo_parts")
 housing = d.device("X10", "DEMO-CONN-2P")
 loose = d.device("X11", "DEMO-CONN-2P")
 cable = d.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
@@ -250,6 +255,8 @@ assert len(fr.derive.bom_lines(model)) == 3  # connector, cable, supply
 assert len(fr.derive.cable_list_rows(model)) == 1
 assert len(fr.derive.contents_rows(fr.derive.top_level_cables(model))) == 1
 assert fr.derive.printed_designation(model, ids["X11"]) == "-X11"
+(mate,) = fr.derive.mates(model)
+assert (mate.a_designation, mate.b_designation) == ("-X10", "-X11")
 
 cable_part = fr.derive.items(model)[ids["W1"]].part
 assert fr.derive.part_rating(model, cable_part).voltage_ac_v == 500

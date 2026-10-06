@@ -549,6 +549,20 @@ class BaselineMate:
 
 
 @value
+class MateRow:
+    """One `Mate` of the model, at any level: its two connector functions and their texts.
+
+    `a` and `b` keep the authored order of `d.mate`. A designation is the text the connector list
+    prints for that connector at system level (`connector_designation`).
+    """
+
+    a: Id[Function]
+    b: Id[Function]
+    a_designation: str
+    b_designation: str
+
+
+@value
 class BaselineNet:
     """One `nets` entry: a `Net` with a member port on an item of the listed unit itself."""
 
@@ -678,22 +692,6 @@ DESIGNATION_COLUMNS = ("designation", "reference", "description")
 # A connector row repeats on each of its pins, so a line is the connector's fields, then the pin's.
 CONNECTOR_COLUMNS = ("designation", "style", "pincount", "gender", "mate_designation")
 PIN_COLUMNS = ("marking", "net", "mate_port_designation")
-CABLE_LIST_COLUMNS = (
-    "designation",
-    "mpn",
-    "description",
-    "core_count",
-    "gauge_mm2",
-    "length_mm",
-    "from_label",
-    "to_label",
-)
-CONTENTS_COLUMNS = (
-    "designation",
-    "mpn",
-    "description",
-    "core_count",
-    "gauge_mm2",
-    "length_mm",
-    "ends",
-)
+_CABLE_FIELDS = ("designation", "mpn", "description", "core_count", "gauge_mm2", "length_mm")
+CABLE_LIST_COLUMNS = (*_CABLE_FIELDS, "from_label", "to_label")
+CONTENTS_COLUMNS = (*_CABLE_FIELDS, "ends")

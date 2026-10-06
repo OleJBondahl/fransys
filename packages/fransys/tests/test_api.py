@@ -22,6 +22,7 @@ _EXPECTED_ALL = [
     "EARTHED",
     "GENERIC",
     "IT",
+    "AuthorError",
     "BuildErrors",
     "BuildResult",
     "Design",

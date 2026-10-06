@@ -57,7 +57,7 @@ class Links:
         if not pins:
             msg = "d.earth joins at least one pin, got none"
             raise AuthorError(msg)
-        self._engine.net("PE", *[_port(pin) for pin in pins], cls="pe")
+        self._engine.net("PE", *[_port(self, pin) for pin in pins], cls="pe")
 
     def net(self: "Design", name: str, *pins: Port | Terminal, kind: NetClass = CONTROL) -> None:
         """Declare the signal net `name` over the pins, of the `NetClass` `kind`.
@@ -65,21 +65,21 @@ class Links:
         Does not make a `PE` or `POWER` net (earth and supplies own those) or take a potential.
         """
         net_class = _kind(kind)
-        self._engine.net(name, *[_port(pin) for pin in pins], cls=net_class.value)
+        self._engine.net(name, *[_port(self, pin) for pin in pins], cls=net_class.value)
 
     def busbar(self: "Design", a: Port | Terminal, b: Port | Terminal) -> None:
         """Join two pins by a busbar: a conductor of kind `bus`.
 
         Does not make a wire; the same pin twice raises.
         """
-        self._engine.link(_port(a), _port(b), kind="bus")
+        self._engine.link(_port(self, a), _port(self, b), kind="bus")
 
     def rail_bond(self: "Design", a: Port | Terminal, b: Port | Terminal) -> None:
         """Join two pins of one rail by a bond: a conductor of kind `rail`.
 
         Does not make a wire; the same pin twice raises.
         """
-        self._engine.link(_port(a), _port(b), kind="rail")
+        self._engine.link(_port(self, a), _port(self, b), kind="rail")
 
     def mate(self: "Design", a: Device | Fn, b: Device | Fn) -> None:
         """Plug connector `a` into connector `b`.

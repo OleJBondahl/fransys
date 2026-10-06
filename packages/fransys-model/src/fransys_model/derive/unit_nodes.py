@@ -12,7 +12,7 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, parent_chain
 from fransys_model.vocab.cables import cable_items
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.membership import is_harness, item_chain, unit_subtree, units
-from fransys_model.vocab.tables import aspect_nodes, items
+from fransys_model.vocab.tables import aspect_nodes, functions, items, ports
 from fransys_model.vocab.unit_index import unit_index
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.aspects import AspectNode
-    from fransys_model.vocab.core import Item, Unit
+    from fransys_model.vocab.core import Item, Port, Unit
 
 # The two aspects a designation renders a segment for, each with its sign.
 SIGNS = {Aspect.FUNCTION: "=", Aspect.LOCATION: "+"}
@@ -43,6 +43,12 @@ def chain_up(
 def outside_unit(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
     """Whether a list for `unit` names `item` from outside it; `unit=None` has no outside."""
     return unit is not None and items(model)[item].unit not in unit_subtree(model, unit)
+
+
+def stub_place(model: Model, near: Id[Port]) -> Id[AspectNode] | None:
+    """The place an off stub at `near` states: its item's, or `None` for an item in a unit."""
+    owner = items(model)[functions(model)[ports(model)[near].function].item]
+    return None if owner.unit else effective_placement(model, owner.id, Aspect.LOCATION)
 
 
 def end_context(

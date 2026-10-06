@@ -13,15 +13,17 @@ Each task is shown twice and builds the same model both times. The easy level wr
 one device and one wire per line. The efficient level uses the same calls with Python around them: a
 loop over a table, a function for a circuit that repeats. Neither level has a call the other lacks.
 
-Tasks on this page: name a place and a function block with devices; wire a terminal strip and a series;
+Tasks on this page: name a function block with devices; wire a terminal strip and a series;
 run a cable. The sections after them list the one-call tasks.
 
 ## Name a place and a function block
 
-A place is where a device physically is: a cabinet, a panel, a machine. `d.location("C1", text)` names
-it, and `place="C1"` on `fr.design` makes it the default place. A function block is a part of the
-circuit drawn together: `with d.function("LAMPS", text):` puts every device made inside it in that
-block. Tags are bare: `"C1"`, never `"+C1"`, and a prefixed tag raises.
+A place is where units and field devices stand: a room, a site, a ship's hold. `d.location("HOLD", text)`
+names it, and `place="HOLD"` on `d.device` or `fr.design` puts devices there. A cabinet is not a place.
+It is a unit that holds components, units and wires (see `units.md`). A function block is one circuit,
+such as one pump's or one string's: `with d.function("LAMPS", text):` puts every device made inside it
+in that block, and a circuit is never a place. Tags are bare: `"HOLD"`, never `"+HOLD"`, and a prefixed
+tag raises.
 
 `d.device(tag, part, place=, parent=, mounted_on=, interface=, unused=, name=)` adds one device.
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.
@@ -35,12 +37,11 @@ Pass `name=`, the identity a released number holds to. A floating call with no `
 with it; a cable's conductors carry no flag.
 
 ```python
-# easy: place and function block
+# easy: function block
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 with d.function("RUN", "Pump run"):
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     h1 = d.device("H1", "DEMO-LAMP-24")
@@ -50,14 +51,13 @@ with d.function("RUN", "Pump run"):
 ```
 
 ```python
-# efficient: place and function block
+# efficient: function block
 import fransys as fr
 from fransys.colours import BU
 
 LAMPS = {"H1": ("co_1", "14"), "H2": ("co_2", "24")}  # lamp tag -> the relay contact that lights it
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 with d.function("RUN", "Pump run"):
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     for tag, (function, pin) in LAMPS.items():
@@ -89,8 +89,7 @@ A device has functions, and a function has pins. Both are plain attributes and b
 ```python
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 k1 = d.device("K1", "DEMO-RLY-2CO-24")
 coil = k1.coil          # the function named `coil` in the part file
 a1 = k1.coil["A1"]      # the pin marked A1 on that function
@@ -113,7 +112,7 @@ pin before the script runs.
 uv run python -m fransys parts-module demo_parts parts_demo.py
 ```
 
-Pass the module to `fr.design(P, place="C1")`. A module whose library has since changed raises at
+Pass the module to `fr.design(P)`. A module whose library has since changed raises at
 `fr.design` and tells you to regenerate it. Both spellings build the same model. The rest of this page
 uses strings.
 
@@ -121,7 +120,7 @@ uses strings.
 
 `d.terminal_strip("X1", part, count, description=, pe=)` adds a terminal strip of `count` terminals,
 and `X1[3]` takes terminal 3. `pe` names the protective-earth part, and a run labelled exactly `"PE"` (`X1.run("PE", 2)`) takes it; without `pe=` that run raises. A terminal has two sides: wiring
-inside the cabinet reaches its inner side, a field cable its outer side. A wire or a series enters a
+inside the unit reaches its inner side, a field cable its outer side. A wire or a series enters a
 strip at the right side without you saying so.
 
 With `count`, the strip makes all its terminals at once, so spares exist and count in the lists. A
@@ -135,8 +134,7 @@ the field side, and `W1.core(...)` lands there.
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
 h1 = d.device("H1", "DEMO-LAMP-24")
 with d.function("FEED", "Lamp feed"):
@@ -162,8 +160,7 @@ terminal, `d.wire` on the inner side and `W1.core` on the outer side.
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump hall")
+d = fr.design("demo_parts")
 feed = d.terminal_strip("X1", "DEMO-TB-2.5").run("24V", bridged=True)
 for tag in ("H1", "H2", "H3"):
     d.wire(feed, d.device(tag, "DEMO-LAMP-24")["1"], wire=(BU, 0.75))
@@ -193,8 +190,7 @@ single-pin lamp is wired with `d.wire` instead.
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 psu = d.device("G1", "DEMO-PSU-24")
 dc = d.dc_supply("24VDC", psu.output)
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
@@ -210,8 +206,7 @@ d.series(dc.plus, feed, k2.coil, dc.minus, wire=(BU, 0.75))
 import fransys as fr
 from fransys.colours import BU
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 psu = d.device("G1", "DEMO-PSU-24")
 dc = d.dc_supply("24VDC", psu.output)
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
@@ -239,8 +234,7 @@ as `parent=` does on `d.device`.
 import fransys as fr
 from fransys.colours import BK, BN, GY
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
 h1 = d.device("H1", "DEMO-LAMP-24")
 h2 = d.device("H2", "DEMO-LAMP-24")
@@ -257,8 +251,7 @@ from fransys.colours import BK, BN, GY
 
 CORES = ((BN, 1, "H1", 1), (BK, 2, "H1", 2), (GY, 3, "H2", 1))  # colour, terminal, lamp, pin
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
 lamps = {tag: d.device(tag, "DEMO-LAMP-24") for tag in ("H1", "H2")}
 w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
@@ -273,8 +266,7 @@ pairing rule stays yours.
 ```python
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 a = d.device("J1", "DEMO-CONN-4P")
 b = d.device("J2", "DEMO-CONN-4P")
 w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
@@ -295,8 +287,7 @@ a blue 0.75 mm2 wire.
 ```python
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, pe="DEMO-TB-PE-2.5")
 d.earth(x1[1], x1[2])
 ```
@@ -322,13 +313,13 @@ source whose part states a nominal voltage takes no `voltage=`; one without it n
 minus 15 V supply.
 
 Without `mid`, `minus` is 0 V and `plus` carries the voltage. With `mid`, `mid` is 0 V, `plus` is
-plus the voltage and `minus` is minus the voltage. `names=(plus, minus, mid)` renames the potentials.
+plus the voltage and `minus` is minus the voltage. `names=(plus, minus, mid)` renames the potentials. `ac_supply` takes `names=` too: one name per phase pin in order, then one for `n`. A second three-phase supply beside L1, L2, L3 takes, say, `names=("EL1", "EL2", "EL3")`. The rails stay `ac.L1`, `ac.L2`, `ac.L3` and `ac.N`, and phases and wire colours do not change.
 
 `earthing=fr.IT` declares a floating supply on `ac_supply` or `dc_supply`; the default is `fr.EARTHED`.
 Two 0 V rails are two supplies.
 
-`d.ac_supply(name, voltage, *phases, n=None)` declares an AC supply on one or three phase pins in
-phase order. Its rails are `ac.L1`, plus `ac.L2` and `ac.L3` for three phases. A pin's side and order
+`d.ac_supply(name, voltage, *phases, n=None, names=None)` declares an AC supply on one or three phase pins in
+phase order. Its rails are `ac.L1`, plus `ac.L2` and `ac.L3` for three phases. On three phases `voltage` is each phase's RMS to the star point: 230 for a 400 V supply. A 230 V line-to-line IT supply is declared 132.79. A pin's side and order
 on a rail come from the supply you declare, never from the rail's name. A rail draws its power symbol
 only when declared. A fused branch or a second source of one voltage is not a supply: make it a strip
 with a `description`, or wire it point to point.
@@ -336,8 +327,7 @@ with a `description`, or wire it point to point.
 ```python
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 x0 = d.terminal_strip("X0", "DEMO-TB-2.5", 2)
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
 mains = d.ac_supply("230V", 230, x0[1], n=x0[2])
@@ -363,8 +353,7 @@ as its subject (see `documents.md`). A harness with no tag takes `name=` as its 
 ```python
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 h1 = d.device("H1", "DEMO-LAMP-24")
 result = fr.build(d)
 assert fr.derive.item_designation(result.model, h1.id) == "H1"
@@ -406,8 +395,7 @@ every pin. The house value is off.
 ```python
 import fransys as fr
 
-d = fr.design("demo_parts", place="C1")
-d.location("C1", "Pump cabinet")
+d = fr.design("demo_parts")
 with d.function("RUN", "Pump run") as run:
     d.device("K1", "DEMO-RLY-2CO-24")
 with d.function("LAMPS", "Lamps") as lamps:

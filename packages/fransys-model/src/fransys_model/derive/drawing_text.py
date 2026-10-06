@@ -43,7 +43,7 @@ from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.marker_targets import marker_lines, target_lines
 from fransys_model.derive.port_marking import marking_text, port_marking
 from fransys_model.derive.revision_text import revision_text
-from fransys_model.derive.unit_nodes import chain_up, end_context
+from fransys_model.derive.unit_nodes import chain_up, end_context, stub_place
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.derive.wire_ends import ordered_wire_ends
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
@@ -252,9 +252,12 @@ def far_end(
     ), tail
 
 
-def stub_far_end(model: Model, port: Id[Port]) -> tuple[str, str]:
-    """C21: `port`'s far end as an off stub names it, `far_end` whole (D10)."""
-    return far_end(model, port)
+def stub_far_end(model: Model, port: Id[Port], near: Id[Port] | None = None) -> tuple[str, str]:
+    """C21: `port`'s far end as the off stub at `near` names it, below `near`'s place (layout-0121).
+
+    A near end in a unit stands on the unit's page, which states no place: whole path, as for None.
+    """
+    return far_end(model, port, None if near is None else stub_place(model, near))
 
 
 def off_stub_line(cable: str, *, north: bool, far: str, ports: Iterable[str]) -> str:
@@ -279,7 +282,7 @@ def off_stub_text(model: Model, marker: LinkMarker) -> str:
         msg = "off_stub_text needs an off stub (star OFF) with a far port"
         raise ValueError(msg)
     cable = "" if marker.carrier is None else "-" + item_designation(model, marker.carrier)
-    head, _ = stub_far_end(model, marker.far)
+    head, _ = stub_far_end(model, marker.far, marker.port)
     run = [marker]
     if marker.box_x is not None:
         run = sorted(
@@ -291,11 +294,11 @@ def off_stub_text(model: Model, marker: LinkMarker) -> str:
                 and other.box_x == marker.box_x
                 and other.y == marker.y
                 and other.carrier == marker.carrier
-                and stub_far_end(model, cast("Id[Port]", other.far))[0] == head
+                and stub_far_end(model, cast("Id[Port]", other.far), other.port)[0] == head
             ),
             key=lambda other: (other.x, other.id),
         )
-    tails = (stub_far_end(model, cast("Id[Port]", other.far))[1] for other in run)
+    tails = (stub_far_end(model, cast("Id[Port]", other.far), other.port)[1] for other in run)
     return off_stub_line(cable, north=marker.facing is Side.N, far=head, ports=tails)
 
 

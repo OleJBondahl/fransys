@@ -106,7 +106,7 @@ def _build_top_level_units(*, second_unit: bool, same: bool):
     ("same", "expected"),
     [
         pytest.param(
-            True, {None: ["← +C1-X1:1"], "ua": ["← +C1-X2:1"]}, id="same-location-fails-on-base"
+            True, {None: ["← -X1:1"], "ua": ["← +C1-X2:1"]}, id="same-location-fails-on-base"
         ),
         pytest.param(
             False, {None: ["← +C1-X1:1"], "ua": ["← +C2-X2:1"]}, id="other-location-control"
@@ -210,7 +210,7 @@ def test_a_pass_through_boundary_pin_wired_to_the_top_level_gets_a_stub_pair() -
     #   of a nested unit (the pass-through pin is then not a top-level unit's boundary pin)
     result = _build_pass_through()
     assert _errors(result) == []
-    assert _off_stubs(result.model) == {None: ["← +C1-X1:1"], "a": ["← +C1-X2:1"]}
+    assert _off_stubs(result.model) == {None: ["← -X1:1"], "a": ["← +C1-X2:1"]}
 
 
 def _build_nested_wire():

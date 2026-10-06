@@ -5,11 +5,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
 from fransys_author.errors import AuthorError
-from fransys_author.handles import Terminal
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import End, Ends
+from fransys_author.surface._wire import _port
 from fransys_model.vocab import ConductorMark, Earthing
-lazy from fransys_author.handles import Port
+lazy from fransys_author.handles import Port, Terminal
 lazy from fransys_author.surface._device import Device
 
 if TYPE_CHECKING:
@@ -95,11 +95,6 @@ class DcSupply(_Rails):
     plus: SupplyRail
     minus: SupplyRail
     mid: SupplyRail
-
-
-def _port(pin: Port | Terminal) -> Port:
-    """The port a pin argument stands for: a terminal's `.inner`, a port itself."""
-    return pin.inner if isinstance(pin, Terminal) else pin
 
 
 def _declare(
@@ -217,12 +212,23 @@ def _dc_rails(
     return rails
 
 
-def _phases(name: str, phases: tuple[Port | Terminal, ...]) -> tuple[Port, ...]:
+def _phases(design: Design, name: str, phases: tuple[Port | Terminal, ...]) -> tuple[Port, ...]:
     """The phase pins as ports; only one or three phases make a supply."""
     if len(phases) not in _ONE_OR_THREE:
         msg = f"ac_supply {name!r} takes 1 or 3 phase pins, not {len(phases)}"
         raise AuthorError(msg)
-    return tuple(_port(pin) for pin in phases)
+    return tuple(_port(design, pin) for pin in phases)
+
+
+def _ac_names(phases: int, names: tuple[str, ...] | None, *, has_n: bool) -> tuple[str, ...]:
+    """The printed rail names: L1.. then N by default; `names=` must give one per pin."""
+    default = tuple(mark.value for mark, _ in _AC[:phases]) + (("N",) if has_n else ())
+    if names is None:
+        return default
+    if len(names) != len(default):
+        msg = f"names= is one per phase pin, then one for n: expected {len(default)}, not {names!r}"
+        raise AuthorError(msg)
+    return tuple(names)
 
 
 class Supplies:
@@ -234,18 +240,22 @@ class Supplies:
         voltage: str | int | Decimal,
         *phases: Port | Terminal,
         n: Port | Terminal | None = None,
+        names: tuple[str, ...] | None = None,
         earthing: Earthing = Earthing.EARTHED,
     ) -> AcSupply:
         """Declare an AC supply on 1 or 3 phase pins in phase order, and `n`; rails `ac.L1`.
 
-        Does not read the voltage from a part: `voltage` is the supply's own, RMS.
+        `voltage` is each phase's RMS to the star point; `names=` renames the rails, one per pin.
+        Does not read the voltage from a part.
         """
+        pins = _phases(self, name, phases)
+        printed = _ac_names(len(pins), names, has_n=n is not None)
         rails = [
-            (SupplyRail(mark.value, pin, mark.value, mark, phase), str(voltage))
-            for (mark, phase), pin in zip(_AC, _phases(name, phases), strict=False)
+            (SupplyRail(mark.value, pin, printed[i], mark, phase), str(voltage))
+            for i, ((mark, phase), pin) in enumerate(zip(_AC, pins, strict=False))
         ]
         if n is not None:
-            rails.append((SupplyRail("N", _port(n), "N", ConductorMark.N, None), "0"))
+            rails.append((SupplyRail("N", _port(self, n), printed[-1], ConductorMark.N, None), "0"))
         _declare(self, name, "ac", rails, earthing)
         return AcSupply(name, (rail for rail, _ in rails))
 
@@ -266,11 +276,11 @@ class Supplies:
         Does not find a pin by name: with no `source` the pins and `voltage=` are required.
         """
         given: dict[ConductorMark, Port | None] = {
-            PLUS: None if plus is None else _port(plus),
-            MINUS: None if minus is None else _port(minus),
+            PLUS: None if plus is None else _port(self, plus),
+            MINUS: None if minus is None else _port(self, minus),
         }
         if mid is not None:
-            given[MID] = _port(mid)
+            given[MID] = _port(self, mid)
         if source is None:
             found = _bare_facts(name, given, voltage)
         else:

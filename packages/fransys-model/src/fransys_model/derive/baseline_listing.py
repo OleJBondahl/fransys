@@ -19,9 +19,6 @@ from fransys_model.vocab.tables import (
     ports,
     projects,
 )
-from fransys_model.vocab.tables import (
-    mates as mates_table,
-)
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
@@ -32,6 +29,7 @@ from .baseline_designation import (
     _net_port_text,
     unit_designation,
 )
+from .mate_rows import mates
 from .reports import _conductor_unit, _lowest_common_unit
 from .rows import (
     BaselineBoundary,
@@ -195,7 +193,7 @@ def _conductor_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineConduc
 def _mate_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineMate, ...]:
     all_items = items(model)
     rows = []
-    for record in mates_table(model).values():
+    for record in mates(model):
         fn_a, fn_b = functions(model)[record.a], functions(model)[record.b]
         a_unit, b_unit = all_items[fn_a.item].unit, all_items[fn_b.item].unit
         if _lowest_common_unit(model, a_unit, b_unit) != unit:

@@ -238,3 +238,29 @@ def test_plus_and_minus_pins_stand_in_for_missing_marks(lib: Draft) -> None:
     dc = d.dc_supply("psu", g1, plus=g1["+"], minus=g1["-"])
     assert (dc.plus.pin.name, dc.minus.pin.name) == ("+", "-")
     assert dc.plus.potential == "24V"
+
+
+def test_ac_names_rename_the_potentials_and_keep_marks_and_phases(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    pins = [d.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(4)]
+    ac = d.ac_supply("it", "133", *pins[:3], n=pins[3], names=("EL1", "EL2", "EL3", "EN"))
+    assert [r.potential for r in (ac.L1, ac.L2, ac.L3, ac.N)] == ["EL1", "EL2", "EL3", "EN"]
+    assert [r.mark for r in (ac.L1, ac.L2, ac.L3, ac.N)] == [
+        ConductorMark.L1,
+        ConductorMark.L2,
+        ConductorMark.L3,
+        ConductorMark.N,
+    ]
+    assert [ac.L1.phase, ac.L2.phase, ac.L3.phase, ac.N.phase] == [0, 120, 240, None]
+    assert set(_records(d, SupplySystem)[0].rails) == {"EL1", "EL2", "EL3", "EN"}
+
+
+def test_ac_names_of_the_wrong_length_raise_with_the_expected_count(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    pin = d.device("A1", "TEST-PSU-24V").out["+"]
+    with pytest.raises(AuthorError, match=r"expected 4, not \('A', 'B', 'C'\)"):
+        d.ac_supply("a", "230", pin, pin, pin, n=pin, names=("A", "B", "C"))
+    with pytest.raises(AuthorError, match=r"expected 3"):
+        d.ac_supply("b", "230", pin, pin, pin, names=("A", "B", "C", "D"))
+    with pytest.raises(AuthorError, match=r"expected 2"):
+        d.ac_supply("c", "230", pin, n=pin, names=("A",))

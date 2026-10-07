@@ -27,8 +27,9 @@ sys.modules[_spec.name] = lean_surface
 _spec.loader.exec_module(lean_surface)
 
 #: The workspace's own ~21-entry surface (MS1, MS2, MS6, MS8; MS1 amended 2026-09-27 to seven
-#: model modules, model-0159 to eight; CT1 dropped `fransys_wireviz`), spelled out so a change
-#: to it is visible in review rather than hidden behind a recomputed assertion.
+#: model modules, model-0159 to eight, model-0167 to nine; CT1 dropped `fransys_wireviz`),
+#: spelled out so a change to it is visible in review rather than hidden behind a recomputed
+#: assertion.
 _EXPECTED_SURFACE_MODULES = (
     "electrical_symbols",
     "fransys",
@@ -40,6 +41,7 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_layout",
     "fransys_model.derive",
     "fransys_model.derive.baseline",
+    "fransys_model.derive.block_diagram",
     "fransys_model.derive.cable_drawing",
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.numbering_pins",
@@ -55,8 +57,8 @@ _EXPECTED_SURFACE_MODULES = (
 )
 
 
-def test_surface_modules_is_the_expected_22_entries():
-    """Every `packages/*` top-level module (`fransys_model` excepted), its eight named
+def test_surface_modules_is_the_expected_23_entries():
+    """Every `packages/*` top-level module (`fransys_model` excepted), its nine named
     modules (MS1), `fransys.colours` and the author package's two surface modules (MS8):
     no more, no fewer.
     """
@@ -67,7 +69,13 @@ def test_surface_names_matches___all___for_drawing_text_baseline_and_numbering_p
     """`derive.drawing_text`/`.baseline`/`.numbering_pins` each carry a real `__all__` now
     (main's SURFACE Part 1) -- `surface_names` reports exactly that tuple, non-empty, for each.
     """
-    from fransys_model.derive import baseline, cable_drawing, drawing_text, numbering_pins
+    from fransys_model.derive import (
+        baseline,
+        block_diagram,
+        cable_drawing,
+        drawing_text,
+        numbering_pins,
+    )
 
     names = lean_surface.surface_names()
     for dotted, module in (
@@ -75,6 +83,7 @@ def test_surface_names_matches___all___for_drawing_text_baseline_and_numbering_p
         ("fransys_model.derive.baseline", baseline),
         ("fransys_model.derive.numbering_pins", numbering_pins),
         ("fransys_model.derive.cable_drawing", cable_drawing),
+        ("fransys_model.derive.block_diagram", block_diagram),
     ):
         assert names[dotted] == tuple(module.__all__)
         assert names[dotted] != ()
@@ -159,3 +168,16 @@ def test_docstring_line_count_counts_source_lines_inclusive():
     node = lean_surface.find_def(tree, "f")
     docstring = lean_surface.literal_docstring(node)
     assert lean_surface.docstring_line_count(docstring) == 4
+
+
+def test_module_tree_is_cached_on_the_text_not_the_path(tmp_path: Path) -> None:
+    """Same text returns the one tree; an in-place rewrite of the same path re-parses (0122)."""
+    path = tmp_path / "m.py"
+    path.write_text("def a(): ...\n", encoding="utf-8")
+    first = lean_surface.module_tree(path)
+    assert lean_surface.module_tree(path) is first
+    path.write_text("def b(): ...\n", encoding="utf-8")
+    second = lean_surface.module_tree(path)
+    assert second is not first
+    assert lean_surface.find_def(second, "b") is not None
+    assert lean_surface.find_def(second, "a") is None

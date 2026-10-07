@@ -2,6 +2,7 @@
 
 from .cables import cable_blocks
 from .check import check
+from .diagram import diagram_sheets
 from .pages import pages
 
-__all__ = ["cable_blocks", "check", "pages"]
+__all__ = ["cable_blocks", "check", "diagram_sheets", "pages"]

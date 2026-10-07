@@ -89,6 +89,8 @@ PORT_FIELDS = {
     # parts-0010 (F9): stated pole side and IEC 60445 conductor; PE is a role, so "PE" is refused
     "side": _Field(str, required=False, enum=PoleSide),
     "conductor": _Field(str, required=False, enum=ConductorMark),
+    # parts-0017 (HA4): a header pin's function port, "<function>.<port>" of the same part
+    "joins": _Field(str, required=False),
 }
 LINK_FIELDS = {
     "a": _Field(str),
@@ -114,6 +116,8 @@ CONNECTOR_FIELDS = {
     "gender": _Field(str, required=False, enum=Gender),  # model-0080: absent means not stated
     # parts-0003: the label printed on the part ("X1"); absent means the function's name
     "marking": _Field(str, required=False),
+    # parts-0016: the MPNs this connector mates with, data only
+    "mates": _Field(list, required=False, elem_type=str),
 }
 
 

@@ -29,6 +29,7 @@ _UNPLACED = frozendict(
         TextKind.REFERENCE: "no free place in the marker's row",
         TextKind.STUB: "no free place in the marker's row",
         TextKind.POWER: "no free place beside the power symbol",
+        TextKind.HARNESS_LINE: "no free place beside the harness line",
     }
 )
 _UNPLACED_SLOT = "no free place beside the slot"

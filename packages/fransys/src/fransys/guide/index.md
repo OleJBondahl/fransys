@@ -18,7 +18,7 @@ from `fransys.colours`.
 | lint a library | `fr.lint(*names)` | parts.md, Linting a library |
 | name a place | `d.location("HOLD", text)`, then `place="HOLD"` | authoring.md, name a place |
 | name a function block | `with d.function("M1", text):` | authoring.md, name a function block |
-| add a device | `d.device("Q1", P.X, place=, parent=, mounted_on=)` | authoring.md, add a device |
+| add a device | `d.device("Q1", P.X, place=, parent=, mounted_on=, joins=)` | authoring.md, add a device |
 | read a function or pin | `Q1.coil`, `Q1["A1"]`, `Q1[2]` | authoring.md, read a function or pin |
 | add a terminal strip, take a terminal | `d.terminal_strip("X1", P.X, n)`, `X1[3]` | authoring.md, Strips and terminals |
 | a named, bridged run on a strip | `X1.run(label, n, bridged=True)` | authoring.md, Bridges |
@@ -35,11 +35,13 @@ from `fransys.colours`.
 | name a place inside a place | `d.location("BATT", text, within="HOLD")` | authoring.md, A place inside a place |
 | list a function's pins in order | `fn.pins` | authoring.md, Cables |
 | plug a connector | `d.mate(a, b)` | authoring.md, plug a connector |
-| add a harness | `d.harness("W5")` | authoring.md, add a harness |
+| add a harness | `d.harness("W5")` | harnesses.md, add a harness |
+| group PLC modules in a rack | `d.rack` | authoring.md |
 | request a PLC channel, scale it | `K1.coil.plc(fr.DO, name)`, `.scale(...)` | authoring.md, request a PLC channel |
 | title block, revision | `d.project(...)`, `d.revision(...)` | authoring.md, title block, revision |
 | read a part's rating while authoring | `d.rating(part, fn)`, `d.operating(part, fn)` | authoring.md, Reading a part's rating |
-| advise the drawing | `d.layout.chain`, `keep_together`, `break_before`, `order`, `symbol`, `draw_in`, `sheet`, `profile` | authoring.md, Layout profile |
+| advise the drawing | `d.layout.chain`, `keep_together`, `break_before`, `order`, `symbol`, `draw_in`, `side`, `sheet`, `profile` | authoring.md, Layout profile |
+| put a unit's interface above or below its outline | `d.layout.side(u1.bus_in, fr.ABOVE)`, `fr.BELOW` | authoring.md, Layout profile |
 | define a unit | `@fr.unit(name, revision=, interface_version=, ...)` | units.md, define a unit |
 | add a unit instance, reach its boundary | `d.add(fn, "U1")` returns the unit's `NamedTuple`, `io.X1` | units.md, Nesting units |
 | mark a boundary device | `interface=True`, `unused=True` on `d.device` | units.md, The boundary |
@@ -111,6 +113,7 @@ fr.write(result, Path("out"))
 
 - `parts.md`: loading and linting a part library, and catching a bad one.
 - `authoring.md`: places, functions, devices, wiring, cables, colours.
+- `harnesses.md`: adding a harness, and how its cables and plugs print.
 - `units.md`: a unit's boundary, its revisions, and nesting one unit inside another.
 - `build.md`: `build`, `check`, `write`, `release`, `verify`, and where each can fail.
 - `documents.md`: presets, covers, subjects, and one PDF per drawing.

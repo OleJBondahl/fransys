@@ -14,8 +14,10 @@ from fransys_model import derive as model_derive
 _REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "examples").is_dir())
 
 _EXPECTED_ALL = [
+    "ABOVE",
     "AI",
     "AO",
+    "BELOW",
     "CONTROL",
     "DI",
     "DO",
@@ -207,3 +209,11 @@ def test_the_docs_scan_excludes_only_the_named_directories(tmp_path):
 def test_the_import_scan_can_fail():
     assert first_party_violations("import fransys_model") == {"fransys_model"}
     assert first_party_violations("import fransys\nfrom pathlib import Path") == set()
+
+
+def test_above_and_below_are_the_models_north_and_south() -> None:
+    """HL14, model-0177: `fr.ABOVE` and `fr.BELOW` name `Side.N` and `Side.S`, one enum serves."""
+    from fransys_model.layout import Side
+
+    assert fransys.ABOVE is Side.N
+    assert fransys.BELOW is Side.S

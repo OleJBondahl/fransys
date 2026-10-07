@@ -103,16 +103,16 @@ def test_no_branch_names_a_pure_off_stub(name: str) -> None:
 
 
 def test_the_cabinets_have_reference_groups_to_count() -> None:
-    """Guard: the equality above is not vacuous; the narrow cabinet holds four groups.
+    """Guard: the equality above is not vacuous; the narrow cabinet holds three groups.
 
-    One severed cut (its owner marker), two page-groups of one star net (a reference on each of
-    two pages) and one turned reference pair (S12, M12: a net of two ports whose join turns
-    back is a reference and a branch, not a wire).
+    One severed cut (its owner marker), one page-group of the rail's star net and one turned
+    reference pair (S12, M12: a net of two ports whose join turns back is a reference and a
+    branch, not a wire). HL1 draws `W1` to `-H1` as a line, so the star's second page-group is gone.
     """
     markers, _ = _laid_out("narrow")
     kinds = Counter(one.star for one in markers if heads_group(one.star, one.side.value))
-    assert kinds == {"": 1, "ref": 3}
-    assert sum(_counted("narrow").values()) == 4
+    assert kinds == {"": 1, "ref": 2}
+    assert sum(_counted("narrow").values()) == 3
 
 
 def _owner(n: int, drawing_set: int) -> LinkMarker:

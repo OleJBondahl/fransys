@@ -20,7 +20,7 @@ def engine(lib: Draft) -> Draft:
     io.revision(1, date="d", text="t", created="XX")
     x1 = io.item("DEMO-CONN-2P", name="X1", tag="X1")
     x2 = io.item("DEMO-CONN-2P", name="X2", tag="X2")
-    io.boundary(x1)
+    io.boundary(x1, name="X1")
     io.boundary(x2)
     io.unused(x2)
     p1 = e.item("DEMO-CONN-2P", name="P1", tag="P1", at=c1)

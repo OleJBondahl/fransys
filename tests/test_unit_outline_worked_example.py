@@ -21,7 +21,9 @@ from _model_build_cover import layout_trigger_document
 from fransys_render._symbol_geometry import oriented_symbol, to_grid
 from graphical_symbols.boxes import body_box
 
+from fransys_model.derive import connector_box_lines
 from fransys_model.layout import (
+    ConnectorBox,
     Label,
     Outline,
     Page,
@@ -116,7 +118,12 @@ def _build_system():
 
 
 def _body_g(model, placement):
-    """`placement`'s own absolute body extent, grid units (the symbol's ink, no slots)."""
+    """`placement`'s own absolute body extent, grid units (the symbol's ink, no slots).
+    A `ConnectorBox` (HL6) is its own rectangle; its texts are checked against its lines."""
+    if isinstance(placement, ConnectorBox):
+        assert len(placement.texts) == len(connector_box_lines(model, placement.function))
+        x, y = placement.x, placement.y
+        return (x, y, x + placement.width, y + placement.height)
     symbol = oriented_symbol(model, placement)
     assert symbol is not None
     box = body_box(symbol)
@@ -173,6 +180,8 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
 
     R7 A (deep dive, G1): a connector is drawn as one placement per pin, so a group and its
     non-members are counted in functions, not placements.
+    HL6 (layout-0155): a connector at a harness line's end is one box; boxes count as bodies.
+    HL12 (layout-0153): the board at the line WH1's end is a middle outline, its title inside.
     """
     result = _build_system()
     model = result.model
@@ -181,19 +190,23 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
     assert len(pages_by_id) == _EXPECTED_SYSTEM_PAGE_COUNT
 
     all_placements = layout_of(model, SymbolPlacement)
+    all_boxes = layout_of(model, ConnectorBox)
     titles = [label for label in layout_of(model, Label).values() if label.slot == "outline_title"]
     outlines = layout_of(model, Outline).values()
     single_member_group_count = 0
     two_member_group_count = 0
     for outline in outlines:
         box = (outline.x, outline.y, outline.x + outline.width, outline.y + outline.height)
-        page_placements = [p for p in all_placements.values() if p.page == outline.page]
+        page_placements: list[SymbolPlacement | ConnectorBox] = [
+            p for p in all_placements.values() if p.page == outline.page
+        ]
+        page_placements += [b for b in all_boxes.values() if b.page == outline.page]
         members = [
             p
             for p in page_placements
             if items_of(model)[functions_of(model)[p.function].item].unit == outline.unit
         ]
-        assert members, "an outline encloses at least one black-box placement"
+        assert members, "an outline encloses at least one black-box placement or box"
         for member in members:
             m_min_x, m_min_y, m_max_x, m_max_y = _body_g(model, member)
             assert box[0] <= m_min_x
@@ -215,14 +228,21 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
         ]
         assert title.y >= 0
         text_height = default_profile().text_height
-        assert title.y + text_height <= box[1] or title.y >= box[3]
+        outside = title.y + text_height <= box[1] or title.y >= box[3]
 
         member_functions = {p.function for p in members}
         other_functions = {p.function for p in non_members}
         if len(member_functions) == 1:
+            # HL12 (layout-0153): the board's X1 ends the harness WH1, so the board is a middle
+            # outline and its title stands inside, left, between its edges
+            assert not outside
+            assert box[0] < title.x
+            assert box[1] < title.y
+            assert title.y + text_height < box[3]
             single_member_group_count += 1
             assert len(other_functions) == _EXPECTED_NON_MEMBERS_PER_SINGLE_MEMBER_GROUP
         elif len(member_functions) == 2:
+            assert outside  # D11: a frame's title stands outside it
             two_member_group_count += 1
             assert len(other_functions) == _EXPECTED_NON_MEMBERS_PER_TWO_MEMBER_GROUP
         else:

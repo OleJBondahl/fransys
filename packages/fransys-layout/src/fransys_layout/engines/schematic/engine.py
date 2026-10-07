@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Mapping
 
 from fransys_layout.lint import (
+    HarnessInk,
     check_coherence,
     check_members,
     check_nowhere,
@@ -27,7 +28,10 @@ from fransys_layout.stages.arrange import (
     inline_exits,
 )
 from fransys_layout.stages.box_reach import sized_columns
+from fransys_layout.stages.box_views import drawn_hidden, face_plugs, hidden_views, placed_boxes
 from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
+from fransys_layout.stages.connector_boxes import PlacedConnectorBox
+from fransys_layout.stages.content import content_box
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
 from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
 from fransys_layout.stages.firstlabels import labelled_pages
@@ -60,10 +64,14 @@ from ._arrange_columns import (
     ordered_columns,
     replicated_columns,
 )
+from ._lines import DrawnPieces, LineScene, draw_lines, harness_ink, strip_lines
+from ._middle import middle_inputs, moved_shapes, strip_middle, with_middle
 from .defaults import BOTTOM_HEADROOM_LANES, DEFAULT_RULES, TOP_HEADROOM_LANES
 from .read import read_inputs, reading
 from .read.contact_marks import image_inputs
+from .read.harness_lines import box_specs, plug_mates
 from .read.labels import label_requests
+from .read.line_texts import marker_keepouts
 from .read.location_paths import location_paths
 from .read.outline_texts import outline_titles
 from .read.tag_texts import tag_texts
@@ -97,6 +105,9 @@ class StageResults:
     sheet_format: Id[Any] | None
     off_ends: tuple[OffEnd, ...] = ()
     joins: tuple[JoinedRun, ...] = ()
+    boxes: tuple[PlacedConnectorBox, ...] = ()
+    hidden: tuple[Id[Any], ...] = ()
+    lines: DrawnPieces = DrawnPieces()
 
 
 def run_stages(
@@ -113,13 +124,19 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
     drawn = potential_sides(drawn, rank_of, *power, (inputs.feeds, inputs.profile))
+    # HL6: a boxed connector's pin views draw no symbol and no label; its box stands over them
+    boxes = box_specs(model, inputs.functions)
+    hidden = hidden_views(boxes)
     slot_requests = tuple(
         request
         for request in label_requests(inputs.label_texts, drawn)
-        if request.kind in (LabelKind.TAG, LabelKind.MARKING)
+        if request.kind in (LabelKind.TAG, LabelKind.MARKING) and request.subject not in hidden
     )
 
     inputs, all_columns, columns, column_findings = _arranged(model, inputs, drawn, rank_of)
+    # HL11: a middle unit's line views leave their columns; its lines' conductors are no routes
+    inputs, columns, middle, reach = strip_middle(model, inputs, columns)
+    inputs, lines = strip_lines(model, inputs)
     texts = tag_texts(model)
     slot_requests, pin_requests = row_labels(texts, inputs.functions, all_columns, slot_requests)
     # C8(b), S11: columns are sized with the keep-outs grown by the measured labels and by
@@ -139,7 +156,15 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     every = (*inputs.functions, *inputs.spares)
     reserves = image_reserves(columns, every, inputs.profile, img.marks, img.owners)
     paths = partial(location_paths, model)
-    run = PageRun(texts, _page_inputs(inputs), rank_of, pin_requests, reserves, paths, power)
+    run = PageRun(
+        texts,
+        middle_inputs(_page_inputs(inputs), middle, (columns, reach, widths)),
+        rank_of,
+        pin_requests,
+        reserves,
+        paths,
+        power,
+    )
     # layout-0080: the ports at a unit's boundary that draw nothing, in the markers and the check
     nesting = unit_nesting(model, {spec.unit for spec in inputs.functions})
     # S10: `references` decides on the planned pages, before each placing (`_decide`)
@@ -183,15 +208,28 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     # move with it, but a marker box never causes the shift (D14 M2, layout-0068), and a box
     # the shift pushes out of the content box is reported by OUT_OF_CONTENT_BOX
     pages, placed_all, markers = shift_pages(plans, pages, markers, inputs.sheet)
+    shapes = moved_shapes(placement.pages, placement.placed_all, placed_all)
     # C19: the contact image under each coil, and each contact's reference to its coil
     pages, contact_refs = contact_images(plans, pages, img, markers, location_paths(model, plans))
     # I2a: each black box's dash-dot outline and its title, before routing
+    placed_box = placed_boxes(
+        placed_all, boxes, inputs.profile.text_height, content_box(inputs.sheet)
+    )
+    placed_box = face_plugs(placed_box, plug_mates(lines))  # HL4, HL19
     pages, outlines = unit_outlines(
         plans,
         pages,
         markers,
-        OutlineInputs(inputs.functions, columns, inputs.profile, outline_titles(model)),
+        OutlineInputs(
+            inputs.functions,
+            columns,
+            inputs.profile,
+            outline_titles(model),
+            placed_box,
+            frozenset((one.unit, one.drawing_set, one.page) for one in shapes),
+        ),
     )
+    pages, outlines, placed_box = with_middle(plans, pages, outlines, placed_box, shapes)
     echoes = echo_requests(
         decided.echoes,
         placement.placed_all,
@@ -209,6 +247,19 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     )
     findings.extend(page_findings)
     routes = onepage.keep_chosen_edges(routes, inputs.net_groups, at_home)
+    # HL15 to HL18: the lines over the finished page, clear of its symbols, boxes and texts
+    scene = LineScene(
+        placed_all,
+        drawn,
+        placed_box,
+        (*labels,),
+        marker_keepouts(model, markers),
+        inputs.profile,
+        inputs.sheet,
+        frozenset(hidden),
+        {plan.drawing_set: plan.unit for plan in plans},
+    )
+    drawn_lines = draw_lines(model, lines, inputs.carried, middle, scene)
 
     layout = Layout(
         pages=plans,
@@ -219,8 +270,11 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         labels=tuple(labels),
         outlines=outlines,
     )
-    drawn_edges = open_ends(inputs.functions, boundary_edge_set(model))
-    findings.extend(_lint_findings(LintScene(layout, columns, drawn, inputs, members, drawn_edges)))
+    # layout-0158: the lint reads the lines, the boxes, and the boxed pin views that draw nothing
+    ink = harness_ink(drawn_lines, placed_box, drawn_hidden(placed_all, hidden, markers))
+    edges = open_ends(inputs.functions, boundary_edge_set(model))
+    lint = _lint_findings(LintScene(layout, columns, drawn, inputs, members, edges, ink))
+    findings.extend((*drawn_lines.findings, *lint))
     planned = {planned.column for plan in plans for planned in plan.columns}
     return StageResults(
         layout=layout,
@@ -229,6 +283,9 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         sheet_format=inputs.sheet_format,
         off_ends=decided.off_ends,
         joins=decided.joins,
+        boxes=placed_box,
+        hidden=tuple(sorted(hidden)),
+        lines=drawn_lines,
     ), tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
 
 
@@ -279,6 +336,7 @@ def _page_inputs(inputs: StageInputs) -> PageInputs:
         sheet=inputs.sheet,
         top_headroom_lanes=TOP_HEADROOM_LANES,
         bottom_headroom_lanes=BOTTOM_HEADROOM_LANES,
+        line_ends=frozenset((end.function, end.port) for c in inputs.carried for end in (c.a, c.b)),
     )
 
 
@@ -356,17 +414,25 @@ class LintScene:
     inputs: StageInputs
     members: tuple[tuple[Any, ...], tuple[Any, ...], frozenset[tuple[Any, int]]]
     open_ends: frozenset[Any]
+    ink: HarnessInk
 
 
 def _lint_findings(scene: LintScene) -> list[Finding]:
     """Stage 9: the geometry, chain, coherence and member findings of `scene.layout`."""
     layout, columns, drawn, inputs = scene.layout, scene.columns, scene.drawn, scene.inputs
     members, open_ends = scene.members, scene.open_ends
-    findings = list(lint_geometry(layout, sheet=inputs.sheet))
+    findings = list(lint_geometry(layout, sheet=inputs.sheet, ink=scene.ink))
     findings.extend(
         lint_chains(
             layout,
-            StageRecords(columns, drawn, inputs.connections, inputs.net_groups, inputs.mates),
+            # HL1: a pin a line carries a conductor to is wired
+            StageRecords(
+                columns,
+                drawn,
+                (*inputs.connections, *inputs.carried),
+                inputs.net_groups,
+                inputs.mates,
+            ),
             open_ends=open_ends,
         )
     )

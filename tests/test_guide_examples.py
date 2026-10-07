@@ -24,6 +24,7 @@ GUIDE_PAGES = (
     "index",
     "parts",
     "authoring",
+    "harnesses",
     "units",
     "build",
     "documents",

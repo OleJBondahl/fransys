@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import AuthoringKey
 
+    from .connector_boxes import PlacedConnectorBox
     from .types import (
         Cell,
         Column,
@@ -45,6 +46,9 @@ class OutlineInputs:
     columns: tuple[Column, ...]
     profile: Profile
     title: Callable[[Handle], str]
+    boxes: tuple[PlacedConnectorBox, ...] = ()  # HL6: a member pin's connector box is inside
+    # HL11, condition 3: a middle unit's page draws its middle outline and no D11 frame
+    middle: frozenset[tuple[Handle, int, int]] = frozenset()
 
 
 def _column_ends(
@@ -179,6 +183,7 @@ class _Run:
     cells: Mapping[AuthoringKey, tuple[Cell, ...]]
     markers: Mapping[tuple[int, int], tuple[LinkMarker, ...]]
     inputs: OutlineInputs
+    boxes: Mapping[tuple[int, int, Handle | None], Box]
 
 
 def _end_faces(inputs: OutlineInputs) -> dict[tuple[Handle, AuthoringKey], bool]:
@@ -201,7 +206,8 @@ def _unit_members(
     by_unit: dict[Handle, list[PlacedFunction]] = {}
     for one in placed:
         unit = run.spec_of[one.function].unit
-        if unit is not None and unit != own_unit:
+        middle = bool(run.inputs.middle) and (unit, one.drawing_set, one.page) in run.inputs.middle
+        if unit is not None and unit != own_unit and not middle:
             by_unit.setdefault(unit, []).append(one)
     return by_unit
 
@@ -233,6 +239,9 @@ def _run_frame(
     texts = [label.box for label in first if label.subject in names]
     # M10: a member port's link marker, stub included, stands inside the frame
     texts += [_marker_reach(marker) for marker in page_markers if marker.port in names]
+    if run.boxes:  # HL6: a member pin's connector box stands inside too
+        owners = {(m.drawing_set, m.page, run.spec_of[m.function].pin_function) for m in members}
+        texts += [run.boxes[owner] for owner in owners if owner in run.boxes]
     return _frame(members, run.faces, texts, top_end=top_end)
 
 
@@ -316,6 +325,7 @@ def unit_outlines(
         cells={col.key: col.cells for col in inputs.columns},
         markers=by_key(markers, page_of),
         inputs=inputs,
+        boxes={(one.drawing_set, one.page, one.function): one.box for one in inputs.boxes},
     )
     found, outlines = [], []
     for plan, (placed, first) in zip(plans, pages, strict=True):

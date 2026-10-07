@@ -10,6 +10,7 @@ functions without a conductor; every list keeps them, and with it off nothing ch
 """
 
 import tempfile
+from functools import cache
 from pathlib import Path
 
 import fransys as fr
@@ -21,8 +22,9 @@ from fransys_model.derive import plc_channel_rows
 from fransys_model.vocab.tables import functions, items
 
 
+@cache
 def _layout(plant, *, hide: bool) -> tuple:
-    """The model and the staged layout of `plant(d)` in one cabinet document."""
+    """The model and the staged layout of `plant(d)` in one cabinet document, built once."""
     d = fr.design("demo_parts", place="CAB")
     if hide:
         d.layout.profile(hide_unused_pins=True)

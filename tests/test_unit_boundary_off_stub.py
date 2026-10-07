@@ -1,6 +1,7 @@
 """W3 (layout deep dive, designer's ruling): a unit's boundary connector mated to the plug of
-a top-level harness shows, in the unit's own set, its pins with the harness's off-stub, as
-the terminals of a top-level cable do; a boundary connector declared unused draws no pin.
+a top-level harness shows, in the unit's own set, where the harness goes; a boundary connector
+declared unused draws no pin. W3's two cores make it a line (HL1): its end leaves the unit's
+set in one line stub naming the far device (HL18, owner C1), not one stub per pin.
 
 Can-fail, checked by hand: without `_boundary_offs` in `read_inputs` the cabinet's X1 pins
 carry no off-stub and the first test fails; with unused boundaries kept in
@@ -14,9 +15,11 @@ import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
 
+from fransys_model.derive import item_designation
 from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.layout import (
     DrawingSet,
+    HarnessLine,
     LinkMarker,
     Page,
     StarKind,
@@ -78,15 +81,23 @@ def test_the_units_boundary_pins_carry_the_top_level_harnesss_off_stub() -> None
         for m in layout_of(model, LinkMarker).values()
         if m.star is StarKind.OFF and _in_cabinet_set(model, m.page)
     ]
-    assert {ports(model)[m.port].name for m in stubs} == {"1", "2"}
-    assert {_owner(model, m.port).key[:2] for m in stubs} == {("cab", "X1")}
-    texts = {off_stub_text(model, m) for m in stubs}
-    assert all(text.startswith("-W3") and "+FLD" in text for text in texts)
+    (stub,) = stubs  # HL18, owner C1: one stub for the line, not one per X1 pin
+    assert "line_stub" in stub.key
+    assert stub.carrier is not None
+    assert item_designation(model, stub.carrier) == "W3"
+    text = off_stub_text(model, stub)
+    assert text.startswith("-W3")
+    assert "+FLD" in text
+    assert "P2" in text
+    assert ":" not in text
+    assert any(line.page == stub.page for line in layout_of(model, HarnessLine).values())
     # the X1 pins stand in a column, not alone ("in no chain"); only the far plug P2 does
+    x1 = {p for p in ports(model) if _owner(model, p).key[:2] == ("cab", "X1")}
     lone = {
         s for f in result.findings if f.code == "FUNCTION_UNPLACED_IN_COLUMN" for s in f.subjects
     }
-    assert not lone & {m.port for m in stubs}
+    assert x1
+    assert not lone & x1
 
 
 def test_a_boundary_declared_unused_draws_no_pin() -> None:

@@ -38,9 +38,16 @@ _ORIGIN = Origin(
 # DRAWN-ENDS (layout-0099 V5, layout-0103): a contact moves under its far pin, so one more wire
 # is drawn whole: 7 and 8.
 _EXPECTED_MARKER_COUNTS = {
-    "cabinet_laid_out": 7,
+    "cabinet_laid_out": 6,
     "cabinet_narrow_laid_out": 8,
 }
+# HL15-HL18 (layout-0154): a harness line leaves its page by an OFF line stub at the end of a
+# 48 G leaving line, not at a port, so these markers are counted but match no port.
+_EXPECTED_LINE_STUB_COUNTS = {"cabinet_laid_out": 1, "cabinet_narrow_laid_out": 2}
+
+
+def _is_line_stub(marker: LinkMarker) -> bool:
+    return "line_stub" in str(marker.key)
 
 
 def _owning_placement(model, marker: LinkMarker) -> SymbolPlacement:
@@ -66,12 +73,18 @@ def _matching_ports(model, placement: SymbolPlacement, marker: LinkMarker) -> li
     return matches
 
 
-def _assert_every_marker_has_exactly_one_matching_port(model, expected_count: int) -> None:
+def _assert_every_marker_has_exactly_one_matching_port(
+    model, expected_count: int, expected_line_stubs: int
+) -> None:
     markers = layout_of(model, LinkMarker)
     assert len(markers) == expected_count
-    assert len(markers) > 0
+    stubs = [m for m in markers.values() if _is_line_stub(m)]
+    assert len(stubs) == expected_line_stubs
+    assert len(markers) > len(stubs)
 
     for marker in markers.values():
+        if _is_line_stub(marker):
+            continue
         placement = _owning_placement(model, marker)
         matches = _matching_ports(model, placement, marker)
         assert len(matches) == 1, (marker.id, placement.symbol, matches)
@@ -80,20 +93,25 @@ def _assert_every_marker_has_exactly_one_matching_port(model, expected_count: in
 def test_every_wide_cabinet_marker_has_exactly_one_matching_port(cabinet_laid_out):
     """The exactly-one-match proof on the wide golden (count asserted non-zero first)."""
     _assert_every_marker_has_exactly_one_matching_port(
-        cabinet_laid_out, _EXPECTED_MARKER_COUNTS["cabinet_laid_out"]
+        cabinet_laid_out,
+        _EXPECTED_MARKER_COUNTS["cabinet_laid_out"],
+        _EXPECTED_LINE_STUB_COUNTS["cabinet_laid_out"],
     )
 
 
 def test_every_narrow_cabinet_marker_has_exactly_one_matching_port(cabinet_narrow_laid_out):
     """The exactly-one-match proof on the narrow golden (count asserted non-zero first)."""
     _assert_every_marker_has_exactly_one_matching_port(
-        cabinet_narrow_laid_out, _EXPECTED_MARKER_COUNTS["cabinet_narrow_laid_out"]
+        cabinet_narrow_laid_out,
+        _EXPECTED_MARKER_COUNTS["cabinet_narrow_laid_out"],
+        _EXPECTED_LINE_STUB_COUNTS["cabinet_narrow_laid_out"],
     )
 
 
 def test_a_marker_moved_off_its_port_matches_no_port(cabinet_narrow_laid_out):
     """The matching check can fail: a real marker nudged one grid unit matches zero ports."""
-    marker = next(iter(layout_of(cabinet_narrow_laid_out, LinkMarker).values()))
+    markers = layout_of(cabinet_narrow_laid_out, LinkMarker).values()
+    marker = next(m for m in markers if not _is_line_stub(m))
     placement = _owning_placement(cabinet_narrow_laid_out, marker)
     assert len(_matching_ports(cabinet_narrow_laid_out, placement, marker)) == 1
     moved = dataclasses.replace(marker, x=marker.x + 1)

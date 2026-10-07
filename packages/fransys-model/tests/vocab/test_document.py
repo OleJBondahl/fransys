@@ -282,6 +282,7 @@ def test_the_page_kinds_are_the_closed_set_in_canonical_order() -> None:
         "cover",
         "notes",
         "contents",
+        "block_diagram",
         "schematic",
         "harness_drawing",
         "plc_list",

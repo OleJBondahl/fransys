@@ -33,11 +33,20 @@ class CableFacts:
 
 @value
 class PinFacts:
-    """One drawn pin of an end, in drawing order: its port, landed or free, its marking's width."""
+    """One drawn pin of an end, in drawing order: its port, landed or free, its marking's width.
+
+    `cores` are the conductors landing on it in core-key order, one place each (CD6, P1).
+    """
 
     port: Id[Any]
     landed: bool
     marking_width: int
+    cores: tuple[Id[Any], ...] = ()
+
+    @property
+    def places(self) -> int:
+        """The cell's width in pitches: one per core, one for a free pin."""
+        return max(1, len(self.cores))
 
 
 @value
@@ -50,13 +59,18 @@ class EndFacts:
     label_width: int
     pins: tuple[PinFacts, ...]
 
+    @property
+    def places(self) -> int:
+        """The box's width in pitches: the places of its pins."""
+        return sum(pin.places for pin in self.pins)
+
 
 @value
 class BlockFacts:
     """What the reader hands the placer for one drawable block.
 
-    `cables` run by designation. `harness_width` is the harness label's width, or None when the
-    subject is a cable (no dashed box, CD9).
+    `cables` run by designation, then `wires` (HA-H1 A1); `cores` is both, cables' first.
+    `harness_width` is None when the subject is a cable (no dashed box, CD9).
     """
 
     subject: Id[Any]
@@ -70,15 +84,35 @@ class BlockFacts:
     top: tuple[EndFacts, ...]
     bottom: tuple[EndFacts, ...]
     harness_width: int | None = None
+    wires: tuple[CoreFacts, ...] = ()
+
+    @property
+    def cores(self) -> tuple[CoreFacts, ...]:
+        """Every core of the block: the cables' cores in print order, then the single wires."""
+        return (*(core for cable in self.cables for core in cable.cores), *self.wires)
+
+
+@value
+class CorePlace:
+    """One place of a wide cell: the core that lands there and the centre x of the place."""
+
+    core: Id[Any]
+    x: int
 
 
 @value
 class PlacedCell:
-    """One pin cell: its port, its centre x (where its core lands) and whether a core lands."""
+    """One pin cell: its port, its centre x, whether a core lands and where each core lands.
+
+    A cell is one pitch wide per core (P1); `landings` pairs each core with the centre x of its
+    place, in core-key order. `x` is the centre of the whole cell.
+    """
 
     port: Id[Any]
     x: int
+    width: int
     landed: bool
+    landings: tuple[CorePlace, ...] = ()
 
 
 @value

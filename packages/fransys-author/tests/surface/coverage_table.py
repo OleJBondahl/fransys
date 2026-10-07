@@ -56,6 +56,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     + dropped(f"net(potential=): {_RAILS}"),
     "LinkScope.link": (
         surface("Design.device(mounted_on=)")
+        + surface("Design.device(joins=)")
         + surface("Design.busbar")
         + surface("Design.rail_bond")
     ),
@@ -66,6 +67,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     ),
     "Scope.mate": surface("Design.mate"),
     "Scope.harness": surface("Design.harness"),
+    "LinkScope.harness_item": surface("Design.harness"),
     "Scope.unit": surface("Design.add"),
     "Scope.unit_id": surface("Design.add"),
     "Scope.boundary": surface("Fn.limits") + surface("Design.device(interface=)"),
@@ -82,6 +84,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.order": surface("Layout.order"),
     "Scope.symbol": surface("Layout.symbol"),
     "Scope.draw_in": surface("Layout.draw_in"),
+    "Scope.side": surface("Layout.side"),
     "Design.sheet": surface("Layout.sheet"),
     "Design.profile": surface("Layout.profile"),
 }

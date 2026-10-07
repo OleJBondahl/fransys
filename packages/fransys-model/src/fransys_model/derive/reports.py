@@ -17,6 +17,7 @@ from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.tables import conductors, facets_of, functions, items
 from fransys_model.vocab.tables import units as units_table
+from fransys_model.vocab.wire_harness import wire_harnesses
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item, Unit
@@ -361,11 +362,22 @@ def _wire_row(
 def wire_rows(
     model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
 ) -> tuple[WireRow, ...]:
-    """One `WireRow` per `wire`-faceted conductor of kind `WIRE`, sorted by `(from, to, id)`.
+    """One `WireRow` per `wire`-faceted `WIRE` conductor no harness carries, by `(from, to, id)`.
 
-    A jumper, a cable core and a link never gets a row. `from`/`to` are the ends as
-    the list prints them (`unit` and `context` act the same); `label` is `wire_text`.
+    A jumper, a cable core, a link and a harness wire never get a row. `from`/`to` are
+    the ends as the list prints them (`unit` and `context` act the same); `label` is `wire_text`.
     """
+    return tuple(
+        row
+        for row in _all_wire_rows(model, unit, context)
+        if not wire_harnesses(model, row.conductor)
+    )
+
+
+def _all_wire_rows(
+    model: Model, unit: Id[Unit] | None, context: Id[AspectNode] | None
+) -> tuple[WireRow, ...]:
+    """Every `WireRow`, harness wires too: the one builder `wire_rows` and `harness_wires` share."""
     _require_unit(model, unit)
     context = unit_list_context(model, unit, context)
     wire_of = {facet.subject: facet for facet in facets_of(model, WireFacet).values()}

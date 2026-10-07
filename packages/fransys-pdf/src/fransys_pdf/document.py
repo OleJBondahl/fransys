@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from fransys_model.vocab import PageKind, documents
 
 from ._contents import contents_page
+from ._diagrams import diagram_source
 from ._drawings import harness_cables_for, harness_drawing_source, schematic_pages, schematic_source
 from ._frame import TitleBlockFields, background, text_margin
 from ._geometry import (
@@ -49,6 +50,9 @@ _HEADING_WORDS: dict[PageKind, str] = {
     PageKind.CABLE_LIST: "Cable list",
     PageKind.BOM: "BOM",
 }
+
+
+_SELF_FRAMED = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC, PageKind.HARNESS_DRAWING)
 
 
 def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: PageKind) -> str:
@@ -100,6 +104,8 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
     if kind is PageKind.HARNESS_DRAWING:
         cables = harness_cables_for(model, record, pages)
         return harness_drawing_source(model, record, sheet, cables, svgs)
+    if kind is PageKind.BLOCK_DIAGRAM:
+        return diagram_source(model, record, svgs)
     return _text_page(kind, model, record, pages)
 
 
@@ -126,7 +132,7 @@ def source(model: Model, document: Id[Document], svgs: Mapping[str, str]) -> str
         body = _page_source(kind, model, record, svgs, pages, sheet)
         if not body:
             continue
-        if kind not in (PageKind.SCHEMATIC, PageKind.HARNESS_DRAWING):
+        if kind not in _SELF_FRAMED:
             body = _section_prefix(model, record, sheet, kind) + "\n" + body
         page_bodies.append(body)
     head = document_metadata(model, record) + "\n" + preamble(sheet)

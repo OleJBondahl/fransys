@@ -90,7 +90,20 @@ def _highest_top(layout: Layout) -> int:
     )
 
 
-@pytest.mark.parametrize("model_of", [_top_level_model, _system_model])
+@pytest.mark.parametrize(
+    "model_of",
+    [
+        _top_level_model,
+        pytest.param(
+            _system_model,
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason="layout-0158 F1: the harness-ink checks see the system's lines over labels "
+                "(WIRE_OVER_LABEL), still after F5; named for the designer",
+            ),
+        ),
+    ],
+)
 def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
     model_of, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -305,7 +305,12 @@ def merged(
 ) -> tuple[Box, str]:
     """D9 (F7), S5: a reference's `box` at port `at` with one more line, the stub of `end_text`."""
     north = box.y + box.height <= at.y
-    text = off_stub_line(end_text.cable, north=north, far=end_text.far, ports=[end_text.port])
+    text = off_stub_line(
+        end_text.cable,
+        north=north,
+        far=end_text.far,
+        ports=() if end_text.line else [end_text.port],
+    )
     height = profile.text_height
     if vertical:
         length = max(box.height, text_width(text, height=height) + 2 * profile.marker_padding)

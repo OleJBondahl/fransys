@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 9,
+  "schema_version": 10,
   "tables": {
     "aspect_node": [
       {
@@ -4307,6 +4307,7 @@
         "ext": {},
         "function": "function_template:54979341d66450d4b2618477d7fa7ce9",
         "id": "port_template:03cf1c9fcf7f5fe493728c8a300fd8d0",
+        "joins": null,
         "key": [
           "contactor-1no",
           "coil",
@@ -4322,6 +4323,7 @@
         "ext": {},
         "function": "function_template:905c6457168d557596dfd029717acda5",
         "id": "port_template:1a3b310f65815f9383fe860352e93d8f",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch3",
@@ -4337,6 +4339,7 @@
         "ext": {},
         "function": "function_template:58f57676b64554b0834a6475334ca2e8",
         "id": "port_template:1b9983e053f05c57845df56d97f5da6a",
+        "joins": null,
         "key": [
           "contactor-1no",
           "no_1",
@@ -4352,6 +4355,7 @@
         "ext": {},
         "function": "function_template:212aa4694a60537cb67e8884fbcc0790",
         "id": "port_template:30cf0f1862cd56f0899b322e97120046",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch1",
@@ -4367,6 +4371,7 @@
         "ext": {},
         "function": "function_template:3120a6f7344357798fbfaf0ee7689f20",
         "id": "port_template:30e6413838f45f3e90cc8dc94c519c37",
+        "joins": null,
         "key": [
           "contactor-1co",
           "co_1",
@@ -4382,6 +4387,7 @@
         "ext": {},
         "function": "function_template:3120a6f7344357798fbfaf0ee7689f20",
         "id": "port_template:322018d4d3e158c1996165ce241852be",
+        "joins": null,
         "key": [
           "contactor-1co",
           "co_1",
@@ -4397,6 +4403,7 @@
         "ext": {},
         "function": "function_template:ef753a8c952c567ead0f4696d0c16186",
         "id": "port_template:394ac6913ccf53c197ee268fdac4b2ba",
+        "joins": null,
         "key": [
           "rtd",
           "signal",
@@ -4412,6 +4419,7 @@
         "ext": {},
         "function": "function_template:f8eaacda28225c47b9c5fd62951f5c6a",
         "id": "port_template:3bf40d49562455659bb23d1ef358e22e",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch3",
@@ -4427,6 +4435,7 @@
         "ext": {},
         "function": "function_template:4b9a03a23c4c5479969832e161acd2a6",
         "id": "port_template:3e1c7ab3b57650f394f5867f39388099",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch7",
@@ -4442,6 +4451,7 @@
         "ext": {},
         "function": "function_template:c299578b3da453aabb18b9440591f22b",
         "id": "port_template:42c2864eb81d5ebeb8f7a7b840bb7c6e",
+        "joins": null,
         "key": [
           "pb",
           "signal",
@@ -4457,6 +4467,7 @@
         "ext": {},
         "function": "function_template:b9a2531e7ab355b39231b97b1313041d",
         "id": "port_template:491b3af15e5a536aa87b9887b1caeedf",
+        "joins": null,
         "key": [
           "terminal",
           "terminal",
@@ -4472,6 +4483,7 @@
         "ext": {},
         "function": "function_template:1acf18bc0fab5014ba3a88a8e714d84c",
         "id": "port_template:4a635193345a560895de8f932857ab1c",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch1",
@@ -4487,6 +4499,7 @@
         "ext": {},
         "function": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0",
         "id": "port_template:4b2ec9073fa75eb1bc1e7791ead326fd",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch8",
@@ -4502,6 +4515,7 @@
         "ext": {},
         "function": "function_template:e710a0c60879507fb77cf4e453ff4350",
         "id": "port_template:4e4315c460f957bf9aeeae4ceb36f2bc",
+        "joins": null,
         "key": [
           "contactor-1co",
           "coil",
@@ -4517,6 +4531,7 @@
         "ext": {},
         "function": "function_template:ef753a8c952c567ead0f4696d0c16186",
         "id": "port_template:50244542732b575695afdfbebd9096ef",
+        "joins": null,
         "key": [
           "rtd",
           "signal",
@@ -4532,6 +4547,7 @@
         "ext": {},
         "function": "function_template:f91ae0795a0255d8ab916f40bcc6f765",
         "id": "port_template:55560ea1ced7548dae281a467dcaae45",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch4",
@@ -4547,6 +4563,7 @@
         "ext": {},
         "function": "function_template:b9a2531e7ab355b39231b97b1313041d",
         "id": "port_template:58b11d0461fe5a9a9a7a908d56519f8b",
+        "joins": null,
         "key": [
           "terminal",
           "terminal",
@@ -4562,6 +4579,7 @@
         "ext": {},
         "function": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad",
         "id": "port_template:5c3e0ed4b3ac54949cff9205597f4953",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch4",
@@ -4577,6 +4595,7 @@
         "ext": {},
         "function": "function_template:c80f3015e0ae5da1b01c4087fa8d3206",
         "id": "port_template:5d38d0e7a6225cb3bb069df52607bd23",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch2",
@@ -4592,6 +4611,7 @@
         "ext": {},
         "function": "function_template:19d53012bedf5e53b3b76ecdbe94d53f",
         "id": "port_template:5e5b775e2ac85a6e8ba06f13ac268a3e",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch3",
@@ -4607,6 +4627,7 @@
         "ext": {},
         "function": "function_template:35e91e76a7d65a83884b8b7694cb450c",
         "id": "port_template:62ede4627f3451f18111c1b5008ed3c4",
+        "joins": null,
         "key": [
           "psu",
           "output",
@@ -4622,6 +4643,7 @@
         "ext": {},
         "function": "function_template:19d53012bedf5e53b3b76ecdbe94d53f",
         "id": "port_template:6b628fa80e4e5677bcb3628d7b7524e0",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch3",
@@ -4637,6 +4659,7 @@
         "ext": {},
         "function": "function_template:ee15d75ff1cd563cb99c4709ca4009c4",
         "id": "port_template:6e7e1811463856d9a54b4a35b4bdf9af",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch1",
@@ -4652,6 +4675,7 @@
         "ext": {},
         "function": "function_template:ac249f511714535c85486451c042444e",
         "id": "port_template:7137b8b7a71b5c61aff56532b6e34fe1",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch6",
@@ -4667,6 +4691,7 @@
         "ext": {},
         "function": "function_template:c80f3015e0ae5da1b01c4087fa8d3206",
         "id": "port_template:71bf8d3969315c7c90f3d527892a31a5",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch2",
@@ -4682,6 +4707,7 @@
         "ext": {},
         "function": "function_template:58f57676b64554b0834a6475334ca2e8",
         "id": "port_template:732e0a98c9df5789bcc5d6d22b5bd3e7",
+        "joins": null,
         "key": [
           "contactor-1no",
           "no_1",
@@ -4697,6 +4723,7 @@
         "ext": {},
         "function": "function_template:7bab8128fdb25743b11ced12f4e49c9d",
         "id": "port_template:832d93151f405c0fb877c8ead5af8a78",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch4",
@@ -4712,6 +4739,7 @@
         "ext": {},
         "function": "function_template:c299578b3da453aabb18b9440591f22b",
         "id": "port_template:85e6d1fb898f5666800ec59299353196",
+        "joins": null,
         "key": [
           "pb",
           "signal",
@@ -4727,6 +4755,7 @@
         "ext": {},
         "function": "function_template:ac249f511714535c85486451c042444e",
         "id": "port_template:897263d05c8a5d0bb28bc02ed4719c0e",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch6",
@@ -4742,6 +4771,7 @@
         "ext": {},
         "function": "function_template:905c6457168d557596dfd029717acda5",
         "id": "port_template:8ceb5a71c3815f0282a9850e387eb0e7",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch3",
@@ -4757,6 +4787,7 @@
         "ext": {},
         "function": "function_template:f77216b8d20759fd99a30d984e501fd5",
         "id": "port_template:8e49394765925e0fae2e0b4561881d2f",
+        "joins": null,
         "key": [
           "fuse-2a",
           "element",
@@ -4772,6 +4803,7 @@
         "ext": {},
         "function": "function_template:35e91e76a7d65a83884b8b7694cb450c",
         "id": "port_template:916d21f505a15fe299dd6a163d0a9041",
+        "joins": null,
         "key": [
           "psu",
           "output",
@@ -4787,6 +4819,7 @@
         "ext": {},
         "function": "function_template:bbd9ebd867775f97905f82e701c45f0e",
         "id": "port_template:9361bc1e7d1d5ab3a5702a50cdc87f34",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch2",
@@ -4802,6 +4835,7 @@
         "ext": {},
         "function": "function_template:3120a6f7344357798fbfaf0ee7689f20",
         "id": "port_template:9777a324e3fe5b2b9a62ec79945884e1",
+        "joins": null,
         "key": [
           "contactor-1co",
           "co_1",
@@ -4817,6 +4851,7 @@
         "ext": {},
         "function": "function_template:54979341d66450d4b2618477d7fa7ce9",
         "id": "port_template:a20b36de7f945de8a4c11da0261087e1",
+        "joins": null,
         "key": [
           "contactor-1no",
           "coil",
@@ -4832,6 +4867,7 @@
         "ext": {},
         "function": "function_template:7bab8128fdb25743b11ced12f4e49c9d",
         "id": "port_template:a2e7317d0e005f06a6f1488b4117e30c",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch4",
@@ -4847,6 +4883,7 @@
         "ext": {},
         "function": "function_template:ee15d75ff1cd563cb99c4709ca4009c4",
         "id": "port_template:a32ebe8ba3685ad1b84f4f0a651c2c00",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch1",
@@ -4862,6 +4899,7 @@
         "ext": {},
         "function": "function_template:e710a0c60879507fb77cf4e453ff4350",
         "id": "port_template:a431d05fd1975dccbe758996eb70547d",
+        "joins": null,
         "key": [
           "contactor-1co",
           "coil",
@@ -4877,6 +4915,7 @@
         "ext": {},
         "function": "function_template:1a7e82ba7d5c508eab3a23c5006ebbad",
         "id": "port_template:a8c1d70602eb5ce08aede2c74a4f8328",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch4",
@@ -4892,6 +4931,7 @@
         "ext": {},
         "function": "function_template:4b9a03a23c4c5479969832e161acd2a6",
         "id": "port_template:a971f4db217958ec8085031dc97cf0a8",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch7",
@@ -4907,6 +4947,7 @@
         "ext": {},
         "function": "function_template:bbd9ebd867775f97905f82e701c45f0e",
         "id": "port_template:afacfac8abdd57c8896d35eb62c00d80",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch2",
@@ -4922,6 +4963,7 @@
         "ext": {},
         "function": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2",
         "id": "port_template:be6bac89a78c52f59839174e27adc314",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch2",
@@ -4937,6 +4979,7 @@
         "ext": {},
         "function": "function_template:354acfcaee4a50f0b4c5d53e4ae005b0",
         "id": "port_template:c1022cc31e455b8183c92b397b011c63",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch8",
@@ -4952,6 +4995,7 @@
         "ext": {},
         "function": "function_template:f77216b8d20759fd99a30d984e501fd5",
         "id": "port_template:c31012870ece56ddb95f89ea2822191e",
+        "joins": null,
         "key": [
           "fuse-2a",
           "element",
@@ -4967,6 +5011,7 @@
         "ext": {},
         "function": "function_template:1acf18bc0fab5014ba3a88a8e714d84c",
         "id": "port_template:cbcdc072514451fea84a642008c4faa3",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch1",
@@ -4982,6 +5027,7 @@
         "ext": {},
         "function": "function_template:f91ae0795a0255d8ab916f40bcc6f765",
         "id": "port_template:d372baf943f851599b818961dcda5241",
+        "joins": null,
         "key": [
           "module-sim-rtd4-pt100",
           "ch4",
@@ -4997,6 +5043,7 @@
         "ext": {},
         "function": "function_template:212aa4694a60537cb67e8884fbcc0790",
         "id": "port_template:d664be1042105559bbd9730bdb34a959",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch1",
@@ -5012,6 +5059,7 @@
         "ext": {},
         "function": "function_template:6249ea67c02d5f9782b992037665eeac",
         "id": "port_template:da900a4e2db05140a57f5458efa5c72d",
+        "joins": null,
         "key": [
           "pt",
           "signal",
@@ -5027,6 +5075,7 @@
         "ext": {},
         "function": "function_template:0f8e15e55f8b56cfb969e0bbc7fe24a2",
         "id": "port_template:ddb8cfe206b151ad9d7d7ec01944760b",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch2",
@@ -5042,6 +5091,7 @@
         "ext": {},
         "function": "function_template:6249ea67c02d5f9782b992037665eeac",
         "id": "port_template:deb78c58806d5177bdf1db5d5ea79e7e",
+        "joins": null,
         "key": [
           "pt",
           "signal",
@@ -5057,6 +5107,7 @@
         "ext": {},
         "function": "function_template:f8eaacda28225c47b9c5fd62951f5c6a",
         "id": "port_template:e8b2b42ab4b85a20b1c490126c98674f",
+        "joins": null,
         "key": [
           "module-sim-ai4-020",
           "ch3",
@@ -5072,6 +5123,7 @@
         "ext": {},
         "function": "function_template:a751c20b3bb95d4d9501cbbd65bb9736",
         "id": "port_template:e8fa76d698eb5895b8a478aba228c54c",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch5",
@@ -5087,6 +5139,7 @@
         "ext": {},
         "function": "function_template:a751c20b3bb95d4d9501cbbd65bb9736",
         "id": "port_template:e9cb171737b65973815cc84cb0f3d750",
+        "joins": null,
         "key": [
           "module-sim-di8-024",
           "ch5",

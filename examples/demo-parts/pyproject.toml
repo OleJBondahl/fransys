@@ -1,6 +1,6 @@
 [project]
 name = "demo-parts"
-version = "0.12.0"
+version = "0.13.0"
 description = "Invented demo part library used by Fransys's tests and docs."
 requires-python = ">=3.15"
 dependencies = []

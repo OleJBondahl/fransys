@@ -16,6 +16,7 @@ _OUTLINE_DASH_ARRAY = (
 
 def _expected(module_mm: Decimal) -> str:
     descendant_dash = format_decimal(STROKE_WIDTH_MM / module_mm)
+    harness_width = format_decimal(Decimal("0.2") * module_mm)
     return (
         "<style>"
         f".symbol, .wire, .marker, .unit-boundary {{ stroke: black; fill: none; "
@@ -28,6 +29,9 @@ def _expected(module_mm: Decimal) -> str:
         f".not-installed * {{ stroke: grey; stroke-dasharray: {descendant_dash}; }}"
         ".not-installed [fill] { fill: grey; }"
         f".unit-boundary {{ stroke-dasharray: {_OUTLINE_DASH_ARRAY}; }}"
+        f".harness-line {{ stroke: black; fill: none; stroke-width: {harness_width}; }}"
+        f".connector-box, .connector-cell {{ stroke: black; fill: none; "
+        f"stroke-width: {_STROKE_WIDTH_MM}; }}"
         "</style>"
     )
 
@@ -44,3 +48,9 @@ def test_style_block_descendant_dash_scales_with_module_mm() -> None:
     assert style_block(Decimal(5)) == _expected(Decimal(5))
     assert "stroke-dasharray: 0.1;" in house
     assert "stroke-dasharray: 0.05;" in other
+
+
+def test_harness_line_is_twice_the_wire_width_at_the_house_module() -> None:
+    css = style_block(Decimal("2.5"))
+    assert ".harness-line { stroke: black; fill: none; stroke-width: 0.5; }" in css
+    assert "stroke-width: 0.25; }.junction" in css

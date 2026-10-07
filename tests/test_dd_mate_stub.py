@@ -3,9 +3,10 @@
 The unit's boundary connector X1 (4 pins) is mated by a bare Mate to the plug P1 of the top-level
 harness -W3. The harness's core runs plug to plug, both plugs in the location +EXT, and P2 is mated
 to K1's port, also in +EXT. No conductor crosses a location; the MATE from X1 to P1 does. D10's
-worked example is "-W3 <- +EXT-K1:1 2 3 4" on X1's pins, one box for the run, its text produced by
-`fransys_model.derive.drawing_text` (`stub_far_end`, `off_stub_line`, `off_stub_text`) and never
-built in `read/`.
+worked example is "-W3 <- +EXT-K1" (HL18: no port). W3's cores make it a line (HL1), so the
+unit's set shows X1's line leaving in one stub (owner C1), not one stub per pin; its text
+produced by `fransys_model.derive.drawing_text` (`stub_far_end`, `off_stub_line`,
+`off_stub_text`) and never built in `read/`.
 
 The connector is a 4-pin part written into a throwaway copy of `examples/demo-parts` in `tmp_path`
 (the demo library has only a 2-pin connector, and the demo cable has 4 cores, so 4 pins is the
@@ -30,7 +31,15 @@ from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import item_designation
 from fransys_model.derive.drawing_text import off_stub_line, off_stub_text, stub_far_end
-from fransys_model.layout import DrawingSet, LinkMarker, Page, Side, StarKind, layout_of
+from fransys_model.layout import (
+    DrawingSet,
+    HarnessLine,
+    LinkMarker,
+    Page,
+    Side,
+    StarKind,
+    layout_of,
+)
 from fransys_model.vocab.tables import functions, ports
 
 _PROJECT: dict[str, Any] = {
@@ -107,57 +116,42 @@ def _item_tag(model, port) -> str | None:
 
 
 def _x1_stubs(model):
-    """The OFF markers on the cabinet page whose port is a pin of X1."""
+    """The OFF markers on the cabinet's own pages: X1's pins, or the line leaving X1 (HL18)."""
     return [
         m
         for m in layout_of(model, LinkMarker).values()
-        if m.star is StarKind.OFF and _in_unit_set(model, m) and _item_tag(model, m.port) == "X1"
+        if m.star is StarKind.OFF and _in_unit_set(model, m)
     ]
 
 
-def test_the_connectors_pins_each_carry_an_off_stub_ending_on_one_box(model) -> None:
-    """Every pin of the mated connector has an OFF stub, and all end on one box (one D10 run)."""
+def test_the_connectors_line_leaves_in_one_stub(model) -> None:
+    """HL18, owner C1: X1's line -W3 leaves the cabinet's page in one stub, not one per pin."""
     # UNDO: stages/offstubs.py: `mate_stub` returns None (the mate
     #   that crosses the location gives no stub: the base, no OFF marker on X1's pins)
-    stubs = _x1_stubs(model)
-    assert {ports(model)[m.port].name for m in stubs} == {str(n) for n in range(1, _PINS + 1)}
-    assert len(stubs) == _PINS
-    assert all(m.box_x is not None for m in stubs)
-    assert len({(m.page, m.box_x, m.y) for m in stubs}) == 1
+    (stub,) = _x1_stubs(model)
+    assert "line_stub" in stub.key
+    assert any(line.page == stub.page for line in layout_of(model, HarnessLine).values())
 
 
 def test_the_stub_text_is_the_worked_example_from_the_derive_function(model) -> None:
-    """D10: "-W3 <- +EXT-K1:1 2 3 4", from `off_stub_line`/`stub_far_end`, facing north (`<-`)."""
+    """D10, HL18: "-W3 <- +EXT-K1", the line's one stub form, facing north (`<-`), no far ports."""
     # UNDO: stages/offstubs.py: as the first test (no OFF marker)
-    stubs = _x1_stubs(model)
-    assert len(stubs) == _PINS
-    assert {m.facing for m in stubs} == {Side.N}
-    head = stub_far_end(model, stubs[0].far)[0]
-    tails = [
-        stub_far_end(model, far)[1] for far in sorted({m.far for m in stubs}, key=_far_pin(model))
-    ]
-    expected = off_stub_line("-W3", north=True, far=head, ports=tails)
+    (stub,) = _x1_stubs(model)
+    assert stub.facing is Side.N
+    head = stub_far_end(model, stub.far, stub.port)[0]
+    expected = off_stub_line("-W3", north=True, far=head, ports=())
     assert head == "+EXT-K1"  # the worked example's far device, not only self-consistent
-    assert expected == "-W3 \N{LEFTWARDS ARROW} +EXT-K1:" + " ".join(map(str, range(1, _PINS + 1)))
-    assert {off_stub_text(model, m) for m in stubs} == {expected} == {"-W3 ← +EXT-K1:1 2 3 4"}
+    assert off_stub_text(model, stub) == expected == "-W3 ← +EXT-K1"
 
 
-def _far_pin(model):
-    """Sort key: the pin number of a far port."""
-    return lambda far: int(ports(model)[far].name)
-
-
-def test_the_stub_names_the_harness_as_carrier_and_the_far_device_port(model) -> None:
-    """F1 fields: `carrier` is the harness -W3, `far` the K1 port of the same pin number."""
+def test_the_stub_names_the_harness_as_carrier_and_the_far_device(model) -> None:
+    """F1 fields: `carrier` is the harness -W3, `far` a port of K1, the device beyond the line."""
     # UNDO: stages/offstubs.py: as the first test (no OFF marker)
-    stubs = _x1_stubs(model)
-    assert len(stubs) == _PINS
-    for m in stubs:
-        assert m.carrier is not None
-        assert item_designation(model, m.carrier) == "W3"
-        assert m.far is not None
-        assert _item_tag(model, m.far) == "K1"
-        assert ports(model)[m.far].name == ports(model)[m.port].name
+    (stub,) = _x1_stubs(model)
+    assert stub.carrier is not None
+    assert item_designation(model, stub.carrier) == "W3"
+    assert stub.far is not None
+    assert _item_tag(model, stub.far) == "K1"
 
 
 def _load(name: str):
@@ -171,16 +165,13 @@ def _load(name: str):
 
 
 def test_a_conductor_that_crosses_the_location_still_gives_its_stub_once() -> None:
-    """Control: the plug at the cabinet's location, the conductor crossing: one stub per X1 pin."""
+    """Control: the plug at the cabinet's location, the conductor crossing: one line stub (HL18)."""
     # UNDO: engines/schematic/read/offstubs.py: `boundary_offs` skips every pair (a
     #   `continue` at the top of its loop): the pins carry no stub. A fix that also stubs the mate
-    #   would give each pin two stubs and fail the `len({m.port ...})` line
+    #   would give the line two stubs and fail the one-stub unpacking
     built = _load("test_unit_boundary_off_stub.py")._build().model
-    stubs = _x1_stubs(built)
-    assert sorted(ports(built)[m.port].name for m in stubs) == ["1", "2"]
-    assert len({m.port for m in stubs}) == len(stubs)
-    head = stub_far_end(built, stubs[0].far)[0]
-    tails = [stub_far_end(built, m.far)[1] for m in sorted(stubs, key=lambda m: m.x)]
-    assert {off_stub_text(built, m) for m in stubs} == {
-        off_stub_line("-W3", north=True, far=head, ports=tails)
-    }
+    (stub,) = _x1_stubs(built)
+    assert "line_stub" in stub.key
+    head = stub_far_end(built, stub.far, stub.port)[0]
+    assert "+FLD" in head
+    assert off_stub_text(built, stub) == off_stub_line("-W3", north=True, far=head, ports=())

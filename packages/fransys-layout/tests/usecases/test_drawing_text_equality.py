@@ -124,29 +124,30 @@ def regenerate(request: pytest.FixtureRequest) -> bool:
 #   X3:1, X3:2, X4:1 x2, X4:2 = 10).
 _EXPECTED_TAG_MARKING_COUNT = 66
 
-# The wide golden's markers and CROSS_REFERENCE labels. Seven markers, all star markers: five
-# of the 24 V net (five ports: `X2:1` external, the three stop-button ports 11 and the lamp's
-# port 1): three branches (S0's pin has `X2:1` over it, V4) plus the reference on each of the
-# two pages `X2:1` stands on; and a
+# The wide golden's markers and CROSS_REFERENCE labels. Six markers: one line stub and five star
+# markers. HL1 draws `W1` (rails to the lamp `-H1`) as a line, which leaves page 1 in its one stub
+# (HL18). The 24 V net keeps four ports (`X2:1` external and the three stop-button ports 11): two
+# branches (S0's pin has `X2:1` over it, V4) and the reference on page 1; and a
 # turned pair (M12, `references.turned`): K1's aux port 13 faces N and its link to `S0:nc_2:22`
 # runs to a device below K1's bottom edge, so it is a reference pair, `S0:nc_2:22` the
 # reference and K1:aux:13 the branch. Eight CROSS_REFERENCE labels (D7): a line under each of
 # the five contacts (K1 main and aux, K2 main and aux, K8 no_1) and a contact image under each
 # of the three coils.
-_EXPECTED_WIDE_MARKER_COUNT = 7
-_EXPECTED_WIDE_REF_MARKER_COUNT = 3
+_EXPECTED_WIDE_MARKER_COUNT = 6
+_EXPECTED_WIDE_REF_MARKER_COUNT = 2
 _EXPECTED_WIDE_CROSS_REFERENCE_COUNT = 8
 
 # The narrow golden's (158 mm) marker counts, checked explicitly for the same reason (spec
 # X5's "never iterated silently"): two severed markers (one cut, K1:14 to K2:13, a marker at
-# either end) and four D9 star markers (the two branches `S1` and `H1`, `S0` has `X2:1` over
-# its pin (V4), and the reference on each of the two
-# pages `X2:1` stands on), and two more star markers, the turned
+# either end) and two D9 star markers (the branch `S1`, `S0` has `X2:1` over its pin (V4), and
+# the reference on page 1; HL1 takes the lamp `H1` off the star, `W1` is a line whose two leaving
+# ends are two line stubs, HL18), and two more star markers, the turned
 # pair of the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux stands on page 1 (layout-0049,
 # D2) above S0's contact, so the link from K1's N pin runs to a device below it and is a
 # reference pair (M12, `references.turned`), not a wire and not a cut.
 _EXPECTED_NARROW_SEVERED_MARKER_COUNT = 2
-_EXPECTED_NARROW_MARKER_COUNT = 8
+_EXPECTED_NARROW_MARKER_COUNT = 6
+_EXPECTED_NARROW_LINE_STUB_COUNT = 2
 # ... and the same eight D7 CROSS_REFERENCE labels as the wide golden.
 _EXPECTED_NARROW_CROSS_REFERENCE_COUNT = 8
 
@@ -286,9 +287,12 @@ def test_tag_and_marking_label_text_matches_what_the_stage_measured() -> None:
         sum(1 for marker in markers.values() if marker.star is StarKind.REF)
         == _EXPECTED_WIDE_REF_MARKER_COUNT
     )
-    assert {marker.star for marker in markers.values()} == {StarKind.REF, StarKind.BRANCH}, (
-        "the wide golden has no cross-page cut: every marker is a D9 star marker"
+    stars = {marker.star for marker in markers.values() if marker.key[3] != "line_stub"}
+    assert stars == {StarKind.REF, StarKind.BRANCH}, (
+        "the wide golden has no cross-page cut: every marker but the line stub is a D9 star"
     )
+    (line_stub,) = (marker for marker in markers.values() if marker.key[3] == "line_stub")
+    assert line_stub.star is StarKind.OFF
 
     checked = 0
     cross_references = 0
@@ -400,8 +404,8 @@ def test_marker_text_line_count_matches_the_stage_reserved_box_on_the_narrow_gol
     """For every `layout.link_marker` of the narrow golden, `marker_text`'s line count matches
     the box height the stage reserved for it (D2 equality, mechanical: see
     `_expected_line_count`) -- the one severed cut and the D9 star markers (branch and
-    reference), none an off stub in this fixture. Every reference line of one marker shares
-    one `#<n>-` prefix.
+    reference), none a per-core off stub in this fixture; `W1`'s line stubs print one line.
+    Every reference line of one marker shares one `#<n>-` prefix.
     """
     if regenerate:
         pytest.skip("--regenerate-golden: test_usecases.py rewrites the narrow digest later")
@@ -419,7 +423,14 @@ def test_marker_text_line_count_matches_the_stage_reserved_box_on_the_narrow_gol
     pages = layout_of(model, Page)
     profile = DEFAULT_PROFILE
     checked = 0
+    line_stubs = 0
     for marker in layout_of(model, LinkMarker).values():
+        if marker.key[3] == "line_stub":
+            # HL18: no stage marker; one line of text, no reference (C1)
+            assert "\n" not in marker_text(model, marker)
+            assert not marker_text(model, marker).startswith("#")
+            line_stubs += 1
+            continue
         key = (pages[marker.page].number, marker.port, marker.star.value if marker.star else "")
         stage_marker = stage_marker_of[key]
         lines = marker_text(model, marker).split("\n")
@@ -432,6 +443,7 @@ def test_marker_text_line_count_matches_the_stage_reserved_box_on_the_narrow_gol
         checked += 1
 
     assert checked == _EXPECTED_NARROW_MARKER_COUNT
+    assert line_stubs == _EXPECTED_NARROW_LINE_STUB_COUNT
 
 
 def test_cross_reference_label_text_matches_the_stage_request_on_the_narrow_golden(

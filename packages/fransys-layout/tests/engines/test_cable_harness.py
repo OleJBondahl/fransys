@@ -93,7 +93,7 @@ def _short() -> SimpleNamespace:
 
 @cache
 def _shared_lone() -> SimpleNamespace:
-    """A lone cable W1 whose cores 1 and 2 both land on -M1:U (CD-H7)."""
+    """A lone cable W1 whose cores 1 and 2 both land on -M1:U (CD-H7, P1)."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     m1, m2 = (d.item(_MOTOR, tag=f"M{n}", at=c1, group=g) for n in (1, 2))
@@ -101,7 +101,7 @@ def _shared_lone() -> SimpleNamespace:
     cable.core(1, m1["U"], m2["U"])
     cable.core(2, m1["U"], m2["V"])
     _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, cable=cable.id)
+    return SimpleNamespace(model=model, cable=cable.id, m1=m1.id)
 
 
 @cache
@@ -155,7 +155,7 @@ def _shared() -> SimpleNamespace:
     d.cable(_CABLE, tag="W1", parent=harness, at=c1).core(1, m1["U"], m2["U"])
     d.cable(_CABLE, tag="W2", parent=harness, at=c1).core(1, m1["U"], m3["U"])
     _, model = _lay(parts, d)
-    return SimpleNamespace(model=model, harness=harness.id)
+    return SimpleNamespace(model=model, harness=harness.id, m1=m1.id)
 
 
 def _block(model, subject):
@@ -281,13 +281,34 @@ def test_a_short_cable_box_grows_the_pitch_until_its_heading_fits():
     assert head.pitch % 16 == 0
 
 
-def test_a_pin_two_cores_land_on_gets_no_block():
-    """CD-H7, Q7: two cores of one cable, or of two cables, on -M1:U: the block is not drawn.
+def _landing(wire, end):
+    """The x where `wire` meets `end`'s box: the one run point on the box edge, inside its width."""
+    edge = end.y + end.height if end.row is BlockRow.TOP else end.y
+    points = {p.x for run in (wire.run_a, wire.run_b) for p in run if p.y == edge}
+    (x,) = (x for x in points if end.x <= x <= end.x + end.width)
+    return x
 
-    Probe: drop the shared-pin test from `drawable`; the lone cable then draws.
+
+def test_a_pin_two_cores_land_on_is_a_cell_two_places_wide_with_a_core_in_each():
+    """CD-H7 at P1, acceptance 27: -M1:U holds two cores, so its cell is two pitches wide.
+
+    The cores land at the centres of its two places, one each, and no wire lies on another.
+    Probe: give the pin one place (`PinFacts.places` returns 1); the cell is one pitch wide.
     """
-    assert _block(_shared().model, _shared().harness) is None
-    assert _block(_shared_lone().model, _shared_lone().cable) is None
+    for s, subject in ((_shared(), _shared().harness), (_shared_lone(), _shared_lone().cable)):
+        head, _, ends, wires = _block(s.model, subject)
+        (m1,) = [e for e in ends if e.item == s.m1]
+        (cell,) = m1.pins
+        assert m1.width == 2 * head.pitch
+        assert cell.x == m1.x + head.pitch
+        assert len(wires) == 2
+        assert sorted(_landing(w, m1) for w in wires) == [
+            m1.x + head.pitch // 2,
+            m1.x + head.pitch // 2 + head.pitch,
+        ]
+        runs = [run for w in wires for run in (w.run_a, w.run_b)]
+        assert_on_the_grid(runs)
+        assert_no_shared_stretch(runs)
 
 
 def _two_cable_facts(*, interleaved: bool):
@@ -295,8 +316,13 @@ def _two_cable_facts(*, interleaved: bool):
     ids = [make_id(Port, (f"p{n}",)) for n in range(6)]
     owner = [make_id(Item, (n,)) for n in ("t1", "t2", "b")]
 
+    wires = [(1, 0, 3), (2, 2 if interleaved else 1, 4), (3, 1 if interleaved else 2, 5)]
+    landing = {ids[n]: (make_id(Conductor, (str(key),)),) for key, *ends in wires for n in ends}
+
     def end(item, *ports, blank=False):
-        pins = tuple(PinFacts(port=p, landed=True, marking_width=16) for p in ports)
+        pins = tuple(
+            PinFacts(port=p, landed=True, marking_width=16, cores=landing[p]) for p in ports
+        )
         return EndFacts(item=item, dashed=False, blank=blank, label_width=16, pins=pins)
 
     def core(key, a, b):
@@ -310,13 +336,13 @@ def _two_cable_facts(*, interleaved: bool):
             cable=make_id(Item, ("a",)),
             external=False,
             heading_width=16,
-            cores=(core(1, ids[0], ids[3]), core(2, ids[2] if interleaved else ids[1], ids[4])),
+            cores=tuple(core(key, ids[a], ids[b]) for key, a, b in wires[:2]),
         ),
         CableFacts(
             cable=make_id(Item, ("b",)),
             external=False,
             heading_width=16,
-            cores=(core(3, ids[1] if interleaved else ids[2], ids[5]),),
+            cores=tuple(core(key, ids[a], ids[b]) for key, a, b in wires[2:]),
         ),
     )
     bottom = (end(owner[2], ids[3], ids[4], ids[5]),)

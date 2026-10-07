@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from fransys_model.kernel import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of, sheet_format_of
 
+from ._fan_outs import fan_outs_group
+from ._harness import connector_boxes_group, harness_lines_group
 from ._junctions import junctions_group
 from ._labels import labels_group
 from ._markers import markers_group
@@ -30,7 +32,11 @@ def _ordered_pages(model: Model) -> tuple[Page, ...]:
 
 
 def _render_page(model: Model, page: Page) -> str:
-    """One page's SVG: viewBox, style, outlines, symbols, routes, junctions, markers, labels."""
+    """One page's SVG: viewBox, style, then the groups in drawing order.
+
+    Order: outlines, symbols, routes, harness lines, fan-outs,
+    connector boxes, junctions, markers, labels.
+    """
     sheet = sheet_format_of(model, page.sheet_format)
     width_mm, height_mm = sheet.width_mm, sheet.height_mm
     return (
@@ -40,6 +46,9 @@ def _render_page(model: Model, page: Page) -> str:
         f"{outlines_group(model, page)}"
         f"{symbols_group(model, page)}"
         f"{routes_group(model, page)}"
+        f"{harness_lines_group(model, page)}"
+        f"{fan_outs_group(model, page)}"
+        f"{connector_boxes_group(model, page)}"
         f"{junctions_group(model, page)}"
         f"{markers_group(model, page)}"
         f"{labels_group(model, page)}"

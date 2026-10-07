@@ -4,6 +4,7 @@ from itertools import pairwise
 
 import pytest
 from layout_cabinet import build_cabinet
+from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -81,9 +82,12 @@ def _written_steps(placement) -> list[int]:
 
 
 def test_on_the_cabinets_written_box_the_offsets_keep_each_sides_pitch() -> None:
-    """Model-0129 acceptance: no two pins of any box side nearer than the channel pitch."""
+    """Model-0129 acceptance: no two pins of any box side nearer than the channel pitch.
+
+    The wired cabinet: HL1 draws the cabinet's `W1` as a line, and its lamp box is then not widened.
+    """
     seen = 0
-    for model in (freeze(build_cabinet()),):
+    for model in (freeze(wired_cabinet()),):
         for placement in _box_placements(model):
             if not placement.port_offsets:
                 continue

@@ -6,6 +6,7 @@ by one grid unit and reaches left until its label ends one pad before the first 
 """
 
 from itertools import pairwise
+lazy from collections.abc import Sequence
 
 from fransys_layout.engines.cable.values import BlockFacts, PlacedCable
 from fransys_layout.geometry import WIRING_GRID, Box, snap_up
@@ -23,7 +24,7 @@ def box_room(facts: BlockFacts) -> tuple[int, int]:
     stands at its row); every box shares the height.
     """
     head = snap_up(2 * facts.pad + facts.text_height)
-    texts = (core.text_width for cable in facts.cables for core in cable.cores if not core.link)
+    texts = (core.text_width for core in facts.cores if not core.link)
     longest = max(texts, default=0)
     height = max(BOX, head + snap_up(longest + 2 * facts.pad, grid=2 * G))
     return height, head + (height - head) // (2 * G) * G
@@ -90,11 +91,11 @@ def cable_boxes(
     )
 
 
-def dashed_box(label: int, boxes: tuple[PlacedCable, ...], first_x: int | None, y: int) -> Box:
+def dashed_box(label: int, boxes: Sequence[Box], first_x: int | None, y: int) -> Box:
     """The harness box around `boxes`, from `y` to one grid unit below them (Q4)."""
-    left = min(placed.box.x for placed in boxes) - G
+    left = min(box.x for box in boxes) - G
     if first_x is not None:
         left = min(left, first_x - label)
     left -= left % G
-    right = snap_up(max(max(p.box.x + p.box.width for p in boxes) + G, left + label))
-    return Box(x=left, y=y, width=right - left, height=boxes[0].box.y + boxes[0].box.height + G - y)
+    right = snap_up(max(max(box.x + box.width for box in boxes) + G, left + label))
+    return Box(x=left, y=y, width=right - left, height=boxes[0].y + boxes[0].height + G - y)

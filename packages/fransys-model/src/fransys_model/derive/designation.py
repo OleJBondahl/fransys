@@ -8,7 +8,6 @@ or similar is not a missing feature; it reintroduces the exact bug this model re
 """
 
 import contextlib
-from itertools import islice
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Iterable
 
@@ -26,6 +25,7 @@ from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.pcb import FootprintFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.membership import (
+    designating_ancestors,
     enclosing_boards,
     is_harness,
     is_sole_unit_root,
@@ -185,19 +185,6 @@ def designation_holder(model: Model, item: Id[Item]) -> Id[Item]:
         if not takes_parents_designation(model, holder):
             break
     return holder
-
-
-def designating_ancestors(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
-    """Every enclosing board or harness of `item` by `Item.parent`, outermost first; never `item`.
-
-    Cycle-safe: `enclosing_boards` for boards, `is_harness` for harnesses; never a rack or strip.
-    An unknown `item` gives `()`, so `item_designation` raises via `_own_designation`, not here.
-    """
-    if items(model).get(item) is None:
-        return ()
-    boards = frozenset(enclosing_boards(model, item))
-    above = islice(item_chain(model, item), 1, None)
-    return tuple(reversed([node for node in above if node in boards or is_harness(model, node)]))
 
 
 def _ancestor_label(model: Model, ancestor: Id[Item], *, is_board: bool) -> str:

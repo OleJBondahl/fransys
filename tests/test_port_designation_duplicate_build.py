@@ -153,4 +153,7 @@ def test_the_same_wiring_with_the_pins_named_apart_builds_clean_and_is_laid_out(
     apart = _build(tmp_path, collide=False)
     assert Severity.ERROR not in {f.severity for f in apart.findings}
     assert _CODE not in {f.code for f in apart.findings}
-    assert len(layout_of(apart.model, LinkMarker)) == 4  # one off stub per plug pin and per A1 pin
+    # HL18, owner C1: the two-core line -W1 leaves each of its two sets in one stub
+    stubs = layout_of(apart.model, LinkMarker).values()
+    assert len(stubs) == 2
+    assert all("line_stub" in m.key for m in stubs)

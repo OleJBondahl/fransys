@@ -1,12 +1,11 @@
 """The page `<style>` block: D11's fixed classes, black on white, deterministic."""
 
-from typing import TYPE_CHECKING
+from decimal import Decimal
+
+from graphical_symbols.geometry import Weight
 
 from ._constants import OUTLINE_DASH_GAP_MM, OUTLINE_DASH_LONG_MM, STROKE_WIDTH_MM
 from ._numbers import format_decimal
-
-if TYPE_CHECKING:
-    from decimal import Decimal
 
 _STROKE_WIDTH_MM = format_decimal(STROKE_WIDTH_MM)
 _FONT_FAMILY = 'Liberation Serif, "Times New Roman", serif'  # D7
@@ -14,6 +13,11 @@ _OUTLINE_DASH_ARRAY = (
     f"{format_decimal(OUTLINE_DASH_LONG_MM)},{format_decimal(OUTLINE_DASH_GAP_MM)},"
     f"{_STROKE_WIDTH_MM},{format_decimal(OUTLINE_DASH_GAP_MM)}"
 )
+
+
+def _harness_width(module_mm: Decimal) -> str:
+    """The harness line's stroke width in mm: the thick weight times the module (0.5 at 2.5)."""
+    return format_decimal(Decimal(str(Weight.THICK.value)) * module_mm)
 
 
 def style_block(module_mm: Decimal) -> str:
@@ -31,5 +35,8 @@ def style_block(module_mm: Decimal) -> str:
         f".not-installed * {{ stroke: grey; stroke-dasharray: {descendant_dash}; }}"
         ".not-installed [fill] { fill: grey; }"
         f".unit-boundary {{ stroke-dasharray: {_OUTLINE_DASH_ARRAY}; }}"
+        f".harness-line {{ stroke: black; fill: none; stroke-width: {_harness_width(module_mm)}; }}"
+        f".connector-box, .connector-cell {{ stroke: black; fill: none; "
+        f"stroke-width: {_STROKE_WIDTH_MM}; }}"
         "</style>"
     )

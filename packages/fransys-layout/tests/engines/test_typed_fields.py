@@ -10,6 +10,7 @@ from functools import cache
 
 import pytest
 from layout_cabinet import build_cabinet
+from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -26,8 +27,9 @@ from fransys_model.vocab.tables import items, ports
 
 
 @cache
-def _laid_out(*, second_location: bool = False):
-    model = freeze(build_cabinet(second_location=second_location))
+def _laid_out(*, second_location: bool = False, wired: bool = False):
+    """The cabinet laid out; `wired` gives `W1`'s cores as wires, not a line (HL1)."""
+    model = freeze((wired_cabinet if wired else build_cabinet)(second_location=second_location))
     results, _ = stage_results(model, read_inputs(model))
     return model, results, write_layout(model, results, write_keys(model))
 
@@ -96,8 +98,11 @@ def test_a_pin_view_placement_has_the_pin_view() -> None:
 
 
 def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawing_order() -> None:
-    """The generic box of the cabinet (not an item view) writes its own port list."""
-    _, results, out = _laid_out()
+    """The generic box of the cabinet (not an item view) writes its own port list.
+
+    The wired cabinet's lamp box: drawn as `W1`'s line end (HL1), its names are in plain order.
+    """
+    _, results, out = _laid_out(wired=True)
     generic = _generic_box(results)
     drawn = sorted(generic.geometry.ports, key=lambda port: (port.at.x, port.facing.value != "n"))
     names, sides, offsets = _placement_fields(generic, PlacementView.FUNCTION)
@@ -160,6 +165,11 @@ def test_marker_fields_come_from_the_stage_marker(changes: dict, expected: tuple
     assert _marker_fields(_marker(box=_BOX, **changes)) == expected
 
 
+def _line_stub(marker) -> bool:
+    """HL18: a leaving line's one stub, written from `results.lines`, not a stage marker."""
+    return marker.key[3] == "line_stub"
+
+
 def _written_markers(model, results, markers):
     layout = dataclasses.replace(results.layout, markers=tuple(markers))
     out = write_layout(model, dataclasses.replace(results, layout=layout), write_keys(model))
@@ -172,7 +182,9 @@ def test_a_star_marker_writes_the_marker_fields_from_its_stage_marker() -> None:
     doctored = [
         dataclasses.replace(m, turn=Point(x=5, y=6), shared_box=True, lead=False) for m in stars
     ]
-    written = _written_markers(model, results, doctored)
+    every = _written_markers(model, results, doctored)
+    written = [m for m in every if not _line_stub(m)]
+    assert len(every) - len(written) == len(results.lines.stubs)
     assert len(written) == len(stars)
     assert {(m.via_x, m.via_y, m.lead) for m in written} == {(5, 6, False)}
     assert {m.box_x for m in written} == {m.box.x for m in stars}
@@ -233,7 +245,11 @@ def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
 
 
 def test_a_cabinet_with_only_reference_and_branch_stars_carries_no_marker_ext() -> None:
-    _, _, out = _laid_out()
+    """Besides its line's stubs (HL18: `W1` leaves its lamp's page), the cabinet has stars only."""
+    _, results, out = _laid_out()
     written = list(dict(out.tables["layout.link_marker"]).values())
-    assert {m.star for m in written} == {StarKind.REF, StarKind.BRANCH}
+    stubs = [m for m in written if _line_stub(m)]
+    assert len(stubs) == len(results.lines.stubs) > 0
+    assert {m.star for m in stubs} == {StarKind.OFF}
+    assert {m.star for m in written if not _line_stub(m)} == {StarKind.REF, StarKind.BRANCH}
     assert not any(m.ext for m in written)

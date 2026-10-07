@@ -158,6 +158,7 @@ _.unused  # TESTS fransys-author/tests/test_errors.py:482
 _.strip  # TESTS fransys-author/tests/test_origins.py:90
 _.cable  # TESTS fransys-author/tests/test_origins.py:109
 _.harness  # TESTS fransys-author/tests/test_external.py:83
+_.rack  # TESTS fransys-author/tests/surface/test_s4b_handles.py:82
 _.wiring  # TESTS fransys-author/tests/test_errors.py:178
 _.net  # TESTS fransys-author/tests/test_origins.py:150
 _.mate  # TESTS fransys-author/tests/test_origins.py:164
@@ -260,7 +261,7 @@ _.limits  # TESTS fransys-author/tests/surface/test_coverage_facts.py:89
 _.stub_a  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.stub_b  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 # CT5-2: the cable drawing's fields and enum members, read by render's cable_blocks
-_.pitch  # OTHER fransys-render/src/fransys_render/cables.py:70
+_.pitch  # OTHER fransys-layout/tests/engines/test_cable_engine.py:269
 _.text_x  # OTHER fransys-render/src/fransys_render/cables.py:109
 _.text_y  # OTHER fransys-render/src/fransys_render/cables.py:109
 _.TOP  # OTHER fransys-render/src/fransys_render/cables.py:62
@@ -269,3 +270,7 @@ _.HARNESS  # OTHER fransys-render/src/fransys_render/cables.py:49
 _.SOLID  # OTHER fransys-render/src/fransys_render/cables.py:61
 _.DASHED  # OTHER fransys-render/src/fransys_render/cables.py:61
 _.BLANK  # OTHER fransys-render/src/fransys_render/cables.py:85
+_.tab_a  # OTHER fransys-render/src/fransys_render/diagram.py:55
+_.tab_b  # OTHER fransys-render/src/fransys_render/diagram.py:56
+_.text_width  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:46
+_.dashed  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:68

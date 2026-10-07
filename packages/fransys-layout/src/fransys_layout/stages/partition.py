@@ -6,13 +6,14 @@ drawing set, the role and the order of a column (steps 1 and 2), `_packing` fill
 `PagePlan`s and `Finding`s.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.geometry import WIRING_GRID, HintError, LayoutError
 from fransys_model.kernel import AuthoringKey, Finding, Severity
 
+from ._gather import Bands, gather
 from ._ordering import Tables, base_order, buckets, column_order, membership, reorder
 from ._packing import merge, pack, placements
 from .place import _without_tag
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
     from .types import Column, DrawnFunction, Handle, PageHints, Profile, SheetFormat
 
 GROUP_SPLIT = "GROUP_SPLIT"
+UNIT_GROUP_SPLIT = "UNIT_GROUP_SPLIT"
 KEEP_TOGETHER_UNMET = "KEEP_TOGETHER_UNMET"
 ORDER_HINT_UNMET = "ORDER_HINT_UNMET"
 
@@ -83,13 +85,17 @@ def column_widths(
 
 @dataclass(frozen=True, slots=True)
 class ColumnTables:
-    """What a column resolves through in `partition`: width, group, location, unit, pole links."""
+    """What a column resolves through in `partition`: width, group, location, unit, pole links.
+
+    `bands` are the unit groups (HL21), each packed as one unit.
+    """
 
     widths: tuple[ColumnWidth, ...]
     groups: tuple[GroupInfo, ...]
     locations: tuple[LocationInfo, ...]
     units: tuple[UnitInfo, ...]
     pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...] = ()
+    bands: Bands = field(default_factory=Bands)
 
 
 def partition(
@@ -128,14 +134,17 @@ def partition(
             pole_links=given.pole_links,
         )
         packed, bucket_met = merge(
-            reorder(ranked, hints.order), hints.keep_together, sheet.content_width
+            # HL21: each unit group one unit, before keep-together sets take it whole
+            gather(reorder(ranked, hints.order), given.bands, tables.width_of),
+            hints.keep_together,
+            sheet.content_width,
         )
         met |= bucket_met
         runs, split = placements(packed, tables.width_of, sheet.content_width, given.pole_links)
         for page in pack(runs, sheet.content_width):
             pages.append(_page(bucket, number, page, tables))
             number += 1
-        findings.extend(_split_findings(split))
+        findings.extend(_split_findings(split, pages, given.bands, tables))
     findings.extend(_keep_together_findings(hints, met))
     findings.sort(key=lambda finding: (finding.code, finding.subjects))
     return tuple(pages), tuple(findings)
@@ -218,14 +227,36 @@ def _keep_together_findings(hints: PageHints, met: AbstractSet[int]) -> Iterator
         )
 
 
-def _split_findings(split: Sequence[Unit]) -> Iterator[Finding]:
-    """One finding per unit the packing had to cut between its columns."""
+def _split_findings(
+    split: Sequence[Unit], pages: Sequence[PagePlan], bands: Bands, tables: Tables
+) -> Iterator[Finding]:
+    """One finding per unit the packing had to cut; a unit group has its own code (HL21)."""
     for unit in split:
+        subjects = tuple(group for group in unit.groups if group is not None)
+        if not any(key in bands.band_of for key in unit.columns):
+            yield Finding(
+                code=GROUP_SPLIT,
+                severity=Severity.WARNING,
+                subjects=subjects,
+                message="group is wider than a page: split between its columns",
+            )
+            continue
+        named = ", ".join(tables.info_of[group].description for group in subjects)
+        keys = set(unit.columns)
+        spans = ", ".join(
+            str(page.number)
+            for page in pages
+            if any(planned.column in keys for planned in page.columns)
+        )
         yield Finding(
-            code=GROUP_SPLIT,
+            code=UNIT_GROUP_SPLIT,
             severity=Severity.WARNING,
-            subjects=tuple(group for group in unit.groups if group is not None),
-            message="group is wider than a page: split between its columns",
+            subjects=subjects,
+            message=(
+                f"unit group ({named}) is wider than a page: split over pages {spans}. "
+                "Side hints (d.layout.side, HL14) to even the edges, or fewer harness "
+                "interfaces on the unit, keep it on one page."
+            ),
         )
 
 

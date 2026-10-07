@@ -18,9 +18,8 @@ class ConnectorFacet:
     `FEMALE` gender (decision model-0116).
 
     `marking` is the label printed on the part ("X1"), read like `Port.marking`: `None` means
-    the function's own name is the label, `""` means the connector prints no label (a shell or
-    an earth stud, whose pins print under the item). Derive reads that rule, not this record
-    (decision model-0071).
+    the function's name, `""` no label (a shell or earth stud). Derive reads that rule
+    (decision model-0071). `mates` names the MPNs it mates with, data only (decision parts-0016).
     """
 
     id: Id[ConnectorFacet]
@@ -30,4 +29,5 @@ class ConnectorFacet:
     pincount: int
     gender: Gender | None = None
     marking: str | None = None
+    mates: tuple[str, ...] = ()
     ext: frozendict[str, Value] = frozendict()

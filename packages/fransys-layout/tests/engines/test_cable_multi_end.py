@@ -165,7 +165,7 @@ def test_f2_swap_in_a_unit_draws_one_jog_and_core_texts_follow_the_top_row():
 
 def test_f2_is_the_same_whatever_order_the_cores_are_added_in():
     """Layout invariant 5, through the model: cores added in reverse order give equal records and
-    the same digest. The listing-order probe is test_cable_channel's shuffle test."""
+    the same digest. The listing-order probe is stages/test_channel's shuffle test."""
     parts, d, _ = _f2_design(reverse=True)
     _, backward = _laid_out(parts, d)
     forward = _f2().model

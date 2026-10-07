@@ -39,5 +39,7 @@ TABLE = Table(
         _row("T1.6", "cross_reference", 3, ((None, _BELOW_TAG, False), (None, _BELOW_TAG, True))),
         # layout-0114: a supply bar's text has one place, past the bar, away from its pin
         _row("T1.7", "power", 0, ((None, (0,), False),)),
+        # layout-0154 HL16: a harness line's designation, beside its longest run, then across it
+        _row("T1.8", "harness_line", 1, _OWN_THEN_MIRROR),
     ),
 )

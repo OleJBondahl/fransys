@@ -11,6 +11,7 @@ _MEMBERS = (
     "order",
     "symbol",
     "draw_in",
+    "side",
     "sheet",
     "profile",
 )

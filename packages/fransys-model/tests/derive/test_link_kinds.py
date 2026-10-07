@@ -43,7 +43,7 @@ def _end(name: str) -> tuple[Item, Function, Port]:
     return item, function, port
 
 
-@pytest.mark.parametrize("kind", ["MOUNT", "RAIL", "BUSBAR"])
+@pytest.mark.parametrize("kind", ["MOUNT", "RAIL", "BUSBAR", "LEAD"])
 def test_a_link_conductor_closes_its_net_and_carries_no_wire_facet(
     kind: str, origin: Origin
 ) -> None:

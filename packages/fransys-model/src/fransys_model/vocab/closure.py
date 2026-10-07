@@ -12,6 +12,7 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest
 from .contacts import link_state
 from .core import Function, Port
 from .enums import LinkKind
+from .joins import port_joins
 from .tables import conductors, functions, internal_links, mates, nets, ports, supply_of_potential
 
 if TYPE_CHECKING:
@@ -92,7 +93,9 @@ def link_groups(model: Model, kinds: frozenset[LinkKind]) -> Iterator[LinkGroup]
 
 
 def _join_mates(model: Model, join_all: Callable[[Sequence[Id[Port]]], None]) -> None:
-    """Join, per port name, every port of that name on the two mated functions."""
+    """Join each header join's two ports, then, per port name, the ports of two mated functions."""
+    for pair in port_joins(model):
+        join_all(pair)
     by_function: dict[Id[Function], list[Port]] = {}
     for port in ports(model).values():
         by_function.setdefault(port.function, []).append(port)

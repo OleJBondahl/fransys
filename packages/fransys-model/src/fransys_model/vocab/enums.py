@@ -158,9 +158,9 @@ class ConductorKind(Enum):
 
     Example: a panel wire is `WIRE`; one core of the invented cable `W012` example
     is `CORE`; a bridge between two terminals is `JUMPER`.
-    `MOUNT`, `BUSBAR` and `RAIL` are links: plug-on contacts, a rack's power
-    jumper, terminals bonded through their rail. A link closes its net and is never a wire:
-    it has no `WireFacet`.
+    `MOUNT`, `BUSBAR`, `RAIL` and `LEAD` are links: plug-on contacts, a rack's power
+    jumper, terminals bonded through their rail, a device's own lead ending in a pin of a
+    fitted connector. A link closes its net and is never a wire: it has no `WireFacet`.
     """
 
     WIRE = "wire"
@@ -169,6 +169,7 @@ class ConductorKind(Enum):
     BUSBAR = "busbar"
     MOUNT = "mount"
     RAIL = "rail"
+    LEAD = "lead"
 
 
 @register_enum
@@ -240,6 +241,7 @@ class PageKind(Enum):
     COVER = "cover"
     NOTES = "notes"
     CONTENTS = "contents"
+    BLOCK_DIAGRAM = "block_diagram"
     SCHEMATIC = "schematic"
     HARNESS_DRAWING = "harness_drawing"
     PLC_LIST = "plc_list"

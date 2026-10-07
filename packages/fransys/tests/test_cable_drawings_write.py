@@ -22,7 +22,7 @@ def _design(*, extra=None, cable_tag="W1"):
     """A strip `X1` and a motor `M1` joined by `cable_tag`; `extra` adds `W2` or a third core.
 
     `extra="loop"`: W2 joins two strip terminals (a cable of row links, CD-H8 at V1).
-    `extra="shared"`: W1's core 3 lands on the pin its core 1 lands on (CD-H7, until CT5-PIN).
+    `extra="interleave"`: harness WH7 whose cable W7's top columns lie round W8's (CD-H6).
     """
     parts = fr.parts("demo_parts")
     d = fransys_author.Design(parts)
@@ -39,8 +39,16 @@ def _design(*, extra=None, cable_tag="W1"):
     if extra == "loop":
         second = d.cable("DEMO-CBL-4G1.5", tag="W2", length_mm=500)
         second.core(1, terminals[2].outer, terminals[3].outer)
-    if extra == "shared":
-        cable.core(3, terminals[2].outer, motor["U"])
+    if extra == "interleave":
+        harness = d.harness(tag="WH7", at=loc, group=grp)
+        m1, m2, m3 = (
+            d.item("DEMO-MOTOR-4KW", tag=f"M{n}", parent=harness, at=loc, group=grp)
+            for n in (2, 3, 4)
+        )
+        w7 = d.cable("DEMO-CBL-4G1.5", tag="W7", parent=harness, at=loc)
+        w7.core(1, m1["U"], m3["U"])
+        w7.core(2, m2["U"], m3["V"])
+        d.cable("DEMO-CBL-4G1.5", tag="W8", parent=harness, at=loc).core(1, m1["V"], m3["W"])
     return parts, d.draft()
 
 
@@ -49,7 +57,7 @@ def _built(variant: str):
     kwargs = {
         "good": {},
         "loop": {"extra": "loop"},
-        "shared": {"extra": "shared"},
+        "interleave": {"extra": "interleave"},
         "wide": {"cable_tag": _LONG_TAG},
     }[variant]
     parts, draft = _design(**kwargs)
@@ -93,7 +101,8 @@ def test_write_embeds_the_cable_block_svg_in_the_typst_source(good_written):
     sources = [p.read_text(encoding="utf-8") for p in sorted(inter.glob("*.typ"))]
     assert len(sources) == 1
     assert 'format: "svg"' in sources[0]
-    assert sources[0].count('format: "svg"') == 1
+    # The cable block and, since BD-3, the SYSTEM block diagram sheet: one SVG each.
+    assert sources[0].count('format: "svg"') == 2
     assert "-W1, 5000 mm" in sources[0]  # the block's heading, inside the SVG literal
     assert 'strong(text("Core"))' not in sources[0]  # the old core table's header cell
 
@@ -108,17 +117,17 @@ def test_write_draws_a_cable_of_row_links(tmp_path):
 
 
 def test_write_refuses_a_cable_the_engine_cannot_draw(good_written, tmp_path):
-    """Acceptance 16, facade half: two cores on one pin (CD-H7) fail the write.
+    """Acceptance 16, facade half: a harness whose cable columns interleave (CD-H6) fails the write.
 
-    The good model (positive control, `good_written`) writes. Probe: the engine's `drawable`
-    predicate accepting the shared-pin cable.
+    The good model (positive control, `good_written`) writes. Probe: the placer's overlap test of
+    the cable boxes dropped, so the harness draws.
     """
     assert good_written()[0]
-    findings = _raised("shared", tmp_path)
+    findings = _raised("interleave", tmp_path)
     missing = [f for f in findings if f.code == "DOCUMENT_NO_DRAWINGS"]
     assert missing
-    (w1,) = [i.id for i in items(_built("shared").model).values() if i.key == ("W1",)]
-    key = cable_block_key(None, w1)
+    (harness,) = [i.id for i in items(_built("interleave").model).values() if i.key == ("WH7",)]
+    key = cable_block_key(None, harness)
     assert any(f"missing drawing for {key}" in f.message for f in missing), [
         f.message for f in missing
     ]

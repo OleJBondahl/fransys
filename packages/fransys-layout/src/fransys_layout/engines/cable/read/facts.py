@@ -2,6 +2,7 @@
 
 from itertools import count
 from typing import Any
+lazy from collections.abc import Iterator
 
 from fransys_layout.engines.cable.values import (
     BlockFacts,
@@ -15,6 +16,7 @@ from fransys_layout.geometry import text_width
 from fransys_model.derive import printed_designation
 from fransys_model.derive.cable_drawing import (
     block_cables,
+    block_wires,
     cable_heading,
     core_text,
     drawn_pins,
@@ -42,6 +44,7 @@ def _end(
                 port=pin.port,
                 landed=pin.landed,
                 marking_width=text_width(pin.marking, height=height),
+                cores=pin.cores,
             )
             for pin in drawn_pins(model, subject, item, unit)
         ),
@@ -49,10 +52,9 @@ def _end(
 
 
 def _cables(
-    model: Model, subject: Id[Any], unit: Id[Any] | None, height: int
+    model: Model, subject: Id[Any], unit: Id[Any] | None, height: int, keys: Iterator[int]
 ) -> tuple[CableFacts, ...]:
     """The block's cables in print order; core keys run on over the whole block (CD5)."""
-    keys = count(1)
     links = set(row_links(model, subject, unit))
     return tuple(
         CableFacts(
@@ -75,6 +77,24 @@ def _cables(
     )
 
 
+def _wires(
+    model: Model, subject: Id[Any], unit: Id[Any] | None, height: int, keys: Iterator[int]
+) -> tuple[CoreFacts, ...]:
+    """The block's single wires in key order, their keys running on after the cables' cores."""
+    links = set(row_links(model, subject, unit))
+    return tuple(
+        CoreFacts(
+            key=next(keys),
+            conductor=wire.conductor,
+            end_a=wire.end_a,
+            end_b=wire.end_b,
+            text_width=text_width(wire.text, height=height),
+            link=wire.conductor in links,
+        )
+        for wire in block_wires(model, subject, unit)
+    )
+
+
 def _harness_width(model: Model, subject: Id[Any], unit: Id[Any] | None, height: int) -> int | None:
     """The harness label's width, or None when the block's subject is a cable (no dashed box)."""
     first = block_cables(model, subject, unit)
@@ -88,6 +108,7 @@ def block_facts(model: Model, subject: Id[Any], unit: Id[Any] | None) -> BlockFa
     profile, _, sheet_format = profile_and_sheet(model)
     height = profile.text_height
     top, bottom = end_rows(model, subject, unit)
+    keys = count(1)
     return BlockFacts(
         subject=subject,
         unit=unit,
@@ -96,8 +117,9 @@ def block_facts(model: Model, subject: Id[Any], unit: Id[Any] | None) -> BlockFa
         turn_penalty=profile.route_turn_penalty,
         crossing_penalty=profile.route_crossing_penalty,
         pad=profile.marker_padding,
-        cables=_cables(model, subject, unit, height),
+        cables=_cables(model, subject, unit, height, keys),
         top=tuple(_end(model, subject, item, unit, height) for item in top),
         bottom=tuple(_end(model, subject, item, unit, height) for item in bottom),
         harness_width=_harness_width(model, subject, unit, height),
+        wires=_wires(model, subject, unit, height, keys),
     )

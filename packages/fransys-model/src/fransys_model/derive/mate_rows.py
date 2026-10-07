@@ -1,7 +1,9 @@
 """The public reader of mates: one row per `Mate` of the model, at every level (model-0147)."""
 
+from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.tables import mates as mates_table
-lazy from fransys_model.kernel import Model
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.core import Function
 
 from .designation import connector_designation
 from .natural_order import natural_key
@@ -39,3 +41,13 @@ def mates(model: Model) -> tuple[MateRow, ...]:
             ),
         )
     )
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def mate_partners(model: Model) -> frozendict[Id[Function], tuple[Id[Function], ...]]:
+    """Each mated connector function with the functions mated to it, smallest id first."""
+    found: dict[Id[Function], list[Id[Function]]] = {}
+    for mate in mates_table(model).values():
+        found.setdefault(mate.a, []).append(mate.b)
+        found.setdefault(mate.b, []).append(mate.a)
+    return frozendict({key: tuple(sorted(value)) for key, value in found.items()})

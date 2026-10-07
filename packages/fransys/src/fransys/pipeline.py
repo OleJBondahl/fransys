@@ -39,6 +39,7 @@ from fransys_layout import lay_out_cables
 from fransys_model.derive import (
     allocate_plc,
     baseline,
+    check_side_hints,
     current_revision,
     document_unit,
     list_context,
@@ -348,6 +349,7 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     model, number_findings = number(model)
     number_findings = (*number_findings, *_revision_pins.new_findings(model, sources))
     validator_findings = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
+    validator_findings.extend(check_side_hints(model))
     findings = (*plc_findings, *number_findings, *validator_findings)
     if _has_error(findings) or not _has_document(model):
         return BuildResult(model=model, findings=findings)
@@ -374,7 +376,7 @@ def _draw_svgs(model: Model) -> dict[str, str]:
     pages: dict[str, str] = (
         dict(fransys_render.pages(model)) if needs_schematic_layout(model) else {}
     )
-    return {**pages, **fransys_render.cable_blocks(model)}
+    return {**pages, **fransys_render.cable_blocks(model), **fransys_render.diagram_sheets(model)}
 
 
 # The last model's drawing only (decision 0054): memory stays flat on a big system, and every

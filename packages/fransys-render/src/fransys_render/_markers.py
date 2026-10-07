@@ -1,15 +1,18 @@
 """Link markers (D8, layout-0038): stub, arrow box and text; size read from the record."""
 
 import dataclasses
+from itertools import pairwise
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
 from graphical_symbols import Direction
 
 from electrical_symbols import WIRING_GRID
+from fransys_model.derive import draws_as_line
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.layout import (
+    HarnessLine,
     LinkMarker,
     PlacementView,
     SymbolPlacement,
@@ -18,6 +21,7 @@ from fransys_model.layout import (
     profile_of,
     sheet_format_of,
 )
+from fransys_model.layout import Page as PageRecord
 from fransys_model.vocab import functions, ports
 
 from ._constants import ASCENT_RATIO, MARKER_ARROW_DEPTH_G
@@ -314,6 +318,22 @@ def _turned_glyphs(
     )
 
 
+def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
+    """Whether `marker` is the stub a harness line ends in (HL18): its carrier's line runs on it.
+
+    A per-core stub of a line's carrier (C21) stands at its port, off the line, and keeps its stub.
+    """
+    if marker.carrier is None or not draws_as_line(model, marker.carrier):
+        return False
+    page = layout_of(model, PageRecord)[marker.page]
+    return any(
+        min(a.x, b.x) <= marker.x <= max(a.x, b.x) and min(a.y, b.y) <= marker.y <= max(a.y, b.y)
+        for line in page_slice(model, HarnessLine, page)
+        if line.harness == marker.carrier
+        for a, b in pairwise(line.points)
+    )
+
+
 def markers_group(model: Model, page: Page) -> str:
     """Every marker on `page` as one stub + arrow-box + text, D11 id order."""
     sheet = sheet_format_of(model, page.sheet_format)
@@ -328,12 +348,14 @@ def markers_group(model: Model, page: Page) -> str:
                 )
             continue
         facing = marker_facing(model, marker)
+        line_stub = _ends_a_line(model, marker)
         stub = (marker.x, marker.y, marker.stub_extra)
-        if stub not in stubs:
+        if stub not in stubs and not line_stub:  # a line runs on to its stub's box itself
             stubs.add(stub)
             parts.append(_stub_glyph(sheet, marker, facing))
-        if marker.box_x is not None:
-            # R6 D2: the lead of a shared box draws it, as a plain rectangle, and the text
+        if marker.box_x is not None or line_stub:
+            # R6 D2: the lead of a shared box draws it, as a plain rectangle, and the text;
+            # a line's stub is one such box, its line meeting its edge's middle (layout-0158)
             if marker.lead:
                 parts.append(_shared_box_glyph(sheet, marker, facing))
                 parts.append(_text_element(sheet, profile, model, marker, facing))

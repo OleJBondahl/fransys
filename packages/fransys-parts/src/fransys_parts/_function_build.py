@@ -21,7 +21,7 @@ from fransys_model.vocab import (
     SignalType,
 )
 
-from . import _pole_facts, _ratings, _toml
+from . import _joins, _pole_facts, _ratings, _toml
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +82,9 @@ def _add_ports(
                 marking=port.get("marking"),
                 pole_side=pole_side,
                 conductor_mark=conductor_mark,
+                joins=_joins.target_id(function_key[:-2], port["joins"])
+                if "joins" in port
+                else None,
             ),
             origin=origin,
         )
@@ -161,6 +164,7 @@ def _add_connector(
             pincount=connector["pincount"],
             gender=Gender(connector["gender"]) if "gender" in connector else None,
             marking=connector.get("marking"),
+            mates=tuple(connector.get("mates", ())),
         ),
         origin=origin,
     )

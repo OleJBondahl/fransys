@@ -28,11 +28,12 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
             _K.CONNECTOR_LIST,
             _K.BOM,
         ),
-        # No BLOCK_DIAGRAM: units spec U3's block-diagram page kind does not exist yet
-        # (model-0041) and is not added here -- a later, separate package's job.
+        # Only SYSTEM carries BLOCK_DIAGRAM; no unit document has it by default (BD-Q3 A),
+        # `add=` puts it on any.
         DocumentPreset.SYSTEM: (
             _K.COVER,
             _K.NOTES,
+            _K.BLOCK_DIAGRAM,
             _K.HARNESS_DRAWING,
             _K.CABLE_LIST,
             _K.BOM,

@@ -63,12 +63,14 @@ class CableBox:
 class PinCell:
     """One cell of an `EndBox`; `index` is its place left to right.
 
-    `x` is the cell centre x, where its core lands.
+    `x` is the cell centre x, where its core lands; `width` is the cell's width, which render
+    reads for the divider on its left edge (layout-0152).
     """
 
     index: int
     port: Id[Port]
     x: int
+    width: int
     landed: bool
 
 

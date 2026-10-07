@@ -10,6 +10,7 @@ from fransys_model.vocab.core import Function
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
+from .enums import Side
 from .order import by_index, holder_of
 
 
@@ -156,3 +157,25 @@ class SymbolChoice:
                 f"kind, not {chosen}"
             )
             raise SchemaError(msg, kind="layout.symbol_choice", record_id=holder_of(self))
+
+
+@record(kind="layout.side_hint", subject="function", unique=True)
+class SideHint:
+    """Draw this boundary function's interface on that edge of its unit's outline.
+
+    Example: a bus connector hinted to `Side.N` stands above the board's outline. Only `Side.N`
+    (above) and `Side.S` (below) are kept; the unit's own drawing never reads it. At most one
+    per function.
+    """
+
+    id: Id[SideHint]
+    key: AuthoringKey
+    function: Id[Function]
+    side: Side
+    ext: frozendict[str, Value] = frozendict()
+
+    def __post_init__(self) -> None:
+        """Refuse a side other than north (above) and south (below)."""
+        if self.side not in (Side.N, Side.S):
+            msg = "a side hint is Side.N (above) or Side.S (below)"
+            raise SchemaError(msg, kind="layout.side_hint", record_id=holder_of(self))

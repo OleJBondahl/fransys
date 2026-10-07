@@ -12,8 +12,9 @@ misfire on a comment holding triple quotes, or a literal triple-quote mark in an
 
 import re
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.kernel import Finding, Severity
@@ -58,13 +59,20 @@ def finding(
 
 
 def parse(file_path: Path, *, relative_to: Path) -> ParsedFile:
-    """Read and parse `file_path`; never raises."""
+    """Read and parse `file_path`; never raises. The parse is cached on the file's text (0122)."""
     rel = file_path.relative_to(relative_to).as_posix()
     try:
         text = file_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         text_finding = finding("FILE_UNREADABLE", rel, 1, str(exc))
         return ParsedFile(path=rel, data=None, origins={}, findings=(text_finding,))
+    cached = _parse_text(text, rel)
+    # The cache keeps its own copy: a caller that edits `data` or `origins` cannot reach it.
+    return replace(cached, data=_copy(cached.data), origins=dict(cached.origins))
+
+
+@lru_cache(maxsize=512)
+def _parse_text(text: str, rel: str) -> ParsedFile:
     try:
         data = tomllib.loads(text, parse_float=Decimal)
     except tomllib.TOMLDecodeError as exc:
@@ -74,6 +82,14 @@ def parse(file_path: Path, *, relative_to: Path) -> ParsedFile:
     origins = _scan_origins(text)
     findings = value_findings(data, rel, origins)
     return ParsedFile(path=rel, data=data, origins=origins, findings=tuple(findings))
+
+
+def _copy(value: Any) -> Any:  # noqa: ANN401 - a TOML value is a dict, list, str, int, bool or Decimal
+    if type(value) is dict:
+        return {key: _copy(item) for key, item in value.items()}
+    if type(value) is list:
+        return [_copy(item) for item in value]
+    return value
 
 
 def value_findings(data: dict[str, Any], rel: str, origins: dict[TablePath, int]) -> list[Finding]:

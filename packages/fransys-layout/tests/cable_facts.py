@@ -21,8 +21,14 @@ from fransys_model.vocab import Conductor, Item, Port
 TEXT_HEIGHT = 16
 
 
-def _pin(name: str) -> PinFacts:
-    return PinFacts(port=make_id(Port, (name,)), landed=True, marking_width=16)
+def _pin(name: str, core: int) -> PinFacts:
+    """A pin of one core, `c{core}`: its one place."""
+    return PinFacts(
+        port=make_id(Port, (name,)),
+        landed=True,
+        marking_width=16,
+        cores=(make_id(Conductor, (f"c{core}",)),),
+    )
 
 
 def _row(
@@ -37,7 +43,7 @@ def _row(
         for core, owner in enumerate(ends):
             if owner == end:
                 pins[end, core] = f"{side}{end}.{core}"
-                ports.append(_pin(pins[end, core]))
+                ports.append(_pin(pins[end, core], core))
         built.append(
             EndFacts(
                 item=make_id(Item, (f"{side}{end}",)),
@@ -69,10 +75,10 @@ def block_facts(
     links = []
     for n, (on_top, end) in enumerate(loops):
         names = [f"{'t' if on_top else 'b'}{end}.L{n}{c}" for c in "ab"]
-        rows[on_top][end] = replace(
-            rows[on_top][end], pins=(*rows[on_top][end].pins, *(_pin(name) for name in names))
-        )
         k = len(cores) + n
+        rows[on_top][end] = replace(
+            rows[on_top][end], pins=(*rows[on_top][end].pins, *(_pin(name, k) for name in names))
+        )
         links.append(
             CoreFacts(
                 key=k + 1,

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Final
 from fransys_model.kernel import Finding, Severity, key_text
 from fransys_model.vocab.enums import FunctionKind, Gender
 from fransys_model.vocab.facets.connector import ConnectorFacet
+from fransys_model.vocab.joins import joined_ports
 from fransys_model.vocab.membership import standalone as unit_standalone
 from fransys_model.vocab.membership import units as unit_ids
 from fransys_model.vocab.tables import (
@@ -81,7 +82,7 @@ class _Plant:
             port for conductor in self.conductors.values() for port in (conductor.a, conductor.b)
         }
         declared = {port for net in nets(model).values() for port in net.ports}
-        self.connected_ports = wired | declared
+        self.connected_ports = wired | declared | joined_ports(model)
         facets = facets_of(model, ConnectorFacet)
         gender_of = {facet.subject: facet.gender for facet in facets.values()}
         self.gendered = {

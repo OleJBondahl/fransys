@@ -9,7 +9,8 @@ change `room` alone, never a port's row or offset, a column's height or its last
 joined run fits the final room (`join_y`), since `place` never refuses a run (S12) and a run
 that stopped fitting would show only as a finding.
 
-The cases: the goldens (the cabinet on the house sheet and on its 158 mm sheet), the S12
+The cases: the goldens (the cabinet on the house sheet and on its 158 mm sheet), the wired
+cabinet (`W1`'s cores as wires, the premise's case since HL1), the S12
 joining fixtures (a feed fanning to three breakers, the same breakers daisy-chained, a strip of
 8 terminals wired in a chain) and the D9 coil hub (`tests/test_dd_gap_rules.py`: `K1:A1` and
 `K2:A1` joined at row 0 facing N, and `K1:A1` a star reference listing K3). The goldens join
@@ -29,6 +30,7 @@ import pytest
 from dd_chain_fixtures import build, design, terminal_chain, three_breakers
 from layout_cabinet import build_cabinet
 from narrow_cabinet import narrow_model
+from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -71,6 +73,7 @@ def _coil_hub() -> None:
 _CASES: dict[str, Callable[[], Any]] = {
     "cabinet": lambda: _laid_out(freeze(build_cabinet())),
     "cabinet_narrow": lambda: _laid_out(narrow_model(158)),
+    "cabinet_wired": lambda: _laid_out(freeze(wired_cabinet())),
     "feed_fanning": lambda: three_breakers(daisy=False),
     "daisy_chain": lambda: three_breakers(daisy=True),
     "terminal_chain": lambda: terminal_chain(8),
@@ -128,8 +131,11 @@ def test_the_texts_change_each_pages_room_alone(case: str) -> None:
 
 
 def test_the_cabinets_texts_shrink_a_pages_room() -> None:
-    """Premise of the claims above: a pushed first-row text shrinks a cabinet page's room."""
-    assert any(page.final.room < page.decided.room for page in _pages("cabinet"))
+    """Premise of the claims above: a pushed first-row text shrinks a cabinet page's room.
+
+    On the wired cabinet: with `W1` drawn as a line (HL1) no cabinet page's text pushes a first row.
+    """
+    assert any(page.final.room < page.decided.room for page in _pages("cabinet_wired"))
 
 
 @pytest.mark.parametrize("case", sorted(_CASES))

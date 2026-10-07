@@ -1,0 +1,71 @@
+schema = 1
+
+# Two relay coils and a 24 V input, each on a male header pin (parts-0017, HA4): every header
+# pin keeps its relay or supply meaning through `joins`, so the module is mated like a connector.
+[part]
+mpn = "DEMO-RELAY-MOD-2"
+manufacturer = "Demo"
+description = "Relay module, two relays and a 24 V input on male headers J1 and J2"
+category = "generic"
+class_code = "M"
+
+[[function]]
+name = "k1"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[function.operating]
+nominal_voltage_v = "24"
+resistance_ohm = "1600"
+
+[[function]]
+name = "k2"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "B1", role = "generic", symbol_port = "in" }, { name = "B2", role = "generic", symbol_port = "out" }]
+
+[function.operating]
+nominal_voltage_v = "24"
+resistance_ohm = "1600"
+
+[[function]]
+name = "in24"
+kind = "load"
+ports = [{ name = "L+", role = "generic" }, { name = "M", role = "generic" }]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_power_w = "1.2"
+
+[[function]]
+name = "j1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in", marking = "P01", joins = "k1.A1" },
+    { name = "2", role = "generic", symbol_port = "out", marking = "P02", joins = "k1.A2" },
+    { name = "3", role = "generic", symbol_port = "in", marking = "P03", joins = "k2.B1" },
+    { name = "4", role = "generic", symbol_port = "out", marking = "P04", joins = "k2.B2" },
+]
+
+[function.connector]
+style = "header-4p"
+pincount = 4
+gender = "male"
+marking = "J1"
+
+[[function]]
+name = "j2"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in", marking = "P01", joins = "in24.L+" },
+    { name = "2", role = "generic", symbol_port = "out", marking = "P02", joins = "in24.M" },
+]
+
+[function.connector]
+style = "header-2p"
+pincount = 2
+gender = "male"
+marking = "J2"

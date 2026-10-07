@@ -15,9 +15,9 @@ from pathlib import Path
 
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.derive import unit_release
+from fransys_model.derive import connector_box_lines, unit_release
 from fransys_model.derive.drawing_text import label_text
-from fransys_model.layout import DrawingSet, Label, LabelKind, Page, layout_of
+from fransys_model.layout import ConnectorBox, DrawingSet, Label, LabelKind, Page, layout_of
 from fransys_model.vocab.tables import units
 
 # the worked example's own builder, loaded by path (root tests are not a package)
@@ -46,9 +46,21 @@ def _tag_texts_by_set():
 
 def test_the_board_units_own_set_prints_item_designations_below_its_root() -> None:
     """The board `A1` is the unit's sole root and the page states its aspects: "-K1", not
-    "=BRD-K1" or "=BRD+ER+C1-A1-K1". Each `X1` pin stands alone in its row and prints its pin
-    tag (D2), less the root, and dashed like every port text (decision model-0052): "-X1:1"."""
-    assert _tag_texts_by_set()["demo-io-board"] == {"-K1", "-X1:1", "-X1:2"}
+    "=BRD-K1" or "=BRD+ER+C1-A1-K1". `X1` is one connector box whose designation line is
+    the short form too, less the root: "-X1". HL6 (layout-0155): `X1` is at a harness line's end."""
+    assert _tag_texts_by_set()["demo-io-board"] == {"-K1"}
+    model = _build_system()[0].model
+    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
+    designations = []
+    for box in layout_of(model, ConnectorBox).values():
+        unit = sets[pages[box.page].drawing_set].unit
+        if unit is None or unit_release(model, unit).name != "demo-io-board":
+            continue
+        lines = connector_box_lines(model, box.function, unit=unit)
+        assert len(box.texts) == len(lines)
+        assert box.cells == ()  # a unit interface box has no cells (HL5)
+        designations.append(lines[0])
+    assert designations == ["-X1", "-X1"]  # one box in each of the two board sets
 
 
 def test_a_cabinets_own_set_and_the_top_level_print_no_aspect() -> None:

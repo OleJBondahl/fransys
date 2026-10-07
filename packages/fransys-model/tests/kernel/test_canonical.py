@@ -150,7 +150,7 @@ def test_the_canonical_text_is_pinned_byte_for_byte() -> None:
     assert text == (
         "{\n"
         '  "aliases": [],\n'
-        '  "schema_version": 9,\n'
+        '  "schema_version": 10,\n'
         '  "tables": {\n'
         '    "canon_owner_probe": [\n'
         "      {\n"

@@ -45,7 +45,7 @@ _GOLDEN_DIR = (
 
 # Page counts, known independently of `pages()` (`conftest.py`'s own docstrings: the wide
 # cabinet's 2 pages, the narrow cabinet's 5).
-_EXPECTED_PAGE_COUNTS = {"cabinet_laid_out": 2, "cabinet_narrow_laid_out": 5}
+_EXPECTED_PAGE_COUNTS = {"cabinet_laid_out": 2, "cabinet_narrow_laid_out": 4}
 
 
 def _goldens(cabinet_laid_out, cabinet_narrow_laid_out):

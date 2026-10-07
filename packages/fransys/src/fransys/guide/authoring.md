@@ -25,7 +25,8 @@ such as one pump's or one string's: `with d.function("LAMPS", text):` puts every
 in that block, and a circuit is never a place. Tags are bare: `"HOLD"`, never `"+HOLD"`, and a prefixed
 tag raises.
 
-`d.device(tag, part, place=, parent=, mounted_on=, interface=, unused=, name=)` adds one device.
+`d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)` adds one device.
+`joins={1: K1.coil["A1"]}` with `parent=K1` fits a housing on K1's own leads: pin 1 is that pin, no wire.
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.
 
 Floating tags: every item call takes `None` for the tag, `d.add` too, and numbers the item from
@@ -353,12 +354,7 @@ dc = d.dc_supply("24VDC", plus=x1[1], minus=x1[2], voltage=24)
 
 ## Add a harness
 
-`d.harness("W5")` adds a part-less harness item and returns its handle, which a document can take
-as its subject (see `documents.md`). A harness holding a cable needs a tag: `d.harness(name="loom")`
-with no tag builds, then fails with `HARNESS_WITHOUT_TAG`. A part-less harness holding exactly one
-cable prints that cable as its own designation (`-W5`, its cores `-W5:1`); its plugs stay `-W5-J1`.
-With two cables they print `-W5-W1` and `-W5-W2`.
-A harness with one cable prints the cable with the harness's designation. The cable's own tag is not printed.
+`d.harness("W5")` adds a harness item: see `harnesses.md`.
 
 ## Read a model id
 
@@ -379,6 +375,7 @@ assert fr.derive.item_designation(result.model, h1.id) == "H1"
 `K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal, and
 `.scale("bar", raw=(0, 100), eng=("0", "10"))` scales an analogue one. The allocation pass binds the
 request to a channel later; you never pick the channel.
+`d.rack("U1")` adds the part-less rack the modules sit under with `parent=`; a `d.harness` rack stops with `HARNESS_HOLDS_PLC_MODULE`.
 
 ## Title block, revision
 
@@ -437,7 +434,9 @@ lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
 ## Layout profile
 
 `d.layout` advises the drawing and never connects anything: `chain`, `keep_together`, `break_before`,
-`order`, `symbol`, `draw_in`, `sheet` and `profile`. `d.layout.profile(hide_unused_pins=True)` hides
+`order`, `symbol`, `draw_in`, `side`, `sheet` and `profile`. `d.layout.side(u1.bus_in, fr.ABOVE)` puts a
+unit's interface above its outline, and `fr.BELOW` below it. It takes a field of the tuple `d.add`
+returns. An interface with no harness line ignores it. `d.layout.profile(hide_unused_pins=True)` hides
 every box-drawn pin with no conductor, and a function with none, on the drawings. Every list keeps
 every pin. The house value is off.
 

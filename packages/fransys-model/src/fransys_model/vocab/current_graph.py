@@ -19,6 +19,7 @@ from fransys_model.vocab.tables import conductors, functions
 from .current_blocks import blocks
 from .current_bounds import CurrentBound, Tie, block_bounds, tie_of
 from .current_ties import Joint, open_ends, pairs, two_ports
+from .joins import port_joins
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Sequence
@@ -77,7 +78,11 @@ def raw_of(model: Model) -> Raw:
     """
     stated = {function: states_current(model, function) for function in functions(model)}
     links, mated = pairs(model)
-    wires = [Wire(conductor.a, conductor.b) for conductor in conductors(model).values()]
+    # a header join ties its two ports with no conductor between: a plain wire (HA4)
+    wires = [
+        Wire(*ends)
+        for ends in (*((c.a, c.b) for c in conductors(model).values()), *port_joins(model))
+    ]
     found: list[tuple[tuple[Id[Function], ...], Joint]] = []
     for joint in links:
         if joint.one == joint.other and stated[joint.one]:

@@ -8,8 +8,8 @@ off stubs on the `+A` side read one text for two different far ends, and the lay
 texts), never a private name.
 
 Can-fail: with `connector_segment` (`fransys_model.derive.designation`) returning `""`, the
-build raises `LayoutError` ("the off stub text ... names two different far ends or carriers")
-inside `_build`, and every test here fails on that line: a test id, not a collection error.
+build carries an ERROR finding and draws nothing, and every test here fails (checked by hand on
+a scratch copy, HL18 landing): a test id, not a collection error.
 """
 
 import functools
@@ -21,11 +21,11 @@ import fransys_parts
 from _model_build_cover import layout_trigger_document
 from fransys_reports import connectors_csv
 
-from fransys_model.derive import item_designation
-from fransys_model.derive.drawing_text import label_text, marker_text
+from fransys_model.derive import connector_box_lines, item_designation
+from fransys_model.derive.drawing_text import marker_text
 from fransys_model.derive.queries import connector_rows
 from fransys_model.kernel import Severity
-from fransys_model.layout import Label, LabelKind, LinkMarker, StarKind, layout_of
+from fransys_model.layout import ConnectorBox, Label, LabelKind, LinkMarker, StarKind, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
 _PROJECT: dict[str, Any] = {
@@ -62,13 +62,16 @@ def _a1(model):
 
 def test_the_build_completes_and_carries_no_error_finding() -> None:
     """(a) The two connectors of one device build: no `LayoutError`, no ERROR finding."""
-    # UNDO: fransys_model/derive/designation.py: `connector_segment` `return f"-{label}"` ->
-    #   `return ""` (the build raises `LayoutError` on the colliding off stubs, inside `_build`)
+    # UNDO: fransys_model/derive/designation.py: `connector_segment`'s last `return` -> `return ""`
+    #   (the two connectors collide: the build carries an ERROR finding)
     result = _build()
     severities = {finding.severity for finding in result.findings}
     assert Severity.ERROR not in severities
     assert severities <= {Severity.WARNING, Severity.INFO}
-    assert len(layout_of(result.model, LinkMarker)) == 4  # one off stub per plug pin and per A1 pin
+    # HL18, owner C1: the line -W1 leaves each of its two sets in one stub, not one per core
+    stubs = layout_of(result.model, LinkMarker).values()
+    assert len(stubs) == 2
+    assert all("line_stub" in m.key and m.star is StarKind.OFF for m in stubs)
 
 
 def test_the_connector_list_names_each_connector_of_the_device_behind_its_tag() -> None:
@@ -85,26 +88,34 @@ def test_the_connector_list_names_each_connector_of_the_device_behind_its_tag() 
     assert [line.split(",")[0] for line in lines[1:]] == ["-A1-X1", "-A1-X1", "-A1-X2", "-A1-X2"]
 
 
-def test_the_drawn_pin_tags_of_the_device_name_the_connector() -> None:
-    """(c) The pin views of `A1` are tagged `-A1-X1:1` and `-A1-X2:1`; no pin reads `-A1:1`."""
-    # UNDO: fransys_model/derive/designation.py: `port_designation` `return
-    #   f"{connector_designation(model, record.function, unit=unit)}:{record.name}"` -> the
-    #   pre-rule `f"-{item_designation(model, owner.id, unit=unit)}:{record.name}"` (both pins
-    #   read `-A1:1`; the stub texts come from `stub_far_end`, so the build still completes)
+def test_the_drawn_boxes_of_the_device_name_the_connector() -> None:
+    """(c) `A1` draws two boxes, `-A1-X1` and `-A1-X2`; no box reads `-A1`, no pin is tagged.
+    HL6 (layout-0155): every connector of the line `-W1` is a box; this test pinned pin tags."""
+    # UNDO: fransys_model/derive/designation.py: `connector_designation` `return
+    #   printed_designation(model, item, unit=unit) + segment` -> `return printed_designation(model,
+    #   item, unit=unit)` (both boxes of `A1` read `-A1`)
     model = _build().model
-    tags = {
-        label_text(model, label)
+    tags = [
+        label
         for label in layout_of(model, Label).values()
         if label.kind is LabelKind.TAG and label.slot.startswith("tag.pin.")
-    }
-    assert tags == {"-A1-X1:1", "-A1-X2:1", "-P1:1", "-P2:1"}
-    assert "-A1:1" not in tags
+    ]
+    assert tags == []
+    designations = set()
+    for box in layout_of(model, ConnectorBox).values():
+        lines = connector_box_lines(model, box.function)
+        assert len(box.texts) == len(lines)
+        assert box.cells == ()  # every pin is wired by a conductor the line carries (HL5)
+        designations.add(lines[0])
+    assert designations == {"-A1-X1", "-A1-X2", "-P1", "-P2"}
 
 
 def test_the_two_stubs_on_the_cabinet_side_name_different_connectors_of_the_far_device() -> None:
-    """(d) The stubs at `P1` and `P2` read `-W1 -> +B-A1-X1:1` and `-W1 -> +B-A1-X2:1`."""
-    # UNDO: fransys_model/derive/drawing_text.py: `stub_far_end` `if segment:` -> `if False:`
-    #   (the far end falls back to the item's own form, `+B-A1:1` for both: the build raises)
+    """(d) The line's one stub at `+A` names `-A1-X1`, `A1`'s connector, not bare `-A1` (HL18).
+
+    Owner C1: one stub per line, so `+A` prints one far device and `+B` names `+A-P1`."""
+    # UNDO: fransys_model/derive/designation.py: `connector_segment`'s last `return` -> `return ""`
+    #   (both connectors print `-A1`: an ERROR finding, and the stub no longer reads `-A1-X1`)
     model = _build().model
     stubs = sorted(
         (
@@ -114,10 +125,4 @@ def test_the_two_stubs_on_the_cabinet_side_name_different_connectors_of_the_far_
         for m in layout_of(model, LinkMarker).values()
         if m.star is StarKind.OFF
     )
-    assert stubs == [
-        ("A1", f"-W1 {_ARROW} +A-P1:1"),
-        ("A1", f"-W1 {_ARROW} +A-P2:1"),
-        ("P1", f"-W1 {_ARROW} +B-A1-X1:1"),
-        ("P2", f"-W1 {_ARROW} +B-A1-X2:1"),
-    ]
-    assert stubs[2][1] != stubs[3][1]
+    assert stubs == [("A1", f"-W1 {_ARROW} +A-P1"), ("P1", f"-W1 {_ARROW} +B-A1-X1")]

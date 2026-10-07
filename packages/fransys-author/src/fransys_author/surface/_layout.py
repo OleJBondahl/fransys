@@ -7,13 +7,15 @@ lazy from decimal import Decimal
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Item
 from fransys_author.surface._links import engine_handle
+from fransys_author.surface._side import hint_side
 from fransys_model.vocab import FunctionKind
 lazy from fransys_author.design import Design as EngineDesign
 lazy from fransys_author.handles import Group, Terminal
 lazy from fransys_author.surface._device import Device
 lazy from fransys_author.surface._handles import Fn
+lazy from fransys_author.surface._strip import TerminalStrip
 lazy from fransys_model.kernel import Id
-lazy from fransys_model.layout import SheetFormat
+lazy from fransys_model.layout import SheetFormat, Side
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design
@@ -83,6 +85,14 @@ class Layout:
         handle = engine_handle(function, "d.layout.draw_in")
         fn = handle.as_function() if isinstance(handle, Item) else handle
         self._engine.draw_in(fn, group)  # ty: ignore[invalid-argument-type] -- terminal=False never returns a Terminal
+
+    def side(self, target: Fn | Device | Terminal | TerminalStrip, side: Side) -> None:
+        """Advise the edge, `fr.ABOVE` or `fr.BELOW`, a unit's interface stands on.
+
+        Does not move anything itself: it only advises the layout engine. `target` is a field of
+        the unit's interface, as `u1.bus_in`; an interface with no harness line ignores it.
+        """
+        hint_side(self._engine, target, side)
 
     def sheet(self, name: str, **numbers: int | Decimal) -> Id[SheetFormat]:
         """Advise a sheet format by name and numbers; returns its handle for `profile`.

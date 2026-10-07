@@ -73,12 +73,23 @@ class Pen:
         text = " ".join(f"{self.mm(x)},{self.mm(y)}" for x, y in points)
         return f'<polyline class="wire {css}" points="{text}"/>'
 
-    def text(self, css: str, at: tuple[Grid, Grid], value: str, *, middle: bool = False) -> str:
-        """One `<text>` of class `label` and `css` at `at` (x, top); centred on x if `middle`."""
+    def text(
+        self,
+        css: str,
+        at: tuple[Grid, Grid],
+        value: str,
+        *,
+        middle: bool = False,
+        end: bool = False,
+    ) -> str:
+        """One `<text>` of class `label` and `css` at `at` (x, top); centred on x if `middle`.
+
+        With `end` the text ends at x, so it reads leftward from a point.
+        """
         x, top = at
         font_mm = grid_to_mm(0, self.font_g, self.module_mm)
         baseline = grid_to_mm(0, top, self.module_mm) + font_mm * ASCENT_RATIO
-        anchor = ' text-anchor="middle"' if middle else ""
+        anchor = ' text-anchor="middle"' if middle else ' text-anchor="end"' if end else ""
         return (
             f'<text class="label {css}" x="{self.mm(x)}" y="{format_decimal(baseline)}" '
             f'font-size="{format_decimal(font_mm)}"{anchor}>{escape(value)}</text>'

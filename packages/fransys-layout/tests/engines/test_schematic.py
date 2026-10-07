@@ -190,7 +190,8 @@ def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placemen
     partner, so it ends in its far port's key (layout-0057). A star marker, a reference (also
     one that carries a stub's text), a branch, names no partner and no role (the role is a
     field, never in the key): its port key, the segment `star`, and its placement's
-    discriminator, nothing for a home placement and the column's group key for a replica.
+    discriminator, nothing for a home placement and the column's group key for a replica. A
+    leaving line's one stub (HL18) is `line_stub`, its line's item key and `branch` and number.
     """
     # the second location has stubs and a merged reference; the extra relay cuts a wire (a pair)
     models = (
@@ -204,6 +205,13 @@ def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placemen
         stands = layout_of(model, SymbolPlacement).values()
         for marker in markers.values():
             values = _fields(marker)
+            if marker.key[3] == "line_stub":
+                line = items(model)[values["carrier"]].key
+                assert marker.key[4 : 5 + len(line)] == (*line, "branch")
+                assert marker.key[5 + len(line)].isdigit()
+                assert values["partner"] == marker.id
+                kinds.add("line_stub")
+                continue
             port = ports(model)[values["port"]]
             partner = markers[values["partner"]]
             is_star = marker.star is not None and partner.id != marker.id
@@ -229,7 +237,7 @@ def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placemen
                 assert actual
                 assert tail in actual
                 kinds.add("star")
-    assert kinds == {"pair", "off", "star"}
+    assert kinds == {"pair", "off", "star", "line_stub"}
 
 
 def test_a_terminal_on_two_pages_has_two_placements_with_different_ids() -> None:

@@ -27,3 +27,5 @@ class PageStacking:
     texts: PageTexts | None = None
     # S4: the page's set's digits, so the band `place` reserves is as wide as the box it holds
     digits: Digits = FLOOR
+    # HL18 (layout-0158): each (function, port) a line's conductor lands on
+    line_ends: frozenset[tuple[Handle, Handle]] = frozenset()

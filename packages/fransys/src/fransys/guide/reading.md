@@ -84,7 +84,7 @@ A terminal is drawn at the pin it serves, once per page. A single-wire contact, 
 `fransys.derive.wire_rows(model, *, unit=None)` returns the wire list: one `WireRow` per
 wire, with `from_`, `to`, `colour`, `cross_section_mm2` and `label`. The `label` is the two end
 designations joined by one space in a fixed order, the text the wire list and sleeves print. A schematic page prints no wire label. A jumper,
-a cable core and a link give no row. `fr.write` writes these rows as `<set>-wires.csv`.
+a core, a link, a harness wire: none. `fr.write` writes these rows as `<set>-wires.csv`.
 
 `fransys.derive.boundary(model, unit)` returns the functions that make up a unit's
 interface, as a tuple of function ids in id order. Only `TERMINAL` and `CONNECTOR` functions
@@ -118,10 +118,9 @@ before `-K10`. Every list that sorts by designation uses that order.
 `fransys.derive.is_cable(model, item)` returns whether `item` is a cable: whether its part
 carries a `cable_product` facet (decision model-0108). `fransys.derive.cable_items(model)`
 returns every such item, as a `frozenset[Id[Item]]`. Neither reads `item`'s own `category` or
-its `cable` facet, which records only the as-installed length of a cable already known to be
-one. Every cable-selecting function on this page (`harness_cables`, `top_level_cables`,
-`unit_cables`, `cable_list_rows`) reads through one of these two, so none can disagree about
-what a cable is. `unit_cable_page_key` is gone: the cable drawing's block key is internal, not a consumer name.
+its `cable` facet, which records only the as-installed length. Every cable-selecting function
+on this page (`harness_cables`, `top_level_cables`, `unit_cables`, `cable_list_rows`) reads
+through one of these two, so none can disagree about what a cable is. `unit_cable_page_key` is gone: the block key is internal.
 
 `fransys.derive.is_plc_module(model, item)` returns whether `item`'s part has category
 `PLC_MODULE`. A rack is an item with at least one such child, and `plc_rack_modules` lists them.
@@ -137,11 +136,13 @@ list prints. Rows sort by those two texts. Reach an item through the function. `
 board connectors only.
 
 `fransys.derive.terminal_items(model)` returns every item that carries a `terminal` facet, as a
-`frozenset[Id[Item]]`. Select terminals through it, so no script rebuilds the set from the facets.
+`frozenset[Id[Item]]`. Select terminals through it, so no script rebuilds the set.
 
 `fransys.derive.pin_order(marking, port)` returns the sort key of a pin: markings of decimal digits
 first by value, the rest after by string (`1, 2, 10, A1`). The connector list, `harness_cables` and
 the overview sort by it, and `fn.pins` follows it. Sort pins through it, so no script keeps a second order.
+
+`fransys.derive.harness_wires(model, harness)` returns the `WireRow`s of the wires on the harness's plugs.
 
 `fransys.derive.cable_list_rows(model)` returns one `CableListRow` per top-level cable
 (every cable item, `is_cable`, with `unit=None`, harness cables included), with its product

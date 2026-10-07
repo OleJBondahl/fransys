@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from layout_cabinet import build_cabinet, unit_with_release
+from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.defaults import ENGINE_VERSION
 from fransys_layout.engines.schematic.engine import stage_results
@@ -79,13 +80,14 @@ def _authored_sheet(width_mm: int) -> tuple[ModelSheetFormat, ModelProfile]:
 
 @cache
 def _laid_out(
-    *, second_location: bool = False, width_mm: int | None = None
+    *, second_location: bool = False, width_mm: int | None = None, wired: bool = False
 ) -> tuple[Model, StageResults, Model]:
     """The frozen cabinet, its stage results, and the model `write_layout` makes of them.
 
-    With `width_mm` the model authors a sheet and a profile that name it.
+    With `width_mm` the model authors a sheet and a profile that name it; with `wired`, `W1`'s
+    cores are wires, not a line (HL1).
     """
-    draft = build_cabinet(second_location=second_location)
+    draft = (wired_cabinet if wired else build_cabinet)(second_location=second_location)
     if width_mm is not None:
         draft.extend(_authored_sheet(width_mm), origin=_ORIGIN)
     model = freeze(draft)
@@ -575,8 +577,9 @@ def test_a_net_of_three_or_more_ports_has_a_reference_marker_and_branch_markers_
     has `-S0`, `-S1`, `-S2`, page 2 has `-H1`, and `-X2:1` is on both), and each reference
     marker leads to a branch on its page. The cabinet's other net, K1:13 to S0:22, is a turned
     reference pair (S12, M12), its own ref and branch: it is not this net's and is left out.
+    On the wired cabinet: HL1 draws `W1` to `-H1` as a line, which takes `-H1:1` off the star.
     """
-    model, results, out = _laid_out()
+    model, results, out = _laid_out(wired=True)
     port_of = {port.key: id_ for id_, port in model.tables["port"].items()}
     rail = port_of["cabinet", "x2", "1", "fn", "terminal", "port", "external"]
     others = {

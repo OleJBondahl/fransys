@@ -3,9 +3,16 @@
 from typing import Any
 
 from fransys_model.kernel import Id, Model, SchemaError, namespace_of
+from fransys_model.vocab.enums import PageKind
 from fransys_model.vocab.tables import kind_of, table_of
 
-from .formats import Profile, SheetFormat, default_profile, default_sheet_format
+from .formats import (
+    Profile,
+    SheetFormat,
+    a2_sheet_format,
+    default_profile,
+    default_sheet_format,
+)
 from .kinds import DERIVED_KINDS
 
 
@@ -41,6 +48,17 @@ def sheet_format_of(model: Model, sheet_format: Id[SheetFormat] | None) -> Sheet
     if sheet_format is None:
         return default_sheet_format()
     return layout_of(model, SheetFormat)[sheet_format]
+
+
+def sheet_for(model: Model, kind: PageKind) -> SheetFormat:
+    """The sheet of a page of `kind`: the one function that gives a page kind's sheet.
+
+    A block diagram is on the house A2 sheet; every other kind is on the profile's sheet,
+    the authored `SheetFormat` it names or the house A3.
+    """
+    if kind is PageKind.BLOCK_DIAGRAM:
+        return a2_sheet_format()
+    return sheet_format_of(model, profile_of(model).sheet_format)
 
 
 def derived_layout_ids(

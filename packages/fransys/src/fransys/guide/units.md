@@ -200,6 +200,15 @@ A unit built alone, with nothing outside it, leaves its interface unconnected, a
 The finding fires once the unit sits inside something larger and an interface device is neither
 mated nor `unused`.
 
+A nested unit with a harness line at one of its interfaces draws on its parent's page as one
+outline, with its columns above and below it. A unit with none keeps its usual frame. Inside stand
+only its interfaces, title and revision. Each line-end interface is a connector box on the outline,
+and the harness plug touches it from outside. The columns feeding top-edge interfaces stand above,
+and those leaving bottom-edge interfaces stand below. Layout picks each interface's edge. A
+single-wire interface keeps its column's flow. Harness interfaces split evenly, with supply-heavy
+ones on top. `d.layout.side(u1.bus_in, fr.ABOVE)`, or `fr.BELOW`, fixes one interface's edge when
+the default reads wrong. The group stands at the left of its page and stays whole on one page.
+
 ## Tags and places
 
 Instance tags count up inside their parent, the cabinet unit: `-U1`, `-U2`, with no prefix. One level

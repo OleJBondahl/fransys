@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 9,
+  "schema_version": 10,
   "tables": {
     "aspect_node": [
       {
@@ -122,6 +122,7 @@
           "connector"
         ],
         "marking": null,
+        "mates": [],
         "pincount": 4,
         "style": "header-4p",
         "subject": "function_template:b3339bbb83e0559083fe3ba8ad273f9d"
@@ -136,6 +137,7 @@
           "connector"
         ],
         "marking": null,
+        "mates": [],
         "pincount": 4,
         "style": "header-4p",
         "subject": "function_template:d8d7490134e25efd9430cb89882dec7b"
@@ -150,6 +152,7 @@
           "connector"
         ],
         "marking": "",
+        "mates": [],
         "pincount": 1,
         "style": "shell",
         "subject": "function_template:6f400c5a219852a2a23e199ae25c5637"
@@ -1112,6 +1115,7 @@
         "ext": {},
         "function": "function_template:3f0a6ddcb8635e3cb70dabb167bec5d1",
         "id": "port_template:0331521d16bf56bab5b219bf6477b313",
+        "joins": null,
         "key": [
           "fuse-1a",
           "element",
@@ -1127,6 +1131,7 @@
         "ext": {},
         "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
         "id": "port_template:78b5aa99ddbe588383f5db516df58df0",
+        "joins": null,
         "key": [
           "board",
           "J1",
@@ -1142,6 +1147,7 @@
         "ext": {},
         "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
         "id": "port_template:7bbbcee707a95ed3a2124b0367b7d358",
+        "joins": null,
         "key": [
           "board",
           "J1",
@@ -1157,6 +1163,7 @@
         "ext": {},
         "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
         "id": "port_template:7f966302ee9b521abb7c72e3c2bf3335",
+        "joins": null,
         "key": [
           "housing-4p",
           "P1",
@@ -1172,6 +1179,7 @@
         "ext": {},
         "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
         "id": "port_template:96bbcd3c6f6954788a96874a75930ea1",
+        "joins": null,
         "key": [
           "board",
           "J1",
@@ -1187,6 +1195,7 @@
         "ext": {},
         "function": "function_template:80f0991b6432503f9ef0782dc153ceea",
         "id": "port_template:98441a7338a85789803cbcab5881d328",
+        "joins": null,
         "key": [
           "relay-smd",
           "coil",
@@ -1202,6 +1211,7 @@
         "ext": {},
         "function": "function_template:80f0991b6432503f9ef0782dc153ceea",
         "id": "port_template:a044500fd5965b5c9b335b7be65eee88",
+        "joins": null,
         "key": [
           "relay-smd",
           "coil",
@@ -1217,6 +1227,7 @@
         "ext": {},
         "function": "function_template:3f0a6ddcb8635e3cb70dabb167bec5d1",
         "id": "port_template:a322fdf5be65527a860583a6b9792cdd",
+        "joins": null,
         "key": [
           "fuse-1a",
           "element",
@@ -1232,6 +1243,7 @@
         "ext": {},
         "function": "function_template:6f400c5a219852a2a23e199ae25c5637",
         "id": "port_template:a395110a97b5564c9af64cf423334415",
+        "joins": null,
         "key": [
           "housing-4p",
           "shell",
@@ -1247,6 +1259,7 @@
         "ext": {},
         "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
         "id": "port_template:a9fdf4deec3950e48fff74327e249441",
+        "joins": null,
         "key": [
           "housing-4p",
           "P1",
@@ -1262,6 +1275,7 @@
         "ext": {},
         "function": "function_template:b3339bbb83e0559083fe3ba8ad273f9d",
         "id": "port_template:adb7ac926e605b5a9ddb99a55523102e",
+        "joins": null,
         "key": [
           "board",
           "J1",
@@ -1277,6 +1291,7 @@
         "ext": {},
         "function": "function_template:08d35dceb572580b9c8279cf6e576d2b",
         "id": "port_template:c46e90988475582a9d0b820b1a70c976",
+        "joins": null,
         "key": [
           "relay-smd",
           "no_1",
@@ -1292,6 +1307,7 @@
         "ext": {},
         "function": "function_template:08d35dceb572580b9c8279cf6e576d2b",
         "id": "port_template:d9e9b904d20c50d19c44425aeca18a08",
+        "joins": null,
         "key": [
           "relay-smd",
           "no_1",
@@ -1307,6 +1323,7 @@
         "ext": {},
         "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
         "id": "port_template:e0608f3caa4d524d8634d920edd4260e",
+        "joins": null,
         "key": [
           "housing-4p",
           "P1",
@@ -1322,6 +1339,7 @@
         "ext": {},
         "function": "function_template:d8d7490134e25efd9430cb89882dec7b",
         "id": "port_template:e4038551ecbb57178d7bd12123f8b841",
+        "joins": null,
         "key": [
           "housing-4p",
           "P1",

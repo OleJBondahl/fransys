@@ -7,6 +7,7 @@ from .colours import check_colours
 from .connectivity import check_connectivity
 from .documents import check_documents
 from .earth import check_earth
+from .harness_holds_plc_module import check_harness_holds_plc_module
 from .harness_without_tag import check_harness_without_tag
 from .part_conformance import check_part_conformance
 from .part_library import check_part_library
@@ -20,6 +21,7 @@ from .strip_without_tag import check_strip_without_tag
 from .structure import check_structure
 from .supplies import check_supplies
 from .units import check_units
+from .wire_on_two_harnesses import check_wire_on_two_harnesses
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -35,6 +37,8 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
     check_colours,
     check_earth,
     check_harness_without_tag,
+    check_harness_holds_plc_module,
+    check_wire_on_two_harnesses,
     check_strip_without_tag,
     check_plc,
     check_plc_wiring,
@@ -57,6 +61,7 @@ __all__ = [
     "check_connectivity",
     "check_documents",
     "check_earth",
+    "check_harness_holds_plc_module",
     "check_harness_without_tag",
     "check_load_draw",
     "check_part_conformance",
@@ -71,4 +76,5 @@ __all__ = [
     "check_structure",
     "check_supplies",
     "check_units",
+    "check_wire_on_two_harnesses",
 ]

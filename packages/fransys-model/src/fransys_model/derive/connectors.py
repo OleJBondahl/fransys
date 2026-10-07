@@ -6,7 +6,7 @@ See vocabulary.md 6 and derive-queries-structure.md.
 from typing import TYPE_CHECKING
 
 from fransys_model.vocab.enums import FunctionKind
-from fransys_model.vocab.tables import functions, items, mates, nets, ports
+from fransys_model.vocab.tables import functions, items, nets, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
@@ -20,6 +20,7 @@ from .designation import (
 from .drawing_text import port_designation_in, product_designation_in
 from .indexes import build_indexes
 from .lookups import connector_facets, descendants, net_name, pin_order, require
+from .mate_rows import mate_partners
 from .natural_order import natural_key
 from .rows import ConnectorPin, ConnectorRow
 from .unit_nodes import outside_unit
@@ -62,10 +63,7 @@ def connector_rows(
     for net in nets(model).values():
         for port in net.ports:
             declared.setdefault(port, []).append((net_name(net), net.id))
-    partners: dict[Id[Function], list[Id[Function]]] = {}
-    for mate in mates(model).values():
-        partners.setdefault(mate.a, []).append(mate.b)
-        partners.setdefault(mate.b, []).append(mate.a)
+    partners = mate_partners(model)
     candidates = []
     for function in functions(model).values():
         shape = None if function.template is None else shapes.get(function.template)

@@ -290,11 +290,14 @@ class World:
         item: Id[Item],
         row: BlockRow,
         style: EndStyle,
-        pins: tuple[tuple[Id[Port], int], ...],
+        pins: tuple[tuple[Any, ...], ...],
         *,
         width: int = 6 * G,
     ) -> None:
-        """An end box in `row`, `width` wide, at its row's y, one landed cell per `pins`."""
+        """An end box in `row`, `width` wide, at its row's y, one landed cell per `pins`.
+
+        A pin is `(port, x)` or `(port, x, cell width)`; the width defaults to one pitch.
+        """
         key = ("end", str(block.id), str(item))
         y = 2 * G if row is BlockRow.TOP else 13 * G
         self.records.append(
@@ -310,8 +313,8 @@ class World:
                 width=width,
                 height=2 * G,
                 pins=tuple(
-                    PinCell(index=n, port=port, x=x, landed=True)
-                    for n, (port, x) in enumerate(pins)
+                    PinCell(index=n, port=port, x=x, width=(wide or (2 * G,))[0], landed=True)
+                    for n, (port, x, *wide) in enumerate(pins)
                 ),
                 produced_by=_BY,
             )

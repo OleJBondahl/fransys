@@ -51,7 +51,10 @@ def _directions(point: _Point, segments: list[_Segment]) -> set[_Point]:
 
 
 def junction_locations(model: Model, page: Page) -> tuple[_Point, ...]:
-    """Every junction dot location on `page`, ordered by `(x, y)` grid units (D11)."""
+    """Every junction dot location on `page`, ordered by `(x, y)` grid units (D11).
+
+    Only routes and markers are read: fan-out legs and harness lines are never counted, by kind.
+    """
     by_net: dict[tuple[Id[Port], ...], list[_Segment]] = {}
 
     def add(port: Id[Port], segments: list[_Segment]) -> None:

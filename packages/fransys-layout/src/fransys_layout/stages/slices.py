@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         PagePlan,
         PlacedFunction,
         PlacedLabel,
+        PlacedOutline,
         Route,
     )
 
@@ -105,7 +106,9 @@ def by_key[T, K](items: Iterable[T], key: Callable[[T], K]) -> dict[K, tuple[T, 
     return {found: tuple(group) for found, group in grouped.items()}
 
 
-def page_of(item: LinkMarker | Route | PlacedFunction | PlacedLabel) -> tuple[int, int]:
+def page_of(
+    item: LinkMarker | Route | PlacedFunction | PlacedLabel | PlacedOutline,
+) -> tuple[int, int]:
     """The `(drawing set, page number)` a placed thing is on."""
     return item.drawing_set, item.page
 

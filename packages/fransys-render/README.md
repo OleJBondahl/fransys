@@ -18,6 +18,8 @@ imports `fransys_model`, `graphical_symbols` and `electrical_symbols` only, neve
 
 `cable_blocks(model) -> frozendict[str, str]` renders every `layout.cable_block` to one SVG, keyed `cable_block_key(unit, subject)` (render-0007). It draws only what the block's records hold, and every text is a `derive.cable_drawing` function's. A core is two runs that stop at the closed cable box. A harness block's dashed box surrounds its cable boxes and carries the harness's `printed_designation`. A by-others end box is dashed, its edges and dividers in one phase.
 
+`diagram_sheets(model) -> frozendict[str, str]` renders every `layout.diagram_sheet` to one full-sheet SVG (594 x 420 mm), keyed `render_id(sheet.id)` (render-0009). Boxes, tabs, lines and cut markers come from the records; every text is a `derive.block_diagram` function's. It draws no frame, grid or title block.
+
 Status: work package `render` complete (PARTS 1-7, including PART 5b's `LAYOUT_MISSING` fix and
 PART 7's D7 font-size fix), wired into the facade (`fransys.pipeline`). Does not merge on
 green CI alone: the owner looks at the rendered pages and the complete demo cabinet PDF first
@@ -60,6 +62,7 @@ Link markers (D8, layout-0038, model-0037, layout-0043, render-0005):
 - Box position mirrors `fransys_layout.stages.references.marker_boxes.marker_box` (a four-way match on facing). The formula is duplicated, since render never imports layout.
 - Facing is the stored `LinkMarker.facing` of an off stub. Every other marker takes it from the one port of its owning placement's oriented symbol that lands on the marker's `(x, y)`. Zero or several matches raise; there is no fallback direction. The owning placement is the one on the marker's page whose function matches the marker port's function.
 - `stub_end` is the arrow's tip vertex and the box's near-edge coordinate: stub and box touch at one point. The arrow pulls the two near corners in by `MARKER_ARROW_DEPTH_G`. The far corners stay square.
+- A harness line's stub (HL18, layout-0158) draws no stub. Its line runs on to the middle of the box's near edge. The box is a plain rectangle, as a shared box.
 - A shared box (R6 D2, layout-0054) is a closed rectangle across the bundle row. A box beside its stub draws its lead in the same polyline, from the stub end along the near edge. A bundle's box and a packed row's have no stub. E and W markers have none either.
 - Marker text uses `class="label"`, since `.marker`'s stroke-only rule would leave it invisible. It sets `text-anchor="middle"` inline, as a marker's text centres in its own box (labels do not).
 - Text is centred in the box width. Its top inset is `(marker.height - profile.text_height) / 2`, read from the record and not from `marker_padding`.
@@ -88,7 +91,7 @@ Symbols (D6, D10, render-0001):
 - A real body is `to_fragment(oriented_symbol(...))` under `translate(x_mm,y_mm) scale(module_mm)`. The toolkit draws in raw module units, so the transform scales first and translates second. Orientation is already baked into the element coordinates.
 - `to_grid` and `grid_to_mm` are small duplicates of facts private to other packages. They are not algorithms.
 - `to_grid` multiplies by 8, exact for a multiple of 0.125. `grid_to_mm` divides `module_mm` by 8, a power of two, so the `Decimal` is exact (0.3125 mm for `module_mm=2.5`).
-- A `not-installed` placement's `<g>` carries `class="symbol not-installed"` (D10). `_leads.visible_symbol` drops unwired bound leads before the fragment is built.
+- A `not-installed` placement's `<g>` carries `class="symbol not-installed"` (D10). `_leads.visible_symbol` drops unwired bound leads before the fragment is built. A fan-out leg ending on a port wires it, as a route end does (layout-0158).
 - A placement is `not-installed` when `functions(model)[placement.function].item` has `installed=False`.
 
 Numbers (`format_decimal`): `normalize()` drops trailing zeros but can leave `1E+1`, so that case is re-quantized to an integer and written with `:f`, which never emits an exponent. Every zero shape becomes `0`: `normalized == 0` catches them all, since `Decimal` equality ignores the sign of zero.

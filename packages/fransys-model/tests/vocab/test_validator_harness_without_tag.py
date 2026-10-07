@@ -9,6 +9,8 @@ from fransys_model.kernel import Draft, Model, Origin, Record, Severity, freeze,
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import PartCategory
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
+from fransys_model.vocab.facets.harness import HarnessFacet
+from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.templates import Part
 from fransys_model.vocab.validators import ALL_VALIDATORS, check_harness_without_tag
 from fransys_model.vocab.validators.harness_without_tag import HARNESS_WITHOUT_TAG
@@ -132,3 +134,31 @@ def test_own_designation_or_none_calls_the_shared_has_own_designation() -> None:
     assert result is None
     assert spy.call_count == 1
     assert spy.call_args.args[1].id == harness.id
+
+
+def _harness_mark(item: Item) -> HarnessFacet:
+    key = (*item.key, "harness_facet")
+    return HarnessFacet(id=make_id(HarnessFacet, key), key=key, subject=item.id)
+
+
+def test_a_marked_harness_with_no_cable_and_no_tag_yields_one_harness_without_tag() -> None:
+    """HA1: `facet.harness` alone makes the item a harness, so the missing tag is reported."""
+    marked = _item("w9", tag=None)
+    model = _freeze((marked, _harness_mark(marked)))
+    (finding,) = check_harness_without_tag(model)
+    assert finding.code == HARNESS_WITHOUT_TAG
+    assert finding.severity is Severity.ERROR
+    assert finding.subjects == (marked.id,)
+
+
+def test_a_marked_harness_with_a_tag_yields_nothing() -> None:
+    marked = _item("w9", tag="W9")
+    assert check_harness_without_tag(_freeze((marked, _harness_mark(marked)))) == ()
+
+
+def test_an_unmarked_item_with_no_cable_child_is_not_a_harness() -> None:
+    plain = _item("box", tag=None)
+    marked = _item("w9", tag="W9")
+    model = _freeze((plain, marked, _harness_mark(marked)))
+    assert not is_harness(model, plain.id)
+    assert is_harness(model, marked.id)

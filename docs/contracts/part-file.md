@@ -165,41 +165,7 @@ An emergency stop has no default: name `emergency-stop` in `symbol`.
 Poles (F4, model-0128). A pole is a switched or protective link, or a protection function's
 conductive link. Poles run in natural marking order, line side on top; no side fact keeps marking order.
 
-### `[function.connector]`
-
-A sub-table of the `[[function]]` entry it describes (P1): the `connector` facet's subject is a
-`FunctionTemplate`, not the `Part`, so a part with more than one connector-style function names
-each one under its own `[[function]]` entry, never in one top-level table. Maps to the model's
-`connector` facet.
-
-```toml
-[[function]]
-name = "x1"
-kind = "connector"
-symbol = "connector-fixed"
-ports = [{ name = "1", role = "generic", symbol_port = "in" }, { name = "2", role = "generic", symbol_port = "out" }]
-
-[function.connector]
-style = "header-2p"
-pincount = 2
-gender = "male"
-```
-
-| Field | Type | Meaning |
-|---|---|---|
-| `style` | string | |
-| `pincount` | integer | At least 1 |
-| `gender` | string | Optional. A `Gender` value: `"male"`, `"female"`, `"neutral"`. Absent means not stated, which is not `neutral` (model-0080) |
-| `marking` | string | Optional. The label printed on the part, e.g. `"X1"`. Omit it to print the function's name; write `""` for no label, and the connector's pins print under the item |
-
-Port names are unique within a function. Two functions of one part may share a port name unless
-they would print one designation (`PORT_NAME_SHARED`, parts-0005): a labelled connector function
-(its `marking`, else its name; `marking = ""` is no label) prints `-<label>` behind the item's
-designation only when the part has two or more labelled connector functions, so `X1:1` and
-`X2:1` differ, and so do a clamp group's `1` and `X1:1`, while a clamp group and a lone labelled
-connector sharing `1` collide. The lint and the build ask the same segment rule
-(`derive.connector_segments`). Two connectors of one part never print one label
-(`CONNECTOR_MARKING_REUSED`). A pin prints as `-<item>-<label>:<pin>`, e.g. `-A1-X1:1` (decisions parts-0003, model-0071).
+The `[function.connector]` table is in `part-file-connectors.md`.
 
 ### `[function.plc_channel]`
 

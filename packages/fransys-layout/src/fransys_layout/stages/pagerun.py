@@ -11,7 +11,7 @@ one page's placed functions, so every box handed to a stage is that page's only 
 layout-0024).
 """
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
@@ -23,6 +23,7 @@ from .boxes import box_sides
 from .content import content_box
 from .images import reserved, rooms, unreserve
 from .labels import SlotFrame, decided_runs, place_slot_labels
+from .middle_fold import fold_page, middle_bands, shape_boxes
 from .onepage import page_wiring
 from .page_stacking import PageStacking
 from .partition import ColumnTables, partition
@@ -52,6 +53,8 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import AuthoringKey, Finding
 
+    from .middle import MiddleGroup
+    from .middle_fold import GroupShape
     from .references.types import LocationPath, References
     from .stacking import JoinedRun, PageStack
     from .texts.stand import PageTexts
@@ -93,6 +96,10 @@ class PageInputs:
     sheet: SheetFormat
     top_headroom_lanes: int
     bottom_headroom_lanes: int
+    # HL12: each band column's middle group, folded on its page
+    middle: Mapping[AuthoringKey, tuple[MiddleGroup, ...]] = field(default_factory=dict)
+    # HL18 (layout-0158): each (function, port) a line's conductor lands on
+    line_ends: frozenset[tuple[Handle, Handle]] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -160,6 +167,7 @@ def plan_pages(
             locations=inputs.locations,
             units=inputs.units,
             pole_links=pole_links(columns, drawn, inputs.connections, inputs.net_groups),
+            bands=middle_bands(inputs.middle, inputs.profile),
         ),
         hints=inputs.hints,
         profile=inputs.profile,
@@ -289,6 +297,7 @@ class FirstCall:
     drawn: tuple[DrawnFunction, ...]
     occupied: tuple[Box, ...]
     profile: Profile
+    shapes: tuple[GroupShape, ...] = ()  # HL20: the middle outlines folded on the page
 
 
 @dataclass(frozen=True)
@@ -312,12 +321,14 @@ def _place_page(
     """Place `page.plan`'s columns; S20: the first slot call is returned, run after the markers."""
     inputs, drawn = page.inputs, page.drawn
     placed, place_findings = place(page.plan, page.columns, drawn, _stacking(page, texts), joins)
+    placed, shapes = fold_page(placed, page.plan, inputs.middle, inputs.profile)
     call = FirstCall(
         requests=one_module_tag(page.requests, placed, drawn),
         placed=placed,
         drawn=drawn,
-        occupied=decided_runs(placed, drawn, inputs.connections, joins),
+        occupied=(*decided_runs(placed, drawn, inputs.connections, joins), *shape_boxes(shapes)),
         profile=inputs.profile,
+        shapes=shapes,
     )
     return placed, call, place_findings
 
@@ -338,6 +349,7 @@ def _stacking(page: PageSlices, texts: PageTexts | None = None) -> PageStacking:
         label_boxes=_page_boxes(page, texts),
         texts=texts,
         digits=page.digits,
+        line_ends=inputs.line_ends,
     )
 
 

@@ -5,8 +5,10 @@ text render prints.
 
 The fixtures are the ones the D10 and W3 stub tests build (a cabinet unit whose boundary plug
 mates a harness, the two-cabinet system, two boundary connectors with and without a foreign
-column between, a top-level cable between two locations) and the layout cabinet with a second
-location. `off_ends` is checked by hand-built pairs of one text.
+column between, a top-level cable between two locations), the same two plugs wired by plain
+wires, and the layout cabinet with a second location. `off_ends` is checked by hand-built pairs
+of one text. A line's one stub (HL1, HL18) stores no text: its box is checked against its derived
+text's measure (`stub_size`), the plain wires keep a shared-box run without a carrier.
 
 Can-fail, checked by hand: with `write/markers.py` writing no `carrier` the equality test fails on
 the cable segment; with `facing` always `Side.S` it fails on the arrow of an N-facing stub.
@@ -16,7 +18,11 @@ import dataclasses
 import importlib.util
 from functools import cache
 
+import fransys as fr
+import fransys_author
+import fransys_parts
 import pytest
+from _model_build_cover import layout_trigger_document
 from layout_cabinet import build_cabinet
 from workspace_root import WORKSPACE_ROOT
 
@@ -25,10 +31,11 @@ from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages.offstubs import off_ends
+from fransys_layout.stages.references.marker_boxes import stub_size
 from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.kernel import freeze
 from fransys_model.layout import DrawingSet, LinkMarker, Page, Side, StarKind, layout_of
-from fransys_model.vocab.tables import functions, items, mates, ports
+from fransys_model.vocab.tables import functions, items, ports
 
 _ROOT_TESTS = WORKSPACE_ROOT / "tests"
 
@@ -67,6 +74,23 @@ def _cable():
 
 
 @cache
+def _wires():
+    """The top-level cable's two plugs, wired by two plain wires: no line, no carrier."""
+    parts = fransys_parts.load("demo_parts")
+    d = fransys_author.Design(parts)
+    d.project(**_UNITS._OFF_STUB._PROJECT)
+    d.revision(1, date="2026-09-24", text="First issue", created="XX")
+    a, b = d.location("A", "Cabinet"), d.location("B", "Field")
+    group = d.group("G", "Pump")
+    p1 = d.item("DEMO-CONN-2P", tag="P1", at=a, group=group)
+    p2 = d.item("DEMO-CONN-2P", tag="P2", at=b, group=group)
+    wire = d.wiring(colour="BU", gauge="0.5")
+    wire(p1["1"], p2["1"])
+    wire(p1["2"], p2["2"])
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
+
+
+@cache
 def _cabinet_two_location():
     return lay_out_schematic(freeze(build_cabinet(second_location=True)))[0]
 
@@ -77,8 +101,14 @@ _FIXTURES = {
     "two-connectors": lambda: _connectors(relay_between=False),
     "two-connectors-relay": lambda: _connectors(relay_between=True),
     "top-level-cable": _cable,
+    "top-level-wires": _wires,
     "cabinet-two-location": _cabinet_two_location,
 }
+
+
+def _line_stub(marker: LinkMarker) -> bool:
+    """HL18: a leaving line's one stub, keyed `line_stub` (write/harness.py)."""
+    return marker.key[3] == "line_stub"
 
 
 def _stubs(model) -> list[LinkMarker]:
@@ -106,15 +136,25 @@ def test_the_derived_stub_text_equals_the_measured_text(name: str) -> None:
     model = _FIXTURES[name]()
     stubs = _stubs(model)
     assert stubs, "the fixture draws no off stub"
-    results, _ = stage_results(model, read_inputs(model))
+    inputs = read_inputs(model)
+    results, _ = stage_results(model, inputs)
     measured = {
         (one.port, one.at.x, one.at.y): one.text
         for one in results.layout.markers
         if one.text  # an off stub, or (D9, F7) the reference that carries one
     }
-    assert len(measured) == len(stubs)
+    boxes = {
+        (one.port, one.at.x, one.at.y): (one.box.width, one.box.height)
+        for one in results.lines.stubs
+    }
+    assert len(measured) + len(boxes) == len(stubs)
     for marker in stubs:
-        assert off_stub_text(model, marker) == measured[marker.port, marker.x, marker.y]
+        text = off_stub_text(model, marker)
+        if _line_stub(marker):
+            assert stub_size(text, inputs.profile) == boxes[marker.port, marker.x, marker.y]
+            assert marker.far != marker.port
+        else:
+            assert text == measured[marker.port, marker.x, marker.y]
         assert not marker.ext
 
 
@@ -153,23 +193,18 @@ def test_far_and_carrier_are_records_of_the_model(name: str) -> None:
 
 
 def test_a_stand_in_stub_carries_its_mates_far_end_and_carrier() -> None:
-    """The unit's boundary pin X1:n reads the plug's stub: the same far port and carrier."""
+    """The unit's boundary X1 reads the parent's stub at X1: the same far port and carrier.
+
+    HL18: W3 is a line, so each side's one stub stands at the connector it mates, X1.
+    """
     model = _unit_stub()
-    mated = {}
-    for mate in mates(model).values():
-        mated[mate.a], mated[mate.b] = mate.b, mate.a
-    top = {
-        (ports(model)[m.port].function, ports(model)[m.port].name): m
-        for m in _stubs(model)
-        if not _in_unit_set(model, m)
-    }
+    top = {ports(model)[m.port].function: m for m in _stubs(model) if not _in_unit_set(model, m)}
     stand_ins = [m for m in _stubs(model) if _in_unit_set(model, m)]
     assert stand_ins
     for marker in stand_ins:
-        port = ports(model)[marker.port]
-        mate = top[mated[port.function], port.name]
+        mate = top[ports(model)[marker.port].function]
         assert (marker.far, marker.carrier) == (mate.far, mate.carrier)
-        assert marker.far != mate.port
+        assert marker.far != marker.port
     assert {functions(model)[ports(model)[m.port].function].key[:2] for m in stand_ins} == {
         ("cab", "X1")
     }

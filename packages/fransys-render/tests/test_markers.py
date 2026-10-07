@@ -54,9 +54,9 @@ _SVG_NS = "{http://www.w3.org/2000/svg}"
 # them off stubs; a reference and a stub on one port are one record, layout-0053). Step 5
 # (layout-0093): M12 makes a wire that turns back round its device a reference pair, and every
 # marker is a turned box (M1), its stored width and height the short and long side.
-_WIDE_MARKER_COUNT = 7
+_WIDE_MARKER_COUNT = 6
 _NARROW_MARKER_COUNT = 8
-_TWO_LOCATION_MARKER_COUNT = 11
+_TWO_LOCATION_MARKER_COUNT = 8
 
 
 def _model(*records):
@@ -228,7 +228,8 @@ def test_all_real_markers_draw_a_stub_box_and_text(
             f'<line class="marker" x1="{mm(marker.x)}" y1="{mm(marker.y)}" '
             f'x2="{mm(marker.x + facing.dx * step)}" y2="{mm(marker.y + facing.dy * step)}"/>'
         )
-        assert stub in rendered
+        # A harness line's stub draws no stub: its line runs on to the box (layout-0158).
+        assert (stub in rendered) is not _markers._ends_a_line(model, marker)
         # The text: no XML metacharacters in a real marker's text (`/1.3`, `-X2:1/1.5`).
         # A star reference wraps to several lines, each its own `<text>`.
         for line in model_marker_text(model, marker).split("\n"):
@@ -427,11 +428,13 @@ def test_drawn_box_size_equals_the_records_stored_size(
     # RR-O5: the two-location golden's reference boxes are sized from the longest position form
     # (`#n-+<location>...p<set>.<page>:<cell>`), 56 G, no longer the fixed 42 G.
     goldens = (
-        (cabinet_laid_out, _WIDE_MARKER_COUNT, {12, 20}, {42}),
-        (cabinet_narrow_laid_out, _NARROW_MARKER_COUNT, {12}, {42}),
-        (cabinet_two_location_laid_out, _TWO_LOCATION_MARKER_COUNT, {12, 20}, {47, 51, 56}),
+        (cabinet_laid_out, _WIDE_MARKER_COUNT, {12, 20, 43}, {12, 42}),
+        (cabinet_narrow_laid_out, _NARROW_MARKER_COUNT, {12, 43}, {12, 42}),
+        (cabinet_two_location_laid_out, _TWO_LOCATION_MARKER_COUNT, {12, 20, 28}, {47, 51, 56}),
     )
+    # HL15-HL18 (layout-0154): the 43 x 12 G boxes are the OFF line stubs of the harness lines.
     checked = 0
+    line_stubs = 0
     for model, expected_count, expected_widths, expected_heights in goldens:
         markers = layout_of(model, LinkMarker)
         assert len(markers) == expected_count  # this golden's own known, named count
@@ -448,6 +451,8 @@ def test_drawn_box_size_equals_the_records_stored_size(
             assert drawn_width == marker.width
             assert drawn_height == marker.height
             checked += 1
+            line_stubs += "line_stub" in str(marker.key)
+    assert line_stubs == 3
     assert checked == _WIDE_MARKER_COUNT + _NARROW_MARKER_COUNT + _TWO_LOCATION_MARKER_COUNT
 
 

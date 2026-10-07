@@ -12,6 +12,7 @@ from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .contact_lines import contact_counts
 from .designation import (
     bom_sort_key,
     designation_holder,
@@ -163,13 +164,45 @@ def _part_designations(
     return tuple(texts)
 
 
+def _contact_lines(
+    model: Model, covered: frozenset[Id[Item]] | None, unit: Id[Unit] | None
+) -> list[tuple[ReleaseOrder, BomLine]]:
+    """One `BomLine` per crimp contact part: `count` is its used pins, `designations` its housings.
+
+    A housing counts when it is installed, not external and in scope, as a part line's items do.
+    """
+    lines: list[tuple[ReleaseOrder, BomLine]] = []
+    for part_id, per_item in contact_counts(model).items():
+        housings = [
+            i
+            for i in per_item
+            if items(model)[i].installed
+            and not external(model, i)
+            and (covered is None or i in covered)
+        ]
+        if housings:
+            part = parts(model)[part_id]
+            ordered = sorted(housings, key=lambda i: bom_sort_key(model, i))
+            line = BomLine(
+                part=part_id,
+                mpn=part.mpn,
+                manufacturer=part.manufacturer,
+                description=part.description,
+                count=sum(per_item[i] for i in ordered),
+                designations=_part_designations(model, ordered, unit),
+                revision="",
+            )
+            lines.append(((0, 0), line))
+    return lines
+
+
 def bom_lines(
     model: Model, scope: Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None = None
 ) -> tuple[BomLine, ...]:
     """One `BomLine` per `Part` of an installed, not external item, by `(mpn, revision, part)`.
 
-    An item with no `part` has no line. `designations` are `printed_designation`s; `revision` is
-    `""` on a part line. A part with no installed item in scope has no line. `scope` narrows:
+    An item with no `part` has no line; a crimp contact part has one, counted per used pin.
+    `designations` are `printed_designation`s; `revision` is `""` on a part line. `scope` narrows:
 
     - `None` (default): every installed item of the model, no unit lines.
     - `Id[Item]`: that item and its descendants; `Id[AspectNode]`: the items at or below it.
@@ -218,7 +251,7 @@ def bom_lines(
             revision="",
         )
         lines.append(((0, 0), part_line))
-    lines.extend(_unit_lines(model, unit_children))
+    lines.extend([*_contact_lines(model, covered, own_unit), *_unit_lines(model, unit_children)])
     keyed = sorted(
         ((_bom_line_key(line, order), line) for order, line in lines), key=lambda p: p[0]
     )

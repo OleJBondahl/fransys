@@ -2,7 +2,6 @@
 
 lazy from collections.abc import Sequence
 
-from fransys_layout.engines.cable.channel import Plan, plan_channel, rise
 from fransys_layout.engines.cable.place_frame import (
     Spans,
     box_room,
@@ -21,11 +20,20 @@ from fransys_layout.engines.cable.place_links import (
     lower,
     upper_lines,
 )
-from fransys_layout.engines.cable.place_rows import row_xs
+from fransys_layout.engines.cable.place_rows import landing_map, row_xs
+from fransys_layout.engines.cable.place_wires import (
+    crosses,
+    envelope,
+    text_edges,
+    text_x,
+    upper_stop,
+    wire_tops,
+)
 from fransys_layout.engines.cable.route import Band, route_lower
 from fransys_layout.engines.cable.values import (
     BlockFacts,
     CoreFacts,
+    CorePlace,
     EndFacts,
     PlacedBlock,
     PlacedCable,
@@ -34,6 +42,7 @@ from fransys_layout.engines.cable.values import (
     PlacedWire,
 )
 from fransys_layout.geometry import PORT_PITCH_G, WIRING_GRID, Box, LayoutError, Point, snap_up
+from fransys_layout.stages.channel import Plan, plan_channel, rise
 from fransys_layout.stages.space import Obstacle
 
 G = WIRING_GRID
@@ -47,8 +56,8 @@ def block_pitch(widest: int) -> int:
 
 
 def _cores(facts: BlockFacts) -> tuple[CoreFacts, ...]:
-    """Every core of the block that crosses between the rows, cable by cable in print order."""
-    return tuple(core for cable in facts.cables for core in cable.cores if not core.link)
+    """Every core that crosses between the rows: the cables' in print order, then the wires."""
+    return tuple(core for core in facts.cores if not core.link)
 
 
 def _widest(facts: BlockFacts) -> int:
@@ -59,7 +68,7 @@ def _widest(facts: BlockFacts) -> int:
 def _spans(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> Spans:
     """Each cable's top columns (first, last), from the placed rows."""
     owners = tuple(n for n, cable in enumerate(facts.cables) for c in cable.cores if not c.link)
-    tops = tuple(top[0] for _, top, _ in _landings(facts, ends))
+    tops = tuple(top[0] for _, top, _ in _landings(facts, ends))[: len(owners)]
     return spans(owners, tops, len(facts.cables))
 
 
@@ -74,7 +83,7 @@ def _pitch(facts: BlockFacts) -> int:
 
 
 def _overhang(end: EndFacts, pitch: int) -> int:
-    return max(0, -(-(end.label_width - len(end.pins) * pitch) // 2))
+    return max(0, -(-(end.label_width - end.places * pitch) // 2))
 
 
 def _origin(facts: BlockFacts, pitch: int) -> int:
@@ -90,11 +99,24 @@ def _top_y(end: EndFacts, rise_by: int) -> tuple[int, int]:
 
 
 def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> PlacedEnd:
-    """One end box with its left edge at `x0`; its pin cells step one pitch from half a pitch in."""
-    cells = tuple(
-        PlacedCell(port=pin.port, x=x0 + pitch // 2 + i * pitch, landed=pin.landed)
-        for i, pin in enumerate(end.pins)
-    )
+    """One end box with its left edge at `x0`; a pin cell is one pitch wide per core (P1)."""
+    cells = []
+    left = x0
+    for pin in end.pins:
+        places = tuple(
+            CorePlace(core=core, x=left + pitch // 2 + n * pitch)
+            for n, core in enumerate(pin.cores)
+        )
+        cells.append(
+            PlacedCell(
+                port=pin.port,
+                x=left + pin.places * pitch // 2,
+                width=pin.places * pitch,
+                landed=pin.landed,
+                landings=places,
+            )
+        )
+        left += pin.places * pitch
     return PlacedEnd(
         item=end.item,
         top=top,
@@ -102,9 +124,9 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
         blank=end.blank,
         x=x0,
         y=y,
-        width=len(end.pins) * pitch,
+        width=end.places * pitch,
         height=0 if end.blank else ROW,
-        cells=cells,
+        cells=tuple(cells),
     )
 
 
@@ -147,10 +169,10 @@ type Landing = tuple[bool, tuple[int, PlacedEnd], tuple[int, PlacedEnd]]
 
 def _landings(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> list[Landing]:
     """Per core: whether `end_a` is the top end, then its top and bottom landing as (x, end)."""
-    where = {cell.port: (cell.x, end) for end in ends for cell in end.cells}
+    where = landing_map(ends)
     found = []
     for core in _cores(facts):
-        a, b = where[core.end_a], where[core.end_b]
+        a, b = where[core.conductor, core.end_a], where[core.conductor, core.end_b]
         found.append((True, a, b) if a[1].top else (False, b, a))
     return found
 
@@ -212,15 +234,16 @@ def _wires(
 def _core_wire(
     facts: BlockFacts, box_y: int, core: CoreFacts, landing: Landing, lower_run: Line
 ) -> tuple[PlacedWire, tuple[Line, Line]]:
-    """One crossing core's record, and its upper and lower runs."""
+    """One crossing core's record and its upper and lower runs."""
     a_top, top, bottom = landing
-    upper = (Point(x=top[0], y=top[1].y + top[1].height), Point(x=top[0], y=box_y))
+    stop = upper_stop(facts, core, box_y)
+    upper = (Point(x=top[0], y=top[1].y + top[1].height), Point(x=top[0], y=stop))
     down, up = (upper, lower_run[::-1]) if a_top else (lower_run, upper[::-1])
     wire = PlacedWire(
         conductor=core.conductor,
         run_a=down,
         run_b=up,
-        text_x=top[0],
+        text_x=text_x(facts, core, top[0]),
         text_y=box_y + box_room(facts)[1],
         stub_a=(top if a_top else bottom)[1].blank,
         stub_b=(bottom if a_top else top)[1].blank,
@@ -250,8 +273,15 @@ def _frame(
     if boxes is None:
         return None
     tops = [top[0] for _, top, _ in _landings(facts, ends)]
+    shapes = [placed.box for placed in boxes]
+    xs = wire_tops(facts, tops)
+    if not shapes and not xs:
+        return boxes, None
+    if crosses(shapes, xs):
+        return None
+    framed = [*shapes, *([envelope(facts, xs, pitch, box_y)] if xs else [])]
     return boxes, dashed_box(
-        label, boxes, min(tops, default=None), dash_top(_top_y_of(facts, ends))
+        label, framed, min(tops, default=None), dash_top(_top_y_of(facts, ends))
     )
 
 
@@ -269,8 +299,9 @@ def _right(
     edges = [b.x + b.width for b in boxes]
     edges += [end.x + end.width for end in ends]
     edges += [end.x + (end.width + labels[end.item] + 1) // 2 for end in ends if not end.blank]
-    wide = {c.conductor: c.text_width for cable in facts.cables for c in cable.cores if c.link}
+    wide = {c.conductor: c.text_width for c in facts.cores if c.link}
     edges += [w.text_x + (wide[w.conductor] + 1) // 2 for w in wires if w.conductor in wide]
+    edges += text_edges(facts, wires)
     return snap_up(max(edges))
 
 

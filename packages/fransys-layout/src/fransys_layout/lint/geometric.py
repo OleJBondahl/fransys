@@ -29,6 +29,17 @@ from fransys_layout.stages.space import (
 from fransys_model.kernel import Finding, Severity
 
 from ._foreign import box_on_symbols, stub_through_symbols
+from ._harness import (
+    NO_INK,
+    HarnessInk,
+    PageInk,
+    ink_outside,
+    inks_by_page,
+    runs_on_outlines,
+    runs_over_texts,
+    runs_through_symbols,
+    through,
+)
 from ._jogs import routes_with_a_jog
 from ._segments import own_ends_at, runs_of
 from ._texts import text_crossings, text_overlaps
@@ -51,6 +62,7 @@ if TYPE_CHECKING:
         Route,
         SheetFormat,
     )
+    from fransys_layout.stages.types import PlacedOutline
 
 
 _MIN_POINTS = 2  # a route is at least its two ends, even `[p, p]`
@@ -67,16 +79,25 @@ class _Page:
     labels: tuple[PlacedLabel, ...]
     markers: tuple[LinkMarker, ...]
     content: Box
+    outlines: tuple[PlacedOutline, ...]
+    ink: PageInk
+    hidden: frozenset[tuple[Handle, int, int]]
 
 
-def lint_geometry(layout: Layout, *, sheet: SheetFormat) -> tuple[Finding, ...]:
-    """Report geometric defects of `layout`, sorted by `(code, subjects)` (design/lint.md 6.8)."""
+def lint_geometry(
+    layout: Layout, *, sheet: SheetFormat, ink: HarnessInk = NO_INK
+) -> tuple[Finding, ...]:
+    """Report geometric defects of `layout` and its harness `ink`, sorted by `(code, subjects)`.
+
+    design/lint.md 6.8; harness lines, stubs and connector boxes from layout-0158.
+    """
     content = content_box(sheet)
     placed_on = by_key(layout.placed, page_of)
     routes_on = by_key(layout.routes, page_of)
     labels_on = by_key(layout.labels, page_of)
     markers_on = by_key(layout.markers, page_of)
-    pages = sorted({*placed_on, *routes_on, *labels_on, *markers_on})
+    outlines_on, inks = by_key(layout.outlines, page_of), inks_by_page(ink)
+    pages = sorted({*placed_on, *routes_on, *labels_on, *markers_on, *inks})
     findings: list[Finding] = []
     for here in pages:
         placed = tuple(sorted(placed_on.get(here, ()), key=lambda one: one.function))
@@ -97,13 +118,16 @@ def lint_geometry(layout: Layout, *, sheet: SheetFormat) -> tuple[Finding, ...]:
             labels=tuple(labels_on.get(here, ())),
             markers=tuple(markers_on.get(here, ())),
             content=content,
+            outlines=outlines_on.get(here, ()),
+            ink=inks.get(here, PageInk()),
+            hidden=ink.hidden,
         )
         findings.extend(_wires(page))
         findings.extend(_jogs(page))
         findings.extend(_symbols(page))
         findings.extend(_content(page))
         findings.extend(text_crossings(page.labels, page.markers))
-        findings.extend(text_overlaps(page.labels, page.markers, page.bodies))
+        findings.extend(_harness(page))
         findings.extend(stub_through_symbols(page.markers, page.placed, page.bodies))
         findings.extend(box_on_symbols(page.markers, page.placed, page.bodies))
     return tuple(sorted(findings, key=lambda finding: (finding.code, finding.subjects)))
@@ -157,16 +181,44 @@ def _wires(page: _Page) -> list[Finding]:
             for one, box in page.boxes
             if any(crosses_unless_leaving(box, run, lanes.get(box, ())) for run in runs)
         )
-        hit = {
-            label.subject for label in page.labels if any(crosses(label.box, run) for run in runs)
-        } | {
-            marker.port for marker in page.markers if any(crosses(marker.box, run) for run in runs)
-        }
+        hit = (
+            {label.subject for label in page.labels if any(crosses(label.box, run) for run in runs)}
+            | {
+                marker.port
+                for marker in page.markers
+                if any(crosses(marker.box, run) for run in runs)
+            }
+            | {
+                subject
+                for subject, box in page.ink.texts
+                if any(through(seg, box) for seg in pairwise(p.at for p in route.points))
+            }
+        )
         findings.extend(
             _warn(WIRE_OVER_LABEL, (*identity, subject), "a route runs through a label box")
             for subject in sorted(hit)
         )
     return findings
+
+
+def _harness(page: _Page) -> list[Finding]:
+    """The text overlaps with the harness ink, and the harness lines' own runs (layout-0158)."""
+    bodies = tuple(
+        (one, body)
+        for one, body in page.bodies
+        if (one.function, one.drawing_set, one.page) not in page.hidden
+    )
+    texts = (
+        *((label.subject, label.box) for label in page.labels),
+        *((marker.port, marker.box) for marker in page.markers),
+    )
+    return [
+        *text_overlaps(page.labels, page.markers, bodies, page.ink.texts),
+        *runs_over_texts(page.ink, texts),
+        *runs_through_symbols(page.ink, bodies),
+        *runs_on_outlines(page.ink, page.outlines),
+        *ink_outside(page.ink, page.content),
+    ]
 
 
 def _jogs(page: _Page) -> list[Finding]:
@@ -205,6 +257,7 @@ def _content(page: _Page) -> list[Finding]:
         _warn(OUT_OF_CONTENT_BOX, (one.function,), "a symbol's keep-out box leaves the content box")
         for one, box in page.boxes
         if not contains(page.content, box)
+        and (one.function, one.drawing_set, one.page) not in page.hidden  # HL6: draws nothing
     ]
     findings.extend(
         _warn(OUT_OF_CONTENT_BOX, (label.subject,), "a label box leaves the content box")

@@ -8,6 +8,8 @@ from .assigned_designation import AssignedDesignationFacet
 from .assigned_unit_tag import AssignedUnitTagFacet
 from .cable import CableFacet, CableProductFacet, CoreFacet
 from .connector import ConnectorFacet
+from .crimp import ContactFit, ContactsFacet
+from .harness import HarnessFacet
 from .pcb import FootprintFacet, PcbFacet
 from .plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from .rating import BoundaryValuesFacet, OperatingFacet, PartRatingFacet, RatingFacet
@@ -24,8 +26,11 @@ __all__ = [
     "CableFacet",
     "CableProductFacet",
     "ConnectorFacet",
+    "ContactFit",
+    "ContactsFacet",
     "CoreFacet",
     "FootprintFacet",
+    "HarnessFacet",
     "OperatingFacet",
     "PartRatingFacet",
     "PcbFacet",

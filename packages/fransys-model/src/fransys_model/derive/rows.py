@@ -684,3 +684,18 @@ class PartFunctionRow:
     name: str
     kind: FunctionKind | None
     rating: Rating | None
+
+
+@value
+class HarnessLineEnd:
+    """One end of a harness or cable line: `plug` is its connector function, else `ports` fan out.
+
+    `branch` is the 1-based n of `-W13.n`. `mates` is the function `d.mate` joins `plug` to, or
+    `None` for a fan-out or an unmated plug.
+    """
+
+    harness: Id[Item]
+    branch: int
+    plug: Id[Function] | None
+    ports: tuple[Id[Port], ...]
+    mates: Id[Function] | None

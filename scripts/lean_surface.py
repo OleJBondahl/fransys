@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import dataclasses
+import functools
 import importlib
 import inspect
 import tomllib
@@ -27,10 +28,11 @@ if TYPE_CHECKING:
 
 ROOT = Path(__file__).resolve().parents[1]
 
-#: `fransys_model`'s own eight surface modules (MS1, amended 2026-09-27 by the designer on
+#: `fransys_model`'s own nine surface modules (MS1, amended 2026-09-27 by the designer on
 #: Part 0's draft to add `derive.numbering_pins`, and by model-0159 to add
-#: `derive.cable_drawing`): not its top-level package, which is excluded from the surface
-#: entirely -- only these eight dotted paths are read by other packages.
+#: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`): not its top-level package,
+#: which is excluded from the surface entirely -- only these nine dotted paths are read by
+#: other packages.
 _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.kernel",
     "fransys_model.vocab",
@@ -40,6 +42,7 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive.baseline",
     "fransys_model.derive.numbering_pins",
     "fransys_model.derive.cable_drawing",
+    "fransys_model.derive.block_diagram",
 )
 
 #: Kept separately from `_MODEL_MODULES` (MS8): `fransys.colours` is a submodule of
@@ -81,7 +84,7 @@ def surface_modules() -> tuple[str, ...]:
     """Every dotted module path that defines part of the workspace's API surface.
 
     MS1, MS2, MS6, MS8 combined: each `packages/*` workspace member's own top-level module
-    (`fransys_model` excepted), `fransys_model`'s own eight named modules (MS1),
+    (`fransys_model` excepted), `fransys_model`'s own nine named modules (MS1),
     `fransys.colours` and the author package's surface modules (MS8). Sorted, so stable.
     """
     top_level = _workspace_top_level_modules(ROOT)
@@ -157,8 +160,13 @@ def resolve_surface_names(modules: Iterable[str] | None = None) -> tuple[Surface
 
 
 def module_tree(path: Path) -> ast.Module:
-    """Parse `path` once; callers cache the result themselves keyed by path."""
-    return ast.parse(path.read_text(encoding="utf-8"))
+    """Parse `path`, cached on the file text (0122); the tree is shared, so never edit it."""
+    return _parse_source(path.read_text(encoding="utf-8"))
+
+
+@functools.lru_cache(maxsize=512)
+def _parse_source(text: str) -> ast.Module:
+    return ast.parse(text)
 
 
 def find_def(

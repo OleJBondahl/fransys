@@ -137,8 +137,8 @@ def _wire(points: tuple[RoutePoint, ...], run_b: tuple[RoutePoint, ...] = ()) ->
 
 
 _PINS = (
-    PinCell(index=0, port=_PORT_A, x=4, landed=True),
-    PinCell(index=1, port=_PORT_B, x=8, landed=False),
+    PinCell(index=0, port=_PORT_A, x=4, width=8, landed=True),
+    PinCell(index=1, port=_PORT_B, x=8, width=8, landed=False),
 )
 _POINTS = (RoutePoint(index=0, x=4, y=12), RoutePoint(index=1, x=4, y=30))
 _RUN_B = (RoutePoint(index=0, x=4, y=62), RoutePoint(index=1, x=4, y=80))

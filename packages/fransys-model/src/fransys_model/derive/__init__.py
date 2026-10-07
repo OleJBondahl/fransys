@@ -47,6 +47,7 @@ from fransys_model.vocab.tables import (
 )
 
 from .bom import TopLevelScope
+from .box_lines import connector_box_lines
 from .closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
 from .columns import (
     BOM_COLUMNS,
@@ -82,7 +83,11 @@ from .designation import (
     unit_location,
 )
 from .external import external
+from .harness_line_ends import harness_line_ends
 from .indexes import Indexes, build_indexes
+from .line_end_fact import connector_at_line_end
+from .line_fact import draws_as_line, line_conductors
+from .line_text import line_designation, line_stub_line
 from .list_cells import (
     CELL_SEPARATOR,
     cell_parts,
@@ -122,6 +127,7 @@ from .queries import (
     ext_usage,
     first_leg,
     harness_cables,
+    harness_wires,
     is_black_box_item,
     is_plc_module,
     is_sole_unit_root,
@@ -167,6 +173,7 @@ from .rows import (
     HarnessCable,
     HarnessCore,
     HarnessEnd,
+    HarnessLineEnd,
     HarnessPin,
     MateRow,
     NetlistNet,
@@ -184,6 +191,8 @@ from .rows import (
     TerminalRow,
     WireRow,
 )
+from .side_hint_findings import check_side_hints
+from .supply_share import supply_share
 from .unused import function_is_unused, port_is_unused
 
 __all__ = [
@@ -225,6 +234,7 @@ __all__ = [
     "HarnessCable",
     "HarnessCore",
     "HarnessEnd",
+    "HarnessLineEnd",
     "HarnessPin",
     "Indexes",
     "Item",
@@ -280,10 +290,13 @@ __all__ = [
     "cell_parts",
     "cell_text",
     "changeover_throws",
+    "check_side_hints",
     "column_rows",
     "column_values",
     "conductors",
     "conductors_on_item",
+    "connector_at_line_end",
+    "connector_box_lines",
     "connector_facets",
     "connector_label",
     "connector_rows",
@@ -296,6 +309,7 @@ __all__ = [
     "designation_list",
     "document_unit",
     "drawing_set_is_replica_only",
+    "draws_as_line",
     "effective_placement",
     "enclosing_boards",
     "ext_usage",
@@ -308,6 +322,8 @@ __all__ = [
     "functions",
     "gives_energy",
     "harness_cables",
+    "harness_line_ends",
+    "harness_wires",
     "is_black_box_item",
     "is_cable",
     "is_own_unit_root",
@@ -321,6 +337,9 @@ __all__ = [
     "item_of_port",
     "items",
     "items_at",
+    "line_conductors",
+    "line_designation",
+    "line_stub_line",
     "link_state",
     "list_context",
     "load_limits",
@@ -364,6 +383,7 @@ __all__ = [
     "schematic_functions",
     "standalone",
     "subtree",
+    "supply_share",
     "supply_systems",
     "takes_energy",
     "takes_parents_designation",

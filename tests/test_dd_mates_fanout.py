@@ -14,9 +14,11 @@ import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
 
+from fransys_model.derive import connector_box_lines
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import marker_text, off_stub_text
 from fransys_model.layout import (
+    ConnectorBox,
     DrawingSet,
     LinkMarker,
     Page,
@@ -300,11 +302,11 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
 
 
 def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from() -> None:
-    """D8 (amended, layout-0069): the harness plug P1 stands above the boundary pin X1 it mates
-    where its chain ends at the plug (a bottom end), and below it where the chain runs on from the
-    plug into the column (a top end: the coil's column, the replica above the plug)."""
-    # UNDO: fransys_layout/stages/chains.py:discover_chains
-    #     `above = chain[at] in edge_top` becomes `above = False` (every replica below again)
+    """D8 (amended, layout-0069), HL6 (layout-0155): the harness plug P1 and the boundary
+    connector X1 it mates sit at a line's end, so on the parent page each draws as one box, no pin
+    symbol, and the two boxes stand face to face, X1 above: the chain enters P1 from below."""
+    # UNDO: fransys_layout/stages/box_views.py:_box
+    #     `top = edge if down else edge - height` becomes `top = edge` (every box hangs down)
     parts, d, _, _ = _design()
     unit = d.scope("cab").unit("demo-pump-cabinet", revision=1, interface="1")
     unit.revision(1, date="2026-01-01", text="First release", created="XX")
@@ -322,14 +324,16 @@ def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
     sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
     parent = {p.id for p in pages.values() if sets[p.drawing_set].unit is None}
-    plugs = [p for p in _placements(model, "P1", "x1") if p.page in parent]
-    boundary = [p for p in _placements(model, "cab", "x1") if p.page in parent]
-    assert len(plugs) == len(boundary) == 2
-    (coil,) = (p for p in _placements(model, "Z9", "coil") if p.page in parent)
-    assert {plug_pin.x == coil.x for plug_pin in plugs} == {True, False}  # both ends are built
-    for plug_pin in plugs:
-        (mate,) = (p for p in boundary if p.x == plug_pin.x)
-        if plug_pin.x == coil.x:  # pin 1 runs on into the coil's column: a top end
-            assert mate.y < plug_pin.y
-        else:  # pin 2 ends at the plug, the cable core leaving: a bottom end
-            assert plug_pin.y < mate.y
+    by_tag = {
+        connector_box_lines(model, box.function)[0]: box
+        for box in layout_of(model, ConnectorBox).values()
+        if box.page in parent
+    }
+    plug, boundary = by_tag["-W3-P1"], by_tag["-X1"]
+    assert plug.page == boundary.page
+    # no pin symbol of X1 stands on the page its box draws it (no marker there)
+    assert [p for p in _placements(model, "cab", "x1") if p.page == boundary.page] == []
+    assert boundary.x < plug.x + plug.width
+    assert plug.x < boundary.x + boundary.width
+    # the chain runs on from P1 down to Z9, so X1 stands above and P1 below, face to face
+    assert boundary.y + boundary.height == plug.y

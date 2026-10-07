@@ -83,6 +83,8 @@ class StageInputs:
     spares: tuple[FunctionSpec, ...] = ()
     # layout-0107: the item boxes that stand over the pin group they feed
     feeds: tuple[BoxFeed, ...] = ()
+    # HL1: the conductors harness lines carry, out of `connections` and `crossing` (layout-0154)
+    carried: tuple[Connection, ...] = ()
 
 
 def read_inputs(model: Model) -> StageInputs:

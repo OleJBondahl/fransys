@@ -1,6 +1,7 @@
 """Devices: `d.device("Q1", part)` and the checked references on what it returns (EA4)."""
 
 from typing import TYPE_CHECKING, Any, overload
+lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
@@ -8,6 +9,8 @@ from fransys_author.surface._handles import Fn, Pin, pick
 from fransys_author.surface._tags import bare
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Item, Strip, Terminal
+lazy from fransys_author.surface import _contacts
+lazy from fransys_author.surface._joins import fit_leads
 lazy from fransys_author.surface._mount import mount
 lazy from fransys_author.surface._parent import parent_item
 lazy from fransys_model.kernel import Id
@@ -171,10 +174,12 @@ class Devices:
         interface: bool | tuple[N, ...] = False,
         unused: bool | tuple[N, ...] = False,
         mounted_on: Device | Fn | None = None,
+        joins: Mapping[str | int, Pin] | None = None,
         description: str = "",
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        contacts: str | Mapping[str, str] | None = None,
     ) -> S: ...
     @overload
     def device[D: Device](
@@ -188,10 +193,12 @@ class Devices:
         interface: bool = False,
         unused: bool = False,
         mounted_on: Device | Fn | None = None,
+        joins: Mapping[str | int, Pin] | None = None,
         description: str = "",
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        contacts: str | Mapping[str, str] | None = None,
     ) -> D: ...
     @overload
     def device(
@@ -205,10 +212,12 @@ class Devices:
         interface: bool | tuple[str, ...] = False,
         unused: bool | tuple[str, ...] = False,
         mounted_on: Device | Fn | None = None,
+        joins: Mapping[str | int, Pin] | None = None,
         description: str = "",
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        contacts: str | Mapping[str, str] | None = None,
     ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design (EA4)
     def device(  # noqa: PLR0913 -- the call's own spec signature (EA4)
         self: "Design",
@@ -221,10 +230,12 @@ class Devices:
         interface: bool | tuple[str, ...] = False,
         unused: bool | tuple[str, ...] = False,
         mounted_on: Device | Fn | None = None,
+        joins: Mapping[str | int, Pin] | None = None,
         description: str = "",
         position: int | None = None,
         installed: bool = True,
         external: bool = False,
+        contacts: str | Mapping[str, str] | None = None,
     ) -> Any:
         """Add device `tag` (printed `-tag`) of `part`, a part class or an MPN string.
 
@@ -233,14 +244,14 @@ class Devices:
         mpn = part_mpn(part)
         _one_maker(self, mpn)
         _check_tag(tag, name)
+        _contacts.validate(self, mpn, contacts)
         holder = _parent_handle(self, parent)
-        where = self._place if place is ... else place
         key = self._claim(name or tag or "", per_function=True)
         item = self._engine.item(
             mpn,
             name=key,
             tag=tag,
-            at=self._place_node(where),
+            at=self._place_node(self._place if place is ... else place),
             group=self._group,
             parent=holder,
             position=position,
@@ -249,8 +260,10 @@ class Devices:
             external=external,
         )
         _mark_boundary(self, item, interface=interface, unused=unused)
+        _contacts.fit(self, item, contacts)
         cls = part if isinstance(part, type) else Device
         made = cls(name or tag or "", item, self._engine)
         if mounted_on is not None:
             mount(self, made, mounted_on)
+        fit_leads(self, made, parent, joins)
         return made

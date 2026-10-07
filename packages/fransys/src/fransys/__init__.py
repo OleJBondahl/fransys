@@ -5,8 +5,10 @@ The CLI is deferred (F10).
 
 from fransys_author import AuthorError
 from fransys_author.surface import (
+    ABOVE,
     AI,
     AO,
+    BELOW,
     CONTROL,
     DI,
     DO,
@@ -51,8 +53,10 @@ from .pipeline import (
 )
 
 __all__ = [
+    "ABOVE",
     "AI",
     "AO",
+    "BELOW",
     "CONTROL",
     "DI",
     "DO",

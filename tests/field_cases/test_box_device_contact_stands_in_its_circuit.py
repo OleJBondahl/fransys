@@ -12,6 +12,7 @@ the box's position, the way a coil's contact shows its coil's.
 """
 
 import dataclasses
+import functools
 import itertools
 import re
 import tempfile
@@ -30,8 +31,9 @@ from fransys_model.layout import Label, LabelKind, PlacementView, SymbolPlacemen
 from fransys_model.vocab.tables import functions, items, ports
 
 
+@functools.cache
 def _built(*, rails: bool = True) -> tuple:
-    """The plant; `rails=False` declares no supply: OUT+ and OUT- go to strip terminals."""
+    """The plant, built once per variant; `rails=False` declares no supply (OUT to terminals)."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)

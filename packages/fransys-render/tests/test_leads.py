@@ -12,6 +12,8 @@ from fransys_render._symbols import symbols_group
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import (
     DrawingSet,
+    FanLeg,
+    HarnessFanOut,
     Label,
     LabelKind,
     LinkMarker,
@@ -308,6 +310,45 @@ def test_a_link_marker_on_the_port_draws_its_lead():
         other_port,
         partner,
     )
+
+    group = symbols_group(model, page)
+    assert group.count("<line") == 1
+    assert 'x1="0" y1="0.25" x2="0" y2="1"' in group  # the S lead
+
+
+def test_a_fan_out_leg_ending_on_the_port_draws_its_lead():
+    """HL17, layout-0158: a harness line's leg ends on its pin as a wire does, so the lead draws."""
+    drawing_set = _drawing_set("fl")
+    sheet = _sheet_format("fl")
+    page = _page("fl", drawing_set=drawing_set, sheet_format=sheet)
+    item, fn, port = _pin("fl", "X6")
+    placement = _placement("fl", function=fn, page=page, x=0, y=0)
+    at = _local(0, 1, placement=placement)  # the S port
+    other_item, other_fn, other_port = _pin("fl-other", "X6b")
+    conductor = _conductor("fl", a=port.id, b=other_port.id)
+    leg = FanLeg(
+        index=0,
+        conductor=conductor.id,
+        points=(
+            RoutePoint(index=0, x=at[0], y=at[1] + 32),
+            RoutePoint(index=1, x=at[0], y=at[1] + 8),
+            RoutePoint(index=2, x=at[0], y=at[1]),
+        ),
+    )
+    key = ("harness_fan_out", "fl")
+    fan = HarnessFanOut(
+        id=make_id(HarnessFanOut, key),
+        key=key,
+        page=page.id,
+        harness=item.id,
+        branch=1,
+        x=at[0],
+        y=at[1] + 32,
+        legs=(leg,),
+        produced_by="test",
+    )
+    records = (drawing_set, sheet, page, item, fn, port, placement, other_item, other_fn)
+    model = _model(*records, other_port, conductor, fan)
 
     group = symbols_group(model, page)
     assert group.count("<line") == 1

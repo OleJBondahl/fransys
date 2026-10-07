@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import printed_designation
 from fransys_model.derive.cable_drawing import (
     block_cables,
+    block_wires,
     cable_block_key,
     cable_heading,
     core_text,
@@ -30,7 +31,7 @@ from ._cable_pen import Pen
 from ._style import style_block
 
 if TYPE_CHECKING:
-    from fransys_model.derive import HarnessCable, HarnessCore
+    from fransys_model.derive import HarnessCable
     from fransys_model.kernel import Model
 
 
@@ -64,20 +65,21 @@ _LABEL_BELOW = {BlockRow.TOP: False, BlockRow.BOTTOM: True}
 
 
 def _cells(model: Model, pen: Pen, block: CableBlock, end: EndBox, *, dashed: bool) -> str:
-    """One marking per pin cell, centred on its core's x, and a divider between neighbours."""
-    markings = {
-        pin.port: pin.marking for pin in drawn_pins(model, block.subject, end.item, block.unit)
-    }
-    half = Decimal(block.pitch) / 2
+    """One marking per pin cell, centred on the cell, and a divider on each cell's left edge.
+
+    The cell's width is layout's (layout-0152), so its edge is half that from x.
+    """
+    pins = {pin.port: pin for pin in drawn_pins(model, block.subject, end.item, block.unit)}
     top = end.y + Decimal(end.height - pen.font_g) / 2
     parts = []
     for n, cell in enumerate(end.pins):
+        pin = pins[cell.port]
         if n:
-            edge = cell.x - half
+            edge = cell.x - Decimal(cell.width) / 2
             parts.append(
                 pen.line("pin-cell", (edge, end.y), (edge, end.y + end.height), dashed=dashed)
             )
-        parts.append(pen.text("pin", (cell.x, top), markings[cell.port], middle=True))
+        parts.append(pen.text("pin", (cell.x, top), pin.marking, middle=True))
     return "".join(parts)
 
 
@@ -103,8 +105,8 @@ def _end(model: Model, pen: Pen, block: CableBlock, end: EndBox) -> str:
     return "".join(parts) + _cells(model, pen, block, end, dashed=dashed)
 
 
-def _wire(pen: Pen, wire: CoreWire, core: HarnessCore, *, link: bool) -> str:
-    """One core: its two runs, stopping at the cable box (a stub is a run), and its text.
+def _wire(pen: Pen, wire: CoreWire, text: str, *, link: bool) -> str:
+    """One core or single wire: its two runs and its text, from layout's points (HA-H1 A1).
 
     The text reads upward along the wire; a row link's reads level, centred on the point (L1).
     """
@@ -112,7 +114,6 @@ def _wire(pen: Pen, wire: CoreWire, core: HarnessCore, *, link: bool) -> str:
         pen.polyline("core", tuple((point.x, point.y) for point in run))
         for run in (wire.run_a, wire.run_b)
     )
-    text = core_text(core)
     if link:
         top = Decimal(wire.text_y) - Decimal(pen.font_g) / 2
         return runs + pen.text("core", (wire.text_x, top), text, middle=True)
@@ -125,12 +126,13 @@ def _render_block(model: Model, block: CableBlock) -> str:
     profile = profile_of(model)
     pen = Pen(sheet.module_mm, profile.text_height, profile.marker_padding)
     cables = block_cables(model, block.subject, block.unit)
-    cores = {core.conductor: core for cable in cables for core in cable.cores}
+    texts = {core.conductor: core_text(core) for cable in cables for core in cable.cores}
+    texts |= {w.conductor: w.text for w in block_wires(model, block.subject, block.unit)}
     links = set(row_links(model, block.subject, block.unit))
     body = _boxes(model, pen, block, cables)
     body += "".join(_end(model, pen, block, end) for end in _of_block(model, EndBox, block))
     body += "".join(
-        _wire(pen, wire, cores[wire.conductor], link=wire.conductor in links)
+        _wire(pen, wire, texts[wire.conductor], link=wire.conductor in links)
         for wire in _of_block(model, CoreWire, block)
     )
     return pen.svg(block.width, block.height, style_block(sheet.module_mm) + body)

@@ -149,7 +149,13 @@ def nav_sections(
     """The nav entries after Home, in order; a plain path is a page, Roadmap, after Examples."""
     return [
         ("Guide", guide),
-        ("Part files", [("Part file contract", "contracts/part-file.md")]),
+        (
+            "Part files",
+            [
+                ("Part file contract", "contracts/part-file.md"),
+                ("Part file connectors", "contracts/part-file-connectors.md"),
+            ],
+        ),
         ("Examples", [("Overview", "examples/index.md"), *gallery]),
         ("Roadmap", "roadmap.md"),
         ("API", api),
@@ -176,7 +182,8 @@ def stage(examples: Path) -> None:
     guide = stage_guide()
     stage_llms(guide)
     (SRC / "contracts").mkdir()
-    shutil.copy2(ROOT / "docs" / "contracts" / "part-file.md", SRC / "contracts" / "part-file.md")
+    for name in ("part-file.md", "part-file-connectors.md"):
+        shutil.copy2(ROOT / "docs" / "contracts" / name, SRC / "contracts" / name)
     gallery = site_gallery.build_gallery(examples, SRC, SNIPPETS)
     stage_roadmap()
     sections = nav_sections(guide, gallery, stage_api())

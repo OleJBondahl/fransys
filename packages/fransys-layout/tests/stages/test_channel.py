@@ -9,8 +9,8 @@ from itertools import permutations
 from cable_checks import assert_no_shared_stretch, assert_on_the_grid, assert_outside_the_box
 from cable_facts import block_facts
 
-from fransys_layout.engines.cable.channel import plan_channel, plan_links, rise
 from fransys_layout.engines.cable.place import place_block
+from fransys_layout.stages.channel import plan_channel, plan_links, rise
 
 F1 = [(0, 0), (0, 1), (0, 2)]  # top: one end of 3 pins; bottom: three ends of one pin
 F2 = [(0, 0), (0, 1), (1, 0), (1, 1)]  # A1-C1, A2-D1, B1-C2, B2-D2: cores 2 and 3 swap columns

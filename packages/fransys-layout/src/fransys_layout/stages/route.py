@@ -181,7 +181,7 @@ def _edges(
         if any(ref.function not in placed_of for ref in (conductor.a, conductor.b)):
             continue
         for ref in (conductor.a, conductor.b):
-            ends[located(ref)] = _end(ref, placed_of, drawn_of)
+            ends[located(ref)] = port_end(ref, placed_of, drawn_of)
         edges.append(
             Edge(
                 connection=conductor.handle,
@@ -194,7 +194,7 @@ def _edges(
     for group in net_groups:
         on_page = [ref for ref in group.ports if ref.function in placed_of]
         for ref in on_page:
-            ends[located(ref)] = _end(ref, placed_of, drawn_of)
+            ends[located(ref)] = port_end(ref, placed_of, drawn_of)
         for first, second in _tree(on_page, ends, placed_of):
             edges.append(
                 Edge(
@@ -208,7 +208,7 @@ def _edges(
     return edges, ends
 
 
-def _end(
+def port_end(
     ref: PortRef,
     placed_of: Mapping[Handle, PlacedFunction],
     drawn_of: Mapping[Handle, DrawnFunction],

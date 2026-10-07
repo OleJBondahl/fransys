@@ -141,16 +141,20 @@ def test_demo_library_record_counts_and_keys():
     PIN-LABELS adds `ctrl-8.toml` (4 functions/16 ports),
     ACCESSORY-HOLDER adds `jumper-bar-3p.toml` (no function, no port),
     GND-NAME adds `psu-24v-pm.toml` (2 functions/4 ports),
-    so 47 parts, 99 templates, 237 ports, 45 links, 40 symbol choices)."""
+    HA7 adds `housing-4f.toml` and `housing-4m.toml` (1 function/4 ports/1 symbol choice each),
+    HA8 adds `crimp-contact-f.toml` and `crimp-contact-m.toml` (no function, no port),
+    HA4 adds `relay-mod-2.toml` (5 functions/12 ports/4 symbol choices, 6 header joins),
+    HA5 adds `contactor-leads.toml` (2 functions/4 ports/2 symbol choices, 1 link),
+    so 53 parts, 108 templates, 261 ports, 46 links, 48 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 47
-    assert len(function_templates(model)) == 99
-    assert len(port_templates(model)) == 237
-    assert len(internal_links(model)) == 45
-    assert len(model.tables["layout.symbol_choice"]) == 40
+    assert len(parts(model)) == 53
+    assert len(function_templates(model)) == 108
+    assert len(port_templates(model)) == 261
+    assert len(internal_links(model)) == 46
+    assert len(model.tables["layout.symbol_choice"]) == 48
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")
@@ -553,3 +557,25 @@ def test_demo_redundancy_module_takes_class_code_r():
     codes = {p.mpn: p.class_code for p in parts(model).values() if p.mpn.startswith("DEMO-RED")}
     assert codes == {"DEMO-RED-2IN": "R", "DEMO-RED-2IN-NET": "R"}
     assert {p.class_code for p in parts(model).values() if p.mpn.startswith("DEMO-IO-")} == {"U"}
+
+
+def test_demo_housings_name_the_parts_they_mate_with():
+    """HA7 / parts-0016: `mates` is data on the connector facet; schema version 10."""
+    from fransys_model.kernel import SCHEMA_VERSION, freeze
+    from fransys_model.vocab import function_templates, parts
+    from fransys_model.vocab.facets.connector import ConnectorFacet
+    from fransys_model.vocab.tables import facets_of
+
+    model = freeze(fransys_parts.load_path(DEMO))
+    mpn_of = {p.id: p.mpn for p in parts(model).values()}
+    template_mpn = {t.id: mpn_of[t.part] for t in function_templates(model).values()}
+    mates = {
+        template_mpn[f.subject]: f.mates
+        for f in facets_of(model, ConnectorFacet).values()
+        if template_mpn[f.subject].startswith("DEMO-HSG-")
+    }
+    assert mates == {
+        "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
+        "DEMO-HSG-4M": ("DEMO-HSG-4F",),
+    }
+    assert SCHEMA_VERSION == 10

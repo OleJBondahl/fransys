@@ -6,7 +6,15 @@ from typing import TYPE_CHECKING
 from graphical_symbols.geometry import Line
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.layout import Label, LabelKind, LinkMarker, Route, layout_of, page_slice
+from fransys_model.layout import (
+    HarnessFanOut,
+    Label,
+    LabelKind,
+    LinkMarker,
+    Route,
+    layout_of,
+    page_slice,
+)
 from fransys_model.layout import Page as PageRecord
 from fransys_model.vocab import ports
 
@@ -34,13 +42,17 @@ def _absolute(placement: SymbolPlacement, local_x: float, local_y: float) -> tup
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _page_ends(model: Model) -> dict[Id[Page], _Ends]:
-    """Per page: every route endpoint (either end, D8) and every link marker's own `(x, y)`."""
+    """Per page: each route end (D8) and leg pin end (HL17), and each marker's `(x, y)`."""
     out: dict[Id[Page], _Ends] = {}
     for page in layout_of(model, PageRecord).values():
         ends = frozenset(
             (route.points[end].x, route.points[end].y)
             for route in page_slice(model, Route, page)
             for end in (0, -1)
+        ) | frozenset(
+            (leg.points[-1].x, leg.points[-1].y)
+            for fan in page_slice(model, HarnessFanOut, page)
+            for leg in fan.legs
         )
         out[page.id] = ends, frozenset((m.x, m.y) for m in page_slice(model, LinkMarker, page))
     return out
@@ -51,7 +63,7 @@ def _ends_of(model: Model, page: Page) -> _Ends:
 
 
 def _route_ends(model: Model, page: Page) -> frozenset[_Grid]:
-    """Every route endpoint on `page`, in grid units (either end, D8)."""
+    """Every route end (D8) and leg pin end (HL17) on `page`, in grid units."""
     return _ends_of(model, page)[0]
 
 

@@ -123,6 +123,8 @@ class PortTemplate:
     nothing", any other string is printed as given. `pole_side` and `conductor_mark` are the
     pin's facts (decision model-0126; F9): which side of a switching device it is on, and its
     IEC 60445 conductor designation. `None` means not stated. PE stays `role = PE`.
+    `joins` (decision parts-0017; HA4) is a header pin's function port, on the same part: the two
+    are one pin with no conductor between, and net closure joins them.
     """
 
     id: Id[PortTemplate]
@@ -133,6 +135,7 @@ class PortTemplate:
     marking: str | None = None
     pole_side: PoleSide | None = None
     conductor_mark: ConductorMark | None = None
+    joins: Id[PortTemplate] | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

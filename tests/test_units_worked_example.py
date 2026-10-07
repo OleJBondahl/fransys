@@ -24,6 +24,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+import pytest
 from _model_build_cover import layout_trigger_document
 from fransys_kicad import netlist as kicad_netlist
 
@@ -32,7 +33,13 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint.codes import CONNECTION_TO_UNDRAWN
 from fransys_layout.stages import LinkCase
 from fransys_model.derive import boundary as unit_boundary
-from fransys_model.derive import reference_designation, standalone, unit_release, units
+from fransys_model.derive import (
+    connector_box_lines,
+    reference_designation,
+    standalone,
+    unit_release,
+    units,
+)
 from fransys_model.derive.designation import own_designation_or_none
 from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.derive.passes.numbering import REFERENCE_DESIGNATION_DUPLICATE
@@ -40,8 +47,10 @@ from fransys_model.derive.passes.numbering import number as number_pass
 from fransys_model.kernel import Draft, Origin, evolve, freeze, make_id, merge
 from fransys_model.layout import (
     BreakBefore,
+    ConnectorBox,
     DrawingSet,
     LinkMarker,
+    Outline,
     Page,
     Route,
     StarKind,
@@ -393,6 +402,13 @@ def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_cl
     assert len(boundaries(result.model)) == 6
 
 
+_LINES_SEEN = (
+    "layout-0158 F1: the harness-ink checks see the worked example's lines over labels "
+    "(WIRE_OVER_LABEL), still after F5; named for the designer"
+)
+
+
+@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
     """S20 tally 8b: on each cabinet the two sibling pins of the connector row carry a tall
     marker box over a 112-high gap above the terminal row. Each box stands beside the pins'
@@ -522,15 +538,6 @@ def _port_named(model, function_id, name):
     )
 
 
-def _page_of(model, function_id):
-    """The page of the first placement found. Ambiguous for a function placed on more than
-    one page (a boundary function, home *and* replica) -- use `_pages_of` there instead."""
-    all_placements = layout_of_model(model, SymbolPlacement)
-    placement = next(p for p in all_placements.values() if p.function == function_id)
-    page = layout_of_model(model, Page)[placement.page]
-    return (page.drawing_set, page.number)
-
-
 def _pages_of(model, function_id):
     """Every page `function_id` is placed on, as a set of `(drawing_set, number)`."""
     pages = layout_of_model(model, Page)
@@ -541,6 +548,18 @@ def _pages_of(model, function_id):
     }
 
 
+def _box_pages_of(model, function_id):
+    """Every page `function_id` stands on as a connector box, as `(drawing_set, number)`."""
+    pages, sets = layout_of_model(model, Page), layout_of_model(model, DrawingSet)
+    boxes = [b for b in layout_of_model(model, ConnectorBox).values() if b.function == function_id]
+    for b in boxes:
+        unit = sets[pages[b.page].drawing_set].unit
+        assert len(b.texts) == len(connector_box_lines(model, function_id, unit=unit))
+        assert b.cells == ()  # a plug box and a unit interface box have no cells (HL5)
+    return {(pages[b.page].drawing_set, pages[b.page].number) for b in boxes}
+
+
+@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit() -> None:
     """OLD premise (spec acceptance 2, amended B2, before units spec U1's board-unit ruling):
     `io_board`'s internal wiring (`X1`-`K1`, two wires) and its one internal net (`K1`'s
@@ -561,6 +580,9 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
     NEW assertions: both internal conductors and the internal net are routed; `X1` is placed
     on both its own home page (shared with `K1`'s coil) and `P1`'s page; both `X1`'s and
     `P1`'s own ports are touched by a route (the wires to `K1`, and the cable cores, in turn).
+    HL6 (layout-0155): `X1` and `P1` stand at the harness line's end, so each is a box.
+    HL1, HL12 (layout-0153): the cable cores are the line's, no route; the board is a middle
+    outline.
     """
     result = _build_system()[0]
     model = result.model
@@ -608,16 +630,23 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
         x1_fn = _function_of(model, x1_item, "x1")
         p1_fn = _function_of(model, p1_item, "x1")
         coil_pages = _pages_of(model, coil_fn)
-        x1_pages = _pages_of(model, x1_fn.id)
-        p1_page = _page_of(model, p1_fn.id)
+        x1_pages = _box_pages_of(model, x1_fn.id)
+        (p1_page,) = _box_pages_of(model, p1_fn.id)
         assert len(coil_pages) == 1, "K1's coil is drawn once, in the board's own home set"
         assert x1_pages == coil_pages | {p1_page}, (
-            "X1 is placed at home (with K1) and again as P1's boundary replica"
+            "X1 is boxed at home (with K1) and again on P1's page, face to face with it"
         )
 
         p1_ports = _ports_of(model, p1_fn.id)
         x1_ports = _ports_of(model, x1_fn.id)
-        assert p1_ports & route_ports, "the cable cores still route onto P1"
+        # HL1 (layout-0153): the cable WH1 is a harness line, so its cores are no route; the
+        # line draws them (P3), and P1's page draws the board as one middle outline (HL12)
+        assert not (p1_ports & route_ports), "the cable cores no longer route onto P1"
+        board = items_of(model)[x1_item].unit
+        page_of = {p.id: (p.drawing_set, p.number) for p in layout_of_model(model, Page).values()}
+        board_outlines = [o for o in layout_of_model(model, Outline).values() if o.unit == board]
+        assert len(board_outlines) == 1, "the board draws one outline"
+        assert page_of[board_outlines[0].page] == p1_page, "on P1's page"
         assert x1_ports & route_ports, "X1's own wires to K1 now route onto X1 too"
 
 

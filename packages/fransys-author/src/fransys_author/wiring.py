@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Protocol
 lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, make_id
-from fransys_model.vocab import Conductor, ConductorKind, WireFacet
+from fransys_model.vocab import Conductor, ConductorKind, HarnessFacet, WireFacet
 
 from ._decimal import as_decimal
 from ._keys import scoped, sorted_pair, spliced
@@ -16,6 +16,8 @@ lazy from .handles import Port, as_port
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Origin, Record
+
+    from .handles import Group, Item, Location
 
 _MINIMUM_RUN_POINTS = 2
 
@@ -94,17 +96,29 @@ _LINK_KINDS = {
     "mount": ConductorKind.MOUNT,
     "bus": ConductorKind.BUSBAR,
     "rail": ConductorKind.RAIL,
+    "lead": ConductorKind.LEAD,
 }
 
 
 class _Linkable(Protocol):
-    """What `LinkScope.link` reads of its `Scope`."""
+    """What `LinkScope` reads of its `Scope`."""
 
     @property
     def _prefix(self) -> AuthoringKey: ...
 
     @property
     def _design(self) -> _Recorder: ...
+
+    def item(  # noqa: PLR0913 -- the `Scope.item` keywords a harness passes
+        self,
+        mpn: None,
+        *,
+        name: str | None,
+        tag: str | None,
+        at: Location | None,
+        group: Group | None,
+        external: bool,
+    ) -> Item: ...
 
 
 class LinkScope:
@@ -113,7 +127,7 @@ class LinkScope:
     __slots__ = ()
 
     def link(self: _Linkable, a: Port, b: Port, *, kind: str) -> None:
-        """A link, `"mount"`, `"bus"` or `"rail"`: closes its net, never a wire (author-0012)."""
+        """A link (`mount`, `bus`, `rail` or `lead`): closes its net, never a wire (author-0012)."""
         if kind not in _LINK_KINDS:
             msg = f"{kind!r} is not a valid link kind; valid: {', '.join(_LINK_KINDS)}"
             raise AuthorError(msg)
@@ -131,3 +145,19 @@ class LinkScope:
             carrier=None,
         )
         self._design._add(conductor, caller_origin())
+
+    def harness_item(
+        self: _Linkable,
+        name: str | None,
+        tag: str | None,
+        at: Location | None,
+        group: Group | None,
+        *,
+        external: bool,
+    ) -> Item:
+        """The part-less item of `Scope.harness`, with its `facet.harness` mark (HA1)."""
+        item = self.item(None, name=name, tag=tag, at=at, group=group, external=external)
+        key = scoped(item.key, "harness_facet")
+        facet = HarnessFacet(id=make_id(HarnessFacet, key), key=key, subject=item.id)
+        self._design._add(facet, caller_origin())
+        return item

@@ -11,11 +11,21 @@ a layer imports only the layers to its right (`derive` -> `layout` -> `vocab` ->
 design/foundations.md 4).
 """
 
+from itertools import islice
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.kernel import Id, Model, SchemaError, parent_chain
+from fransys_model.kernel import (
+    DIGEST_CACHE_SIZE,
+    Id,
+    Model,
+    SchemaError,
+    digest_cached,
+    parent_chain,
+)
 
-from .tables import items
+from .facets.harness import HarnessFacet
+from .leads import fitted_on_leads
+from .tables import facets_of, items
 from .tables import units as units_table
 from .unit_index import unit_index
 lazy from .core import Function, Item, Unit
@@ -174,12 +184,32 @@ def cable_children(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
 
 
 def is_harness(model: Model, item: Id[Item]) -> bool:
-    """Whether `item` is a harness: any child by `Item.parent` is a cable (`is_cable`).
+    """Whether `item` is a harness: it carries `facet.harness`, or a child is a cable (`is_cable`).
 
-    A harness is a plain `Item` whose children say so: no record kind, no new facet.
-    A container with no cable child reads flat, whatever else it holds (a rack, a strip).
+    A harness is a plain `Item`, marked by the author (HA1, model-0171) or by the cable under it.
+    A container with neither reads flat, whatever else it holds (a rack, a strip).
     """
-    return bool(cable_children(model, item))
+    return item in marked_harnesses(model) or bool(cable_children(model, item))
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def marked_harnesses(model: Model) -> frozenset[Id[Item]]:
+    """The items that carry `facet.harness`: the one read of the mark (HA1)."""
+    return frozenset(facet.subject for facet in facets_of(model, HarnessFacet).values())
+
+
+def designating_ancestors(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
+    """Every enclosing board, harness or leads-parent of `item`, outermost first; never `item`.
+
+    Cycle-safe: `enclosing_boards`, `is_harness`, or the parent of an item `fitted_on_leads`
+    (HA6); never a rack or strip. An unknown `item` gives `()`.
+    """
+    if items(model).get(item) is None:
+        return ()
+    boards = frozenset(enclosing_boards(model, item))
+    fitted = items(model)[item].parent if fitted_on_leads(model, item) else None
+    above = islice(item_chain(model, item), 1, None)
+    return tuple(reversed([n for n in above if n in boards or n == fitted or is_harness(model, n)]))
 
 
 def in_unit_subtree(model: Model, item: Id[Item], unit: Id[Unit]) -> bool:

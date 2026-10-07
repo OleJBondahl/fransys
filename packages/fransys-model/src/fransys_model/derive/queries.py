@@ -19,6 +19,7 @@ from .harness import (
     top_level_cables,
     unit_cables,
 )
+from .harness_wires import harness_wires
 from .lookups import (
     effective_placement,
     item_description,
@@ -87,6 +88,7 @@ __all__ = [
     "ext_usage",
     "first_leg",
     "harness_cables",
+    "harness_wires",
     "is_black_box_item",
     "is_plc_module",
     "is_sole_unit_root",

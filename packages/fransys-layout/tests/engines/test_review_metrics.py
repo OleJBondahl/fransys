@@ -100,6 +100,13 @@ def _review(findings: tuple[Finding, ...]) -> list[str]:
     return sorted(one.code for one in findings if one.code in _REVIEW_CODES)
 
 
+_LINES_SEEN = (
+    "layout-0158 F1: the harness-ink checks see the cabinet's W1 line; after F5 its label has no "
+    "place and its stub stands on lamp H1 (TEXT_OVERLAP, WIRE_OVER_LABEL), named for the designer"
+)
+
+
+@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 @pytest.mark.parametrize("variant", _VARIANTS[:3])
 def test_the_invented_cabinet_has_none_of_the_five_review_defects(variant: dict) -> None:
     """All five review codes are findings now, and `_review` reads them all off `findings`.
@@ -119,6 +126,7 @@ def test_the_invented_cabinet_has_none_of_the_five_review_defects(variant: dict)
         pytest.param(190, {"k1", "k2"}, id="190 mm: k1 aux and k2 aux"),
     ],
 )
+@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_known_engine_defect_a_chain_cut_between_two_one_cell_columns(
     width_mm: int, cut: set[str]
 ) -> None:

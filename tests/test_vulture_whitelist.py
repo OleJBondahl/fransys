@@ -59,7 +59,15 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # decision 0115: the count leaves out an OTHER entry that cites a reader in another package
 # (148 entries at CT5-2, of which 36 are cross-package OTHER)
 # - nominal_current_a (RATINGS-3 `draw` reads it): one fewer counted entry
-WHITELIST_CEILING = 111
+# + _.dashed (BD-3: render defines its own dashed params, so 0115's cross-package exemption
+# does not apply)
+# 112: _.dashed read by fransys-render/_diagram_boxes.py; render defines its own `dashed`
+# (owner 2026-10-07: ceilings may rise; cleanup round 2026-10-08 lowers)
+# +1: CableBlock.pitch read only by layout tests (CELL-WIDTH); owner 2026-10-07: ceilings may
+# rise; cleanup round 2026-10-08 lowers
+# +1: Design.rack read only by author tests (HA-B B6); owner 2026-10-07: ceilings may rise;
+# cleanup round 2026-10-08 lowers
+WHITELIST_CEILING = 114
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 ROOT-LINES names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(

@@ -14,12 +14,14 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.read.units import (
     boundary_edges,
+    function_unit,
     top_boundary_edges,
     top_level_unit,
 )
 from fransys_layout.stages.offstubs import OffEnd, OffReads, PortText, bridge, mate_stub
 from fransys_layout.stages.types import StubText
-from fransys_model.derive.designation import item_designation, port_designation
+from fransys_model.derive import draws_as_line
+from fransys_model.derive.designation import port_designation, printed_designation
 from fransys_model.derive.drawing_text import stub_far_end
 from fransys_model.kernel import parent_chain
 from fransys_model.vocab.tables import conductors, items, mates, ports
@@ -130,9 +132,12 @@ def _stub_end(
     """C21: the one build of an off stub's `PortText` and `OffEnd`, at `near` naming `far`."""
     function = ports(model)[far].function
     far = maps.by_name.get((maps.partner.get(function), ports(model)[far].name), far)
-    cable = "" if carrier is None else "-" + item_designation(model, carrier)
-    head, tail = stub_far_end(model, far, near)
-    text = StubText(cable=cable, far=head, port=tail)
+    unit = function_unit(model, ports(model)[near].function)
+    cable = "" if carrier is None else printed_designation(model, carrier, unit=unit)
+    head, tail = stub_far_end(model, far, near, unit=unit)
+    # HL18: a carrier that draws as a line names no far port, as `off_stub_text` prints it
+    line = carrier is not None and draws_as_line(model, carrier)
+    text = StubText(cable=cable, far=head, port=tail, line=line)
     return PortText(port=near, text=text), OffEnd(port=near, text=text, carrier=carrier, far=far)
 
 

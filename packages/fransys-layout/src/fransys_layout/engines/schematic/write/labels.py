@@ -32,7 +32,7 @@ def outlines(
     for one in layout.outlines:
         real, pin = real_function(keys, one.lead)
         pin_part = (pin,) if pin is not None else ()
-        extra = discriminator[one.lead, one.drawing_set, one.page]
+        extra = _extra(discriminator, page_of, (one.lead, one.drawing_set, one.page))
         subject = (*keys.unit[one.unit], *keys.function[real], *pin_part)
         key = (*PREFIX, "outline", *subject, *extra)
         records.append(
@@ -73,7 +73,7 @@ def labels(
         else:
             real, pin = real_function(keys, label.subject)
             tail = keys.function[real]
-            extra = discriminator[label.subject, label.drawing_set, label.page]
+            extra = _extra(discriminator, page_of, (label.subject, label.drawing_set, label.page))
         written_slot = label.slot
         if not marking and pin is not None and label.slot == "tag.pin":
             written_slot = f"tag.pin.{pin}"  # R7 A: the pin view's pin, for render
@@ -105,3 +105,14 @@ def labels(
             )
         )
     return records
+
+
+def _extra(
+    discriminator: Mapping[tuple[Id[Any], int, int], AuthoringKey],
+    page_of: Mapping[PageId, Page],
+    where: tuple[Id[Any], int, int],
+) -> AuthoringKey:
+    """A subject's placement discriminator; a middle title's lead has none, so its page's key."""
+    if where in discriminator:
+        return discriminator[where]
+    return ("on", *page_of[where[1], where[2]].key[len(PREFIX) :])

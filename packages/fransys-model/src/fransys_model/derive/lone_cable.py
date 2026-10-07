@@ -5,14 +5,15 @@ Reached as `fransys_model.derive.lone_cable.<name>`, not re-exported from `deriv
 
 from fransys_model.vocab.membership import cable_children
 from fransys_model.vocab.tables import items
+from fransys_model.vocab.wire_harness import harnesses_with_wires
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 
 
 def lone_cable(model: Model, harness: Id[Item]) -> Id[Item] | None:
-    """The one cable `harness` prints as, when it has no part and exactly one cable child."""
+    """The one cable `harness` prints as: no part, one cable child and no single wire (HA2)."""
     record = items(model).get(harness)
-    if record is None or record.part is not None:
+    if record is None or record.part is not None or harness in harnesses_with_wires(model):
         return None
     cables = cable_children(model, harness)
     return cables[0] if len(cables) == 1 else None

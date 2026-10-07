@@ -83,7 +83,8 @@ def placements(
                 Placement(
                     unit=unit,
                     columns=chunk,
-                    width=sum(width_of[key] for key in chunk),
+                    # HL21: a whole unit group is as wide as it folds, not its columns' sum
+                    width=unit.width if len(chunks) == 1 else sum(width_of[k] for k in chunk),
                     starts_page=index > 0 or unit.break_before or unit.width > content_width,
                 )
             )

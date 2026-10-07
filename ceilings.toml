@@ -20,13 +20,13 @@ surface_docstring_lines = 15
 "packages/fransys-author/src/fransys_author/design.py::Scope.symbol" = 17
 "packages/fransys-author/src/fransys_author/handles.py::Strip.terminal" = 19
 "packages/fransys-kicad/src/fransys_kicad/_sexpr.py::_read" = 17
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_results" = 46
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_results" = 58
 "packages/fransys-layout/src/fransys_layout/engines/schematic/read/views.py::item_views" = 36
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/labels.py::labels" = 20
-"packages/fransys-layout/src/fransys_layout/engines/schematic/write/placements.py::placements" = 20
+"packages/fransys-layout/src/fransys_layout/engines/schematic/write/placements.py::placements" = 23
 "packages/fransys-layout/src/fransys_layout/lint/_jogs.py::_chains" = 18
 "packages/fransys-layout/src/fransys_layout/lint/chains.py::lint_chains" = 18
-"packages/fransys-layout/src/fransys_layout/lint/geometric.py::lint_geometry" = 25
+"packages/fransys-layout/src/fransys_layout/lint/geometric.py::lint_geometry" = 26
 "packages/fransys-layout/src/fransys_layout/stages/_labelling.py::home" = 29
 "packages/fransys-layout/src/fransys_layout/stages/attach.py::_with_attached" = 19
 "packages/fransys-layout/src/fransys_layout/stages/attach.py::attach_feeders" = 32
@@ -55,7 +55,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::replicate_boundaries" = 21
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::replicate_terminals" = 25
 "packages/fransys-layout/src/fransys_layout/stages/resolve.py::resolve" = 16
-"packages/fransys-layout/src/fransys_layout/stages/route.py::_end" = 18
+"packages/fransys-layout/src/fransys_layout/stages/route.py::port_end" = 18
 "packages/fransys-layout/src/fransys_layout/stages/route.py::route" = 24
 "packages/fransys-layout/src/fransys_layout/stages/terminal_rows.py::join_terminal_rows" = 18
 "packages/fransys-layout/src/fransys_layout/stages/terminal_rows.py::terminal_chains" = 20
@@ -96,7 +96,7 @@ surface_docstring_lines = 15
 "packages/fransys-pdf/src/fransys_pdf/checks.py::check" = 16
 "packages/fransys-render/src/fransys_render/_labels.py::_contact_image" = 17
 "packages/fransys-render/src/fransys_render/_markers.py::_text_element" = 16
-"packages/fransys-render/src/fransys_render/_markers.py::markers_group" = 21
+"packages/fransys-render/src/fransys_render/_markers.py::markers_group" = 22
 "packages/fransys/src/fransys/_layout_need.py::symbol_port_missing_finding" = 16
 "packages/fransys/src/fransys/pipeline.py::_pin_source" = 16
 "packages/fransys/src/fransys/pipeline.py::_seed_assigned_for_unit" = 17
@@ -136,18 +136,18 @@ surface_docstring_lines = 15
 "packages/fransys-render/src/fransys_render/_leads.py::visible_symbol" = 1
 
 [module_code_lines]
-"packages/fransys-author/src/fransys_author/design.py" = 723
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 327
-"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 307
-"packages/fransys-layout/src/fransys_layout/stages/place.py" = 623
+"packages/fransys-author/src/fransys_author/design.py" = 736
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 388
+"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 317
+"packages/fransys-layout/src/fransys_layout/stages/place.py" = 625
 "packages/fransys-model/src/fransys_model/derive/designation.py" = 373
-"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 504
-"packages/fransys-model/src/fransys_model/derive/rows.py" = 324
+"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 512
+"packages/fransys-model/src/fransys_model/derive/rows.py" = 331
 "packages/fransys-parts/src/fransys_parts/lint.py" = 514
 "packages/fransys-pdf/src/fransys_pdf/_frame.py" = 486
 "packages/fransys-pdf/src/fransys_pdf/_lists.py" = 343
 "packages/fransys-pdf/src/fransys_pdf/checks.py" = 437
-"packages/fransys/src/fransys/pipeline.py" = 756
+"packages/fransys/src/fransys/pipeline.py" = 758
 
 [docstring_lines]
 "packages/fransys-author/src/fransys_author/handles.py::Item.__getitem__" = 6
@@ -193,13 +193,15 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"packages/fransys/src/fransys/guide/findings.md" = 6671
+"docs/DESIGN.md" = 5021
+"packages/fransys/src/fransys/guide/findings.md" = 6906
 
 [md_long_sentences]
-"CLAUDE.md" = 8
+"CLAUDE.md" = 9
 "docs/DESIGN.md" = 4
 "docs/ROADMAP.md" = 2
-"docs/contracts/part-file.md" = 5
+"docs/contracts/part-file-connectors.md" = 2
+"docs/contracts/part-file.md" = 3
 "packages/electrical-symbols/CLAUDE.md" = 7
 "packages/electrical-symbols/README.md" = 1
 "packages/electrical-symbols/docs/IEC_HANDLING.md" = 4

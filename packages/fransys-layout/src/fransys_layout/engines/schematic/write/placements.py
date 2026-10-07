@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.engines.schematic.write.keys import PREFIX, real_function, view_of
 from fransys_layout.geometry import default_order, default_sides, draw_order, generic_box_geometry
 from fransys_layout.geometry import library_version as symbol_library_version
+from fransys_layout.stages.box_views import drawn_hidden
 from fransys_layout.stages.types import Home
 from fransys_model.kernel import make_id
 from fransys_model.layout import PlacementView, Side, SymbolPlacement
@@ -29,7 +30,7 @@ def placements(
     stamp: str,
 ) -> tuple[list[SymbolPlacement], dict[tuple[Id[Any], int, int], AuthoringKey]]:
     """The symbol placements, and each one's discriminator for the labels drawn on it."""
-    nodes = keys.aspect_node
+    nodes, layout = keys.aspect_node, results.layout
     columns = {column.key: column for column in results.columns}
     records = []
     discriminator: dict[tuple[Id[Any], int, int], AuthoringKey] = {}
@@ -39,7 +40,9 @@ def placements(
         for cell in column.cells
         if cell.home is Home.ELSEWHERE
     }
-    for placed in results.layout.placed:
+    # HL6: a boxed pin view draws no symbol, but where a marker stands at it on its page
+    hidden = set(drawn_hidden(layout.placed, frozenset(results.hidden), layout.markers))
+    for placed in layout.placed:
         extra: AuthoringKey = ()
         if (placed.function, placed.column) in away:
             group = columns[placed.column].group
@@ -52,6 +55,8 @@ def placements(
         # an item view stands on a function drawn apart too
         extra = (*extra, "view") if view is PlacementView.ITEM else extra
         discriminator[placed.function, placed.drawing_set, placed.page] = extra
+        if (placed.function, placed.drawing_set, placed.page) in hidden:  # HL6: its box draws it
+            continue
         port_names, port_sides, offsets = _placement_fields(placed, view)
         key = (*PREFIX, "symbol_placement", *keys.function[real], *extra)
         records.append(

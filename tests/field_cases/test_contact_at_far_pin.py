@@ -20,6 +20,7 @@ layout-0125: a keep-out holds the ink drawn, so contacts under adjacent channel 
 
 import tempfile
 from dataclasses import astuple
+from functools import cache
 from hashlib import sha256
 from itertools import combinations, pairwise
 from pathlib import Path
@@ -57,16 +58,26 @@ def _plant(d, *, split: bool = False) -> None:
     d.wire(contactors[4].aux["13"], lamps[4].lamp["2"], wire=(BU, 0.5))
 
 
-def _built(*, split: bool = False) -> tuple:
+@cache
+def _staged(*, split: bool = False, sixteen: bool = False) -> tuple:
+    """The model, the staged layout and its findings of one circuit, built once; read only."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
-    _plant(d, split=split)
+    if sixteen:
+        _plant_16(d)
+    else:
+        _plant(d, split=split)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model))
-    return model, results.layout
+    results, findings = stage_results(model, read_inputs(model))
+    return model, results.layout, findings
+
+
+def _built(*, split: bool = False) -> tuple:
+    model, layout, _ = _staged(split=split)
+    return model, layout
 
 
 def _placed(model, layout, tag: str, name: str) -> list:
@@ -232,15 +243,7 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
     auxiliary contact of a contactor in a second group. The bug: at the house column spacing the
     module was 16 columns wide, so its widened slots could not fit and its contacts stayed home.
     """
-    d = fr.design("demo_parts", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    _plant_16(d)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model))
-    layout = results.layout
+    model, layout, _ = _staged(sixteen=True)
     (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
     keepout = box.geometry.keepout
     assert box.at.x + keepout.x + keepout.width <= read_inputs(model).sheet.content_width
@@ -251,21 +254,13 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
 
 
 def _built_16() -> tuple:
-    d = fr.design("demo_parts", place="CAB")
-    cab = d.location("CAB", "Cabinet")
-    _plant_16(d)
-    cover = Path(tempfile.mkdtemp()) / "cover.md"
-    cover.write_text("# Cabinet\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
-    model = fr.build(d, doc).model
-    results, findings = stage_results(model, read_inputs(model))
-    return results.layout, findings
+    _, layout, findings = _staged(sixteen=True)
+    return layout, findings
 
 
 def _built_with_findings(*, split: bool = False) -> tuple:
-    model, _ = _built(split=split)
-    results, findings = stage_results(model, read_inputs(model))
-    return results.layout, findings
+    _, layout, findings = _staged(split=split)
+    return layout, findings
 
 
 def _drawing(layout) -> str:

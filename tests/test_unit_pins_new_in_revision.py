@@ -3,10 +3,12 @@
 A cabinet unit holds floating relays and board instances (floating tags need a release
 `class_code`, which `_cabinet` gives each release). Revision 1 is released; revision 2 builds
 against it (`releases=`) or releases directly.
-One cabinet and one board release serve every test (the cabinet is built per call, never shared).
+One cabinet and one board release serve every test: released once, copied per test.
+The cabinet is built per call, never shared.
 """
 
 import json
+import shutil
 lazy from pathlib import Path
 
 import fransys as fr
@@ -36,14 +38,21 @@ def _cabinet(revision, *, relays=("k_a", "k_b"), boards=("m1", "m2"), written=No
     return fr.build(parts, design.draft(), releases=releases), cab, board
 
 
-@pytest.fixture
-def released(tmp_path: Path) -> Path:
-    """Revision 1 released into a fresh folder: relays K1, K2; boards U1, U2."""
+@pytest.fixture(scope="module")
+def _released_once(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Revision 1 released once into a folder no test writes to: relays K1, K2; boards U1, U2."""
+    target = tmp_path_factory.mktemp("released")
     result, cab, board = _cabinet(1)
     assert [f for f in fr.check(result) if f.severity is fr.Severity.ERROR] == []
-    fr.release(result, tmp_path, unit=board)
-    fr.release(result, tmp_path, unit=cab)
-    return tmp_path
+    fr.release(result, target, unit=board)
+    fr.release(result, target, unit=cab)
+    return target
+
+
+@pytest.fixture
+def released(_released_once: Path, tmp_path: Path) -> Path:
+    """A private copy of the revision 1 release, for tests that release revision 2 into it."""
+    return shutil.copytree(_released_once, tmp_path / "released")
 
 
 def _texts(target: Path) -> dict[str, str]:

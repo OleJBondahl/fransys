@@ -4,12 +4,13 @@ from typing import Any
 
 from fransys_model.derive.cable_drawing import (
     block_cables,
+    block_wires,
     cable_subject,
+    wire_harness_subjects,
 )
 from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.kernel.ids import render_id
 from fransys_model.vocab.tables import items
-lazy from fransys_model.derive.rows import HarnessCable
 lazy from fransys_model.kernel import Id, Model
 
 
@@ -20,6 +21,10 @@ def block_pairs(model: Model) -> tuple[tuple[Id[Any] | None, Id[Any]], ...]:
     pairs += [
         (all_items[c.cable].unit, cable_subject(model, c.cable)) for c in all_unit_cables(model)
     ]
+    for harness in wire_harness_subjects(model):
+        pairs.append((None, harness))
+        if all_items[harness].unit is not None:
+            pairs.append((all_items[harness].unit, harness))
     return tuple(
         sorted(
             dict.fromkeys(pairs),
@@ -28,17 +33,10 @@ def block_pairs(model: Model) -> tuple[tuple[Id[Any] | None, Id[Any]], ...]:
     )
 
 
-def _shared_pin(cables: tuple[HarnessCable, ...]) -> bool:
-    """CD-H7: whether two cores of the block land on one pin, so their drops would lie together."""
-    ports = [port for cable in cables for core in cable.cores for port in (core.end_a, core.end_b)]
-    return len(ports) != len(set(ports))
-
-
 def drawable(model: Model, subject: Id[Any], unit: Id[Any] | None) -> bool:
     """Whether the engine draws the block of `subject` in `unit`'s reading: the one predicate.
 
-    A block has a cable and no pin that two cores land on (CD-H7). A row link and a cable of row
-    links alone draw (CD5 at L1, CD-H8 at V1).
+    A block has a cable or a single wire; only CD-H6 (overlapping cable boxes) is refused, by the
+    placer.
     """
-    cables = block_cables(model, subject, unit)
-    return bool(cables) and not _shared_pin(cables)
+    return bool(block_cables(model, subject, unit)) or bool(block_wires(model, subject, unit))

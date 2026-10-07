@@ -161,12 +161,20 @@ def _lint(results, inputs, layout) -> list:
     return [*check_members(*args), *check_nowhere(*args)]
 
 
-def _main(tmp_path):
-    return _build(tmp_path, _dc_plant(motor_on_24=True))
+@pytest.fixture(scope="module")
+def main(tmp_path_factory) -> fr.BuildResult:
+    """The main plant, built once for every test that only reads it."""
+    return _build(tmp_path_factory.mktemp("main"), _dc_plant(motor_on_24=True))
 
 
-def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(tmp_path) -> None:
-    model = _main(tmp_path).model
+@pytest.fixture(scope="module")
+def main_staged(main) -> tuple:
+    """The main plant's inputs and staged results, run once; tests only read them."""
+    return _stage_run(main.model)
+
+
+def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(main) -> None:
+    model = main.model
     assert Counter(one.symbol for one in _symbols(model)) == Counter(
         {"power-supply": 12, "ground": 6, "protective-earth": 3}
     )  # the PSU's 0 V and the last lamp's 0 V are a fallen-back join, two grounds (D5, step 6)
@@ -178,8 +186,8 @@ def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(tmp_path) -> Non
     assert len(layout_of(model, Page)) == 3
 
 
-def test_power_ends_print_the_net_name_and_no_hash_reference(tmp_path) -> None:
-    model = _main(tmp_path).model
+def test_power_ends_print_the_net_name_and_no_hash_reference(main) -> None:
+    model = main.model
     names = {"power-supply": "24V", "ground": None, "protective-earth": None}
     for one in _symbols(model):
         assert _text_of(model, one) == names[one.symbol]
@@ -190,17 +198,17 @@ def test_power_ends_print_the_net_name_and_no_hash_reference(tmp_path) -> None:
     assert power_ports.isdisjoint(one.port for one in layout_of(model, LinkMarker).values())
 
 
-def test_no_connection_is_undrawn_and_the_build_has_no_error(tmp_path) -> None:
-    result = _main(tmp_path)
+def test_no_connection_is_undrawn_and_the_build_has_no_error(main) -> None:
+    result = main
     assert _no_error_codes(result) == set()
     assert "CONNECTION_NOT_DRAWN" not in _codes(result)
     assert "TEXT_OVERLAP" not in _codes(result)
     assert "LABEL_UNPLACED" not in _codes(result)
 
 
-def test_the_lint_counts_each_symbol_as_a_draw(tmp_path) -> None:
+def test_the_lint_counts_each_symbol_as_a_draw(main_staged) -> None:
     """Drop one symbol's marker from the layout copy and the member check names its port."""
-    inputs, results = _stage_run(_main(tmp_path).model)
+    inputs, results = main_staged
     layout = results.layout
     ends = [one for one in layout.markers if one.symbol]
     assert _lint(results, inputs, layout) == []
@@ -248,15 +256,15 @@ def _key5(model, port) -> tuple:
     return ports(model)[port].key[-5:]
 
 
-def test_a_power_text_stands_on_no_symbols_lead_or_body(tmp_path) -> None:
+def test_a_power_text_stands_on_no_symbols_lead_or_body(main, main_staged) -> None:
     """D5, step 6: "24V" at the PSU's `+` stood on its `-`'s lead; it now takes its free side.
 
     Every power symbol's lead and body are in the placer's `Space` for every text, not only for
     its own: no power text overlaps any symbol's lead or body on its page, and the `+` text
     stands past its bar (layout-0114), below the bar hung under the PSU's `+` pin.
     """
-    model = _main(tmp_path).model
-    _, results = _stage_run(model)
+    model = main.model
+    _, results = main_staged
     layout = results.layout
     places = power_places(layout.markers)
     texts = [one for one in layout.labels if one.slot == "power"]
@@ -271,7 +279,7 @@ def test_a_power_text_stands_on_no_symbols_lead_or_body(tmp_path) -> None:
     assert label.box.y >= plus.body.y + plus.body.height  # a bar hung below its pin: text below
 
 
-def test_the_slot_label_placer_holds_every_power_lead_and_body(tmp_path, monkeypatch) -> None:
+def test_the_slot_label_placer_holds_every_power_lead_and_body(main, monkeypatch) -> None:
     """D5, step 6: the text placer's `Space` holds the power leads and bodies, not only power's.
 
     The second slot call's `occupied` is recorded: each page's call holds every power symbol's
@@ -285,7 +293,7 @@ def test_the_slot_label_placer_holds_every_power_lead_and_body(tmp_path, monkeyp
         return slot_placer(*args, occupied=occupied, **kwargs)
 
     monkeypatch.setattr(pagerun, "place_slot_labels", slot)
-    _, results = _stage_run(_main(tmp_path).model)
+    _, results = _stage_run(main.model)  # run again: the patched placer must be called
     power = {(one.drawing_set, one.page): [] for one in power_places(results.layout.markers)}
     for one in power_places(results.layout.markers):
         power[one.drawing_set, one.page] += [one.body, one.lead]
@@ -296,15 +304,15 @@ def test_the_slot_label_placer_holds_every_power_lead_and_body(tmp_path, monkeyp
         assert any(set(boxes) <= held for held in seen)
 
 
-def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(tmp_path) -> None:
+def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(main, main_staged) -> None:
     """V3: `-P4:2` to `-T1:-` is two grounds, no route, and no join is tried: no `JOIN_UNALIGNED`.
 
     Both pins are on the 0 V rail, so the conductor between them is not drawn (it was a join
     that fell back to symbols with `JOIN_UNALIGNED`, D1 and D5 step 6).
     """
-    result = _build(tmp_path, _dc_plant(motor_on_24=True))
+    result = main
     model = result.model
-    _, results = _stage_run(model)
+    _, results = main_staged
     ends = {_P4_PIN_2, _PSU_MINUS}
     grounds = {_key5(model, one.port) for one in _symbols(model, "ground")}
     assert ends <= grounds
@@ -312,23 +320,23 @@ def test_a_conductor_between_two_0v_pins_is_two_grounds_and_no_join(tmp_path) ->
     assert [f for f in fr.check(result) if f.code == "JOIN_UNALIGNED"] == []
 
 
-def test_a_power_supply_has_ac_pins_on_top_and_dc_pins_at_the_bottom(tmp_path) -> None:
+def test_a_power_supply_has_ac_pins_on_top_and_dc_pins_at_the_bottom(main_staged) -> None:
     """The PSU's `L` and `N` stand on the AC supply, so they sit above its `+` and `-` (D5)."""
-    _, results = _stage_run(_main(tmp_path).model)
+    _, results = main_staged
     (psu,) = (one for one in results.layout.placed if one.column[0] == "B/T1")
     side = {g.name: g.facing.value for g in psu.geometry.ports}
     assert side == {"input.L": "n", "input.N": "n", "output.+": "s", "output.-": "s"}
 
 
-def test_the_build_is_the_same_every_time(tmp_path) -> None:
-    first = _build(tmp_path, _dc_plant(motor_on_24=True)).model
+def test_the_build_is_the_same_every_time(main, tmp_path) -> None:
+    first = main.model  # the shared build against one fresh build: the fresh one cannot be shared
     second = _build(tmp_path, _dc_plant(motor_on_24=True)).model
     assert layout_of(first, PowerSymbol) == layout_of(second, PowerSymbol)
 
 
-def test_a_pin_facing_south_gets_a_symbol_hung_below_it(tmp_path) -> None:
+def test_a_pin_facing_south_gets_a_symbol_hung_below_it(main) -> None:
     """A lamp's 0 V pin stands on the lower edge (D5): its ground hangs below, its bar is above."""
-    model = _main(tmp_path).model
+    model = main.model
     table = ports(model)
     lamp_0v = [one for one in _symbols(model) if table[one.port].key[-5:] == _P0_PIN_2]
     assert [(one.symbol, one.orientation) for one in lamp_0v] == [("ground", Orientation.R0)]
@@ -336,8 +344,8 @@ def test_a_pin_facing_south_gets_a_symbol_hung_below_it(tmp_path) -> None:
     assert {one.orientation for one in north} == {Orientation.R0}
 
 
-def test_pe_prints_no_text_and_takes_protective_earth(tmp_path) -> None:
-    model = _main(tmp_path).model
+def test_pe_prints_no_text_and_takes_protective_earth(main) -> None:
+    model = main.model
     earth = _symbols(model, "protective-earth")
     assert all(_text_of(model, one) is None for one in earth)
     assert {one.symbol for one in _symbols(model)} <= {"power-supply", "ground", "protective-earth"}
@@ -382,10 +390,8 @@ def test_an_ac_supply_keeps_its_references(tmp_path) -> None:
     assert layout_of(model, LinkMarker)
 
 
-def _shape(tmp_path, block: str) -> dict:
+def _shape(model, results) -> dict:
     """Every power symbol's origin and orientation and every power text's box, by pin and page."""
-    model = _build(tmp_path, _dc_plant(motor_on_24=True, block=block)).model
-    _, results = _stage_run(model)
     layout = results.layout
     texts = {(one.subject, one.page): one.box for one in layout.labels if one.slot == "power"}
     return {
@@ -398,13 +404,18 @@ def _shape(tmp_path, block: str) -> dict:
     }
 
 
-def test_the_power_shape_does_not_depend_on_the_name_of_the_block(tmp_path) -> None:
+def test_the_power_shape_does_not_depend_on_the_name_of_the_block(
+    main, main_staged, tmp_path
+) -> None:
     """Step 5 (i): the same circuit under any block name draws every symbol and text alike.
 
     The PSU's `+` and `-` stand on one side and take their leads in turn; which one took the
     first free lead was the order of their port ids, a hash of the block's name.
     """
-    shapes = [_shape(tmp_path, block) for block in ("B", "A", "C", "D")]
+    shapes = [_shape(main.model, main_staged[1])]  # block B is the shared main plant
+    for block in ("A", "C", "D"):
+        model = _build(tmp_path, _dc_plant(motor_on_24=True, block=block)).model
+        shapes.append(_shape(model, _stage_run(model)[1]))
     assert shapes[1:] == shapes[:1] * 3
 
 

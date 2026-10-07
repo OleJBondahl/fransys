@@ -12,12 +12,16 @@ class Boundary:
     Example: `u.boundary(x1)` in `io_board` makes connector `X1` the board's
     interface. One function may be the boundary of several units, for a board
     connector that is also its cabinet's external connector.
+
+    `name` is the NamedTuple field name the unit's interface gave this function, or None; it is
+    for the box's name line.
     """
 
     id: Id[Boundary]
     key: AuthoringKey
     unit: Id[Unit]
     function: Id[Function]
+    name: str | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

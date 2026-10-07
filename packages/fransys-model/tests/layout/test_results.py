@@ -54,6 +54,7 @@ from fransys_model.layout import (
     RoutePoint,
     SheetFormat,
     Side,
+    SideHint,
     StarKind,
     SymbolChoice,
     default_sheet_format,
@@ -227,6 +228,15 @@ def _group_hint(value: str) -> GroupHint:
         key=("examples", "layout", "group_hint", value),
         function=function_id("c"),
         group=group_node().id,
+    )
+
+
+def _side_hint(value: str, side: Side = Side.N) -> SideHint:
+    return SideHint(
+        id=Id(kind="layout.side_hint", value=value * 32),
+        key=("examples", "layout", "side_hint", value),
+        function=function_id("c"),
+        side=side,
     )
 
 
@@ -415,6 +425,24 @@ def test_one_group_hint_freezes_and_a_second_for_the_function_is_a_freeze_error(
         _freeze((*_engineering(), _group_hint("a"), _group_hint("b")))
 
 
+def test_one_side_hint_freezes_and_a_second_for_the_function_is_a_freeze_error() -> None:
+    """`SideHint` is unique per function: one is fine, two fail `freeze()` (model-0177)."""
+    _freeze((*_engineering(), _side_hint("a")))
+    with pytest.raises(FreezeError):
+        _freeze((*_engineering(), _side_hint("a"), _side_hint("b", Side.S)))
+
+
+@pytest.mark.parametrize("side", [Side.E, Side.W])
+def test_a_side_hint_is_above_or_below_only(side: Side) -> None:
+    with pytest.raises(SchemaError):
+        _side_hint("a", side)
+
+
+def test_a_side_hint_names_the_enum_member_it_was_given() -> None:
+    assert _side_hint("a", Side.S).side is Side.S
+    assert _side_hint("b").side is Side.N
+
+
 def test_a_pair_of_link_markers_referencing_each_other_freezes() -> None:
     """Reference resolution accepts the two-record cycle a marker pair forms."""
     owner, user = _marker_pair()
@@ -473,6 +501,7 @@ def test_model_with_one_record_of_every_layout_kind_round_trips() -> None:
             entries=(ChainEntry(function=function_id("c"), index=0),),
         ),
         _group_hint("b"),
+        _side_hint("c", Side.S),
         KeepTogether(
             id=Id(kind="layout.keep_together", value="a" * 31 + "2"),
             key=("examples", "layout", "keep", "pumps"),

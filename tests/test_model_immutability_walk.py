@@ -192,7 +192,10 @@ def test_n_is_the_smallest_build_that_reaches_every_kind():
     assert _built_kinds(N - 1) < kinds_at_n
     assert _built_kinds(N + 1) == kinds_at_n
     assert kinds_at_n >= REQUIRED_KINDS
-    assert len(kinds_at_n) == 45  # CT5-2: the four layout.cable_* kinds
+    assert (
+        len(kinds_at_n) == 52
+    )  # CT5-2: layout.cable_*; BD-3: diagram_*; HA1: facet.harness; HL6: layout.connector_box;
+    # HL1, HL17: the cabinet's -WH1 draws layout.harness_line and layout.harness_fan_out
 
 
 def test_a_mutable_value_smuggled_into_a_real_record_is_found_by_its_path():

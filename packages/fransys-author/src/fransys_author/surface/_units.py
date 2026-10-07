@@ -7,6 +7,7 @@ lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
 
+from ._boundary_names import write_boundaries
 from ._unit_tags import check_add, class_code_of
 from ._unused import mark_unused
 
@@ -103,6 +104,7 @@ class Units:
         )
         for entry in (*definition.history, definition.entry):
             scope.revision(**entry)
+        scope._held = []
         result = definition.build(type(self)(self.library, scope=scope))
         if not (isinstance(result, tuple) and hasattr(result, "_fields")):
             msg = (
@@ -111,5 +113,6 @@ class Units:
                 "then return Io(X1=d.device(...))"
             )
             raise AuthorError(msg)
+        write_boundaries(scope, result)
         mark_unused(self, scope, result, unused)
         return result

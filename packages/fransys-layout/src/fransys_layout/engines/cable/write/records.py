@@ -40,7 +40,7 @@ def _style(end: PlacedEnd) -> EndStyle:
 def _end(end: PlacedEnd, key: AuthoringKey, block: Id[Any], stamp: str) -> EndBox:
     end_key = (*key, "end", render_id(end.item))
     pins = tuple(
-        PinCell(index=i, port=cell.port, x=cell.x, landed=cell.landed)
+        PinCell(index=i, port=cell.port, x=cell.x, width=cell.width, landed=cell.landed)
         for i, cell in enumerate(end.cells)
     )
     return EndBox(

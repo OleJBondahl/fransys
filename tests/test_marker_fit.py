@@ -55,9 +55,9 @@ _GOLDEN_DIR = (
 # iterated silently" pattern): a future golden that adds markers and forgets this dict fails the
 # coverage check below instead of being silently skipped.
 _EXPECTED_MARKER_COUNTS: dict[str, int] = {
-    "cabinet_laid_out.json": 7,
+    "cabinet_laid_out.json": 6,
     "cabinet_narrow_laid_out.json": 8,
-    "cabinet_two_location_laid_out.json": 11,
+    "cabinet_two_location_laid_out.json": 8,
 }
 
 
@@ -145,6 +145,7 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
     """For every golden, every marker's measured text plus padding fits its stored width/height."""
     total = 0
     multi_line = 0
+    line_stubs = 0
     for name, expected_count in _EXPECTED_MARKER_COUNTS.items():
         model = loads((_GOLDEN_DIR / name).read_text(encoding="utf-8"))
         markers = layout_of(model, LinkMarker)
@@ -155,6 +156,7 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
         assert padding > 0, "every golden here authors or defaults to a non-zero marker_padding"
         for marker in markers.values():
             assert _fits(model, marker, text_height=text_height, padding=padding)
+            line_stubs += "line_stub" in str(marker.key)
             # Stronger than `<=` fit requires (decision layout-0089): a reference's (severed
             # pair, star or split) box is the sheet's fixed width exactly, never measured from
             # its own text (LD3 (c)) -- unless a merged off stub's own line needed more
@@ -187,7 +189,10 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
     # V4 (layout-0099) took it from 11 to 7: -X2:1 stands over -S0's pin, so the wide and the
     # narrow cabinet each lose a branch and their star texts shrink (4, 3, 4 became 3, 0, 4).
     # C2 (model-0139) took it from 7 to 4: a marker with three or more targets prints one line.
-    assert multi_line == 4, "LD5 (d)'s symmetric text: every 3+-end net's markers are multi-line"
+    # HL15-HL18 (layout-0154): W1 is a harness line, not per-core markers; 4 became 6 with the
+    # line stubs (one OFF stub per line leaving its page: 1 wide, 2 narrow) and the lost branches.
+    assert line_stubs == 3, "the goldens' harness lines leave their pages by OFF line stubs"
+    assert multi_line == 6, "LD5 (d)'s symmetric text: every 3+-end net's markers are multi-line"
 
 
 def test_the_fit_check_can_fail() -> None:

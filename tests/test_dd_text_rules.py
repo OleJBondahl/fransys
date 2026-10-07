@@ -25,7 +25,7 @@ from _model_build_cover import layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines import lay_out_schematic
-from fransys_model.derive import drawing_text, unit_release
+from fransys_model.derive import connector_box_lines, drawing_text, unit_release
 from fransys_model.derive.closure import net_of
 from fransys_model.derive.designation import (
     item_designation,
@@ -46,6 +46,7 @@ from fransys_model.derive.drawing_text import (
 )
 from fransys_model.kernel import Severity, freeze
 from fransys_model.layout import (
+    ConnectorBox,
     DrawingSet,
     Label,
     LabelKind,
@@ -144,19 +145,30 @@ def test_a_contacts_cross_reference_line_in_a_units_set_uses_the_same_short_form
         assert all(re.fullmatch(r"\d+-\d+ \d+[A-Z] \| \d+-\d+ \d+[A-Z]", row) for row in rows)
 
 
-def test_a_connector_pin_named_on_its_own_prints_dash_item_colon_port() -> None:
-    """D12: a pin named on its own prints "-<item>:<port designation>", "-X1:1"."""
-    # UNDO: fransys_model/derive/designation.py: `port_designation` drops the leading dash
-    #   (model-0052's port-format order)
+def test_a_boundary_connector_at_a_line_end_prints_one_dashed_box_designation() -> None:
+    """D12: the board's `X1` prints "-X1" once, on its connector box, and no pin tag.
+    HL6 (layout-0155): `X1` is at a harness line's end; this test pinned its old "-X1:1" pins."""
+    # UNDO: fransys_model/derive/box_lines.py: `connector_box_lines` returns
+    #   `(designation.lstrip("-"), ...)` (the box line reads "X1")
     model = _system_model()
-    pins = _labels_in_unit_sets(model, "demo-io-board", slot="tag.pin.")
-    assert len(pins) == 4  # two pins in each of the two board sets
-    assert all(re.fullmatch(r"-\S+:\S+", label_text(model, lb)) for lb in pins)
+    assert _labels_in_unit_sets(model, "demo-io-board", slot="tag.pin.") == []
+    pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
+    designations = []
+    for box in layout_of(model, ConnectorBox).values():
+        unit = sets[pages[box.page].drawing_set].unit
+        if unit is None or unit_release(model, unit).name != "demo-io-board":
+            continue
+        lines = connector_box_lines(model, box.function, unit=unit)
+        assert len(box.texts) == len(lines)
+        assert box.cells == ()  # a unit interface box has no cells (HL5)
+        designations.append(lines[0])
+    assert designations == ["-X1", "-X1"]  # one box in each of the two board sets
 
 
 def test_a_connector_designation_on_a_pin_row_lead_has_the_dash_of_every_item_tag() -> None:
     """D12 + designer ruling (GOLDEN-FIX 2 follow-up): `tag.conn` reads "-K1", never "K1": the
-    `item_tag_text` of the connector's item, at top level and in a unit's own set alike."""
+    `item_tag_text` of the connector's item, at top level and in a unit's own set alike.
+    HL6 (layout-0155): `-WH1-P1` and `-U1-X1` are at a harness line's end: boxes, no `tag.conn`."""
     # UNDO: fransys_model/derive/drawing_text.py: the `tag.conn` branch of `label_text` (top
     #   level) or of `unit_tag_text` (a unit's own set) returns `item_designation` again
     model = _system_model()
@@ -170,7 +182,18 @@ def test_a_connector_designation_on_a_pin_row_lead_has_the_dash_of_every_item_ta
         assert text == item_tag_text(model, item, unit=unit)
         assert text.startswith("-")
         seen[unit is not None].add(text)
-    assert seen == {False: {"-K1"}, True: {"-WH1-P1", "-U1-X1"}}
+    assert seen == {False: {"-K1"}, True: set()}
+    boxed: set[str] = set()
+    for box in layout_of(model, ConnectorBox).values():
+        unit = sets[pages[box.page].drawing_set].unit
+        if unit is None or unit_release(model, unit).name != "demo-pump-cabinet":
+            continue
+        lines = connector_box_lines(model, box.function, unit=unit)
+        assert len(box.texts) == len(lines)
+        assert box.cells == ()  # a plug box and a unit interface box have no cells (HL5)
+        assert lines[0] == item_tag_text(model, functions(model)[box.function].item, unit=unit)
+        boxed.add(lines[0])
+    assert boxed == {"-WH1-P1", "-U1-X1"}
 
 
 def _three_phase(strip: str = "X01"):

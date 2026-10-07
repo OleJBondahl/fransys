@@ -13,7 +13,12 @@ def _only[R: Record](draft: Draft, cls: type[R]) -> tuple[R, ...]:
 
 @pytest.mark.parametrize(
     ("kind", "expected"),
-    [("mount", ConductorKind.MOUNT), ("bus", ConductorKind.BUSBAR), ("rail", ConductorKind.RAIL)],
+    [
+        ("mount", ConductorKind.MOUNT),
+        ("bus", ConductorKind.BUSBAR),
+        ("rail", ConductorKind.RAIL),
+        ("lead", ConductorKind.LEAD),
+    ],
 )
 def test_link_writes_one_conductor_of_its_kind_with_no_wire_facet(parts, kind, expected):
     """Can-fail: mapping `bus` to `ConductorKind.RAIL` fails the kind assert on `bus`."""
@@ -43,7 +48,7 @@ def test_link_refuses_an_unknown_kind_listing_the_valid_ones(parts):
     d = Design(parts)
     strip = d.strip("X1")
     t1, t2 = strip.terminal("TEST-TB", "A"), strip.terminal("TEST-TB", "B")
-    with pytest.raises(AuthorError, match="valid: mount, bus, rail"):
+    with pytest.raises(AuthorError, match="valid: mount, bus, rail, lead"):
         d.link(t1.inner, t2.inner, kind="wire")
 
 

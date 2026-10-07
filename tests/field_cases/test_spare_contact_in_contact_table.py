@@ -11,6 +11,7 @@ The fix: decision model-0136, a reference to a place on the same page prints the
 is never drawn without a conductor, with the switch on or off.
 """
 
+import functools
 import re
 import tempfile
 from pathlib import Path
@@ -43,8 +44,9 @@ def _plant(d) -> None:
         d.wire(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
 
 
+@functools.cache
 def _built(*, hide: bool):
-    """The built result of `_plant` in one cabinet document."""
+    """The built result of `_plant` in one cabinet document, built once per switch setting."""
     d = fr.design("demo_parts", place="CAB")
     if hide:
         d.layout.profile(hide_unused_pins=True)

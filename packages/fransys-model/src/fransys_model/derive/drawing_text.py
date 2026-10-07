@@ -39,6 +39,7 @@ from fransys_model.derive.designation import (
     terminal_of,
 )
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.line_fact import draws_as_line
 from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.marker_targets import marker_lines, target_lines
 from fransys_model.derive.port_marking import marking_text, port_marking
@@ -117,8 +118,7 @@ def frame_row(content_height: int, frame_rows: int, y: int) -> str:
     (LD3), the row twin of `frame_column`. Row A is at the top (the smallest `y`), matching
     the printed grid's own top-to-bottom order.
     """
-    row = min(max(y * frame_rows // content_height + 1, 1), frame_rows)
-    return row_letter(row - 1)
+    return row_letter(min(max(y * frame_rows // content_height + 1, 1), frame_rows) - 1)
 
 
 def position_text(  # noqa: PLR0913 -- one form for every position; own_page is the keyword (model-0136)
@@ -211,13 +211,22 @@ def product_designation_in(
     The prefix is `port_designation_in`'s rule; `unit=None` reads OWN placement, else effective.
     A `terminal` with a parent is not a cable end, so it is not read. Raises as `item_designation`.
     """
-    text = printed_designation(model, item, unit=unit)
-    node = (
-        own_location_node(model, item)
-        if unit is None
-        else effective_placement(model, item, Aspect.LOCATION)
+    return product_location(model, item, context, unit=unit) + printed_designation(
+        model, item, unit=unit
     )
-    return _located(model, node, end_context(model, item, node, context, unit), text)
+
+
+def product_location(
+    model: Model, item: Id[Item], context: Id[AspectNode] | None, *, unit: Id[Unit] | None = None
+) -> str:
+    """The `+<label>` prefix `product_designation_in` prints before `item`'s designation, or "".
+
+    Block-diagram line 1 (BD4) reads it too, so a box's place is the one `item` prints.
+    """
+    node = effective_placement(model, item, Aspect.LOCATION)
+    if unit is None:
+        node = own_location_node(model, item)
+    return _located(model, node, end_context(model, item, node, context, unit), "")
 
 
 def _located(
@@ -254,12 +263,15 @@ def far_end(
     ), tail
 
 
-def stub_far_end(model: Model, port: Id[Port], near: Id[Port] | None = None) -> tuple[str, str]:
+def stub_far_end(
+    model: Model, port: Id[Port], near: Id[Port] | None = None, *, unit: Id[Unit] | None = None
+) -> tuple[str, str]:
     """C21: `port`'s far end as the off stub at `near` names it, below `near`'s place (layout-0121).
 
     A near end in a unit stands on the unit's page, which states no place: whole path, as for None.
+    `unit` is the page's unit: the end names its items unit-locally (model-0181).
     """
-    return far_end(model, port, None if near is None else stub_place(model, near))
+    return far_end(model, port, None if near is None else stub_place(model, near), unit=unit)
 
 
 def off_stub_line(cable: str, *, north: bool, far: str, ports: Iterable[str]) -> str:
@@ -270,21 +282,29 @@ def off_stub_line(cable: str, *, north: bool, far: str, ports: Iterable[str]) ->
     listed in the order given. The arrow points up (`←`) for a stub facing north, else `→`.
     """
     arrow = "←" if north else "→"
-    tails = " ".join(port.removeprefix(":") for port in ports)
-    return " ".join(part for part in (cable, arrow, f"{far}:{tails}") if part)
+    tails = " ".join(port.removeprefix(":") for port in ports if port)
+    return " ".join(part for part in (cable, arrow, f"{far}:{tails}" if tails else far) if part)
+
+
+def _stub_end_of(model: Model, marker: LinkMarker, unit: Id[Unit] | None) -> tuple[str, str]:
+    """`stub_far_end` of an off stub `marker`'s far port, printed in `unit`'s document."""
+    return stub_far_end(model, cast("Id[Port]", marker.far), marker.port, unit=unit)
 
 
 def off_stub_text(model: Model, marker: LinkMarker) -> str:
     """What an off stub says: `-W3 → +EXT-M1:U1 U2`, cable, arrow, far device and its ports.
 
-    The one text layout sizes the stub's box from and render prints; stubs of one box read the same.
-    The arrow is `←` for a stub facing `Side.N`, else `→`. Raises `ValueError` without `far`.
+    A carrier that `draws_as_line` prints `-W14 → -M1`, no ports. Layout sizes the box from it,
+    render prints it; `←` faces `Side.N`, else `→`. Raises `ValueError` without `far`.
     """
     if marker.star is not StarKind.OFF or marker.far is None:
         msg = "off_stub_text needs an off stub (star OFF) with a far port"
         raise ValueError(msg)
-    cable = "" if marker.carrier is None else "-" + item_designation(model, marker.carrier)
-    head, _ = stub_far_end(model, marker.far, marker.port)
+    unit = layout_of(model, DrawingSet)[layout_of(model, Page)[marker.page].drawing_set].unit
+    cable = "" if marker.carrier is None else printed_designation(model, marker.carrier, unit=unit)
+    head, _ = stub_far_end(model, marker.far, marker.port, unit=unit)
+    if marker.carrier is not None and draws_as_line(model, marker.carrier):
+        return off_stub_line(cable, north=marker.facing is Side.N, far=head, ports=())
     run = [marker]
     if marker.box_x is not None:
         run = sorted(
@@ -296,11 +316,11 @@ def off_stub_text(model: Model, marker: LinkMarker) -> str:
                 and other.box_x == marker.box_x
                 and other.y == marker.y
                 and other.carrier == marker.carrier
-                and stub_far_end(model, cast("Id[Port]", other.far), other.port)[0] == head
+                and _stub_end_of(model, other, unit)[0] == head
             ),
             key=lambda other: (other.x, other.id),
         )
-    tails = (stub_far_end(model, cast("Id[Port]", other.far), other.port)[1] for other in run)
+    tails = (_stub_end_of(model, other, unit)[1] for other in run)
     return off_stub_line(cable, north=marker.facing is Side.N, far=head, ports=tails)
 
 
@@ -554,8 +574,7 @@ def tag_text(model: Model, function: Id[Function]) -> str:
     """
     record = functions(model)[function]
     if record.kind is FunctionKind.TERMINAL:
-        port_ids = build_indexes(model).ports_by_function.get(function, ())
-        return port_designation(model, min(port_ids))
+        return port_designation(model, min(build_indexes(model).ports_by_function[function]))
     return item_tag_text(model, record.item)
 
 
@@ -585,9 +604,7 @@ def strip_tag_text(model: Model, function: Id[Function]) -> str:
 def _strip_item(model: Model, function: Id[Function]) -> Id[Item]:
     """The item `function`'s strip tag names: a strip terminal's `parent`, a device's own item."""
     item = items(model)[functions(model)[function].item]
-    if is_device_terminal(model, function):
-        return item.id
-    return item.parent or item.id
+    return item.id if is_device_terminal(model, function) else item.parent or item.id
 
 
 def is_device_terminal(model: Model, function: Id[Function]) -> bool:
@@ -905,6 +922,7 @@ __all__ = [
     "point_text",
     "port_marking",
     "position_text",
+    "product_location",
     "row_letter",
     "strip_tag_text",
     "stub_far_end",

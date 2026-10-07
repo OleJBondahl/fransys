@@ -7,6 +7,7 @@ _PREFIX = {
     "terminal_strip": "-",
     "cable": "-",
     "harness": "-",
+    "rack": "-",
     "add": "-",
     "location": "+",
     "function": "=",

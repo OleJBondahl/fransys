@@ -106,6 +106,30 @@ class Links:
             msg = "give a tag, or name= for a harness with no tag"
             raise AuthorError(msg)
         key = self._claim(name or tag or "", per_function=True)
+        item = self._engine.harness_item(
+            key,
+            tag,
+            self._place_node(self._place if place is ... else place),
+            self._group,
+            external=external,
+        )
+        return Device(name or tag or "", item)
+
+    def rack(
+        self: "Design",
+        tag: str,
+        *,
+        name: str | None = None,
+        place: str | EllipsisType | None = ...,
+        external: bool = False,
+    ) -> Device:
+        """Add the part-less PLC rack `tag` (printed `-tag`); `place=None` gives it no place.
+
+        Put modules under it with `parent=`.
+        Does not make a harness, so the modules print flat.
+        """
+        bare(tag, "rack")
+        key = self._claim(name or tag, per_function=True)
         item = self._engine.item(
             None,
             name=key,
@@ -114,4 +138,4 @@ class Links:
             group=self._group,
             external=external,
         )
-        return Device(name or tag or "", item)
+        return Device(name or tag, item)

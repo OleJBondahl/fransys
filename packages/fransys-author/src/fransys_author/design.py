@@ -12,6 +12,7 @@ from fransys_model.layout import (
     ChainEntry,
     KeepTogether,
     OrderHint,
+    Side,
     SymbolChoice,
 )
 from fransys_model.layout import (
@@ -67,6 +68,7 @@ from .handles import (
     Terminal,
     _item_from_stamped,
     _write_group_hint,
+    _write_side_hint,
 )
 from .wiring import LinkScope, Wiring
 
@@ -162,7 +164,7 @@ class Scope(LinkScope, SupplyScope):
     defaults for every item it creates, inherited by a nested scope unless overridden.
     """
 
-    __slots__ = ("_at", "_design", "_group", "_prefix", "_release", "_unit")
+    __slots__ = ("_at", "_design", "_group", "_held", "_prefix", "_release", "_unit")
 
     def __init__(  # noqa: PLR0913 -- this scope's own prefix, defaults, unit and unit release
         self,
@@ -181,6 +183,7 @@ class Scope(LinkScope, SupplyScope):
         self._group = group
         self._unit = unit
         self._release = release
+        self._held: list[tuple[Boundary, Origin]] | None = None
 
     # -- structure --------------------------------------------------------------
 
@@ -221,7 +224,7 @@ class Scope(LinkScope, SupplyScope):
     def scope(self, name: str, *, at: Location | None = None, group: Group | None = None) -> Scope:
         """A nested scope; every key it writes starts with this scope's prefix plus `name`."""
         prefix = scoped(self._prefix, name)
-        return Scope(
+        child = Scope(
             self._design,
             prefix,
             at=at if at is not None else self._at,
@@ -229,6 +232,8 @@ class Scope(LinkScope, SupplyScope):
             unit=self._unit,
             release=self._release,
         )
+        child._held = self._held
+        return child
 
     def unit(  # noqa: PLR0913 -- the release's own five fields (SC2) plus the name
         self,
@@ -364,6 +369,7 @@ class Scope(LinkScope, SupplyScope):
         *,
         rating: Rating | None = None,
         operating: Operating | None = None,
+        name: str | None = None,
     ) -> None:
         """Mark `target` part of this scope's unit's interface (spec U6, U3).
 
@@ -371,6 +377,7 @@ class Scope(LinkScope, SupplyScope):
         `CONNECTOR` function (the rule `d.mate` already uses for items). `rating` and
         `operating` (`fr.derive.Rating`, `fr.derive.Operating`) state what the unit says about
         this boundary; given either, one `BoundaryValuesFacet` is written beside the record.
+        `name` is the interface field name; `d.add` fills it when left `None` (model-0174).
 
         Raises:
             AuthorError: this scope has no unit, `target` is ambiguous, or `rating` or
@@ -382,10 +389,15 @@ class Scope(LinkScope, SupplyScope):
             raise AuthorError(msg)
         fn = _as_function(target)
         key = scoped(self._prefix, "boundary", spliced(fn.key))
-        record = Boundary(id=make_id(Boundary, key), key=key, unit=self._unit, function=fn.id)
+        record = Boundary(
+            id=make_id(Boundary, key), key=key, unit=self._unit, function=fn.id, name=name
+        )
         facet = build_boundary_values(key, record.id, rating, operating)
         origin = caller_origin()
-        self._design._add(record, origin)
+        if self._held is None:
+            self._design._add(record, origin)
+        else:  # `d.add` writes it once the interface names it (model-0174)
+            self._held.append((record, origin))
         if facet is not None:
             self._design._add(facet, origin)
 
@@ -586,7 +598,7 @@ class Scope(LinkScope, SupplyScope):
         designation, and `derive.item_designation` now refuses to render one of its
         members instead of silently rendering it flat (model-0043's amendment).
         """
-        return self.item(None, name=name, tag=tag, at=at, group=group, external=external)
+        return self.harness_item(name, tag, at, group, external=external)
 
     # -- connectivity --------------------------------------------------------------
 
@@ -795,6 +807,10 @@ class Scope(LinkScope, SupplyScope):
         item (that is `group=` on `d.item(...)`, a placement, not a hint).
         """
         _write_group_hint(self._design, function, group, caller_origin())
+
+    def side(self, function: Fn, side: Side) -> None:
+        """Hint the edge of its unit's outline that the boundary `function` stands on (HL14)."""
+        _write_side_hint(self._design, function, side, caller_origin())
 
     # -- shared placement --------------------------------------------------------------
 

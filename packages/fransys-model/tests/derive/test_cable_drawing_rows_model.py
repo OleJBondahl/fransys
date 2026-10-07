@@ -111,19 +111,39 @@ def test_a_connector_end_shows_landed_pins_in_core_order_then_free_pins_in_pin_o
     h1 = plant.item("h1", designation="H1")
     _, ports = make_connector(plant, ("h1", "P1"), ("1", "2", "10", "A1"))
     far = [make_pin(plant, f"far{n}", f"F{n}") for n in (1, 2)]
-    make_core(plant, "c1", w1, (ports["A1"], far[0]), index=1)
-    make_core(plant, "c2", w1, (ports["2"], far[1]), index=2)
+    c1 = make_core(plant, "c1", w1, (ports["A1"], far[0]), index=1)
+    c2 = make_core(plant, "c2", w1, (ports["2"], far[1]), index=2)
     model = plant.model()
     pins = drawn_pins(model, w1, h1, None)
     assert pins == (
-        DrawnPin(port=ports["A1"], marking="A1", landed=True),
-        DrawnPin(port=ports["2"], marking="2", landed=True),
+        DrawnPin(port=ports["A1"], marking="A1", landed=True, cores=(c1,)),
+        DrawnPin(port=ports["2"], marking="2", landed=True, cores=(c2,)),
         DrawnPin(port=ports["1"], marking="1", landed=False),
         DrawnPin(port=ports["10"], marking="10", landed=False),
     )
     (row,) = block_cables(model, w1, None)
     (end,) = [e for e in row.ends if e.item == h1]
     assert {(p.port, p.marking) for p in end.pins} == {(p.port, p.marking) for p in pins[:2]}
+
+
+def test_a_pin_holds_one_place_per_core_landing_on_it_in_core_key_order() -> None:
+    """P1: cores 3 and 1 of `W1` and core 2 of `W2` land on `A1`: three places, keyed 1, 3, W2's.
+
+    A core with both ends on `A1` counts once, and a pin one core lands on holds one place.
+    """
+    plant = Plant()
+    harness = plant.item("wh", designation="WH1")
+    w1 = cable(plant, "w1", "W1", parent=harness)
+    w2 = cable(plant, "w2", "W2", parent=harness)
+    h1 = plant.item("h1", designation="H1")
+    _, ports = make_connector(plant, ("h1", "P1"), ("A1", "B2"))
+    far = [make_pin(plant, f"far{n}", f"F{n}") for n in range(4)]
+    c3 = make_core(plant, "c3", w1, (ports["A1"], far[0]), index=3)
+    c1 = make_core(plant, "c1", w1, (ports["A1"], far[1]), index=1)
+    c4 = make_core(plant, "c4", w1, (ports["B2"], far[2]), index=4)
+    c5 = make_core(plant, "c5", w2, (far[3], ports["A1"]), index=2)
+    pins = drawn_pins(plant.model(), harness, h1, None)
+    assert [(p.marking, p.cores) for p in pins] == [("A1", (c1, c3, c5)), ("B2", (c4,))]
 
 
 def test_a_terminal_strip_end_shows_only_the_landed_pin_marked_group_colon_index() -> None:
@@ -134,10 +154,10 @@ def test_a_terminal_strip_end_shows_only_the_landed_pin_marked_group_colon_index
     landed = make_terminal(plant, "x1", "t1", group="L", index=1)
     make_terminal(plant, "x1", "t2", group="L", index=2)
     far = make_pin(plant, "far", "F1")
-    make_core(plant, "c1", w1, (landed.external, far), index=1)
+    c1 = make_core(plant, "c1", w1, (landed.external, far), index=1)
     model = plant.model()
     assert drawn_pins(model, w1, x1, None) == (
-        DrawnPin(port=landed.external, marking="L:1", landed=True),
+        DrawnPin(port=landed.external, marking="L:1", landed=True, cores=(c1,)),
     )
     (row,) = block_cables(model, w1, None)
     (end,) = [e for e in row.ends if e.item == x1]

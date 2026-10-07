@@ -1,4 +1,4 @@
-"""`conventions.texts`: the text candidate table, one row per kind (T1.1 to T1.7, S2, S15)."""
+"""`conventions.texts`: the text candidate table, one row per kind (T1.1 to T1.8, S2, S15)."""
 
 import pytest
 
@@ -29,6 +29,7 @@ _ROWS = (
     ("T1.5", TextKind.CONTACT_IMAGE, 2, ((Facing.S, (0,), False),)),
     ("T1.6", TextKind.CROSS_REFERENCE, 3, ((None, _BELOW, False), (None, _BELOW, True))),
     ("T1.7", TextKind.POWER, 0, ((None, (0,), False),)),
+    ("T1.8", TextKind.HARNESS_LINE, 1, ((None, _ALONG, False), (None, _ALONG, True))),
 )
 
 

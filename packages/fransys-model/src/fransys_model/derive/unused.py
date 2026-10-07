@@ -4,6 +4,7 @@ Layout and the contact table both call these, so a drawn contact is never listed
 """
 
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.vocab.joins import joined_ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Port
 
@@ -15,7 +16,11 @@ def port_is_unused(model: Model, port: Id[Port]) -> bool:
     its ports are (`function_is_unused`).
     """
     indexes = build_indexes(model)
-    return not indexes.conductors_by_port.get(port) and not indexes.nets_by_port.get(port)
+    return (
+        not indexes.conductors_by_port.get(port)
+        and not indexes.nets_by_port.get(port)
+        and port not in joined_ports(model)
+    )
 
 
 def function_is_unused(model: Model, function: Id[Function]) -> bool:

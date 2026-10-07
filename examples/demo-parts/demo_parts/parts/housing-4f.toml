@@ -1,0 +1,25 @@
+schema = 1
+
+[part]
+mpn = "DEMO-HSG-4F"
+manufacturer = "Demo"
+description = "Connector housing, 4-way female"
+category = "connector"
+class_code = "J"
+
+[[function]]
+name = "x1"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+    { name = "3", role = "generic", symbol_port = "in" },
+    { name = "4", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "housing-4w"
+pincount = 4
+gender = "female"
+mates = ["DEMO-HSG-4M", "DEMO-CONN-4P"]

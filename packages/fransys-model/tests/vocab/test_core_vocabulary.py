@@ -65,7 +65,7 @@ _DESIGNED: dict[type, tuple[str, ...]] = {
     PartLibrary: ("name", "version"),
     Part: ("mpn", "manufacturer", "description", "category", "class_code", "library"),
     FunctionTemplate: ("part", "name", "kind", "protection_type", "energy"),
-    PortTemplate: ("function", "name", "role", "marking", "pole_side", "conductor_mark"),
+    PortTemplate: ("function", "name", "role", "marking", "pole_side", "conductor_mark", "joins"),
     InternalLink: ("a", "b", "kind", "rest"),
     Item: (
         "part",
@@ -92,6 +92,7 @@ _REFERENCES = {
     ("part", "library"): "part_library",
     ("function_template", "part"): "part",
     ("port_template", "function"): "function_template",
+    ("port_template", "joins"): "port_template",
     ("internal_link", "a"): "port_template",
     ("internal_link", "b"): "port_template",
     ("item", "part"): "part",

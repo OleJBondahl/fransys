@@ -199,7 +199,7 @@ def _run_markers(
 ) -> list[MarkerDecision]:
     """One run's stubs: the text, the box they share and the tier it stands out at (C21, S14)."""
     cable, far, facing = head
-    ports = [port for _, _, _, port, _ in ends]
+    ports = [port for _, _, _, port, text in ends if not text.line]
     text = off_stub_line(cable, north=facing is Facing.N, far=far, ports=ports)
     size = stub_size(text, tiers.profile)
     lift = tiers.step if ends[0][2].ref.function in tiers.terminals else 0

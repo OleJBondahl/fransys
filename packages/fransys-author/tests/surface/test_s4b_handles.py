@@ -6,8 +6,11 @@ import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import CONTROL, GENERIC, SIGNAL, design, unit
 
+from fransys_model.derive import item_designation
+from fransys_model.kernel import freeze, merge
+from fransys_model.vocab import HarnessFacet, NetClass
 from fransys_model.vocab import Item as ModelItem
-from fransys_model.vocab import NetClass
+from fransys_model.vocab.membership import is_harness
 lazy from fransys_model.kernel import Draft
 
 
@@ -60,3 +63,26 @@ def test_a_unit_child_refuses_revision_and_the_parent_does_not(parts: Draft) -> 
     d.revision(1, date="d", text="t", created="XX")
     with pytest.raises(AuthorError, match=r"@fr\.unit\(history=\)"):
         d.add(board, "IO")
+
+
+def test_a_part_less_harness_with_no_cable_is_a_harness_and_prints_its_plugs(parts: Draft) -> None:
+    """HA1: `d.harness` writes `facet.harness`, so a plug under it prints `W1-P1` with no cable."""
+    d = design(parts, place="C1")
+    w1 = d.harness("W1")
+    p1 = d.device("P1", "TEST-CONN-2P", parent=w1)
+    model = freeze(merge(parts, d.draft()))
+    assert is_harness(model, w1.id)
+    assert item_designation(model, p1.id) == "W1-P1"
+    assert [r for r in d.draft().records() if isinstance(r, HarnessFacet)]
+
+
+def test_a_rack_is_a_part_less_container_with_no_harness_mark(parts: Draft) -> None:
+    """Author-0031: `d.rack` adds a tagged part-less item and no `facet.harness`."""
+    d = design(parts, place="C1")
+    u1 = d.rack("U1")
+    model = freeze(merge(parts, d.draft()))
+    assert not is_harness(model, u1.id)
+    assert item_designation(model, u1.id) == "U1"
+    assert not [r for r in d.draft().records() if isinstance(r, HarnessFacet)]
+    with pytest.raises(AuthorError):
+        d.rack("-U2")

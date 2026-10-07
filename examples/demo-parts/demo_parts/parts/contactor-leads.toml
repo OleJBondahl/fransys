@@ -1,0 +1,28 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CTR-LEADS"
+manufacturer = "Demo"
+description = "Contactor on flying leads, 24 V DC coil and one NO auxiliary contact"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[[function]]
+name = "aux"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "13", role = "generic", symbol_port = "in" },
+    { name = "14", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "13", b = "14", kind = "switched" }]
+
+[[supply]]
+supplier = "Demo Supply"
+supplier_part_number = "DS-0012"

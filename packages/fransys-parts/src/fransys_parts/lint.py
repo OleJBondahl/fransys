@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import connector_label, connector_segments
 from fransys_model.kernel import Finding, Severity
 
-from . import _changeover, _fields, _function_facts, _power_loss, _ratings, _toml
+from . import _changeover, _fields, _function_facts, _joins, _power_loss, _ratings, _toml
 
 if TYPE_CHECKING:
     from ._toml import ParsedFile
@@ -355,7 +355,7 @@ def _check_functions(data: _toml.Table, path: str, origins: _toml.Origins) -> li
             continue
         findings.extend(_check_function_entry(entry, path, line, state, index))
         findings.extend(_ratings.check_function_tables(entry, path, origins, index, line))
-    return findings
+    return [*findings, *_joins.check(functions, path, origins)]
 
 
 def _check_function_entry(

@@ -633,13 +633,14 @@ class LinkDecision:
 class StubText:
     """C21: what an off stub names of its end: the cable, the far device and the far port.
 
-    `cable` is the outermost carrier's `-designation` (`""` for none), `far` and `port` the far
-    end's head and tail as `derive.drawing_text.stub_far_end` gives them (`+EXT-M1`, `:U1`).
+    `cable` is the outermost carrier's `-designation`, `far`/`port` the far end's head and tail
+    (`stub_far_end`); `line`: the carrier draws as a line, so the stub prints no port (HL18).
     """
 
     cable: str
     far: str
     port: str
+    line: bool = False
 
 
 @value

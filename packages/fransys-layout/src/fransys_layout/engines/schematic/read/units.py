@@ -7,14 +7,19 @@ from fransys_layout.stages.exempt import UnitNesting
 from fransys_layout.stages.references import BlackBoxReads
 from fransys_layout.stages.replicate import UnitBoundary
 from fransys_model.vocab.membership import boundary, units
+from fransys_model.vocab.tables import functions, items, unused_boundaries
 from fransys_model.vocab.tables import units as units_table
-from fransys_model.vocab.tables import unused_boundaries
 from fransys_model.vocab.unit_index import unit_index
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from fransys_model.kernel import Id, Model
+
+
+def function_unit(model: Model, function: Id[Any]) -> Id[Any] | None:
+    """The unit whose own document draws `function`: its item's (layout-0159)."""
+    return items(model)[functions(model)[function].item].unit
 
 
 def boundary_edges(model: Model) -> frozenset[Id[Any]]:

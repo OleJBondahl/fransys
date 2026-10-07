@@ -213,6 +213,16 @@ def build_test_catalogue() -> Draft:
     _port(draft, econn, "1")
     _port(draft, econn, "2")
 
+    # a crimp contact: a part with no function, as a fuse link is (HA8)
+    _part(
+        draft,
+        library,
+        manufacturer="TestCo",
+        mpn="TEST-CRIMP",
+        category=PartCategory.CONNECTOR,
+        letter="X",
+    )
+
     # spec A5: one MPN, two manufacturers -> ambiguous at item() time.
     _part(
         draft,

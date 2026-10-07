@@ -245,3 +245,21 @@ def test_off_stub_line_is_cable_arrow_far_end_and_its_ports() -> None:
     assert off_stub_line("-W3", north=True, far="+EXT-M1", ports=[":U1", ":V1"]) == (
         "-W3 ← +EXT-M1:U1 V1"
     )
+
+
+def test_a_stub_of_a_cable_that_draws_as_a_line_names_the_far_device_and_no_port() -> None:
+    """HL18, model-0180: W3 carries two cores, so its stub is the line's one stub, no ports."""
+    stubs = _Stubs()
+    for n, name in enumerate(("U1", "V1")):
+        stubs.plant.core(stubs.near[n], stubs.device[name], key=f"core{n}", carrier=stubs.cable)
+    marker = stubs.stub("U1")
+    stubs.stub("V1", box_x=0)
+    assert off_stub_text(stubs.model(), marker) == "-W3 → +EXT-M1"
+
+
+def test_a_stub_of_a_one_core_cable_keeps_the_per_core_form() -> None:
+    """One core is no line (HL1): the stub still names the far port."""
+    stubs = _Stubs()
+    stubs.plant.core(stubs.near[0], stubs.device["U1"], key="core0", carrier=stubs.cable)
+    marker = stubs.stub("U1")
+    assert off_stub_text(stubs.model(), marker) == "-W3 → +EXT-M1:U1"

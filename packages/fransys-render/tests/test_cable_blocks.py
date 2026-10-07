@@ -447,3 +447,28 @@ def test_every_emitted_rect_corner_is_a_whole_grid_position(module: Decimal) -> 
     for rect in root.iter(SVG + "rect"):
         for attr in ("x", "y"):
             assert Decimal(rect.get(attr) or 0) % step == 0
+
+
+def test_a_cell_two_cores_land_on_has_its_divider_at_its_own_left_edge() -> None:
+    """CD6 at P1: the second pin holds two places (4G wide), its centre at 6G, its edge at 4G.
+
+    Probe: take the divider half a pitch from the centre, whatever the places; it lands at 5G.
+    """
+    world = World()
+    w0 = world.cable("w0", "W0", ("BK", "BN", "GY"))
+    a1, a = world.device("a1", "A1", "1", "2")
+    b1, b = world.device("b1", "B1", "1", "2", "3")
+    c1 = world.core("c1", w0, (a["1"], b["1"]), 1)
+    c2 = world.core("c2", w0, (a["2"], b["2"]), 2)
+    c3 = world.core("c3", w0, (a["2"], b["3"]), 3)
+    block = world.block(w0)
+    world.box(block, w0, BoxKind.CABLE, (2 * G, 6 * G, 6 * G, 5 * G))
+    world.end(
+        block, a1, TOP, EndStyle.SOLID, ((a["1"], 3 * G), (a["2"], 6 * G, 4 * G)), width=6 * G
+    )
+    world.end(block, b1, BOTTOM, EndStyle.SOLID, tuple(zip(b.values(), CELLS, strict=True)))
+    for conductor, x in zip((c1, c2, c3), (3 * G, 5 * G, 7 * G), strict=True):
+        world.wire(block, conductor, x)
+    root = _parse(cable_blocks(world.model())[cable_block_key(None, w0)])
+    top = [d for d in _of(root, "line", "pin-cell") if d.get("y1") == _mm(2 * G)]
+    assert [Decimal(d.get("x1") or 0) for d in top] == [Decimal(_mm(4 * G))]

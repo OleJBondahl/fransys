@@ -14,6 +14,7 @@ lazy from fransys_model.vocab import Conductor, Item, Port, Unit
 
 from .cable_end_rank import cable_end_rank
 from .drawing_text import external_note
+from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
 from .harness import _end_designation, _facts_of, _pin_marking, all_cables, all_unit_cables
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
@@ -22,7 +23,9 @@ lazy from .rows import HarnessCable, HarnessCore
 
 __all__ = [
     "DrawnPin",
+    "DrawnWire",
     "block_cables",
+    "block_wires",
     "cable_block_key",
     "cable_heading",
     "cable_subject",
@@ -32,19 +35,22 @@ __all__ = [
     "end_label",
     "end_rows",
     "row_links",
+    "wire_harness_subjects",
 ]
 
 
 @value
 class DrawnPin:
-    """One cell of an end box: a port, its marking, and whether a core of the block lands on it.
+    """One cell of an end box: a port, its marking, and the cores of the block that land on it.
 
-    A drawing value, not a row shape (model-0159).
+    `cores` runs in core-key order and gives the cell one place each (CD6, P1, model-0168); a
+    free pin has none and one place. A drawing value, not a row shape (model-0159).
     """
 
     port: Id[Port]
     marking: str
     landed: bool
+    cores: tuple[Id[Conductor], ...] = ()
 
 
 def cable_subject(model: Model, cable: Id[Item]) -> Id[Item]:
@@ -87,34 +93,42 @@ def block_cables(
     )
 
 
-def _port_keys(cables: tuple[HarnessCable, ...]) -> dict[Id[Port], tuple[int, int]]:
-    """Each landed port's lowest core key: the cable's place in the block, then the core index."""
+type _Keyed = list[tuple[tuple[int, int], HarnessCore]]
+
+
+def _keyed_cores(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> _Keyed:
+    """The block's cores in core-key order: cable place then core index, the wires after the cables.
+
+    A wire's place is the number of cables; its index is its place among the harness's wires.
+    """
+    cables = block_cables(model, subject, unit)
+    keyed = [((place, core.index), core) for place, c in enumerate(cables) for core in c.cores]
+    keyed.extend(((len(cables), core.index), core) for core in wire_cores(model, subject, unit))
+    return sorted(keyed, key=lambda pair: pair[0])
+
+
+def _landed_by_end(model: Model, keyed: _Keyed) -> dict[Id[Item], dict[Id[Port], tuple[int, int]]]:
+    """The block's landed ports with their lowest core key, grouped by their end item."""
     keys: dict[Id[Port], tuple[int, int]] = {}
-    for position, cable in enumerate(cables):
-        for core in cable.cores:
-            for port in (core.end_a, core.end_b):
-                keys[port] = min(keys.get(port, (position, core.index)), (position, core.index))
-    return keys
-
-
-def _landed_by_end(
-    model: Model, cables: tuple[HarnessCable, ...]
-) -> dict[Id[Item], dict[Id[Port], tuple[int, int]]]:
-    """The block's landed ports with their core keys, grouped by the end item they stand on."""
+    for key, core in keyed:
+        for port in (core.end_a, core.end_b):
+            keys[port] = min(keys.get(port, key), key)
     ends: dict[Id[Item], dict[Id[Port], tuple[int, int]]] = {}
-    for port, key in _port_keys(cables).items():
-        owner = cable_end_owner(model, item_of_port(model, port))
-        ends.setdefault(owner, {})[port] = key
+    for port, key in keys.items():
+        ends.setdefault(cable_end_owner(model, item_of_port(model, port)), {})[port] = key
     return ends
 
 
+def _cores_by_port(keyed: _Keyed) -> dict[Id[Port], tuple[Id[Conductor], ...]]:
+    """Each landed port's cores in core-key order; a core with both ends on a port counts once."""
+    found: dict[Id[Port], list[Id[Conductor]]] = {}
+    for _, core in keyed:
+        for port in dict.fromkeys((core.end_a, core.end_b)):
+            found.setdefault(port, []).append(core.conductor)
+    return {port: tuple(cores) for port, cores in found.items()}
+
+
 type _Groups = dict[Id[Item], dict[Id[Item], int]]
-
-
-def _ordered_cores(cables: tuple[HarnessCable, ...]) -> list[HarnessCore]:
-    """The block's cores in core-key order: the cable's place in the block, then the core index."""
-    keyed = [((place, core.index), core) for place, c in enumerate(cables) for core in c.cores]
-    return [core for _, core in sorted(keyed, key=lambda pair: pair[0])]
 
 
 def _joined(groups: _Groups, one: Id[Item], two: Id[Item]) -> bool:
@@ -149,13 +163,13 @@ def _colouring(
     The cores, in core-key order, join groups of ends each with a side. After the last core each
     group's first seed (CD5's rule) stands on top; flipping a group never changes a link.
     """
-    cables = block_cables(model, subject, unit)
-    keys = {i: min(p.values()) for i, p in _landed_by_end(model, cables).items()}
+    keyed = _keyed_cores(model, subject, unit)
+    keys = {i: min(p.values()) for i, p in _landed_by_end(model, keyed).items()}
     ends = sorted(keys, key=lambda item: (keys[item], cable_end_rank(model, item)))
     seeds = sorted(ends, key=lambda i: (not in_reading(model, i, unit), cable_end_rank(model, i)))
     groups: _Groups = {end: {end: 0} for end in ends}
     links = []
-    for core in _ordered_cores(cables):
+    for _, core in keyed:
         one, two = (
             cable_end_owner(model, item_of_port(model, p)) for p in (core.end_a, core.end_b)
         )
@@ -189,18 +203,20 @@ def drawn_pins(
 ) -> tuple[DrawnPin, ...]:
     """The pins of the end box of `item` in the block of `unit`'s reading, drawing order (CD6, Q9).
 
-    A port any core of the block lands on is landed, at the place of its lowest core key. A
-    connector end then shows its other pins in `pin_order`; any other end shows landed pins only.
+    A port any core of the block lands on is landed, at the place of its lowest core key, and
+    holds one place per core landing on it (P1). A connector end then shows its other pins in
+    `pin_order`; any other end shows landed pins only.
     """
-    cables = block_cables(model, subject, unit)
-    landed = _landed_by_end(model, cables).get(item, {})
+    keyed = _keyed_cores(model, subject, unit)
+    landed = _landed_by_end(model, keyed).get(item, {})
     marked = {port: _pin_marking(model, port) for port in landed}
+    cores = _cores_by_port(keyed)
     pins = [
-        DrawnPin(port=port, marking=marked[port], landed=True)
+        DrawnPin(port=port, marking=marked[port], landed=True, cores=cores[port])
         for port in sorted(landed, key=lambda p: (landed[p], pin_order(marked[p], p)))
     ]
     free = sorted(
-        (port for port in _connector_ports(model, cables, item) if port not in landed),
+        (port for port in _connector_ports(model, subject, unit, item) if port not in landed),
         key=lambda port: pin_order(_pin_marking(model, port), port),
     )
     pins.extend(
@@ -210,13 +226,16 @@ def drawn_pins(
 
 
 def _connector_ports(
-    model: Model, cables: tuple[HarnessCable, ...], item: Id[Item]
+    model: Model, subject: Id[Item], unit: Id[Unit] | None, item: Id[Item]
 ) -> tuple[Id[Port], ...]:
-    """Every port of the connector function `item` is drawn as, or `()` for any other end."""
+    """Every port of the connector function `item` is drawn as, or `()` for any other end.
+
+    The function is read off the ends of the block's cables and of its wires alike.
+    """
+    ends = [e for cable in block_cables(model, subject, unit) for e in cable.ends]
     found = [
         end.connector
-        for cable in cables
-        for end in cable.ends
+        for end in (*ends, *wire_ends(model, subject, unit))
         if end.item == item and end.connector is not None
     ]
     return build_indexes(model).ports_by_function.get(min(found), ()) if found else ()

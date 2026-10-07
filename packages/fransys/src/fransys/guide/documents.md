@@ -99,7 +99,7 @@ The PDF is named after the unit and its release, `demo-io-board-v1.1.pdf`.
 
 ## Cable drawings
 
-A `HARNESS_DRAWING` page draws each cable as one block, and a harness of two or more cables as one block around its cables. A block has its end boxes with their pins, a box per cable with its heading, and one wire per core. A core whose two ends stand in one row is a short link at that row. A block where two cores land on one pin is not drawn yet. A document that shows it stops with
+A `HARNESS_DRAWING` page draws each cable as one block, and a harness of two or more cables as one block around its cables. A block has its end boxes with their pins, a box per cable with its heading, and one wire per core. A core whose two ends stand in one row is a short link at that row. Two cores on one pin stand side by side in the pin's cell. A harness whose cables interleave is not drawn yet. A document that shows it stops with
 `DOCUMENT_NO_DRAWINGS`.
 
 ## A unit's own cable drawings
@@ -141,6 +141,20 @@ assert any(p.suffix == ".pdf" for p in fr.write(result, Path("out")))
 pdfs = {key: name for key, name in fr.export_names(result).items() if key[0] == "pdf"}
 assert list(pdfs.values()) == ["cable-cabinet-v1.1.pdf"]  # the key is ("pdf", <document id>)
 ```
+
+## Block diagrams
+
+A `BLOCK_DIAGRAM` page draws a reading as boxes joined by one line per cable. The line carries the
+cable's designation, and a tab names the strip or connector it lands on. The `SYSTEM` preset
+carries the page after the notes: its boxes are the top-level units and items, its lines the
+top-level cables. A unit document does not carry it by default; `add=(fr.PageKind.BLOCK_DIAGRAM,)`
+puts it there, and the page shows that unit's own cables and its child units, never what lies
+inside them. A reading with no cable line gets no page.
+
+The page is A2 landscape, 594 x 420 mm, with a 12 x 8 frame; the other pages keep the
+document's sheet. A diagram wider than one sheet continues on the next, and a line cut between
+sheets ends in a marker naming the other sheet. A kept page whose diagram cannot be drawn stops the
+export with `DOCUMENT_NO_DRAWINGS`.
 
 ## One PDF is one drawing
 

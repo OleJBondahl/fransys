@@ -36,8 +36,11 @@ from fransys_model.vocab.facets import (
     CableFacet,
     CableProductFacet,
     ConnectorFacet,
+    ContactFit,
+    ContactsFacet,
     CoreFacet,
     FootprintFacet,
+    HarnessFacet,
     OperatingFacet,
     PartRatingFacet,
     PcbFacet,
@@ -160,7 +163,19 @@ _CASES: dict[str, tuple[Any, type, bool, dict[str, Any]]] = {
         ConnectorFacet,
         FunctionTemplate,
         True,
-        {"style": "JST-XH", "pincount": 4, "gender": Gender.FEMALE, "marking": "X1"},
+        {
+            "style": "JST-XH",
+            "pincount": 4,
+            "gender": Gender.FEMALE,
+            "marking": "X1",
+            "mates": ("MPN-A",),
+        },
+    ),
+    "contacts": (
+        ContactsFacet,
+        Item,
+        True,
+        {"fits": (ContactFit(pin=None, part=_BUNDLE.part.id),)},
     ),
     "supply": (
         SupplyFacet,
@@ -203,6 +218,7 @@ _CASES: dict[str, tuple[Any, type, bool, dict[str, Any]]] = {
         },
     ),
     "assigned_unit_tag": (AssignedUnitTagFacet, Unit, True, {"text": "U1"}),
+    "harness": (HarnessFacet, Item, True, {}),
     "reserved_designation": (
         ReservedDesignationFacet,
         UnitRelease,
@@ -269,11 +285,12 @@ def _wrong_subject(subject_type: type) -> Id[Any]:
     return _BUNDLE.part.id if subject_type is Item else _HOUSING
 
 
-def test_the_facets_are_the_twenty_of_the_design_table() -> None:
+def test_the_facets_are_the_twenty_one_of_the_design_table() -> None:
     """facets.md lists these kinds; each one is in the `facet` namespace and none is missing."""
     assert set(_CASES) == {
         "assigned_designation",
         "assigned_unit_tag",
+        "harness",
         "boundary_values",
         "rating",
         "part_rating",
@@ -288,6 +305,7 @@ def test_the_facets_are_the_twenty_of_the_design_table() -> None:
         "core",
         "wire",
         "connector",
+        "contacts",
         "supply",
         "pcb",
         "footprint",
@@ -295,7 +313,8 @@ def test_the_facets_are_the_twenty_of_the_design_table() -> None:
     }
     for name, (cls, _subject, _unique, _fields) in _CASES.items():
         assert make_id(cls, ("k",)).kind == f"facet.{name}"
-    assert {cls.__name__ for cls, *_ in _CASES.values()} == set(facets.__all__)
+    facet_names = set(facets.__all__) - {"ContactFit"}  # a value, not a facet
+    assert {cls.__name__ for cls, *_ in _CASES.values()} == facet_names
 
 
 @pytest.mark.parametrize("name", _NAMES)
@@ -517,3 +536,17 @@ def test_the_subject_of_a_facet_refuses_none(name: str) -> None:
     with pytest.raises(FreezeError) as excinfo:
         _model(cls(id=make_id(cls, key), key=key, subject=None, **fields))
     assert f"{cls.__name__}.subject" in str(excinfo.value.errors[0])
+
+
+def test_a_connector_facets_mates_survive_canonical_form_and_default_to_empty() -> None:
+    """Decision parts-0016: `mates` names the MPNs a connector mates with, in order, data only."""
+    mates = ("MPN-B", "MPN-A")
+    model = _model(_facet("connector", mates=mates))
+    (facet,) = facets_of(loads(dumps(model)), ConnectorFacet).values()
+    assert facet.mates == ("MPN-B", "MPN-A")
+    fields = {k: v for k, v in _CASES["connector"][3].items() if k != "mates"}
+    key = ("facets", "connector", "a")
+    plain = ConnectorFacet(
+        id=make_id(ConnectorFacet, key), key=key, subject=_NO_1_TEMPLATE, **fields
+    )
+    assert plain.mates == ()

@@ -16,9 +16,10 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model, Record
 
 # --import-mode=importlib leaves the test directories off sys.path; the tests import their helpers
-# by name: samples, layout_cabinet and debug_svg live here, coherence_helpers in lint. These two
-# are appended, not inserted (workspace rule, see the model conftest).
-for directory in (".", "lint"):
+# by name: samples, layout_cabinet and debug_svg live here, coherence_helpers in lint and
+# grid_path_oracle in stages. These three are appended, not inserted (workspace rule, see the
+# model conftest).
+for directory in (".", "lint", "stages"):
     sys.path.append(str(Path(__file__).parent / directory))
 
 

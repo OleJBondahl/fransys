@@ -25,6 +25,7 @@ from . import lookups
 from ._band_align import _band_top, _cascade_bottom, _participants
 from ._bands import band_of
 from .host_offsets import _next_slot, attachment_offsets
+from .line_room import line_room
 from .references.marker_boxes import FLOOR, Digits, reference_box_width
 from .room import grow_keepout, room_offset
 from .stack_room import make_room
@@ -283,9 +284,11 @@ def _stack_page(
     # C14: the first rows leave room above for their texts (tags, point texts, markers on N
     # ports) and the last rows below, inside the content box
     lift, sink = _text_room(page, profile, drawn_of, texts)
+    # HL18 (layout-0158): and room for a leaving line and its stub beyond a line's pins
+    up, down = line_room(page, drawn_of, stacking.line_ends, profile)
     # M4: every page keeps it, a reference or none
     band = _reference_band(sheet, profile, stacking.digits)
-    lift, sink = max(lift, band), max(sink, band)
+    lift, sink = max(lift, band, up), max(sink, band, down)
     # M9: two ports stacked along a stub stand as far apart as the texts at them reach out
     make_room(page, drawn_of, texts, gaps_of=gaps_of, profile=profile)
     top = stacking.headroom_lanes * WIRING_GRID + lift

@@ -267,7 +267,12 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
     # Positive first: layout's surface really does resolve to its three names, and the encode
     # module's `write_json` really is measured, so an empty answer is not an unread file.
     resolved = {entry.name for entry in lean_surface.resolve_surface_names(("fransys_layout",))}
-    assert resolved == {"SymbolPortError", "lay_out_cables", "lay_out_schematic"}
+    assert resolved == {
+        "SymbolPortError",
+        "lay_out_cables",
+        "lay_out_diagrams",
+        "lay_out_schematic",
+    }
     assert "write_json" in {
         entry.name for entry in lean_surface.resolve_surface_names(("fransys_model.kernel",))
     }

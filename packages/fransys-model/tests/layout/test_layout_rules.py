@@ -35,6 +35,7 @@ from fransys_model.layout import (
     AUTHORED_KINDS,
     CABLE_KINDS,
     DERIVED_KINDS,
+    DIAGRAM_KINDS,
     Chain,
     ChainEntry,
     CrossReferencePartner,
@@ -175,6 +176,29 @@ def test_a_layout_enum_has_exactly_its_contract_members_and_is_registered(enum: 
 _COMMON = {"id", "key", "ext"}
 _FIELDS: dict[type, set[str]] = {
     layout.Chain: {"entries"},
+    layout.DiagramSheet: {"unit", "number", "produced_by"},
+    layout.DiagramBox: {
+        "sheet",
+        "subject",
+        "dashed",
+        "x",
+        "y",
+        "width",
+        "height",
+        "tabs",
+        "produced_by",
+    },
+    layout.DiagramLine: {
+        "sheet",
+        "cable",
+        "a",
+        "b",
+        "points",
+        "text_x",
+        "text_y",
+        "produced_by",
+    },
+    layout.DiagramMarker: {"sheet", "line", "at_sheet", "x", "y", "produced_by"},
     layout.CableBlock: {
         "subject",
         "unit",
@@ -222,6 +246,7 @@ _FIELDS: dict[type, set[str]] = {
     layout.KeepTogether: {"groups"},
     layout.BreakBefore: {"group"},
     layout.OrderHint: {"before", "after"},
+    layout.SideHint: {"function", "side"},
     layout.SymbolChoice: {"function", "template", "part", "kind", "symbol", "port_map"},
     layout.SheetFormat: {
         "name",
@@ -265,6 +290,27 @@ _FIELDS: dict[type, set[str]] = {
         "ports",
         "sides",
         "port_offsets",
+    },
+    layout.HarnessLine: {"page", "harness", "branch", "points", "text_x", "text_y", "produced_by"},
+    layout.ConnectorBox: {
+        "page",
+        "function",
+        "x",
+        "y",
+        "width",
+        "height",
+        "texts",
+        "cells",
+        "produced_by",
+    },
+    layout.HarnessFanOut: {
+        "page",
+        "harness",
+        "branch",
+        "x",
+        "y",
+        "legs",
+        "produced_by",
     },
     layout.Route: {"page", "conductor", "net", "a", "b", "points", "produced_by"},
     layout.LinkMarker: {
@@ -335,8 +381,13 @@ def test_every_layout_kind_is_authored_or_derived_and_never_both() -> None:
         for value in vars(importlib.import_module(f"{layout.__name__}.{info.name}")).values()
         if isinstance(value, type) and str(vars(value).get("__kind__", "")).startswith("layout.")
     }
-    assert records == {*AUTHORED_KINDS, *DERIVED_KINDS, *CABLE_KINDS}
-    kinds = (set(AUTHORED_KINDS), set(DERIVED_KINDS), set(CABLE_KINDS))
+    assert records == {*AUTHORED_KINDS, *DERIVED_KINDS, *CABLE_KINDS, *DIAGRAM_KINDS}
+    kinds = (
+        set(AUTHORED_KINDS),
+        set(DERIVED_KINDS),
+        set(CABLE_KINDS),
+        set(DIAGRAM_KINDS),
+    )
     assert sum(map(len, kinds)) == len(records)
     assert set(_FIELDS) == records
 

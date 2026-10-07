@@ -10,7 +10,11 @@ from fransys_model.derive import (
     top_level_cables,
     unit_cables,
 )
-from fransys_model.derive.cable_drawing import cable_block_key, cable_subject
+from fransys_model.derive.cable_drawing import (
+    cable_block_key,
+    cable_subject,
+    wire_harness_subjects,
+)
 from fransys_model.derive.drawing_text import page_title, page_title_groups
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes, items, parts
@@ -166,15 +170,33 @@ def _harness_block(model: Model, subject: Id[Item], key: str) -> Block:
     return Block(key, part.mpn, _join_part_line(part.mpn, part.description))
 
 
+def wire_only_subject(
+    model: Model, record: Document, cables: tuple[HarnessCable, ...]
+) -> Id[Item] | None:
+    """The document's own harness item when it has single wires and no cable (HA-H1 A1).
+
+    A SYSTEM or unit document never has one. The CONTENTS table stays cable-only: no row for it.
+    """
+    if cables or record.item is None or record.preset is DocumentPreset.SYSTEM:
+        return None
+    if document_unit(model, record) is not None:
+        return None
+    return record.item if record.item in wire_harness_subjects(model) else None
+
+
 def cable_blocks(
     model: Model, record: Document, cables: tuple[HarnessCable, ...]
 ) -> tuple[Block, ...]:
     """The document's blocks, one per `cable_subject`, each at its first cable's place (CD12).
 
-    A document reads absolutely unless it is a unit document, whose reading is its unit.
+    A document reads absolutely unless it is a unit document, whose reading is its unit. A
+    harness with wires and no cable gets its one block too (`wire_only_subject`).
     """
     unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record)
     blocks: dict[str, Block] = {}
+    if (wired := wire_only_subject(model, record, cables)) is not None:
+        key = cable_block_key(None, wired)
+        blocks[key] = _harness_block(model, wired, key)
     for cable in cables:
         subject = cable_subject(model, cable.cable)
         key = cable_block_key(unit, subject)
@@ -250,7 +272,8 @@ def harness_drawing_source(
     """Cable block pages, one run per part (pdf-0020, pdf-0022); `""` for SYSTEM with no cable."""
     if system_has_no_top_level_cables(record, cables_found):
         return ""
-    if not cables_found:
+    blocks = cable_blocks(model, record, cables_found)
+    if not blocks:
         fields = TitleBlockFields(
             *document_facts(model, record),
             page_title="Harness drawing",
@@ -261,4 +284,4 @@ def harness_drawing_source(
         )
         margin = text_margin(sheet)
         return f"#page(margin: {margin}, background: {background(sheet, fields)})[{NO_DRAWINGS}]"
-    return _cable_runs(model, record, sheet, cable_blocks(model, record, cables_found), svgs)
+    return _cable_runs(model, record, sheet, blocks, svgs)

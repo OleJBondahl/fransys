@@ -11,9 +11,10 @@ from dataclasses import dataclass
 from itertools import pairwise
 lazy from collections.abc import Mapping, Sequence
 
-from fransys_layout.engines.cable.channel import plan_links
+from fransys_layout.engines.cable.place_rows import landing_map
 from fransys_layout.engines.cable.values import BlockFacts, CoreFacts, PlacedEnd, PlacedWire
 from fransys_layout.geometry import WIRING_GRID, Point
+from fransys_layout.stages.channel import plan_links
 
 G = WIRING_GRID
 
@@ -42,12 +43,12 @@ def room(facts: BlockFacts) -> int:
 
 def links_of(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> tuple[Link, ...]:
     """The block's links in core-key order whose pins stand in `ends`."""
-    where = {cell.port: (cell.x, end) for end in ends for cell in end.cells}
+    where = landing_map(ends)
     found = []
-    for core in (c for cable in facts.cables for c in cable.cores if c.link):
-        if core.end_a not in where:
+    for core in (c for c in facts.cores if c.link):
+        if (core.conductor, core.end_a) not in where:
             continue
-        (a, end), (b, _) = where[core.end_a], where[core.end_b]
+        (a, end), (b, _) = where[core.conductor, core.end_a], where[core.conductor, core.end_b]
         y = end.y + end.height if end.top else end.y
         found.append(Link(core=core, a=a, b=b, y=y, top=end.top))
     return tuple(found)

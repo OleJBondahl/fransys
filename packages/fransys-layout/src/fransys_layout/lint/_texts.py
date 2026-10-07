@@ -59,12 +59,18 @@ def text_overlaps(
     labels: tuple[PlacedLabel, ...],
     markers: tuple[LinkMarker, ...],
     bodies: tuple[tuple[PlacedFunction, Box], ...],
+    ink: tuple[tuple[Handle, Box], ...] = (),
 ) -> list[Finding]:
-    """One `TEXT_OVERLAP` per pair of texts, or text and foreign body, that share interior."""
+    """One `TEXT_OVERLAP` per pair of texts, or text and foreign body, that share interior.
+
+    `ink` holds a harness line's label, stub and connector boxes, each checked against bodies too.
+    """
     texts = [
         *((label.subject, label.box) for label in labels),
         *((marker.port, marker.box) for marker in markers if marker.lead and not marker.symbol),
+        *ink,
     ]
+    drawn = {subject for subject, _ in ink}
     found: dict[tuple[Handle, Handle], Finding] = {}
 
     def _fire(a: Handle, b: Handle, message: str) -> None:
@@ -80,7 +86,7 @@ def text_overlaps(
         if overlaps(box, other_box):
             _fire(subject, other, "two texts on the page overlap")
     for subject, box in texts:
-        if subject.kind != "function":
+        if subject.kind != "function" and subject not in drawn:
             continue
         for function, body in bodies:
             if subject != function.function and overlaps(box, body):

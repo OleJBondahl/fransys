@@ -41,6 +41,7 @@ class TextKind(Enum):
     CONTACT_IMAGE = "contact_image"
     CROSS_REFERENCE = "cross_reference"
     POWER = "power"
+    HARNESS_LINE = "harness_line"
 
 
 @value

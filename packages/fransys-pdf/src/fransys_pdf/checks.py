@@ -36,8 +36,10 @@ from fransys_model.vocab import PageKind, documents, projects
 
 from ._cable_checks import harness_block_messages
 from ._cover_checks import cover_overflow_findings
+from ._diagrams import diagram_no_drawings_messages
 from ._drawings import (
     _page_title_labels,
+    cable_blocks,
     harness_cables_for,
     replica_only_sets,
     run_headings,
@@ -251,7 +253,7 @@ def _harness_page_overflow_findings(ctx: _OverflowContext) -> tuple[Finding, ...
     if PageKind.HARNESS_DRAWING not in ctx.pages:
         return ()
     cables_found = harness_cables_for(ctx.model, ctx.record, ctx.pages)
-    if not cables_found:
+    if not cable_blocks(ctx.model, ctx.record, cables_found):
         return ()
     target = _FieldTarget(subject=ctx.subject, sheet=ctx.sheet)
     findings = []
@@ -382,7 +384,7 @@ def _harness_no_drawings_messages(
 ) -> list[str]:
     """The `HARNESS_DRAWING` messages: "no cable at all", else `harness_block_messages`'s."""
     cables_found = harness_cables_for(model, record, pages)
-    if not cables_found:
+    if not cable_blocks(model, record, cables_found):
         if system_has_no_top_level_cables(record, cables_found):
             # STEP 4b addition: the model simply has no top-level cable at all -- the SYSTEM
             # preset's own DOCUMENT_NO_TOP_LEVEL_CABLES INFO covers it below, not this ERROR.
@@ -399,13 +401,11 @@ def _no_drawings_findings(
     pages: tuple[PageKind, ...],
     svgs: Mapping[str, str],
 ) -> tuple[Finding, ...]:
-    messages = []
-    if PageKind.SCHEMATIC in pages:
-        message = _schematic_no_drawings_message(model, record, pages, svgs)
-        if message is not None:
-            messages.append(message)
+    schematic = _schematic_no_drawings_message(model, record, pages, svgs)
+    messages = [schematic] if PageKind.SCHEMATIC in pages and schematic is not None else []
     if PageKind.HARNESS_DRAWING in pages:
         messages.extend(_harness_no_drawings_messages(model, record, pages, svgs))
+    messages.extend(diagram_no_drawings_messages(model, record, pages, svgs))
     return tuple(
         Finding(
             code="DOCUMENT_NO_DRAWINGS", severity=Severity.ERROR, subjects=(subject,), message=m

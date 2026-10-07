@@ -156,7 +156,7 @@ def test_the_third_party_check_can_fail():
 
 # --- The import surface (SURFACE spec, decision 0046, MS1/MS3/MS6): outside a package, source
 # crosses into another workspace package only through that package's own top-level `__all__`
-# (MS6), or, for the model, one of its seven named modules (MS1). `lean_surface` is the one home
+# (MS6), or, for the model, one of its eight named modules (MS1). `lean_surface` is the one home
 # of "the surface"; this test keeps no module list of its own. `graphical_symbols` is outside:
 # it is third-party, never a workspace package, so it never reaches `FIRST_PARTY` at all.
 
@@ -165,7 +165,7 @@ SURFACE_NAMES: dict[str, tuple[str, ...]] = lean_surface.surface_names()
 
 # Layout's own imports of `fransys_model` are still its pre-redesign deep paths (step 5 is
 # mid-rewrite); this ONE dated line exempts that one pair until its follow-up rewrites them to
-# the seven surface modules and removes it. Nothing else is exempt (2026-09-27, SURFACE MS3).
+# the eight surface modules and removes it. Nothing else is exempt (2026-09-27, SURFACE MS3).
 SURFACE_EXEMPT: frozenset[tuple[str, str]] = frozenset({("fransys_layout", "fransys_model")})
 
 
@@ -271,7 +271,7 @@ def test_the_surface_check_can_fail():
     ) == {"fransys_layout.engines.schematic.lay_out_schematic"}
     assert surface_violations("fransys", "from fransys_layout import lay_out_schematic") == set()
     # Acceptance 9 (MS3, module binding): `baseline.listing` passes; `baseline._common_location`
-    # and a submodule bound directly (`designation`, not one of the seven) both fail.
+    # and a submodule bound directly (`designation`, not one of the eight) both fail.
     assert (
         surface_violations(
             "fransys",
@@ -286,6 +286,21 @@ def test_the_surface_check_can_fail():
     assert surface_violations("fransys", "from fransys_model.derive import designation") == {
         "fransys_model.derive.designation"
     }
+    # `derive.cable_drawing` (model-0159): a name in its `__all__` passes, a private name and a
+    # private attribute off the bound module both fail.
+    assert (
+        surface_violations(
+            "fransys_render", "from fransys_model.derive.cable_drawing import cable_heading"
+        )
+        == set()
+    )
+    assert surface_violations(
+        "fransys_render", "from fransys_model.derive.cable_drawing import _not_in_all"
+    ) == {"fransys_model.derive.cable_drawing._not_in_all"}
+    assert surface_violations(
+        "fransys",
+        "from fransys_model.derive import cable_drawing\ncable_drawing._hidden()\n",
+    ) == {"fransys_model.derive.cable_drawing._hidden"}
     # Layout's own deep model imports are exempt (MS3), until step 5's follow-up.
     assert (
         surface_violations(
@@ -667,3 +682,11 @@ def test_the_cycle_check_catches_a_cycle_through_a_package_init(tmp_path: Path):
     # A relative import resolves against the importing module's package (`..` from `pkg.sub`).
     _write_tree(tmp_path, {"pkg/m.py": "from .sub import n\n"})
     assert import_cycles(tmp_path) == [["pkg.m", "pkg.sub.n"]]
+
+
+def test_the_model_copy_of_g_per_module_matches_its_home():
+    """`fransys_model` copies `G_PER_MODULE` (invariant 2 bars the import); the copy must agree."""
+    import electrical_symbols
+    from fransys_model.derive import drawing_text
+
+    assert drawing_text._G_PER_MODULE == electrical_symbols.G_PER_MODULE

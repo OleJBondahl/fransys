@@ -112,8 +112,9 @@ def test_k1_markings_and_terminal_tags_stand_clear_of_every_marker_box(
     On this page only the second slot call reads the markers: without them in its `occupied`,
     contact 4's reference stands at (203, 116), on a marker box of K1's sheet.
     """
-    # UNDO: stages/pagerun.py `finish_page`: drop `*marker_shapes(markers)` from the second slot
-    #     call's `occupied`: contact 4's cross-reference stands on the K1 run's box
+    # UNDO: stages/pagerun.py `finish_page`: drop `*(one.box for one in drawn_shapes(markers))`
+    #     from the second slot call's `occupied`: contact 4's cross-reference stands on the K1
+    #     run's box
     boxes, markings, tags, references, findings = _parts(page)
     assert boxes
     assert len(markings) == 4

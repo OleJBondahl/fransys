@@ -17,7 +17,7 @@ from fransys_layout.geometry import (
     PortGeometry,
 )
 from fransys_layout.stages import Connection, DrawnPort, NetGroup, PortRef, Role
-from fransys_layout.stages._routing import shortest_path
+from fransys_layout.stages.grid_path import grid_path
 from fransys_layout.stages.route import ROUTE_FAILED
 from fransys_model.kernel import Severity
 
@@ -307,9 +307,9 @@ def test_a_failed_edge_is_searched_again_only_when_the_widening_adds_room(
 
     def counted(*args):
         calls.append(args)
-        return shortest_path(*args)
+        return grid_path(*args)
 
-    monkeypatch.setattr(module, "shortest_path", counted)
+    monkeypatch.setattr(module, "grid_path", counted)
     wall = (
         Box(x=16, y=65, width=96, height=8),
         Box(x=16, y=48, width=40, height=25),

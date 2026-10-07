@@ -1,4 +1,4 @@
-Fransys output: laid-out model to SVG pages.
+Fransys output: laid-out model to SVG pages and cable blocks.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.
 
@@ -16,6 +16,8 @@ those, once, on every page). `check(model) -> tuple[Finding, ...]` reports `UNKN
 imports `fransys_model`, `graphical_symbols` and `electrical_symbols` only, never
 `fransys_layout`.
 
+`cable_blocks(model) -> frozendict[str, str]` renders every `layout.cable_block` to one SVG, keyed `cable_block_key(unit, subject)` (render-0007). It draws only what the block's records hold, and every text is a `derive.cable_drawing` function's. A core is two runs that stop at the closed cable box. A harness block's dashed box surrounds its cable boxes and carries the harness's `printed_designation`. A by-others end box is dashed, its edges and dividers in one phase.
+
 Status: work package `render` complete (PARTS 1-7, including PART 5b's `LAYOUT_MISSING` fix and
 PART 7's D7 font-size fix), wired into the facade (`fransys.pipeline`). Does not merge on
 green CI alone: the owner looks at the rendered pages and the complete demo cabinet PDF first
@@ -23,7 +25,7 @@ green CI alone: the owner looks at the rendered pages and the complete demo cabi
 See `docs/decisions/render-0001-junction-rule-constants-and-open-choices.md` for the junction
 rule, this package's own constants and their sources, and the choices made along the way. The
 link-marker glyph draws the record's own `width`/`height` (model-0037, layout-0043, the "marker
-box" work package's PART B): its box is no longer a render-side constant.
+box" work package's PART B): its box is no longer a render-side constant. CT5 added `cable_blocks` (render-0007).
 
 ## Rules moved from docstrings (docstring sweep, 2026-10-02)
 

@@ -34,12 +34,13 @@ from fransys_model.derive.drawing_text import page_title
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import PageKind, documents, projects
 
-from ._cable_runs import part_groups
+from ._cable_checks import harness_block_messages
 from ._cover_checks import cover_overflow_findings
 from ._drawings import (
     _page_title_labels,
     harness_cables_for,
     replica_only_sets,
+    run_headings,
     schematic_missing_keys,
     schematic_pages,
     system_has_no_top_level_cables,
@@ -264,7 +265,7 @@ def _harness_page_overflow_findings(ctx: _OverflowContext) -> tuple[Finding, ...
     )
     if finding is not None:
         findings.append(finding)
-    for heading, _group in part_groups(cables_found):
+    for heading in run_headings(ctx.model, ctx.record, cables_found):
         finding = _one_line_overflow_finding(
             target, "page_title", heading, where=heading, fallback=None
         )
@@ -376,19 +377,19 @@ def _schematic_no_drawings_message(
     return None
 
 
-def _harness_no_drawings_message(
-    model: Model, record: Document, pages: tuple[PageKind, ...]
-) -> str | None:
-    """CT2's `HARNESS_DRAWING` message: only "no cable at all" is left (no missing-key case)."""
+def _harness_no_drawings_messages(
+    model: Model, record: Document, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
+) -> list[str]:
+    """The `HARNESS_DRAWING` messages: "no cable at all", else `harness_block_messages`'s."""
     cables_found = harness_cables_for(model, record, pages)
     if not cables_found:
         if system_has_no_top_level_cables(record, cables_found):
             # STEP 4b addition: the model simply has no top-level cable at all -- the SYSTEM
             # preset's own DOCUMENT_NO_TOP_LEVEL_CABLES INFO covers it below, not this ERROR.
-            return None
+            return []
         subject = "unit" if document_unit(model, record) is not None else "harness"
-        return f"HARNESS_DRAWING: the {subject} has no cable"
-    return None
+        return [f"HARNESS_DRAWING: the {subject} has no cable"]
+    return harness_block_messages(model, record, pages, svgs)
 
 
 def _no_drawings_findings(
@@ -404,9 +405,7 @@ def _no_drawings_findings(
         if message is not None:
             messages.append(message)
     if PageKind.HARNESS_DRAWING in pages:
-        message = _harness_no_drawings_message(model, record, pages)
-        if message is not None:
-            messages.append(message)
+        messages.extend(_harness_no_drawings_messages(model, record, pages, svgs))
     return tuple(
         Finding(
             code="DOCUMENT_NO_DRAWINGS", severity=Severity.ERROR, subjects=(subject,), message=m

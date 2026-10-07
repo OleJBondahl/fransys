@@ -26,7 +26,12 @@ def engine(lib: Draft) -> Draft:
     c1 = e.location("C1", "")
     i = {tag: e.item(mpn, name=tag, tag=tag, at=c1) for tag, mpn in PARTS.items()}
     out = i["G1"].fn("out")
-    e.supply("24VDC", current="dc", rails={"P24": ("24", None), "P0": ("0", None)})
+    e.supply(
+        "24VDC",
+        current="dc",
+        rails={"P24": ("24", None), "P0": ("0", None)},
+        pins=[out["+"], out["-"]],
+    )
     e.net("P24", out["+"], cls="power", potential="P24")
     e.net("P0", out["-"], cls="power", potential="P0")
     wire = e.wiring(colour="BU", gauge="0.75")

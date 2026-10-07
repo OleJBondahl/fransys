@@ -1,4 +1,4 @@
-"""`unit_cables` reads unit-relative and `unit_cable_page_key` (decision model-0090).
+"""`unit_cables` reads unit-relative and `cable_block_key` (decision model-0090).
 
 The owner's rule: "a unit's drawing shows nothing above the unit". A nested unit's cable prints
 its ends against the unit's own location and its outside end as `""` (model-0056), a top-level
@@ -23,9 +23,9 @@ from fransys_model.derive import (
     cable_rows,
     harness_cables,
     top_level_cables,
-    unit_cable_page_key,
     unit_cables,
 )
+from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.derive.designation import product_designation
 from fransys_model.derive.drawing_text import product_designation_in
 from fransys_model.derive.harness import all_cables
@@ -307,16 +307,17 @@ def test_product_designation_in_prefixes_only_what_is_below_the_context() -> Non
     assert product_designation_in(model, design.m1, None) == "+EXT-M1"
 
 
-# -- unit_cable_page_key ------------------------------------------------------------------------
+# -- cable_block_key ------------------------------------------------------------------------
 
 
-def test_the_unit_cable_page_key_is_one_per_unit_and_cable_and_not_the_items() -> None:
+def test_the_cable_block_key_is_one_per_unit_and_cable_and_not_the_items() -> None:
     """Distinct per unit and per cable, equal for equal inputs, never the item document's key."""
     design = _design()
-    key = unit_cable_page_key(design.hu, design.w1)
-    assert key == unit_cable_page_key(design.hu, design.w1)
-    assert key != unit_cable_page_key(design.top, design.w1)
-    assert key != unit_cable_page_key(design.hu, design.w2)
+    key = cable_block_key(design.hu, design.w1)
+    assert key == cable_block_key(design.hu, design.w1)
+    assert key != cable_block_key(design.top, design.w1)
+    assert key != cable_block_key(design.hu, design.w2)
     assert key != render_id(design.w1)
+    assert cable_block_key(None, design.w1) == render_id(design.w1)
     assert key == f"{render_id(design.hu)}~{render_id(design.w1)}"
     assert key.replace(":", "-") == f"unit-{design.hu.value}~item-{design.w1.value}"

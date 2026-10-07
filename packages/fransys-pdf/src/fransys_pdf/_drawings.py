@@ -4,20 +4,18 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    cell_text,
-    column_values,
     document_unit,
-    external,
     harness_cables,
     item_designation,
     top_level_cables,
     unit_cables,
 )
-from fransys_model.derive.drawing_text import external_note, page_title, page_title_groups
+from fransys_model.derive.cable_drawing import cable_block_key, cable_subject
+from fransys_model.derive.drawing_text import page_title, page_title_groups
 from fransys_model.kernel import render_id
-from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes
+from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes, items, parts
 
-from ._cable_runs import part_groups, run_page
+from ._cable_runs import Block, part_groups, run_page
 from ._frame import TitleBlockFields, background, text_margin
 from ._geometry import (
     _drawing_set_pages,
@@ -33,9 +31,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive import HarnessCable
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Id, Model
     from fransys_model.layout import DrawingSet, Page, SheetFormat
-    from fransys_model.vocab import Document
+    from fransys_model.vocab import Document, Item
 
 NO_DRAWINGS = '#par(text("No drawings."))'
 
@@ -146,64 +144,71 @@ def system_has_no_top_level_cables(
     return record.preset is DocumentPreset.SYSTEM and not cables_found
 
 
-_CORE_HEADERS = ("Core", "From", "To", "Label")
-_CORE_COLUMNS = ("index", "end_a_designation", "end_b_designation", "label")
-
-
 def _part_line(cable: HarnessCable) -> str:
     """The page's part line (pdf-0021): mpn, description, cores x gauge; unset ones omitted."""
-    parts = [cable.mpn, cable.description]
+    composite = None
     if cable.core_count is not None and cable.gauge_mm2 is not None:
-        parts.append(f"{cable.core_count} x {cable.gauge_mm2} mm²")
-    return ", ".join(part for part in parts if part)
+        composite = f"{cable.core_count} x {cable.gauge_mm2} mm²"
+    return _join_part_line(cable.mpn, cable.description, composite)
 
 
-def _cable_heading(cable: HarnessCable) -> str:
-    """A cable's heading (pdf-0021): its designation, then its length when it has one."""
-    return (
-        f"{cable.designation}, {cable.length_mm} mm"
-        if cable.length_mm is not None
-        else cable.designation
-    )
+def _join_part_line(*texts: str | None) -> str:
+    """The one part-line format, the lone cable's and the harness's: set texts, comma-joined."""
+    return ", ".join(text for text in texts if text)
 
 
-def _cable_external_note(model: Model, record: Document, cable: HarnessCable) -> str | None:
-    """CT3's "by others" line (Y3), SYSTEM only: external cable and ends, not blank ends."""
-    if record.preset is not DocumentPreset.SYSTEM:
-        return None
-    covered = [cable.designation] if external(model, cable.cable) else []
-    covered.extend(
-        end.designation for end in cable.ends if end.designation and external(model, end.item)
-    )
-    if not covered:
-        return None
-    return f"{external_note()}: {', '.join(covered)}"
+def _harness_block(model: Model, subject: Id[Item], key: str) -> Block:
+    """A harness block: in the run of the harness's own part, or of none (CD9, Q8)."""
+    part_id = items(model)[subject].part
+    if part_id is None:
+        return Block(key, "", "")
+    part = parts(model)[part_id]
+    return Block(key, part.mpn, _join_part_line(part.mpn, part.description))
 
 
-def _cable_table(cable: HarnessCable) -> str:
-    """CT3's per-core table, shared `cell_text` (pdf-0016); header only without cores (CT4)."""
-    header = "table.header(" + ", ".join(f"strong(text({literal(h)}))" for h in _CORE_HEADERS) + ")"
-    cells = [header]
-    for core in cable.cores:
-        values = column_values(core, _CORE_COLUMNS)
-        cells.extend(f"text({literal(cell_text(value))})" for value in values)
-    return f"#table(columns: {len(_CORE_HEADERS)}, stroke: 0.5pt, " + ", ".join(cells) + ")"
+def cable_blocks(
+    model: Model, record: Document, cables: tuple[HarnessCable, ...]
+) -> tuple[Block, ...]:
+    """The document's blocks, one per `cable_subject`, each at its first cable's place (CD12).
+
+    A document reads absolutely unless it is a unit document, whose reading is its unit.
+    """
+    unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record)
+    blocks: dict[str, Block] = {}
+    for cable in cables:
+        subject = cable_subject(model, cable.cable)
+        key = cable_block_key(unit, subject)
+        if key in blocks:
+            continue
+        blocks[key] = (
+            Block(key, cable.mpn or "", _part_line(cable))
+            if subject == cable.cable
+            else _harness_block(model, subject, key)
+        )
+    return tuple(blocks.values())
 
 
-def _cable_body(model: Model, record: Document, cable: HarnessCable) -> str:
-    """One cable's block: its heading, the "by others" line on SYSTEM, core table."""
-    lines = [f"#strong(text({literal(_cable_heading(cable))}))"]
-    note = _cable_external_note(model, record, cable)
-    if note is not None:
-        lines.append(f"#linebreak()#text({literal(note)})")
-    lines.append(_cable_table(cable))
-    return "\n".join(lines)
+def run_headings(model: Model, record: Document, cables: tuple[HarnessCable, ...]) -> list[str]:
+    """The part heading of each run, in page order: the title-block `page_title` of its pages."""
+    return [heading for heading, _ in part_groups(cable_blocks(model, record, cables))]
+
+
+def block_missing_keys(blocks: tuple[Block, ...], svgs: Mapping[str, str]) -> tuple[str, ...]:
+    """The keys of `blocks` that `svgs` has no entry for, as `schematic_missing_keys` does."""
+    return tuple(block.key for block in blocks if block.key not in svgs)
 
 
 def _cable_runs(
-    model: Model, record: Document, sheet: SheetFormat, cables: tuple[HarnessCable, ...]
+    model: Model,
+    record: Document,
+    sheet: SheetFormat,
+    blocks: tuple[Block, ...],
+    svgs: Mapping[str, str],
 ) -> str:
-    """One page run per part (pdf-0020); each run's title block names the part number."""
+    """One page run per part (pdf-0020); each run's title block names the part number.
+
+    A block with no SVG is left out: `check` reports it, and only intermediates show the page.
+    """
     assert (  # noqa: S101 -- a harness document's subject is an item or a unit, or this is SYSTEM
         record.item is not None
         or record.unit is not None
@@ -216,7 +221,7 @@ def _cable_runs(
         else subject_label(model, record)
     )
     runs = []
-    for index, (heading, group) in enumerate(part_groups(cables)):
+    for index, (heading, group) in enumerate(part_groups(blocks)):
         fields = TitleBlockFields(
             *document_facts(model, record),
             page_title=heading,
@@ -225,16 +230,24 @@ def _cable_runs(
             notice=project_notice(model),
             logo=record.logo,
         )
-        bodies = [_cable_body(model, record, cable) for cable in group]
-        line = _part_line(group[0]) if group[0].mpn else heading
+        bodies = [
+            f'#image(bytes({literal(svgs[block.key])}), format: "svg")'
+            for block in group
+            if block.key in svgs
+        ]
+        line = group[0].line if group[0].mpn else heading
         runs.append(run_page(sheet, index, line, background(sheet, fields), bodies))
     return "\n#pagebreak()\n".join(runs)
 
 
 def harness_drawing_source(
-    model: Model, record: Document, sheet: SheetFormat, cables_found: tuple[HarnessCable, ...]
+    model: Model,
+    record: Document,
+    sheet: SheetFormat,
+    cables_found: tuple[HarnessCable, ...],
+    svgs: Mapping[str, str],
 ) -> str:
-    """Table pages, one run per cable part (pdf-0018, pdf-0020); `""` for SYSTEM with no cable."""
+    """Cable block pages, one run per part (pdf-0020, pdf-0022); `""` for SYSTEM with no cable."""
     if system_has_no_top_level_cables(record, cables_found):
         return ""
     if not cables_found:
@@ -248,4 +261,4 @@ def harness_drawing_source(
         )
         margin = text_margin(sheet)
         return f"#page(margin: {margin}, background: {background(sheet, fields)})[{NO_DRAWINGS}]"
-    return _cable_runs(model, record, sheet, cables_found)
+    return _cable_runs(model, record, sheet, cable_blocks(model, record, cables_found), svgs)

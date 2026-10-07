@@ -29,13 +29,11 @@ Harness pages (decisions pdf-0015 to pdf-0018). CONTENTS's rows are
 `derive.rows.ContentsRow` (model-0106): this package holds no copy of the row shape or the ends
 join. `requests_harness_pages(pages)` is true when a
 page list holds `CONTENTS` or `HARNESS_DRAWING`, the kinds that show cables; the cable choice
-reads it. A `HARNESS_DRAWING` page is a run of table pages per cable part (pdf-0020), built from `derive`'s
-`HarnessCable` row, with no SVG (pdf-0018, cable-tables spec CT2 and CT3). Its page header is the part line (mpn, description, cores x gauge, pdf-0021); each cable is
-headed by its designation, and the table has one row per core. On the system document only, the heading
-also carries the `by others` note (`derive.drawing_text.external_note()`), naming the cable or
-the ends supplied by others. WireViz drew these pages until decision 0055 archived it; our own
-cable drawings come later (0056). A unit document keys its cable pages by
-`derive.unit_cable_page_key(unit, cable)` and prints its cables unit-relative (model-0090). So a
+reads it. A `HARNESS_DRAWING` page is a run of pages per cable part (pdf-0020). Each page places
+the cable block SVGs the facade hands in, one per block (pdf-0022). Its page header is the part
+line (mpn, description, cores x gauge, pdf-0021). A harness block runs under its harness's own part, else under "No part number" (pdf-0022). `fransys_layout`'s cable engine places each
+block and `fransys_render.cable_blocks` draws it. `check` reports a block with no SVG, or one
+larger than the page body, as `DOCUMENT_NO_DRAWINGS`. A block's SVG is keyed `cable_block_key(unit, subject)` of `derive.cable_drawing` (model-0159). A unit document's blocks print its cables unit-relative (model-0090). So a
 harness that is a unit's appears twice: absolute in its item document, unit-relative in the
 unit's. `CONTENTS` is left out when the document's subject has no cable (pdf-0019).
 
@@ -77,6 +75,6 @@ nothing (pdf-0012). An end inside the list context prints short; one outside pri
 path first (model-0054).
 
 Status: done. Work package `pdf` (decisions pdf-0001, pdf-0002): the pure package, list and BOM
-pages, harness pages (cable tables since pdf-0018), and the schematic pages from `fransys_render`, compiled by the
+pages, harness pages (drawn cable blocks since pdf-0022), and the schematic pages from `fransys_render`, compiled by the
 facade. Work package `page frame` (pdf-0003 to pdf-0005, R11 in pdf-0010): the frame, grid and
 title block on every page, drawn as the Typst page background.

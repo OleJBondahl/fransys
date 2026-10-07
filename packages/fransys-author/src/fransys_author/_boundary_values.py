@@ -44,6 +44,6 @@ def _check(argument: str, value: object, expected: type[Rating | Operating]) -> 
     if not isinstance(value, expected):
         msg = f"boundary() {argument}= must be a {expected.__name__} or None, not {value!r}"
         raise AuthorError(msg)
-    if all(getattr(value, f.name) is None for f in dataclasses.fields(expected)):
+    if all(getattr(value, f.name) in (None, ()) for f in dataclasses.fields(expected)):
         msg = f"boundary() {argument}= {value!r} states no value; set at least one field"
         raise AuthorError(msg)

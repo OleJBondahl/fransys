@@ -9,6 +9,7 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.types import Home
 from fransys_model.derive.drawing_text import marker_lines
 
 from .cuts import link_world
@@ -19,8 +20,8 @@ from .nets import branch_pages, shown
 from .types import Leave, LinkWorld, MarkerDecision, MarkerSpec, PortEnd
 
 if TYPE_CHECKING:
-    from fransys_layout.stages.types import Column, Connection, Profile
-    from fransys_model.kernel import Id
+    from fransys_layout.stages.types import Cell, Column, Connection, Profile
+    from fransys_model.kernel import AuthoringKey, Id
 
     from .types import MarkerScene, Page, Star
 
@@ -111,31 +112,37 @@ def split_markers(
     found = []
     for column in columns:
         for cell in column.cells:
-            if not cell.replica or cell.host is None or cell.host not in terminal:
-                continue
-            wire = next(
-                (
-                    c
-                    for c in connections
-                    if {c.a.function, c.b.function} == {cell.function, cell.host}
-                ),
-                None,
-            )
-            pages = world.where.get(cell.function, {})
-            there = next((pg for pg, key in pages.items() if key == column.key), None)
-            home = next((pg for pg, key in sorted(pages.items()) if key != column.key), None)
-            if wire is None or there is None or home is None:
-                continue
-            ref = wire.a if wire.a.function == cell.function else wire.b
-            home_side, home_leave = marker_end(EndRead("split", at_home=True, terminal=True))
-            there_side, there_leave = marker_end(EndRead("split", terminal=True))
-            at_home = (PortEnd(ref=ref, page=home), home_leave)
-            at_there = (PortEnd(ref=ref, page=there), there_leave)
-            owner = MarkerSpec(wire.handle, at_home, at_there, 1, kind="branch", side=home_side)
-            user = MarkerSpec(wire.handle, at_there, at_home, 1, kind="branch", side=there_side)
-            found.extend((decided(owner, scene), decided(user, scene)))
+            if cell.home is Home.ELSEWHERE and cell.host is not None and cell.host in terminal:
+                found.extend(_split_pair(cell, column.key, connections, (world, scene)))
     step = terminal_lift(scene.profile)
     return tuple(replace(m, out=m.out + step) for m in found)
+
+
+def _split_pair(
+    cell: Cell,
+    key: AuthoringKey,
+    connections: tuple[Connection, ...],
+    at: tuple[LinkWorld, MarkerScene],
+) -> list[MarkerDecision]:
+    """The two texts of one split cell: at its home page and at the column that holds it."""
+    world, scene = at
+    wire = next(
+        (c for c in connections if {c.a.function, c.b.function} == {cell.function, cell.host}),
+        None,
+    )
+    pages = world.where.get(cell.function, {})
+    there = next((pg for pg, k in pages.items() if k == key), None)
+    home = next((pg for pg, k in sorted(pages.items()) if k != key), None)
+    if wire is None or there is None or home is None:
+        return []
+    ref = wire.a if wire.a.function == cell.function else wire.b
+    home_side, home_leave = marker_end(EndRead("split", at_home=True, terminal=True))
+    there_side, there_leave = marker_end(EndRead("split", terminal=True))
+    at_home = (PortEnd(ref=ref, page=home), home_leave)
+    at_there = (PortEnd(ref=ref, page=there), there_leave)
+    owner = MarkerSpec(wire.handle, at_home, at_there, 1, kind="branch", side=home_side)
+    user = MarkerSpec(wire.handle, at_there, at_home, 1, kind="branch", side=there_side)
+    return [decided(owner, scene), decided(user, scene)]
 
 
 def decided(spec: MarkerSpec, scene: MarkerScene) -> MarkerDecision:

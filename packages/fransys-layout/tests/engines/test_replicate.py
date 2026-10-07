@@ -12,7 +12,7 @@ from samples import column, connection, function_spec, hid
 from fransys_layout.engines.schematic.read import StageInputs, read_inputs
 from fransys_layout.engines.schematic.read.units import unit_boundaries, unused_functions
 from fransys_layout.geometry import LayoutError
-from fransys_layout.stages import Cell, Column, Role, boundary_key, columns_from_chains
+from fransys_layout.stages import Cell, Column, Home, Role, boundary_key, columns_from_chains
 from fransys_layout.stages.replicate import (
     UnitBoundary,
     replicate_boundaries,
@@ -49,7 +49,7 @@ def _replicas(result: tuple[Column, ...], columns: tuple[Column, ...]) -> tuple[
 def _replica(served: Column, terminal_number: int, spec_key: tuple[str, ...]) -> Column:
     return Column(
         key=(*served.key, "terminal", *spec_key),
-        cells=(Cell(function=hid("function", terminal_number), index=0),),
+        cells=(Cell(function=hid("function", terminal_number), index=0, home=Home.ELSEWHERE),),
         group=served.group,
         role=served.role,
         location=served.location,
@@ -394,7 +394,7 @@ def test_a_boundary_function_gets_a_black_box_replica_in_its_parent_unit() -> No
     )
     result = _replicate_boundaries((home,), model, inputs.functions, (home,))
     (replica,) = _replicas(result, (home,))
-    assert replica.cells == (Cell(function=function_id, index=0),)
+    assert replica.cells == (Cell(function=function_id, index=0, home=Home.ELSEWHERE),)
     assert replica.group == home.group
     assert replica.role == home.role
     assert replica.location == home.location
@@ -463,7 +463,7 @@ def test_a_top_level_units_own_boundary_gets_a_replica_in_the_top_level_set() ->
     )
     result = _replicate_boundaries((home,), model, inputs.functions, (home,))
     (replica,) = _replicas(result, (home,))
-    assert replica.cells == (Cell(function=function_id, index=0),)
+    assert replica.cells == (Cell(function=function_id, index=0, home=Home.ELSEWHERE),)
     assert replica.group == home.group
     assert replica.role == home.role
     assert replica.location == home.location
@@ -505,7 +505,7 @@ def test_a_unit_with_one_boundary_function_replicates_it_into_its_parents_column
     result = replicate_boundaries((home,), (unit,), frozenset(), (spec,), (home,))
 
     (replica,) = _replicas(result, (home,))
-    assert replica.cells == (Cell(function=spec.function, index=0),)
+    assert replica.cells == (Cell(function=spec.function, index=0, home=Home.ELSEWHERE),)
     assert replica.key == boundary_key(spec.key, _PARENT_KEY)
     assert replica.unit == _PARENT
     assert (replica.group, replica.role, replica.location) == (
@@ -533,7 +533,7 @@ def test_a_boundary_rail_terminal_keeps_its_replica_and_loses_its_home_cell() ->
     """RB2 (layout-0120): the parent draws the terminal; the unit's own pages do not."""
     # UNDO: stages/replicate.py, `replicate_boundaries`: `_without_rail_homes(columns, functions)`
     #     -> `columns`
-    spec = dataclasses.replace(function_spec(1), rail=True)
+    spec = dataclasses.replace(function_spec(1), home=Home.ELSEWHERE)
     home = column("home", (1,), group=1)
     unit = UnitBoundary(functions=(spec.function,), parent=_PARENT, parent_key=_PARENT_KEY)
 
@@ -541,7 +541,7 @@ def test_a_boundary_rail_terminal_keeps_its_replica_and_loses_its_home_cell() ->
 
     (only,) = result
     assert only.unit == _PARENT
-    assert only.cells == (Cell(function=spec.function, index=0),)
+    assert only.cells == (Cell(function=spec.function, index=0, home=Home.ELSEWHERE),)
 
 
 def _replicate_boundaries(

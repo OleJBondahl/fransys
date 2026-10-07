@@ -15,9 +15,9 @@ from fransys_layout.geometry import (
 from fransys_model.kernel import Finding, Severity, UnionFind
 
 from . import lookups
-from ._routing import Field, axes_of, cells_of, reserve_exits, shortest_path
 from ._sides import Edge, drawn_key, drawn_order, joined, joins_of, located, retarget
 from .content import content_box
+from .grid_path import Field, axes_of, cells_of, grid_path, reserve_exits
 from .space import End, Obstacle, Shape, Space, span
 from .types import Route, RoutePoint
 
@@ -301,7 +301,7 @@ def _draw(
     )
     widened = union(padded, page.content)
     for region in (padded,) if widened == padded else (padded, widened):
-        points = shortest_path(
+        points = grid_path(
             start,
             goal,
             Field(

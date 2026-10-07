@@ -10,7 +10,7 @@ The rule (decision model-0138): a pole with pins 1-2 (3-4, 5-6, ...) is main and
 """
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.derive.drawing_text import contact_image
@@ -22,7 +22,7 @@ def _poles() -> list[str]:
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Pole", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
-    d.location("CAB", "Cabinet")
+    _cabinet = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     with d.function("G", "Group"):
         feed, zero, load = strip[1], strip[2], strip[3]
@@ -35,7 +35,7 @@ def _poles() -> list[str]:
     d.wire(k1.aux["14"], load, wire=wire)
     d.wire(feed, pole["1"], wire=wire)
     d.wire(pole["2"], load, wire=wire)
-    model = fr.build(d, system_document()).model
+    model = fr.build(d, cabinet_document(_cabinet)).model
     (label,) = (
         one
         for one in layout_of(model, Label).values()

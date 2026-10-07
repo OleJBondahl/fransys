@@ -72,7 +72,7 @@ from .rating_readers import (
     function_rating,
     part_rating,
 )
-from .ratings import Operating, Rating, effective_rating
+from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
 from .supply_system import Rail, SupplySystem, rail_phase_problem
 from .tables import (
@@ -122,6 +122,7 @@ __all__ = [
     "AssignedUnitTagFacet",
     "Boundary",
     "BoundaryValuesFacet",
+    "BreakingPoint",
     "CableFacet",
     "CableProductFacet",
     "Conductor",

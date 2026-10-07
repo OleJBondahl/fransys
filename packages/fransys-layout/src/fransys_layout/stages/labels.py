@@ -143,10 +143,11 @@ def _port_points(
 ) -> dict[Handle, tuple[int, int]]:
     """Each placed port's page point `(x, y)`, as `place` placed it."""
     symbol = {port.port: port.symbol_port for one in drawn for port in one.ports}
+    drawn_of = {one.function: one for one in drawn}
     at = {}
     for one in placed:
         geometry = {g.name: g for g in one.geometry.ports}
-        for port in next(d for d in drawn if d.function == one.function).ports:
+        for port in drawn_of[one.function].ports:
             g = geometry.get(symbol[port.port])
             if g is not None:
                 here = port_page_at(one.at, g)

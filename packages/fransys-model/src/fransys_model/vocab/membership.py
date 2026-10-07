@@ -1,7 +1,8 @@
 """Unit, board and harness membership (units spec U8, decisions model-0040 and model-0043).
 
 `units`, `unit_subtree`, `unit_items`, `standalone`, `boundary`, `item_chain`,
-`enclosing_boards`, `external`, `unit_own_roots`, `is_sole_unit_root`, `cable_children` and
+`enclosing_boards`, `external`, `unit_own_roots`, `is_sole_unit_root`, `in_reading`,
+`cable_children` and
 `is_harness`, plus `require`, the identity refusal that `derive.lookups` re-exports
 (`derive.external` re-exports `external`). Every per-unit and per-item fact reads the per-model
 index of `vocab.unit_index`, built once per model digest, never a scan of the items table
@@ -187,6 +188,17 @@ def in_unit_subtree(model: Model, item: Id[Item], unit: Id[Unit]) -> bool:
     An unknown `unit` is refused like `unit_subtree` refuses it.
     """
     return items(model)[item].unit in unit_subtree(model, unit)
+
+
+def in_reading(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
+    """Whether `item` lies inside a reading's subject (model-0157): `unit=None` is any unit.
+
+    A given `unit` reads its subtree (`in_unit_subtree`); an item in no unit is never inside.
+    The one rule behind CD4's end order and CD5's rows.
+    """
+    if unit is None:
+        return items(model)[item].unit is not None
+    return in_unit_subtree(model, item, unit)
 
 
 def crosses_unit(model: Model, one: Id[Item], other: Id[Item]) -> bool:

@@ -1,6 +1,7 @@
 """Private to `write/`: the `LinkMarker` builder (design/engine.md 7, model layout-namespace.md)."""
 
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.write.keys import PREFIX
@@ -12,15 +13,30 @@ from fransys_model.layout import LinkMarker, Side, StarKind
 from fransys_model.layout import MarkerSide as ModelMarkerSide
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Mapping
 
     from fransys_layout.engines.schematic.engine import StageResults
     from fransys_layout.engines.schematic.write.keys import PageId, WriteKeys
+    from fransys_layout.stages import Layout
     from fransys_layout.stages import LinkMarker as StageMarker
     from fransys_layout.stages.offstubs import OffEnd
     from fransys_layout.stages.types import StubText
     from fransys_model.kernel import AuthoringKey, Id
     from fransys_model.layout import Page
+
+
+@dataclass(frozen=True)
+class _Ctx:
+    """What the marker records are made from, shared by the helpers below."""
+
+    keys: WriteKeys
+    page_of: Mapping[PageId, Page]
+    stamp: str
+    stands_on: Mapping[tuple[Id[Any], int, int], AuthoringKey]  # each drawn port's placement
+    doubled: frozenset[AuthoringKey]
+    end_of: Mapping[tuple[Id[Any], StubText | None], OffEnd]  # an off stub, by `(port, end_text)`
+    by_port: Mapping[Id[Any], OffEnd]  # D9: the merged reference's stub
+    reached: Mapping[tuple[Id[Any], Id[Any]], int]
 
 
 def link_markers(
@@ -32,13 +48,34 @@ def link_markers(
 ) -> list[LinkMarker]:
     """Each severed signal's two markers, each pointing at the other by record id."""
     layout = without_power(results.layout)  # a power end is a `PowerSymbol`, not a marker
-    # an off stub finds its end by `(port, end_text)`; any other marker's `end_text` is `None`
+    pairs, doubled = _pairs_and_doubled(layout.markers, keys)
     end_of: dict[tuple[Id[Any], StubText | None], OffEnd] = {
         (end.port, end.text): end for end in results.off_ends
     }
-    by_port = {end.port: end for end in results.off_ends}  # D9: the merged reference's stub
+    ctx = _Ctx(
+        keys,
+        page_of,
+        stamp,
+        _stands_on(results, layout, discriminator),
+        doubled,
+        end_of,
+        {end.port: end for end in results.off_ends},
+        Counter((end.port, end.far) for end in end_of.values()),
+    )
+    star_key = _star_keys(ctx, layout.markers)
+    stars = [_star_marker(ctx, star_key, one) for one in layout.markers if one.star]  # R7 B4
+    both = ((one, other) for owner, user in pairs for one, other in ((owner, user), (user, owner)))
+    return [*(_record(ctx, one, other) for one, other in both), *stars]
+
+
+def _stands_on(
+    results: StageResults,
+    layout: Layout,
+    discriminator: Mapping[tuple[Id[Any], int, int], AuthoringKey],
+) -> dict[tuple[Id[Any], int, int], AuthoringKey]:
+    """Each drawn port's placement, by set and page: its discriminator."""
     handle_ports = {one.function: [p.port for p in one.ports] for one in results.drawn}
-    stands_on = {  # each drawn port's placement, by set and page: its discriminator
+    return {
         (port, placed.drawing_set, placed.page): discriminator[
             placed.function, placed.drawing_set, placed.page
         ]
@@ -46,134 +83,121 @@ def link_markers(
         for port in handle_ports.get(placed.function, ())
     }
 
-    def key_to(one: StageMarker, partner_port: Id[Any]) -> AuthoringKey:
-        """D17: the port key, the side, the partner's port key; never a page or an ordinal."""
-        return (
-            *PREFIX,
-            "link_marker",
-            *keys.port[one.port],
-            one.side.value,
-            *keys.port[partner_port],
+
+def _key_to(keys: WriteKeys, one: StageMarker, partner_port: Id[Any]) -> AuthoringKey:
+    """D17: the port key, the side, the partner's port key; never a page or an ordinal."""
+    return (
+        *PREFIX,
+        "link_marker",
+        *keys.port[one.port],
+        one.side.value,
+        *keys.port[partner_port],
+    )
+
+
+def _off_key(c: _Ctx, one: StageMarker, end: OffEnd) -> AuthoringKey:
+    """An off stub's key: its far port's, plus its carrier's when two carriers reach it."""
+    key = _key_to(c.keys, one, end.far)
+    if c.reached[end.port, end.far] > 1 and end.carrier is not None:
+        return (*key, "carrier", *c.keys.item[end.carrier])
+    return key
+
+
+def _star_key_of(c: _Ctx, one: StageMarker) -> AuthoringKey:
+    """D17: the port key, `star`, the placement's discriminator; no role, partner or page."""
+    where = c.stands_on[one.port, one.drawing_set, one.page]
+    return (*PREFIX, "link_marker", *c.keys.port[one.port], "star", *where)
+
+
+def _key_of(c: _Ctx, one: StageMarker, other: StageMarker) -> AuthoringKey:
+    """A key given twice also names the placement its port stands on (layout-0127)."""
+    key = _key_to(c.keys, one, other.port)
+    if key in c.doubled:
+        return (*key, "on", *c.stands_on[one.port, one.drawing_set, one.page])
+    return key
+
+
+def _tag_of(one: StageMarker) -> str:
+    return "off" if one.star == "off" else "star"  # C21: an off stub is its own partner
+
+
+def _star_keys(
+    c: _Ctx, markers: tuple[StageMarker, ...]
+) -> dict[tuple[Id[Any] | None, int, int, str, StubText | None], AuthoringKey]:
+    """A star marker's key by its port, page, tag and (an off stub) its end's text."""
+    return {
+        (one.port, one.drawing_set, one.page, _tag_of(one), one.end_text): (
+            _off_key(c, one, c.end_of[one.port, one.end_text])
+            if one.star == "off"
+            else _star_key_of(c, one)
         )
-
-    reached = Counter((end.port, end.far) for end in end_of.values())
-
-    def off_key(one: StageMarker, end: OffEnd) -> AuthoringKey:
-        """An off stub's key: its far port's, plus its carrier's when two carriers reach it."""
-        key = key_to(one, end.far)
-        if reached[end.port, end.far] > 1 and end.carrier is not None:
-            return (*key, "carrier", *keys.item[end.carrier])
-        return key
-
-    def star_key_of(one: StageMarker) -> AuthoringKey:
-        """D17: the port key, `star`, the placement's discriminator; no role, partner or page."""
-        where = stands_on[one.port, one.drawing_set, one.page]
-        return (*PREFIX, "link_marker", *keys.port[one.port], "star", *where)
-
-    pairs, doubled = _pairs_and_doubled(layout.markers, key_to)
-
-    def key_of(one: StageMarker, other: StageMarker) -> AuthoringKey:
-        return _placed(key_to(one, other.port), (one, stands_on), doubled)
-
-    def record(one: StageMarker, other: StageMarker) -> LinkMarker:
-        box_x, lead, stub_extra, via_x, via_y = _marker_fields(one)
-        return LinkMarker(
-            id=make_id(LinkMarker, key_of(one, other)),
-            key=key_of(one, other),
-            page=page_of[one.drawing_set, one.page].id,
-            port=one.port,
-            side=ModelMarkerSide[one.side.name],
-            partner=make_id(LinkMarker, key_of(other, one)),
-            x=one.at.x,
-            y=one.at.y,
-            width=one.box.width,
-            height=one.box.height,
-            produced_by=stamp,
-            box_x=box_x,
-            lead=lead,
-            stub_extra=stub_extra,
-            via_x=via_x,
-            via_y=via_y,
-            vertical=one.vertical,
-        )
-
-    def tag_of(one: StageMarker) -> str:
-        return "off" if one.star == "off" else "star"  # C21: an off stub is its own partner
-
-    # a star marker is found by its port, its page, its tag and (an off stub) its end's text:
-    # its key, which `partner` (the id of the marker on the partner's page) is made from
-    star_key: dict[tuple[Id[Any] | None, int, int, str, StubText | None], AuthoringKey] = {
-        (one.port, one.drawing_set, one.page, tag_of(one), one.end_text): (
-            off_key(one, end_of[one.port, one.end_text]) if one.star == "off" else star_key_of(one)
-        )
-        for one in layout.markers
+        for one in markers
         if one.star
     }
 
-    def star_marker(one: StageMarker) -> LinkMarker:
-        box_x, lead, stub_extra, via_x, via_y = _marker_fields(one)
-        # D9 (F7): a reference carrying the off stub's text on the same port is that off stub
-        if one.star == "off":
-            off = end_of[one.port, one.end_text]
-        else:
-            off = by_port[one.port] if one.star and one.text else None
-        key = star_key[one.port, one.drawing_set, one.page, tag_of(one), one.end_text]
-        partner = star_key[
-            one.star_partner, one.star_partner_set, one.partner_page, tag_of(one), one.end_text
-        ]
-        return LinkMarker(
-            id=make_id(LinkMarker, key),
-            key=key,
-            page=page_of[one.drawing_set, one.page].id,
-            port=one.port,
-            side=ModelMarkerSide[one.side.name],
-            partner=make_id(LinkMarker, partner),
-            x=one.at.x,
-            y=one.at.y,
-            width=one.box.width,
-            height=one.box.height,
-            produced_by=stamp,
-            box_x=box_x,
-            lead=lead,
-            stub_extra=stub_extra,
-            via_x=via_x,
-            via_y=via_y,
-            star=StarKind.OFF if off else StarKind[one.star.upper()],
-            far=off.far if off else None,
-            carrier=off.carrier if off else None,
-            facing=_facing(one) if off else None,
-            vertical=one.vertical,
-            wrap_at=one.wrap_at,
-        )
 
-    stars = [star_marker(one) for one in layout.markers if one.star]  # R7 B4: one per marker
-    return [
-        *(
-            record(one, other)
-            for owner, user in pairs
-            for one, other in ((owner, user), (user, owner))
-        ),
-        *stars,
-    ]
+def _common(c: _Ctx, one: StageMarker) -> dict[str, Any]:
+    """The `LinkMarker` fields a cut marker and a star marker take the same way."""
+    box_x, lead, stub_extra, via_x, via_y = _marker_fields(one)
+    return {
+        "page": c.page_of[one.drawing_set, one.page].id,
+        "port": one.port,
+        "side": ModelMarkerSide[one.side.name],
+        "x": one.at.x,
+        "y": one.at.y,
+        "width": one.box.width,
+        "height": one.box.height,
+        "produced_by": c.stamp,
+        "box_x": box_x,
+        "lead": lead,
+        "stub_extra": stub_extra,
+        "via_x": via_x,
+        "via_y": via_y,
+        "vertical": one.vertical,
+    }
+
+
+def _record(c: _Ctx, one: StageMarker, other: StageMarker) -> LinkMarker:
+    key = _key_of(c, one, other)
+    partner = make_id(LinkMarker, _key_of(c, other, one))
+    return LinkMarker(id=make_id(LinkMarker, key), key=key, partner=partner, **_common(c, one))
+
+
+def _star_marker(
+    c: _Ctx,
+    star_key: Mapping[tuple[Id[Any] | None, int, int, str, StubText | None], AuthoringKey],
+    one: StageMarker,
+) -> LinkMarker:
+    # D9 (F7): a reference carrying the off stub's text on the same port is that off stub
+    if one.star == "off":
+        off = c.end_of[one.port, one.end_text]
+    else:
+        off = c.by_port[one.port] if one.text else None
+    tag = _tag_of(one)
+    key = star_key[one.port, one.drawing_set, one.page, tag, one.end_text]
+    partner = star_key[one.star_partner, one.star_partner_set, one.partner_page, tag, one.end_text]
+    return LinkMarker(
+        id=make_id(LinkMarker, key),
+        key=key,
+        partner=make_id(LinkMarker, partner),
+        star=StarKind.OFF if off else StarKind[one.star.upper()],
+        far=off.far if off else None,
+        carrier=off.carrier if off else None,
+        facing=_facing(one) if off else None,
+        wrap_at=one.wrap_at,
+        **_common(c, one),
+    )
 
 
 def _pairs_and_doubled(
-    markers: tuple[StageMarker, ...], key_to: Callable[[StageMarker, Id[Any]], AuthoringKey]
+    markers: tuple[StageMarker, ...], keys: WriteKeys
 ) -> tuple[list[tuple[StageMarker, StageMarker]], frozenset[AuthoringKey]]:
     """The cut pairs, and the keys a cut drawn in two drawing sets gives twice (layout-0127)."""
     pairs = _pairs(tuple(m for m in markers if not m.star))
-    counts = Counter(key_to(one, other.port) for pair in pairs for one, other in (pair, pair[::-1]))
+    counts = Counter(
+        _key_to(keys, one, other.port) for pair in pairs for one, other in (pair, pair[::-1])
+    )
     return pairs, frozenset(key for key, count in counts.items() if count > 1)
-
-
-def _placed(
-    key: AuthoringKey,
-    on: tuple[StageMarker, Mapping[tuple[Id[Any], int, int], AuthoringKey]],
-    doubled: frozenset[AuthoringKey],
-) -> AuthoringKey:
-    """A key given twice also names the placement its port stands on (layout-0127)."""
-    one, stands_on = on
-    return (*key, "on", *stands_on[one.port, one.drawing_set, one.page]) if key in doubled else key
 
 
 def _marker_fields(one: StageMarker) -> tuple[int | None, bool, int, int | None, int | None]:

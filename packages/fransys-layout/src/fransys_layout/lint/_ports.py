@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 from fransys_layout.geometry import LayoutError, Point, port_page_at
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from fransys_layout.stages import (
         Connection,
         DrawnFunction,
@@ -43,6 +45,19 @@ def locate(
     drawn: tuple[DrawnFunction, ...],
 ) -> Ports:
     """Locate every port a connection or net group names, on each page its function is on."""
+    where = _placements(placed)
+    named = _named(connections, net_groups)
+    also = _also(connections, where)
+    return Ports(
+        net={port: net for port, (_, net) in named.items()},
+        at=_at(named, where, {one.function: one for one in drawn}),
+        also={key: frozenset(points) for key, points in also.items()},
+        pages={function: tuple(sorted(pages)) for function, pages in where.items()},
+    )
+
+
+def _placements(placed: tuple[PlacedFunction, ...]) -> dict[Handle, dict[Page, PlacedFunction]]:
+    """Each function's placement per page; a function placed twice on one page is a fault."""
     where: dict[Handle, dict[Page, PlacedFunction]] = defaultdict(dict)
     for one in placed:
         page = (one.drawing_set, one.page)
@@ -50,8 +65,15 @@ def locate(
             msg = "one function is placed twice on one page"
             raise LayoutError(msg)
         where[one.function][page] = one
-    drawn_of = {one.function: one for one in drawn}
-    named = _named(connections, net_groups)
+    return where
+
+
+def _at(
+    named: Mapping[Handle, tuple[Handle, Handle]],
+    where: Mapping[Handle, Mapping[Page, PlacedFunction]],
+    drawn_of: Mapping[Handle, DrawnFunction],
+) -> dict[tuple[Handle, Page], Point]:
+    """The page position of each named port of a placed function."""
     at: dict[tuple[Handle, Page], Point] = {}
     for port in sorted(named):
         function = named[port][0]
@@ -64,17 +86,19 @@ def locate(
                 msg = "a drawn port is not a port of the symbol its function is placed with"
                 raise LayoutError(msg)
             at[port, page] = port_page_at(placement.at, symbol)
+    return at
+
+
+def _also(
+    connections: tuple[Connection, ...], where: Mapping[Handle, Mapping[Page, PlacedFunction]]
+) -> dict[tuple[Handle, Page], set[Point]]:
+    """Where each end with a `symbol_port` lands, per page (R7 B5)."""
     also: dict[tuple[Handle, Page], set[Point]] = defaultdict(set)
     for ref in (ref for one in connections for ref in (one.a, one.b) if ref.symbol_port):
         for page, placement in where.get(ref.function, {}).items():
             symbol = next(p for p in placement.geometry.ports if p.name == ref.symbol_port)
             also[ref.port, page].add(port_page_at(placement.at, symbol))
-    return Ports(
-        net={port: net for port, (_, net) in named.items()},
-        at=at,
-        also={key: frozenset(points) for key, points in also.items()},
-        pages={function: tuple(sorted(pages)) for function, pages in where.items()},
-    )
+    return also
 
 
 def _named(

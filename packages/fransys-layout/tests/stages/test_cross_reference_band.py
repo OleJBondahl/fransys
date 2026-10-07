@@ -9,6 +9,8 @@ No fixture of the layout or root suites has a marker box over a cross-reference'
 candidate (measured over every `finish_page` call), so this page is the test's own.
 """
 
+from dataclasses import replace
+
 from samples import NO_HINTS, PROFILE, SHEET, drawn, hid, placed
 
 from fransys_layout.geometry import Box, Point, translate
@@ -69,8 +71,8 @@ def _reference(markers: tuple[LinkMarker, ...]) -> tuple[PlacedLabel, tuple[obje
 def test_a_cross_reference_whose_first_candidate_lies_on_a_marker_box_takes_the_next_one() -> None:
     """A marker's box over the first candidate sends the reference one step further down its
     side, the table's next candidate, which is free; no finding."""
-    # UNDO: stages/pagerun.py `finish_page`: drop `*marker_shapes(markers)` from the second slot
-    #     call's `occupied`: the reference stands on the marker's box
+    # UNDO: stages/pagerun.py `finish_page`: drop the `drawn_shapes(markers)` boxes from the
+    #     second slot call's `occupied`: the reference stands on the marker's box
     first, found = _reference(())
     assert not first.unplaced
     assert found == ()
@@ -79,3 +81,18 @@ def test_a_cross_reference_whose_first_candidate_lies_on_a_marker_box_takes_the_
     assert not label.unplaced
     assert findings == ()
     assert label.box == translate(first.box, dx=0, dy=PROFILE.text_height)
+
+
+def test_a_power_ends_undrawn_box_does_not_hold_the_reference_but_its_symbol_does() -> None:
+    """layout-0138: the keep-out of the second slot call is the page's drawn ink, as the tables
+    read it; a power end draws its symbol, never its marker box."""
+    # UNDO: stages/pagerun.py `finish_page`: put the markers' boxes and every power symbol's
+    #     body and lead back in `occupied` (a power end's undrawn box holds the reference again)
+    first, _ = _reference(())
+    far = Point(x=2000, y=2000)  # the symbol stands far from the reference
+    undrawn = replace(_marker(first.box), at=far, symbol="ground", symbol_text="")
+    label, findings = _reference((undrawn,))
+    assert findings == ()
+    assert label.box == first.box, "a box nobody draws holds nothing"
+    drawn_end = replace(undrawn, symbol="", symbol_text="")
+    assert _reference((drawn_end,))[0].box != first.box, "the same box drawn does hold it"

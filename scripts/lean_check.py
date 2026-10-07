@@ -68,7 +68,7 @@ STARTING_EXEMPT: dict[str, str] = {
         "generated (overview-0001)"
     ),
     "packages/fransys-layout/src/fransys_layout/stages/types.py": ("D8 exemption, unchanged (LC2)"),
-    "packages/fransys-layout/src/fransys_layout/geometry/text_metrics.py": (
+    "packages/electrical-symbols/src/electrical_symbols/text_metrics.py": (
         "D8 exemption, unchanged (LC2)"
     ),
 }

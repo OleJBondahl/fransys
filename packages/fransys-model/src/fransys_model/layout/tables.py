@@ -43,10 +43,14 @@ def sheet_format_of(model: Model, sheet_format: Id[SheetFormat] | None) -> Sheet
     return layout_of(model, SheetFormat)[sheet_format]
 
 
-def derived_layout_ids(model: Model) -> tuple[Id[Any], ...]:
-    """Return the id of every derived `layout.*` record in `model`, sorted.
+def derived_layout_ids(
+    model: Model, kinds: tuple[type, ...] = DERIVED_KINDS
+) -> tuple[Id[Any], ...]:
+    """Return the id of every `layout.*` result of `kinds` in `model`, sorted.
 
     What a layout pass hands to `evolve(remove=...)` before writing a fresh result:
-    results are replaced wholesale, never patched. Authored kinds are never included.
+    results are replaced wholesale, never patched. The schematic pass takes the default,
+    the cable pass `CABLE_KINDS` (Q3); each leaves the other's records and every authored
+    kind alone.
     """
-    return tuple(sorted(record_id for kind in DERIVED_KINDS for record_id in table_of(model, kind)))
+    return tuple(sorted(record_id for kind in kinds for record_id in table_of(model, kind)))

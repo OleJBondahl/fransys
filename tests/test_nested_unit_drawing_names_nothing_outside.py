@@ -20,7 +20,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 # `test_declared_dependencies.py`'s pattern for importing a sibling root test module.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -57,7 +57,7 @@ _OUTSIDE = ("WH1", "P1", "+", "=", "ER", "C1", "FLD", "pump", "M1")
 def _model_and_units():
     parts = fransys_parts.load("demo_parts")
     design, _field1, _field2 = _system_design(parts)
-    model = fr.build(parts, design.draft(), system_document()).model
+    model = fr.build(parts, design.draft(), layout_trigger_document()).model
     cabinet = _unit_id(model, name="demo-pump-cabinet", prefix="pump1")
     board = _unit_id(model, name="demo-io-board", prefix="pump1")
     return model, cabinet, board
@@ -185,7 +185,7 @@ def _build_boundary_mated_to_top_level_harness(*, nested: bool):
     cable.core(1, p1["1"], p2["1"])
     cable.core(2, p1["2"], p2["2"])
     d.mate(p1, x1)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     model = result.model
     errors = {f.code for f in result.findings if f.severity is Severity.ERROR}
     if nested:

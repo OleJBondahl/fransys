@@ -12,7 +12,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from workspace_root import WORKSPACE_ROOT
 
 from fransys_model.layout import Route, SymbolPlacement, layout_of
@@ -89,7 +89,7 @@ def _built(tmp_path: Path, names: tuple[str, str, str]):
     wire(supply.inner, k1.fn("co_1")[com])
     wire(k1.fn("co_1")[make], out1.inner)
     wire(k1.fn("co_1")[brk], out2.inner)
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _drawn(model, names: tuple[str, str, str]):
@@ -191,6 +191,6 @@ def test_two_changeovers_of_one_item_stay_two_symbols(tmp_path) -> None:
         strict=True,
     ):
         wire(terminal.inner, s1.fn(function)[port])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     symbols = [p.symbol for p in layout_of(model, SymbolPlacement).values()]
     assert symbols.count("change-over-contact") == 2

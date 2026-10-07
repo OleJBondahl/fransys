@@ -10,7 +10,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
 from fransys_model.layout import LinkMarker, Route, layout_of
@@ -50,7 +50,11 @@ def _build():
     wire(coil["K6"], coil["K7"])
     d.net("SHARED", *coil.values())
     star = {coil[tag].id for tag in ("K5", "K6", "K7")}
-    return fr.build(parts, d.draft(), system_document()), star, {coil["K1"].id, coil["K2"].id}
+    return (
+        fr.build(parts, d.draft(), layout_trigger_document()),
+        star,
+        {coil["K1"].id, coil["K2"].id},
+    )
 
 
 def test_a_net_group_is_spanned_over_its_wire_drawn_ports_and_never_a_star_port() -> None:

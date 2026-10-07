@@ -93,15 +93,22 @@ def _unrealised(plant: _Plant) -> list[Finding]:
     return found
 
 
+def _one_intent(plant: _Plant, declared: set[Id[Net]]) -> bool:
+    """Whether every declared net is named, and all share one name (model-0156)."""
+    names = {plant.nets[net].name for net in declared}
+    return len(names) == 1 and None not in names
+
+
 def _per_physical_net(plant: _Plant) -> list[Finding]:
     found = []
     for physical in plant.closure:
         declared = {net for port in physical.ports for net in plant.declared.get(port, ())}
+        if len(declared) > 1 and not _one_intent(plant, declared):
+            names = ", ".join(sorted(_label(plant.nets[net]) for net in declared))
+            message = f"one physical net joins the declared nets {names}"
+            found.append(_finding(NET_SHORTED, Severity.ERROR, declared, message))
         if len(declared) <= 1:
             continue
-        names = ", ".join(sorted(_label(plant.nets[net]) for net in declared))
-        message = f"one physical net joins the declared nets {names}"
-        found.append(_finding(NET_SHORTED, Severity.ERROR, declared, message))
         by_potential = physical_potentials(plant.model, physical)
         if len(by_potential) > 1:
             message = f"one physical net joins the rails {', '.join(sorted(by_potential))}"

@@ -174,7 +174,12 @@ def _bind_ports(
         bound[symbol_port] = port
     return tuple(
         DrawnPort(
-            port=p.port, symbol_port=name, ac=p.current == "ac", group=p.group, channel=p.channel
+            port=p.port,
+            symbol_port=name,
+            ac=p.current == "ac",
+            group=p.group,
+            channel=p.channel,
+            stand=p.stand,
         )
         for name, p in bound.items()
     )

@@ -17,7 +17,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -83,7 +83,7 @@ def _ring(part: str, function: str, count: int):
     ring = [d.item(part, tag=f"H{n}", name=f"h{n}", at=c1, group=grp) for n in range(1, count + 1)]
     for at, one in enumerate(ring):
         wire(one.fn(function)["2"], ring[(at + 1) % count].fn(function)["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @pytest.mark.parametrize("count", [3, 4])
@@ -182,7 +182,7 @@ def _star(*wires):
     }
     for first, second in wires:
         wire(*(relays[spec[:2]][spec[3:]] for spec in (first, second)))
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def test_the_first_row_keeps_room_above_for_its_markers_inside_the_content_box() -> None:
@@ -217,7 +217,7 @@ def test_the_last_row_keeps_room_below_for_its_markers_inside_the_content_box() 
         )
     for n in range(3):
         wire(column[-1]["A2"], d.item(_RELAY, tag=f"X{n}", at=c1, group=grp).fn("coil")["A2"])
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     model = result.model
     assert "PAGE_OVERFULL" not in {f.code for f in result.findings}
     lowest = max(layout_of(model, LinkMarker).values(), key=lambda m: m.y)
@@ -256,7 +256,7 @@ def test_a_reference_wired_to_a_member_leaves_its_list_by_a_junction_dot_and_an_
     }
     wire(coil["K1"]["A1"], coil["K2"]["A1"])
     wire(coil["K1"]["A1"], coil["K3"]["A2"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     (page,) = layout_of(model, Page).values()
     markers = list(layout_of(model, LinkMarker).values())
     (reference,) = (m for m in markers if m.star is StarKind.REF)
@@ -305,7 +305,7 @@ def _terminal_hub(*, far: tuple[str, ...] = ()):
     fld = d.location("FLD", "Field")
     for tag in far:
         wire(x1["external"], d.item(_RELAY, tag=tag, at=fld, group=grp).fn("coil")["A1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _stands_apart_from_the_wires(result, reference: LinkMarker) -> None:
@@ -433,7 +433,7 @@ def test_a_turned_reference_with_an_off_stub_renders_and_prints_the_measured_arr
         wire(hub, d.item(_LAMP, tag=tag, name=tag.lower(), at=c1, group=grp).fn("lamp")["1"])
     far = d.item("DEMO-CONN-2P", tag="Q1", at=d.location("FLD", "Field"), group=grp)["1"]
     d.cable("DEMO-CBL-4G1.5", tag="W1").core(1, hub, far)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     pages = render_pages(model)  # raises when the turned merged marker cannot be drawn
     (merged,) = (m for m in layout_of(model, LinkMarker).values() if m.via_x is not None)
     assert merged.star is StarKind.OFF  # one record: the list and the stub
@@ -463,7 +463,7 @@ def test_a_turned_reference_that_carries_a_stub_is_one_merged_record_render_draw
         wire(hub, other)
     far = d.item("DEMO-CONN-2P", tag="Q1", at=d.location("FLD", "Field"), group=grp)["1"]
     d.cable("DEMO-CBL-4G1.5", tag="W1").core(1, hub, far)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     pages = render_pages(model)  # raises when the turned merged marker cannot be drawn
     (merged,) = (m for m in layout_of(model, LinkMarker).values() if m.via_x is not None)
     assert merged.star is StarKind.OFF  # one record: the list and the stub

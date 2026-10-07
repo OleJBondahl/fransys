@@ -8,15 +8,20 @@ from dataclasses import replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from fransys_layout.geometry import G_PER_MODULE, generic_box_geometry, snap_up
+from fransys_layout.geometry import (
+    G_PER_MODULE,
+    NORTH,
+    PORT_PITCH_G,
+    SOUTH,
+    Facing,
+    generic_box_geometry,
+    snap_up,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .types import BoxFeed, DrawnFunction, Profile
-
-_PIN_ORIGIN = 16  # a generic box's first pin, one port pitch right of its body's left edge
-_NORTH, _SOUTH = "n", "s"
 
 
 def paired_boxes(
@@ -49,7 +54,7 @@ def _pair_one(
         mine = {p.port: p.symbol_port for p in feeder.ports}
         names = [(symbol[a], mine[b]) for a, b in ((p.fed, p.feeder) for p in feed.ports)]
         face = _facing(feeder)
-        if any(fed_face[a] != _NORTH or face[b] != _SOUTH for a, b in names):
+        if any(fed_face[a] != NORTH or face[b] != SOUTH for a, b in names):
             return None
         blocks.append((feed, feeder, names))
     order = _fed_order(fed, [frozenset(a for a, _ in names) for *_, names in blocks])
@@ -61,7 +66,7 @@ def _pair_one(
 
 def _fed_order(fed: DrawnFunction, groups: Sequence[frozenset[str]]) -> list[str]:
     """The fed box's top pins left to right, each feeder's pins one block (stable)."""
-    top = sorted((g for g in fed.geometry.ports if g.facing.value == _NORTH), key=lambda g: g.at.x)
+    top = sorted((g for g in fed.geometry.ports if g.facing is Facing.N), key=lambda g: g.at.x)
     names = [g.name for g in top]
     first = {name: next((i for i, g in enumerate(groups) if name in g), None) for name in names}
     start = {i: min(at for at, n in enumerate(names) if first[n] == i) for i in set(first.values())}
@@ -80,7 +85,9 @@ def _feeder_order(
     face = _facing(feeder)
     every = [g.name for g in feeder.geometry.ports]
     ordered = [*block, *(n for n in every if n not in block)]
-    geometry = generic_box_geometry(tuple(ordered), tuple(face[n] for n in ordered), feeder.reach)
+    geometry = generic_box_geometry(
+        tuple(ordered), tuple(face[n] for n in ordered), feeder.reach, stand=feeder.stand
+    )
     return replace(
         feeder, geometry=geometry, primary_in=None, primary_out=block[0], feeds=fed.function
     )
@@ -89,15 +96,15 @@ def _feeder_order(
 def _pin_step(fed: DrawnFunction) -> int:
     """The fed box's pin pitch: the smallest gap between two of its pin columns."""
     xs = sorted(g.at.x for g in fed.geometry.ports)
-    return next((b - a for a, b in pairwise(xs) if b > a), _PIN_ORIGIN)
+    return next((b - a for a, b in pairwise(xs) if b > a), PORT_PITCH_G)
 
 
 def _open_slot(feeder: DrawnFunction, cursor: int, profile: Profile) -> tuple[int, int]:
     """The slot's start and the cursor after it: the feeder's keep-out width plus the column gap."""
     body, keep = feeder.geometry.body, feeder.geometry.keepout
-    start = cursor - _PIN_ORIGIN + max(0, body.x - keep.x)
+    start = cursor - PORT_PITCH_G + max(0, body.x - keep.x)
     reach = keep.x + keep.width - body.x
-    return start, int(snap_up(start + reach + profile.column_gap)) + _PIN_ORIGIN
+    return start, int(snap_up(start + reach + profile.column_gap)) + PORT_PITCH_G
 
 
 def _pin_x(feeder: DrawnFunction, mate: str, start: int) -> int:
@@ -114,7 +121,7 @@ def _pin_columns(
 ) -> dict[str, int]:
     """Each fed pin's x: a paired pin under its feeder's pin, a free pin one step on."""
     step = _pin_step(fed)
-    at: dict[str, int] = {g.name: g.at.x for g in fed.geometry.ports if g.facing.value != _NORTH}
+    at: dict[str, int] = {g.name: g.at.x for g in fed.geometry.ports if g.facing is not Facing.N}
     slot_of = {a: (feeder, b) for _, feeder, names in blocks for a, b in names}
     cursor = 0
     start: dict[object, int] = {}

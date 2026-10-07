@@ -16,7 +16,7 @@ SKIP_PREFIXES = (
     "docs/reviews/",
     "docs/plans/",
     "examples/pump-station/",
-    "docs/specs/2026-10-05-fransys-rename.md",
+    "docs/archive/specs/2026-10-05-fransys-rename.md",
     "packages/fransys/src/fransys/guide/moving-to-fransys.md",
     "tests/test_names.py",
 )

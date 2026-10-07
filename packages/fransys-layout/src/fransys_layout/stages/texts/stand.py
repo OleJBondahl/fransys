@@ -15,13 +15,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import (
-    WIRING_GRID,
-    Box,
-    Facing,
-    LayoutError,
-    text_width,
-)
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, LayoutError, text_width
 from fransys_layout.stages.markers import stand_against_content_edge
 from fransys_layout.stages.references.marker_boxes import reads_along, reference_size
 from fransys_layout.stages.references.types import Leave
@@ -205,7 +199,10 @@ def candidate_box(one: MarkerDecision, at: Point, facing: Facing) -> Box:
     return box_of(dataclasses.replace(first, out=along(one, facing)), stub_anchor(at), size)
 
 
-PIN_PITCH = 3 * WIRING_GRID  # the distance between two pins: the pole pitch
+# A run box's stand-in for the gap between two of its stubs, so it only sizes the box's padding
+# and least width. Measured on the pump station: 32 G (6 runs), 16 G (2), 112 G (1), one mixed; the
+# layout tests mostly 24 G. So it spans 16 to 112 G, not one pitch (a box pin pitch, a pole pitch).
+RUN_PIN_GAP = 3 * WIRING_GRID
 
 
 def run_box(
@@ -219,7 +216,7 @@ def run_box(
     def need(line: str) -> int:
         return text_width(line, height=height) + pad
 
-    width = max(2 * PIN_PITCH, stubs[1] - stubs[0] + PIN_PITCH)
+    width = max(2 * RUN_PIN_GAP, stubs[1] - stubs[0] + RUN_PIN_GAP)
     words = text.split(" ")
     wrap_at = None
     if need(text) > width:

@@ -31,6 +31,28 @@ if TYPE_CHECKING:
 # -- unit_designation (L2) -------------------------------------------------------------------
 
 
+def _own_location_leaves(model: Model, unit: Id[Unit]) -> set[Id[AspectNode]]:
+    leaves: set[Id[AspectNode]] = set()
+    for item in items(model).values():
+        if item.unit != unit:
+            continue
+        leaf = reference_leaves(model, item.id).get(Aspect.LOCATION)
+        if leaf is not None:
+            leaves.add(leaf.id)
+    return leaves
+
+
+def _shared_prefix(
+    common: list[Id[AspectNode]], chain: list[Id[AspectNode]]
+) -> list[Id[AspectNode]]:
+    shared = 0
+    for own, other in zip(common, chain, strict=False):
+        if own != other:
+            break
+        shared += 1
+    return common[:shared]
+
+
 def _common_location(model: Model, unit: Id[Unit] | None) -> Id[AspectNode] | None:
     """The deepest location that holds every located item of `unit`'s own items.
 
@@ -40,24 +62,13 @@ def _common_location(model: Model, unit: Id[Unit] | None) -> Id[AspectNode] | No
     if unit is None:
         return None
     nodes = aspect_nodes(model)
-    leaves: set[Id[AspectNode]] = set()
-    for item in items(model).values():
-        if item.unit != unit:
-            continue
-        leaf = reference_leaves(model, item.id).get(Aspect.LOCATION)
-        if leaf is not None:
-            leaves.add(leaf.id)
+    leaves = _own_location_leaves(model, unit)
     if not leaves:
         return None
     chains = [list(reversed(list(chain_up(nodes, leaf)))) for leaf in leaves]
     common = chains[0]
     for chain in chains[1:]:
-        shared = 0
-        for own, other in zip(common, chain, strict=False):
-            if own != other:
-                break
-            shared += 1
-        common = common[:shared]
+        common = _shared_prefix(common, chain)
     return common[-1] if common else None
 
 

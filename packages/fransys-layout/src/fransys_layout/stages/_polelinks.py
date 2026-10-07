@@ -10,6 +10,8 @@ from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from fransys_layout.stages.types import Home
+
 from .lookups import nets_from_pairs
 
 if TYPE_CHECKING:
@@ -32,7 +34,7 @@ def pole_links(
     homes: defaultdict[Handle, list[AuthoringKey]] = defaultdict(list)
     for column in columns:
         for cell in column.cells:
-            if not cell.replica:
+            if cell.home is not Home.ELSEWHERE:
                 homes[cell.function].append(column.key)
     links: set[tuple[AuthoringKey, AuthoringKey]] = set()
     for one in connections:

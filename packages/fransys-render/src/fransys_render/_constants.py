@@ -17,13 +17,6 @@ JUNCTION_DOT_DIAMETER_MM = Decimal(1)
 # because 2048 = 2**11: no rounding.
 ASCENT_RATIO = Decimal(1420) / Decimal(2048)
 
-# One wiring-grid step (decision layout-0038): the distance a marker's stub runs from its
-# port to its box, and the same step `fransys_layout.geometry.units.WIRING_GRID` (= 8)
-# names on the layout side. Duplicated here, not imported -- render may not import
-# `fransys_layout` (spec section 5) -- the same single-fact duplication `to_grid` in
-# `_symbol_geometry.py` already uses for this package.
-WIRING_GRID = 8
-
 # How far the arrow's point is pulled in from the box's two near-edge corners, along the
 # facing axis (render's own choice, unpinned by the spec, the same way STROKE_WIDTH_MM
 # is): small relative to the box so the point reads as a spike, not a wedge.

@@ -3,7 +3,7 @@
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.geometry import Box, generic_box_geometry
+from fransys_layout.geometry import Box, draw_order, generic_box_geometry
 from fransys_layout.geometry.box_reach import Reach, Row, extent
 
 from .box_fed import fed_geometry
@@ -90,13 +90,13 @@ def _widened(one: DrawnFunction, room: Mapping[str, tuple[Row, ...]] | None) -> 
         return one
     reach = tuple(Reach(name=name, rows=rows) for name, rows in sorted(room.items()))
     names = tuple(
-        p.name for p in sorted(one.geometry.ports, key=lambda p: (p.at.x, p.facing.value))
+        p.name for p in sorted(one.geometry.ports, key=lambda p: draw_order(p.at.x, p.facing.value))
     )
     sides = tuple(g.facing.value for name in names for g in one.geometry.ports if g.name == name)
     geometry = (
         fed_geometry(one, names, sides, reach)
         if one.fed_by
-        else generic_box_geometry(names, sides, reach)
+        else generic_box_geometry(names, sides, reach, stand=one.stand)
     )
     return replace(one, reach=reach, geometry=_with_hung(geometry, room))
 

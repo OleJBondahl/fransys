@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -78,7 +78,7 @@ def _relays() -> Model:
         wire(feed.inner, relay.fn("co_2")["21"])  # layout-0112: an unwired contact is not drawn
         wire(relay.fn("co_2")["24"], out1.inner)
     wire(k1.fn("co_1")["12"], out2.inner)
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _designation(model: Model, placement: SymbolPlacement) -> str:
@@ -197,6 +197,43 @@ def test_each_contact_cross_reference_line_carries_its_coils_position() -> None:
             )
             assert label_text(model, line) == _where(model, coil, contact)
             assert [partner.x for partner in line.partners] == [coil.x]
+
+
+def _centre_cell(model: Model, placement: SymbolPlacement, reader: SymbolPlacement) -> str:
+    """The text for `placement`'s frame cell at its drawn body's centre, as `reader` prints it."""
+    body = _geometry(placement).body
+    centre_y = placement.y + body.y + body.height // 2
+    page = layout_of(model, Page)[placement.page]
+    column = frame_column(DEFAULT_SHEET.content_width, DEFAULT_SHEET.frame_columns, placement.x)
+    row = frame_row(DEFAULT_SHEET.content_height, DEFAULT_SHEET.frame_rows, centre_y)
+    return position_text(
+        page.number, column, row, (), own_page=layout_of(model, Page)[reader.page].number
+    )
+
+
+def test_a_contacts_partner_text_names_the_cell_of_the_coils_drawn_body_centre() -> None:
+    """RR-O5-FIX: the contact's coil position is the frame cell holding the coil body's centre."""
+    # UNDO: derive/drawing_text.py `_partner_row`: `placement.y + 142` (one row down) fails the
+    # cabinet K1 and the relays K1, K2.
+    checked = 0
+    for model, tag, functions_of in (
+        (_cabinet(), "K1", ("main", "aux")),
+        (_relays(), "K1", ("co_1", "co_2")),
+        (_relays(), "K2", ("co_1", "co_2")),
+    ):
+        coil = _placement(model, tag, "coil")
+        for name in functions_of:
+            contact = _placement(model, tag, name)
+            (line,) = (
+                label
+                for label in layout_of(model, Label).values()
+                if label.function == contact.function
+                and label.slot == "tag"
+                and label.kind is LabelKind.CROSS_REFERENCE
+            )
+            assert label_text(model, line) == _centre_cell(model, coil, contact)
+            checked += 1
+    assert checked == 6
 
 
 # ---- D7: where the image stands ---------------------------------------------------------------

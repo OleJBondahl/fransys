@@ -114,7 +114,7 @@ def test_function_operatings_of_a_function_with_none_or_an_unknown_id_is_empty()
 def _with_current(source: str, field: str) -> _World:
     """A world whose only current is `field` = 10, stated by `source`."""
     world = _World()
-    value = {field: _TEN}
+    value: dict[str, Any] = {field: _TEN}  # Any: Rating also has tuple-typed fields
     rating, operating = (
         (Rating(**value), None) if field in _RATING_CURRENTS else (None, Operating(**value))
     )

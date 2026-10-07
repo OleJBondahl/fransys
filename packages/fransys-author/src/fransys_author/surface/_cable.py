@@ -8,6 +8,7 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._device import part_mpn
 from fransys_author.surface._pairing import Ends, pair
+from fransys_author.surface._parent import cable_parent_item
 from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
@@ -163,7 +164,7 @@ class Cables:
             length_mm=mm,
             at=self._place_node(where),
             group=self._group,
-            parent=None if parent is None else parent._item,
+            parent=None if parent is None else cable_parent_item(parent),
             external=external,
         )
         return Cable(name or tag or "", engine, self)

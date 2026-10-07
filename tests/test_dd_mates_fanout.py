@@ -12,7 +12,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import marker_text, off_stub_text
@@ -70,7 +70,7 @@ def test_a_connector_is_one_view_per_wired_pin_and_an_idle_one_is_not_drawn() ->
     wire(k1.fn("co_1")["14"], plug["1"])
     wire(k2.fn("co_1")["14"], plug["2"])
     d.mate(plug, socket)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     wired, mated = _placements(model, "j1", "x1"), _placements(model, "j2", "x1")
     assert len(wired) == 2
     assert {p.x for p in wired} == {p.x for p in mated}
@@ -93,7 +93,7 @@ def _mated_pair(*, coil=None, contact=None):
     if coil is not None:
         wire(pair[coil]["1"], k2.fn("coil")["A1"])
     d.mate(pair["JA"], pair["JB"])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _one(model, item, name="x1"):
@@ -144,7 +144,7 @@ def test_a_pair_in_no_chain_keeps_the_plug_on_top() -> None:
     end = d.item("DEMO-CONN-2P", tag="PZ", name="pz", parent=harness, at=far, group=field)
     d.cable("DEMO-CBL-4G1.5", name="w3c", parent=harness, at=c1).core(1, plug["2"], end["2"])
     d.mate(plug, d.item("DEMO-CONN-2P", tag="J0", name="j0", at=c1, group=grp))
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     (upper,) = _placements(model, "p9", "x1")
     (lower,) = _placements(model, "j0", "x1")
     assert upper.x == lower.x
@@ -174,7 +174,7 @@ def _star_of_relays(*wires, strip=False):
         wire(terminal.outer, pin("K3.A1"))
     for first, second in wires:
         wire(pin(first), pin(second))
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _star(model):
@@ -277,7 +277,7 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
         wire(terminal.outer, k.fn("coil")["A1"])
         wire(k.fn("co_1")["11"], k.fn("co_1")["14"])  # layout-0112: an unwired contact is not drawn
         wire(k.fn("co_2")["21"], k.fn("co_2")["24"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     pin = terminal.outer.id
     sets = layout_of(model, DrawingSet)
     unit_of = {page.id: sets[page.drawing_set].unit for page in layout_of(model, Page).values()}
@@ -319,7 +319,7 @@ def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from
     relay = d.item("DEMO-RLY-2CO-24", tag="Z9", at=c1, group=field)
     d.wiring(colour="BU", gauge="0.5")(plug["1"], relay.fn("coil")["A1"])
     d.mate(plug, inner)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
     parent = {p.id for p in pages.values() if sets[p.drawing_set].unit is None}
     plugs = [p for p in _placements(model, "P1", "x1") if p.page in parent]

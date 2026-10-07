@@ -12,7 +12,7 @@ element whatever the designations are, as it already is for a suppressor that is
 """
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.layout import SymbolPlacement, layout_of
@@ -24,7 +24,7 @@ def _columns() -> dict[str, int]:
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Coil", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
-    d.location("CAB", "Cabinet")
+    _cabinet = d.location("CAB", "Cabinet")
     feed, back = d.terminal_strip("X1", "DEMO-TB-2.5", 1), d.terminal_strip("X2", "DEMO-TB-2.5", 1)
     with d.function("G", "Group"):
         k1 = d.device("K1", "DEMO-CTR-3P-24")
@@ -34,7 +34,7 @@ def _columns() -> dict[str, int]:
     d.wire(k1.coil["A2"], back[1].outer, wire=wire)
     d.wire(k1.coil["A1"], d1["1"], wire=wire)
     d.wire(k1.coil["A2"], d1["2"], wire=wire)
-    model = fr.build(d, system_document()).model
+    model = fr.build(d, cabinet_document(_cabinet)).model
     return {
         "/".join(functions(model)[p.function].key[:-2]): p.x
         for p in layout_of(model, SymbolPlacement).values()

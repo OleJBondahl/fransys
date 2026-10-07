@@ -24,6 +24,7 @@ from fransys_layout.stages.texts.candidates import (
     stub_anchor,
 )
 
+from .digits import FLOOR, Digits
 from .marker_boxes import reference_box_width
 
 if TYPE_CHECKING:
@@ -44,10 +45,11 @@ REFERENCE_SLOT = "reference"
 
 @dataclass(frozen=True, slots=True)
 class Wiring:
-    """The conductors and net groups a side port's partners are read from (S11, D10)."""
+    """The conductors and net groups a side port's partners are read from, and its set's digits."""
 
     connections: tuple[Connection, ...]
     net_groups: tuple[NetGroup, ...]
+    digits: Digits = FLOOR  # S4: the set's reference box is drawn at these digits
 
 
 def side_reference_rooms(
@@ -70,7 +72,10 @@ def side_reference_rooms(
     if not sides:
         return {}
     partners = _partners({p for _, _, p, _ in sides}, wiring.connections, wiring.net_groups)
-    size = (reference_box_width(sheet, profile), profile.text_height + 2 * profile.marker_padding)
+    size = (
+        reference_box_width(sheet, profile, digits=wiring.digits),
+        profile.text_height + 2 * profile.marker_padding,
+    )
     found: dict[Id[Any], list[tuple[str, Box]]] = defaultdict(list)
     for column, cell, port, g in sides:
         rows = _rows_of(column)

@@ -1,10 +1,14 @@
 """The label-free corridor of a straight vertical connection (C23, D8): hand-made values only."""
 
+from typing import override
+lazy from collections.abc import Iterator
+
 from samples import connection, drawn, hid, placed
 
 from fransys_layout.geometry import Box
-from fransys_layout.stages.labels import _corridors, decided_runs
+from fransys_layout.stages.labels import _corridors, _port_points, decided_runs
 from fransys_layout.stages.stacking import JoinedEnd, JoinedRun
+lazy from fransys_layout.stages.types import DrawnFunction
 
 # Function n's `out` port sits 16 below its origin and its `in` port 16 above it (the through
 # symbol), both on the origin's x. Function 1 at (104, 96) has its `out` at (104, 112).
@@ -65,3 +69,26 @@ def test_decided_runs_hold_the_corridors_and_the_joined_runs() -> None:
     at = (placed(1, x=104, y=96), placed(2, x=104, y=400, name="b"))
     both = decided_runs(at, _DRAWN, (connection(1, 1, 2),), (_join(1, 2),))
     assert both == _corridors(at, _DRAWN, (connection(1, 1, 2),))
+
+
+class _Counting(tuple):  # noqa: SLOT001 -- a tuple subclass counts its own passes, no slots needed
+    passes = 0
+
+    @override
+    def __iter__(self) -> Iterator[DrawnFunction]:
+        type(self).passes += 1
+        return super().__iter__()
+
+
+def test_the_passes_over_the_drawn_functions_do_not_grow_with_the_placed_ones() -> None:
+    """`_port_points` reads each placed function's drawn one by key: the passes stay the same."""
+    # UNDO: stages/labels.py `_port_points`: `drawn_of[one.function]` -> `next(d for d in drawn)`
+    counts = []
+    for n in (2, 12):
+        _Counting.passes = 0
+        _port_points(
+            tuple(placed(i, x=104, y=96 * i, name=f"f{i}") for i in range(1, n + 1)),
+            _Counting(drawn(i) for i in range(1, n + 1)),
+        )
+        counts.append(_Counting.passes)
+    assert counts[0] == counts[1]

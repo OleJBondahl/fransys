@@ -26,7 +26,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_layout.engines.schematic.read.tag_texts import tag_texts
 from fransys_layout.stages import LabelKind as StageLabelKind
@@ -90,7 +90,7 @@ def _k1():
     top(root.fn("x2")["1"], p1["2"])
     u.boundary(root.fn("x1"))
     u.boundary(root.fn("x2"))
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @functools.cache
@@ -110,7 +110,7 @@ def _k1_pin_rows():
     top(root.fn("x2")["2"], p2["2"])
     u.boundary(root.fn("x1"))
     u.boundary(root.fn("x2"))
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @functools.cache
@@ -124,7 +124,7 @@ def _k2():
     wire(root["2"], lamp["2"])
     d.wiring(colour="BU", gauge="0.5")(root["1"], p1["1"])
     u.boundary(root.fn("x1"))
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @functools.cache
@@ -138,7 +138,7 @@ def _k3():
     wire(root.fn("terminal")["external"], lamp["2"])
     d.wiring(colour="BU", gauge="0.5")(root.fn("terminal")["external"], p1["1"])
     u.boundary(root.fn("terminal"))
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @functools.cache
@@ -155,7 +155,7 @@ def _k4():
     top(terminals[1].outer, p1["2"])
     for terminal in terminals:
         u.boundary(terminal)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @functools.cache
@@ -170,7 +170,7 @@ def _k5():
     wire(root.fn("coil")["A2"], lamp["2"])
     wire(root.fn("co_1")["11"], lamp2["1"])
     wire(root.fn("co_1")["12"], lamp2["2"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 # -- what a set draws, what the lists print ---------------------------------------------------
@@ -332,7 +332,7 @@ def test_the_row_header_of_a_top_level_set_names_the_connector_behind_the_tag() 
     top(a1.fn("x1")["2"], p1["2"])
     top(a1.fn("x2")["1"], p2["1"])
     top(a1.fn("x2")["2"], p2["2"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     pins = [
         label
         for label in _labels(model, own=False)

@@ -7,7 +7,7 @@ lazy from .ids import AuthoringKey, Id
 lazy from .origin import Origin
 lazy from .record import Record
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 """The canonical-form version `freeze()` stamps and `from_data` demands (kernel-model.md 5.6)."""
 
 

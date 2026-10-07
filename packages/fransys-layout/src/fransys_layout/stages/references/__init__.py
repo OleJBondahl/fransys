@@ -18,13 +18,14 @@ from fransys_layout.stages.offstubs import off_ends
 
 from .apart import apart_markers
 from .cuts import LINK_FANOUT, LINK_PARTNER_UNLOCATED, CutLocations, links
-from .digits import FLOOR, set_digits
+from .digits import FLOOR, Digits, set_digits
 from .joins import JOIN_UNALIGNED, joined_runs
 from .markers import split_markers, star_markers
 from .nets import side_functions, star_nets, with_orphans, without_starred
 from .off_stubs import black_box_sets, with_off_markers
 from .power import with_power_ends
 from .rails import rail_markers
+from .room_check import REFERENCE_BOX_EXCEEDS_ROOM, box_room_findings
 from .side_rooms import Wiring, side_reference_rooms
 from .turned import turned_stars
 from .types import (
@@ -47,6 +48,7 @@ __all__ = (
     "JOIN_UNALIGNED",
     "LINK_FANOUT",
     "LINK_PARTNER_UNLOCATED",
+    "REFERENCE_BOX_EXCEEDS_ROOM",
     "BlackBoxReads",
     "CutLocations",
     "ReferenceInputs",
@@ -54,6 +56,7 @@ __all__ = (
     "Star",
     "Wiring",
     "black_box_sets",
+    "box_room_findings",
     "joined_runs",
     "links",
     "references",
@@ -73,8 +76,10 @@ def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]
     )
     decided, findings = _decided(inputs, joins, MappingProxyType({}))
     # S4: a power end prints no `#n`, so it is no reference group
-    digits = set_digits((one for one in decided.markers if not one.symbol), seating.plans)
-    wider = {one.drawing_set: (one.refs, one.sheets) for one in digits}
+    digits = set_digits(
+        (one for one in decided.markers if not one.symbol), seating.plans, inputs.location_paths
+    )
+    wider = {one.drawing_set: one.digits for one in digits}
     if any(counts != FLOOR for counts in wider.values()):
         decided, findings = _decided(inputs, joins, wider)
     return replace(decided, digits=digits), findings
@@ -84,16 +89,14 @@ def _with_rail_ends(
     markers: tuple[MarkerDecision, ...], inputs: ReferenceInputs, scene: MarkerScene, off: OffInputs
 ) -> tuple[MarkerDecision, ...]:
     """The power-flagged markers, and a symbol at each rail end that has none (V3)."""
-    flagged = with_power_ends(
-        with_off_markers(markers, inputs.seating, inputs.replicas, off), inputs.power
-    )
+    flagged = with_power_ends(with_off_markers(markers, inputs.seating, off), inputs.power)
     taken = {(one.port, one.drawing_set, one.page) for one in flagged if one.symbol}
     rails = rail_markers(inputs.rail_ends, scene, inputs.exempt, inputs.outward, taken)
     return (*flagged, *with_power_ends(rails, inputs.power))
 
 
 def _decided(
-    inputs: ReferenceInputs, joins: Joins, digits: Mapping[int, tuple[int, int]]
+    inputs: ReferenceInputs, joins: Joins, digits: Mapping[int, Digits]
 ) -> tuple[References, tuple[Finding, ...]]:
     """`references` on `joins`, with each set's texts sized for its `digits` (`digits` empty)."""
     plans, columns = inputs.seating.plans, inputs.seating.columns

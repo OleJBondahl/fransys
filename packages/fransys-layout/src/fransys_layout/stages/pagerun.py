@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 lazy from fransys_layout.geometry import Box
 
+from ._page_requests import _page_requests
 from ._polelinks import pole_links
 from .boxes import box_sides
 from .content import content_box
@@ -27,6 +28,7 @@ from .page_stacking import PageStacking
 from .partition import ColumnTables, partition
 from .place import page_stack, place
 from .references import Wiring, side_reference_rooms
+from .references.digits import FLOOR, Digits, set_digits
 from .references.types import Seat, Seating
 from .replicate import drop_attached_replicas, drop_replicas
 from .route import PageRoom, route
@@ -40,8 +42,8 @@ from .slices import (
     pages_of,
     rooms_by_page,
 )
-from .tags import TagTexts, one_item_tag, one_module_tag, pin_labels, unit_texts
-from .texts.power import held_shapes, with_power_rooms
+from .tags import TagTexts, one_module_tag
+from .texts.power import drawn_shapes, with_power_rooms
 from .texts.stand import joined_ports, page_texts
 from .types import LabelKind
 
@@ -50,7 +52,7 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import AuthoringKey, Finding
 
-    from .references.types import References
+    from .references.types import LocationPath, References
     from .stacking import JoinedRun, PageStack
     from .texts.stand import PageTexts
     from .types import (
@@ -110,8 +112,9 @@ class PageRun:
     inputs: PageInputs
     rank_of: dict[Handle, int]
     pin_requests: tuple[LabelRequest, ...]
-    replicas: frozenset[AuthoringKey]
     reserves: dict[tuple[AuthoringKey, Handle], Any]
+    # S4: each drawing set's location path, read from the planned pages (known before `place`)
+    paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, LocationPath]]
     # D5, V1: the power kinds and the item-box sides, by port (`boxes.power_maps`)
     power: tuple[dict[Handle, str], dict[Handle, str]] = ({}, {})
 
@@ -162,7 +165,7 @@ def plan_pages(
         profile=inputs.profile,
         sheet=inputs.sheet,
     )
-    plans = drop_replicas(plans, columns, replicas=run.replicas)
+    plans = drop_replicas(plans, columns)
     return Planned(plans, drop_attached_replicas(plans, columns), findings)
 
 
@@ -226,14 +229,22 @@ def _place_each(
     page_rooms = rooms(run.reserves, drawn, plans, run.inputs)
     own = page_columns(plans, columns)
     on_page = pages_of(own)
-    owner = {port.port: one.function for one in drawn for port in one.ports}
     drawn_at = by_page(drawn, FUNCTION, on_page, len(plans))
     specs_at = by_page(run.inputs.functions, FUNCTION, on_page, len(plans))
-    requests_at = by_page(run.pin_requests, partial(_function_of, owner=owner), on_page, len(plans))
+    requests_at = by_page(
+        run.pin_requests,
+        partial(
+            _function_of, owner={port.port: one.function for one in drawn for port in one.ports}
+        ),
+        on_page,
+        len(plans),
+    )
     connections_at = by_ends(
         run.inputs.connections, connection_ends, on_page, count=len(plans), every=True
     )
     rooms_at = rooms_by_page(page_rooms, plans)
+    # S4, layout-0135: each set's box width, from the digits known before `place` (not `refs`)
+    sized = {one.drawing_set: one.digits for one in set_digits((), plans, run.paths_of(plans))}
     work = [
         PageSlices(
             plan,
@@ -241,6 +252,7 @@ def _place_each(
             reserved(page_drawn, page_room),
             _page_requests(run.texts, plan, cols, specs, requests),
             replace(run.inputs, connections=connections),
+            sized.get(plan.drawing_set, FLOOR),
         )
         for plan, cols, page_drawn, page_room, specs, requests, connections in zip(
             plans, own, drawn_at, rooms_at, specs_at, requests_at, connections_at, strict=True
@@ -251,9 +263,7 @@ def _place_each(
     seats = _seated(plans, columns)
     decided = decide(Seating(plans, columns, drawn, seats, stacks))
     # S16: Room's N or S call reads each page's texts as decided, and the wiring on the page
-    _, _, wired = page_wiring(
-        decided[0].connections, columns, seats, run.replicas, decided[0].net_groups
-    )
+    _, _, wired = page_wiring(decided[0].connections, columns, seats, decided[0].net_groups)
     texts = page_texts(
         decided[0].markers,
         wired,
@@ -268,22 +278,6 @@ def _place_each(
         pages.append((placed, first))
         found.extend(page_findings)
     return pages, found, page_rooms, decided
-
-
-def _page_requests(
-    texts: TagTexts,
-    plan: PagePlan,
-    columns: tuple[Column, ...],
-    specs: tuple[FunctionSpec, ...],
-    requests: tuple[LabelRequest, ...],
-) -> tuple[LabelRequest, ...]:
-    """The page's tag rules over its own slices: the pin decision, one item tag, unit texts."""
-    return unit_texts(
-        texts,
-        plan,
-        one_item_tag(columns, specs, pin_labels(texts, requests, columns, specs)),
-        specs,
-    )
 
 
 @dataclass(frozen=True)
@@ -306,6 +300,7 @@ class PageSlices:
     drawn: tuple[DrawnFunction, ...]
     requests: tuple[LabelRequest, ...]
     inputs: PageInputs
+    digits: Digits = FLOOR  # S4: its set's digits, `refs` at the floor (known only after `place`)
 
 
 def _place_page(
@@ -342,6 +337,7 @@ def _stacking(page: PageSlices, texts: PageTexts | None = None) -> PageStacking:
         bottom_headroom_lanes=inputs.bottom_headroom_lanes,
         label_boxes=_page_boxes(page, texts),
         texts=texts,
+        digits=page.digits,
     )
 
 
@@ -351,7 +347,7 @@ def _page_boxes(page: PageSlices, texts: PageTexts | None) -> dict[Handle, list[
     sides = side_reference_rooms(
         page.columns,
         drawn,
-        Wiring(inputs.connections, inputs.net_groups),
+        Wiring(inputs.connections, inputs.net_groups, page.digits),
         sheet=inputs.sheet,
         profile=inputs.profile,
     )
@@ -374,7 +370,7 @@ def finish_page(
         drawn,
         occupied=(
             *(label.box for label in labels),
-            *held_shapes(markers),
+            *(one.box for one in drawn_shapes(markers)),
         ),
         frame=SlotFrame(content=content_box(inputs.sheet), profile=inputs.profile),
     )

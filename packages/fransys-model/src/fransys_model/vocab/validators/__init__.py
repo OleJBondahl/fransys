@@ -13,7 +13,8 @@ from .part_library import check_part_library
 from .plc import check_plc, check_plc_wiring
 from .potential_without_supply import check_potential_without_supply
 from .ratings import check_ratings
-from .ratings_current import check_ratings_current
+from .ratings_breaking import check_breaking
+from .ratings_current import check_load_draw, check_ratings_current
 from .revisions import check_revisions
 from .strip_without_tag import check_strip_without_tag
 from .structure import check_structure
@@ -41,6 +42,8 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
     check_supplies,
     check_ratings,
     check_ratings_current,
+    check_load_draw,
+    check_breaking,
     check_revisions,
     check_documents,
     check_potential_without_supply,
@@ -48,12 +51,14 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
 
 __all__ = [
     "ALL_VALIDATORS",
+    "check_breaking",
     "check_cables",
     "check_colours",
     "check_connectivity",
     "check_documents",
     "check_earth",
     "check_harness_without_tag",
+    "check_load_draw",
     "check_part_conformance",
     "check_part_library",
     "check_plc",

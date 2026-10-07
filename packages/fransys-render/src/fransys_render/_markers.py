@@ -6,6 +6,7 @@ from xml.sax.saxutils import escape
 
 from graphical_symbols import Direction
 
+from electrical_symbols import WIRING_GRID
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.layout import (
@@ -19,11 +20,7 @@ from fransys_model.layout import (
 )
 from fransys_model.vocab import functions, ports
 
-from ._constants import (
-    ASCENT_RATIO,
-    MARKER_ARROW_DEPTH_G,
-    WIRING_GRID,
-)
+from ._constants import ASCENT_RATIO, MARKER_ARROW_DEPTH_G
 from ._numbers import format_decimal, grid_to_mm
 from ._symbol_geometry import oriented_symbol, to_grid
 

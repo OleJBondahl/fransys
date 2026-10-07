@@ -20,7 +20,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import unit_release
 from fransys_model.derive.drawing_text import marker_text
@@ -57,7 +57,7 @@ def _build(*, in_unit: bool, nested: bool):
         panel = scope.item("DEMO-CONN-2P", name=f"panel{i}", at=field)
         peer = scope.item("DEMO-CONN-2P", name=f"peer{i}", at=cab)
         wire(panel.fn("x1")["1"], peer.fn("x1")["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _errors(result) -> list[str]:

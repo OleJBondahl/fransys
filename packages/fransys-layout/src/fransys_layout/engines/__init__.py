@@ -3,6 +3,7 @@
 Refs: package-layout.md 4.
 """
 
+from .cable import lay_out_cables
 from .schematic import lay_out_schematic
 
-__all__ = ("lay_out_schematic",)
+__all__ = ("lay_out_cables", "lay_out_schematic")

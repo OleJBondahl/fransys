@@ -394,3 +394,22 @@ def test_no_message_prints_an_id() -> None:
 def test_an_empty_model_has_no_finding() -> None:
     """Nothing declared, nothing to compare."""
     assert check_connectivity(Plant().model()) == ()
+
+
+def _wired_pair(name_a: str | None, name_b: str | None) -> Plant:
+    plant = Plant()
+    a, b, c, d = (plant.pin(name, "f", "1") for name in "abcd")
+    plant.net("net-a", (a, b), name=name_a)
+    plant.net("net-b", (c, d), name=name_b)
+    plant.wire(a, c, key="bridge")
+    return plant
+
+
+def test_declared_nets_of_one_name_join_without_a_finding() -> None:
+    """One name is one intent (model-0156)."""
+    assert _of(_wired_pair("BUS", "BUS"), NET_SHORTED) == []
+
+
+def test_two_unnamed_declared_nets_joined_are_still_shorted() -> None:
+    assert len(_of(_wired_pair(None, None), NET_SHORTED)) == 1
+    assert len(_of(_wired_pair("BUS", None), NET_SHORTED)) == 1

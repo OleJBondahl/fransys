@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.stages.attach import _entry, _first_pin, _wire_ends
 from fransys_layout.stages.far_moves import _assembled, _moved_cells
+from fransys_layout.stages.types import Home
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -36,7 +37,9 @@ def own_group_homes(
     fits: Callable[[Column], bool],
 ) -> tuple[Column, ...]:
     """V4: move each own-group home terminal to its first far pin, unless `fits` says no."""
-    home = {c.function: (col, c) for col in columns for c in col.cells if not c.replica}
+    home = {
+        c.function: (col, c) for col in columns for c in col.cells if c.home is not Home.ELSEWHERE
+    }
     busy = {c.host for col in columns for c in col.cells if c.host is not None}
     placed: dict[AuthoringKey, tuple[_Entry, ...]] = {}
     leaving: dict[AuthoringKey, frozenset[Handle]] = {}
@@ -61,7 +64,7 @@ def _stars(
     """Each home terminal cell's column, handle, host column and entry, where V4 applies."""
     for column in columns:
         for cell in column.cells:
-            if cell.replica or cell.moved or cell.host is not None:
+            if cell.home is not Home.HERE or cell.host is not None:
                 continue
             if not drawn_of[cell.function].roles.terminal:
                 continue

@@ -27,6 +27,7 @@ from _build import (
 )
 from fransys_pdf import check
 
+from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import Severity, make_id
 from fransys_model.kernel.ids import render_id
 from fransys_model.layout import SheetFormat, default_sheet_format
@@ -241,13 +242,15 @@ def _harness_with_one_cable():
     return m, doc, cable
 
 
-def test_no_drawings_finding_for_a_harness_with_a_cable_even_with_no_svgs_at_all():
-    """CT2: a table page needs no rendered drawing, so a harness cable `harness_cables_for`
-    finds can never itself be "missing" -- `check(m, {})` alone (no svgs entry for the cable)
-    reports nothing, unlike the pre-CT2 behaviour this replaces."""
-    m, _doc, _cable = _harness_with_one_cable()
-    findings = [f for f in check(m, {}) if f.code == "DOCUMENT_NO_DRAWINGS"]
-    assert findings == []
+def test_no_drawings_finding_for_a_harness_cable_with_no_block_svg():
+    """Acceptance 16: the cable's block is keyed by `cable_block_key`; with no SVG for it the
+    ERROR names that key, as a missing schematic page key does, and with the SVG it is gone."""
+    m, _doc, cable = _harness_with_one_cable()
+    key = cable_block_key(None, cable.id)
+    (finding,) = [f for f in check(m, {}) if f.code == "DOCUMENT_NO_DRAWINGS"]
+    assert finding.severity is Severity.ERROR
+    assert finding.message == f"HARNESS_DRAWING: missing drawing for {key}"
+    assert [f for f in check(m, {key: "<svg>b</svg>"}) if f.code == "DOCUMENT_NO_DRAWINGS"] == []
 
 
 def _cabinet_with_drawing_set():

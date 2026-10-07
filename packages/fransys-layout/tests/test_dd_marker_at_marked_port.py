@@ -24,7 +24,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Id, Severity
 from fransys_model.layout import (
@@ -84,7 +84,7 @@ def _build(spec: tuple[tuple[str, int], ...], *, pair: bool = False):
         blue(relay.fn("coil")["A1"], relay.fn("coil")["A2"])
         for contact, pins in (("co_1", ("11", "14")), ("co_2", ("21", "24"))):  # layout-0112
             blue(relay.fn(contact)[pins[0]], relay.fn(contact)[pins[1]])
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
     return result.model, [terminal.inner.id for terminal in terminals]
 

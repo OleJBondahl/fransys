@@ -64,7 +64,29 @@ def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: Pa
     return f"#set page(margin: {text_margin(sheet)}, background: {background(sheet, fields)})"
 
 
-def _page_source(  # noqa: PLR0911, PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` for the page-frame background
+_LIST_PAGES = {
+    PageKind.PLC_LIST: plc_list_page,
+    PageKind.TERMINAL_LIST: terminal_list_page,
+    PageKind.CONNECTOR_LIST: connector_list_page,
+    PageKind.WIRE_LABEL_LIST: wire_label_list_page,
+    PageKind.DESIGNATION_LIST: designation_list_page,
+    PageKind.BOM: bom_page,
+}
+
+
+def _text_page(kind: PageKind, model: Model, record: Document, pages: tuple[PageKind, ...]) -> str:
+    if kind is PageKind.COVER:
+        return cover_page(model, record)
+    if kind is PageKind.NOTES:
+        return notes_page(record)
+    if kind is PageKind.CONTENTS:
+        return contents_page(model, record, pages)
+    if kind is PageKind.CABLE_LIST:
+        return cable_list_page(model)
+    return _LIST_PAGES[kind](model, record)
+
+
+def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` for the page-frame background
     kind: PageKind,
     model: Model,
     record: Document,
@@ -73,30 +95,12 @@ def _page_source(  # noqa: PLR0911, PLR0913, PLR0917 -- one branch per `PageKind
     sheet: SheetFormat,
 ) -> str:
     """The Typst source of one page kind; the two drawing kinds set their own frame (R3, R4)."""
-    if kind is PageKind.COVER:
-        return cover_page(model, record)
-    if kind is PageKind.NOTES:
-        return notes_page(record)
     if kind is PageKind.SCHEMATIC:
         return schematic_source(model, record, sheet, schematic_pages(model, record, pages), svgs)
-    if kind is PageKind.CONTENTS:
-        return contents_page(model, record, pages)
     if kind is PageKind.HARNESS_DRAWING:
         cables = harness_cables_for(model, record, pages)
-        return harness_drawing_source(model, record, sheet, cables)
-    if kind is PageKind.PLC_LIST:
-        return plc_list_page(model, record)
-    if kind is PageKind.TERMINAL_LIST:
-        return terminal_list_page(model, record)
-    if kind is PageKind.CONNECTOR_LIST:
-        return connector_list_page(model, record)
-    if kind is PageKind.WIRE_LABEL_LIST:
-        return wire_label_list_page(model, record)
-    if kind is PageKind.DESIGNATION_LIST:
-        return designation_list_page(model, record)
-    if kind is PageKind.CABLE_LIST:
-        return cable_list_page(model)
-    return bom_page(model, record)  # kind is PageKind.BOM: the one PageKind left unhandled above
+        return harness_drawing_source(model, record, sheet, cables, svgs)
+    return _text_page(kind, model, record, pages)
 
 
 def source(model: Model, document: Id[Document], svgs: Mapping[str, str]) -> str:
@@ -107,7 +111,7 @@ def source(model: Model, document: Id[Document], svgs: Mapping[str, str]) -> str
         document: Id of the authored `Document` record.
         svgs: Page key to SVG text (from ``fransys_render.pages``); each `SCHEMATIC` SVG is
             inlined as ``image(bytes("..."), format: "svg")``. A `HARNESS_DRAWING` page reads
-            none (CT2).
+            one SVG per cable block, keyed by `cable_block_key` (pdf-0022).
 
     Returns:
         The Typst source, pure in `model` and `svgs`. Every page carries frame, grid and title

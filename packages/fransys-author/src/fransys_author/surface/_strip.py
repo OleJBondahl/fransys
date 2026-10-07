@@ -1,6 +1,6 @@
 """Terminal strips: `d.terminal_strip("X1", part)` and `X1[3]`, terminal 3 by number (EA9)."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 lazy from collections.abc import Callable
 lazy from types import EllipsisType
 
@@ -75,6 +75,10 @@ class TerminalStrip:
             if self._grows and number > 1 and self._bridge is not None:
                 self._bridge(self._made[number - 1], made)
         return self._made[number]
+
+    def _as_parent(self) -> Strip:
+        """The strip an accessory (`d.device(None, part, parent=X1)`) nests under."""
+        return self._strip
 
     def _claim(self, *numbers: int) -> None:
         """Place each terminal not yet placed at the open function block, if there is one."""
@@ -203,6 +207,13 @@ class Run(TerminalStrip):
             numbers = range(first, last + 1)
             strip._bridge(*(self._terminal(number) for number in numbers))
             self._claim(*numbers)
+
+    @override
+    def _as_parent(self) -> Strip:
+        """Refuse: a run holds no accessory, its strip does."""
+        strip = "/".join(self._strip.key)
+        msg = f"parent= takes a device or a strip; {self._tag} is a run, give its strip {strip}"
+        raise AuthorError(msg)
 
 
 def _boundary_marker(

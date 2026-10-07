@@ -15,7 +15,7 @@ pins, on the cabinet's own set, keep theirs. The board's own pages still draw th
 from typing import Any, NamedTuple
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.layout import DrawingSet, Page, PowerSymbol, layout_of
@@ -82,7 +82,7 @@ def _build() -> fr.BuildResult:
     d.project(**_PROJECT)
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
     d.add(_cabinet, "CAB")
-    return fr.build(d, system_document())
+    return fr.build(d, cabinet_document(d.location("C1", "Cabinet")))
 
 
 def _symbols(model) -> set[tuple[str, str]]:

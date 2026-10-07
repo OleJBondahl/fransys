@@ -2,12 +2,13 @@
 
 import dataclasses
 import glob
-import re
 import shutil
 import tempfile
+from functools import partial
 from importlib.resources import as_file, files
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
+lazy from collections.abc import Callable
 
 import fransys_pdf
 import fransys_render
@@ -34,14 +35,13 @@ from fransys_reports import (
 )
 from fransys_wago import modules_xml as modules_xml_of
 
-from fransys_layout import SymbolPortError, lay_out_schematic
+from fransys_layout import lay_out_cables
 from fransys_model.derive import (
     allocate_plc,
     baseline,
     current_revision,
     document_unit,
     list_context,
-    location_node_designation,
     number,
     numbering_pins,
     release_order,
@@ -71,29 +71,30 @@ from fransys_model.kernel import dumps as model_dumps
 from fransys_model.vocab import (
     ALL_VALIDATORS,
     AssignedDesignationFacet,
-    DocumentPreset,
     ReservedDesignationFacet,
     documents,
-    functions,
     items,
-    port_templates,
     projects,
     unit_name_unresolved,
     unit_releases,
     units_named,
 )
-from fransys_model.vocab import parts as model_parts
 lazy from fransys_model.kernel import AuthoringKey, Draft, Model, Origin
 
 from . import _args, _designation_pins, _revision_pins, _subjects
+from ._baseline_cause import sections_text
+from ._export_names import document_export_name as _document_export_name
+from ._export_names import export_name as _export_name
+from ._history_gate import history_findings
+from ._layout_need import lay_out_if_needed, needs_schematic_layout
+from ._release_files import release_file_findings
 from ._release_manifest import _manifest
+from ._release_reader import listed_siblings, stored_listing, stored_numbering
 from .documents import engine_subject
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
     from fransys_model.derive.baseline import Listing
-    from fransys_model.vocab import Document, Function, Item, UnitRelease
+    from fransys_model.vocab import Item, UnitRelease
     from fransys_model.vocab import Unit as ModelUnit
 
 _SEVERITY_RANK = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
@@ -190,46 +191,6 @@ def lint(*libraries: str) -> tuple[Finding, ...]:
         with as_file(files(library)) as root:
             findings.extend(parts_lint(root))
     return tuple(findings)
-
-
-def _symbol_port_missing_finding(model: Model, error: SymbolPortError) -> Finding:
-    """One `SYMBOL_PORT_MISSING` `ERROR` for a `SymbolPortError` layout raised (decision 0018).
-
-    `error.function` is a Function of this model, or the whole Item of a one-view draw.
-    Message: part mpn + `error`'s text; origin: PortTemplate, else Part, else `error.function`.
-    """
-    if error.function.kind == "item":
-        function = None
-        item = items(model)[cast("Id[Item]", error.function)]
-    else:
-        function = functions(model)[cast("Id[Function]", error.function)]
-        item = items(model)[function.item]
-    part = model_parts(model).get(item.part) if item.part is not None else None
-    mpn = part.mpn if part is not None else "no part"
-    port_template = (
-        next(
-            (
-                candidate
-                for candidate in port_templates(model).values()
-                if candidate.function == function.template and candidate.name == error.port_name
-            ),
-            None,
-        )
-        if function is not None and function.template is not None
-        else None
-    )
-    if port_template is not None:
-        subject = port_template.id
-    elif part is not None:
-        subject = part.id
-    else:
-        subject = error.function
-    return Finding(
-        code="SYMBOL_PORT_MISSING",
-        severity=Severity.ERROR,
-        subjects=(subject,),
-        message=f"part {mpn!r}: {error}",
-    )
 
 
 def _has_error(findings: tuple[Finding, ...]) -> bool:
@@ -372,10 +333,10 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     """Merge, freeze and lay out drafts or a `Design` into a `BuildResult`.
 
     Runs PLC allocation, numbering, every validator and layout, collecting each pass's findings.
-    Layout runs only when no `ERROR` was found and the model holds a `Document`; a layout
-    `SymbolPortError` becomes one `SYMBOL_PORT_MISSING` `ERROR`. `releases` seeds numbering pins
-    from that release root; `None` numbers freely. Raises `FreezeError` on a structural
-    problem in the merged draft.
+    The schematic lays out only when no `ERROR` was found and a `Document` keeps a SCHEMATIC
+    page; a layout `SymbolPortError` becomes one `SYMBOL_PORT_MISSING` `ERROR`. `releases` seeds
+    numbering pins from that release root; `None` numbers freely. Raises `FreezeError` on a
+    structural problem in the merged draft.
 
     Does not write files, run `check` or raise on findings; does not seed pins when `releases`
     is `None`.
@@ -386,17 +347,13 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     model = _seed_designation_pins(model, sources)
     model, number_findings = number(model)
     number_findings = (*number_findings, *_revision_pins.new_findings(model, sources))
-    validator_findings: list[Finding] = []
-    for validator in ALL_VALIDATORS:
-        validator_findings.extend(validator(model))
-    findings = (*plc_findings, *number_findings, *tuple(validator_findings))
+    validator_findings = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
+    findings = (*plc_findings, *number_findings, *validator_findings)
     if _has_error(findings) or not _has_document(model):
         return BuildResult(model=model, findings=findings)
-    try:
-        model, layout_findings = lay_out_schematic(model)
-    except SymbolPortError as error:
-        layout_findings = (_symbol_port_missing_finding(model, error),)
-    return BuildResult(model=model, findings=(*findings, *layout_findings))
+    model, layout_findings = lay_out_if_needed(model)
+    model, cable_findings = lay_out_cables(model)
+    return BuildResult(model=model, findings=(*findings, *layout_findings, *cable_findings))
 
 
 def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...]:
@@ -409,12 +366,15 @@ def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...
 
 
 def _draw_svgs(model: Model) -> dict[str, str]:
-    """Page key to SVG text of `fransys_render`'s pages; callers run it only with a document.
+    """Page key to SVG text of `fransys_render`'s pages and cable blocks; only with a document.
 
-    A cable page is a Typst table `fransys_pdf` builds from `HarnessCable` rows (no SVG, no dot).
+    A cable block is keyed by `cable_block_key`, a schematic page by its page id (CT5 CD12).
     Built once per write/check, reused by `_check`, `_write_intermediates`, `_exports`.
     """
-    return dict(fransys_render.pages(model))
+    pages: dict[str, str] = (
+        dict(fransys_render.pages(model)) if needs_schematic_layout(model) else {}
+    )
+    return {**pages, **fransys_render.cable_blocks(model)}
 
 
 # The last model's drawing only (decision 0054): memory stays flat on a big system, and every
@@ -450,7 +410,8 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
         raw.extend(kicad_check(model, board))
     if not _has_error(result.findings) and _has_document(model):
         raw.extend(fransys_pdf.check(model, svgs))
-        raw.extend(fransys_render.check(model))
+        if needs_schematic_layout(model):
+            raw.extend(fransys_render.check(model))
     return tuple(raw)
 
 
@@ -503,21 +464,36 @@ def _write_intermediates(model: Model, svgs: dict[str, str], intermediates: Path
 
 
 class _ExportLedger:
-    """Export bytes by name, refusing a name two different subjects both want (spec F6)."""
+    """Export names, and with `names_only=False` their bytes, refusing a name two subjects want.
 
-    def __init__(self, model: Model) -> None:
+    `names` maps `(kind, subject)` to the name: one traversal gives `write` its bytes and
+    `export_names` its names, so the naming rule has one home (spec F6).
+    """
+
+    def __init__(self, model: Model, *, names_only: bool = False) -> None:
         self._model = model
+        self._names_only = names_only
         self.exports: dict[str, bytes] = {}
-        self._subjects_by_name: dict[str, Id[Any]] = {}
+        self.names: dict[tuple[str, Id[Any] | None], str] = {}
+        self._subjects_by_name: dict[str, Id[Any] | None] = {}
 
     def add(
-        self, name: str, data: str | bytes, subject: Id[Any], *, hint: str | None = None
+        self,
+        kind: str,
+        name: str,
+        subject: Id[Any] | None,
+        data: Callable[[], str | bytes],
+        *,
+        hint: str | None = None,
     ) -> None:
         held = self._subjects_by_name.get(name)
-        if held is not None and held != subject:
+        if held is not None and subject is not None and held != subject:
             raise _export_name_clash(name, held, subject, self._model, hint=hint)
-        self.exports[name] = data.encode("utf-8") if isinstance(data, str) else data
+        self.names[(kind, subject)] = name
         self._subjects_by_name[name] = subject
+        if not self._names_only:
+            made = data()
+            self.exports[name] = made.encode("utf-8") if isinstance(made, str) else made
 
 
 def _compile_pdf(model: Model, document_id: Id[Any], svgs: dict[str, str]) -> bytes:
@@ -556,68 +532,19 @@ def _resolve_unit(model: Model, unit: object) -> Id[ModelUnit] | None:
     raise TypeError(msg)
 
 
-def _export_name(
-    model: Model,
-    unit: Id[ModelUnit] | None,
-    extension: str,
-    *,
-    kind: str | None = None,
-    fragment: str | None = None,
-) -> str:
-    """`<prefix>[-<kind>][-<fragment>].<extension>` (decision 0033); an empty part is left out.
-
-    The one place prefix, kind and fragment are joined; the prefix is `_subjects.export_prefix`.
-    """
-    joined = "-".join(
-        part for part in (_subjects.export_prefix(model, unit), kind, fragment) if part
-    )
-    return f"{joined}.{extension}"
-
-
-def _document_export_name(model: Model, unit: Id[ModelUnit] | None, record: Document) -> str:
-    """One document's PDF name, from its own subject, never its cover (decision 0033).
-
-    Unit subject (`record.unit`, or `record.unit_name` via `derive.document_unit`): its own prefix.
-    Location, item, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
-    """
-    document_own_unit = document_unit(model, record)
-    if document_own_unit is not None:
-        kind = "harness" if record.preset is DocumentPreset.HARNESS_DRAWING else None
-        return _export_name(model, document_own_unit, "pdf", kind=kind)
-    if not _subjects.export_prefix(model, unit):
-        return _export_name(model, unit, "pdf", fragment=record.key[1])
-    if record.location is not None:
-        fragment = _subjects.fragment(location_node_designation(model, record.location))
-        return _export_name(model, unit, "pdf", fragment=fragment)
-    if record.item is not None:
-        return _export_name(
-            model, unit, "pdf", fragment=_subjects.export_ref(model, record.item, unit)
-        )
-    return _export_name(model, unit, "pdf")
-
-
 def _add_system_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit] | None) -> None:
     """The CSV reports, and with `unit=None` the two whole-system views (units spec U6)."""
-    # Straight into `ledger.exports`, never `ledger.add`: each name is fixed by its kind.
-    ledger.exports.update(
-        {
-            _export_name(model, unit, "csv", kind="bom"): bom_csv(model, unit).encode("utf-8"),
-            _export_name(model, unit, "csv", kind="plc"): plc_csv(model, unit=unit).encode("utf-8"),
-            _export_name(model, unit, "csv", kind="wires"): wires_csv(model, unit=unit).encode(
-                "utf-8"
-            ),
-            _export_name(model, unit, "csv", kind="designations"): designations_csv(
-                model, unit=unit
-            ).encode("utf-8"),
-        }
-    )
+    made: dict[str, tuple[str, Callable[[], str]]] = {
+        "bom": ("csv", partial(bom_csv, model, unit)),
+        "plc": ("csv", partial(plc_csv, model, unit=unit)),
+        "wires": ("csv", partial(wires_csv, model, unit=unit)),
+        "designations": ("csv", partial(designations_csv, model, unit=unit)),
+    }
     if unit is None:
-        ledger.exports[_export_name(model, unit, "html", kind="overview")] = overview_html(
-            model
-        ).encode("utf-8")
-        ledger.exports[_export_name(model, unit, "csv", kind="cables")] = cables_csv(model).encode(
-            "utf-8"
-        )
+        made["overview"] = ("html", partial(overview_html, model))
+        made["cables"] = ("csv", partial(cables_csv, model))
+    for kind, (extension, produce) in made.items():
+        ledger.add(kind, _export_name(model, unit, extension, kind=kind), None, produce)
 
 
 def _list_context(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) -> Id[Any] | None:
@@ -647,16 +574,18 @@ def _add_item_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit] |
         fragment = _subjects.export_ref(model, strip, unit)
         name = _export_name(model, unit, "csv", kind="terminals", fragment=fragment)
         context = _list_context(model, unit, strip)
-        ledger.add(name, terminal_csv_of(model, strip, unit=unit, context=context), strip)
+        produce = partial(terminal_csv_of, model, strip, unit=unit, context=context)
+        ledger.add("terminals", name, strip, produce)
     for board in boards:
         fragment = _subjects.export_ref(model, board, unit)
         name = _export_name(model, unit, "csv", kind="connectors", fragment=fragment)
         context = _list_context(model, unit, board)
-        ledger.add(name, connectors_csv_of(model, board, unit=unit, context=context), board)
+        produce = partial(connectors_csv_of, model, board, unit=unit, context=context)
+        ledger.add("connectors", name, board, produce)
     for rack in racks:
         fragment = _subjects.export_ref(model, rack, unit)
         name = _export_name(model, unit, "xml", kind="wago", fragment=fragment)
-        ledger.add(name, modules_xml_of(model, rack, unit=unit), rack)
+        ledger.add("wago", name, rack, partial(modules_xml_of, model, rack, unit=unit))
 
 
 def _add_document_exports(
@@ -680,18 +609,42 @@ def _add_document_exports(
             if release_by_name.get(name) == release_id:
                 hint = _subjects.export_set_name(model, document_own_unit)
             release_by_name[name] = release_id
-        ledger.add(name, _compile_pdf(model, document_id, svgs), document_id, hint=hint)
+        ledger.add(
+            "pdf", name, document_id, partial(_compile_pdf, model, document_id, svgs), hint=hint
+        )
+
+
+def _ledger(
+    model: Model, svgs: dict[str, str], unit: Id[ModelUnit] | None, *, names_only: bool = False
+) -> _ExportLedger:
+    ledger = _ExportLedger(model, names_only=names_only)
+    _add_system_exports(ledger, model, unit)
+    _add_item_exports(ledger, model, unit)
+    _add_document_exports(ledger, model, svgs, unit)
+    return ledger
 
 
 def _exports(
     model: Model, svgs: dict[str, str], *, unit: Id[ModelUnit] | None = None
 ) -> dict[str, bytes]:
     """Every export of `model` by name (F6, U6): `unit` restricts them to that unit; no netlist."""
-    ledger = _ExportLedger(model)
-    _add_system_exports(ledger, model, unit)
-    _add_item_exports(ledger, model, unit)
-    _add_document_exports(ledger, model, svgs, unit)
-    return ledger.exports
+    return _ledger(model, svgs, unit).exports
+
+
+def export_names(
+    result: BuildResult, *, unit: object = None
+) -> dict[tuple[str, Id[Any] | None], str]:
+    """The file name `write` gives each export of `result`, by `(kind, subject)`.
+
+    A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"` or `"cables"` (subject
+    `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or `"pdf"`
+    (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
+    `write` raises for a bad `unit` or a name two subjects share (`ExportNameClash`).
+
+    Does not write a file, compile a PDF or run `check`.
+    """
+    model = result.model
+    return _ledger(model, {}, _resolve_unit(model, unit), names_only=True).names
 
 
 def _remove_prefixed(out_dir: Path, name: str) -> None:
@@ -757,9 +710,6 @@ def write(
     return tuple(sorted(written))
 
 
-_REVISION_DIR_RE = re.compile(r"[0-9]+\.[0-9]+")
-
-
 @dataclasses.dataclass(frozen=True, slots=True)
 class _ReleaseTarget:
     """A unit's, or the system's, release identity and target directory.
@@ -790,25 +740,6 @@ def _release_target(model: Model, unit: Id[ModelUnit] | None, into: Path) -> _Re
     return _ReleaseTarget(name=name, version=version, revision=revision, path=path)
 
 
-def _stored_listing_text(target: Path) -> str | None:
-    """`target`'s stored `baseline/listing.json` text, or `None` when it has none.
-
-    The one read of a stored listing: `release`'s no-op check and L4 checks share it, so they agree.
-    """
-    path = target / "baseline" / "listing.json"
-    if not path.exists():
-        return None
-    return path.read_text(encoding="utf-8")
-
-
-def _stored_numbering_text(target: Path) -> str | None:
-    """`target`'s stored `baseline/numbering.json` text, or `None` when it has none."""
-    path = target / "baseline" / "numbering.json"
-    if not path.exists():
-        return None
-    return path.read_text(encoding="utf-8")
-
-
 def _revision_already_released_finding(
     model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget
 ) -> Finding | None:
@@ -816,7 +747,7 @@ def _revision_already_released_finding(
 
     Applies to a unit and the system (`unit=None`, `subjects=()`): a released folder never changes.
     """
-    stored_text = _stored_listing_text(release.path)
+    stored_text = stored_listing(release.path)
     new_listing = baseline.listing(model, unit)
     new_text = baseline.dumps(new_listing)
     if stored_text is None or stored_text == new_text:
@@ -846,8 +777,7 @@ def _baseline_differs_finding(
     new_text = baseline.dumps(new_listing)
     if stored_text == new_text:
         return None
-    stored = baseline.loads(stored_text)
-    sections = ", ".join(baseline.differing_sections(stored, new_listing))
+    sections = sections_text(baseline.loads(stored_text), new_listing)
     release_revision_text = revision_text(release.version, release.revision)
     return Finding(
         code="BASELINE_DIFFERS",
@@ -870,7 +800,7 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
     findings: list[Finding] = []
     for nested in nested_ids:
         nested_release = _release_target(model, nested, into)
-        nested_stored_text = _stored_listing_text(nested_release.path)
+        nested_stored_text = stored_listing(nested_release.path)
         if nested_stored_text is None:
             nested_revision_text = revision_text(nested_release.version, nested_release.revision)
             findings.append(
@@ -891,22 +821,6 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
     return findings
 
 
-def _release_siblings(parent_dir: Path) -> Iterator[tuple[Path, str]]:
-    """Every `<version>.<revision>` sibling of `parent_dir` that has a stored listing.
-
-    Sorted; non-dirs, non-matching names and dirs without a stored listing are skipped (invisible).
-    Used by `_previous_release_listing` and `_pin_source`.
-    """
-    if not parent_dir.exists():
-        return
-    for sibling in sorted(parent_dir.iterdir()):
-        if not sibling.is_dir() or _REVISION_DIR_RE.fullmatch(sibling.name) is None:
-            continue
-        text = _stored_listing_text(sibling)
-        if text is not None:
-            yield sibling, text
-
-
 def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
     """The stored listing of the highest release ordered below this one, or `None`.
 
@@ -917,7 +831,7 @@ def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
     this_folder = revision_text(release.version, release.revision)
     best: Listing | None = None
     best_order: tuple[int, int] | None = None
-    for sibling, sibling_text in _release_siblings(release.path.parent):
+    for sibling, sibling_text in listed_siblings(release.path.parent):
         if sibling.name == this_folder:
             continue
         sibling_listing = baseline.loads(sibling_text)
@@ -932,13 +846,13 @@ def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
 def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
     """The pin source: the highest released revision of the same version at or below this one.
 
-    Reads `<into>/<name>/*/baseline/numbering.json` (`_release_siblings`), else `None`; same version
+    Reads `<into>/<name>/*/baseline/numbering.json` (`listed_siblings`), else `None`; same version
     only, unlike `_previous_release_listing`; a re-release may be its own pin source.
     """
     this_order = release_order(release.version, release.revision)
     best: tuple[Path, NumberingPins] | None = None
     best_order: tuple[int, int] | None = None
-    for sibling, listing_text in _release_siblings(into / release.name):
+    for sibling, listing_text in listed_siblings(into / release.name):
         sibling_listing = baseline.loads(listing_text)
         if not same_version(
             (sibling_listing.unit.name, sibling_listing.unit.version),
@@ -948,7 +862,7 @@ def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPin
         sibling_order = release_order(sibling_listing.unit.version, sibling_listing.unit.revision)
         if sibling_order > this_order:
             continue
-        numbering_text = _stored_numbering_text(sibling)
+        numbering_text = stored_numbering(sibling)
         if numbering_text is None:
             continue
         if best_order is None or sibling_order > best_order:
@@ -1004,11 +918,22 @@ def _release_no_history_finding(
     )
 
 
-def _l4_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> tuple[Finding, ...]:
-    """L4's five release checks, reading only `<into>` and the model.
+def _unit_l4_findings(
+    model: Model, unit: Id[ModelUnit], release: _ReleaseTarget, into: Path
+) -> list[Finding]:
+    """The checks only a real unit has: `INTERFACE_NOT_BUMPED` and the pin findings."""
+    new_listing = baseline.listing(model, unit)
+    return [
+        *_interface_not_bumped_findings(unit, release, new_listing),
+        *_revision_pins.pin_findings(model, unit, _pin_source(release, into)),
+    ]
 
-    Subject is `unit` or the nested unit; the system has `subjects=()`, skips INTERFACE_NOT_BUMPED,
-    but gets `REVISION_ALREADY_RELEASED`. Nested checks walk the whole subtree.
+
+def _l4_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> tuple[Finding, ...]:
+    """L4's release checks, reading only `<into>` and the model.
+
+    Subject is `unit` or the nested unit; the system has `subjects=()` and skips the unit-only
+    checks. Nested checks walk the whole subtree.
     """
     release = _release_target(model, unit, into)
     findings: list[Finding] = []
@@ -1017,12 +942,16 @@ def _l4_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> tuple[
         findings.append(already_released)
     findings.extend(_nested_release_findings(model, unit, into))
     if unit is not None:
-        new_listing = baseline.listing(model, unit)
-        findings.extend(_interface_not_bumped_findings(unit, release, new_listing))
-        findings.extend(_revision_pins.pin_findings(model, unit, _pin_source(release, into)))
+        findings.extend(_unit_l4_findings(model, unit, release, into))
     no_history = _release_no_history_finding(model, unit, release)
     if no_history is not None:
         findings.append(no_history)
+    current = (release.version, release.revision)
+    findings.extend(
+        history_findings(
+            model, unit, name=release.name, current=current, parent=release.path.parent
+        )
+    )
     return tuple(findings)
 
 
@@ -1032,7 +961,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     Writes `<into>/<name>/<version>.<revision>/`: the unit's exports as `write` makes them,
     `baseline/` (listing, model, manifest) and, after a first release, `changes.md` and
     `changes.csv`. Runs the same gate as `write` plus L4's checks: any `ERROR` raises `BuildErrors`
-    and writes nothing. An identical stored listing digest returns the existing path untouched.
+    and writes nothing. An identical stored listing text returns the existing path untouched.
     Files are built in a temporary sibling and renamed, so a failure leaves nothing behind.
 
     Does not release when `check` finds an ERROR; does not overwrite an identical release.
@@ -1054,7 +983,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     new_listing = baseline.listing(model, resolved_unit)
     new_listing_text = baseline.dumps(new_listing)
 
-    stored_text = _stored_listing_text(target)
+    stored_text = stored_listing(target)
     if stored_text is not None and stored_text == new_listing_text:
         return target
 
@@ -1122,13 +1051,13 @@ def diff(
     target_info = _release_target(model, resolved_unit, baselines)
     if against is not None:
         candidate = target_info.path.parent / against
-        text = _stored_listing_text(candidate)
+        text = stored_listing(candidate)
         if text is None:
             msg = f"no release found at {candidate}"
             raise FileNotFoundError(msg)
         a = baseline.loads(text)
     else:
-        current_text = _stored_listing_text(target_info.path)
+        current_text = stored_listing(target_info.path)
         if current_text is not None:
             a = baseline.loads(current_text)
         else:
@@ -1145,6 +1074,7 @@ def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]:
 
     Compares the rebuilt listing digest with the stored one under `baselines`, for every unit
     and for the system when the model holds a `Project`. The model digest is never compared.
+    Also re-hashes every release file: `RELEASE_FILE_CHANGED`, `RELEASE_FILE_MISSING`.
     Meant for a consumer's test, wherever they want it.
 
     Does not write files, release or gate `write`; does not report a unit with no stored baseline.
@@ -1157,10 +1087,11 @@ def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]:
     findings: list[Finding] = []
     for unit in subjects:
         target = _release_target(model, unit, baselines)
-        stored_text = _stored_listing_text(target.path)
+        stored_text = stored_listing(target.path)
         if stored_text is None:
             continue
         differs = _baseline_differs_finding(model, unit, target, stored_text)
         if differs is not None:
             findings.append(differs)
+    findings.extend(release_file_findings(baselines))
     return tuple(findings)

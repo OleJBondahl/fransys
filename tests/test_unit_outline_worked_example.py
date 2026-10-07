@@ -17,7 +17,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_render._symbol_geometry import oriented_symbol, to_grid
 from graphical_symbols.boxes import body_box
 
@@ -112,7 +112,7 @@ def _system_design(parts, *, name1="C1", name2="C2"):
 def _build_system():
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _body_g(model, placement):

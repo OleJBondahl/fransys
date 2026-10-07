@@ -6,6 +6,7 @@ Split out because both the function-reading and the connectivity-reading halves 
 
 from typing import TYPE_CHECKING
 
+from fransys_layout.engines.schematic.read.power import port_stand
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages import ROLE_ORDER, PortSpec, Role
 from fransys_model.derive import changeover_throws, port_potential_current, port_potential_rank
@@ -75,6 +76,7 @@ def port_spec(
         rank=port_potential_rank(model, port_id),
         current=None if current is None else current.value,
         strip_side=port.role.value if sided else None,
+        stand=port_stand(model, port_id),
     )
 
 

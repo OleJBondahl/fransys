@@ -9,7 +9,7 @@ import dataclasses
 
 from samples import column, connection, drawn, hid, through_geometry
 
-from fransys_layout.stages import Cell, DrawnPort, NetGroup, PortRef, Role
+from fransys_layout.stages import Cell, DrawnPort, Home, NetGroup, PortRef, Role
 from fransys_layout.stages._polelinks import pole_links
 
 
@@ -84,7 +84,7 @@ def test_a_replica_cell_is_not_a_home() -> None:
             column("c", (3,)),
             cells=(
                 Cell(function=hid("function", 3), index=0),
-                Cell(function=hid("function", 2), index=1, replica=True),
+                Cell(function=hid("function", 2), index=1, home=Home.ELSEWHERE),
             ),
         ),
     )

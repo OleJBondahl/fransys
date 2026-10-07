@@ -7,7 +7,13 @@ import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import Device, Fn, design
 
-from fransys_model.vocab import Boundary, BoundaryValuesFacet, Operating, Rating
+from fransys_model.vocab import (
+    Boundary,
+    BoundaryValuesFacet,
+    BreakingPoint,
+    Operating,
+    Rating,
+)
 lazy from fransys_model.kernel import Draft
 
 _RATING = Rating(voltage_ac_v=Decimal(250), current_ac_a=Decimal("0.5"))
@@ -112,3 +118,14 @@ def test_limits_outside_a_unit_raises_the_engine_error(parts: Draft) -> None:
 
 def test_design_has_no_interface_call(parts: Draft) -> None:
     assert not hasattr(design(parts), "interface")
+
+
+def test_limits_refuses_a_rating_with_a_breaking_point(parts: Draft) -> None:
+    point = BreakingPoint(voltage_v=Decimal(250), current_a=Decimal(10000))
+    for rating in (Rating(breaking_dc=(point,)), Rating(breaking_ac=(point,))):
+        root, fn = _in_unit(parts)
+        with pytest.raises(AuthorError, match="a boundary does not re-rate a breaking capacity"):
+            fn.limits(rating=rating)
+        assert not [r for r in root.draft().records() if isinstance(r, Boundary)]
+    root, fn = _in_unit(parts)
+    assert fn.limits(rating=Rating(voltage_ac_v=Decimal(250), breaking_dc=())) is fn

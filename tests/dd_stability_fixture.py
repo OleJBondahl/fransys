@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.layout import Page, layout_of
 
@@ -125,7 +125,7 @@ def build_result(
             links.append((t[crowd][2].inner, ky.fn("coil")["A1"]))
     for a, b in links[::-1] if reverse else links:
         wire(a, b)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def group_names(model: Model) -> dict:

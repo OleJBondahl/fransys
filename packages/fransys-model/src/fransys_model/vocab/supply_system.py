@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record, value
 
+from .core import Port, Unit
 from .enums import Current, Earthing
 
 PHASE_STEP = 60
@@ -51,8 +52,11 @@ class SupplySystem:
     Example: `SupplySystem(name="400V", current=Current.AC, rails=...)` holds rails `L1`,
     `L2`, `L3` and `N`, each named as `Net.potential` names it. Protective earth is not a
     supplied rail: a rail carried by a `PE`-class net is earth, at 0 V to earth in every supply.
-    `earthing` says how the source is earthed. Not a `Part`, not an
-    `Item`: it has no designation and no place.
+    `earthing` says how the source is earthed. `fault_current_a` is the supply's prospective
+    current into a bolted fault, `fault_time_constant_ms` its DC time constant (RATINGS-3 R3).
+    `unit` is the unit that declares it, as `Item.unit` is; `pins` are the ports its call puts
+    its rails on, sorted by id (RATINGS-3 R6).
+    Not a `Part`, not an `Item`: it has no designation and no place.
     """
 
     id: Id[SupplySystem]
@@ -61,6 +65,10 @@ class SupplySystem:
     current: Current
     earthing: Earthing = Earthing.EARTHED
     rails: frozendict[str, Rail] = frozendict()
+    fault_current_a: Decimal | None = None
+    fault_time_constant_ms: Decimal | None = None
+    unit: Id[Unit] | None = None
+    pins: tuple[Id[Port], ...] = ()
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:

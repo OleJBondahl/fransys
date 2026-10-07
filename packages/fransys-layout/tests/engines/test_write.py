@@ -24,7 +24,7 @@ from fransys_layout.engines.schematic.write import write_layout
 from fransys_layout.engines.schematic.write.keys import WriteKeys
 from fransys_layout.engines.schematic.write.unique import check_unique
 from fransys_layout.geometry import LayoutError, Orientation, library_version
-from fransys_layout.stages import LabelKind, MarkerSide, Role
+from fransys_layout.stages import Home, LabelKind, MarkerSide, Role
 from fransys_layout.stages import Route as StageRoute
 from fransys_layout.stages import RoutePoint as StageRoutePoint
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -215,6 +215,16 @@ def test_two_units_at_one_location_give_two_drawing_sets_with_distinct_keys() ->
     assert b_set.key == (*prefix, "unit", *unit_b.key, *where)
 
 
+def _away_seats(results: StageResults) -> set[tuple[Id[Any], tuple[Any, ...]]]:
+    """The `(function, column key)` seats drawn away from their home."""
+    return {
+        (cell.function, column.key)
+        for column in results.columns
+        for cell in column.cells
+        if cell.home is Home.ELSEWHERE
+    }
+
+
 def _boundary_fixture() -> tuple[Model, Function, StageResults]:
     """A boundary function of a unit nested under a top unit: the home and a black-box replica."""
     top, top_release = unit_with_release(("write-fixture", "top"), name="top")
@@ -288,8 +298,9 @@ def test_replicas_of_one_function_and_group_in_two_drawing_sets_get_two_keys() -
     """
     model, function, results = _boundary_fixture()
     placed = results.layout.placed
-    replica = next(p for p in placed if p.column in results.replicas)
-    home = next(p for p in placed if p.column not in results.replicas)
+    away = _away_seats(results)
+    replica = next(p for p in placed if (p.function, p.column) in away)
+    home = next(p for p in placed if (p.function, p.column) not in away)
     assert replica.drawing_set != home.drawing_set
     clone = dataclasses.replace(replica, drawing_set=home.drawing_set, page=home.page)
     layout = dataclasses.replace(results.layout, placed=(*placed, clone))
@@ -311,7 +322,8 @@ def test_two_records_of_one_key_raise_a_layout_error_naming_both_and_their_sets(
     `SchemaError`, not a `LayoutError`, and this test fails.
     """
     model, function, results = _boundary_fixture()
-    replica = next(p for p in results.layout.placed if p.column in results.replicas)
+    away = _away_seats(results)
+    replica = next(p for p in results.layout.placed if (p.function, p.column) in away)
     layout = dataclasses.replace(results.layout, placed=(*results.layout.placed, replica))
     with pytest.raises(LayoutError, match="two SymbolPlacement records share one key") as raised:
         write_layout(model, dataclasses.replace(results, layout=layout), write_keys(model))
@@ -511,7 +523,7 @@ def test_a_replica_with_no_group_gets_the_ungrouped_discriminator() -> None:
         c.key
         for c in results.columns
         for cell in c.cells
-        if cell.replica and cell.function == function
+        if cell.home is Home.ELSEWHERE and cell.function == function
     }
     columns = tuple(
         dataclasses.replace(c, group=None) if c.key in hosting else c for c in results.columns

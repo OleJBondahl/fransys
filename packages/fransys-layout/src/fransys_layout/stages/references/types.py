@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     )
     from fransys_model.kernel import AuthoringKey, Finding, Id
 
-    from .digits import SetDigits
+    from .digits import Digits, SetDigits
 
 # `(drawing_set, page)`: pages are ordered by this pair throughout the package.
 type Page = tuple[int, int]
@@ -172,7 +172,7 @@ class MarkerScene:
     drawn: tuple[DrawnFunction, ...]
     sheet: SheetFormat
     profile: Profile
-    digits: Mapping[int, tuple[int, int]] = field(default_factory=lambda: MappingProxyType({}))
+    digits: Mapping[int, Digits] = field(default_factory=lambda: MappingProxyType({}))
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,7 +213,7 @@ class OffStubs:
 
     crossing: tuple[Connection, ...]
     off_texts: Mapping[Id[Any], Sequence[StubText]]
-    away: frozenset[AuthoringKey | tuple[Id[Any], AuthoringKey]] = frozenset()
+    away: frozenset[tuple[Id[Any], AuthoringKey]] = frozenset()
     outward: Mapping[Id[Any], frozenset[int]] = field(default_factory=lambda: MappingProxyType({}))
     busy: Mapping[tuple[Id[Any], int, int], int] = field(
         default_factory=lambda: MappingProxyType({})
@@ -260,7 +260,6 @@ class ReferenceInputs:
     net_groups: tuple[NetGroup, ...]
     functions: tuple[FunctionSpec, ...]
     seating: Seating
-    replicas: frozenset[AuthoringKey]
     location_paths: Mapping[int, LocationPath]
     exempt: frozenset[tuple[Id[Any], int]]
     crossing: tuple[Connection, ...]

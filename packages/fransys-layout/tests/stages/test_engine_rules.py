@@ -139,7 +139,7 @@ def test_an_off_stub_on_a_references_port_comes_back_as_that_reference_one_marke
     # UNDO: stages/references/off_stubs.py `with_off_markers`: `merged.get((m.port,
     #   m.drawing_set, m.page), m) if m.star == "ref" else m` -> `m` (the reference stays)
     ref = _decision(_PORT, star="ref")
-    (merged,) = with_off_markers((ref,), _seating(), frozenset(), _off())
+    (merged,) = with_off_markers((ref,), _seating(), _off())
     assert merged.star == "ref"
     assert merged.port == _PORT
     assert merged.merge == _TEXT
@@ -154,7 +154,7 @@ def test_an_off_stub_on_no_reference_is_appended_after_the_markers() -> None:
     # UNDO: stages/references/off_stubs.py `with_off_markers`: `*(m for m in offs if m.star !=
     #   "ref")` -> `*()` (the stub is lost)
     branch = _decision(hid("port", 99), star="branch")
-    kept, stub = with_off_markers((branch,), _seating(), frozenset(), _off())
+    kept, stub = with_off_markers((branch,), _seating(), _off())
     assert kept == branch
     assert (stub.star, stub.port, stub.end_text) == ("off", _PORT, _TEXT)
 

@@ -1,12 +1,13 @@
 """The one text of a list cell and the field extraction every list output reads (derive-queries.md).
 
-Which fields of each row shape a list prints (`*_COLUMNS`) stay in `derive.rows`.
+Which fields of each row shape a list prints (`*_COLUMNS`) stay in `derive.columns`.
 """
 
 from enum import Enum
 lazy from collections.abc import Iterable
 
-from .rows import CONNECTOR_COLUMNS, PIN_COLUMNS, ConnectorRow
+from .columns import CONNECTOR_COLUMNS, PIN_COLUMNS
+lazy from .rows import ConnectorRow
 
 CELL_SEPARATOR = "; "
 

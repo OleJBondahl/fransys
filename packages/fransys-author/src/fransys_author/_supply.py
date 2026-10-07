@@ -3,31 +3,38 @@
 A DC rail has no phase and an AC `max_v` is not negative: authoring's own checks.
 """
 
-from collections.abc import Mapping
-from decimal import InvalidOperation
-from typing import TYPE_CHECKING
+from collections.abc import Mapping, Sequence
+from decimal import Decimal, InvalidOperation
+from typing import TYPE_CHECKING, Protocol
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Current, Earthing, Rail, SupplySystem, rail_phase_problem
 
 from ._decimal import as_decimal
 from ._enums import member
+from ._keys import scoped
+from ._origin import caller_origin
 from .errors import AuthorError
 
 if TYPE_CHECKING:
-    from decimal import Decimal
+    from fransys_model.kernel import AuthoringKey, Id, Origin, Record
+    from fransys_model.vocab import Port as ModelPort
+    from fransys_model.vocab import Unit
 
-    from fransys_model.kernel import AuthoringKey
+    from .handles import Port
 
 _RAIL_FIELDS = 2  # a rail is (max_v, phase)
 
 
-def build_supply_system(
+def build_supply_system(  # noqa: PLR0913, PLR0917 -- the supply's own fields, the fault values (R3), its unit and pins (R6)
     key: AuthoringKey,
     name: str,
     current: str,
     rails: Mapping[str, tuple[str | Decimal, int | None]],
     earthing: str,
+    fault: tuple[str | int | Decimal | None, str | int | Decimal | None] = (None, None),
+    unit: Id[Unit] | None = None,
+    pins: Sequence[Id[ModelPort]] = (),
 ) -> SupplySystem:
     """The `SupplySystem` `s.supply(name, ...)` writes, refusing what authoring can see wrong."""
     kind = member(Current, current, field="current")
@@ -52,7 +59,28 @@ def build_supply_system(
         current=kind,
         earthing=earth,
         rails=frozendict(built),
+        fault_current_a=_positive(f"supply {name!r} fault_current_a", fault[0]),
+        fault_time_constant_ms=_positive(f"supply {name!r} fault_time_constant_ms", fault[1]),
+        unit=unit,
+        pins=tuple(sorted(set(pins))),
     )
+
+
+def _positive(where: str, raw: str | int | Decimal | None) -> Decimal | None:
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        msg = f"{where} must be a positive number, not a bool ({raw!r})"
+        raise AuthorError(msg)
+    try:
+        value = as_decimal(str(raw) if isinstance(raw, int) else raw, field=where)
+    except InvalidOperation:
+        msg = f"{where} {raw!r} is not a number"
+        raise AuthorError(msg) from None
+    if not value.is_finite() or value <= 0:
+        msg = f"{where} must be a positive number, not {raw!r}"
+        raise AuthorError(msg)
+    return value
 
 
 def _rail(supply: str, potential: str, spec: object, kind: Current) -> Rail:
@@ -93,3 +121,51 @@ def _max_v(where: str, raw: str | Decimal) -> Decimal:
         msg = f"{where} max_v must be finite, not {raw!r}"
         raise AuthorError(msg)
     return max_v
+
+
+class _Declaring(Protocol):
+    """What `SupplyScope.supply` reads of its `Scope`."""
+
+    @property
+    def _prefix(self) -> AuthoringKey: ...
+
+    @property
+    def _unit(self) -> Id[Unit] | None: ...
+
+    @property
+    def _design(self) -> _Recorder: ...
+
+
+class _Recorder(Protocol):
+    """What the scope needs back from the `Design` that made it."""
+
+    def _add(self, record: Record, origin: Origin) -> None: ...
+
+
+class SupplyScope:
+    """The `supply` method of `Scope`, kept here because `design.py` has no room to grow."""
+
+    __slots__ = ()
+
+    def supply(  # noqa: PLR0913 -- the supply's own fields, the fault values (R3) and its pins (R6)
+        self: _Declaring,
+        name: str,
+        *,
+        current: str,
+        rails: Mapping[str, tuple[str | Decimal, int | None]],
+        earthing: str = "earthed",
+        fault_current_a: str | int | Decimal | None = None,
+        fault_time_constant_ms: str | int | Decimal | None = None,
+        pins: Sequence[Port] = (),
+    ) -> None:
+        """Declare a supply system and its rails (spec model-review Q2).
+
+        `rails` maps potential to `(max_v, phase)`; `pins` are the ports they stand on (R6).
+        Raises `AuthorError` on a bad value, or on `name` declared twice here with other content.
+        """
+        key = scoped(self._prefix, "supply", name)
+        fault = (fault_current_a, fault_time_constant_ms)
+        record = build_supply_system(
+            key, name, current, rails, earthing, fault, self._unit, [pin.id for pin in pins]
+        )
+        self._design._add(record, caller_origin())

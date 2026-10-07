@@ -8,6 +8,7 @@ lists the discriminator each kind adds to its subject's key.
 """
 
 from itertools import pairwise
+from typing import NoReturn
 
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record, value
 from fransys_model.vocab.aspects import AspectNode
@@ -20,6 +21,68 @@ from .order import by_index, holder_of
 
 # The slot of a power symbol's label: not `marking.<name>`, which a port named `ground` already has
 POWER_SLOT = "power"
+
+
+def _refuse(rec: Label | LinkMarker | Route, kind: str, msg: str) -> NoReturn:
+    raise SchemaError(msg, kind=kind, record_id=holder_of(rec))
+
+
+def _check_size(rec: Label | LinkMarker, owner: str, kind: str) -> None:
+    for name in ("width", "height"):
+        size = getattr(rec, name)
+        if type(size) is int and size <= 0:
+            _refuse(rec, kind, f"{owner} {name} must be positive, got {size}")
+
+
+def _check_route_ends(rec: Route) -> bool:
+    if (rec.conductor is None) == (rec.net is None):
+        msg = "a route draws either a conductor or a leg of a net, not both and not neither"
+        _refuse(rec, "layout.route", msg)
+    ends_are_ids = type(rec.a) is Id and type(rec.b) is Id
+    if ends_are_ids and rec.a == rec.b:
+        _refuse(rec, "layout.route", "a route joins two different ports")
+    return ends_are_ids
+
+
+def _check_marker_numbers(rec: LinkMarker) -> None:
+    kind = "layout.link_marker"
+    if (rec.via_x is None) != (rec.via_y is None):
+        _refuse(rec, kind, "a link marker's via_x and via_y are both set or both None")
+    if type(rec.stub_extra) is int and rec.stub_extra < 0:
+        _refuse(rec, kind, f"a link marker's stub_extra must not be negative, got {rec.stub_extra}")
+    if type(rec.wrap_at) is int and rec.wrap_at < 1:
+        _refuse(rec, kind, f"a link marker's wrap_at must be positive, got {rec.wrap_at}")
+
+
+def _check_marker_stub(rec: LinkMarker) -> None:
+    kind = "layout.link_marker"
+    if rec.lead is False and rec.box_x is None:
+        _refuse(rec, kind, "a link marker that is not the lead of a shared box needs a box_x")
+    is_off = rec.star is StarKind.OFF
+    if (rec.far is not None) != is_off or (rec.facing is not None) != is_off:
+        _refuse(rec, kind, "a link marker's far and facing are set exactly when it is an off stub")
+    if rec.carrier is not None and rec.far is None:
+        _refuse(rec, kind, "a link marker's carrier needs a far")
+
+
+def _check_label_subject(rec: Label) -> None:
+    subjects = sum(subject is not None for subject in (rec.function, rec.port, rec.conductor))
+    if subjects != 1:
+        msg = f"a label has exactly one of function, port and conductor, not {subjects}"
+        _refuse(rec, "layout.label", msg)
+    if rec.kind is LabelKind.WIRE and rec.conductor is None:
+        _refuse(rec, "layout.label", "a wire label belongs to a conductor")
+
+
+def _check_label_partners(rec: Label) -> None:
+    partners = rec.partners
+    if type(partners) is not tuple or not all(type(p) is CrossReferencePartner for p in partners):
+        return
+    is_cross = rec.kind is LabelKind.CROSS_REFERENCE
+    if is_cross and not partners:
+        _refuse(rec, "layout.label", "a cross-reference label needs at least one partner")
+    if not is_cross and partners:
+        _refuse(rec, "layout.label", "only a cross-reference label carries partners")
 
 
 @record(kind="layout.drawing_set")
@@ -187,19 +250,12 @@ class Route:
         Turning `a` and `b` round reverses the polyline: the points keep their `index`
         slots and swap places, so `points` still runs from `a` to `b`.
         """
-        holder = holder_of(self)
-        if (self.conductor is None) == (self.net is None):
-            msg = "a route draws either a conductor or a leg of a net, not both and not neither"
-            raise SchemaError(msg, kind="layout.route", record_id=holder)
-        first, second = self.a, self.b
-        ends_are_ids = type(first) is Id and type(second) is Id
-        if ends_are_ids and first == second:
-            msg = "a route joins two different ports"
-            raise SchemaError(msg, kind="layout.route", record_id=holder)
-        points = by_index(self.points, RoutePoint, kind="layout.route", holder=holder)
+        ends_are_ids = _check_route_ends(self)
+        points = by_index(self.points, RoutePoint, kind="layout.route", holder=holder_of(self))
         if points is None:
             return
-        if ends_are_ids and second < first:
+        if ends_are_ids and self.b < self.a:
+            first, second = self.a, self.b
             object.__setattr__(self, "a", second)
             object.__setattr__(self, "b", first)
             points = _turned_round(points)
@@ -253,32 +309,9 @@ class LinkMarker:
         Also an off stub without `far` and `facing`, either on any other marker, and a
         `carrier` without `far`.
         """
-        holder = holder_of(self)
-        if type(self.width) is int and self.width <= 0:
-            msg = f"a link marker's width must be positive, got {self.width}"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        if type(self.height) is int and self.height <= 0:
-            msg = f"a link marker's height must be positive, got {self.height}"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        if (self.via_x is None) != (self.via_y is None):
-            msg = "a link marker's via_x and via_y are both set or both None"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        if type(self.stub_extra) is int and self.stub_extra < 0:
-            msg = f"a link marker's stub_extra must not be negative, got {self.stub_extra}"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        if type(self.wrap_at) is int and self.wrap_at < 1:
-            msg = f"a link marker's wrap_at must be positive, got {self.wrap_at}"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        if self.lead is False and self.box_x is None:
-            msg = "a link marker that is not the lead of a shared box needs a box_x"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        is_off = self.star is StarKind.OFF
-        if (self.far is not None) != is_off or (self.facing is not None) != is_off:
-            msg = "a link marker's far and facing are set exactly when it is an off stub"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
-        if self.carrier is not None and self.far is None:
-            msg = "a link marker's carrier needs a far"
-            raise SchemaError(msg, kind="layout.link_marker", record_id=holder)
+        _check_size(self, "a link marker's", "layout.link_marker")
+        _check_marker_numbers(self)
+        _check_marker_stub(self)
 
 
 @record(kind="layout.outline")
@@ -382,29 +415,6 @@ class Label:
 
     def __post_init__(self) -> None:
         """Require a positive size, one subject, a `WIRE` conductor, cross-reference partners."""
-        if type(self.width) is int and self.width <= 0:
-            msg = f"a label's width must be positive, got {self.width}"
-            raise SchemaError(msg, kind="layout.label", record_id=holder_of(self))
-        if type(self.height) is int and self.height <= 0:
-            msg = f"a label's height must be positive, got {self.height}"
-            raise SchemaError(msg, kind="layout.label", record_id=holder_of(self))
-        subjects = sum(
-            subject is not None for subject in (self.function, self.port, self.conductor)
-        )
-        if subjects != 1:
-            msg = f"a label has exactly one of function, port and conductor, not {subjects}"
-            raise SchemaError(msg, kind="layout.label", record_id=holder_of(self))
-        if self.kind is LabelKind.WIRE and self.conductor is None:
-            msg = "a wire label belongs to a conductor"
-            raise SchemaError(msg, kind="layout.label", record_id=holder_of(self))
-        partners = self.partners
-        if type(partners) is tuple and all(
-            type(partner) is CrossReferencePartner for partner in partners
-        ):
-            has_partners = len(partners) > 0
-            if self.kind is LabelKind.CROSS_REFERENCE and not has_partners:
-                msg = "a cross-reference label needs at least one partner"
-                raise SchemaError(msg, kind="layout.label", record_id=holder_of(self))
-            if self.kind is not LabelKind.CROSS_REFERENCE and has_partners:
-                msg = "only a cross-reference label carries partners"
-                raise SchemaError(msg, kind="layout.label", record_id=holder_of(self))
+        _check_size(self, "a label's", "layout.label")
+        _check_label_subject(self)
+        _check_label_partners(self)

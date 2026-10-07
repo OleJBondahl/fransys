@@ -3,8 +3,8 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.vocab.rail_reach import earth_potentials
 from fransys_model.vocab.tables import nets, supply_of_potential, supply_systems
-from fransys_model.vocab.validators.ratings import _earth_potentials
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -14,7 +14,7 @@ POTENTIAL_WITHOUT_SUPPLY: Final[str] = "POTENTIAL_WITHOUT_SUPPLY"
 
 def check_potential_without_supply(model: Model) -> tuple[Finding, ...]:
     """Warn once per net whose `potential` is no supply's rail and no earth rail (model-0085)."""
-    earth = _earth_potentials(model)
+    earth = earth_potentials(model)
     declared = sorted({name for s in supply_systems(model).values() for name in s.rails})
     named = ", ".join(declared) or "none"
     found = []

@@ -97,3 +97,27 @@ def test_a_contact_of_an_item_view_keeps_its_item_tag() -> None:
     )
     kept = one_item_tag(columns, (view, contact), requests)
     assert [r.subject for r in kept] == [hid("item", 1), hid("function", 2)]
+
+
+def test_a_pin_of_an_item_view_keeps_its_tag_and_the_items_own_repeat_goes() -> None:
+    """layout-0131: a pin names something below the item; the item's own tag repeated does not."""
+    view = dataclasses.replace(function_spec(1), function=hid("item", 1))
+    pin = dataclasses.replace(
+        function_spec(2),
+        item=hid("item", 1),
+        pin_function=hid("function", 2),
+        roles=KindRoles(),  # not a contact: only the pin fact saves it
+    )
+    other = dataclasses.replace(
+        function_spec(3), item=hid("item", 1), kind="plc_channel", roles=KindRoles(plc_channel=True)
+    )  # a channel repeating the item tag
+    columns = (
+        dataclasses.replace(column("a", ()), cells=(Cell(function=hid("item", 1), index=0),)),
+        column("b", (2, 3)),
+    )
+    requests = tuple(
+        LabelRequest(kind=LabelKind.TAG, subject=subject, slot="tag", text="-K4")
+        for subject in (hid("item", 1), hid("function", 2), hid("function", 3))
+    )
+    kept = one_item_tag(columns, (view, pin, other), requests)
+    assert [r.subject for r in kept] == [hid("item", 1), hid("function", 2)]

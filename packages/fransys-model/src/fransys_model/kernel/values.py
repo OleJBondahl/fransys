@@ -87,7 +87,13 @@ def check_value(value: object, *, path: tuple[str, ...] = ()) -> None:
         _check_decimal(cast("Decimal", value), path)
     elif isinstance(value, Enum):
         _check_enum(value, path)
-    elif kind is tuple:
+    else:
+        _check_container(value, path)
+
+
+def _check_container(value: object, path: tuple[str, ...]) -> None:
+    kind = type(value)
+    if kind is tuple:
         for index, item in enumerate(cast("tuple[object, ...]", value)):
             check_value(item, path=(*path, str(index)))
     elif kind is frozendict:

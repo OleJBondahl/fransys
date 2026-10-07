@@ -20,11 +20,10 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import _COVER
-from fransys_pdf import source
-from fransys_pdf._drawings import _cable_external_note
 
 # `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import fransys_render
 from test_units_worked_example import (
     _PROJECT,
     _wire_field_to_motor,
@@ -32,18 +31,22 @@ from test_units_worked_example import (
     pump_cabinet,
 )
 
-from fransys_model.derive import bom_lines, external, top_level_cables
+from fransys_model.derive import bom_lines, external
+from fransys_model.derive.cable_drawing import cable_block_key, end_label
 from fransys_model.derive.designation import printed_designation
 from fransys_model.kernel import dumps, loads
-from fransys_model.vocab import DocumentPreset, documents
+from fransys_model.layout import CableBlock, EndBox, EndStyle, layout_of
+from fransys_model.vocab import DocumentPreset
 from fransys_model.vocab.tables import items as items_of
 
 BY_OTHERS = "by others"
+_DASH_ATTR = ' stroke-dasharray="'  # an element attribute, not the stylesheet's rule
 
 
 def _build(*, x0_external=True, switch_external=True):
     """`demo_system` with an external switch `K1` and a scratch strip `X0` wired to it, plus a
-    `SYSTEM` document (CT2, CT3: the "by others" line lives on its table pages only, Y3)."""
+    `SYSTEM` document (CD10: "by others" is drawn on the cable blocks, a dashed end box and a
+    label, Y3)."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -85,12 +88,6 @@ def _bom_designations(model):
     return lines, {d for line in lines for d in line.designations}
 
 
-def _cable_row(model, designation):
-    rows = [r for r in top_level_cables(model) if r.designation == f"-{designation}"]
-    assert len(rows) == 1, designation
-    return rows[0]
-
-
 def _fixture(model):
     """The items the tests name: X0, its terminals, the switch, and the control strip X2."""
     x0 = _by_key(model, "X0")
@@ -111,12 +108,6 @@ def default_model():
 @pytest.fixture(scope="module")
 def unflagged_model():
     return _build(x0_external=False, switch_external=False)
-
-
-def _system_document_id(model):
-    """The one `SYSTEM` document `_build` adds, for `source`."""
-    (doc_id,) = [d.id for d in documents(model).values() if d.preset is DocumentPreset.SYSTEM]
-    return doc_id
 
 
 # -- 1. the BOM ---------------------------------------------------------------------------
@@ -197,52 +188,73 @@ def test_a_round_trip_of_the_unflagged_design_has_no_external_item(unflagged_mod
     assert not any(item.external for item in items_of(loaded).values())
 
 
-# -- 4. cable tables (CT2, CT3): the system document's "by others" line -------------------
+# -- 4. cable blocks (CD10): the dashed end box and the "by others" label ----------------
 
 
-def _expected_note(model, cable_key):
-    """CT3's own `_cable_external_note`, for the system document and `cable_key`'s cable."""
-    doc_id = _system_document_id(model)
-    record = documents(model)[doc_id]
-    row = _cable_row(model, cable_key)
-    return _cable_external_note(model, record, row)
+def _end_boxes(model, cable_key):
+    """The end boxes of `cable_key`'s block in the absolute reading, by end item."""
+    cable = _by_key(model, cable_key)
+    (block,) = [
+        b.id for b in layout_of(model, CableBlock).values() if b.unit is None and b.subject == cable
+    ]
+    return {e.item: e for e in layout_of(model, EndBox).values() if e.block == block}
 
 
-def test_the_table_page_of_a_cable_to_the_switch_notes_the_switch_only(default_model):
-    """CT3's "by others" line (Y3): `WM1S` is not external itself, but its end at the switch
-    `K1` is -- the note covers only `K1`'s own designation, and lands on the system document's
-    table page (`source`, not only the pure `_cable_external_note`)."""
-    note = _expected_note(default_model, "WM1S")
-    assert note is not None
-    assert note.endswith("K1")
-    assert note.count(BY_OTHERS) == 1
-    text = source(default_model, _system_document_id(default_model), {})
-    assert note in text
+def _block_svg(model, cable_key):
+    """The SVG `fransys_render` draws for `cable_key`'s block in the absolute reading."""
+    return fransys_render.cable_blocks(model)[cable_block_key(None, _by_key(model, cable_key))]
 
 
-def test_the_table_page_of_the_cable_from_the_external_strip_notes_both_ends(default_model):
-    """`WX0` is not external itself, but both its ends are: the `X0` strip and the switch
-    `K1` -- the note covers both designations, in `cable.ends` order."""
-    note = _expected_note(default_model, "WX0")
-    assert note is not None
-    covered = note.removeprefix(f"{BY_OTHERS}: ").split(", ")
-    assert sorted(designation[-2:] for designation in covered) == ["K1", "X0"]
-    text = source(default_model, _system_document_id(default_model), {})
-    assert note in text
+def _dashed(model, cable_key):
+    return {i for i, e in _end_boxes(model, cable_key).items() if e.style is EndStyle.DASHED}
 
 
-def test_the_table_page_of_a_cable_with_no_external_end_carries_no_note(default_model):
-    assert _expected_note(default_model, "WM1") is None
-    row = _cable_row(default_model, "WM1")
-    text = source(default_model, _system_document_id(default_model), {})
-    marker = f'#strong(text("{row.designation}'
-    assert marker in text  # the cable's own table page is there
-    body = text.split(marker, 1)[1].split("#table(", 1)[0]
-    assert BY_OTHERS not in body
+def _by_others(model, item):
+    return end_label(model, item, None).endswith(f" ({BY_OTHERS})")
 
 
-def test_the_table_page_of_the_unflagged_design_carries_no_note_on_the_switch_cable(
+def test_the_block_of_a_cable_to_the_switch_draws_the_switch_dashed_only(default_model):
+    """CD10 (Y3): `WM1S` is not external itself, but its end at the switch `K1` is -- `K1`'s end
+    box is dashed and labelled "by others", the cabinet end is solid."""
+    model = default_model
+    boxes = _end_boxes(model, "WM1S")
+    switch = _by_key(model, "K1")
+    assert switch in boxes
+    assert boxes[switch].style is EndStyle.DASHED
+    assert _by_others(model, switch)
+    (other,) = set(boxes) - {switch}
+    assert boxes[other].style is EndStyle.SOLID
+    assert not _by_others(model, other)
+    svg = _block_svg(model, "WM1S")
+    assert svg.count(f" ({BY_OTHERS})") == 1
+    assert _DASH_ATTR in svg
+
+
+def test_the_block_svg_of_a_cable_with_no_external_end_prints_no_by_others(default_model):
+    """Can-fail partner of the SVG checks above: the printed block, not only its records."""
+    svg = _block_svg(default_model, "WM1")
+    assert "<svg" in svg
+    assert BY_OTHERS not in svg
+    assert _DASH_ATTR not in svg
+
+
+def test_the_block_of_the_cable_from_the_external_strip_draws_both_ends_dashed(default_model):
+    """`WX0` is not external itself, but both its ends are: the `X0` strip and the switch `K1`."""
+    model = default_model
+    boxes = _end_boxes(model, "WX0")
+    assert set(boxes) == {_by_key(model, "X0"), _by_key(model, "K1")}
+    assert _dashed(model, "WX0") == set(boxes)
+    assert all(_by_others(model, item) for item in boxes)
+
+
+def test_the_block_of_a_cable_with_no_external_end_draws_no_dashed_end(default_model):
+    assert len(_end_boxes(default_model, "WM1")) > 0  # the cable's own block is there
+    assert _dashed(default_model, "WM1") == set()
+
+
+def test_the_block_of_the_unflagged_design_draws_no_dashed_end_on_the_switch_cable(
     unflagged_model,
 ):
-    """Can-fail: without the flag on the switch, the table page of `WM1S` has no note."""
-    assert _expected_note(unflagged_model, "WM1S") is None
+    """Can-fail: without the flag on the switch, the block of `WM1S` has no dashed end."""
+    assert len(_end_boxes(unflagged_model, "WM1S")) > 0
+    assert _dashed(unflagged_model, "WM1S") == set()

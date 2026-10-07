@@ -13,18 +13,21 @@ def check_run(strip: Any, label: object, count: object, bridged: object) -> None
     if not isinstance(label, str) or not label:
         msg = f"{strip._tag}.run: the label is a non-empty text, got {label!r}"
         raise AuthorError(msg)
+    _check_count(named, count, bridged)
+    if label in strip._runs:
+        msg = f"{strip._tag} already has a run {label!r}"
+        raise AuthorError(msg)
+    strip._runs.add(label)
+
+
+def _check_count(named: str, count: object, bridged: object) -> None:
     if count is None:
         _check_sizeless(named, bridged)
-        count = 0
     elif isinstance(count, bool) or not isinstance(count, int) or count < 1:
         msg = f"{named}: the count is an integer from 1, got {count!r}"
         raise AuthorError(msg)
     else:
         _check_bridged(named, count, bridged)
-    if label in strip._runs:
-        msg = f"{strip._tag} already has a run {label!r}"
-        raise AuthorError(msg)
-    strip._runs.add(label)
 
 
 def _check_bridged(named: str, count: int, bridged: object) -> None:

@@ -16,7 +16,7 @@ from fransys_model.derive.accessory_blocks import is_contact_block, items_with_a
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import instance_designation, unit_root
 from fransys_model.derive.lone_cable import printing_item
-from fransys_model.derive.lookups import effective_placement, require
+from fransys_model.derive.lookups import effective_placement, require, strip_set
 from fransys_model.derive.natural_order import NaturalKey, natural_key
 from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
@@ -51,7 +51,6 @@ lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.kernel import AuthoringKey
     from fransys_model.vocab.templates import Part
 
 
@@ -158,14 +157,14 @@ def takes_parents_designation(model: Model, item: Id[Item]) -> bool:
     parent = all_items.get(record.parent)
     if (
         parent is None
-        or parent.part is None
+        or (parent.part is None and parent.id not in strip_set(model))
         or terminal_of(model, parent.id) is not None
         or parent.id in enclosing_boards(model, item)
         or is_harness(model, parent.id)
     ):
         return False
     return own_designation_or_none(model, parent) is not None or bool(
-        parts(model)[parent.part].class_code
+        parent.part and parts(model)[parent.part].class_code
     )
 
 
@@ -767,14 +766,3 @@ def product_designation(model: Model, item: Id[Item]) -> str:
     if location is None:
         return f"-{own}"
     return f"{location}-{own}"
-
-
-def cable_end_rank(model: Model, item: Id[Item]) -> tuple[int, AuthoringKey, str, Id[Item]]:
-    """`item`'s cable-end order key: location key order, then `product_designation`, then `item`.
-
-    A located item (own or inherited placement) sorts first; shared by `harness` and `cable_rows`.
-    Ties on location go to the printed text; `item` only breaks identical text within one cable.
-    """
-    node = effective_placement(model, item, Aspect.LOCATION)
-    key: AuthoringKey = () if node is None else aspect_nodes(model)[node].key
-    return (0 if node is not None else 1, key, product_designation(model, item), item)

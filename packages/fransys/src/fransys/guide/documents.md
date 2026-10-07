@@ -97,6 +97,51 @@ assert any(p.name == "demo-io-board-v1.1.pdf" for p in fr.write(board_result, Pa
 
 The PDF is named after the unit and its release, `demo-io-board-v1.1.pdf`.
 
+## Cable drawings
+
+A `HARNESS_DRAWING` page draws each cable as one block, and a harness of two or more cables as one block around its cables. A block has its end boxes with their pins, a box per cable with its heading, and one wire per core. A core whose two ends stand in one row is a short link at that row. A block where two cores land on one pin is not drawn yet. A document that shows it stops with
+`DOCUMENT_NO_DRAWINGS`.
+
+## A unit's own cable drawings
+
+A `CABINET_SCHEMATIC` document leaves out the cable pages. To print a unit's own cable drawings and
+cable list in its document, add their page kinds: `add=(fr.PageKind.HARNESS_DRAWING,
+fr.PageKind.CABLE_LIST)`. `remove=` wins over `add=`: a kind named in both is left out.
+
+```python
+from pathlib import Path
+from typing import NamedTuple
+
+import fransys as fr
+from fransys.colours import BN
+
+
+class Cabinet(NamedTuple):
+    pass
+
+
+@fr.unit("cable-cabinet", revision=1, interface_version=1, date="2026-02-02", text="First", by="XX")
+def cable_cabinet(c):
+    k1 = c.device("K1", "DEMO-CO-4P-24")
+    k2 = c.device("K2", "DEMO-CO-4P-24")
+    w1 = c.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
+    w1.core(BN, k1.coil["A1"], k2.coil["A1"])
+    return Cabinet()
+
+
+d = fr.design("demo_parts")
+d.add(cable_cabinet, "U1")
+cover = Path("cabinet.md")
+cover.write_text("# Cabinet\n", encoding="utf-8")
+pages = (fr.PageKind.HARNESS_DRAWING, fr.PageKind.CABLE_LIST)
+own = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cable-cabinet", cover=cover, add=pages)
+result = fr.build(d, own)
+assert not [f for f in fr.check(result) if f.severity is fr.Severity.ERROR]
+assert any(p.suffix == ".pdf" for p in fr.write(result, Path("out")))
+pdfs = {key: name for key, name in fr.export_names(result).items() if key[0] == "pdf"}
+assert list(pdfs.values()) == ["cable-cabinet-v1.1.pdf"]  # the key is ("pdf", <document id>)
+```
+
 ## One PDF is one drawing
 
 Each `fr.document(...)` call, and each resulting PDF, is one drawing: a cabinet schematic, a

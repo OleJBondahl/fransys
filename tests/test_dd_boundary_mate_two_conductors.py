@@ -11,7 +11,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.layout import DrawingSet, LinkMarker, Page, StarKind, layout_of
@@ -47,7 +47,7 @@ def _build():
     cable.core(1, p1["1"], q1["1"])
     cable.core(2, p1["1"], r1["1"])
     d.mate(p1, x1)
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _unit_stubs(model):

@@ -55,7 +55,7 @@ if str(_TESTS_DIR) not in sys.path:
     # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
     sys.path.insert(0, str(_TESTS_DIR))
 
-from _model_build_cover import system_document  # noqa: E402
+from _model_build_cover import layout_trigger_document  # noqa: E402
 from scale_units_fixture import (  # noqa: E402
     build_scale,
     scale_design,
@@ -67,7 +67,7 @@ MIN_OBJECTS = 1500  # the walk of the N = 1 build visits 1914; an empty walk can
 
 
 def _build_scale_with_document(n: int):
-    """`build_scale(n)`'s own design, with a `system_document()` merged in.
+    """`build_scale(n)`'s own design, with a `layout_trigger_document()` merged in.
 
     `build_scale` itself must stay document-free (`tests/test_scale_units_fixture.py`,
     acceptance 6 of MODEL-BUILD: it is the "examples' largest build with its documents left
@@ -76,7 +76,7 @@ def _build_scale_with_document(n: int):
     document-bearing build, reached from `scale_design` directly, never from `build_scale`.
     """
     parts = fransys_parts.load("demo_parts")
-    return fr.build(parts, scale_design(parts, n).draft(), system_document())
+    return fr.build(parts, scale_design(parts, n).draft(), layout_trigger_document())
 
 
 _MUTABLE = (MutableSequence, MutableMapping, MutableSet, bytearray)
@@ -192,7 +192,7 @@ def test_n_is_the_smallest_build_that_reaches_every_kind():
     assert _built_kinds(N - 1) < kinds_at_n
     assert _built_kinds(N + 1) == kinds_at_n
     assert kinds_at_n >= REQUIRED_KINDS
-    assert len(kinds_at_n) == 41
+    assert len(kinds_at_n) == 45  # CT5-2: the four layout.cable_* kinds
 
 
 def test_a_mutable_value_smuggled_into_a_real_record_is_found_by_its_path():

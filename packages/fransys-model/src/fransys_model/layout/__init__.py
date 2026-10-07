@@ -4,11 +4,23 @@ The records only; the engines that read and write them live outside this repo. R
 for every kind here: it may reference `core` and `facet` ids and nothing references it
 back; an authored kind (hint, rule parameter) has no coordinate or page-number field; a
 derived kind (page, placement, route) is written only by a pass and carries
-`produced_by`. A new kind goes into `AUTHORED_KINDS` or `DERIVED_KINDS`, which is what
-the tests and `derived_layout_ids` go by.
+`produced_by`. A new kind goes into `AUTHORED_KINDS`, `DERIVED_KINDS` or `CABLE_KINDS`, which
+is what the tests and `derived_layout_ids` go by.
 """
 
-from .enums import LabelKind, MarkerSide, Orientation, PageRole, PlacementView, Side, StarKind
+from .cable_results import CableBlock, CableBox, CoreWire, EndBox, PinCell
+from .enums import (
+    BlockRow,
+    BoxKind,
+    EndStyle,
+    LabelKind,
+    MarkerSide,
+    Orientation,
+    PageRole,
+    PlacementView,
+    Side,
+    StarKind,
+)
 from .formats import Profile, SheetFormat, default_profile, default_sheet_format
 from .hints import (
     BreakBefore,
@@ -19,7 +31,7 @@ from .hints import (
     OrderHint,
     SymbolChoice,
 )
-from .kinds import AUTHORED_KINDS, DERIVED_KINDS
+from .kinds import AUTHORED_KINDS, CABLE_KINDS, DERIVED_KINDS
 from .page_slices import page_slice
 from .results import (
     POWER_SLOT,
@@ -39,13 +51,21 @@ from .tables import derived_layout_ids, layout_of, profile_of, sheet_format_of
 
 __all__ = [
     "AUTHORED_KINDS",
+    "CABLE_KINDS",
     "DERIVED_KINDS",
     "POWER_SLOT",
+    "BlockRow",
+    "BoxKind",
     "BreakBefore",
+    "CableBlock",
+    "CableBox",
     "Chain",
     "ChainEntry",
+    "CoreWire",
     "CrossReferencePartner",
     "DrawingSet",
+    "EndBox",
+    "EndStyle",
     "GroupHint",
     "KeepTogether",
     "Label",
@@ -58,6 +78,7 @@ __all__ = [
     "Page",
     "PageGroup",
     "PageRole",
+    "PinCell",
     "PlacementView",
     "PowerSymbol",
     "Profile",

@@ -17,6 +17,7 @@ one boundary connector wired to one unitless plug, two stubs and no route) and
 
 import functools
 import importlib.util
+from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -26,12 +27,18 @@ from fransys_layout.engines.schematic import engine, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import WIRING_GRID
 from fransys_layout.lint.codes import OUT_OF_CONTENT_BOX, WIRE_OVER_LABEL
+from fransys_layout.stages.references.digits import FLOOR
 from fransys_layout.stages.route import ROUTE_FAILED
 
 if TYPE_CHECKING:
     from fransys_layout.stages import Layout
+    from fransys_layout.stages.references.digits import Digits
     from fransys_model.kernel import Model
 
+place = import_module("fransys_layout.stages.place")  # `stages.place` names the function
+# the records reach this far above the first row's stack top: with the floor's band of 56 the bound
+# is 3 lanes + 56 - 48 = 4 grid steps, the constant it was before layout-0135
+_REACH_ABOVE_ROW = 6 * WIRING_GRID
 _FAILURES = {ROUTE_FAILED, WIRE_OVER_LABEL, OUT_OF_CONTENT_BOX}
 
 
@@ -91,6 +98,14 @@ def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
     content box, and every keep-out, text, route vertex and outline is at y >= 0."""
     # UNDO: stages/place.py `_stack_page`: `band = 0`, and engines/schematic/defaults.py
     #     `TOP_HEADROOM_LANES = 0` (the system model's outlines then stand at y = -2)
+    seen: list[tuple[int, Digits]] = []
+    real = place._reference_band
+
+    def spy(sheet, profile, digits=FLOOR):
+        seen.append((real(sheet, profile, digits), digits))
+        return seen[-1][0]
+
+    monkeypatch.setattr(place, "_reference_band", spy)
     layout, codes = _run(model_of(), monkeypatch, None)
     assert not codes & _FAILURES
     # something is drawn (not vacuous): routes (the system model), or the off stubs that end a
@@ -99,7 +114,11 @@ def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
     assert layout.outlines
     top = _highest_top(layout)
     assert top >= 0  # nothing stands above the content box
-    assert top <= 4 * WIRING_GRID  # and the first row still starts near it
+    # and the first row still starts near it: the bound is the model's own band, sized by the
+    # widest digits of this run (S4, layout-0135)
+    inputs = read_inputs(model_of())
+    band = real(inputs.sheet, inputs.profile, max(seen)[1])
+    assert top <= engine.TOP_HEADROOM_LANES * WIRING_GRID + band - _REACH_ABOVE_ROW
 
 
 def test_without_headroom_the_unit_outlines_stay_below_the_top_reference_band(

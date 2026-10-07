@@ -71,7 +71,7 @@ class Conductor:
 
 @record(kind="mate")
 class Mate:
-    """Two connector functions plugged together; ports with equal names become conductive.
+    """Two CONNECTOR or TERMINAL functions plugged together; equal-named ports become conductive.
 
     Example: a harness housing's connector `Function` mates with a board-edge
     connector `Function` (design/examples.md 11); net closure runs through the mate

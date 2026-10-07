@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.derive.drawing_text import contact_image
@@ -51,7 +51,7 @@ def _built_block():
     d.project(title="Block", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
     d.layout.profile(hide_unused_pins=True)
-    d.location("CAB", "Cabinet")
+    _cabinet = d.location("CAB", "Cabinet")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
     feed, zero, load = x1[1], x1[2], x1[3]
     with d.function("G", "Group"):
@@ -62,7 +62,7 @@ def _built_block():
     d.wire(k1.coil["A2"], zero, wire=blue)
     d.wire(feed, block.no["53"], wire=blue)
     d.wire(block.no["54"], load, wire=blue)
-    return fr.build(d, system_document()).model
+    return fr.build(d, cabinet_document(_cabinet)).model
 
 
 def _table(model, tag: str) -> tuple[list[str], list[str]]:

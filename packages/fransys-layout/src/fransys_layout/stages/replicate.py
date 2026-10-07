@@ -11,7 +11,7 @@ lazy from collections.abc import Mapping
 
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages.columns import boundary_key, replica_key
-from fransys_layout.stages.types import Cell, Column
+from fransys_layout.stages.types import Cell, Column, Home
 
 if TYPE_CHECKING:
     from fransys_layout.stages.types import (
@@ -69,7 +69,7 @@ def replicate_terminals(
         replicas.append(
             Column(
                 key=replica_key(served.key, specs[terminal].key),
-                cells=(Cell(function=terminal, index=0),),
+                cells=(Cell(function=terminal, index=0, home=Home.ELSEWHERE),),
                 group=served.group,
                 role=served.role,
                 location=served.location,
@@ -131,10 +131,18 @@ def replicate_boundaries(
     for spec in functions:
         if spec.pin_function is not None:
             pins.setdefault(spec.pin_function, []).append(spec)
-    home = {cell.function: column for column in homes for cell in column.cells if not cell.replica}
+    home = {
+        cell.function: column
+        for column in homes
+        for cell in column.cells
+        if cell.home is not Home.ELSEWHERE
+    }
     # I2a: a boundary pin already drawn face to face under its mate in the parent's set
     faced = {
-        (cell.function, column.unit) for column in columns for cell in column.cells if cell.replica
+        (cell.function, column.unit)
+        for column in columns
+        for cell in column.cells
+        if cell.home is Home.ELSEWHERE
     }
     replicas = []
     for unit in units:
@@ -157,7 +165,7 @@ def replicate_boundaries(
                 replicas.append(
                     Column(
                         key=boundary_key(spec.key, unit.parent_key),
-                        cells=(Cell(function=spec.function, index=0),),
+                        cells=(Cell(function=spec.function, index=0, home=Home.ELSEWHERE),),
                         group=home_column.group,
                         role=home_column.role,
                         location=home_column.location,
@@ -176,19 +184,20 @@ def _without_rail_homes(
     columns: tuple[Column, ...], functions: tuple[FunctionSpec, ...]
 ) -> tuple[Column, ...]:
     """RB2: columns without the home cells of boundary rail terminals (the parent draws them)."""
-    rails = {spec.function for spec in functions if spec.rail}
+    rails = {spec.function for spec in functions if spec.home is Home.ELSEWHERE}
     kept = (
         replace(
-            column, cells=tuple(c for c in column.cells if c.replica or c.function not in rails)
+            column,
+            cells=tuple(
+                c for c in column.cells if c.home is Home.ELSEWHERE or c.function not in rails
+            ),
         )
         for column in columns
     )
     return tuple(column for column in kept if column.cells)
 
 
-def drop_replicas(
-    plans: tuple[PagePlan, ...], columns: tuple[Column, ...], *, replicas: frozenset[AuthoringKey]
-) -> tuple[PagePlan, ...]:
+def drop_replicas(plans: tuple[PagePlan, ...], columns: tuple[Column, ...]) -> tuple[PagePlan, ...]:
     """Drop each replica column whose page already holds its terminal, after `partition`."""
     by_key = {column.key: column for column in columns}
     result = []
@@ -199,13 +208,12 @@ def drop_replicas(
         held = {
             cell.function
             for planned in plan.columns
-            if planned.column not in replicas
             for cell in by_key[planned.column].cells
-            if not cell.replica
+            if cell.home is not Home.ELSEWHERE
         }
         kept = []
         for planned in plan.columns:
-            if planned.column in replicas:
+            if by_key[planned.column].away:
                 terminal = by_key[planned.column].cells[0].function
                 if terminal in held:
                     continue
@@ -228,14 +236,14 @@ def drop_attached_replicas(
     for column in columns:
         if column.key in page_of:
             for cell in column.cells:
-                if not cell.replica:
+                if cell.home is not Home.ELSEWHERE:
                     held.setdefault(page_of[column.key], set()).add(cell.function)
     result = []
     for column in columns:
         page = page_of.get(column.key)
         kept = []
         for cell in column.cells:
-            if cell.replica:
+            if cell.home is Home.ELSEWHERE:
                 if cell.function in held.get(page, ()):
                     continue  # home or an earlier replica already on this page
                 held.setdefault(page, set()).add(cell.function)

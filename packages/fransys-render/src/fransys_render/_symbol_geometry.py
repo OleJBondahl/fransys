@@ -5,7 +5,15 @@ from typing import TYPE_CHECKING
 from graphical_symbols import Orientation as LibraryOrientation
 from graphical_symbols import UnknownSymbolError, orient, repeat
 
-from electrical_symbols import GENERIC_BOX_KEY, LIBRARY, generic_box
+from electrical_symbols import (
+    G_PER_MODULE,
+    GENERIC_BOX_KEY,
+    LIBRARY,
+    box_port_name,
+    default_order,
+    generic_box,
+    is_generic_box,
+)
 from fransys_model.derive import build_indexes
 from fransys_model.layout import PlacementView
 from fransys_model.vocab import functions, ports
@@ -21,7 +29,7 @@ __all__ = ["GENERIC_BOX_KEY", "oriented_power_symbol", "oriented_symbol", "to_gr
 
 def to_grid(module_units: float) -> int:
     """One coordinate, module units to grid units (0.125 M each): exact, no rounding."""
-    return int(module_units * 8)
+    return int(module_units * G_PER_MODULE)
 
 
 def _generic_box_port_names(model: Model, placement: SymbolPlacement) -> tuple[str, ...]:
@@ -31,26 +39,24 @@ def _generic_box_port_names(model: Model, placement: SymbolPlacement) -> tuple[s
         return placement.ports
     if placement.view is PlacementView.ITEM:
         item = functions(model)[placement.function].item
-        return tuple(
-            sorted(
-                f"{function.name}.{ports(model)[port_id].name}"
-                for function in functions(model).values()
-                if function.item == item
-                for port_id in indexes.ports_by_function.get(function.id, ())
-            )
+        return default_order(
+            box_port_name(function.name, ports(model)[port_id].name)
+            for function in functions(model).values()
+            if function.item == item
+            for port_id in indexes.ports_by_function.get(function.id, ())
         )
     port_ids = indexes.ports_by_function.get(placement.function, ())
-    return tuple(sorted(ports(model)[port_id].name for port_id in port_ids))
+    return default_order(ports(model)[port_id].name for port_id in port_ids)
 
 
 def oriented_symbol(model: Model, placement: SymbolPlacement) -> Symbol | None:
     """`placement`'s symbol, repeated and oriented as layout drew it; `None` for an unknown key."""
-    if placement.symbol == GENERIC_BOX_KEY:
+    if is_generic_box(placement.symbol):
         # R7 C5: the port sides layout turned the box to, else the alternating ones
         base = generic_box(
             _generic_box_port_names(model, placement),
             tuple(side.value for side in placement.sides),
-            tuple(offset / 8 for offset in placement.port_offsets),  # grid units to M
+            tuple(offset / G_PER_MODULE for offset in placement.port_offsets),  # grid units to M
         )
     else:
         try:

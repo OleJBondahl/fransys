@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.stages.columns import build_column
 from fransys_layout.stages.lookups import group_of
-from fransys_layout.stages.types import Cell, Column
+from fransys_layout.stages.types import Cell, Column, Home
 from fransys_model.kernel import Id, UnionFind, value
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ def _facings(drawn: tuple[DrawnFunction, ...]) -> dict[Id[Any], str]:
 
 def _marked(cell: Cell) -> bool:
     """A cell a bare row cell would change: a side element, a mirrored pole or a replica."""
-    return cell.side or cell.mirror or cell.replica
+    return cell.side or cell.mirror or cell.home is Home.ELSEWHERE
 
 
 def join_terminal_rows(

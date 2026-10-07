@@ -21,24 +21,14 @@ from fransys_layout.stages import (
     DrawnFunction,
     LabelKind,
     Layout,
-    column_widths,
-    columns_from_chains,
     onepage,
 )
 from fransys_layout.stages.arrange import (
-    cut_locations,
-    edge_mates,
     inline_exits,
-    join_strip_rows,
-    rack_order,
-    same_unit_connectivity,
 )
-from fransys_layout.stages.attach import attach_replicas, hub_order
 from fransys_layout.stages.box_reach import sized_columns
 from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
-from fransys_layout.stages.chains import ChainRecords, discover_chains
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
-from fransys_layout.stages.far_ends import FarInputs, group_map, move_far_ends, sheet_fits
 from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
 from fransys_layout.stages.firstlabels import labelled_pages
 from fransys_layout.stages.images import contact_images, image_reserves
@@ -50,41 +40,44 @@ from fransys_layout.stages.references import (
     ReferenceInputs,
     Wiring,
     black_box_sets,
+    box_room_findings,
     references,
     side_reference_rooms,
 )
-from fransys_layout.stages.replicate import replicate_boundaries, replicate_terminals
 from fransys_layout.stages.stacking import JoinedRun
 from fransys_layout.stages.tags import own_set_texts, row_labels
-from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_chains
 from fransys_layout.stages.texts.echoes import echo_requests
 from fransys_layout.stages.texts.marker_room import MarkerRoom
 from fransys_layout.stages.texts.marker_row import place_markers
 from fransys_layout.stages.texts.markers import link_markers, placed_world
 from fransys_layout.stages.texts.power import without_power_findings
 from fransys_layout.stages.tidy import clear_of_stubs, shift_pages
-from fransys_model.kernel import AuthoringKey, Finding, Id, value
+from fransys_model.kernel import Finding, Id, value
 
+from ._arrange_columns import (
+    chained_columns,
+    discovered_columns,
+    ordered_columns,
+    replicated_columns,
+)
 from .defaults import BOTTOM_HEADROOM_LANES, DEFAULT_RULES, TOP_HEADROOM_LANES
 from .read import read_inputs, reading
 from .read.contact_marks import image_inputs
 from .read.labels import label_requests
+from .read.location_paths import location_paths
 from .read.outline_texts import outline_titles
 from .read.tag_texts import tag_texts
 from .read.units import (
     black_box_reads,
     boundary_edge_set,
-    boundary_parents,
-    unit_boundaries,
     unit_nesting,
-    unused_functions,
 )
 from .read.write_keys import write_keys
 from .symbol_defaults import resolve_with_defaults
 from .write import write_layout
 
 if TYPE_CHECKING:
-    from fransys_layout.stages import ColumnWidth, PagePlan
+    from fransys_layout.stages import ColumnWidth
     from fransys_layout.stages.exempt import UnitNesting
     from fransys_layout.stages.pagerun import Decide
     from fransys_layout.stages.references import References
@@ -101,7 +94,6 @@ class StageResults:
     layout: Layout
     drawn: tuple[DrawnFunction, ...]
     columns: tuple[Column, ...]
-    replicas: tuple[AuthoringKey, ...]
     sheet_format: Id[Any] | None
     off_ends: tuple[OffEnd, ...] = ()
     joins: tuple[JoinedRun, ...] = ()
@@ -121,14 +113,13 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
     drawn = potential_sides(drawn, rank_of, *power, (inputs.feeds, inputs.profile))
-    requests = label_requests(inputs.label_texts, drawn)
     slot_requests = tuple(
-        request for request in requests if request.kind in (LabelKind.TAG, LabelKind.MARKING)
+        request
+        for request in label_requests(inputs.label_texts, drawn)
+        if request.kind in (LabelKind.TAG, LabelKind.MARKING)
     )
 
-    inputs, all_columns, columns, replicas, column_findings = _arranged(
-        model, inputs, drawn, rank_of
-    )
+    inputs, all_columns, columns, column_findings = _arranged(model, inputs, drawn, rank_of)
     texts = tag_texts(model)
     slot_requests, pin_requests = row_labels(texts, inputs.functions, all_columns, slot_requests)
     # C8(b), S11: columns are sized with the keep-outs grown by the measured labels and by
@@ -147,11 +138,12 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     img = image_inputs(model, inputs)
     every = (*inputs.functions, *inputs.spares)
     reserves = image_reserves(columns, every, inputs.profile, img.marks, img.owners)
-    run = PageRun(texts, _page_inputs(inputs), rank_of, pin_requests, replicas, reserves, power)
+    paths = partial(location_paths, model)
+    run = PageRun(texts, _page_inputs(inputs), rank_of, pin_requests, reserves, paths, power)
     # layout-0080: the ports at a unit's boundary that draw nothing, in the markers and the check
     nesting = unit_nesting(model, {spec.unit for spec in inputs.functions})
     # S10: `references` decides on the planned pages, before each placing (`_decide`)
-    decide = partial(_decide, model, inputs, replicas, nesting)
+    decide = partial(_decide, model, inputs, nesting)
     placement, (decided, reference_findings) = _placed(run, drawn, columns, widths, decide)
     plans, columns, drawn = placement.plans, placement.columns, placement.drawn
     pages, placed_all = placement.pages, placement.placed_all
@@ -166,7 +158,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     inputs = replace(inputs, connections=decided.connections, net_groups=decided.net_groups)
     # S9: `texts` builds every marker from its decision, on the placed pages
     at_home, routed_on, wired = page_wiring(
-        inputs.connections, columns, placement.placed_all, replicas, inputs.net_groups
+        inputs.connections, columns, placement.placed_all, inputs.net_groups
     )
     built = link_markers(
         decided.markers,
@@ -192,7 +184,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     # the shift pushes out of the content box is reported by OUT_OF_CONTENT_BOX
     pages, placed_all, markers = shift_pages(plans, pages, markers, inputs.sheet)
     # C19: the contact image under each coil, and each contact's reference to its coil
-    pages, contact_refs = contact_images(plans, pages, img, markers, _location_paths(model, plans))
+    pages, contact_refs = contact_images(plans, pages, img, markers, location_paths(model, plans))
     # I2a: each black box's dash-dot outline and its title, before routing
     pages, outlines = unit_outlines(
         plans,
@@ -205,7 +197,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         placement.placed_all,
         placement.drawn,
         sheet=inputs.sheet,
-        location_paths=_location_paths(model, plans),
+        location_paths=location_paths(model, plans),
     )
     held = {(r.subject, r.slot) for r in echoes}
     cross_references = (*echoes, *(r for r in contact_refs if (r.subject, r.slot) not in held))
@@ -234,7 +226,6 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         layout=layout,
         drawn=drawn,
         columns=tuple(column for column in columns if column.key in planned),
-        replicas=tuple(sorted(replicas)),
         sheet_format=inputs.sheet_format,
         off_ends=decided.off_ends,
         joins=decided.joins,
@@ -248,21 +239,19 @@ def _placed(
     widths: tuple[ColumnWidth, ...],
     decide: Decide,
 ) -> tuple[Placement, tuple[References, tuple[Finding, ...]]]:
-    """S10: `plan_pages`, then `references` and `place`; once more on grown widths (C21)."""
+    """S10: `plan_pages`, `references`, `place`; again on grown widths (C21); room check (0143)."""
     planned = plan_pages(run, drawn, columns, widths)
+    first = planned.plans
     placement, grown, decided = place_pages(run, drawn, planned, widths, decide)
-    if grown == widths:
-        return placement, decided
-    drawn = placement.drawn
-    planned = plan_pages(run, drawn, columns, grown)
-    placement, _, decided = place_pages(run, drawn, planned, grown, decide)
-    return placement, decided
+    if grown != widths:
+        planned = plan_pages(run, placement.drawn, columns, grown)
+        placement, _, decided = place_pages(run, placement.drawn, planned, grown, decide)
+    return placement, box_room_findings(decided, first)
 
 
 def _decide(
     model: Model,
     inputs: StageInputs,
-    replicas: frozenset[AuthoringKey],
     nesting: UnitNesting,
     seating: Seating,
 ) -> tuple[References, tuple[Finding, ...]]:
@@ -273,7 +262,7 @@ def _decide(
         ),
         nesting,
     )
-    return references(_reference_inputs(model, inputs, seating, replicas, (exempt, nesting.nested)))
+    return references(_reference_inputs(model, inputs, seating, (exempt, nesting.nested)))
 
 
 def _page_inputs(inputs: StageInputs) -> PageInputs:
@@ -299,73 +288,22 @@ def _arranged(
     StageInputs,
     tuple[Column, ...],
     tuple[Column, ...],
-    frozenset[AuthoringKey],
     tuple[Finding, ...],
 ]:
     """Stage 2: the columns of the run."""
-    # Discovery runs first, over every function no chain claims, so a hinted chain always wins
-    # (columns.md 6.2/pages.md 6.3): a chain never gets a function discovery already placed.
-    chain_claimed = {entry.function for chain in inputs.chains for entry in chain.entries}
-    undiscovered = tuple(spec for spec in inputs.functions if spec.function not in chain_claimed)
-    # Deep-dive R4: chains are discovered from connectivity alone.
-    # A chain never spans two units: discovery sees same-unit connectivity only (units U1).
-    same = same_unit_connectivity(
-        inputs.functions, inputs.connections, inputs.net_groups, inputs.mates
-    )
     tie_key = reading.terminal_sort_keys(model, inputs.functions)
-    records = ChainRecords(
-        undiscovered,
-        drawn,
-        *same,
-        edge_mates=edge_mates(boundary_parents(model), inputs.functions, inputs.mates),
-        fixed=frozenset(inputs.item_north + inputs.item_south),
-    )
-    discovered = discover_chains(records, rank_of=rank_of, tie_key=tie_key)
-    # C21: a column never spans locations; the conductors between two are stubs
-    discovered = cut_locations(discovered, inputs.functions)
+    discovered = discovered_columns(model, inputs, drawn, rank_of, tie_key)
     crossing = set(inputs.crossing)
     inputs = replace(inputs, connections=tuple(c for c in inputs.connections if c not in crossing))
-    # I4: an edge pin's face replica is not its home; its home column still comes below
-    placed_by_discovery = {
-        cell.function for column in discovered for cell in column.cells if not cell.replica
-    }
-    chained, column_findings = columns_from_chains(
-        inputs.chains,
-        tuple(spec for spec in inputs.functions if spec.function not in placed_by_discovery),
-        drawn=drawn,
-        connections=inputs.connections,
-    )
-    all_columns = join_strip_rows(chained + discovered, inputs.functions)
-    chains = terminal_chains(inputs.functions, drawn, inputs.connections)
-    all_columns = join_terminal_rows(
-        all_columns,
-        inputs.functions,
-        chains,
-        tie_key=tie_key,
-        fits=lambda row: (
-            column_widths((row,), drawn, profile=inputs.profile)[0].width
-            <= inputs.sheet.content_width
-        ),
-    )
-    all_columns = rack_order(all_columns, inputs.functions)
+    chained, column_findings = chained_columns(inputs, drawn, discovered)
+    all_columns, chains = ordered_columns(inputs, drawn, chained + discovered, tie_key)
     inputs = replace(
         inputs,
         connections=inline_exits(inputs.connections, all_columns, inputs.functions, drawn),
         terminal_chains=chains,
     )
-    columns = replicate_terminals(all_columns, inputs.functions, inputs.connections)
-    columns = replicate_boundaries(
-        columns, unit_boundaries(model), unused_functions(model), inputs.functions, all_columns
-    )
-    fits = sheet_fits(drawn, inputs.profile, inputs.sheet)
-    columns = attach_replicas(columns, all_columns, drawn, inputs.connections, fits)
-    far = FarInputs(drawn, inputs.connections, group_map(inputs.functions))
-    columns = move_far_ends(columns, all_columns, far, fits)
-    added = frozenset(column.key for column in columns) - frozenset(
-        column.key for column in all_columns
-    )
-    columns, replicas = hub_order(columns, inputs.functions, inputs.connections, added)
-    return inputs, all_columns, columns, replicas, column_findings
+    columns = replicated_columns(model, inputs, drawn, all_columns)
+    return inputs, all_columns, columns, column_findings
 
 
 def _unit_maps(
@@ -377,20 +315,10 @@ def _unit_maps(
     return unit_of, set_unit
 
 
-def _location_paths(model: Model, plans: tuple[PagePlan, ...]) -> dict[int, tuple[Any, ...]]:
-    """Each drawing set's location path, of every plan with a location."""
-    return {
-        plan.drawing_set: reading.location_path(model, plan.location)
-        for plan in plans
-        if plan.location is not None
-    }
-
-
 def _reference_inputs(
     model: Model,
     inputs: StageInputs,
     seating: Seating,
-    replicas: frozenset[AuthoringKey],
     boundary: tuple[frozenset[tuple[Id[Any], int]], frozenset[Id[Any] | None]],
 ) -> ReferenceInputs:
     """D1 step 4's `ReferenceInputs`: `inputs`, the planned pages and what it reads of `model`."""
@@ -406,8 +334,7 @@ def _reference_inputs(
         net_groups=inputs.net_groups,
         functions=inputs.functions,
         seating=seating,
-        replicas=replicas,
-        location_paths=_location_paths(model, seating.plans),
+        location_paths=location_paths(model, seating.plans),
         exempt=exempt,
         crossing=inputs.crossing,
         off_texts=inputs.off_texts,

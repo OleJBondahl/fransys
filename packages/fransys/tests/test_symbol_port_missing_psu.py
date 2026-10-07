@@ -12,7 +12,7 @@ function: that case used to raise a bare `KeyError` from `_symbol_port_missing_f
 import fransys as fr
 import fransys_author
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys import BuildErrors, BuildResult, Severity
 
 
@@ -31,7 +31,7 @@ def _relay_with_the_wrong_symbol(*, whole_item: bool) -> BuildResult:
     sup = d.group("SUP", "Supply")
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=c1, group=sup)
     d.symbol(k1 if whole_item else k1.fn("coil"), "psu")
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), cabinet_document(c1))
 
 
 @pytest.mark.parametrize("whole_item", [False, True], ids=["one-function", "whole-item"])

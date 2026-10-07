@@ -46,6 +46,7 @@ from fransys_layout.stages import (
     SymbolChoice,
 )
 from fransys_layout.stages.offstubs import OffEnd, PortText, by_location, groups_by_location
+from fransys_layout.stages.types import Home
 from fransys_model.kernel import Finding, Id
 
 if TYPE_CHECKING:
@@ -70,7 +71,9 @@ def rail_reads(
     # V3: a rail terminal is not drawn; its wires and the pins' rail wires become `rail_ends`
     undrawn = rail_terminal_functions(model, specs)
     specs = mark_boundary_rails(model, specs, undrawn)  # RB2: the parent's page draws these
-    specs = tuple(spec for spec in specs if spec.function not in undrawn or spec.rail)
+    specs = tuple(
+        spec for spec in specs if spec.function not in undrawn or spec.home is Home.ELSEWHERE
+    )
     wires, rail_ends = rail_wires(model, reading.connections(model, indexes), specs, undrawn)
     return specs, undrawn, wires, rail_ends
 

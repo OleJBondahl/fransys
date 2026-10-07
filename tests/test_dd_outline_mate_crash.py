@@ -16,7 +16,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
 from fransys_model.layout import Outline, SymbolPlacement, layout_of
@@ -61,7 +61,7 @@ def _nested_board(first: str, second: str):
         plug = cab.item("DEMO-CONN-2P", tag=f"J{n}", at=c1, group=group)
         _relay_on(cab, plug, kind, f"K{n}", (c1, group))
         cab.mate(plug, header)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model, ("cab", "a2")
 
@@ -89,7 +89,7 @@ def _two_boundary_connectors():
         else:
             _relay_on(d, plug, "coil_A1", "K2", (c1, group))
         d.mate(plug, header)
-    return fr.build(parts, d.draft(), system_document()).model, ("cab",)
+    return fr.build(parts, d.draft(), layout_trigger_document()).model, ("cab",)
 
 
 def _placed(model, page, key):

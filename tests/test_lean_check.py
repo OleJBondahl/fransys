@@ -143,7 +143,7 @@ def test_module_code_lines_first_run_excludes_the_d8_exempt_files():
     """
     measured = lean_check.lean_code_shape.measure_module_code_lines(ROOT, limit=300)
     types_py = "packages/fransys-layout/src/fransys_layout/stages/types.py"
-    text_metrics_py = "packages/fransys-layout/src/fransys_layout/geometry/text_metrics.py"
+    text_metrics_py = "packages/electrical-symbols/src/electrical_symbols/text_metrics.py"
     assert types_py in measured
     assert text_metrics_py not in measured
     measured = {**measured, text_metrics_py: 999}

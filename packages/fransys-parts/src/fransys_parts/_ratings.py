@@ -11,12 +11,17 @@ the record building have one home. Finding codes emitted here:
   be above zero; a `[function.operating]` value may be zero (parts-0006), as a source's
   `min_voltage_v` may be 0.
 
+- `RATING_VALUE_INVALID` also covers a malformed `breaking_ac` or `breaking_dc` point list
+  (parts-0015, `_breaking_points`): empty, a non-table entry, a missing or unknown key, a
+  non-positive value, or a `time_constant_ms` on an AC point.
+
 A value that is not a string is `FIELD_TYPE` (or `FLOAT_FORBIDDEN`) from `_fields`/`_toml`,
 and is not reported again here.
 """
 
 import re
 from decimal import Decimal
+from typing import Any
 
 from fransys_model.kernel import Draft, Finding, Id, Origin, make_id
 from fransys_model.vocab import (
@@ -29,7 +34,7 @@ from fransys_model.vocab import (
     RatingFacet,
 )
 
-from . import _fields, _toml
+from . import _breaking_points, _fields, _toml
 
 _PLAIN_DECIMAL = re.compile(r"[0-9]+(\.[0-9]+)?")
 
@@ -54,7 +59,17 @@ def _check_table(
     if not allow_zero:
         expected = 'a positive number such as "24" or "0.5"'
     for field, value in table.items():
-        if (
+        if field in _breaking_points.POINT_FIELDS and field in spec:
+            findings.extend(
+                _breaking_points.check_points(
+                    field,
+                    value,
+                    is_plain=lambda text: _is_plain_decimal(text, allow_zero=False),
+                    at=at,
+                    name=name,
+                )
+            )
+        elif (
             field in spec
             and type(value) is str
             and not _is_plain_decimal(value, allow_zero=allow_zero)
@@ -143,4 +158,8 @@ def add_function_tables(
 
 
 def _rating(table: _toml.Table) -> Rating:
-    return Rating(**{k: Decimal(v) for k, v in table.items()})
+    values: dict[str, Any] = {
+        k: _breaking_points.build_points(v) if k in _breaking_points.POINT_FIELDS else Decimal(v)
+        for k, v in table.items()
+    }
+    return Rating(**values)

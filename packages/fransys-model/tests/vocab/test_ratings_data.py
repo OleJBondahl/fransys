@@ -30,7 +30,14 @@ from fransys_model.kernel import (
     to_data,
 )
 from fransys_model.kernel.schema import annotations_of, resolve_target
-from fransys_model.vocab import Operating, OperatingFacet, PartRatingFacet, Rating, RatingFacet
+from fransys_model.vocab import (
+    BreakingPoint,
+    Operating,
+    OperatingFacet,
+    PartRatingFacet,
+    Rating,
+    RatingFacet,
+)
 from fransys_model.vocab.tables import facets_of
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
@@ -93,7 +100,7 @@ def test_the_kind_is_registered_in_the_facet_namespace_and_unique_per_subject(
 
 
 def test_the_value_types_hold_only_optional_decimals() -> None:
-    """Every field of `Rating` and `Operating` is `Decimal | None` with default `None`."""
+    """Rating and Operating hold `Decimal | None` fields defaulting to `None`; points are tuples."""
     assert list(annotations_of(Rating)) == [
         "voltage_ac_v",
         "voltage_dc_v",
@@ -101,6 +108,8 @@ def test_the_value_types_hold_only_optional_decimals() -> None:
         "current_dc_a",
         "min_breaking_current_a",
         "power_loss_w",
+        "breaking_ac",
+        "breaking_dc",
     ]
     assert list(annotations_of(Operating)) == [
         "voltage_ac_v",
@@ -114,12 +123,19 @@ def test_the_value_types_hold_only_optional_decimals() -> None:
         "resistance_ohm",
         "nominal_power_w",
         "nominal_current_a",
+        "fault_current_ac_a",
+        "fault_current_dc_a",
+        "fault_time_constant_ms",
     ]
+    points = {"breaking_ac", "breaking_dc"}
     for cls in (Rating, Operating):
         for name, annotation in annotations_of(cls).items():
+            if name in points:
+                assert get_args(annotation)[0] is BreakingPoint, name
+                continue
             assert isinstance(annotation, UnionType), name
             assert set(get_args(annotation)) == {Decimal, type(None)}, name
-        assert all(v is None for v in dataclasses.asdict(cls()).values())
+        assert all(v in (None, ()) for v in dataclasses.asdict(cls()).values())
 
 
 def test_a_model_with_all_three_facets_survives_both_codecs_with_an_equal_digest() -> None:

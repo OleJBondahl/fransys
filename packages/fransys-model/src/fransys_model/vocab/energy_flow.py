@@ -1,9 +1,10 @@
 """Which way energy flows through a function's pins (decisions model-0131, model-0133)."""
 
-from fransys_model.vocab import Energy, FunctionKind
-from fransys_model.vocab.tables import function_templates, functions
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab import Function
+
+from .enums import Energy, FunctionKind
+from .tables import function_templates, functions
+lazy from .core import Function
 
 
 def _declared(model: Model, function: Id[Function]) -> tuple[Energy | None, FunctionKind]:

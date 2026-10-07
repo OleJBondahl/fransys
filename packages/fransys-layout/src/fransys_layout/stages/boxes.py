@@ -125,7 +125,7 @@ def _turned_box(
     # partners' x order; ports with no partner keep theirs
     ordered = sorted(placed_at, key=lambda p: (p[4], p[1] is None, p[1] or 0, p[2]))
     names, drawn = tuple(p[3] for p in ordered), tuple(p[0] for p in ordered)
-    geometry = generic_box_geometry(names, drawn, one.reach)
+    geometry = generic_box_geometry(names, drawn, one.reach, stand=one.stand)
     return one if geometry == one.geometry else replace(one, geometry=geometry)
 
 

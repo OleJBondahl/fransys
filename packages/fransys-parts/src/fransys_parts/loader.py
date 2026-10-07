@@ -5,48 +5,26 @@ then on every field lint checked is trusted, so the record-building code below i
 straight-line: no second, weaker validation happens here (P5).
 """
 
-from dataclasses import dataclass
 from decimal import Decimal
 from importlib.resources import as_file, files
 from pathlib import Path
 
 from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, Severity, make_id
-from fransys_model.layout import SymbolChoice
 from fransys_model.vocab import (
     CableProductFacet,
-    ConnectorFacet,
-    Energy,
     FootprintFacet,
-    FunctionKind,
-    FunctionTemplate,
-    Gender,
-    InternalLink,
-    LinkKind,
-    LinkRest,
     Part,
     PartCategory,
     PartLibrary,
     PcbFacet,
-    PlcChannelFacet,
-    PortRole,
-    PortTemplate,
-    ProtectionType,
-    SignalType,
     SupplyFacet,
 )
 
-from . import _pole_facts, _ratings, _toml
+from . import _ratings, _toml
+from ._function_build import _build_function, _PartContext
 from .lint import SUPPORTED_SCHEMAS, lint
 
 __all__ = ["SUPPORTED_SCHEMAS", "PartLibraryError", "load", "load_path"]
-
-
-@dataclass(frozen=True, slots=True)
-class _PartContext:
-    """A part's authoring key and id, threaded into its function builder."""
-
-    key: tuple[str, ...]
-    id: Id[Part]
 
 
 class PartLibraryError(ModelError):
@@ -202,127 +180,3 @@ def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[Part
         rating_line = origins.get(("rating",), 1)
         rating_origin = Origin(file=parsed.path, line=rating_line, note="")
         _ratings.add_part_rating(draft, data["rating"], part.id, part_key, rating_origin)
-
-
-def _protection_type(entry: _toml.Table) -> ProtectionType | None:
-    table = entry.get("protection")
-    return ProtectionType(table["type"]) if type(table) is dict and "type" in table else None
-
-
-def _build_function(
-    draft: Draft, entry: _toml.Table, index: int, part: _PartContext, parsed: _toml.ParsedFile
-) -> None:
-    origins = parsed.origins
-    origin = Origin(file=parsed.path, line=origins.get(("function", index), 1), note="")
-    name = entry["name"]
-    function_key = (*part.key, "function", name)
-    function_id = make_id(FunctionTemplate, function_key)
-    draft.add(
-        FunctionTemplate(
-            id=function_id,
-            key=function_key,
-            part=part.id,
-            name=name,
-            kind=FunctionKind(entry["kind"]),
-            protection_type=_protection_type(entry),
-            energy=Energy(entry["energy"]) if "energy" in entry else None,
-        ),
-        origin=origin,
-    )
-
-    port_ids = {}
-    for port in entry["ports"]:
-        pole_side, conductor_mark = _pole_facts.facts(entry, port)
-        port_key = (*function_key, "port", port["name"])
-        port_id = make_id(PortTemplate, port_key)
-        port_ids[port["name"]] = port_id
-        draft.add(
-            PortTemplate(
-                id=port_id,
-                key=port_key,
-                function=function_id,
-                name=port["name"],
-                role=PortRole(port["role"]),
-                # model-0053 (F2): the part's own pin marking, when it differs from the name
-                marking=port.get("marking"),
-                pole_side=pole_side,
-                conductor_mark=conductor_mark,
-            ),
-            origin=origin,
-        )
-
-    for link in entry.get("links", ()):
-        link_key = (*function_key, "link", link["a"], link["b"])
-        draft.add(
-            InternalLink(
-                id=make_id(InternalLink, link_key),
-                key=link_key,
-                a=port_ids[link["a"]],
-                b=port_ids[link["b"]],
-                kind=LinkKind(link["kind"]),
-                rest=LinkRest(link["rest"]) if "rest" in link else None,
-            ),
-            origin=origin,
-        )
-
-    symbol = entry.get("symbol")
-    if symbol is not None:
-        port_map = {
-            port["name"]: port["symbol_port"]
-            for port in entry["ports"]
-            if "symbol_port" in port and port["symbol_port"] != port["name"]
-        }
-        choice_key = (*function_key, "symbol_choice")
-        draft.add(
-            SymbolChoice(
-                id=make_id(SymbolChoice, choice_key),
-                key=choice_key,
-                function=None,
-                template=function_id,
-                part=None,
-                kind=None,
-                symbol=symbol,
-                port_map=frozendict(port_map),
-            ),
-            origin=origin,
-        )
-
-    connector = entry.get("connector")
-    if connector is not None:
-        key = (*function_key, "connector")
-        connector_line = origins.get(("function", index, "connector"), origin.line)
-        draft.add(
-            ConnectorFacet(
-                id=make_id(ConnectorFacet, key),
-                key=key,
-                subject=function_id,
-                style=connector["style"],
-                pincount=connector["pincount"],
-                gender=Gender(connector["gender"]) if "gender" in connector else None,
-                marking=connector.get("marking"),
-            ),
-            origin=Origin(file=parsed.path, line=connector_line, note=""),
-        )
-
-    plc_channel = entry.get("plc_channel")
-    if plc_channel is not None:
-        key = (*function_key, "plc_channel")
-        plc_channel_line = origins.get(("function", index, "plc_channel"), origin.line)
-        draft.add(
-            PlcChannelFacet(
-                id=make_id(PlcChannelFacet, key),
-                key=key,
-                subject=function_id,
-                signal=SignalType(plc_channel["signal"]),
-                channel=plc_channel["channel"],
-            ),
-            origin=Origin(file=parsed.path, line=plc_channel_line, note=""),
-        )
-
-    table_origins = {
-        table: Origin(
-            file=parsed.path, line=origins.get(("function", index, table), origin.line), note=""
-        )
-        for table in ("rating", "operating")
-    }
-    _ratings.add_function_tables(draft, entry, function_id, function_key, table_origins)

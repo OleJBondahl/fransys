@@ -45,7 +45,15 @@ def main(work: Path) -> None:
                 DocumentPreset.HARNESS_DRAWING, harness, cover=cover, remove=(PageKind.SCHEMATIC,)
             )
         )
-    result = fr.build(parts, d.draft(), *documents)
+    cover = covers / "cabinet.md"
+    cover.write_text("# Cabinet\n", encoding="utf-8")
+    cabinet = fr.document(
+        DocumentPreset.CABINET_SCHEMATIC,
+        c1,
+        cover=cover,
+        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
+    )
+    result = fr.build(parts, d.draft(), *documents, cabinet)
     fr.write(result, work / "out", intermediates=work / "intermediates")
     # Positive control for the test: proves the child really ran under its own hash seed.
     (work / "hash-of-a-str.txt").write_text(str(hash("fransys")), encoding="utf-8")

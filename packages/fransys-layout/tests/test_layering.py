@@ -57,11 +57,16 @@ DRAWING_TEXT_FORMATTERS = frozenset(
         "off_stub_line",
         "marker_lines",
         "partner_position_text",
+        "heads_group",
     }
 )
 
 SYMBOL_LIBRARIES = ("graphical_symbols", "electrical_symbols")
 SYMBOL_ADAPTER = SRC_ROOT / "geometry" / "symbols.py"
+# `units.py` takes the two grid constants from the library's one home (RR-O4); `symbols.py`
+# imports `units`, so the constants cannot come through it. `units.py` may import nothing else.
+UNITS_MODULE = SRC_ROOT / "geometry" / "units.py"
+UNITS_ALLOWED = frozenset({"WIRING_GRID", "G_PER_MODULE"})
 
 # spec D6: inside `engines`, only the `read/` package may import `fransys_model.derive` or
 # `fransys_model.vocab` (the `drawing_text` formatters excepted), and only the `read/` and
@@ -71,8 +76,7 @@ MODEL_DERIVE = "fransys_model.derive"
 MODEL_VOCAB = "fransys_model.vocab"
 MODEL_LAYOUT = "fransys_model.layout"
 LAYOUT_ENUMS = frozenset({"Orientation", "MarkerSide", "LabelKind"})
-READER_PACKAGE = "fransys_layout.engines.schematic.read"
-WRITER_PACKAGE = "fransys_layout.engines.schematic.write"
+ENGINES_PACKAGE = "fransys_layout.engines"
 
 # The engine modules that still break that rule, each with the exact names it imports, keyed by
 # the path under `src/fransys_layout`. The list is empty and stays as the refusal: a new
@@ -189,6 +193,19 @@ def _symbol_library_imports(imported: set[str]) -> set[str]:
     return _violates(imported, SYMBOL_LIBRARIES)
 
 
+def _units_library_names(source: str) -> set[str]:
+    """What `units.py` takes from the symbol libraries beyond the two grid constants."""
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom) and node.module == "electrical_symbols":
+            found.update(a.name for a in node.names if a.name not in UNITS_ALLOWED)
+        elif isinstance(node, ast.ImportFrom):
+            found.update(_symbol_library_imports({node.module or ""}))
+        elif isinstance(node, ast.Import):
+            found.update(_symbol_library_imports({a.name for a in node.names}))
+    return found
+
+
 def _imports_of(path: Path) -> set[str]:
     module_name, is_init = _module_name(path)
     return _imported_modules(module_name, path.read_text(encoding="utf-8"), is_init=is_init)
@@ -206,6 +223,14 @@ def _in_package(module_name: str, package: str, *, is_init: bool) -> bool:
     if module_name == package:
         return is_init
     return module_name.startswith(package + ".")
+
+
+def _in_engine_role(module_name: str, role: str, *, is_init: bool) -> bool:
+    """Whether a module is inside `fransys_layout.engines.<any engine>.<role>` (`read`/`write`)."""
+    parts = module_name.split(".")
+    if len(parts) < 4 or ".".join(parts[:2]) != ENGINES_PACKAGE or parts[3] != role:
+        return False
+    return _in_package(module_name, ".".join(parts[:4]), is_init=is_init)
 
 
 def _model_targets(node: ast.Import | ast.ImportFrom) -> set[str]:
@@ -248,9 +273,9 @@ def _forbidden_engine_imports(module_name: str, source: str, *, is_init: bool) -
 
     `read/` is exempt from all three; `write/` is exempt from `layout` only.
     """
-    if _in_package(module_name, READER_PACKAGE, is_init=is_init):
+    if _in_engine_role(module_name, "read", is_init=is_init):
         return set()
-    layout_allowed = _in_package(module_name, WRITER_PACKAGE, is_init=is_init)
+    layout_allowed = _in_engine_role(module_name, "write", is_init=is_init)
     return {
         target
         for node in ast.walk(ast.parse(source))
@@ -321,14 +346,28 @@ def test_only_engines_import_the_drawing_text_readers() -> None:
 
 
 def test_only_the_symbol_adapter_imports_the_symbol_libraries() -> None:
-    """No module but `geometry/symbols.py` imports `graphical_symbols`/`electrical_symbols`."""
+    """No module but `geometry/symbols.py` (and `units.py`, for two constants) imports them."""
     problems = [
         f"{path}: imports {bad}"
         for path in sorted(SRC_ROOT.rglob("*.py"))
-        if path != SYMBOL_ADAPTER
+        if path not in (SYMBOL_ADAPTER, UNITS_MODULE)
         for bad in sorted(_symbol_library_imports(_imports_of(path)))
     ]
     assert problems == []
+
+
+def test_units_takes_only_the_two_grid_constants_from_the_symbol_libraries() -> None:
+    """`geometry/units.py` imports `WIRING_GRID` and `G_PER_MODULE`, and nothing else from them."""
+    assert _units_library_names(UNITS_MODULE.read_text(encoding="utf-8")) == set()
+
+
+def test_checker_fails_when_units_imports_more_than_the_grid_constants() -> None:
+    """A third `electrical_symbols` name, or any `graphical_symbols` import, is found."""
+    source = (
+        "from electrical_symbols import WIRING_GRID, LIBRARY\n"
+        "from graphical_symbols.orient import turn\n"
+    )
+    assert _units_library_names(source) == {"LIBRARY", "graphical_symbols.orient"}
 
 
 def test_only_the_reader_imports_derive_vocab_or_layout_in_engines() -> None:
@@ -404,8 +443,8 @@ def test_checker_exempts_the_reader_package_but_not_the_reader_file() -> None:
     inside = _forbidden_engine_imports(
         "fransys_layout.engines.schematic.read.items", source, is_init=False
     )
-    init = _forbidden_engine_imports(READER_PACKAGE, source, is_init=True)
-    file = _forbidden_engine_imports(READER_PACKAGE, source, is_init=False)
+    init = _forbidden_engine_imports("fransys_layout.engines.schematic.read", source, is_init=True)
+    file = _forbidden_engine_imports("fransys_layout.engines.schematic.read", source, is_init=False)
     assert (inside, init, file) == (set(), set(), {"fransys_model.derive.designation"})
 
 
@@ -446,8 +485,10 @@ def test_checker_exempts_the_writer_package_for_layout_only() -> None:
     inside = _forbidden_engine_imports(
         "fransys_layout.engines.schematic.write.records", source, is_init=False
     )
-    init = _forbidden_engine_imports(WRITER_PACKAGE, source, is_init=True)
-    file = _forbidden_engine_imports(WRITER_PACKAGE, source, is_init=False)
+    init = _forbidden_engine_imports("fransys_layout.engines.schematic.write", source, is_init=True)
+    file = _forbidden_engine_imports(
+        "fransys_layout.engines.schematic.write", source, is_init=False
+    )
     assert (inside, init, file) == (
         {"fransys_model.derive.designation"},
         {"fransys_model.derive.designation"},
@@ -553,3 +594,30 @@ def test_checker_fails_when_a_stage_imports_a_symbol_library() -> None:
     source = "import graphical_symbols\nfrom electrical_symbols import LIBRARY\n"
     imported = _imported_modules("fransys_layout.stages.bad", source, is_init=False)
     assert _symbol_library_imports(imported) == {"graphical_symbols", "electrical_symbols"}
+
+
+CABLE_DERIVE = "from fransys_model.derive.cable_drawing import cable_drawing\n"
+
+
+def test_checker_reports_derive_in_a_cable_engine_module() -> None:
+    """`engines.cable.bad` importing `derive.cable_drawing` is reported."""
+    found = _forbidden_engine_imports(
+        "fransys_layout.engines.cable.bad", CABLE_DERIVE, is_init=False
+    )
+    assert found == {"fransys_model.derive.cable_drawing"}
+
+
+def test_checker_exempts_the_cable_reader_package() -> None:
+    """`engines.cable.read.blocks` may import `derive.cable_drawing`."""
+    name = "fransys_layout.engines.cable.read.blocks"
+    assert _forbidden_engine_imports(name, CABLE_DERIVE, is_init=False) == set()
+
+
+def test_checker_lets_the_cable_writer_import_layout_but_not_derive() -> None:
+    """`engines.cable.write.records` may import a `layout` record, not a `derive` name."""
+    name = "fransys_layout.engines.cable.write.records"
+    layout = "from fransys_model.layout import CableBlock\n"
+    assert _forbidden_engine_imports(name, layout, is_init=False) == set()
+    assert _forbidden_engine_imports(name, CABLE_DERIVE, is_init=False) == {
+        "fransys_model.derive.cable_drawing"
+    }

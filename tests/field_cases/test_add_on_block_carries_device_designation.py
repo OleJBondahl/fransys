@@ -12,7 +12,7 @@ The invented parts are `demo_parts`' contactor, its `DEMO-CTR-BLOCK-1NO1NC` bloc
 """
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.derive import designation_list, item_designation
@@ -26,7 +26,7 @@ def _build() -> tuple[fr.Model, fr.Device, fr.Device]:
     d = fr.design("demo_parts", place="CAB")
     d.project(title="Block", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-02", text="First issue", created="XX")
-    d.location("CAB", "Cabinet")
+    _cabinet = d.location("CAB", "Cabinet")
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     with d.function("G", "Group"):
         feed, zero, load = strip[1], strip[2], strip[3]
@@ -40,7 +40,7 @@ def _build() -> tuple[fr.Model, fr.Device, fr.Device]:
     d.wire(block.no["54"], load, wire=wire)
     d.wire(feed, block.nc["61"], wire=wire)
     d.wire(block.nc["62"], load, wire=wire)
-    return fr.build(d, system_document()).model, block, overload
+    return fr.build(d, cabinet_document(_cabinet)).model, block, overload
 
 
 def test_the_block_prints_the_contactors_designation_and_has_no_row() -> None:

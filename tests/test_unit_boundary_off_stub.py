@@ -12,7 +12,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.layout import (
@@ -58,7 +58,7 @@ def _build():
     cable.core(1, p1["1"], p2["1"])
     cable.core(2, p1["2"], p2["2"])
     d.mate(p1, x1)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _in_cabinet_set(model, page):

@@ -18,7 +18,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_reports import connectors_csv
 
 from fransys_model.derive import item_designation
@@ -53,7 +53,7 @@ def _build():
     cable = d.cable("DEMO-CBL-4G1.5", tag="W1")
     cable.core(1, p1["1"], a1.fn("x1")["1"])
     cable.core(2, p2["1"], a1.fn("x2")["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _a1(model):

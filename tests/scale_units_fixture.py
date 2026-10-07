@@ -82,14 +82,15 @@ def build_scale(n, *, with_document: bool = False) -> fr.BuildResult:
     `with_document=False` (the default): no document, the shape MODEL-BUILD acceptance 6 (the
     examples' largest build with its documents left out) measures -- decision 0037 (PS1) then
     runs no layout at all, so this default must never change. `with_document=True` adds a
-    `system_document()` draft (`_model_build_cover.py`): for a caller that specifically needs
-    this design laid out (`tests/test_scale_call_counts.py`'s own layout-code-object count,
-    which reads real `stages/place.py` calls that only happen once layout runs).
+    `layout_trigger_document()` draft (`_model_build_cover.py`): for a caller that
+    specifically needs this design laid out (`tests/test_scale_call_counts.py`'s own
+    layout-code-object count, which reads real `stages/place.py` calls that only happen once
+    layout runs).
     """
     parts = fransys_parts.load("demo_parts")
     drafts = (scale_design(parts, n).draft(),)
     if with_document:
-        from _model_build_cover import system_document
+        from _model_build_cover import layout_trigger_document
 
-        drafts = (*drafts, system_document())
+        drafts = (*drafts, layout_trigger_document())
     return fr.build(parts, *drafts)

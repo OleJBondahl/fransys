@@ -11,7 +11,7 @@ from fransys_model.derive.lookups import effective_placement
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, parent_chain
 from fransys_model.vocab.cables import cable_items
 from fransys_model.vocab.enums import Aspect
-from fransys_model.vocab.membership import in_unit_subtree, is_harness, item_chain, units
+from fransys_model.vocab.membership import in_reading, is_harness, item_chain, units
 from fransys_model.vocab.tables import aspect_nodes, functions, items, ports
 from fransys_model.vocab.unit_index import unit_index
 
@@ -42,7 +42,7 @@ def chain_up(
 
 def outside_unit(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
     """Whether a list for `unit` names `item` from outside it; `unit=None` has no outside."""
-    return unit is not None and not in_unit_subtree(model, item, unit)
+    return unit is not None and not in_reading(model, item, unit)
 
 
 def stub_place(model: Model, near: Id[Port]) -> Id[AspectNode] | None:

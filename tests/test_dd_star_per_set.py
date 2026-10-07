@@ -21,7 +21,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive.drawing_text import marker_text, reference_number
 from fransys_model.kernel import Id, Severity
@@ -79,7 +79,7 @@ def _build(spec: tuple[tuple[str, int], ...], *, fill: int):
             blue(relay.fn("co_2")["21"], relay.fn("co_2")["24"])
             if k == 0:
                 blue(terminal.outer, relay.fn("coil")["A1"])
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
     return result.model, [terminal.inner.id for terminal in terminals]
 

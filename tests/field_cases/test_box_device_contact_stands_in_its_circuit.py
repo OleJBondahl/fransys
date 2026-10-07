@@ -24,7 +24,7 @@ from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.write_keys import write_keys
 from fransys_layout.geometry import overlaps
-from fransys_layout.stages.texts.power import held_shapes
+from fransys_layout.stages.texts.power import drawn_shapes
 from fransys_model.derive.drawing_text import contact_image, cross_reference_text, tag_text
 from fransys_model.layout import Label, LabelKind, PlacementView, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, items, ports
@@ -170,14 +170,14 @@ def test_the_box_stands_on_a_function_drawn_in_it_not_on_one_drawn_apart() -> No
 
 
 def test_the_image_stands_clear_of_the_ink_below_the_module() -> None:
-    """layout-0123: the image meets no marker, stub or power symbol of its page (one push-clear)."""
+    """layout-0134: the image meets no drawn marker, stub or power symbol of its page."""
     _, layout = _built()
     (image,) = (
         one
         for one in layout.labels
         if one.slot == "contacts" and one.subject.kind == "item" and one.page == 1
     )
-    ink = held_shapes(tuple(m for m in layout.markers if m.page == image.page))
+    ink = [s.box for s in drawn_shapes(tuple(m for m in layout.markers if m.page == image.page))]
     assert ink, "the page has a power symbol under the module"
     assert not [box for box in ink if overlaps(image.box, box)]
 

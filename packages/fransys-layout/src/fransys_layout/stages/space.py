@@ -18,6 +18,8 @@ from fransys_layout.geometry import (
 )
 from fransys_model.kernel import Id, value
 
+from .cell_index import CellIndex
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
@@ -151,11 +153,16 @@ def run_of(first: Point, second: Point) -> Run:
     )
 
 
+def obstacle_index(obstacles: Iterable[Obstacle]) -> CellIndex[Obstacle]:
+    """The obstacles keyed by the wiring-grid cells their boxes meet, for `step_admitted`."""
+    return CellIndex((one.box, one) for one in obstacles)
+
+
 def step_admitted(
-    first: Cell, second: Cell, obstacles: Iterable[Obstacle], ends: frozenset[Cell]
+    first: Cell, second: Cell, obstacles: CellIndex[Obstacle], ends: frozenset[Cell]
 ) -> bool:
     """P1, a route step admitted closed: no obstacle touches it, but at an end cell or on a lane."""
-    for obstacle in obstacles:
+    for obstacle in obstacles.meeting(first[0], first[1], second[0], second[1]):
         if _touches(obstacle.box, first, second, ends) and not _in_a_lane(obstacle, first, second):
             return False
     return True
@@ -165,7 +172,7 @@ def run_admitted(
     first: Cell, second: Cell, obstacles: Iterable[Obstacle], ends: frozenset[Cell]
 ) -> bool:
     """P1 for a straight run: true iff `step_admitted` holds for every grid step of it."""
-    obstacles = tuple(obstacles)
+    index = obstacle_index(obstacles)
     dx = (second[0] > first[0]) - (second[0] < first[0])
     dy = (second[1] > first[1]) - (second[1] < first[1])
     length = abs(second[0] - first[0]) + abs(second[1] - first[1])
@@ -173,7 +180,7 @@ def run_admitted(
     for done in range(0, length, WIRING_GRID):
         step = min(WIRING_GRID, length - done)
         there = (here[0] + dx * step, here[1] + dy * step)
-        if not step_admitted(here, there, obstacles, ends):
+        if not step_admitted(here, there, index, ends):
             return False
         here = there
     return True

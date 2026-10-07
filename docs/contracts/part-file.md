@@ -229,7 +229,7 @@ channel = 3
 voltage or a fuse link in its holder; it maps to the `part_rating` facet (subject: `Part`).
 `[function.rating]` and `[function.operating]` are sub-tables of a `[[function]]` entry (P1); they
 map to the `rating` and `operating` facets (subject: `FunctionTemplate`). `power_loss_w` is the heat given off at the rated load. `resistance_ohm`, `nominal_power_w` and
-`nominal_current_a` are stated at `nominal_voltage_v`. Nothing reads them yet (model-0125, parts-0009).
+`nominal_current_a` are stated at `nominal_voltage_v`. No check reads the first two (model-0125, parts-0009).
 A part states `power_loss_w` once, in `[rating]` or per function: both is `POWER_LOSS_TWICE` (`ERROR`).
 A function takes its template's rating, else its part's, as a whole record: a template rating with only an AC value
 hides the part's DC value (decisions model-0079, parts-0004).
@@ -246,8 +246,14 @@ voltage_ac_v = "250"
 
 | Table | Fields, all optional |
 |---|---|
-| `[rating]`, `[function.rating]` | `voltage_ac_v`, `voltage_dc_v`, `current_ac_a`, `current_dc_a`, `min_breaking_current_a`, `power_loss_w` |
-| `[function.operating]` | `voltage_ac_v`, `voltage_dc_v`, `nominal_voltage_v`, `max_voltage_v`, `min_voltage_v`, `capacity_ah`, `max_current_ac_a`, `max_current_dc_a`, `resistance_ohm`, `nominal_power_w`, `nominal_current_a` |
+| `[rating]`, `[function.rating]` | `voltage_ac_v`, `voltage_dc_v`, `current_ac_a`, `current_dc_a`, `min_breaking_current_a`, `power_loss_w`, `breaking_ac`, `breaking_dc` |
+| `[function.operating]` | `voltage_ac_v`, `voltage_dc_v`, `nominal_voltage_v`, `max_voltage_v`, `min_voltage_v`, `capacity_ah`, `max_current_ac_a`, `max_current_dc_a`, `resistance_ohm`, `nominal_power_w`, `nominal_current_a`, `fault_current_ac_a`, `fault_current_dc_a`, `fault_time_constant_ms` |
+
+A breaking list is non-empty. A `breaking_dc` point may add `time_constant_ms`:
+
+```toml
+breaking_dc = [{ voltage_v = "1000", current_a = "15000", time_constant_ms = "15" }]
+```
 
 `min_breaking_current_a` marks a partial-range fuse (an aBat link): the lowest current it
 breaks. It bounds no continuous current. `max_current_ac_a` and `max_current_dc_a` are a source's continuous current limit, charging included (decision model-0088).
@@ -258,9 +264,8 @@ may also be 0 (`"0"`, `"0.0"`: a source's minimum voltage), decision parts-0006.
 float is `FLOAT_FORBIDDEN` and an integer is `FIELD_TYPE`. The lint refuses, as `ERROR`, a table
 with no field (`RATING_TABLE_EMPTY`) and a value outside those rules, negative or not plain
 (`RATING_VALUE_INVALID`). The `RATING_VOLTAGE_BELOW_CIRCUIT` and
-`RATING_CURRENT_BELOW_BRANCH` checks read a rating. Of the operating values, only
-`max_current_ac_a` and `max_current_dc_a` are read, by the second; the rest are data only. A part
-with no current rating limits no branch (decision model-0088).
+`RATING_CURRENT_BELOW_BRANCH` checks read a rating. Of the operating values, only `max_current_*`, `nominal_current_a` and `fault_*` are read. A part
+with no current rating limits no branch (model-0088).
 
 ### `[pcb]`
 

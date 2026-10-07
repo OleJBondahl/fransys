@@ -8,6 +8,7 @@ from samples import PROFILE, SHEET, built_links, connection, drawn, hid, placed,
 from fransys_layout.geometry import Box, Facing, Point, PortGeometry
 from fransys_layout.stages import LinkCase, LinkMarker, MarkerSide
 from fransys_layout.stages.references import LINK_PARTNER_UNLOCATED
+from fransys_layout.stages.references.digits import Digits
 from fransys_layout.stages.references.marker_boxes import reference_box_width
 from fransys_model.kernel import Severity
 
@@ -88,9 +89,9 @@ def test_a_marker_box_is_sized_for_its_own_sets_digits() -> None:
         location_paths=LOCATION_PATHS,
         units=frozendict(),
         function_units=frozendict(),
-        digits=frozendict({1: (3, 2)}),
+        digits=frozendict({1: Digits(3, 2)}),
     )[1]
-    three = reference_box_width(SHEET, PROFILE, digits=(3, 2))
+    three = reference_box_width(SHEET, PROFILE, digits=Digits(3, 2))
     assert three > reference_box_width(SHEET, PROFILE)
     assert len(wide) == 2  # turned (S20 M1): the length is the height
     assert {marker.box.height for marker in wide} == {three}

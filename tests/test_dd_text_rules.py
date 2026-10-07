@@ -21,11 +21,10 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines import lay_out_schematic
-from fransys_layout.engines.schematic import engine
 from fransys_model.derive import drawing_text, unit_release
 from fransys_model.derive.closure import net_of
 from fransys_model.derive.designation import (
@@ -191,7 +190,7 @@ def _three_phase(strip: str = "X01"):
     for i in range(3):
         wire(feed[i].inner, main[str(2 * i + 1)])
         wire(main[str(2 * i + 2)], out[i].inner)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _units_strip(terminal_count: int, *, three_phase: bool):
@@ -217,12 +216,12 @@ def _units_strip(terminal_count: int, *, three_phase: bool):
         ]
         for i, terminal in enumerate(phases):
             wire(q1.fn("main")[str(2 * i + 2)], terminal.inner)
-        return fr.build(parts, d.draft(), system_document()).model, phases
+        return fr.build(parts, d.draft(), layout_trigger_document()).model, phases
     relay = u.item("DEMO-RLY-2CO-24", name="k1", parent=board, group=grp)
     terminals = [strip.terminal("DEMO-TB-2.5", group=grp) for _ in range(terminal_count)]
     for terminal, pin in zip(terminals, ("A1", "A2"), strict=False):
         wire(terminal.inner, relay.fn("coil")[pin])
-    return fr.build(parts, d.draft(), system_document()).model, terminals
+    return fr.build(parts, d.draft(), layout_trigger_document()).model, terminals
 
 
 def _terminal_tags(model, *, own_set: bool | None = None):
@@ -520,7 +519,7 @@ def _mounted_device_terminal(*, in_unit: bool):
     scope.wiring(colour="BU", gauge="0.5")(
         device.fn("terminal")["internal"], relay.fn("coil")["A1"]
     )
-    return fr.build(parts, d.draft(), system_document()).model, device.id, board.id
+    return fr.build(parts, d.draft(), layout_trigger_document()).model, device.id, board.id
 
 
 @pytest.mark.parametrize("in_unit", [False, True], ids=["top_level", "unit_set"])
@@ -624,7 +623,7 @@ def _sibling_units(*, own_group_in_a: bool = False):
         if own_group_in_a and name == "a":
             mine = u.item("DEMO-RLY-2CO-24", tag="K2", at=loc, group=u.group("MINE", "Mine"))
             u.wiring(colour="BU", gauge="0.5")(mine.fn("coil")["A1"], mine.fn("coil")["A2"])
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model
 
@@ -697,7 +696,7 @@ def _relay_built(wire_up, *, bridge: tuple[int, int] | None = None):
     wire_up(d.wiring(colour="BU", gauge="0.5", label="W"), terminals, k1, k2)
     if bridge is not None:
         d.bridge(terminals[bridge[0]], terminals[bridge[1]])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _feed_relays(wire, t, k1, k2) -> None:
@@ -720,7 +719,7 @@ def _lamps_through_a_terminal():
     wire = d.wiring(colour="BU", gauge="0.5")
     wire(p1.fn("lamp")["2"], terminal.outer)
     wire(terminal.inner, p2.fn("lamp")["1"])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def test_a_terminal_in_another_group_does_not_give_its_column_that_group() -> None:
@@ -892,7 +891,10 @@ def test_routes_of_different_nets_only_cross_straight_and_share_no_track(
     rule."""
     # UNDO: (two edits) fransys_layout/stages/route.py: drop the `axes` of foreign nets in
     #   `_draw` (`if foreign:` -> False) AND set `crossing_penalty=0` in its `Field`
-    monkeypatch.setattr(engine, "attach_replicas", lambda columns, *_: columns)
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.attach_replicas",
+        lambda columns, *_: columns,
+    )
     model = _cabinet_model()
     crossings, touches, overlaps = _crossings_and_overlaps(model)
     assert crossings  # the fixture does cross; a rule about nothing would pass too

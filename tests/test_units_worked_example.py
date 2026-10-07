@@ -24,7 +24,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_kicad import netlist as kicad_netlist
 
 from fransys_layout.engines.schematic.engine import lay_out_schematic, stage_results
@@ -198,7 +198,7 @@ def _system_design(parts, *, name1="C1", name2="C2"):
 def _build_system(*, name1="C1", name2="C2"):
     parts = fransys_parts.load("demo_parts")
     d, field1, field2 = _system_design(parts, name1=name1, name2=name2)
-    return fr.build(parts, d.draft(), system_document()), field1, field2
+    return fr.build(parts, d.draft(), layout_trigger_document()), field1, field2
 
 
 def _build_cabinet_own(*, prefix, name):
@@ -207,7 +207,7 @@ def _build_cabinet_own(*, prefix, name):
     d.project(**_PROJECT)
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     field, _ = pump_cabinet(d.scope(prefix), name=name)
-    return fr.build(parts, d.draft(), system_document()), field
+    return fr.build(parts, d.draft(), layout_trigger_document()), field
 
 
 def _codes(result):
@@ -355,7 +355,7 @@ def _bare_two_cabinet_design(parts):
 def _build_bare_two_cabinets():
     parts = fransys_parts.load("demo_parts")
     d, field1, field2 = _bare_two_cabinet_design(parts)
-    return fr.build(parts, d.draft(), system_document()), field1, field2
+    return fr.build(parts, d.draft(), layout_trigger_document()), field1, field2
 
 
 def test_an_unwired_field_terminal_is_boundary_unconnected_four_times():
@@ -420,7 +420,7 @@ def test_boundary_unconnected_clears_once_every_field_terminal_is_declared_unuse
     assert len(fields) == 4
     for terminal in fields:
         d.unused(terminal)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert result.model.tables["unused_boundary"]
     assert len(result.model.tables["unused_boundary"]) == 4
     assert _codes(result).count(BOUNDARY_UNCONNECTED) == 0
@@ -499,7 +499,7 @@ def test_removing_the_boards_boundary_gives_unit_boundary_bypassed():
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
     broken_pump_cabinet(d.scope("pump1", at=er), name="C1")
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     bypassed = [f for f in result.findings if f.code == UNIT_BOUNDARY_BYPASSED]
     assert len(bypassed) > 0
     assert "crosses out of unit" in bypassed[0].message
@@ -684,7 +684,7 @@ def test_a_cabinet_terminal_wired_straight_to_the_board_relay_bypasses_its_own_u
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
     _cabinet_terminal_straight_to_board_relay(d.scope("pump1", at=er), name="C1")
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
 
     to_undrawn = [f for f in result.findings if f.code == CONNECTION_TO_UNDRAWN]
     assert to_undrawn == []
@@ -989,7 +989,7 @@ def test_a_wire_bypassing_a_units_boundary_is_caught_and_drawn_cross_unit() -> N
     d.revision(1, date="2026-09-22", text="First issue", created="XX")
     er = d.location("ER", "Engine room")
     _cabinet_terminal_straight_to_unit_relay(d.scope("pump1", at=er), name="C1")
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
 
     bypassed = [f for f in result.findings if f.code == UNIT_BOUNDARY_BYPASSED]
     assert len(bypassed) == 1

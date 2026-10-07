@@ -8,7 +8,7 @@ the wire XA:1 - K1:1 are both between neighbouring cells (C3), so no star is mad
 draws the strap. XA:3 stands over K2's pole 1 but feeds its pole 2, so its wire turns on the one
 cell in front of K2:1. Routed before the strap, it sealed that port: `ROUTE_FAILED` and
 `CONNECTION_NOT_DRAWN`. The router now keeps every port's first step for that port's net and lets
-a foreign wire only cross it (`stages/_routing.py`, `reserve_exits`).
+a foreign wire only cross it (`stages/grid_path.py`, `reserve_exits`).
 
 The second test is the reviewer's mixed chain (`test_dd_turned_poles.py`): the same seal on a
 two-port net, where D9's markers never apply.
@@ -28,7 +28,7 @@ from dd_chain_fixtures import (
 )
 
 from fransys_layout.geometry import WIRING_GRID, Facing, Point
-from fransys_layout.stages._routing import reserve_exits
+from fransys_layout.stages.grid_path import reserve_exits
 from fransys_layout.stages.space import End
 from fransys_model.layout import Route, StarKind, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, ports
@@ -59,7 +59,7 @@ def _errors(result: Any) -> list[str]:
 
 def test_a_port_reserves_the_cell_in_front_of_it_along_its_own_axis() -> None:
     """The cell one step out of a S facing port is its net's, along "v" only."""
-    # UNDO: stages/_routing.py reserve_exits, `axis = "h"` for every facing
+    # UNDO: stages/grid_path.py reserve_exits, `axis = "h"` for every facing
     south, east = (
         End(at=Point(x=0, y=0), facing=Facing.S),
         End(at=Point(x=80, y=0), facing=Facing.E),
@@ -72,7 +72,7 @@ def test_a_port_reserves_the_cell_in_front_of_it_along_its_own_axis() -> None:
 
 def test_a_cell_in_front_of_two_nets_ports_is_reserved_for_neither() -> None:
     """Two facing ports two steps apart share their step: no net can keep it, so none does."""
-    # UNDO: stages/_routing.py reserve_exits, `if len(nets) == 1` -> `if nets`
+    # UNDO: stages/grid_path.py reserve_exits, `if len(nets) == 1` -> `if nets`
     down, up = (
         End(at=Point(x=0, y=0), facing=Facing.S),
         End(at=Point(x=0, y=2 * WIRING_GRID), facing=Facing.N),

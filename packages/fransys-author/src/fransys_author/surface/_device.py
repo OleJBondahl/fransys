@@ -7,12 +7,14 @@ from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn, Pin, pick
 from fransys_author.surface._tags import bare
 lazy from fransys_author.design import Scope
-lazy from fransys_author.handles import Item, Terminal
+lazy from fransys_author.handles import Item, Strip, Terminal
 lazy from fransys_author.surface._mount import mount
+lazy from fransys_author.surface._parent import parent_item
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Item as ModelItem
 
 if TYPE_CHECKING:
+    from fransys_author.surface._strip import TerminalStrip
     from fransys_author.surface.design import Design
 
 
@@ -95,6 +97,14 @@ def _one_maker(design: Design, mpn: str) -> None:
         raise AuthorError(msg)
 
 
+def _check_tag(tag: str | None, name: str | None) -> None:
+    if tag is not None:
+        bare(tag, "device")
+    elif name is None:
+        msg = "give a tag, or name= for a device with no tag"
+        raise AuthorError(msg)
+
+
 def part_mpn(part: str | type[Device]) -> str:
     """The MPN a `part` argument stands for: a string, or a part class's `mpn`."""
     if isinstance(part, str):
@@ -137,6 +147,15 @@ def _mark_boundary(
         design._engine.unused(fn)
 
 
+def _parent_handle(
+    design: "Design", parent: "Device | TerminalStrip | None"
+) -> Item | Strip | None:
+    """The handle `parent=` nests under: a device's item, a strip, or a refusal."""
+    if parent is None:
+        return None
+    return parent._item if isinstance(parent, Device) else parent_item(design, parent)
+
+
 class Devices:
     """The `device` call of `Design`."""
 
@@ -147,7 +166,7 @@ class Devices:
         part: type[TypedDevice[N, S]],
         *,
         place: str | EllipsisType | None = ...,
-        parent: Device | None = None,
+        parent: "Device | TerminalStrip | None" = None,
         name: str | None = None,
         interface: bool | tuple[N, ...] = False,
         unused: bool | tuple[N, ...] = False,
@@ -164,7 +183,7 @@ class Devices:
         part: type[D],
         *,
         place: str | EllipsisType | None = ...,
-        parent: Device | None = None,
+        parent: "Device | TerminalStrip | None" = None,
         name: str | None = None,
         interface: bool = False,
         unused: bool = False,
@@ -181,7 +200,7 @@ class Devices:
         part: str,
         *,
         place: str | EllipsisType | None = ...,
-        parent: Device | None = None,
+        parent: "Device | TerminalStrip | None" = None,
         name: str | None = None,
         interface: bool | tuple[str, ...] = False,
         unused: bool | tuple[str, ...] = False,
@@ -197,7 +216,7 @@ class Devices:
         part: str | type[Device],
         *,
         place: str | EllipsisType | None = ...,
-        parent: Device | None = None,
+        parent: "Device | TerminalStrip | None" = None,
         name: str | None = None,
         interface: bool | tuple[str, ...] = False,
         unused: bool | tuple[str, ...] = False,
@@ -213,11 +232,8 @@ class Devices:
         """
         mpn = part_mpn(part)
         _one_maker(self, mpn)
-        if tag is not None:
-            bare(tag, "device")
-        elif name is None:
-            msg = "give a tag, or name= for a device with no tag"
-            raise AuthorError(msg)
+        _check_tag(tag, name)
+        holder = _parent_handle(self, parent)
         where = self._place if place is ... else place
         key = self._claim(name or tag or "", per_function=True)
         item = self._engine.item(
@@ -226,7 +242,7 @@ class Devices:
             tag=tag,
             at=self._place_node(where),
             group=self._group,
-            parent=None if parent is None else parent._item,
+            parent=holder,
             position=position,
             description=description,
             installed=installed,

@@ -15,7 +15,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 
 from fransys_model.layout import SymbolPlacement, layout_of
 
@@ -46,7 +46,7 @@ def _built() -> fr.BuildResult:
     earth(hub.inner, right.inner)
     for terminal in (left, hub, filler, right):
         cab.boundary(terminal)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), cabinet_document(c1))
 
 
 def test_two_terminals_above_one_hub_stand_apart() -> None:

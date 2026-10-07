@@ -1,0 +1,76 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CTRL-8"
+manufacturer = "Demo"
+description = "Controller module with a system supply, a field supply and an 8-pin connector"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "supply_system"
+kind = "load"
+ports = [
+    { name = "S24V", role = "generic" },
+    { name = "SGND", role = "generic" },
+]
+
+[function.rating]
+voltage_dc_v = "31.2"
+
+[function.operating]
+nominal_voltage_v = "24"
+min_voltage_v = "18"
+max_voltage_v = "31.2"
+
+[[function]]
+name = "supply_field"
+kind = "supply"
+energy = "in"
+ports = [
+    { name = "F24V1", role = "generic" },
+    { name = "FGND1", role = "generic" },
+]
+
+[function.rating]
+voltage_dc_v = "31.2"
+current_dc_a = "10"
+
+[function.operating]
+nominal_voltage_v = "24"
+min_voltage_v = "18"
+max_voltage_v = "31.2"
+
+[[function]]
+name = "X1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+    { name = "5", role = "generic" },
+    { name = "6", role = "generic" },
+    { name = "7", role = "generic" },
+    { name = "8", role = "generic" },
+]
+
+[function.connector]
+style = "rj45"
+pincount = 8
+gender = "female"
+
+[[function]]
+name = "X2"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+    { name = "3", role = "generic" },
+    { name = "4", role = "generic" },
+]
+
+[function.connector]
+style = "header-4p"
+pincount = 4
+gender = "female"

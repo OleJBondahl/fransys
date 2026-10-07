@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from test_dd_contact_images import _box, _cabinet, _images, _lane_x, _placement, _relays
 
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE, DEFAULT_SHEET
@@ -54,7 +54,7 @@ def _parallel_coils() -> tuple[Model, tuple[Finding, ...]]:
         wire(feed.inner, relay.fn("co_1")["11"])
         wire(relay.fn("co_1")["14"], out.inner)
         wire(relay.fn("co_1")["12"], out3.inner)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     return result.model, tuple(result.findings)
 
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from plant import Plant
 
-from fransys_model.vocab.membership import crosses_unit, in_unit_subtree
+from fransys_model.vocab.membership import crosses_unit, in_reading, in_unit_subtree
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -51,3 +51,14 @@ def test_crosses_unit_is_strict_so_the_nested_case_crosses() -> None:
     assert not crosses_unit(n.model, n.in_a, n.in_a)
     assert not crosses_unit(n.model, n.bare, n.bare)
     assert in_unit_subtree(n.model, n.in_b, n.a)
+
+
+def test_in_reading_absolute_holds_any_unit_item_and_never_a_bare_one() -> None:
+    """model-0157: `unit=None` asks "belongs to a unit"; a given unit asks its subtree."""
+    n = _nest()
+    assert in_reading(n.model, n.in_c, None)
+    assert in_reading(n.model, n.in_b, None)
+    assert not in_reading(n.model, n.bare, None)
+    assert in_reading(n.model, n.in_b, n.a)
+    assert not in_reading(n.model, n.in_c, n.a)
+    assert not in_reading(n.model, n.bare, n.a)

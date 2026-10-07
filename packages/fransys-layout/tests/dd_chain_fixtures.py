@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.layout import LinkMarker, Route, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, ports
@@ -42,7 +42,7 @@ def design() -> tuple[Any, Any]:
 
 def build(parts: Any, d: Any) -> Any:
     """Build and lay out; the result carries `model` and `findings`."""
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def contactor_with_pole_one_wired(*, relays: bool) -> Any:

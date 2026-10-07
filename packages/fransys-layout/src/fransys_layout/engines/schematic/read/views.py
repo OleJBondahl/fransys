@@ -16,6 +16,7 @@ lazy from collections.abc import Set as AbstractSet
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES, kind_roles
 from fransys_layout.engines.schematic.read.box_split import split_box
 from fransys_layout.engines.schematic.read.item_sides import function_groups
+from fransys_layout.geometry import box_port_name
 from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
 from fransys_layout.stages.resolve import _symbol_for, choice_index, throw_port
@@ -112,7 +113,7 @@ def item_views(
         view_ports = tuple(
             dataclasses.replace(
                 port,
-                name=f"{name[spec.function]}.{port.name}",
+                name=box_port_name(name[spec.function], port.name),
                 group=order[spec.function],
                 channel=spec.roles.plc_channel,
             )
@@ -153,7 +154,7 @@ def item_views(
                     symbol=one.symbol,
                     port_map=frozendict(
                         {
-                            f"{name[spec.function]}.{port.name}": resolved[
+                            box_port_name(name[spec.function], port.name): resolved[
                                 spec.function
                             ].port_map.get(port.name, port.name)
                             for spec in group

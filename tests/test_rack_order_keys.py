@@ -16,7 +16,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.layout import SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, items
@@ -44,7 +44,7 @@ def _ungrouped_rack_x(do_position: int, di_position: int) -> dict:
     wire = d.wiring(colour="BU", gauge="0.5")
     wire(do.fn("do_1")["1"], k1.fn("coil")["A1"])
     wire(di.fn("di_1")["1"], k2.fn("co_1")["14"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     item_key = {record.id: record.key for record in items(model).values()}
     x = {}
     for placement in layout_of(model, SymbolPlacement).values():

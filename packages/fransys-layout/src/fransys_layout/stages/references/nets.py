@@ -77,15 +77,20 @@ def _counted_nets(
     """Each port's owner, and each net of three or more counted ports with its inside wires."""
     side = side_functions(columns)
     owner, nets = _joined_nets(connections, _terminal_splits(connections, specs))
-    found = []
+    found: list[tuple[list[Id[Any]], list[Connection]]] = []
+    home: dict[Id[Any], list[int]] = defaultdict(list)
     for ports in nets:
         counted = sorted(port for port in ports if owner[port] not in side)
         if len(counted) < 3:  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
             continue
-        inside = set(counted)
-        found.append(
-            (counted, [c for c in connections if c.a.port in inside and c.b.port in inside])
-        )
+        for port in counted:
+            home[port].append(len(found))
+        found.append((counted, []))
+    for c in connections:  # one pass: a wire is inside each net that counts both its ports
+        both = set(home.get(c.b.port, ()))
+        for index in home.get(c.a.port, ()):
+            if index in both:
+                found[index][1].append(c)
     return owner, found
 
 

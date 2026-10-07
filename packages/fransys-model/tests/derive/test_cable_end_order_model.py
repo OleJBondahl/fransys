@@ -151,3 +151,36 @@ def test_wire_rows_has_no_row_for_a_cable_core_that_cable_rows_lists() -> None:
     (csv_row,) = cable_rows(model, cable)
     assert csv_row.conductor == core
     assert wire_rows(model) == ()
+
+
+def test_an_end_in_a_unit_ranks_before_a_located_end_in_none() -> None:
+    """CD4: a unit's unlocated strip `X3` is first, ahead of the located motor `M1` in no unit.
+
+    Without the unit key the located end sorts first, so the cable would read From `M1`.
+    """
+    plant = Plant()
+    motor_loc = make_node("aa-motor", None)
+    plant.add(motor_loc)
+    unit = plant.unit("u1")
+    m1 = plant.item("e1", designation="M1")
+    x3 = plant.item("e2", designation="X3", unit=unit)
+    plant.add(make_placement("m1-loc", m1, motor_loc.id))
+    m1_port = plant.port(plant.function(m1, "f"), "1")
+    x3_port = plant.port(plant.function(x3, "f"), "1")
+    cable = plant.item("w11", designation="W11", part=_cable_part(plant, "w11"))
+    plant.add(
+        CableFacet(
+            id=make_id(CableFacet, ("w11", "cable")),
+            key=("w11", "cable"),
+            subject=cable,
+            length_mm=None,
+        )
+    )
+    make_core(plant, "core-1", cable, (m1_port, x3_port), index=1)
+    model = plant.model()
+
+    (csv_row,) = cable_rows(model, cable)
+    (list_row,) = cable_list_rows(model)
+    assert csv_row.end_a == x3_port
+    assert list_row.from_label.endswith("X3")
+    assert list_row.to_label.endswith("M1")

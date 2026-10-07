@@ -43,8 +43,9 @@ def _branch_text(model: Model, end: PositionEnds) -> str:
     return min(_port_text(model, end.first), _port_text(model, end.second))
 
 
-def _walk(model: Model, ends: tuple[PositionEnds, ...]) -> list[int]:
-    """Indexes of `ends` in a depth-first edge walk from the supply end."""
+def _incidence(
+    ends: tuple[PositionEnds, ...],
+) -> tuple[defaultdict[Id[Port], list[Id[Port]]], defaultdict[Id[Port], list[int]]]:
     at_node: defaultdict[Id[Port], list[Id[Port]]] = defaultdict(list)
     incident: defaultdict[Id[Port], list[int]] = defaultdict(list)
     for index, end in enumerate(ends):
@@ -52,8 +53,30 @@ def _walk(model: Model, ends: tuple[PositionEnds, ...]) -> list[int]:
         at_node[end.second_node] += [end.second]
         incident[end.first_node].append(index)
         incident[end.second_node].append(index)
+    return at_node, incident
+
+
+def _start_node(
+    model: Model,
+    at_node: defaultdict[Id[Port], list[Id[Port]]],
+    incident: defaultdict[Id[Port], list[int]],
+) -> Id[Port]:
     ends_only = [node for node, found in incident.items() if len(found) == 1]
-    start = min(ends_only or incident, key=lambda node: (_end_key(model, at_node[node]), node))
+    return min(ends_only or incident, key=lambda node: (_end_key(model, at_node[node]), node))
+
+
+def _pick_edge(model: Model, ends: tuple[PositionEnds, ...], free: list[int]) -> int:
+    return min(free, key=lambda i: (_branch_text(model, ends[i]), i))
+
+
+def _far_node(end: PositionEnds, here: Id[Port]) -> Id[Port]:
+    return end.second_node if end.first_node == here else end.first_node
+
+
+def _walk(model: Model, ends: tuple[PositionEnds, ...]) -> list[int]:
+    """Indexes of `ends` in a depth-first edge walk from the supply end."""
+    at_node, incident = _incidence(ends)
+    start = _start_node(model, at_node, incident)
     order: list[int] = []
     seen: set[int] = set()
     stack = [start]
@@ -62,11 +85,10 @@ def _walk(model: Model, ends: tuple[PositionEnds, ...]) -> list[int]:
         if not free:
             stack.pop()
             continue
-        pick = min(free, key=lambda i: (_branch_text(model, ends[i]), i))
+        pick = _pick_edge(model, ends, free)
         order.append(pick)
         seen.add(pick)
-        end = ends[pick]
-        stack.append(end.second_node if end.first_node == stack[-1] else end.first_node)
+        stack.append(_far_node(ends[pick], stack[-1]))
     return order
 
 

@@ -52,15 +52,30 @@ def _component[V: Hashable](
                 frames.append((other, at, iter(adjacent[other])))
                 break
             if order[other] < order[vertex]:
-                stack.append(at)
-                low[vertex] = min(low[vertex], order[other])
+                _back_edge(stack, low, vertex, at, order[other])
         else:
-            frames.pop()
-            if frames:
-                parent = frames[-1][0]
-                low[parent] = min(low[parent], low[vertex])
-                if low[vertex] >= order[parent]:
-                    block = [stack.pop()]
-                    while block[-1] != via:
-                        block.append(stack.pop())
-                    yield frozenset(block)
+            yield from _retreat(frames, order, low, stack)
+
+
+def _back_edge[V: Hashable](
+    stack: list[int], low: dict[V, int], vertex: V, at: int, reached: int
+) -> None:
+    stack.append(at)
+    low[vertex] = min(low[vertex], reached)
+
+
+def _retreat[V: Hashable](
+    frames: list[tuple[V, int, Iterator[tuple[int, V]]]],
+    order: dict[V, int],
+    low: dict[V, int],
+    stack: list[int],
+) -> Iterator[frozenset[int]]:
+    vertex, via, _ = frames.pop()
+    if frames:
+        parent = frames[-1][0]
+        low[parent] = min(low[parent], low[vertex])
+        if low[vertex] >= order[parent]:
+            block = [stack.pop()]
+            while block[-1] != via:
+                block.append(stack.pop())
+            yield frozenset(block)

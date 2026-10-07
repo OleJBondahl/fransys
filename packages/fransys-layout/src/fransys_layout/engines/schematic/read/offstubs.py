@@ -57,18 +57,32 @@ def boundary_offs(
             spec, other = spec_of.get(near), spec_of.get(far)
             if spec is None or other is None or spec.unit == other.unit:
                 continue
-            if spec.pin_function not in edges:
-                continue
-            leaving = [c for c in crossing if far in (c.a.port, c.b.port)]
-            found.extend(bridge(c, near, far) for c in leaving)
-            texts.extend(
-                dataclasses.replace(reads.end_text(c, far, near)[0], port=near) for c in leaving
-            )
-            if not leaving and (stub := mate_stub(within, (spec, other), (near, far), reads)):
-                found.append(stub[0])
-                texts.append(stub[1])
-                ends.append(stub[2])
+            if spec.pin_function in edges:
+                got = _mate_offs(reads, within, crossing, (spec, other), (near, far))
+                found.extend(got[0])
+                texts.extend(got[1])
+                ends.extend(got[2])
     return tuple(found), tuple(texts), tuple(ends)
+
+
+def _mate_offs(
+    reads: OffReads,
+    within: tuple[Connection, ...],
+    crossing: tuple[Connection, ...],
+    specs: tuple[FunctionSpec, FunctionSpec],
+    ports_: tuple[Id[Any], Id[Any]],
+) -> tuple[list[Connection], list[PortText], list[OffEnd]]:
+    """W3: the off-stub reads of one boundary pin `near` mated to `far` outside its unit."""
+    near, far = ports_
+    leaving = [c for c in crossing if far in (c.a.port, c.b.port)]
+    found = [bridge(c, near, far) for c in leaving]
+    texts = [dataclasses.replace(reads.end_text(c, far, near)[0], port=near) for c in leaving]
+    ends: list[OffEnd] = []
+    if not leaving and (stub := mate_stub(within, specs, ports_, reads)):
+        found.append(stub[0])
+        texts.append(stub[1])
+        ends.append(stub[2])
+    return found, texts, ends
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

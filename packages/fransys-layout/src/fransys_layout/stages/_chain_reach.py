@@ -115,34 +115,47 @@ def _rekey(r: _Reach, b: int, lead: int, offset: int) -> None:
             r.span_hit.setdefault((function, lead), port)
 
 
-def _merge_singles(
-    r: _Reach, function: Handle, hits: Mapping[int, list[tuple[Handle, bool]]]
-) -> dict[int, list[tuple[Handle, bool]]]:
-    """(iii): `hits` with the single chains that all end below on one multi-port function merged."""
-    merged = dict(hits)
-    drawn = r.drawn_of[function]
-    symbol = _symbol_of(drawn)
-    port_x = {g.name: g.at.x for g in drawn.geometry.ports}
-    # V1: on an item box whose pins V1 fixes, those that all end above merge too, on top
-    below = not any(p in r.fixed and not down for found in hits.values() for p, down in found)
-    singles = [
+def _singles(r: _Reach, hits: Mapping[int, list[tuple[Handle, bool]]], *, below: bool) -> list[int]:
+    """The groups of one chain whose ports all lie on the `below` side and have no extra."""
+    return [
         b
         for b, found in hits.items()
         if len(r.groups[b].chains) == 1
         and all(down == below for _, down in found)
         and b not in r.extra
     ]
-    if len(drawn.geometry.ports) > 2 and len(singles) > 1:  # noqa: PLR2004 -- (iii)
-        singles.sort(key=lambda b: min(port_x.get(symbol.get(p), 0) for p, _ in merged[b]))
-        lead = singles[0]
-        for b in singles[1:]:
-            _rekey(r, b, lead, len(r.groups[lead].chains))
-            r.groups[lead].chains.extend(r.groups[b].chains)
-            merged[lead].extend(merged.pop(b))
-            r.alias[b] = lead
-            del r.groups[b]
-        r.groups[lead].bottom = below
+
+
+def _fold(
+    r: _Reach, hits: Mapping[int, list[tuple[Handle, bool]]], singles: Sequence[int], *, below: bool
+) -> dict[int, list[tuple[Handle, bool]]]:
+    """`hits` with every group of `singles` merged into the first, which keeps chains and votes."""
+    merged = dict(hits)
+    lead = singles[0]
+    for b in singles[1:]:
+        _rekey(r, b, lead, len(r.groups[lead].chains))
+        r.groups[lead].chains.extend(r.groups[b].chains)
+        merged[lead].extend(merged.pop(b))
+        r.alias[b] = lead
+        del r.groups[b]
+    r.groups[lead].bottom = below
     return merged
+
+
+def _merge_singles(
+    r: _Reach, function: Handle, hits: Mapping[int, list[tuple[Handle, bool]]]
+) -> dict[int, list[tuple[Handle, bool]]]:
+    """(iii): `hits` with the single chains that all end below on one multi-port function merged."""
+    drawn = r.drawn_of[function]
+    symbol = _symbol_of(drawn)
+    port_x = {g.name: g.at.x for g in drawn.geometry.ports}
+    # V1: on an item box whose pins V1 fixes, those that all end above merge too, on top
+    below = not any(p in r.fixed and not down for found in hits.values() for p, down in found)
+    singles = _singles(r, hits, below=below)
+    if len(drawn.geometry.ports) > 2 and len(singles) > 1:  # noqa: PLR2004 -- (iii)
+        singles.sort(key=lambda b: min(port_x.get(symbol.get(p), 0) for p, _ in hits[b]))
+        return _fold(r, hits, singles, below=below)
+    return dict(hits)
 
 
 def _score(

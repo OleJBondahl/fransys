@@ -11,7 +11,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
 
@@ -47,5 +47,5 @@ def test_a_plug_at_ext_wired_to_a_coil_and_mated_to_a_boundary_connector_lays_ou
     relay = d.item("DEMO-RLY-2CO-24", tag="K1", at=relay_at, group=field)
     d.wiring(colour="BU", gauge="0.5")(plug["1"], relay.fn("coil")[coil_pin])
     d.mate(plug, header)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]

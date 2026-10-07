@@ -29,13 +29,7 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import (
-    WIRING_GRID,
-    Box,
-    Facing,
-    Point,
-    follow,
-)
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, follow
 from fransys_layout.stages.labels import decided_runs
 from fransys_layout.stages.tidy import turned
 
@@ -49,7 +43,7 @@ from .stand import joined_box, joined_ports, star_turns, start_tier, tier_offset
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from fransys_layout.stages.types import DrawnFunction, LinkMarker, PlacedFunction
+    from fransys_layout.stages.types import DrawnFunction, LinkMarker, PlacedFunction, Profile
     from fransys_model.kernel import Finding, Id
 
     from .marker_room import MarkerRoom
@@ -67,6 +61,7 @@ class _Page:
     wired_at: frozenset[tuple[int, int, int, int]]
     width: int
     height: int
+    profile: Profile
     terminals: frozenset[Id[Any]] = frozenset()
 
 
@@ -78,87 +73,150 @@ def place_markers(
 ) -> tuple[tuple[LinkMarker, ...], tuple[Finding, ...]]:
     """S20: every marker of `markers` at the first free place of its row, page by page (M3)."""
     model_port = {(one.function, p.symbol_port): p.port for one in drawn for p in one.ports}
-    joined = joined_ports(around.connections, around.columns)
-    wired_at = wired_points(placed, drawn, around.wired)
-    owner = {port.port: one.function for one in drawn for port in one.ports}
-    on_page: dict[tuple[int, int], list[PlacedFunction]] = defaultdict(list)
-    for one in placed:
-        on_page[one.drawing_set, one.page].append(one)
-    members: dict[tuple[int, int], list[int]] = defaultdict(list)
-    for index, marker in enumerate(markers):
-        members[marker.drawing_set, marker.page].append(index)
-    content = Box(x=0, y=-FAR, width=around.sheet.content_width, height=2 * FAR)
-    found, findings = list(markers), ()
-    for page, indices in members.items():
-        here = on_page[page]
-        room = _Page(
-            lanes=lanes_of(here, model_port),
-            owner=owner,
-            joined=joined,
-            wired_at=wired_at,
-            width=around.sheet.content_width,
-            height=around.sheet.content_height,
-            terminals=frozenset(one.function for one in drawn if one.roles.terminal),
-        )
-        # C21: a run's members share one box, its one place; its first member stands for them
-        # all, with every member's stub
-        runs: dict[Box, list[int]] = defaultdict(list)
-        for index in indices:
-            if markers[index].shared_box:
-                runs[markers[index].box].append(index)
-        standing = [i for i in indices if not markers[i].shared_box or runs[markers[i].box][0] == i]
-        # M3: the markers at one pin are one text, the first of them standing for all
-        mates = _pin_mates(markers, standing, room)
-        stand = list(markers)
-        for lead, rest in mates.items():
-            one = markers[lead]
-            boxes = tuple(markers[i].box for i in (lead, *rest))
-            one_box = joined_box(boxes, one.at, around.profile, vertical=one.vertical)
-            stand[lead] = replace(one, box=one_box)
-        standing = [i for i in standing if not any(i in rest for rest in mates.values())]
-        rows = {index: _row(stand[index], room) for index in standing}
-        for run in runs.values():
-            stubs = tuple(box for i in run for box in stub_boxes(markers[i]))
-            lead = markers[run[0]]
-            rows[run[0]] = [(lead, Place(box=lead.box, stub=stubs))]
-        ranks = _marker_ranks(rows)
-        texts = tuple(
-            TextToPlace(
-                kind=TextKind.STUB if stand[index].star == "off" else TextKind.REFERENCE,
-                handle=stand[index].port,
-                slot=f"{index:06d}",
-                position=stand[index].at,
-                width=stand[index].box.width,
-                height=stand[index].box.height,
-                anchors=(),
-                own=(owner[stand[index].port],) if stand[index].port in owner else (),
-                places=tuple(place for _, place in rows[index]),
-                rank=ranks[index],
-            )
-            for index in standing
-        )
-        # S20: no text stands on a decided run (a C23 corridor, a joined run's wire)
-        decided = decided_runs(
-            tuple(here),
-            drawn,
-            around.connections,
-            tuple(run for run in around.joins if (run.drawing_set, run.page) == page),
-        )
-        done, page_findings = place_clear_of_bodies(texts, rows, here, decided, content)
-        for one in done:
-            index = int(one.slot)
-            found[index] = rows[index][one.index][0]
-            for mate in mates.get(index, ()):
-                found[mate] = replace(
-                    markers[mate],
-                    box=found[index].box,
-                    stub_extra=found[index].stub_extra,
-                    turn=found[index].turn,
-                    shared_box=True,
-                    lead=False,
-                )
+    base = _Page(
+        lanes=(),
+        owner={port.port: one.function for one in drawn for port in one.ports},
+        joined=joined_ports(around.connections, around.columns),
+        wired_at=wired_points(placed, drawn, around.wired),
+        width=around.sheet.content_width,
+        height=around.sheet.content_height,
+        profile=around.profile,
+        terminals=frozenset(one.function for one in drawn if one.roles.terminal),
+    )
+    on_page = _by_page(placed)
+    found, findings = dict(enumerate(markers)), ()
+    for page, indices in _by_page(markers).items():
+        here = tuple(placed[i] for i in on_page.get(page, ()))
+        room = replace(base, lanes=lanes_of(here, model_port))
+        decided = _decided(here, drawn, around, page)
+        written, page_findings = _place_page(markers, indices, here, room, decided)
+        found.update(written)
         findings += page_findings
-    return tuple(found), findings
+    return tuple(found.values()), findings
+
+
+def _by_page(items: Sequence[Any]) -> dict[tuple[int, int], list[int]]:
+    """The indices of `items` on each (drawing set, page), in order."""
+    pages: dict[tuple[int, int], list[int]] = defaultdict(list)
+    for index, one in enumerate(items):
+        pages[one.drawing_set, one.page].append(index)
+    return pages
+
+
+def _place_page(
+    markers: tuple[LinkMarker, ...],
+    indices: Sequence[int],
+    here: tuple[PlacedFunction, ...],
+    room: _Page,
+    decided: tuple[Box, ...],
+) -> tuple[dict[int, LinkMarker], tuple[Finding, ...]]:
+    """One page's markers placed by the placer: the records that moved and the findings."""
+    runs = _runs(markers, indices)
+    # C21: a run's first member stands for all of them; M3: markers at one pin are one text
+    standing = [i for i in indices if not markers[i].shared_box or runs[markers[i].box][0] == i]
+    mates = _pin_mates(markers, standing, room)
+    stand = _stand(markers, mates, room.profile)
+    standing = [i for i in standing if not any(i in rest for rest in mates.values())]
+    rows = _rows(stand, standing, runs, markers, room)
+    content = Box(x=0, y=-FAR, width=room.width, height=2 * FAR)
+    texts = _texts(stand, standing, rows, room.owner)
+    done, findings = place_clear_of_bodies(texts, rows, here, decided, content)
+    return _written(done, rows, markers, mates), findings
+
+
+def _decided(
+    here: tuple[PlacedFunction, ...],
+    drawn: tuple[DrawnFunction, ...],
+    around: MarkerRoom,
+    page: tuple[int, int],
+) -> tuple[Box, ...]:
+    """S20: the decided runs no text stands on (a C23 corridor, a joined run's wire)."""
+    joins = tuple(run for run in around.joins if (run.drawing_set, run.page) == page)
+    return decided_runs(here, drawn, around.connections, joins)
+
+
+def _runs(markers: tuple[LinkMarker, ...], indices: Sequence[int]) -> dict[Box, list[int]]:
+    """C21: a run's members share one box, its one place."""
+    runs: dict[Box, list[int]] = defaultdict(list)
+    for index in indices:
+        if markers[index].shared_box:
+            runs[markers[index].box].append(index)
+    return runs
+
+
+def _stand(
+    markers: tuple[LinkMarker, ...], mates: Mapping[int, list[int]], profile: Profile
+) -> list[LinkMarker]:
+    """The markers, each pin's first one with the box that holds all its mates."""
+    stand = list(markers)
+    for lead, rest in mates.items():
+        one = markers[lead]
+        boxes = tuple(markers[i].box for i in (lead, *rest))
+        stand[lead] = replace(one, box=joined_box(boxes, one.at, profile, vertical=one.vertical))
+    return stand
+
+
+def _rows(
+    stand: Sequence[LinkMarker],
+    standing: Sequence[int],
+    runs: Mapping[Box, list[int]],
+    markers: tuple[LinkMarker, ...],
+    room: _Page,
+) -> dict[int, list[tuple[LinkMarker, Place]]]:
+    """Each standing marker's row; a run's first member has one place with every member's stub."""
+    rows = {index: _row(stand[index], room) for index in standing}
+    for run in runs.values():
+        stubs = tuple(box for i in run for box in stub_boxes(markers[i]))
+        lead = markers[run[0]]
+        rows[run[0]] = [(lead, Place(box=lead.box, stub=stubs))]
+    return rows
+
+
+def _texts(
+    stand: Sequence[LinkMarker],
+    standing: Sequence[int],
+    rows: Mapping[int, list[tuple[LinkMarker, Place]]],
+    owner: Mapping[Id[Any], Id[Any]],
+) -> tuple[TextToPlace, ...]:
+    """The placer's text for each standing marker, its places the row's."""
+    return tuple(
+        TextToPlace(
+            kind=TextKind.STUB if stand[index].star == "off" else TextKind.REFERENCE,
+            handle=stand[index].port,
+            slot=f"{index:06d}",
+            position=stand[index].at,
+            width=stand[index].box.width,
+            height=stand[index].box.height,
+            anchors=(),
+            own=(owner[stand[index].port],) if stand[index].port in owner else (),
+            places=tuple(place for _, place in rows[index]),
+            rank=0 if len(rows[index]) == 1 or rows[index][0][0].turn is not None else 1,  # S20
+        )
+        for index in standing
+    )
+
+
+def _written(
+    done: Sequence[Any],
+    rows: Mapping[int, list[tuple[LinkMarker, Place]]],
+    markers: tuple[LinkMarker, ...],
+    mates: Mapping[int, list[int]],
+) -> dict[int, LinkMarker]:
+    """The record each placed text writes, and its mates' records sharing its box."""
+    found: dict[int, LinkMarker] = {}
+    for one in done:
+        index = int(one.slot)
+        found[index] = row = rows[index][one.index][0]
+        for mate in mates.get(index, ()):
+            found[mate] = replace(
+                markers[mate],
+                box=row.box,
+                stub_extra=row.stub_extra,
+                turn=row.turn,
+                shared_box=True,
+                lead=False,
+            )
+    return found
 
 
 def _pin_mates(
@@ -179,19 +237,6 @@ def _turns(marker: LinkMarker, room: _Page) -> bool:
     # a terminal's off stub stands at its free symbol port, which `wired_at` (by model port) holds
     kind = star_turns(marker.star, terminal=room.owner.get(marker.port) in room.terminals)
     return kind and (marker.drawing_set, marker.page, at.x, at.y) in room.wired_at
-
-
-def _marker_ranks(rows: Mapping[int, list[tuple[LinkMarker, Place]]]) -> dict[int, int]:
-    """S20: a marker's call rank, 0 with one place, 1 otherwise, so movable texts see fixed ones."""
-    return {
-        index: 0 if len(row) == 1 or row[0][0].turn is not None else 1
-        for index, row in rows.items()
-    }
-
-
-def marker_shapes(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
-    """Each marker's box and the boxes its stub takes: what every later text call holds (S20)."""
-    return tuple(box for marker in markers for box in (marker.box, *stub_boxes(marker)))
 
 
 def stub_boxes(marker: LinkMarker) -> tuple[Box, ...]:

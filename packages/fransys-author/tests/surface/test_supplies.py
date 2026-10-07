@@ -1,11 +1,11 @@
 """EA6: `ac_supply` and `dc_supply` write what the same calls by hand write, and fail by name."""
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
 from fransys_author import AuthorError
-from fransys_author.surface import design
+from fransys_author.surface import Design, Device, design, unit
 from fransys_author.surface._pairing import End
 
 from fransys_model.kernel import make_id
@@ -19,13 +19,12 @@ from fransys_model.vocab import (
     PartCategory,
     SupplySystem,
 )
+from fransys_model.vocab import Unit as ModelUnit
 
 from ..conftest import _ORIGIN, _function, _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
 from ..equivalence.series_parts import MINUS, PLUS, _pin, series_library  # noqa: TID252 -- same
 
 if TYPE_CHECKING:
-    from fransys_author.surface import Design
-
     from fransys_model.kernel import Draft
 
 M = ConductorMark.M
@@ -63,6 +62,17 @@ def lib() -> Draft:
     return draft
 
 
+class _Io(NamedTuple):
+    G1: Device
+
+
+@unit("demo-psu-board", revision=1, interface_version=1, date="d", text="t", by="XX")
+def _psu_board(d: Design) -> _Io:
+    g1 = d.device("G1", "TEST-PSU-24V", interface=True)
+    d.dc_supply("psu", g1)
+    return _Io(g1)
+
+
 def _records(d: Design, cls: type) -> list:
     return [r for r in d.draft().records() if isinstance(r, cls)]
 
@@ -82,6 +92,7 @@ def test_ac_supply_equals_the_same_calls_by_hand(lib: Draft) -> None:
             "N": ("0", None),
         },
         earthing="it",
+        pins=hand_pins,
     )
     for rail, pin in zip(("L1", "L2", "L3", "N"), hand_pins, strict=True):
         hand._engine.net(rail, pin, cls="power", potential=rail)
@@ -154,6 +165,7 @@ def test_dc_supply_equals_the_same_calls_by_hand(lib: Draft) -> None:
         current="dc",
         rails={"24V": (Decimal(24), None), "0V": ("0", None)},
         earthing="it",
+        pins=[h1.out["+"], h1.out["-"]],
     )
     hand._engine.net("24V", h1.out["+"], cls="power", potential="24V")
     hand._engine.net("0V", h1.out["-"], cls="power", potential="0V")
@@ -264,3 +276,53 @@ def test_ac_names_of_the_wrong_length_raise_with_the_expected_count(lib: Draft) 
         d.ac_supply("b", "230", pin, pin, pin, names=("A", "B", "C", "D"))
     with pytest.raises(AuthorError, match=r"expected 2"):
         d.ac_supply("c", "230", pin, n=pin, names=("A",))
+
+
+def test_an_explicit_mid_equal_to_a_plus_or_minus_pin_is_kept(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    g1 = d.device("G1", "PSU-MID")
+    dc = d.dc_supply("psu", g1, mid=g1["C"])
+    assert (dc.plus.pin.name, dc.mid.pin.name) == ("C", "C")
+
+
+def test_supply_pins_are_the_rail_pins_sorted_by_id(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    pins = [d.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(4)]
+    d.ac_supply("mains", "400", *reversed(pins[:3]), n=pins[3])
+    (system,) = _records(d, SupplySystem)
+    assert system.pins == tuple(sorted(pin.id for pin in pins))
+    assert system.unit is None
+    assert len(system.pins) == 4
+
+
+def test_dc_supply_pins_are_its_plus_and_minus(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    dc = d.dc_supply("psu", d.device("G1", "TEST-PSU-24V"))
+    (system,) = _records(d, SupplySystem)
+    assert system.pins == tuple(sorted((dc.plus.pin.id, dc.minus.pin.id)))
+
+
+def test_a_supply_inside_a_unit_scope_carries_the_unit(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    d.add(_psu_board, "U1")
+    (system,) = _records(d, SupplySystem)
+    (unit_record,) = _records(d, ModelUnit)
+    assert system.unit == unit_record.id
+    assert len(system.pins) == 2
+
+
+def test_a_bare_engine_supply_has_no_pins_and_no_unit(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    d._engine.supply("bare", current="dc", rails={"24V": ("24", None)})
+    (system,) = _records(d, SupplySystem)
+    assert (system.pins, system.unit) == ((), None)
+
+
+def test_the_same_supply_declared_twice_with_other_pins_still_conflicts(lib: Draft) -> None:
+    d = design(lib, place="C1")
+    a, b = (d.device(f"A{i}", "TEST-PSU-24V").out["+"] for i in range(2))
+    rails = {"24V": ("24", None)}
+    d._engine.supply("s", current="dc", rails=rails, pins=[a])
+    d._engine.supply("s", current="dc", rails=rails, pins=[a])
+    with pytest.raises(AuthorError, match="supply"):
+        d._engine.supply("s", current="dc", rails=rails, pins=[b])

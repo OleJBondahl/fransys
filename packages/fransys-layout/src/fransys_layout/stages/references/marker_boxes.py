@@ -7,23 +7,32 @@ at its port through the text placer's one anchoring rule.
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Facing, text_width
-from fransys_model.derive.drawing_text import row_letter
+from fransys_model.derive.drawing_text import position_text, row_letter
 
-from .digits import FLOOR
+from .digits import FLOOR, Digits
 
 if TYPE_CHECKING:
     from fransys_layout.stages.types import Profile, SheetFormat
 
 
-def reference_box_width(
-    sheet: SheetFormat, profile: Profile, *, digits: tuple[int, int] = FLOOR
-) -> int:
+def reference_texts(sheet: SheetFormat, digits: Digits) -> tuple[str, ...]:
+    """The widest `#n-<position>` of each form derive's `position_text` prints at `digits`."""
+    column, row = sheet.frame_columns, row_letter(sheet.frame_rows - 1)
+    page = int("9" * digits.sheets)
+    forms = [position_text(page, column, row, (), own_page=1)]
+    if digits.other_sets:
+        other = int("9" * digits.other_sets)
+        forms.append(position_text(page, column, row, (), other))
+        forms.append(position_text(page, column, row, digits.prefix, other))
+    return tuple(f"#{'9' * digits.refs}-{form}" for form in forms)
+
+
+def reference_box_width(sheet: SheetFormat, profile: Profile, *, digits: Digits = FLOOR) -> int:
     """LD3 (c), S4: the fixed reference/star box width, one per drawing set and sheet format."""
-    refs, sheets = digits
-    widest_column = str(sheet.frame_columns)
-    widest_row = row_letter(sheet.frame_rows - 1)
-    widest = f"#{'9' * refs}-p{'9' * sheets}:{widest_column}{widest_row}"
-    return text_width(widest, height=profile.text_height) + (2 * profile.marker_padding)
+    widest = max(
+        text_width(text, height=profile.text_height) for text in reference_texts(sheet, digits)
+    )
+    return widest + (2 * profile.marker_padding)
 
 
 def reference_size(
@@ -31,7 +40,7 @@ def reference_size(
     profile: Profile,
     *,
     lines: int = 1,
-    digits: tuple[int, int] = FLOOR,
+    digits: Digits = FLOOR,
 ) -> tuple[int, int]:
     """LD3 (c): a reference's `(width, height)`, `lines` lines tall at its set's fixed width."""
     height = lines * profile.text_height + 2 * profile.marker_padding

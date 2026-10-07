@@ -11,15 +11,16 @@ from dataclasses import dataclass, replace
 from itertools import combinations, pairwise
 from operator import itemgetter
 from typing import TYPE_CHECKING
-lazy from collections.abc import Sequence
 
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages import LinkCase
-from fransys_layout.stages._routing import axes_of, clean_crossing
+from fransys_layout.stages.grid_path import axes_of, clean_crossing
 from fransys_layout.stages.slices import by_key, page_of
-from fransys_model.kernel import Finding, Severity, UnionFind
+from fransys_model.kernel import Finding, Severity
 
 from ._cuts import conductor_cut, group_cuts, unpaired
+from ._group_joins import cut_gaps, page_joins
+from ._group_joins import identity as _identity
 from ._ports import locate
 from .codes import (
     CONNECTION_DRAWN_TWICE,
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
         NetGroup,
         Route,
     )
-    from fransys_layout.stages._routing import Cell
+    from fransys_layout.stages.grid_path import Cell
 
     from ._cuts import Cut
     from ._ports import Page, Ports
@@ -135,11 +136,6 @@ def _claimed_net(
 
 def _error(code: str, subjects: tuple[Handle, ...], message: str) -> Finding:
     return Finding(code=code, severity=Severity.ERROR, subjects=subjects, message=message)
-
-
-def _identity(route: Route) -> Identity:
-    """What a finding about a route names: its `(connection, a, b)`."""
-    return route.connection, route.a, route.b
 
 
 def _lands(world: _World, port: Handle, page: Page, point: Point) -> bool:
@@ -277,50 +273,15 @@ def _twice(subjects: tuple[Handle, ...]) -> Finding:
     return _error(CONNECTION_DRAWN_TWICE, subjects, "a connection is drawn more than once")
 
 
-def _joined(
-    page: Page,
-    on_page: Sequence[Handle],
-    by_page: Mapping[Page, list[Route]],
-) -> tuple[UnionFind[Handle], set[Identity]]:
-    """The components the edges of a net group make of `on_page`, and the surplus edges."""
-    joined: UnionFind[Handle] = UnionFind()
-    surplus: set[Identity] = set()
-    for route in sorted(by_page.get(page, ()), key=_identity):
-        if not joined.union(route.a, route.b):
-            surplus.add(_identity(route))
-    for other, routes in by_page.items():
-        for route in routes if other != page else ():
-            if route.a in on_page and route.b in on_page:
-                joined.union(route.a, route.b)
-    return joined, surplus
-
-
 def _groups(world: _World) -> list[Finding]:
     """`CONNECTION_NOT_DRAWN` and `CONNECTION_DRAWN_TWICE` for the net groups."""
     findings = []
     for group in world.net_groups:
-        cuts = group_cuts(group, world.ports)
-        by_page = world.edges.get(group.net, {})
-        pages = {page for ref in group.ports for page in world.ports.pages.get(ref.function, ())}
-        drawn_twice = {
-            identity
-            for identity, count in Counter(
-                _identity(route) for routes in by_page.values() for route in routes
-            ).items()
-            if count > 1
-        }
-        missing = False
-        for page in sorted(pages):
-            on_page = [ref.port for ref in group.ports if (ref.port, page) in world.ports.at]
-            joined, surplus = _joined(page, on_page, by_page)
-            drawn_twice |= surplus
-            missing |= len({joined.find(port) for port in on_page}) > 1
-        findings.extend(_twice(identity) for identity in sorted(drawn_twice))
-        for identity, count in Counter((cut.connection, cut.a, cut.b) for cut in cuts).items():
-            missing |= world.decisions[identity] < count
-            if world.decisions[identity] > count:
-                findings.append(_twice(identity))
-        if missing:
+        twice, missing = page_joins(group, world.ports, world.edges.get(group.net, {}))
+        findings.extend(_twice(one) for one in sorted(twice))
+        cuts_missing, extra = cut_gaps(group_cuts(group, world.ports), world.decisions)
+        findings.extend(_twice(one) for one in extra)
+        if missing or cuts_missing:
             findings.append(_not_drawn((group.net,)))
     return findings
 

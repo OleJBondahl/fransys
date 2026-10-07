@@ -740,3 +740,29 @@ def test_a_unit_name_subject_document_is_still_named_by_its_own_release(tmp_path
 
     assert "demo-unit-v1.1.pdf" in names
     assert "cabinet.pdf" not in names
+
+
+# -- EXPORT-NAMES (root 0117): `fr.export_names` is the naming rule `fr.write` uses -------------
+
+
+def test_write_paths_are_out_dir_joined_with_export_names_for_the_whole_build(worked, tmp_path):
+    result, _cabinet, _board = worked
+    names = fr.export_names(result)
+    assert fr.write(result, tmp_path) == tuple(sorted(tmp_path / name for name in names.values()))
+    assert names[("bom", None)] == "P-1001-v1.1-bom.csv"
+    assert {kind for kind, _subject in names} >= {"bom", "terminals", "pdf", "overview", "cables"}
+
+
+def test_write_paths_are_out_dir_joined_with_export_names_for_a_unit(worked, tmp_path):
+    result, cabinet, _board = worked
+    names = fr.export_names(result, unit=cabinet)
+    assert fr.write(result, tmp_path, unit=cabinet) == tuple(
+        sorted(tmp_path / name for name in names.values())
+    )
+    assert ("overview", None) not in names
+
+
+def test_export_names_refuses_a_bad_unit_like_write(worked):
+    result, _cabinet, _board = worked
+    with pytest.raises(ValueError, match="no-such-unit"):
+        fr.export_names(result, unit="no-such-unit")

@@ -50,6 +50,19 @@ class Role(Enum):
     SIGNAL = "signal"
 
 
+@register_enum
+class Home(Enum):
+    """Where a function's home is, as a cell or a spec states it (layout-0129).
+
+    `HERE`: the cell stands at its function's home. `MOVED`: the home moved to the pin it serves.
+    `ELSEWHERE`: drawn away from its home, a replica; on a spec, a home that is not drawn.
+    """
+
+    HERE = "here"
+    MOVED = "moved"
+    ELSEWHERE = "elsewhere"
+
+
 ROLE_ORDER: tuple[Role, ...] = (Role.POWER, Role.CONTROL, Role.SIGNAL)
 
 
@@ -152,6 +165,7 @@ class PortSpec:
     strip_side: str | None = None  # a terminal port's `PortRole` value, internal or external
     group: int = 0  # V1: the side order of the port's function in its item box, 0 outside one
     channel: bool = False  # V5: a PLC channel's pin, of a box that also holds other functions
+    stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
 
 
 @value
@@ -216,7 +230,7 @@ class FunctionSpec:
     item_parent: Id[Any] | None = None
     rest: str | None = None  # layout-0105: `link_state` of the first switched link
     protection_type: str | None = None  # layout-0105: a protection's type value
-    rail: bool = False  # layout-0120: a unit-boundary rail terminal, drawn only as a replica
+    home: Home = Home.HERE  # layout-0120: ELSEWHERE for a unit-boundary rail terminal (replicas)
 
     def __post_init__(self) -> None:
         """Sort `ports` by name and `pole_pairs` by index; the paths keep their order."""
@@ -237,6 +251,7 @@ class DrawnPort:
     ac: bool = False  # V11: the pin's supply current is AC
     group: int = 0  # V1: its function's side order in an item box, kept whole on a box side
     channel: bool = False  # V5: a PLC channel's pin
+    stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
 
 
 @value
@@ -272,6 +287,11 @@ class DrawnFunction:
     reach: tuple[Reach, ...] = ()  # V5: the room each box pin's attached contact needs
     fed_by: tuple[BoxFeed, ...] = ()  # layout-0107: the feeders whose pins stand over this box's
     feeds: Id[Any] | None = None  # layout-0107: the box this one stands over, pin over pin
+
+    @property
+    def stand(self) -> int:
+        """layout-0132: the width in G of the widest power symbol and text standing at a pin."""
+        return max((p.stand for p in self.ports), default=0)
 
     def __post_init__(self) -> None:
         """Sort `ports` by model port handle."""
@@ -392,8 +412,7 @@ class Cell:
     host: Id[Any] | None = None  # R7.1: an attachment's host function in this column
     port: str = ""  # R7.1: the host's symbol port the attachment sits at
     face: bool = False  # R7 A: the lower pin of a mated pair, face to face with host
-    replica: bool = False  # R7 B8: a replica terminal attached in another group's column
-    moved: bool = False  # D4 V5: a contact or coil whose home moved to the pin it serves
+    home: Home = Home.HERE  # layout-0129: ELSEWHERE a replica (R7 B8), MOVED a V5 home at its pin
     span_port: str = ""  # C12: the symbol port that sits under this cell's lane
 
 
@@ -423,6 +442,11 @@ class Column:
     def __post_init__(self) -> None:
         """Sort `cells` by row, then lane."""
         _sort(self, cells=lambda cell: (cell.index, cell.lane))
+
+    @property
+    def away(self) -> bool:
+        """Every cell is drawn away from its home: a replica column (layout-0129)."""
+        return all(cell.home is Home.ELSEWHERE for cell in self.cells)
 
     @property
     def drawing_set_key(self) -> tuple[Id[Any] | None, Id[Any] | None]:

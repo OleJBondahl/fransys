@@ -14,6 +14,7 @@ from fransys_model.vocab.validators.units import (
     BOUNDARY_KIND,
     BOUNDARY_NOT_IN_UNIT,
     BOUNDARY_UNCONNECTED,
+    MATE_NOT_CONNECTOR,
     MATE_PORT_MISMATCH,
     UNIT_BOUNDARY_BYPASSED,
     UNIT_CONNECTOR_DANGLING,
@@ -230,6 +231,44 @@ def test_can_fail_mate_port_mismatch_4_to_4_twin_reports_nothing() -> None:
     model = plant.model()
     assert mate in mates(model)
     assert [f for f in check_units(model) if f.code == MATE_PORT_MISMATCH] == []
+
+
+# ---- MATE_NOT_CONNECTOR -----------------------------------------------------------------------
+
+
+def _mate_of_kinds(plant: Plant, kind_a: FunctionKind, kind_b: FunctionKind) -> tuple:
+    fn_a = plant.function(plant.item("end-a"), "a", kind=kind_a)
+    fn_b = plant.function(plant.item("end-b"), "b", kind=kind_b)
+    for fn in (fn_a, fn_b):
+        plant.port(fn, "1")
+    return plant.mate(fn_a, fn_b), fn_a, fn_b
+
+
+def test_mate_not_connector_names_the_coil_end_of_a_plug_to_coil_mate() -> None:
+    """A connector mated to a coil: one ERROR, subjects the mate and the coil function."""
+    plant = Plant()
+    mate, _plug, coil = _mate_of_kinds(plant, FunctionKind.CONNECTOR, FunctionKind.COIL)
+    model = plant.model()
+    findings = [f for f in check_units(model) if f.code == MATE_NOT_CONNECTOR]
+    assert [f.severity for f in findings] == [Severity.ERROR]
+    assert set(findings[0].subjects) == {mate, coil}
+
+
+def test_can_fail_mate_not_connector_connector_and_terminal_twin_reports_nothing() -> None:
+    """Twin: a connector mated to a terminal is a valid mate."""
+    plant = Plant()
+    mate, _a, _b = _mate_of_kinds(plant, FunctionKind.CONNECTOR, FunctionKind.TERMINAL)
+    model = plant.model()
+    assert mate in mates(model)
+    assert [f for f in check_units(model) if f.code == MATE_NOT_CONNECTOR] == []
+
+
+def test_mate_not_connector_reports_each_offending_end() -> None:
+    """Two non-connector ends give two findings."""
+    plant = Plant()
+    _mate, _a, _b = _mate_of_kinds(plant, FunctionKind.COIL, FunctionKind.COIL)
+    findings = [f for f in check_units(plant.model()) if f.code == MATE_NOT_CONNECTOR]
+    assert len(findings) == 2
 
 
 # ---- UNUSED_CONTRADICTED ---------------------------------------------------------------------

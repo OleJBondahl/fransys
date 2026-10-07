@@ -13,7 +13,7 @@ from samples import PROFILE, SHEET, column, drawn, hid
 from fransys_layout.geometry import generic_box_geometry
 from fransys_layout.geometry.symbols import channel_pitch
 from fransys_layout.stages.far_ends import FarInputs, group_map, move_far_ends, sheet_fits
-from fransys_layout.stages.types import Cell, Connection, PortRef, Role
+from fransys_layout.stages.types import Cell, Connection, Home, PortRef, Role
 
 if TYPE_CHECKING:
     from fransys_layout.stages.types import Column, DrawnFunction, FunctionSpec
@@ -41,7 +41,7 @@ def _moved(number: int, index: int, host: int, port: str) -> Cell:
         index=index,
         host=hid("function", host),
         port=port,
-        moved=True,
+        home=Home.MOVED,
     )
 
 
@@ -71,15 +71,14 @@ def _pair(
 def test_a_contact_wired_to_a_pin_in_another_group_moves_its_home_there() -> None:
     """Contact 5 hangs on the `out` (S) pin of function 1: a home cell below it, own column gone."""
     # UNDO: stages/far_ends.py:_far_host, the group/drawing-set test `==` -> `!=` (inverted)
-    # UNDO: stages/far_ends.py:_moved_cells, `moved=True` -> `moved=False`
+    # UNDO: stages/far_ends.py:_moved_cells, `home=Home.MOVED` -> `home=Home.HERE`
     drawn_functions, columns = _pair()
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
 
     result = _run(drawn_functions, wires, columns)
 
     assert result == (replace(columns[0], cells=(_cell(1, 0), _moved(5, 1, 1, "out"))),)
-    assert result[0].cells[1].moved
-    assert not result[0].cells[1].replica
+    assert result[0].cells[1].home is Home.MOVED
 
 
 def test_a_contact_wired_to_a_pin_in_its_own_group_stays_home() -> None:
@@ -149,8 +148,8 @@ def test_sheet_fits_counts_the_rows_at_row_spacing_against_the_sheet_less_headro
     two = replace(two, cells=(_cell(1, 0), _cell(5, 1)))
     drawn_functions = (drawn(1), drawn(5))
 
-    assert sheet_fits(drawn_functions, PROFILE, replace(SHEET, content_height=200))(two)
-    assert not sheet_fits(drawn_functions, PROFILE, replace(SHEET, content_height=199))(two)
+    assert sheet_fits(drawn_functions, PROFILE, replace(SHEET, content_height=200), 4)(two)
+    assert not sheet_fits(drawn_functions, PROFILE, replace(SHEET, content_height=199), 4)(two)
 
 
 def test_a_contact_in_a_bundle_column_moves_alone_and_the_rest_closes_up() -> None:
@@ -208,9 +207,9 @@ def test_a_box_whose_contacts_cannot_stand_a_channel_pitch_apart_on_a_page_does_
     need = 19 * channel_pitch() + contact.geometry.keepout.width
     wide = replace(SHEET, content_width=need)
 
-    assert sheet_fits((box, contact, last), PROFILE, wide)(stacked)
+    assert sheet_fits((box, contact, last), PROFILE, wide, 4)(stacked)
     narrow = replace(wide, content_width=need - 1)
-    assert not sheet_fits((box, contact, last), PROFILE, narrow)(stacked)
+    assert not sheet_fits((box, contact, last), PROFILE, narrow, 4)(stacked)
 
 
 def _star(
@@ -249,7 +248,7 @@ def test_a_terminal_wired_inside_its_own_group_stands_at_its_first_pin_outside_i
         replace(columns[1], cells=(_moved(1, 0, 3, "in"), _cell(3, 1))),
         columns[2],
     )
-    assert not result[1].cells[0].replica
+    assert result[1].cells[0].home is not Home.ELSEWHERE
 
 
 def test_a_terminal_with_a_pin_in_another_group_stays_home() -> None:

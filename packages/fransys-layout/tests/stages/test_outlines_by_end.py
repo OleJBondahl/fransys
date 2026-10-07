@@ -29,6 +29,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 from fransys_layout.geometry import Box, Facing, Point
+from fransys_layout.stages import Home
 from fransys_layout.stages.outlines import OutlineInputs, _by_end, unit_outlines
 
 if TYPE_CHECKING:
@@ -54,7 +55,9 @@ def _one(
 
 def _face(column: str, end: str) -> SimpleNamespace:
     """A column holding the face replica `f-<column>` of a mate at `end`."""
-    cell = SimpleNamespace(function=f"f-{column}", face=True, replica=True, flip=end == _BOTTOM)
+    cell = SimpleNamespace(
+        function=f"f-{column}", face=True, home=Home.ELSEWHERE, flip=end == _BOTTOM
+    )
     return SimpleNamespace(key=column, cells=(cell,))
 
 
@@ -149,7 +152,7 @@ def test_a_member_that_is_no_face_takes_the_end_of_the_faces_of_its_column() -> 
 def _plain(column: str, *functions: str) -> SimpleNamespace:
     """A column of cells that are no mate: `functions` in row order, the cell's `index` its row."""
     cells = tuple(
-        SimpleNamespace(function=name, index=index, face=False, replica=False, flip=False)
+        SimpleNamespace(function=name, index=index, face=False, home=Home.HERE, flip=False)
         for index, name in enumerate(functions)
     )
     return SimpleNamespace(key=column, cells=cells)

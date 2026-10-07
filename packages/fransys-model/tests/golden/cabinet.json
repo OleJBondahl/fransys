@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 8,
+  "schema_version": 9,
   "tables": {
     "aspect_node": [
       {
@@ -5103,11 +5103,14 @@
         "current": "ac",
         "earthing": "earthed",
         "ext": {},
+        "fault_current_a": null,
+        "fault_time_constant_ms": null,
         "id": "supply_system:2409e77f9e7450828229854bd34aba1e",
         "key": [
           "400V"
         ],
         "name": "400V",
+        "pins": [],
         "rails": {
           "L1": {
             "max_v": "230",
@@ -5121,17 +5124,21 @@
             "max_v": "230",
             "phase": 240
           }
-        }
+        },
+        "unit": null
       },
       {
         "current": "dc",
         "earthing": "earthed",
         "ext": {},
+        "fault_current_a": null,
+        "fault_time_constant_ms": null,
         "id": "supply_system:82cf3f4b59a7591a8fdddf4ce522a058",
         "key": [
           "24V"
         ],
         "name": "24V",
+        "pins": [],
         "rails": {
           "+24V": {
             "max_v": "24",
@@ -5145,7 +5152,8 @@
             "max_v": "0",
             "phase": null
           }
-        }
+        },
+        "unit": null
       }
     ]
   }

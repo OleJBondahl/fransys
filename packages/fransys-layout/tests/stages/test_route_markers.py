@@ -7,7 +7,7 @@ outward lane also frees a marker's box, and only along that one port's own lane.
 
 PART A3's two tests exercise `route._own_ends`, `route.py`'s private per-edge lookup of the
 edge's own ends, and `Space.obstacles`, the same pattern `test_route.py` already uses for
-`_routing.shortest_path`; each
+`grid_path.grid_path`; each
 still resolves its box's owner through the real `_owner_of`, so a break in `_marker_owner`'s
 mapping fails them too, but `Space.obstacles`'s lane arithmetic (pre-existing WP13 code) is what
 they are really pinned on. The end-to-end registration path -- `route(markers=...)` actually

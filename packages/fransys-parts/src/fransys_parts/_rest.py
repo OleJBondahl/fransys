@@ -43,23 +43,43 @@ def check_rest(entry: _toml.Table, path: str, line: int) -> list[Finding]:
     """The four rest-state lints of one function entry."""
     kind = entry.get("kind")
     links = _switched(entry)
+    findings = [
+        *_check_unswitched(entry, path, line),
+        *_check_switched(kind, links, path, line),
+    ]
+    if kind in _CONTACTS and not links:
+        text = f"a {kind} function has no switched link"
+        findings.append(_toml.finding("CONTACT_WITHOUT_SWITCHED_LINK", path, line, text))
+    return [*findings, *_check_symbol(entry, kind, links, path, line)]
+
+
+def _check_unswitched(entry: _toml.Table, path: str, line: int) -> list[Finding]:
+    return [
+        _toml.finding(
+            "REST_ON_UNSWITCHED_LINK",
+            path,
+            line,
+            f"{_link_text(link)} declares rest but is not switched",
+        )
+        for link in _unswitched(entry)
+        if link.get("rest") is not None
+    ]
+
+
+def _check_switched(
+    kind: object, links: list[dict[str, object]], path: str, line: int
+) -> list[Finding]:
     findings = []
-    for link in _unswitched(entry):
-        if link.get("rest") is not None:
-            text = f"{_link_text(link)} declares rest but is not switched"
-            findings.append(_toml.finding("REST_ON_UNSWITCHED_LINK", path, line, text))
+    implied = _IMPLIED.get(str(kind))
     for link in links:
         rest = link.get("rest")
         if kind in _DECLARES and rest is None:
             text = f"switched {_link_text(link)} of a {kind} function declares no rest state"
             findings.append(_toml.finding("SWITCHED_LINK_WITHOUT_REST", path, line, text))
-        if kind in _IMPLIED and rest in ("open", "closed") and rest != _IMPLIED[kind]:
-            text = f"{_link_text(link)} is rest {rest!r} but a {kind} contact is {_IMPLIED[kind]!r}"
+        if implied and rest in ("open", "closed") and rest != implied:
+            text = f"{_link_text(link)} is rest {rest!r} but a {kind} contact is {implied!r}"
             findings.append(_toml.finding("REST_DISAGREES_WITH_KIND", path, line, text))
-    if kind in _CONTACTS and not links:
-        text = f"a {kind} function has no switched link"
-        findings.append(_toml.finding("CONTACT_WITHOUT_SWITCHED_LINK", path, line, text))
-    return [*findings, *_check_symbol(entry, kind, links, path, line)]
+    return findings
 
 
 def _check_symbol(

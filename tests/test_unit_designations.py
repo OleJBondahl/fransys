@@ -13,7 +13,7 @@ tests below fail.
 import importlib.util
 from pathlib import Path
 
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import unit_release
 from fransys_model.derive.drawing_text import label_text
@@ -111,7 +111,7 @@ def test_a_top_level_cables_end_plug_in_a_units_location_leaves_that_location_ow
     cable.core(1, p1["1"], p2["1"])
     cable.core(2, p1["2"], p2["2"])
     d.mate(p1, x1)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     (cabinet,) = units(model)
     assert "C1" in {aspect_nodes(model)[node].label for node in own_nodes(model, cabinet)}
 

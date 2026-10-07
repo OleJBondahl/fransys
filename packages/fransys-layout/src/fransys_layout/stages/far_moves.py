@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.stages.attach import _with_attached
 from fransys_layout.stages.slices import by_key
+from fransys_layout.stages.types import Home
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -74,7 +75,7 @@ def _moved_cells(host: Column, entries: Sequence[_Entry]) -> Column:
     return replace(
         attached,
         cells=tuple(
-            replace(cell, replica=False, moved=True) if cell.function in moving else cell
+            replace(cell, home=Home.MOVED) if cell.function in moving else cell
             for cell in attached.cells
         ),
     )

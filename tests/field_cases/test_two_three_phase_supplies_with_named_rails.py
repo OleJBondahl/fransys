@@ -14,7 +14,7 @@ and phase checks are unchanged.
 
 import fransys as fr
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BK
 from fransys_author import AuthorError
 
@@ -41,7 +41,8 @@ def _design(names: tuple[str, ...]) -> fr.Design:
 
 def test_second_supply_prints_its_own_rail_names() -> None:
     """The model carries EL1, EL2 and EL3 as the second supply's rails and power nets, no ERROR."""
-    result = fr.build(_design(("EL1", "EL2", "EL3")), system_document())
+    d = _design(("EL1", "EL2", "EL3"))
+    result = fr.build(d, cabinet_document(d.location("C1", "Cabinet")))
     assert not [f for f in result.findings if f.severity is fr.Severity.ERROR]
     rails = {s.name: set(s.rails) for s in supply_systems(result.model).values()}
     assert rails["IT230V"] == {"EL1", "EL2", "EL3"}

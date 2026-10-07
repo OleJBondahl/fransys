@@ -14,6 +14,7 @@ for a reason that has nothing to do with the layout itself. `produced_by` is unt
 render check reads it.
 """
 
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -29,6 +30,10 @@ if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
     from fransys_model.kernel import Record
+
+# --import-mode=importlib leaves the test directory off sys.path; tests import `_cable_build` by
+# name. Workspace rule: conftests append to sys.path, never insert(0).
+sys.path.append(str(Path(__file__).parent))
 
 _GOLDEN_DIR = (
     next(

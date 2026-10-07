@@ -1,8 +1,11 @@
 """Validator: supply names and potentials are model-wide (decision model-0075)."""
 
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel.encode import decimal_text
+from fransys_model.vocab.supply_sources import source_declarations
 from fransys_model.vocab.tables import supply_systems
 
 if TYPE_CHECKING:
@@ -13,6 +16,8 @@ if TYPE_CHECKING:
 
 SUPPLY_DIFFERS: Final[str] = "SUPPLY_DIFFERS"
 POTENTIAL_IN_TWO_SUPPLIES: Final[str] = "POTENTIAL_IN_TWO_SUPPLIES"
+_COMPARED: Final = ("current", "earthing")
+_FAULT_FIELDS: Final = ("fault_current_a", "fault_time_constant_ms")
 
 
 def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
@@ -32,17 +37,33 @@ def _rails_detail(members: list[SupplySystem]) -> str | None:
     return ", ".join(notes) if notes else None
 
 
-def _supply_differs(supplies: Iterable[SupplySystem]) -> list[Finding]:
+def _field_text(supply: SupplySystem, field: str) -> str:
+    """A compared field as text: an enum's value, a decimal's text, `"None"` when unset."""
+    value = getattr(supply, field)
+    if isinstance(value, Enum):
+        return str(value.value)
+    return "None" if value is None else decimal_text(value)
+
+
+def _differing(members: list[SupplySystem], fields: Iterable[str]) -> dict[str, str]:
+    """The compared `fields` whose values differ among `members`, each with its values as text."""
+    details: dict[str, str] = {}
+    for field in fields:
+        values = sorted({_field_text(supply, field) for supply in members})
+        if len(values) > 1:
+            details[field] = ", ".join(map(repr, values))
+    return details
+
+
+def _supply_differs(model: Model) -> list[Finding]:
     by_name: dict[str, list[SupplySystem]] = {}
-    for supply in supplies:
+    for supply in supply_systems(model).values():
         by_name.setdefault(supply.name, []).append(supply)
+    sources = source_declarations(model)
     found = []
     for name, members in by_name.items():
-        details: dict[str, str] = {}
-        for field in ("current", "earthing"):
-            values = sorted({getattr(supply, field).value for supply in members})
-            if len(values) > 1:
-                details[field] = ", ".join(map(repr, values))
+        details = _differing(members, _COMPARED)
+        details.update(_differing(list(sources[name]), _FAULT_FIELDS))
         rails = _rails_detail(members)
         if rails is not None:
             details["rails"] = rails
@@ -87,5 +108,5 @@ def check_supplies(model: Model) -> tuple[Finding, ...]:
     `earthing` and `rails` are one supply; a potential in two supplies is reported once.
     """
     supplies = tuple(supply_systems(model).values())
-    found = [*_supply_differs(supplies), *_potential_in_two_supplies(supplies)]
+    found = [*_supply_differs(model), *_potential_in_two_supplies(supplies)]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

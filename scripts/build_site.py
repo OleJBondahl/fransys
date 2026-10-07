@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -64,6 +65,42 @@ def stage_guide() -> list[tuple[str, str]]:
     shutil.copy2(guide / "AGENTS.md", SRC / "guide" / "AGENTS.md")
     entries.append(("For coding agents", "guide/AGENTS.md"))
     return entries
+
+
+def opening_paragraph(path: Path) -> str:
+    """The first paragraph after a page's `# title`, as one line."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    body = lines[next(i for i, line in enumerate(lines) if line.startswith("# ")) + 1 :]
+    paragraph: list[str] = []
+    for line in body:
+        if line.strip():
+            paragraph.append(line.strip())
+        elif paragraph:
+            break
+    return " ".join(paragraph)
+
+
+def llms_txt(entries: list[tuple[str, str]], site_url: str) -> str:
+    """The llmstxt.org file: title, a one-line summary, one line per page of `entries`."""
+    summary = opening_paragraph(SRC / entries[0][1]).split(". ")[0].rstrip(".") + "."
+    lines = ["# Fransys", "", f"> {summary}", "", "## Guide", ""]
+    for title, page in entries:
+        url = f"{site_url}{page.removesuffix('.md').removesuffix('index')}"
+        url += "" if url.endswith("/") else "/"
+        lines.append(f"- [{title}]({url}): {opening_paragraph(SRC / page)}")
+    return "\n".join(lines) + "\n"
+
+
+def stage_llms(guide: list[tuple[str, str]]) -> None:
+    """Write `llms.txt` at the site root from the guide pages already staged."""
+    config = (WEBSITE / "mkdocs.yml").read_text(encoding="utf-8")
+    site_url = re.search(r"^site_url:\s*(\S+)", config, re.MULTILINE)
+    if site_url is None:
+        msg = "site_url not found in website/mkdocs.yml"
+        raise SystemExit(msg)
+    (SRC / "llms.txt").write_text(
+        llms_txt(guide, site_url.group(1).rstrip("/") + "/"), encoding="utf-8"
+    )
 
 
 def stage_api() -> list[tuple[str, str]]:
@@ -137,6 +174,7 @@ def stage(examples: Path) -> None:
     SRC.mkdir(parents=True)
     stage_home()
     guide = stage_guide()
+    stage_llms(guide)
     (SRC / "contracts").mkdir()
     shutil.copy2(ROOT / "docs" / "contracts" / "part-file.md", SRC / "contracts" / "part-file.md")
     gallery = site_gallery.build_gallery(examples, SRC, SNIPPETS)

@@ -18,13 +18,15 @@ reader classes, decision 0050) plus one concrete file:line where that class appl
     DICT    read as `vars(cls)[...]`/`vars(cls).get(...)` dict access rather than literal
             attribute syntax.
     OTHER   read by literal `obj.attr`/call syntax from another workspace package's `src/`.
+            It is proven used there, so the ceiling does not count an OTHER entry whose cited
+            file is in a different package from every package defining the name (decision 0115).
     TESTS   read only from the defining package's own `tests/` (or, for the author DSL, also
             the consumer guide/README/examples -- a fluent builder returns `self`/a handle, so
             nothing inside the package's own `src/` ever calls its own methods).
 
 `tests/test_vulture_whitelist.py` holds every entry to these two mechanical checks: still
 defined somewhere under `packages/*/src`, and the line matches the `# CLASS path:line` shape;
-plus a shrink-only ceiling on the entry count.
+plus a shrink-only ceiling on the entries that count (decision 0115).
 """
 
 
@@ -46,7 +48,7 @@ _ = _Whitelist()
 # kernel/diff.py, vocab/document.py, vocab/facets/supply.py, vocab/project.py, vocab/ratings.py,
 # vocab/revision.py: fields read by literal `obj.attr` syntax from another workspace package's
 # `src/` (OTHER), through `derive.rows.column_rows`'s generic `getattr(record, name)` on a
-# `*_COLUMNS` tuple (DICT, `derive/rows.py:765`), or -- for a field with neither, still a real
+# `*_COLUMNS` tuple (DICT, `derive/columns.py`), or -- for a field with neither, still a real
 # `@record`/`@value` field read generically via `dataclasses.fields()` for hashing, freezing and
 # canonical JSON (FIELDS, `kernel/schema.py:37`, sufficient alone) -- never within
 # fransys-model/src itself.
@@ -113,7 +115,6 @@ _.min_voltage_v  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.capacity_ah  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 # F8 (2026-10-02): data-only record fields, no reader yet (model-0125)
 _.nominal_power_w  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
-_.nominal_current_a  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.power_loss_w  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.resistance_ohm  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.checked  # OTHER fransys-pdf/src/fransys_pdf/_pages.py:66
@@ -199,10 +200,10 @@ _.SH  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
 
 # --- fransys-layout --------------------------------------------------------------------
 
-# engines/schematic/read/house.py DEFAULT_PROFILE, geometry/text_metrics.py FONT_NAME: read
+# engines/schematic/read/house.py DEFAULT_PROFILE, electrical_symbols/text_metrics FONT_NAME: read
 # only from fransys-layout's own tests, never from fransys_layout/src or another package.
 _.DEFAULT_PROFILE  # TESTS fransys-layout/tests/engines/test_defaults.py:68
-_.FONT_NAME  # TESTS fransys-layout/tests/geometry/test_text.py:36
+_.FONT_NAME  # TESTS electrical-symbols/tests/test_text.py:36
 
 # stages/types.py:221 KindRoles.contact_closed: KindRoles is a fransys_model `@value` class
 # (same FIELDS mechanism as the model section above), set by keyword in defaults.py's own
@@ -252,3 +253,19 @@ _.OVERLOAD  # TESTS fransys-parts/tests/test_lint_rest_protection.py:227
 _.RCD  # TESTS fransys-parts/tests/test_lint_rest_protection.py:228
 _.port_pairs  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/pairs.py:29
 _.limits  # TESTS fransys-author/tests/surface/test_coverage_facts.py:89
+
+# CT5-1C: stub_a and stub_b of layout/cable_results.py CoreWire; engines/cable/write writes
+# them, render draws a stub as the wire's own end segment. Vulture runs per package, so a
+# model field read only in layout or render stays here (CT5-2, layout-0141).
+_.stub_a  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
+_.stub_b  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
+# CT5-2: the cable drawing's fields and enum members, read by render's cable_blocks
+_.pitch  # OTHER fransys-render/src/fransys_render/cables.py:70
+_.text_x  # OTHER fransys-render/src/fransys_render/cables.py:109
+_.text_y  # OTHER fransys-render/src/fransys_render/cables.py:109
+_.TOP  # OTHER fransys-render/src/fransys_render/cables.py:62
+_.BOTTOM  # OTHER fransys-render/src/fransys_render/cables.py:62
+_.HARNESS  # OTHER fransys-render/src/fransys_render/cables.py:49
+_.SOLID  # OTHER fransys-render/src/fransys_render/cables.py:61
+_.DASHED  # OTHER fransys-render/src/fransys_render/cables.py:61
+_.BLANK  # OTHER fransys-render/src/fransys_render/cables.py:85

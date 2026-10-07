@@ -8,8 +8,10 @@ arguments. An identity argument that is not a record of that kind in the model r
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import (
+    DIGEST_CACHE_SIZE,
     Id,
     Model,
+    digest_cached,
     key_text,
     parent_chain,
 )
@@ -44,6 +46,13 @@ if TYPE_CHECKING:
     from .indexes import Indexes
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def strip_set(model: Model) -> frozenset[Id[Item]]:
+    """Every item that is the parent of a terminal: the one strip set."""
+    all_items = items(model)
+    return frozenset(p for t in terminal_items(model) if (p := all_items[t].parent) is not None)
+
+
 __all__ = [
     "cable_end_owner",
     "channel_devices",
@@ -61,6 +70,7 @@ __all__ = [
     "pin_order",
     "position_rank",
     "require",
+    "strip_set",
     "terminal_items",
     "unit_chain",
 ]

@@ -2,8 +2,9 @@
 
 import dataclasses
 from dataclasses import dataclass, field
+from functools import partial
 from itertools import pairwise
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
     WIRING_GRID,
@@ -21,9 +22,10 @@ from fransys_layout.geometry import (
 from fransys_model.kernel import Finding, Severity
 
 from . import lookups
+from ._band_align import _band_top, _cascade_bottom, _participants
 from ._bands import band_of
 from .host_offsets import _next_slot, attachment_offsets
-from .references.marker_boxes import reference_box_width
+from .references.marker_boxes import FLOOR, Digits, reference_box_width
 from .room import grow_keepout, room_offset
 from .stack_room import make_room
 from .stacking import JoinedRun, PageStack, StackedPort, blocks, gaps_below, join_offset
@@ -281,7 +283,8 @@ def _stack_page(
     # C14: the first rows leave room above for their texts (tags, point texts, markers on N
     # ports) and the last rows below, inside the content box
     lift, sink = _text_room(page, profile, drawn_of, texts)
-    band = _reference_band(sheet, profile)  # M4: every page keeps it, a reference or none
+    # M4: every page keeps it, a reference or none
+    band = _reference_band(sheet, profile, stacking.digits)
     lift, sink = max(lift, band), max(sink, band)
     # M9: two ports stacked along a stub stand as far apart as the texts at them reach out
     make_room(page, drawn_of, texts, gaps_of=gaps_of, profile=profile)
@@ -294,9 +297,9 @@ def _stack_page(
     return page, top, floor
 
 
-def _reference_band(sheet: SheetFormat, profile: Profile) -> int:
+def _reference_band(sheet: SheetFormat, profile: Profile, digits: Digits = FLOOR) -> int:
     """M4: the top and bottom band height, a turned reference plus stub clearance, on every page."""
-    return snap_up(WIRING_GRID + reference_box_width(sheet, profile))
+    return snap_up(WIRING_GRID + reference_box_width(sheet, profile, digits=digits))
 
 
 def _in_plan_order(plan: PagePlan, columns: tuple[Column, ...]) -> list[Column]:
@@ -652,42 +655,71 @@ def _align_bands(
     stacked: Mapping[tuple[int, int], int],
 ) -> None:
     """Align each band's participants, top band first, after spacing (R7 B7, A9, layout-0061)."""
-    participants = _participants(page)
+    found = _participants(page)
     aligned: dict[int, set[int]] = {}
-    for band in sorted(participants, key=lambda key: (ranks[key[0]], key[0], str(key[1]))):
+    blocks = partial(_blocks, page, gaps_of, aligned)
+    fits = partial(_fits, page, gaps_of, floor)
+    for band in sorted(found, key=lambda key: (ranks[key[0]], key[0], str(key[1]))):
         if band[0].endswith(".last"):
             continue
-        members, top = list(participants[band]), 0  # top is read only once the loop has run
-        while len(members) > 1:
-            need = max(stacked[m] for m in members)
-            tops = sorted(
-                t for t in (min(cell.top for cell in page[c][i]) for c, i in members) if t >= need
-            )
-            top = tops[0] if tops else need
-            blockers = [
-                m
-                for m in members
-                if _moves_an_aligned_row(
-                    page[m[0]], m[1], top, gaps_of(page[m[0]]), aligned.get(m[0], set())
-                )
-            ]
-            if blockers:
-                members.remove(max(blockers, key=lambda m: (stacked[m], m)))
-                continue
-            if all(_cascade_bottom(page[c], i, top, gaps_of(page[c])) <= floor for c, i in members):
-                break
-            # the participant that can rise least leaves the band (A9)
-            members.remove(max(members, key=lambda m: (stacked[m], m)))
+        top, members = _settle_band(page, found[band], stacked, blocks, fits)
         if len(members) < 2:  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
             continue
         for column, index in members:
-            rows = page[column]
-            current = min(cell.top for cell in rows[index])
-            if current > top:
-                _raise(rows, index, top, gaps_of(rows))
-            elif current < top:
-                _cascade(rows, index, top, gaps_of(rows))
+            _bring_to(page[column], index, top, gaps_of(page[column]))
             aligned.setdefault(column, set()).add(index)
+
+
+_Member = tuple[int, int]
+
+
+def _blocks(
+    page: Sequence[list[list[_Cell]]],
+    gaps_of: _GapsOf,
+    aligned: Mapping[int, set[int]],
+    member: _Member,
+    top: int,
+) -> bool:
+    """Whether bringing `member` to `top` would move a row some band already aligned."""
+    rows = page[member[0]]
+    return _moves_an_aligned_row(rows, member[1], top, gaps_of(rows), aligned.get(member[0], set()))
+
+
+def _fits(
+    page: Sequence[list[list[_Cell]]], gaps_of: _GapsOf, floor: int, member: _Member, top: int
+) -> bool:
+    """Whether lowering `member` to `top` keeps its column above `floor`."""
+    rows = page[member[0]]
+    return _cascade_bottom(rows, member[1], top, gaps_of(rows)) <= floor
+
+
+def _settle_band(
+    page: Sequence[list[list[_Cell]]],
+    members: Sequence[_Member],
+    stacked: Mapping[_Member, int],
+    blocks: Callable[[_Member, int], bool],
+    fits: Callable[[_Member, int], bool],
+) -> tuple[int, list[_Member]]:
+    """Drop participants until the rest share one top; return that top and who stays."""
+    top = 0
+    members = list(members)
+    while len(members) > 1:
+        top = _band_top(page, members, stacked)
+        blockers = [m for m in members if blocks(m, top)]
+        if not blockers and all(fits(m, top) for m in members):
+            break
+        # the participant that can rise least leaves the band (A9)
+        members.remove(max(blockers or members, key=lambda m: (stacked[m], m)))
+    return top, members
+
+
+def _bring_to(rows: Sequence[list[_Cell]], index: int, top: int, gaps: Sequence[int]) -> None:
+    """Move `rows[index]` to `top`: raise it from below, cascade it from above."""
+    current = min(cell.top for cell in rows[index])
+    if current > top:
+        _raise(rows, index, top, gaps)
+    elif current < top:
+        _cascade(rows, index, top, gaps)
 
 
 def _moves_an_aligned_row(
@@ -729,37 +761,6 @@ def _raise_plan(
         moves.append((index, excess))
         below = min(cell.top_at(cell.top - excess) for cell in rows[index])
     return moves
-
-
-def _cascade_bottom(rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]) -> int:
-    """The column's lowest keep-out bottom if `_cascade` lowered `rows[start]` to `top`."""
-    floor, bottom = top, max(cell.bottom for row in rows for cell in row)
-    for index in range(start, len(rows)):
-        row = rows[index]
-        row_top = min(cell.top for cell in row)
-        if row_top >= floor:
-            return bottom
-        shift = floor - row_top
-        bottom = max(bottom, max(cell.bottom for cell in row) + shift)
-        floor = max(cell.bottom for cell in row) + shift + gaps[index]
-    return bottom
-
-
-def _participants(page: Sequence[Any]) -> dict[tuple[str, object, int], list[tuple[int, int]]]:
-    """The topmost row of each band per column, keyed by (band, role, poles) (C13(b))."""
-    found: dict[tuple[str, object, int], list[tuple[int, int]]] = {}
-    for column, rows in enumerate(page):
-        seen: set[str] = set()
-        for index, row in enumerate(rows):
-            band = row[0].band
-            if band is None or band in seen:
-                continue
-            seen.add(band)
-            # C13(b): the role, and the circuit width (poles across the row's lanes): a
-            # 3-pole power row never aligns a single control contact
-            poles = sum(cell.geometry.poles for cell in row if not cell.side)
-            found.setdefault((band, row[0].role, poles), []).append((column, index))
-    return found
 
 
 def _cascade(rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]) -> None:

@@ -15,12 +15,9 @@ room.room_offset
 sizing.with_rooms
 # step 6
 firstlabels.labelled_pages
-texts.marker_row.marker_shapes
-texts.power.held_shapes
 texts.power.without_power_findings
 # step 7 and shared support
-_routing.shortest_path
-_routing.axes_of
+grid_path.axes_of
 space.run_of
 slices.connection_ends
 pagerun.plan_pages

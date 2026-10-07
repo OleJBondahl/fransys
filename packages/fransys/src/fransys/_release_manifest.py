@@ -244,8 +244,8 @@ def _manifest(
 ) -> str:
     """`baseline/manifest.json`'s canonical JSON text; the listing digest is read off the bytes.
 
-    `baseline_files` holds the other two baseline files (`listing.json`, `model.json`); their
-    paths and hashes join `files` like every export's.
+    `baseline_files` holds the other baseline files (`listing.json`, `model.json`, and for a unit
+    `numbering.json`, `changes.md`, `changes.csv`); their paths and hashes join `files`.
     """
     unit_dict, history = _unit_manifest_fields(model, unit)
     listing_digest = hashlib.sha256(baseline_files["baseline/listing.json"]).hexdigest()

@@ -623,13 +623,14 @@ def unit_with_release(
     return unit, release
 
 
-def build_cabinet(
+def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     *,
     reverse: bool = False,
     extra_relay: bool = False,
     broken_chain: bool = False,
     second_location: bool = False,
     discovery: bool = False,
+    side_terminals: bool = False,
 ) -> Draft:
     """Build the WP14 cabinet fixture: a `Draft`, not yet frozen (WP14).
 
@@ -686,7 +687,9 @@ def build_cabinet(
     functions share no connection, which must raise `HintError`. `second_location=True`
     adds a second location node `+C2` and places the items of `=P2` (and only those) there,
     so `=P2` is drawn in another drawing set. The shared terminal `-X2:1` stays in `=SUP`
-    at `+C1`, so the control chain of `=P2` then crosses locations.
+    at `+C1`, so the control chain of `=P2` then crosses locations. `side_terminals=True`
+    draws every terminal's `internal` port at `w` and `external` at `e` (ENGINE-DIGITS): the
+    rail terminal `-X2:1` then carries a reference beside an E port.
 
     `discovery=True` (WP16) leaves out every `layout.chain` above (`chain` becomes a no-op,
     the WP15 spike's own method) and authors a `layout.profile` with a wider sheet,
@@ -698,7 +701,11 @@ def build_cabinet(
     b = _Builder(second_location=second_location, chains_enabled=not discovery)
     parts = {spec.key: b.part(spec) for spec in _specs()}
     cab = {tag: b.strip(tag.upper()) for tag in ("x1", "x2", "x3", "x4")}
-    b.choice(FunctionKind.TERMINAL, "terminal", {"internal": "n", "external": "s"})
+    # `side_terminals`: a terminal draws its ports on its W and E sides (an E or W reference)
+    terminal_ports = {"internal": "w", "external": "e"} if side_terminals else None
+    b.choice(
+        FunctionKind.TERMINAL, "terminal", terminal_ports or {"internal": "n", "external": "s"}
+    )
     b.choice(FunctionKind.COIL, "operating-device", {"A1": "in", "A2": "out"})
     _supply(b, parts, cab)
     _pump(b, parts, cab, 1)

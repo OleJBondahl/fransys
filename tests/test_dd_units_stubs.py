@@ -20,7 +20,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_model.derive import revision_text, unit_release
@@ -99,7 +99,7 @@ def _build_two_connectors(*, relay_between: bool):
         wire(relay.fn("coil")["A1"], relay.fn("coil")["A2"])
         wire(relay.fn("co_1")["11"], relay.fn("co_1")["14"])  # layout-0112: wired, so drawn
         wire(relay.fn("co_2")["21"], relay.fn("co_2")["24"])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _two_location_cable_model():
@@ -115,7 +115,7 @@ def _two_location_cable_model():
     cable = d.cable("DEMO-CBL-4G1.5", tag="W1")
     cable.core(1, p1["1"], p2["1"])
     cable.core(2, p1["2"], p2["2"])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _set_of(model, page_id):

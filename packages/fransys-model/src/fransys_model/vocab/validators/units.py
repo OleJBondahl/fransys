@@ -35,6 +35,7 @@ CONNECTOR_WIRED_WITHOUT_MATE: Final[str] = "CONNECTOR_WIRED_WITHOUT_MATE"
 UNUSED_CONTRADICTED: Final[str] = "UNUSED_CONTRADICTED"
 BOUNDARY_KIND: Final[str] = "BOUNDARY_KIND"
 BOUNDARY_NOT_IN_UNIT: Final[str] = "BOUNDARY_NOT_IN_UNIT"
+MATE_NOT_CONNECTOR: Final[str] = "MATE_NOT_CONNECTOR"
 
 _BOUNDARY_KINDS: Final = frozenset({FunctionKind.TERMINAL, FunctionKind.CONNECTOR})
 _GENDERED: Final = frozenset({Gender.MALE, Gender.FEMALE})
@@ -208,6 +209,21 @@ def _mate_port_mismatch(plant: _Plant) -> list[Finding]:
     return found
 
 
+def _mate_not_connector(plant: _Plant) -> list[Finding]:
+    found = []
+    for mate in plant.mates.values():
+        for end in (mate.a, mate.b):
+            function = plant.functions[end]
+            if function.kind in _BOUNDARY_KINDS:
+                continue
+            message = (
+                f"mate {key_text(mate)} has end {key_text(function)} of kind "
+                f"{function.kind.value}, not connector or terminal"
+            )
+            found.append(_finding(MATE_NOT_CONNECTOR, Severity.ERROR, (mate.id, end), message))
+    return found
+
+
 def _connector_wired_without_mate(plant: _Plant) -> list[Finding]:
     found = []
     for function, item, other, record in plant.ends:
@@ -283,10 +299,10 @@ def _boundary_kind_and_membership(plant: _Plant) -> list[Finding]:
 
 
 def check_units(model: Model) -> tuple[Finding, ...]:
-    """Check every unit's boundary; `check_structure`'s `UNIT_CYCLE` is separate.
+    """Check every unit's boundary and every mate's kind; `UNIT_CYCLE` is `check_structure`'s.
 
-    Error: `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`, `BOUNDARY_KIND`, `BOUNDARY_NOT_IN_UNIT`
-    The other four unit boundary codes are `WARNING`; sorted by `(code, subjects, message)`.
+    `ERROR`: the boundary codes `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`, `BOUNDARY_KIND`,
+    `BOUNDARY_NOT_IN_UNIT`, and `MATE_NOT_CONNECTOR`; the others `WARNING`. Sorted by code.
     """
     plant = _Plant(model)
     found = [
@@ -294,6 +310,7 @@ def check_units(model: Model) -> tuple[Finding, ...]:
         *_unit_boundary_bypassed(plant),
         *_unit_connector_dangling(plant),
         *_mate_port_mismatch(plant),
+        *_mate_not_connector(plant),
         *_connector_wired_without_mate(plant),
         *_unused_contradicted(plant),
         *_boundary_kind_and_membership(plant),

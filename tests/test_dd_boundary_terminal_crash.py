@@ -18,7 +18,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive.drawing_text import marker_text, off_stub_text
 from fransys_model.kernel import Severity
@@ -53,7 +53,7 @@ def _build(relay_pins: tuple[tuple[str, str], ...]):
         if tag not in relays:
             relays[tag] = d.item("DEMO-RLY-2CO-24", tag=tag, at=fld, group=group)
         wire(terminal["external"], relays[tag].fn("coil")[pin])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _stubs_of_x1(model) -> list[LinkMarker]:
@@ -115,7 +115,7 @@ def _build_with_marker(far: tuple[str, ...]):
         wire(
             x1["external"], d.item("DEMO-RLY-2CO-24", tag=tag, at=c1, group=group).fn("coil")["A1"]
         )
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_three_far_ends_on_one_port_share_one_box_with_a_line_each() -> None:
@@ -164,7 +164,7 @@ def test_two_cables_to_one_far_port_build_and_keep_two_stubs() -> None:
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=d.location("FLD", "Field"), group=group)
     for name in ("ca", "cb"):
         d.cable("DEMO-CBL-4G1.5", name=name, at=c1).core(1, x1["external"], k1.fn("coil")["A1"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     stubs = _stubs_of_x1(model)
     assert len({m.far for m in stubs}) == 1
     assert len({m.id for m in stubs}) == len({m.key for m in stubs}) == 2

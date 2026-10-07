@@ -16,7 +16,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 import electrical_symbols
 from fransys_model.layout import (
@@ -94,7 +94,7 @@ def _rack_of_three_modules():
         )
         k = d.item("DEMO-RLY-2CO-24", tag=relay.upper(), name=relay, at=c1, group=plc)
         wire(module.fn("do_1")["1"], k.fn("coil")["A1"])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def test_a_racks_modules_and_their_attached_columns_stand_in_authored_position_order() -> None:
@@ -121,7 +121,7 @@ def test_several_groups_share_one_page() -> None:
         d.item(
             "DEMO-LAMP-24", tag=f"P{name[-1]}", name=name.lower(), at=c1, group=d.group(name, name)
         )
-    pages = layout_of(fr.build(parts, d.draft(), system_document()).model, Page).values()
+    pages = layout_of(fr.build(parts, d.draft(), layout_trigger_document()).model, Page).values()
     assert len(pages) < 3
     assert max(len(page.groups) for page in pages) >= 2
 
@@ -136,7 +136,7 @@ def _plc_modules():
     for name, channel in (("k1", "do_1"), ("k2", "do_2")):
         k = d.item("DEMO-RLY-2CO-24", tag=name.upper(), name=name, at=c1, group=plc)
         wire(do.fn(channel)[channel[-1]], k.fn("coil")["A1"])
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _marking_labels(model, placement, item):
@@ -217,7 +217,7 @@ def test_a_module_tag_is_shown_once_on_its_box() -> None:
 
 
 def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -> None:
-    """D5: pitch = ceil(0.65 * longest name + 0.5) M, at least 2 M, by the name after its dot."""
+    """D5: pitch = ceil(text_width / 8 + 0.5) M, at least 2 M, by the name after its dot."""
 
     # UNDO: electrical_symbols/generic_box.py:_pitch measures the whole
     # name (drop `.rsplit(".", 1)[-1]`), or drops the `math.ceil`
@@ -228,7 +228,7 @@ def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -
     assert pitch("1", "2", "3", "4") == 2
     assert pitch("do_1.1", "do_2.2", "do_3.3", "do_4.4") == 2
     assert pitch("ABC", "D", "E", "F") == 3
-    assert pitch("internal", "x", "y", "z") == 6
+    assert pitch("internal", "x", "y", "z") == 4
 
 
 def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
@@ -237,7 +237,7 @@ def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
     d.item("DEMO-MOTOR-4KW", tag="M1", name="m1", at=c1, group=grp)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     motor = _placed(model, "m1", "motor")
     marks = _marking_labels(model, motor, "m1")
     assert marks["V"].y == marks["PE"].y
@@ -252,7 +252,9 @@ def _motor_with_partner(relay_function, relay_port, motor_port):
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
     m1 = d.item("DEMO-MOTOR-4KW", tag="M1", name="m1", at=c1, group=grp)
     d.wiring(colour="BU", gauge="0.5")(k1.fn(relay_function)[relay_port], m1[motor_port])
-    return fr.build(parts, d.draft(), system_document()).model, m1.fn("motor")[motor_port].id
+    return fr.build(parts, d.draft(), layout_trigger_document()).model, m1.fn("motor")[
+        motor_port
+    ].id
 
 
 @pytest.mark.parametrize(
@@ -284,7 +286,7 @@ def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box(
     do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     box = _box(model, "do")
     assert box.symbol == _GENERIC_BOX
     assert set(_marking_labels(model, box, "do")) == {"1", "2"}
@@ -334,7 +336,7 @@ def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_th
     do = d.item("DEMO-PLC-DO-3", tag="DO1", name="do", at=c1, group=plc)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=plc)
     d.wiring(colour="BU", gauge="0.5")(do.fn("do_1")["1"], k1.fn("coil")["A1"])
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     box = _box(model, "do")
     assert box.symbol == _GENERIC_BOX
     assert set(_marking_labels(model, box, "do")) == {"1", "2", "3"}

@@ -13,7 +13,20 @@ from graphical_symbols import UnknownSymbolError as LibraryUnknownSymbolError
 from graphical_symbols import body_box, keepout_box, orient, repeat, slot_box
 from graphical_symbols.model import nodes_of
 
-from electrical_symbols import GENERIC_BOX_KEY, LIBRARY, generic_box
+from electrical_symbols import (
+    GENERIC_BOX_KEY,
+    LIBRARY,
+    NORTH,
+    PORT_PITCH_G,
+    SOUTH,
+    box_port_name,
+    default_order,
+    default_sides,
+    draw_order,
+    generic_box,
+    is_generic_box,
+    text_width,
+)
 from electrical_symbols import library_version as _electrical_symbols_library_version
 from fransys_model.kernel import register_enum, value
 from fransys_model.layout import Orientation
@@ -23,7 +36,19 @@ from .boxes import Box
 from .errors import GeometryError, UnknownSymbolError
 from .units import G_PER_MODULE, Point, to_grid
 
-__all__ = ("GENERIC_BOX_KEY", "OPPOSITE", "Orientation")  # re-exported by `geometry`
+__all__ = (  # re-exported by `geometry`: the generic box's home is `electrical_symbols.box_ports`
+    "GENERIC_BOX_KEY",
+    "NORTH",
+    "OPPOSITE",
+    "PORT_PITCH_G",
+    "SOUTH",
+    "Orientation",
+    "box_port_name",
+    "default_order",
+    "default_sides",
+    "draw_order",
+    "text_width",
+)
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -96,8 +121,8 @@ class SymbolGeometry:
 
     @property
     def generic_box(self) -> bool:
-        """Whether this is the labelled-box placeholder: the one compare of `GENERIC_BOX_KEY`."""
-        return self.key == GENERIC_BOX_KEY
+        """Whether this is the labelled-box placeholder (`electrical_symbols.is_generic_box`)."""
+        return is_generic_box(self.key)
 
 
 def symbol_geometry(
@@ -134,11 +159,15 @@ def generic_box_geometry(
     reach: tuple[Reach, ...] = (),
     *,
     offsets: tuple[float, ...] = (),
+    stand: int = 0,
 ) -> SymbolGeometry:
-    """The labelled-box placeholder, pins `reach` apart (model-0129) or at `offsets` (0107)."""
+    """The labelled-box placeholder, pins `reach` apart (model-0129) or at `offsets` (0107).
+
+    `stand` is the width in G of the power symbol and text standing at a pin: the pitch fits it.
+    """
     if offsets:
         return _generic(port_names, sides, offsets)
-    base = _generic(port_names, sides)
+    base = _generic(port_names, sides, stand=stand)
     if not reach:
         return base
     spots = {p.name: (p.facing.value, p.at.x) for p in base.ports}
@@ -156,11 +185,15 @@ def channel_pitch() -> int:
 
 
 def _generic(
-    port_names: tuple[str, ...], sides: tuple[str, ...], offsets: tuple[float, ...] = ()
+    port_names: tuple[str, ...],
+    sides: tuple[str, ...],
+    offsets: tuple[float, ...] = (),
+    *,
+    stand: int = 0,
 ) -> SymbolGeometry:
     """One generic box converted to grid units."""
     return convert(
-        orient(generic_box(port_names, sides, offsets), LibraryOrientation.R0),
+        orient(generic_box(port_names, sides, offsets, stand), LibraryOrientation.R0),
         poles=1,
         orientation=Orientation.R0,
     )

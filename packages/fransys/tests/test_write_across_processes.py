@@ -37,6 +37,7 @@ def test_two_processes_with_different_hash_seeds_write_byte_equal_files(tmp_path
     Root `CLAUDE.md` invariant 1: the same model digest always gives the same bytes.
     `test_two_writes_of_one_result_give_byte_equal_files` cannot see a set-order effect (one
     process has one hash seed) and its fixture has no `Document`, so no PDF is compared there.
+    The third document is a cabinet document at C1: it carries the schematic SVG (record 0118).
     Here every file of `out_dir` and of the intermediates directory is compared: the PDFs, the
     `.typ` sources and the one remaining SVG. Both harness pages are cable tables now
     (CT1/CT2), no SVG of their own; `fransys_render.pages` still draws one `layout.page:...`
@@ -52,10 +53,10 @@ def test_two_processes_with_different_hash_seeds_write_byte_equal_files(tmp_path
     assert first_hash != second_hash
     names = sorted(first)
     assert names == sorted(second)
-    # Not vacuous: the trees hold both PDFs, both Typst sources and one rendered SVG.
+    # Not vacuous: the trees hold three PDFs, three Typst sources, one page SVG, two block SVGs.
     suffixes = [name.rpartition(".")[2] for name in names]
-    assert suffixes.count("pdf") == 2
-    assert suffixes.count("typ") == 2
-    assert suffixes.count("svg") == 1  # CT1: no dot spawn, no harness SVG any more
+    assert suffixes.count("pdf") == 3
+    assert suffixes.count("typ") == 3
+    assert suffixes.count("svg") == 3  # CT5-2: one schematic page, two cable blocks
     assert all(first[name] for name in names)
     assert [name for name in names if first[name] != second[name]] == []

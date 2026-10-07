@@ -17,7 +17,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_render import pages
 from fransys_render._numbers import grid_to_mm
 
@@ -98,7 +98,7 @@ def _drawn_image(tmp_path: Path, names: tuple[str, str, str]) -> tuple[list, dic
     wire(feed.inner, k1.fn("co_1")[com])
     wire(k1.fn("co_1")[make], out1.inner)
     wire(k1.fn("co_1")[brk], out2.inner)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
 
     (label,) = (
         one

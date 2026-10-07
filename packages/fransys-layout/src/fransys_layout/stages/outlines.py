@@ -18,7 +18,7 @@ from fransys_layout.geometry import (
 from .lookups import placed_keepout
 from .slices import by_key, page_of
 from .tidy import TEXT_GAP
-from .types import LabelKind, PlacedLabel, PlacedOutline
+from .types import Home, LabelKind, PlacedLabel, PlacedOutline
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
         FunctionSpec,
         Handle,
         LinkMarker,
+        PagePlan,
         PlacedFunction,
         Profile,
     )
@@ -169,6 +170,139 @@ def _exit_cells(placed: Sequence[PlacedFunction]) -> list[Box]:
     return [Box(x=at.x - 1, y=at.y - 1, width=2, height=2) for at in steps]
 
 
+@dataclass(frozen=True)
+class _Run:
+    """The run-wide reads every page's outlines share."""
+
+    spec_of: Mapping[Handle, FunctionSpec]
+    faces: Mapping[tuple[Handle, AuthoringKey], bool]
+    cells: Mapping[AuthoringKey, tuple[Cell, ...]]
+    markers: Mapping[tuple[int, int], tuple[LinkMarker, ...]]
+    inputs: OutlineInputs
+
+
+def _end_faces(inputs: OutlineInputs) -> dict[tuple[Handle, AuthoringKey], bool]:
+    """A face replica stands above its plug (flip False) at a column's top end.
+
+    The one place the end is read again, from the cell `discover_chains` made.
+    """
+    return {
+        (c.function, col.key): not c.flip
+        for col in inputs.columns
+        for c in col.cells
+        if c.face and c.home is Home.ELSEWHERE
+    }
+
+
+def _unit_members(
+    placed: tuple[PlacedFunction, ...], run: _Run, own_unit: Handle | None
+) -> dict[Handle, list[PlacedFunction]]:
+    """The page's placements grouped by the unit whose black box they belong to."""
+    by_unit: dict[Handle, list[PlacedFunction]] = {}
+    for one in placed:
+        unit = run.spec_of[one.function].unit
+        if unit is not None and unit != own_unit:
+            by_unit.setdefault(unit, []).append(one)
+    return by_unit
+
+
+def _run_groups(
+    placed: tuple[PlacedFunction, ...], run: _Run, own_unit: Handle | None
+) -> dict[tuple[Handle, int], tuple[list[PlacedFunction], bool]]:
+    """Each unit's runs, bottom-end first then top-end, keyed by (unit, run index)."""
+    groups: dict[tuple[Handle, int], tuple[list[PlacedFunction], bool]] = {}
+    for unit, members in _unit_members(placed, run, own_unit).items():
+        top_set, bottom_set = _by_end(members, run.faces, run.cells, placed)
+        runs = [(r, False) for r in _column_runs(bottom_set, placed)]
+        runs += [(r, True) for r in _column_runs(top_set, placed)]
+        groups.update({(unit, index): r for index, r in enumerate(runs)})
+    return groups
+
+
+def _run_frame(
+    members: Sequence[PlacedFunction],
+    first: tuple[PlacedLabel, ...],
+    page_markers: Sequence[LinkMarker],
+    run: _Run,
+    *,
+    top_end: bool,
+) -> tuple[Box, bool]:
+    """One run's frame, holding its members' labels and link markers (M10)."""
+    names = {m.function for m in members}
+    names |= {p.port for m in members for p in run.spec_of[m.function].ports}
+    texts = [label.box for label in first if label.subject in names]
+    # M10: a member port's link marker, stub included, stands inside the frame
+    texts += [_marker_reach(marker) for marker in page_markers if marker.port in names]
+    return _frame(members, run.faces, texts, top_end=top_end)
+
+
+def _title_box(box: Box, text: str, taken: Sequence[Box], *, drawn_top: bool, height: int) -> Box:
+    """Where a unit's title goes: above or below its frame, whichever is free (D4, layout-0104)."""
+    margin = WIRING_GRID // 2
+    width = text_width(text, height=height)
+    # layout-0104: a title left of the content box's text gap moves right to it
+    at_x = max(box.x, TEXT_GAP)
+    above = Box(x=at_x, y=box.y - margin - height, width=width, height=height)
+    below = Box(x=at_x, y=box.y + box.height + margin, width=width, height=height)
+    if drawn_top:
+        # the mirror: below-left when free, else above-left (D4's top room holds it)
+        free = not any(overlaps(below, other) for other in taken)
+        return below if free else above
+    free = above.y >= 0 and not any(overlaps(above, other) for other in taken)
+    return above if free else below
+
+
+def _page_taken(
+    placed: tuple[PlacedFunction, ...],
+    first: tuple[PlacedLabel, ...],
+    page_markers: Sequence[LinkMarker],
+) -> list[Box]:
+    """The boxes a title must not overlap: keep-outs, port exits, labels and marker reaches."""
+    taken = [placed_keepout(one) for one in placed]
+    taken += _exit_cells(placed)
+    taken += [label.box for label in first]
+    taken += [_marker_reach(marker) for marker in page_markers]
+    return taken
+
+
+def _page_outlines(
+    plan: PagePlan,
+    placed: tuple[PlacedFunction, ...],
+    first: tuple[PlacedLabel, ...],
+    run: _Run,
+) -> tuple[list[PlacedLabel], list[PlacedOutline]]:
+    """One page's outline titles and outlines, one pair per run of a unit's black box."""
+    page_markers = run.markers.get((plan.drawing_set, plan.number), ())
+    groups = _run_groups(placed, run, plan.unit)
+    taken = _page_taken(placed, first, page_markers)
+    titles: list[PlacedLabel] = []
+    outlines: list[PlacedOutline] = []
+    height = run.inputs.profile.text_height
+    for (unit, _), (members, top_end) in sorted(
+        groups.items(), key=lambda kv: (kv[0][0], str(kv[0][1]))
+    ):
+        box, drawn_top = _run_frame(members, first, page_markers, run, top_end=top_end)
+        lead = min(members, key=lambda m: (m.at.x, m.at.y)).function
+        title = _title_box(box, run.inputs.title(unit), taken, drawn_top=drawn_top, height=height)
+        taken.append(title)
+        titles.append(
+            PlacedLabel(
+                kind=LabelKind.TAG,
+                subject=lead,
+                slot="outline_title",
+                drawing_set=plan.drawing_set,
+                page=plan.number,
+                box=title,
+            )
+        )
+        outlines.append(
+            PlacedOutline(
+                unit=unit, lead=lead, drawing_set=plan.drawing_set, page=plan.number, box=box
+            )
+        )
+    return titles, outlines
+
+
 def unit_outlines(
     plans: tuple[Any, ...],
     pages: Sequence[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]],
@@ -176,79 +310,16 @@ def unit_outlines(
     inputs: OutlineInputs,
 ) -> tuple[list[Any], tuple[PlacedOutline, ...]]:
     """I2a, U1: per page, one dash-dot outline and title per run of a unit's black box (D8, D11)."""
-    spec_of = {spec.function: spec for spec in inputs.functions}
-    # a face replica stands above its plug (flip False) at a column's top end: the one place the
-    # end is read again, from the cell `discover_chains` made
-    faces = {
-        (c.function, col.key): not c.flip
-        for col in inputs.columns
-        for c in col.cells
-        if c.face and c.replica
-    }
-    cells = {col.key: col.cells for col in inputs.columns}
-    margin = WIRING_GRID // 2
-    here_markers = by_key(markers, page_of)
+    run = _Run(
+        spec_of={spec.function: spec for spec in inputs.functions},
+        faces=_end_faces(inputs),
+        cells={col.key: col.cells for col in inputs.columns},
+        markers=by_key(markers, page_of),
+        inputs=inputs,
+    )
     found, outlines = [], []
     for plan, (placed, first) in zip(plans, pages, strict=True):
-        by_unit: dict[Handle, list[PlacedFunction]] = {}
-        for one in placed:
-            unit = spec_of[one.function].unit
-            if unit is not None and unit != plan.unit:
-                by_unit.setdefault(unit, []).append(one)
-        groups: dict[tuple[Handle, int], tuple[list[PlacedFunction], bool]] = {}
-        for unit, members in by_unit.items():
-            top_set, bottom_set = _by_end(members, faces, cells, placed)
-            runs = [(run, False) for run in _column_runs(bottom_set, placed)]
-            runs += [(run, True) for run in _column_runs(top_set, placed)]
-            groups.update({(unit, index): run for index, run in enumerate(runs)})
-        taken = [placed_keepout(one) for one in placed]
-        taken += _exit_cells(placed)
-        taken += [label.box for label in first]
-        page_markers = here_markers.get((plan.drawing_set, plan.number), [])
-        taken += [_marker_reach(marker) for marker in page_markers]
-        titles = []
-        for (unit, _), (members, top_end) in sorted(
-            groups.items(), key=lambda kv: (kv[0][0], str(kv[0][1]))
-        ):
-            names = {m.function for m in members}
-            names |= {p.port for m in members for p in spec_of[m.function].ports}
-            texts = [label.box for label in first if label.subject in names]
-            # M10: a member port's link marker, stub included, stands inside the frame
-            texts += [_marker_reach(marker) for marker in page_markers if marker.port in names]
-            box, drawn_top = _frame(members, faces, texts, top_end=top_end)
-            left, top, bottom = box.x, box.y, box.y + box.height
-            lead = min(members, key=lambda m: (m.at.x, m.at.y)).function
-            text = inputs.title(unit)
-            width, height = (
-                text_width(text, height=inputs.profile.text_height),
-                inputs.profile.text_height,
-            )
-            # layout-0104: a title left of the content box's text gap moves right to it
-            at_x = max(left, TEXT_GAP)
-            above = Box(x=at_x, y=top - margin - height, width=width, height=height)
-            below = Box(x=at_x, y=bottom + margin, width=width, height=height)
-            if drawn_top:
-                # the mirror: below-left when free, else above-left (D4's top room holds it)
-                free = not any(overlaps(below, other) for other in taken)
-                title = below if free else above
-            else:
-                free = above.y >= 0 and not any(overlaps(above, other) for other in taken)
-                title = above if free else below
-            taken.append(title)
-            titles.append(
-                PlacedLabel(
-                    kind=LabelKind.TAG,
-                    subject=lead,
-                    slot="outline_title",
-                    drawing_set=plan.drawing_set,
-                    page=plan.number,
-                    box=title,
-                )
-            )
-            outlines.append(
-                PlacedOutline(
-                    unit=unit, lead=lead, drawing_set=plan.drawing_set, page=plan.number, box=box
-                )
-            )
+        titles, page_outlines = _page_outlines(plan, placed, first, run)
         found.append((placed, (*first, *titles)))
+        outlines.extend(page_outlines)
     return found, tuple(outlines)

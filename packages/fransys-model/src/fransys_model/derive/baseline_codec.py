@@ -7,7 +7,7 @@ from typing import cast
 from fransys_model.kernel import SchemaError, SchemaVersionError
 from fransys_model.kernel.encode import JsonValue, decimal_text, write_json
 from fransys_model.kernel.jsonread import read_json
-from fransys_model.vocab.ratings import Operating, Rating
+from fransys_model.vocab.ratings import BreakingPoint, Operating, Rating
 
 from .rows import (
     BaselineBoundary,
@@ -26,20 +26,61 @@ _LISTING_VERSION = 1
 # -- dumps / loads (canonical JSON, baseline spec L2) ----------------------------------------
 
 
-def _decimal_dict(value: Rating | Operating | None) -> dict[str, JsonValue] | None:
-    """A `Rating`/`Operating`'s own fields (every one `Decimal | None`), `Decimal` as text."""
-    if value is None:
-        return None
+_POINT_FIELDS = frozenset({"breaking_ac", "breaking_dc"})
+# The fields RATINGS-3 added: written only off their default, so an older listing keeps its bytes.
+_NEW_FIELDS = _POINT_FIELDS | {"fault_current_ac_a", "fault_current_dc_a", "fault_time_constant_ms"}
+
+
+def _decimal_text_or_none(v: Decimal | None) -> str | None:
+    return None if v is None else decimal_text(v)
+
+
+def _point_dict(point: BreakingPoint) -> dict[str, JsonValue]:
     return {
-        field.name: (None if (v := getattr(value, field.name)) is None else decimal_text(v))
-        for field in dataclasses.fields(value)
+        "voltage_v": decimal_text(point.voltage_v),
+        "current_a": decimal_text(point.current_a),
+        "time_constant_ms": _decimal_text_or_none(point.time_constant_ms),
     }
 
 
-def _decimal_value[T](cls: type[T], data: frozendict[str, str | None] | None) -> T | None:
-    if data is None:
+def _field_json(v: object) -> JsonValue:
+    if isinstance(v, tuple):
+        return [_point_dict(point) for point in v]
+    return _decimal_text_or_none(cast("Decimal | None", v))
+
+
+def _decimal_dict(value: Rating | Operating | None) -> dict[str, JsonValue] | None:
+    """A `Rating`/`Operating`'s own fields, `Decimal` as text; a new field only when set."""
+    if value is None:
         return None
-    return cls(**{key: (None if v is None else Decimal(v)) for key, v in data.items()})
+    named = {field.name: getattr(value, field.name) for field in dataclasses.fields(value)}
+    return {
+        name: _field_json(v)
+        for name, v in named.items()
+        if name not in _NEW_FIELDS or v not in (None, ())
+    }
+
+
+def _point_from(value: object) -> BreakingPoint:
+    d = _mapping(value)
+    tc = cast("str | None", d["time_constant_ms"])
+    return BreakingPoint(
+        voltage_v=Decimal(cast("str", d["voltage_v"])),
+        current_a=Decimal(cast("str", d["current_a"])),
+        time_constant_ms=None if tc is None else Decimal(tc),
+    )
+
+
+def _field_from(key: str, v: object) -> object:
+    if key in _POINT_FIELDS:
+        return tuple(_point_from(point) for point in _array(v))
+    return None if v is None else Decimal(cast("str", v))
+
+
+def _decimal_value[T](cls: type[T], value: object) -> T | None:
+    if value is None:
+        return None
+    return cls(**{key: _field_from(key, v) for key, v in _mapping(value).items()})
 
 
 def _unit_dict(u: BaselineUnit) -> dict[str, JsonValue]:
@@ -179,10 +220,8 @@ def _boundary_from(value: object) -> BaselineBoundary:
     return BaselineBoundary(
         designation=cast("str", d["function"]),
         ports=cast("tuple[str, ...]", _array(d["ports"])),
-        rating=_decimal_value(Rating, cast("frozendict[str, str | None] | None", d["rating"])),
-        operating=_decimal_value(
-            Operating, cast("frozendict[str, str | None] | None", d["operating"])
-        ),
+        rating=_decimal_value(Rating, d["rating"]),
+        operating=_decimal_value(Operating, d["operating"]),
     )
 
 

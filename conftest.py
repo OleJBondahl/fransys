@@ -22,7 +22,7 @@ if str(_ROOT) not in sys.path:
     # `tests/test_reauthoring.py` needs it for `layout_cabinet`.
     sys.path.insert(0, str(_ROOT))
 
-from _model_build_cover import system_document  # noqa: E402
+from _model_build_cover import cabinet_document  # noqa: E402
 from demo_designs import cabinet_design, harness_with_board_design  # noqa: E402
 
 if TYPE_CHECKING:
@@ -47,7 +47,8 @@ def _built(parts: Draft, design: Design) -> Model:
     contract -- "the two root fixtures build a laid-out model", `tests/test_fixtures.py` --
     true again, unchanged from before PS1.
     """
-    return fr.build(parts, design.draft(), system_document()).model
+    document = cabinet_document(fransys_author.Design(parts).location("C1", "Demo cabinet"))
+    return fr.build(parts, design.draft(), document).model
 
 
 @pytest.fixture

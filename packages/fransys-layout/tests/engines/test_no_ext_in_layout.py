@@ -22,7 +22,7 @@ from workspace_root import WORKSPACE_ROOT
 
 from fransys_layout.engines import lay_out_schematic
 from fransys_model.kernel import freeze
-from fransys_model.layout import DERIVED_KINDS, layout_of
+from fransys_model.layout import CABLE_KINDS, DERIVED_KINDS, layout_of
 
 _ROOT_TESTS = WORKSPACE_ROOT / "tests"
 
@@ -80,7 +80,7 @@ _FIXTURES = {
 def _ext_keys(model) -> dict[str, set[str]]:
     """Every `ext` key the engine wrote, by layout kind."""
     found: dict[str, set[str]] = {}
-    for kind in DERIVED_KINDS:
+    for kind in (*DERIVED_KINDS, *CABLE_KINDS):
         record_type: type[Any] = kind  # every derived kind has the generic `ext` field
         keys = {key for record in layout_of(model, record_type).values() for key in record.ext}
         if keys:

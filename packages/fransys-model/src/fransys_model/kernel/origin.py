@@ -73,33 +73,45 @@ def _lines(problem: ModelError | Finding, source: OriginSource) -> tuple[str, ..
         subjects = (f"  subject: {_render(s, source)}" for s in problem.subjects)
         return (f"{problem.code} ({problem.severity.value}): {problem.message}", *subjects)
     lines = str(problem).splitlines() or [""]
+    lines += _extra_lines(problem, source)
+    return tuple(lines)
+
+
+def _freeze_lines(problem: FreezeError, source: OriginSource) -> list[str]:
+    lines: list[str] = []
+    for number, error in enumerate(problem.errors, start=1):
+        prefix = f"  {number}. "
+        first, *rest = _lines(error, source)
+        lines += [prefix + first, *(" " * len(prefix) + line for line in rest)]
+    return lines
+
+
+def _extra_lines(problem: ModelError, source: OriginSource) -> list[str]:
     # A new error that carries ids gets a case here, above any base class it inherits from.
+    extra: list[str] = []
     match problem:
         case FreezeError():
-            for number, error in enumerate(problem.errors, start=1):
-                prefix = f"  {number}. "
-                first, *rest = _lines(error, source)
-                lines += [prefix + first, *(" " * len(prefix) + line for line in rest)]
+            extra = _freeze_lines(problem, source)
         case RefError():
-            lines += [
+            extra = [
                 f"  record: {_render(problem.record_id, source)}",
                 f"  field: {problem.field}",
                 f"  target: {_render(problem.target, source)}",
             ]
         case MergeConflict():
-            lines += [
+            extra = [
                 f"  record: {_render(problem.record_id, source)}",
                 f"  first: {problem.origin_a.file}:{problem.origin_a.line}",
                 f"  second: {problem.origin_b.file}:{problem.origin_b.line}",
             ]
         case SchemaError():
-            lines += [*_holder(problem.record_id, source), f"  kind: {problem.kind}"]
+            extra = [*_holder(problem.record_id, source), f"  kind: {problem.kind}"]
         case ValueTypeError():
             path = ".".join(problem.path) or "<top level>"
-            lines += [*_holder(problem.record_id, source), f"  path: {path}"]
+            extra = [*_holder(problem.record_id, source), f"  path: {path}"]
         case SchemaVersionError():
-            lines += [f"  expected: {problem.expected}", f"  actual: {problem.actual}"]
-    return tuple(lines)
+            extra = [f"  expected: {problem.expected}", f"  actual: {problem.actual}"]
+    return extra
 
 
 def _holder(record_id: Id[Any] | None, source: OriginSource) -> tuple[str, ...]:

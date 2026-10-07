@@ -19,7 +19,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import unit_release
 from fransys_model.derive.drawing_text import off_stub_text
@@ -99,7 +99,7 @@ def _build_top_level_units(*, second_unit: bool, same: bool):
     else:
         far = d.item("DEMO-CONN-2P", name="h", tag="X2", at=where)
     d.wiring(colour="BU", gauge="0.5")(f["1"], far["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @pytest.mark.parametrize(
@@ -165,7 +165,7 @@ def _build_mated_units():
         u.boundary(made[name])
         u.wiring(colour="BU", gauge="0.5")(made[name]["1"], inside["1"])
     d.mate(made["a"], made["b"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_two_top_level_units_boundary_connectors_mated_get_a_stub_each_through_the_mate() -> None:
@@ -198,7 +198,7 @@ def _build_pass_through():
     a.boundary(x1)
     h = d.item("DEMO-CONN-2P", name="h", tag="X2", at=c1)
     d.wiring(colour="BU", gauge="0.5")(x1["1"], h["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_a_pass_through_boundary_pin_wired_to_the_top_level_gets_a_stub_pair() -> None:
@@ -229,7 +229,7 @@ def _build_nested_wire():
     ua.boundary(f)
     h = p.item("DEMO-CONN-2P", name="h", tag="X2", at=box, group=p.group("GP", "Group P"))
     p.wiring(colour="BU", gauge="0.5")(f["1"], h["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_a_nested_units_boundary_wire_is_drawn_in_the_parent_set_with_no_stub() -> None:
@@ -273,7 +273,7 @@ def _build_nested_chain(units_count: int):
     wire = p.wiring(colour="BU", gauge="0.5")
     for i in range(len(pins) - 1):
         wire(pins[i], pins[i + 1])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 @pytest.mark.parametrize("units_count", [2, 4])
@@ -322,7 +322,7 @@ def test_wiring_inside_one_unit_is_untouched() -> None:
     g = ua.item("DEMO-CONN-2P", name="g", tag="X2", at=at, group=group)
     ua.boundary(f)
     ua.wiring(colour="BU", gauge="0.5")(f["1"], g["1"])
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     model = result.model
     assert _errors(result) == []
     assert _off_stubs(model) == {}

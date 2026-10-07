@@ -129,6 +129,17 @@ def function_rating(model: Model, function: Id[Function]) -> Rating | None:
     return effective_rating(template_rating, None if part is None else index.part_ratings.get(part))
 
 
+def fitted_link_rating(model: Model, function: Id[Function]) -> Rating | None:
+    """The rating of the fuse link fitted in a protection `function`'s holder (model-0151).
+
+    The holder item's highest-rated link; `None` for no link or a function other than protection.
+    """
+    record = functions(model).get(function)
+    if record is None or record.kind is not FunctionKind.PROTECTION:
+        return None
+    return _index(model).link_of.get(record.item)
+
+
 def function_ratings(model: Model, function: Id[Function]) -> tuple[FunctionRating, ...]:
     """Every rating `function` is checked against in `model`, each with its source.
 
@@ -141,8 +152,8 @@ def function_ratings(model: Model, function: Id[Function]) -> tuple[FunctionRati
     own = function_rating(model, function)
     if own is not None:
         found.append(FunctionRating(own, None))
-    link = _index(model).link_of.get(functions(model)[function].item)
-    if link is not None and functions(model)[function].kind is FunctionKind.PROTECTION:
+    link = fitted_link_rating(model, function)
+    if link is not None:
         found.append(FunctionRating(link, None))
     for boundary in _index(model).boundaries_of.get(function, ()):
         rating = boundary_rating(model, boundary.id)
@@ -243,6 +254,11 @@ def boundary_operating(model: Model, boundary: Id[Boundary]) -> Operating | None
     """
     facet = _index(model).boundary_values.get(boundary)
     return None if facet is None else facet.operating
+
+
+def template_rating(model: Model, template: Id[FunctionTemplate]) -> Rating | None:
+    """The rating a function template states itself, with no fallback to its part."""
+    return _index(model).template_ratings.get(template)
 
 
 def part_rating(model: Model, part: Id[Part]) -> Rating | None:

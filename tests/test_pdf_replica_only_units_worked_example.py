@@ -14,7 +14,7 @@ from pathlib import Path
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
@@ -22,9 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fransys_pdf import check, source
 from fransys_pdf._drawings import replica_only_sets, schematic_pages
 from fransys_pdf._lists import _boards_for, _terminal_strips_for, bom_page
+from fransys_render import cable_blocks as render_cable_blocks
 from fransys_render import pages as render_pages
 from test_units_worked_example import _PROJECT, io_board
 
+from fransys_layout import lay_out_cables
 from fransys_model.derive import unit_release, units
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import SymbolPlacement
@@ -85,7 +87,7 @@ def _build(*, name1="C1", name2="C2", extra_unitless_neighbor=False):
         d.scope("pump1", at=er), name=name1, extra_unitless_neighbor=extra_unitless_neighbor
     )
     c2, _field2 = pump_cabinet(d.scope("pump2", at=er), name=name2)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     # An `ERROR` stops `build` before layout (decision 0028): no `layout.*` record to measure.
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model, c1.id, c2.id
@@ -106,7 +108,7 @@ def _with_documents(model, *location_ids):
         )
         for index, location_id in enumerate(location_ids)
     ]
-    return evolve(model, put=docs, origin=_ORIGIN), docs
+    return evolve(model, remove=tuple(documents(model)), put=docs, origin=_ORIGIN), docs
 
 
 def test_the_worked_examples_two_top_level_sets_are_replica_only_with_one_info_each():
@@ -323,7 +325,7 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
 def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
     """Can-fail 1's own positive proof, on the same real geometry: a hand-built top-level
     cable item (`unit=None`, the same shape `top_level_cables`'s own model-side tests use)
-    gives the section its one real page and clears the INFO -- a genuine behavioural
+    gives the section its one drawn cable block and clears the INFO -- a genuine behavioural
     difference on the worked example's own model, not a flag flip.
     """
     model, _c1_id, _c2_id = _build()
@@ -368,14 +370,16 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
         origin=_ORIGIN,
     )
 
-    findings = check(model, {})
+    model, _ = lay_out_cables(model)  # as the facade does after the schematic layout
+    svgs = dict(render_cable_blocks(model))
+
+    findings = check(model, svgs)
     own_findings = [f for f in findings if doc.id in f.subjects]
     assert [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"] == []
 
-    text = source(model, doc.id, {})
-    # CT2: the cable's own table page needs no svgs entry, unlike the WireViz image it replaces.
-    assert "<svg>" not in text
-    assert text.count("#table(columns: 4,") == 1
+    text = source(model, doc.id, svgs)
+    # CD12: the cable is one drawn block, its SVG from `render.cable_blocks`.
+    assert text.count('format: "svg"') == 1
     assert '#par(text("No drawings."))' not in text
 
 

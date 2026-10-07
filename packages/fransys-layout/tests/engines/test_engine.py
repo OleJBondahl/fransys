@@ -23,6 +23,7 @@ from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import Box, Facing, overlaps
 from fransys_layout.lint._segments import runs_of
 from fransys_layout.stages import (
+    Home,
     LabelKind,
     LabelRequest,
     LinkCase,
@@ -139,10 +140,7 @@ def _replicas_of(results: StageResults, inputs: StageInputs, key: tuple[str, ...
     return [
         c
         for c in results.columns
-        if any(
-            cell.function == function and (cell.replica or c.key in results.replicas)
-            for cell in c.cells
-        )
+        if any(cell.function == function and cell.home is Home.ELSEWHERE for cell in c.cells)
     ]
 
 

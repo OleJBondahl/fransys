@@ -117,9 +117,9 @@ def test_a_cable_belonging_to_a_unit_is_excluded() -> None:
     assert "-W3" not in {row.designation for row in rows}
 
 
-def test_three_ends_keeps_only_the_two_lowest_ranked_ends() -> None:
-    """A cable with three unlocated ends: the two lowest product-designation ends are
-    `from_label`/`to_label`, in that order (decision model-0048); the third is dropped.
+def test_three_ends_list_every_other_end_in_rank_order() -> None:
+    """A cable with three unlocated ends: the lowest product-designation end is `from_label`,
+    `to_label` lists the others in rank order, joined by ", " (model-0048, model-0155).
 
     Same construction as the two-end test above: keys sorted by `Item` id, then handed
     designations in reverse alphabetical order ("X3" to the smallest-id item, "X1" to the
@@ -134,8 +134,7 @@ def test_three_ends_keeps_only_the_two_lowest_ranked_ends() -> None:
     make_core(plant, "core-2", cable, (ends[keys[1]], ends[keys[2]]), index=2)
     make_core(plant, "core-3", cable, (ends[keys[2]], ends[keys[0]]), index=3)
     (row,) = cable_list_rows(plant.model())
-    assert (row.from_label, row.to_label) == ("-X1", "-X2")
-    assert "-X3" not in (row.from_label, row.to_label)
+    assert (row.from_label, row.to_label) == ("-X1", "-X2, -X3")
 
 
 def test_zero_ends_gives_empty_from_and_to_labels() -> None:

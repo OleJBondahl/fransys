@@ -16,7 +16,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Id, Severity
 from fransys_model.layout import (
@@ -65,7 +65,7 @@ def _build(wired: tuple[tuple[int, int], ...], *, unit: bool = True):
     wire = d.wiring(colour="BU", gauge="0.5")
     for one, other in wired:
         wire(terminals[one].inner, terminals[other].inner)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _terminals(model) -> list[Id]:

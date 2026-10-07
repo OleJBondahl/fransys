@@ -9,12 +9,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Id, Model, SchemaError
-from fransys_model.kernel.ids import render_id
 from fransys_model.vocab.cables import cable_items
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.facets.wire import WireFacet
-from fransys_model.vocab.membership import cable_children
+from fransys_model.vocab.membership import cable_children, in_reading
 from fransys_model.vocab.tables import (
     facets_of,
     functions,
@@ -25,9 +24,9 @@ from fransys_model.vocab.tables import (
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .cable_end_rank import cable_end_rank
 from .designation import (
     _own_designation,
-    cable_end_rank,
     end_outside_nested_unit,
     printed_designation,
     prints_connector_label,
@@ -255,8 +254,8 @@ def cable_title(cable: HarnessCable) -> str:
 def harness_cables(model: Model, harness: Id[Item]) -> tuple[HarnessCable, ...]:
     """One `HarnessCable` per child of `harness` that is a cable (`is_cable`).
 
-    Cores are `cable_rows`' own. Ends are one per item a core lands on, in `cable_end_rank` order;
-    a terminal's end is its strip. A non-cable child is left out.
+    Cores are `cable_rows`' own. Ends are one per item a core lands on, in `cable_end_rank` order
+    (a unit member first); a terminal's end is its strip. A non-cable child is left out.
 
     Args:
         model: The frozen model to read.
@@ -313,25 +312,6 @@ def unit_cables(model: Model, unit: Id[Unit]) -> tuple[HarnessCable, ...]:
     return _sorted_cables(model, _cable_ids_of_unit(model, unit), unit)
 
 
-def unit_cable_page_key(unit: Id[Unit], cable: Id[Item]) -> str:
-    """The page key of `cable`'s drawing in `unit`'s own document: `unit:<hex>~item:<hex>`.
-
-    One key per (unit, cable), so the same cable drawn in two documents (its harness's item
-    document keys it `render_id(cable)`) never shares a page key with either. `~` occurs in no
-    rendered id (a kind has no `:`, a value is a hex digest), and survives the facade's
-    `_file_safe` (`:` becomes `-`, giving `unit-<hex>~item-<hex>`), which Windows accepts, so
-    two distinct pairs are two distinct intermediate files.
-
-    Args:
-        unit: The unit whose own document the cable is drawn in.
-        cable: The cable item being drawn.
-
-    Returns:
-        The page key, unique to this `(unit, cable)` pair.
-    """
-    return f"{render_id(unit)}~{render_id(cable)}"
-
-
 def all_cables(model: Model) -> tuple[HarnessCable, ...]:
     """Every cable item whose ends can all be rendered, whatever its harness or unit.
 
@@ -353,7 +333,7 @@ def all_unit_cables(model: Model) -> tuple[HarnessCable, ...]:
         (
             (cable, all_items[cable].unit)
             for cable in _all_cable_ids(model)
-            if all_items[cable].unit is not None
+            if in_reading(model, cable, None)
         ),
     )
 
@@ -386,7 +366,8 @@ def cable_list_rows(model: Model) -> tuple[CableListRow, ...]:
     """One `CableListRow` per top-level cable: every cable item (`is_cable`) with `unit=None`.
 
     A cable inside a harness is included, one belonging to a unit is not.
-    `from_label`/`to_label` are the `designation` of the two lowest-ranked `HarnessEnd`s.
+    `from_label` is the `designation` of the first `HarnessEnd`; `to_label` lists every other
+    end's, in `cable_end_rank` order (a unit member first), joined by ", ".
 
     Args:
         model: The frozen model to read.
@@ -401,9 +382,7 @@ def cable_list_rows(model: Model) -> tuple[CableListRow, ...]:
     found = []
     for cable in _top_level_cable_ids(model):
         cable_facts = _cable_facts(model, cable, facts)
-        # A list line names two ends; the spec has no rule for more, and dropping the extras keeps
-        # the row one line.
-        kept = cable_facts.ends[:2]
+        kept = cable_facts.ends
         found.append(
             CableListRow(
                 cable=cable,
@@ -414,7 +393,7 @@ def cable_list_rows(model: Model) -> tuple[CableListRow, ...]:
                 gauge_mm2=cable_facts.gauge_mm2,
                 length_mm=cable_facts.length_mm,
                 from_label=kept[0].designation if kept else "",
-                to_label=kept[1].designation if kept[1:] else "",
+                to_label=", ".join(end.designation for end in kept[1:]),
             )
         )
     return tuple(sorted(found, key=lambda row: (natural_key(row.designation), row.cable)))

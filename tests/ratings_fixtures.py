@@ -5,6 +5,7 @@ part's function template another rating for one test, and the three plants of th
 motor behind a contactor, a changeover's common, and a reversing starter.
 """
 
+import dataclasses
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -49,7 +50,7 @@ def template_of(model: Model, mpn: str, function: str) -> FunctionTemplate:
 def rating_facet(template: FunctionTemplate, **fields: str) -> RatingFacet:
     """A `RatingFacet` of `template` whose `Rating` fields are the given decimals."""
     key = ("test", "rating", *template.key)
-    rating = Rating(**{name: Decimal(text) for name, text in fields.items()})
+    rating = dataclasses.replace(Rating(), **{name: Decimal(text) for name, text in fields.items()})
     return RatingFacet(id=make_id(RatingFacet, key), key=key, subject=template.id, rating=rating)
 
 

@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     )
     from fransys_model.kernel import AuthoringKey
 
+    from .digits import Digits
     from .types import LocationPath, MarkerScene, Page, Seated
 
 LINK_FANOUT = "LINK_FANOUT"
@@ -193,7 +194,7 @@ def _cuts(
 
 
 def _markers(
-    cut: Cut, sheet: SheetFormat, profile: Profile, digits: Mapping[int, tuple[int, int]]
+    cut: Cut, sheet: SheetFormat, profile: Profile, digits: Mapping[int, Digits]
 ) -> list[MarkerDecision]:
     """The owner marker at the end on the earlier page and the user marker at the other (D4)."""
     owner, user = sorted(cut.ends, key=lambda end: end.page)

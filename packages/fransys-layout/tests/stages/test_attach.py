@@ -12,7 +12,7 @@ from samples import column, drawn, hid, through_geometry
 
 from fransys_layout.geometry import Facing, Point, PortGeometry
 from fransys_layout.stages.attach import attach_replicas
-from fransys_layout.stages.types import Cell, Connection, PortRef, Role
+from fransys_layout.stages.types import Cell, Connection, Home, PortRef, Role
 
 if TYPE_CHECKING:
     from fransys_layout.geometry import SymbolGeometry
@@ -57,7 +57,7 @@ def _attached(number: int, index: int, host: int, port: str) -> Cell:
         index=index,
         host=hid("function", host),
         port=port,
-        replica=True,
+        home=Home.ELSEWHERE,
     )
 
 

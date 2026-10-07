@@ -9,7 +9,7 @@ import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.read.units import boundary_edge_set
-from fransys_layout.stages.types import RailEnd
+from fransys_layout.stages.types import Home, RailEnd
 from fransys_model.derive import is_rail_terminal, port_power_kind, terminal_items
 from fransys_model.vocab import PowerKind
 from fransys_model.vocab.enums import ConductorKind
@@ -42,7 +42,7 @@ def mark_boundary_rails(
     """RB2: `specs`, each rail terminal on a unit boundary marked `rail`: its parent draws it."""
     boundary = boundary_edge_set(model)
     return tuple(
-        dataclasses.replace(spec, rail=True)
+        dataclasses.replace(spec, home=Home.ELSEWHERE)
         if spec.function in undrawn and spec.function in boundary
         else spec
         for spec in specs
@@ -66,16 +66,20 @@ def rail_wires(
     """`connections` without the rail wires, and the `RailEnd` of each drawn pin they leave."""
     strip_terminals = terminal_items(model)
     pins = {spec.function for spec in specs if spec.item not in strip_terminals}
-    boundary = {spec.function for spec in specs if spec.rail}
+    drawn = {spec.function for spec in specs} - set(undrawn)
+    boundary = {spec.function for spec in specs if spec.home is Home.ELSEWHERE}
     kept: list[Connection] = []
     ends: list[RailEnd] = []
     for connection in connections:
         pair = (connection.a, connection.b)
-        if _is_rail_wire(model, pair, pins, undrawn) and not _enters_unit(model, pair, boundary):
+        if _is_rail_wire(model, pair, pins, drawn, undrawn) and not _enters_unit(
+            model, pair, boundary
+        ):
+            keep = drawn if any(ref.function in undrawn for ref in pair) else pins
             ends += [
                 RailEnd(ref=ref, connection=connection.handle)
                 for ref in pair
-                if ref.function in pins
+                if ref.function in keep
             ]
         else:
             kept.append(connection)
@@ -96,12 +100,16 @@ def _is_rail_wire(
     model: Model,
     pair: tuple[PortRef, PortRef],
     pins: Collection[Id[Any]],
+    drawn: Collection[Id[Any]],
     undrawn: Collection[Id[Any]],
 ) -> bool:
-    """One end a removed rail terminal and the other a power pin, or both ends power pins."""
+    """One end a removed rail terminal and the other a drawn power end, or both ends power pins.
+
+    The drawn end of a removed rail terminal's wire may be a strip terminal; two power ends may not.
+    """
     if not any(ref.function in undrawn for ref in pair):
         return all(ref.function in pins and _on_power(model, ref) for ref in pair)
-    return any(ref.function in pins and _on_power(model, ref) for ref in pair)
+    return any(ref.function in drawn and _on_power(model, ref) for ref in pair)
 
 
 def _on_power(model: Model, ref: PortRef) -> bool:

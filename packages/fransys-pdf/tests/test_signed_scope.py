@@ -21,10 +21,10 @@ from _build import (
     sheet_format,
 )
 from fransys_pdf import source
+from fransys_pdf._cable_runs import Block
 from fransys_pdf._drawings import _cable_runs
 from fransys_pdf._geometry import document_heading, preamble, subject_label
 
-from fransys_model.derive import HarnessCable
 from fransys_model.kernel.ids import render_id
 from fransys_model.vocab import DocumentPreset, PageKind, documents
 
@@ -88,21 +88,10 @@ def test_a_drawing_pages_scope_cell_reads_the_bare_location():
 
 def test_a_harness_drawing_pages_scope_cell_reads_the_bare_harness():
     harness = item("h1", description="Harness one")
-    cable_item = item("w1", description="Cable one")
     doc = document("d1", preset=DocumentPreset.HARNESS_DRAWING, subject=harness, cover="# Cover")
     m = model(project(), harness, doc)
     sheet = sheet_format("wide", width_mm=150, height_mm=200, frame_columns=1, frame_rows=1)
-    cable = HarnessCable(
-        cable=cable_item.id,
-        designation="-W1",
-        mpn=None,
-        description=None,
-        core_count=None,
-        gauge_mm2=None,
-        shielded=None,
-        length_mm=None,
-        cores=(),
-        ends=(),
-    )
-    text = preamble(sheet) + _cable_runs(m, documents(m)[doc.id], sheet, (cable,))
+    block = Block("k", "", "")
+    runs = _cable_runs(m, documents(m)[doc.id], sheet, (block,), {"k": "<svg>block</svg>"})
+    text = preamble(sheet) + runs
     assert 'text(size: 8pt, "Scope"), text(size: 10pt, text("H1"))' in text

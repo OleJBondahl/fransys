@@ -17,7 +17,6 @@ from .harness import (
     contents_rows,
     harness_cables,
     top_level_cables,
-    unit_cable_page_key,
     unit_cables,
 )
 from .lookups import (
@@ -111,7 +110,6 @@ __all__ = [
     "top_level_cables",
     "unconnected_ports",
     "unit_boards",
-    "unit_cable_page_key",
     "unit_cables",
     "unit_items",
     "unit_release",

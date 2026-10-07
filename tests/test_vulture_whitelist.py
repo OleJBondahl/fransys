@@ -56,7 +56,10 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # + four EA-SERIES surface calls: series, parallel, ac_supply, dc_supply
 # - `design` (EA-SWAP), + Fn.limits (author-0017 O4), + _.port_pairs (BOX-OVER-GROUP): net 138
 # + Profile.hide_unused_pins (model-0136 removed the model's own read; layout reads it): net 139
-WHITELIST_CEILING = 139
+# decision 0115: the count leaves out an OTHER entry that cites a reader in another package
+# (148 entries at CT5-2, of which 36 are cross-package OTHER)
+# - nominal_current_a (RATINGS-3 `draw` reads it): one fewer counted entry
+WHITELIST_CEILING = 111
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 ROOT-LINES names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(
@@ -127,6 +130,20 @@ def workspace_trees() -> list[ast.Module]:
     ]
 
 
+def _defined_in(tree: ast.Module) -> set[str]:
+    """Every name `tree` defines: a def/class, an assigned name, an attribute-store target."""
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                _collect_target_names(target, names)
+        elif isinstance(node, ast.AnnAssign):
+            _collect_target_names(node.target, names)
+    return names
+
+
 @pytest.fixture(scope="module")
 def defined_names(workspace_trees: list[ast.Module]) -> frozenset[str]:
     """Every name defined anywhere under `packages/*/src`: a function/class def, an assigned
@@ -134,14 +151,7 @@ def defined_names(workspace_trees: list[ast.Module]) -> frozenset[str]:
     """
     names: set[str] = set()
     for tree in workspace_trees:
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-                names.add(node.name)
-            elif isinstance(node, ast.Assign):
-                for target in node.targets:
-                    _collect_target_names(target, names)
-            elif isinstance(node, ast.AnnAssign):
-                _collect_target_names(node.target, names)
+        names |= _defined_in(tree)
     return frozenset(names)
 
 
@@ -225,9 +235,60 @@ def test_every_whitelist_entry_has_its_reason() -> None:
     assert unreasoned == []
 
 
-def test_whitelist_entry_count_is_at_most_the_ceiling() -> None:
+def _package_of(path: str) -> str:
+    """The workspace package a `packages/`-relative `path` lies in."""
+    return path.split("/", 1)[0]
+
+
+@pytest.fixture(scope="module")
+def defining_packages() -> dict[str, frozenset[str]]:
+    """Each name mapped to the packages whose `src` defines it (same walk as `defined_names`)."""
+    found: dict[str, set[str]] = {}
+    for path in (ROOT / "packages").glob("*/src/**/*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        package = path.relative_to(ROOT / "packages").parts[0]
+        for name in _defined_in(tree):
+            found.setdefault(name, set()).add(package)
+    return {name: frozenset(packages) for name, packages in found.items()}
+
+
+def _counted_entries(
+    entries: list[tuple[str, str, str, int]], defining: dict[str, frozenset[str]]
+) -> list[tuple[str, str, str, int]]:
+    """The entries the ceiling counts: all but an OTHER one citing a reader in a package that
+    defines no such name (proven used there, decision 0115).
+    """
+    return [
+        entry
+        for entry in entries
+        if not (
+            entry[1] == "OTHER"
+            and "/src/" in entry[2]
+            and _package_of(entry[2]) not in defining.get(entry[0], ())
+        )
+    ]
+
+
+def test_whitelist_entry_count_is_at_most_the_ceiling(
+    defining_packages: dict[str, frozenset[str]],
+) -> None:
     entries = _reasoned_entries(WHITELIST_PATH.read_text(encoding="utf-8"))
-    assert len(entries) <= WHITELIST_CEILING
+    assert len(_counted_entries(entries, defining_packages)) <= WHITELIST_CEILING
+
+
+def test_an_other_entry_citing_its_own_package_is_counted(
+    defining_packages: dict[str, frozenset[str]],
+) -> None:
+    same = ("pitch", "OTHER", "fransys-model/src/fransys_model/x.py", 1)
+    cross = ("pitch", "OTHER", "fransys-render/src/fransys_render/cables.py", 1)
+    assert _counted_entries([same, cross], defining_packages) == [same]
+
+
+def test_an_other_entry_citing_another_packages_tests_is_counted(
+    defining_packages: dict[str, frozenset[str]],
+) -> None:
+    tests_reader = ("pitch", "OTHER", "fransys-render/tests/test_cables.py", 1)
+    assert _counted_entries([tests_reader], defining_packages) == [tests_reader]
 
 
 # --- ignore_names: still a real enum member (beyond the legacy set), ceiling ----------------

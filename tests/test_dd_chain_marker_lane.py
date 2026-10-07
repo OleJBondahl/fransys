@@ -18,7 +18,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Origin, Severity, make_id
 from fransys_model.layout import (
@@ -72,7 +72,7 @@ def _build(n: int, *, width_mm: int | None = None):
             sheet_format=sheet.id,
         )
         draft.extend((sheet, profile), origin=Origin(file=__file__, line=1, note="narrow sheet"))
-    return fr.build(parts, draft, system_document())
+    return fr.build(parts, draft, layout_trigger_document())
 
 
 @pytest.mark.parametrize("n", [3, 4, 5, 6, 8, 12])

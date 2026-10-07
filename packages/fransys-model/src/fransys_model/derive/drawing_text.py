@@ -42,6 +42,7 @@ from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lookups import effective_placement
 from fransys_model.derive.marker_targets import marker_lines, target_lines
 from fransys_model.derive.port_marking import marking_text, port_marking
+from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.revision_text import revision_text
 from fransys_model.derive.unit_nodes import chain_up, end_context, stub_place
 from fransys_model.derive.unit_release import unit_release
@@ -82,9 +83,10 @@ type Seat = tuple[int, int, LocationPath]
 type _PinKey = tuple[Id[Page], int, int, int, int, int, bool]
 type _ReadingKey = tuple[int, int, str, Id[Port]]
 
-# Grid units per symbol module (`G = M/8`), the same constant as
-# `fransys_layout.geometry.units.G_PER_MODULE`. Duplicated, not imported: this package
-# imports nothing (root CLAUDE.md invariant 2). Only `content_extent` uses it.
+# Grid units per symbol module (`G = M/8`). The home is `electrical_symbols.G_PER_MODULE`; this is
+# a copy, not an import (this package imports nothing, root CLAUDE.md invariant 2), guarded by
+# `tests/test_boundaries.py::test_the_model_copy_of_g_per_module_matches_its_home`.
+# Only `content_extent` uses it.
 _G_PER_MODULE = 8
 
 
@@ -414,21 +416,19 @@ def _reference_groups(
     markers: Mapping[Id[LinkMarker], LinkMarker],
     branches_of: Mapping[Id[LinkMarker], tuple[LinkMarker, ...]],
 ) -> list[tuple[LinkMarker, ...]]:
-    """Every reference group in the whole model, once each (a pure off stub excluded).
+    """Every reference group in the whole model, once each, its head first (`heads_group`).
 
     Global, not per drawing set: a severed pair's two ends can stand in two sets, found by id.
-    Grouping one set's markers first would leave such a partner unresolved.
+    A group belongs to its head's set (layout-0132), the set layout counted it in.
     """
-    seen: set[Id[LinkMarker]] = set()
     groups: list[tuple[LinkMarker, ...]] = []
     for marker in markers.values():
-        if marker.id in seen:
+        star = marker.star.value if marker.star else ""
+        if not heads_group(star, marker.side.value, named=marker.id in branches_of):
             continue
         group = _reference_group(marker, markers, branches_of)
-        if group is None:
-            continue
-        seen.update(one.id for one in group)
-        groups.append(group)
+        if group is not None:
+            groups.append((marker, *(one for one in group if one.id != marker.id)))
     return groups
 
 
@@ -448,8 +448,8 @@ def _rank_drawing_set(
 def _reference_numbers(model: Model) -> Mapping[Id[LinkMarker], int]:
     """The `#n` map, every reference marker to its rank, built once per model digest.
 
-    Groups are found once globally, then ranked in the drawing set of each one's own first end.
-    A group spanning two sets is numbered in that set, so every member still carries one number.
+    Groups are found once globally, then ranked in the drawing set of each one's head.
+    A group spanning two sets is numbered in its head's set, so every member carries one number.
     """
     markers = layout_of(model, LinkMarker)
     pages = layout_of(model, Page)
@@ -457,8 +457,7 @@ def _reference_numbers(model: Model) -> Mapping[Id[LinkMarker], int]:
     groups = _reference_groups(markers, branches_of)
     by_set: dict[Id[DrawingSet], list[tuple[LinkMarker, ...]]] = defaultdict(list)
     for group in groups:
-        first = min(group, key=lambda one: _reading_key(model, pages, one))
-        by_set[pages[first.page].drawing_set].append(group)
+        by_set[pages[group[0].page].drawing_set].append(group)
     numbers: dict[Id[LinkMarker], int] = {}
     for set_groups in by_set.values():
         numbers.update(_rank_drawing_set(model, set_groups, pages))
@@ -890,6 +889,7 @@ __all__ = [
     "external_note",
     "frame_column",
     "frame_row",
+    "heads_group",
     "is_device_terminal",
     "item_tag_text",
     "label_text",

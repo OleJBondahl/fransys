@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Box, port_page_at, translate
 from fransys_layout.stages.space import Shape, Space
-from fransys_layout.stages.stub_runs import functions_through
+from fransys_layout.stages.stub_runs import functions_through, solids
 
 from .candidates import DEFAULT_TABLE
 from .place_texts import place_texts
@@ -29,11 +29,12 @@ def _stub_clear(
     ports = {
         one.function: tuple(port_page_at(one.at, g) for g in one.geometry.ports) for one in here
     }
+    page = solids(bodies, ports)
     return tuple(
         replace(
             text,
             places=tuple(
-                replace(place, fits=False) if functions_through(marker, bodies, ports) else place
+                replace(place, fits=False) if functions_through(marker, page) else place
                 for marker, place in rows[int(text.slot)]
             ),
         )

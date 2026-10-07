@@ -14,7 +14,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -72,7 +72,7 @@ def _design(*, second_tag: str = "K2", relays: bool = True, lamp_rails: tuple[st
         d.supply("DC", current="dc", rails=_DC_RAILS)
         for name, end, rail in (("TOPN", a, lamp_rails[0]), ("BOTN", b, lamp_rails[1])):
             d.net(name, end.inner, cls="pe" if rail == "PE" else "power", potential=rail)
-        return fr.build(parts, d.draft(), system_document()).model
+        return fr.build(parts, d.draft(), layout_trigger_document()).model
     feed1, feed2, zero1, zero2, out1, out2 = (
         strip.terminal("DEMO-TB-2.5", group=group) for _ in range(6)
     )
@@ -87,7 +87,7 @@ def _design(*, second_tag: str = "K2", relays: bool = True, lamp_rails: tuple[st
         wire(relay.fn("co_1")["14"], out1.inner)
         wire(feed.inner, relay.fn("co_2")["21"])  # layout-0112: an unwired contact is not drawn
     wire(k1.fn("co_1")["12"], out2.inner)
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _geometry(placement: SymbolPlacement):
@@ -228,7 +228,7 @@ def _switch_chain(row_spacing: int | None = None, switch_count: int = 5):
     for above, below in pairwise(switches):
         wire(above["B"], below["A"])
     wire(switches[-1]["B"], bottom.inner)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_a_seven_block_column_ends_inside_the_page_at_the_house_row_spacing() -> None:

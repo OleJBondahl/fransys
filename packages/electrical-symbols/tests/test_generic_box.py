@@ -5,7 +5,7 @@ from graphical_symbols.boxes import body_box, slot_box
 from graphical_symbols.geometry import Box, Direction, Point, Polyline
 from graphical_symbols.model import SymbolKind
 
-from electrical_symbols import GENERIC_BOX_KEY, generic_box
+from electrical_symbols import GENERIC_BOX_KEY, box_pitch, generic_box
 
 
 def test_the_key_is_the_symbol_reference_number():
@@ -75,9 +75,10 @@ def test_a_marking_slot_sits_beside_each_port():
 
 
 def test_pitch_rounds_the_offset_up_not_down():
-    """R7 B3: pitch is `ceil(0.65 * longest + 0.5)`; an 11-char marking needs 8 M, not 7."""
+    """R7 B3: pitch is `ceil(text_width / 8 + 0.5)` M; "longmarking" (41 G) needs 6 M, not 5."""
+    # CAN-FAIL: generic_box.py `_pitch`: `math.ceil` -> `math.floor` (5 M) fails the box width
     symbol = generic_box(("function.longmarking",))
-    assert body_box(symbol) == Box(Point(-2, -2), Point(14, 2))
+    assert body_box(symbol) == Box(Point(-2, -2), Point(10, 2))
 
 
 def test_offsets_set_each_ports_x_and_the_body_ends_one_pitch_past_the_last():
@@ -95,3 +96,28 @@ def test_offsets_of_the_wrong_length_raise():
 
 def test_no_offsets_leaves_the_default_box_as_it_was():
     assert generic_box(("a", "b", "c")) == generic_box(("a", "b", "c"), offsets=())
+
+
+def test_a_side_other_than_n_or_s_raises():
+    """A side is "n" or "s"; any other is refused, with or without offsets, never drawn south."""
+    with pytest.raises(ValueError, match="got 'e'"):
+        generic_box(("a", "b"), sides=("n", "e"))
+    with pytest.raises(ValueError, match="got 'e'"):
+        generic_box(("a", "b"), sides=("n", "e"), offsets=(0.0, 2.0))
+
+
+def test_box_pitch_fits_the_widest_thing_standing_at_a_port():
+    """layout-0132: `stand` G wide needs `ceil(stand / 8 + 0.5)` M, never less than markings."""
+    # CAN-FAIL: generic_box.py `box_pitch`: `max(longest, stand)` -> `longest` gives 2 M, not 3 M
+    assert box_pitch(("+", "-")) == 2.0
+    assert box_pitch(("+", "-"), stand=16) == 3.0
+    assert box_pitch(("+", "-"), stand=4) == 2.0
+    assert box_pitch(("function.longmarking",), stand=16) == 6.0
+
+
+def test_a_stand_spaces_the_ports_at_the_wider_pitch_and_keeps_the_plain_body_margin():
+    """`stand` 20 G: ports 3 M apart; the body ends at the last port plus plain pitch plus 2 M."""
+    symbol = generic_box(("a", "b", "c"), stand=20)
+    assert [p.position.x for p in symbol.ports] == [0, 0, 3]
+    assert body_box(symbol) == Box(Point(-2, -2), Point(5, 2))
+    assert generic_box(("a", "b", "c"), stand=0) == generic_box(("a", "b", "c"))

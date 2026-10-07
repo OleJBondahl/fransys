@@ -19,7 +19,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import designation_list, unit_release
 from fransys_model.derive.designation import own_nodes
@@ -42,7 +42,7 @@ _STUB = re.compile(r"^-W\d+ [→←] \+EXT-\S+:.+")
 def _laid_out(parts, draft):
     """`fr.build`'s model, after asserting it carries no `ERROR` (decision 0028: an `ERROR`
     stops `build` before layout, so the test would find no `layout.*` record to measure)."""
-    result = fr.build(parts, draft, system_document())
+    result = fr.build(parts, draft, layout_trigger_document())
     errors = [f.code for f in result.findings if f.severity is Severity.ERROR]
     assert errors == []
     return result.model
@@ -142,7 +142,7 @@ def test_a_function_node_shared_with_another_units_item_is_not_the_units_own() -
         u = d.scope(name).unit("demo-pump-cabinet", revision=1, interface="1")
         u.revision(1, date="2026-01-01", text="First release", created="XX")
         u.item("DEMO-CONN-2P", tag="X1", at=u.location(name.upper(), "Cabinet"), group=p1)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     assert len(units(model)) == 2
     owned = [_labels(model, own_nodes(model, unit)) for unit in units(model)]
     assert sorted(owned, key=sorted) == [{"CAB1"}, {"CAB2"}]  # no "P1", each its own location

@@ -138,14 +138,17 @@ def test_demo_library_record_counts_and_keys():
     (1/2/1/1) and two function-less fuse links (`fuse-link-4a-t.toml`, `fuse-link-500ma-t.toml`);
     RR-O6 adds `connector-header-2p-lettered.toml` (1/2/0/1),
     FEEDER-PORTS adds `psu-24v-5out.toml` (2 functions/7 ports),
-    so 44 parts, 93 templates, 217 ports, 45 links, 40 symbol choices)."""
+    PIN-LABELS adds `ctrl-8.toml` (4 functions/16 ports),
+    ACCESSORY-HOLDER adds `jumper-bar-3p.toml` (no function, no port),
+    GND-NAME adds `psu-24v-pm.toml` (2 functions/4 ports),
+    so 47 parts, 99 templates, 237 ports, 45 links, 40 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 44
-    assert len(function_templates(model)) == 93
-    assert len(port_templates(model)) == 217
+    assert len(parts(model)) == 47
+    assert len(function_templates(model)) == 99
+    assert len(port_templates(model)) == 237
     assert len(internal_links(model)) == 45
     assert len(model.tables["layout.symbol_choice"]) == 40
 

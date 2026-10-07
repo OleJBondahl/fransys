@@ -11,10 +11,10 @@ from .rows import MateRow
 def mates(model: Model) -> tuple[MateRow, ...]:
     """One `MateRow` per mate in `model`, sorted by `(a_designation, b_designation)`.
 
-    A mate joins two connector functions, kept in the authored order of `d.mate`. A mate on a board
-    and one between a plug and a unit's interface connector both appear, where `connector_rows`
-    covers board connectors only. Each designation is the text the connector list prints at system
-    level. Reach an item through the function.
+    A mate joins two connector or terminal functions, kept in the authored order of `d.mate`. A
+    mate on a board and one between a plug and a unit's interface connector both appear, where
+    `connector_rows` covers board connectors only. Each designation is the text the connector list
+    prints at system level. Reach an item through the function.
 
     Raises:
         SchemaError: a mated function is not of `model`, or its item has no designation.

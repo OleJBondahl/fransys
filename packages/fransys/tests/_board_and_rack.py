@@ -25,7 +25,7 @@ any `Function`).
 """
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document, system_document
 
 from fransys_model.kernel import Draft, Model, Origin, make_id
 from fransys_model.vocab.core import Function, Item
@@ -36,9 +36,9 @@ from fransys_model.vocab.templates import Part
 _ORIGIN = Origin(file="packages/fransys/tests/_board_and_rack.py", line=1, note="invented")
 
 
-def build_board_and_rack_model() -> Model:
+def build_board_and_rack_model(*, lays_out: bool = False) -> Model:
     """A board `PCB1` (one function of its own) and a PLC rack `R1` with one (channel-less)
-    module, via `fr.build`.
+    module, via `fr.build`; `lays_out` keeps a SCHEMATIC page so the layout call runs.
     """
     board_part = Part(
         id=make_id(Part, ("board",)),
@@ -113,4 +113,5 @@ def build_board_and_rack_model() -> Model:
         ],
         origin=_ORIGIN,
     )
-    return fr.build(draft, system_document()).model
+    document = layout_trigger_document() if lays_out else system_document()
+    return fr.build(draft, document).model

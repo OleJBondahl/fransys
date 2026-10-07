@@ -283,14 +283,19 @@ a blue 0.75 mm2 wire.
 
 ## Earth pins
 
-`d.earth(*pins)` joins the pins to protective earth as one `PE` net.
+`d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A wired pin draws the PE
+symbol. A pin joined only by `d.earth` draws bare and warns `NET_UNREALISED`.
 
 ```python
 import fransys as fr
+from fransys.colours import GNYE
 
 d = fr.design("demo_parts")
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, pe="DEMO-TB-PE-2.5")
-d.earth(x1[1], x1[2])
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
+pe = x1.run("PE", 2, bridged=True)
+m1 = d.device("M1", "DEMO-MOTOR-4KW")
+d.wire(m1.motor["PE"], pe[1], wire=(GNYE, 2.5))
+d.earth(m1.motor["PE"], pe[1])
 ```
 
 ## A named signal net
@@ -318,6 +323,12 @@ plus the voltage and `minus` is minus the voltage. `names=(plus, minus, mid)` re
 
 `earthing=fr.IT` declares a floating supply on `ac_supply` or `dc_supply`; the default is `fr.EARTHED`.
 Two 0 V rails are two supplies.
+
+`ac_supply` and `dc_supply` take `fault_current_a=`, the supply's prospective fault current in amps. `dc_supply` also takes
+`fault_time_constant_ms=`. A supply that states a fault current is a source for the breaking-capacity check (`reading.md`). A
+`dc_supply` declared from a `source` device refuses both, since that part states its own fault data.
+
+A nested unit's declaration of a supply name its container also declares is not a source. The container's declaration counts.
 
 `d.ac_supply(name, voltage, *phases, n=None, names=None)` declares an AC supply on one or three phase pins in
 phase order. Its rails are `ac.L1`, plus `ac.L2` and `ac.L3` for three phases. On three phases `voltage` is each phase's RMS to the star point: 230 for a 400 V supply. A 230 V line-to-line IT supply is declared 132.79. A pin's side and order
@@ -392,6 +403,21 @@ assert fr.derive.item_designation(model, link.id) == fr.derive.item_designation(
 The link prints `F1` and has no number or row of its own. An authored tag makes it an ordinary item. The
 holder's protection function then bounds its branch at the link's rated current. The part page shows the
 link's `[rating]`, and `reading.md` shows the branch check ("Checking a branch's current").
+
+`parent=` also takes a terminal strip. A jumper bar on a bridged run is an accessory of its strip: it prints
+the strip's designation and the BOM counts it. `parent=` refuses a run or a terminal and names its strip.
+You state the bar yourself; the bridge adds none.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
+run = x1.run("L", 3, bridged=True)
+bar = d.device(None, "DEMO-JUMPER-BAR-3P", name="bar", parent=x1)
+model = fr.build(d).model
+assert fr.derive.item_designation(model, bar.id) == "X1"
+```
 
 ## Reading a part's rating
 

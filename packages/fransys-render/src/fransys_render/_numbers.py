@@ -2,6 +2,8 @@
 
 from decimal import Decimal
 
+from electrical_symbols import G_PER_MODULE
+
 
 def format_decimal(value: Decimal) -> str:
     """`value` with no exponent and no trailing zeros; any zero becomes `0`."""
@@ -14,6 +16,6 @@ def format_decimal(value: Decimal) -> str:
     return f"{normalized:f}"
 
 
-def grid_to_mm(origin_mm: int, g: int, module_mm: Decimal) -> Decimal:
+def grid_to_mm(origin_mm: int, g: int | Decimal, module_mm: Decimal) -> Decimal:
     """One grid coordinate `g` (0.125 M each) converted to an absolute mm position (D5)."""
-    return Decimal(origin_mm) + Decimal(g) * module_mm / 8
+    return Decimal(origin_mm) + Decimal(g) * module_mm / G_PER_MODULE

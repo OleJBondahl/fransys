@@ -17,7 +17,7 @@ from fransys_layout.engines.schematic.read.write_keys import write_keys
 from fransys_layout.engines.schematic.write import write_layout
 from fransys_layout.engines.schematic.write.markers import _marker_fields
 from fransys_layout.engines.schematic.write.placements import _placement_fields
-from fransys_layout.geometry import GENERIC_BOX_KEY, Box, Point
+from fransys_layout.geometry import GENERIC_BOX_KEY, Box, Point, generic_box_geometry
 from fransys_layout.stages import MarkerSide
 from fransys_model.kernel import freeze
 from fransys_model.layout import MarkerSide as ModelMarkerSide
@@ -105,6 +105,15 @@ def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawin
     assert sides == tuple(Side[port.facing.value.upper()] for port in drawn)
     (written,) = (p for p in dict(out.tables["layout.symbol_placement"]).values() if p.ports)
     assert (written.ports, written.sides, written.port_offsets) == (names, sides, offsets)
+
+
+def test_a_box_port_standing_north_is_written_before_the_one_south_of_it() -> None:
+    """RR-O4: at one x the drawing order is N then S, whatever the names sort to."""
+    _, results, _ = _laid_out()
+    box = dataclasses.replace(_generic_box(results), geometry=generic_box_geometry(("b", "a")))
+    names, sides, _ = _placement_fields(box, PlacementView.ITEM)
+    assert names == ("b", "a")
+    assert sides == (Side.N, Side.S)
 
 
 def _marker(**changes):

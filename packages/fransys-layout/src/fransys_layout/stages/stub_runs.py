@@ -5,11 +5,13 @@ lint reports it. A foreign symbol is a function with no port at the marker's poi
 runs through it when it crosses the body's interior or passes over one of its ports.
 """
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping
 
 from fransys_layout.geometry import Box, Point, meets
 
+from .cell_index import CellIndex
 from .space import Run, crosses, run_of
 
 if TYPE_CHECKING:
@@ -51,23 +53,44 @@ def _run_to_box(start: Point, box: Box) -> Run | None:
     return None if end == start else run_of(start, end)
 
 
-def functions_through(
-    marker: LinkMarker,
-    bodies: Mapping[Handle, Box],
-    ports: Mapping[Handle, tuple[Point, ...]],
-) -> tuple[Handle, ...]:
-    """The foreign functions the marker's stub runs through or over, in `bodies` order."""
-    own = {function for function, points in ports.items() if marker.at in points}
-    runs = stub_runs(marker)
-    return tuple(
-        function
-        for function, body in bodies.items()
-        if function not in own
-        and (
-            any(crosses(body, run) for run in runs)
-            or any(_on(point, marker.at, runs) for point in ports[function])
-        )
+@dataclass(frozen=True, slots=True)
+class Solids:
+    """A page's bodies and port points keyed by wiring-grid cell, each with its body-order rank."""
+
+    bodies: CellIndex[tuple[int, Handle, Box]]
+    ports: CellIndex[tuple[int, Handle, Point]]
+
+
+def solids(bodies: Mapping[Handle, Box], ports: Mapping[Handle, tuple[Point, ...]]) -> Solids:
+    """The index `functions_through` reads; a port of a function with no body is no candidate."""
+    rank = {function: place for place, function in enumerate(bodies)}
+    return Solids(
+        bodies=CellIndex(
+            (box, (rank[function], function, box)) for function, box in bodies.items()
+        ),
+        ports=CellIndex(
+            (Box(x=point.x, y=point.y, width=0, height=0), (rank[function], function, point))
+            for function, points in ports.items()
+            if function in rank
+            for point in points
+        ),
     )
+
+
+def functions_through(marker: LinkMarker, solids: Solids) -> tuple[Handle, ...]:
+    """The foreign functions the marker's stub runs through or over, in body order."""
+    at = marker.at
+    own = {
+        function
+        for _, function, point in solids.ports.meeting(at.x, at.y, at.x, at.y)
+        if point == at
+    }
+    hit: set[tuple[int, Handle]] = set()
+    for run in stub_runs(marker):
+        corners = (run.x, run.y, run.to_x, run.to_y)
+        hit.update((r, f) for r, f, body in solids.bodies.meeting(*corners) if crosses(body, run))
+        hit.update((r, f) for r, f, p in solids.ports.meeting(*corners) if _on(p, at, (run,)))
+    return tuple(function for _, function in sorted(hit) if function not in own)
 
 
 def _on(point: Point, own: Point, runs: tuple[Run, ...]) -> bool:

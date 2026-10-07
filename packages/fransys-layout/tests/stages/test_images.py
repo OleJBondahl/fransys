@@ -24,8 +24,8 @@ from fransys_layout.stages.images import (
     contact_images,
     image_reserves,
 )
-from fransys_layout.stages.texts.power import held_shapes
-from fransys_layout.stages.types import Cell
+from fransys_layout.stages.texts.power import drawn_shapes, power_place
+from fransys_layout.stages.types import Cell, Home
 
 
 def _relay_function(number: int, kind: str, *names: str, item: int = 1) -> FunctionSpec:
@@ -90,10 +90,10 @@ def test_a_coil_with_contacts_reserves_room_below_its_last_cell_and_width_on_its
     assert reserves[cells.key, coil].images == reserves[cells.key, under].images == (image,)
 
 
-@pytest.mark.parametrize("own", [{"replica": True}, {"host": hid("function", 9)}])
+@pytest.mark.parametrize("own", [{"home": Home.ELSEWHERE}, {"host": hid("function", 9)}])
 def test_a_replica_or_a_hosted_coil_reserves_nothing(own: dict) -> None:
     """A replica cell and an attachment (a cell with a host) hold no contact image."""
-    # UNDO: stages/images.py:image_reserves, drop `cell.replica or cell.host is not None or`
+    # UNDO: stages/images.py:image_reserves, drop the `cell.home` and `cell.host` guard
     cells = replace(column("a", (1,)), cells=(Cell(function=hid("function", 1), index=0, **own),))
     assert image_reserves((cells,), _relay(), PROFILE, MARKS) == {}
 
@@ -199,7 +199,10 @@ def test_the_ink_of_a_page_is_grouped_once_in_marker_order() -> None:
     # UNDO: stages/slices.py:page_of, `item.drawing_set, item.page` -> `item.drawing_set, 1`
     a, b, c = _marker(1, 64), _marker(2, 96), _marker(1, 128)
     found = _page_marker_boxes((a, b, c))
-    assert found == {(1, 1): held_shapes((a, c)), (1, 2): held_shapes((b,))}
+    assert found == {
+        (1, 1): tuple(one.box for one in drawn_shapes((a, c))),
+        (1, 2): tuple(one.box for one in drawn_shapes((b,))),
+    }
     assert [box for box in found[1, 1] if box in (a.box, c.box)] == [a.box, c.box]
     assert len(found[1, 1]) > 2, "the stubs are ink too"
 
@@ -346,3 +349,54 @@ def test_the_image_starts_at_the_rightmost_bottom_port() -> None:
     box = replace(one, geometry=replace(one.geometry, ports=ports))
     assert _anchor_x(box) == 144
     assert _anchor_x(one) == 96, "a coil's one bottom port is its anchor"
+
+
+# --- drawn-clear (layout-0134): a table clears only what the page draws ------------------------
+
+
+def _table_y(*markers: LinkMarker) -> tuple[int, Box]:
+    """The y and box of the one coil's table on a page holding `markers`."""
+    coil = _relay_function(1, "coil", "A1", "A2")
+    make = _relay_function(2, "contact_no", "13", "14")
+    coil_at = placed(1, x=0, y=0, name="a")
+    inputs = ImageInputs((make, coil), SHEET, PROFILE, MARKS, no_place="N/A")
+    found, _ = contact_images(
+        (page_plan(("a",)),), [((coil_at, placed(2, x=200, y=0, name="b")), ())], inputs, markers
+    )
+    ((_, (label,)),) = found
+    return label.box.y, label.box
+
+
+def _end(box: Box, *, pin: Point, symbol: str = "") -> LinkMarker:
+    """A marker with `box` and its pin at `pin`: a power end when `symbol` is given."""
+    return replace(
+        _marker(1, 0), box=box, at=pin, symbol=symbol, symbol_text="+24" if symbol else ""
+    )
+
+
+def test_a_table_clears_a_drawn_marker_but_not_a_power_ends_undrawn_box() -> None:
+    """layout-0134: a power end draws its symbol, not its box: only the symbol holds a table."""
+    # UNDO: stages/images.py `_page_marker_boxes`: return the boxes unfiltered (the undrawn box
+    # of a power end is held again), or drop `Shape`s for power symbols from `drawn_shapes`.
+    bare_y, bare = _table_y()
+    over = Box(x=bare.x, y=bare.y, width=bare.width, height=bare.height)
+    far = Point(x=2000, y=2000)  # the symbol stands far from the table
+    power_y, _ = _table_y(_end(over, pin=far, symbol="ground"))
+    assert power_y == bare_y, "the undrawn box of a power end holds the table"
+    drawn_y, drawn = _table_y(_end(over, pin=far))
+    assert drawn_y > bare_y
+    assert drawn.y >= over.y + over.height
+
+
+def test_a_table_clears_a_power_symbols_body_and_lead() -> None:
+    """layout-0134: the symbol a power end draws holds the table, wherever its box stands."""
+    # UNDO: stages/texts/power.py `drawn_shapes`: drop the `Shape`s of `power_places` (the symbol).
+    bare_y, bare = _table_y()
+    pin = Point(x=bare.x + 8, y=bare.y + bare.height + 2 * WIRING_GRID)
+    box = Box(x=pin.x - 24, y=pin.y - 6 * WIRING_GRID, width=48, height=12)  # above the pin
+    end = _end(box, pin=pin, symbol="ground")
+    y, table = _table_y(end)
+    body = power_place(end)
+    assert y > bare_y
+    for shape in (body.body, body.lead):
+        assert table.y >= shape.y + shape.height or table.y + table.height <= shape.y

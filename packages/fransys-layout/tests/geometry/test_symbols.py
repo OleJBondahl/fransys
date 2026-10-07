@@ -30,7 +30,7 @@ from fransys_layout.geometry import (
     on_wiring_grid,
     symbol_geometry,
 )
-from fransys_layout.geometry.symbols import convert
+from fransys_layout.geometry.symbols import convert, generic_box_geometry
 
 
 def test_make_contact_ports_are_integer_grid_points() -> None:
@@ -409,3 +409,25 @@ def test_a_symbol_with_no_declared_nodes_has_only_implicit_singletons() -> None:
 def test_library_version_has_a_version_after_each_name() -> None:
     """Each distribution name is followed by a version token."""
     assert re.fullmatch(r"electrical-symbols \S+ / graphical-symbols \S+", library_version())
+
+
+@pytest.mark.parametrize(
+    ("names", "sides", "stand", "expected"),
+    [
+        (("a", "b", "c"), (), 20, (0.0, 0.0, 3.0)),
+        (("in1", "in2", "out"), ("n", "n", "s"), 30, (0.0, 5.0, 0.0)),
+        (("1", "2", "3", "4"), ("n", "s", "n", "s"), 25, (0.0, 0.0, 4.0, 4.0)),
+        (("a", "b"), (), 0, (0.0, 0.0)),
+    ],
+)
+def test_a_standing_box_draws_the_ports_the_symbol_returns_at_the_stand_pitch(
+    names: tuple[str, ...], sides: tuple[str, ...], stand: int, expected: tuple[float, ...]
+) -> None:
+    """Layout draws each pin where `generic_box(stand=)` puts its port: the one home of spacing."""
+    drawn = {p.name: p.at.x for p in generic_box_geometry(names, sides, stand=stand).ports}
+    symbol = electrical_symbols.generic_box(names, sides, stand=stand)
+    port_x = {p.id: p.position.x for p in symbol.ports}
+    assert tuple(drawn[n] for n in names) == tuple(
+        port_x[n] * electrical_symbols.G_PER_MODULE for n in names
+    )
+    assert tuple(port_x[n] for n in names) == expected

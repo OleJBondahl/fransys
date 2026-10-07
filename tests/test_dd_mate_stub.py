@@ -26,7 +26,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import item_designation
 from fransys_model.derive.drawing_text import off_stub_line, off_stub_text, stub_far_end
@@ -93,7 +93,7 @@ def model(tmp_path_factory):
     k1 = d.item("DEMO-CONN-4P", tag="K1", at=ext, group=group)
     d.mate(p1, x1)
     d.mate(p2, k1)
-    return fr.build(parts, d.draft(), system_document()).model
+    return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
 def _in_unit_set(model, marker) -> bool:

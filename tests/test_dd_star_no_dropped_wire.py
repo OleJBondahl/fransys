@@ -13,7 +13,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
 
@@ -48,5 +48,5 @@ def test_a_star_that_drops_no_conductor_builds_without_error() -> None:
     earth(hub.inner, right.inner)
     for terminal in (left, hub, filler, right):
         cab.boundary(terminal)
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]

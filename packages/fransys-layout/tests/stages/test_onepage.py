@@ -4,12 +4,13 @@ Hand-made values. Functions 1 and 2 are joined by conductor 1 (port 22 of functi
 of function 1). Column `a` is a home column; column `r` is a replica column when it is named so.
 """
 
+import dataclasses
 from typing import TYPE_CHECKING
 
-from samples import connection, hid, placed
+from samples import column, connection, hid, placed
 
 from fransys_layout.stages.onepage import page_wiring
-from fransys_layout.stages.types import NetGroup, PortRef, Role
+from fransys_layout.stages.types import Cell, Home, NetGroup, PortRef, Role
 
 if TYPE_CHECKING:
     from fransys_layout.stages.types import PlacedFunction
@@ -26,7 +27,7 @@ def test_two_functions_on_one_page_are_at_home_and_both_ends_are_wired_there() -
     # UNDO: stages/onepage.py `page_wiring`: `wired_ends(connections, at_home, routed_on)` ->
     #   `frozenset()` (nothing is wired)
     at_home, routed_on, wired = page_wiring(
-        (connection(1, 2, 1),), (), _seats((1, 1, "a"), (2, 1, "a")), frozenset()
+        (connection(1, 2, 1),), (), _seats((1, 1, "a"), (2, 1, "a"))
     )
     assert at_home == {(hid("function", 1), (1, 1)): True, (hid("function", 2), (1, 1)): True}
     assert routed_on == {}
@@ -37,13 +38,17 @@ def test_a_conductor_between_two_pages_is_routed_on_the_page_where_its_ends_are_
     """Both functions stand on page 1 in column `a` and on page 2 in the replica column `r`: the
     conductor is routed on page 1, so only page 1 holds its ends in the wiring, and page 2's
     placements are not at home."""
-    # UNDO: stages/onepage.py `page_wiring`: `homes(seats, replicas, attached)` ->
-    #   `homes(seats, frozenset(), attached)` (page 2 counts as home: FAILED this
+    # UNDO: stages/onepage.py `page_wiring`: `homes(seats, away)` ->
+    #   `homes(seats, frozenset())` (page 2 counts as home: FAILED this
     #   test alone on `at_home[...] is False`)
     stands = ((1, 1, "a"), (2, 1, "a"), (1, 2, "r"), (2, 2, "r"))
-    at_home, routed_on, wired = page_wiring(
-        (connection(1, 2, 1),), (), _seats(*stands), frozenset({("invented", "r")})
+    replica = dataclasses.replace(
+        column("r", (1, 2)),
+        cells=tuple(
+            Cell(function=hid("function", n), index=0, home=Home.ELSEWHERE) for n in (1, 2)
+        ),
     )
+    at_home, routed_on, wired = page_wiring((connection(1, 2, 1),), (replica,), _seats(*stands))
     assert at_home[hid("function", 1), (1, 2)] is False
     assert at_home[hid("function", 1), (1, 1)] is True
     assert routed_on == {hid("conductor", 1): (1, 1)}
@@ -64,5 +69,5 @@ def test_the_ports_of_a_net_group_with_a_mate_on_the_page_are_wired_there() -> N
         ),
     )
     stands = ((1, 1, "a"), (2, 1, "a"), (3, 2, "b"))
-    *_, wired = page_wiring((), (), _seats(*stands), frozenset(), (group,))
+    *_, wired = page_wiring((), (), _seats(*stands), (group,))
     assert wired == {(hid("port", 12), 1, 1), (hid("port", 22), 1, 1)}

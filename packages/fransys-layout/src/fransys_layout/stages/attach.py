@@ -12,7 +12,7 @@ from fransys_layout.geometry import OPPOSITE
 from fransys_layout.stages.columns import is_rack_key
 from fransys_layout.stages.feeder_chains import chain_of, chain_rows
 from fransys_layout.stages.slices import by_key
-from fransys_layout.stages.types import Cell, Column
+from fransys_layout.stages.types import Cell, Column, Home
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -112,11 +112,11 @@ def attach_feeders(
         if column.key not in found:
             result.append(column)
             continue
-        attached = _with_attached(column, found[column.key], replica=False, chains=chains)
+        attached = _with_attached(column, found[column.key], home=Home.HERE, chains=chains)
         entries = found[column.key]
         if not fits(attached):
             entries = [e for e in entries if not chains[e[3]]]
-            attached = _with_attached(column, entries, replica=False) if entries else column
+            attached = _with_attached(column, entries, home=Home.HERE) if entries else column
         drop.update(keys[e[3]] for e in entries)
         result.append(attached)
     return tuple(column for column in result if column.key not in drop)
@@ -184,7 +184,7 @@ def _with_attached(
     column: Column,
     attached: Sequence[tuple[Handle, str, int, Handle, str, bool]],
     *,
-    replica: bool = True,
+    home: Home = Home.ELSEWHERE,
     chains: Mapping[Handle, tuple[Cell, ...]] | None = None,
 ) -> Column:
     """R7 B8: `column` with each attached replica above its N host or below its S host (L9).
@@ -220,7 +220,7 @@ def _with_attached(
                     flip=flip,
                     host=host,
                     port=symbol,
-                    replica=replica,
+                    home=home,
                 )
                 for lane, (host, _, _, terminal, symbol, flip) in enumerate(ordered)
             )
@@ -232,12 +232,14 @@ def hub_order(
     columns: tuple[Column, ...],
     specs: tuple[FunctionSpec, ...],
     connections: tuple[Connection, ...],
-    replicas: frozenset[AuthoringKey],
-) -> tuple[tuple[Column, ...], frozenset[AuthoringKey]]:
-    """C11: a hub column is keyed right after its lowest-keyed branch; `replicas` rename with it."""
+) -> tuple[Column, ...]:
+    """C11: a hub column is keyed right after its lowest-keyed branch."""
     spec_of = {spec.function: spec for spec in specs}
     home = {
-        cell.function: column for column in columns for cell in column.cells if not cell.replica
+        cell.function: column
+        for column in columns
+        for cell in column.cells
+        if cell.home is not Home.ELSEWHERE
     }
     partners: dict[Handle, set[Handle]] = {}
     for c in connections:
@@ -264,10 +266,7 @@ def hub_order(
             if len(branches) >= 2 and column.key not in rekey and not is_rack_key(column.key):  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
                 # the column key is appended: two hubs of a ring share a lowest branch
                 rekey[column.key] = (*branches[0], "hub", *column.key)
-    return (
-        tuple(
-            replace(column, key=rekey[column.key]) if column.key in rekey else column
-            for column in columns
-        ),
-        frozenset(rekey.get(key, key) for key in replicas),
+    return tuple(
+        replace(column, key=rekey[column.key]) if column.key in rekey else column
+        for column in columns
     )

@@ -33,6 +33,7 @@ from fransys_model.kernel import (
 )
 from fransys_model.layout import (
     AUTHORED_KINDS,
+    CABLE_KINDS,
     DERIVED_KINDS,
     Chain,
     ChainEntry,
@@ -152,6 +153,9 @@ _ENUMS = {
     PlacementView: {"FUNCTION", "ITEM", "PIN"},
     StarKind: {"OFF", "REF", "BRANCH"},
     Side: {"N", "E", "S", "W"},
+    layout.BlockRow: {"TOP", "BOTTOM"},
+    layout.BoxKind: {"CABLE", "HARNESS"},
+    layout.EndStyle: {"SOLID", "DASHED", "BLANK"},
 }
 
 
@@ -171,6 +175,49 @@ def test_a_layout_enum_has_exactly_its_contract_members_and_is_registered(enum: 
 _COMMON = {"id", "key", "ext"}
 _FIELDS: dict[type, set[str]] = {
     layout.Chain: {"entries"},
+    layout.CableBlock: {
+        "subject",
+        "unit",
+        "width",
+        "height",
+        "pitch",
+        "sheet_format",
+        "produced_by",
+    },
+    layout.CableBox: {
+        "block",
+        "item",
+        "kind",
+        "external",
+        "x",
+        "y",
+        "width",
+        "height",
+        "produced_by",
+    },
+    layout.CoreWire: {
+        "block",
+        "conductor",
+        "run_a",
+        "run_b",
+        "text_x",
+        "text_y",
+        "stub_a",
+        "stub_b",
+        "produced_by",
+    },
+    layout.EndBox: {
+        "block",
+        "item",
+        "row",
+        "style",
+        "x",
+        "y",
+        "width",
+        "height",
+        "pins",
+        "produced_by",
+    },
     layout.GroupHint: {"function", "group"},
     layout.KeepTogether: {"groups"},
     layout.BreakBefore: {"group"},
@@ -288,8 +335,9 @@ def test_every_layout_kind_is_authored_or_derived_and_never_both() -> None:
         for value in vars(importlib.import_module(f"{layout.__name__}.{info.name}")).values()
         if isinstance(value, type) and str(vars(value).get("__kind__", "")).startswith("layout.")
     }
-    assert records == {*AUTHORED_KINDS, *DERIVED_KINDS}
-    assert not set(AUTHORED_KINDS) & set(DERIVED_KINDS)
+    assert records == {*AUTHORED_KINDS, *DERIVED_KINDS, *CABLE_KINDS}
+    kinds = (set(AUTHORED_KINDS), set(DERIVED_KINDS), set(CABLE_KINDS))
+    assert sum(map(len, kinds)) == len(records)
     assert set(_FIELDS) == records
 
 

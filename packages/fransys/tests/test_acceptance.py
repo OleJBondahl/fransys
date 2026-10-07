@@ -6,6 +6,7 @@ from pathlib import Path
 
 import fransys as fr
 import pytest
+from fransys._layout_need import symbol_port_missing_finding
 from fransys.pipeline import (
     BuildErrors,
     BuildResult,
@@ -15,7 +16,6 @@ from fransys.pipeline import (
     _resolved,
     _svgs,
     _svgs_cache,
-    _symbol_port_missing_finding,
 )
 
 from fransys_layout.engines.schematic import lay_out_schematic
@@ -494,7 +494,7 @@ def test_board_and_rack_model_has_no_layout_missing_finding():
     only descendants'), so `LAYOUT_MISSING` must not fire even though the model genuinely
     holds a `Function` record and no `layout.page`.
     """
-    model = build_board_and_rack_model()
+    model = build_board_and_rack_model(lays_out=True)
     assert model.tables["function"]  # the board's own function: a non-vacuous can-fail base
     result = BuildResult(model=model, findings=())
     findings = fr.check(result)
@@ -538,14 +538,15 @@ def test_check_calls_fransys_render_check_for_the_model():
 
     A model with a `Function` but no `layout.page` (never run through `fr.build`) is exactly
     `fransys_render.check`'s own `LAYOUT_MISSING` case; `fr.check` must surface it, proving
-    `_check` really calls `fransys_render.check(model)` and not just the other two.
+    `_check` really calls `fransys_render.check(model)` and not just the other two. A kept
+    SCHEMATIC with no drawing set gives both `DOCUMENT_NO_DRAWINGS` and `LAYOUT_MISSING`.
     """
     model = _model_with_an_unlaid_out_function()
     result = BuildResult(model=model, findings=())
     findings = fr.check(result)
-    assert len(findings) == 1
-    assert findings[0].code == "LAYOUT_MISSING"
-    assert findings[0].severity is Severity.ERROR
+    assert sorted(f.code for f in findings) == ["DOCUMENT_NO_DRAWINGS", "LAYOUT_MISSING"]
+    [missing] = [f for f in findings if f.code == "LAYOUT_MISSING"]
+    assert missing.severity is Severity.ERROR
 
 
 # -- F4/F5: SYMBOL_PORT_MISSING (examples gap G10, decision 0018) ---------------
@@ -578,7 +579,7 @@ def _system_document(name: str) -> Document:
         preset=DocumentPreset.SYSTEM,
         location=None,
         item=None,
-        add=(),
+        add=(PageKind.SCHEMATIC,),
         remove=(PageKind.HARNESS_DRAWING, PageKind.CABLE_LIST, PageKind.BOM),
         cover="Invented cover text.",
         notes=None,
@@ -801,7 +802,7 @@ def test_symbol_port_missing_falls_back_to_the_part_with_no_matching_port_templa
     assert not any(f.code == "SYMBOL_PORT_MISSING" for f in result.findings)
     with pytest.raises(SymbolPortError) as raised:
         lay_out_schematic(result.model)
-    finding = _symbol_port_missing_finding(result.model, raised.value)
+    finding = symbol_port_missing_finding(result.model, raised.value)
     assert finding.severity is Severity.ERROR
     assert finding.subjects == (part_id,)
     assert finding.message == (

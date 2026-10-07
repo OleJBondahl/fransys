@@ -29,7 +29,7 @@ from fransys_model.vocab import (
     SignalType,
 )
 
-from . import _toml
+from . import _breaking_points, _toml
 
 if TYPE_CHECKING:
     from enum import Enum
@@ -121,7 +121,11 @@ PROTECTION_FIELDS = {"type": _Field(str, required=False, enum=ProtectionType)}
 PLC_CHANNEL_FIELDS = {"signal": _Field(str, enum=SignalType), "channel": _Field(int)}
 PCB_FIELDS = {"revision": _Field(str)}
 # parts-0004: the model's `Rating`/`Operating` field lists, once; every value a decimal string
-RATING_FIELDS = {f.name: _Field(str, required=False) for f in fields(Rating)}
+# parts-0015: the breaking-point fields are lists of inline tables, linted in `_breaking_points`
+RATING_FIELDS = {
+    f.name: _Field(list if f.name in _breaking_points.POINT_FIELDS else str, required=False)
+    for f in fields(Rating)
+}
 OPERATING_FIELDS = {f.name: _Field(str, required=False) for f in fields(Operating)}
 
 

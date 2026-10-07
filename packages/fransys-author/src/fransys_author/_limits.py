@@ -24,5 +24,8 @@ def state_limits(
             "to mark a boundary, use interface=True on the device"
         )
         raise AuthorError(msg)
+    if rating is not None and (rating.breaking_ac or rating.breaking_dc):
+        msg = f"{owner}.{fn.name}.limits: a boundary does not re-rate a breaking capacity"
+        raise AuthorError(msg)
     scope = scope or fn._recorder  # the unit scope; the root design raises
     scope.boundary(fn, rating=rating, operating=operating)  # ty: ignore[unresolved-attribute] -- the recorder fallback is the root design, which has boundary

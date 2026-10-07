@@ -4,10 +4,15 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping
 
-from fransys_layout.geometry import generic_box_geometry
+from fransys_layout.geometry import G_PER_MODULE, generic_box_geometry, symbol_geometry, text_width
 
 if TYPE_CHECKING:
     from .types import DrawnFunction, DrawnPort, Handle
+
+
+def power_stand(symbol: str, text: str | None) -> int:
+    """layout-0132: the width in G of a power `symbol` or its `text`, whichever is wider."""
+    return max(symbol_geometry(symbol).body.width, text_width(text or "", height=G_PER_MODULE))
 
 
 def _forced_sides(ports: tuple[DrawnPort, ...], kind_of: Mapping[Handle, str]) -> dict[str, str]:
@@ -64,4 +69,5 @@ def power_geometry(
         *(n for n in names if n not in pinned),
     ]
     drawn = tuple(pinned.get(n) or rest or facing[n] for n in names)
-    return replace(one, geometry=generic_box_geometry(tuple(names), drawn, one.reach))
+    geometry = generic_box_geometry(tuple(names), drawn, one.reach, stand=one.stand)
+    return replace(one, geometry=geometry)

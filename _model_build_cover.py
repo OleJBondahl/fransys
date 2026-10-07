@@ -40,8 +40,30 @@ if TYPE_CHECKING:
 
 _COVER = Path(__file__).resolve().parent / "tests" / "_model_build_cover.md"
 _EMPTY_ON_A_BLANK_MODEL = (PageKind.HARNESS_DRAWING, PageKind.CABLE_LIST, PageKind.BOM)
+_KEEPS_LAYOUT = (PageKind.SCHEMATIC,)
 
 
 def system_document() -> Draft:
     """A `SYSTEM` document draft with no page that could report itself empty."""
     return fr.document(DocumentPreset.SYSTEM, None, cover=_COVER, remove=_EMPTY_ON_A_BLANK_MODEL)
+
+
+def layout_trigger_document() -> Draft:
+    """SYSTEM plus SCHEMATIC so fr.build lays out; it never checks or writes clean (DOCUMENT_NO_DRAWINGS)."""  # noqa: E501 -- the ruled one-line docstring
+    return fr.document(
+        DocumentPreset.SYSTEM,
+        None,
+        cover=_COVER,
+        add=_KEEPS_LAYOUT,
+        remove=_EMPTY_ON_A_BLANK_MODEL,
+    )
+
+
+def cabinet_document(location: object) -> Draft:
+    """A `CABINET_SCHEMATIC` draft for `location`, SCHEMATIC kept: its page finds drawings."""
+    return fr.document(
+        DocumentPreset.CABINET_SCHEMATIC,
+        location,
+        cover=_COVER,
+        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
+    )

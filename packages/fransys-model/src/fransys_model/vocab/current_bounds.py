@@ -14,12 +14,13 @@ from enum import Enum
 from typing import TYPE_CHECKING
 lazy from decimal import Decimal
 
+from fransys_model.vocab.energy_flow import gives_energy
 from fransys_model.vocab.enums import Current, FunctionKind
 from fransys_model.vocab.rating_readers import function_operatings, function_ratings
 from fransys_model.vocab.tables import functions
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.contacts import LinkState
-lazy from fransys_model.vocab.core import Function, Item
+lazy from fransys_model.vocab.core import Function, Item, Port
 
 from .current_blocks import blocks
 
@@ -44,6 +45,7 @@ class CurrentBound:
     same bound (value, setter and role), the (item, `rest` or `operated`) of each enumerated
     item that is in the same state in ALL of them (`current_states`), sorted by item id. An item
     that varies between such assignments does not matter and is not named; empty when none does.
+    `ports` are the two end ports of the position whose limit set the bound.
     """
 
     kind: Current
@@ -51,6 +53,7 @@ class CurrentBound:
     by: Id[Function]
     role: LimitRole
     states: tuple[tuple[Id[Item], LinkState], ...] = ()
+    ports: tuple[Id[Port], ...] = ()
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -62,7 +65,9 @@ class Tie:
     source: bool
 
 
-def _limits_of(model: Model, function: Id[Function]) -> list[CurrentBound]:
+def _limits_of(
+    model: Model, function: Id[Function], ports: tuple[Id[Port], ...] = ()
+) -> list[CurrentBound]:
     """The limits `function` states: a source's `max_current_*`, a full-range fuse's rating."""
     found: list[CurrentBound] = []
     for envelope in function_operatings(model, function):
@@ -71,6 +76,7 @@ def _limits_of(model: Model, function: Id[Function]) -> list[CurrentBound]:
             LimitRole.SOURCE,
             envelope.operating.max_current_ac_a,
             envelope.operating.max_current_dc_a,
+            ports,
         )
     ratings = [stated.rating for stated in function_ratings(model, function)]
     # Partial-range is a fact of the function: one rating with a minimum breaking current
@@ -79,29 +85,33 @@ def _limits_of(model: Model, function: Id[Function]) -> list[CurrentBound]:
     if functions(model)[function].kind is FunctionKind.PROTECTION and not partial:
         for rating in ratings:
             found += _bounds(
-                function, LimitRole.PROTECTION, rating.current_ac_a, rating.current_dc_a
+                function, LimitRole.PROTECTION, rating.current_ac_a, rating.current_dc_a, ports
             )
     return found
 
 
 def _bounds(
-    function: Id[Function], role: LimitRole, ac: Decimal | None, dc: Decimal | None
+    function: Id[Function],
+    role: LimitRole,
+    ac: Decimal | None,
+    dc: Decimal | None,
+    ports: tuple[Id[Port], ...],
 ) -> list[CurrentBound]:
     return [
-        CurrentBound(kind=kind, value=value, by=function, role=role)
+        CurrentBound(kind=kind, value=value, by=function, role=role, ports=ports)
         for kind, value in ((Current.AC, ac), (Current.DC, dc))
         if value is not None
     ]
 
 
-def tie_of(model: Model, stated: Sequence[Id[Function]]) -> Tie:
-    """The position through `stated`; it holds a source when one is a supply or has a limit."""
-    limits = [limit for function in stated for limit in _limits_of(model, function)]
-    supply = any(functions(model)[function].kind is FunctionKind.SUPPLY for function in stated)
+def tie_of(model: Model, stated: Sequence[Id[Function]], ports: tuple[Id[Port], ...] = ()) -> Tie:
+    """The position through `stated`; it holds a source when one gives energy or has a limit."""
+    limits = [limit for function in stated for limit in _limits_of(model, function, ports)]
+    gives = any(gives_energy(model, function) for function in stated)
     return Tie(
         functions=tuple(stated),
         limits=tuple(limits),
-        source=supply or any(limit.role is LimitRole.SOURCE for limit in limits),
+        source=gives or any(limit.role is LimitRole.SOURCE for limit in limits),
     )
 
 
@@ -143,7 +153,7 @@ def tightest(limits: Sequence[CurrentBound]) -> tuple[CurrentBound, ...]:
     return tuple(
         min(
             (limit for limit in limits if limit.kind is kind),
-            key=lambda limit: (limit.value, limit.role.value, limit.by),
+            key=lambda limit: (limit.value, limit.role.value, limit.by, limit.ports),
         )
         for kind in Current
         if any(limit.kind is kind for limit in limits)
@@ -154,6 +164,6 @@ def highest(bounds: Iterable[CurrentBound]) -> CurrentBound:
     """The highest of `bounds`, the one choice both `current_states` and the check make.
 
     The largest value; equal values by role name, then function id, as `tightest` orders them,
-    then by `states`, so the choice never depends on the order of `bounds`.
+    then by `states` and `ports`, so the choice never depends on the order of `bounds`.
     """
-    return min(bounds, key=lambda b: (-b.value, b.role.value, b.by, b.states))
+    return min(bounds, key=lambda b: (-b.value, b.role.value, b.by, b.states, b.ports))

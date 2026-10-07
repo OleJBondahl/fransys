@@ -14,7 +14,7 @@ from pathlib import Path
 import fransys as fr
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_author import Design
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +26,7 @@ if str(_ROOT) not in sys.path:
 
 from demo_designs import cabinet_design, harness_with_board_design  # noqa: E402
 
+from fransys_layout import lay_out_cables  # noqa: E402
 from fransys_layout.engines.schematic import lay_out_schematic  # noqa: E402
 from fransys_model.derive import allocate_plc, number  # noqa: E402
 from fransys_model.kernel import freeze, merge  # noqa: E402
@@ -34,21 +35,22 @@ from fransys_model.kernel import freeze, merge  # noqa: E402
 def _by_hand(design_factory):
     parts = fransys_parts.load("demo_parts")
     design = design_factory(parts)
-    # The same `system_document()` `_by_build` now needs (PS1/PS2, decision 0037) is merged in
-    # here too, by hand: this path calls `lay_out_schematic` unconditionally and never reads
+    # The same `layout_trigger_document()` `_by_build` now needs (PS1/PS2, decision 0037) is merged
+    # in here too, by hand: this path calls `lay_out_schematic` unconditionally and never reads
     # `_has_document` itself, but the two sides' `core` digest must still compare the same
     # record set, or this test would be comparing apples (no document) to oranges (one).
-    model = freeze(merge(parts, design.draft(), system_document()))
+    model = freeze(merge(parts, design.draft(), layout_trigger_document()))
     model, _ = allocate_plc(model)
     model, _ = number(model)
     model, _ = lay_out_schematic(model)
+    model, _ = lay_out_cables(model)
     return model
 
 
 def _by_build(design_factory):
     parts = fransys_parts.load("demo_parts")
     design = design_factory(parts)
-    return fr.build(parts, design.draft(), system_document()).model
+    return fr.build(parts, design.draft(), layout_trigger_document()).model
 
 
 @pytest.mark.parametrize(

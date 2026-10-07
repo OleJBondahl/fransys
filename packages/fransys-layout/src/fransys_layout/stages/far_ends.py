@@ -7,7 +7,7 @@ group's column moves its home there, above an N pin or below an S pin, if the co
 from functools import partial
 from typing import TYPE_CHECKING, NamedTuple
 
-from fransys_layout.geometry import WIRING_GRID
+from fransys_layout.geometry import WIRING_GRID, draw_order
 from fransys_layout.geometry.box_reach import Reach, Row, extent, spread
 from fransys_layout.geometry.symbols import channel_pitch
 from fransys_layout.stages.attach import _entry
@@ -20,6 +20,7 @@ from fransys_layout.stages.far_moves import (
 )
 from fransys_layout.stages.lookups import group_of
 from fransys_layout.stages.own_group import own_group_homes
+from fransys_layout.stages.types import Home
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -72,7 +73,7 @@ def move_far_ends(
         for column in columns
         if column.key in home_keys
         for cell in column.cells
-        if not cell.replica
+        if cell.home is not Home.ELSEWHERE
     }
     facts = _Facts({one.function: one for one in far.drawn}, _touching(far.connections), far.groups)
     placed: dict[AuthoringKey, tuple[_Entry, ...]] = {}
@@ -140,10 +141,10 @@ def _serves(mine: DrawnFunction, far: DrawnFunction, end: PortRef) -> bool:
 
 
 def sheet_fits(
-    drawn: tuple[DrawnFunction, ...], profile: Profile, sheet: SheetFormat
+    drawn: tuple[DrawnFunction, ...], profile: Profile, sheet: SheetFormat, headroom_lanes: int
 ) -> Callable[[Column], bool]:
     """layout-0074: a column fits when its rows, `row_spacing` apart, stand inside the sheet."""
-    room = sheet.content_height - _HEADROOM_LANES * WIRING_GRID
+    room = sheet.content_height - headroom_lanes * WIRING_GRID
     return partial(
         _fits, {one.function: one for one in drawn}, profile.row_spacing, room, sheet.content_width
     )
@@ -177,13 +178,10 @@ def _span(drawn_of: Mapping[Handle, DrawnFunction], column: Column) -> int:
     if not held:
         return 0
     reach = tuple(Reach(name=name, rows=tuple(rows)) for name, rows in held.items())
-    ports = sorted(box.geometry.ports, key=lambda p: (p.at.x, p.facing.value))
+    ports = sorted(box.geometry.ports, key=lambda p: draw_order(p.at.x, p.facing.value))
     base = {p.name: ("", i) for i, p in enumerate(ports)}  # sides are not yet turned: one row
     low, high = extent(spread(base, reach, channel_pitch()), reach)
     return high - low
-
-
-_HEADROOM_LANES = 4  # the engine's top (3) and bottom (1) headroom lanes
 
 
 def _wires_at(far: DrawnFunction, end: PortRef, touching: _Touching) -> tuple[Connection, ...]:

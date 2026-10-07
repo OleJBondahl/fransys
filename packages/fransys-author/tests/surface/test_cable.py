@@ -227,3 +227,12 @@ def test_a_cable_parent_is_the_items_parent(lib: Draft) -> None:
     parents = {i.tag: i.parent for i in d.draft().records() if isinstance(i, ModelItem)}
     assert parents["W1"] == h1._item.id
     assert parents["W2"] is None
+
+
+@pytest.mark.parametrize("kind", ["strip", "run", "terminal"])
+def test_a_cable_parent_that_is_not_a_device_is_refused(lib: Draft, kind: str) -> None:
+    d = design(lib)
+    x1 = d.terminal_strip("X1", "TEST-TERM")
+    parents = {"strip": x1, "run": x1.run("M", 2), "terminal": x1[1]}
+    with pytest.raises(AuthorError, match=f"parent= takes a device, not a {kind}"):
+        d.cable("W1", FOUR, parent=parents[kind])  # ty: ignore[invalid-argument-type] -- the refusal is the case

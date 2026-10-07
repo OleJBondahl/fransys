@@ -29,7 +29,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 
 from fransys_model.kernel import Draft, Severity
 from fransys_model.layout import LinkMarker, layout_of
@@ -100,7 +100,7 @@ def _build(root: Path, *, collide: bool) -> fr.BuildResult:
     cable = d.cable("DEMO-CBL-4G1.5", tag="W1")
     cable.core(1, p1["1"], a1.fn("ch1")["7"])
     cable.core(2, p2["1"], a1.fn("ch2")[second])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), cabinet_document(cabinet))
 
 
 def test_the_build_returns_one_error_naming_the_item_the_functions_and_the_text(

@@ -96,7 +96,14 @@ def raw_of(model: Model) -> Raw:
     ]
     found.sort(key=lambda entry: (entry[0], entry[1].first, entry[1].second))
     edges = tuple(
-        Edge(at, joint.first, joint.second, tie_of(model, through), joint.item, joint.state)
+        Edge(
+            at,
+            joint.first,
+            joint.second,
+            tie_of(model, through, (joint.first, joint.second)),
+            joint.item,
+            joint.state,
+        )
         for at, (through, joint) in enumerate(found)
     )
     return Raw(wires=tuple(wires), edges=edges, opens=open_ends(model))

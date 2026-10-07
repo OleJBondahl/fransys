@@ -23,7 +23,12 @@ def engine(lib: Draft) -> Draft:
     g1 = e.item("TEST-PSU-24V", name="G1", tag="G1", at=c1)
     k1, k2, s1 = (e.item(m, name=t, tag=t, at=c1) for t, m in _PARTS)
     out = g1.fn("out")
-    e.supply("24VDC", current="dc", rails={"24V": ("24", None), "0V": ("0", None)})
+    e.supply(
+        "24VDC",
+        current="dc",
+        rails={"24V": ("24", None), "0V": ("0", None)},
+        pins=[out["+"], out["-"]],
+    )
     e.net("24V", out["+"], cls="power", potential="24V")
     e.net("0V", out["-"], cls="power", potential="0V")
     valve = [x3.terminal("TEST-TERM", VALVE, index=n) for n in range(1, 9)]

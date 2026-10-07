@@ -51,7 +51,7 @@ from .attach import _entry
 from .columns import build_column
 from .slices import by_key
 from .terminal_facts import TerminalRead
-from .types import Cell, PortRef
+from .types import Cell, Home, PortRef
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -142,11 +142,15 @@ def _finish_columns(
     for cells in built:
         # keyed by its first placed non-attachment function: unique, a function is placed
         # once; R5 rule 4: within a group, columns run by the top function's designation
-        top = specs[next(c for c in cells if c.host is None and not c.replica).function]
+        top = specs[
+            next(c for c in cells if c.host is None and c.home is not Home.ELSEWHERE).function
+        ]
         first_key = ("chain", top.designation, *top.key)
         # C11: a column's group and location are its own cells', not its attachments' (nor
         # an edge pin's, a replica whose home is in its own unit)
-        own_specs = [specs[c.function] for c in cells if c.host is None and not c.replica]
+        own_specs = [
+            specs[c.function] for c in cells if c.host is None and c.home is not Home.ELSEWHERE
+        ]
         columns.append(build_column(first_key, tuple(cells), own_specs))
     columns.sort(key=lambda column: (column.key, tuple(cell.function for cell in column.cells)))
     return tuple(columns)

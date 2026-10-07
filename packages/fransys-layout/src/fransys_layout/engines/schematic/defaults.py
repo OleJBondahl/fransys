@@ -15,7 +15,7 @@ STAGE_FACTS = frozenset({"function_kind", "part_category", "connector_gender"})
 
 ENGINE_NAME = "schematic"
 # The package's `pyproject.toml` version: a test keeps the two equal (decision layout-0029).
-ENGINE_VERSION = "0.11.1"
+ENGINE_VERSION = "0.12.0"
 
 # Whole routing lanes (`WIRING_GRID` each) `place` leaves between the content-box top and
 # row 0, so a north-facing port of row 0 routes inside the content box (decision layout-0031).
@@ -32,6 +32,8 @@ TOP_HEADROOM_LANES = 3
 # the same reason as the top's. One: the smallest count with which the two-cell south-port
 # case (`claude-tools/bottom_symmetry_probe.py`) routes inside the content box.
 BOTTOM_HEADROOM_LANES = 1
+# Both, as the stages that fit a column to the sheet count them
+HEADROOM_LANES = TOP_HEADROOM_LANES + BOTTOM_HEADROOM_LANES
 
 
 def row_pairs(row: Row) -> dict[str, str]:

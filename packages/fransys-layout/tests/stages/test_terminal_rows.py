@@ -9,7 +9,7 @@ from dataclasses import replace
 from samples import column, drawn, function_spec, hid
 
 from fransys_layout.engines.schematic.defaults import kind_roles
-from fransys_layout.stages import Connection, PortRef, Role
+from fransys_layout.stages import Connection, Home, PortRef, Role
 from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_chains
 
 
@@ -120,7 +120,7 @@ def test_a_chain_with_a_replica_cell_stays_as_it_was() -> None:
     """A row rebuilt from bare cells would lose the replica flag."""
     # UNDO: stages/terminal_rows.py `_marked`: return False
     marked = column("c1", (1,))
-    marked = replace(marked, cells=tuple(replace(c, replica=True) for c in marked.cells))
+    marked = replace(marked, cells=tuple(replace(c, home=Home.ELSEWHERE) for c in marked.cells))
     columns = (marked, column("c2", (2,)))
     wires = (_link(1, (1, 1), (2, 1)),)
     assert _join(columns, (1, 2), wires, {}) == columns

@@ -8,7 +8,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.units import boundary_edge_set
@@ -56,7 +56,7 @@ def test_the_boundary_pins_hold_the_outer_and_the_nested_boundary_function_and_n
     cab.boundary(cab.item("DEMO-CONN-2P", tag="X1", at=at_c1, group=net))
     board.boundary(board.item("DEMO-CONN-2P", tag="J1", at=at_c1, group=net))
     cab.item("DEMO-LAMP-24", tag="H1", at=at_c1, group=net)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     inputs = read_inputs(model)
     drawn = _keys(model, {spec.function for spec in inputs.functions})
     assert ("cab", "H1") in drawn
@@ -92,6 +92,6 @@ def test_a_parent_wired_straight_to_a_nested_connector_is_drawn_and_x1_is_open()
     wire = cab.wiring(colour="BU", gauge="0.75")
     wire(lamp["1"], j1["1"])
     wire(lamp["2"], j1["2"])
-    found = fr.build(parts, d.draft(), system_document()).findings
+    found = fr.build(parts, d.draft(), layout_trigger_document()).findings
     assert not [one for one in found if one.code == CONNECTION_NOT_DRAWN]
     assert not [one for one in found if one.code == LONE_CELL]

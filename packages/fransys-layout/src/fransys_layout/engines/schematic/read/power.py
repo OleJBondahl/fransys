@@ -7,6 +7,7 @@ pin wired to a 24 V terminal gets it though no `Net` lists it.
 
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.box_power import power_stand
 from fransys_layout.stages.types import PowerEnd
 from fransys_model.derive import net_of, port_power_kind, port_power_text, power_kind
 from fransys_model.vocab import PowerKind
@@ -42,3 +43,11 @@ def power_ends(model: Model) -> tuple[PowerEnd, ...]:
 def _end(port: Id[Any], kind: PowerKind, text: str | None) -> PowerEnd:
     """The `PowerEnd` of `port` of `kind` printing `text`."""
     return PowerEnd(port=port, kind=kind.value, symbol=_SYMBOLS[kind], text=text)
+
+
+def port_stand(model: Model, port: Id[Any]) -> int:
+    """The width in G of `port`'s power symbol or its text, whichever is wider; 0 off a net."""
+    kind = port_power_kind(model, port)
+    if kind is PowerKind.NONE:
+        return 0
+    return power_stand(_SYMBOLS[kind], port_power_text(model, port))

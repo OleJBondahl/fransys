@@ -36,8 +36,7 @@ from fransys_pdf import font_dir, source
 from fransys_render import pages
 from fransys_render._constants import MARKER_ARROW_DEPTH_G
 
-from electrical_symbols import GENERIC_BOX_KEY
-from fransys_layout.geometry import text_width
+from electrical_symbols import GENERIC_BOX_KEY, text_width
 from fransys_model.derive.drawing_text import frame_column, frame_row, marker_text, position_text
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.kernel.ids import render_id

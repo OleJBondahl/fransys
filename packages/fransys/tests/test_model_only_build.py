@@ -13,7 +13,7 @@ import fransys_pdf
 import fransys_render
 import pytest
 from demo_designs import cabinet_design
-from fransys import pipeline
+from fransys import _layout_need, pipeline
 
 _GATED_PIPELINE_NAMES = ("lay_out_schematic",)
 
@@ -33,7 +33,7 @@ def _spy(monkeypatch, module, name):
 
 def _spy_every_gated_call(monkeypatch):
     """One call list per function PS1/PS2 gates, keyed by name."""
-    calls = {name: _spy(monkeypatch, pipeline, name) for name in _GATED_PIPELINE_NAMES}
+    calls = {name: _spy(monkeypatch, _layout_need, name) for name in _GATED_PIPELINE_NAMES}
     calls["fransys_pdf.check"] = _spy(monkeypatch, fransys_pdf, "check")
     calls["fransys_render.check"] = _spy(monkeypatch, fransys_render, "check")
     calls["fransys_render.pages"] = _spy(monkeypatch, fransys_render, "pages")
@@ -129,7 +129,7 @@ def test_no_document_build_does_not_raise_but_a_document_build_does(tmp_path, mo
         raise AssertionError(message)
 
     for name in _GATED_PIPELINE_NAMES:
-        monkeypatch.setattr(pipeline, name, _raiser)
+        monkeypatch.setattr(_layout_need, name, _raiser)
 
     parts = fr.parts("demo_parts")
     no_document_result = fr.build(parts, _changeover_no_document_draft(parts))

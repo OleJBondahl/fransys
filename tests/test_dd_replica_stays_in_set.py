@@ -16,7 +16,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
 from fransys_model.layout import LinkMarker, StarKind, SymbolPlacement, layout_of
@@ -49,7 +49,7 @@ def _build(*, under_box: bool):
     d.cable("DEMO-CBL-4G1.5", tag="W1", length_mm=5000, at=frame).core(
         1, dev["1"], terminal.function["external"]
     )
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _ends_of_the_wire(model) -> list[LinkMarker]:

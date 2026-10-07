@@ -155,6 +155,38 @@ d.add(cabinet, "U1")
 The build holds no `BOUNDARY_UNCONNECTED` and no `UNUSED_CONTRADICTED`. U1's `X1` is mated, and U2's
 prints `N/A` in its table only.
 
+## Variants and revised copies
+
+A variant is a parameter of your own builders, never a Fransys feature. Fransys has no variant hook,
+and nothing patches `fr.Design`. A revised copy of a unit is a factory around `@fr.unit`: a function that
+takes the name, the revision and the variant, and returns the decorated unit.
+
+```python
+from typing import NamedTuple
+
+import fransys as fr
+
+
+class Io(NamedTuple):
+    X1: fr.Device
+
+
+def board_unit(name, revision, *, pins="DEMO-CONN-2P"):
+    @fr.unit(name, revision=revision, interface_version=1, date="2026-01-01", text="issue", by="AB")
+    def board(d):
+        return Io(d.device("X1", pins, interface=True))
+
+    return board
+
+
+first = board_unit("demo-io-board", 1)
+revised = board_unit("demo-io-board-r2", 2, pins="DEMO-CONN-4P")
+d = fr.design("demo_parts")
+d.add(first, "U1")
+d.add(revised, "U2")
+assert len(fr.derive.units(fr.build(d).model)) == 2
+```
+
 ## Reaching a unit from outside
 
 A container reaches a unit's connector through a plug and `d.mate(plug, io.X1)`. Do not wire
@@ -350,6 +382,13 @@ d.add(board_r2, "U1")
 
 `d.revision(revision, date=, text=, created=)` writes one history entry of the project itself,
 the same way, on a design that is not a unit.
+
+`fr.release` refuses a history entry that names a revision never released, as
+`RELEASE_HISTORY_UNRELEASED`. The cutoff is the first entry, in history order (date, then version
+and revision), that names a released revision. Entries before it are free text, such as an old
+register's. Each later entry needs a folder under `into` in its own version, or must be the revision
+being released. A first release has no folders, so every entry is free. A system release checks the
+project's history the same way.
 
 ## Writing one unit
 

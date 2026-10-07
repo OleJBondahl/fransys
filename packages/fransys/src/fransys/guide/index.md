@@ -49,9 +49,11 @@ from `fransys.colours`.
 | add a document | `fr.document(preset, subject, cover=)` | documents.md |
 | all findings of a build | `fr.check(result)` | build.md, `fr.check` sees more |
 | write exports | `fr.write(result, out_dir)` | build.md |
+| the name of each export | `fr.export_names(result, unit=None)` | build.md, Export file names |
 | release a baseline | `fr.release(result, into)` | build.md, Releasing |
 | list changes since a release | `fr.diff(result, baselines)` | build.md, Getting the change list |
 | test a baseline stays true | `fr.verify(result, baselines)` | build.md, Checking a baseline |
+| list the releases on disk | `fr.releases(root)` | build.md, Listing the releases |
 | read a built model | `fr.derive.<function>(model, ...)` | reading.md |
 | an easy and an efficient level | same calls, a function or a loop around them | examples.md, easy and efficient |
 
@@ -74,7 +76,7 @@ Replace `vX.Y.Z` with the release you pin.
 
 A script starts a design from an installed part library (`fr.design`), authors it with
 `d.device` and wiring, adds a cabinet as a unit (`@fr.unit`, `d.add`), and passes the design to
-`fr.build`, which merges, freezes and lays out a model. `fr.check` collects every finding about the built model;
+`fr.build`, which merges and freezes a model and lays out the schematic when a document keeps a SCHEMATIC page. `fr.check` collects every finding about the built model;
 `fr.write` writes the exports to a directory, raising instead of writing anything if `check`
 found an `ERROR`. A design with no document has nothing to draw, so `build` still succeeds and
 `write` still produces the parts-list exports.

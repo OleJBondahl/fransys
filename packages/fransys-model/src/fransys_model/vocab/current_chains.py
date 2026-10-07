@@ -59,6 +59,7 @@ invariant 7). Cached on `model.digest`, the last few results.
 """
 
 import dataclasses
+from typing import TYPE_CHECKING
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 lazy from fransys_model.vocab.core import Function, Port
@@ -67,6 +68,11 @@ from .current_graph import raw_of
 from .current_states import evaluate
 lazy from .current_bounds import CurrentBound
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from .current_graph import Raw
+
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class CurrentPosition:
@@ -74,11 +80,13 @@ class CurrentPosition:
 
     `bounds` holds at most one `CurrentBound` per current kind, AC before DC: the highest, over
     the item states in which the position exists and has one, of the smallest limit the law lets
-    reach it, with the function that set it and the item states that give it.
+    reach it, with the function that set it and the item states that give it. `ports` are the
+    position's two end ports, its identity when equal `functions` repeat (one per pole).
     """
 
     functions: tuple[Id[Function], ...]
     bounds: tuple[CurrentBound, ...]
+    ports: tuple[Id[Port], ...] = ()
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -102,6 +110,14 @@ class PositionEnds:
     second_node: Id[Port]
 
 
+def position_at(
+    raw: Raw, bounds: Mapping[int, tuple[CurrentBound, ...]], at: int
+) -> CurrentPosition:
+    """The position of `raw.edges[at]` with its bounds from `evaluate`: the one way one is built."""
+    edge = raw.edges[at]
+    return CurrentPosition(edge.tie.functions, bounds.get(at, ()), (edge.first, edge.second))
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def chain_blocks(model: Model) -> tuple[tuple[CurrentChain, tuple[PositionEnds, ...]], ...]:
     """Each chain with the ends of its positions, aligned; `derive.current_chains` orders them."""
@@ -119,7 +135,7 @@ def chain_blocks(model: Model) -> tuple[tuple[CurrentChain, tuple[PositionEnds, 
         entries = sorted(
             (
                 (
-                    CurrentPosition(raw.edges[at].tie.functions, bounds.get(at, ())),
+                    position_at(raw, bounds, at),
                     PositionEnds(
                         raw.edges[at].first,
                         raw.edges[at].second,

@@ -45,7 +45,7 @@ from fransys_pdf._frame import (
     title_columns,
 )
 
-from fransys_model.derive import unit_cable_page_key
+from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.derive.designation import own_nodes
 from fransys_model.kernel import Severity, make_id
 from fransys_model.kernel.ids import render_id
@@ -940,7 +940,7 @@ def test_harness_page_title_text_overflow_finding_present_for_a_long_cable_desig
         add=(K.HARNESS_DRAWING,),
     )
     m = model(u1, fmt, ds, schem_page, w1, w1_facet, doc, cable_part, cable_product)
-    cable_svg_key = unit_cable_page_key(u1.id, w1.id)
+    cable_svg_key = cable_block_key(u1.id, w1.id)
     svgs = {cable_svg_key: "<svg xmlns='http://www.w3.org/2000/svg'/>"}
     findings = check(m, svgs)
     page_title_findings = [

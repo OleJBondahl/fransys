@@ -2,9 +2,18 @@
 
 import pytest
 
+from fransys_model import derive
 from fransys_model.derive import gives_energy, takes_energy
 from fransys_model.kernel import Draft, Id, Model, Origin, SchemaError, freeze, make_id
-from fransys_model.vocab import Energy, Function, FunctionKind, FunctionTemplate, Item, Part
+from fransys_model.vocab import (
+    Energy,
+    Function,
+    FunctionKind,
+    FunctionTemplate,
+    Item,
+    Part,
+    energy_flow,
+)
 from fransys_model.vocab.enums import PartCategory
 
 _ORIGIN = Origin(file="t.toml", line=1, note="")
@@ -120,3 +129,9 @@ def test_gives_energy_reads_the_template_else_a_supply_kind(
     model, function = _model(kind, energy, templated=templated)
     assert gives_energy(model, function) is gives
     assert takes_energy(model, function) is takes
+
+
+def test_derive_reexports_the_vocab_readers() -> None:
+    """One home for the energy readers: a second copy in derive fails here."""
+    assert derive.takes_energy is energy_flow.takes_energy
+    assert derive.gives_energy is energy_flow.gives_energy

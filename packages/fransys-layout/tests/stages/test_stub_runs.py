@@ -7,7 +7,7 @@ from samples import hid
 
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import LinkMarker, MarkerSide
-from fransys_layout.stages.stub_runs import functions_through, stub_runs
+from fransys_layout.stages.stub_runs import functions_through, solids, stub_runs
 
 _OWN, _FOREIGN = hid("function", 1), hid("function", 2)
 _MARKER = LinkMarker(
@@ -26,7 +26,7 @@ _OWN_PORTS = {_OWN: (Point(x=0, y=0),)}
 def _through(body: Box, *ports: Point) -> tuple:
     """The foreign functions the stub runs through, the foreign one's body and ports as given."""
     bodies = {_OWN: Box(x=-5, y=-10, width=10, height=10), _FOREIGN: body}
-    return functions_through(_MARKER, bodies, {**_OWN_PORTS, _FOREIGN: ports})
+    return functions_through(_MARKER, solids(bodies, {**_OWN_PORTS, _FOREIGN: ports}))
 
 
 def test_a_stub_through_a_foreign_bodys_interior_runs_through_it() -> None:
@@ -46,7 +46,7 @@ def test_a_stub_over_a_foreign_port_runs_through_its_function() -> None:
 def test_the_markers_own_function_is_never_foreign() -> None:
     """UNDO: `own` emptied in `functions_through`, and the own body above the port is found."""
     bodies = {_OWN: Box(x=-5, y=-10, width=10, height=20)}
-    assert functions_through(_MARKER, bodies, _OWN_PORTS) == ()
+    assert functions_through(_MARKER, solids(bodies, _OWN_PORTS)) == ()
 
 
 def test_a_south_markers_stub_is_one_run_from_its_port_to_its_box() -> None:

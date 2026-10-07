@@ -1,0 +1,8 @@
+schema = 1
+
+[part]
+mpn = "DEMO-JUMPER-BAR-3P"
+manufacturer = "Demo"
+description = "Jumper bar, 3 positions, for a feed-through terminal strip"
+category = "terminal"
+class_code = "X"

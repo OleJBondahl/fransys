@@ -161,6 +161,24 @@ on 310 Ah is 310 A. Do that multiplication yourself before writing the part file
 `[function.operating]` table's `max_current_dc_a` is a current, in amps, never a C-rate.
 Fransys stores whatever number you give it and does not compute this conversion.
 
+A protective device's datasheet gives its breaking capacity as points: the voltage, the current it breaks there
+and, for DC, the circuit's time constant. A part states them in `[rating]` or `[function.rating]` as `breaking_ac` and
+`breaking_dc`. A source's datasheet gives its fault current and time constant in `[function.operating]`.
+
+```toml
+# a DC fuse function
+[function.rating]
+voltage_dc_v = "1000"
+current_dc_a = "125"
+breaking_dc = [{ voltage_v = "1000", current_a = "15000", time_constant_ms = "15" }]
+
+# a battery function
+[function.operating]
+nominal_voltage_v = "51.2"
+fault_current_dc_a = "6000"
+fault_time_constant_ms = "2"
+```
+
 A replaceable part, such as a fuse link in its holder, is its own part file. It states a top-level
 `[rating]` and has no `[[function]]`. The holder keeps the pads and the footprint.
 

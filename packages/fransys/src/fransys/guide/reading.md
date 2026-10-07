@@ -121,7 +121,7 @@ returns every such item, as a `frozenset[Id[Item]]`. Neither reads `item`'s own 
 its `cable` facet, which records only the as-installed length of a cable already known to be
 one. Every cable-selecting function on this page (`harness_cables`, `top_level_cables`,
 `unit_cables`, `cable_list_rows`) reads through one of these two, so none can disagree about
-what a cable is.
+what a cable is. `unit_cable_page_key` is gone: the cable drawing's block key is internal, not a consumer name.
 
 `fransys.derive.is_plc_module(model, item)` returns whether `item`'s part has category
 `PLC_MODULE`. A rack is an item with at least one such child, and `plc_rack_modules` lists them.
@@ -131,7 +131,7 @@ return the terminal strips and the boards that `unit` owns directly, sorted by i
 a unit nested in it.
 
 `fransys.derive.mates(model)` returns one `MateRow` per `d.mate` in the model, at every level: a mate
-on a board, and a plug mated to a unit's interface connector. A row holds the two connector functions
+on a board, and a plug mated to a unit's interface connector. A row holds the two mated functions (each a connector or terminal),
 `a` and `b` in the authored order, and `a_designation` and `b_designation`, the text the connector
 list prints. Rows sort by those two texts. Reach an item through the function. `connector_rows` covers
 board connectors only.
@@ -145,7 +145,8 @@ the overview sort by it, and `fn.pins` follows it. Sort pins through it, so no s
 
 `fransys.derive.cable_list_rows(model)` returns one `CableListRow` per top-level cable
 (every cable item, `is_cable`, with `unit=None`, harness cables included), with its product
-facts and the designations of its two lowest-ranked ends.
+facts. `from_label` is the first end's designation. `to_label` lists every other end's, in the
+cable's end order, joined by `, `.
 
 `fransys.derive.contents_rows(cables)` reshapes a tuple of `HarnessCable`s (from
 `harness_cables`, `top_level_cables` or `unit_cables`) into one `ContentsRow` per cable, its
@@ -196,6 +197,12 @@ functions below read it back.
 `fransys.derive.function_rating(model, function)` returns the rating a function's template
 states, else its part's. `None` when neither states one.
 
+`fransys.derive.part_function_rows(model)` returns one `PartFunctionRow` per function a part
+declares: its `part`, `mpn`, `template`, `name`, `kind` and `rating`, sorted by MPN. A part with
+no function, such as a fuse link, has one row with `template` and `kind` `None` and `name`
+empty. `rating` is the function's own, else the part's, the rule `function_rating` reads. It
+needs no design: a parts-only build is enough.
+
 `fransys.derive.function_operating(model, function)` returns the operating envelope a
 function's template states. `None` with no template or no such facet.
 
@@ -204,6 +211,8 @@ its boundaries. `None` when the unit states none.
 
 `fransys.derive.boundary_operating(model, boundary)` returns the operating envelope a unit
 states on one of its boundaries. `None` when the unit states none.
+
+`fransys.derive.profile_of(model)` returns the layout profile the model authors, else the house one.
 
 ## Checking a branch's current
 
@@ -244,9 +253,51 @@ bounds = {b for c in fr.derive.current_chains(result.model) for p in c.positions
 assert {(b.value, b.role.value) for b in bounds} == {(160, "protection")}
 ```
 
-Not checked: breaking capacity, a load against its protection, isolation, a cable against its
-installation, busbar authoring, a through-hole sensor, and per-path ratings across the functions of one part.
-A rated busbar item is checked like any other device.
+Not checked: isolation, a cable against its installation, busbar authoring, a through-hole sensor, and
+per-path ratings across the functions of one part. A rated busbar item is checked like any other device.
+
+## Checking a fault and a load
+
+`RATING_BREAKING_BELOW_FAULT` compares a protective device's breaking points with the prospective fault
+current at its position. `fr.derive.prospective_fault(model)` returns what it reads: one `ProspectiveFault`
+per protective position and current kind. An entry holds the `position`, the `kind`, `current_a`,
+`time_constant_ms`, the source `functions` counted and the declared `supplies` counted.
+
+A source is a function that gives energy, or a supply declared by pins that states `fault_current_a`.
+A supply input takes energy and is no source. A source function with more than two conductive ports
+counts as no source: its pins would have to be grouped by rail.
+
+A bolted fault at one terminal of the device joins it to every other rail of the supplies the device
+reaches. A DC fuse behind a power supply does not see the AC rails. The device carries the sources on
+a path from the fault to its other terminal. A series run of sources counts at its largest member and
+parallel runs add. The larger of the two terminals' values is the entry's.
+
+The value is conservative only given every feed declared. Cable and busbar resistance are ignored, which
+errs high. An undeclared feed counts as no source, which errs low, so declare every feed's fault current.
+A position no source reaches reads `0`. A counted source that states none makes the value `None`, and the
+check stays silent.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
+f1 = d.device("F1", "DEMO-FUSE-DC-160")
+dc = d.dc_supply("HV", plus=x1[1], minus=x1[2], voltage=24, fault_current_a=6000)
+d.wire(dc.plus.pin, f1[1], wire=("BK", 1.5))
+d.wire(f1[2], x1[3], wire=("BK", 1.5))
+d.wire(dc.minus.pin, x1[4], wire=("BK", 1.5))
+
+(fault,) = fr.derive.prospective_fault(fr.build(d).model)
+assert fault.current_a == 6000
+assert fault.time_constant_ms is None
+```
+
+`LOAD_ABOVE_LIMIT` and `LOADS_ABOVE_LIMIT` compare a load's draw with the limit that bounds it.
+`fr.derive.load_limits(model)` returns one `LoadLimit` per load edge: the `function`, the `port` of a
+star edge (`None` for a two-port load), the `kind`, `draw_a` and the `bound`. The `bound` is a
+`CurrentBound`, or `None` when no limit bounds the load. The draw is the part's `nominal_current_a`,
+as stated.
 
 ## A worked example
 

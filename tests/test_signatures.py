@@ -23,6 +23,7 @@ SURFACES = (
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.baseline",
     "fransys_model.derive.numbering_pins",
+    "fransys_model.derive.cable_drawing",
 )
 
 #: symbols whose annotation names a type imported only under TYPE_CHECKING (strict xfail)

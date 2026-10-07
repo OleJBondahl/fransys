@@ -12,7 +12,7 @@ The decision that fixes it: model-0134.
 from typing import Any, NamedTuple
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import cabinet_document
 from fransys.colours import BU
 
 from fransys_model.derive.drawing_text import label_text
@@ -34,11 +34,11 @@ def _container_texts() -> tuple[fr.Model, list[str], list[str]]:
     d = fr.design("demo_parts", place="C1")
     d.project(title="Box", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-05", text="First issue", created="XX")
-    d.location("C1", "Cabinet")
+    _cabinet = d.location("C1", "Cabinet")
     board = d.add(_board, "U2")
     lamp = d.device("M1", "DEMO-LAMP-24")
     d.wire(lamp["1"], board.J1["1"], wire=(BU, 0.5))
-    model = fr.build(d, system_document()).model
+    model = fr.build(d, cabinet_document(_cabinet)).model
     sets = layout_of(model, DrawingSet)
     pages = layout_of(model, Page)
     titles, pins = [], []

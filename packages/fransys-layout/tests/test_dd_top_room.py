@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from samples import SHEET
 
 from fransys_layout.engines.schematic import engine, run_stages
@@ -61,7 +61,7 @@ def _first_row_reference() -> LinkMarker:
             wire(terminal.inner, lamp.fn("lamp")["1"])
             if n == 0:
                 d.chain(terminal, lamp)
-    model = fr.build(parts, d.draft(), system_document()).model
+    model = fr.build(parts, d.draft(), layout_trigger_document()).model
     layout, _, _ = run_stages(model, read_inputs(model))
     refs = [m for m in layout.markers if m.page == 1 and m.star == "ref"]
     assert refs, "premise: a first-row terminal carries a star reference"

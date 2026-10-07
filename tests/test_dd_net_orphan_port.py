@@ -15,7 +15,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_layout.stages.references import Star, with_orphans
 from fransys_layout.stages.types import NetGroup, PortRef, Role
@@ -85,7 +85,7 @@ def _build(tags, wires, nets):
         wire(end(a, *port), end(b, *port))
     for name, members in nets:
         d.net(name, *(end(spec) for spec in members))
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
     return result.model, {spec: one.id for spec, one in named.items()}
 

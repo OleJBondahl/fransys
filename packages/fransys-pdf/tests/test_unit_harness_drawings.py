@@ -2,7 +2,7 @@
 
 `harness_cables_for` reads `Document.unit` (not only `Document.item`): a unit document asking for
 `CONTENTS` or `HARNESS_DRAWING` gets `derive.unit_cables`, so `check` reports `DOCUMENT_NO_DRAWINGS`
-only when a cable's drawing is really missing, and `source` prints the pages.
+only when a cable's block is really missing, and `source` prints the pages.
 """
 
 from _build import (
@@ -24,6 +24,7 @@ from fransys_pdf._contents import contents_page
 from fransys_pdf._drawings import harness_cables_for
 
 from fransys_model.derive import unit_cables
+from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, documents
 
 K = PageKind
@@ -102,14 +103,17 @@ def test_harness_cables_for_a_unit_subject_is_empty_when_no_harness_page_kind_is
     assert harness_cables_for(m, record, (K.COVER,)) == ()
 
 
-def test_check_gives_no_drawings_finding_for_a_unit_document_with_a_cable():
-    """Positive: the unit's own cable always gets its table page (CT2), so no
-    `DOCUMENT_NO_DRAWINGS` -- a table needs no rendered drawing to be "missing" against. Only
-    the unit's own cable is asked for: the nested unit's and the top-level cable's are not this
-    document's, and are not missed."""
-    m, _doc, _w1, _w2, _w3 = _unit_with_cables()
-    findings = check(m, {})
-    assert [f for f in findings if f.code == _NO_DRAWINGS] == []
+def test_check_asks_a_unit_document_for_its_own_cables_blocks_in_the_units_reading():
+    """A unit document asks for one block per cable of its own, keyed by its unit's reading
+    (`unit~subject`): a block keyed absolutely, or a nested unit's or top-level cable's, is not it.
+    """
+    m, _doc, w1, w2, w3 = _unit_with_cables()
+    (message,) = [f.message for f in check(m, {}) if f.code == _NO_DRAWINGS]
+    assert message == f"HARNESS_DRAWING: missing drawing for {cable_block_key(w1.unit, w1.id)}"
+    answered = {cable_block_key(w1.unit, w1.id): "<svg>w1</svg>"}
+    assert [f for f in check(m, answered) if f.code == _NO_DRAWINGS] == []
+    assert w2.id.value not in message
+    assert w3.id.value not in message
 
 
 def _no_cable_message(*records):
@@ -134,15 +138,15 @@ def test_no_cable_message_says_unit_for_a_unit_document_and_harness_for_an_item_
     )
 
 
-def test_source_prints_a_table_page_per_unit_cable_and_the_contents_table():
-    """`source` for a unit document: the table page carries the cable's own (unit-relative)
-    designation and the contents page lists it, instead of `No drawings.` and `None.` (CT2: a
-    table needs no rendered SVG, so `source` is called with no `svgs` entry for it at all)."""
+def test_source_prints_the_unit_cables_block_and_the_contents_table():
+    """`source` for a unit document: the page embeds the cable's block, found under the unit's
+    reading key, and the contents page lists the cable, instead of `No drawings.` and `None.`."""
     m, doc, w1, w2, _w3 = _unit_with_cables()
-    text = source(m, doc.id, {})
+    svgs = {cable_block_key(w1.unit, w1.id): "<svg>unit-reading-block</svg>"}
+    text = source(m, doc.id, svgs)
     (cable,) = harness_cables_for(m, documents(m)[doc.id], (K.HARNESS_DRAWING,))
     assert cable.cable == w1.id
-    assert "<svg>" not in text
+    assert "<svg>unit-reading-block</svg>" in text
     assert '#par(text("No drawings."))' not in text
     assert '#par(text("None."))' not in text
     assert f'"{cable.designation}"' in text

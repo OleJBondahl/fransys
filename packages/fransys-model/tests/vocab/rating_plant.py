@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from plant import Plant
 
     from fransys_model.kernel import Id
-    from fransys_model.vocab.core import Function
+    from fransys_model.vocab.core import Function, Port, Unit
 
 
 def rail(max_v: str, phase: int | None = None) -> Rail:
@@ -46,8 +46,11 @@ def supply(  # noqa: PLR0913 -- one keyword per thing a test varies
     name: str | None = None,
     current: Current = Current.AC,
     earthing: Earthing = Earthing.EARTHED,
+    unit: Id[Unit] | None = None,
+    pins: Sequence[Id[Port]] = (),
+    fault_current_a: Decimal | None = None,
 ) -> Id[SupplySystem]:
-    """Add a supply; `name` defaults to the key."""
+    """Add a supply; `name` defaults to the key; `unit`, `pins` and the fault are its own."""
     record = SupplySystem(
         id=make_id(SupplySystem, (key,)),
         key=(key,),
@@ -55,6 +58,9 @@ def supply(  # noqa: PLR0913 -- one keyword per thing a test varies
         current=current,
         earthing=earthing,
         rails=frozendict(rails),
+        fault_current_a=fault_current_a,
+        unit=unit,
+        pins=tuple(sorted(pins)),
     )
     plant.add(record)
     return record.id

@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
 from fransys_model.layout import DrawingSet, Label, Page, SymbolPlacement, layout_of
@@ -57,7 +57,7 @@ def _build():
     wire(k1.fn("coil")["A1"], terminal.inner)
     inner.break_before(group_b)
     inner.boundary(terminal)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _terminal(model: Model) -> Id:

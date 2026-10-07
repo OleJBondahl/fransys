@@ -31,16 +31,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
+from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import text_width
-from fransys_model.derive.drawing_text import marker_text, row_letter
+from fransys_layout.stages.references.marker_boxes import reference_box_width
+from fransys_model.derive.drawing_text import marker_text
 from fransys_model.kernel import loads
 from fransys_model.layout import (
     LinkMarker,
     Page,
     Profile,
-    SheetFormat,
     StarKind,
-    default_sheet_format,
     layout_of,
 )
 
@@ -110,25 +110,15 @@ def _is_merged_or_pure_reference(model: Model, marker: LinkMarker) -> bool:
     return any(o.partner == marker.id and o.star is StarKind.BRANCH for o in markers.values())
 
 
-def _reference_width(model: Model, marker: LinkMarker, *, text_height: int, padding: int) -> int:
-    """LD3 (c), decision layout-0089: the fixed reference box width for `marker`'s own sheet.
+def _reference_width(model: Model, *, text_height: int, padding: int) -> int:
+    """RR-O5: the narrowest reference box (`#99-<position>` at the floor), as layout sizes it.
 
-    `stages/references/marker_boxes.py::reference_box_width`'s formula,
-    reimplemented on the model's own
-    (millimetre) `SheetFormat` instead of the stage's grid-converted one (decision layout-0037:
-    the two are distinct types) -- `frame_columns`/`frame_rows` are the same plain ints on
-    both, so no grid conversion is needed here, only the two fields this test already has.
+    Layout's own `reference_box_width` at its floor digits, on the model's sheet and profile. A
+    run of several sets draws the box wider (the longest form), so there this is a lower bound.
     """
-    pages = layout_of(model, Page)
-    page = pages[marker.page]
-    sheet = (
-        default_sheet_format()
-        if page.sheet_format is None
-        else layout_of(model, SheetFormat)[page.sheet_format]
-    )
-    widest_column = str(sheet.frame_columns)
-    widest_row = row_letter(sheet.frame_rows - 1)
-    return text_width(f"#99-p99:{widest_column}{widest_row}", height=text_height) + 2 * padding
+    profile, sheet, _ = profile_and_sheet(model)
+    assert (profile.text_height, profile.marker_padding) == (text_height, padding)
+    return reference_box_width(sheet, profile)
 
 
 def _fits(model: Model, marker: LinkMarker, *, text_height: int, padding: int) -> bool:
@@ -161,6 +151,7 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
         assert len(markers) == expected_count
 
         text_height, padding = _profile_numbers(model)
+        several_sets = len({page.drawing_set for page in layout_of(model, Page).values()}) > 1
         assert padding > 0, "every golden here authors or defaults to a non-zero marker_padding"
         for marker in markers.values():
             assert _fits(model, marker, text_height=text_height, padding=padding)
@@ -171,15 +162,18 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
             # value instead. A pure, unmerged off stub still gets its old exactly-measured
             # width. Either way `_fits`'s `<=` stays the correct general "fits" semantics;
             # this only gives stronger evidence of exactly which rule wrote each width.
-            fixed = _reference_width(model, marker, text_height=text_height, padding=padding)
+            fixed = _reference_width(model, text_height=text_height, padding=padding)
             measured, _height = _measured_size(
                 model, marker, text_height=text_height, padding=padding
             )
             along = _sides(marker)[0]
+            # RR-O5: a run of several sets sizes the box for its longest form, so it is only a
+            # lower bound there; one set draws the floor exactly.
+            holds = (lambda a, b: a >= b) if several_sets else (lambda a, b: a == b)
             if marker.star is not StarKind.OFF:  # a plain pair, or a star REF/BRANCH
-                assert along == fixed
+                assert holds(along, fixed)
             elif _is_merged_or_pure_reference(model, marker):  # merged: the wider of the two
-                assert along == max(fixed, measured)
+                assert holds(along, max(fixed, measured))
             else:  # a pure, unmerged off stub: the old exactly-measured width
                 assert along == measured
             multi_line += "\n" in marker_text(model, marker)

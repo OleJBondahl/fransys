@@ -7,7 +7,7 @@ The router asks it per step (`_crosses_cleanly`), the coherence lint of what was
 import pytest
 
 from fransys_layout.geometry import Box, Facing
-from fransys_layout.stages._routing import Field, _crosses_cleanly, clean_crossing
+from fransys_layout.stages.grid_path import Field, _crosses_cleanly, clean_crossing
 
 H, V, BOTH = frozenset("h"), frozenset("v"), frozenset("hv")
 

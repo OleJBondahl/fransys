@@ -14,6 +14,7 @@ from fransys_model.vocab.validators.supplies import (
     SUPPLY_DIFFERS,
     check_supplies,
 )
+lazy from fransys_model.vocab.core import Unit
 
 
 def _dc(max_v: str, phase: int | None = None) -> Rail:
@@ -28,6 +29,7 @@ def _supply(  # noqa: PLR0913 -- one keyword per thing a test varies
     current: Current = Current.DC,
     earthing: Earthing = Earthing.EARTHED,
     rails: dict[str, Rail] | None = None,
+    fault_current_a: Decimal | None = None,
 ) -> Id[SupplySystem]:
     supply = SupplySystem(
         id=make_id(SupplySystem, (key,)),
@@ -36,6 +38,7 @@ def _supply(  # noqa: PLR0913 -- one keyword per thing a test varies
         current=current,
         earthing=earthing,
         rails=frozendict({"+24V": _dc("24"), "0V": _dc("0")} if rails is None else rails),
+        fault_current_a=fault_current_a,
     )
     plant.add(supply)
     return supply.id
@@ -235,3 +238,58 @@ def test_findings_are_sorted_and_all_errors() -> None:
     assert {f.code for f in findings} == {SUPPLY_DIFFERS, POTENTIAL_IN_TWO_SUPPLIES}
     assert all(f.severity == Severity.ERROR for f in findings)
     assert findings == tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
+
+
+def test_declarations_differing_only_in_fault_current_name_it() -> None:
+    plant = Plant()
+    _supply(plant, "s1", fault_current_a=Decimal(10000))
+    _supply(plant, "s2", fault_current_a=Decimal(6000))
+    (finding,) = check_supplies(plant.model())
+    assert finding.code == SUPPLY_DIFFERS
+    assert finding.message == "supplies named '24V' differ in fault_current_a: '10000', '6000'"
+    equal = Plant()
+    _supply(equal, "s1", fault_current_a=Decimal(10000))
+    _supply(equal, "s2", fault_current_a=Decimal(10000))
+    assert check_supplies(equal.model()) == ()
+    unset = Plant()
+    _supply(unset, "s1", fault_current_a=Decimal(10000))
+    _supply(unset, "s2")
+    assert [f.code for f in check_supplies(unset.model())] == [SUPPLY_DIFFERS]
+
+
+def _in_unit(
+    plant: Plant, key: str, unit: Id[Unit] | None, amps: str, current: Current = Current.DC
+) -> None:
+    supply = SupplySystem(
+        id=make_id(SupplySystem, (key,)),
+        key=(key,),
+        name="24V",
+        current=current,
+        rails=frozendict({"+24V": _dc("24", 0), "0V": _dc("0")}),  # phase 0 so AC accepts it
+        fault_current_a=Decimal(amps),
+        unit=unit,
+    )
+    plant.add(supply)
+
+
+def test_a_container_fault_current_wins_over_a_nested_unit() -> None:
+    plant = Plant()
+    _in_unit(plant, "s1", None, "10000")
+    _in_unit(plant, "s2", plant.unit("panel"), "6000")
+    assert check_supplies(plant.model()) == ()
+
+
+def test_sibling_units_that_differ_in_fault_current_give_supply_differs() -> None:
+    plant = Plant()
+    _in_unit(plant, "s1", plant.unit("left"), "10000")
+    _in_unit(plant, "s2", plant.unit("right"), "6000")
+    (found,) = _of(plant, SUPPLY_DIFFERS)
+    assert "fault_current_a" in found.message
+
+
+def test_a_nested_unit_that_differs_in_current_still_gives_supply_differs() -> None:
+    plant = Plant()
+    _in_unit(plant, "s1", None, "10000")
+    _in_unit(plant, "s2", plant.unit("panel"), "10000", current=Current.AC)
+    (found,) = _of(plant, SUPPLY_DIFFERS)
+    assert found.message.endswith("differ in current: 'ac', 'dc'")

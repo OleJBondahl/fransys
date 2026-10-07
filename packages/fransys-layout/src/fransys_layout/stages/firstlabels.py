@@ -8,8 +8,7 @@ lazy from fransys_layout.geometry import Box
 from .content import content_box
 from .labels import SlotFrame, place_slot_labels
 from .slices import by_plan, page_of
-from .texts.marker_row import marker_shapes
-from .texts.power import with_power_labels
+from .texts.power import drawn_shapes, power_reserved, with_power_labels
 from .texts.power_lead import with_power_leads
 
 if TYPE_CHECKING:
@@ -32,6 +31,12 @@ def _first_labels(
     )
 
 
+def _held(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
+    """The first call's keep-out: each ordinary end as drawn, each power end as reserved (D5)."""
+    ordinary = tuple(one for one in markers if not one.symbol)
+    return (*(one.box for one in drawn_shapes(ordinary)), *power_reserved(markers))
+
+
 def labelled_pages(
     plans: tuple[PagePlan, ...],
     pages: Sequence[tuple[tuple[PlacedFunction, ...], FirstCall]],
@@ -48,7 +53,7 @@ def labelled_pages(
     findings: list[Finding] = []
     led: dict[int, LinkMarker] = {}
     for (placed, call), mine in zip(pages, by_plan(markers, page_of, plans), strict=True):
-        labels, label_findings = _first_labels(call, marker_shapes(tuple(mine)))
+        labels, label_findings = _first_labels(call, _held(tuple(mine)))
         now, lead_findings = with_power_leads(tuple(mine), call.placed, labels)
         led.update((id(was), one) for was, one in zip(mine, now, strict=True))
         frame = SlotFrame(content=content_box(sheet), profile=call.profile)

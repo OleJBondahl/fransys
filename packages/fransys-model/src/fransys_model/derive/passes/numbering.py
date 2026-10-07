@@ -21,19 +21,17 @@ from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lone_cable import lone_cable_harness
 from fransys_model.derive.lookups import terminal_items
+from fransys_model.derive.passes.numbering_assigned import assigned_facets
 from fransys_model.derive.passes.numbering_units import (
-    instance_tags_in,
     number_unit_tags,
     unit_tag_duplicates,
 )
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
-from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
+from fransys_model.kernel import Finding, Model, Severity, evolve
 from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.enums import Aspect
-from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
-from fransys_model.vocab.numbering_codes import item_class_code
 from fransys_model.vocab.tables import (
     aspect_nodes,
     facets_of,
@@ -46,6 +44,7 @@ if TYPE_CHECKING:
     from fransys_model.derive.indexes import Indexes
     from fransys_model.kernel import Id
     from fransys_model.vocab.core import Item, Port, Unit
+    from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 
 DESIGNATION_DUPLICATE: Final[str] = "DESIGNATION_DUPLICATE"
 REFERENCE_DESIGNATION_DUPLICATE: Final[str] = "REFERENCE_DESIGNATION_DUPLICATE"
@@ -313,42 +312,38 @@ def _duplicates(model: Model, siblings: list[Item], reserved: frozenset[str]) ->
     return findings
 
 
-def _assigned(
-    model: Model,
-    siblings: list[Item],
-    reserved: frozenset[str],
-) -> list[AssignedDesignationFacet]:
-    """One `facet.assigned_designation` for each unnumbered sibling that can be numbered.
+def _sibling_groups(
+    model: Model, terminals: frozenset[Id[Item]]
+) -> dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]]:
+    # The group's second element is the item's nearest read-through ancestor (a board or
+    # harness), not its structural `parent` (C3b): still an item id or `None`.
+    by_group: dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]] = {}
+    for item in items(model).values():
+        if item.id not in terminals:
+            ancestors = designating_ancestors(model, item.id)
+            scope = ancestors[-1] if ancestors else None
+            by_group.setdefault((item.unit, scope), []).append(item)
+    return by_group
 
-    Each takes the first `code + str(n)`, from n = 1, not already an exact string in the group.
-    An item with an own text is skipped and its text taken; an accessory uses up no number.
-    """
-    taken = {
-        text for item in siblings if (text := own_designation_or_none(model, item)) is not None
-    } | reserved
-    if siblings and not designating_ancestors(model, siblings[0].id):
-        taken |= instance_tags_in(model, siblings[0].unit)  # UT3: one count with the instances
-    numbered: list[AssignedDesignationFacet] = []
-    for item in sorted(siblings, key=lambda item: (item.key, item.id)):
-        if own_designation_or_none(model, item) is not None or takes_parents_designation(
-            model, item.id
-        ):
-            continue
-        code = item_class_code(model, item.id)
-        if not code:
-            continue
-        counter = 1
-        while f"{code}{counter}" in taken:
-            counter += 1
-        candidate = f"{code}{counter}"
-        taken.add(candidate)
-        key = (*item.key, "assigned_designation")
-        numbered.append(
-            AssignedDesignationFacet(
-                id=make_id(AssignedDesignationFacet, key), key=key, subject=item.id, text=candidate
-            )
-        )
-    return numbered
+
+def _with_facets(model: Model, numbered: list[AssignedDesignationFacet]) -> Model:
+    if not numbered:
+        return model
+    # Each facet takes its item's origin (`Model.origins` is outside every digest), so an
+    # error about it still cites the author.
+    authored = {facet.id: require_origin(model.origins, facet.subject) for facet in numbered}
+    evolved = evolve(model, put=numbered, origin=authored[numbered[0].id])
+    origins = frozendict({**evolved.origins, **authored})
+    return dataclasses.replace(evolved, origins=origins)
+
+
+def _item_findings(model: Model, terminals: frozenset[Id[Item]]) -> list[Finding]:
+    return [
+        *_reference_duplicates(model, terminals),
+        *_product_duplicates(model, terminals),
+        *_harness_end_ambiguities(model),
+        *_port_duplicates(model, terminals),
+    ]
 
 
 def number(model: Model) -> tuple[Model, tuple[Finding, ...]]:
@@ -367,34 +362,15 @@ def number(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         findings, sorted by `(code, subjects, message)`.
     """
     terminals = terminal_items(model)
-    # The group's second element is the item's nearest read-through ancestor (a board or
-    # harness), not its structural `parent` (C3b): still an item id or `None`.
-    by_group: dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]] = {}
-    for item in items(model).values():
-        if item.id not in terminals:
-            ancestors = designating_ancestors(model, item.id)
-            scope = ancestors[-1] if ancestors else None
-            by_group.setdefault((item.unit, scope), []).append(item)
+    by_group = _sibling_groups(model, terminals)
     findings: list[Finding] = []
     numbered: list[AssignedDesignationFacet] = []
     for (unit, scope), siblings in by_group.items():
         reserved = _reserved_texts(model, unit, scope)
         findings.extend(_duplicates(model, siblings, reserved))
-        numbered.extend(_assigned(model, siblings, reserved))
-    if numbered:
-        # Each facet takes its item's origin (`Model.origins` is outside every digest), so an
-        # error about it still cites the author.
-        authored = {facet.id: require_origin(model.origins, facet.subject) for facet in numbered}
-        evolved = evolve(model, put=numbered, origin=authored[numbered[0].id])
-        origins = frozendict({**evolved.origins, **authored})
-        result = dataclasses.replace(evolved, origins=origins)
-    else:
-        result = model
-    result = number_unit_tags(result, _reserved_texts)
+        numbered.extend(assigned_facets(model, siblings, reserved))
+    result = number_unit_tags(_with_facets(model, numbered), _reserved_texts)
     findings.extend(unit_tag_duplicates(result, DESIGNATION_DUPLICATE))
-    findings.extend(_reference_duplicates(result, terminals))
-    findings.extend(_product_duplicates(result, terminals))
-    findings.extend(_harness_end_ambiguities(result))
-    findings.extend(_port_duplicates(result, terminals))
+    findings.extend(_item_findings(result, terminals))
     ordered = tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
     return result, ordered

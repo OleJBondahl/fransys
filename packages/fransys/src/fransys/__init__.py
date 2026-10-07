@@ -32,6 +32,7 @@ from fransys_model import derive
 from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflict, Model, Severity
 from fransys_model.vocab import DocumentPreset, PageKind
 
+from ._release_reader import Release, ReleasePin, releases
 from .design import design
 from .documents import document
 from .parts_module import parts_module
@@ -41,6 +42,7 @@ from .pipeline import (
     build,
     check,
     diff,
+    export_names,
     lint,
     parts,
     release,
@@ -74,6 +76,8 @@ __all__ = [
     "PageKind",
     "PartLibraryError",
     "Pin",
+    "Release",
+    "ReleasePin",
     "Run",
     "Severity",
     "Terminal",
@@ -86,10 +90,12 @@ __all__ = [
     "design",
     "diff",
     "document",
+    "export_names",
     "lint",
     "parts",
     "parts_module",
     "release",
+    "releases",
     "unit",
     "verify",
     "write",

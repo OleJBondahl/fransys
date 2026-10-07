@@ -5,13 +5,11 @@ layout unit is the grid unit `G = M/8`, so every library coordinate is an exact 
 x grows right, y grows down, and a page origin is the top left of its content box.
 """
 
+from electrical_symbols import G_PER_MODULE, WIRING_GRID
 from fransys_model.kernel import value
 
 from .errors import GeometryError
 
-G_PER_MODULE = 8
-# Ports and wire segments sit on multiples of this: the libraries' 1 M wiring grid.
-WIRING_GRID = 8
 # A text stands this far from what it must not touch: a neighbour's text, a page edge.
 TEXT_GAP = WIRING_GRID
 

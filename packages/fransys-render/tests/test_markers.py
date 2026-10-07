@@ -424,10 +424,12 @@ def test_drawn_box_size_equals_the_records_stored_size(
     C2, model-0139: three targets or more print one line) and of stored heights
     (their lengths) is asserted.
     """
+    # RR-O5: the two-location golden's reference boxes are sized from the longest position form
+    # (`#n-+<location>...p<set>.<page>:<cell>`), 56 G, no longer the fixed 42 G.
     goldens = (
         (cabinet_laid_out, _WIDE_MARKER_COUNT, {12, 20}, {42}),
         (cabinet_narrow_laid_out, _NARROW_MARKER_COUNT, {12}, {42}),
-        (cabinet_two_location_laid_out, _TWO_LOCATION_MARKER_COUNT, {12, 20}, {42, 47, 50, 51}),
+        (cabinet_two_location_laid_out, _TWO_LOCATION_MARKER_COUNT, {12, 20}, {47, 51, 56}),
     )
     checked = 0
     for model, expected_count, expected_widths, expected_heights in goldens:

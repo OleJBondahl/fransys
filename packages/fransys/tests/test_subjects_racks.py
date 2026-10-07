@@ -1,7 +1,7 @@
 """`_subjects.racks` is the parents of `derive.is_plc_module` children only."""
 
 import fransys as fr
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys import _subjects
 
 from fransys_model.kernel import Draft, Origin, make_id
@@ -45,5 +45,5 @@ def test_only_the_parent_of_a_plc_module_is_a_rack() -> None:
     relay = _item("relay-item", other_part, cabinet)
     draft = Draft()
     draft.extend([module_part, other_part, rack, cabinet, module, relay], origin=_ORIGIN)
-    model = fr.build(draft, system_document()).model
+    model = fr.build(draft, layout_trigger_document()).model
     assert _subjects.racks(model) == (rack.id,)

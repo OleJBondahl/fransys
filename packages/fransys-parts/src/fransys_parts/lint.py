@@ -129,18 +129,19 @@ def _check_part_file(
     part_line = _line(origins, ("part",)) if "part" in data else 1
     category = part.get("category") if type(part) is dict else None
 
-    findings: list[Finding] = []
-    findings.extend(_check_top_level_tables(data, path, origins))
-    findings.extend(_check_schema(data, path, library_schema))
-    findings.extend(_check_part_section(data, part, path, part_line, seen_parts))
-    findings.extend(_check_functions(data, path, origins))
-    findings.extend(_check_supplies(data, path, origins))
-    findings.extend(_check_footprint(data, path, origins))
-    findings.extend(_check_cable_product_section(data, path, origins, category, part_line))
-    findings.extend(_check_pcb_section(data, path, origins, category, part_line))
-    findings.extend(_ratings.check_part_rating(data, path, origins))
-    findings.extend(_power_loss.check_power_loss_twice(data, path, origins))
-    return findings
+    groups = (
+        _check_top_level_tables(data, path, origins),
+        _check_schema(data, path, library_schema),
+        _check_part_section(data, part, path, part_line, seen_parts),
+        _check_functions(data, path, origins),
+        _check_supplies(data, path, origins),
+        _check_footprint(data, path, origins),
+        _check_cable_product_section(data, path, origins, category, part_line),
+        _check_pcb_section(data, path, origins, category, part_line),
+        _ratings.check_part_rating(data, path, origins),
+        _power_loss.check_power_loss_twice(data, path, origins),
+    )
+    return [finding for group in groups for finding in group]
 
 
 def _check_top_level_tables(data: _toml.Table, path: str, origins: _toml.Origins) -> list[Finding]:
@@ -197,51 +198,38 @@ def _check_part_section(
     )
     if type(part) is not dict:
         return findings
-    class_code = part.get("class_code")
-    if type(class_code) is str:
-        if _CLASS_CODE.fullmatch(class_code) is None:
-            findings.append(
-                _toml.finding(
-                    "CLASS_CODE",
-                    path,
-                    part_line,
-                    f"class_code {class_code!r} must be 1 to 3 uppercase letters",
-                )
-            )
-        elif class_code[0] in _FORBIDDEN_CLASS_CODES:
-            findings.append(
-                _toml.finding(
-                    "CLASS_CODE",
-                    path,
-                    part_line,
-                    f"class_code {class_code!r} is forbidden by IEC 81346-2:2019",
-                )
-            )
-        elif class_code[0] in _RESERVED_CLASS_CODES:
-            findings.append(
-                _toml.finding(
-                    "CLASS_CODE",
-                    path,
-                    part_line,
-                    f"class_code {class_code!r} is reserved by IEC 81346-2:2019",
-                )
-            )
-    manufacturer, mpn = part.get("manufacturer"), part.get("mpn")
-    if type(manufacturer) is str and type(mpn) is str:
-        seen_key = (manufacturer, mpn)
-        earlier = seen.get(seen_key)
-        if earlier is not None:
-            findings.append(
-                _toml.finding(
-                    "PART_DUPLICATE",
-                    path,
-                    part_line,
-                    f"part ({manufacturer!r}, {mpn!r}) is already declared in {earlier}",
-                )
-            )
-        else:
-            seen[seen_key] = path
+    findings.extend(_check_class_code(part.get("class_code"), path, part_line))
+    findings.extend(
+        _check_part_duplicate(part.get("manufacturer"), part.get("mpn"), path, part_line, seen)
+    )
     return findings
+
+
+def _check_class_code(class_code: object, path: str, line: int) -> list[Finding]:
+    if type(class_code) is not str:
+        return []
+    if _CLASS_CODE.fullmatch(class_code) is None:
+        text = f"class_code {class_code!r} must be 1 to 3 uppercase letters"
+    elif class_code[0] in _FORBIDDEN_CLASS_CODES:
+        text = f"class_code {class_code!r} is forbidden by IEC 81346-2:2019"
+    elif class_code[0] in _RESERVED_CLASS_CODES:
+        text = f"class_code {class_code!r} is reserved by IEC 81346-2:2019"
+    else:
+        return []
+    return [_toml.finding("CLASS_CODE", path, line, text)]
+
+
+def _check_part_duplicate(
+    manufacturer: object, mpn: object, path: str, line: int, seen: dict[tuple[str, str], str]
+) -> list[Finding]:
+    if type(manufacturer) is not str or type(mpn) is not str:
+        return []
+    earlier = seen.get((manufacturer, mpn))
+    if earlier is None:
+        seen[(manufacturer, mpn)] = path
+        return []
+    text = f"part ({manufacturer!r}, {mpn!r}) is already declared in {earlier}"
+    return [_toml.finding("PART_DUPLICATE", path, line, text)]
 
 
 def _check_supplies(data: _toml.Table, path: str, origins: _toml.Origins) -> list[Finding]:

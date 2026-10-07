@@ -11,10 +11,12 @@ _NAMES = {
     "design",
     "diff",
     "document",
+    "export_names",
     "lint",
     "parts",
     "parts_module",
     "release",
+    "releases",
     "verify",
     "write",
 }
@@ -37,7 +39,7 @@ def test_every_public_function_has_a_does_not_line() -> None:
     assert not missing, f"no 'Does not' line: {missing}"
 
 
-def test_the_walk_finds_the_eleven_functions_and_the_check_can_fail() -> None:
+def test_the_walk_finds_the_thirteen_functions_and_the_check_can_fail() -> None:
     assert {name for name, _ in _public_functions()} == _NAMES
     assert not has_does_not("Builds a design.\n\nIt writes nothing.")
     assert not has_does_not(None)

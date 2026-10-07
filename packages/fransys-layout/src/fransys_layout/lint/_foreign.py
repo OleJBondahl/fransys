@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping
 
 from fransys_layout.geometry import contains_point, overlaps, port_page_at
-from fransys_layout.stages.stub_runs import functions_through
+from fransys_layout.stages.stub_runs import functions_through, solids
 from fransys_model.kernel import Finding, Severity
 
 from .codes import TEXT_OVERLAP, WIRE_THROUGH_SYMBOL
@@ -32,10 +32,10 @@ def stub_through_symbols(
 ) -> list[Finding]:
     """One `WIRE_THROUGH_SYMBOL` per (marker, foreign function) its stub runs through or over."""
     ports = _ports(placed)
-    boxes = {one.function: box for one, box in bodies}
+    page = solids({one.function: box for one, box in bodies}, ports)
     found: dict[tuple[Handle, ...], Finding] = {}
     for marker in markers:
-        for function in functions_through(marker, boxes, ports):
+        for function in functions_through(marker, page):
             subjects = tuple(sorted((marker.connection, marker.port, function)))
             found.setdefault(
                 subjects,

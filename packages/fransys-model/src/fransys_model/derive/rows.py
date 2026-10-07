@@ -6,7 +6,7 @@ already rendered (`derive.designation`), so no formatter ever re-derives or re-p
 label. All numeric fields are `int` or `Decimal`, never `float`; every sequence is a
 `tuple`.
 
-The list outputs' shared read of these rows lives at the bottom, once: which fields of each
+The list outputs' shared read of these rows lives in `derive.columns`, once: which fields of each
 row shape a list prints and in what order (`*_COLUMNS`) and the terminal list's two ends labels
 (`TERMINAL_LABELS`). The one text of a list cell (`cell_text`, `cell_parts`, `CELL_SEPARATOR`) and
 the field extraction (`column_values`, `column_rows`, `pin_lines`) live in `derive.list_cells`.
@@ -21,9 +21,9 @@ from typing import Any
 from fransys_model.kernel import AuthoringKey, Id, register_enum, value
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.enums import Gender, SignalType
+from fransys_model.vocab.enums import FunctionKind, Gender, SignalType
 from fransys_model.vocab.ratings import Operating, Rating
-from fransys_model.vocab.templates import Part
+from fransys_model.vocab.templates import FunctionTemplate, Part
 
 
 @value
@@ -278,8 +278,8 @@ class HarnessCore:
     `label` is the label of the `wire` facet of the core's conductor, `None` when it has none.
     `end_a`/`end_b` are `CableRow`'s own -- `cable_rows` itself orients every core of one cable
     to run from its one lower-ranked end to its one higher-ranked end
-    (`designation.cable_end_rank`/`cable_end_owner`), not `Conductor.a`/`.b`'s raw port-id order, so
-    `end_a` is always the same physical end for every core that lands on it.
+    (`cable_end_rank`, a unit member first; `cable_end_owner`), not `Conductor.a`/`.b`'s raw
+    port-id order, so `end_a` is always the same physical end for every core that lands on it.
     """
 
     conductor: Id[Conductor]
@@ -348,10 +348,11 @@ class CableListRow:
 
     `mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
     facts, `None` where the part or facet is absent. `designation` is the cable's
-    `printed_designation` (`"-W1"`). `from_label` and `to_label` are the `HarnessEnd.designation`
-    of the two lowest-ranked ends (`designation.cable_end_rank`), the text
-    the drawing prints, so a cable authored either way round reads the same way round. With one
-    end `to_label` is `""`, with none both are; ends beyond the second are left out.
+    `printed_designation` (`"-W1"`). Ends are ordered by `cable_end_rank` (a unit member first),
+    so a cable authored either way round reads the same way round. `from_label` is the first end's
+    `HarnessEnd.designation`, the text the drawing prints. `to_label` lists every other end's
+    designation in that order, joined by `", "`. With one end `to_label` is `""`, with none
+    both are.
     """
 
     cable: Id[Item]
@@ -551,7 +552,7 @@ class BaselineMate:
 
 @value
 class MateRow:
-    """One `Mate` of the model, at any level: its two connector functions and their texts.
+    """One `Mate` of the model, at any level: its two CONNECTOR or TERMINAL functions, with texts.
 
     `a` and `b` keep the authored order of `d.mate`. A designation is the text the connector list
     prints for that connector at system level (`connector_designation`).
@@ -668,31 +669,18 @@ class NumberingPins:
     retired: tuple[NumberingRetired, ...]
 
 
-# -- what the list outputs print of these rows (the PDF lists and the CSVs, one read) -------
+@value
+class PartFunctionRow:
+    """One function a part declares, with the rating it has.
 
-# The human-readable fields of each row shape, in the row's field order. An `Id` field is left
-# out where the row carries its rendered twin (`terminal` and `designation`, `part` and `mpn`,
-# `internal` and `internal_ends`).
-TERMINAL_COLUMNS = (
-    "designation",
-    "group",
-    "index",
-    "internal_ends",
-    "external_ends",
-    "jumper_group",
-)
-# The terminal list's two ends columns are the terminal's port roles, internal then external
-# (owner ruling 2026-09-24): headed by these labels, not by the field name. The CSV's header is
-# the same label lower-cased with `_` for the space (`side_a`, `side_b`).
-TERMINAL_LABELS = {"internal_ends": "Side A", "external_ends": "Side B"}
-PLC_COLUMNS = ("channel_designation", "signal", "wired_to", "signal_name")
-BOM_COLUMNS = ("mpn", "revision", "manufacturer", "description", "count", "designations")
-WIRE_COLUMNS = ("from_", "to", "colour", "cross_section_mm2", "label")
-WIRE_LABELS = {"from_": "from"}  # the CSV header of the one column whose field name is a keyword
-DESIGNATION_COLUMNS = ("designation", "reference", "description")
-# A connector row repeats on each of its pins, so a line is the connector's fields, then the pin's.
-CONNECTOR_COLUMNS = ("designation", "style", "pincount", "gender", "mate_designation")
-PIN_COLUMNS = ("marking", "net", "mate_port_designation")
-_CABLE_FIELDS = ("designation", "mpn", "description", "core_count", "gauge_mm2", "length_mm")
-CABLE_LIST_COLUMNS = (*_CABLE_FIELDS, "from_label", "to_label")
-CONTENTS_COLUMNS = (*_CABLE_FIELDS, "ends")
+    A part with no function template has one row: `template` is `None`, `name` is `""`, `kind` is
+    `None`, and `rating` is the part's own. Otherwise `rating` is `effective_rating`: the
+    template's, else the part's.
+    """
+
+    part: Id[Part]
+    mpn: str
+    template: Id[FunctionTemplate] | None
+    name: str
+    kind: FunctionKind | None
+    rating: Rating | None

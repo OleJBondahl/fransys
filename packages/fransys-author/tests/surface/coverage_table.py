@@ -59,7 +59,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
         + surface("Design.busbar")
         + surface("Design.rail_bond")
     ),
-    "Scope.supply": surface("Design.ac_supply")
+    "SupplyScope.supply": surface("Design.ac_supply")
     + surface("Design.dc_supply")
     + dropped(
         "rails=: ac_supply and dc_supply write the rails, a free rails mapping is no spelling (EA6)"

@@ -28,7 +28,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_layout.engines.schematic import lay_out_schematic, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
@@ -87,7 +87,7 @@ def _build_boundary_pair(*, parent: str | None):
     ub.boundary(jb)
     scope.wiring(colour="BU", gauge="0.5")(ja["1"], jb["1"])
     scope.break_before(group_b)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _pin_one(model, name: str):
@@ -211,7 +211,7 @@ def _build_bypass():
     fa = ua.item("DEMO-CONN-2P", name="fa", tag="X1", at=at, group=ua.group("GA", "Group A"))
     fb = ub.item("DEMO-CONN-2P", name="fb", tag="X2", at=at, group=ub.group("GB", "Group B"))
     d.wiring(colour="BU", gauge="0.5")(fa["1"], fb["1"])
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def test_a_wire_that_bypasses_the_boundaries_keeps_its_cross_unit_decision_and_no_marker() -> None:

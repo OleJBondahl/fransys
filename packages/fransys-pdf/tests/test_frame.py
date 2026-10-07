@@ -26,6 +26,7 @@ from fransys_pdf._frame import (
     title_block_fits,
 )
 
+from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import make_id
 from fransys_model.kernel.ids import render_id
 from fransys_model.layout import SheetFormat, default_sheet_format
@@ -242,7 +243,7 @@ def test_harness_table_page_keeps_the_content_box_margin():
     fit.
     """
     m, doc, cable = _harness_with_one_cable()
-    text = source(m, doc.id, {})
+    text = source(m, doc.id, {cable_block_key(None, cable.id): "<svg>block</svg>"})
     house = default_sheet_format()
     padding = 5
     content_left = house.content_x_mm + padding
@@ -255,12 +256,11 @@ def test_harness_table_page_keeps_the_content_box_margin():
     )
     assert f"#page(margin: {{ let m = {margin};" in text
     assert 'fit: "contain"' not in text  # no image anywhere on this page any more
-    # P8's caption is gone, replaced by CT3's own heading line: the cable's designation now
-    # appears in the table page's body itself (`#strong(text(...))`, the designation alone),
-    # not only inside the title block -- the opposite of what this test pinned before CT2.
+    # The page body is the cable's block image; the per-cable heading line is gone (pdf-0022).
     (found,) = harness_cables_for(m, documents(m)[doc.id], (K.HARNESS_DRAWING,))
     assert found.cable == cable.id
-    assert f'#strong(text("{found.designation}' in text
+    assert "<svg>block</svg>" in text
+    assert "#strong(text(" not in text
 
 
 # -- direct, lower-level calls into the width/wrap/fit helpers (mutmut kill order) ----------

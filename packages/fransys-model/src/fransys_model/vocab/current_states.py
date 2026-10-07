@@ -40,7 +40,7 @@ from .current_bounds import highest
 from .current_graph import Edge, Raw, Wire, group, solve
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Iterator, Mapping, Sequence
 
     from fransys_model.vocab.contacts import LinkState
     from fransys_model.vocab.core import Item, Port
@@ -79,6 +79,17 @@ def _closed(part: Edge | Wire, chosen: Mapping[Id[Item], LinkState], capped: set
     return chosen.get(part.item, part.state) == part.state
 
 
+def assignments(parts: Sequence[Edge | Wire]) -> Iterator[tuple[_States, list[Edge | Wire]]]:
+    """Each consistent item assignment of one component, with the parts of `parts` it closes.
+
+    The one enumeration both the branch law and the fault graph (RATINGS-3 R7) walk.
+    """
+    enumerated, capped = _stateful_items(parts)
+    for combo in itertools.product(_THROWS, repeat=len(enumerated)):
+        chosen = dict(zip(enumerated, combo, strict=True))
+        yield tuple(chosen.items()), [part for part in parts if _closed(part, chosen, capped)]
+
+
 def _named(options: Sequence[tuple[CurrentBound, _States]]) -> CurrentBound:
     """The highest of the bounds in `options`, naming the items that all of its states agree on.
 
@@ -104,21 +115,19 @@ def _component(
 
     A position present in some assignment has an entry, empty if no assignment bounds it.
     """
-    enumerated, capped = _stateful_items((*edges, *wires))
     options: dict[tuple[int, Current], list[tuple[CurrentBound, _States]]] = {}
     seen: set[int] = set()
-    for combo in itertools.product(_THROWS, repeat=len(enumerated)):
-        chosen = dict(zip(enumerated, combo, strict=True))
+    for chosen, closed in assignments((*edges, *wires)):
         found = solve(
-            [e for e in edges if _closed(e, chosen, capped)],
-            [w for w in wires if _closed(w, chosen, capped)],
+            [part for part in closed if isinstance(part, Edge)],
+            [part for part in closed if isinstance(part, Wire)],
             opens,
             root,
         )
         seen.update(found)
         for at, bounds in found.items():
             for bound in bounds:
-                options.setdefault((at, bound.kind), []).append((bound, tuple(chosen.items())))
+                options.setdefault((at, bound.kind), []).append((bound, chosen))
     return {
         at: tuple(_named(options[at, kind]) for kind in Current if (at, kind) in options)
         for at in seen

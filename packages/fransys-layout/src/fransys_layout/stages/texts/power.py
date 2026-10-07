@@ -29,7 +29,7 @@ from fransys_layout.stages.space import Shape, Space
 from fransys_layout.stages.types import LabelKind, PlacedLabel
 
 from .candidates import DEFAULT_TABLE, TextKind
-from .marker_row import corridor, marker_shapes, stub_boxes
+from .marker_row import corridor, stub_boxes
 from .place_texts import Anchor, TextToPlace, place_texts
 from .stand import leave_port, symbol_port
 
@@ -128,14 +128,29 @@ def power_places(markers: tuple[LinkMarker, ...]) -> tuple[PowerPlace, ...]:
     return tuple(found.values())
 
 
-def power_boxes(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
-    """The body and lead of every power symbol of `markers`: what every text placer must clear."""
-    return tuple(box for one in power_places(markers) for box in (one.body, one.lead))
+def drawn_shapes(markers: tuple[LinkMarker, ...]) -> tuple[Shape, ...]:
+    """What the page draws for `markers`: each ordinary end's box and stubs, each power symbol."""
+    return (
+        *(
+            Shape(owner=m.port, box=box)
+            for m in markers
+            if not m.symbol
+            for box in (m.box, *stub_boxes(m))
+        ),
+        *(
+            Shape(owner=None, box=box)
+            for one in power_places(markers)
+            for box in (one.body, one.lead)
+        ),
+    )
 
 
-def held_shapes(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
-    """What every later text call holds (S20): the markers' boxes and stubs, the power symbols."""
-    return (*marker_shapes(markers), *power_boxes(markers))
+def power_reserved(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
+    """What a power end holds before its lead is set (D5): its marker box and stub, not its symbol.
+
+    The lead is set from the first labels, so the symbol's place is not known to them (layout-0142).
+    """
+    return tuple(box for m in markers if m.symbol for box in (m.box, *stub_boxes(m)))
 
 
 def without_power_findings(
@@ -164,13 +179,7 @@ def with_power_labels(
         return labels, ()
     shapes = (
         *(Shape(owner=one.function, box=placed_keepout(one)) for one in placed),
-        *(
-            Shape(owner=m.port, box=box)
-            for m in markers
-            if not m.symbol
-            for box in (m.box, *stub_boxes(m))
-        ),
-        *(Shape(owner=None, box=box) for one in places for box in (one.body, one.lead)),
+        *drawn_shapes(markers),
         *(Shape(owner=None, box=one.box) for one in labels),
     )
     done, findings = place_texts(texts, Space(shapes=shapes, content=frame.content), DEFAULT_TABLE)

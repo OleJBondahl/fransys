@@ -30,6 +30,7 @@ from fransys_pdf._geometry import (
 )
 from fransys_pdf._pages import cover_page
 
+from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel.ids import render_id
 from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, documents
 
@@ -626,29 +627,25 @@ def test_contents_page_is_left_out_when_added_to_a_location_subject_document():
     assert text.count("#table") == 0  # no cable table; the cover carries no table either (R10)
 
 
-def test_harness_drawing_renders_one_table_page_per_cable():
-    """CT2: `source` builds a table page per cable straight from `derive`'s `HarnessCable`
-    rows, with no svgs entry needed for either -- unlike the WireViz image it replaces."""
-    m, doc, _cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
-    text = source(m, doc.id, {})
-    assert "<svg>" not in text
+def test_harness_drawing_renders_one_block_per_harness():
+    """A harness of two cables is one block (CD9), keyed by the harness, in the "No part number"
+    run since the harness has no part of its own: not one page per cable, not the cables' parts."""
+    m, doc, cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
+    text = source(m, doc.id, {cable_block_key(None, cable1.parent): "<svg>harness-block</svg>"})
+    assert text.count("<svg>harness-block</svg>") == 1
     assert "#align(center)" not in text  # P8's caption is gone (page-frame R3, R4)
-    # One run per part number; the title block names the part, the cable keeps its own heading.
-    assert '"SIM-CAB1"' in text
-    assert '"SIM-CAB2"' in text
-    assert text.index('"SIM-CAB1"') < text.index('"SIM-CAB2"')
-    assert '#strong(text("-WH1-W1, 1500 mm"))' in text
-    assert "SIM-CAB1, Invented 4-core cable" in text  # the part line, once, in the run header
+    assert '"No part number"' in text
+    assert '"SIM-CAB1"' not in text
+    assert '"SIM-CAB2"' not in text
 
 
 def test_harness_drawing_never_falls_back_to_no_drawings_once_a_cable_is_found():
-    """CT2: unlike the WireViz image it replaces, a found cable's table page never depends on
-    an svgs entry -- an empty dict still builds both cables' table pages, never `No drawings.`
-    (the pre-CT2 "cable key missing" fallback this test used to prove)."""
-    m, doc, _cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
-    text = source(m, doc.id, {})
+    """A found cable's block page is built from its svgs entry, never `No drawings.`: the block
+    is the page's one image."""
+    m, doc, cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
+    text = source(m, doc.id, {cable_block_key(None, cable1.parent): "<svg>harness-block</svg>"})
     assert '#par(text("No drawings."))' not in text
-    assert "<svg>" not in text
+    assert "<svg>harness-block</svg>" in text
 
 
 def test_harness_cables_for_is_empty_for_a_location_subject():
@@ -685,9 +682,13 @@ def test_system_preset_renders_a_harness_drawing_page_per_top_level_cable():
     cpf2 = cable_product_facet("w2", subject=demo_part2.id, core_count=0)
     doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover", notes=None)
     m = model(demo_part, cable1, cf1, cpf1, demo_part2, cable2, cf2, cpf2, doc)
-    text = source(m, doc.id, {})
-    assert "<svg>" not in text
-    assert text.count("#table(columns: 4,") == _SYSTEM_CABLE_PAGE_COUNT
+    svgs = {
+        cable_block_key(None, cable.id): f"<svg>{cable.id.value}</svg>"
+        for cable in (cable1, cable2)
+    }
+    text = source(m, doc.id, svgs)
+    assert text.count('format: "svg")') == _SYSTEM_CABLE_PAGE_COUNT
+    assert all(svg in text for svg in svgs.values())
     assert '"System"' in text  # the heading, no dangling "-- subject"
 
 
@@ -715,9 +716,8 @@ def test_system_preset_with_one_top_level_cable_draws_its_page_and_no_no_drawing
     cf = cable_facet("w1", subject=cable.id, length_mm=None)
     doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover", notes=None)
     m = model(cable, cf, cable_part, cable_product, doc)
-    text = source(m, doc.id, {})
-    assert "<svg>" not in text
-    assert text.count("#table(columns: 4,") == 1
+    text = source(m, doc.id, {cable_block_key(None, cable.id): "<svg>lone-cable</svg>"})
+    assert text.count("<svg>lone-cable</svg>") == 1
     assert '#par(text("No drawings."))' not in text
 
 

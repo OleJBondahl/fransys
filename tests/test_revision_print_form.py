@@ -13,7 +13,7 @@ import io
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from fransys_pdf import source
 from fransys_pdf._lists import bom_page
 from fransys_reports import bom_csv
@@ -75,7 +75,7 @@ def _build():
     )
     d.revision(1, date="2026-01-01", text="First issue", created="XX")
     _pump_cabinet(d.scope("pump", at=d.location("ER", "Engine room")))
-    result = fr.build(parts, d.draft(), system_document())
+    result = fr.build(parts, d.draft(), layout_trigger_document())
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []
     return result.model
 

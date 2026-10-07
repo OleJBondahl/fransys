@@ -21,7 +21,7 @@ from .designation import end_outside_nested_unit, terminal_designation, unit_lis
 from .drawing_text import port_designation_in
 from .indexes import build_indexes
 from .list_order import in_designation_order
-from .lookups import conductors_by_role, item_of_port, require, terminal_items
+from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
 from .rows import TerminalRow
 
 if TYPE_CHECKING:
@@ -240,12 +240,7 @@ def terminal_strips(model: Model) -> tuple[Id[Item], ...]:
     Returns:
         Every strip item's id, by natural designation, then id.
     """
-    all_items = items(model)
-    strips: set[Id[Item]] = set()
-    for terminal in terminal_items(model):
-        strip = all_items[terminal].parent
-        if strip is not None:
-            strips.add(strip)
+    strips = strip_set(model)
     return in_designation_order(model, strips)
 
 

@@ -1,5 +1,6 @@
 """Derived layer: indexes, closure, designations, passes, queries and rows (design/derive.md)."""
 
+from fransys_model.layout import profile_of
 from fransys_model.vocab import (
     Aspect,
     AspectNode,
@@ -28,6 +29,9 @@ from fransys_model.vocab import (
     is_cable,
     part_rating,
 )
+from fransys_model.vocab.energy_flow import gives_energy, takes_energy
+from fransys_model.vocab.load_limits import LoadLimit, load_limits
+from fransys_model.vocab.prospective_fault import ProspectiveFault, prospective_fault
 from fransys_model.vocab.tables import (
     aspect_nodes,
     boundaries,
@@ -44,6 +48,19 @@ from fransys_model.vocab.tables import (
 
 from .bom import TopLevelScope
 from .closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
+from .columns import (
+    BOM_COLUMNS,
+    CABLE_LIST_COLUMNS,
+    CONNECTOR_COLUMNS,
+    CONTENTS_COLUMNS,
+    DESIGNATION_COLUMNS,
+    PIN_COLUMNS,
+    PLC_COLUMNS,
+    TERMINAL_COLUMNS,
+    TERMINAL_LABELS,
+    WIRE_COLUMNS,
+    WIRE_LABELS,
+)
 from .contact_entries import NO_PLACE
 from .contacts import LinkState, Throws, changeover_throws, link_state, owned_contacts
 from .current_chains import CurrentBound, CurrentChain, CurrentPosition, LimitRole, current_chains
@@ -64,7 +81,6 @@ from .designation import (
     takes_parents_designation,
     unit_location,
 )
-from .energy import gives_energy, takes_energy
 from .external import external
 from .indexes import Indexes, build_indexes
 from .list_cells import (
@@ -79,6 +95,7 @@ from .lookups import connector_facets, item_of_port, pin_order, terminal_items
 from .mate_rows import mates
 from .natural_order import natural_key
 from .pairing import BoxPair, box_pairs
+from .part_functions import part_function_rows
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
 from .potential import port_potential_current, port_potential_rank
@@ -128,7 +145,6 @@ from .queries import (
     top_level_cables,
     unconnected_ports,
     unit_boards,
-    unit_cable_page_key,
     unit_cables,
     unit_items,
     unit_release,
@@ -138,17 +154,6 @@ from .queries import (
     wire_rows,
 )
 from .rows import (
-    BOM_COLUMNS,
-    CABLE_LIST_COLUMNS,
-    CONNECTOR_COLUMNS,
-    CONTENTS_COLUMNS,
-    DESIGNATION_COLUMNS,
-    PIN_COLUMNS,
-    PLC_COLUMNS,
-    TERMINAL_COLUMNS,
-    TERMINAL_LABELS,
-    WIRE_COLUMNS,
-    WIRE_LABELS,
     BoardNetlist,
     BomLine,
     CableListRow,
@@ -172,6 +177,7 @@ from .rows import (
     OverviewNode,
     OverviewPort,
     OverviewSignal,
+    PartFunctionRow,
     PlcChannelRow,
     PlcRackChannel,
     PlcRackModule,
@@ -224,6 +230,7 @@ __all__ = [
     "Item",
     "LimitRole",
     "LinkState",
+    "LoadLimit",
     "MateRow",
     "Net",
     "NetClass",
@@ -236,6 +243,7 @@ __all__ = [
     "OverviewNode",
     "OverviewPort",
     "OverviewSignal",
+    "PartFunctionRow",
     "PhysicalNet",
     "Placement",
     "PlcChannelRow",
@@ -244,6 +252,7 @@ __all__ = [
     "Port",
     "PortRole",
     "PowerKind",
+    "ProspectiveFault",
     "Rating",
     "SupplySystem",
     "TerminalRow",
@@ -314,6 +323,7 @@ __all__ = [
     "items_at",
     "link_state",
     "list_context",
+    "load_limits",
     "location_node_designation",
     "mates",
     "natural_key",
@@ -324,6 +334,7 @@ __all__ = [
     "overview_graph",
     "own_nodes",
     "owned_contacts",
+    "part_function_rows",
     "part_rating",
     "physical_nets",
     "pin_lines",
@@ -342,6 +353,8 @@ __all__ = [
     "power_kind",
     "power_text",
     "printed_designation",
+    "profile_of",
+    "prospective_fault",
     "rail_pairs",
     "reference_designation",
     "release_order",
@@ -360,7 +373,6 @@ __all__ = [
     "top_level_cables",
     "unconnected_ports",
     "unit_boards",
-    "unit_cable_page_key",
     "unit_cables",
     "unit_items",
     "unit_location",

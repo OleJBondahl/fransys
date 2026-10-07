@@ -9,6 +9,7 @@ import pytest
 from samples import hid
 
 from fransys_layout.geometry import Box, Facing, Point
+from fransys_layout.stages import space
 from fransys_layout.stages.space import (
     End,
     Lane,
@@ -20,6 +21,7 @@ from fransys_layout.stages.space import (
     crosses,
     crosses_unless_leaving,
     lane,
+    obstacle_index,
     run_admitted,
     step_admitted,
 )
@@ -35,8 +37,9 @@ def _admitted(
     ends: frozenset[_Cell] = frozenset(),
 ) -> bool:
     """P1 for a step, asserting that the step read in the other direction agrees."""
-    forward = step_admitted(first, second, obstacles, ends)
-    assert step_admitted(second, first, obstacles, ends) is forward
+    index = obstacle_index(obstacles)
+    forward = step_admitted(first, second, index, ends)
+    assert step_admitted(second, first, index, ends) is forward
     return forward
 
 
@@ -280,7 +283,7 @@ def test_a_run_longer_than_the_lane_along_it_is_admitted_by_the_walker_and_refus
     port = End(at=Point(x=28, y=32), facing=Facing.N)
     obstacles = (Obstacle(box=_BOX, lanes=(lane(port, _BOX),)),)
     assert _run((28, 24), (28, 0), obstacles) is True
-    assert step_admitted((28, 24), (28, 0), obstacles, frozenset()) is False
+    assert step_admitted((28, 24), (28, 0), obstacle_index(obstacles), frozenset()) is False
 
 
 def test_a_run_whose_middle_step_touches_a_foreign_box_is_refused() -> None:
@@ -833,3 +836,22 @@ def test_a_space_with_no_content_holds_every_box() -> None:
     # UNDO: in `Space.holds`, `self.content is None or` is dropped (it then raises on None)
     """
     assert Space(shapes=()).holds(Box(x=-500, y=500, width=8, height=8)) is True
+
+
+def _touches_for_a_step(far: int, monkeypatch: pytest.MonkeyPatch) -> int:
+    """The `_touches` calls of one step beside `_BOX` on a page with `far` far-away obstacles."""
+    calls = []
+    original = space._touches
+    monkeypatch.setattr(space, "_touches", lambda *args: calls.append(1) or original(*args))
+    far_boxes = tuple(
+        Obstacle(box=Box(x=800 + 24 * n, y=0, width=16, height=16), lanes=()) for n in range(far)
+    )
+    step_admitted((24, 8), (24, 16), obstacle_index((*far_boxes, *_bare())), frozenset())
+    return len(calls)
+
+
+def test_a_step_tests_only_the_obstacles_in_its_cells(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The exact `_touches` count of a step does not grow with the obstacles far from it."""
+    # UNDO: `CellIndex.meeting` returns every item (the count then follows the page)
+    assert _touches_for_a_step(5, monkeypatch) == 1
+    assert _touches_for_a_step(50, monkeypatch) == 1

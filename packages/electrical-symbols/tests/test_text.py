@@ -1,13 +1,13 @@
-"""WP3: `geometry.text` and the advance table (ROADMAP WP3, docs/design/geometry.md 5.3)."""
+"""WP3: `text_width` and the advance table (RR-O5, layout-0132)."""
 
 import ast
 from pathlib import Path
 
 import pytest
 
-from fransys_layout import geometry
-from fransys_layout.geometry import text_width
-from fransys_layout.geometry.text_metrics import ADVANCES, FONT_NAME, UNITS_PER_EM
+import electrical_symbols
+from electrical_symbols import text_width
+from electrical_symbols.text_metrics import ADVANCES, FONT_NAME, UNITS_PER_EM
 
 
 def test_advance_table_covers_the_characters_designations_use() -> None:
@@ -131,7 +131,7 @@ def test_a_zero_height_has_no_width() -> None:
     assert text_width("-K1", height=0) == 0
 
 
-GEOMETRY = Path(geometry.__file__).parent
+GEOMETRY = Path(electrical_symbols.__file__).parent
 # Neither `importlib.metadata` nor `importlib.resources` is allowed: the library version comes from
 # the `LIBRARY_VERSION` constants the symbol packages export (decision layout-0020).
 FORBIDDEN_MODULES = {
@@ -170,10 +170,10 @@ def _file_access(source: str) -> list[str]:
 
 
 def test_geometry_opens_no_file_and_imports_no_font_library() -> None:
-    """The table is committed data; no module in `geometry/` reads a font or any file."""
+    """The table is committed data; no text module reads a font or any file."""
     problems = {
         path.name: found
-        for path in sorted(GEOMETRY.glob("*.py"))
+        for path in sorted(GEOMETRY.glob("text*.py"))
         if (found := _file_access(path.read_text(encoding="utf-8")))
     }
     assert problems == {}

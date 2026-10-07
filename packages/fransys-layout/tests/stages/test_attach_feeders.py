@@ -27,7 +27,7 @@ def test_attach_feeders_puts_each_feeder_above_its_fed_box_and_drops_its_column(
     boxes = pair()
     home = column("fed", (1,))
     result = attach_feeders((home, column("t2", (2,)), column("t3", (3,))), boxes, _fits)
-    hosted = {"host": hid("function", 1), "replica": False}
+    hosted = {"host": hid("function", 1)}
     assert result == (
         replace(
             home,
@@ -58,7 +58,7 @@ def test_a_feeder_at_the_bottom_of_its_column_takes_its_column_along() -> None:
     boxes = pair()
     home = column("fed", (1,))
     result = attach_feeders((home, column("t2", (7, 8, 2)), column("t3", (9, 3))), boxes, _fits)
-    hosted = {"host": hid("function", 1), "replica": False}
+    hosted = {"host": hid("function", 1)}
     assert result == (
         replace(
             home,
@@ -94,7 +94,7 @@ def test_a_chained_feeder_whose_column_does_not_fit_the_page_keeps_its_own_colum
     result = attach_feeders(
         (home, chained, plain), boxes, lambda c: len({x.index for x in c.cells}) < 3
     )
-    hosted = {"host": hid("function", 1), "replica": False}
+    hosted = {"host": hid("function", 1)}
     assert result == (
         replace(home, cells=(_cell(3, 0, 0, port="b1", **hosted), _cell(1, 1))),
         chained,

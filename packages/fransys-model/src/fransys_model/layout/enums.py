@@ -96,3 +96,28 @@ class LabelKind(Enum):
     MARKING = "marking"
     WIRE = "wire"
     CROSS_REFERENCE = "cross_reference"
+
+
+@register_enum
+class BlockRow(Enum):
+    """Which row of a cable drawing block an `EndBox` stands in."""
+
+    TOP = "top"
+    BOTTOM = "bottom"
+
+
+@register_enum
+class BoxKind(Enum):
+    """What a `CableBox` is: one cable's box, or the dashed box of the harness around them."""
+
+    CABLE = "cable"
+    HARNESS = "harness"
+
+
+@register_enum
+class EndStyle(Enum):
+    """How an `EndBox` is drawn: solid, dashed (an end by others, CD10) or blank (CD11)."""
+
+    SOLID = "solid"
+    DASHED = "dashed"
+    BLANK = "blank"

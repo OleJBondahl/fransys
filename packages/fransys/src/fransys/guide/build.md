@@ -154,6 +154,19 @@ assert sorted(p.name for p in written) == [
 ]
 ```
 
+`fr.export_names(result, *, unit=None)` gives the name `write` gives each export, by `(kind, subject)`,
+without writing or compiling anything. A kind is `bom`, `plc`, `wires`, `designations`, `overview`
+or `cables` (subject `None`); `terminals`, `connectors` or `wago` with the item's id; or `pdf` with
+the document's id. The key is a tuple: `("bom", None)` for a whole-set file, `("pdf", <document id>)`
+for a document. `write` names its files through it, so a script never builds a name itself.
+
+```python
+names = fr.export_names(result)
+assert names[("bom", None)] == "bom.csv"
+assert [key for key in names if key[0] == "pdf"] == []  # no document: no ("pdf", id) key
+assert sorted(names.values()) == sorted(p.name for p in written)
+```
+
 With no document, `check` never runs the drawing or PDF checks: neither has a layout to read.
 `write` writes the same kind of file list as before, with no PDF, since a PDF comes only from a
 document.
@@ -253,6 +266,9 @@ revision is frozen: releasing a unit again with different content raises `BuildE
 `REVISION_ALREADY_RELEASED` instead of overwriting it (see `findings.md`). The files are the
 consumer's -- commit them in your own repo, alongside the design script that produced them.
 
+A container rebuilt against an old child release uses the child's old source from git. Fransys loads no frozen child.
+A history entry that names a revision never released is `RELEASE_HISTORY_UNRELEASED`; `units.md` has the rule.
+
 ## Getting the change list
 
 `fr.diff(result, into, *, unit=None, against=None)` gives the Markdown change list from a
@@ -305,6 +321,49 @@ shares `demo-io-board`'s revision `2` release identity but was never released it
 spare connector's tag differs from what `1.2` actually released, so `verify` catches the drift
 without anyone calling `release` again. A unit or the system with no stored baseline at all is
 not reported.
+
+When a child moved release, `BASELINE_DIFFERS` names it right after `units`, as in
+`demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board 1.1 → 1.3)`.
+It names direct children only. A grandchild's move shows in its parent's own finding.
+
+`verify` also re-hashes every file of every release under `baselines`, with no model needed.
+`RELEASE_FILE_CHANGED` means a listed file's bytes differ, the folder holds a file the manifest does
+not list, or the manifest does not parse. `RELEASE_FILE_MISSING` means a listed file, or the manifest, is gone.
+A text file (`.csv`, `.json`, `.md`, `.xml`, `.html`, `.txt`) whose bytes differ only by CRLF line ends passes,
+so a Windows checkout does not fail it. `verify` returns findings and blocks nothing.
+
+## Listing the releases
+
+`fr.releases(root) -> tuple[Release, ...]` reads every `<name>/<version>.<revision>/` folder under
+`root`, in name, version and revision order. Versions and revisions sort as integers. A
+`Release` has `name`, `version`, `revision`, `interface`, `listing_digest`, `nested`, `files` and `path`.
+`nested` holds one `ReleasePin` (`name`, `version`, `revision`, `listing_digest`) per release nested
+in it. `files` holds `(path, sha256)` pairs. A folder with no manifest is listed with those fields empty.
+A manifest that does not parse raises `ValueError` naming its path.
+
+Later Fransys versions may add manifest keys. They keep reading every manifest an earlier public Fransys wrote.
+
+```python
+listed = fr.releases(Path("releases"))
+assert [(r.name, r.version, r.revision) for r in listed] == [
+    ("demo-io-board", 1, 1),
+    ("demo-io-board", 1, 2),
+]
+assert listed[0].interface == "1"
+
+# Which parents to bump: a release whose pin of a child is older than the child's latest release.
+latest = {r.name: (r.version, r.revision) for r in listed}
+stale = [
+    (r.name, f"{r.version}.{r.revision}", pin.name)
+    for r in listed
+    for pin in r.nested
+    if latest.get(pin.name) not in (None, (pin.version, pin.revision))
+]
+assert stale == []
+```
+
+The policy stays yours: tag names, who releases, which findings block and who gets a copy.
+A transmittal is a script over `fr.releases` that lists what went to whom. Fransys keeps no issue record.
 
 ## Keeping designations fixed across revisions
 

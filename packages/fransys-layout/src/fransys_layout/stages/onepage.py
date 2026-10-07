@@ -8,6 +8,8 @@ each other are. The engine routes it once, on the common page that holds most of
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.types import Home
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
@@ -22,13 +24,11 @@ type Homes = dict[tuple[Handle, Page], bool]
 
 def _homes(
     placed: tuple[Seated, ...],
-    replicas: frozenset[AuthoringKey],
-    attached: frozenset[tuple[Handle, AuthoringKey]] = frozenset(),
+    away: frozenset[tuple[Handle, AuthoringKey]],
 ) -> Homes:
-    """R7 B8: whether each `(function, page)` is at home: no replica column, no attached replica."""
+    """R7 B8: whether each `(function, page)` is at home: its cell is not drawn away from it."""
     return {
-        (one.function, (one.drawing_set, one.page)): one.column not in replicas
-        and (one.function, one.column) not in attached
+        (one.function, (one.drawing_set, one.page)): (one.function, one.column) not in away
         for one in placed
     }
 
@@ -72,16 +72,18 @@ def page_wiring(
     connections: tuple[Connection, ...],
     columns: tuple[Column, ...],
     seats: tuple[Seated, ...],
-    replicas: frozenset[AuthoringKey],
     net_groups: tuple[NetGroup, ...] = (),
 ) -> tuple[Homes, dict[Handle, Page], frozenset[tuple[Any, int, int]]]:
     """The one definition of "wired on this page": homes, conductor pages, wired ends (S10)."""
     # I4 (designer's (A)): a star reference on a port a drawn wire also reaches leaves
     # the wire sideways, so the wire never crosses it (D9: a hub pin or a member's port alike)
-    attached = frozenset(
-        (cell.function, column.key) for column in columns for cell in column.cells if cell.replica
+    away = frozenset(
+        (cell.function, column.key)
+        for column in columns
+        for cell in column.cells
+        if cell.home is Home.ELSEWHERE
     )
-    at_home = _homes(seats, replicas, attached)
+    at_home = _homes(seats, away)
     routed_on = _conductor_pages(connections, at_home)
     wired = _wired_ends(connections, at_home, routed_on) | _net_wired(net_groups, at_home)
     return at_home, routed_on, wired

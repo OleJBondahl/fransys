@@ -21,7 +21,22 @@ def engine_subject(subject: object) -> object:
     return subject
 
 
-def _subject_ids(  # noqa: PLR0911 -- one branch per subject kind (spec F7, units spec U3)
+def _id_subject_ids(
+    subject: Id[Any],
+) -> tuple[Id[Any] | None, Id[Any] | None, Id[Any] | None, str | None]:
+    if subject.kind == "aspect_node":
+        return subject, None, None, None
+    if subject.kind == "item":
+        return None, subject, None, None
+    if subject.kind == "unit":
+        return None, None, subject, None
+    msg = (
+        f"a document subject id must be an aspect_node, an item or a unit id, not {subject.kind!r}"
+    )
+    raise TypeError(msg)
+
+
+def _subject_ids(
     subject: object,
 ) -> tuple[Id[Any] | None, Id[Any] | None, Id[Any] | None, str | None]:
     """`(location, item, unit, unit_name)`, at most one set, from a subject value.
@@ -35,17 +50,7 @@ def _subject_ids(  # noqa: PLR0911 -- one branch per subject kind (spec F7, unit
     if isinstance(subject, str):
         return None, None, None, subject
     if isinstance(subject, Id):
-        if subject.kind == "aspect_node":
-            return subject, None, None, None
-        if subject.kind == "item":
-            return None, subject, None, None
-        if subject.kind == "unit":
-            return None, None, subject, None
-        msg = (
-            "a document subject id must be an aspect_node, an item or a unit id, "
-            f"not {subject.kind!r}"
-        )
-        raise TypeError(msg)
+        return _id_subject_ids(subject)
     if isinstance(subject, Location):
         return subject.id, None, None, None
     if isinstance(subject, Item):

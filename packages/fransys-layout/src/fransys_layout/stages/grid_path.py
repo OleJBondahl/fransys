@@ -22,7 +22,7 @@ from fransys_layout.geometry import (
     port_exit,
 )
 
-from .space import Cell, End, Obstacle, step_admitted
+from .space import Cell, End, Obstacle, obstacle_index, step_admitted
 
 type _State = tuple[Cell, Facing]
 
@@ -57,11 +57,11 @@ def cells_of(points: tuple[Point, ...]) -> frozenset[Cell]:
     return frozenset(covered)
 
 
-def shortest_path(start: End, goal: End, field: Field) -> tuple[Point, ...] | None:
+def grid_path(start: End, goal: End, field: Field) -> tuple[Point, ...] | None:
     """The cheapest orthogonal path, uniform cost; ties break on `(cost, x, y, heading rank)`."""
     first: _State = ((start.at.x, start.at.y), start.facing)
     last: _State = ((goal.at.x, goal.at.y), OPPOSITE[goal.facing])
-    ends = frozenset({first[0], last[0]})
+    ends, obstacles = frozenset({first[0], last[0]}), obstacle_index(field.obstacles)
     best: dict[_State, int] = {first: 0}
     came: dict[_State, _State] = {}
     settled: set[_State] = set()
@@ -78,7 +78,7 @@ def shortest_path(start: End, goal: End, field: Field) -> tuple[Point, ...] | No
             step = FACING_STEP[heading]
             cell = (x + step[0], y + step[1])
             if not contains_point(field.region, cell[0], cell[1]) or not step_admitted(
-                (x, y), cell, field.obstacles, ends
+                (x, y), cell, obstacles, ends
             ):
                 continue
             if field.axes and not _crosses_cleanly((x, y), state[1], heading, cell, field):

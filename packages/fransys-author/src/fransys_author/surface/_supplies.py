@@ -23,6 +23,8 @@ PLUS, MINUS, MID = ConductorMark.L_PLUS, ConductorMark.L_MINUS, ConductorMark.M
 _AC = ((ConductorMark.L1, 0), (ConductorMark.L2, 120), (ConductorMark.L3, 240))
 _ONE_OR_THREE = (1, 3)
 _TWO_OR_THREE = (2, 3)  # names= is (plus, minus) or (plus, minus, mid)
+_Number = str | int | Decimal
+_FAULT_KEYS = ("fault_current_a", "fault_time_constant_ms")
 
 
 @dataclass(frozen=True)
@@ -97,19 +99,28 @@ class DcSupply(_Rails):
     mid: SupplyRail
 
 
-def _declare(
+def _declare(  # noqa: PLR0913, PLR0917 -- the supply's own fields plus the two fault values (RATINGS-3 R3)
     design: Design,
     name: str,
     current: str,
     rails: Sequence[tuple[SupplyRail, str | Decimal]],
     earthing: Earthing,
+    fault: tuple[_Number | None, _Number | None] = (None, None),
 ) -> None:
     """Write the supply system, then one power net per rail named after its potential."""
     if not isinstance(earthing, Earthing):
         msg = f"earthing must be Earthing.EARTHED or Earthing.IT, not {earthing!r}"
         raise AuthorError(msg)
     specs = {rail.potential: (volts, rail.phase) for rail, volts in rails}
-    design._engine.supply(name, current=current, rails=specs, earthing=earthing.value)
+    design._engine.supply(
+        name,
+        current=current,
+        rails=specs,
+        earthing=earthing.value,
+        fault_current_a=fault[0],
+        fault_time_constant_ms=fault[1],
+        pins=[rail.pin for rail, _ in rails],
+    )
     for rail, _ in rails:
         design._engine.net(rail.potential, rail.pin, cls="power", potential=rail.potential)
 
@@ -171,7 +182,10 @@ def _dc_facts(
     voltage: str | int | Decimal | None,
 ) -> tuple[Port, Port, Port | None, Decimal]:
     """The L+, L- and M pins and the voltage of `fn`; a missing one raises by name."""
-    plus, minus, mid = (_marked(design, fn, mark, given.get(mark)) for mark in (PLUS, MINUS, MID))
+    plus, minus = (_marked(design, fn, mark, given.get(mark)) for mark in (PLUS, MINUS))
+    mid = _marked(design, fn, MID, given.get(MID))
+    if mid in (plus, minus) and MID not in given:
+        mid = None  # a pin the call names as L+ or L- is not also its mid
     volts = _nominal(design, fn) if voltage is None else Decimal(str(voltage))
     if plus is None or minus is None or volts is None:
         facts = (("L+ pin", plus), ("L- pin", minus), ("nominal voltage", volts))
@@ -231,10 +245,21 @@ def _ac_names(phases: int, names: tuple[str, ...] | None, *, has_n: bool) -> tup
     return tuple(names)
 
 
+def _forbid_fault(name: str, source: object, fault: tuple[_Number | None, _Number | None]) -> None:
+    """A source's part states its fault current, so `dc_supply(source=)` takes no fault keyword."""
+    given = [key for key, value in zip(_FAULT_KEYS, fault, strict=True) if value is not None]
+    if source is not None and given:
+        msg = (
+            f"dc_supply {name!r}: drop {', '.join(key + '=' for key in given)}; "
+            "the source part states its fault current"
+        )
+        raise AuthorError(msg)
+
+
 class Supplies:
     """The supply calls of `Design`: `ac_supply` and `dc_supply`."""
 
-    def ac_supply(
+    def ac_supply(  # noqa: PLR0913 -- the call's own spec signature plus fault_current_a (R3)
         self: "Design",
         name: str,
         voltage: str | int | Decimal,
@@ -242,11 +267,12 @@ class Supplies:
         n: Port | Terminal | None = None,
         names: tuple[str, ...] | None = None,
         earthing: Earthing = Earthing.EARTHED,
+        fault_current_a: _Number | None = None,
     ) -> AcSupply:
         """Declare an AC supply on 1 or 3 phase pins in phase order, and `n`; rails `ac.L1`.
 
         `voltage` is each phase's RMS to the star point; `names=` renames the rails, one per pin.
-        Does not read the voltage from a part.
+        Does not read the voltage from a part. `fault_current_a` is in A, positive.
         """
         pins = _phases(self, name, phases)
         printed = _ac_names(len(pins), names, has_n=n is not None)
@@ -256,7 +282,7 @@ class Supplies:
         ]
         if n is not None:
             rails.append((SupplyRail("N", _port(self, n), printed[-1], ConductorMark.N, None), "0"))
-        _declare(self, name, "ac", rails, earthing)
+        _declare(self, name, "ac", rails, earthing, (fault_current_a, None))
         return AcSupply(name, (rail for rail, _ in rails))
 
     def dc_supply(  # noqa: PLR0913 -- the call's own spec signature (EA6, EA15)
@@ -270,11 +296,16 @@ class Supplies:
         voltage: str | int | Decimal | None = None,
         names: tuple[str, ...] | None = None,
         earthing: Earthing = Earthing.EARTHED,
+        fault_current_a: _Number | None = None,
+        fault_time_constant_ms: _Number | None = None,
     ) -> DcSupply:
         """Declare a DC supply from `source`'s L+, L- pins and voltage, or from the pins given.
 
         Does not find a pin by name: with no `source` the pins and `voltage=` are required.
+        `fault_current_a` (A) and `fault_time_constant_ms` (ms), positive, only with no `source`.
         """
+        fault = (fault_current_a, fault_time_constant_ms)
+        _forbid_fault(name, source, fault)
         given: dict[ConductorMark, Port | None] = {
             PLUS: None if plus is None else _port(self, plus),
             MINUS: None if minus is None else _port(self, minus),
@@ -288,5 +319,5 @@ class Supplies:
             _forbid_voltage(self, label, fn, voltage)
             found = _dc_facts(self, f"dc_supply {name!r}: {label}.{fn.name}", fn, given, voltage)
         rails = _dc_rails(found[3], found[:3], names)
-        _declare(self, name, "dc", rails, earthing)
+        _declare(self, name, "dc", rails, earthing, fault)
         return DcSupply(name, (rail for rail, _ in rails))

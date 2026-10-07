@@ -21,6 +21,7 @@ from fransys_layout.engines.schematic.read.write_keys import write_keys
 from fransys_layout.engines.schematic.write import write_layout
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages.references.digits import (
+    Digits,
     SetDigits,
     _digit_widths,
     _reference_groups,
@@ -28,7 +29,7 @@ from fransys_layout.stages.references.digits import (
 )
 from fransys_layout.stages.references.marker_boxes import reference_box_width
 from fransys_layout.stages.types import LinkMarker, MarkerSide
-from fransys_model.derive.drawing_text import reference_number
+from fransys_model.derive.drawing_text import _branches_of, heads_group, reference_number
 from fransys_model.kernel import Model, freeze
 from fransys_model.layout import DrawingSet, Page, StarKind, layout_of
 from fransys_model.layout import LinkMarker as WrittenMarker
@@ -74,10 +75,31 @@ def _numbered(name: str) -> dict[int, int]:
 
 @pytest.mark.parametrize("name", ["house", "two_location", "narrow"])
 def test_layout_counts_as_many_reference_groups_per_set_as_derive_numbers(name: str) -> None:
-    """Per drawing set: layout's own group count equals derive's highest `#n`."""
-    # CAN-FAIL: stages/references/digits.py `reference_groups`: count a star reference twice
-    #     (`Counter(...)` over the markers plus the `star == "ref"` ones again) fails here
+    """Per drawing set: layout's own group count equals derive's highest `#n`.
+
+    Both ask `heads_group` (RR-O5, layout-0132), so this proves the one predicate, not two copies.
+    """
+    # CAN-FAIL: stages/references/digits.py `_reference_groups`: the predicate call put back as its
+    #     old inline condition with one clause flipped (`side is OWNER` -> `USER`) fails here
     assert _counted(name) == _numbered(name)
+
+
+@pytest.mark.parametrize("name", ["house", "two_location", "narrow"])
+def test_no_branch_names_a_pure_off_stub(name: str) -> None:
+    """Derive's `named` can only be true of a merged stub (a stage "ref"), never a pure one.
+
+    A pure off stub is its own partner. So layout, which sees a merged stub as a "ref" end that
+    heads its group anyway, gives `heads_group` no `named` for an "off" and counts what derive does.
+    """
+    # CAN-FAIL: derive/drawing_text.py `_branches_of`: `is StarKind.BRANCH` -> `in (BRANCH, OFF)`
+    #     (an off stub names itself a hub) fails the pure-stub assert on the two-location cabinet
+    _, written = _laid_out(name)
+    hubs = _branches_of(written)
+    for one in layout_of(written, WrittenMarker).values():
+        if one.star is StarKind.OFF and one.partner == one.id:
+            assert one.id not in hubs
+    merged = [one for one in layout_of(written, WrittenMarker).values() if one.star is StarKind.OFF]
+    assert (name == "two_location") == any(one.partner != one.id for one in merged)
 
 
 def test_the_cabinets_have_reference_groups_to_count() -> None:
@@ -88,11 +110,7 @@ def test_the_cabinets_have_reference_groups_to_count() -> None:
     back is a reference and a branch, not a wire).
     """
     markers, _ = _laid_out("narrow")
-    kinds = Counter(
-        one.star
-        for one in markers
-        if one.star == "ref" or (one.star in ("", "branch") and one.side is MarkerSide.OWNER)
-    )
+    kinds = Counter(one.star for one in markers if heads_group(one.star, one.side.value))
     assert kinds == {"": 1, "ref": 3}
     assert sum(_counted("narrow").values()) == 4
 
@@ -119,7 +137,9 @@ def test_ninety_nine_groups_keep_two_digits_and_a_hundred_widen() -> None:
     assert _digit_widths(100, 5) == (3, 2)
     assert _digit_widths(5, 100) == (2, 3)
     assert _digit_widths(0, 1) == (2, 2)
-    assert reference_box_width(SHEET, PROFILE, digits=(3, 2)) > reference_box_width(SHEET, PROFILE)
+    assert reference_box_width(SHEET, PROFILE, digits=Digits(3, 2)) > reference_box_width(
+        SHEET, PROFILE
+    )
 
 
 def test_a_set_of_a_hundred_groups_gets_three_digits_and_its_neighbour_two() -> None:
@@ -135,7 +155,7 @@ def test_a_set_of_a_hundred_groups_gets_three_digits_and_its_neighbour_two() -> 
         replace(page_plan(("a",), number=n), drawing_set=s) for s, n in ((1, 1), (1, 2), (2, 1))
     ]
     assert _reference_groups(markers) == Counter({1: 100, 2: 99})
-    assert set_digits(markers, plans) == (
-        SetDigits(drawing_set=1, refs=3, sheets=2),
-        SetDigits(drawing_set=2, refs=2, sheets=2),
+    assert set_digits(markers, plans, {}) == (
+        SetDigits(drawing_set=1, refs=3, sheets=2, other_sets=1),
+        SetDigits(drawing_set=2, refs=2, sheets=2, other_sets=1),
     )

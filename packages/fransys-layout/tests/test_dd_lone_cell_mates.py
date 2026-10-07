@@ -10,7 +10,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 
 from fransys_layout.lint.codes import LONE_CELL
 from fransys_model.vocab.tables import functions, ports
@@ -57,7 +57,7 @@ def test_a_pin_wired_only_through_its_mate_is_no_lone_cell() -> None:
     end = d.item("DEMO-CONN-2P", tag="PZ", name="pz", parent=harness, at=far, group=field)
     d.cable("DEMO-CBL-4G1.5", name="w3c", parent=harness, at=c1).core(1, plug["2"], end["2"])
     d.mate(plug, d.item("DEMO-CONN-2P", tag="J0", name="j0", at=c1, group=grp))
-    assert "j0" not in _lone_items(fr.build(parts, d.draft(), system_document()))
+    assert "j0" not in _lone_items(fr.build(parts, d.draft(), layout_trigger_document()))
 
 
 def _standalone_unit():
@@ -94,5 +94,5 @@ def test_a_boundary_connector_is_open_on_its_own_set_and_an_unwired_symbol_still
     # UNDO: engines/schematic/engine.py, pass `open_ends=frozenset()` to `lint_chains`
     """
     parts, d = _standalone_unit()
-    found = _lone_functions(fr.build(parts, d.draft(), system_document()))
+    found = _lone_functions(fr.build(parts, d.draft(), layout_trigger_document()))
     assert found == [("cab", "H1", "fn", "lamp")]

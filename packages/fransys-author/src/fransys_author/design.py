@@ -3,7 +3,6 @@
 import dataclasses
 import itertools
 from typing import TYPE_CHECKING, Any, cast, override
-lazy from collections.abc import Mapping
 lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Draft, Id, MergeConflict, Origin, Record, make_id
@@ -55,7 +54,7 @@ from ._enums import member
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
 from ._release import unit_release
-from ._supply import build_supply_system
+from ._supply import SupplyScope
 from .errors import AuthorError
 from .handles import (
     Cable,
@@ -155,7 +154,7 @@ def _with_external(records: tuple[Record, ...], *, external: bool) -> tuple[Reco
     )
 
 
-class Scope(LinkScope):
+class Scope(LinkScope, SupplyScope):
     """A design-like object whose keys start with its own prefix (spec A9).
 
     `d.scope("p1", at=c1, group=g1)` returns one, for a reusable unit: a plain Python
@@ -390,28 +389,6 @@ class Scope(LinkScope):
         if facet is not None:
             self._design._add(facet, origin)
 
-    def supply(
-        self,
-        name: str,
-        *,
-        current: str,
-        rails: Mapping[str, tuple[str | Decimal, int | None]],
-        earthing: str = "earthed",
-    ) -> None:
-        """Declare a supply system and its rails (spec model-review Q2).
-
-        `current` is `"ac"` or `"dc"`; `earthing` is `"earthed"` or `"it"`. `rails` maps each
-        potential name to `(max_v, phase)`: `max_v` is a `str` or `Decimal`, and `phase` is
-        degrees in multiples of 60 for an AC rail above 0 V, else `None`.
-
-        Raises:
-            AuthorError: an argument breaks a rule above, or `name` is declared twice in this
-                scope with different content.
-        """
-        key = scoped(self._prefix, "supply", name)
-        record = build_supply_system(key, name, current, rails, earthing)
-        self._design._add(record, caller_origin())
-
     def operating(self, mpn: str | tuple[str, str], function: str) -> Operating | None:
         """The operating envelope of function template `function` of part `mpn` (spec Q6).
 
@@ -469,7 +446,7 @@ class Scope(LinkScope):
         tag: str | None = None,
         at: Location | None = None,
         group: Group | None = None,
-        parent: Item | None = None,
+        parent: Item | Strip | None = None,
         position: int | None = None,
         description: str = "",
         installed: bool = True,
@@ -640,7 +617,7 @@ class Scope(LinkScope):
         self._design._add(record, caller_origin())
 
     def mate(self, a: Fn | Item, b: Fn | Item) -> None:
-        """Two connector functions plugged together (spec A6)."""
+        """Two CONNECTOR or TERMINAL functions plugged together (spec A6); others are refused."""
         fn_a, fn_b = _as_function(a), _as_function(b)
         ends = sorted_pair(fn_a.key, fn_b.key)
         key = scoped(self._prefix, "mate", spliced(ends[0]), spliced(ends[1]))

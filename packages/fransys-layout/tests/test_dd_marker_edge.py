@@ -18,7 +18,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import system_document
+from _model_build_cover import layout_trigger_document
 from samples import (
     PROFILE,
     SHEET,
@@ -72,7 +72,7 @@ def _star(*, third_branch: bool):
             lamp(f"Y{group}{n}", group)
     for branch in branches[: 3 if third_branch else 2]:
         wire(hub, branch)
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _page_one(result):
@@ -227,7 +227,7 @@ def _pump_motor(*, wide: bool):
         wire(motor["U"], lamp(f"A{n}", group))
     for group in (1, 2, 3):
         wire(motor["W"], lamp(f"B{group}", group))
-    return fr.build(parts, d.draft(), system_document())
+    return fr.build(parts, d.draft(), layout_trigger_document())
 
 
 def _x_span(ref) -> tuple[int, int]:

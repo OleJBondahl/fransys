@@ -24,6 +24,7 @@ from fransys_layout.stages import (
     DrawnFunction,
     DrawnPort,
     FunctionSpec,
+    Home,
     PolePair,
     PortRef,
     PortSpec,
@@ -961,7 +962,7 @@ def test_at_a_top_end_the_replica_is_in_the_row_before_the_turned_parent_side_pi
     column, plug, pin, relay = _edge_column(top=True)
     assert [cell.function for cell in column.cells] == [pin.function, plug.function, relay.function]
     assert (pin.index, plug.index, relay.index) == (0, 1, 2)
-    assert (pin.flip, pin.face, pin.replica, pin.host) == (False, True, True, plug.function)
+    assert (pin.flip, pin.face, pin.home, pin.host) == (False, True, Home.ELSEWHERE, plug.function)
     assert plug.flip is True
 
 
@@ -970,7 +971,7 @@ def test_at_a_bottom_end_the_replica_is_in_the_row_after_the_plug_and_turned() -
     column, plug, pin, relay = _edge_column(top=False)
     assert [cell.function for cell in column.cells] == [relay.function, plug.function, pin.function]
     assert (relay.index, plug.index, pin.index) == (0, 1, 2)
-    assert (pin.flip, pin.face, pin.replica, pin.host) == (True, True, True, plug.function)
+    assert (pin.flip, pin.face, pin.home, pin.host) == (True, True, Home.ELSEWHERE, plug.function)
     assert plug.flip is False
 
 

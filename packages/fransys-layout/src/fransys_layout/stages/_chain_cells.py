@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from ._chain_state import _EDGE_FACE, _Cells, _Row, _Synthetic
-from .types import Cell
+from .types import Cell, Home
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -108,7 +108,7 @@ def _edge_cell(function: tuple[str, bool, Handle, Handle], ctx: _Cells) -> None:
         host=host,
         port="in",
         face=True,
-        replica=True,
+        home=Home.ELSEWHERE,
     )
     ctx.cells.append(cell)
     ctx.step()

@@ -13,7 +13,7 @@ from ._packing import Unit
 from .types import ROLE_ORDER, Role
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
 
     from fransys_model.kernel import AuthoringKey
 
@@ -85,29 +85,50 @@ def membership(found: tuple[Bucket, ...]) -> dict[Handle, set[int]]:
     return sets_of
 
 
-def _link_order(
-    members: Sequence[Column], pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...]
-) -> list[Column]:
-    """`members` in key order, each pole-linked column right after its earliest placed partner."""
-    keys = {column.key for column in members}
+def _partners(
+    keys: Collection[AuthoringKey], pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...]
+) -> dict[AuthoringKey, set[AuthoringKey]]:
+    """Each key's pole-linked partners, both ends of a link inside `keys`."""
     partners: dict[AuthoringKey, set[AuthoringKey]] = {}
     for x, y in pole_links:
         if x in keys and y in keys:
             partners.setdefault(x, set()).add(y)
             partners.setdefault(y, set()).add(x)
+    return partners
+
+
+def _earliest_partner(
+    placed: Sequence[Column], partners: Collection[AuthoringKey]
+) -> AuthoringKey | None:
+    """The key of the first placed column among `partners`, if any is placed."""
+    at = {one.key: index for index, one in enumerate(placed)}
+    earlier = [at[key] for key in partners if key in at]
+    return placed[min(earlier)].key if earlier else None
+
+
+def _after_hangers(
+    placed: Sequence[Column], first: AuthoringKey, anchor: Mapping[AuthoringKey, AuthoringKey]
+) -> int:
+    """The index just past `first` and the columns already hung from it."""
+    end = next(index for index, one in enumerate(placed) if one.key == first) + 1
+    while end < len(placed) and _hangs_from(placed[end].key, first, anchor):
+        end += 1
+    return end
+
+
+def _link_order(
+    members: Sequence[Column], pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...]
+) -> list[Column]:
+    """`members` in key order, each pole-linked column right after its earliest placed partner."""
+    partners = _partners({column.key for column in members}, pole_links)
     placed: list[Column] = []
     anchor: dict[AuthoringKey, AuthoringKey] = {}
     for column in members:
-        at = {one.key: index for index, one in enumerate(placed)}
-        earlier = [at[key] for key in partners.get(column.key, ()) if key in at]
-        if not earlier:
+        first = _earliest_partner(placed, partners.get(column.key, set()))
+        if first is None:
             placed.append(column)
             continue
-        first = placed[min(earlier)].key
-        end = at[first] + 1
-        while end < len(placed) and _hangs_from(placed[end].key, first, anchor):
-            end += 1
-        placed.insert(end, column)
+        placed.insert(_after_hangers(placed, first, anchor), column)
         anchor[column.key] = first
     return placed
 
@@ -164,8 +185,10 @@ def _group_key(info: GroupInfo, group_ranks: frozendict[str, int]) -> tuple[int,
     return (1, 0, info.key) if rank is None else (0, rank, info.key)
 
 
-def reorder(units: Sequence[Unit], order_hints: tuple[OrderHint, ...]) -> list[Unit]:
-    """Move groups an order hint names, a stable pass (D4); a cycle raises `HintError`."""
+def _blockers(
+    units: Sequence[Unit], order_hints: tuple[OrderHint, ...]
+) -> dict[int, set[int]] | None:
+    """Per unit index, the indices that must come first; `None` when no hint names a group here."""
     positions: dict[Handle, list[int]] = {}
     for index, unit in enumerate(units):
         if unit.groups[0] is not None:
@@ -177,8 +200,11 @@ def reorder(units: Sequence[Unit], order_hints: tuple[OrderHint, ...]) -> list[U
             for later in positions[hint.after]:
                 blockers[later].update(positions[hint.before])
             applied = True
-    if not applied:
-        return list(units)
+    return blockers if applied else None
+
+
+def _unblocked_order(units: Sequence[Unit], blockers: Mapping[int, set[int]]) -> list[int]:
+    """Unit indices, each the first still waiting whose blockers are placed; a cycle raises."""
     order: list[int] = []
     placed: set[int] = set()
     while len(order) < len(units):
@@ -191,4 +217,12 @@ def reorder(units: Sequence[Unit], order_hints: tuple[OrderHint, ...]) -> list[U
             raise HintError(msg, subjects=subjects)
         placed.add(free)
         order.append(free)
-    return [units[index] for index in order]
+    return order
+
+
+def reorder(units: Sequence[Unit], order_hints: tuple[OrderHint, ...]) -> list[Unit]:
+    """Move groups an order hint names, a stable pass (D4); a cycle raises `HintError`."""
+    blockers = _blockers(units, order_hints)
+    if blockers is None:
+        return list(units)
+    return [units[index] for index in _unblocked_order(units, blockers)]

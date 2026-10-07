@@ -6,14 +6,7 @@ from itertools import chain
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import (
-    WIRING_GRID,
-    Box,
-    Facing,
-    port_page_at,
-    push_clear,
-    text_width,
-)
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, port_page_at, push_clear, text_width
 from fransys_model.derive.drawing_text import (
     frame_column,
     frame_row,
@@ -27,8 +20,8 @@ from .lookups import placed_keepout
 from .place import axis_offset
 from .room import grow_keepout
 from .slices import by_key, page_of
-from .texts.power import held_shapes
-from .types import LabelKind, LabelRequest, PlacedLabel, RequestPartner
+from .texts.power import drawn_shapes
+from .types import Home, LabelKind, LabelRequest, PlacedLabel, RequestPartner
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -134,7 +127,12 @@ def image_reserves(
     for column in columns:
         for cell in column.cells:
             spec = spec_of.get(cell.function)
-            if cell.replica or spec is None or not spec.roles.contacts_apart or _hosted(cell):
+            if (
+                cell.home is Home.ELSEWHERE
+                or spec is None
+                or not spec.roles.contacts_apart
+                or _hosted(cell)
+            ):
                 continue
             no, nc = _image_marks(by_item.get(spec.item, []), marks)
             if not (no or nc):
@@ -275,8 +273,11 @@ def _page_holding(
 
 
 def _page_marker_boxes(markers: tuple[Any, ...]) -> dict[tuple[int, int], tuple[Box, ...]]:
-    """layout-0123: the ink below an item per `(drawing_set, page)`: markers, stubs, power."""
-    return {here: held_shapes(group) for here, group in by_key(markers, page_of).items()}
+    """layout-0134: the ink below an item per `(drawing_set, page)`: what the page draws."""
+    return {
+        here: tuple(one.box for one in drawn_shapes(group))
+        for here, group in by_key(markers, page_of).items()
+    }
 
 
 def contact_images(
@@ -358,4 +359,4 @@ def contact_images(
 
 def _hosted(cell: Cell) -> bool:
     """A cell attached to a host keeps no image reserve; a moved one (V5) is a home cell."""
-    return cell.host is not None and not cell.moved
+    return cell.host is not None and cell.home is not Home.MOVED

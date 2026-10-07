@@ -20,6 +20,7 @@ from fransys_layout.stages.types import (
     Cell,
     Column,
     FunctionSpec,
+    Home,
     MatedFunctions,
     PortRef,
 )
@@ -28,7 +29,7 @@ from fransys_model.kernel import Id
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_layout.stages.types import Connection, DrawnFunction, NetGroup
+    from fransys_layout.stages.types import Connection, DrawnFunction, Handle, NetGroup
     from fransys_model.kernel import AuthoringKey
 
 # a rack position (an int, possibly below zero) as 20 digits that sort as the number does
@@ -222,7 +223,12 @@ def rack_order(columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]) -> 
         found = []
         for cell in column.cells:
             spec = spec_of.get(cell.function)
-            if spec is None or spec.rack_position is None or cell.replica or cell.host:
+            if (
+                spec is None
+                or spec.rack_position is None
+                or cell.home is Home.ELSEWHERE
+                or cell.host
+            ):
                 continue
             group = group_of(spec)
             if group == column.group:
@@ -233,6 +239,44 @@ def rack_order(columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]) -> 
         column if (at := slot(column)) is None else replace(column, key=("rack", *at, *column.key))
         for column in columns
     )
+
+
+def _wires_at(connections: tuple[Connection, ...]) -> dict[Id[Any], int]:
+    """The number of connections with an end on each model port."""
+    wires_at: dict[Id[Any], int] = {}
+    for c in connections:
+        for port in {c.a.port, c.b.port}:
+            wires_at[port] = wires_at.get(port, 0) + 1
+    return wires_at
+
+
+def _is_inline_exit(
+    ref: PortRef,
+    other: PortRef,
+    spec_of: Mapping[Handle, FunctionSpec],
+    index: Mapping[Handle, tuple[AuthoringKey, int]],
+    wired: int,
+) -> bool:
+    """Whether `ref` is an in-line terminal end with `other` further down its own column."""
+    spec = spec_of.get(ref.function)
+    here, there = index.get(ref.function), index.get(other.function)
+    return (
+        spec is not None
+        and bool(
+            FACTS["inline_terminal"].func(TerminalRead(spec.roles.terminal, len(spec.ports), wired))
+        )
+        and here is not None
+        and there is not None
+        and here[0] == there[0]
+        and there[1] > here[1]
+    )
+
+
+def _opposite_port(d: DrawnFunction, ref: PortRef) -> str:
+    """The symbol port facing away from the one `ref` is bound to."""
+    bound = next(p.symbol_port for p in d.ports if p.port == ref.port)
+    facing = next(g.facing for g in d.geometry.ports if g.name == bound)
+    return next(g.name for g in d.geometry.ports if g.facing == OPPOSITE[facing])
 
 
 def inline_exits(
@@ -250,33 +294,15 @@ def inline_exits(
         for cell in column.cells
         if not cell.side
     }
-    wires_at: dict[Id[Any], int] = {}  # the number of connections with an end on each model port
-    for c in connections:
-        for port in {c.a.port, c.b.port}:
-            wires_at[port] = wires_at.get(port, 0) + 1
+    wires_at = _wires_at(connections)
     found = []
     for connection in connections:
         ends = []
         for ref, other in ((connection.a, connection.b), (connection.b, connection.a)):
-            spec = spec_of.get(ref.function)
-            here, there = index.get(ref.function), index.get(other.function)
-            wired = wires_at[ref.port]
-            if (
-                spec is not None
-                and FACTS["inline_terminal"].func(
-                    TerminalRead(spec.roles.terminal, len(spec.ports), wired)
-                )
-                and here is not None
-                and there is not None
-                and here[0] == there[0]
-                and there[1] > here[1]
-            ):
-                d = drawn_by[ref.function]
-                bound = next(p.symbol_port for p in d.ports if p.port == ref.port)
-                facing = next(g.facing for g in d.geometry.ports if g.name == bound)
-                opposite = next(g.name for g in d.geometry.ports if g.facing == OPPOSITE[facing])
+            if _is_inline_exit(ref, other, spec_of, index, wires_at[ref.port]):
+                opposite = _opposite_port(drawn_by[ref.function], ref)
                 ends.append(replace(ref, symbol_port=opposite))
-                continue
-            ends.append(ref)
+            else:
+                ends.append(ref)
         found.append(replace(connection, a=ends[0], b=ends[1]))
     return tuple(found)

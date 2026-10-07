@@ -17,6 +17,7 @@ from fransys_layout.stages.references import (
     JOIN_UNALIGNED,
     LINK_FANOUT,
     LINK_PARTNER_UNLOCATED,
+    REFERENCE_BOX_EXCEEDS_ROOM,
 )
 from fransys_layout.stages.resolve import PIN_MAP_INCOMPLETE, SYMBOL_DEFAULTED
 from fransys_layout.stages.route import ROUTE_FAILED
@@ -69,6 +70,7 @@ ALL_CODES: tuple[str, ...] = (
     PIN_MAP_INCOMPLETE,
     POWER_SYMBOL_UNPLACED,
     REDUNDANT_JOG,
+    REFERENCE_BOX_EXCEEDS_ROOM,
     ROUTE_FAILED,
     ROUTE_SHORTS_NETS,
     ROUTE_WRONG_PORT,

@@ -57,12 +57,12 @@ def test_motor_cable_cores(
     assert cable.core_count == 4
     cores = sorted(cable.cores, key=lambda core: core.index)
     assert [core.index for core in cores] == [1, 2, 3, 4]
-    # The ends are ordered by designation: `-Mn` sorts before `-U1-X3`.
+    # The ends keep the authored order: `-U1-X3` first, then the motor (model-0157).
     expected = [
-        (1, f"{motor}:U1", f"-U1-X3:U:{pump}"),
-        (2, f"{motor}:V1", f"-U1-X3:V:{pump}"),
-        (3, f"{motor}:W1", f"-U1-X3:W:{pump}"),
-        (4, f"{motor}:PE", f"-U1-X3:PE:{pump}"),
+        (1, f"-U1-X3:U:{pump}", f"{motor}:U1"),
+        (2, f"-U1-X3:V:{pump}", f"{motor}:V1"),
+        (3, f"-U1-X3:W:{pump}", f"{motor}:W1"),
+        (4, f"-U1-X3:PE:{pump}", f"{motor}:PE"),
     ]
     assert [(c.index, c.end_a_designation, c.end_b_designation) for c in cores] == expected
 

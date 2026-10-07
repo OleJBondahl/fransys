@@ -26,6 +26,7 @@ ports = [
 style = "mstb-header-3p"
 pincount = 3
 gender = "female"
+mates = ["1757022"]
 
 [footprint]
 library = "Connector_Phoenix_MSTB"

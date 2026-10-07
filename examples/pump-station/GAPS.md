@@ -1,7 +1,7 @@
 # Gaps
 
 The places where this example is not drawn or authored the way a real cabinet would be, because
-Fransys, at the pinned v0.12.0 line, cannot say it yet. Open gaps come first, then the closed ones
+Fransys, at the pinned v0.13.0 line, cannot say it yet. Open gaps come first, then the closed ones
 with the version that closed them. Evidence is in the three `out/` folders: `out/cabinet/` (the
 cabinet unit's set), `out/board/` (the relay board's) and `out/all/` (everything, with the system
 document). A `wires.csv` row lists its two ends in the model's id order, so its order can

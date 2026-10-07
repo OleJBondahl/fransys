@@ -237,7 +237,7 @@ def cabinet(u):
 
     # -- =PLC: WAGO controller and I/O modules ---------------------------------------------
     with u.function("PLC", "WAGO PLC"):
-        rack = u.harness("U1")
+        rack = u.rack("U1")
         # The rack container is -U1; its modules carry the rack scheme as explicit tags,
         # counting up per type (C1 controller, DI1, DO1, E1 end module).
         # The controller's first RJ45 port is the cabinet's interface, where the cable from outside

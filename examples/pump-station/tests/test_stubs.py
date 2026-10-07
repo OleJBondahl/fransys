@@ -19,7 +19,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 
-STUB_TEXT = "-W3 ← +EXT-K1:1 2 3 4 5 6 7 8"
+STUB_TEXT = "-W3 ← +EXT-K1"
 STUB_TITLE = 'text(size: 10pt, text("WAGO PLC"))'
 PAGE_BREAK = "#pagebreak()"
 

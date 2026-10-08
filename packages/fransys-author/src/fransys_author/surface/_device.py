@@ -1,10 +1,11 @@
 """Devices: `d.device("Q1", part)` and the checked references on what it returns (EA4)."""
 
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
+from fransys_author.surface._box import check_box, with_box
 from fransys_author.surface._handles import Fn, Pin, pick
 from fransys_author.surface._tags import bare
 lazy from fransys_author.design import Scope
@@ -119,6 +120,26 @@ def part_mpn(part: str | type[Device]) -> str:
     return mpn
 
 
+def _checked_mpn(  # noqa: PLR0913 -- the call's own checked facts, split out of `device`
+    design: "Design",
+    part: str | type[Device] | None,
+    tag: str | None,
+    name: str | None,
+    *,
+    external: bool,
+    pins: tuple[str, ...] | None,
+    contacts: str | Mapping[str, str] | None,
+) -> str | None:
+    """The MPN of `part` after the tag, pins and one-maker checks; `None` for a part-less box."""
+    check_box(part, tag=tag, external=external, pins=pins)
+    mpn = None if part is None else part_mpn(part)
+    _check_tag(tag, name)
+    if mpn is not None:
+        _one_maker(design, mpn)
+        _contacts.validate(design, mpn, contacts)
+    return mpn
+
+
 def _named(item: Item | Terminal, what: str, *, spec: bool | tuple[str, ...]) -> list[Any]:
     """The functions of `item` that `spec` names: `True` is every one, a tuple the named ones."""
     if spec is False or spec == ():
@@ -203,6 +224,20 @@ class Devices:
     @overload
     def device(
         self: "Design",
+        tag: str,
+        part: None,
+        *,
+        pins: tuple[str, ...],
+        external: Literal[True],
+        place: str | EllipsisType | None = ...,
+        parent: "Device | TerminalStrip | None" = None,
+        name: str | None = None,
+        description: str = "",
+        position: int | None = None,
+    ) -> Any: ...  # noqa: ANN401 -- a box's pins are named at the call, so untyped like a string MPN
+    @overload
+    def device(
+        self: "Design",
         tag: str | None,
         part: str,
         *,
@@ -222,8 +257,9 @@ class Devices:
     def device(  # noqa: PLR0913 -- the call's own spec signature (EA4)
         self: "Design",
         tag: str | None,
-        part: str | type[Device],
+        part: str | type[Device] | None,
         *,
+        pins: tuple[str, ...] | None = None,
         place: str | EllipsisType | None = ...,
         parent: "Device | TerminalStrip | None" = None,
         name: str | None = None,
@@ -240,11 +276,9 @@ class Devices:
         """Add device `tag` (printed `-tag`) of `part`, a part class or an MPN string.
 
         Does not take a prefixed tag or mount by name. `interface`, `unused`: `True` or names.
+        `part=None` makes an `external=True` box of `pins=`, with a tag and no BOM line.
         """
-        mpn = part_mpn(part)
-        _one_maker(self, mpn)
-        _check_tag(tag, name)
-        _contacts.validate(self, mpn, contacts)
+        mpn = _checked_mpn(self, part, tag, name, external=external, pins=pins, contacts=contacts)
         holder = _parent_handle(self, parent)
         key = self._claim(name or tag or "", per_function=True)
         item = self._engine.item(
@@ -259,6 +293,8 @@ class Devices:
             installed=installed,
             external=external,
         )
+        if mpn is None:
+            item = with_box(self._engine, item, pins or ())
         _mark_boundary(self, item, interface=interface, unused=unused)
         _contacts.fit(self, item, contacts)
         cls = part if isinstance(part, type) else Device

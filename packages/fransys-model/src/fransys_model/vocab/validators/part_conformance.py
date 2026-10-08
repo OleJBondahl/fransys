@@ -12,6 +12,7 @@ from fransys_model.vocab.tables import (
     port_templates,
     ports,
 )
+from fransys_model.vocab.unit_index import unit_index
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -155,8 +156,8 @@ def _item_findings(
 def check_part_conformance(model: Model) -> tuple[Finding, ...]:
     """Check every `Item` with a `part` has exactly its part's functions and ports.
 
-    `ITEM_PART_MISMATCH` (`ERROR`), one per discrepancy; `ITEM_WITHOUT_PART` (`INFO`): `part=None`.
-    Findings come back sorted by `(code, subjects, message)`.
+    `ITEM_PART_MISMATCH` (`ERROR`), one per discrepancy; `ITEM_WITHOUT_PART` (`INFO`): `part=None`
+    and not external. Findings come back sorted by `(code, subjects, message)`.
     """
     index = _Index(
         templates_of=_group(function_templates(model).values(), lambda template: template.part),
@@ -165,8 +166,11 @@ def check_part_conformance(model: Model) -> tuple[Finding, ...]:
         ports_of=_group(ports(model).values(), lambda port: port.function),
     )
     found: list[Finding] = []
+    outside = unit_index(model).external
     for item in items(model).values():
         if item.part is None:
+            if item.id in outside:
+                continue
             found.append(
                 Finding(
                     code=ITEM_WITHOUT_PART,

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, override
 lazy from collections.abc import Callable
 lazy from types import EllipsisType
 
+from fransys_author._partless import check_partless
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device, _mark_boundary, _one_maker, part_mpn
 from fransys_author.surface._runs import check_run
@@ -39,7 +40,7 @@ class TerminalStrip:
         self,
         tag: str,
         strip: Strip,
-        mpn: str,
+        mpn: str | None,
         count: int | None,
         pe_mpn: str | None = None,
         *,
@@ -236,7 +237,7 @@ class Strips:
     def terminal_strip(  # noqa: PLR0913 -- one keyword per strip fact, as `device` has
         self: "Design",
         tag: str | None,
-        part: str | type[Device],
+        part: str | type[Device] | None,
         count: int | None = None,
         *,
         name: str | None = None,
@@ -250,10 +251,14 @@ class Strips:
         """Add terminal strip `tag` (printed `-tag`) of terminal `part`, `count` terminals if given.
 
         Does not take a prefixed tag. `tag=None` needs `name=`; `external=True` flags its terminals.
+        `part=None` makes terminals with no part, each with only `.outer`; it needs `external=True`.
         """
-        mpn = part_mpn(part)
+        if part is None:
+            check_partless(tag, external=external, call="d.terminal_strip")
+        mpn = None if part is None else part_mpn(part)
         pe_mpn = None if pe is None else part_mpn(pe)
-        _one_maker(self, mpn)
+        if mpn is not None:
+            _one_maker(self, mpn)
         if pe_mpn is not None:
             _one_maker(self, pe_mpn)
         name = floating_name(tag, name, "terminal_strip")

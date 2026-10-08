@@ -39,6 +39,7 @@ from ._enums import member
 from ._keys import scoped
 from ._limits import state_limits
 from ._origin import caller_origin
+from ._partless import terminal_records
 from .errors import AuthorError
 
 if TYPE_CHECKING:
@@ -326,7 +327,7 @@ class Strip:
 
     def terminal(
         self,
-        mpn: str | tuple[str, str],
+        mpn: str | tuple[str, str] | None,
         group_text: str = "",
         *,
         index: int | None = None,
@@ -335,7 +336,7 @@ class Strip:
         """One terminal on this strip (spec A7).
 
         Args:
-            mpn: The part's MPN, or `(manufacturer, mpn)` when a bare MPN is ambiguous.
+            mpn: The part's MPN, `(manufacturer, mpn)` if ambiguous, or `None` for no part (E2).
             group_text: This terminal's group text; terminals that share one count up together.
             index: 1-based position within `group_text` (in the key); counts up unless given.
             group: A `=` node this terminal is placed at.
@@ -355,9 +356,7 @@ class Strip:
         middle = (group_text,) if group_text else ()
         key = scoped(self.key, "terminal", *middle, str(index))
         origin = caller_origin()
-        part = self._recorder._catalogue.find(mpn)
-        bundle = self._recorder._catalogue.bundle(part)
-        stamped = instantiate_(bundle, key, parent=self.id)
+        stamped = self._stamp(mpn, key)
         if self._unit is not None:
             stamped = tuple(
                 replace(record, unit=self._unit) if isinstance(record, ModelItem) else record
@@ -377,6 +376,13 @@ class Strip:
         if group is not None:
             _write_placement(self._recorder, item.id, item.key, group, origin)
         return Terminal(id=item.id, key=item.key, function=item.as_function())
+
+    def _stamp(self, mpn: str | tuple[str, str] | None, key: AuthoringKey) -> tuple[Record, ...]:
+        """The records of one terminal: the part's, or the part-less terminal's."""
+        if mpn is None:
+            return terminal_records(key, self.id)
+        bundle = self._recorder._catalogue.bundle(self._recorder._catalogue.find(mpn))
+        return instantiate_(bundle, key, parent=self.id)
 
 
 @dataclass(slots=True)

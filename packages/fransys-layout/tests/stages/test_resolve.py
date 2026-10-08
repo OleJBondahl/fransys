@@ -5,7 +5,7 @@ import dataclasses
 import pytest
 from samples import function_spec, hid
 
-from fransys_layout.engines.schematic.defaults import kind_roles
+from fransys_layout.engines.schematic.defaults import DEFAULT_RULES, kind_roles
 from fransys_layout.geometry import (
     GENERIC_BOX_KEY,
     WIRING_GRID,
@@ -110,11 +110,34 @@ def test_unknown_symbol_key_raises() -> None:
 
 def test_function_with_no_symbol_is_a_generic_box_with_a_finding() -> None:
     """A `generic` function with no choice is drawn as a box and reported, not refused."""
-    drawn, findings = resolve((function_spec(1, kind="generic"),), rules=RULES, choices=())
+    drawn, findings = resolve(
+        (_with_part(function_spec(1, kind="generic")),), rules=RULES, choices=()
+    )
     assert drawn[0].geometry.key == GENERIC_BOX_KEY
     assert len(drawn[0].geometry.ports) == 2
     assert [f.code for f in findings] == [SYMBOL_DEFAULTED]
     assert findings[0].subjects == (hid("function", 1),)
+
+
+def _with_part(spec):
+    """`spec` as a function of a part: `function_spec` has none, and that box is no finding."""
+    return dataclasses.replace(spec, part=hid("part", 1))
+
+
+def test_a_function_with_no_part_and_no_symbol_is_a_box_without_a_finding() -> None:
+    """PATCH-0132 E4: a part-less box is its intended drawing, so `SYMBOL_DEFAULTED` skips it."""
+    drawn, findings = resolve((function_spec(1, kind="generic"),), rules=RULES, choices=())
+    assert drawn[0].geometry.key == GENERIC_BOX_KEY
+    assert findings == ()
+
+
+def test_the_default_terminal_rule_binds_a_lone_external_port_to_the_south_side() -> None:
+    """PATCH-0132 E4: T2.21 carries `external` to `s`, for a terminal with no part."""
+    spec = function_spec(1, kind="terminal")
+    lone = dataclasses.replace(spec, ports=(dataclasses.replace(spec.ports[0], name="external"),))
+    drawn, findings = resolve((lone,), rules=DEFAULT_RULES, choices=())
+    assert [(p.symbol_port) for p in drawn[0].ports] == ["s"]
+    assert findings == ()
 
 
 def test_result_is_independent_of_input_order() -> None:
@@ -300,7 +323,7 @@ def test_a_rule_for_another_category_falls_back_to_the_plain_row() -> None:
 def test_a_category_only_row_does_not_match_a_function_without_a_category() -> None:
     """No plain row and no category on the function: the generic box, reported."""
     rules = (SymbolRule(kind="contact_no", category="protection", symbol="break-contact"),)
-    drawn, findings = resolve((function_spec(1),), rules=rules, choices=())
+    drawn, findings = resolve((_with_part(function_spec(1)),), rules=rules, choices=())
     assert drawn[0].geometry.key == GENERIC_BOX_KEY
     assert [f.code for f in findings] == [SYMBOL_DEFAULTED]
 
@@ -420,14 +443,14 @@ def test_a_generic_box_without_ports_is_the_minimum_body_and_has_no_primaries() 
 
 def test_the_generic_box_is_never_repeated() -> None:
     """A three-pole function with no symbol is one box: `poles` is 1, and nothing is refused."""
-    drawn, findings = resolve((_generic(("13", "14"), poles=3),), rules=(), choices=())
+    drawn, findings = resolve((_with_part(_generic(("13", "14"), poles=3)),), rules=(), choices=())
     assert drawn[0].geometry.poles == 1
     assert [f.code for f in findings] == [SYMBOL_DEFAULTED]
 
 
 def test_the_defaulted_finding_is_info() -> None:
     """`SYMBOL_DEFAULTED` never blocks anything: severity `INFO`."""
-    _, findings = resolve((function_spec(1, kind="generic"),), rules=RULES, choices=())
+    _, findings = resolve((_with_part(function_spec(1, kind="generic")),), rules=RULES, choices=())
     assert findings[0].severity is Severity.INFO
 
 
@@ -491,7 +514,9 @@ def test_result_and_findings_ignore_the_order_of_every_input() -> None:
         _choice(1, symbol="make-contact", kind="contact_no"),
         _choice(2, symbol="break-contact", kind="contact_nc"),
     )
-    specs = (function_spec(1, kind="generic"), function_spec(2, kind="generic"), function_spec(3))
+    specs = tuple(
+        _with_part(function_spec(n, kind="generic" if n < 3 else "contact_no")) for n in (1, 2, 3)
+    )
     forward = resolve(specs, rules=rules, choices=choices)
     backward = resolve(specs[::-1], rules=rules[::-1], choices=choices[::-1])
     assert forward == backward

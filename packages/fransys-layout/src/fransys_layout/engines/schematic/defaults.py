@@ -8,14 +8,14 @@ profile, which read the model's layout defaults, are in `read/house.py`.
 """
 
 from fransys_layout.conventions import Comb, Row, Table
-from fransys_layout.conventions.symbols import SYMBOL_DEFAULTS
+from fransys_layout.conventions.symbols import SYMBOL_DEFAULTS, SYMBOL_PORT_MAPS
 from fransys_layout.stages import KindRoles, SymbolRule
 
 STAGE_FACTS = frozenset({"function_kind", "part_category", "connector_gender"})
 
 ENGINE_NAME = "schematic"
 # The package's `pyproject.toml` version: a test keeps the two equal (decision layout-0029).
-ENGINE_VERSION = "0.13.1"
+ENGINE_VERSION = "0.13.2"
 
 # Whole routing lanes (`WIRING_GRID` each) `place` leaves between the content-box top and
 # row 0, so a north-facing port of row 0 routes inside the content box (decision layout-0031).
@@ -54,12 +54,13 @@ def stage_rules(table: Table) -> tuple[SymbolRule, ...]:
                     category=found.get("part_category"),
                     symbol=str(row.then),
                     gender=found.get("connector_gender"),
+                    port_map=frozendict(SYMBOL_PORT_MAPS.get(row.id, {})),
                 )
             )
     return tuple(rules)
 
 
-# A rule may carry a `port_map`; none does yet (docs/design/open-questions.md 13.7). The model
+# A rule may carry a `port_map`; only T2.21 does (open-questions.md 7). The model
 # cannot tell a fuse from a breaker: a fuse is a `layout.symbol_choice` on its part.
 DEFAULT_RULES: tuple[SymbolRule, ...] = stage_rules(SYMBOL_DEFAULTS)
 

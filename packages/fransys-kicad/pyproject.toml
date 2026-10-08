@@ -1,9 +1,9 @@
 [project]
 name = "fransys-kicad"
-version = "0.13.1"
+version = "0.13.2"
 description = "Fransys output: KiCad netlist. Dev tool: KiCad symbol to part-file skeleton."
 requires-python = ">=3.15"
-dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.13.1#subdirectory=packages/fransys-model"]
+dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.13.2#subdirectory=packages/fransys-model"]
 
 [build-system]
 requires = ["hatchling==1.32.4"]

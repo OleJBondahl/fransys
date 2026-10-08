@@ -194,7 +194,7 @@ surface_docstring_lines = 15
 
 [md_tokens]
 "docs/DESIGN.md" = 5021
-"packages/fransys/src/fransys/guide/findings.md" = 6906
+"packages/fransys/src/fransys/guide/findings.md" = 6919
 
 [md_long_sentences]
 "CLAUDE.md" = 9

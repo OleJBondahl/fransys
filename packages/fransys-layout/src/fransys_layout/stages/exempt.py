@@ -91,7 +91,15 @@ def boundary_exempt(inputs: ExemptInputs, nesting: UnitNesting) -> frozenset[tup
         for port in ports_of.get(one.function, ()):
             if unit != set_unit[one.drawing_set]:  # the black box, in the parent's set
                 # a top-level unit's black box stays exempt whatever its net (its stubs: Part 2)
-                exempt = not nested or not any(leaves(mate, unit) for mate in net[port])
+                # layout-0162: a mate outside the set unit passes through: no wire is drawn here
+                exempt = not nested or not any(
+                    leaves(mate, unit)
+                    and (
+                        set_unit[one.drawing_set] is None
+                        or not leaves(mate, set_unit[one.drawing_set])
+                    )
+                    for mate in net[port]
+                )
             else:  # the unit's own set: a nested unit's pin whose every conductor leaves it
                 exempt = (
                     nested

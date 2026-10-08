@@ -139,6 +139,28 @@ def test_item_without_part_is_tracked_not_rejected() -> None:
     assert any(f.code == ITEM_WITHOUT_PART for f in findings)
 
 
+def _partless(key: str, *, parent: Id[Item] | None = None, external: bool = False) -> Item:
+    return Item(
+        id=make_id(Item, ("examples", key)),
+        key=("examples", key),
+        part=None,
+        parent=parent,
+        position=None,
+        tag=None,
+        description="",
+        external=external,
+    )
+
+
+def test_a_part_less_external_item_and_its_children_give_no_item_without_part() -> None:
+    """E6: the flag on a strip or a parent silences the item; a plain part-less item fires."""
+    strip = _partless("x8", external=True)
+    terminal = _partless("x8-1", parent=strip.id)
+    plain = _partless("plain")
+    findings = check_part_conformance(_freeze((strip, terminal, plain)))
+    assert [f.subjects for f in findings if f.code == ITEM_WITHOUT_PART] == [(plain.id,)]
+
+
 # ---- each discrepancy is one finding, about the right records ---------------------------
 
 

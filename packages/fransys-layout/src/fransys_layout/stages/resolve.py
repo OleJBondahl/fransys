@@ -49,21 +49,11 @@ def resolve(
     table = {(rule.kind, rule.category, rule.gender): rule for rule in rules}
     index = choice_index(choices)
     drawn = []
-    findings = []
+    findings: list[Finding] = []
     for spec in sorted(functions, key=lambda spec: spec.function):
         symbol, port_map = _symbol_for(spec, table, index, default_symbol)
-        if symbol is None:
-            geometry = generic_box_geometry(tuple(port.name for port in spec.ports))
-            findings.append(
-                Finding(
-                    code=SYMBOL_DEFAULTED,
-                    severity=Severity.INFO,
-                    subjects=(spec.function,),
-                    message=f"no symbol for function kind {spec.kind!r}: drawn as a labelled box",
-                )
-            )
-        else:
-            geometry = symbol_geometry(symbol, poles=spec.poles, orientation=Orientation.R0)
+        geometry = _geometry(spec, symbol)
+        findings.extend([_defaulted(spec)] if symbol is None and spec.part is not None else [])
         primary_in, primary_out = _primary_ports(geometry)
         bound_ports = _bind_ports(spec, geometry, port_map)
         bound_names = {dp.symbol_port for dp in bound_ports}
@@ -90,6 +80,21 @@ def resolve(
             )
         )
     return tuple(drawn), tuple(findings)
+
+
+def _geometry(spec: FunctionSpec, symbol: str | None) -> SymbolGeometry:
+    """The symbol's geometry, or the labelled box of the function's ports when it has none."""
+    if symbol is None:
+        return generic_box_geometry(tuple(port.name for port in spec.ports))
+    return symbol_geometry(symbol, poles=spec.poles, orientation=Orientation.R0)
+
+
+def _defaulted(spec: FunctionSpec) -> Finding:
+    """`SYMBOL_DEFAULTED`; a part-less function gets none (PATCH-0132 E4: its box is intended)."""
+    message = f"no symbol for function kind {spec.kind!r}: drawn as a labelled box"
+    return Finding(
+        code=SYMBOL_DEFAULTED, severity=Severity.INFO, subjects=(spec.function,), message=message
+    )
 
 
 def _incomplete_nodes(

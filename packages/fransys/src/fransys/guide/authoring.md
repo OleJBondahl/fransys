@@ -38,6 +38,34 @@ An accessory takes its holder's designation and uses up no number.
 `d.terminal_strip`, `d.cable` and `d.harness`. The item has no BOM line. A strip's terminals are external
 with it; a cable's conductors carry no flag.
 
+An external device or strip may take `None` for its part, when only its terminal names are known. It needs a tag and has no BOM line. A part-less device names its pins with `pins=` and draws as a box. A part-less strip's terminals offer only `.outer`.
+
+```python
+# easy: equipment others supply
+import fransys as fr
+from fransys.colours import BK
+
+d = fr.design("demo_parts")
+x8 = d.terminal_strip("X8", None, 4, external=True)
+q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
+d.ac_supply("S", 400, q8["L1"], q8["L2"], q8["L3"], n=q8["N"])
+d.wire(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
+```
+
+```python
+# efficient: equipment others supply
+import fransys as fr
+from fransys.colours import BK
+
+d = fr.design("demo_parts")
+x8 = d.terminal_strip("X8", None, 4, external=True)
+q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
+l1, l2, l3 = (q8[pin] for pin in ("L1", "L2", "L3"))
+d.ac_supply("S", 400, l1, l2, l3, n=q8["N"])
+motor = d.device("M1", "DEMO-MOTOR-4KW")
+d.wire(x8[1].outer, motor["U"], wire=(BK, 1.5))
+```
+
 ```python
 # easy: function block
 import fransys as fr

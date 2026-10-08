@@ -134,6 +134,14 @@ class _Plant:
         return port_id in self.connected_ports or (port.function, port.name) in self.mated
 
 
+def _offered_up(plant: _Plant, unit: Id[Unit], function: Id[Function]) -> bool:
+    """Whether a standalone unit enclosing `unit` holds `function` as its boundary (model-0184)."""
+    return any(
+        function in plant.boundary_of[outer] and unit_standalone(plant.model, outer)
+        for outer in plant.containing[unit] - {unit}
+    )
+
+
 def _boundary_unconnected(plant: _Plant) -> list[Finding]:
     unused_functions = {unused.function for unused in plant.unused.values()}
     found = []
@@ -142,6 +150,8 @@ def _boundary_unconnected(plant: _Plant) -> list[Finding]:
             continue
         for function in plant.boundary_of[unit]:
             if plant.crosses_out_of(unit, function) or function in unused_functions:
+                continue
+            if _offered_up(plant, unit, function):
                 continue
             message = (
                 f"boundary function {key_text(plant.functions[function])} of unit "

@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
+    boundary,
     current_revision,
     document_unit,
     drawing_set_is_replica_only,
@@ -55,14 +56,22 @@ def _matched_drawing_sets(model: Model, record: Document) -> tuple[DrawingSet, .
 
 
 def _is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
-    """Whether the set has placements, all replicas, and no conductor route or `LinkMarker`."""
+    """Whether the set has placements, all replicas, and no conductor route or `LinkMarker`.
+
+    A replica of the page unit's own boundary counts as drawn (pdf-0025).
+    """
     pages = {
         page.id for page in layout_of(model, Page).values() if page.drawing_set == drawing_set.id
     }
-    has_placement = any(
-        placement.page in pages for placement in layout_of(model, SymbolPlacement).values()
-    )
-    if not has_placement:
+    placed = [
+        placement.function
+        for placement in layout_of(model, SymbolPlacement).values()
+        if placement.page in pages
+    ]
+    if not placed:
+        return False
+    # pdf-0025: a replica of the page unit's own boundary (a pass-through) is its drawing
+    if drawing_set.unit is not None and set(placed) & set(boundary(model, drawing_set.unit)):
         return False
     if not drawing_set_is_replica_only(model, drawing_set.id):
         return False

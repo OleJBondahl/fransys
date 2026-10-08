@@ -1,9 +1,9 @@
 [project]
 name = "fransys-author"
-version = "0.13.3"
+version = "0.13.4"
 description = "Fransys input: the Python authoring API."
 requires-python = ">=3.15"
-dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.13.3#subdirectory=packages/fransys-model"]
+dependencies = ["fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.13.4#subdirectory=packages/fransys-model"]
 
 [build-system]
 requires = ["hatchling==1.32.4"]

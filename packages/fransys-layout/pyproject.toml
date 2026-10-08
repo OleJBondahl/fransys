@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fransys-layout"
-version = "0.13.3"
+version = "0.13.4"
 requires-python = ">=3.15"
 dependencies = [
-    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.13.3#subdirectory=packages/fransys-model",
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.13.4#subdirectory=packages/fransys-model",
     "graphical-symbols @ git+https://github.com/OleJBondahl/graphical-symbols@v0.3.0",
-    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.13.3#subdirectory=packages/electrical-symbols",
+    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.13.4#subdirectory=packages/electrical-symbols",
 ]
 
 [tool.hatch.metadata]

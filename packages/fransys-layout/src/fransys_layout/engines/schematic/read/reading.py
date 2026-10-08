@@ -94,6 +94,11 @@ def _sort_key(model: Model, spec: FunctionSpec) -> tuple[int, Any, str, int]:
         )  # bom_sort_key's own key for an item with an empty designation
 
 
+def key_orders(specs: tuple[FunctionSpec, ...]) -> dict[Id[Any], tuple[Any, ...]]:
+    """Each function's authoring key in natural order (digit runs by value, layout-0165)."""
+    return {spec.function: tuple(natural_key(part) for part in spec.key) for spec in specs}
+
+
 def connections(model: Model, indexes: Indexes) -> tuple[Connection, ...]:
     """One `Connection` per `Conductor`, sorted by `(handle, a.port, b.port)`."""
     return tuple(

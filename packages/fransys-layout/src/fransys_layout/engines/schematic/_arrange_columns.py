@@ -18,6 +18,7 @@ from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_cha
 from fransys_layout.stages.types import Home
 
 from .defaults import HEADROOM_LANES
+from .read.reading import key_orders
 from .read.units import boundary_parents, unit_boundaries, unused_functions
 
 if TYPE_CHECKING:
@@ -53,7 +54,9 @@ def discovered_columns(
         edge_mates=edge_mates(boundary_parents(model), inputs.functions, inputs.mates),
         fixed=frozenset(inputs.item_north + inputs.item_south),
     )
-    discovered = discover_chains(records, rank_of=rank_of, tie_key=tie_key)
+    discovered = discover_chains(
+        records, rank_of=rank_of, tie_key=tie_key, key_order=key_orders(inputs.functions)
+    )
     # C21: a column never spans locations; the conductors between two are stubs
     return cut_locations(discovered, inputs.functions)
 

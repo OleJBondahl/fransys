@@ -9,10 +9,15 @@ only the interfaces its columns reach, and the line interface reaches page 1 onl
 its lead from the first line box and raised IndexError on page 2, so the build crashed.
 The fix (decision layout-0164): the part's lead is the first no-line interface that has a replica
 on the page, so the outline part draws there holding the replicas.
+
+REPLICA-ROUTE (decision layout-0165): on that replica-only page the J4 replicas and the far device's
+pins ran 1, 10, 2 ... (string order), and two wires ran inside the outline. The three tests at the
+end of the module hold both.
 """
 
 import tempfile
 from functools import cache
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -21,7 +26,7 @@ import fransys_parts
 
 from fransys_model import derive
 from fransys_model.kernel import merge
-from fransys_model.layout import ConnectorBox, Outline, layout_of
+from fransys_model.layout import ConnectorBox, Outline, Route, SymbolPlacement, layout_of
 
 _PART = """schema = 1
 
@@ -174,3 +179,65 @@ def test_the_boards_outline_draws_on_both_pages_with_its_plug() -> None:
     assert len(pages) == 2
     plug_pages = {b.page for b in layout_of(model, ConnectorBox).values()}
     assert pages & plug_pages
+
+
+def _replica_only_page() -> tuple[Outline, Any]:
+    model = _built().model
+    plug_pages = {b.page for b in layout_of(model, ConnectorBox).values()}
+    outline = next(o for o in layout_of(model, Outline).values() if o.page not in plug_pages)
+    return outline, model
+
+
+def _pins_left_to_right(tag: str) -> list[str]:
+    """The pin names of device `tag`'s placements on the replica-only page, by x."""
+    outline, model = _replica_only_page()
+    found = [
+        (p.x, p.key[-1])
+        for p in layout_of(model, SymbolPlacement).values()
+        if p.page == outline.page and tag in p.key
+    ]
+    return [pin for _, pin in sorted(found)]
+
+
+_NATURAL = [str(n) for n in range(1, 11)]
+
+
+def test_the_replicas_run_in_pin_order() -> None:
+    assert _pins_left_to_right("J4") == _NATURAL
+
+
+def test_the_far_pins_run_in_pin_order() -> None:
+    assert _pins_left_to_right("Z2") == _NATURAL
+
+
+def _inside(a: tuple[int, int], b: tuple[int, int], box: Outline) -> bool:
+    """Whether the segment a-b has a piece strictly inside the box's open rectangle."""
+    (x0, y0), (x1, y1) = a, b
+    left, right, top, bottom = box.x, box.x + box.width, box.y, box.y + box.height
+    if x0 == x1:
+        return left < x0 < right and min(y0, y1) < bottom and max(y0, y1) > top
+    return top < y0 < bottom and min(x0, x1) < right and max(x0, x1) > left
+
+
+def _wires_inside_the_outline() -> list[tuple[Any, ...]]:
+    """Each route segment inside the outline other than the one stub down from its replica."""
+    outline, model = _replica_only_page()
+    bottom = outline.y + outline.height
+    bad = []
+    for route in layout_of(model, Route).values():
+        if route.page != outline.page:
+            continue
+        pts = [(p.x, p.y) for p in route.points]
+        ends = {0: (pts[0], pts[1]), len(pts) - 2: (pts[-1], pts[-2])}
+        for i, (a, b) in enumerate(pairwise(pts)):
+            if not _inside(a, b, outline):
+                continue
+            at_replica = i in ends and a[0] == b[0] and max(a[1], b[1]) >= bottom > min(a[1], b[1])
+            if at_replica and ends[i][0][1] < bottom:
+                continue
+            bad.append((route.key[-1], a, b))
+    return bad
+
+
+def test_no_wire_runs_inside_the_outline_except_at_its_replica() -> None:
+    assert _wires_inside_the_outline() == []

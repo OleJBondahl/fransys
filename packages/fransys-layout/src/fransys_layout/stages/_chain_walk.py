@@ -325,7 +325,10 @@ def _signature(
 
 
 def _pole_order(
-    chain: Sequence[_PoleId], poles: Mapping[_PoleId, _Pole], specs: Mapping[Handle, FunctionSpec]
+    chain: Sequence[_PoleId],
+    poles: Mapping[_PoleId, _Pole],
+    specs: Mapping[Handle, FunctionSpec],
+    key_order: Mapping[Handle, tuple[Any, ...]],
 ) -> tuple[Any, ...]:
     """A bundle's chains left to right: by the pole index of the first multi-pole function."""
     for p in chain:
@@ -336,7 +339,8 @@ def _pole_order(
             and len(specs[pole.function].pole_pairs) > 1
         ):
             return (0, pole.index)
-    return (1, specs[poles[chain[0]].function].key)
+    first = specs[poles[chain[0]].function]
+    return (1, key_order.get(first.function, ()), first.key)  # layout-0165: 2 before 10
 
 
 def _group_bundles(
@@ -344,20 +348,27 @@ def _group_bundles(
     per_item: Mapping[Any, int],
     poles: Mapping[_PoleId, _Pole],
     specs: Mapping[Handle, FunctionSpec],
+    key_order: Mapping[Handle, tuple[Any, ...]],
 ) -> list[list[list[_PoleId]]]:
     """Chains of one signature through an `(item, kind)` with several poles make one bundle."""
     bundles: list[list[list[_PoleId]]] = []
     for sig, group in by_sig.items():
         multi = any(len(k) == 2 and per_item[k] > 1 for k in sig)  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
         if len(group) > 1 and multi:
-            bundles.append(sorted(group, key=lambda chain: _pole_order(chain, poles, specs)))
+            bundles.append(
+                sorted(group, key=lambda chain: _pole_order(chain, poles, specs, key_order))
+            )
         else:
             bundles.extend([chain] for chain in group)
     return bundles
 
 
 def bundle_chains(
-    walks: _Walks, state: _Poles, links: _Links, specs: Mapping[Handle, FunctionSpec]
+    walks: _Walks,
+    state: _Poles,
+    links: _Links,
+    specs: Mapping[Handle, FunctionSpec],
+    key_order: Mapping[Handle, tuple[Any, ...]],
 ) -> None:
     """Fill `walks.bundles`: chains with one signature, one column each."""
     poles = state.poles
@@ -365,4 +376,4 @@ def bundle_chains(
     by_sig: dict[tuple[Any, ...], list[list[_PoleId]]] = defaultdict(list)
     for chain in walks.chains:
         by_sig[_signature(chain, poles, walks.ends_of, links.detached)].append(chain)
-    walks.bundles = _group_bundles(by_sig, per_item, poles, specs)
+    walks.bundles = _group_bundles(by_sig, per_item, poles, specs, key_order)

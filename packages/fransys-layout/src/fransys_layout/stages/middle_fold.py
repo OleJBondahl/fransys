@@ -212,7 +212,11 @@ def _fold_group(
     span = max(up_right, low_right, cursor + wide) - cursor
     above = max((_bottom(page.hulls[key]) for key in upper), default=page.top)
     frame = _frame(group, page, Point(x=snap_up(cursor + (span - wide) // 2), y=above), wide)
-    deepest = frame.y + frame.height + _plug_room(bottom, page.profile.text_height)
+    deepest = (
+        frame.y
+        + frame.height
+        + _plug_room(bottom, page.reps[group.unit.unit][1], page.profile.text_height)
+    )
     dy = snap_up(deepest - min((page.hulls[key].y for key in lower), default=deepest))
     moves = {**up_moves, **{key: (dx, dy) for key, (dx, _) in low_moves.items()}}
     return _shape(group, page, frame, (top, bottom)), cursor + span + gap, moves
@@ -289,9 +293,13 @@ def _edge_tall(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], 
     return max(tall, replica_height(reps) + WIRING_GRID) if reps else tall
 
 
-def _plug_room(edge: Sequence[MiddleInterface], height: int) -> int:
-    """The band gap (HL20): the plug box, the line's fan-out room and one grid."""
-    return snap_up(_tallest(edge, height, plug=True) + FAN + WIRING_GRID)
+def _plug_room(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], height: int) -> int:
+    """The band gap (HL20): the plug box, the line's fan-out room and one grid.
+
+    An edge of replicas also gets a track for each, the most wires that can need one at once (RR2).
+    """
+    line = _tallest(edge, height, plug=True) + FAN + WIRING_GRID
+    return snap_up(max(line, len(reps) * WIRING_GRID))
 
 
 def _frame(group: MiddleGroup, page: _Page, at: Point, wide: int) -> Box:
@@ -300,7 +308,7 @@ def _frame(group: MiddleGroup, page: _Page, at: Point, wide: int) -> Box:
     top, bottom = _edges(group, page, {})
     reps = page.reps[group.unit.unit]
     tall = _edge_tall(top, reps[0], height) + _edge_tall(bottom, reps[1], height)
-    y = snap_up(at.y + _plug_room(top, height))
+    y = snap_up(at.y + _plug_room(top, reps[0], height))
     return Box(x=at.x, y=y, width=wide, height=snap_up(tall + height + 2 * WIRING_GRID + 2 * HALF))
 
 

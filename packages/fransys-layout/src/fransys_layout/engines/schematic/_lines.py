@@ -10,12 +10,12 @@ from itertools import pairwise
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import Box, Facing, pad
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, pad
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.lint import HarnessInk
-from fransys_layout.stages.content import content_box
+from fransys_layout.stages.content import content_box, drawn_extent
 from fransys_layout.stages.harness_route import Grid, line_text, text_centre
-from fransys_layout.stages.line_draw import EndOnPage, PinAt, line_pieces
+from fransys_layout.stages.line_draw import LEAVE_GRIDS, EndOnPage, PinAt, line_pieces
 from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.route import port_end
@@ -253,7 +253,8 @@ def _grid(grid: Grid, page: _Page, world: _World) -> Grid:
     A line starts on a box's edge or a split outside its pins, and leaves them outward.
     """
     shapes = tuple(world.shapes.get(page, ()))
-    return replace(grid, obstacles=Space(shapes=shapes).obstacles({}, grid.region))
+    region = drawn_extent(grid.region, (one.box for one in shapes), LEAVE_GRIDS * WIRING_GRID)
+    return replace(grid, region=region, obstacles=Space(shapes=shapes).obstacles({}, region))
 
 
 def _page_pieces(

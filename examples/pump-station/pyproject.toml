@@ -5,7 +5,7 @@ description = "A two-pump station authored with Fransys, on real catalogue parts
 requires-python = ">=3.15"
 dependencies = [
     "example-parts==0.1.0",
-    "fransys @ git+https://github.com/OleJBondahl/fransys@v0.13.0#subdirectory=packages/fransys",
+    "fransys @ git+https://github.com/OleJBondahl/fransys@v0.13.1#subdirectory=packages/fransys",
 ]
 
 [dependency-groups]

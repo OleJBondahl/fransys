@@ -13,7 +13,7 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab import Conductor, Item, Port, Unit
 
 from .cable_end_rank import cable_end_rank
-from .designation import item_designation
+from .designation import item_designation, port_designation
 from .drawing_text import external_note
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
 from .harness import _end_designation, _facts_of, _pin_marking, all_cables, all_unit_cables
@@ -135,27 +135,35 @@ def _block_key(
     return (unit is not None, render_id(unit) if unit else "", not cabled, name, render_id(subject))
 
 
-type _Keyed = list[tuple[tuple[int, int], HarnessCore]]
+type _Key = tuple[int, tuple[object, ...]]
+type _Keyed = list[tuple[_Key, HarnessCore]]
 
 
 def _keyed_cores(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> _Keyed:
     """The block's cores in core-key order: cable place then core index, the wires after the cables.
 
-    A wire's place is the number of cables; its index is its place among the harness's wires.
+    A wire's place is the number of cables; its key then runs by the natural order of its printed
+    from-end, then to-end (model-0185, SORT-ORDER O5), its index breaking a tie.
     """
     cables = block_cables(model, subject, unit)
-    keyed = [((place, core.index), core) for place, c in enumerate(cables) for core in c.cores]
-    keyed.extend(((len(cables), core.index), core) for core in wire_cores(model, subject, unit))
+    keyed: _Keyed = [
+        ((place, (core.index,)), core) for place, c in enumerate(cables) for core in c.cores
+    ]
+    for core in wire_cores(model, subject, unit):
+        ends = [
+            natural_key(port_designation(model, p, unit=unit)) for p in (core.end_a, core.end_b)
+        ]
+        keyed.append(((len(cables), (*ends, core.index)), core))
     return sorted(keyed, key=lambda pair: pair[0])
 
 
-def _landed_by_end(model: Model, keyed: _Keyed) -> dict[Id[Item], dict[Id[Port], tuple[int, int]]]:
+def _landed_by_end(model: Model, keyed: _Keyed) -> dict[Id[Item], dict[Id[Port], _Key]]:
     """The block's landed ports with their lowest core key, grouped by their end item."""
-    keys: dict[Id[Port], tuple[int, int]] = {}
+    keys: dict[Id[Port], _Key] = {}
     for key, core in keyed:
         for port in (core.end_a, core.end_b):
             keys[port] = min(keys.get(port, key), key)
-    ends: dict[Id[Item], dict[Id[Port], tuple[int, int]]] = {}
+    ends: dict[Id[Item], dict[Id[Port], _Key]] = {}
     for port, key in keys.items():
         ends.setdefault(cable_end_owner(model, item_of_port(model, port)), {})[port] = key
     return ends

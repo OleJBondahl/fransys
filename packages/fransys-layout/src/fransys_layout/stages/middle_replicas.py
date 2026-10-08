@@ -6,7 +6,7 @@ edges that HL13's step 2 gives them, after that edge's boxes.
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID, Box, Point
+from fransys_layout.geometry import WIRING_GRID, Box, Point, snap_up
 
 from .lookups import placed_keepout
 
@@ -53,6 +53,6 @@ def replica_places(
     for one in sorted(edge, key=lambda one: (one.at.x, one.function)):
         keepout = placed_keepout(one)
         y = frame.y + WIRING_GRID if top else frame.y + frame.height - WIRING_GRID - keepout.height
-        found[one.function] = Point(x=one.at.x + x - keepout.x, y=one.at.y + y - keepout.y)
+        found[one.function] = Point(x=one.at.x + snap_up(x - keepout.x), y=one.at.y + y - keepout.y)
         x += keepout.width + gap
     return found

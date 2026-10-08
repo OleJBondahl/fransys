@@ -305,8 +305,8 @@ def _right(
     return snap_up(max(edges))
 
 
-def _plan(facts: BlockFacts, pitch: int) -> Plan | None:
-    ends = _place_rows(facts, _origin(facts, pitch), pitch, 2 * G)[0]
+def _plan(facts: BlockFacts, pitch: int, x0: int) -> Plan | None:
+    ends = _place_rows(facts, x0, pitch, 2 * G)[0]
     low = lower(links_of(facts, ends))
     columns = [*_columns(facts, _landings(facts, ends)), *((k.core.key, k.a, k.b) for k in low)]
     return plan_channel(columns, {link.core.key for link in low})
@@ -344,13 +344,15 @@ def _place_at(
 def place_tracks(facts: BlockFacts, tracks: int) -> PlacedBlock | None:
     """The block with `tracks` tracks in its lower band, or None when its cores need more."""
     pitch = _pitch(facts)
-    plan = _plan(facts, pitch)
+    x0 = _origin(facts, pitch)
+    plan = _plan(facts, pitch, x0)
     if plan is None or plan.count > tracks:
         return None
-    x0 = _origin(facts, pitch)
     block = _place_at(facts, pitch, x0, tracks, plan)
     if block is not None and block.harness is not None and block.harness.x < 0:
-        block = _place_at(facts, pitch, x0 + snap_up(-block.harness.x), tracks, plan)
+        x0 += snap_up(-block.harness.x)
+        plan = _plan(facts, pitch, x0)
+        block = None if plan is None else _place_at(facts, pitch, x0, tracks, plan)
     return block
 
 
@@ -359,5 +361,6 @@ def place_block(facts: BlockFacts) -> PlacedBlock | None:
 
     The lower band holds as many tracks as the channel needs, at least one (CT5-3 P2 ruling).
     """
-    plan = _plan(facts, _pitch(facts))
+    pitch = _pitch(facts)
+    plan = _plan(facts, pitch, _origin(facts, pitch))
     return None if plan is None else place_tracks(facts, max(1, plan.count))

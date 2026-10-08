@@ -88,10 +88,11 @@ def test_top_replicas_stand_a_grid_below_the_frames_top_side_by_side_from_x() ->
     frame = Box(x=0, y=40, width=400, height=200)
     edge = [placed(11, x=304, y=904), placed(10, x=24, y=504)]
     found = replica_places(edge, frame, 100, 8, top=True)
-    # keep-out origin is `at` minus (8, 16): at = (keep-out x + 8, keep-out y + 16)
+    # keep-out origin is `at` minus (8, 16); the move in x is snapped up to the grid
+    # (layout-0164), so each `at` stays on it: 24 + snap_up(100 - 16), 304 + snap_up(164 - 296)
     assert found == {
-        hid("function", 10): Point(x=108, y=40 + 8 + 16),
-        hid("function", 11): Point(x=100 + WIDE + 8 + 8, y=40 + 8 + 16),
+        hid("function", 10): Point(x=112, y=40 + 8 + 16),
+        hid("function", 11): Point(x=176, y=40 + 8 + 16),
     }
 
 
@@ -102,4 +103,15 @@ def test_bottom_replicas_stand_a_grid_above_the_frames_bottom_side() -> None:
     """
     frame = Box(x=0, y=40, width=400, height=200)
     found = replica_places([placed(10, x=24, y=504)], frame, 100, 8, top=False)
-    assert found == {hid("function", 10): Point(x=108, y=40 + 200 - 8 - HIGH + 16)}
+    assert found == {hid("function", 10): Point(x=112, y=40 + 200 - 8 - HIGH + 16)}
+
+
+def test_a_replica_moves_by_whole_grids_so_its_ports_stay_on_the_wiring_grid() -> None:
+    """layout-0164: a keep-out off the grid about `at` (text overhang) must not shift `at` off it.
+
+    UNDO: `replica_places` moves `at` by `x - keepout.x` without snapping it up.
+    """
+    frame = Box(x=0, y=40, width=400, height=200)
+    one = placed(10, x=24, y=504)
+    found = replica_places([one], frame, 20, 8, top=True)  # 20 - 16 = 4: not a grid
+    assert (found[hid("function", 10)].x - one.at.x) % 8 == 0

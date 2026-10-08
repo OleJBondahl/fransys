@@ -3,7 +3,7 @@
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID, Box, Point, hull, snap_up, text_width
+from fransys_layout.geometry import WIRING_GRID, Box, LayoutError, Point, hull, snap_up, text_width
 
 from ._gather import Band, Bands, banded
 from .connector_boxes import HALF, PlacedConnectorBox, box_size
@@ -320,11 +320,26 @@ def _shape(
         width=text_width(group.unit.title, height=height),
         height=height,
     )
-    lead = (*sides[0], *sides[1])[0].edge.function
+    lead = _lead(group, sides, page.reps[group.unit.unit])
     plan = page.plan
     return GroupShape(
         group.unit.unit, lead, plan.drawing_set, plan.number, frame, title, tuple(boxes)
     )
+
+
+def _lead(
+    group: MiddleGroup,
+    sides: tuple[Sequence[MiddleInterface], Sequence[MiddleInterface]],
+    reps: tuple[list[PlacedFunction], list[PlacedFunction]],
+) -> Id[Any]:
+    """layout-0164: the first interface of the group on the page: lines by edge, then replicas."""
+    owner = {view: one.edge.function for one in group.unit.interfaces for view in one.views}
+    found = [one.edge.function for one in (*sides[0], *sides[1])]
+    found += [owner[one.function] for one in (*reps[0], *reps[1]) if one.function in owner]
+    if not found:
+        msg = f"the unit group {group.unit.title!r} draws no interface on its page"
+        raise LayoutError(msg)
+    return found[0]
 
 
 def _edge_boxes(

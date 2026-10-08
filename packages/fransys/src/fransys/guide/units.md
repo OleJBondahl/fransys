@@ -36,7 +36,7 @@ build time.
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,
 so the build does not ask for it to be wired. `unused=True` on a device that is not an
 interface marks it as one too. The tuple the function returns names the devices a
-container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field that holds a strip, a run or a terminal is
+container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector becomes this unit's interface too, one level at a time, and prints its full path. `fr.derive.black_box_unit(model, unit, set_unit)` returns the unit directly in `set_unit` that holds `unit`: the black box a page draws for it. A field that holds a strip, a run or a terminal is
 typed `fr.TerminalStrip`, `fr.Run` or `fr.Terminal`.
 `d.series` and `d.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
 
@@ -98,6 +98,32 @@ def supply_box(d):
     operating = d.operating("DEMO-STRING-864V", "string")
     x1.x1.limits(operating=operating)
     return Supply(x1, operating)
+```
+
+```python
+from typing import NamedTuple
+
+import fransys as fr
+
+
+class Io(NamedTuple):
+    X7: fr.Device
+
+
+@fr.unit("demo-board", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def board(d):
+    return Io(d.device("X7", "DEMO-CONN-2P", interface=True))
+
+
+@fr.unit("demo-assembly", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
+def assembly(d):
+    return Io(d.add(board, "U2").X7)  # the board's connector is the assembly's interface too
+
+
+d = fr.design("demo_parts")
+unit = d.add(assembly, "U1")
+d.mate(d.device("P1", "DEMO-CONN-2P"), unit.X7)
+assert not [f for f in fr.build(d).findings if f.code == "UNIT_BOUNDARY_BYPASSED"]
 ```
 
 ## Leaving one instance open

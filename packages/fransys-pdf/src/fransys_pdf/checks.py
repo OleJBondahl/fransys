@@ -379,6 +379,12 @@ def _schematic_no_drawings_message(
     return None
 
 
+_LOCATION_DRAWS_NO_HARNESS = (
+    "HARNESS_DRAWING: a location document draws no harness drawing. "
+    "Add the page to the unit's or the harness's document."
+)
+
+
 def _harness_no_drawings_messages(
     model: Model, record: Document, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
 ) -> list[str]:
@@ -389,8 +395,11 @@ def _harness_no_drawings_messages(
             # STEP 4b addition: the model simply has no top-level cable at all -- the SYSTEM
             # preset's own DOCUMENT_NO_TOP_LEVEL_CABLES INFO covers it below, not this ERROR.
             return []
-        subject = "unit" if document_unit(model, record) is not None else "harness"
-        return [f"HARNESS_DRAWING: the {subject} has no cable"]
+        if document_unit(model, record) is not None:
+            return ["HARNESS_DRAWING: the unit has no cable"]
+        if record.item is None:
+            return [_LOCATION_DRAWS_NO_HARNESS]
+        return ["HARNESS_DRAWING: the harness has no cable"]
     return harness_block_messages(model, record, pages, svgs)
 
 

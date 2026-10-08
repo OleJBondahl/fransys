@@ -25,7 +25,7 @@ def test_a_pin_mated_to_the_boundary_pin_of_a_unit_nested_in_its_own_is_paired()
     #     `((mate.a, mate.b),)` (a mate authored the other way round is missed)
     specs = (_in_unit(1, PARENT), _in_unit(2, CHILD))
     plug = MatedFunctions(a=hid("function", 1), b=hid("function", 2))
-    parent_of = {hid("function", 2): PARENT}
+    parent_of = {hid("function", 2): frozenset({PARENT})}
 
     assert edge_mates(parent_of, specs, (plug,)) == (plug,)
     assert edge_mates(parent_of, specs, (MatedFunctions(a=plug.b, b=plug.a),)) == (plug,)
@@ -33,8 +33,8 @@ def test_a_pin_mated_to_the_boundary_pin_of_a_unit_nested_in_its_own_is_paired()
 
 def test_a_boundary_pin_whose_unit_has_no_parent_pairs_only_with_a_top_level_pin() -> None:
     """The unit is top level (`parent` is `None`): a pin in another unit is not its parent's."""
-    # UNDO: stages/arrange.py:edge_mates, `and parent_of[owner] == spec_of[a].unit` -> `and True`
-    parent_of = {hid("function", 2): None}
+    # UNDO: stages/arrange.py:edge_mates, `and spec_of[a].unit in parent_of[owner]` -> `and True`
+    parent_of = {hid("function", 2): frozenset({None})}
     plug = MatedFunctions(a=hid("function", 1), b=hid("function", 2))
     inside = (_in_unit(1, PARENT), _in_unit(2, CHILD))
     top = (_in_unit(1, None), _in_unit(2, CHILD))
@@ -87,3 +87,12 @@ def test_a_terminal_column_joins_the_row_of_its_strip_as_the_next_lane() -> None
             cells=(*host.cells, Cell(function=hid("function", 3), index=1, lane=1)),
         ),
     )
+
+
+def test_a_pin_on_two_units_boundaries_pairs_with_a_pin_in_either_parent() -> None:
+    """layout-0160: a function on the boundary of a unit and of one nested in it has two parents."""
+    parent_of = {hid("function", 2): frozenset({PARENT, None})}
+    plug = MatedFunctions(a=hid("function", 1), b=hid("function", 2))
+
+    assert edge_mates(parent_of, (_in_unit(1, PARENT), _in_unit(2, CHILD)), (plug,)) == (plug,)
+    assert edge_mates(parent_of, (_in_unit(1, None), _in_unit(2, CHILD)), (plug,)) == (plug,)

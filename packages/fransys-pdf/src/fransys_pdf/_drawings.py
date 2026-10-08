@@ -13,6 +13,7 @@ from fransys_model.derive import (
 from fransys_model.derive.cable_drawing import (
     cable_block_key,
     cable_subject,
+    drawn_blocks,
     wire_harness_subjects,
 )
 from fransys_model.derive.drawing_text import page_title, page_title_groups
@@ -170,18 +171,25 @@ def _harness_block(model: Model, subject: Id[Item], key: str) -> Block:
     return Block(key, part.mpn, _join_part_line(part.mpn, part.description))
 
 
-def wire_only_subject(
+def wire_subjects(
     model: Model, record: Document, cables: tuple[HarnessCable, ...]
-) -> Id[Item] | None:
-    """The document's own harness item when it has single wires and no cable (HA-H1 A1).
+) -> tuple[Id[Item], ...]:
+    """The harnesses with single wires the document draws, by `block_drawn` (HA-H1 A1, pdf-0024).
 
-    A SYSTEM or unit document never has one. The CONTENTS table stays cable-only: no row for it.
+    A SYSTEM document has none. A unit document has its unit's; a harness document has its own
+    item when it has no cable. The CONTENTS table stays cable-only: no row for a wire.
     """
-    if cables or record.item is None or record.preset is DocumentPreset.SYSTEM:
-        return None
-    if document_unit(model, record) is not None:
-        return None
-    return record.item if record.item in wire_harness_subjects(model) else None
+    if record.preset is DocumentPreset.SYSTEM:
+        return ()
+    unit = document_unit(model, record)
+    if unit is None and (record.item is None or cables):
+        return ()
+    wired = set(wire_harness_subjects(model))
+    return tuple(
+        subject
+        for block_unit, subject in drawn_blocks(model)
+        if block_unit == unit and subject in wired and (unit is not None or subject == record.item)
+    )
 
 
 def cable_blocks(
@@ -190,13 +198,10 @@ def cable_blocks(
     """The document's blocks, one per `cable_subject`, each at its first cable's place (CD12).
 
     A document reads absolutely unless it is a unit document, whose reading is its unit. A
-    harness with wires and no cable gets its one block too (`wire_only_subject`).
+    harness with wires gets its one block too (`wire_subjects`), after the cable blocks.
     """
     unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record)
     blocks: dict[str, Block] = {}
-    if (wired := wire_only_subject(model, record, cables)) is not None:
-        key = cable_block_key(None, wired)
-        blocks[key] = _harness_block(model, wired, key)
     for cable in cables:
         subject = cable_subject(model, cable.cable)
         key = cable_block_key(unit, subject)
@@ -207,6 +212,9 @@ def cable_blocks(
             if subject == cable.cable
             else _harness_block(model, subject, key)
         )
+    for wired in wire_subjects(model, record, cables):
+        key = cable_block_key(unit, wired)
+        blocks.setdefault(key, _harness_block(model, wired, key))
     return tuple(blocks.values())
 
 

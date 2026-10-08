@@ -77,6 +77,7 @@ from .read.outline_texts import outline_titles
 from .read.tag_texts import tag_texts
 from .read.units import (
     black_box_reads,
+    black_boxes,
     boundary_edge_set,
     unit_nesting,
 )
@@ -227,6 +228,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
             outline_titles(model),
             placed_box,
             frozenset((one.unit, one.drawing_set, one.page) for one in shapes),
+            black_boxes(model),
         ),
     )
     pages, outlines, placed_box = with_middle(plans, pages, outlines, placed_box, shapes)

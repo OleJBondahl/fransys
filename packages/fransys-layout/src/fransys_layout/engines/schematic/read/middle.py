@@ -1,5 +1,6 @@
 """HL11, HL12: the nested units drawn as one middle outline, read once (layout-0153)."""
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.stages.middle import MiddleInterface, MiddleUnit
@@ -11,6 +12,7 @@ from fransys_model.vocab.tables import units as unit_table
 
 from .harness_lines import line_reads
 from .interfaces import interface_reads
+from .units import hidden_sets, shared_boundaries
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -34,10 +36,11 @@ def middle_units(model: Model, functions: Sequence[FunctionSpec]) -> tuple[Middl
         end.mates: (end.plug, line) for line in lines.lines for end in line.ends if end.mates
     }
     found = []
+    shared = shared_boundaries(model)
     for unit in units(model):
         reads = interface_reads(model, unit)
         if any(read.line for read in reads):
-            found.append(_unit(model, unit, reads, mated, views))
+            found.append(_hidden(model, _unit(model, unit, reads, mated, views), shared))
     return tuple(found)
 
 
@@ -74,6 +77,19 @@ def _unit(
         carried=frozenset(c for one in interfaces for c in one.conductors),
         title=outline_title(model, unit),
         top=host is None,
+    )
+
+
+def _hidden(model: Model, found: MiddleUnit, shared: frozenset[Id[Function]]) -> MiddleUnit:
+    """`found` with the sets it does not draw in, on each interface another unit also holds (P6)."""
+    return replace(
+        found,
+        interfaces=tuple(
+            replace(one, hidden=hidden_sets(model, found.unit, one.edge.function))
+            if one.edge.function in shared
+            else one
+            for one in found.interfaces
+        ),
     )
 
 

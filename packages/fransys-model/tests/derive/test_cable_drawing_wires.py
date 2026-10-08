@@ -11,7 +11,9 @@ from fransys.colours import BU
 from fransys_model.derive.cable_drawing import (
     DrawnWire,
     block_cables,
+    block_drawn,
     block_wires,
+    drawn_blocks,
     drawn_pins,
     end_rows,
     row_links,
@@ -173,3 +175,23 @@ def test_a_unit_reading_holds_the_wires_of_the_harnesses_of_that_unit() -> None:
     assert len(block_wires(model, harness, None)) == 1
     assert wire.text.startswith(wire_text(model, wire.conductor, unit=unit))
     assert wire.text.endswith(" BU 0.5 mm²")
+
+
+def test_a_block_is_drawn_when_it_has_a_cable_or_a_wire_and_not_otherwise(model: fr.Model) -> None:
+    """Catches a predicate that asks cables alone, wires alone, or answers yes for a bare loom."""
+    drawn = {
+        key: block_drawn(model, _item(model, key), None)
+        for key in ("MIX/MIX", "ONLY/ONLY", "BARE/cbare")
+    }
+    assert drawn == {"MIX/MIX": True, "ONLY/ONLY": True, "BARE/cbare": True}
+    assert block_drawn(model, _item(model, "BARE/J1"), None) is False
+
+
+def test_the_drawn_blocks_list_wire_only_and_cable_harnesses_and_no_plug(model: fr.Model) -> None:
+    """Catches a list that leaves out a wire-only harness, or lists a block that has nothing."""
+    listed = {subject for _, subject in drawn_blocks(model)}
+    assert _item(model, "ONLY/ONLY") in listed
+    assert _item(model, "MIX/MIX") in listed
+    assert _item(model, "BARE/cbare") in listed
+    assert _item(model, "BARE/J1") not in listed
+    assert all(block_drawn(model, subject, unit) for unit, subject in drawn_blocks(model))

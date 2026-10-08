@@ -166,12 +166,13 @@ def test_a_blank_end_in_a_nested_units_reading_has_an_empty_label_and_no_mark() 
     assert end_by_others(model, m1, nested) is False
 
 
-def test_the_surface_is_exactly_the_fourteen_names_and_none_reaches_derive() -> None:
+def test_the_surface_is_exactly_the_sixteen_names_and_none_reaches_derive() -> None:
     """The module's `__all__`; `all_cables` and `all_unit_cables` stay off every `__all__`."""
     names = {
-        "DrawnPin", "DrawnWire", "block_cables", "block_wires", "cable_block_key",
+        "DrawnPin", "DrawnWire", "block_cables", "block_drawn", "block_wires", "cable_block_key",
         "cable_heading", "cable_subject",
-        "core_text", "drawn_pins", "end_by_others", "end_label", "end_rows", "row_links",
+        "core_text", "drawn_blocks", "drawn_pins", "end_by_others", "end_label", "end_rows",
+        "row_links",
         "wire_harness_subjects",
     }  # fmt: skip
     assert sorted(cable_drawing.__all__) == sorted(names)

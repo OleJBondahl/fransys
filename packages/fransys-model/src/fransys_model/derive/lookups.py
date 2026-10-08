@@ -33,14 +33,14 @@ from fransys_model.vocab.tables import (
 from fransys_model.vocab.terminals import terminal_items
 from fransys_model.vocab.unit_index import descendants
 lazy from fransys_model.vocab.aspects import AspectNode
-lazy from fransys_model.vocab.core import Item, Port
+lazy from fransys_model.vocab.core import Item, Port, Unit
 lazy from fransys_model.vocab.templates import FunctionTemplate
 
 from .indexes import build_indexes
 
 if TYPE_CHECKING:
     from fransys_model.vocab.connectivity import Conductor, Net
-    from fransys_model.vocab.core import Function, Unit
+    from fransys_model.vocab.core import Function
     from fransys_model.vocab.enums import PortRole
 
     from .indexes import Indexes
@@ -217,6 +217,15 @@ def unit_chain(model: Model, unit: Id[Unit]) -> list[Id[Unit]]:
     """
     all_units = units(model)
     return list(parent_chain(lambda current: all_units[current].parent, unit))
+
+
+def black_box_unit(model: Model, unit: Id[Unit], set_unit: Id[Unit] | None) -> Id[Unit]:
+    """The unit directly in `set_unit` that holds `unit`: the black box its page draws.
+
+    `unit` itself when no ancestor stands directly in `set_unit`; `set_unit` `None` is the top.
+    """
+    table = units(model)
+    return next((one for one in unit_chain(model, unit) if table[one].parent == set_unit), unit)
 
 
 def channel_devices(model: Model) -> dict[Id[Function], Id[Function]]:

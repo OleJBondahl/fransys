@@ -96,7 +96,7 @@ from .list_cells import (
     column_values,
     pin_lines,
 )
-from .lookups import connector_facets, item_of_port, pin_order, terminal_items
+from .lookups import black_box_unit, connector_facets, item_of_port, pin_order, terminal_items
 from .mate_rows import mates
 from .natural_order import natural_key
 from .pairing import BoxPair, box_pairs
@@ -273,6 +273,7 @@ __all__ = [
     "WireRow",
     "allocate_plc",
     "aspect_nodes",
+    "black_box_unit",
     "board_netlist",
     "boards",
     "bom_lines",

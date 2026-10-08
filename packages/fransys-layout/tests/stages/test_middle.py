@@ -13,6 +13,7 @@ from fransys_layout.stages.middle import (
     MiddleGroup,
     MiddleInterface,
     MiddleUnit,
+    draws_in,
     group_index,
     middle_groups,
     strip_columns,
@@ -247,3 +248,11 @@ def test_a_split_group_draws_on_each_page_only_the_interfaces_its_columns_reach(
     _, (shape,) = fold_page(only_b, page_plan(("b",)), index, PROFILE)
     assert [one.function for one in shape.boxes] == [J2]
     assert shape.lead == J2
+
+
+def test_a_unit_draws_an_interface_in_no_hidden_set() -> None:
+    """layout-0160: not in its own set, not in a set an outer unit's black box holds."""
+    unit, outer = hid("unit", 1), hid("unit", 2)
+    assert draws_in(unit, frozenset({outer}), None)
+    assert not draws_in(unit, frozenset({outer}), outer)
+    assert not draws_in(unit, frozenset(), unit)

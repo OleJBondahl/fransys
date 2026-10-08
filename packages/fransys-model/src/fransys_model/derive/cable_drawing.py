@@ -13,23 +13,27 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab import Conductor, Item, Port, Unit
 
 from .cable_end_rank import cable_end_rank
+from .designation import item_designation
 from .drawing_text import external_note
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
 from .harness import _end_designation, _facts_of, _pin_marking, all_cables, all_unit_cables
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
 from .lookups import cable_end_owner, item_of_port, pin_order
+from .natural_order import natural_key
 lazy from .rows import HarnessCable, HarnessCore
 
 __all__ = [
     "DrawnPin",
     "DrawnWire",
     "block_cables",
+    "block_drawn",
     "block_wires",
     "cable_block_key",
     "cable_heading",
     "cable_subject",
     "core_text",
+    "drawn_blocks",
     "drawn_pins",
     "end_by_others",
     "end_label",
@@ -91,6 +95,44 @@ def block_cables(
         if cable_subject(model, cable.cable) == subject
         and (unit is None or all_items[cable.cable].unit == unit)
     )
+
+
+def block_drawn(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> bool:
+    """Whether the block of `subject` in `unit`'s reading is drawn: it has a cable or a single wire.
+
+    The one predicate of "this block is drawn" (model-0182): layout's engine and every PDF check
+    ask it, so a harness of plain wires is drawn wherever a harness of cables is.
+    """
+    return bool(block_cables(model, subject, unit)) or bool(block_wires(model, subject, unit))
+
+
+def drawn_blocks(model: Model) -> tuple[tuple[Id[Unit] | None, Id[Item]], ...]:
+    """Every drawn (unit, subject) of the model once: absolute ones, then units', in print order.
+
+    The one list of the blocks a harness drawing draws (model-0182): layout lays out exactly
+    these and the PDF lists its wire-only harnesses from them. Each pair holds `block_drawn`.
+    """
+    all_items = items(model)
+    pairs = [(None, cable_subject(model, c.cable)) for c in all_cables(model)]
+    pairs += [
+        (all_items[c.cable].unit, cable_subject(model, c.cable)) for c in all_unit_cables(model)
+    ]
+    cabled = set(pairs)
+    for harness in wire_harness_subjects(model):
+        pairs.append((None, harness))
+        if all_items[harness].unit is not None:
+            pairs.append((all_items[harness].unit, harness))
+    drawn = [pair for pair in dict.fromkeys(pairs) if block_drawn(model, pair[1], pair[0])]
+    return tuple(sorted(drawn, key=lambda pair: _block_key(model, pair, cabled=pair in cabled)))
+
+
+def _block_key(
+    model: Model, pair: tuple[Id[Unit] | None, Id[Item]], *, cabled: bool
+) -> tuple[object, ...]:
+    """Print order: absolute then units'; cable blocks by id, then wire-only ones by designation."""
+    unit, subject = pair
+    name = () if cabled else natural_key(item_designation(model, subject))
+    return (unit is not None, render_id(unit) if unit else "", not cabled, name, render_id(subject))
 
 
 type _Keyed = list[tuple[tuple[int, int], HarnessCore]]

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.stages.exempt import UnitNesting
 from fransys_layout.stages.references import BlackBoxReads
 from fransys_layout.stages.replicate import UnitBoundary
+from fransys_model.derive import black_box_unit
 from fransys_model.vocab.membership import boundary, units
 from fransys_model.vocab.tables import functions, items, unused_boundaries
 from fransys_model.vocab.tables import units as units_table
@@ -70,13 +71,16 @@ def unit_boundaries(model: Model) -> tuple[UnitBoundary, ...]:
     return tuple(found)
 
 
-def boundary_parents(model: Model) -> dict[Id[Any], Id[Any] | None]:
-    """Each boundary function's unit's parent, `None` for a top-level unit (`edge_mates`)."""
-    parent_of: dict[Id[Any], Id[Any] | None] = {}
+def boundary_parents(model: Model) -> dict[Id[Any], frozenset[Id[Any] | None]]:
+    """Each boundary function's units' parents, `None` for a top-level unit (`edge_mates`).
+
+    A function on the boundary of several units (author-0032) has one parent per unit.
+    """
+    parent_of: dict[Id[Any], set[Id[Any] | None]] = {}
     for unit in units(model):
         for function in boundary(model, unit):
-            parent_of[function] = units_table(model)[unit].parent
-    return parent_of
+            parent_of.setdefault(function, set()).add(units_table(model)[unit].parent)
+    return {function: frozenset(parents) for function, parents in parent_of.items()}
 
 
 def unit_nesting(model: Model, standing_in: Iterable[Id[Any] | None]) -> UnitNesting:
@@ -102,3 +106,38 @@ def boundary_edge_set(model: Model) -> frozenset[Id[Any]]:
 def unused_functions(model: Model) -> frozenset[Id[Any]]:
     """The functions declared unused boundaries (W3): they draw no pin."""
     return frozenset(one.function for one in unused_boundaries(model).values())
+
+
+def shared_boundaries(model: Model) -> frozenset[Id[Any]]:
+    """P6: the functions on the boundary of two or more units (read once)."""
+    held: dict[Id[Any], int] = {}
+    for unit in units(model):
+        for function in boundary(model, unit):
+            held[function] = held.get(function, 0) + 1
+    return frozenset(function for function, count in held.items() if count > 1)
+
+
+def hidden_sets(model: Model, unit: Id[Any], function: Id[Any]) -> frozenset[Id[Any] | None]:
+    """P6: the sets (by unit, `None` the top) where `unit` does not draw a function it shares.
+
+    A set draws it in the `derive.black_box_unit` of its item's unit, never in the set's own unit.
+    """
+    home = function_unit(model, function)
+    if home is None:
+        return frozenset()
+    above = containing_units(model, home) - {home}
+    return frozenset(
+        one
+        for one in (None, *units(model))
+        if (one is not None and unit in containing_units(model, one))
+        or ((one is None or one in above) and black_box_unit(model, home, one) != unit)
+    )
+
+
+def black_boxes(model: Model) -> dict[tuple[Id[Any], Id[Any] | None], Id[Any]]:
+    """Each unit's black box in each set above it (`derive.black_box_unit`; `unit_outlines`)."""
+    return {
+        (unit, one): black_box_unit(model, unit, one)
+        for unit in units(model)
+        for one in (None, *containing_units(model, unit))
+    }

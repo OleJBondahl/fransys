@@ -18,6 +18,7 @@ A harness with one cable prints the cable with the harness's designation. The ca
 end on a plug of `W1` is a wire of `W1`: `fransys.derive.harness_wires(model, w1_id)` lists its rows.
 A wire between plugs of two harnesses is the ERROR `WIRE_ON_TWO_HARNESSES`. A cable beside a wire
 prints `-W1-W1`; a cable that is the whole harness prints `-W1`.
+A harness of plain wires draws on a harness drawing as one block, with its end boxes and one line per wire, and no cable box.
 
 ## Fit a housing on a part's leads
 

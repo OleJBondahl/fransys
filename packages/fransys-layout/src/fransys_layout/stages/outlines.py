@@ -1,6 +1,6 @@
 """Unit outlines: the dash-dot frame around each unit's black box, and its title."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import (
@@ -49,6 +49,8 @@ class OutlineInputs:
     boxes: tuple[PlacedConnectorBox, ...] = ()  # HL6: a member pin's connector box is inside
     # HL11, condition 3: a middle unit's page draws its middle outline and no D11 frame
     middle: frozenset[tuple[Handle, int, int]] = frozenset()
+    # layout-0160: a unit's black box in a set above it, `derive.black_box_unit`, read once
+    black_box: Mapping[tuple[Handle, Handle | None], Handle] = field(default_factory=dict)
 
 
 def _column_ends(
@@ -206,6 +208,8 @@ def _unit_members(
     by_unit: dict[Handle, list[PlacedFunction]] = {}
     for one in placed:
         unit = run.spec_of[one.function].unit
+        if unit is not None:
+            unit = run.inputs.black_box.get((unit, own_unit), unit)
         middle = bool(run.inputs.middle) and (unit, one.drawing_set, one.page) in run.inputs.middle
         if unit is not None and unit != own_unit and not middle:
             by_unit.setdefault(unit, []).append(one)

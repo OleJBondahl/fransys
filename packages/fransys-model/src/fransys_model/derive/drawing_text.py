@@ -40,7 +40,7 @@ from fransys_model.derive.designation import (
 )
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.line_fact import draws_as_line
-from fransys_model.derive.lookups import effective_placement
+from fransys_model.derive.lookups import black_box_unit, effective_placement
 from fransys_model.derive.marker_targets import marker_lines, target_lines
 from fransys_model.derive.port_marking import marking_text, port_marking
 from fransys_model.derive.reference_heads import heads_group
@@ -745,13 +745,22 @@ def label_text(model: Model, label: Label) -> str:
     return _cross_reference_label_text(model, label)
 
 
+def _black_box_unit(model: Model, label: Label) -> Id[Unit] | None:
+    """The unit whose black box a title names: `black_box_unit` of the item's unit on its page."""
+    unit = items(model)[functions(model)[cast("Id[Function]", label.function)].item].unit
+    if unit is None:
+        return None
+    page = layout_of(model, Page)[label.page]
+    return black_box_unit(model, unit, layout_of(model, DrawingSet)[page.drawing_set].unit)
+
+
 def _tag_label_text(model: Model, label: Label) -> str:
     """`label_text` for a TAG label: the unit's own text, else the slot's text (D2)."""
     if label.function is None:
         msg = "a TAG label has no function"
         raise SchemaError(msg, kind="layout.label", record_id=label.id)
     if label.slot == "outline_title":  # I2a: a black box's title, from its item's unit
-        return outline_title(model, items(model)[functions(model)[label.function].item].unit)
+        return outline_title(model, _black_box_unit(model, label))
     unit = _own_unit(model, label)
     if unit is not None:
         own = _unit_label_text(model, label, unit)  # I4 R2: the unit's own set

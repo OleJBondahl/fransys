@@ -63,7 +63,7 @@ def same_unit_connectivity(
 
 
 def edge_mates(
-    parent_of: Mapping[Id[Any], Id[Any] | None],
+    parent_of: Mapping[Id[Any], frozenset[Id[Any] | None]],
     functions: tuple[FunctionSpec, ...],
     mates: tuple[MatedFunctions, ...],
 ) -> tuple[MatedFunctions, ...]:
@@ -79,7 +79,7 @@ def edge_mates(
             if (
                 owner in parent_of
                 and edge.unit != spec_of[a].unit
-                and parent_of[owner] == spec_of[a].unit
+                and spec_of[a].unit in parent_of[owner]
             ):
                 found.append(MatedFunctions(a=a, b=b))
     return tuple(found)

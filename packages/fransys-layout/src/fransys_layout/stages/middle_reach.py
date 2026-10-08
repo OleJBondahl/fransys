@@ -6,7 +6,7 @@ The one answer both the middle groups and the leaving lines read (designer's P3 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
-from .middle import MiddleUnit, owners_of
+from .middle import MiddleUnit, draws_in, owners_of
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -49,14 +49,17 @@ def line_reach(
 
 
 def _held(
-    column: Column, owners: Mapping[Id[Any], list[tuple[Id[Any], Id[Any]]]]
+    column: Column,
+    owners: Mapping[Id[Any], list[tuple[Id[Any], Id[Any], frozenset[Id[Any] | None]]]],
 ) -> tuple[list[Id[Any]], bool]:
     """The interfaces whose views `column` holds outside their unit, and whether a cell stays."""
     held: dict[Id[Any], None] = {}
     keeps = False
     for cell in column.cells:
         mine = [
-            interface for unit, interface in owners.get(cell.function, ()) if unit != column.unit
+            interface
+            for unit, interface, hidden in owners.get(cell.function, ())
+            if draws_in(unit, hidden, column.unit)
         ]
         held.update(dict.fromkeys(mine))
         keeps = keeps or not mine

@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
     from .types import Column
 
+    type _Owner = tuple[Id[Any], Id[Any], frozenset[Id[Any] | None]]
+
 
 @dataclass(frozen=True)
 class MiddleInterface:
@@ -28,6 +30,7 @@ class MiddleInterface:
     far: frozenset[Id[Any]] = frozenset()  # the functions at its line's other ends, and their views
     conductors: frozenset[Id[Any]] = frozenset()  # what its line carries
     leaving: bool = False  # its line reaches no column of its set: it leaves (HL18), condition 1
+    hidden: frozenset[Id[Any] | None] = frozenset()  # sets where an outer black box draws it (P6)
 
 
 @dataclass(frozen=True)
@@ -96,34 +99,41 @@ def strip_columns(
     return tuple(out), kept_reach
 
 
-def owners_of(units: Sequence[MiddleUnit]) -> dict[Id[Any], list[tuple[Id[Any], Id[Any]]]]:
+def owners_of(units: Sequence[MiddleUnit]) -> dict[Id[Any], list[_Owner]]:
     """Each stripped pin view's (unit, interface) pairs: a line interface's and its plug's.
 
     A leaving interface keeps its views: their column anchors its group on its page.
     """
-    owners: dict[Id[Any], list[tuple[Id[Any], Id[Any]]]] = {}
+    owners: dict[Id[Any], list[_Owner]] = {}
     for unit in units:
         for one in unit.interfaces:
             if one.edge.line and not one.leaving:
                 for view in {*one.views, *one.plug_views}:
-                    owners.setdefault(view, []).append((unit.unit, one.edge.function))
+                    owners.setdefault(view, []).append((unit.unit, one.edge.function, one.hidden))
     return owners
 
 
-def _strip_one(column: Column, owners: Mapping[Id[Any], list[tuple[Id[Any], Id[Any]]]]) -> Column:
+def _strip_one(column: Column, owners: Mapping[Id[Any], list[_Owner]]) -> Column:
     """`column` without every other unit's stripped views."""
     gone = frozenset(
         cell.function
         for cell in column.cells
-        if any(unit != column.unit for unit, _ in owners.get(cell.function, ()))
+        if any(
+            draws_in(unit, hidden, column.unit) for unit, _, hidden in owners.get(cell.function, ())
+        )
     )
     return _compact(column, gone) if gone else column
+
+
+def draws_in(unit: Id[Any], hidden: frozenset[Id[Any] | None], column_unit: Id[Any] | None) -> bool:
+    """Whether `unit` draws an interface in a set of `column_unit`: not its own, not hidden."""
+    return column_unit != unit and column_unit not in hidden
 
 
 def _flow(one: MiddleInterface, columns: Sequence[Column], unit: Id[Any]) -> bool | None:
     """A no-line interface's edge by its column's flow: at the column's bottom end, the top."""
     for column in columns:
-        if column.unit == unit:
+        if not draws_in(unit, one.hidden, column.unit):
             continue
         at = [cell.index for cell in column.cells if cell.function in one.views]
         if at:
@@ -139,7 +149,8 @@ def _homes(
     return tuple(
         column.key
         for column in columns
-        if column.unit != unit and any(cell.function in views for cell in column.cells)
+        if draws_in(unit, one.hidden, column.unit)
+        and any(cell.function in views for cell in column.cells)
     )
 
 
@@ -152,19 +163,28 @@ def middle_groups(
 ) -> tuple[MiddleGroup, ...]:
     """HL13: each middle unit's edges, by `edges`, with the flows and band widths filled in."""
     groups = []
+    set_of = {column.key: column.unit for column in columns}
     for unit in units:
+        reach_of = {
+            one.edge.function: tuple(
+                key
+                for key in reach.get(one.edge.function, ())
+                if not one.hidden or draws_in(unit.unit, one.hidden, set_of[key])
+            )
+            for one in unit.interfaces
+        }
         filled = [
             replace(
                 one.edge,
                 flow=None if one.edge.line else _flow(one, columns, unit.unit),
-                width=_band_width(one, reach, widths, text_height),
+                width=_band_width(one, reach_of, widths, text_height),
             )
             for one in unit.interfaces
         ]
         split = edges(filled)
         top = frozenset(function for function, edge in split.items() if edge is TOP)
         mine = {
-            one.edge.function: reach.get(one.edge.function, ())
+            one.edge.function: reach_of[one.edge.function]
             if one.edge.line
             else _homes(one, columns, unit.unit)
             for one in unit.interfaces

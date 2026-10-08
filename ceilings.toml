@@ -137,16 +137,16 @@ surface_docstring_lines = 15
 
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/design.py" = 736
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 388
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 390
 "packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 317
 "packages/fransys-layout/src/fransys_layout/stages/place.py" = 625
 "packages/fransys-model/src/fransys_model/derive/designation.py" = 373
-"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 512
+"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 518
 "packages/fransys-model/src/fransys_model/derive/rows.py" = 331
 "packages/fransys-parts/src/fransys_parts/lint.py" = 514
 "packages/fransys-pdf/src/fransys_pdf/_frame.py" = 486
 "packages/fransys-pdf/src/fransys_pdf/_lists.py" = 343
-"packages/fransys-pdf/src/fransys_pdf/checks.py" = 437
+"packages/fransys-pdf/src/fransys_pdf/checks.py" = 444
 "packages/fransys/src/fransys/pipeline.py" = 758
 
 [docstring_lines]

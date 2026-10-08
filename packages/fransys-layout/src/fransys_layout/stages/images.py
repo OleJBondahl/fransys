@@ -112,6 +112,11 @@ def _image_width(entries: Sequence[str], profile: Profile) -> int:
     return 2 * (column + 2 * profile.marker_padding)
 
 
+def table_height(rows: int, profile: Profile) -> int:
+    """C19: a contact table's height: its head and `rows` rows of text, padded (R8's one size)."""
+    return (1 + rows) * profile.text_height + 3 * profile.marker_padding
+
+
 def image_reserves(
     columns: tuple[Column, ...],
     specs: tuple[FunctionSpec, ...],
@@ -122,7 +127,7 @@ def image_reserves(
     """I4 Q1, D7: (column key, function) -> `_Reserve`; a flipped cell keeps nothing."""
     by_item = by_owner([s for s in specs if s.roles.contact], owners)
     spec_of = {spec.function: spec for spec in specs}
-    text, pad = profile.text_height, profile.marker_padding
+    pad = profile.marker_padding
     found: dict[tuple[AuthoringKey, Handle], _Reserve] = {}
     for column in columns:
         for cell in column.cells:
@@ -137,28 +142,51 @@ def image_reserves(
             no, nc = _image_marks(by_item.get(spec.item, []), marks)
             if not (no or nc):
                 continue
-            rows = max(len(no), len(nc))
-            down = (1 + rows) * text + 3 * pad + text + 4 * pad
+            down = table_height(max(len(no), len(nc)), profile) + pad
             under = [
-                c
-                for c in column.cells
-                if c.lane == cell.lane and c.index > cell.index and c.host is None and not c.side
+                c for c in column.cells if c.index > cell.index and c.host is None and not c.side
             ]
             last = max(under, key=lambda c: c.index) if under else cell
             cross = any(
                 c.drawing_set_key != spec.drawing_set_key for c in by_item.get(spec.item, [])
             )
             image = (cell.function, (*no, *nc), cross)  # RW9: a contact in another set
-            wide = (cell, *(() if cell.side else under))
+            lane = [c for c in under if c.lane == cell.lane]
+            wide = (cell, *(() if cell.side else lane))
             for one in dict.fromkeys((*wide, last)):
                 if one.flip:
                     continue
                 key = column.key, one.function
                 before = found.get(key, _Reserve())
                 found[key] = _Reserve(
-                    down=down if one is last else before.down,
+                    down=max(before.down, down) if one is last else before.down,
                     images=(*before.images, image) if one in wide else before.images,
                 )
+    return found
+
+
+def with_flipped_below(
+    reserves: Mapping[tuple[AuthoringKey, Handle], _Reserve],
+    columns: tuple[Column, ...],
+    heights: Mapping[Handle, int],
+) -> dict[tuple[AuthoringKey, Handle], _Reserve]:
+    """R8: a flipped cell keeps no room (place rebuilds its geometry), so the cell above holds it.
+
+    Each reserve that holds a table's room grows by the keep-out heights of the cells below it.
+    """
+    found = dict(reserves)
+    below: dict[tuple[AuthoringKey, Handle], int] = {}
+    for column in columns:
+        rows: dict[int, list[Handle]] = {}
+        for cell in column.cells:
+            rows.setdefault(cell.index, []).append(cell.function)
+        total = 0
+        for index in sorted(rows, reverse=True):
+            below.update({(column.key, function): total for function in rows[index]})
+            total += sum(heights.get(function, 0) for function in rows[index])
+    for place, reserve in reserves.items():
+        if reserve.down:
+            found[place] = replace(reserve, down=reserve.down + below.get(place, 0))
     return found
 
 
@@ -328,7 +356,7 @@ def contact_images(
         no.extend(_entry_text(mark, inputs.no_place) for mark in spare_no)  # layout-0112: no place
         nc.extend(_entry_text(mark, inputs.no_place) for mark in spare_nc)
         width = _image_width([*no, *nc], profile)
-        height = (1 + max(len(no), len(nc))) * profile.text_height + 3 * profile.marker_padding
+        height = table_height(max(len(no), len(nc)), profile)
         x = _anchor_x(at) + WIRING_GRID // 2
         y = _image_top(at, holding[at.function, at.drawing_set, at.page], profile)
         # I4, layout-0123: nor on a marker, a stub or a power symbol (a star marker under A2)

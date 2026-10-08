@@ -35,7 +35,8 @@ from fransys_layout.stages.content import content_box
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
 from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
 from fransys_layout.stages.firstlabels import labelled_pages
-from fransys_layout.stages.images import contact_images, image_reserves
+from fransys_layout.stages.images import contact_images, image_reserves, with_flipped_below
+from fransys_layout.stages.middle_tall import recut, tall_groups
 from fransys_layout.stages.offstubs import OffEnd
 from fransys_layout.stages.onepage import page_wiring
 from fransys_layout.stages.outlines import OutlineInputs, unit_outlines
@@ -155,7 +156,9 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     # I4 Q1: room for each contact image under its coil's lane, kept while placing
     img = image_inputs(model, inputs)
     every = (*inputs.functions, *inputs.spares)
+    heights = {one.function: one.geometry.keepout.height for one in drawn}
     reserves = image_reserves(columns, every, inputs.profile, img.marks, img.owners)
+    reserves = with_flipped_below(reserves, columns, heights)
     paths = partial(location_paths, model)
     run = PageRun(
         texts,
@@ -298,11 +301,16 @@ def _placed(
     widths: tuple[ColumnWidth, ...],
     decide: Decide,
 ) -> tuple[Placement, tuple[References, tuple[Finding, ...]]]:
-    """S10: `plan_pages`, `references`, `place`; again on grown widths (C21); room check (0143)."""
+    """S10: `plan_pages`, `references`, `place`; again on grown widths (C21); room check (0143).
+
+    TALL-PAGE T5: the second pass also cuts the groups the first placing folded below the page.
+    """
     planned = plan_pages(run, drawn, columns, widths)
     first = planned.plans
     placement, grown, decided = place_pages(run, drawn, planned, widths, decide)
-    if grown != widths:
+    tall = tall_groups(placement.pages, run.inputs.sheet.content_height, run.inputs.middle)
+    if grown != widths or tall:
+        run = recut(run, tall)
         planned = plan_pages(run, placement.drawn, columns, grown)
         placement, _, decided = place_pages(run, placement.drawn, planned, grown, decide)
     return placement, box_room_findings(decided, first)

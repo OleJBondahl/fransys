@@ -104,8 +104,10 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
     monkeypatch.setattr(
         engine,
         "place_pages",
-        lambda *_: (SimpleNamespace(drawn=()), next(calls), final),
+        lambda *_: (SimpleNamespace(drawn=(), pages=[]), next(calls), final),
     )
-    nothing: Any = None  # the stubs read none of the run, the drawn or the decide
-    _, (_, found) = engine._placed(nothing, (), (), (), nothing)
+    nothing: Any = None  # the stubs read none of the drawn or the decide
+    sheet = SimpleNamespace(content_height=854)  # no page, so no group is tall
+    run: Any = SimpleNamespace(inputs=SimpleNamespace(sheet=sheet, middle={}))
+    _, (_, found) = engine._placed(run, (), (), (), nothing)
     assert [one.code for one in found] == [REFERENCE_BOX_EXCEEDS_ROOM]

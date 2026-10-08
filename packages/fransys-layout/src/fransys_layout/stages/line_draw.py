@@ -11,18 +11,17 @@ from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, Point, p
 
 from .harness_route import LineEnd, line_paths, root
 from .line_shapes import DrawnLeg
+from .line_trunk import edge, halves, tip, trunk_end
 from .space import End
-from .texts.candidates import Candidate, box_of, stub_anchor
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from fransys_model.kernel import Id
 
     from .harness_route import Grid
 
 FAN_GRIDS = 4  # HL17: the split stands 32 G, four grids, before its pins' row
-LEAVE_GRIDS = 6  # HL18: a leaving line runs 48 G, one column gap, straight out
 
 
 @dataclass(frozen=True)
@@ -86,12 +85,17 @@ class Pieces:
 
 
 def line_pieces(
-    ends: Sequence[EndOnPage], absent: int | None, grid: Grid, *, margin: int = 0
+    ends: Sequence[EndOnPage],
+    absent: int | None,
+    grid: Grid,
+    *,
+    margin: int = 0,
+    trunk: tuple[Facing, tuple[int, int]] | None = None,
 ) -> Pieces:
     """HL15, HL18: the line among its joint ends; each leaving end and a lone end leave.
 
-    `absent` is the branch of the first end not on this page, `None` when every end is here.
-    A fan-out's split keeps `margin` (half its widest stub) inside the region (layout-0158).
+    `absent` is the first end's branch off this page; `margin` keeps a fan-out's split inside
+    (layout-0158); `trunk` is set when the root is off the page (TALL-PAGE R1, `line_trunk`).
     """
     drawn = [_drawn(one, _within(grid.region, margin)) for one in ends]
     others = [end.branch for _, end, _ in drawn]
@@ -100,14 +104,50 @@ def line_pieces(
     if len(joint) == 1:
         leave.append(joint.pop())
     paths = [(end.branch, _out(end.end)) for end in leave]
-    stubs = [Stub(end.branch, _far(absent, others, end.branch), _tip(end.end)) for end in leave]
-    if joint and absent is not None:
+    stubs = [Stub(end.branch, _far(absent, others, end.branch), tip(end.end)) for end in leave]
+    out = _trunk(joint, absent, grid, trunk)
+    if out is not None:
+        paths.extend(out[0])
+        stubs.append(out[1])
+        joint = []
+    elif joint and absent is not None:
         first = root(joint)
-        stubs.append(Stub(first.branch, absent, _tip(first.end)))
+        stubs.append(Stub(first.branch, absent, tip(first.end)))
         joint.append(LineEnd(branch=absent, end=_goal(first.end)))
     if len(joint) > 1:
         paths.extend(line_paths(joint, grid).items())
     return _through_rows(paths, tuple(fan for _, _, fan in drawn if fan), stubs, grid)
+
+
+def _trunk(
+    joint: Sequence[LineEnd],
+    absent: int | None,
+    grid: Grid,
+    trunk: tuple[Facing, tuple[int, int]] | None,
+) -> tuple[list[tuple[int, tuple[Point, ...]]], Stub] | None:
+    """R1: the bar of the ends here and the trunk out of it to its stub; `None` leaves as before."""
+    if trunk is None or absent is None or not joint[1:]:
+        return None
+    bar = line_paths(joint, grid)
+    end = trunk_end(bar, grid, *trunk)
+    if end is None:
+        return None
+    first = root(joint)
+    return [*_branches(bar, joint, end.at), (absent, _out(end))], Stub(
+        first.branch, absent, tip(end)
+    )
+
+
+def _branches(
+    bar: Mapping[int, tuple[Point, ...]], joint: Sequence[LineEnd], at: Point
+) -> list[tuple[int, tuple[Point, ...]]]:
+    """The bar's paths, each end keeping its own branch: two ends' one polyline is cut at `at`."""
+    if joint[2:]:  # a pair is the one bar that is a single polyline
+        return list(bar.items())
+    first = root(joint)
+    other = next(one for one in joint if one is not first)
+    near, far = halves(bar[first.branch], at)
+    return [(first.branch, near), (other.branch, far)]
 
 
 def _within(region: Box, margin: int) -> tuple[int, int]:
@@ -135,6 +175,11 @@ def _drawn(one: EndOnPage, bounds: tuple[int, int]) -> tuple[EndOnPage, LineEnd,
     )
     fan = Fan(one.branch, split, legs, further, facing)
     return one, LineEnd(one.branch, End(at=split, facing=facing), one.interface), fan
+
+
+def drawn_end(one: EndOnPage, bounds: tuple[int, int]) -> LineEnd:
+    """The end's `LineEnd` as `line_pieces` draws it: its point and the way it faces."""
+    return _drawn(one, bounds)[1]
 
 
 def _pin_rows(pins: Sequence[PinAt]) -> list[list[PinAt]]:
@@ -243,22 +288,11 @@ def fan_out(
     return split, legs
 
 
-def _tip(end: End) -> End:
-    """Where a leaving line ends and its stub starts, facing on out (HL18)."""
-    return End(at=port_exit(end.at, end.facing, LEAVE_GRIDS), facing=end.facing)
-
-
-def _edge(end: End) -> Point:
-    """Where a leaving line meets its stub's box: its near edge's middle, as `stub_box` has it."""
-    edge = box_of(Candidate(side=end.facing, offset=0), stub_anchor(_tip(end).at), (0, 0))
-    return Point(x=edge.x, y=edge.y)
-
-
 def _goal(end: End) -> End:
     """The leaving end as a goal of the search: its stub box's edge, entered from the line."""
-    return End(at=_edge(end), facing=OPPOSITE[end.facing])
+    return End(at=edge(end), facing=OPPOSITE[end.facing])
 
 
 def _out(end: End) -> tuple[Point, ...]:
     """A leaving line: straight out from its end to its stub box's edge (layout-0158)."""
-    return (end.at, _edge(end))
+    return (end.at, edge(end))

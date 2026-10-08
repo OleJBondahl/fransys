@@ -6,8 +6,9 @@ from typing import Any
 from samples import PROFILE, hid, through_geometry
 
 from fransys_layout.geometry import WIRING_GRID
-from fransys_layout.stages.line_draw import FAN_GRIDS, LEAVE_GRIDS
+from fransys_layout.stages.line_draw import FAN_GRIDS
 from fransys_layout.stages.line_room import line_room
+from fransys_layout.stages.line_trunk import LEAVE_GRIDS
 
 _F = hid("function", 1)
 _PORT = hid("port", 1)

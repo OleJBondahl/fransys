@@ -20,7 +20,8 @@ surface_docstring_lines = 15
 "packages/fransys-author/src/fransys_author/design.py::Scope.symbol" = 17
 "packages/fransys-author/src/fransys_author/handles.py::Strip.terminal" = 19
 "packages/fransys-kicad/src/fransys_kicad/_sexpr.py::_read" = 17
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_results" = 58
+"packages/fransys-layout/src/fransys_layout/engines/schematic/_lines.py::draw_lines" = 19
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_results" = 60
 "packages/fransys-layout/src/fransys_layout/engines/schematic/read/views.py::item_views" = 36
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/labels.py::labels" = 20
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/placements.py::placements" = 23
@@ -43,6 +44,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/images.py::contact_images" = 42
 "packages/fransys-layout/src/fransys_layout/stages/images.py::image_reserves" = 23
 "packages/fransys-layout/src/fransys_layout/stages/labels.py::place_slot_labels" = 16
+"packages/fransys-layout/src/fransys_layout/stages/line_draw.py::line_pieces" = 20
 "packages/fransys-layout/src/fransys_layout/stages/pagerun.py::_place_each" = 22
 "packages/fransys-layout/src/fransys_layout/stages/partition.py::_check_inputs" = 20
 "packages/fransys-layout/src/fransys_layout/stages/partition.py::column_widths" = 22
@@ -137,7 +139,9 @@ surface_docstring_lines = 15
 
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/design.py" = 736
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 390
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 395
+"packages/fransys-layout/src/fransys_layout/stages/images.py" = 312
+"packages/fransys-layout/src/fransys_layout/stages/middle_fold.py" = 309
 "packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 317
 "packages/fransys-layout/src/fransys_layout/stages/place.py" = 625
 "packages/fransys-model/src/fransys_model/derive/designation.py" = 373
@@ -194,6 +198,7 @@ surface_docstring_lines = 15
 
 [md_tokens]
 "docs/DESIGN.md" = 5021
+"packages/fransys-layout/docs/rules/step-5-place.md" = 5067
 "packages/fransys/src/fransys/guide/findings.md" = 6919
 
 [md_long_sentences]

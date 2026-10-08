@@ -13,6 +13,12 @@ on the page, so the outline part draws there holding the replicas.
 REPLICA-ROUTE (decision layout-0165): on that replica-only page the J4 replicas and the far device's
 pins ran 1, 10, 2 ... (string order), and two wires ran inside the outline. The three tests at the
 end of the module hold both.
+
+TALL-PAGE (R8): contact tables now count in a group's height, so the original input, a contactor
+on a lead housing at the line's far end, is cut and builds with no replica-only page. Its test is
+`test_the_original_input_with_a_contactor_is_cut_and_builds`. The replica-only page is still held
+by the same input with the contactor swapped for a plain 4-pin header end; the other tests use it.
+A landed field case's input never changes silently: the premise moved to a second input.
 """
 
 import tempfile
@@ -131,16 +137,14 @@ def _top(u: Any) -> _Top:
     w = u.harness("W1")
     p = u.device("J1", "FLD-PLG-14", parent=w, name="p1")
     u.mate(p, b.a)
-    q = u.device("Q1", "FLD-CTR")
-    housing = u.device(
-        "J1",
-        "FLD-HSG-4M",
-        parent=q,
-        name="h1",
-        joins={"1": q.coil["X1"], "2": q.coil["X2"], "3": q.aux["T1"], "4": q.aux["T2"]},
-    )
+    end = u.device("E1", "FLD-HDR-4")
     lp = u.device("J2", "FLD-PLG-4", parent=w, name="p2")
-    u.mate(lp, housing)
+    u.mate(lp, end)
+    _wire_the_board(u, b, p, lp)
+    return _Top()
+
+
+def _wire_the_board(u: Any, b: Any, p: Any, lp: Any) -> None:
     for pin in range(1, 5):
         u.wire(p[str(pin)], lp[str(pin)], wire=("WH", 0.5))
     for tag, part, board_pin, count in (
@@ -151,18 +155,61 @@ def _top(u: Any) -> _Top:
         far = u.device(tag, part)
         for pin in range(1, count + 1):
             u.wire(board_pin[str(pin)], far[str(pin)], wire=("WH", 0.5))
+
+
+@fr.unit("fld-top-ctr", revision=1, interface_version=1, date="2026-10-08", text="t", by="X")
+def _top_ctr(u: Any) -> _Top:
+    b = u.add(_board, "B1")
+    w = u.harness("W1")
+    p = u.device("J1", "FLD-PLG-14", parent=w, name="p1")
+    u.mate(p, b.a)
+    q = u.device("Q1", "FLD-CTR")
+    housing = u.device(
+        "J1",
+        "FLD-HSG-4M",
+        parent=q,
+        name="h1",
+        joins={"1": q.coil["X1"], "2": q.coil["X2"], "3": q.aux["T1"], "4": q.aux["T2"]},
+    )
+    lp = u.device("J2", "FLD-PLG-4", parent=w, name="p2")
+    u.mate(lp, housing)
+    _wire_the_board(u, b, p, lp)
     return _Top()
+
+
+def _build(top: Any, name: str) -> fr.BuildResult:
+    root = Path(tempfile.mkdtemp())
+    draft = merge(fransys_parts.load("demo_parts"), fransys_parts.load_path(_library(root / "lib")))
+    d = fr.Design(draft)
+    d.add(top, "U1")
+    (root / "cover.md").write_text("# Top\n", encoding="utf-8")
+    doc = fr.document(fr.DocumentPreset("cabinet_schematic"), name, cover=root / "cover.md")
+    return fr.build(d, doc)
 
 
 @cache
 def _built() -> fr.BuildResult:
-    root = Path(tempfile.mkdtemp())
-    draft = merge(fransys_parts.load("demo_parts"), fransys_parts.load_path(_library(root / "lib")))
-    d = fr.Design(draft)
-    d.add(_top, "U1")
-    (root / "cover.md").write_text("# Top\n", encoding="utf-8")
-    doc = fr.document(fr.DocumentPreset("cabinet_schematic"), "fld-top", cover=root / "cover.md")
-    return fr.build(d, doc)
+    return _build(_top, "fld-top")
+
+
+@cache
+def _built_ctr() -> fr.BuildResult:
+    return _build(_top_ctr, "fld-top-ctr")
+
+
+def test_the_original_input_with_a_contactor_is_cut_and_builds() -> None:
+    built = _built_ctr()
+    assert [f.code for f in built.findings if f.severity.name == "ERROR"] == []
+    assert "OUT_OF_CONTENT_BOX" not in {f.code for f in built.findings}
+    model = built.model
+    board = next(
+        u for u in derive.units(model) if derive.unit_release(model, u).name == "fld-board"
+    )
+    outlines = [o for o in layout_of(model, Outline).values() if o.unit == board]
+    plug_pages = {b.page for b in layout_of(model, ConnectorBox).values()}
+    assert len(outlines) == 2
+    assert {o.y for o in outlines} == {outlines[0].y}
+    assert {o.page for o in outlines} <= plug_pages
 
 
 def test_the_build_finishes_with_no_error() -> None:

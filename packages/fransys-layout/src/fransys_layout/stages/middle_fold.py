@@ -9,14 +9,16 @@ from ._gather import Band, Bands, banded
 from .connector_boxes import HALF, PlacedConnectorBox, box_size
 from .edges import along
 from .lookups import placed_keepout
+from .middle_cut import fold_overfull, measured, stack_lower
 from .middle_replicas import replica_height, replica_places, replica_width, replicas
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from fransys_model.kernel import AuthoringKey, Id
+    from fransys_model.kernel import AuthoringKey, Finding, Id
 
     from .middle import MiddleGroup, MiddleInterface
+    from .pagerun import PageInputs
     from .types import PagePlan, PlacedFunction, Profile
 
 FAN = 4 * WIRING_GRID  # HL17: the fan-out's split distance, the room a line needs past a box
@@ -33,11 +35,20 @@ class GroupShape:
     outline: Box
     title: Box
     boxes: tuple[PlacedConnectorBox, ...]
+    bottom: int = 0  # TALL-PAGE T1: how far down the folded group reaches
+    held: bool = False  # replicas on both edges: no cut works, the group is never cut
+    below: bool = (
+        False  # TALL-PAGE A1: replicas in the upper band, so the cut is at the bottom edge
+    )
+    frame_dx: int = (
+        0  # TALL-PAGE: the outline's left edge from the lower columns' (the cut's value)
+    )
 
     def moved(self, dx: int, dy: int) -> GroupShape:
         """This shape moved by `(dx, dy)`, as `shift_pages` moves its page."""
         return replace(
             self,
+            bottom=self.bottom + dy,
             outline=_by(self.outline, dx, dy),
             title=_by(self.title, dx, dy),
             boxes=tuple(
@@ -101,15 +112,32 @@ def fold_page(
     return tuple(replace(one, at=places.get(one.function, one.at)) for one in moved), tuple(shapes)
 
 
+def folded_page(
+    placed: tuple[PlacedFunction, ...],
+    plan: PagePlan,
+    inputs: PageInputs,
+    found: tuple[Finding, ...],
+) -> tuple[tuple[PlacedFunction, ...], tuple[GroupShape, ...], tuple[Finding, ...]]:
+    """The page folded (HL20) with its `PAGE_OVERFULL` widened by the fold's reach (T6)."""
+    height = inputs.sheet.content_height
+    folded, shapes = fold_page(placed, plan, inputs.middle, inputs.profile)
+    return folded, shapes, fold_overfull(folded, shapes, height, found)
+
+
 def _here(
     placed: tuple[PlacedFunction, ...],
     plan: PagePlan,
     groups: Mapping[AuthoringKey, tuple[MiddleGroup, ...]],
 ) -> list[MiddleGroup]:
-    """The groups with a column on the page, in the page's column order, each once."""
+    """The groups with a column on the page, in the page's column order, each once.
+
+    A cut group (TALL-PAGE T2) is on the page of its lower band only, where its outline stands;
+    one cut below (A1) is on the page of its upper band, where its outline stands.
+    """
     columns = {one.column for one in placed}
-    keys = (one.column for one in plan.columns if one.column in columns)
-    return list({g.unit.unit: g for k in keys for g in groups.get(k, ())}.values())
+    keys = [one.column for one in plan.columns if one.column in columns]
+    found = {g.unit.unit: g for k in keys for g in groups.get(k, ())}.values()
+    return [g for g in found if not g.cut or ((g.upper if g.below else g.lower) & set(keys))]
 
 
 def _page(
@@ -150,6 +178,8 @@ def middle_bands(groups: Mapping[AuthoringKey, tuple[MiddleGroup, ...]], profile
                 upper=group.upper,
                 lower=group.lower,
                 outline=_outline_width(group, _sides(group), profile) + profile.column_gap,
+                cut=group.cut,
+                below=group.below,
             )
             for group in unique
         ]
@@ -202,24 +232,36 @@ def _fold_group(
 
     A column an earlier group took stays there (HL20), and one in both bands stands below.
     """
-    gap = page.profile.column_gap
+    gap, height = page.profile.column_gap, page.profile.text_height
     lower = [key for key in page.order if key in group.lower and key not in taken]
     upper = [k for k in page.order if k in group.upper and k not in taken and k not in lower]
     up_moves, up_right = _pack(upper, page.hulls, cursor, gap)
     low_moves, low_right = _pack(lower, page.hulls, cursor, gap)
     top, bottom = _edges(group, page, {**up_moves, **low_moves})
     wide = _outline_width(group, (top, bottom), page.profile, page.reps[group.unit.unit])
-    span = max(up_right, low_right, cursor + wide) - cursor
+    left, span = _frame_left(group, (cursor, up_right, low_right), wide)
     above = max((_bottom(page.hulls[key]) for key in upper), default=page.top)
-    frame = _frame(group, page, Point(x=snap_up(cursor + (span - wide) // 2), y=above), wide)
-    deepest = (
-        frame.y
-        + frame.height
-        + _plug_room(bottom, page.reps[group.unit.unit][1], page.profile.text_height)
-    )
-    dy = snap_up(deepest - min((page.hulls[key].y for key in lower), default=deepest))
-    moves = {**up_moves, **{key: (dx, dy) for key, (dx, _) in low_moves.items()}}
-    return _shape(group, page, frame, (top, bottom)), cursor + span + gap, moves
+    frame = _frame(group, page, Point(x=left, y=above), wide)
+    deepest = frame.y + frame.height + _plug_room(bottom, page.reps[group.unit.unit][1], height)
+    moves = {**up_moves, **stack_lower(lower, page.hulls, low_moves, deepest)}
+    shape = measured(_shape(group, page, frame, (top, bottom)), group, page, (lower, moves))
+    shape = replace(shape, frame_dx=left - cursor)
+    return shape, cursor + span + gap, moves
+
+
+def _frame_left(group: MiddleGroup, edges: tuple[int, int, int], wide: int) -> tuple[int, int]:
+    """The outline's left edge, centred on the bands, and the span from `cursor` it ends.
+
+    A group cut at its top edge (TALL-PAGE) has no upper band on its page: the outline stands
+    where the uncut fold put it (`frame_dx`, measured by the first pass).
+    """
+    cursor, up_right, low_right = edges
+    span = max(up_right, low_right, cursor + wide) - cursor
+    left = cursor + (span - wide) // 2
+    if group.cut and not group.below:
+        left = cursor + group.frame_dx
+    left = snap_up(left)
+    return left, max(span, left + wide - cursor)
 
 
 def _outline_width(
@@ -252,7 +294,7 @@ def _edges(
     lines = {
         one.edge.function: one
         for one in group.unit.interfaces
-        if one.edge.line and _reaches(group.reach.get(one.edge.function, ()), page)
+        if one.edge.line and (group.cut or _reaches(group.reach.get(one.edge.function, ()), page))
     }
     reach_x = {
         function: min(

@@ -22,6 +22,10 @@ class Band:
     upper: frozenset[AuthoringKey]
     lower: frozenset[AuthoringKey]
     outline: int
+    # TALL-PAGE T2: the upper band and the outline with the lower band are two units
+    cut: bool = False
+    # TALL-PAGE: the cut is at the outline's bottom edge: the outline stays with the upper band
+    below: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +59,7 @@ def gather(
         if rest:
             order.append(_kept(unit, rest, width_of))
     units_of = {root: _group(root, found, owners, width_of) for root, found in members.items()}
-    return [units_of[one] if isinstance(one, int) else one for one in order]
+    return [part for one in order for part in (units_of[one] if isinstance(one, int) else (one,))]
 
 
 def banded(bands: Sequence[Band]) -> Bands:
@@ -93,21 +97,44 @@ def _group(
     members: Sequence[Unit],
     owners: Bands,
     width_of: Mapping[AuthoringKey, int],
-) -> Unit:
-    """One root's unit: its members' band columns in order, as wide as its bands fold."""
+) -> tuple[Unit, ...]:
+    """One root's unit: its members' band columns in order, as wide as its bands fold.
+
+    TALL-PAGE T2: a cut group is two: the upper band, then the outline with the lower band,
+    which starts a page. Cut below (A1), the outline stays with the upper band instead.
+    """
     keys = tuple(
         key
         for unit in members
         for key in unit.columns
         if key in owners.band_of and owners.root[owners.band_of[key]] == root
     )
-    return Unit(
+    whole = Unit(
         groups=tuple(group for unit in members for group in unit.groups),
         columns=keys,
         width=_folded(keys, root, owners, width_of),
         break_before=any(unit.break_before for unit in members),
         role=members[0].role,
     )
+    band = owners.bands[owners.of_root[root][0]]
+    low = tuple(key for key in keys if key in band.lower)
+    if not (band.cut and low) or len(owners.of_root[root]) > 1:
+        return (whole,)
+    up = tuple(key for key in keys if key not in band.lower)
+    if band.below and up:
+        return (
+            replace(whole, columns=up, width=max(sum(width_of[k] for k in up), band.outline)),
+            replace(whole, columns=low, width=sum(width_of[k] for k in low), break_before=True),
+        )
+    lower = replace(
+        whole,
+        columns=low,
+        width=max(sum(width_of[k] for k in low), band.outline),
+        break_before=True,
+    )
+    if not up:
+        return (lower,)
+    return (replace(whole, columns=up, width=sum(width_of[k] for k in up)), lower)
 
 
 def _folded(

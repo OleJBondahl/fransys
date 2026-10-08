@@ -53,6 +53,13 @@ class MiddleGroup:
     reach: Mapping[Id[Any], tuple[AuthoringKey, ...]]
     upper: frozenset[AuthoringKey] = frozenset()
     lower: frozenset[AuthoringKey] = frozenset()
+    cut: bool = (
+        False  # TALL-PAGE T2: the outline and lower band start the page after the upper band
+    )
+    # TALL-PAGE: the outline's left edge from the lower columns' in the uncut fold (DK18)
+    frame_dx: int = 0
+    # TALL-PAGE: the cut is at the outline's bottom edge: the outline stays with the upper band
+    below: bool = False
 
 
 def _band(

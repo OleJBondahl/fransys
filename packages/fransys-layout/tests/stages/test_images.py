@@ -23,6 +23,8 @@ from fransys_layout.stages.images import (
     _page_marker_boxes,
     contact_images,
     image_reserves,
+    table_height,
+    with_flipped_below,
 )
 from fransys_layout.stages.texts.power import drawn_shapes, power_place
 from fransys_layout.stages.types import Cell, Home
@@ -74,7 +76,7 @@ def _relay() -> tuple[FunctionSpec, ...]:
 
 
 def test_a_coil_with_contacts_reserves_room_below_its_last_cell_and_width_on_its_lane() -> None:
-    """The room (2 text rows + 1 text row, 0 padding) is kept below the last cell under the coil.
+    """The table's room (`table_height` and a padding) is kept below the last cell under the coil.
 
     Both cells of the lane keep the image's width free; the coil's entry marks are "13-14".
     """
@@ -83,11 +85,32 @@ def test_a_coil_with_contacts_reserves_room_below_its_last_cell_and_width_on_its
     cells = column("a", (1, 3))
     reserves = image_reserves((cells,), _relay(), PROFILE, MARKS)
     coil, under = (hid("function", n) for n in (1, 3))
-    down = (1 + 1) * PROFILE.text_height + PROFILE.text_height
+    down = table_height(1, PROFILE) + PROFILE.marker_padding
     assert set(reserves) == {(cells.key, coil), (cells.key, under)}
     assert (reserves[cells.key, coil].down, reserves[cells.key, under].down) == (0, down)
     image = (coil, ("13-14",), False)
     assert reserves[cells.key, coil].images == reserves[cells.key, under].images == (image,)
+
+
+def test_the_room_adds_the_height_of_the_flipped_cells_below_the_last_cell_that_keeps_it() -> None:
+    """R8: a flipped cell keeps no room (place rebuilds its geometry), so the cell above holds it.
+
+    UNDO: `with_flipped_below` adds nothing, and the column's hull ends above the placed table.
+    """
+    cells = column("a", (1, 3))
+    flipped = replace(
+        cells.cells[1],
+        function=hid("function", 7),
+        index=5,
+        flip=True,
+        host=cells.cells[1].function,
+    )
+    cells = replace(cells, cells=(*cells.cells, flipped))
+    heights = {flipped.function: 32}
+    plain = image_reserves((cells,), _relay(), PROFILE, MARKS)
+    found = with_flipped_below(plain, (cells,), heights)
+    key = cells.key, cells.cells[1].function
+    assert found[key].down == plain[key].down + 32
 
 
 @pytest.mark.parametrize("own", [{"home": Home.ELSEWHERE}, {"host": hid("function", 9)}])

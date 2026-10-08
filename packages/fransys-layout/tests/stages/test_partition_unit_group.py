@@ -25,11 +25,15 @@ def _key(name: str) -> AuthoringKey:
     return ("invented", name)
 
 
-def _band(upper: str, lower: str, outline: int = 100) -> Band:
+def _band(
+    upper: str, lower: str, outline: int = 100, *, cut: bool = False, below: bool = False
+) -> Band:
     return Band(
         upper=frozenset(_key(n) for n in upper),
         lower=frozenset(_key(n) for n in lower),
         outline=outline,
+        cut=cut,
+        below=below,
     )
 
 
@@ -148,3 +152,46 @@ def test_a_unit_group_wider_than_the_page_splits_with_unit_group_split() -> None
     assert [(f.code, f.severity) for f in findings] == [(UNIT_GROUP_SPLIT, Severity.WARNING)]
     assert GROUP_SPLIT not in {f.code for f in findings}
     assert "split over pages 1, 2" in findings[0].message
+
+
+def test_a_cut_group_is_two_units_and_its_lower_band_starts_the_next_page() -> None:
+    """TALL-PAGE T2: b over d stays on page 1 as the upper band; d with its outline starts page 2.
+
+    UNDO: `_gather._group` returns the whole group for a cut band.
+    """
+    widths = dict.fromkeys("abcde", 200)
+    assert _shape(_plan(widths, [_band("b", "d")])[0]) == [["a", "b", "d", "c", "e"]]
+    pages, findings = _plan(widths, [_band("b", "d", cut=True)])
+    assert _shape(pages) == [["a", "b"], ["d", "c", "e"]]
+    assert findings == ()
+
+
+def test_a_group_cut_below_keeps_its_outline_with_the_upper_band() -> None:
+    """TALL-PAGE A1: b with the outline stays on page 1; d alone starts page 2.
+
+    The outline (500) is wider than b (200), so b's unit is as wide as the outline.
+    UNDO: `_group` ignores `below` and cuts at the top edge.
+    """
+    widths = dict.fromkeys("abcde", 200)
+    pages, findings = _plan(widths, [_band("b", "d", 500, cut=True, below=True)])
+    assert _shape(pages) == [["a", "b"], ["d", "c", "e"]]
+    assert findings == ()
+    units = [_unit(n, 200) for n in "abde"]
+    wide = {_key(n): 200 for n in "abde"}
+    gathered = gather(units, banded([_band("b", "d", 500, cut=True, below=True)]), wide)
+    assert [(u.columns, u.width, u.break_before) for u in gathered] == [
+        ((_key("a"),), 200, False),
+        ((_key("b"),), 500, False),
+        ((_key("d"),), 200, True),
+        ((_key("e"),), 200, False),
+    ]
+
+
+def test_a_cut_group_with_no_lower_band_or_a_shared_column_stays_whole() -> None:
+    """`gather` never makes a unit with no columns: the lower half of a cut needs a column."""
+    widths: dict[AuthoringKey, int] = {_key("a"): 100, _key("b"): 200, _key("c"): 300}
+    units = [_unit(n, w) for (_, n), w in widths.items()]
+    empty = gather(units, banded([_band("ab", "", cut=True)]), widths)
+    assert [u.columns for u in empty] == [(_key("a"), _key("b")), (_key("c"),)]
+    shared = gather(units, banded([_band("a", "b", 10, cut=True), _band("b", "c", 10)]), widths)
+    assert [u.break_before for u in shared] == [False]

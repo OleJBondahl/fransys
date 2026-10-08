@@ -10,13 +10,15 @@ from itertools import pairwise
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID, Box, Facing, pad
+from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, pad
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.lint import HarnessInk
 from fransys_layout.stages.content import content_box, drawn_extent
+from fransys_layout.stages.grid_path import cells_of
 from fransys_layout.stages.harness_route import Grid, line_text, text_centre
-from fransys_layout.stages.line_draw import LEAVE_GRIDS, EndOnPage, PinAt, line_pieces
+from fransys_layout.stages.line_draw import EndOnPage, PinAt, drawn_end, line_pieces
 from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub
+from fransys_layout.stages.line_trunk import LEAVE_GRIDS
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.route import port_end
 from fransys_layout.stages.space import Shape, Space, span
@@ -46,6 +48,8 @@ if TYPE_CHECKING:
     from .read.harness_lines import HarnessLineEnd, LineRead, LineReads
 
 type _Page = tuple[int, int]
+
+BUSY = 8 * WIRING_GRID  # R7: a cell another line covers costs eight steps: cross, never run along
 
 
 def strip_lines(model: Model, inputs: StageInputs) -> tuple[StageInputs, LineReads]:
@@ -122,15 +126,22 @@ def draw_lines(
     texts = line_texts(model, lines)
     grid = Grid(content_box(scene.sheet), (), scene.profile.route_turn_penalty)
     pieces: dict[_Page, list[tuple[LineRead, Pieces]]] = defaultdict(list)
+    covered: dict[_Page, frozenset[Any]] = defaultdict(frozenset)
     for line in lines.lines:
         for page in _pages(line, world):
             if not drawn_on(line, scene.units.get(page[0]), lines.top):
                 continue
             ends, absent = _ends_on(line.ends, page, world)
             if ends:
-                here = _grid(grid, page, world)
-                half = widest_stub(texts, line, scene.units.get(page[0]), scene.profile) // 2
-                pieces[page].append((line, line_pieces(ends, absent, here, margin=half)))
+                here = replace(_grid(grid, page, world), busy=covered[page], busy_penalty=BUSY)
+                wide = widest_stub(texts, line, scene.units.get(page[0]), scene.profile)
+                trunk = _trunk(line, ends, (page, here), world)
+                size = (wide, scene.profile.text_height + 2 * scene.profile.marker_padding)
+                made = line_pieces(
+                    ends, absent, here, margin=wide // 2, trunk=trunk and (trunk, size)
+                )
+                pieces[page].append((line, made))
+                covered[page] |= frozenset().union(*(cells_of(pts) for _, pts in made.paths))
     found = DrawnPieces()
     for page in sorted(pieces):
         found = _page_pieces(found, page, pieces[page], (texts, world, scene))
@@ -202,6 +213,22 @@ def _ends_on(
         else:
             found.append(one)
     return found, absent
+
+
+def _trunk(
+    line: LineRead, ends: Sequence[EndOnPage], where: tuple[_Page, Grid], world: _World
+) -> Facing | None:
+    """R1: the way the line enters its root's box, when the root stands on another page."""
+    page, grid = where
+    first = next((one for one in line.ends if one.mates in world.interfaces), line.ends[0])
+    if any(one.branch == first.branch for one in ends):
+        return None
+    for other in (one for one in _pages(line, world) if one != page):
+        found = _end_on(first, other, world)
+        if found is not None:
+            region = grid.region
+            return OPPOSITE[drawn_end(found, (region.x, region.x + region.width)).end.facing]
+    return None
 
 
 def _end_on(end: HarnessLineEnd, page: _Page, world: _World) -> EndOnPage | None:

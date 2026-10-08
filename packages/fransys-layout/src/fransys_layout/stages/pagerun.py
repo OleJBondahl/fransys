@@ -23,7 +23,7 @@ from .boxes import box_sides
 from .content import content_box
 from .images import reserved, rooms, unreserve
 from .labels import SlotFrame, decided_runs, place_slot_labels
-from .middle_fold import fold_page, middle_bands, shape_boxes
+from .middle_fold import folded_page, middle_bands, shape_boxes
 from .onepage import page_wiring
 from .page_stacking import PageStacking
 from .partition import ColumnTables, partition
@@ -321,7 +321,7 @@ def _place_page(
     """Place `page.plan`'s columns; S20: the first slot call is returned, run after the markers."""
     inputs, drawn = page.inputs, page.drawn
     placed, place_findings = place(page.plan, page.columns, drawn, _stacking(page, texts), joins)
-    placed, shapes = fold_page(placed, page.plan, inputs.middle, inputs.profile)
+    placed, shapes, place_findings = folded_page(placed, page.plan, inputs, place_findings)
     call = FirstCall(
         requests=one_module_tag(page.requests, placed, drawn),
         placed=placed,

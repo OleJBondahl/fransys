@@ -2368,12 +2368,17 @@
           {
             "index": 1,
             "x": 24,
-            "y": 176
+            "y": 496
+          },
+          {
+            "index": 2,
+            "x": 120,
+            "y": 496
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
         "text_x": 42,
-        "text_y": 148
+        "text_y": 324
       },
       {
         "branch": 2,
@@ -2450,28 +2455,23 @@
         "points": [
           {
             "index": 0,
-            "x": 24,
-            "y": 176
+            "x": 216,
+            "y": 488
           },
           {
             "index": 1,
-            "x": 24,
+            "x": 216,
             "y": 496
           },
           {
             "index": 2,
-            "x": 216,
+            "x": 120,
             "y": 496
-          },
-          {
-            "index": 3,
-            "x": 216,
-            "y": 488
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 42,
-        "text_y": 336
+        "text_x": 168,
+        "text_y": 484
       },
       {
         "branch": 1,
@@ -2533,18 +2533,18 @@
         "points": [
           {
             "index": 0,
-            "x": 24,
-            "y": 176
+            "x": 120,
+            "y": 496
           },
           {
             "index": 1,
-            "x": 24,
-            "y": 208
+            "x": 120,
+            "y": 552
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 42,
-        "text_y": 200
+        "text_x": 138,
+        "text_y": 524
       }
     ],
     "layout.label": [
@@ -4735,8 +4735,8 @@
         "via_y": null,
         "width": 43,
         "wrap_at": null,
-        "x": 24,
-        "y": 200
+        "x": 120,
+        "y": 544
       },
       {
         "box_x": null,

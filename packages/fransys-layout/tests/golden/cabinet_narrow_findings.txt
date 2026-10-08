@@ -5,7 +5,5 @@ WARNING LABEL_UNPLACED cabinet/w1 no free place beside the harness line
 INFO SYMBOL_DEFAULTED cabinet/h1/fn/lamp no symbol for function kind 'load': drawn as a labelled box
 WARNING TEXT_OVERLAP cabinet/h1/fn/lamp,cabinet/w1 two texts on the page overlap
 WARNING WIRE_OVER_LABEL cabinet/wire/13,cabinet/w1,cabinet/s2/fn/nc_1/port/12,cabinet/k2/fn/coil/port/A1 a route runs through a label box
-WARNING WIRE_OVER_LABEL cabinet/wire/16,cabinet/w1,cabinet/s0/fn/nc_1/port/12,cabinet/s0/fn/nc_2/port/21 a route runs through a label box
-WARNING WIRE_OVER_LABEL cabinet/w1 a harness line runs through a label box
 WARNING WIRE_OVER_LABEL cabinet/w1,cabinet/s0/fn/nc_2/port/22 a harness line runs through a label box
 WARNING WIRE_THROUGH_SYMBOL cabinet/h1/fn/lamp,cabinet/w1 a harness line runs through a symbol it does not end on

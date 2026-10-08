@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Protocol
 
 from fransys_layout.geometry import WIRING_GRID, Facing, snap_up
 
-from .line_draw import FAN_GRIDS, LEAVE_GRIDS
+from .line_draw import FAN_GRIDS
+from .line_trunk import LEAVE_GRIDS
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence

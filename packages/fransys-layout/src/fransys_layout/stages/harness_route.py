@@ -46,6 +46,8 @@ class Grid:
     region: Box
     obstacles: tuple[Obstacle, ...]
     turn_penalty: int
+    busy: frozenset[Cell] = frozenset()  # TALL-PAGE R7: the cells the page's placed lines cover
+    busy_penalty: int = 0  # what each such cell costs: a line crosses, but never runs along
 
 
 def root(ends: Sequence[LineEnd]) -> LineEnd:
@@ -96,9 +98,9 @@ def _path(
         region=grid.region,
         obstacles=grid.obstacles,
         free=free,
-        busy=frozenset(),
+        busy=grid.busy,
         turn_penalty=grid.turn_penalty,
-        crossing_penalty=0,
+        crossing_penalty=grid.busy_penalty,
     )
     points = grid_path(start, goal, field) or grid_path(start, goal, replace(field, obstacles=()))
     if points is None:

@@ -4,13 +4,14 @@ The grid is 8. A leaving line runs 6 grids, 48, straight out; a fan-out's split 
 """
 
 import itertools
+from dataclasses import replace
 
 from samples import hid
 
 from fransys_layout.geometry import Box, Facing, Point
 from fransys_layout.stages.harness_route import Grid, _unspiked
 from fransys_layout.stages.line_draw import EndOnPage, PinAt, Stub, fan_out, line_pieces
-from fransys_layout.stages.space import End
+from fransys_layout.stages.space import End, Obstacle
 
 _GRID = Grid(region=Box(x=0, y=0, width=1000, height=1000), obstacles=(), turn_penalty=8)
 _C = [hid("conductor", n) for n in (1, 2, 3)]
@@ -184,3 +185,44 @@ def test_two_pin_rows_get_two_fans_and_the_line_runs_on_to_the_second() -> None:
     ]
     assert all(b.y >= 32 for a, b in near if a == Point(x=64, y=32))
     assert all(b.y <= 168 for a, b in near if a == Point(x=8, y=168))
+
+
+_TRUNK = (Facing.S, (40, 16))
+
+
+def test_a_line_with_its_root_off_the_page_leaves_its_bar_south_by_the_middle() -> None:
+    """TALL-PAGE R1: root 3 is elsewhere; the trunk (keyed 3) runs from the bar's middle.
+
+    UNDO: `line_pieces` ignores `trunk`, or `_branches` keeps one polyline: branch 2 has no path.
+    """
+    ends = (_plug(1, 200, 200, interface=True), _plug(2, 400, 200))
+    pieces = line_pieces(ends, 3, _GRID, trunk=_TRUNK)
+    paths = dict(pieces.paths)
+    assert sorted(paths) == [1, 2, 3]
+    assert paths[3] == (Point(x=296, y=192), Point(x=296, y=248))
+    assert paths[1][-1] == paths[2][-1] == Point(x=296, y=192)  # each end keeps its own branch
+    assert pieces.stubs == (Stub(near=1, far=3, end=End(at=Point(x=296, y=240), facing=Facing.S)),)
+
+
+def test_a_trunk_never_runs_through_a_box_the_search_must_avoid() -> None:
+    """A box covers the point under the bar's middle; the trunk leaves elsewhere, clear of it.
+
+    UNDO: `_free` skips the obstacle test, and the trunk runs through the box.
+    """
+    ends = (_plug(1, 200, 200, interface=True), _plug(2, 400, 200))
+    block = Obstacle(box=Box(x=280, y=200, width=32, height=100), lanes=())
+    pieces = line_pieces(ends, 3, replace(_GRID, obstacles=(block,)), trunk=_TRUNK)
+    run = dict(pieces.paths)[3]
+    assert run[0].x not in range(272, 321)
+    assert Point(x=296, y=248) not in run
+
+
+def test_no_free_point_leaves_the_stub_at_the_junction_as_before() -> None:
+    """R1: the whole page blocked, the root's end carries the stub facing N.
+
+    UNDO: `_trunk` returns a trunk with no free point, or fails.
+    """
+    ends = (_plug(1, 200, 200, interface=True), _plug(2, 400, 200))
+    wall = Obstacle(box=Box(x=0, y=0, width=1000, height=1000), lanes=())
+    pieces = line_pieces(ends, 3, replace(_GRID, obstacles=(wall,)), trunk=_TRUNK)
+    assert pieces == line_pieces(ends, 3, replace(_GRID, obstacles=(wall,)))

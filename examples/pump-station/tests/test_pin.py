@@ -43,7 +43,7 @@ def test_fransys_is_pinned_at_a_tag() -> None:
 
 def test_the_pin_check_fails_on_a_floating_pin() -> None:
     tag = (
-        "fransys @ git+https://github.com/OleJBondahl/fransys@v0.13.3#subdirectory=packages/fransys"
+        "fransys @ git+https://github.com/OleJBondahl/fransys@v0.13.4#subdirectory=packages/fransys"
     )
     text = f'[project]\ndependencies = ["{tag}"]\n[tool.uv]\n'
     assert pin_problems(text) == []

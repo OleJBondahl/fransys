@@ -25,8 +25,8 @@ wheels = [
 
 [[package]]
 name = "electrical-symbols"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Felectrical-symbols&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Felectrical-symbols&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "graphical-symbols" },
 ]
@@ -38,8 +38,8 @@ source = { editable = "parts" }
 
 [[package]]
 name = "fransys"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-author" },
     { name = "fransys-kicad" },
@@ -56,8 +56,8 @@ dependencies = [
 
 [[package]]
 name = "fransys-author"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-author&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-author&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]
@@ -81,7 +81,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "example-parts", editable = "parts" },
-    { name = "fransys", git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.13.3" },
+    { name = "fransys", git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys&rev=v0.13.4" },
 ]
 
 [package.metadata.requires-dev]
@@ -93,16 +93,16 @@ dev = [
 
 [[package]]
 name = "fransys-kicad"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-kicad&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-kicad&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-layout"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-layout&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-layout&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-model" },
@@ -111,37 +111,37 @@ dependencies = [
 
 [[package]]
 name = "fransys-model"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-model&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-model&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 
 [[package]]
 name = "fransys-overview"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-overview&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-overview&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-parts"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-parts&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-parts&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-pdf"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-pdf&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-pdf&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-render"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-render&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-render&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-model" },
@@ -150,16 +150,16 @@ dependencies = [
 
 [[package]]
 name = "fransys-reports"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-reports&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-reports&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]
 
 [[package]]
 name = "fransys-wago"
-version = "0.13.3"
-source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-wago&rev=v0.13.3#fbeee511069b9260e18539148e6b339aedac2b06" }
+version = "0.13.4"
+source = { git = "https://github.com/OleJBondahl/fransys?subdirectory=packages%2Ffransys-wago&rev=v0.13.4#c5e52848e0cd80da6d65f78818a20569caf08982" }
 dependencies = [
     { name = "fransys-model" },
 ]

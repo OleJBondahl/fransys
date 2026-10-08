@@ -1,0 +1,1796 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/guide/build/">
+      
+      
+        <link rel="prev" href="../units/">
+      
+      
+        <link rel="next" href="../documents/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.68">
+    
+    
+      
+        <title>Building a design - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.595f2bf5.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b27955a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Building a design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-a-build-can-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where a build can fail
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frcheckresult-is-the-one-list-of-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.check(result)</code> is the one list of findings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-document-no-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        No document, no layout
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-file-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Export file names
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-export-ever-carries-an-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        No export ever carries an error
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#releasing-a-frozen-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Releasing a frozen baseline
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-change-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Getting the change list
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-a-baseline-stays-true" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking a baseline stays true
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#listing-the-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Listing the releases
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keeping-designations-fixed-across-revisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keeping designations fixed across revisions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-a-build-can-fail" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where a build can fail
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frcheckresult-is-the-one-list-of-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.check(result)</code> is the one list of findings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-document-no-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        No document, no layout
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-file-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Export file names
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#no-export-ever-carries-an-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        No export ever carries an error
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#releasing-a-frozen-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Releasing a frozen baseline
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-change-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Getting the change list
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-a-baseline-stays-true" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking a baseline stays true
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#listing-the-releases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Listing the releases
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keeping-designations-fixed-across-revisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keeping designations fixed across revisions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="building-a-design">Building a design</h1>
+<p><code>fr.build</code>, <code>fr.check</code> and <code>fr.write</code> are the three pipeline functions. <code>build</code> takes the design
+(and any documents), merges them into a model and runs the passes, the validators, and layout
+when there is a document.
+<code>check</code> collects every finding about a built model, including some <code>build</code> itself never sees.
+<code>write</code> writes the model's exports to a directory. It raises, and writes nothing, if any
+finding is an <code>ERROR</code>.</p>
+<h2 id="where-a-build-can-fail">Where a build can fail</h2>
+<p>Four stages. Each fails differently. A mistake in an authoring call itself, such as a design call
+the builder refuses, raises <code>fr.AuthorError</code> at that call, so a test catches it by name.</p>
+<p><strong>1. Loading a part library.</strong> <code>fr.design(...)</code> and <code>fr.parts(...)</code> lint every library they load
+and raise <code>PartLibraryError</code> if linting finds an <code>ERROR</code>. Nothing is built from a library that fails its
+own lint.</p>
+<p><strong>2. The build itself.</strong> <code>fr.build(d, *documents)</code> merges the design with the documents, then
+freezes the result into a <code>Model</code>. Two structural problems can raise here. <code>build</code> catches neither.</p>
+<ul>
+<li><code>MergeConflict</code>, when two records share one id with different content. This can even happen
+  before <code>build</code> runs, at the second authoring call that creates the conflicting record.</li>
+<li><code>FreezeError</code>, when freezing finds one or more structural problems inside the merged records: a
+  dangling reference, a bad value, or a missing required field. It aggregates every problem it
+  found in <code>.errors</code>, not just the first, so an author fixes a batch in one pass.</li>
+</ul>
+<p>The case a consumer meets is two instances of one unit release, same name and revision, authored
+with different content.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Io</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">X1</span><span class="p">:</span> <span class="n">fr</span><span class="o">.</span><span class="n">Device</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-09-27"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"First"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"OJB"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">board_a</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Io</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-09-27"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"First"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"OJB"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">board_b</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Io</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+
+<span class="n">conflict_design</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">conflict_design</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">board_a</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">conflict_design</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">board_b</span><span class="p">,</span> <span class="s2">"U2"</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">MergeConflict</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="s2">"two different records share one id"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_a</span><span class="o">.</span><span class="n">file</span> <span class="o">==</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_b</span><span class="o">.</span><span class="n">file</span>
+    <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_a</span><span class="o">.</span><span class="n">line</span> <span class="o">!=</span> <span class="n">e</span><span class="o">.</span><span class="n">origin_b</span><span class="o">.</span><span class="n">line</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected MergeConflict"</span><span class="p">)</span>
+</code></pre></div>
+<p>Both functions declare the release <code>demo-io-board</code>, revision 1. The second gives a different
+<code>interface</code>, so it conflicts instead of deduplicating. <code>e.origin_a</code> and <code>e.origin_b</code> name the two
+call sites.</p>
+<p><code>fr.build(d)</code> always carries the part library the design was started from. Only the engine's own
+draft, <code>d.draft()</code>, leaves it out, and building that shows what a missing library does: every
+reference to a part is left dangling.</p>
+<div class="highlight"><pre><span></span><code><span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">x1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">draft</span><span class="p">())</span>  <span class="c1"># the authored records without the library</span>
+<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">FreezeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected FreezeError"</span><span class="p">)</span>
+</code></pre></div>
+<p>Four references are left dangling by the missing library: one <code>RefError</code> for each.
+<code>e.errors</code> holds all four, not just the first one freezing happened to find.</p>
+<p>Any exception out of <code>build</code> other than these two is a Fransys bug, not something a normal
+script needs to guard against. Report it as a field case.</p>
+<p><strong>3. The validators.</strong> Every domain validator runs inside <code>build</code>, but an <code>ERROR</code> finding from
+one of them does not raise. It comes back in <code>fr.check(result)</code>, and it also stops layout there:
+a model with a validator <code>ERROR</code> is returned numbered but unlaid, findings and all.</p>
+<p><strong>4. <code>write</code>.</strong> <code>write</code> computes <code>fr.check(result)</code> itself and raises <code>BuildErrors</code> if any
+finding in it is an <code>ERROR</code>, before touching <code>out_dir</code>. See below.</p>
+<h2 id="frcheckresult-is-the-one-list-of-findings"><code>fr.check(result)</code> is the one list of findings</h2>
+<p><code>fr.check(result)</code> returns every finding about a built model. That covers the PLC and numbering
+passes, the validators, layout, and the board check. When the model holds a document it adds the
+drawing and PDF checks. A script reads findings only through it.</p>
+<p>The design above has one device and no wiring, so its document has nothing to draw:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">cabinet_cover</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"cabinet.md"</span><span class="p">)</span>
+<span class="n">cabinet_cover</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"# Cabinet</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">cabinet_cover</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">))</span> <span class="o">==</span> <span class="mi">6</span>
+</code></pre></div>
+<p><code>fr.check(result)</code> holds two <code>PORT_UNCONNECTED</code> <code>INFO</code> findings from the validators, two
+<code>DOCUMENT_EMPTY_LIST</code> <code>INFO</code> findings and, most importantly, two <code>ERROR</code>s that only the drawing
+and PDF checks find. A script that asserted the design clean would have shipped it.</p>
+<p><code>write</code> runs the same check internally, so it raises on those errors:</p>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="n">fr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"out"</span><span class="p">))</span>
+<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">BuildErrors</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected BuildErrors"</span><span class="p">)</span>
+</code></pre></div>
+<p><code>e.findings</code> holds exactly the two <code>ERROR</code>s, not every finding of <code>fr.check(result)</code>. <code>out_dir</code> is
+left with nothing written for this build. No bad export, ever. There is no <code>allow_errors</code>,
+<code>force</code> or <code>draft</code> parameter on <code>write</code>, and none will be added.</p>
+<h2 id="no-document-no-layout">No document, no layout</h2>
+<p>Layout exists only to draw documents. A build with no <code>Document</code> draft skips layout entirely.
+There is no flag, and no other function to call.</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>  <span class="c1"># no document this time</span>
+<span class="n">codes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">codes</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"PORT_UNCONNECTED"</span><span class="p">,</span> <span class="s2">"PORT_UNCONNECTED"</span><span class="p">]</span>
+
+<span class="n">written</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"out"</span><span class="p">))</span>
+<span class="k">assert</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">written</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span>
+    <span class="s2">"bom.csv"</span><span class="p">,</span>
+    <span class="s2">"cables.csv"</span><span class="p">,</span>
+    <span class="s2">"designations.csv"</span><span class="p">,</span>
+    <span class="s2">"overview.html"</span><span class="p">,</span>
+    <span class="s2">"plc.csv"</span><span class="p">,</span>
+    <span class="s2">"wires.csv"</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><code>fr.export_names(result, *, unit=None)</code> gives the name <code>write</code> gives each export, by <code>(kind, subject)</code>,
+without writing or compiling anything. A kind is <code>bom</code>, <code>plc</code>, <code>wires</code>, <code>designations</code>, <code>overview</code>
+or <code>cables</code> (subject <code>None</code>); <code>terminals</code>, <code>connectors</code> or <code>wago</code> with the item's id; or <code>pdf</code> with
+the document's id. The key is a tuple: <code>("bom", None)</code> for a whole-set file, <code>("pdf", &lt;document id&gt;)</code>
+for a document. <code>write</code> names its files through it, so a script never builds a name itself.</p>
+<div class="highlight"><pre><span></span><code><span class="n">names</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">export_names</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">names</span><span class="p">[(</span><span class="s2">"bom"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span> <span class="o">==</span> <span class="s2">"bom.csv"</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]</span>  <span class="c1"># no document: no ("pdf", id) key</span>
+<span class="k">assert</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">written</span><span class="p">)</span>
+</code></pre></div>
+<p>With no document, <code>check</code> never runs the drawing or PDF checks: neither has a layout to read.
+<code>write</code> writes the same kind of file list as before, with no PDF, since a PDF comes only from a
+document.</p>
+<h2 id="export-file-names">Export file names</h2>
+<p>Export names follow rules EN1 to EN5. One function builds every
+name, so a script never constructs its own. The <code>v</code> prefix is used only in file names, never in a
+title block or history table. The names are a built-in default with no option or template.</p>
+<ul>
+<li><strong>EN1, the set prefix.</strong> Every file belongs to one set: the unit written (<code>unit=U</code>) or the
+  system (<code>unit=None</code>). The prefix is <code>&lt;set name&gt;-v&lt;V&gt;.&lt;R&gt;</code>, the set's name plus its version and
+  revision in <code>derive.revision_text</code>'s print form. A unit's name is its release name
+  (<code>demo-io-board-v1.1</code>); the system's is the project's number (<code>EX-1-v1.1</code>). A system write of
+  a model with no project record has no prefix, and the system's own files keep their bare names
+  (plain <code>bom.csv</code>), which is what the examples above wrote because this guide's design authors
+  no project. A unit's document still takes its unit's prefix there.</li>
+<li><strong>EN2, prefix, kind, fragment.</strong> A name is <code>&lt;prefix&gt;[-&lt;kind&gt;][-&lt;fragment&gt;].&lt;ext&gt;</code>:
+  <code>demo-io-board-v1.1-bom.csv</code>, per item <code>demo-io-board-v1.1-terminals-X1.csv</code>, and for the
+  unit's own root the bare kind <code>demo-io-board-v1.1-terminals.csv</code>.</li>
+<li><strong>EN3, a PDF is named by its subject, not its cover file.</strong> A document of the set itself is
+  <code>&lt;prefix&gt;.pdf</code>; a <code>harness_drawing</code> adds <code>-harness</code>; a document of an item or location inside
+  the set adds that subject's fragment. A document whose subject is a unit takes that unit's
+  name in every write, a system write included, so <code>out/all/</code> holds <code>EX-1-v1.1.pdf</code> beside
+  <code>cabinet-v2.1.pdf</code>. Two instances of one release with a document each come to one name and
+  raise a name-clash error; keep one document per release.</li>
+<li><strong>EN4, stale exports.</strong> <code>write</code> runs <code>_clean_stale_exports</code> before writing. It deletes the
+  files that start with the set's name and <code>-v</code> for any version, so a work folder reused across
+  revisions keeps only the current ones. A system write also deletes the files that start with
+  each unit release's name in the model and <code>-v</code>, for the unit documents. The old bare-name
+  patterns are still cleaned for one more release. Known limit: a unit that leaves the model
+  leaves its last PDF behind in <code>out/all/</code>.</li>
+<li><strong>EN5, releases.</strong> <code>fr.release</code> writes the same names, and its manifest lists them.</li>
+</ul>
+<p>Every file <code>write</code> writes is UTF-8 without a byte order mark, with <code>\n</code> line ends, on every OS.</p>
+<h2 id="no-export-ever-carries-an-error">No export ever carries an error</h2>
+<p>This is the point of the <code>write</code> example above. <code>write</code> computes <code>fr.check(result)</code> before
+writing anything. Any <code>ERROR</code> in it blocks every export into that <code>out_dir</code>, not just the one
+the error is about. A half-finished design still draws its schematic pages into
+<code>intermediates</code>, when given. <code>out_dir</code> only ever holds a design with zero <code>ERROR</code> findings.</p>
+<h2 id="releasing-a-frozen-baseline">Releasing a frozen baseline</h2>
+<p><code>fr.release(result, into, *, unit=None)</code> writes one unit's (or the whole system's) frozen
+baseline: its document set, exactly as <code>write</code> would write it for that unit, plus a canonical
+listing, a manifest of file hashes and package/tool versions, and the model itself. The target
+is <code>&lt;into&gt;/&lt;unit release name&gt;/&lt;version&gt;.&lt;revision&gt;/</code>, or <code>&lt;into&gt;/&lt;project number&gt;/&lt;version&gt;.
+&lt;revision&gt;/</code> for the system (<code>unit=None</code>). Every check runs first -- the same gate <code>write</code> uses,
+plus five checks of its own -- and any <code>ERROR</code> writes nothing, the same as <code>write</code>.</p>
+<p>A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Io</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">board</span><span class="p">(</span><span class="n">revision</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One unit design: the release `demo-io-board`, X1 on its boundary, X3, an optional spare."""</span>
+
+    <span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span>
+        <span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="n">revision</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-09-27"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Revision </span><span class="si">{</span><span class="n">revision</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"OJB"</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">io_board</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X3"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">spare</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">spare</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Io</span><span class="p">()</span>
+
+    <span class="n">release_design</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+    <span class="n">release_design</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">io_board</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">release_design</span>
+
+
+<span class="n">release_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">release_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">release_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">release_errors</span> <span class="o">==</span> <span class="p">[],</span> <span class="n">release_errors</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="n">release_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">target</span> <span class="o">==</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"demo-io-board"</span> <span class="o">/</span> <span class="s2">"1.1"</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">target</span> <span class="o">/</span> <span class="s2">"baseline"</span> <span class="o">/</span> <span class="s2">"listing.json"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">target</span> <span class="o">/</span> <span class="s2">"baseline"</span> <span class="o">/</span> <span class="s2">"manifest.json"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+<span class="c1"># releasing the same, unchanged model again writes nothing new</span>
+<span class="n">same_target</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="n">release_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">same_target</span> <span class="o">==</span> <span class="n">target</span>
+</code></pre></div>
+<p>An unchanged release is a no-op: nothing is rebuilt, no file's timestamp changes. A released
+revision is frozen: releasing a unit again with different content raises <code>BuildErrors</code> naming
+<code>REVISION_ALREADY_RELEASED</code> instead of overwriting it (see <code>findings.md</code>). The files are the
+consumer's -- commit them in your own repo, alongside the design script that produced them.</p>
+<p>A container rebuilt against an old child release uses the child's old source from git. Fransys loads no frozen child.
+A history entry that names a revision never released is <code>RELEASE_HISTORY_UNRELEASED</code>; <code>units.md</code> has the rule.</p>
+<h2 id="getting-the-change-list">Getting the change list</h2>
+<p><code>fr.diff(result, into, *, unit=None, against=None)</code> gives the Markdown change list from a
+stored release to the model as it stands now, without writing anything -- useful while a
+revision is still being worked on, before deciding to release it. <code>release()</code> itself writes
+the same text into <code>changes.md</code> (and the same rows as <code>changes.csv</code>) once a previous release
+exists to compare against; the first release of a unit gets neither file, since there is
+nothing yet to diff against. The revision text you author stays yours. <code>changes.md</code> is the
+detailed evidence beside it, and nothing fills or overwrites the history text.</p>
+<div class="highlight"><pre><span></span><code><span class="n">second_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="s2">"X2"</span><span class="p">))</span>
+<span class="n">second_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">second_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">second_errors</span> <span class="o">==</span> <span class="p">[],</span> <span class="n">second_errors</span>
+
+<span class="n">preview</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"Added `-X2`"</span> <span class="ow">in</span> <span class="n">preview</span>
+
+<span class="n">second_target</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">release</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"demo-io-board"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">second_target</span> <span class="o">/</span> <span class="s2">"changes.md"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="o">==</span> <span class="n">preview</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">second_target</span> <span class="o">/</span> <span class="s2">"changes.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</code></pre></div>
+<p><code>against=</code> names a specific released revision's folder (<code>"1.1"</code>) to diff against instead of the
+default (the model's own current release if it is already stored, otherwise the previous
+released revision below it, possibly in an earlier version). <code>fr.diff</code> raises
+<code>FileNotFoundError</code> when no released revision is found either way.</p>
+<h2 id="checking-a-baseline-stays-true">Checking a baseline stays true</h2>
+<p><code>fr.verify(result, baselines) -&gt; tuple[Finding, ...]</code> reruns the same comparison <code>release</code>'s own
+<code>BASELINE_DIFFERS</code> check does, for every unit instance the model has (and the system, when the
+model has a project) that a stored baseline already exists for. It writes nothing, and
+<code>fr.write</code> never calls it -- a consumer runs it wherever they want the check, most often a test
+that guards against an accidental change to a released revision.</p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">second_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span> <span class="o">==</span> <span class="p">()</span>
+
+<span class="n">third_result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">board</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">spare</span><span class="o">=</span><span class="s2">"X9"</span><span class="p">))</span>  <span class="c1"># X2, mistagged X9</span>
+<span class="n">third_errors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">third_result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">third_errors</span> <span class="o">==</span> <span class="p">[],</span> <span class="n">third_errors</span>
+
+<span class="n">findings</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">third_result</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"BASELINE_DIFFERS"</span><span class="p">]</span>
+</code></pre></div>
+<p><code>second_result</code> is unchanged since its own release above, so <code>verify</code> gives nothing. <code>third_result</code>
+shares <code>demo-io-board</code>'s revision <code>2</code> release identity but was never released itself, and its
+spare connector's tag differs from what <code>1.2</code> actually released, so <code>verify</code> catches the drift
+without anyone calling <code>release</code> again. A unit or the system with no stored baseline at all is
+not reported.</p>
+<p>When a child moved release, <code>BASELINE_DIFFERS</code> names it right after <code>units</code>, as in
+<code>demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board 1.1 → 1.3)</code>.
+It names direct children only. A grandchild's move shows in its parent's own finding.</p>
+<p><code>verify</code> also re-hashes every file of every release under <code>baselines</code>, with no model needed.
+<code>RELEASE_FILE_CHANGED</code> means a listed file's bytes differ, the folder holds a file the manifest does
+not list, or the manifest does not parse. <code>RELEASE_FILE_MISSING</code> means a listed file, or the manifest, is gone.
+A text file (<code>.csv</code>, <code>.json</code>, <code>.md</code>, <code>.xml</code>, <code>.html</code>, <code>.txt</code>) whose bytes differ only by CRLF line ends passes,
+so a Windows checkout does not fail it. <code>verify</code> returns findings and blocks nothing.</p>
+<h2 id="listing-the-releases">Listing the releases</h2>
+<p><code>fr.releases(root) -&gt; tuple[Release, ...]</code> reads every <code>&lt;name&gt;/&lt;version&gt;.&lt;revision&gt;/</code> folder under
+<code>root</code>, in name, version and revision order. Versions and revisions sort as integers. A
+<code>Release</code> has <code>name</code>, <code>version</code>, <code>revision</code>, <code>interface</code>, <code>listing_digest</code>, <code>nested</code>, <code>files</code> and <code>path</code>.
+<code>nested</code> holds one <code>ReleasePin</code> (<code>name</code>, <code>version</code>, <code>revision</code>, <code>listing_digest</code>) per release nested
+in it. <code>files</code> holds <code>(path, sha256)</code> pairs. A folder with no manifest is listed with those fields empty.
+A manifest that does not parse raises <code>ValueError</code> naming its path.</p>
+<p>Later Fransys versions may add manifest keys. They keep reading every manifest an earlier public Fransys wrote.</p>
+<div class="highlight"><pre><span></span><code><span class="n">listed</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">releases</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"releases"</span><span class="p">))</span>
+<span class="k">assert</span> <span class="p">[(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">revision</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">listed</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"demo-io-board"</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="k">assert</span> <span class="n">listed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">interface</span> <span class="o">==</span> <span class="s2">"1"</span>
+
+<span class="c1"># Which parents to bump: a release whose pin of a child is older than the child's latest release.</span>
+<span class="n">latest</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">revision</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">listed</span><span class="p">}</span>
+<span class="n">stale</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">revision</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">pin</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">listed</span>
+    <span class="k">for</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">nested</span>
+    <span class="k">if</span> <span class="n">latest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pin</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="n">pin</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">pin</span><span class="o">.</span><span class="n">revision</span><span class="p">))</span>
+<span class="p">]</span>
+<span class="k">assert</span> <span class="n">stale</span> <span class="o">==</span> <span class="p">[]</span>
+</code></pre></div>
+<p>The policy stays yours: tag names, who releases, which findings block and who gets a copy.
+A transmittal is a script over <code>fr.releases</code> that lists what went to whom. Fransys keeps no issue record.</p>
+<h2 id="keeping-designations-fixed-across-revisions">Keeping designations fixed across revisions</h2>
+<p><code>fr.build(d, *documents, releases=None)</code> takes a keyword-only <code>releases</code>, the same root <code>fr.release</code>
+writes into. Left at <code>None</code> (the default), numbering is free, exactly as above. Given the
+releases root, <code>build</code> reads each unit's own previously released numbering before assigning
+new tags: an item still in the same group keeps the number it was released with, and a number
+freed by a removed or moved item is never handed to a different item within that unit's
+version. A tag the engineer authors may still equal a pinned or reserved number by mistake;
+that is <code>DESIGNATION_DUPLICATE</code> (see <code>findings.md</code>), not silently allowed. Releasing without
+<code>releases=</code> still catches a moved number, as <code>DESIGNATION_MOVED</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.3c842f4c.min.js"></script>
+      
+    
+  </body>
+</html>

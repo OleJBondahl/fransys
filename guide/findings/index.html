@@ -1,0 +1,2138 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/guide/findings/">
+      
+      
+        <link rel="prev" href="../reading/">
+      
+      
+        <link rel="next" href="../examples/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.68">
+    
+    
+      
+        <title>Finding codes - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.595f2bf5.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b27955a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Finding codes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="finding-codes">Finding codes</h1>
+<p>Every code Fransys can emit. Each row gives the code, severity, stage, meaning and fix.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Severity</th>
+<th>Stage</th>
+<th>Meaning</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASPECT_CROSS_PARENT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>An aspect node's parent belongs to a different aspect (function, location or product).</td>
+<td>Move the node under a parent of the same aspect, or fix the authored parent link.</td>
+</tr>
+<tr>
+<td>ASPECT_CYCLE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>An aspect node's parent chain loops back on itself.</td>
+<td>Break the cycle by correcting the parent authored on one of the looping nodes.</td>
+</tr>
+<tr>
+<td>BASELINE_DIFFERS</td>
+<td>ERROR</td>
+<td>release, verify</td>
+<td>A unit instance in the released subtree, or checked by <code>verify</code>, has a listing that differs from its released baseline.</td>
+<td>Release the nested unit's new revision, then the containing unit again; or find why its content changed.</td>
+</tr>
+<tr>
+<td>BOUNDARY_KIND</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A unit's boundary function is not a terminal or a connector.</td>
+<td>Declare the boundary on a terminal or connector function instead.</td>
+</tr>
+<tr>
+<td>BOUNDARY_NOT_IN_UNIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A unit's boundary function belongs to an item outside that unit's subtree.</td>
+<td>Move the boundary declaration to a function whose item is inside the unit, or fix the item's unit/parent.</td>
+</tr>
+<tr>
+<td>BOUNDARY_UNCONNECTED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A unit's boundary function is not connected across the unit and is not declared unused.</td>
+<td>Wire the boundary, or leave it open: <code>unused=</code> on <code>d.add</code> for one instance, on <code>d.device</code> for all. A standalone (top-level) unit never fires it, nor does an interface it passes up from a nested unit.</td>
+</tr>
+<tr>
+<td>CABLE_CORE_COUNT</td>
+<td>WARNING or ERROR</td>
+<td>validators</td>
+<td>A cable item's core count differs from its product's core-colour count (WARNING when fewer, ERROR when more).</td>
+<td>Model the missing cores, or correct the product's <code>core_colours</code> list.</td>
+</tr>
+<tr>
+<td>CHAIN_BROKEN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A connection between two "pole" cells was severed into a marker pair though its net has only those two ports.</td>
+<td>Move the two cells onto one page, or accept the marker pair.</td>
+</tr>
+<tr>
+<td>CONDUCTOR_ON_UNINSTALLED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A conductor lands on an item that is not marked installed.</td>
+<td>Mark the item installed, or remove the conductor if the item is absent.</td>
+</tr>
+<tr>
+<td>CONNECTION_DRAWN_TWICE</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A connection (or net-group edge) is drawn by more than one route, or drawn together with a cut decision that contradicts it.</td>
+<td>Remove the duplicate so the connection is drawn or cut once.</td>
+</tr>
+<tr>
+<td>CONNECTION_NOT_DRAWN</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A conductor or net-group edge is neither routed on a shared page nor cut with a link marker.</td>
+<td>Give both ends a location so layout can route or cut them. Check <code>layout.route</code>, <code>layout.symbol_placement</code> and <code>layout.page</code>.</td>
+</tr>
+<tr>
+<td>CONNECTION_TO_UNDRAWN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A connection, net group or rail has an end whose function layout never draws.</td>
+<td>Draw the missing end's function, or accept it as intentionally undrawn (e.g. board-internal wiring).</td>
+</tr>
+<tr>
+<td>CONNECTOR_WIRED_WITHOUT_MATE</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A conductor from outside a nested unit lands directly on that unit's boundary connector, whose part gender is male or female (neutral or unstated passes).</td>
+<td>Mate a plug to the boundary connector (<code>u.mate(plug, connector)</code>) and wire the plug's pin instead.</td>
+</tr>
+<tr>
+<td>CONTAINMENT_CYCLE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>An item's physical-containment parent chain loops back on itself.</td>
+<td>Break the cycle by correcting the parent authored on one of the looping items.</td>
+</tr>
+<tr>
+<td>COVER_OVERFLOW</td>
+<td>WARNING</td>
+<td>pdf</td>
+<td>A document's cover text plus revision-history table are estimated taller than the content box and may overlap.</td>
+<td>Shorten the cover text or the revision entries' text.</td>
+</tr>
+<tr>
+<td>DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>Two items or unit instances under one parent print one designation: a tag equal to a sibling's text, or a retired or moved released one.</td>
+<td>Give the item a distinct tag, or none. A tag a released revision reserved needs a new version.</td>
+</tr>
+<tr>
+<td>DESIGNATION_MOVED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>An item or unit instance pinned in the previous release now prints a different designation, written or numbered.</td>
+<td>Restore the released tag; only a new version may change it.</td>
+</tr>
+<tr>
+<td>DESIGNATION_NEW_IN_REVISION</td>
+<td>WARNING</td>
+<td>build, release</td>
+<td>A new untagged item or unit instance took the next free number in a later revision.</td>
+<td>Tag it if the number matters.</td>
+</tr>
+<tr>
+<td>DIAGRAM_BOX_OVERLAP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Two boxes of a block diagram, or a tab and another box, overlap.</td>
+<td>A layout-engine issue. Report it with the model.</td>
+</tr>
+<tr>
+<td>DIAGRAM_CABLE_FANOUT</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A cable reaches three or more boxes, so the block diagram draws one line from its first box to each other box.</td>
+<td>Usually nothing to fix. Split the cable if a line per pair is not wanted.</td>
+</tr>
+<tr>
+<td>DIAGRAM_CABLE_ONE_BOX</td>
+<td>INFO</td>
+<td>render</td>
+<td>A cable's ends reach one box or none, so the block diagram draws no line for it.</td>
+<td>Usually nothing to fix: the cable runs inside one box, or an end is an unmated plug.</td>
+</tr>
+<tr>
+<td>DIAGRAM_LINE_OFF_BOX</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A line of a block diagram does not end on its box's outline or tab.</td>
+<td>A layout-engine issue. Report it with the model.</td>
+</tr>
+<tr>
+<td>DIAGRAM_LINE_THROUGH_BOX</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A line of a block diagram crosses a box other than its own two.</td>
+<td>A layout-engine issue. Report it with the model.</td>
+</tr>
+<tr>
+<td>DIAGRAM_LOOSE_WIRE</td>
+<td>INFO</td>
+<td>render</td>
+<td>In the system reading, a wire with no cable joins two boxes, so the block diagram does not draw it.</td>
+<td>Usually nothing to fix: the unit pages show it as stubs. Put it in a cable to give it a line.</td>
+</tr>
+<tr>
+<td>DIAGRAM_TEXT_OVERLAP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Two texts of a block diagram overlap.</td>
+<td>A layout-engine issue. Report it with the model.</td>
+</tr>
+<tr>
+<td>DOCUMENT_EMPTY_LIST</td>
+<td>INFO</td>
+<td>pdf</td>
+<td>A document's list page (PLC, terminal, connector, wire-label, designation, cable or BOM) has no rows; the page is left out.</td>
+<td>Usually nothing to fix (pdf-0019); add records to show it.</td>
+</tr>
+<tr>
+<td>DOCUMENT_MIXED_SHEET_FORMATS</td>
+<td>ERROR</td>
+<td>pdf</td>
+<td>A document's pages use more than one sheet format.</td>
+<td>Give the document (or its unit/layout profile) one consistent sheet format across all its pages.</td>
+</tr>
+<tr>
+<td>DOCUMENT_NO_DRAWINGS</td>
+<td>ERROR</td>
+<td>pdf</td>
+<td>A SCHEMATIC, HARNESS_DRAWING or BLOCK_DIAGRAM page has no drawing set, cable or diagram, or its drawing is missing, too large or not drawable yet: interleaved harness cables.</td>
+<td>Add the missing content, remove the page kind or shorten the texts.</td>
+</tr>
+<tr>
+<td>DOCUMENT_NO_TOP_LEVEL_CABLES</td>
+<td>INFO</td>
+<td>pdf</td>
+<td>A SYSTEM document's HARNESS_DRAWING section has nothing to draw: the model has no top-level cable.</td>
+<td>Usually nothing to fix: add a top-level cable if one was expected.</td>
+</tr>
+<tr>
+<td>DOCUMENT_UNIT_UNRESOLVED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A document's <code>unit_name</code> matches no unit, or more than one.</td>
+<td>Make the unit name unique so <code>unit_name</code> resolves to one unit instance.</td>
+</tr>
+<tr>
+<td>DRAWING_SET_REPLICA_ONLY</td>
+<td>INFO</td>
+<td>pdf</td>
+<td>A document's drawing set holds only black-box replicas of another unit's boundary.</td>
+<td>Usually nothing to fix; add content if a page is intended.</td>
+</tr>
+<tr>
+<td>EXPORT_NAME_CLASH</td>
+<td>ERROR</td>
+<td>build</td>
+<td>Two different subjects (documents, items) would write to the same file name in <code>out_dir</code>.</td>
+<td>Give the colliding units, items or documents distinct names (or locations/fragments); two unit instances of one release name need one document per release.</td>
+</tr>
+<tr>
+<td>FILE_UNREADABLE</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>A part-file could not be read (missing file, permission error, or bad encoding).</td>
+<td>Fix the path, permissions or encoding so it reads as UTF-8.</td>
+</tr>
+<tr>
+<td>FLOAT_FORBIDDEN</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>A part-file has a bare TOML float value, which the contract forbids (values must be quoted strings).</td>
+<td>Quote the numeric value as a string in the TOML file.</td>
+</tr>
+<tr>
+<td>FUNCTION_UNPLACED_IN_COLUMN</td>
+<td>INFO</td>
+<td>render</td>
+<td>A function is in no authored chain, so layout placed it alone in a column of its own.</td>
+<td>Usually nothing to fix: add a chain hint only if the function should sit in series with others.</td>
+</tr>
+<tr>
+<td>GNYE_NOT_PE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A green-yellow conductor is on a net that is not PE. Silent on a net no declared net lists.</td>
+<td>Recolour it, or connect it to the PE net.</td>
+</tr>
+<tr>
+<td>GROUP_SPLIT</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A group of columns is wider than one page, so layout split it across pages between columns.</td>
+<td>Usually nothing to fix; split a large group into smaller ones for single-page groups.</td>
+</tr>
+<tr>
+<td>HARNESS_END_AMBIGUOUS</td>
+<td>ERROR</td>
+<td>build</td>
+<td>Two or more ends of one cable print the same text in its drawing.</td>
+<td>Place the colliding unit instances at distinct locations, or tag the strips apart.</td>
+</tr>
+<tr>
+<td>HARNESS_HOLDS_PLC_MODULE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A PLC module sits under an item made with <code>d.harness</code>.</td>
+<td>Build the rack with <code>d.rack</code>, so its modules print flat.</td>
+</tr>
+<tr>
+<td>HARNESS_WITHOUT_TAG</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A harness (marked, or with a cable child) has no tag or assigned designation, so it has no label.</td>
+<td>Give it a tag: <code>d.harness(tag=...)</code>, or <code>tag=</code> on the item.</td>
+</tr>
+<tr>
+<td>INTERFACE_NOT_BUMPED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>The previous released revision of this unit (the highest below this one) has the same interface string but a different boundary section.</td>
+<td>Bump the interface string if the boundary changed, or restore the previous boundary.</td>
+</tr>
+<tr>
+<td>ITEM_PART_MISMATCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>An item's functions or ports do not match its part's templates (missing, extra, duplicated, or differing in name, kind, role or marking).</td>
+<td>Fix the item's authored functions and ports (or the part's templates) so they agree.</td>
+</tr>
+<tr>
+<td>ITEM_WITHOUT_PART</td>
+<td>INFO</td>
+<td>validators</td>
+<td>An item has no <code>part</code>, so its functions are authored directly rather than checked against a part's templates.</td>
+<td>Usually nothing to fix: assign a <code>part</code> to check against templates.</td>
+</tr>
+<tr>
+<td>JOIN_UNALIGNED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A run of same-net, same-facing ports at one end of neighbouring columns could not be aligned onto one row, so layout drew references.</td>
+<td>Rearrange the columns, or accept the references: the wires still connect through them.</td>
+</tr>
+<tr>
+<td>KEEP_TOGETHER_UNMET</td>
+<td>WARNING</td>
+<td>render</td>
+<td>An authored <code>keep_together</code> set could not be kept on one page (it does not fit, its groups sit on different drawing sets, or <code>break_before</code> is invalid).</td>
+<td>Shrink the set, move its groups onto one drawing set, or drop the hint.</td>
+</tr>
+<tr>
+<td>LABEL_UNPLACED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A tag, marking or cross-reference found no free spot and sits at its default location.</td>
+<td>Usually nothing to fix; if it looks wrong, rearrange the crowded symbols or wires.</td>
+</tr>
+<tr>
+<td>LAYOUT_MISSING</td>
+<td>ERROR</td>
+<td>render</td>
+<td>The model has functions to draw, but layout made no page for them.</td>
+<td>Add a document so layout runs, and check that the drawn location or unit has connected content.</td>
+</tr>
+<tr>
+<td>LIBRARY_VERSION_MISMATCH</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A placement was laid out against a symbol library version different from the one now installed.</td>
+<td>Re-run layout (build) with the installed <code>electrical_symbols</code> version.</td>
+</tr>
+<tr>
+<td>LINE_ON_OUTLINE</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A harness line runs along a unit outline's edge, so the two read as one stroke.</td>
+<td>A layout-engine issue. Report it with the model.</td>
+</tr>
+<tr>
+<td>LINK_FANOUT</td>
+<td>WARNING</td>
+<td>render</td>
+<td>More than one severed link crosses between the same two pages on one physical net.</td>
+<td>Use a terminal to join the net once instead of severing it more than once between the same two pages.</td>
+</tr>
+<tr>
+<td>LINK_PARTNER_UNLOCATED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A signal crosses into a drawing set with no authored location, so its cross-reference marker has no located prefix.</td>
+<td>Name the drawing set's unit or location.</td>
+</tr>
+<tr>
+<td>LOAD_ABOVE_LIMIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A load's stated draw is above the limit that bounds it.</td>
+<td>Lower the draw or raise the limit.</td>
+</tr>
+<tr>
+<td>LOADS_ABOVE_LIMIT</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>The loads one limit bounds sum above it; none is above it alone.</td>
+<td>If they run together, raise the limit or split the loads.</td>
+</tr>
+<tr>
+<td>LONE_CELL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A placed symbol has no drawn conductor, or stands alone on a page though its column has more cells elsewhere.</td>
+<td>Wire the port, or move the column's cells onto one page. A unit's own open boundary functions never give it (decision layout-0077).</td>
+</tr>
+<tr>
+<td>MARKDOWN_UNSUPPORTED</td>
+<td>ERROR</td>
+<td>pdf</td>
+<td>A document's cover or notes text uses a Markdown construct the PDF renderer does not support.</td>
+<td>Rewrite that part of the cover/notes using only the supported Markdown subset.</td>
+</tr>
+<tr>
+<td>MARKER_UNPAIRED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A severed connection's owner or user marker is missing, or a marker on the page matches no severed decision.</td>
+<td>Usually a layout-engine issue: report it, or check that the cut decision and its two markers agree.</td>
+</tr>
+<tr>
+<td>MATE_NOT_CONNECTOR</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A mate end is not a connector or terminal (a relay coil, say).</td>
+<td>Mate a connector or terminal.</td>
+</tr>
+<tr>
+<td>MATE_PORT_MISMATCH</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A mate's two functions have different port names, so some ports have no counterpart.</td>
+<td>Example: a lettered inlet (L1, L2, L3, N, PE) mated to a numbered plug. Rename the ports to match.</td>
+</tr>
+<tr>
+<td>MULTILINE_STRING</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>A part-file string value contains a line break, which the TOML contract forbids.</td>
+<td>Rewrite the value as a single-line string, or use TOML's escaped <code>\n</code> for a newline.</td>
+</tr>
+<tr>
+<td>NET_NAME_DUPLICATE</td>
+<td>ERROR</td>
+<td>kicad</td>
+<td>Two or more KiCad netlist nets share one name, so KiCad would merge them into one net on import.</td>
+<td>Give each net a distinct name.</td>
+</tr>
+<tr>
+<td>NET_POTENTIAL_CONFLICT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>One physical net joins two declared nets that are rails of different supply potentials.</td>
+<td>Fix the wiring or the net declarations so no physical net joins two potentials.</td>
+</tr>
+<tr>
+<td>NET_SHORTED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>One physical net joins declared nets of different names.</td>
+<td>Fix the wiring, or give the nets one name if they are one signal (nets of one name join silently).</td>
+</tr>
+<tr>
+<td>NET_SINGLE_PIN</td>
+<td>WARNING</td>
+<td>kicad</td>
+<td>A KiCad netlist net has only one pin on it.</td>
+<td>Usually nothing to fix; otherwise wire its second end.</td>
+</tr>
+<tr>
+<td>NET_UNREALISED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A declared net's ports fall into more than one physical net, and no single board holds all of them together.</td>
+<td>Wire the missing conductors, or accept the WARNING if intended.</td>
+</tr>
+<tr>
+<td>NODE_WITHOUT_COMPONENT</td>
+<td>WARNING</td>
+<td>kicad</td>
+<td>A netlist pin belongs to an item with no footprint (or is the board's own pin), so KiCad drops it on import.</td>
+<td>Give the item a footprint, or model the connector as a child item with a footprint.</td>
+</tr>
+<tr>
+<td>ORDER_HINT_UNMET</td>
+<td>WARNING</td>
+<td>render</td>
+<td>An authored order hint names two groups that are not on the same drawing set, so no page order can honour it.</td>
+<td>Move both groups onto the same drawing set, or drop the hint.</td>
+</tr>
+<tr>
+<td>OUT_OF_CONTENT_BOX</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A symbol's keep-out box, a label, a marker box, or a route vertex sits outside the page's content box.</td>
+<td>Rearrange the layout (via authored hints) to fit the content box.</td>
+</tr>
+<tr>
+<td>PAD_ON_MULTIPLE_NETS</td>
+<td>ERROR</td>
+<td>kicad</td>
+<td>One component pad appears in more than one net in the KiCad netlist.</td>
+<td>Fix the wiring so each pad is on exactly one net.</td>
+</tr>
+<tr>
+<td>PAGE_OVERFULL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A page's placed rows are taller than the content box; nothing is scaled to fit.</td>
+<td>Split the content across more pages, or shrink the authored grouping.</td>
+</tr>
+<tr>
+<td>PART_LIBRARY_VERSION_CONFLICT</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>Two <code>PartLibrary</code> records share a name but declare different versions.</td>
+<td>Make sure only one version of each named part library is loaded.</td>
+</tr>
+<tr>
+<td>PART_WITHOUT_FOOTPRINT</td>
+<td>WARNING</td>
+<td>kicad</td>
+<td>A board item's part has no footprint, so the KiCad netlist omits it.</td>
+<td>Add a footprint to the part, or accept that the item is left out.</td>
+</tr>
+<tr>
+<td>PE_NOT_GNYE</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A single wire on a PE net is not green-yellow (an empty colour is not a finding).</td>
+<td>Colour the wire GNYE.</td>
+</tr>
+<tr>
+<td>PE_PORT_OFF_PE</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A port with role PE is on a net that is not PE. Silent on a net no declared net lists.</td>
+<td>Wire the port to the PE net.</td>
+</tr>
+<tr>
+<td>PIN_MAP_INCOMPLETE</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A symbol node has no model port bound to any of its symbol ports at all.</td>
+<td>Add the missing model port or a <code>port_map</code>/symbol choice.</td>
+</tr>
+<tr>
+<td>PLACEMENT_DUPLICATE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>One item is placed more than once in the same aspect (function, location or product).</td>
+<td>Remove the duplicate placement so the item is placed once per aspect.</td>
+</tr>
+<tr>
+<td>PLC_BINDING_SIGNAL_MISMATCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A PLC binding's channel does not have the signal type the request asked for (or is not a declared channel at all).</td>
+<td>Bind the request to a channel of the matching signal type, or fix the requested signal.</td>
+</tr>
+<tr>
+<td>PLC_BINDING_WIRING_MISMATCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A PLC binding disagrees with the wiring: the request or channel function is wired to a different channel or request than its binding.</td>
+<td>Rebind the request/channel to match the wiring, or rewire it to match the binding.</td>
+</tr>
+<tr>
+<td>PLC_REQUEST_UNSERVABLE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>No free PLC channel of the requested signal type on the request's unit chain (its unit declares none, or every one is taken).</td>
+<td>Add a channel of that signal type to the unit (or a parent unit), or move another request off one.</td>
+</tr>
+<tr>
+<td>PORT_DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>Two or more ports of one item print the same designation text, so a drawing or list cannot tell them apart.</td>
+<td>Give the part's pin markings distinct names so each port prints a unique text.</td>
+</tr>
+<tr>
+<td>PORT_UNCONNECTED</td>
+<td>INFO</td>
+<td>validators</td>
+<td>A port is in no declared net, on no conductor, and on no mate.</td>
+<td>Usually nothing to fix unless a connection was intended.</td>
+</tr>
+<tr>
+<td>POTENTIAL_IN_TWO_SUPPLIES</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>One potential name is a rail of two differently named supplies.</td>
+<td>Rename one of the potentials, or merge the two supply declarations if they are the same supply.</td>
+</tr>
+<tr>
+<td>POTENTIAL_WITHOUT_SUPPLY</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A net potential no supply declares: its pins get no rank and no power symbol.</td>
+<td>Declare the supply with that rail.</td>
+</tr>
+<tr>
+<td>POWER_SYMBOL_UNPLACED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>No lead of up to 12 grids kept a power symbol clear of its neighbours, so it keeps one grid and may touch one.</td>
+<td>Space the pins, or move the device so its power pins have room.</td>
+</tr>
+<tr>
+<td>PRODUCT_DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>Two items print the same product designation (location plus own label): both at one location or, unplaced, both unnumbered alike in one unit instance.</td>
+<td>Place one item at a distinct location, or tag it distinctly.</td>
+</tr>
+<tr>
+<td>RATING_BREAKING_BELOW_FAULT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A protective device breaks less current than the prospective fault at its position.</td>
+<td>Fit a higher-breaking device.</td>
+</tr>
+<tr>
+<td>RATING_BREAKING_NO_DATA</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A device states breaking points, but none covers the circuit voltage or time constant.</td>
+<td>Add a point for that voltage or time constant.</td>
+</tr>
+<tr>
+<td>RATING_CURRENT_BELOW_BRANCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A function's rated current is below the current its branch can carry.</td>
+<td>Fit a part rated for the branch's current, or reduce the limit that sets the bound.</td>
+</tr>
+<tr>
+<td>RATING_VOLTAGE_BELOW_CIRCUIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A function's rated voltage is below the voltage that stands across it.</td>
+<td>Fit a part rated for the circuit's voltage, or change the supply or wiring so less stands across it.</td>
+</tr>
+<tr>
+<td>REDUNDANT_JOG</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A drawn route leaves a straight line and returns to it where a straight run was free.</td>
+<td>Usually a layout-engine artifact. Report it if it recurs; otherwise cosmetic.</td>
+</tr>
+<tr>
+<td>REFERENCE_BOX_EXCEEDS_ROOM</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A drawing set has 100 or more cross-reference numbers (#n) or pages; a reference box is then wider than layout's room.</td>
+<td>Check the named pages. Fewer than 100 #n numbers and 100 pages per set avoids it.</td>
+</tr>
+<tr>
+<td>REFERENCE_DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>Two items in the function or location aspect print the same full reference designation (e.g. two unit instances at one location).</td>
+<td>Place one of them at a distinct location so the designations differ.</td>
+</tr>
+<tr>
+<td>REFERENCE_DUPLICATE</td>
+<td>ERROR</td>
+<td>kicad</td>
+<td>Two parts of the board share one reference designation in the KiCad netlist.</td>
+<td>Give each part a distinct designation.</td>
+</tr>
+<tr>
+<td>RELEASE_FILE_CHANGED</td>
+<td>ERROR</td>
+<td>verify</td>
+<td>A released file's hash differs, the folder holds a file its manifest does not list, or the manifest does not parse. A CRLF-only change in a text file passes.</td>
+<td>Restore the file from version control; a released revision never changes.</td>
+</tr>
+<tr>
+<td>RELEASE_FILE_MISSING</td>
+<td>ERROR</td>
+<td>verify</td>
+<td>A file its manifest lists, or the manifest itself, is gone from a release folder.</td>
+<td>Restore it from version control.</td>
+</tr>
+<tr>
+<td>RELEASE_HISTORY_UNRELEASED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>A history entry after the first released one names a revision with no folder under <code>into</code>, in its own version.</td>
+<td>Remove the entry, or release that revision first. Older entries are free text.</td>
+</tr>
+<tr>
+<td>RELEASE_NESTED_UNRELEASED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>A unit anywhere in the subtree being released (not only direct children) has no baseline folder yet.</td>
+<td>Release that nested unit first, then release the containing unit.</td>
+</tr>
+<tr>
+<td>RELEASE_NO_HISTORY</td>
+<td>ERROR</td>
+<td>release</td>
+<td>The revision being released has no matching <code>Revision</code> history entry.</td>
+<td>Add the missing entry: <code>history=</code> on <code>@fr.unit</code>, or <code>Design.revision(...)</code> for a system release.</td>
+</tr>
+<tr>
+<td>REVISION_ALREADY_RELEASED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>The unit (or system) being released already has a baseline folder whose listing differs from the one to be written.</td>
+<td>Bump the version or revision, or find why a frozen revision changed.</td>
+</tr>
+<tr>
+<td>REVISION_CURRENT_MISSING</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A unit's (or the project's) current revision has no matching <code>Revision</code> history entry, so a title block prints no date.</td>
+<td>Add the missing entry: <code>history=</code> on <code>@fr.unit</code>, or <code>Design.revision(rev, date=, text=, created=)</code>.</td>
+</tr>
+<tr>
+<td>REVISION_DATE_FORMAT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A revision entry's date is not in <code>YYYY-MM-DD</code> format.</td>
+<td>Rewrite the date as <code>YYYY-MM-DD</code>.</td>
+</tr>
+<tr>
+<td>REVISION_INITIALS_MISSING</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A revision entry has no <code>created</code> (author initials).</td>
+<td>Add the author's initials to the revision entry's <code>created</code> field.</td>
+</tr>
+<tr>
+<td>ROUTE_FAILED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>No orthogonal path on the wiring grid could be found between the two ports of a connection.</td>
+<td>Usual causes: a redundant conductor between two points already on one net (rewire to a point already routed), or crowded geometry around the ports.</td>
+</tr>
+<tr>
+<td>ROUTE_SHORTS_NETS</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A drawn route touches a port of another physical net, or two routes of different physical nets touch on the page.</td>
+<td>Usually a layout-engine issue. Report it; if authored hints crowd the nets, rearrange those hints.</td>
+</tr>
+<tr>
+<td>ROUTE_WRONG_PORT</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A route does not run between the two ports it claims to join.</td>
+<td>Usually a layout-engine bug. Report it.</td>
+</tr>
+<tr>
+<td>SHEET_FORMAT_UNUSED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>An authored sheet format is not named by any layout profile, so pages use the house sheet (or the profile's named format).</td>
+<td>Name the sheet format in the layout profile, or remove it.</td>
+</tr>
+<tr>
+<td>SIDE_HINT_NO_HARNESS_LINE</td>
+<td>WARNING</td>
+<td>build</td>
+<td>A <code>d.layout.side</code> hint names an interface that has no harness line, so the hint does nothing.</td>
+<td>Remove the hint, or connect the interface through a harness line.</td>
+</tr>
+<tr>
+<td>STRIP_WITHOUT_TAG</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A part-less top-level item, usually a floating strip, has no tag and no class code (no terminals, or disagreeing ones).</td>
+<td>Give it a part, a tag, or terminals of one class code.</td>
+</tr>
+<tr>
+<td>SUPPLY_DIFFERS</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>Two declarations of one supply name disagree in current, earthing or rails, or two source declarations in fault current or time constant.</td>
+<td>Make them agree, or give the differing declarations distinct names.</td>
+</tr>
+<tr>
+<td>SYMBOL_DEFAULTED</td>
+<td>INFO</td>
+<td>render</td>
+<td>A function matched no symbol rule or choice, so it was drawn as a plain labelled box.</td>
+<td>Add a symbol rule or choice for that function's kind or category if a real symbol is wanted.</td>
+</tr>
+<tr>
+<td>SYMBOL_OVERLAP</td>
+<td>WARNING</td>
+<td>render</td>
+<td>The keep-out boxes of two symbols on one page overlap.</td>
+<td>Rearrange the layout (via authored hints).</td>
+</tr>
+<tr>
+<td>SYMBOL_PORT_MISSING</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A model port matches no port on its drawn symbol by any of the three binding rules.</td>
+<td>Fix the part's port names, or add a <code>port_map</code>/symbol choice.</td>
+</tr>
+<tr>
+<td>TEXT_CROSSED_BY_ROUTE</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A link marker's stub runs through a text box (a label or another marker's box).</td>
+<td>Rearrange the crowded labels or markers so the stub has a clear path.</td>
+</tr>
+<tr>
+<td>TEXT_OVERLAP</td>
+<td>WARNING</td>
+<td>render</td>
+<td>Two texts on a page overlap, or a text overlaps a symbol body it does not belong to.</td>
+<td>Rearrange the crowded texts or symbols (via authored hints).</td>
+</tr>
+<tr>
+<td>TITLE_BLOCK_NOTICE_OVERFLOW</td>
+<td>WARNING</td>
+<td>pdf</td>
+<td>The project's <code>notice</code> text does not fit the title block's notice cell and would be cut.</td>
+<td>Shorten the project's <code>notice</code> text.</td>
+</tr>
+<tr>
+<td>TITLE_BLOCK_NO_ROOM</td>
+<td>WARNING</td>
+<td>pdf</td>
+<td>The sheet format's title-block band is under the required 20mm.</td>
+<td>Use a sheet format whose title-block band is tall enough.</td>
+</tr>
+<tr>
+<td>TITLE_BLOCK_TEXT_OVERFLOW</td>
+<td>WARNING</td>
+<td>pdf</td>
+<td>A one-line title-block field (title, number, customer, revision, date, author, page title, scope or sheet counter) does not fit its cell and would be cut.</td>
+<td>Shorten the text, or rely on the shorter fallback label where one applies.</td>
+</tr>
+<tr>
+<td>TITLE_BLOCK_UNIT_IDENTITY_MISSING</td>
+<td>WARNING</td>
+<td>pdf</td>
+<td>A unit document's unit has an empty <code>title</code> or <code>number</code>, so that title-block cell will print empty.</td>
+<td>Give the unit release a <code>title</code> and/or <code>number</code>.</td>
+</tr>
+<tr>
+<td>TOML_INVALID</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>A part-file is not valid TOML and could not be parsed.</td>
+<td>Fix the TOML syntax error the message names.</td>
+</tr>
+<tr>
+<td>UNCONNECTED_PIN</td>
+<td>INFO</td>
+<td>kicad</td>
+<td>A pin of a board part is in no net in the KiCad netlist.</td>
+<td>Usually nothing to fix unless a connection was intended.</td>
+</tr>
+<tr>
+<td>UNIT_BOUNDARY_BYPASSED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A conductor or mate crosses out of a unit at a function that is not declared that unit's boundary.</td>
+<td>Declare the function as the unit's boundary, or route it through an existing boundary function.</td>
+</tr>
+<tr>
+<td>UNIT_CONNECTOR_DANGLING</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A terminal or connector function belongs directly to a unit, is not its boundary, and connects to nothing.</td>
+<td>Wire the function, or remove it if it is not needed.</td>
+</tr>
+<tr>
+<td>UNIT_CYCLE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A unit's parent chain loops back on itself.</td>
+<td>Break the cycle by correcting the parent authored on one of the looping units.</td>
+</tr>
+<tr>
+<td>UNIT_GROUP_SPLIT</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A unit group is wider than one page, so layout split it across pages; each page keeps an outline for its own interfaces.</td>
+<td>Even the edges with side hints (<code>d.layout.side</code>), or give the unit fewer harness interfaces.</td>
+</tr>
+<tr>
+<td>UNKNOWN_SYMBOL_KEY</td>
+<td>ERROR</td>
+<td>render</td>
+<td>A placement's symbol key is not in the installed symbol library.</td>
+<td>Fix the symbol key (rule, choice, or part data), or install a library version that has it.</td>
+</tr>
+<tr>
+<td>UNUSED_CONTRADICTED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>A boundary declared unused names a function that is no unit's boundary, or is in fact connected across the unit.</td>
+<td>Remove the <code>unused=</code> if the function is wired, or fix which unit/function it names.</td>
+</tr>
+<tr>
+<td>WIRE_COLOUR_UNKNOWN</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A wire or cable-product core colour is not a recognized IEC 60757 colour code (or combination).</td>
+<td>Use a base code, a combination of two, a base code with a core number, or the shield code <code>SH</code>.</td>
+</tr>
+<tr>
+<td>WIRE_NOT_ORTHOGONAL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A drawn route has a segment that is not orthogonal (not purely horizontal or vertical).</td>
+<td>Usually a layout-engine artifact. Report it if it recurs.</td>
+</tr>
+<tr>
+<td>WIRE_ON_TWO_HARNESSES</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>A wire joins plugs of two harnesses.</td>
+<td>Wire to a plug of one harness, or use a cable.</td>
+</tr>
+<tr>
+<td>WIRE_OVER_LABEL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A drawn route runs through a label's (or link marker's) box.</td>
+<td>Rearrange the crowded labels/markers (via authored hints) so the route has a clear path.</td>
+</tr>
+<tr>
+<td>WIRE_THROUGH_SYMBOL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>A drawn route runs through the keep-out box of a symbol it does not end at.</td>
+<td>Rearrange the layout (via authored hints) so the route need not cross that symbol.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.3c842f4c.min.js"></script>
+      
+    
+  </body>
+</html>

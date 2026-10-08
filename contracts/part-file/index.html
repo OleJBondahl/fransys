@@ -1,0 +1,2251 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/contracts/part-file/">
+      
+      
+        <link rel="prev" href="../../guide/AGENTS/">
+      
+      
+        <link rel="next" href="../part-file-connectors/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.68">
+    
+    
+      
+        <title>Part file contract - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.595f2bf5.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b27955a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Part file contract
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose-and-audience" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Purpose and audience
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#library-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Library layout
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#librarytoml-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>library.toml</code> fields
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-file-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Part file tables
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part file tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#part" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[part]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[[function]]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supply" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[[supply]]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#footprint" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[footprint]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cable_product" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[cable_product]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functionprotection" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[function.protection]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functionplc_channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[function.plc_channel]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rating-functionrating-and-functionoperating" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[rating]</code>, <code>[function.rating]</code> and <code>[function.operating]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pcb" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[pcb]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rules
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Worked examples
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packaging-and-pinning" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Packaging and pinning
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Versioning
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose-and-audience" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Purpose and audience
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#library-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Library layout
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#librarytoml-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>library.toml</code> fields
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-file-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Part file tables
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part file tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#part" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[part]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[[function]]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supply" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[[supply]]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#footprint" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[footprint]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cable_product" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[cable_product]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functionprotection" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[function.protection]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functionplc_channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[function.plc_channel]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rating-functionrating-and-functionoperating" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[rating]</code>, <code>[function.rating]</code> and <code>[function.operating]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pcb" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>[pcb]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rules
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Worked examples
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packaging-and-pinning" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Packaging and pinning
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Versioning
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="part-file-contract">Part-file contract</h1>
+<p>Version 1. Parts are data, not code: TOML files in a data package that the loader reads and the
+lint checks.</p>
+<h2 id="purpose-and-audience">Purpose and audience</h2>
+<p>This contract is for someone writing a part library without reading Fransys's source. A part
+library is a Python data package of TOML files and no code. This document is enough to write one that
+<code>fransys_parts.load</code> and <code>fransys_parts.lint</code> accept.</p>
+<h2 id="library-layout">Library layout</h2>
+<div class="highlight"><pre><span></span><code>&lt;library-package&gt;/
+  __init__.py
+  library.toml
+  parts/
+    relay-2co-24vdc.toml
+    terminal-feedthrough-2_5.toml
+    cable-4g1_5.toml
+    ...
+</code></pre></div>
+<ul>
+<li><code>__init__.py</code> carries a one-line docstring and no code: it only makes the directory importable
+  by <code>load(package)</code>.</li>
+<li><code>library.toml</code> sits at the package root and describes the library as a whole.</li>
+<li>Every part lives in its own file under <code>parts/</code>. The loader ignores the filename; a lowercased,
+  hyphenated MPN or short description is expected.</li>
+<li>TOML is read with stdlib <code>tomllib</code> and <code>parse_float=Decimal</code>. No other file format is
+  accepted.</li>
+</ul>
+<h2 id="librarytoml-fields"><code>library.toml</code> fields</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema</code></td>
+<td>integer</td>
+<td>The part-file schema version this library is written against. See "Versioning" below</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>The library's name, recorded on the model so a drawing states which library it used</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>string</td>
+<td>The library's own version, recorded alongside <code>name</code></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>Free text, not read by the loader</td>
+</tr>
+</tbody>
+</table>
+<h2 id="part-file-tables">Part file tables</h2>
+<p>Every part file carries <code>schema = 1</code> at the top, then the tables below. Fields named here match
+the model's records (the core kinds and the facets); a field not listed there is out of contract.</p>
+<p>Any field below typed as "a <code>&lt;Name&gt;</code> value" takes the string value of a member of that enum in
+<code>fransys_model.vocab.enums</code>. That module is the authority: the allowed-values lists in this
+contract are copied from it and can go stale, the module cannot.</p>
+<h3 id="part"><code>[part]</code></h3>
+<p>One per file. Maps to the model's <code>Part</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mpn</code></td>
+<td>string</td>
+<td>Manufacturer part number. The only home of this fact once loaded</td>
+</tr>
+<tr>
+<td><code>manufacturer</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>string</td>
+<td>A <code>PartCategory</code> value: <code>"electromechanical"</code>, <code>"protection"</code>, <code>"terminal"</code>, <code>"cable"</code>, <code>"connector"</code>, <code>"plc_module"</code>, <code>"board"</code>, <code>"generic"</code></td>
+</tr>
+<tr>
+<td><code>class_code</code></td>
+<td>string</td>
+<td>1 to 3 uppercase letters, IEC 81346-2:2019, seeding numbering, e.g. <code>"K"</code>, <code>"Q"</code>, <code>"QA"</code>, <code>"X"</code>, <code>"W"</code>. The first letter is one of <code>B C E F G H J K M N P Q R S T U W X</code>; A, I and O are forbidden and D, L, V, Y and Z reserved (parts lint)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="function"><code>[[function]]</code></h3>
+<p>Zero or more per file, one array entry per function the part has. Maps to the model's
+<code>FunctionTemplate</code>, with nested <code>ports</code> mapping to <code>PortTemplate</code> and nested <code>links</code> mapping to
+<code>InternalLink</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>Function name, stamped onto every instance, e.g. <code>"coil"</code>, <code>"co_1"</code></td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>string</td>
+<td>A <code>FunctionKind</code> value: <code>"coil"</code>, <code>"contact_no"</code>, <code>"contact_nc"</code>, <code>"contact_co"</code>, <code>"protection"</code>, <code>"switch"</code>, <code>"terminal"</code>, <code>"connector"</code>, <code>"plc_channel"</code>, <code>"supply"</code>, <code>"load"</code>, <code>"sensor"</code>, <code>"actuator"</code>, <code>"generic"</code></td>
+</tr>
+<tr>
+<td><code>symbol</code></td>
+<td>string</td>
+<td>Optional. Symbol key: a lowercase, hyphenated slug naming a symbol in <code>electrical-symbols</code>. A function with no <code>symbol</code> gets no authored <code>layout.symbol_choice</code>, and the layout engine's rules by kind apply</td>
+</tr>
+<tr>
+<td><code>energy</code></td>
+<td>string</td>
+<td>Optional, on a supply or load function only: <code>"in"</code> or <code>"out"</code>. Default: load in, supply out. Any other kind fails lint (<code>ENERGY_ON_NON_POWER</code>)</td>
+</tr>
+<tr>
+<td><code>ports</code></td>
+<td>array of tables</td>
+<td>See below. At least one entry</td>
+</tr>
+<tr>
+<td><code>links</code></td>
+<td>array of tables</td>
+<td>See below. Optional; omit for a function with no internal connectivity</td>
+</tr>
+</tbody>
+</table>
+<p><code>ports</code> entries:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>The part's own terminal marking, e.g. <code>"13"</code>, <code>"A1"</code>. Unique within the part, except pins of connectors that print a label. Name a terminal as the device prints it (<code>IN1+</code>, <code>OUT-</code>); where printed names repeat on the part, by its function, numbered (<code>L</code>, <code>N</code>, <code>PE</code>, <code>24V1</code>, <code>GND1</code>, <code>S24V</code>, <code>F24V1</code>) (owner 2026-09-26, parts-0005)</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>string</td>
+<td>A <code>PortRole</code> value: <code>"generic"</code>, <code>"internal"</code>, <code>"external"</code>, <code>"pe"</code>, or a throw role <code>"common"</code>, <code>"break"</code> (closed at rest), <code>"make"</code> (closed when operated). Every port of a <code>contact_co</code> function takes a throw role, whatever its pin name (<code>CHANGEOVER_ROLE</code>, decisions model-0091, parts-0007)</td>
+</tr>
+<tr>
+<td><code>symbol_port</code></td>
+<td>string</td>
+<td>Optional. The role-named port of <code>symbol</code> this port maps to, e.g. <code>"in"</code>, <code>"out"</code>. A port with no <code>symbol_port</code> keeps its own name. A <code>symbol_port</code> on a function with no <code>symbol</code> is a lint error (<code>SYMBOL_PORT_WITHOUT_SYMBOL</code>). A <code>contact_co</code> port takes none: the drawing binds a changeover by its throw roles (<code>CHANGEOVER_SYMBOL_PORT</code>)</td>
+</tr>
+<tr>
+<td><code>marking</code></td>
+<td>string</td>
+<td>Optional. What a drawing prints on this pin, when it differs from <code>name</code>. Omit it to print <code>name</code>; write <code>""</code> to print nothing</td>
+</tr>
+<tr>
+<td><code>side</code></td>
+<td>string</td>
+<td>Optional: <code>"line"</code> or <code>"load"</code>; else the marking fills it (parts-0010)</td>
+</tr>
+<tr>
+<td><code>conductor</code></td>
+<td>string</td>
+<td>Optional: <code>"L1"</code>, <code>"L2"</code>, <code>"L3"</code>, <code>"N"</code>, <code>"L+"</code>, <code>"L-"</code>, <code>"M"</code>; not <code>"PE"</code> (use <code>role = "pe"</code>), filled likewise</td>
+</tr>
+</tbody>
+</table>
+<p><code>links</code> entries:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a</code></td>
+<td>string</td>
+<td>A <code>name</code> from this function's <code>ports</code></td>
+</tr>
+<tr>
+<td><code>b</code></td>
+<td>string</td>
+<td>A <code>name</code> from this function's <code>ports</code></td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>string</td>
+<td>A <code>LinkKind</code> value: <code>"conductive"</code>, <code>"switched"</code> or <code>"protective"</code></td>
+</tr>
+<tr>
+<td><code>rest</code></td>
+<td>string</td>
+<td>Optional, <code>switched</code> only: <code>"open"</code> or <code>"closed"</code></td>
+</tr>
+</tbody>
+</table>
+<p>A <code>protective</code> link is a fuse or breaker, closed in service. It ends the physical net but not the
+supply rail (decision model-0122). An overload's main path is <code>conductive</code>.</p>
+<p>In a <code>contact_co</code> function, every <code>switched</code> link joins the <code>common</code> port to a <code>break</code> or a
+<code>make</code> port (<code>CHANGEOVER_LINK</code>).</p>
+<p>Rest state (decision parts-0008): a <code>contact_no</code> or <code>contact_nc</code> may omit <code>rest</code> and must agree
+if it writes it. A <code>switch</code> or <code>generic</code> function must write <code>rest</code>. Lint, all
+<code>ERROR</code>: <code>SWITCHED_LINK_WITHOUT_REST</code>, <code>REST_DISAGREES_WITH_KIND</code>, <code>REST_ON_UNSWITCHED_LINK</code>,
+<code>CONTACT_WITHOUT_SWITCHED_LINK</code>, and <code>SYMBOL_REST_MISMATCH</code> (<code>make-contact</code> is open and
+<code>break-contact</code> and <code>emergency-stop</code> closed).</p>
+<h3 id="supply"><code>[[supply]]</code></h3>
+<p>Zero or more per file. Maps to the model's <code>supply</code> facet, which allows many per part.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>supplier</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>supplier_part_number</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>string</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<h3 id="footprint"><code>[footprint]</code></h3>
+<p>At most one per file. Maps to the model's <code>footprint</code> facet (subject: <code>Part</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>library</code></td>
+<td>string</td>
+<td>A KiCad footprint library name</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>The footprint's name within that library</td>
+</tr>
+</tbody>
+</table>
+<p>Written into the KiCad netlist as <code>library:name</code> (design section 7). <code>fransys_kicad</code> writes
+this reference; it does not read the footprint itself.</p>
+<h3 id="cable_product"><code>[cable_product]</code></h3>
+<p>At most one per file. Maps to the model's <code>cable_product</code> facet (subject: <code>Part</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core_count</code></td>
+<td>integer</td>
+<td>The author's checksum: the lint's <code>CABLE_CORE_COUNT</code> compares it with <code>core_colours</code>. The model stores no count; it reads <code>len(core_colours)</code> (model-0082)</td>
+</tr>
+<tr>
+<td><code>core_colours</code></td>
+<td>array of strings</td>
+<td>One entry per core, in core index order, e.g. <code>["BN", "BK", "GY", "GNYE"]</code>. Each is an IEC 60757 colour code: a base code, two base codes joined (<code>GNYE</code>), a base code with a number (<code>BK1</code>), or <code>SH</code> for a shield (model-0070); anything else is an ERROR</td>
+</tr>
+<tr>
+<td><code>gauge_mm2</code></td>
+<td>string</td>
+<td>Cross-section in mm², read as <code>Decimal</code></td>
+</tr>
+<tr>
+<td><code>shielded</code></td>
+<td>boolean</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="functionprotection"><code>[function.protection]</code></h3>
+<p>A <code>protection</code> function names its device in <code>type</code>: <code>"fuse"</code>, <code>"mcb"</code>, <code>"motor_breaker"</code>,
+<code>"overload"</code> or <code>"rcd"</code>. The loader writes it to <code>FunctionTemplate.protection_type</code>, null when absent.
+Lint: <code>PROTECTION_WITHOUT_TYPE</code> (<code>WARNING</code>), <code>PROTECTION_TYPE_ON_NON_PROTECTION</code>
+(<code>ERROR</code>), <code>PROTECTION_LINK_KIND</code> (<code>ERROR</code>, a
+<code>switched</code> link) and <code>SYMBOL_TYPE_MISMATCH</code> (<code>ERROR</code>, a symbol of another type).</p>
+<p>Default symbols (layout-0105). A <code>symbol</code> on the part or a layout choice always wins.</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>switch, open at rest</td>
+<td><code>make-contact</code></td>
+</tr>
+<tr>
+<td>switch, closed at rest</td>
+<td><code>break-contact</code></td>
+</tr>
+<tr>
+<td><code>fuse</code></td>
+<td><code>fuse</code></td>
+</tr>
+<tr>
+<td><code>mcb</code>, <code>motor_breaker</code></td>
+<td><code>circuit-breaker</code></td>
+</tr>
+<tr>
+<td><code>overload</code></td>
+<td><code>thermal-overload</code>, one box per pole</td>
+</tr>
+<tr>
+<td><code>rcd</code></td>
+<td><code>rcd</code></td>
+</tr>
+<tr>
+<td>protection with no type</td>
+<td><code>circuit-breaker</code></td>
+</tr>
+</tbody>
+</table>
+<p>An emergency stop has no default: name <code>emergency-stop</code> in <code>symbol</code>.</p>
+<p>Poles (F4, model-0128). A pole is a switched or protective link, or a protection function's
+conductive link. Poles run in natural marking order, line side on top; no side fact keeps marking order.</p>
+<p>The <code>[function.connector]</code> table is in <code>part-file-connectors.md</code>.</p>
+<h3 id="functionplc_channel"><code>[function.plc_channel]</code></h3>
+<p>A sub-table of the <code>[[function]]</code> entry it describes (P1): a multi-channel PLC module part has
+one <code>[[function]]</code>, and one <code>[function.plc_channel]</code>, per channel. Maps to the model's
+<code>plc_channel</code> facet (subject: <code>FunctionTemplate</code>).</p>
+<div class="highlight"><pre><span></span><code><span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"di_3"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"plc_channel"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="w"> </span><span class="p">}]</span>
+
+<span class="k">[function.plc_channel]</span>
+<span class="n">signal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"di"</span>
+<span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>signal</code></td>
+<td>string</td>
+<td>A <code>SignalType</code> value: <code>"di"</code>, <code>"do"</code>, <code>"ai_current"</code>, <code>"ai_voltage"</code>, <code>"ao_current"</code>, <code>"ao_voltage"</code>, <code>"rtd"</code>, <code>"relay"</code></td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td>integer</td>
+<td>Channel number on the module</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rating-functionrating-and-functionoperating"><code>[rating]</code>, <code>[function.rating]</code> and <code>[function.operating]</code></h3>
+<p><code>[rating]</code> (top level, at most one per file) is the part's own rating, e.g. a cable's rated
+voltage or a fuse link in its holder; it maps to the <code>part_rating</code> facet (subject: <code>Part</code>).
+<code>[function.rating]</code> and <code>[function.operating]</code> are sub-tables of a <code>[[function]]</code> entry (P1); they
+map to the <code>rating</code> and <code>operating</code> facets (subject: <code>FunctionTemplate</code>). <code>power_loss_w</code> is the heat given off at the rated load. <code>resistance_ohm</code>, <code>nominal_power_w</code> and
+<code>nominal_current_a</code> are stated at <code>nominal_voltage_v</code>. No check reads the first two (model-0125, parts-0009).
+A part states <code>power_loss_w</code> once, in <code>[rating]</code> or per function: both is <code>POWER_LOSS_TWICE</code> (<code>ERROR</code>).
+A function takes its template's rating, else its part's, as a whole record: a template rating with only an AC value
+hides the part's DC value (decisions model-0079, parts-0004).</p>
+<div class="highlight"><pre><span></span><code><span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"coil"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"coil"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"A1"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"A2"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="w"> </span><span class="p">}]</span>
+
+<span class="k">[function.rating]</span>
+<span class="n">voltage_ac_v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"250"</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Fields, all optional</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[rating]</code>, <code>[function.rating]</code></td>
+<td><code>voltage_ac_v</code>, <code>voltage_dc_v</code>, <code>current_ac_a</code>, <code>current_dc_a</code>, <code>min_breaking_current_a</code>, <code>power_loss_w</code>, <code>breaking_ac</code>, <code>breaking_dc</code></td>
+</tr>
+<tr>
+<td><code>[function.operating]</code></td>
+<td><code>voltage_ac_v</code>, <code>voltage_dc_v</code>, <code>nominal_voltage_v</code>, <code>max_voltage_v</code>, <code>min_voltage_v</code>, <code>capacity_ah</code>, <code>max_current_ac_a</code>, <code>max_current_dc_a</code>, <code>resistance_ohm</code>, <code>nominal_power_w</code>, <code>nominal_current_a</code>, <code>fault_current_ac_a</code>, <code>fault_current_dc_a</code>, <code>fault_time_constant_ms</code></td>
+</tr>
+</tbody>
+</table>
+<p>A breaking list is non-empty. A <code>breaking_dc</code> point may add <code>time_constant_ms</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">breaking_dc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">voltage_v</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"1000"</span><span class="p">,</span><span class="w"> </span><span class="n">current_a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"15000"</span><span class="p">,</span><span class="w"> </span><span class="n">time_constant_ms</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"15"</span><span class="w"> </span><span class="p">}]</span>
+</code></pre></div>
+<p><code>min_breaking_current_a</code> marks a partial-range fuse (an aBat link): the lowest current it
+breaks. It bounds no continuous current. <code>max_current_ac_a</code> and <code>max_current_dc_a</code> are a source's continuous current limit, charging included (decision model-0088).</p>
+<p>Every value is a string in plain decimal notation (digits with an optional fraction), read as
+<code>Decimal</code>. A rating value is above 0; a <code>[function.operating]</code> value
+may also be 0 (<code>"0"</code>, <code>"0.0"</code>: a source's minimum voltage), decision parts-0006. A bare TOML
+float is <code>FLOAT_FORBIDDEN</code> and an integer is <code>FIELD_TYPE</code>. The lint refuses, as <code>ERROR</code>, a table
+with no field (<code>RATING_TABLE_EMPTY</code>) and a value outside those rules, negative or not plain
+(<code>RATING_VALUE_INVALID</code>). The <code>RATING_VOLTAGE_BELOW_CIRCUIT</code> and
+<code>RATING_CURRENT_BELOW_BRANCH</code> checks read a rating. Of the operating values, only <code>max_current_*</code>, <code>nominal_current_a</code> and <code>fault_*</code> are read. A part
+with no current rating limits no branch (model-0088).</p>
+<h3 id="pcb"><code>[pcb]</code></h3>
+<p>At most one per file. Maps to the model's <code>pcb</code> facet (subject: <code>Part</code>); marks a board part.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>revision</code></td>
+<td>string</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="rules">Rules</h2>
+<ul>
+<li><strong>No floats.</strong> Every table is read with <code>parse_float=Decimal</code>. A bare TOML float (<code>1.5</code>
+  unquoted) is <code>FLOAT_FORBIDDEN</code> wherever it sits in the file; write it as a string (<code>"1.5"</code>).</li>
+<li><strong>Quantities are strings read as <code>Decimal</code>.</strong> <code>gauge_mm2</code> is the example.</li>
+<li><strong>Lengths are integer millimetres.</strong> A length field is a plain TOML integer.</li>
+<li><strong>The symbol key is a slug.</strong> <code>symbol</code> is lowercase and hyphenated (<code>"operating-device"</code>,
+  <code>"change-over-contact"</code>), naming a key in <code>electrical-symbols</code>. <code>fransys_parts</code> checks the
+  slug's shape only; the layout engine reports an unknown symbol or unbound port.</li>
+<li><strong><code>symbol_port</code> names a role of the symbol, not a marking of the part.</strong> The symbol knows
+  shapes and calls its ports by role (<code>in</code>, <code>out</code>, <code>com</code>, <code>nc</code>, <code>no</code>); the part knows markings
+  and calls the same ports by what is printed on it. <code>ports.marking</code> overrides what is printed (design section 6). A changeover binds by its throw roles.</li>
+<li><strong>Footprint is <code>library:name</code>.</strong> Never a bare name.</li>
+<li><strong>No multi-line strings.</strong> The loader finds a record's line by scanning the file text once for
+  table headers (decision parts-0001); a multi-line string could hide a header. No string value
+  may contain a line break (lint: <code>MULTILINE_STRING</code>, checked on the parsed values).</li>
+<li><strong>A file that cannot be read is a finding, not a crash.</strong> An unreadable or non-UTF-8 part file is
+  <code>FILE_UNREADABLE</code>; <code>lint</code> and <code>load_path</code> still check every other file.</li>
+</ul>
+<h2 id="worked-examples">Worked examples</h2>
+<p>The files below are the start of the demo part library (<code>examples/demo-parts/</code>), the worked
+example of this contract and the fixture every test builds on.</p>
+<p><code>examples/demo-parts/demo_parts/library.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"demo-parts"</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"0.1.0"</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Invented parts for Fransys's tests and documentation."</span>
+</code></pre></div>
+<p><code>examples/demo-parts/demo_parts/parts/relay-2co-24vdc.toml</code>: a relay with a coil function and two
+changeover-contact functions, each contact's <code>links</code> marking the switched connectivity inside it:</p>
+<div class="highlight"><pre><span></span><code><span class="n">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="k">[part]</span>
+<span class="n">mpn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"DEMO-RLY-2CO-24"</span>
+<span class="n">manufacturer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Demo"</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Relay, 2 changeover contacts, 24 V DC coil"</span>
+<span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"electromechanical"</span>
+<span class="n">class_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"K"</span>
+
+<span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"coil"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"coil"</span>
+<span class="n">symbol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"operating-device"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"A1"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="p">,</span><span class="w"> </span><span class="n">symbol_port</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"in"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"A2"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"generic"</span><span class="p">,</span><span class="w"> </span><span class="n">symbol_port</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"out"</span><span class="w"> </span><span class="p">}]</span>
+
+<span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"co_1"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"contact_co"</span>
+<span class="n">symbol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"change-over-contact"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"11"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"common"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"12"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"break"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"14"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"make"</span><span class="w"> </span><span class="p">},</span>
+<span class="p">]</span>
+<span class="n">links</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"11"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"12"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"switched"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"11"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"14"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"switched"</span><span class="w"> </span><span class="p">}]</span>
+
+<span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"co_2"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"contact_co"</span>
+<span class="n">symbol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"change-over-contact"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"21"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"common"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"22"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"break"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"24"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"make"</span><span class="w"> </span><span class="p">},</span>
+<span class="p">]</span>
+<span class="n">links</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"21"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"22"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"switched"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"21"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"24"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"switched"</span><span class="w"> </span><span class="p">}]</span>
+
+<span class="k">[[supply]]</span>
+<span class="n">supplier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Demo Supply"</span>
+<span class="n">supplier_part_number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"DS-0001"</span>
+</code></pre></div>
+<p><code>examples/demo-parts/demo_parts/parts/terminal-feedthrough-2_5.toml</code>: a feed-through terminal, one
+function with <code>internal</code>/<code>external</code> ports joined by a <code>conductive</code> link, so a wire on either side
+is the same net:</p>
+<div class="highlight"><pre><span></span><code><span class="n">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="k">[part]</span>
+<span class="n">mpn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"DEMO-TB-2.5"</span>
+<span class="n">manufacturer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Demo"</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Feed-through terminal block, 2.5 mm2"</span>
+<span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"terminal"</span>
+<span class="n">class_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"X"</span>
+
+<span class="k">[[function]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"terminal"</span>
+<span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"terminal"</span>
+<span class="n">symbol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"terminal"</span>
+<span class="n">ports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"internal"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"internal"</span><span class="p">,</span><span class="w"> </span><span class="n">symbol_port</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"n"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"external"</span><span class="p">,</span><span class="w"> </span><span class="n">role</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"external"</span><span class="p">,</span><span class="w"> </span><span class="n">symbol_port</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"s"</span><span class="w"> </span><span class="p">},</span>
+<span class="p">]</span>
+<span class="n">links</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"internal"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"external"</span><span class="p">,</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"conductive"</span><span class="w"> </span><span class="p">}]</span>
+</code></pre></div>
+<p><code>examples/demo-parts/demo_parts/parts/cable-4g1_5.toml</code>: a cable part with no functions of its own; its
+cores are conductors created when an item is instantiated as a cable, not functions or ports on the part itself:</p>
+<div class="highlight"><pre><span></span><code><span class="n">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="k">[part]</span>
+<span class="n">mpn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"DEMO-CBL-4G1.5"</span>
+<span class="n">manufacturer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Demo"</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Control cable, 4 cores including PE, 1.5 mm2"</span>
+<span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cable"</span>
+<span class="n">class_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"W"</span>
+
+<span class="k">[cable_product]</span>
+<span class="n">core_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="n">core_colours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"BN"</span><span class="p">,</span><span class="w"> </span><span class="s2">"BK"</span><span class="p">,</span><span class="w"> </span><span class="s2">"GY"</span><span class="p">,</span><span class="w"> </span><span class="s2">"GNYE"</span><span class="p">]</span>
+<span class="n">gauge_mm2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1.5"</span>
+<span class="n">shielded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</code></pre></div>
+<h2 id="packaging-and-pinning">Packaging and pinning</h2>
+<p>A part library is an ordinary Python data package: no build step beyond packaging the TOML
+files, no Fransys code inside it.</p>
+<ul>
+<li><strong>Normal use.</strong> A project pins the library as a git dependency with an exact
+  revision: <code>co-parts = { git = "https://...", rev = "&lt;sha&gt;" }</code> in its <code>pyproject.toml</code>.
+  <code>uv.lock</code> then pins the resolved commit, so a build needs no access to the library
+  repository.</li>
+<li><strong>While authoring new parts.</strong> The project instead points <code>[tool.uv.sources]</code> at a local
+  checkout (<code>co-parts = { path = "../co-parts", editable = true }</code>), so edits to a part file are
+  picked up without a commit and a re-pin. This is switched back to the git form before the
+  change ships.</li>
+<li><code>fransys_parts.lint</code> is meant to run in the library's own CI, so a bad part fails there and
+  never reaches a project's build.</li>
+</ul>
+<h2 id="versioning">Versioning</h2>
+<ul>
+<li><code>schema</code> (an integer, <code>1</code> today) is the part-file schema version, not the library's own <code>version</code>.
+  A library can ship many releases against one <code>schema</code>.</li>
+<li>A breaking change to this contract (a renamed field, a changed meaning, a removed table) bumps
+  <code>schema</code>. It is never changed in place under the same number.</li>
+<li><code>fransys_parts.SUPPORTED_SCHEMAS: frozenset[int]</code> names the accepted <code>schema</code> values;
+  today <code>frozenset({1})</code>. <code>library.toml</code> and every part file carry <code>schema</code>; a value outside
+  <code>SUPPORTED_SCHEMAS</code> is the lint finding <code>SCHEMA_UNSUPPORTED</code>, naming the file and the value
+  found, and a part file whose <code>schema</code> differs from its <code>library.toml</code> is <code>SCHEMA_MIXED</code>.</li>
+<li>There is no migration framework. A library bumps <code>schema</code> for every part file in one commit.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.3c842f4c.min.js"></script>
+      
+    
+  </body>
+</html>

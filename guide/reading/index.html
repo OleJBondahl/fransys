@@ -1,0 +1,1750 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/guide/reading/">
+      
+      
+        <link rel="prev" href="../documents/">
+      
+      
+        <link rel="next" href="../findings/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.68">
+    
+    
+      
+        <title>Reading a model - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.595f2bf5.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b27955a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reading a model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The tables
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-units-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One unit's release
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rails-boundaries-and-function-kinds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rails, boundaries and function kinds
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rows
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#designations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Designations
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ratings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ratings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-a-branchs-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking a branch's current
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-a-fault-and-a-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking a fault and a load
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-worked-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A worked example
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The tables
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-units-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One unit's release
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rails-boundaries-and-function-kinds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rails, boundaries and function kinds
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rows
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#designations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Designations
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ratings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ratings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-a-branchs-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking a branch's current
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-a-fault-and-a-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking a fault and a load
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-worked-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A worked example
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="reading-a-model">Reading a model</h1>
+<p><code>fransys.derive</code> is the read side of a model: every designation, table, row and rating a
+script might need already has a function here, and layout, render and every output call the
+same ones. This page does not restate <code>fr.derive</code>'s whole surface. Every function carries its
+own docstring at its definition, and that docstring is the full reference. What follows is a
+short tour of the read surface as this release documents it explicitly: enough to know what is
+there and how to reach for it.</p>
+<p>Two facts hold across the whole surface, so they are said once, here:</p>
+<ul>
+<li>Ids are opaque keys. A script looks a record up by its id (in a table, or by passing the id
+  to a <code>derive</code> function); it never builds, parses or prints an id itself.</li>
+<li>An item's name is <code>item.key[-1]</code>. There is no separate <code>.name</code> field.</li>
+</ul>
+<h2 id="the-tables">The tables</h2>
+<p><code>fransys.derive.units(model)</code> returns every <code>Unit</code> of <code>model</code>, by id, as a
+<code>frozendict[Id[Unit], Unit]</code>. The other tables (<code>nets</code>, <code>unit_releases</code>, <code>supply_systems</code>,
+and more) follow the same shape: one function per record kind, keyed by id.</p>
+<ul>
+<li><code>fransys.derive.nets(model)</code>: every <code>Net</code> of <code>model</code>, by id.</li>
+<li><code>fransys.derive.unit_releases(model)</code>: every <code>UnitRelease</code> of <code>model</code>, by id. A
+  <code>UnitRelease</code> is the product a <code>Unit</code> instantiates (its name, version, revision, interface,
+  title and document number); several <code>Unit</code>s can share one release.</li>
+<li><code>fransys.derive.supply_systems(model)</code>: every <code>SupplySystem</code> of <code>model</code>, by id. A
+  <code>SupplySystem</code> is a declared supply and its rails (a potential name, its maximum voltage and,
+  for AC, its phase).</li>
+</ul>
+<h2 id="one-units-release">One unit's release</h2>
+<p><code>fransys.derive.unit_release(model, unit)</code> reads the one <code>UnitRelease</code> record a <code>Unit</code>
+instance is of. It is the one reader of a unit's release facts.</p>
+<p><code>fransys.derive.unit_location(model, unit)</code> returns the location node <code>unit</code> is placed at:
+its root items' own location, or their nearest common ancestor; <code>None</code> when no root is placed.</p>
+<h2 id="rails-boundaries-and-function-kinds">Rails, boundaries and function kinds</h2>
+<p><code>fransys.derive.port_rails(model, port)</code> returns the rails a port carries, as a
+<code>frozenset[str]</code> of potential names: empty for a port that carries none, or is not in
+<code>model</code>. A rail only exists once some <code>SupplySystem</code> declares the potential and some <code>Net</code>
+carries it; wiring alone declares no rail.</p>
+<p><code>fransys.derive.port_potential_rank(model, port)</code> is the rank of the potential a pin carries, or <code>None</code>.
+A smaller rank is drawn higher up. It reads the supply's facts, never a rail's name. The order is AC phases,
+DC above 0 V, AC at 0 V, DC at 0 V, DC below 0 V, then PE. A pin behind a switch keeps its
+rail's rank. A pin reached from two rails takes the lower. <code>fransys.derive.port_potential_current(model,
+port)</code> gives the rail's <code>Current</code>, and <code>None</code> for PE or no rank.</p>
+<p><code>fransys.derive.takes_energy(model, function)</code> is <code>True</code> when <code>function</code> takes energy in: its part's
+declared <code>energy</code> when it has one, else <code>True</code> for a <code>load</code> and <code>False</code> for any other kind. A box draws
+the pins of an energy-in function above those of an energy-out one.</p>
+<p><code>fransys.derive.gives_energy(model, function)</code> is <code>True</code> when <code>function</code> gives energy out: its part's
+declared <code>energy</code> when it has one, else <code>True</code> for a <code>supply</code> and <code>False</code> for any other kind. A box draws
+a function that takes or gives energy above a signal function.</p>
+<p><code>fransys.derive.no_conductor_at(model, port)</code> is <code>True</code> when no conductor (wire, jumper, cable core
+or link) ends at <code>port</code>. Unlike <code>unconnected_ports</code>, a mate or a declared net does not count.</p>
+<p><code>fransys.derive.box_pairs(model, drawn=None)</code> maps each function wired pin to pin to one function of another
+item, to a <code>BoxPair</code> (<code>function</code>, <code>partner</code>, <code>port_pairs</code>). Every port needs a two-port net to the partner, one to one. With <code>drawn</code>, a collection of ports, only those ports count on either side. Layout passes the ports <code>port_is_unused</code> leaves when a profile hides unused pins, so pass that same set rather than a count of your own.</p>
+<p><code>fransys.derive.port_is_unused(model, port)</code> is <code>True</code> when no conductor ends at <code>port</code> and no declared
+net has it. A mate does not count. <code>fransys.derive.function_is_unused(model, function)</code> is <code>True</code> when
+every port of <code>function</code> is unused: the function <code>hide_unused_pins</code> leaves off the page, and a contact
+among them is a spare in its coil's contact table.</p>
+<p><code>fransys.derive.power_kind(model, net)</code> returns a <code>PowerKind</code> for a declared net: <code>SUPPLY</code>,
+<code>GROUND</code>, <code>PE</code> or <code>NONE</code>. A net of class <code>pe</code> is <code>PE</code>. A potential of a DC supply is <code>GROUND</code> at
+0 V and <code>SUPPLY</code> otherwise. An AC rail, a potential in no supply, no potential, or two
+potentials on one wired net is <code>NONE</code>. So is a wired net of exactly two ports. A point-to-point
+connection is a wire; only a net of three or more ports is a rail. A PE net stays <code>PE</code>. <code>port_power_kind(model, port)</code> gives the kind of a
+port's wired net. A DC supply declares its 0 V rail (<code>rails={"24V": ("24", None), "0V": ("0",
+None)}</code>). Without it, the 0 V net gets references, not a ground symbol. <code>power_text(model, net)</code>
+is the text a power symbol prints: the supply's name, else its potential. It is <code>None</code> for
+<code>GROUND</code>, <code>PE</code> and <code>NONE</code>. <code>port_power_text(model, port)</code> gives the text of the symbol at a port.
+<code>is_rail_terminal(model, terminal)</code> is true for a terminal on a DC rail or PE net, bridged to
+another terminal of its strip.
+A schematic page draws no rail terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and the wire list still hold every landing and wire.
+A terminal is drawn at the pin it serves, once per page. A single-wire contact, and a coil on a PLC output channel, are drawn at the pin they serve, with a reference back to their device. A rail symbol faces away from its box: up above a top pin, down below a bottom pin.</p>
+<p><code>fransys.derive.wire_rows(model, *, unit=None)</code> returns the wire list: one <code>WireRow</code> per
+wire, with <code>from_</code>, <code>to</code>, <code>colour</code>, <code>cross_section_mm2</code> and <code>label</code>. The <code>label</code> is the two end
+designations joined by one space in a fixed order, the text the wire list and sleeves print. A schematic page prints no wire label. A jumper,
+a core, a link, a harness wire: none. <code>fr.write</code> writes these rows as <code>&lt;set&gt;-wires.csv</code>.</p>
+<p><code>fransys.derive.boundary(model, unit)</code> returns the functions that make up a unit's
+interface, as a tuple of function ids in id order. Only <code>TERMINAL</code> and <code>CONNECTOR</code> functions
+can be a unit's boundary.</p>
+<p><code>fransys.derive.FunctionKind</code> is the enum of what a <code>Function</code> exposes: <code>COIL</code>,
+<code>CONTACT_NO</code>, <code>TERMINAL</code>, <code>CONNECTOR</code>, <code>SUPPLY</code>, and so on. A function's <code>kind</code> is one of
+these.</p>
+<p><code>fransys.derive.connector_facets(model)</code> returns every <code>connector</code> facet, by the function
+template it describes, as a <code>frozendict[Id[FunctionTemplate], ConnectorFacet]</code>.</p>
+<h2 id="rows">Rows</h2>
+<p><code>fransys.derive.bom_lines(model, scope=None)</code> returns the parts list, one <code>BomLine</code> per
+installed, non-external part (by mpn, revision and part), or one line per nested unit when
+<code>scope</code> is a unit. <code>scope</code> narrows what is counted: <code>None</code> for the whole model, an item id for
+that item's subtree, an aspect-node id for what is placed there, a unit id for that unit's
+own items and its directly nested units, or <code>fransys.derive.TOP_LEVEL</code> for items with no
+unit plus one line per top-level unit. <code>TOP_LEVEL</code>'s type, <code>fransys.derive.TopLevelScope</code>,
+is exported only so a script can annotate a variable that holds it.</p>
+<p><code>fransys.derive.NO_PLACE</code> is the text "N/A" a coil's contact table prints after the mark of a
+contact that no conductor reaches, in place of a page position.</p>
+<p><code>fransys.derive.bom_sort_key(model, item)</code> is the sort key <code>bom_lines</code> orders a line's
+<code>designations</code> by: a terminal by its strip, group and index; any other item by its whole
+designation in <code>fransys.derive.natural_key</code> order. Digit runs compare as numbers, so <code>-K2</code> sorts
+before <code>-K10</code>. Every list that sorts by designation uses that order.</p>
+<p><code>fransys.derive.is_cable(model, item)</code> returns whether <code>item</code> is a cable: whether its part
+carries a <code>cable_product</code> facet (decision model-0108). <code>fransys.derive.cable_items(model)</code>
+returns every such item, as a <code>frozenset[Id[Item]]</code>. Neither reads <code>item</code>'s own <code>category</code> or
+its <code>cable</code> facet, which records only the as-installed length. Every cable-selecting function
+on this page (<code>harness_cables</code>, <code>top_level_cables</code>, <code>unit_cables</code>, <code>cable_list_rows</code>) reads
+through one of these two, so none can disagree about what a cable is. <code>unit_cable_page_key</code> is gone: the block key is internal.</p>
+<p><code>fransys.derive.is_plc_module(model, item)</code> returns whether <code>item</code>'s part has category
+<code>PLC_MODULE</code>. A rack is an item with at least one such child, and <code>plc_rack_modules</code> lists them.</p>
+<p><code>fransys.derive.unit_strips(model, unit)</code> and <code>fransys.derive.unit_boards(model, unit)</code>
+return the terminal strips and the boards that <code>unit</code> owns directly, sorted by id, never those of
+a unit nested in it.</p>
+<p><code>fransys.derive.mates(model)</code> returns one <code>MateRow</code> per <code>d.mate</code> in the model, at every level: a mate
+on a board, and a plug mated to a unit's interface connector. A row holds the two mated functions (each a connector or terminal),
+<code>a</code> and <code>b</code> in the authored order, and <code>a_designation</code> and <code>b_designation</code>, the text the connector
+list prints. Rows sort by those two texts. Reach an item through the function. <code>connector_rows</code> covers
+board connectors only.</p>
+<p><code>fransys.derive.terminal_items(model)</code> returns every item that carries a <code>terminal</code> facet, as a
+<code>frozenset[Id[Item]]</code>. Select terminals through it, so no script rebuilds the set.</p>
+<p><code>fransys.derive.pin_order(marking, port)</code> returns the sort key of a pin: markings of decimal digits
+first by value, the rest after by string (<code>1, 2, 10, A1</code>). The connector list, <code>harness_cables</code> and
+the overview sort by it, and <code>fn.pins</code> follows it. Sort pins through it, so no script keeps a second order.</p>
+<p><code>fransys.derive.harness_wires(model, harness)</code> returns the <code>WireRow</code>s of the wires on the harness's plugs.</p>
+<p><code>fransys.derive.cable_list_rows(model)</code> returns one <code>CableListRow</code> per top-level cable
+(every cable item, <code>is_cable</code>, with <code>unit=None</code>, harness cables included), with its product
+facts. <code>from_label</code> is the first end's designation. <code>to_label</code> lists every other end's, in the
+cable's end order, joined by <code>,</code>.</p>
+<p><code>fransys.derive.contents_rows(cables)</code> reshapes a tuple of <code>HarnessCable</code>s (from
+<code>harness_cables</code>, <code>top_level_cables</code> or <code>unit_cables</code>) into one <code>ContentsRow</code> per cable, its
+product facts alongside <code>ends</code>: every end's designation, in the cable's own order, joined by an
+en dash, with a blank end dropped along with its dash. <code>CONTENTS_COLUMNS</code> names its columns, in
+print order.</p>
+<h2 id="designations">Designations</h2>
+<p><code>fransys.derive.item_designation(model, item)</code> renders an item's own printed label, such as
+<code>K1</code>, or <code>U1-K1</code> for one nested inside a board.</p>
+<p><code>fransys.derive.port_designation(model, port)</code> renders a port's label: the item's
+designation plus the port's name, dash-prefixed like every physical tag (<code>-K1:13</code>).</p>
+<p><code>fransys.derive.reference_designation(model, item)</code> renders an item's full reference: its
+location and its product designation together (<code>+C1-K1</code>).</p>
+<p><code>fransys.derive.printed_designation(model, item)</code> renders an item the way a list prints it:
+dash-prefixed, product part only, with no location segment.</p>
+<p>Each of these takes further keyword-only options (an inner board to render relative to, a unit
+to render for that unit's own document); their docstrings cover the exact rules.</p>
+<p><code>fransys.derive.item_label(model, item)</code> is <code>item_designation</code>'s no-raise twin: an item's own
+text, or its authoring key joined by <code>/</code> when it has none yet.</p>
+<p><code>fransys.derive.location_node_designation(model, node)</code> renders a location node's own signed
+path, root to leaf (<code>+C1</code>, nested <code>+ER+C1</code>) -- the same segment <code>reference_designation</code> prints
+for an item placed there. Caution: not for a title block's scope cell, which deliberately keeps
+the bare label.</p>
+<p><code>fransys.derive.owned_contacts(model, device)</code> returns the contact functions <code>device</code> owns,
+sorted by id: its own and those of its add-on contact blocks. A block is a child item whose
+functions are all contacts; it carries no designation and prints <code>device</code>'s (decision model-0119).</p>
+<p><code>fransys.derive.item_of_port(model, port)</code> returns the item whose function owns <code>port</code>, the
+lookup <code>port_designation</code> itself reads through.</p>
+<h2 id="ratings">Ratings</h2>
+<p><code>fransys.derive.part_rating(model, part)</code> returns the rating stated on a part itself, for a
+part with no function to rate, such as a fuse link. <code>None</code> when the part states none. It reads
+the model after the build.
+<code>d.rating</code> and <code>d.operating</code> state a rating or an operating envelope while authoring; the
+functions below read it back.</p>
+<p><code>fransys.derive.function_rating(model, function)</code> returns the rating a function's template
+states, else its part's. <code>None</code> when neither states one.</p>
+<p><code>fransys.derive.part_function_rows(model)</code> returns one <code>PartFunctionRow</code> per function a part
+declares: its <code>part</code>, <code>mpn</code>, <code>template</code>, <code>name</code>, <code>kind</code> and <code>rating</code>, sorted by MPN. A part with
+no function, such as a fuse link, has one row with <code>template</code> and <code>kind</code> <code>None</code> and <code>name</code>
+empty. <code>rating</code> is the function's own, else the part's, the rule <code>function_rating</code> reads. It
+needs no design: a parts-only build is enough.</p>
+<p><code>fransys.derive.function_operating(model, function)</code> returns the operating envelope a
+function's template states. <code>None</code> with no template or no such facet.</p>
+<p><code>fransys.derive.boundary_rating(model, boundary)</code> returns the rating a unit states on one of
+its boundaries. <code>None</code> when the unit states none.</p>
+<p><code>fransys.derive.boundary_operating(model, boundary)</code> returns the operating envelope a unit
+states on one of its boundaries. <code>None</code> when the unit states none.</p>
+<p><code>fransys.derive.profile_of(model)</code> returns the layout profile the model authors, else the house one.</p>
+<h2 id="checking-a-branchs-current">Checking a branch's current</h2>
+<p><code>RATING_CURRENT_BELOW_BRANCH</code> compares each rated function with the current its branch can carry.
+A branch is bounded by a full-range protective device's rated current and by a source's
+<code>max_current_ac_a</code> or <code>max_current_dc_a</code>. A partial-range fuse, one with a minimum breaking current,
+bounds nothing. A load's draw is not an input.</p>
+<p>Every device on the branch must be rated at least the bound. Below it, the finding is an <code>ERROR</code>.
+Here a 160 A fuse protects a branch of a 186 A source, and the contactor pole is rated 150 A.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">g1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-STRING-864V"</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"DEMO-FUSE-DC-160"</span><span class="p">)</span>
+<span class="n">k1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"K1"</span><span class="p">,</span> <span class="s2">"DEMO-CONTACTOR-DC"</span><span class="p">)</span>
+<span class="n">x1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">x2</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X2"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"HV"</span><span class="p">,</span> <span class="n">g1</span><span class="o">.</span><span class="n">string</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span> <span class="n">f1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">f1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">k1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">k1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x1</span><span class="p">[</span><span class="s2">"internal"</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span> <span class="n">x2</span><span class="p">[</span><span class="s2">"internal"</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="p">(</span><span class="n">finding</span><span class="p">,)</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="s2">"RATING_CURRENT_BELOW_BRANCH"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">finding</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span>
+</code></pre></div>
+<p><code>fr.derive.current_chains(model)</code> returns the rated paths, grouped by loop, in order from the supply
+end. Each position names its functions and its bounds. A bound holds the value, the function that set
+it and its role, <code>source</code> or <code>protection</code>. Here the fuse's 160 A is the smallest limit reaching the pole.</p>
+<div class="highlight"><pre><span></span><code><span class="n">bounds</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">current_chains</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">positions</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">bounds</span><span class="p">}</span>
+<span class="k">assert</span> <span class="p">{(</span><span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">}</span> <span class="o">==</span> <span class="p">{(</span><span class="mi">160</span><span class="p">,</span> <span class="s2">"protection"</span><span class="p">)}</span>
+</code></pre></div>
+<p>Not checked: isolation, a cable against its installation, busbar authoring, a through-hole sensor, and
+per-path ratings across the functions of one part. A rated busbar item is checked like any other device.</p>
+<h2 id="checking-a-fault-and-a-load">Checking a fault and a load</h2>
+<p><code>RATING_BREAKING_BELOW_FAULT</code> compares a protective device's breaking points with the prospective fault
+current at its position. <code>fr.derive.prospective_fault(model)</code> returns what it reads: one <code>ProspectiveFault</code>
+per protective position and current kind. An entry holds the <code>position</code>, the <code>kind</code>, <code>current_a</code>,
+<code>time_constant_ms</code>, the source <code>functions</code> counted and the declared <code>supplies</code> counted.</p>
+<p>A source is a function that gives energy, or a supply declared by pins that states <code>fault_current_a</code>.
+A supply input takes energy and is no source. A source function with more than two conductive ports
+counts as no source: its pins would have to be grouped by rail.</p>
+<p>A bolted fault at one terminal of the device joins it to every other rail of the supplies the device
+reaches. A DC fuse behind a power supply does not see the AC rails. The device carries the sources on
+a path from the fault to its other terminal. A series run of sources counts at its largest member and
+parallel runs add. The larger of the two terminals' values is the entry's.</p>
+<p>The value is conservative only given every feed declared. Cable and busbar resistance are ignored, which
+errs high. An undeclared feed counts as no source, which errs low, so declare every feed's fault current.
+A position no source reaches reads <code>0</code>. A counted source that states none makes the value <code>None</code>, and the
+check stays silent.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">x1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="s2">"X1"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"DEMO-FUSE-DC-160"</span><span class="p">)</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"HV"</span><span class="p">,</span> <span class="n">plus</span><span class="o">=</span><span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minus</span><span class="o">=</span><span class="n">x1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">voltage</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">fault_current_a</span><span class="o">=</span><span class="mi">6000</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span> <span class="n">f1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">f1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">x1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span> <span class="n">x1</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="s2">"BK"</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+
+<span class="p">(</span><span class="n">fault</span><span class="p">,)</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">prospective_fault</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">fault</span><span class="o">.</span><span class="n">current_a</span> <span class="o">==</span> <span class="mi">6000</span>
+<span class="k">assert</span> <span class="n">fault</span><span class="o">.</span><span class="n">time_constant_ms</span> <span class="ow">is</span> <span class="kc">None</span>
+</code></pre></div>
+<p><code>LOAD_ABOVE_LIMIT</code> and <code>LOADS_ABOVE_LIMIT</code> compare a load's draw with the limit that bounds it.
+<code>fr.derive.load_limits(model)</code> returns one <code>LoadLimit</code> per load edge: the <code>function</code>, the <code>port</code> of a
+star edge (<code>None</code> for a two-port load), the <code>kind</code>, <code>draw_a</code> and the <code>bound</code>. The <code>bound</code> is a
+<code>CurrentBound</code>, or <code>None</code> when no limit bounds the load. The draw is the part's <code>nominal_current_a</code>,
+as stated.</p>
+<h2 id="a-worked-example">A worked example</h2>
+<p>The design is authored with <code>fr.design</code>; every read below runs on <code>result.model</code> after the build.
+A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is found by its <code>tag</code> in
+<code>fr.derive.items(model)</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BN</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Io</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">P1</span><span class="p">:</span> <span class="n">fr</span><span class="o">.</span><span class="n">Device</span>
+
+
+<span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"power-tap"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-09-26"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"First"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"XX"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">power_tap</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Io</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"P1"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">housing</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X10"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">)</span>
+<span class="n">loose</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"X11"</span><span class="p">,</span> <span class="s2">"DEMO-CONN-2P"</span><span class="p">)</span>
+<span class="n">cable</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">cable</span><span class="p">(</span><span class="s2">"W1"</span><span class="p">,</span> <span class="s2">"DEMO-CBL-4G1.5"</span><span class="p">,</span> <span class="n">length_m</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">cable</span><span class="o">.</span><span class="n">core</span><span class="p">(</span><span class="n">BN</span><span class="p">,</span> <span class="n">housing</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">loose</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">d</span><span class="o">.</span><span class="n">mate</span><span class="p">(</span><span class="n">housing</span><span class="p">,</span> <span class="n">loose</span><span class="p">)</span>
+
+<span class="n">supply</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"main"</span><span class="p">,</span> <span class="n">supply</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="o">.</span><span class="n">pin</span><span class="p">,</span> <span class="n">housing</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BN</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+<span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">power_tap</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>  <span class="c1"># no document: no layout</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">model</span>
+<span class="n">ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">tag</span><span class="p">}</span>
+
+<span class="p">(</span><span class="n">unit_id</span><span class="p">,)</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">units</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">release</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">unit_release</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">unit_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">release</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"power-tap"</span>
+
+<span class="p">(</span><span class="n">boundary_function</span><span class="p">,)</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">boundary</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">unit_id</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">functions</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="n">boundary_function</span><span class="p">]</span><span class="o">.</span><span class="n">kind</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">FunctionKind</span><span class="o">.</span><span class="n">CONNECTOR</span>
+
+<span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">port_rails</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">housing</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">==</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"24V"</span><span class="p">})</span>
+<span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">nets</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">bom_lines</span><span class="p">(</span><span class="n">model</span><span class="p">))</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># connector, cable, supply</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">cable_list_rows</span><span class="p">(</span><span class="n">model</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">contents_rows</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">top_level_cables</span><span class="p">(</span><span class="n">model</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">printed_designation</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ids</span><span class="p">[</span><span class="s2">"X11"</span><span class="p">])</span> <span class="o">==</span> <span class="s2">"-X11"</span>
+<span class="p">(</span><span class="n">mate</span><span class="p">,)</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">mates</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="k">assert</span> <span class="p">(</span><span class="n">mate</span><span class="o">.</span><span class="n">a_designation</span><span class="p">,</span> <span class="n">mate</span><span class="o">.</span><span class="n">b_designation</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"-X10"</span><span class="p">,</span> <span class="s2">"-X11"</span><span class="p">)</span>
+
+<span class="n">cable_part</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="n">ids</span><span class="p">[</span><span class="s2">"W1"</span><span class="p">]]</span><span class="o">.</span><span class="n">part</span>
+<span class="k">assert</span> <span class="n">fr</span><span class="o">.</span><span class="n">derive</span><span class="o">.</span><span class="n">part_rating</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cable_part</span><span class="p">)</span><span class="o">.</span><span class="n">voltage_ac_v</span> <span class="o">==</span> <span class="mi">500</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.3c842f4c.min.js"></script>
+      
+    
+  </body>
+</html>

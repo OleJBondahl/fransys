@@ -1,0 +1,1630 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/guide/parts/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../authoring/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.68">
+    
+    
+      
+        <title>Parts - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.595f2bf5.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b27955a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Parts
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#starting-a-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Starting a design
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-typed-parts-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The typed parts module
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Class codes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-a-library-without-a-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Loading a library without a design
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linting-a-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Linting a library
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-a-library-fails-to-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        When a library fails to load
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ratings-from-a-datasheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ratings from a datasheet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#starting-a-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Starting a design
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-typed-parts-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The typed parts module
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Class codes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-a-library-without-a-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Loading a library without a design
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#linting-a-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Linting a library
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-a-library-fails-to-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        When a library fails to load
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ratings-from-a-datasheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ratings from a datasheet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="parts">Parts</h1>
+<p>A part library is a Python data package: TOML files describing parts, and no code. Fransys
+never reads a spreadsheet or a manufacturer's own format directly; every part your design
+uses comes from an installed library written against the part-file contract. This page covers
+starting a design from a library, the typed parts module, class codes, linting and load failures. The
+contract itself is <code>docs/contracts/part-file.md</code> in the Fransys repository, at the tag you
+pinned. Read it before you write a library.</p>
+<h2 id="starting-a-design">Starting a design</h2>
+<p><code>fr.design</code> takes the import names of one or more installed part-data packages and returns a
+design <code>d</code> with every part, function and port of those libraries loaded. A device names its
+part by manufacturer part number (MPN), as a string. This is the data-driven path: the part
+list can come from a table or a file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># easy: start a design</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"H1"</span><span class="p">,</span> <span class="s2">"DEMO-LAMP-24"</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"H2"</span><span class="p">,</span> <span class="s2">"DEMO-LAMP-24"</span><span class="p">)</span>
+</code></pre></div>
+<p>A part is either a typed object from the generated parts module or an MPN string. That is one
+argument of <code>d.device</code>, not two spellings of one task. Use the typed object when you write the
+part by hand and want completion and checking, and the string when the MPN comes from data.
+Two parts with one MPN from two makers have no spelling in this release.</p>
+<h2 id="the-typed-parts-module">The typed parts module</h2>
+<p>The generator writes one Python module for a library: a class per part, with its functions and
+pins as typed attributes. Your editor then completes <code>H1.lamp[1]</code> and flags a pin the part does
+not have. Regenerate the module whenever the library changes. Run this from a shell:</p>
+<div class="highlight"><pre><span></span><code>python -m fransys parts-module demo_parts demo_typed.py
+</code></pre></div>
+<p><code>fr.parts_module("demo_parts")</code> returns the same module as text, when a script writes the file itself.</p>
+<p>The module records the library's digest. <code>fr.design(P, ...)</code> compares that digest with the
+library it loads and raises an error naming the command above when the module is stale. A
+whitespace edit in a part file is not stale; any changed fact is. The efficient level of the
+task builds the same model with the typed module and a loop:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># efficient: start a design</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">"-m"</span><span class="p">,</span> <span class="s2">"fransys"</span><span class="p">,</span> <span class="s2">"parts-module"</span><span class="p">,</span> <span class="s2">"demo_parts"</span><span class="p">,</span> <span class="s2">"demo_typed.py"</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">demo_typed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">P</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"H1"</span><span class="p">,</span> <span class="s2">"H2"</span><span class="p">):</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">P</span><span class="o">.</span><span class="n">DEMO_LAMP_24</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="class-codes">Class codes</h2>
+<p>A part's <code>class_code</code> seeds its printed designation (<code>-Q1</code>, <code>-Q2</code>). Recommended codes, IEC 81346-2:2019:</p>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Contactor, main switch, switch-disconnector</td>
+<td>Q</td>
+</tr>
+<tr>
+<td>Fuse, MCB (protection)</td>
+<td>F</td>
+</tr>
+<tr>
+<td>Relay, PLC coupler and modules, network switch</td>
+<td>K</td>
+</tr>
+<tr>
+<td>Overload relay, sensor, current transformer</td>
+<td>B</td>
+</tr>
+<tr>
+<td>Signal lamp, meter, display</td>
+<td>P</td>
+</tr>
+<tr>
+<td>Terminal, terminal strip</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Plug, socket, board header (connector)</td>
+<td>J</td>
+</tr>
+<tr>
+<td>Power supply, transformer</td>
+<td>T</td>
+</tr>
+<tr>
+<td>Motor, solenoid actuator</td>
+<td>M</td>
+</tr>
+<tr>
+<td>Suppressor diode, resistor</td>
+<td>R</td>
+</tr>
+<tr>
+<td>Board (PCB), rack</td>
+<td>U</td>
+</tr>
+<tr>
+<td>Cable, harness</td>
+<td>W</td>
+</tr>
+<tr>
+<td>Heater</td>
+<td>E</td>
+</tr>
+<tr>
+<td>Push button, selector, emergency stop</td>
+<td>S</td>
+</tr>
+</tbody>
+</table>
+<h2 id="loading-a-library-without-a-design">Loading a library without a design</h2>
+<p><code>fr.parts</code> takes the same import names and returns a single <code>Draft</code> holding every part,
+function, port and facet record, each carrying the file and line it came from. Use it to lint a
+library or build without a design:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">parts</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">parts</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+</code></pre></div>
+<p>Loading several libraries together, as in <code>fr.design("a", "b")</code> or <code>fr.parts("a", "b")</code>,
+merges them into one library.</p>
+<h2 id="linting-a-library">Linting a library</h2>
+<p><code>fr.lint(*libraries)</code> checks one or more libraries against the part-file contract without
+building a model: every part file's fields, enum values, port and link shapes, and the
+cross-file rules (duplicate parts, duplicate connector labels, and so on), collected as
+<code>Finding</code>s.</p>
+<div class="highlight"><pre><span></span><code><span class="n">findings</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">lint</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="ow">not</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">fr</span><span class="o">.</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+</code></pre></div>
+<p>The argument is the library's import name, resolved exactly as <code>fr.parts</code> resolves it: an
+installed package's own root, the directory that directly holds <code>library.toml</code>. For the demo
+library that is <code>demo_parts</code>, the inner package, never <code>examples/demo-parts</code>, the outer
+project folder that merely contains it (and holds the package's own <code>pyproject.toml</code>, not a
+part file). Passing the project folder's name is the mistake to watch for. <code>fr.lint</code> and
+<code>fr.parts</code> both want the package's own name, the same one you would give <code>uv add</code> or an
+<code>import</code> statement.</p>
+<h2 id="when-a-library-fails-to-load">When a library fails to load</h2>
+<p><code>fr.parts</code> runs the same checks <code>fr.lint</code> does before it builds anything, and refuses to load a
+library that fails them: it raises <code>fr.PartLibraryError</code>, whose <code>findings</code> attribute holds
+every finding lint collected, warnings included, not only the errors that caused the raise. So
+does <code>fr.design</code>. A library with a genuine problem (a part file missing its required <code>[part]</code>
+table, in this made-up example) never reaches your model:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">Path</span><span class="p">(</span><span class="s2">"bad_parts/parts"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">Path</span><span class="p">(</span><span class="s2">"bad_parts/__init__.py"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">'"""A broken library, for this example only."""</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">Path</span><span class="p">(</span><span class="s2">"bad_parts/library.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+    <span class="s1">'schema = 1</span><span class="se">\n</span><span class="s1">name = "bad-parts"</span><span class="se">\n</span><span class="s1">version = "0.0.1"</span><span class="se">\n</span><span class="s1">description = "missing its [part] table"</span><span class="se">\n</span><span class="s1">'</span>
+<span class="p">)</span>
+<span class="n">Path</span><span class="p">(</span><span class="s2">"bad_parts/parts/broken.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"schema = 1</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">fr</span><span class="o">.</span><span class="n">parts</span><span class="p">(</span><span class="s2">"bad_parts"</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">fr</span><span class="o">.</span><span class="n">PartLibraryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">findings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="s2">"FIELD_MISSING"</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"expected PartLibraryError"</span><span class="p">)</span>
+</code></pre></div>
+<p>Catch <code>fr.PartLibraryError</code> around a load whose library you do not control yourself: one built
+by a separate team or vendor. An uncaught <code>PartLibraryError</code> already stops your script right
+there, with Python's own one-line traceback. Catching it instead gets you <code>e.findings</code>: every
+finding the failed load collected, not only the one that raised, so you can report the library's
+whole set of problems at once instead of fixing them one exception at a time.</p>
+<h2 id="ratings-from-a-datasheet">Ratings from a datasheet</h2>
+<p>A part's rating fields are read straight off its datasheet, but a battery or cell datasheet
+often states its rating as a C-rate against the part's capacity rather than as a current: 1C
+on 310 Ah is 310 A. Do that multiplication yourself before writing the part file. A
+<code>[function.operating]</code> table's <code>max_current_dc_a</code> is a current, in amps, never a C-rate.
+Fransys stores whatever number you give it and does not compute this conversion.</p>
+<p>A protective device's datasheet gives its breaking capacity as points: the voltage, the current it breaks there
+and, for DC, the circuit's time constant. A part states them in <code>[rating]</code> or <code>[function.rating]</code> as <code>breaking_ac</code> and
+<code>breaking_dc</code>. A source's datasheet gives its fault current and time constant in <code>[function.operating]</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># a DC fuse function</span>
+<span class="k">[function.rating]</span>
+<span class="n">voltage_dc_v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1000"</span>
+<span class="n">current_dc_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"125"</span>
+<span class="n">breaking_dc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">voltage_v</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"1000"</span><span class="p">,</span><span class="w"> </span><span class="n">current_a</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"15000"</span><span class="p">,</span><span class="w"> </span><span class="n">time_constant_ms</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"15"</span><span class="w"> </span><span class="p">}]</span>
+
+<span class="c1"># a battery function</span>
+<span class="k">[function.operating]</span>
+<span class="n">nominal_voltage_v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"51.2"</span>
+<span class="n">fault_current_dc_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"6000"</span>
+<span class="n">fault_time_constant_ms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2"</span>
+</code></pre></div>
+<p>A replaceable part, such as a fuse link in its holder, is its own part file. It states a top-level
+<code>[rating]</code> and has no <code>[[function]]</code>. The holder keeps the pads and the footprint.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[part]</span>
+<span class="n">mpn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"DEMO-FUSE-LINK-4A-T"</span>
+<span class="n">manufacturer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Demo"</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Replaceable fuse link for a PCB holder, 4 A time-lag, 1000 V DC"</span>
+<span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"protection"</span>
+<span class="n">class_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"F"</span>
+
+<span class="k">[rating]</span>
+<span class="n">voltage_dc_v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1000"</span>
+<span class="n">current_dc_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"4"</span>
+</code></pre></div>
+<p><code>d.rating("DEMO-FUSE-LINK-4A-T")</code> reads that rating. Put the link in its holder with <code>parent=</code>, as <code>authoring.md</code>
+shows. A link with <code>min_breaking_current_a</code> is partial-range and bounds no current.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">d</span><span class="o">.</span><span class="n">rating</span><span class="p">(</span><span class="s2">"DEMO-FUSE-LINK-4A-T"</span><span class="p">)</span><span class="o">.</span><span class="n">current_dc_a</span> <span class="o">==</span> <span class="mi">4</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.3c842f4c.min.js"></script>
+      
+    
+  </body>
+</html>

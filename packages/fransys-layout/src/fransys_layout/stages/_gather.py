@@ -1,4 +1,4 @@
-"""HL21: each unit group's columns gathered into one packing unit, as wide as it folds.
+"""Layout-0153: each unit group's columns gathered into one packing unit, as wide as it folds.
 
 Private to `stages.partition`. One pass over the units: a band column leaves its unit for its
 group's, which stands at its first member's place (layout-0153, extending layout-0103 S10).
@@ -30,7 +30,7 @@ class Band:
 
 @dataclass(frozen=True, slots=True)
 class Bands:
-    """The bands, each band column's band (the first naming it, HL20) and each band's root band."""
+    """The bands, each band column's band (the first naming it) and each band's root band."""
 
     bands: tuple[Band, ...] = ()
     band_of: Mapping[AuthoringKey, int] = field(default_factory=dict)
@@ -43,7 +43,7 @@ def gather(
 ) -> list[Unit]:
     """Each band's columns as one unit at its first member's place, the rest left as they were.
 
-    Two bands that share a column are one unit: they share a page (HL20).
+    Two bands that share a column are one unit: they share a page (layout-0153).
     """
     if not owners.bands:
         return list(units)
@@ -142,7 +142,7 @@ def _folded(
 ) -> int:
     """The bands side by side, each folded: its wider band of the columns it keeps, or its outline.
 
-    HL12: the bands stack about the outline; HL20: groups that share a column stand side by side.
+    the bands stack about the outline; layout-0153: groups that share a column stand side by side.
     A band whose columns an earlier band kept still draws its outline.
     """
     sums = {index: [0, 0] for index in owners.of_root[root]}

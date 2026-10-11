@@ -1,4 +1,4 @@
-"""An interface's supply share: how much of what it connects carries a supply (HL13, model-0176)."""
+"""An interface's supply share: how much of what it connects carries a supply."""
 
 from fractions import Fraction
 

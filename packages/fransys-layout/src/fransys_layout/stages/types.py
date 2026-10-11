@@ -29,6 +29,7 @@ type FnBoxes = Mapping[Handle, list[tuple[str, Box]]]
 
 # A function's body box, keyed by the function.
 type BodyBox = tuple[Handle, Box]
+type OrderKey = tuple[tuple[tuple[int, int, str], ...], str]  # O4: `natural_key`'s shape, a value
 
 # The `Id.kind` the engine gives a unit-boundary stand-in handle (a port or function on no
 # net, where a chain stops at the unit edge). A stage-side convention, not vocabulary.
@@ -166,6 +167,7 @@ class PortSpec:
     group: int = 0  # V1: the side order of the port's function in its item box, 0 outside one
     channel: bool = False  # V5: a PLC channel's pin, of a box that also holds other functions
     stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
+    order: int = 0  # O7: rank of the name in natural order among the function's ports, a value
 
 
 @value
@@ -217,6 +219,7 @@ class FunctionSpec:
     location_path: tuple[Id[Any], ...]
     group_hint: Id[Any] | None
     designation: str = ""  # R5: the item's reference designation, "" unnumbered
+    designation_order: int = 0  # O4: rank of the designation in natural order, a value
     strip_text: str = ""  # R6 D1: a terminal's strip tag, "" for any other function
     point_text: str = ""  # R6 D1: a terminal's own point text, in full ("-X2:U:1", D12)
     # R7 A: a pin view's real connector function; the view's handle is the pin's port
@@ -233,8 +236,8 @@ class FunctionSpec:
     home: Home = Home.HERE  # layout-0120: ELSEWHERE for a unit-boundary rail terminal (replicas)
 
     def __post_init__(self) -> None:
-        """Sort `ports` by name and `pole_pairs` by index; the paths keep their order."""
-        _sort(self, ports=lambda p: p.name, pole_pairs=lambda p: p.index)
+        """Sort `ports` by `order`, then name, and `pole_pairs` by index; paths keep their order."""
+        _sort(self, ports=lambda p: (p.order, p.name), pole_pairs=lambda p: p.index)
 
     @property
     def drawing_set_key(self) -> tuple[Id[Any] | None, Id[Any] | None]:
@@ -252,11 +255,12 @@ class DrawnPort:
     group: int = 0  # V1: its function's side order in an item box, kept whole on a box side
     channel: bool = False  # V5: a PLC channel's pin
     stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
+    order: int = 0  # O7: its `PortSpec.order`, the tie-break of a box port nobody placed
 
 
 @value
 class FedPin:
-    """layout-0107: a pin of the fed box and the feeder's pin wired to it."""
+    """Layout-0107: a pin of the fed box and the feeder's pin wired to it."""
 
     fed: Id[Any]
     feeder: Id[Any]
@@ -264,7 +268,7 @@ class FedPin:
 
 @value
 class BoxFeed:
-    """layout-0107: one box wired pin to pin to a group of another, `ports` as `FedPin`s."""
+    """Layout-0107: one box wired pin to pin to a group of another, `ports` as `FedPin`s."""
 
     fed: Id[Any]
     feeder: Id[Any]
@@ -290,7 +294,7 @@ class DrawnFunction:
 
     @property
     def stand(self) -> int:
-        """layout-0132: the width in G of the widest power symbol and text standing at a pin."""
+        """Layout-0132: the width in G of the widest power symbol and text standing at a pin."""
         return max((p.stand for p in self.ports), default=0)
 
     def __post_init__(self) -> None:
@@ -474,6 +478,7 @@ class GroupInfo:
     key: AuthoringKey
     label: str
     description: str
+    order: int = 0  # O4, O6: rank of the label in natural order, passed in by the read layer
 
 
 @value
@@ -483,6 +488,7 @@ class LocationInfo:
     location: Id[Any]
     label: str
     path: tuple[Id[Any], ...] = ()  # RW9: root-to-leaf node ids; the labels are in `locations`
+    order: int = 0  # O4, O7: rank of the label in natural order, passed in by the read layer
 
 
 @value
@@ -491,6 +497,7 @@ class UnitInfo:
 
     unit: Id[Any]
     location: Id[Any] | None = None
+    order: int = 0  # O4, O7: rank of the unit designation in natural order, passed in
 
 
 @value
@@ -634,7 +641,7 @@ class StubText:
     """C21: what an off stub names of its end: the cable, the far device and the far port.
 
     `cable` is the outermost carrier's `-designation`, `far`/`port` the far end's head and tail
-    (`stub_far_end`); `line`: the carrier draws as a line, so the stub prints no port (HL18).
+    (`stub_far_end`); `line`: the carrier draws as a line, so the stub prints no port (layout-0154).
     """
 
     cable: str

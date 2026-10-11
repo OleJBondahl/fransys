@@ -29,6 +29,8 @@ class Tables:
     width_of: dict[AuthoringKey, int]
     unit_ids: frozenset[Handle]
     unit_location: dict[Handle, Handle | None]
+    unit_order: dict[Handle, int]
+    location_order: dict[Handle, int]
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +56,10 @@ def buckets(columns: tuple[Column, ...], tables: Tables) -> tuple[Bucket, ...]:
         by_unit.setdefault(unit, {}).setdefault(location, []).append(column)
     unit_order: list[Handle | None] = [
         *([None] if None in by_unit else []),
-        *sorted(unit for unit in by_unit if unit is not None),
+        *sorted(
+            (unit for unit in by_unit if unit is not None),
+            key=lambda unit: (tables.unit_order[unit], unit),
+        ),
     ]
     found = []
     drawing_set = 0
@@ -62,7 +67,11 @@ def buckets(columns: tuple[Column, ...], tables: Tables) -> tuple[Bucket, ...]:
         by_location = by_unit[unit]
         located = sorted(
             (location for location in by_location if location is not None),
-            key=lambda location: (tables.label_of[location], location),
+            key=lambda location: (
+                tables.location_order[location],
+                tables.label_of[location],
+                location,
+            ),
         )
         location_order: list[Handle | None] = [
             *located,
@@ -179,10 +188,12 @@ def base_order(
     return units
 
 
-def _group_key(info: GroupInfo, group_ranks: frozendict[str, int]) -> tuple[int, int, AuthoringKey]:
-    """The rank of the group's label in the profile, unranked last, then its authoring key."""
+def _group_key(
+    info: GroupInfo, group_ranks: frozendict[str, int]
+) -> tuple[int | AuthoringKey, ...]:
+    """The label's profile rank; unranked groups last, by natural label (O6), then by key."""
     rank = group_ranks.get(info.label)
-    return (1, 0, info.key) if rank is None else (0, rank, info.key)
+    return (1, 0, info.order, info.key) if rank is None else (0, rank, 0, info.key)
 
 
 def _blockers(

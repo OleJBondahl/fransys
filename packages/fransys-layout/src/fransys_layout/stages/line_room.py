@@ -1,4 +1,4 @@
-"""HL18 (layout-0158): the room a leaving line and its stub need beyond its pins' row.
+"""Layout-0154 (layout-0158): the room a leaving line and its stub need beyond its pins' row.
 
 A pin that ends a line's conductor may end a leaving line: its fan-out, the 48 G run and the
 stub stand beyond the pin. The page's first rows keep that room above, the last rows below,

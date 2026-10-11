@@ -40,7 +40,7 @@ def placements(
         for cell in column.cells
         if cell.home is Home.ELSEWHERE
     }
-    # HL6: a boxed pin view draws no symbol, but where a marker stands at it on its page
+    # layout-0155: a boxed pin view draws no symbol, but where a marker stands at it on its page
     hidden = set(drawn_hidden(layout.placed, frozenset(results.hidden), layout.markers))
     for placed in layout.placed:
         extra: AuthoringKey = ()
@@ -55,7 +55,11 @@ def placements(
         # an item view stands on a function drawn apart too
         extra = (*extra, "view") if view is PlacementView.ITEM else extra
         discriminator[placed.function, placed.drawing_set, placed.page] = extra
-        if (placed.function, placed.drawing_set, placed.page) in hidden:  # HL6: its box draws it
+        if (
+            placed.function,
+            placed.drawing_set,
+            placed.page,
+        ) in hidden:  # layout-0155: its box draws it
             continue
         port_names, port_sides, offsets = _placement_fields(placed, view)
         key = (*PREFIX, "symbol_placement", *keys.function[real], *extra)

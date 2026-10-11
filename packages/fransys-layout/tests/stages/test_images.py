@@ -1,20 +1,25 @@
 """The contact-image rules: hand-made values, no model and no engine."""
 
 from dataclasses import replace
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
-from samples import PROFILE, SHEET, column, function_spec, hid, page_plan, placed
+from samples import PROFILE, SHEET, column, drawn, function_spec, hid, page_plan, placed
 
-from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, PortGeometry
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, PortGeometry, text_width
 from fransys_layout.stages import (
     FunctionSpec,
     LabelKind,
     LinkMarker,
     MarkerSide,
+    PlacedLabel,
     PortSpec,
     RequestPartner,
     Role,
+    images,
 )
+from fransys_layout.stages._image_stack import stack_tables
 from fransys_layout.stages.images import (
     ImageInputs,
     _anchor_x,
@@ -423,3 +428,52 @@ def test_a_table_clears_a_power_symbols_body_and_lead() -> None:
     assert y > bare_y
     for shape in (body.body, body.lead):
         assert table.y >= shape.y + shape.height or table.y + table.height <= shape.y
+
+
+def test_a_heading_wider_than_the_table_widens_it_and_a_shorter_one_does_not() -> None:
+    """layout-0170: the measured heading is part of the table's width (model-0190)."""
+    plain = _image_width(["13-14"], PROFILE)
+    long_heading = "-K" + "W" * 20
+    wide = _image_width(["13-14"], PROFILE, long_heading)
+    assert wide == text_width(long_heading, height=PROFILE.text_height) + 2 * PROFILE.marker_padding
+    assert wide > plain
+    assert _image_width(["13-14"], PROFILE, "-K1") == plain
+
+
+def test_stacked_tables_are_each_no_narrower_than_their_heading() -> None:
+    """The stack widens a table to its coil's heading; a lone table keeps its own width."""
+    heads = {hid("function", 1): "-K" + "W" * 20, hid("function", 2): "-K2"}
+    home = {hid("function", n): placed(n, x=0, y=16 * n) for n in (1, 2)}
+    labels = [
+        PlacedLabel(
+            kind=LabelKind.CROSS_REFERENCE,
+            subject=hid("function", n),
+            slot="contacts",
+            drawing_set=1,
+            page=1,
+            box=Box(x=0, y=40, width=24, height=24),
+        )
+        for n in (1, 2)
+    ]
+    stacked = stack_tables({(1, 1): labels}, home, {}, PROFILE, heads)[(1, 1)]
+    wide = text_width(heads[hid("function", 1)], height=PROFILE.text_height)
+    assert [one.box.width for one in stacked] == [wide + 2 * PROFILE.marker_padding, 24]
+
+
+def test_a_stacked_coils_room_to_the_right_includes_its_measured_heading(monkeypatch) -> None:
+    """The reserve measures the coil's heading only when its foot holds two or more tables."""
+    # UNDO: stages/images.py:rooms, `head = inputs.heads.get(coil, "") if ...` -> `head = ""`
+    monkeypatch.setattr(images, "widest_places", lambda _plans, _inputs: ("", ""))
+    coil = hid("function", 1)
+    key = column("a", (1,)).key
+    heading = "-K" + "W" * 20
+
+    def right(tables: tuple[int, ...], heading: str = heading) -> int:
+        reserve = images._Reserve(down=0, images=((coil, ("13-14",), False),), tables=tables)
+        inputs: Any = SimpleNamespace(profile=PROFILE, heads={coil: heading})
+        return images.rooms({(key, coil): reserve}, (drawn(1),), (), inputs)[key, coil][1]
+
+    assert right((24, 24)) > right((24,))
+    longer = heading + "W"
+    grown = text_width(longer, height=PROFILE.text_height) - text_width(heading, height=8)
+    assert right((24, 24), longer) - right((24, 24)) == grown > 0

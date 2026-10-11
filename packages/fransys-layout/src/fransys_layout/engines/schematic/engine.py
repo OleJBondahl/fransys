@@ -62,6 +62,8 @@ from .symbol_defaults import resolve_with_defaults
 from .write import write_layout
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from fransys_layout.stages import ColumnWidth
     from fransys_layout.stages.pagerun import Decide
     from fransys_layout.stages.references import References
@@ -99,7 +101,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
     drawn = potential_sides(drawn, rank_of, *power, (inputs.feeds, inputs.profile))
-    # HL6: a boxed connector's pin views draw no symbol and no label; its box stands over them
+    # a boxed connector's pin views draw no symbol and no label; its box stands over them
     boxes = box_specs(model, inputs.functions)
     hidden = hidden_views(boxes)
     slot_requests = tuple(
@@ -109,7 +111,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     )
 
     inputs, all_columns, columns, column_findings = arranged(model, inputs, drawn, rank_of)
-    # HL11: a middle unit's line views leave their columns; its lines' conductors are no routes
+    # a middle unit's line views leave their columns; its lines' conductors are no routes
     inputs, columns, middle, reach = strip_middle(model, inputs, columns)
     inputs, lines = strip_lines(model, inputs)
     texts = tag_texts(model)
@@ -118,7 +120,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     drawn, widths, img, reserves = sized(model, inputs, drawn, columns, own_set)
     run = PageRun(
         texts,
-        middle_inputs(_page_inputs(inputs), middle, (columns, reach, widths)),
+        middle_inputs(_page_inputs(inputs, img.heads), middle, (columns, reach, widths)),
         rank_of,
         pin_requests,
         reserves,
@@ -192,11 +194,11 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     routes, labels, page_findings = finish_pages(
         plans,
         pages,
-        FinishRun(columns, drawn, _page_inputs(inputs), markers, crossings, routed_on),
+        FinishRun(columns, drawn, _page_inputs(inputs, img.heads), markers, crossings, routed_on),
     )
     findings.extend(page_findings)
     routes = onepage.keep_chosen_edges(routes, inputs.net_groups, at_home)
-    # HL15 to HL18: the lines over the finished page, clear of its symbols, boxes and texts
+    # layout-0154: the lines over the finished page, clear of its symbols, boxes and texts
     scene = LineScene(
         placed_all,
         drawn,
@@ -260,7 +262,7 @@ def _placed(
     return placement, box_room_findings(decided, first)
 
 
-def _page_inputs(inputs: StageInputs) -> PageInputs:
+def _page_inputs(inputs: StageInputs, heads: Mapping[Id[Any], str]) -> PageInputs:
     """The fields of `inputs` the page steps read, with the house headroom (`defaults`)."""
     return PageInputs(
         functions=inputs.functions,
@@ -275,6 +277,7 @@ def _page_inputs(inputs: StageInputs) -> PageInputs:
         top_headroom_lanes=TOP_HEADROOM_LANES,
         bottom_headroom_lanes=BOTTOM_HEADROOM_LANES,
         line_ends=frozenset((end.function, end.port) for c in inputs.carried for end in (c.a, c.b)),
+        heads=heads,
     )
 
 

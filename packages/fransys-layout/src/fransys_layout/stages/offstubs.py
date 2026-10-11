@@ -28,6 +28,8 @@ from fransys_model.kernel import Id, UnionFind, value
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Iterable, Mapping
 
+    from fransys_layout.stages.types import OrderKey
+
 
 @value
 class PortText:
@@ -54,7 +56,7 @@ class OffReads:
     edges: frozenset[Id[Any]]
     top_unit: Callable[[Id[Any] | None], Id[Any] | None]
     end_text: Callable[[Connection, Id[Any], Id[Any]], tuple[PortText, OffEnd]]
-    designation: Callable[[Id[Any]], str]
+    designation: Callable[[Id[Any]], OrderKey]  # a port's natural designation key (O7)
 
 
 def off_ends(off_ends: Iterable[OffEnd], off_texts: Iterable[PortText]) -> tuple[OffEnd, ...]:

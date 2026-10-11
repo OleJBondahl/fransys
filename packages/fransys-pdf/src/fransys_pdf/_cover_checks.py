@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import revision_history
 from fransys_model.kernel import Finding, Severity
 
+from ._frame import text_width_mm
 from ._geometry import document_heading, document_release, resolve_sheet_format
 from ._markdown import BulletList, Heading, NumberedList, Paragraph, Unsupported, parse
 from ._pages import DESCRIPTION_WIDTH_MM, TABLE_HEADER_MM
@@ -36,7 +37,6 @@ _PADDING_MM = 5
 _HEADING_PT = 16  # `_geometry.preamble`'s `#show heading.where(level: 1)` size
 _BODY_PT = 10  # `_geometry.preamble`'s base text size
 _TABLE_PT = 9  # `_geometry.preamble`'s `#show table: set text(size: 9pt)`
-_CHAR_WIDTH_EM = 0.5  # a crude average glyph width for Liberation Serif, as a fraction of its size
 _LINE_HEIGHT_EM = 1.3
 _MM_PER_PT = 25.4 / 72.0
 
@@ -46,12 +46,8 @@ def _pt_to_mm(pt: float) -> float:
 
 
 def _line_count(text: str, *, width_mm: float, size_pt: float) -> int:
-    """A crude wrapped-line estimate: `text`'s length against `width_mm` at `size_pt`."""
-    if not text:
-        return 1
-    char_width_mm = _pt_to_mm(size_pt) * _CHAR_WIDTH_EM
-    chars_per_line = max(1, int(width_mm / char_width_mm))
-    return max(1, ceil(len(text) / chars_per_line))
+    """A wrapped-line estimate: `text`'s measured width against `width_mm` at `size_pt`."""
+    return max(1, ceil(text_width_mm(text, size_pt=size_pt) / width_mm))
 
 
 def _text_height_mm(text: str, *, width_mm: float, size_pt: float) -> float:

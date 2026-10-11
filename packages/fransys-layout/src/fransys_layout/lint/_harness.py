@@ -1,4 +1,4 @@
-"""What harness lines draw, for the geometric lint (HL6, HL15 to HL18, layout-0158).
+"""What harness lines draw, for the geometric lint (layout-0155, layout-0154, layout-0158).
 
 Lines, fan-out legs, line labels, line stubs and connector boxes are drawn after routing and are
 no `Route`, label or marker, so the geometric checks read them from `HarnessInk`. A run here may
@@ -29,7 +29,7 @@ type Segment = tuple[Point, Point]
 class HarnessInk:
     """Every harness line's drawn pieces and every connector box.
 
-    `hidden` holds each boxed pin view (function, drawing set, page) that draws nothing (HL6).
+    `hidden` holds each boxed pin view (function, drawing set, page) that draws nothing.
     """
 
     boxes: tuple[PlacedConnectorBox, ...] = ()

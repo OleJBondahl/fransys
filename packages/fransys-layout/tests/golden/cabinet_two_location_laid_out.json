@@ -3620,7 +3620,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "contacts",
-        "width": 70,
+        "width": 68,
         "x": 828,
         "y": 434
       },
@@ -3880,7 +3880,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "contacts",
-        "width": 70,
+        "width": 68,
         "x": 212,
         "y": 434
       },

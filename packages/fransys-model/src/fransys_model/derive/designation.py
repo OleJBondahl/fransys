@@ -16,7 +16,6 @@ from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import instance_designation, unit_root
 from fransys_model.derive.lone_cable import printing_item
 from fransys_model.derive.lookups import effective_placement, require, strip_set
-from fransys_model.derive.natural_order import NaturalKey, natural_key
 from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
 from fransys_model.vocab.enums import Aspect, FunctionKind
@@ -681,25 +680,6 @@ def unit_list_context(
         return context
     own = unit_location(model, unit)
     return context if own is None else own
-
-
-def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, int]:
-    """Sort key for one item within a `bom_lines` line's `designations`.
-
-    A terminal with a parent sorts `(0, its strip's item_designation, its own group, its own
-    index)`: by strip, then group, then index. `group`/`index` come straight off the
-    `TerminalFacet`, never re-parsed from rendered text, so `"L1:10"` sorts after `"L1:2"`. Any
-    other item sorts
-    `(1, natural_key(its own item_designation), "", 0)`: digit runs by value (`-K2`, `-K10`).
-
-    Raises:
-        SchemaError: as `item_designation`.
-    """
-    record = items(model).get(item)
-    t = terminal_of(model, item)
-    if record is not None and record.parent is not None and t is not None:
-        return (0, natural_key(item_designation(model, record.parent)), t.group, t.index)
-    return (1, natural_key(item_designation(model, item)), "", 0)
 
 
 def location_node_designation(model: Model, node: Id[AspectNode]) -> str:

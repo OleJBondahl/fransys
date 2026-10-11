@@ -111,8 +111,8 @@ contact that no conductor reaches, in place of a page position.
 
 `fransys.derive.bom_sort_key(model, item)` is the sort key `bom_lines` orders a line's
 `designations` by: a terminal by its strip, group and index; any other item by its whole
-designation in `fransys.derive.natural_key` order. Digit runs compare as numbers, so `-K2` sorts
-before `-K10`. Every list that sorts by designation uses that order.
+designation. Every list an engineer reads sorts through
+`fransys.derive` keys: designations in `natural_key` order, so `-K2` sorts before `-K10`.
 
 `fransys.derive.is_cable(model, item)` returns whether `item` is a cable: whether its part
 carries a `cable_product` facet (decision model-0108). `fransys.derive.cable_items(model)`

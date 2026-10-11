@@ -13,6 +13,7 @@ from fransys_model.vocab.load_limits import LoadLimit, load_limits
 from fransys_model.vocab.rail_reach import rails_by_potential, reached_kinds
 from fransys_model.vocab.rating_readers import function_ratings
 from fransys_model.vocab.tables import functions, items, units
+from fransys_model.vocab.validators._natural_join import natural_join
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -139,7 +140,7 @@ def _together(model: Model, entries: list[tuple[LoadLimit, CurrentBound]]) -> li
         bound, total = firsts[key], sum(load.draw_a for load in members.values())
         if total <= bound.value or any(load.draw_a > bound.value for load in members.values()):
             continue
-        named = ", ".join(f"{_named(model, f)} {members[f].draw_a:f} A" for f in sorted(members))
+        named = natural_join(f"{_named(model, f)} {members[f].draw_a:f} A" for f in members)
         message = (
             f"loads {named} draw {total:f} A {bound.kind.name} together, above the limit of "
             f"{bound.value:f} A {bound.kind.name} set by {_setter(model, bound)}"

@@ -1,4 +1,4 @@
-"""Which edge of a middle outline each interface takes, and their order along it (HL13, HL14)."""
+"""Which edge of a middle outline each interface takes, and their order along it."""
 
 from dataclasses import dataclass
 from fractions import Fraction
@@ -15,7 +15,7 @@ TOP, BOTTOM = True, False  # an edge: the outline's top or its bottom
 
 @dataclass(frozen=True)
 class InterfaceEdge:
-    """One interface of a middle outline: HL13's facts; the engine fills `flow` and `width`."""
+    """One interface of a middle outline: its facts; the engine fills `flow` and `width`."""
 
     function: Id[Any]
     designation: str
@@ -28,7 +28,7 @@ class InterfaceEdge:
 
 
 def _given(item: InterfaceEdge) -> bool | None:
-    """The edge HL13 steps 1 and 2 fix, or `None` for a line interface with no hint."""
+    """The edge layout-0153 steps 1 and 2 fix, or `None` for a line interface with no hint."""
     if item.hint is not None:
         return item.hint
     return None if item.line else (BOTTOM if item.flow is None else item.flow)
@@ -60,7 +60,7 @@ def _moves(
 
 
 def edges(interfaces: Sequence[InterfaceEdge]) -> dict[Id[Any], bool]:
-    """HL13: each interface's edge: its hint, else its column's flow, else the even split.
+    """Layout-0153: each interface's edge: its hint, else its column's flow, else the even split.
 
     The split ranks line interfaces by supply share, starts them below and moves each to the top
     while the edges stay as even. The first that does not fit stops it; the rest stay below.

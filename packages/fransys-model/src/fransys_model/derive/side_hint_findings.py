@@ -1,4 +1,4 @@
-"""The WARNING for a side hint on an interface with no harness line (HL14, model-0176)."""
+"""The WARNING for a side hint on an interface with no harness line (model-0177, model-0176)."""
 
 from typing import Final
 

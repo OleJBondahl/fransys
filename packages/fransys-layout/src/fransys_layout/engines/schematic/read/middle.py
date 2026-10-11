@@ -1,4 +1,4 @@
-"""HL11, HL12: the nested units drawn as one middle outline, read once (layout-0153)."""
+"""Layout-0153: the nested units drawn as one middle outline, read once (layout-0153)."""
 
 from dataclasses import replace
 from typing import TYPE_CHECKING
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 def middle_units(model: Model, functions: Sequence[FunctionSpec]) -> tuple[MiddleUnit, ...]:
-    """HL12: each unit with a harness line at one of its interfaces, in unit id order."""
+    """Layout-0153: each unit with a harness line at one of its interfaces, in unit id order."""
     views: dict[Id[Function], list[Id[Function]]] = {}
     for spec in functions:
         if spec.pin_function is not None:
@@ -53,7 +53,7 @@ def _unit(
 ) -> MiddleUnit:
     """One middle unit: its interfaces with their views, plugs and box texts, and its lines.
 
-    `top` marks a top-level unit: its lines to another top-level unit leave (HL20, condition 2).
+    `top` marks a top-level unit: its lines to another top-level unit leave.
     """
     host = unit_table(model)[unit].parent  # its sheet prints in this unit (layout-0159)
     interfaces = []
@@ -99,7 +99,7 @@ def _far(
     line: LineRead | None,
     views: Mapping[Id[Function], list[Id[Function]]],
 ) -> frozenset[Id[Function]]:
-    """The functions at the line's ends other than `interface`'s, with their pin views (HL13)."""
+    """The functions at the line's ends other than `interface`'s, with their pin views."""
     table = ports(model)
     found: set[Id[Function]] = set()
     for end in line.ends if line is not None else ():

@@ -1,4 +1,4 @@
-"""Whether a cable or harness draws as a harness line: HL1's one test (model-0180)."""
+"""Whether a cable or harness draws as a harness line: layout-0154's one test (model-0180)."""
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.enums import ConductorKind

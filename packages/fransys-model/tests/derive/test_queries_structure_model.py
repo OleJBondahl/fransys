@@ -319,9 +319,7 @@ def test_board_netlist_a_loose_wire_between_two_board_pins_merges_their_groups()
     plant.wire(x1_2, k1_a2, key="w2")
     plant.wire(x1_1, x1_2, key="bridge")
     netlist = board_netlist(plant.model(), board)
-    assert [(n.name, n.pins) for n in netlist.nets] == [
-        ("Net-(K1-A1)", tuple(sorted((x1_1, x1_2, k1_a1, k1_a2))))
-    ]
+    assert [(n.name, n.pins) for n in netlist.nets] == [("Net-(K1-A1)", (k1_a1, k1_a2, x1_1, x1_2))]
 
 
 def test_board_netlist_tolerates_a_parent_cycle_and_never_lists_the_board() -> None:
@@ -762,3 +760,17 @@ def test_effective_placement_can_fail_a_board_connector_with_no_placement_of_its
     model = plant.model()
     assert _item_only_placement(model, connector, Aspect.LOCATION) is None
     assert effective_placement(model, connector, Aspect.LOCATION) == node.id
+
+
+def test_board_netlist_names_an_undeclared_group_by_its_lowest_pin_in_natural_order() -> None:
+    """`K1` has pins `10` and `2` in one group: the name takes `2`, not the plain-string `10`."""
+    plant = Plant()
+    board = plant.item("board", designation="A1")
+    x1 = plant.item("x1", parent=board, designation="X1")
+    k1 = plant.item("k1", parent=board, designation="K1")
+    hub = plant.port(plant.function(x1, "x1"), "1")
+    k1_fn = plant.function(k1, "coil")
+    plant.wire(plant.port(k1_fn, "10"), hub, key="w10")
+    plant.wire(plant.port(k1_fn, "2"), hub, key="w2")
+    (net,) = board_netlist(plant.model(), board).nets
+    assert net.name == "Net-(K1-2)"

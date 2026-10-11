@@ -11,8 +11,8 @@ STROKE_WIDTH_MM = Decimal("0.25")
 JUNCTION_DOT_DIAMETER_MM = Decimal(1)
 
 # The Liberation Serif Regular 2.1.5 typographic ascent ratio (D7): OS/2.sTypoAscender / unitsPerEm
-# = 1420 / 2048, read with fontTools 4.65.0 from the same font file fransys_layout's
-# text_metrics.py table was built from (sha256
+# = 1420 / 2048, read with fontTools 4.65.0 from the same font file fransys_model's
+# derive/_text_widths.py table was built from (sha256
 # 058ea80864aef09a23f45cbec2bb5400bc3dfbdea01c3f10538a21fcb497fb74, cited there). Exact
 # because 2048 = 2**11: no rounding.
 ASCENT_RATIO = Decimal(1420) / Decimal(2048)

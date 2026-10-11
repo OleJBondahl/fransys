@@ -1,4 +1,4 @@
-"""HL15 to HL18 (layout-0154): a harness line's drawn pieces on one page, as `write/` takes them."""
+"""Layout-0154: a harness line's drawn pieces on one page, as `write/` takes them."""
 
 from typing import Any
 
@@ -21,7 +21,7 @@ class DrawnLine:
 
 @value
 class DrawnLeg:
-    """One fan-out leg: the conductor it draws and its points, split first, pin last (HL17)."""
+    """One fan-out leg: the conductor it draws and its points, split first, pin last."""
 
     conductor: Id[Any]
     points: tuple[Point, ...]
@@ -29,7 +29,7 @@ class DrawnLeg:
 
 @value
 class DrawnFanOut:
-    """One branch's fan-out on one page: its split point and one leg per conductor (HL8, HL17)."""
+    """One branch's fan-out on one page: its split point and one leg per conductor."""
 
     harness: Id[Any]
     branch: int
@@ -55,7 +55,7 @@ class FarEnd:
 
 @value
 class LineStub:
-    """A leaving line's one stub (HL18): at the line's end, facing out, its text's box size.
+    """A leaving line's one stub (layout-0154): at the line's end, facing out, its text's box size.
 
     `port` is the near end's port and `far` the far end's, as an off stub names them.
     """

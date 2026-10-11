@@ -62,7 +62,7 @@ Link markers (D8, layout-0038, model-0037, layout-0043, render-0005):
 - Box position mirrors `fransys_layout.stages.references.marker_boxes.marker_box` (a four-way match on facing). The formula is duplicated, since render never imports layout.
 - Facing is the stored `LinkMarker.facing` of an off stub. Every other marker takes it from the one port of its owning placement's oriented symbol that lands on the marker's `(x, y)`. Zero or several matches raise; there is no fallback direction. The owning placement is the one on the marker's page whose function matches the marker port's function.
 - `stub_end` is the arrow's tip vertex and the box's near-edge coordinate: stub and box touch at one point. The arrow pulls the two near corners in by `MARKER_ARROW_DEPTH_G`. The far corners stay square.
-- A harness line's stub (HL18, layout-0158) draws no stub. Its line runs on to the middle of the box's near edge. The box is a plain rectangle, as a shared box.
+- A harness line's stub (layout-0154, layout-0158) draws no stub. Its line runs on to the middle of the box's near edge. The box is a plain rectangle, as a shared box.
 - A shared box (R6 D2, layout-0054) is a closed rectangle across the bundle row. A box beside its stub draws its lead in the same polyline, from the stub end along the near edge. A bundle's box and a packed row's have no stub. E and W markers have none either.
 - Marker text uses `class="label"`, since `.marker`'s stroke-only rule would leave it invisible. It sets `text-anchor="middle"` inline, as a marker's text centres in its own box (labels do not).
 - Text is centred in the box width. Its top inset is `(marker.height - profile.text_height) / 2`, read from the record and not from `marker_padding`.

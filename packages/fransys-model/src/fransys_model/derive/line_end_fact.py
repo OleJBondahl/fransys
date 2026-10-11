@@ -25,8 +25,8 @@ def _at_line_ends(model: Model) -> frozenset[Id[Function]]:
 def connector_at_line_end(model: Model, function: Id[Function]) -> bool:
     """Whether `function` is a plug, the function a plug mates, or a fan-out pin's function.
 
-    Read from `harness_line_ends` of the lines `draws_as_line` holds, and nothing else. HL6,
-    HL12, HL13 and the side hint's WARNING call it and never ask again. A connector at no line
-    gives `False`.
+    Read from `harness_line_ends` of the lines `draws_as_line` holds, and nothing else. The box
+    rule, the middle-outline edge rule and the side hint's WARNING call it and never ask again. A
+    connector at no line gives `False`.
     """
     return function in _at_line_ends(model)

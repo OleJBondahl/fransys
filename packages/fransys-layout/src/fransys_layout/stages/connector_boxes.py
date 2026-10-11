@@ -1,4 +1,4 @@
-"""Connector boxes at a harness line's end: cells, size and parts (HL5)."""
+"""Connector boxes at a harness line's end: cells, size and parts (layout-0155)."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -33,7 +33,7 @@ class PlacedConnectorBox:
 
 
 def has_cells(*, plug: bool, black_box: bool, board: bool, wired: bool) -> bool:
-    """HL5: a plug, a black-box interface and a board connector never; else only when wired."""
+    """A plug, a black-box interface and a board connector never; else only when wired."""
     return wired and not (plug or black_box or board)
 
 

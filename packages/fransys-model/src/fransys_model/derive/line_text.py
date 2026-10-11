@@ -1,4 +1,4 @@
-"""Texts of a harness line: its designation and a leaving line's one stub (HL1, HL3)."""
+"""Texts of a harness line: its designation and a leaving line's one stub."""
 
 from fransys_model.kernel import Id, Model, SchemaError
 lazy from fransys_model.vocab.core import Item, Unit

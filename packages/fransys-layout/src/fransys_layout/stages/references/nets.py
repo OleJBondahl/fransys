@@ -233,7 +233,7 @@ def reference(
         key=lambda port: (
             -degree[port],
             not spec[owner[port]].roles.coil,
-            spec[owner[port]].designation,
+            spec[owner[port]].designation_order,
             port,
         ),
     )

@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field, replace
 from functools import partial
-from itertools import chain
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
@@ -13,6 +12,7 @@ from fransys_model.derive.drawing_text import (
     partner_position_text,
 )
 
+from ._image_stack import foot_down, headed_width, settled_tables
 from ._image_widest import widest_places
 from .boxes import first_placed
 from .image_refs import by_owner, home_references, unplaced_coil_owners
@@ -54,7 +54,9 @@ class ImageInputs:
     marks: dict[Handle, tuple[list[str], list[str]]]
     owners: Mapping[Handle, Handle] | None = None  # contact function -> the item owning it
     spares: tuple[FunctionSpec, ...] = ()  # V1: contacts on no page, listed "<mark> <no_place>"
+    row_order: Mapping[Handle, tuple[Any, ...]] = field(default_factory=dict)  # O7, model-0138
     no_place: str = field(kw_only=True)  # layout-0112: the model's text for "not drawn"
+    heads: Mapping[Handle, str] = field(default_factory=dict)  # coil -> its table's heading (0170)
 
 
 def _image_marks(
@@ -104,12 +106,27 @@ class _Reserve:
 
     down: int = 0
     images: tuple[tuple[Handle, tuple[str, ...], bool], ...] = ()
+    tables: tuple[int, ...] = ()  # layout-0170: the heights of the tables of the foot it holds
+
+    def hold(
+        self,
+        profile: Profile,
+        image: tuple[Handle, tuple[str, ...], bool] | None = None,
+        table: int | None = None,
+    ) -> _Reserve:
+        """This reserve plus an `image` hung on its lane and a `table` standing on its foot."""
+        tables = self.tables if table is None else (*self.tables, table)
+        images = self.images if image is None else (*self.images, image)
+        return _Reserve(down=foot_down(tables, profile), images=images, tables=tables)
 
 
-def _image_width(entries: Sequence[str], profile: Profile) -> int:
-    """C19, D13: a contact image's width, two columns of widest text plus padding."""
+def _image_width(entries: Sequence[str], profile: Profile, heading: str = "") -> int:
+    """C19, D13: a contact image's width, two columns of widest text plus padding.
+
+    A stacked table's `heading` (layout-0170) is measured too: the table is no narrower than it.
+    """
     column = max(text_width(t, height=profile.text_height) for t in (*entries, "NO", "NC"))
-    return 2 * (column + 2 * profile.marker_padding)
+    return headed_width(2 * (column + 2 * profile.marker_padding), heading, profile)
 
 
 def table_height(rows: int, profile: Profile) -> int:
@@ -127,7 +144,6 @@ def image_reserves(
     """I4 Q1, D7: (column key, function) -> `_Reserve`; a flipped cell keeps nothing."""
     by_item = by_owner([s for s in specs if s.roles.contact], owners)
     spec_of = {spec.function: spec for spec in specs}
-    pad = profile.marker_padding
     found: dict[tuple[AuthoringKey, Handle], _Reserve] = {}
     for column in columns:
         for cell in column.cells:
@@ -142,7 +158,7 @@ def image_reserves(
             no, nc = _image_marks(by_item.get(spec.item, []), marks)
             if not (no or nc):
                 continue
-            down = table_height(max(len(no), len(nc)), profile) + pad
+            height = table_height(max(len(no), len(nc)), profile)
             under = [
                 c for c in column.cells if c.index > cell.index and c.host is None and not c.side
             ]
@@ -158,9 +174,8 @@ def image_reserves(
                     continue
                 key = column.key, one.function
                 before = found.get(key, _Reserve())
-                found[key] = _Reserve(
-                    down=max(before.down, down) if one is last else before.down,
-                    images=(*before.images, image) if one in wide else before.images,
+                found[key] = before.hold(
+                    profile, image if one in wide else None, height if one is last else None
                 )
     return found
 
@@ -207,8 +222,9 @@ def rooms(
         for coil, marks, cross in reserve.images:
             first = by_function[coil]
             start = axis_offset(one) + first.geometry.ports[0].at.x - axis_offset(first)
+            head = inputs.heads.get(coil, "") if len(reserve.tables) > 1 else ""
             width = _image_width(
-                [_entry_text(mark, widest[cross]) for mark in marks], inputs.profile
+                [_entry_text(mark, widest[cross]) for mark in marks], inputs.profile, head
             )
             right = max(right, start + WIRING_GRID // 2 + width - edge)
         found[key] = (reserve.down, right)
@@ -272,23 +288,6 @@ def _image_top(
     return y + WIRING_GRID if len(row) > 1 else y
 
 
-def _on_one_baseline(
-    tables: Mapping[tuple[int, int], list[PlacedLabel]], home: Mapping[Handle, PlacedFunction]
-) -> dict[tuple[int, int], list[PlacedLabel]]:
-    """I4: the contact images of one page row share one baseline, the lowest needed."""
-    found = {}
-    for page, labels in tables.items():
-        rows: dict[int, list[PlacedLabel]] = {}
-        for label in labels:
-            rows.setdefault(home[label.subject].at.y, []).append(label)
-        found[page] = [
-            replace(label, box=replace(label.box, y=max(one.box.y for one in row)))
-            for row in rows.values()
-            for label in row
-        ]
-    return found
-
-
 def _page_holding(
     pages: Sequence[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]],
 ) -> dict[tuple[Handle, int, int], tuple[PlacedFunction, ...]]:
@@ -346,7 +345,7 @@ def contact_images(
         at = home[coil.function]
         order = sorted(
             contacts,
-            key=lambda s: (len(s.ports) <= 2, sorted(chain(*inputs.marks[s.function]))[:1]),  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
+            key=lambda s: (len(s.ports) <= 2, inputs.row_order.get(s.function, ())),  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
         )
         no, nc = [], []
         for s in order:
@@ -378,7 +377,9 @@ def contact_images(
             )
         )
         requests.extend(home_references(contacts, coil, home, where))
-    tables = _on_one_baseline(tables, home)
+    tables = settled_tables(
+        tables, home, marker_boxes, profile, inputs.heads
+    )  # I4 baseline, layout-0170 stack
     found = []
     for plan, (placed, first) in zip(plans, pages, strict=True):
         found.append((placed, (*first, *tables.get((plan.drawing_set, plan.number), ()))))

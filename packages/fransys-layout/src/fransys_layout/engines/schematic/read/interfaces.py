@@ -1,4 +1,4 @@
-"""One read per interface of a unit: the facts HL13 splits its edges by (layout-0153)."""
+"""One read per interface of a unit: the facts layout-0153 splits its edges by."""
 
 from typing import TYPE_CHECKING
 

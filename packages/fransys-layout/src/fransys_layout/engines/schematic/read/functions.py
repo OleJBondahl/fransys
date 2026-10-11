@@ -10,6 +10,7 @@ item-only lookup, so a board connector with no placement of its own draws in its
 placed ancestor's drawing set.
 """
 
+import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.defaults import kind_roles
@@ -20,7 +21,7 @@ from fransys_model.derive.designation import reference_designation
 from fransys_model.derive.drawing_text import point_text, strip_tag_text
 from fransys_model.derive.lookups import connector_facets
 from fransys_model.kernel import SchemaError, parent_chain
-from fransys_model.vocab import function_poles, pole_order
+from fransys_model.vocab import function_poles, marking_key, pole_order
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.tables import (
     aspect_nodes,
@@ -34,13 +35,19 @@ from . import roles
 from .rest import function_rest, protection_type
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
 
-    from fransys_layout.stages import PolePair
+    from fransys_layout.stages import PolePair, PortSpec
     from fransys_model.derive.indexes import Indexes
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.aspects import AspectNode
     from fransys_model.vocab.core import Function, Item
+
+
+def _in_marking_order(specs: Iterable[PortSpec]) -> tuple[PortSpec, ...]:
+    """`specs` with `order` set to the rank of each name's `marking_key` (O7: `10` after `2`)."""
+    ranked = sorted(specs, key=lambda spec: (marking_key(spec.name), spec.name))
+    return tuple(dataclasses.replace(spec, order=i) for i, spec in enumerate(ranked))
 
 
 def function_spec(
@@ -55,7 +62,7 @@ def function_spec(
     poles, pole_pairs = _poles_and_pairs(model, function)
     port_ids = indexes.ports_by_function.get(function.id, ())
     throw_of = roles.changeover_throw_of(model, function)
-    port_specs = tuple(
+    port_specs = _in_marking_order(
         roles.port_spec(model, indexes, port_id, throw_of.get(port_id)) for port_id in port_ids
     )
     strip, point = _terminal_texts(model, function)

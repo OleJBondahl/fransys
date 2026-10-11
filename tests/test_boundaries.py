@@ -154,7 +154,7 @@ def test_the_third_party_check_can_fail():
 
 # --- The import surface (SURFACE spec, decision 0046, MS1/MS3/MS6): outside a package, source
 # crosses into another workspace package only through that package's own top-level `__all__`
-# (MS6), or, for the model, one of its nine named modules (MS1). `lean_surface` is the one home
+# (MS6), or, for the model, one of its eleven named modules (MS1). `lean_surface` is the one home
 # of "the surface"; this test keeps no module list of its own. `symdef` is outside:
 # it is third-party, never a workspace package, so it never reaches `FIRST_PARTY` at all.
 
@@ -163,7 +163,7 @@ SURFACE_NAMES: dict[str, tuple[str, ...]] = lean_surface.surface_names()
 
 # Layout's own imports of `fransys_model` are still its pre-redesign deep paths (step 5 is
 # mid-rewrite); this ONE dated line exempts that one pair until its follow-up rewrites them to
-# the nine surface modules and removes it. Nothing else is exempt (2026-09-27, SURFACE MS3).
+# the eleven surface modules and removes it. Nothing else is exempt (2026-09-27, SURFACE MS3).
 SURFACE_EXEMPT: frozenset[tuple[str, str]] = frozenset({("fransys_layout", "fransys_model")})
 
 
@@ -269,7 +269,7 @@ def test_the_surface_check_can_fail():
     ) == {"fransys_layout.engines.schematic.lay_out_schematic"}
     assert surface_violations("fransys", "from fransys_layout import lay_out_schematic") == set()
     # Acceptance 9 (MS3, module binding): `baseline.listing` passes; `baseline._common_location`
-    # and a submodule bound directly (`designation`, not one of the nine) both fail.
+    # and a submodule bound directly (`designation`, not one of the eleven) both fail.
     assert (
         surface_violations(
             "fransys",
@@ -301,9 +301,7 @@ def test_the_surface_check_can_fail():
     ) == {"fransys_model.derive.cable_drawing._hidden"}
     # Layout's own deep model imports are exempt (MS3), until step 5's follow-up.
     assert (
-        surface_violations(
-            "fransys_layout", "from fransys_model.derive.designation import bom_sort_key"
-        )
+        surface_violations("fransys_layout", "from fransys_model.derive.order import bom_sort_key")
         == set()
     )
 

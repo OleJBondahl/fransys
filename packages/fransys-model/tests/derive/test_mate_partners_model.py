@@ -6,8 +6,8 @@ from plant import Plant
 from fransys_model.derive.mate_rows import mate_partners
 
 
-def test_each_end_of_a_mate_lists_the_other_and_a_second_mate_adds_a_partner_in_id_order() -> None:
-    """Both ends are keys; a connector with two mates lists both, smallest id first."""
+def test_each_end_of_a_mate_lists_the_other_a_second_mate_adds_one_by_designation() -> None:
+    """Both ends are keys; a connector with two mates lists both, in designation order."""
     plant = Plant()
     for name in ("a", "b", "c"):
         plant.item(name, designation=name.upper())
@@ -17,7 +17,7 @@ def test_each_end_of_a_mate_lists_the_other_and_a_second_mate_adds_a_partner_in_
     plant.mate(fa, fb)
     plant.mate(fa, fc, key="mate-2")
     partners = mate_partners(plant.model())
-    assert partners[fa] == tuple(sorted((fb, fc)))
+    assert partners[fa] == (fb, fc)
     assert partners[fb] == (fa,)
     assert partners[fc] == (fa,)
 

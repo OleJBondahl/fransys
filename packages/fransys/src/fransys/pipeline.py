@@ -56,6 +56,7 @@ from fransys_model.derive import (
     units,
 )
 from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins
+from fransys_model.derive.order import finding_order_key
 from fransys_model.kernel import (
     Finding,
     Id,
@@ -352,10 +353,23 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     validator_findings.extend(check_side_hints(model))
     findings = (*plc_findings, *number_findings, *validator_findings)
     if _has_error(findings) or not _has_document(model):
-        return BuildResult(model=model, findings=findings)
+        return BuildResult(model=model, findings=_by_code_in_reader_order(findings, model))
     model, layout_findings = lay_out_if_needed(model)
     model, cable_findings = lay_out_cables(model)
-    return BuildResult(model=model, findings=(*findings, *layout_findings, *cable_findings))
+    found = (*findings, *layout_findings, *cable_findings)
+    return BuildResult(model=model, findings=_by_code_in_reader_order(found, model))
+
+
+def _by_code_in_reader_order(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...]:
+    """Each code keeps its first place; its findings list by `finding_order_key` (decision 0135)."""
+    by_code: dict[str, list[Finding]] = {}
+    for finding in findings:
+        by_code.setdefault(finding.code, []).append(finding)
+    return tuple(
+        finding
+        for group in by_code.values()
+        for finding in sorted(group, key=lambda f: finding_order_key(model, f))
+    )
 
 
 def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...]:
@@ -363,7 +377,16 @@ def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...
         dataclasses.replace(finding, message=describe(finding, model)) for finding in findings
     )
     return tuple(
-        sorted(resolved, key=lambda f: (_SEVERITY_RANK[f.severity], f.code, f.subjects, f.message))
+        sorted(
+            resolved,
+            key=lambda f: (
+                _SEVERITY_RANK[f.severity],
+                f.code,
+                finding_order_key(model, f),
+                f.subjects,
+                f.message,
+            ),
+        )
     )
 
 

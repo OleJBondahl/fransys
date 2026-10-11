@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.stages.exempt import UnitNesting
 from fransys_layout.stages.references import BlackBoxReads
 from fransys_layout.stages.replicate import UnitBoundary
-from fransys_model.derive import black_box_unit
+from fransys_model.derive import black_box_unit, natural_key
+from fransys_model.derive.instance_tag import instance_name, instance_tags
 from fransys_model.vocab.membership import boundary, units
 from fransys_model.vocab.tables import functions, items
 from fransys_model.vocab.tables import units as units_table
@@ -15,6 +16,7 @@ from fransys_model.vocab.unit_index import unit_index
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from fransys_layout.stages.types import OrderKey
     from fransys_model.kernel import Id, Model
 
 
@@ -138,3 +140,8 @@ def black_boxes(model: Model) -> dict[tuple[Id[Any], Id[Any] | None], Id[Any]]:
         for unit in units(model)
         for one in (None, *containing_units(model, unit))
     }
+
+
+def unit_order(model: Model, unit: Id[Any]) -> OrderKey:
+    """O7: the natural key of a unit's instance designation (`-U2` before `-U10`), a value."""
+    return natural_key(instance_name(instance_tags(model, unit, None)))

@@ -6,7 +6,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function
 
 from .designation import connector_designation
-from .natural_order import natural_key
+from .order import natural_key
 from .rows import MateRow
 
 
@@ -45,9 +45,16 @@ def mates(model: Model) -> tuple[MateRow, ...]:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def mate_partners(model: Model) -> frozendict[Id[Function], tuple[Id[Function], ...]]:
-    """Each mated connector function with the functions mated to it, smallest id first."""
+    """Each mated connector function with the functions mated to it, in designation order."""
     found: dict[Id[Function], list[Id[Function]]] = {}
     for mate in mates_table(model).values():
         found.setdefault(mate.a, []).append(mate.b)
         found.setdefault(mate.b, []).append(mate.a)
-    return frozendict({key: tuple(sorted(value)) for key, value in found.items()})
+    return frozendict(
+        {
+            key: tuple(
+                sorted(value, key=lambda f: (natural_key(connector_designation(model, f)), f))
+            )
+            for key, value in found.items()
+        }
+    )

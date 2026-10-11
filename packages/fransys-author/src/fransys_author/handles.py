@@ -443,7 +443,7 @@ def _write_group_hint(recorder: _Recorder, function: Fn, group: Group, origin: O
 
 
 def _write_side_hint(recorder: _Recorder, function: Fn, side: Side, origin: Origin) -> None:
-    """Write one `layout.side_hint` for the boundary `function` (HL14, `d.layout.side`)."""
+    """Write one `layout.side_hint` for the boundary `function` (model-0177, `d.layout.side`)."""
     key = scoped(function.key, "side_hint")
     hint = SideHint(id=make_id(SideHint, key), key=key, function=function.id, side=side)
     recorder._add(hint, origin)

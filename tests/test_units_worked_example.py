@@ -1221,7 +1221,8 @@ def test_step_4b_the_kicad_netlist_of_the_board_is_board_relative() -> None:
     one internal net -- `board_netlist`'s grouping (decision model-0042, the board-netlist-
     conductors work package) gives each of the two `X1`-`K1` wires its own undeclared net,
     `Net-(K1-A1)` and `Net-(K1-A2)`, `K1` beating `X1` as the smaller board-relative
-    reference; `internal`, the one declared net, sorts after both (`'N' < 'i'`).
+    reference, and its pins listing in that order; `internal`, the one declared net, sorts after
+    both (`'N' < 'i'`).
 
     Can-fail (measured before this fix, `pin_of`'s fallback with no `relative_to`, then
     undone with Edit -- not kept as a toggle in this test):
@@ -1244,11 +1245,11 @@ def test_step_4b_the_kicad_netlist_of_the_board_is_board_relative() -> None:
         "  (components)\n"
         "  (nets\n"
         '    (net (code "1") (name "Net-(K1-A1)")\n'
-        '      (node (ref "X1") (pin "1"))\n'
-        '      (node (ref "K1") (pin "A1")))\n'
+        '      (node (ref "K1") (pin "A1"))\n'
+        '      (node (ref "X1") (pin "1")))\n'
         '    (net (code "2") (name "Net-(K1-A2)")\n'
-        '      (node (ref "X1") (pin "2"))\n'
-        '      (node (ref "K1") (pin "A2")))\n'
+        '      (node (ref "K1") (pin "A2"))\n'
+        '      (node (ref "X1") (pin "2")))\n'
         '    (net (code "3") (name "internal")\n'
         '      (node (ref "K1") (pin "11"))\n'
         '      (node (ref "K1") (pin "21"))))'

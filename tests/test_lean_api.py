@@ -66,8 +66,8 @@ def test_fransys_pdf_output_is_byte_identical_across_two_calls():
     assert lean_api.api("fransys_pdf") == lean_api.api("fransys_pdf")
 
 
-def test_model_package_maps_to_its_nine_surface_modules():
-    """`_package_modules("fransys_model")` is exactly MS1's nine dotted modules, sorted --
+def test_model_package_maps_to_its_eleven_surface_modules():
+    """`_package_modules("fransys_model")` is exactly MS1's eleven dotted modules, sorted --
     the general prefix rule, not a special case for the model.
     """
     assert lean_api._package_modules("fransys_model") == (
@@ -77,14 +77,16 @@ def test_model_package_maps_to_its_nine_surface_modules():
         "fransys_model.derive.cable_drawing",
         "fransys_model.derive.drawing_text",
         "fransys_model.derive.numbering_pins",
+        "fransys_model.derive.order",
+        "fransys_model.derive.text_width",
         "fransys_model.kernel",
         "fransys_model.layout",
         "fransys_model.vocab",
     )
 
 
-def test_model_api_output_covers_all_nine_modules_own_names():
-    """`api("fransys_model")` prints at least one header per one of the nine modules."""
+def test_model_api_output_covers_all_eleven_modules_own_names():
+    """`api("fransys_model")` prints at least one header per one of the eleven modules."""
     output = lean_api.api("fransys_model")
     modules_seen = {module for module, _name in _headers(output)}
     assert modules_seen == {
@@ -94,6 +96,8 @@ def test_model_api_output_covers_all_nine_modules_own_names():
         "fransys_model.derive.cable_drawing",
         "fransys_model.derive.drawing_text",
         "fransys_model.derive.numbering_pins",
+        "fransys_model.derive.order",
+        "fransys_model.derive.text_width",
         "fransys_model.kernel",
         "fransys_model.layout",
         "fransys_model.vocab",

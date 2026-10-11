@@ -284,7 +284,7 @@ def _stack_page(
     # C14: the first rows leave room above for their texts (tags, point texts, markers on N
     # ports) and the last rows below, inside the content box
     lift, sink = _text_room(page, profile, drawn_of, texts)
-    # HL18 (layout-0158): and room for a leaving line and its stub beyond a line's pins
+    # layout-0154 (layout-0158): and room for a leaving line and its stub beyond a line's pins
     up, down = line_room(page, drawn_of, stacking.line_ends, profile)
     # M4: every page keeps it, a reference or none
     band = _reference_band(sheet, profile, stacking.digits)

@@ -31,7 +31,7 @@ from .indexes import build_indexes
 from .instance_tag import instance_name, instance_tags
 from .lookups import cable_end_owner, item_of_port, unit_chain
 from .mate_rows import mate_partners
-from .natural_order import NaturalKey, natural_key
+from .order import NaturalKey, natural_key
 lazy from .rows import HarnessCable
 
 __all__ = [

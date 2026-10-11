@@ -1,7 +1,7 @@
 """Model diff report: a `ListingDiff` as CSV or Markdown (MODEL-DIFF work order, M2)."""
 
-from fransys_model.derive import revision_text
-from fransys_model.derive.baseline import CHANGE_COLUMNS, Change, ListingDiff
+from fransys_model.derive import natural_key, revision_text
+from fransys_model.derive.baseline import CHANGE_COLUMNS, Change, ListingDiff, change_identity
 
 from .csv import _csv
 
@@ -27,21 +27,9 @@ def changes_csv(diff: ListingDiff) -> str:
     return _csv(diff.changes, CHANGE_COLUMNS)
 
 
-def _identity(section: str, parts: tuple[str, ...]) -> str:
-    """A `Change.parts` tuple as the bullet's backticked identity text (reports-0004)."""
-    if section == "units":
-        instance, name = parts
-        return f"`{instance}` ({name})"
-    if section in ("conductors", "mates"):
-        a, b = parts
-        return f"between `{a}` and `{b}`"
-    (subject,) = parts
-    return f"`{subject}`"
-
-
 def _bullet(section: str, rows: list[Change]) -> str:
     """One Markdown bullet for one `(section, subject)` group of `Change` rows (reports-0004)."""
-    identity = _identity(section, rows[0].parts)
+    identity = change_identity(section, rows[0].parts)
     if len(rows) == 1 and rows[0].field == "" and rows[0].change != "changed":
         change = rows[0].change
         verb = "Added" if change == "added" else "Removed"
@@ -50,10 +38,12 @@ def _bullet(section: str, rows: list[Change]) -> str:
             return f"- {verb} {identity}: {detail}."
         return f"- {verb} {identity}."
     ports_added = sorted(
-        row.after for row in rows if row.change == "added" and row.field == "ports"
+        (row.after for row in rows if row.change == "added" and row.field == "ports"),
+        key=natural_key,
     )
     ports_removed = sorted(
-        row.before for row in rows if row.change == "removed" and row.field == "ports"
+        (row.before for row in rows if row.change == "removed" and row.field == "ports"),
+        key=natural_key,
     )
     clauses = []
     if ports_added:

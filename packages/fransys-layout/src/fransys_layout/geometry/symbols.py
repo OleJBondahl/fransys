@@ -19,15 +19,17 @@ from electrical_symbols import (
     NORTH,
     PORT_PITCH_G,
     SOUTH,
+    box_port_marking,
     box_port_name,
     default_order,
     default_sides,
     draw_order,
     generic_box,
     is_generic_box,
-    text_width,
 )
 from electrical_symbols import library_version as _electrical_symbols_library_version
+from fransys_model.derive.drawing_text import pole_prefix
+from fransys_model.derive.text_width import marking_widths, text_width
 from fransys_model.kernel import register_enum, value
 from fransys_model.layout import Orientation
 
@@ -192,8 +194,12 @@ def _generic(
     stand: int = 0,
 ) -> SymbolGeometry:
     """One generic box converted to grid units."""
+    widths = marking_widths(box_port_marking(name) for name in port_names)
     return convert(
-        orient(generic_box(port_names, sides, offsets, stand), LibraryOrientation.R0),
+        orient(
+            generic_box(port_names, sides, offsets, stand, marking_widths=widths),
+            LibraryOrientation.R0,
+        ),
         poles=1,
         orientation=Orientation.R0,
     )
@@ -202,12 +208,12 @@ def _generic(
 def convert(symbol: Symbol, *, poles: int, orientation: Orientation) -> SymbolGeometry:
     """Convert one library symbol, already repeated and oriented, to grid units."""
     # `repeat` prefixes pole 1's ports `1.`; the through path names the base ports.
-    pole_prefix = "1." if poles > 1 else ""
+    first_pole = pole_prefix(0, poles)
     through = next(
         (
             ThroughPath(
-                start=path.from_port.removeprefix(pole_prefix),
-                end=path.to_port.removeprefix(pole_prefix),
+                start=path.from_port.removeprefix(first_pole),
+                end=path.to_port.removeprefix(first_pole),
             )
             for path in symbol.paths
             if path.through

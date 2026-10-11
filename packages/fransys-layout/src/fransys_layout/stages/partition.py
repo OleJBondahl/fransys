@@ -87,7 +87,7 @@ def column_widths(
 class ColumnTables:
     """What a column resolves through in `partition`: width, group, location, unit, pole links.
 
-    `bands` are the unit groups (HL21), each packed as one unit.
+    `bands` are the unit groups (layout-0153), each packed as one unit.
     """
 
     widths: tuple[ColumnWidth, ...]
@@ -113,6 +113,8 @@ def partition(
         width_of={width.column: width.width for width in given.widths},
         unit_ids=frozenset(info.unit for info in given.units),
         unit_location={info.unit: info.location for info in given.units},
+        unit_order={info.unit: info.order for info in given.units},
+        location_order={info.location: info.order for info in given.locations},
     )
     ordered = tuple(sorted(columns, key=column_order))
     _check_inputs(ordered, given, tables)
@@ -134,7 +136,7 @@ def partition(
             pole_links=given.pole_links,
         )
         packed, bucket_met = merge(
-            # HL21: each unit group one unit, before keep-together sets take it whole
+            # layout-0153: each unit group one unit, before keep-together sets take it whole
             gather(reorder(ranked, hints.order), given.bands, tables.width_of),
             hints.keep_together,
             sheet.content_width,
@@ -230,7 +232,7 @@ def _keep_together_findings(hints: PageHints, met: AbstractSet[int]) -> Iterator
 def _split_findings(
     split: Sequence[Unit], pages: Sequence[PagePlan], bands: Bands, tables: Tables
 ) -> Iterator[Finding]:
-    """One finding per unit the packing had to cut; a unit group has its own code (HL21)."""
+    """One finding per unit the packing had to cut; a unit group has its own code (layout-0153)."""
     for unit in split:
         subjects = tuple(group for group in unit.groups if group is not None)
         if not any(key in bands.band_of for key in unit.columns):

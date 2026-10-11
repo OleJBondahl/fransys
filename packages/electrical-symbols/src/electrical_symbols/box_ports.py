@@ -3,10 +3,10 @@
 Layout and render both draw the box from these, so a name, a side or a pitch has one spelling.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
 # `SymbolGeometry.key` (`fransys_layout`) is the generic box's `reference.number`.
 GENERIC_BOX_KEY = "generic-box"
@@ -44,6 +44,9 @@ def draw_order(x: float, side: str) -> tuple[float, bool]:
     return (x, side != NORTH)
 
 
-def default_order(names: Iterable[str]) -> tuple[str, ...]:
-    """The drawing order of box ports nobody ordered: by name (R7 B2)."""
-    return tuple(sorted(names))
+def default_order(names: Iterable[str], key: Callable[[str], Any] = str) -> tuple[str, ...]:
+    """The drawing order of box ports nobody ordered: by `key` of the name, then the name (R7 B2).
+
+    The caller passes the natural key (`marking_key`), so `A2` stands before `A10` (O4, O7).
+    """
+    return tuple(sorted(names, key=lambda name: (key(name), name)))

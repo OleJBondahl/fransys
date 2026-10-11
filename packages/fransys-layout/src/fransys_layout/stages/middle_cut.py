@@ -30,7 +30,7 @@ def stack_lower(
     moves: Mapping[AuthoringKey, tuple[int, int]],
     deepest: int,
 ) -> dict[AuthoringKey, tuple[int, int]]:
-    """HL20: the lower columns move down together until the highest is at `deepest`."""
+    """Layout-0153: the lower columns move down together until the highest is at `deepest`."""
     dy = snap_up(deepest - min((hulls[key].y for key in lower), default=deepest))
     return {key: (dx, dy) for key, (dx, _) in moves.items()}
 

@@ -4,6 +4,7 @@ Reached as `fransys_model.derive.baseline.<name>`, never re-exported from
 `derive/__init__.py` (that file is a parallel task's; this module's own file set stays
 disjoint from it). This module is the surface only; the code lives beside it by concern:
 
+- `baseline_change_text`: `change_identity`, the identity text of one `Change` bullet.
 - `baseline_designation`: `unit_designation`, `reference_designation`'s rule with the unit's own
   common location dropped from the `+` segment, never the `=` segment (a group move changes
   what the drawings print, so it changes the release), and the cross-unit port texts.
@@ -18,6 +19,7 @@ disjoint from it). This module is the surface only; the code lives beside it by 
 - `baseline_diff`, `baseline_diff_units`, `baseline_diff_wiring`: `diff`.
 """
 
+from .baseline_change_text import change_identity
 from .baseline_codec import differing_sections, dumps, loads
 from .baseline_designation import unit_designation
 from .baseline_diff import diff
@@ -29,6 +31,7 @@ __all__ = [
     "Change",
     "Listing",
     "ListingDiff",
+    "change_identity",
     "diff",
     "differing_sections",
     "dumps",

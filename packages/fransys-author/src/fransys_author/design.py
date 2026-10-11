@@ -796,7 +796,7 @@ class Scope(LinkScope, SupplyScope):
         _write_group_hint(self._design, function, group, caller_origin())
 
     def side(self, function: Fn, side: Side) -> None:
-        """Hint the edge of its unit's outline that the boundary `function` stands on (HL14)."""
+        """Hint the edge of its unit's outline that the boundary `function` stands on."""
         _write_side_hint(self._design, function, side, caller_origin())
 
     # -- shared placement --------------------------------------------------------------

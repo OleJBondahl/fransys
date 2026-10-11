@@ -45,6 +45,8 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_model.derive.cable_drawing",
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.numbering_pins",
+    "fransys_model.derive.order",
+    "fransys_model.derive.text_width",
     "fransys_model.kernel",
     "fransys_model.layout",
     "fransys_model.vocab",
@@ -57,7 +59,7 @@ _EXPECTED_SURFACE_MODULES = (
 )
 
 
-def test_surface_modules_is_the_expected_23_entries():
+def test_surface_modules_is_the_expected_25_entries():
     """Every `packages/*` top-level module (`fransys_model` excepted), its nine named
     modules (MS1), `fransys.colours` and the author package's two surface modules (MS8):
     no more, no fewer.

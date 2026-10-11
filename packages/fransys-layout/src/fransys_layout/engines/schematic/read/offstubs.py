@@ -20,14 +20,14 @@ from fransys_layout.engines.schematic.read.units import (
 )
 from fransys_layout.stages.offstubs import OffEnd, OffReads, PortText, bridge, mate_stub
 from fransys_layout.stages.types import StubText
-from fransys_model.derive import draws_as_line
+from fransys_model.derive import draws_as_line, natural_key
 from fransys_model.derive.designation import port_designation, printed_designation
 from fransys_model.derive.drawing_text import stub_far_end
 from fransys_model.kernel import parent_chain
 from fransys_model.vocab.tables import conductors, items, mates, ports
 
 if TYPE_CHECKING:
-    from fransys_layout.stages.types import Connection, FunctionSpec, MatedFunctions
+    from fransys_layout.stages.types import Connection, FunctionSpec, MatedFunctions, OrderKey
     from fransys_model.kernel import Id, Model
 
 
@@ -135,10 +135,15 @@ def _stub_end(
     unit = function_unit(model, ports(model)[near].function)
     cable = "" if carrier is None else printed_designation(model, carrier, unit=unit)
     head, tail = stub_far_end(model, far, near, unit=unit)
-    # HL18: a carrier that draws as a line names no far port, as `off_stub_text` prints it
+    # layout-0154: a carrier that draws as a line names no far port, as `off_stub_text` prints it
     line = carrier is not None and draws_as_line(model, carrier)
     text = StubText(cable=cable, far=head, port=tail, line=line)
     return PortText(port=near, text=text), OffEnd(port=near, text=text, carrier=carrier, far=far)
+
+
+def _port_order(model: Model, port: Id[Any]) -> OrderKey:
+    """O4: the natural key of a port's designation, the stage's tie-break (O7)."""
+    return natural_key(port_designation(model, port))
 
 
 def off_reads(model: Model, maps: FarMaps) -> OffReads:
@@ -147,5 +152,5 @@ def off_reads(model: Model, maps: FarMaps) -> OffReads:
         edges=top_boundary_edges(model),
         top_unit=partial(top_level_unit, model),
         end_text=partial(end_text, model, maps),
-        designation=partial(port_designation, model),
+        designation=partial(_port_order, model),
     )

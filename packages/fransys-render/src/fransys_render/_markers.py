@@ -319,7 +319,7 @@ def _turned_glyphs(
 
 
 def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
-    """Whether `marker` is the stub a harness line ends in (HL18): its carrier's line runs on it.
+    """Whether `marker` is the stub a harness line ends in: its carrier's line runs on it.
 
     A per-core stub of a line's carrier (C21) stands at its port, off the line, and keeps its stub.
     """

@@ -19,12 +19,11 @@ surface_docstring_lines = 15
 "packages/fransys-author/src/fransys_author/design.py::Scope.cable" = 17
 "packages/fransys-author/src/fransys_author/design.py::Scope.item" = 17
 "packages/fransys-author/src/fransys_author/design.py::Scope.symbol" = 17
-"packages/fransys-author/src/fransys_author/handles.py::Strip.terminal" = 19
+"packages/fransys-author/src/fransys_author/handles.py::Strip.terminal" = 17
 "packages/fransys-kicad/src/fransys_kicad/_sexpr.py::_read" = 17
-"packages/fransys-layout/src/fransys_layout/engines/schematic/_lines.py::draw_lines" = 19
 "packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_results" = 46
-"packages/fransys-layout/src/fransys_layout/engines/schematic/read/views.py::item_views" = 36
-"packages/fransys-layout/src/fransys_layout/engines/schematic/write/labels.py::labels" = 20
+"packages/fransys-layout/src/fransys_layout/engines/schematic/read/views.py::item_views" = 35
+"packages/fransys-layout/src/fransys_layout/engines/schematic/write/labels.py::labels" = 19
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/placements.py::placements" = 23
 "packages/fransys-layout/src/fransys_layout/lint/_jogs.py::_chains" = 18
 "packages/fransys-layout/src/fransys_layout/lint/chains.py::lint_chains" = 18
@@ -38,12 +37,11 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/chains.py::_attach" = 34
 "packages/fransys-layout/src/fransys_layout/stages/chains.py::discover_chains" = 18
 "packages/fransys-layout/src/fransys_layout/stages/columns.py::columns_from_chains" = 28
-"packages/fransys-layout/src/fransys_layout/stages/exempt.py::boundary_exempt" = 19
+"packages/fransys-layout/src/fransys_layout/stages/exempt.py::boundary_exempt" = 18
 "packages/fransys-layout/src/fransys_layout/stages/far_ends.py::move_far_ends" = 16
 "packages/fransys-layout/src/fransys_layout/stages/finish.py::finish_pages" = 17
-"packages/fransys-layout/src/fransys_layout/stages/grid_path.py::grid_path" = 26
 "packages/fransys-layout/src/fransys_layout/stages/images.py::contact_images" = 42
-"packages/fransys-layout/src/fransys_layout/stages/images.py::image_reserves" = 23
+"packages/fransys-layout/src/fransys_layout/stages/images.py::image_reserves" = 22
 "packages/fransys-layout/src/fransys_layout/stages/labels.py::place_slot_labels" = 16
 "packages/fransys-layout/src/fransys_layout/stages/pagerun.py::_place_each" = 22
 "packages/fransys-layout/src/fransys_layout/stages/partition.py::_check_inputs" = 20
@@ -54,9 +52,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/references/joins.py::_wired_beside" = 22
 "packages/fransys-layout/src/fransys_layout/stages/references/joins.py::port_spots" = 18
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::drop_attached_replicas" = 16
-"packages/fransys-layout/src/fransys_layout/stages/replicate.py::replicate_boundaries" = 21
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::replicate_terminals" = 25
-"packages/fransys-layout/src/fransys_layout/stages/resolve.py::resolve" = 16
 "packages/fransys-layout/src/fransys_layout/stages/route.py::port_end" = 18
 "packages/fransys-layout/src/fransys_layout/stages/route.py::route" = 24
 "packages/fransys-layout/src/fransys_layout/stages/terminal_rows.py::join_terminal_rows" = 18
@@ -66,7 +62,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/tidy.py::clear_of_stubs" = 19
 "packages/fransys-layout/src/fransys_layout/stages/tidy.py::shift_pages" = 19
 "packages/fransys-model/src/fransys_model/derive/bom.py::bom_lines" = 24
-"packages/fransys-model/src/fransys_model/derive/connectors.py::connector_rows" = 21
+"packages/fransys-model/src/fransys_model/derive/connectors.py::connector_rows" = 19
 "packages/fransys-model/src/fransys_model/derive/passes/numbering.py::_duplicates" = 18
 "packages/fransys-model/src/fransys_model/derive/passes/plc_allocation.py::allocate_plc" = 34
 "packages/fransys-model/src/fransys_model/derive/reports.py::plc_channel_rows" = 18
@@ -109,7 +105,6 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/chains.py::_attach" = 9
 "packages/fransys-layout/src/fransys_layout/stages/references/joins.py::_wired_beside" = 9
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::drop_attached_replicas" = 9
-"packages/fransys-layout/src/fransys_layout/stages/replicate.py::replicate_boundaries" = 10
 "packages/fransys-model/src/fransys_model/kernel/conform.py::_walk" = 10
 
 [nested_defs]
@@ -120,10 +115,8 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/place.py::_gaps_of" = 1
 "packages/fransys-layout/src/fransys_layout/stages/texts/stand.py::run_box" = 1
 "packages/fransys-layout/src/fransys_layout/stages/tidy.py::shift_pages" = 1
-"packages/fransys-model/src/fransys_model/derive/drawing_text.py::unit_tag_text" = 1
 "packages/fransys-model/src/fransys_model/derive/reports.py::cable_rows" = 1
 "packages/fransys-model/src/fransys_model/derive/structure.py::_board_nets" = 1
-"packages/fransys-model/src/fransys_model/derive/structure.py::_undeclared_net_name" = 1
 "packages/fransys-model/src/fransys_model/derive/structure.py::schematic_functions" = 1
 "packages/fransys-model/src/fransys_model/derive/wiring.py::_far_ends" = 1
 "packages/fransys-model/src/fransys_model/kernel/cache.py::digest_cached" = 1
@@ -138,29 +131,28 @@ surface_docstring_lines = 15
 
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/design.py" = 722
-"packages/fransys-layout/src/fransys_layout/stages/images.py" = 312
+"packages/fransys-layout/src/fransys_layout/stages/images.py" = 311
 "packages/fransys-layout/src/fransys_layout/stages/middle_fold.py" = 309
-"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 317
+"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 318
 "packages/fransys-layout/src/fransys_layout/stages/place.py" = 625
-"packages/fransys-model/src/fransys_model/derive/designation.py" = 373
-"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 552
+"packages/fransys-model/src/fransys_model/derive/designation.py" = 360
+"packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 558
 "packages/fransys-model/src/fransys_model/derive/rows.py" = 322
 "packages/fransys-parts/src/fransys_parts/lint.py" = 514
-"packages/fransys-pdf/src/fransys_pdf/_frame.py" = 486
 "packages/fransys-pdf/src/fransys_pdf/_lists.py" = 343
 "packages/fransys-pdf/src/fransys_pdf/checks.py" = 385
-"packages/fransys/src/fransys/pipeline.py" = 756
+"packages/fransys/src/fransys/pipeline.py" = 776
 
 [docstring_lines]
 "packages/fransys-author/src/fransys_author/handles.py::Item.__getitem__" = 6
 "packages/fransys-author/src/fransys_author/surface/_pairing.py::poles" = 6
 
 [surface_docstring_lines]
-"packages/fransys-reports/src/fransys_reports/csv.py::bom_csv" = 16
 "packages/fransys-reports/src/fransys_reports/csv.py::connectors_csv" = 16
 "packages/fransys-reports/src/fransys_reports/csv.py::terminal_csv" = 16
 
 [surface_types]
+"packages/electrical-symbols/src/electrical_symbols/box_ports.py::default_order" = 1
 "packages/fransys-model/src/fransys_model/derive/list_cells.py::cell_parts" = 1
 "packages/fransys-model/src/fransys_model/derive/list_cells.py::cell_text" = 1
 "packages/fransys-model/src/fransys_model/derive/list_cells.py::column_rows" = 2
@@ -195,16 +187,16 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"docs/DESIGN.md" = 5021
-"packages/fransys/src/fransys/guide/findings.md" = 6668
+"packages/fransys-layout/docs/rules/step-5-place.md" = 5118
+"packages/fransys/src/fransys/guide/findings.md" = 6624
 
 [md_long_sentences]
-"CLAUDE.md" = 9
-"docs/DESIGN.md" = 4
-"docs/ROADMAP.md" = 2
+"CLAUDE.md" = 8
+"docs/DESIGN.md" = 3
+"docs/ROADMAP.md" = 1
 "docs/contracts/part-file-connectors.md" = 2
 "docs/contracts/part-file.md" = 3
-"packages/electrical-symbols/CLAUDE.md" = 7
+"packages/electrical-symbols/CLAUDE.md" = 6
 "packages/electrical-symbols/README.md" = 1
 "packages/electrical-symbols/docs/IEC_HANDLING.md" = 4
 "packages/fransys-author/README.md" = 2
@@ -213,10 +205,10 @@ surface_docstring_lines = 15
 "packages/fransys-layout/CLAUDE.md" = 3
 "packages/fransys-layout/README.md" = 1
 "packages/fransys-layout/docs/TWEAKS.md" = 4
-"packages/fransys-layout/docs/design/columns.md" = 31
+"packages/fransys-layout/docs/design/columns.md" = 29
 "packages/fransys-layout/docs/design/engine.md" = 29
 "packages/fransys-layout/docs/design/foundations.md" = 4
-"packages/fransys-layout/docs/design/geometry.md" = 6
+"packages/fransys-layout/docs/design/geometry.md" = 5
 "packages/fransys-layout/docs/design/labels.md" = 11
 "packages/fransys-layout/docs/design/links.md" = 34
 "packages/fransys-layout/docs/design/lint.md" = 39
@@ -261,6 +253,5 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/guide/reading.md" = 3
 
 [exempt]
-"packages/electrical-symbols/src/electrical_symbols/text_metrics.py" = "D8 exemption, unchanged (LC2)"
 "packages/fransys-layout/src/fransys_layout/stages/types.py" = "D8 exemption, unchanged (LC2)"
 "packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py" = "generated (overview-0001)"

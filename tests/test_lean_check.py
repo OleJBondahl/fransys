@@ -134,24 +134,19 @@ def test_directory_exempt_does_not_skip_an_exact_numeric_site():
 # --- the D8 module_code_lines exemption, real repo ------------------------------------------
 
 
-def test_module_code_lines_first_run_excludes_the_d8_exempt_files():
-    """Both D8-exempt files never appear in a fresh `[module_code_lines]` baseline.
+def test_module_code_lines_first_run_excludes_the_d8_exempt_file():
+    """The D8-exempt file never appears in a fresh `[module_code_lines]` baseline.
 
-    `types.py` is over 300 code lines today (real measurement); `text_metrics.py` is not, so
-    its own exclusion is proven with a fabricated over-limit entry instead -- either way, an
-    `[exempt]` site never gets a ceilings entry from `first_run`.
+    `types.py` is over 300 code lines today (real measurement), and an `[exempt]` site never gets
+    a ceilings entry from `first_run`.
     """
     measured = lean_check.lean_code_shape.measure_module_code_lines(ROOT, limit=300)
     types_py = "packages/fransys-layout/src/fransys_layout/stages/types.py"
-    text_metrics_py = "packages/electrical-symbols/src/electrical_symbols/text_metrics.py"
     assert types_py in measured
-    assert text_metrics_py not in measured
-    measured = {**measured, text_metrics_py: 999}
 
     file = lean_check.build_ceilings(None, {"module_code_lines": measured})
 
     assert types_py not in file.sections["module_code_lines"]
-    assert text_metrics_py not in file.sections["module_code_lines"]
 
 
 # --- robustness: a raising checker never partially writes ----------------------------------

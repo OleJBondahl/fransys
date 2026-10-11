@@ -3,7 +3,7 @@
 from typing import cast
 
 from .list_cells import CELL_SEPARATOR
-from .natural_order import natural_key
+from .order import natural_key
 from .rows import (
     BaselineConductor,
     BaselineMate,
@@ -129,7 +129,7 @@ def _net_field_text(field: str, value: object) -> str:
     if field == "potential":
         return "" if value is None else cast("str", value)
     # ports: the row's own `ports` tuple
-    return CELL_SEPARATOR.join(sorted(cast("tuple[str, ...]", value)))
+    return CELL_SEPARATOR.join(sorted(cast("tuple[str, ...]", value), key=natural_key))
 
 
 def _net_changes(a_rows: tuple[BaselineNet, ...], b_rows: tuple[BaselineNet, ...]) -> list[Change]:

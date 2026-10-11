@@ -1,4 +1,4 @@
-"""The one printed form of a revision .
+"""The one printed form of a revision.
 
 Lives in `vocab`, not `derive`, because `vocab.validators.revisions` names a revision in its
 messages and `vocab` never imports `derive`; `derive.revision_text` re-exports it and every

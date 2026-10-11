@@ -174,7 +174,7 @@ class ConductorKind(Enum):
 
 @register_enum
 class Aspect(Enum):
-    """One of the three IEC 81346 views of the same objects .
+    """One of the three IEC 81346 views of the same objects.
 
     Example: `-K1` is a `PRODUCT` designation; `+C1` is a `LOCATION` node.
     """

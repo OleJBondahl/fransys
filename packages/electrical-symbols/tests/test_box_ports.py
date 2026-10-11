@@ -40,7 +40,7 @@ def test_default_sides_alternate_from_north(count, sides):
 
 
 def test_generic_box_without_sides_uses_the_default_sides():
-    symbol = generic_box(("a", "b", "c"))
+    symbol = generic_box(("a", "b", "c"), marking_widths=(4, 4, 4))
     assert tuple("n" if p.direction.name == "N" else "s" for p in symbol.ports) == default_sides(3)
 
 
@@ -57,7 +57,7 @@ def test_draw_order_is_left_to_right_and_north_before_south_at_one_x():
 def test_the_grid_constants_agree_with_the_box_it_draws():
     assert PORT_PITCH_G == PORT_PITCH * G_PER_MODULE == 16
     assert WIRING_GRID == G_PER_MODULE == 8
-    ports = generic_box(("a", "b", "c")).ports
+    ports = generic_box(("a", "b", "c"), marking_widths=(4, 4, 4)).ports
     assert [p.position.x for p in ports] == [0, 0, PORT_PITCH]
 
 

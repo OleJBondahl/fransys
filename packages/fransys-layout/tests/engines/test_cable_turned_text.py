@@ -7,8 +7,8 @@ from dataclasses import replace
 
 from cable_facts import block_facts
 
-from electrical_symbols import text_width
 from fransys_layout.engines.cable.place import block_pitch, place_block
+from fransys_layout.geometry import text_width
 
 _H = 8
 _A3_BODY = (1280, 787)  # G, layout-0141's house sheet

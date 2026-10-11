@@ -21,7 +21,7 @@ from .drawing_text import port_designation_in, product_designation_in
 from .indexes import build_indexes
 from .lookups import connector_facets, descendants, net_name, pin_order, require
 from .mate_rows import mate_partners
-from .natural_order import natural_key
+from .order import natural_key
 from .rows import ConnectorPin, ConnectorRow
 from .unit_nodes import outside_unit
 

@@ -267,7 +267,7 @@ def test_harness_table_page_keeps_the_content_box_margin():
 
 
 def test_bold_text_width_differs_from_regular():
-    """`bold=True` picks `_BOLD_WIDTHS_EM` over `_REGULAR_WIDTHS_EM`, a genuinely different
+    """`bold=True` picks the bold advances over the regular ones, a genuinely different
     table (not a no-op): the same text set bold measures a different width.
     """
     text = "A somewhat long value"
@@ -329,8 +329,13 @@ def test_cut_to_width_stops_strictly_before_the_width_not_at_it():
     exactly on the budget: at that exact boundary, "AB" is kept whole and only the following
     character is cut, proving the comparison is strict.
     """
-    size_pt = 10.0
     text = "ABCDEFGH"
+
+    def _exact(size_pt: float) -> bool:  # float sums must give back the budget exactly
+        e, c = text_width_mm("…", size_pt=size_pt), text_width_mm("AB", size_pt=size_pt)
+        return (e + c) - e == c
+
+    size_pt = next(s for s in (10.0, 9.0, 8.0, 12.0, 11.0, 7.0) if _exact(s))
     ellipsis_width = text_width_mm("…", size_pt=size_pt, bold=False)
     candidate_width = text_width_mm("AB", size_pt=size_pt, bold=False)
     width_mm = ellipsis_width + candidate_width

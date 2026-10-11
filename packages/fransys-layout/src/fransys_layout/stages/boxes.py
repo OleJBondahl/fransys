@@ -111,6 +111,7 @@ def _turned_box(
     centre = box.at.y + one.geometry.body.y + one.geometry.body.height // 2
     symbol_of = {port.symbol_port: port.port for port in one.ports}
     group_of = {port.symbol_port: port.group for port in one.ports}
+    read_order = {port.symbol_port: port.order for port in one.ports}  # the read layer's rank
     rank_of, kind_of, sides = power
     v1 = item_pins(one.ports, sides)
     pinned = v1 or pinned_sides(one.ports, rank_of, kind_of)
@@ -120,12 +121,13 @@ def _turned_box(
         ends = [where[q][page] for q in partners.get(port, ()) if page in where.get(q, {})]
         ranked = rank_of.get(port, 0) if side and (not v1 or port in rank_of) else None
         slot = _slot(side, g.facing.value, ranked, ends, centre)
-        placed_at.append((*slot, i, g.name, group_of.get(g.name, 0)))
+        placed_at.append((*slot, (read_order.get(g.name, 0), i), g.name, group_of.get(g.name, 0)))
     # V1, C22: each side's pin groups whole; inside a group the ranked pins first, then the
     # partners' x order; ports with no partner keep theirs
     ordered = sorted(placed_at, key=lambda p: (p[4], p[1] is None, p[1] or 0, p[2]))
-    names, drawn = tuple(p[3] for p in ordered), tuple(p[0] for p in ordered)
-    geometry = generic_box_geometry(names, drawn, one.reach, stand=one.stand)
+    geometry = generic_box_geometry(
+        tuple(p[3] for p in ordered), tuple(p[0] for p in ordered), one.reach, stand=one.stand
+    )
     return one if geometry == one.geometry else replace(one, geometry=geometry)
 
 

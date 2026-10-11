@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, cast
 
 from .baseline_codec import _decimal_dict
-from .natural_order import natural_key
+from .order import natural_key
 from .revision_text import revision_text
 from .rows import (
     BaselineBoundary,

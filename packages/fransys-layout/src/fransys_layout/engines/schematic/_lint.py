@@ -50,7 +50,7 @@ def lint_findings(scene: LintScene) -> list[Finding]:
     findings.extend(
         lint_chains(
             layout,
-            # HL1: a pin a line carries a conductor to is wired
+            # layout-0154: a pin a line carries a conductor to is wired
             StageRecords(
                 columns,
                 drawn,

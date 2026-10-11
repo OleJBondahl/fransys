@@ -1,7 +1,7 @@
 """Short names for the PLC signal types a function block asks for, and for `d.net`'s kinds (EA).
 
 `EARTHED` and `IT` are the supplies' earthing systems. `ABOVE` and `BELOW` are the two sides
-`d.layout.side` takes: the model's `Side.N` and `Side.S`, one enum for both (HL14).
+`d.layout.side` takes: the model's `Side.N` and `Side.S`, one enum for both (model-0177).
 Current loops only (4-20 mA); the voltage, RTD and relay types have no short name.
 `PE` and `POWER` have none: `d.earth` and the supplies own those nets.
 """

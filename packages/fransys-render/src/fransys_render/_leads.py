@@ -42,7 +42,7 @@ def _absolute(placement: SymbolPlacement, local_x: float, local_y: float) -> tup
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _page_ends(model: Model) -> dict[Id[Page], _Ends]:
-    """Per page: each route end (D8) and leg pin end (HL17), and each marker's `(x, y)`."""
+    """Per page: each route end (D8) and leg pin end (layout-0154), and each marker's `(x, y)`."""
     out: dict[Id[Page], _Ends] = {}
     for page in layout_of(model, PageRecord).values():
         ends = frozenset(
@@ -63,7 +63,7 @@ def _ends_of(model: Model, page: Page) -> _Ends:
 
 
 def _route_ends(model: Model, page: Page) -> frozenset[_Grid]:
-    """Every route end (D8) and leg pin end (HL17) on `page`, in grid units."""
+    """Every route end (D8) and leg pin end (layout-0154) on `page`, in grid units."""
     return _ends_of(model, page)[0]
 
 

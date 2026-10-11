@@ -97,10 +97,11 @@ class PageInputs:
     sheet: SheetFormat
     top_headroom_lanes: int
     bottom_headroom_lanes: int
-    # HL12: each band column's middle group, folded on its page
+    # layout-0153: each band column's middle group, folded on its page
     middle: Mapping[AuthoringKey, tuple[MiddleGroup, ...]] = field(default_factory=dict)
-    # HL18 (layout-0158): each (function, port) a line's conductor lands on
+    # layout-0154 (layout-0158): each (function, port) a line's conductor lands on
     line_ends: frozenset[tuple[Handle, Handle]] = frozenset()
+    heads: Mapping[Handle, str] = field(default_factory=dict)  # layout-0170: coil -> table heading
 
 
 @dataclass(frozen=True)
@@ -296,7 +297,7 @@ class FirstCall:
     drawn: tuple[DrawnFunction, ...]
     occupied: tuple[Box, ...]
     profile: Profile
-    shapes: tuple[GroupShape, ...] = ()  # HL20: the middle outlines folded on the page
+    shapes: tuple[GroupShape, ...] = ()  # layout-0153: the middle outlines folded on the page
 
 
 @dataclass(frozen=True)

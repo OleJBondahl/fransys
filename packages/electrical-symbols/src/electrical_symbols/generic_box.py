@@ -14,10 +14,8 @@ from electrical_symbols.box_ports import (
     NORTH,
     PORT_PITCH,
     SOUTH,
-    box_port_marking,
     default_sides,
 )
-from electrical_symbols.text import text_width
 
 # Geometry, in module units (M, DESIGN 6.1): a port every 2 M, a body 4 M tall and at least 4 M
 # wide, and a 6 M x 1 M `tag` slot 0.5 M to the body's right.
@@ -32,17 +30,15 @@ _MARK_OFFSET_Y = 0.75
 _MARK_WIDTH = 1.5
 
 
-def box_pitch(port_names: tuple[str, ...], stand: int = 0) -> float:
+def box_pitch(marking_widths: tuple[int, ...], stand: int = 0) -> float:
     """R7 B3: the port pitch in whole M: wide enough for the longest marking and for `stand`.
 
-    A marking is the port name after the last "." (an item view names a port `<function>.<port>`),
-    measured by the one text width at the house text height (1 M). `stand` is the width in G of
-    the widest power symbol or its text standing at a port (layout-0132). Either, plus the 0.25 M
-    wire offset and a gap, rounds up to whole M so ports stay on the grid.
+    `marking_widths` are the widths in G of each port's marking (`box_port_marking`: the name
+    after the last "."), measured by the caller at the house text height (1 M). `stand` is the
+    width in G of the widest power symbol or its text standing at a port (layout-0132). Either,
+    plus the 0.25 M wire offset and a gap, rounds up to whole M so ports stay on the grid.
     """
-    longest = max(
-        (text_width(box_port_marking(name), height=G_PER_MODULE) for name in port_names), default=0
-    )
+    longest = max(marking_widths, default=0)
     return float(max(PORT_PITCH, math.ceil(max(longest, stand) / G_PER_MODULE + 0.5)))
 
 
@@ -103,6 +99,8 @@ def generic_box(
     sides: tuple[str, ...] = (),
     offsets: tuple[float, ...] = (),
     stand: int = 0,
+    *,
+    marking_widths: tuple[int, ...],
 ) -> Symbol:
     """A labelled box with one port per name: N side (even index), S side (odd index).
 
@@ -113,6 +111,8 @@ def generic_box(
             then ends one pitch past the last offset (model-0129).
         stand: the width in G of a power symbol or text standing at a port (layout-0132): the
             ports run at the pitch that fits it, the body keeps the plain pitch's margin.
+        marking_widths: the width in G of each port's marking, measured by the caller (the one
+            text width); the pitch fits the longest.
 
     Returns:
         A `Symbol` with `reference.number` `GENERIC_BOX_KEY`, a `tag` slot and `pole_pitch=None`.
@@ -120,8 +120,8 @@ def generic_box(
     if offsets and len(offsets) != len(port_names):
         msg = f"offsets are one per port name, got {len(offsets)} for {len(port_names)}"
         raise ValueError(msg)
-    plain = box_pitch(port_names)
-    pitch = box_pitch(port_names, stand)
+    plain = box_pitch(marking_widths)
+    pitch = box_pitch(marking_widths, stand)
     # R7 C5 (deep dive): `sides` overrides the alternating rule; each side's ports then run
     # left to right at the pitch
     sides = sides or default_sides(len(port_names))

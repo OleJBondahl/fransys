@@ -1,12 +1,19 @@
-"""The readings of a model: the system, then each unit instance by render id."""
+"""The readings of a model: the system, then each unit instance by natural designation."""
 
+from functools import partial
 from typing import Any
 
+from fransys_layout.engines.schematic.read.units import unit_order
 from fransys_model.kernel.ids import render_id
 from fransys_model.vocab.tables import units
 lazy from fransys_model.kernel import Id, Model
 
 
+def _sheet_key(model: Model, unit: Id[Any]) -> tuple[tuple[Any, ...], str]:
+    """A unit sheet's place: its natural designation (O7), then `render_id` for a tie."""
+    return unit_order(model, unit), render_id(unit)
+
+
 def readings(model: Model) -> tuple[Id[Any] | None, ...]:
-    """`None` for the system, then every unit instance sorted by `render_id`."""
-    return (None, *sorted(units(model), key=render_id))
+    """`None` for the system, then every unit instance by natural designation."""
+    return (None, *sorted(units(model), key=partial(_sheet_key, model)))

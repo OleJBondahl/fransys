@@ -1,4 +1,4 @@
-"""The engine's glue for the middle outlines (HL11, HL12, HL20, layout-0153)."""
+"""The engine's glue for the middle outlines (layout-0153)."""
 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
@@ -32,7 +32,7 @@ def strip_middle(
     tuple[MiddleUnit, ...],
     dict[Id[Any], tuple[AuthoringKey, ...]],
 ]:
-    """HL11: the middle units, their reached line views out of the columns, and the reach."""
+    """Layout-0153: the middle units, their reached line views out of the columns, and the reach."""
     reach, units = line_reach(columns, middle_units(model, inputs.functions))
     if not units:
         return inputs, columns, units, {}

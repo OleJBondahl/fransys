@@ -11,7 +11,7 @@ from query_builders import (
     reversed_tables,
 )
 
-from fransys_model.derive import OverviewLinkKind, overview_graph
+from fransys_model.derive import OverviewLinkKind, natural_key, overview_graph
 from fransys_model.derive.passes.numbering import number
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Item
@@ -101,10 +101,10 @@ def test_wires_between_two_items_are_one_link_with_their_count() -> None:
     (link,) = overview_graph(plant.model()).links
     assert (link.kind, link.via, link.via_designation, link.count) == (_WIRE, None, None, 2)
     assert link.conductors == tuple(sorted((first, second)))
-    assert (link.a, link.b) == tuple(sorted(_ids("x", "y")))
+    assert (link.a, link.b) == tuple(_ids("x", "y"))  # X1 before Y1
 
 
-def test_a_and_b_are_stored_smaller_id_first_whichever_way_the_conductor_runs() -> None:
+def test_a_and_b_are_stored_lower_designation_first_whichever_way_the_conductor_runs() -> None:
     """The unordered pair is one link: `x` to `y` and `y` to `x` aggregate together."""
     plant = Plant()
     x, y = make_pin(plant, "x", "X1"), make_pin(plant, "y", "Y1")
@@ -114,7 +114,7 @@ def test_a_and_b_are_stored_smaller_id_first_whichever_way_the_conductor_runs() 
     plant.wire(y2, x2, key="backward")
     (link,) = overview_graph(plant.model()).links
     assert link.count == 2
-    assert link.a < link.b
+    assert (link.a, link.b) == tuple(_ids("x", "y"))  # X1 before Y1
 
 
 def test_the_cores_of_one_cable_between_two_items_are_one_cable_link_via_the_cable() -> None:
@@ -211,7 +211,7 @@ def test_a_cable_link_whose_cable_is_unnumbered_has_no_via_designation_and_raise
 
 
 def test_a_net_across_two_items_is_a_signal_with_ports_in_item_then_pin_order() -> None:
-    """Ports `10` and `2` on one item come out `2, 10`; items in id order."""
+    """Ports `10` and `2` on one item come out `2, 10`; items in designation order."""
     plant = Plant()
     x = plant.function(plant.item("x", designation="X1"), "f")
     y = plant.function(plant.item("y", designation="Y1"), "f")
@@ -219,8 +219,8 @@ def test_a_net_across_two_items_is_a_signal_with_ports_in_item_then_pin_order() 
     plant.wire(ports[0], ports[2], key="a")
     plant.wire(ports[1], ports[2], key="b")
     (signal,) = overview_graph(plant.model()).signals
-    items_in_order = [one.item for one in signal.ports]
-    assert items_in_order == sorted(items_in_order)
+    items_in_order = list(dict.fromkeys(one.item for one in signal.ports))
+    assert items_in_order == _ids("x", "y")
     x_markings = [one.marking for one in signal.ports if one.item == make_id(Item, ("x",))]
     assert x_markings == ["2", "10"]
     assert {one.port for one in signal.ports} == set(ports)
@@ -260,9 +260,7 @@ def test_signals_are_sorted_by_their_first_port() -> None:
     plant.wire(plant.port(items["c"], "1"), plant.port(items["d"], "1"), key="late")
     plant.wire(plant.port(items["a"], "1"), plant.port(items["b"], "1"), key="early")
     signals = overview_graph(plant.model()).signals
-    firsts = [(signal.ports[0].item, signal.ports[0].marking) for signal in signals]
-    assert firsts == sorted(firsts)
-    assert len(signals) == 2
+    assert [signal.ports[0].item for signal in signals] == _ids("a", "c")
 
 
 def test_signal_ports_tied_on_item_and_marking_sort_by_port_id() -> None:
@@ -327,3 +325,18 @@ def test_the_graph_does_not_depend_on_table_order() -> None:
     plant.mate(p1, j1)
     model = plant.model()
     assert overview_graph(reversed_tables(model)) == overview_graph(model)
+
+
+def test_links_list_by_the_natural_designations_of_their_ends_not_item_id() -> None:
+    """Twelve spokes on one hub: the links run `-X1`, `-X2`, ..., `-X12` by digit runs (O7)."""
+    plant = Plant()
+    hub = make_pin(plant, "hub", "A0")
+    for n in range(1, 13):
+        plant.wire(make_pin(plant, f"s{n}", f"X{n}"), hub, key=f"w{n}")
+    graph = overview_graph(plant.model())
+    label = {node.item: node.designation for node in graph.nodes}
+    keys = [
+        (natural_key(label[link.a] or ""), natural_key(label[link.b] or "")) for link in graph.links
+    ]
+    assert keys == sorted(keys)
+    assert len(keys) == 12

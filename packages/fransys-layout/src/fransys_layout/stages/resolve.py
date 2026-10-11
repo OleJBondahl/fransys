@@ -12,6 +12,7 @@ from fransys_layout.geometry import (
     generic_box_geometry,
     symbol_geometry,
 )
+from fransys_model.derive.drawing_text import pole_prefix
 from fransys_model.kernel import Finding, Severity, UnionFind
 
 from .slices import by_key
@@ -185,6 +186,7 @@ def _bind_ports(
             group=p.group,
             channel=p.channel,
             stand=p.stand,
+            order=p.order,
         )
         for name, p in bound.items()
     )
@@ -228,7 +230,7 @@ def _through_ports(spec: FunctionSpec, geometry: SymbolGeometry) -> dict[str, st
     found: dict[str, str] = {}
     if geometry.through is not None:
         for pair in spec.pole_pairs:
-            prefix = f"{pair.index + 1}." if spec.poles > 1 else ""
+            prefix = pole_prefix(pair.index, spec.poles)
             found[pair.first] = prefix + geometry.through.start
             found[pair.second] = prefix + geometry.through.end
     return found
@@ -237,7 +239,7 @@ def _through_ports(spec: FunctionSpec, geometry: SymbolGeometry) -> dict[str, st
 def _primary_ports(geometry: SymbolGeometry) -> tuple[str | None, str | None]:
     """The symbol ports that continue a column: the through path, else first N and first S."""
     if geometry.through is not None:
-        prefix = "1." if geometry.poles > 1 else ""
+        prefix = pole_prefix(0, geometry.poles)
         return prefix + geometry.through.start, prefix + geometry.through.end
     north = next((port.name for port in geometry.ports if port.facing is Facing.N), None)
     south = next((port.name for port in geometry.ports if port.facing is Facing.S), None)

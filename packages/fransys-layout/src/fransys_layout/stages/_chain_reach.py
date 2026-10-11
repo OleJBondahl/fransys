@@ -217,7 +217,7 @@ def _star_first(
     ]
     if len(net) < 3 or not others:  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
         return None
-    first = min(others, key=lambda q: (r.specs[state.port_function[q]].designation, q))
+    first = min(others, key=lambda q: (r.specs[state.port_function[q]].designation_order, q))
     return first, port
 
 

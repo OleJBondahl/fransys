@@ -27,9 +27,9 @@ def test_a_wired_connector_box_has_cells_and_an_unwired_one_has_none() -> None:
 
 
 def test_a_two_line_box_with_no_cells_is_as_wide_as_its_widest_text() -> None:
-    # width: widest 57 + a grid (half each side) 8 = 65, up to 72
+    # width: widest 56 + a grid (half each side) 8 = 64, up to 64
     # height: 2 lines of 8 + one grid between 8 + a grid of padding 8 = 32
-    assert box_size(["-W1-P1", "DEMO-HSG-4M"], [], text_height=TH) == (72, 32)
+    assert box_size(["-W1-P1", "DEMO-HSG-4M"], [], text_height=TH) == (64, 32)
 
 
 def test_a_box_with_three_cells_is_as_wide_as_them_side_by_side() -> None:

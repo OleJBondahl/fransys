@@ -1,4 +1,4 @@
-"""HL15 and HL16 (layout-0154): a harness line's polylines and its label, pure, over given points.
+"""Layout-0154: a harness line's polylines and its label, pure, over given points.
 
 The ends come in the ends row's order with their branch numbers (`derive.harness_line_ends`);
 nothing here numbers. Every path is drawn by `grid_path`, the router's one search.
@@ -51,12 +51,12 @@ class Grid:
 
 
 def root(ends: Sequence[LineEnd]) -> LineEnd:
-    """HL15: the first end at a unit interface in the ends row's order, else the first end."""
+    """The first end at a unit interface in the ends row's order, else the first end."""
     return next((one for one in ends if one.interface), ends[0])
 
 
 def line_paths(ends: Sequence[LineEnd], grid: Grid) -> dict[int, tuple[Point, ...]]:
-    """HL15: one polyline per end, keyed by its branch; the trunk is the root's.
+    """Layout-0154: one polyline per end, keyed by its branch; the trunk is the root's.
 
     Two ends give one polyline, the root's. Legs leave the split in turn, each free to run
     along the cells of the legs before it, so overlapping legs share their runs.
@@ -132,7 +132,7 @@ def _axis(step: tuple[int, int]) -> tuple[tuple[int, int], tuple[int, int]]:
 
 
 def longest_run(points: tuple[Point, ...]) -> tuple[Point, Point]:
-    """HL16: the polyline's longest straight run; the first of equal ones."""
+    """Layout-0154: the polyline's longest straight run; the first of equal ones."""
     return max(
         pairwise(points), key=lambda run: abs(run[1].x - run[0].x) + abs(run[1].y - run[0].y)
     )
@@ -141,7 +141,7 @@ def longest_run(points: tuple[Point, ...]) -> tuple[Point, Point]:
 def line_text(
     harness: Id[Any], branch: int, points: tuple[Point, ...], size: tuple[int, int]
 ) -> TextToPlace:
-    """HL16: a leg's designation to place, beside its longest run, for one `place_texts` call.
+    """A leg's designation to place, beside its longest run, for one `place_texts` call.
 
     Above a horizontal run, right of a vertical one, then the mirror (the `harness_line` row),
     the house text gap off the run (layout-0158).
@@ -161,6 +161,6 @@ def line_text(
 
 
 def text_centre(placed: PlacedText) -> Point:
-    """HL16: a placed line text's centre, the record's `text_x`, `text_y`; always horizontal."""
+    """A placed line text's centre, the record's `text_x`, `text_y`; always horizontal."""
     box = placed.box
     return Point(x=box.x + box.width // 2, y=box.y + box.height // 2)

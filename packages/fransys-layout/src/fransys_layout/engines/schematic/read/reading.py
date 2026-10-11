@@ -6,6 +6,7 @@ field (docs/design/stages.md 6, "Modules stay small and single-purpose"). `funct
 `functions.py` need.
 """
 
+import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.read.house import DEFAULT_SHEET, to_stage_profile
@@ -27,8 +28,8 @@ from fransys_layout.stages import (
     SymbolChoice,
     UnitInfo,
 )
-from fransys_model.derive import natural_key, schematic_functions
-from fransys_model.derive.designation import bom_sort_key, unit_location
+from fransys_model.derive import bom_sort_key, natural_key, schematic_functions
+from fransys_model.derive.designation import unit_location
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.derive.drawing_text import location_path as model_location_path
 from fransys_model.kernel import SchemaError
@@ -53,8 +54,11 @@ from fransys_model.vocab.tables import (
 from . import roles
 from .functions import function_spec
 from .rails import is_rail_link
+from .units import unit_order
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from fransys_model.derive.indexes import Indexes
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.connectivity import Conductor
@@ -64,12 +68,17 @@ def drawn_functions(model: Model, indexes: Indexes) -> tuple[FunctionSpec, ...]:
     """Every `FunctionSpec` read from the model's drawn functions, sorted by handle."""
     drawn = set(schematic_functions(model))
     group_hints = {hint.function: hint.group for hint in layout_of(model, ModelGroupHint).values()}
+    specs = [
+        function_spec(model, indexes, function, group_hints)
+        for function in functions(model).values()
+        if function.id in drawn
+    ]
+    place = _places(natural_key(spec.designation) for spec in specs)
     return tuple(
         sorted(
             (
-                function_spec(model, indexes, function, group_hints)
-                for function in functions(model).values()
-                if function.id in drawn
+                dataclasses.replace(spec, designation_order=place[natural_key(spec.designation)])
+                for spec in specs
             ),
             key=lambda spec: spec.function,
         )
@@ -202,16 +211,31 @@ def symbol_choices(model: Model) -> tuple[SymbolChoice, ...]:
     return tuple(sorted(entries, key=lambda c: (c.choice, c.function)))
 
 
+def _places(keys: Iterable[Any]) -> dict[Any, int]:
+    """O4: each distinct natural key's place in order, a value the stages sort by."""
+    return {key: place for place, key in enumerate(sorted(set(keys)))}
+
+
+def _key_text(key: tuple[Any, ...]) -> tuple[Any, ...]:
+    """An authoring key's parts in natural order, part by part (G1: `F2` before `F10`)."""
+    return tuple(natural_key(str(part)) for part in key)
+
+
 def group_infos(model: Model) -> tuple[GroupInfo, ...]:
     """Every `=` aspect node, sorted by key."""
+    nodes = [n for n in aspect_nodes(model).values() if n.aspect is Aspect.FUNCTION]
+    place = _places(_key_text(node.key) for node in nodes)
     return tuple(
         sorted(
             (
                 GroupInfo(
-                    group=node.id, key=node.key, label=node.label, description=node.description
+                    group=node.id,
+                    key=node.key,
+                    label=node.label,
+                    description=node.description,
+                    order=place[_key_text(node.key)],
                 )
-                for node in aspect_nodes(model).values()
-                if node.aspect is Aspect.FUNCTION
+                for node in nodes
             ),
             key=lambda g: g.key,
         )
@@ -220,6 +244,8 @@ def group_infos(model: Model) -> tuple[GroupInfo, ...]:
 
 def location_infos(model: Model) -> tuple[LocationInfo, ...]:
     """Every `+` aspect node, sorted by handle."""
+    nodes = [n for n in aspect_nodes(model).values() if n.aspect is Aspect.LOCATION]
+    place = _places(natural_key(node.label) for node in nodes)
     return tuple(
         sorted(
             (
@@ -227,9 +253,9 @@ def location_infos(model: Model) -> tuple[LocationInfo, ...]:
                     location=node.id,
                     label=node.label,
                     path=tuple(n for n, _ in location_path(model, node.id)),
+                    order=place[natural_key(node.label)],
                 )
-                for node in aspect_nodes(model).values()
-                if node.aspect is Aspect.LOCATION
+                for node in nodes
             ),
             key=lambda location: location.location,
         )
@@ -243,10 +269,15 @@ def location_path(model: Model, location: Id[Any]) -> tuple[tuple[Id[Any], str],
 
 def unit_infos(model: Model) -> tuple[UnitInfo, ...]:
     """Every `Unit` in the model, sorted by handle."""
+    place = _places(unit_order(model, unit_id) for unit_id in units(model))
     return tuple(
         sorted(
             (
-                UnitInfo(unit=unit_id, location=unit_location(model, unit_id))
+                UnitInfo(
+                    unit=unit_id,
+                    location=unit_location(model, unit_id),
+                    order=place[unit_order(model, unit_id)],
+                )
                 for unit_id in units(model)
             ),
             key=lambda info: info.unit,

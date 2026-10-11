@@ -13,14 +13,14 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab import Conductor, Item, Port, Unit
 
 from .cable_end_rank import cable_end_rank
-from .designation import item_designation, port_designation
+from .designation import port_designation
 from .drawing_text import external_note
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
 from .harness import _end_designation, _facts_of, _pin_marking, all_cables, all_unit_cables
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
 from .lookups import cable_end_owner, item_of_port, pin_order
-from .natural_order import natural_key
+from .order import designation_key, natural_key
 lazy from .rows import HarnessCable, HarnessCore
 
 __all__ = [
@@ -131,7 +131,7 @@ def _block_key(
 ) -> tuple[object, ...]:
     """Print order: absolute then units'; cable blocks by id, then wire-only ones by designation."""
     unit, subject = pair
-    name = () if cabled else natural_key(item_designation(model, subject))
+    name = () if cabled else designation_key(model, subject)
     return (unit is not None, render_id(unit) if unit else "", not cabled, name, render_id(subject))
 
 

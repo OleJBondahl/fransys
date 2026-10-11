@@ -21,6 +21,7 @@ from fransys_model.vocab.tables import (
     unused_boundaries,
 )
 from fransys_model.vocab.unit_index import unit_index
+from fransys_model.vocab.validators._natural_join import natural_join
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -211,7 +212,7 @@ def _mate_port_mismatch(plant: _Plant) -> list[Finding]:
         names_b = plant.port_names.get(mate.b, set())
         if names_a == names_b:
             continue
-        unmatched = ", ".join(sorted(names_a ^ names_b))
+        unmatched = natural_join(names_a ^ names_b)
         message = f"mate {key_text(mate)} joins ports named {unmatched} that have no match"
         found.append(
             _finding(MATE_PORT_MISMATCH, Severity.WARNING, (mate.id, mate.a, mate.b), message)

@@ -11,6 +11,7 @@ from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.plc_wiring import owner_of_port, ports_by_function, wired_functions
 from fransys_model.vocab.tables import facets_of, functions
+from fransys_model.vocab.validators._natural_join import natural_join
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
@@ -129,7 +130,7 @@ def _key(wiring: _Wiring, function: Id[Function]) -> str:
 
 def _keys(wiring: _Wiring, wired: Collection[Id[Function]]) -> str:
     """The keys of several functions, sorted and joined with `, `."""
-    return ", ".join(sorted(_key(wiring, function) for function in wired))
+    return natural_join(_key(wiring, function) for function in wired)
 
 
 def _mismatch(subjects: tuple[Id[Any], ...], message: str) -> Finding:

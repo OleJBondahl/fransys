@@ -201,10 +201,9 @@ _.SH  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
 
 # --- fransys-layout --------------------------------------------------------------------
 
-# engines/schematic/read/house.py DEFAULT_PROFILE, electrical_symbols/text_metrics FONT_NAME: read
+# engines/schematic/read/house.py DEFAULT_PROFILE: read
 # only from fransys-layout's own tests, never from fransys_layout/src or another package.
 _.DEFAULT_PROFILE  # TESTS fransys-layout/tests/engines/test_defaults.py:68
-_.FONT_NAME  # TESTS electrical-symbols/tests/test_text.py:36
 
 # stages/types.py:221 KindRoles.contact_closed: KindRoles is a fransys_model `@value` class
 # (same FIELDS mechanism as the model section above), set by keyword in defaults.py's own

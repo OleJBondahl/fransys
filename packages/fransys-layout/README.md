@@ -2,7 +2,7 @@
 
 The layout engines of Fransys. **Internal: Fransys is the only consumer.** It is a package of this uv workspace. Do not depend on it directly; there are no stability promises.
 
-Status: WP1 to WP14 are done (geometry, stages, both lints, the schematic engine: `lay_out_schematic` reads a model, lays it out and returns it with derived `layout.*` records, and the end-to-end use cases with their goldens). Ladder discovery (WP15, WP16), branch junctions and the marker box (WP18), drawing text (WP17) and persisted cross-reference partners (WP19) are done too: WP1 to WP19 are done. Since then: marker padding (render spec D8) and the board black box (`docs/archive/specs/2026-09-23-board-black-box.md`: a cabinet page draws a board's connectors only, designations `-A1-X1`). The layout deep dive (`docs/archive/specs/2026-09-24-layout-deep-dive.md`, merged 2026-09-25) replaced ladder discovery with chain discovery and stacked columns from the top; its rulings live in the package's design notes. CT5 added the second engine, the cable engine (layout-0141). The package roadmap is closed (decision layout-0118). Open layout work is on the project roadmap.
+Status: the first layers are done (geometry, stages, both lints, the schematic engine: `lay_out_schematic` reads a model, lays it out and returns it with derived `layout.*` records, and the end-to-end use cases with their goldens). Ladder discovery, branch junctions and the marker box, drawing text and persisted cross-reference partners are done too: the package's planned work is complete. Since then: marker padding and the board black box (`docs/archive/specs/2026-09-23-board-black-box.md`: a cabinet page draws a board's connectors only, designations `-A1-X1`). The layout deep dive (`docs/archive/specs/2026-09-24-layout-deep-dive.md`, merged 2026-09-25) replaced ladder discovery with chain discovery and stacked columns from the top; its rulings live in the package's design notes. CT5 added the second engine, the cable engine (layout-0141). The package roadmap is closed (decision layout-0118). Open layout work is on the project roadmap.
 
 ## What it is
 
@@ -54,7 +54,7 @@ A rung written in a front end lowers to ordinary connectivity plus a `layout.cha
 
 Runtime dependencies are `fransys-model` and `electrical-symbols`, both workspace members, and `symdef`, pinned by an exact PyPI version (root decisions 0015 and 0128). No solver and no graph library. Python 3.15, because the model needs the builtin `frozendict`.
 
-Every outside prerequisite of WP1 to WP19 is met. The list is in the archived roadmap.
+Every outside prerequisite of the package's planned work is met. The list is in the archived roadmap.
 
 ## Develop
 

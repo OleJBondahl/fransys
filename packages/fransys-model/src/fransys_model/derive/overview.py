@@ -11,7 +11,7 @@ lazy from fransys_model.kernel import Model
 from .closure import physical_nets
 from .designation import designation_holder, own_designation_or_none, printed_designation
 from .lookups import item_description, item_of_port, location_label, pin_order, terminal_items
-from .natural_order import natural_key
+from .order import NaturalKey, natural_key
 from .rows import (
     OverviewGraph,
     OverviewLink,
@@ -62,25 +62,44 @@ def _nodes(model: Model) -> tuple[OverviewNode, ...]:
             key=lambda node: (
                 node.designation is None,
                 natural_key(node.designation or ""),
+                node.description,  # a harness and its cable print one designation
+                node.mpn or "",
                 node.item,
             ),
         )
     )
 
 
+def _end_keys(model: Model) -> dict[Id[Item], tuple[bool, NaturalKey, Id[Item]]]:
+    """Each item's sort key as an end of a link or signal: printed designation, nameless last."""
+    terminals = terminal_items(model)
+    found = {}
+    for item in items(model).values():
+        designation = _designation(model, item, terminals)
+        found[item.id] = (designation is None, natural_key(designation or ""), item.id)
+    return found
+
+
 def _links(model: Model) -> tuple[OverviewLink, ...]:
     terminals = terminal_items(model)
     all_items = items(model)
+    ends = _end_keys(model)
     wires: dict[_Group, list[Conductor]] = {}
     for conductor in conductors(model).values():
-        first, second = sorted((item_of_port(model, conductor.a), item_of_port(model, conductor.b)))
+        first, second = sorted(
+            (item_of_port(model, conductor.a), item_of_port(model, conductor.b)),
+            key=lambda item: ends[item],
+        )
         if first == second:
             continue
         kind = OverviewLinkKind.WIRE if conductor.carrier is None else OverviewLinkKind.CABLE
         wires.setdefault((first, second, kind, conductor.carrier), []).append(conductor)
     joined: dict[_Group, int] = {}
     for mate in mates(model).values():
-        first, second = sorted((functions(model)[mate.a].item, functions(model)[mate.b].item))
+        first, second = sorted(
+            (functions(model)[mate.a].item, functions(model)[mate.b].item),
+            key=lambda item: ends[item],
+        )
         if first != second:
             key = (first, second, OverviewLinkKind.MATE, None)
             joined[key] = joined.get(key, 0) + 1
@@ -104,13 +123,20 @@ def _links(model: Model) -> tuple[OverviewLink, ...]:
     return tuple(
         sorted(
             links,
-            key=lambda link: (link.a, link.b, link.kind.value, link.via is not None, link.via),
+            key=lambda link: (
+                ends[link.a],
+                ends[link.b],
+                link.kind.value,
+                link.via is not None,
+                link.via,
+            ),
         )
     )
 
 
 def _signals(model: Model) -> tuple[OverviewSignal, ...]:
     signals = []
+    ends = _end_keys(model)
     for net in physical_nets(model):
         found = sorted(
             (
@@ -119,13 +145,17 @@ def _signals(model: Model) -> tuple[OverviewSignal, ...]:
                 )
                 for port in net.ports
             ),
-            key=lambda one: (one.item, pin_order(one.marking, one.port)),
+            key=lambda one: (ends[one.item], pin_order(one.marking, one.port)),
         )
         if len({one.item for one in found}) >= 2:  # noqa: PLR2004 -- a signal spans two items
             signals.append(OverviewSignal(ports=tuple(found)))
     return tuple(
         sorted(
-            signals, key=lambda s: (s.ports[0].item, pin_order(s.ports[0].marking, s.ports[0].port))
+            signals,
+            key=lambda s: (
+                ends[s.ports[0].item],
+                pin_order(s.ports[0].marking, s.ports[0].port),
+            ),
         )
     )
 

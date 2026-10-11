@@ -28,10 +28,11 @@ if TYPE_CHECKING:
 
 ROOT = Path(__file__).resolve().parents[1]
 
-#: `fransys_model`'s own nine surface modules (amended 2026-09-27 to add
+#: `fransys_model`'s own eleven surface modules (amended 2026-09-27 to add
 #: `derive.numbering_pins`, and by model-0159 to add
-#: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`): not its top-level package,
-#: which is excluded from the surface entirely -- only these nine dotted paths are read by
+#: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`, model-0190 to add
+#: `derive.text_width`): not its top-level package,
+#: which is excluded from the surface entirely -- only these eleven dotted paths are read by
 #: other packages.
 _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.kernel",
@@ -43,6 +44,8 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive.numbering_pins",
     "fransys_model.derive.cable_drawing",
     "fransys_model.derive.block_diagram",
+    "fransys_model.derive.order",
+    "fransys_model.derive.text_width",
 )
 
 #: Kept separately from `_MODEL_MODULES` (MS8): `fransys.colours` is a submodule of
@@ -84,7 +87,7 @@ def surface_modules() -> tuple[str, ...]:
     """Every dotted module path that defines part of the workspace's API surface.
 
     MS1, MS2, MS6, MS8 combined: each `packages/*` workspace member's own top-level module
-    (`fransys_model` excepted), `fransys_model`'s own nine named modules (MS1),
+    (`fransys_model` excepted), `fransys_model`'s own eleven named modules (MS1),
     `fransys.colours` and the author package's surface modules (MS8). Sorted, so stable.
     """
     top_level = _workspace_top_level_modules(ROOT)

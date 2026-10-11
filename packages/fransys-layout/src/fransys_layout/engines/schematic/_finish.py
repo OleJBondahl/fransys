@@ -56,7 +56,7 @@ def boxed(
     specs: tuple[BoxSpec, ...],
     lines: LineReads,
 ) -> tuple[PlacedConnectorBox, ...]:
-    """HL4, HL19: each connector box placed over its pin views, facing the plug it mates."""
+    """Each connector box placed over its pin views, facing the plug it mates."""
     content = content_box(inputs.sheet)
     placed_box = placed_boxes(placed_all, specs, inputs.profile.text_height, content)
     return face_plugs(placed_box, plug_mates(lines))

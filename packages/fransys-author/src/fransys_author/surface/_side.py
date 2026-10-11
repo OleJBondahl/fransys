@@ -1,4 +1,4 @@
-"""`d.layout.side` hints the edge a unit's interface stands on (HL14, author-0030)."""
+"""`d.layout.side` hints the edge a unit's interface stands on (model-0177, author-0030)."""
 
 from typing import TYPE_CHECKING, Any
 

@@ -41,7 +41,7 @@ from .lookups import (
     pin_order,
     require,
 )
-from .natural_order import natural_key
+from .order import natural_key
 from .reports import cable_rows
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
 

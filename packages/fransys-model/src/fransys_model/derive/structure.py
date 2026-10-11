@@ -38,9 +38,8 @@ lazy from fransys_model.vocab.core import Function, Item
 from .closure import port_groups
 from .designation import footprint_facet, item_designation, takes_parents_designation
 from .indexes import build_indexes
-from .list_order import in_designation_order
 from .lookups import descendants, effective_placement, item_of_port, net_name, require
-from .natural_order import natural_key
+from .order import in_designation_order, natural_key
 from .rows import BoardNetlist, ExtUsage, NetlistNet, NetlistPart
 
 if TYPE_CHECKING:
@@ -145,25 +144,22 @@ def _board_nets(model: Model, board: Id[Item], on_board: set[Id[Item]]) -> tuple
             if declared_ids
             else _undeclared_net_name(model, board, group.ports)
         )
-        found.append(NetlistNet(name=name, pins=group.ports))
+        pins = tuple(sorted(group.ports, key=lambda port: _pin_key(model, board, port)))
+        found.append(NetlistNet(name=name, pins=pins))
     return tuple(sorted(found, key=lambda net: (net.name, net.pins)))
 
 
+def _pin_key(model: Model, board: Id[Item], port: Id[Port]) -> tuple[Any, Any, Id[Port]]:
+    """A pin's reader order: its board-relative designation, its name (both natural), its id."""
+    designation = item_designation(model, item_of_port(model, port), relative_to=board)
+    return natural_key(designation), natural_key(ports(model)[port].name), port
+
+
 def _undeclared_net_name(model: Model, board: Id[Item], pins: tuple[Id[Port], ...]) -> str:
-    """KiCad's own auto-net form, `Net-(designation-pin)`, from the group's smallest pin.
-
-    Smallest is `(item_designation(model, item, relative_to=board), Port.name, Port.id)`, in order.
-    """
-    all_ports = ports(model)
-
-    def _key(port: Id[Port]) -> tuple[str, str, Id[Port]]:
-        item = item_of_port(model, port)
-        return (item_designation(model, item, relative_to=board), all_ports[port].name, port)
-
-    designation, marking, _ = min(
-        (_key(port) for port in pins), key=lambda k: (natural_key(k[0]), *k[1:])
-    )
-    return f"Net-({designation}-{marking})"
+    """KiCad's own auto-net form, `Net-(designation-pin)`, from the group's smallest pin."""
+    first = min(pins, key=lambda port: _pin_key(model, board, port))
+    designation = item_designation(model, item_of_port(model, first), relative_to=board)
+    return f"Net-({designation}-{ports(model)[first].name})"
 
 
 def boards(model: Model) -> tuple[Id[Item], ...]:

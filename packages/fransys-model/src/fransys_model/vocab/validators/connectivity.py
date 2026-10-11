@@ -15,6 +15,7 @@ from fransys_model.vocab.tables import (
     nets,
     ports,
 )
+from fransys_model.vocab.validators._natural_join import natural_join
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -105,14 +106,14 @@ def _per_physical_net(plant: _Plant) -> list[Finding]:
     for physical in plant.closure:
         declared = {net for port in physical.ports for net in plant.declared.get(port, ())}
         if len(declared) > 1 and not _one_intent(plant, declared):
-            names = ", ".join(sorted(_label(plant.nets[net]) for net in declared))
+            names = natural_join(_label(plant.nets[net]) for net in declared)
             message = f"one physical net joins the declared nets {names}"
             found.append(_finding(NET_SHORTED, Severity.ERROR, declared, message))
         if len(declared) <= 1:
             continue
         by_potential = physical_potentials(plant.model, physical)
         if len(by_potential) > 1:
-            message = f"one physical net joins the rails {', '.join(sorted(by_potential))}"
+            message = f"one physical net joins the rails {natural_join(by_potential)}"
             rails = (net for ids in by_potential.values() for net in ids)
             found.append(_finding(NET_POTENTIAL_CONFLICT, Severity.ERROR, rails, message))
     return found
@@ -127,7 +128,7 @@ def _conductor_findings(plant: _Plant) -> list[Finding]:
             if not item.installed
         }
         if pulled:
-            names = ", ".join(sorted(key_text(item) for item in pulled.values()))
+            names = natural_join(key_text(item) for item in pulled.values())
             message = (
                 f"conductor {key_text(conductor)} lands on an item that is not installed: {names}"
             )

@@ -47,6 +47,7 @@ MODEL_KERNEL = "fransys_model.kernel"
 # import this module, but only for its pure formatters; its readers (which take a model) are
 # as off-limits outside `engines` as any other `fransys_model.derive` name.
 DRAWING_TEXT_MODULE = "fransys_model.derive.drawing_text"
+TEXT_WIDTH_MODULE = "fransys_model.derive.text_width"  # model-0190: pure, takes only values
 DRAWING_TEXT_FORMATTERS = frozenset(
     {
         "frame_column",
@@ -58,6 +59,8 @@ DRAWING_TEXT_FORMATTERS = frozenset(
         "marker_lines",
         "partner_position_text",
         "heads_group",
+        "CONTACTS_HEADED",
+        "pole_prefix",
     }
 )
 
@@ -147,7 +150,10 @@ def _beyond_kernel(imported: set[str]) -> set[str]:
     return {
         m
         for m in imported
-        if _under(m, MODEL) and not _under(m, MODEL_KERNEL) and not _under(m, DRAWING_TEXT_MODULE)
+        if _under(m, MODEL)
+        and not _under(m, MODEL_KERNEL)
+        and not _under(m, DRAWING_TEXT_MODULE)
+        and not _under(m, TEXT_WIDTH_MODULE)
     }
 
 

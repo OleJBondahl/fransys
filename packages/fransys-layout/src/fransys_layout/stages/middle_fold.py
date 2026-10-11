@@ -1,4 +1,4 @@
-"""HL12, HL20: a middle unit's group folded on its page: bands, outline, boxes and title."""
+"""Layout-0153: a middle unit's group folded on its page: bands, outline, boxes and title."""
 
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from .pagerun import PageInputs
     from .types import PagePlan, PlacedFunction, Profile
 
-FAN = 4 * WIRING_GRID  # HL17: the fan-out's split distance, the room a line needs past a box
+FAN = 4 * WIRING_GRID  # layout-0154: the fan-out's split distance, the room a line needs past a box
 
 
 @dataclass(frozen=True)
@@ -93,7 +93,7 @@ def fold_page(
     groups: Mapping[AuthoringKey, tuple[MiddleGroup, ...]],
     profile: Profile,
 ) -> tuple[tuple[PlacedFunction, ...], tuple[GroupShape, ...]]:
-    """HL20: each group on the page first, its bands about its outline; the rest to its right."""
+    """Each group on the page first, its bands about its outline; the rest to its right."""
     here = _here(placed, plan, groups)
     if not here:
         return placed, ()
@@ -118,7 +118,7 @@ def folded_page(
     inputs: PageInputs,
     found: tuple[Finding, ...],
 ) -> tuple[tuple[PlacedFunction, ...], tuple[GroupShape, ...], tuple[Finding, ...]]:
-    """The page folded (HL20) with its `PAGE_OVERFULL` widened by the fold's reach (T6)."""
+    """The page folded (layout-0153) with its `PAGE_OVERFULL` widened by the fold's reach (T6)."""
     height = inputs.sheet.content_height
     folded, shapes = fold_page(placed, plan, inputs.middle, inputs.profile)
     return folded, shapes, fold_overfull(folded, shapes, height, found)
@@ -158,7 +158,7 @@ def _page(
 def _replica_places(
     shape: GroupShape, reps: tuple[list[PlacedFunction], list[PlacedFunction]], gap: int
 ) -> dict[Id[Any], Point]:
-    """HL11: each replica inside the outline at its edge, after that edge's boxes."""
+    """Layout-0153: each replica inside the outline at its edge, after that edge's boxes."""
     frame = shape.outline
     places: dict[Id[Any], Point] = {}
     for edge, top in ((reps[0], True), (reps[1], False)):
@@ -170,7 +170,7 @@ def _replica_places(
 
 
 def middle_bands(groups: Mapping[AuthoringKey, tuple[MiddleGroup, ...]], profile: Profile) -> Bands:
-    """HL21: each group's bands and outline width, a column gap included, packed as one unit."""
+    """Each group's bands and outline width, a column gap included, packed as one unit."""
     unique = {group.unit.unit: group for found in groups.values() for group in found}.values()
     return banded(
         [
@@ -230,7 +230,7 @@ def _fold_group(
 ) -> tuple[GroupShape, int, dict[AuthoringKey, tuple[int, int]]]:
     """One group from `cursor`: its upper band, its outline below it, its lower band below that.
 
-    A column an earlier group took stays there (HL20), and one in both bands stands below.
+    A column an earlier group took stays there (layout-0153), and one in both bands stands below.
     """
     gap, height = page.profile.column_gap, page.profile.text_height
     lower = [key for key in page.order if key in group.lower and key not in taken]
@@ -270,7 +270,7 @@ def _outline_width(
     profile: Profile,
     reps: tuple[list[PlacedFunction], list[PlacedFunction]] | None = None,
 ) -> int:
-    """HL11: the wider edge's natural width, its boxes then its replicas, never under the title."""
+    """The wider edge's natural width, its boxes then its replicas, never under the title."""
     gap, height = profile.column_gap, profile.text_height
     reps = reps or ([], [])
     wide = max(
@@ -289,7 +289,7 @@ def _edges(
 ) -> tuple[list[MiddleInterface], list[MiddleInterface]]:
     """The page's line interfaces on each edge, in the x order of the columns their lines reach.
 
-    A group split over pages draws on each only the interfaces reaching it (HL21 ruling (a)).
+    A group split over pages draws on each only the interfaces reaching it (layout-0153 ruling (a)).
     """
     lines = {
         one.edge.function: one
@@ -320,7 +320,7 @@ def _sizes(one: MiddleInterface, height: int) -> tuple[tuple[int, int], tuple[in
 
 
 def _edge_width(edge: Sequence[MiddleInterface], gap: int, height: int) -> int:
-    """HL11: an edge's natural width: boxes side by side, a column gap apart, half a grid out."""
+    """An edge's natural width: boxes side by side, a column gap apart, half a grid out."""
     boxes = [_sizes(one, height)[0][0] for one in edge]
     return sum(boxes) + gap * max(len(boxes) - 1, 0) + 2 * HALF
 
@@ -336,7 +336,7 @@ def _edge_tall(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], 
 
 
 def _plug_room(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], height: int) -> int:
-    """The band gap (HL20): the plug box, the line's fan-out room and one grid.
+    """The band gap (layout-0153): the plug box, the line's fan-out room and one grid.
 
     An edge of replicas also gets a track for each, the most wires that can need one at once (RR2).
     """
@@ -345,7 +345,7 @@ def _plug_room(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], 
 
 
 def _frame(group: MiddleGroup, page: _Page, at: Point, wide: int) -> Box:
-    """The outline below the upper band's deepest keep-out, at `at.x`, `wide` across (HL11)."""
+    """The outline below the upper band's deepest keep-out, at `at.x`, `wide` across."""
     height = page.profile.text_height
     top, bottom = _edges(group, page, {})
     reps = page.reps[group.unit.unit]
@@ -360,7 +360,7 @@ def _shape(
     frame: Box,
     sides: tuple[Sequence[MiddleInterface], Sequence[MiddleInterface]],
 ) -> GroupShape:
-    """The outline's boxes on its edges, the plugs outside them, the title inside left (HL11)."""
+    """The outline's boxes on its edges, the plugs outside them, the title inside left."""
     height = page.profile.text_height
     boxes = [*_edge_boxes(sides[0], frame, page, top=True), *_edge_boxes(sides[1], frame, page)]
     tall = _edge_tall(sides[0], page.reps[group.unit.unit][0], height)
@@ -382,7 +382,7 @@ def _lead(
     sides: tuple[Sequence[MiddleInterface], Sequence[MiddleInterface]],
     reps: tuple[list[PlacedFunction], list[PlacedFunction]],
 ) -> Id[Any]:
-    """layout-0164: the first interface of the group on the page: lines by edge, then replicas."""
+    """Layout-0164: the first interface of the group on the page: lines by edge, then replicas."""
     owner = {view: one.edge.function for one in group.unit.interfaces for view in one.views}
     found = [one.edge.function for one in (*sides[0], *sides[1])]
     found += [owner[one.function] for one in (*reps[0], *reps[1]) if one.function in owner]
@@ -414,7 +414,7 @@ def _edge_boxes(
 
 
 def _box(function: Id[Any], lines: Sequence[str], box: Box, page: _Page) -> PlacedConnectorBox:
-    """A cell-less box (HL5) at `box`, its text lines from the top, padded by half a grid."""
+    """A cell-less box at `box`, its text lines from the top, padded by half a grid."""
     step = page.profile.text_height + WIRING_GRID
     return PlacedConnectorBox(
         function=function,

@@ -1,4 +1,4 @@
-"""The engine's glue for harness lines (HL1, HL15 to HL18, layout-0154): strip, then draw.
+"""The engine's glue for harness lines (layout-0154): strip, then draw.
 
 A conductor a line carries is never a route and never a marker; its line draws it, after the
 outlines and the routes, from the boxes and pins standing on each page.
@@ -49,12 +49,14 @@ if TYPE_CHECKING:
     from .read.harness_lines import HarnessLineEnd, LineRead, LineReads
 
 type _Page = tuple[int, int]
+type _Context = tuple[LineTexts, _World, LineScene]
+type _Routed = dict[_Page, list[tuple[LineRead, Pieces]]]
 
-BUSY = 8 * WIRING_GRID  # R7: a cell another line covers costs eight steps: cross, never run along
+BUSY = 8 * WIRING_GRID  # layout-0167: a covered cell costs eight steps; cross, never run along
 
 
 def strip_lines(model: Model, inputs: StageInputs) -> tuple[StageInputs, LineReads]:
-    """HL1: the run without the conductors lines carry, routed or crossing; the lines read."""
+    """The run without the conductors lines carry, routed or crossing; the lines read."""
     lines = line_reads(model)
     carried = [*inputs.connections, *inputs.crossing]
     stripped = replace(
@@ -77,7 +79,7 @@ class LineScene:
     keepouts: tuple[tuple[_Page, Id[Any], Any], ...]  # marker boxes: page, owner, box
     profile: Profile
     sheet: Any
-    hidden: frozenset[Id[Any]] = frozenset()  # HL6: boxed pin views, which draw nothing
+    hidden: frozenset[Id[Any]] = frozenset()  # layout-0155: boxed pin views, which draw nothing
     units: Mapping[int, Id[Any] | None] = MappingProxyType({})  # each drawing set's unit
 
 
@@ -122,37 +124,39 @@ def draw_lines(
     units: Sequence[MiddleUnit],
     scene: LineScene,
 ) -> DrawnPieces:
-    """HL15 to HL18: each line on each page its ends stand on, its labels placed (HL16)."""
+    """Layout-0154: each line on each page its ends stand on, its labels placed (item 4)."""
     world = _world(carried, units, scene)
     texts = replace(
         line_texts(model, lines), spots=line_spots(model, lines, world), sheet=scene.sheet
     )
     grid = Grid(content_box(scene.sheet), (), scene.profile.route_turn_penalty)
-    pieces: dict[_Page, list[tuple[LineRead, Pieces]]] = defaultdict(list)
-    covered: dict[_Page, frozenset[Any]] = defaultdict(frozenset)
-    away: dict[tuple[Id[Any], _Page], tuple[int, ...]] = {}
-    for line in lines.lines:
-        for page in _pages(line, world):
-            if not drawn_on(line, scene.units.get(page[0]), lines.top):
-                continue
-            ends, absent = _ends_on(line.ends, page, world)
-            if ends:
-                here = replace(_grid(grid, page, world), busy=covered[page], busy_penalty=BUSY)
-                away[line.owner, page] = tuple(absent)
-                made = _route_line(line, (page, ends, absent), here, (texts, world, scene))
-                pieces[page].append((line, made))
-                covered[page] |= frozenset().union(*(cells_of(pts) for _, pts in made.paths))
+    pieces = _route_pages(lines, grid, (texts, world, scene))
     found = DrawnPieces()
     for page in sorted(pieces):
-        found = _page_pieces(found, page, pieces[page], (texts, world, scene, away))
+        found = _page_pieces(found, page, pieces[page], (texts, world, scene))
     return found
+
+
+def _route_pages(lines: LineReads, grid: Grid, context: _Context) -> _Routed:
+    """Every line routed on each page its ends stand on; later lines route around earlier ones."""
+    _, world, scene = context
+    pieces: _Routed = defaultdict(list)
+    covered: dict[_Page, frozenset[Any]] = defaultdict(frozenset)
+    for line in lines.lines:
+        for page in _pages(line, world):
+            on = (page, *_ends_on(line.ends, page, world))
+            if on[1] and drawn_on(line, scene.units.get(page[0]), lines.top):
+                here = replace(_grid(grid, page, world), busy=covered[page], busy_penalty=BUSY)
+                pieces[page].append((line, made := _route_line(line, on, here, context)))
+                covered[page] |= frozenset().union(*(cells_of(pts) for _, pts in made.paths))
+    return pieces
 
 
 def _route_line(
     line: LineRead,
     on: tuple[_Page, Sequence[Any], Sequence[int]],
     here: Grid,
-    context: tuple[LineTexts, _World, LineScene],
+    context: _Context,
 ) -> Pieces:
     """One line's pieces on one page; routes keep the unplaced stub width, only the box grows."""
     (page, ends, absent), (texts, world, scene) = on, context
@@ -235,7 +239,7 @@ def _ends_on(
 def _trunk(
     line: LineRead, ends: Sequence[EndOnPage], where: tuple[_Page, Grid], world: _World
 ) -> Facing | None:
-    """R1: the way the line enters its root's box, when the root stands on another page."""
+    """Layout-0167: the way the line enters its root's box, when the root stands on another page."""
     page, grid = where
     first = next((one for one in line.ends if one.mates in world.interfaces), line.ends[0])
     if any(one.branch == first.branch for one in ends):
@@ -267,7 +271,7 @@ def _end_on(end: HarnessLineEnd, page: _Page, world: _World) -> EndOnPage | None
 def _own_sheet(
     end: HarnessLineEnd, mate: PlacedConnectorBox | None, world: _World
 ) -> EndOnPage | None:
-    """A top-level unit's own sheet has no plug: its interface's box leaves (HL18)."""
+    """A top-level unit's own sheet has no plug: its interface's box leaves (layout-0154 item 6)."""
     if mate is None or end.mates not in world.top:
         return None
     return EndOnPage(end.branch, interface=True, leaving=True, box=mate.box)
@@ -285,7 +289,7 @@ def _pins(end: HarnessLineEnd, page: _Page, world: _World) -> list[PinAt]:
 
 
 def _row(keepout: Box, facing: Facing) -> tuple[int, int]:
-    """A pin's row for its fan (HL17): its symbol's keep-out along the facing axis."""
+    """A pin's row for its fan (layout-0154 item 5): its symbol's keep-out along the facing axis."""
     if facing in (Facing.N, Facing.S):
         return keepout.y, keepout.y + keepout.height
     return keepout.x, keepout.x + keepout.width
@@ -305,10 +309,10 @@ def _page_pieces(
     found: DrawnPieces,
     page: _Page,
     pieces: Sequence[tuple[LineRead, Pieces]],
-    run: tuple[LineTexts, _World, LineScene, Mapping[tuple[Id[Any], _Page], tuple[int, ...]]],
+    run: _Context,
 ) -> DrawnPieces:
     """One page's lines with their labels placed in one `place_texts` call, fans and stubs."""
-    texts, world, scene, away = run
+    texts, world, scene = run
     paths = [(line.owner, branch, points) for line, one in pieces for branch, points in one.paths]
     centres, unplaced = _label_boxes(paths, texts, world.shapes.get(page, []), scene)
     lines = tuple(
@@ -340,7 +344,7 @@ def _page_pieces(
             texts,
             line,
             stub,
-            (page, scene.units.get(page[0]), away[line.owner, page]),
+            (page, scene.units.get(page[0]), tuple(_ends_on(line.ends, page, world)[1])),
             scene.profile,
         )
         for line, one in pieces
@@ -360,7 +364,7 @@ def _label_boxes(
     shapes: Sequence[Shape],
     scene: LineScene,
 ) -> tuple[dict[tuple[Id[Any], int], Any], tuple[Finding, ...]]:
-    """HL16: each path's designation at the first free candidate along its longest run.
+    """Each path's designation at the first free candidate along its longest run.
 
     Every run keeps every label the house text gap off, its own line's too (layout-0158).
     """

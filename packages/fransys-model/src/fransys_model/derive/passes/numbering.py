@@ -21,6 +21,7 @@ from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lone_cable import lone_cable_harness
 from fransys_model.derive.lookups import terminal_items
+from fransys_model.derive.order import natural_key
 from fransys_model.derive.passes.numbering_assigned import assigned_facets
 from fransys_model.derive.passes.numbering_units import (
     number_unit_tags,
@@ -114,7 +115,7 @@ def _reference_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[
             subjects=tuple(sorted(item.id for item in group)),
             message=(
                 f"reference designation {text!r} is shared by "
-                + ", ".join(sorted("/".join(item.key) for item in group))
+                + ", ".join(sorted(("/".join(item.key) for item in group), key=natural_key))
             ),
         )
         for text, group in by_text.items()
@@ -167,7 +168,7 @@ def _product_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Fi
             subjects=tuple(sorted(item.id for item in group)),
             message=(
                 f"product designation {text!r} is shared by "
-                + ", ".join(sorted("/".join(item.key) for item in group))
+                + ", ".join(sorted(("/".join(item.key) for item in group), key=natural_key))
             ),
         )
         for text, group in by_text.items()
@@ -180,7 +181,7 @@ def _product_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Fi
             subjects=tuple(sorted(item.id for item in group)),
             message=(
                 f"product designation {text!r} is shared by "
-                + ", ".join(sorted("/".join(item.key) for item in group))
+                + ", ".join(sorted(("/".join(item.key) for item in group), key=natural_key))
             ),
         )
         for (_unit, text), group in by_unit_text.items()

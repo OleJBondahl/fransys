@@ -20,8 +20,8 @@ from .closure import physical_nets
 from .designation import end_outside_nested_unit, terminal_designation, unit_list_context
 from .drawing_text import port_designation_in
 from .indexes import build_indexes
-from .list_order import in_designation_order
 from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
+from .order import in_designation_order, natural_key
 from .rows import TerminalRow
 
 if TYPE_CHECKING:
@@ -88,6 +88,15 @@ def _jumper_groups(model: Model, rows: list[Id[Item]]) -> dict[Id[Item], int]:
     return number
 
 
+def _end_text(
+    model: Model, port: Id[Port], context: Id[AspectNode] | None, unit: Id[Unit] | None
+) -> str:
+    """One far end as printed: `""` outside a nested `unit`, else `port_designation_in`."""
+    if end_outside_nested_unit(model, item_of_port(model, port), unit):
+        return ""
+    return port_designation_in(model, port, context, unit=unit)
+
+
 def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's context
     model: Model,
     idx: Indexes,
@@ -97,11 +106,11 @@ def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's co
     *,
     unit: Id[Unit] | None,
     context: Id[AspectNode] | None,
-) -> tuple[str, ...]:
-    """The port each of `landed` reaches from `terminal`'s ports of `role`, rendered, in order.
+) -> tuple[tuple[Id[Conductor], ...], tuple[str, ...]]:
+    """`landed` and the end each reaches from `terminal`'s ports of `role`, by `natural_key`.
 
-    Each is `port_designation_in` `context`, or `""` when its item is outside the nested `unit`
-    (`end_outside_nested_unit`): kept, so the tuple stays as long as `landed`.
+    An end is `""` when its item is outside the nested `unit`, so the tuples stay as long as
+    `landed`. Conductor and end stay paired; a tie on the printed end breaks on the conductor id.
     """
     near = {
         port
@@ -115,12 +124,11 @@ def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's co
         record = all_conductors[conductor]
         return record.b if record.a in near else record.a
 
-    return tuple(
-        ""
-        if end_outside_nested_unit(model, item_of_port(model, far(conductor)), unit)
-        else port_designation_in(model, far(conductor), context, unit=unit)
-        for conductor in landed
+    pairs = sorted(
+        ((_end_text(model, far(conductor), context, unit), conductor) for conductor in landed),
+        key=lambda pair: (natural_key(pair[0]), pair[1]),
     )
+    return tuple(c for _, c in pairs), tuple(text for text, _ in pairs)
 
 
 def terminal_rows(
@@ -130,7 +138,7 @@ def terminal_rows(
     unit: Id[Unit] | None = None,
     context: Id[AspectNode] | None = None,
 ) -> tuple[TerminalRow, ...]:
-    """One `TerminalRow` per `strip` terminal, sorted by `(facet.group, facet.index, id)`.
+    """One `TerminalRow` per `strip` terminal, by `(natural_key(group), index, id)`.
 
     Args:
         model: The model to read.
@@ -150,14 +158,30 @@ def terminal_rows(
     facets = {facet.subject: facet for facet in facets_of(model, TerminalFacet).values()}
     children = sorted(
         (child for child in idx.children_by_item.get(strip, ()) if child in facets),
-        key=lambda child: (facets[child].group, facets[child].index, child),
+        key=lambda child: (natural_key(facets[child].group), facets[child].index, child),
     )
     groups = _jumper_groups(model, children)
     rows = []
     for child in children:
         by_role = conductors_by_role(model, idx, child)
-        internal = tuple(sorted(by_role.get(PortRole.INTERNAL, ())))
-        external = tuple(sorted(by_role.get(PortRole.EXTERNAL, ())))
+        internal, internal_ends = _far_ends(
+            model,
+            idx,
+            child,
+            PortRole.INTERNAL,
+            tuple(by_role.get(PortRole.INTERNAL, ())),
+            unit=unit,
+            context=context,
+        )
+        external, external_ends = _far_ends(
+            model,
+            idx,
+            child,
+            PortRole.EXTERNAL,
+            tuple(by_role.get(PortRole.EXTERNAL, ())),
+            unit=unit,
+            context=context,
+        )
         rows.append(
             TerminalRow(
                 terminal=child,
@@ -166,12 +190,8 @@ def terminal_rows(
                 index=facets[child].index,
                 internal=internal,
                 external=external,
-                internal_ends=_far_ends(
-                    model, idx, child, PortRole.INTERNAL, internal, unit=unit, context=context
-                ),
-                external_ends=_far_ends(
-                    model, idx, child, PortRole.EXTERNAL, external, unit=unit, context=context
-                ),
+                internal_ends=internal_ends,
+                external_ends=external_ends,
                 jumper_group=groups.get(child),
             )
         )

@@ -1,4 +1,4 @@
-"""HL13, HL18: which columns each middle interface's line reaches, or that it leaves.
+"""Layout-0153, layout-0154: which columns each middle interface's line reaches, or that it leaves.
 
 The one answer both the middle groups and the leaving lines read (P3 condition 1).
 """
@@ -24,7 +24,7 @@ def line_reach(
     """Per line interface, the columns of its drawing set that its line reaches; the units.
 
     Reached: a column that held its or its plug's views and keeps a cell, or holds a far end. An
-    interface reached nowhere leaves (HL18), its views' columns its anchor; every unit stays.
+    interface reached nowhere leaves (layout-0154), its views' columns its anchor; every unit stays.
     """
     owners = owners_of(units)
     homes: dict[Id[Any], dict[AuthoringKey, _SetKey]] = {}
@@ -69,7 +69,7 @@ def _held(
 def _far(units: Sequence[MiddleUnit]) -> dict[Id[Any], list[Id[Any]]]:
     """Each far-end function, to the line interfaces whose lines end at it.
 
-    A line between two top-level units reaches neither: each end leaves (HL20, condition 2).
+    A line between two top-level units reaches neither: each end leaves (layout-0153, condition 2).
     """
     top = {
         f

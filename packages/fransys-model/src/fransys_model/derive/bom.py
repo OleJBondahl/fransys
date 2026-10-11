@@ -11,7 +11,6 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .contact_lines import contact_counts
 from .designation import (
-    bom_sort_key,
     designation_holder,
     is_own_unit_root,
     location_designation,
@@ -22,7 +21,7 @@ from .external import external
 from .indexes import Indexes, build_indexes
 from .instance_tag import instance_name, unit_tag
 from .lookups import descendants, require
-from .natural_order import natural_key
+from .order import bom_sort_key, natural_key
 from .release_order import release_order
 from .revision_text import revision_text
 from .rows import BomLine

@@ -66,7 +66,6 @@ from .contact_entries import NO_PLACE
 from .contacts import LinkState, Throws, changeover_throws, link_state, owned_contacts
 from .current_chains import CurrentBound, CurrentChain, CurrentPosition, LimitRole, current_chains
 from .designation import (
-    bom_sort_key,
     connector_label,
     connector_segments,
     designation_holder,
@@ -98,7 +97,7 @@ from .list_cells import (
 )
 from .lookups import black_box_unit, connector_facets, item_of_port, pin_order, terminal_items
 from .mate_rows import mates
-from .natural_order import natural_key
+from .order import bom_sort_key, natural_key
 from .pairing import BoxPair, box_pairs
 from .part_functions import part_function_rows
 from .passes.numbering import number

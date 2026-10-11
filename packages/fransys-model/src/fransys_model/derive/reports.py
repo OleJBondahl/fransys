@@ -24,7 +24,6 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .cable_end_rank import cable_end_rank
 from .designation import (
-    bom_sort_key,
     end_outside_nested_unit,
     is_own_unit_root,
     port_designation,
@@ -44,7 +43,7 @@ from .lookups import (
     require,
     unit_chain,
 )
-from .natural_order import natural_key
+from .order import bom_sort_key, natural_key
 from .rows import CableRow, DesignationRow, PlcChannelRow, WireRow
 from .structure import boards
 from .wire_ends import ordered_wire_ends
@@ -388,7 +387,9 @@ def _all_wire_rows(
         and conductor.kind is ConductorKind.WIRE
         and (unit is None or _conductor_belongs(model, conductor, unit))
     ]
-    return tuple(sorted(rows, key=lambda row: (row.from_, row.to, row.conductor)))
+    return tuple(
+        sorted(rows, key=lambda row: (natural_key(row.from_), natural_key(row.to), row.conductor))
+    )
 
 
 def designation_list(model: Model, *, unit: Id[Unit] | None = None) -> tuple[DesignationRow, ...]:
@@ -420,4 +421,7 @@ def designation_list(model: Model, *, unit: Id[Unit] | None = None) -> tuple[Des
         and not takes_parents_designation(model, item.id)
         and not is_own_unit_root(model, item.id, unit)
     ]
-    return tuple(sorted(rows, key=lambda row: (natural_key(row.designation), row.item)))
+    # a harness and its cable print one designation: the printed text breaks the tie, the id last
+    return tuple(
+        sorted(rows, key=lambda row: (natural_key(row.designation), row.description, row.item))
+    )

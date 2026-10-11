@@ -3,7 +3,12 @@
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
-from fransys_model.derive.drawing_text import contact_image, label_text
+from fransys_model.derive.drawing_text import (
+    CONTACT_SLOTS,
+    contact_heading,
+    contact_image,
+    label_text,
+)
 from fransys_model.layout import Label, page_slice, profile_of, sheet_format_of
 from fransys_model.vocab import functions, items, ports
 
@@ -38,10 +43,9 @@ def _not_installed(model: Model, label: Label) -> bool:
 def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
     """C19: a coil's contact image, at the label's measured box."""
     no, nc = contact_image(model, label)
-    width, height = label.width, label.height
     step = profile.text_height
     pad = profile.marker_padding
-    half = width // 2
+    half = label.width // 2
     font_mm = grid_to_mm(0, step, sheet.module_mm)
     css_class = "label not-installed" if _not_installed(model, label) else "label"
 
@@ -58,18 +62,20 @@ def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: La
             f'font-size="{format_decimal(font_mm)}">{escape(value)}</text>'
         )
 
-    x0, y0 = label.x, label.y
+    heading = contact_heading(model, label)  # layout-0170: a table sharing its foot names its coil
+    x0, y0 = label.x, label.y + (step if heading else 0)
     rule = y0 + pad + step
     parts = [
+        *([text(x0 + pad, label.y, heading)] if heading else []),
         text(x0 + pad, y0 + pad, "NO"),
         text(x0 + half + pad, y0 + pad, "NC"),
         (
-            f'<line class="marker" x1="{mm_x(x0)}" y1="{mm_y(rule)}" x2="{mm_x(x0 + width)}" '
+            f'<line class="marker" x1="{mm_x(x0)}" y1="{mm_y(rule)}" x2="{mm_x(x0 + label.width)}" '
             f'y2="{mm_y(rule)}"/>'
         ),
         (
             f'<line class="marker" x1="{mm_x(x0 + half)}" y1="{mm_y(y0)}" '
-            f'x2="{mm_x(x0 + half)}" y2="{mm_y(y0 + height)}"/>'
+            f'x2="{mm_x(x0 + half)}" y2="{mm_y(label.y + label.height)}"/>'
         ),
     ]
     for row, entry in enumerate(no):
@@ -81,7 +87,7 @@ def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: La
 
 def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
     """One label as a `<text>` element: position, class and escaped text (D7, D10)."""
-    if label.slot == "contacts":
+    if label.slot in CONTACT_SLOTS:
         return _contact_image(model, sheet, profile, label)
     top_mm = grid_to_mm(sheet.content_y_mm, label.y, sheet.module_mm)
     font_size_mm = grid_to_mm(0, profile.text_height, sheet.module_mm)

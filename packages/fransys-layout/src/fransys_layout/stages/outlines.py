@@ -48,8 +48,10 @@ class OutlineInputs:
     columns: tuple[Column, ...]
     profile: Profile
     title: Callable[[Handle], str]
-    boxes: tuple[PlacedConnectorBox, ...] = ()  # HL6: a member pin's connector box is inside
-    # HL11, condition 3: a middle unit's page draws its middle outline and no D11 frame
+    boxes: tuple[
+        PlacedConnectorBox, ...
+    ] = ()  # layout-0155: a member pin's connector box is inside
+    # layout-0153, condition 3: a middle unit's page draws its middle outline and no D11 frame
     middle: frozenset[tuple[Handle, int, int]] = frozenset()
     # layout-0160: a unit's black box in a set above it, `derive.black_box_unit`, read once
     black_box: Mapping[tuple[Handle, Handle | None], Handle] = field(default_factory=dict)
@@ -124,10 +126,28 @@ def _column_runs(
     members: Sequence[PlacedFunction], placed: tuple[PlacedFunction, ...]
 ) -> list[list[PlacedFunction]]:
     """One end's placements of a unit, cut into runs so a frame never spans unrelated columns."""
-    return [
-        [one for column in stretch for one in members if one.column == column]
-        for stretch in _column_stretches(members, placed)
-    ]
+    runs = []
+    for stretch in _column_stretches(members, placed):
+        run = [one for column in stretch for one in members if one.column == column]
+        runs.extend(_cut_by_foreign(run, placed))
+    return runs
+
+
+def _cut_by_foreign(
+    run: Sequence[PlacedFunction], placed: tuple[PlacedFunction, ...]
+) -> list[list[PlacedFunction]]:
+    """OUTLINE-ENCLOSE: a non-member in a member's column between two members cuts the run."""
+    names = {m.function for m in run}
+    parts: dict[int, list[PlacedFunction]] = {}
+    for one in run:
+        ys = [m.at.y for m in run if m.column == one.column]
+        cuts = [
+            f.at.y
+            for f in placed
+            if f.column == one.column and f.function not in names and min(ys) < f.at.y < max(ys)
+        ]
+        parts.setdefault(sum(c < one.at.y for c in cuts), []).append(one)
+    return [parts[k] for k in sorted(parts)]
 
 
 def _marker_reach(marker: LinkMarker) -> Box:
@@ -239,7 +259,7 @@ def _run_frame(
     texts = [label.box for label in first if label.subject in names]
     # M10: a member port's link marker, stub included, stands inside the frame
     texts += [_marker_reach(marker) for marker in page_markers if marker.port in names]
-    if run.boxes:  # HL6: a member pin's connector box stands inside too
+    if run.boxes:  # layout-0155: a member pin's connector box stands inside too
         owners = {(m.drawing_set, m.page, run.spec_of[m.function].pin_function) for m in members}
         texts += [run.boxes[owner] for owner in owners if owner in run.boxes]
     return _frame(members, run.faces, texts, top_end=top_end)

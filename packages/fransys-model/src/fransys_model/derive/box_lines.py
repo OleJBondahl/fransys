@@ -1,4 +1,4 @@
-"""The text lines of a connector's box: designation, part number, interface name (HL5, HL7)."""
+"""The text lines of a connector's box: designation, part number, interface name."""
 
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import boundaries, functions, items, parts
@@ -7,6 +7,8 @@ lazy from fransys_model.vocab.core import Function, Unit
 
 from .designation import connector_designation
 from .indexes import build_indexes
+from .instance_tag import unit_tag
+from .order import natural_key
 
 
 def _part_line(model: Model, function: Id[Function]) -> str | None:
@@ -21,10 +23,10 @@ def _part_line(model: Model, function: Id[Function]) -> str | None:
 
 
 def _name_line(model: Model, function: Id[Function], unit: Id[Unit] | None) -> str | None:
-    """The interface name of `function`, the given unit's first, else the lowest boundary's."""
+    """The interface name of `function`, the given unit's first, else by unit tag."""
     named = sorted(
         (b for b in boundaries(model).values() if b.function == function and b.name is not None),
-        key=lambda b: (b.unit != unit, b.id),
+        key=lambda b: (b.unit != unit, natural_key(unit_tag(model, b.unit) or ""), b.id),
     )
     return named[0].name if named else None
 

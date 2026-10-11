@@ -18,7 +18,7 @@ import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
 
-import electrical_symbols
+from fransys_layout.geometry import generic_box_geometry
 from fransys_model.layout import (
     Label,
     LabelKind,
@@ -219,11 +219,11 @@ def test_a_module_tag_is_shown_once_on_its_box() -> None:
 def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -> None:
     """D5: pitch = ceil(text_width / 8 + 0.5) M, at least 2 M, by the name after its dot."""
 
-    # UNDO: electrical_symbols/generic_box.py:_pitch measures the whole
-    # name (drop `.rsplit(".", 1)[-1]`), or drops the `math.ceil`
+    # UNDO: layout geometry/symbols.py:_generic measures the whole name (drop
+    # `box_port_marking`), or generic_box.py:box_pitch drops the `math.ceil`
     def pitch(*names):
-        symbol = electrical_symbols.generic_box(names)
-        return symbol.ports[2].position.x - symbol.ports[0].position.x
+        ports = generic_box_geometry(names).ports
+        return (ports[2].at.x - ports[0].at.x) / 8
 
     assert pitch("1", "2", "3", "4") == 2
     assert pitch("do_1.1", "do_2.2", "do_3.3", "do_4.4") == 2

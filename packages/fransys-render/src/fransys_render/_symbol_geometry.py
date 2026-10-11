@@ -9,14 +9,16 @@ from electrical_symbols import (
     G_PER_MODULE,
     GENERIC_BOX_KEY,
     LIBRARY,
+    box_port_marking,
     box_port_name,
     default_order,
     generic_box,
     is_generic_box,
 )
 from fransys_model.derive import build_indexes
+from fransys_model.derive.text_width import marking_widths
 from fransys_model.layout import PlacementView
-from fransys_model.vocab import functions, ports
+from fransys_model.vocab import functions, marking_key, ports
 
 if TYPE_CHECKING:
     from symdef.model import Symbol
@@ -40,23 +42,28 @@ def _generic_box_port_names(model: Model, placement: SymbolPlacement) -> tuple[s
     if placement.view is PlacementView.ITEM:
         item = functions(model)[placement.function].item
         return default_order(
-            box_port_name(function.name, ports(model)[port_id].name)
-            for function in functions(model).values()
-            if function.item == item
-            for port_id in indexes.ports_by_function.get(function.id, ())
+            (
+                box_port_name(function.name, ports(model)[port_id].name)
+                for function in functions(model).values()
+                if function.item == item
+                for port_id in indexes.ports_by_function.get(function.id, ())
+            ),
+            marking_key,
         )
     port_ids = indexes.ports_by_function.get(placement.function, ())
-    return default_order(ports(model)[port_id].name for port_id in port_ids)
+    return default_order((ports(model)[port_id].name for port_id in port_ids), marking_key)
 
 
 def oriented_symbol(model: Model, placement: SymbolPlacement) -> Symbol | None:
     """`placement`'s symbol, repeated and oriented as layout drew it; `None` for an unknown key."""
     if is_generic_box(placement.symbol):
         # R7 C5: the port sides layout turned the box to, else the alternating ones
+        names = _generic_box_port_names(model, placement)
         base = generic_box(
-            _generic_box_port_names(model, placement),
+            names,
             tuple(side.value for side in placement.sides),
             tuple(offset / G_PER_MODULE for offset in placement.port_offsets),  # grid units to M
+            marking_widths=marking_widths(box_port_marking(name) for name in names),
         )
     else:
         try:

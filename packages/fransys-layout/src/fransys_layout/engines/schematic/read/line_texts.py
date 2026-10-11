@@ -1,4 +1,4 @@
-"""What a harness line prints, measured: its designation (HL3) and a leaving line's stub (HL18).
+"""What a harness line prints, measured: its designation and a leaving line's stub.
 
 Derive prints both texts; layout only measures them, as render prints them.
 """
@@ -96,7 +96,7 @@ def line_texts(model: Model, lines: LineReads) -> LineTexts:
 def stub_box(
     texts: LineTexts, line: LineRead, stub: Stub, sheet: Sheet, profile: Profile
 ) -> LineStub:
-    """HL18: the leaving line's one stub, its text `derive.line_stub_line` measured (C1).
+    """Layout-0154: the leaving line's one stub, its text `derive.line_stub_line` measured (C1).
 
     `sheet` is the page, its drawing set's unit (the carrier prints relative to it) and every end
     off the page: with none the stub names its `far` end alone (R6).

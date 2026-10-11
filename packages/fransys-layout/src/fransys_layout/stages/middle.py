@@ -1,4 +1,4 @@
-"""HL11 to HL13: a middle unit's line interfaces leave their columns, then take their edges."""
+"""Layout-0153: a middle unit's line interfaces leave their columns, then take their edges."""
 
 from dataclasses import dataclass, replace
 from fractions import Fraction
@@ -29,13 +29,15 @@ class MiddleInterface:
     plug_lines: tuple[str, ...]
     far: frozenset[Id[Any]] = frozenset()  # the functions at its line's other ends, and their views
     conductors: frozenset[Id[Any]] = frozenset()  # what its line carries
-    leaving: bool = False  # its line reaches no column of its set: it leaves (HL18), condition 1
+    leaving: bool = (
+        False  # its line reaches no column of its set: it leaves (layout-0154), condition 1
+    )
     hidden: frozenset[Id[Any] | None] = frozenset()  # sets where an outer black box draws it (P6)
 
 
 @dataclass(frozen=True)
 class MiddleUnit:
-    """A unit with a harness line at an interface (HL12), and the conductors its lines carry."""
+    """A unit with a harness line at an interface, and the conductors its lines carry."""
 
     unit: Id[Any]
     interfaces: tuple[MiddleInterface, ...]
@@ -74,7 +76,7 @@ def _band(
 def group_index(groups: Sequence[MiddleGroup]) -> dict[AuthoringKey, tuple[MiddleGroup, ...]]:
     """Each band column's groups, so a page finds its groups by its own columns.
 
-    Two groups may share a column (HL20): two top-level units' leaving lines anchor in one.
+    Two groups may share a column (layout-0153): two top-level units' leaving lines anchor in one.
     """
     index: dict[AuthoringKey, tuple[MiddleGroup, ...]] = {}
     for group in groups:
@@ -151,7 +153,7 @@ def _flow(one: MiddleInterface, columns: Sequence[Column], unit: Id[Any]) -> boo
 def _homes(
     one: MiddleInterface, columns: Sequence[Column], unit: Id[Any]
 ) -> tuple[AuthoringKey, ...]:
-    """A no-line interface's columns: those holding its replica outside its unit (HL11)."""
+    """A no-line interface's columns: those holding its replica outside its unit (layout-0153)."""
     views = frozenset(one.views)
     return tuple(
         column.key
@@ -168,7 +170,7 @@ def middle_groups(
     widths: Mapping[AuthoringKey, int],
     text_height: int,
 ) -> tuple[MiddleGroup, ...]:
-    """HL13: each middle unit's edges, by `edges`, with the flows and band widths filled in."""
+    """Each middle unit's edges, by `edges`, with the flows and band widths filled in."""
     groups = []
     set_of = {column.key: column.unit for column in columns}
     for unit in units:
@@ -207,7 +209,7 @@ def _band_width(
     widths: Mapping[AuthoringKey, int],
     text_height: int,
 ) -> Fraction:
-    """HL13's even measure: its box, or the columns its line reaches, whichever is wider."""
+    """Layout-0153's even measure: its box, or the columns its line reaches, whichever is wider."""
     box = box_size(one.lines, [], text_height=text_height)[0]
     columns = sum(widths.get(key, 0) for key in reach.get(one.edge.function, ()))
     return Fraction(max(box, columns))

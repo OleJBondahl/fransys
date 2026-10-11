@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 
     from .harness_route import Grid
 
-LEAVE_GRIDS = 6  # HL18: a leaving line runs 48 G, one column gap, straight out
+LEAVE_GRIDS = 6  # layout-0154: a leaving line runs 48 G, one column gap, straight out
 
 
 def tip(end: End) -> End:
-    """Where a leaving line ends and its stub starts, facing on out (HL18)."""
+    """Where a leaving line ends and its stub starts, facing on out (layout-0154)."""
     return End(at=port_exit(end.at, end.facing, LEAVE_GRIDS), facing=end.facing)
 
 

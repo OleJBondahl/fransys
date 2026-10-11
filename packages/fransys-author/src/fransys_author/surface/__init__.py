@@ -1,4 +1,4 @@
-"""The engineer surface over the author engine .
+"""The engineer surface over the author engine.
 
 Its names stay off `fransys_author.__all__` until the facade swap.
 """

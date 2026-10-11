@@ -34,7 +34,7 @@ def test_terminal_csv_includes_unused_terminals(cabinet, strip):
 def test_terminal_csv_names_where_each_conductor_goes_and_the_jumper_group(cabinet, strip):
     lines = terminal_csv(cabinet, strip).splitlines()
     # L:1 is jumpered to L:2 (group 1) and has two conductors inside and one outside
-    assert "-X1:L:1,L,1,-X1:L:2; -K1:1,-B1:1,1" in lines
+    assert "-X1:L:1,L,1,-K1:1; -X1:L:2,-B1:1,1" in lines
     assert "-X1:L:2,L,2,-X1:L:1,,1" in lines
     # wired on both sides, in no jumper group; B7 sits at +C1 and no context is given: full path
     assert "-X1:S:1,S,1,-F1:1,+C1-B7:1," in lines

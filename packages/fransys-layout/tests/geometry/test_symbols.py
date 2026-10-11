@@ -29,6 +29,7 @@ from fransys_layout.geometry import (
     library_version,
     on_wiring_grid,
     symbol_geometry,
+    text_width,
 )
 from fransys_layout.geometry.symbols import convert, generic_box_geometry
 
@@ -424,7 +425,8 @@ def test_a_standing_box_draws_the_ports_the_symbol_returns_at_the_stand_pitch(
 ) -> None:
     """Layout draws each pin where `generic_box(stand=)` puts its port: the one home of spacing."""
     drawn = {p.name: p.at.x for p in generic_box_geometry(names, sides, stand=stand).ports}
-    symbol = electrical_symbols.generic_box(names, sides, stand=stand)
+    widths = tuple(text_width(electrical_symbols.box_port_marking(n), height=8) for n in names)
+    symbol = electrical_symbols.generic_box(names, sides, stand=stand, marking_widths=widths)
     port_x = {p.id: p.position.x for p in symbol.ports}
     assert tuple(drawn[n] for n in names) == tuple(
         port_x[n] * electrical_symbols.G_PER_MODULE for n in names

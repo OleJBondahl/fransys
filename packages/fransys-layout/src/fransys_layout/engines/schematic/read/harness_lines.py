@@ -1,4 +1,4 @@
-"""HL1, HL5, HL6: which conductors a harness line carries and which connectors get a box."""
+"""which conductors a harness line carries and which connectors get a box."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -48,7 +48,7 @@ class LineReads:
 
 
 def line_reads(model: Model) -> LineReads:
-    """One `LineRead` per line `derive.line_conductors` holds, sorted by owner id (HL1)."""
+    """One `LineRead` per line `derive.line_conductors` holds, sorted by owner id (layout-0154)."""
     table = items(model)
     edges: dict[Id[Any], set[Id[Any]]] = {}
     for one in boundaries(model).values():
@@ -96,7 +96,7 @@ def drawn_on(line: LineRead, unit: Id[Any] | None, top: frozenset[Id[Any]]) -> b
 
 
 def boxed_functions(model: Model) -> frozenset[Id[Function]]:
-    """HL6: every connector function at a line's end."""
+    """Layout-0155: every connector function at a line's end."""
     return frozenset(
         function.id
         for function in functions(model).values()
@@ -111,7 +111,7 @@ def plug_functions(lines: LineReads) -> frozenset[Id[Function]]:
 
 @dataclass(frozen=True)
 class BoxRead:
-    """HL5: one boxed connector: its text lines, plug or unit interface, and each pin's marking.
+    """one boxed connector: its text lines, plug or unit interface, and each pin's marking.
 
     `wired` holds the pins a conductor no line carries lands on: the pins that may get a cell.
     """
@@ -151,7 +151,7 @@ def box_reads(model: Model, lines: LineReads) -> tuple[BoxRead, ...]:
 
 
 def box_specs(model: Model, functions: Sequence[FunctionSpec]) -> tuple[BoxSpec, ...]:
-    """HL5, HL6: one `BoxSpec` per boxed connector drawn as pin views, its cells by `has_cells`."""
+    """One `BoxSpec` per boxed connector drawn as pin views, its cells by `has_cells`."""
     views: dict[Id[Function], list[Id[Port]]] = {}
     for spec in functions:
         if spec.pin_function is not None:
@@ -175,7 +175,7 @@ def box_specs(model: Model, functions: Sequence[FunctionSpec]) -> tuple[BoxSpec,
 
 
 def plug_mates(lines: LineReads) -> dict[Id[Function], Id[Function]]:
-    """Each plug of every line to the connector it mates (HL4)."""
+    """Each plug of every line to the connector it mates (model-0175)."""
     return {
         end.plug: end.mates
         for line in lines.lines

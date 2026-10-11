@@ -54,7 +54,7 @@ def test_conductors_on_item_lists_only_terminals_with_conductors_and_only_roles_
     assert list(result[l1.item]) == [PortRole.EXTERNAL, PortRole.INTERNAL]
 
 
-def test_many_conductors_on_one_terminal_come_out_in_id_order_in_both_queries() -> None:
+def test_many_conductors_on_one_terminal_come_out_in_id_order_then_far_end_order() -> None:
     """Eight conductors per role: too many for a set's iteration order to look sorted."""
     plant = Plant()
     strip = plant.item("x1", designation="X1")
@@ -72,8 +72,12 @@ def test_many_conductors_on_one_terminal_come_out_in_id_order_in_both_queries() 
     assert grouped[PortRole.INTERNAL] == tuple(sorted(inside))
     assert grouped[PortRole.EXTERNAL] == tuple(sorted(outside))
     (row,) = terminal_rows(model, strip)
-    assert row.internal == tuple(sorted(inside))
-    assert row.external == tuple(sorted(outside))
+    assert set(row.internal) == set(inside)
+    assert set(row.external) == set(outside)
+    assert row.internal_ends == tuple(
+        f"-K{n}:1" for n in range(8)
+    )  # `terminal_rows` follows the far end
+    assert row.external_ends == tuple(f"-B{n}:1" for n in range(8))
 
 
 def test_conductors_on_item_leaves_out_a_terminal_without_any_conductor() -> None:

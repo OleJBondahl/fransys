@@ -17,6 +17,7 @@ exception (DESIGN 4, decision layout-0037) is keyed to the qualified module path
 """
 
 from collections import defaultdict
+from functools import partial
 from typing import TYPE_CHECKING, Any, cast
 lazy from collections.abc import Iterable, Sequence
 lazy from decimal import Decimal
@@ -42,6 +43,8 @@ from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.line_fact import draws_as_line
 from fransys_model.derive.lookups import black_box_unit, effective_placement
 from fransys_model.derive.marker_targets import marker_lines, target_lines
+from fransys_model.derive.order import natural_key
+from fransys_model.derive.pole_ports import pole_prefix
 from fransys_model.derive.port_marking import marking_text, port_marking
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.revision_text import revision_text
@@ -51,13 +54,13 @@ from fransys_model.derive.view_placements import placements_by_function_page
 from fransys_model.derive.wire_ends import ordered_wire_ends
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
 from fransys_model.layout import (
+    CrossReferencePartner,
     DrawingSet,
     Label,
     LabelKind,
     LinkMarker,
     Page,
     PageGroup,
-    SheetFormat,
     Side,
     StarKind,
     StubEnd,
@@ -76,7 +79,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab.connectivity import Conductor
 
 # A location's root-to-leaf path: each node's identity paired with its own label, root first
-# (units spec U7). The identity half is what a nearest-common-ancestor walk compares -- never
+# (the units rule). The identity half is what a nearest-common-ancestor walk compares -- never
 # the label, so two nodes that happen to share label text at different tree positions are
 # never mistaken for one.
 type LocationPath = tuple[tuple[Id[AspectNode], str], ...]
@@ -84,6 +87,9 @@ type Seat = tuple[int, int, LocationPath]
 # A marker's pin key; a reading key.
 type _PinKey = tuple[Id[Page], int, int, int, int, int, bool]
 type _ReadingKey = tuple[int, int, str, Id[Port]]
+CONTACTS_HEADED = "contacts.headed"  # a contact table sharing its column foot: heading line (0170)
+CONTACT_SLOTS = ("contacts", CONTACTS_HEADED)
+
 
 # Grid units per symbol module (`G = M/8`). The home is `electrical_symbols.G_PER_MODULE`; this is
 # a copy, not an import (this package imports nothing, root CLAUDE.md invariant 2), guarded by
@@ -103,7 +109,7 @@ def frame_column(content_width: int, frame_columns: int, x: int) -> int:
 
 
 def row_letter(index: int) -> str:
-    """The letter for a 0-based frame-grid row index, A first (LD3).
+    """The letter for a 0-based frame-grid row index, A first.
 
     `fransys_pdf`'s own printed reference grid (`_frame.py::_row_strip`) calls this too, so
     the grid and a position text can never disagree on what a row is called (DESIGN 4, root
@@ -115,9 +121,9 @@ def row_letter(index: int) -> str:
 def frame_row(content_height: int, frame_rows: int, y: int) -> str:
     """The frame-grid row `y` falls in, as a letter: the content box divided evenly, clamped.
 
-    `content_height` and `frame_rows` are grid units and the row count of a page's sheet
-    (LD3), the row twin of `frame_column`. Row A is at the top (the smallest `y`), matching
-    the printed grid's own top-to-bottom order.
+    `content_height` and `frame_rows` are grid units and the row count of a page's sheet.
+    It is the row twin of `frame_column`. Row A is at the top (the smallest `y`), matching the
+    printed grid's own top-to-bottom order.
     """
     return row_letter(min(max(y * frame_rows // content_height + 1, 1), frame_rows) - 1)
 
@@ -131,15 +137,15 @@ def position_text(  # noqa: PLR0913 -- one form for every position; own_page is 
     *,
     own_page: int | None = None,
 ) -> str:
-    """`p<page_number>:<column><row>`, prefixed by `+<label>` for each of `location_labels` (LD5).
+    """`p<page_number>:<column><row>`, prefixed by `+<label>` for each of `location_labels`.
 
     The one form for every printed position; `row` is `frame_row`'s letter. A caller passes `()`
-    for `location_labels` in the same set (U7). `own_page` equal to `page_number` prints the cell.
+    for `location_labels` in the same set. `own_page` equal to `page_number` prints the cell.
     """
     if own_page == page_number and not location_labels and set_number is None:
         return f"{column}{row}"
     if not location_labels and set_number is not None:
-        # C18, restated for LD5's form: a place in another drawing set with no location
+        # A place in another drawing set with no location
         # prefix still names its set, "p3.2:1A" (set.page, then cell), so it is never ambiguous
         return f"p{set_number}.{page_number}:{column}{row}"
     where = f"p{page_number}:{column}{row}"
@@ -148,7 +154,7 @@ def position_text(  # noqa: PLR0913 -- one form for every position; own_page is 
 
 
 def location_prefix(own_path: LocationPath, partner_path: LocationPath) -> tuple[str, ...]:
-    """The partner's location labels below the nearest common ancestor, root first (U7).
+    """The partner's location labels below the nearest common ancestor, root first.
 
     Empty when nothing is left below it -- the two ends share their whole path, or the
     partner has none at all. The common-ancestor walk compares each path entry's identity
@@ -173,21 +179,19 @@ def content_extent(millimetres: int, module_mm: Decimal) -> int:
     return int(millimetres * _G_PER_MODULE // module_mm)
 
 
-def _content_width_grid(sheet: SheetFormat) -> int:
-    """`sheet`'s content width in grid units (`content_extent`)."""
-    return content_extent(sheet.content_width_mm, sheet.module_mm)
-
-
-def _content_height_grid(sheet: SheetFormat) -> int:
-    """`sheet`'s content height in grid units (`content_extent`), the row twin of the width."""
-    return content_extent(sheet.content_height_mm, sheet.module_mm)
+def _cell(model: Model, page: Page, x: int, y: int) -> tuple[int, str]:
+    """The frame-grid `(column, row letter)` the point `x`, `y` falls in on `page`'s sheet."""
+    sheet = sheet_format_of(model, page.sheet_format)
+    wide = content_extent(sheet.content_width_mm, sheet.module_mm)
+    high = content_extent(sheet.content_height_mm, sheet.module_mm)
+    return frame_column(wide, sheet.frame_columns, x), frame_row(high, sheet.frame_rows, y)
 
 
 def location_path(model: Model, node: Id[AspectNode] | None) -> LocationPath:
     """`node`'s root-to-leaf path, empty for `None` (no location).
 
-    The one walk is `kernel.parent_chain` (via `chain_up`), reversed to root first (units spec
-    U7), with each node's label kept alongside its id. Every location text is built from it.
+    The one walk is `kernel.parent_chain` (via `chain_up`), reversed to root first, with each
+    node's label kept alongside its id. Every location text is built from it.
     """
     nodes = aspect_nodes(model)
     return tuple((found, nodes[found].label) for found in reversed(list(chain_up(nodes, node))))
@@ -222,7 +226,7 @@ def product_location(
 ) -> str:
     """The `+<label>` prefix `product_designation_in` prints before `item`'s designation, or "".
 
-    Block-diagram line 1 (BD4) reads it too, so a box's place is the one `item` prints.
+    Block-diagram line 1 reads it too, so a box's place is the one `item` prints.
     """
     node = effective_placement(model, item, Aspect.LOCATION)
     if unit is None:
@@ -267,7 +271,7 @@ def far_end(
 def stub_far_end(
     model: Model, port: Id[Port], near: Id[Port] | None = None, *, unit: Id[Unit] | None = None
 ) -> tuple[str, str]:
-    """C21: `port`'s far end as the off stub at `near` names it, below `near`'s place (layout-0121).
+    """`port`'s far end as the off stub at `near` names it, below `near`'s place (layout-0121).
 
     A near end in a unit stands on the unit's page, which states no place: whole path, as for None.
     `unit` is the page's unit: the end names its items unit-locally (model-0181).
@@ -291,8 +295,8 @@ def line_stub_line(line: str, *, north: bool, far: Sequence[tuple[str, str]]) ->
     """A leaving line's single stub, `-W3 → +EXT-M1 p2:4A, +EXT-M2 p2:5C`: line, arrow, far devices.
 
     `far` is each far device with where it is drawn in the stub's drawing set, `position_text`'s
-    form, or "" for none. No place at all keeps the first device alone, the text without places
-    (STUB-POSITIONS P2). The arrow points up (`←`) for a stub facing north, else `→`.
+    form, or "" for none. No place at all keeps the first device alone, the text without places.
+    The arrow points up (`←`) for a stub facing north, else `→`.
     """
     listed = far if any(place for _, place in far) else far[:1]
     devices = ", ".join(f"{device} {place}" if place else device for device, place in listed)
@@ -315,7 +319,7 @@ def _stub_ends(model: Model) -> dict[Id[LinkMarker], list[StubEnd]]:
 def _line_stub_far(
     model: Model, marker: LinkMarker, unit: Id[Unit] | None, head: str
 ) -> list[tuple[str, str]]:
-    """A line stub's far devices with their places, from its `StubEnd` records (P1, R6).
+    """A line stub's far devices with their places, from its `StubEnd` records.
 
     A stub with none keeps its `far` port's device alone (a hand-made marker, an old model).
     """
@@ -381,8 +385,8 @@ def marker_text(model: Model, marker: LinkMarker) -> str:
     merged with an off stub (named by at least one branch) are the four shapes
     `_reference_group` covers. A pure off stub that no branch names keeps its own text,
     unprefixed and unnumbered. The lead of markers that share one box at a pin (`_boxmates_of`)
-    returns every one's own text, joined by `id`. A text layout broke in two (`wrap_at`) is split
-    after that many words: the space becomes the line break.
+    returns every one's own text, joined in natural designation order. A text layout broke in two
+    (`wrap_at`) is split after that many words: the space becomes the line break.
     """
     group = _boxmates_of(model).get(marker.id)
     if group is None:
@@ -404,7 +408,7 @@ def _own_text(model: Model, marker: LinkMarker) -> str:
     ends = sorted(group, key=lambda one: _reading_key(model, layout_of(model, Page), one))
     positions = [_marker_position(model, marker, one) for one in ends if one.id != marker.id]
     lines = target_lines(reference_number(model, marker), positions)
-    # D9 F7: the merged stub's own text, last, unprefixed
+    # the merged stub's own text, last, unprefixed
     return "\n".join(
         [*lines, off_stub_text(model, marker)] if marker.star is StarKind.OFF else lines
     )
@@ -427,7 +431,7 @@ def _reference_group(
     if marker.star is StarKind.OFF:
         branches = branches_of.get(marker.id, ())
         return (marker, *branches) if branches else None
-    hub = markers[marker.partner]  # BRANCH: partner is the hub, or (C17, S21) another BRANCH
+    hub = markers[marker.partner]  # BRANCH: partner is the hub, or another BRANCH
     if hub.star is StarKind.BRANCH:
         return (marker, hub)
     return (hub, *branches_of.get(hub.id, ()))
@@ -437,7 +441,7 @@ def _reference_group(
 def _branches_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]]:
     """Every `BRANCH` marker, grouped by the hub (a `REF` or a merged `OFF`) its `partner` names.
 
-    Built once per model digest (RW8): `_reference_group` and `reference_number` both read
+    Built once per model digest: `_reference_group` and `reference_number` both read
     this by key instead of scanning every marker each time they need one hub's branches.
     """
     found: dict[Id[LinkMarker], list[LinkMarker]] = defaultdict(list)
@@ -449,7 +453,7 @@ def _branches_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _boxmates_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]]:
-    """Each lead that shares its box with mates, to the lead and its mates ordered by `id`.
+    """Each lead that shares its box with mates, to the lead and its mates by designation.
 
     Markers with equal page, `x`, `y`, `stub_extra`, `width`, `height`, `vertical` stand at one pin.
     Several leads at one key are not one box and get no entry. Built once per model digest.
@@ -463,17 +467,22 @@ def _boxmates_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]
     for ones in keyed.values():
         leads = [one for one in ones if one.lead]
         if len(leads) == 1 and len(ones) > 1:
-            found[leads[0].id] = tuple(sorted(ones, key=lambda one: one.id))
+            found[leads[0].id] = tuple(
+                sorted(
+                    ones, key=lambda one: (natural_key(port_designation(model, one.port)), one.id)
+                )
+            )
     return found
 
 
 def _reading_key(model: Model, pages: Mapping[Id[Page], Page], marker: LinkMarker) -> _ReadingKey:
-    """D1's reading order for one marker's own end: `(page.number, column, row, port)`."""
+    """The reading order for one marker's own end: `(page.number, column, row, port)`."""
     page = pages[marker.page]
-    sheet = sheet_format_of(model, page.sheet_format)
-    column = frame_column(_content_width_grid(sheet), sheet.frame_columns, marker.x)
-    row = frame_row(_content_height_grid(sheet), sheet.frame_rows, marker.y)
-    return (page.number, column, row, marker.port)
+    return (
+        page.number,
+        *_cell(model, page, marker.x, marker.y),
+        marker.port,
+    )
 
 
 def _reference_groups(
@@ -529,16 +538,16 @@ def _reference_numbers(model: Model) -> Mapping[Id[LinkMarker], int]:
 
 
 def reference_number(model: Model, marker: LinkMarker) -> int:
-    """LD3's `#n` for `marker`'s reference net (RW8: one lookup into the per-digest map)."""
+    """The `#n` for `marker`'s reference net (one lookup into the per-digest map)."""
     return _reference_numbers(model)[marker.id]
 
 
 def partner_position_text(own: Seat, partner: Seat, column: int, row: str) -> str:
-    """A partner's position as `own` reads it, on plain values (LD5, RW9).
+    """A partner's position as `own` reads it, on plain values.
 
     A seat is (set number, page, location path). The same set prints the cell, `own`'s page
-    kept (model-0136); another adds the prefix below the common ancestor (U7), else its set
-    number (C18). The one place that text is built.
+    kept (model-0136); another adds the prefix below the common ancestor, else its set
+    number. The one place that text is built.
     """
     (own_set, own_page, own_path), (set_number, page, path) = own, partner
     if own_set == set_number:
@@ -553,26 +562,20 @@ def _seat(model: Model, page: Page) -> Seat:
 
 
 def _position_between(model: Model, own_page: Page, partner_page: Page, x: int, row: str) -> str:
-    """The position at `x`/`row` on `partner_page`, read from `own_page` (LD5): the lookups."""
-    sheet = sheet_format_of(model, partner_page.sheet_format)
-    column = frame_column(_content_width_grid(sheet), sheet.frame_columns, x)
+    """The position at `x`/`row` on `partner_page`, read from `own_page`: the lookups."""
+    column = _cell(model, partner_page, x, 0)[0]
     return partner_position_text(_seat(model, own_page), _seat(model, partner_page), column, row)
 
 
 def place_text(model: Model, own_page: Page, partner_page: Page, x: int, y: int) -> str:
-    """The cell at `x`, `y` on `partner_page` as `own_page` reads it (LD5): derive's one text."""
-    sheet = sheet_format_of(model, partner_page.sheet_format)
-    row = frame_row(_content_height_grid(sheet), sheet.frame_rows, y)
-    return _position_between(model, own_page, partner_page, x, row)
+    """The cell at `x`, `y` on `partner_page` as `own_page` reads it: derive's one text."""
+    return _position_between(model, own_page, partner_page, x, _cell(model, partner_page, x, y)[1])
 
 
 def _marker_position(model: Model, marker: LinkMarker, partner: LinkMarker) -> str:
-    """`partner`'s position, with its location label across drawing sets (LD5)."""
+    """`partner`'s position, with its location label across drawing sets."""
     pages = layout_of(model, Page)
-    partner_page = pages[partner.page]
-    sheet = sheet_format_of(model, partner_page.sheet_format)
-    row = frame_row(_content_height_grid(sheet), sheet.frame_rows, partner.y)
-    return _position_between(model, pages[marker.page], partner_page, partner.x, row)
+    return place_text(model, pages[marker.page], pages[partner.page], partner.x, partner.y)
 
 
 def _partner_row(model: Model, page: Page, port: Id[Port]) -> str:
@@ -583,8 +586,17 @@ def _partner_row(model: Model, page: Page, port: Id[Port]) -> str:
     """
     function = ports(model)[port].function
     placement = placements_by_function_page(model)[function, page.id]
-    sheet = sheet_format_of(model, page.sheet_format)
-    return frame_row(_content_height_grid(sheet), sheet.frame_rows, placement.y)
+    return _cell(model, page, 0, placement.y)[1]
+
+
+def _partner_place(
+    model: Model, pages: Mapping[Id[Page], Page], own_page: Page, partner: CrossReferencePartner
+) -> str:
+    """Where `partner` stands as `own_page` reads it: its page and `x`, its function's row."""
+    page = pages[partner.page]
+    return _position_between(
+        model, own_page, page, partner.x, _partner_row(model, page, partner.port)
+    )
 
 
 def cross_reference_text(model: Model, label: Label) -> str:
@@ -595,20 +607,13 @@ def cross_reference_text(model: Model, label: Label) -> str:
     """
     pages = layout_of(model, Page)
     own_page = pages[label.page]
-    seen: set[str] = set()
-    texts: list[str] = []
-    for partner in label.partners:
-        partner_page = pages[partner.page]
-        row = _partner_row(model, partner_page, partner.port)
-        text = _position_between(model, own_page, partner_page, partner.x, row)
-        if text not in seen:
-            seen.add(text)
-            texts.append(text)
-    return " ".join(texts)
+    return " ".join(
+        dict.fromkeys(_partner_place(model, pages, own_page, p) for p in label.partners)
+    )
 
 
 def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None) -> str:
-    """A component's tag on a drawing: its item designation only, "-Q11" (D12, layout-0066).
+    """A component's tag on a drawing: its item designation only, "-Q11" (layout-0066).
 
     The page states the location, unit and groups, so a tag never carries them, in a unit's
     own set (`unit`, unit-relative) and at top level alike. The one
@@ -618,7 +623,7 @@ def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None)
 
 
 def tag_text(model: Model, function: Id[Function]) -> str:
-    """A TAG label's text: the designation the layout engine used (D2).
+    """A TAG label's text: the designation the layout engine used.
 
     A terminal function's tag is the designation of its lowest-handle port; every other
     function's tag is its item's `item_tag_text`.
@@ -630,24 +635,24 @@ def tag_text(model: Model, function: Id[Function]) -> str:
 
 
 def wire_label_text(end_a: str, end_b: str) -> str:
-    """The text at both ends of a wire, `-B12:96 -Q11:A1` (V8): the join's one home."""
+    """The text at both ends of a wire, `-B12:96 -Q11:A1`: the join's one home."""
     return f"{end_a} {end_b}"
 
 
 def wire_text(model: Model, conductor: Id[Conductor], *, unit: Id[Unit] | None = None) -> str:
-    """A WIRE label's text via `wire_label_text` (V8); `unit` makes the ends unit-relative."""
+    """A WIRE label's text via `wire_label_text`; `unit` makes the ends unit-relative."""
     record = conductors(model)[conductor]
     ends = ordered_wire_ends(model, record.a, record.b)
     return wire_label_text(*(port_designation(model, port, unit=unit) for port in ends))
 
 
 def strip_tag_text(model: Model, function: Id[Function]) -> str:
-    """A run's one strip tag: the item designation of the terminal's strip, "-X01" (R6 D1, D12).
+    """A run's one strip tag: the item designation of the terminal's strip, "-X01".
 
     Printed once, left of a run of terminals of one strip (`run_point_text` is each one's own
     point); a unit's own set prints the unit-relative form instead (`unit_tag_text`). A device's
     own terminal (`is_device_terminal`) names the device itself, never the board it is mounted
-    on (D12).
+    on.
     """
     return item_tag_text(model, _strip_item(model, function))
 
@@ -659,7 +664,7 @@ def _strip_item(model: Model, function: Id[Function]) -> Id[Item]:
 
 
 def is_device_terminal(model: Model, function: Id[Function]) -> bool:
-    """L2 (designer): a terminal-kind function of an item that is no terminal.
+    """A terminal-kind function of an item that is no terminal.
 
     The item carries no terminal facet: a device's own pass-through terminal such as an
     overload relay's A2.
@@ -681,7 +686,7 @@ def point_text(model: Model, function: Id[Function]) -> str:
     """A terminal's point text inside its strip's row.
 
     A strip terminal's is `run_point_text`, "L2:1"; a device terminal's is its port marking,
-    "A2" (L2).
+    "A2".
     """
     if is_device_terminal(model, function):
         return port_marking(model, min(build_indexes(model).ports_by_function[function]))
@@ -689,7 +694,7 @@ def point_text(model: Model, function: Id[Function]) -> str:
 
 
 def _own_unit(model: Model, label: Label) -> Id[Unit] | None:
-    """I4 R2: the set's unit, when the function is in its subtree (a nested black box too)."""
+    """The set's unit, when the function is in its subtree (a nested black box too)."""
     unit = layout_of(model, DrawingSet)[layout_of(model, Page)[label.page].drawing_set].unit
     if unit is None or label.function is None:
         return None
@@ -697,7 +702,7 @@ def _own_unit(model: Model, label: Label) -> Id[Unit] | None:
 
 
 def _pin_view_ports(model: Model, label: Label) -> tuple[Id[Port], ...]:
-    """The ports of the function a pin view's `tag.pin` or `tag.conn` label sits on (R7 A).
+    """The ports of the function a pin view's `tag.pin` or `tag.conn` label sits on.
 
     Layout writes such a label with its function as the subject, never a port or a conductor.
     """
@@ -706,7 +711,7 @@ def _pin_view_ports(model: Model, label: Label) -> tuple[Id[Port], ...]:
 
 
 def _pin_port(model: Model, label: Label) -> Id[Port]:
-    """R7 A: the port a `tag.pin.<name>` label names, among its function's ports."""
+    """The port a `tag.pin.<name>` label names, among its function's ports."""
     name = label.slot.removeprefix("tag.pin.")
     return next(p for p in _pin_view_ports(model, label) if ports(model)[p].name == name)
 
@@ -715,11 +720,9 @@ def _unit_port_tag_text(
     model: Model, handle: Id[Any], port: Port, slot: str, unit: Id[Unit]
 ) -> str:
     """`unit_tag_text` for a port handle: a terminal's point, or a pin view's connector or pin."""
-    if functions(model)[port.function].kind is FunctionKind.TERMINAL:
-        return port_designation(model, handle, unit=unit)  # a terminal's point: "X2:0V:3"
-    # a pin view: its connector (tag.conn) or pin (tag.pin), as outside a unit set, less the
-    # unit's root
-    if slot == "tag.conn":
+    # a terminal's point "X2:0V:3", or a pin view's pin (tag.pin) as outside a unit set, less the
+    # unit's root; a pin view's connector (tag.conn) is the one other form
+    if slot == "tag.conn" and functions(model)[port.function].kind is not FunctionKind.TERMINAL:
         return connector_designation(model, port.function, unit=unit)
     return port_designation(model, handle, unit=unit)
 
@@ -727,7 +730,7 @@ def _unit_port_tag_text(
 def unit_tag_text(
     model: Model, handle: Id[Item] | Id[Port] | Id[Function], slot: str, unit: Id[Unit]
 ) -> str | None:
-    """I4 R2: a TAG text as printed in `unit`'s own set, for a stage handle and its slot.
+    """A TAG text as printed in `unit`'s own set, for a stage handle and its slot.
 
     The handle is a function, a pin view's port or an item view's item; `None` keeps the
     ordinary text (a run's point tag `run_point_text`, a device terminal's port marking).
@@ -735,10 +738,7 @@ def unit_tag_text(
     A component's tag is its item designation only, "-Q11", below the unit's sole root; the
     page states the location, unit and groups.
     """
-
-    def short(item: Id[Item]) -> str:
-        return item_tag_text(model, item, unit=unit)
-
+    short = partial(item_tag_text, model, unit=unit)
     if handle.kind == "item":
         return short(cast("Id[Item]", handle))
     port = ports(model).get(cast("Id[Port]", handle))
@@ -748,10 +748,10 @@ def unit_tag_text(
     record = functions(model)[function]
     if slot == "tag.strip":  # a terminal row's strip, in the unit's own form
         return short(_strip_item(model, function))
-    if slot == "tag.point":  # D12: a run's point text, unit-independent, and a device's marking
+    if slot == "tag.point":  # a run's point text, unit-independent, and a device's marking
         return None
     if record.kind is FunctionKind.TERMINAL:
-        # D12: a terminal outside a run prints its full form in the unit's own strip form; a
+        # a terminal outside a run prints its full form in the unit's own strip form; a
         # device terminal keeps its ordinary text
         return (
             None
@@ -762,7 +762,7 @@ def unit_tag_text(
 
 
 def _unit_label_text(model: Model, label: Label, unit: Id[Unit]) -> str | None:
-    """I4 R2: `label_text`'s TAG text in `unit`'s own set, from the persisted label."""
+    """`label_text`'s TAG text in `unit`'s own set, from the persisted label."""
     if label.slot.startswith("tag.pin."):
         return unit_tag_text(model, _pin_port(model, label), "tag.pin", unit)
     if label.slot == "tag.conn":
@@ -772,7 +772,7 @@ def _unit_label_text(model: Model, label: Label, unit: Id[Unit]) -> str | None:
 
 
 def label_text(model: Model, label: Label) -> str:
-    """The text `label` shows, dispatched by its `kind` (D2).
+    """The text `label` shows, dispatched by its `kind`.
 
     TAG, MARKING, WIRE and CROSS_REFERENCE are rendered from the model.
 
@@ -806,7 +806,7 @@ def _black_box_unit(model: Model, label: Label) -> Id[Unit] | None:
 
 
 def _tag_label_text(model: Model, label: Label) -> str:
-    """`label_text` for a TAG label: the unit's own text, else the slot's text (D2)."""
+    """`label_text` for a TAG label: the unit's own text, else the slot's text."""
     if label.function is None:
         msg = "a TAG label has no function"
         raise SchemaError(msg, kind="layout.label", record_id=label.id)
@@ -814,7 +814,7 @@ def _tag_label_text(model: Model, label: Label) -> str:
         return outline_title(model, _black_box_unit(model, label))
     unit = _own_unit(model, label)
     if unit is not None:
-        own = _unit_label_text(model, label, unit)  # I4 R2: the unit's own set
+        own = _unit_label_text(model, label, unit)  # the unit's own set
         if own is not None:
             return own
     return _tag_slot_text(model, label, label.function)
@@ -822,13 +822,13 @@ def _tag_label_text(model: Model, label: Label) -> str:
 
 def _tag_slot_text(model: Model, label: Label, function: Id[Function]) -> str:
     """`label_text` for a TAG label outside a unit's own set, by its slot."""
-    if label.slot.startswith("tag.pin."):  # R7 A: one pin of a connector
+    if label.slot.startswith("tag.pin."):  # one pin of a connector
         return port_designation(model, _pin_port(model, label))
     if label.slot == "tag.strip":
         return strip_tag_text(model, function)
-    if label.slot == "tag.item":  # C13(a): a mixed-kind row of one item, its item's tag
+    if label.slot == "tag.item":  # a mixed-kind row of one item, its item's tag
         return item_tag_text(model, functions(model)[function].item)
-    if label.slot == "tag.conn":  # R7 A5: a pin row's one connector designation (model-0073)
+    if label.slot == "tag.conn":  # a pin row's one connector designation (model-0073)
         return connector_designation(model, function)
     if label.slot == "tag.point":
         return point_text(model, function)
@@ -836,29 +836,30 @@ def _tag_slot_text(model: Model, label: Label, function: Id[Function]) -> str:
 
 
 def _cross_reference_label_text(model: Model, label: Label) -> str:
-    """`label_text` for a CROSS_REFERENCE label: the contact image or the position text (D2)."""
+    """`label_text` for a CROSS_REFERENCE label: the contact image or the position text."""
     if label.function is None:
         msg = "a CROSS_REFERENCE label has no function"
         raise SchemaError(msg, kind="layout.label", record_id=label.id)
-    if label.slot == "contacts":  # C19: the contact image, one line per row
+    if label.slot in CONTACT_SLOTS:  # the contact image, one line per row
         no, nc = contact_image(model, label)
         rows = max(len(no), len(nc))
         cells = [
             ("NO", "NC"),
             *zip(no + [""] * (rows - len(no)), nc + [""] * (rows - len(nc)), strict=True),
         ]
-        return "\n".join(f"{a} | {b}" for a, b in cells)
+        head = contact_heading(model, label)
+        lines = [f"{a} | {b}" for a, b in cells]
+        return "\n".join([head, *lines] if head else lines)
     return cross_reference_text(model, label)
 
 
 def external_note() -> str:
     """The note an external item's designations carry wherever they are drawn or listed.
 
-    Y3's own name, first reserved for a schematic symbol's label (external-items spec Y3,
-    not yet built) and now also the cable table's heading line (cable-tables spec CT3,
-    decision model-0112): one text, "by others", so a future consumer never invents its own
-    wording. Takes no argument: `derive.external` decides WHICH item is covered, this
-    decides only what the note SAYS.
+    Its own name, first reserved for a schematic symbol's label (not yet built) and now also
+    the cable table's heading line (decision model-0112): one text, "by others", so a future
+    consumer never invents its own wording. Takes no argument: `derive.external` decides WHICH
+    item is covered, this decides only what the note SAYS.
     """
     return "by others"
 
@@ -881,27 +882,26 @@ def outline_title(model: Model, unit: Id[Unit] | None) -> str:
     return f"{unit_label(model, unit)} rev {revision_text(release.version, release.revision)}"
 
 
+def _in_image_order(entries: list[Entry]) -> list[str]:
+    """The text of each contact entry, in image order."""
+    return [text for *_, text in sorted(entries, key=image_order)]
+
+
 def contact_image(model: Model, label: Label) -> tuple[list[str], list[str]]:
-    """C19: a coil's contact image, its NO and NC entries.
+    """A coil's contact image, its NO and NC entries.
 
     Per contact of the coil's item, its terminal pairs by number ("13-14", the "/L1" suffixes
     stripped) and where it is drawn ("/3.7"); main contacts (more than one pair) first, then
     by terminal number. A changeover's entries come from its throw roles (`changeover_throws`),
-    the names as printed, named commons after numbered ones (CS5). A contact no conductor reaches
-    is listed too, its pair and `NO_PLACE`, whatever `hide_unused_pins` says (V1).
+    the names as printed, named commons after numbered ones. A contact no conductor reaches
+    is listed too, its pair and `NO_PLACE`, whatever `hide_unused_pins` says.
     """
     pages = layout_of(model, Page)
     own_page = pages[label.page]
     no, nc = list[Entry](), list[Entry]()
     for partner in label.partners:
         function = functions(model)[ports(model)[partner.port].function]
-        where = _position_between(
-            model,
-            own_page,
-            pages[partner.page],
-            partner.x,
-            _partner_row(model, pages[partner.page], partner.port),
-        )
+        where = _partner_place(model, pages, own_page, partner)
         no_marks, nc_marks = contact_entries(model, function)
         no.extend((main, key, f"{mark} {where}") for main, key, mark in no_marks)
         nc.extend((main, key, f"{mark} {where}") for main, key, mark in nc_marks)
@@ -909,30 +909,41 @@ def contact_image(model: Model, label: Label) -> tuple[list[str], list[str]]:
     spare_no, spare_nc = spare_entries(
         model, functions(model)[cast("Id[Function]", label.function)].item, shown
     )
-    return [text for *_, text in sorted(no + spare_no, key=image_order)], [
-        text for *_, text in sorted(nc + spare_nc, key=image_order)
-    ]
+    return _in_image_order(no + spare_no), _in_image_order(nc + spare_nc)
+
+
+def contact_heading(model: Model, label: Label) -> str:
+    """The heading line of a contact table that shares its column foot: its coil's tag, "-K1".
+
+    A lone table has none (""): layout marks the tables of one foot with the `CONTACTS_HEADED` slot.
+    """
+    if label.slot != CONTACTS_HEADED:
+        return ""
+    return coil_heading(model, functions(model)[cast("Id[Function]", label.function)].item)
+
+
+def coil_heading(model: Model, coil: Id[Item]) -> str:
+    """The text `contact_heading` prints for the table of item `coil`: layout measures it first."""
+    return item_tag_text(model, coil)
 
 
 def contact_marks(model: Model, function: Id[Function]) -> tuple[list[str], list[str]]:
-    """C19: the terminal pairs one contact function lists under NO and under NC, in image order.
+    """The terminal pairs one contact function lists under NO and under NC, in image order.
 
     The marks of `contact_image` before the place is appended ("13-14", "COM-NO"): the one rule
     of which pairs a contact prints and in which column, so layout sizes a contact image over
     exactly the entries render prints.
     """
     no, nc = contact_entries(model, functions(model)[function])
-    return [mark for *_, mark in sorted(no, key=image_order)], [
-        mark for *_, mark in sorted(nc, key=image_order)
-    ]
+    return _in_image_order(no), _in_image_order(nc)
 
 
 def page_title_groups(model: Model, page: Page) -> tuple[PageGroup, ...]:
-    """Which of `page.groups` title `page` (RW1, model-0097).
+    """Which of `page.groups` title `page` (model-0097).
 
     A unit's own groups only, when the page's drawing set has a unit; every group, unfiltered,
-    when the set has no unit (a location-subject page). `page_title` calls this; RW1 Part 3
-    points `fransys_pdf`'s `_page_title_labels` at it too, so the rule has one home (root
+    when the set has no unit (a location-subject page). `page_title` calls this; `fransys_pdf`'s
+    `_page_title_labels` calls it too, so the rule has one home (root
     CLAUDE.md, "one rule computed in two places").
     """
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
@@ -943,11 +954,11 @@ def page_title_groups(model: Model, page: Page) -> tuple[PageGroup, ...]:
 
 
 def page_title(model: Model, page: Page) -> str:
-    """The page's title: its groups' descriptions, in `index` order, joined by `', '` (D2).
+    """The page's title: its groups' descriptions, in `index` order, joined by `', '`.
 
     `page.groups` is already stored in `index` order (`Page.__post_init__`). In a unit's own
-    set only the unit's own groups title a page (L3, by R2; `own_nodes` decides via
-    `page_title_groups`, and an item of no unit never un-owns a function group, F9); with
+    set only the unit's own groups title a page (`own_nodes` decides via
+    `page_title_groups`, and an item of no unit never un-owns a function group); with
     none, the unit's title, its name when the title is empty (`unit_label`, model-0066).
     """
     nodes = aspect_nodes(model)
@@ -959,7 +970,11 @@ def page_title(model: Model, page: Page) -> str:
 
 
 __all__ = [
+    "CONTACTS_HEADED",
+    "CONTACT_SLOTS",
+    "coil_heading",
     "connector_designation",
+    "contact_heading",
     "contact_image",
     "contact_marks",
     "content_extent",
@@ -982,6 +997,7 @@ __all__ = [
     "partner_position_text",
     "place_text",
     "point_text",
+    "pole_prefix",
     "port_marking",
     "position_text",
     "product_location",

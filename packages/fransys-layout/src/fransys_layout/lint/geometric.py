@@ -257,7 +257,8 @@ def _content(page: _Page) -> list[Finding]:
         _warn(OUT_OF_CONTENT_BOX, (one.function,), "a symbol's keep-out box leaves the content box")
         for one, box in page.boxes
         if not contains(page.content, box)
-        and (one.function, one.drawing_set, one.page) not in page.hidden  # HL6: draws nothing
+        and (one.function, one.drawing_set, one.page)
+        not in page.hidden  # layout-0155: draws nothing
     ]
     findings.extend(
         _warn(OUT_OF_CONTENT_BOX, (label.subject,), "a label box leaves the content box")

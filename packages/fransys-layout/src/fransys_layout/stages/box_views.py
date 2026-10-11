@@ -1,4 +1,4 @@
-"""HL6: a boxed connector's box stands over its placed pin views, which draw no symbol."""
+"""Layout-0155: a boxed connector's box stands over its placed pin views, which draw no symbol."""
 
 from dataclasses import dataclass
 from functools import reduce
@@ -106,7 +106,7 @@ def drawn_hidden(
 def face_plugs(
     boxes: Sequence[PlacedConnectorBox], mates: Mapping[Id[Any], Id[Any]]
 ) -> tuple[PlacedConnectorBox, ...]:
-    """HL4, HL19: a plug's box touches its mate's box with cells, on the side away from them.
+    """A plug's box touches its mate's box with cells, on the side away from them.
 
     The cells stand on the pins' edge, toward the component's symbols; the line comes from the
     other side, so the symbols stand on the far side of the box from it.

@@ -8,6 +8,7 @@ from fransys_model.vocab.tables import conductors, items, nets, supply_of_potent
 
 from .indexes import build_indexes
 from .lookups import item_of_port, terminal_items
+from .order import NaturalKey, natural_key
 
 _WIRE_PORTS = 2  # a physical net of this many ports is one wire, not a rail (V3)
 
@@ -80,11 +81,16 @@ def power_text(model: Model, net: Id[Net]) -> str | None:
     return declared.name if declared.name is not None else declared.potential
 
 
+def _text_order(net: Net) -> tuple[NaturalKey, Id[Net]]:
+    """First-wins order of declared nets: printed name or potential, naturally, then id."""
+    return natural_key(net.name or net.potential or ""), net.id
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def _texts(model: Model) -> frozendict[Id[Port], str | None]:
     """Each power physical net's text by its first port: the first declared net's, by net id."""
     texts: dict[Id[Port], str | None] = {}
-    for net in sorted(nets(model).values(), key=lambda one: one.id):
+    for net in sorted(nets(model).values(), key=_text_order):
         if power_kind(model, net.id) is PowerKind.NONE:
             continue
         for port in net.ports:

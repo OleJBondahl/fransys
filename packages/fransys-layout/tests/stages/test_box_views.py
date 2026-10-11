@@ -72,10 +72,10 @@ def test_a_box_stands_above_its_pins_row_when_the_pins_face_south() -> None:
 
 
 def test_a_box_is_centred_over_one_narrow_view_at_its_natural_width() -> None:
-    # the view's body is 16 wide around x 40; the box is 72 wide, so it starts at 40 - 36
+    # the view's body is 16 wide around x 40; the box is 64 wide, so it starts at 40 - 32
     (box,) = placed_boxes([view(1, x=40)], [spec(1, (1,), cells=False)], TH, PAGE)
     assert (box.box.width, box.box.height) == box_size(LINES, [], text_height=TH)
-    assert box.box.x == 4
+    assert box.box.x == 8
 
 
 def test_a_box_over_wide_views_spans_them() -> None:

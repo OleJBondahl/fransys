@@ -11,6 +11,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from fransys_layout.stages.types import Home
+from fransys_model.derive.drawing_text import pole_prefix
 
 from .lookups import nets_from_pairs
 
@@ -58,7 +59,7 @@ def pole_ports(function: DrawnFunction) -> frozenset[Handle]:
     if through is None:
         return frozenset()
     poles = function.geometry.poles
-    prefixes = [""] if poles <= 1 else [f"{n}." for n in range(1, poles + 1)]
+    prefixes = [pole_prefix(n, poles) for n in range(max(poles, 1))]
     names = {f"{prefix}{end}" for prefix in prefixes for end in (through.start, through.end)}
     return frozenset(port.port for port in function.ports if port.symbol_port in names)
 

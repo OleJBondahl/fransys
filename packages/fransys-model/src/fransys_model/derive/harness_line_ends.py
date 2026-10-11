@@ -11,9 +11,9 @@ from fransys_model.vocab.tables import mates as mates_table
 lazy from fransys_model.vocab.core import Function, Item, Port
 
 from .designation import connector_designation, port_designation
-from .harness import harness_cables, top_level_cables
+from .harness import harness_cables, top_level_cables, unit_cables
 from .lookups import cable_end_owner, item_of_port, require
-from .natural_order import natural_key
+from .order import natural_key
 from .rows import HarnessLineEnd
 from .wire_harness import harness_of_wire
 
@@ -41,7 +41,9 @@ def _cables_of(model: Model, subject: Id[Item]) -> tuple[HarnessCable, ...]:
     require(items(model).get(subject), "item", subject)
     if is_harness(model, subject):
         return harness_cables(model, subject)
-    found = tuple(cable for cable in top_level_cables(model) if cable.cable == subject)
+    unit = items(model)[subject].unit
+    reading = top_level_cables(model) if unit is None else unit_cables(model, unit)
+    found = tuple(cable for cable in reading if cable.cable == subject)
     if not found:
         message = f"{subject}: neither a harness nor a cable"
         raise SchemaError(message, kind="item", record_id=subject)
@@ -49,7 +51,7 @@ def _cables_of(model: Model, subject: Id[Item]) -> tuple[HarnessCable, ...]:
 
 
 def _wire_ends(model: Model, subject: Id[Item]) -> list[_End]:
-    """One end per port a single wire of harness `subject` lands on (HL1, model-0175 amended)."""
+    """One end per port a single wire of harness `subject` lands on."""
     found = []
     for conductor in conductors(model).values():
         if harness_of_wire(model, conductor.id) == subject:
@@ -95,7 +97,7 @@ def _sort_key(model: Model, end: _End, plug: Id[Function] | None) -> tuple[objec
 def harness_line_ends(model: Model, subject: Id[Item]) -> tuple[HarnessLineEnd, ...]:
     """The ends of `subject`'s line: a harness's cables and wires, or one cable on no harness.
 
-    The one home of branch numbering: HL3's text function reads `-W13.n` from `branch` and never
+    The one home of branch numbering: the line-text function reads `-W13.n` from `branch` and never
     numbers on its own. A plug is an end whose item is a direct child of `subject` or of one of
     its cables and which a core or wire lands on a connector function of. Cable and wire ends
     merge by end item into one order. Plugs come first, by the natural

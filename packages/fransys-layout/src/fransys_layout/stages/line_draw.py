@@ -1,7 +1,7 @@
-"""HL15, HL17, HL18 (layout-0154): one line's pieces on one page, from its ends drawn there.
+"""Layout-0154: one line's pieces on one page, from its ends drawn there.
 
 An end is a plug's box edge on the line's side, or a fan-out's split. A line some of whose ends
-are elsewhere leaves: it runs `LEAVE` straight out and ends in one stub (HL1, owner C1).
+are elsewhere leaves: it runs `LEAVE` straight out and ends in one stub (layout-0154, owner C1).
 """
 
 from dataclasses import dataclass
@@ -21,14 +21,14 @@ if TYPE_CHECKING:
 
     from .harness_route import Grid
 
-FAN_GRIDS = 4  # HL17: the split stands 32 G, four grids, before its pins' row
+FAN_GRIDS = 4  # layout-0154: the split stands 32 G, four grids, before its pins' row
 
 
 @dataclass(frozen=True)
 class PinAt:
     """A fan-out end's pin on the page: the conductor that lands on it, and where it points.
 
-    `row` is its symbol's keep-out along the facing axis: pins whose rows meet share a fan (HL17).
+    `row` is its symbol's keep-out along the facing axis: pins whose rows meet share a fan.
     """
 
     conductor: Id[Any]
@@ -53,10 +53,10 @@ class EndOnPage:
 
 @dataclass(frozen=True)
 class Fan:
-    """One fan-out: its branch, split point and legs (HL8, HL17).
+    """One fan-out: its branch, split point and legs (render-0010, layout-0154).
 
     `rows` are the further pin rows' splits, each facing out of its row: the line runs on to
-    each in turn (HL15).
+    each in turn (layout-0154).
     """
 
     branch: int
@@ -92,7 +92,7 @@ def line_pieces(
     margin: int = 0,
     trunk: tuple[Facing, tuple[int, int]] | None = None,
 ) -> Pieces:
-    """HL15, HL18: the line among its joint ends; each leaving end and a lone end leave.
+    """Layout-0154: the line among its joint ends; each leaving end and a lone end leave.
 
     `absent` is the first end's branch off this page; `margin` keeps a fan-out's split inside
     (layout-0158); `trunk` is set when the root is off the page (TALL-PAGE R1, `line_trunk`).
@@ -192,7 +192,7 @@ def drawn_end(one: EndOnPage, bounds: tuple[int, int]) -> LineEnd:
 
 
 def _pin_rows(pins: Sequence[PinAt]) -> list[list[PinAt]]:
-    """HL17: the pins grouped in rows (facing alike, `row` spans meeting), the outermost first."""
+    """The pins grouped in rows (facing alike, `row` spans meeting), the outermost first."""
     facing = pins[0].end.facing
     sign = 1 if facing in (Facing.S, Facing.E) else -1
     rows: list[list[PinAt]] = []
@@ -218,7 +218,7 @@ def _through_rows(
     stubs: Sequence[Stub],
     grid: Grid,
 ) -> Pieces:
-    """HL15: the pieces, the path that ends at a fan's split run on to each further row's."""
+    """Layout-0154: the pieces, the path that ends at a fan's split run on to each further row's."""
     found: list[tuple[int, tuple[Point, ...]]] = list(paths)
     for fan in (one for one in fans if one.rows):
         found = [(b, _joined(points, fan, grid)) for b, points in found]
@@ -272,7 +272,7 @@ def _box_end(box: Box, mate: Box | None) -> End:
 def fan_out(
     pins: Sequence[PinAt], bounds: tuple[int, int] | None = None
 ) -> tuple[Point, tuple[DrawnLeg, ...]]:
-    """HL17: the split `FAN_GRIDS` past the pins' row, centred; each leg split, knee, pin.
+    """Layout-0154: the split `FAN_GRIDS` past the pins' row, centred; each leg split, knee, pin.
 
     The knee stands one grid out of its pin; the leg's slant follows from the split distance.
     A split across a vertical row stays within `bounds` (x), so its stub stays on the page.

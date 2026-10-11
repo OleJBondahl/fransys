@@ -22,7 +22,6 @@ from electrical_symbols.box_ports import (
     is_generic_box,
 )
 from electrical_symbols.generic_box import box_pitch, generic_box
-from electrical_symbols.text import text_width
 
 __all__ = [
     "GENERIC_BOX_KEY",
@@ -43,7 +42,6 @@ __all__ = [
     "generic_box",
     "is_generic_box",
     "library_version",
-    "text_width",
 ]
 
 LIBRARY: Library = load_bundle(Path(__file__).parent / "bundle.json")

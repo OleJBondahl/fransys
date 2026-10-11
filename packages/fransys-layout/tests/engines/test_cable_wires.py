@@ -108,7 +108,7 @@ def test_a_mixed_harness_keeps_its_cable_box_and_draws_wires_beside_it(built: An
 
 
 def test_no_wire_is_drawn_inside_a_cable_box(built: Any) -> None:
-    """Acceptance 10: a wire's column is clear of every cable box, and its line runs the band.
+    """A wire's column is clear of every cable box, and its line runs the band.
 
     The upper run starts above the box band and the two runs meet at the band's bottom edge, so
     the line is one piece through the band. Mutation: `_spans` giving the wires' columns to a

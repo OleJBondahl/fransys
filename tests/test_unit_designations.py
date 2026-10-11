@@ -1,7 +1,7 @@
 """Short designations (owner ruling, generalising I4 R2): on a page of a unit's own drawing
 set a component's tag prints its item designation only, below the unit's sole root ("-K1",
 "-X2"); the page already states the location, unit and groups. The top-level set prints the
-same short form (D12 amended, layout-0066). Probed on the units worked example (two pump
+same short form (layout-0066). Probed on the units worked example (two pump
 cabinets at +ER, each with one I/O board unit). `own_nodes` (R2) still decides a unit's own
 aspects for its exports.
 
@@ -47,7 +47,7 @@ def _tag_texts_by_set():
 def test_the_board_units_own_set_prints_item_designations_below_its_root() -> None:
     """The board `A1` is the unit's sole root and the page states its aspects: "-K1", not
     "=BRD-K1" or "=BRD+ER+C1-A1-K1". `X1` is one connector box whose designation line is
-    the short form too, less the root: "-X1". HL6 (layout-0155): `X1` is at a harness line's end."""
+    the short form too, less the root: "-X1". `X1` is at a harness line's end (layout-0155)."""
     assert _tag_texts_by_set()["demo-io-board"] == {"-K1"}
     model = _build_system()[0].model
     pages, sets = layout_of(model, Page), layout_of(model, DrawingSet)
@@ -58,15 +58,15 @@ def test_the_board_units_own_set_prints_item_designations_below_its_root() -> No
             continue
         lines = connector_box_lines(model, box.function, unit=unit)
         assert len(box.texts) == len(lines)
-        assert box.cells == ()  # a unit interface box has no cells (HL5)
+        assert box.cells == ()  # a unit interface box has no cells
         designations.append(lines[0])
     assert designations == ["-X1", "-X1"]  # one box in each of the two board sets
 
 
 def test_a_cabinets_own_set_and_the_top_level_print_no_aspect() -> None:
     """A cabinet's own set prints "-X2", no "+C1" and no "+ER"; the top-level set prints the
-    item designation only too, "-X2" and "-M1", no "+ER+C1" and no "=FLD+FLD" (D12 amended,
-    layout-0066: the owner's rule has no top-level exception)."""
+    item designation only too, "-X2" and "-M1", no "+ER+C1" and no "=FLD+FLD"
+    (layout-0066: the owner's rule has no top-level exception)."""
     texts = _tag_texts_by_set()
     cabinet = texts["demo-pump-cabinet"]
     assert "-X2" in cabinet

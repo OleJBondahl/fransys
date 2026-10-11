@@ -1,4 +1,4 @@
-"""CUT-END part 3 probe: a declared net over a boundary function's replica page.
+"""A probe: a declared net over a boundary function's replica page.
 
 A unit `ua` holds a boundary connector `f` and a peer `g` (both group GA); a top-level connector
 `h` (group GT) stands beside them. A declared net `n` joins `f.1`, `g.1` and `h.1`, so its ports'

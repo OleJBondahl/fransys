@@ -167,7 +167,7 @@ def test_the_builders_write_only_their_own_kinds_never_a_route() -> None:
 
 
 def test_a_stub_writes_one_end_record_per_far_end_in_list_order() -> None:
-    """STUB-POSITIONS P1: a placed end keeps its page and x, y; one drawn nowhere keeps none."""
+    """A placed end keeps its page and x, y; one drawn nowhere keeps none."""
     sets, page_of = _world()
     ends = (
         FarEnd(port=FAR, page=2, x=24, y=40),

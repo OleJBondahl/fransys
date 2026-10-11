@@ -1,4 +1,4 @@
-"""UT1, UT3, UT5: `d.add` takes a bare tag or `None` with `name=`; `class_code` is kept."""
+"""`d.add` takes a bare tag or `None` with `name=`; `class_code` is kept."""
 
 from typing import NamedTuple
 

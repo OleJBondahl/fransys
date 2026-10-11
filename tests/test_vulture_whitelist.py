@@ -1,8 +1,8 @@
 """`whitelist.py` and `pyproject.toml`'s `[tool.vulture].ignore_names`: every entry still
 defined, every entry carries its reader-class reason, and the entry count never exceeds a
-shrink-only ceiling (VULTURE-60, decision 0050).
+shrink-only ceiling (decision 0050).
 
-"Still defined" is class-aware (FIX1): OTHER and TESTS entries cite one real reader `file:line`
+"Still defined" is class-aware: OTHER and TESTS entries cite one real reader `file:line`
 -- the specific site whose literal `obj.attr`/call syntax is the whole proof the name is used --
 so staleness is checked there and only there: the name must still be spelled (as vulture itself
 matches, by bare identifier, not only where first defined) inside that one cited file. A
@@ -20,13 +20,13 @@ workspace-wide "still defined somewhere under packages/*/src" check.
 `packages/*/src`; since it became an external, pinned, unscanned dependency none of the 15
 resolves in `packages/*/src` any more, and none is this order's to fix (root `pyproject.toml`).
 `_LEGACY_IGNORE_NAMES` names them so the "still a real enum member" check below applies only to
-whatever is added beyond them -- today, nothing (the ROOT-LINES hand-back adds 51 more; until
+whatever is added beyond them -- today, nothing (the hand-back adds 51 more; until
 that lands, every check on `ignore_names` here is vacuously true, proven able to fail by the
 probes instead, on a patched copy).
 
-`IGNORE_NAMES_CEILING` is set to 66 (15 legacy + the 51 ROOT-LINES adds), not today's real count
-of 15: the shrink-only rule (Part 3c) only ever lowers a ceiling, so its initial value has to be
-the one it settles at the moment ROOT-LINES lands, not a number a later, non-root-owned commit
+`IGNORE_NAMES_CEILING` is set to 66 (15 legacy + the 51 adds), not today's real count
+of 15: the shrink-only rule only ever lowers a ceiling, so its initial value has to be
+the one it settles at the moment those 51 names land, not a number a later, non-root-owned commit
 would need to raise.
 """
 
@@ -48,27 +48,27 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # Today's count (this branch), shrink-only: lowered as entries are removed, never raised except
 # by adding real, reasoned entries.
 # 90 + ConductorKind.MOUNT and Scope.link (links order, ruling), each with its reader
-# + cross_section_mm2 (WIRE-LIST) + LabelKind.WIRE (WIRE-LIST-2: model twin, tests)
-# + four F8 data-only fields (nominal_power_w, nominal_current_a, power_loss_w, resistance_ohm)
-# + F9: PoleSide.LINE, six ConductorMark members, pole_side and conductor_mark (POLE-SIDES)
-# + two EF-B first-half names (default_symbol, pole_order), wired by EF-B part 2
+# + cross_section_mm2 + LabelKind.WIRE (model twin, tests)
+# + four data-only fields (nominal_power_w, nominal_current_a, power_loss_w, resistance_ohm)
+# + PoleSide.LINE, six ConductorMark members, pole_side and conductor_mark
+# + two first-half names (default_symbol, pole_order), wired by the second half
 # + five ProtectionType members (model-0127), read by value in the loader and by tests
-# + four EA-SERIES surface calls: series, parallel, ac_supply, dc_supply
-# - `design` (EA-SWAP), + Fn.limits (author-0017 O4), + _.port_pairs (BOX-OVER-GROUP): net 138
+# + four surface calls: series, parallel, ac_supply, dc_supply
+# - `design`, + Fn.limits (author-0017 O4), + _.port_pairs: net 138
 # + Profile.hide_unused_pins (model-0136 removed the model's own read; layout reads it): net 139
 # decision 0115: the count leaves out an OTHER entry that cites a reader in another package
-# (148 entries at CT5-2, of which 36 are cross-package OTHER)
-# - nominal_current_a (RATINGS-3 `draw` reads it): one fewer counted entry
-# + _.dashed (BD-3: render defines its own dashed params, so 0115's cross-package exemption
+# (148 entries, of which 36 are cross-package OTHER)
+# - nominal_current_a (`draw` reads it): one fewer counted entry
+# + _.dashed (render defines its own dashed params, so 0115's cross-package exemption
 # does not apply)
 # 112: _.dashed read by fransys-render/_diagram_boxes.py; render defines its own `dashed`
 # (owner 2026-10-07: ceilings may rise; cleanup round 2026-10-08 lowers)
-# +1: CableBlock.pitch read only by layout tests (CELL-WIDTH); owner 2026-10-07: ceilings may
+# +1: CableBlock.pitch read only by layout tests; owner 2026-10-07: ceilings may
 # rise; cleanup round 2026-10-08 lowers
-# +1: Design.rack read only by author tests (HA-B B6); owner 2026-10-07: ceilings may rise;
+# +1: Design.rack read only by author tests ; owner 2026-10-07: ceilings may rise;
 # cleanup round 2026-10-08 lowers
 WHITELIST_CEILING = 114
-IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 ROOT-LINES names + 4 layout-0111 enum members
+IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(
     {

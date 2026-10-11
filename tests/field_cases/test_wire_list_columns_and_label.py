@@ -9,7 +9,7 @@ The bug: the export was the wire-label CSV, `wire-labels.csv`, with the columns 
 only what the author typed (`None` when none was). The builder needs `from`, `to`, `colour`,
 `cross_section_mm2` and a `label` that reads from-to, as `-B12:96 -Q11:A1`.
 
-Decision 0092 (the owner's answers in CONVENTIONS-V06 V8): `wires.csv` with those five columns, one
+Decision 0092 (the owner's answers): `wires.csv` with those five columns, one
 row per wire, the label being both end designations with one space between.
 """
 

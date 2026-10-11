@@ -31,8 +31,8 @@ ITEMS_PER_INSTANCE = 9  # X2 strip, 2 terminals, board, X1, K1, harness, P1, cab
 @pytest.mark.parametrize("n", [2, 3])
 def test_the_units_and_items_are_exact_in_n(n):
     # with_document=True: this test's own ERROR-absence check below would otherwise miss any
-    # layout-only ERROR (e.g. SYMBOL_PORT_MISSING) since decision 0037 (PS1) never runs layout
-    # without one; build_scale's own default stays document-free (acceptance 6).
+    # layout-only ERROR (e.g. SYMBOL_PORT_MISSING) since decision 0037 never runs layout
+    # without one; build_scale's own default stays document-free.
     result = build_scale(n, with_document=True)
     model = result.model
     assert len(units(model)) == 1 + UNITS_PER_INSTANCE * n

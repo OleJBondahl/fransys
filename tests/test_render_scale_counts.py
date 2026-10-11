@@ -1,6 +1,6 @@
 """The render count test: no render code object grows by more than 2.5x when the scale doubles.
 
-RW3 (render-0006). `count_render` (tests/scale_counter.py, the harness the layout count test
+Decision render-0006: `count_render` (tests/scale_counter.py, the harness the layout count test
 shares) counts calls, generator resumes and loop iterations per `fransys_render` code object
 in `pages(model)` on `build_scale(8)` and `build_scale(16)`; a code object whose count grows by
 more than 2.5x with count(16) >= 100 is flagged. Ratios only, never exact counts; no wall time.

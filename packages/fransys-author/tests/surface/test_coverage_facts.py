@@ -1,4 +1,4 @@
-"""EA-COVERAGE P2 facts: each call writes or reads exactly what the engine call does."""
+"""Coverage facts: each call writes or reads exactly what the engine call does."""
 
 from decimal import Decimal
 
@@ -98,7 +98,7 @@ def test_limits_without_a_value_raises_use_interface_true(parts: Draft) -> None:
 def _in_unit(parts: Draft):
     d = design(parts)
     root = d._engine
-    d._engine = d._engine.unit("io", revision=1, interface="1")  # ty: ignore[invalid-assignment] -- test-only seam until EA-UNITS-RUNS
+    d._engine = d._engine.unit("io", revision=1, interface="1")  # ty: ignore[invalid-assignment] -- test-only seam until that pending work lands
     return root, _boundary_fn(d)
 
 

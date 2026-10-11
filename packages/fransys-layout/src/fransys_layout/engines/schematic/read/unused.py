@@ -2,7 +2,8 @@
 
 An unwired contact is never drawn (layout-0112): it is a spare, listed in its coil's table. With
 `hide_unused_pins`, any other spare function (`derive.function_is_unused`) is left off too, and a
-box-drawn function drops its unused ports (`derive.port_is_unused`). IEC symbols keep their fixed
+box-drawn function drops its unused ports (`derive.port_is_unused`), but a boundary box whose
+every port is spare keeps them (layout-0139). IEC symbols keep their fixed
 pins, and connector pin views keep their own rule. A unit's boundary function is never
 a spare (layout-0139): its replica column needs its spec.
 """
@@ -44,7 +45,8 @@ def without_unused(
             spares.append(spec)
         elif hide and spec.pin_function is None and box_drawn(spec, table, index):
             kept = tuple(ref for ref in spec.ports if not port_is_unused(model, ref.port))
-            drawn.append(dataclasses.replace(spec, ports=kept))
+            # A boundary box with every port spare keeps them: no port, nothing to place
+            drawn.append(dataclasses.replace(spec, ports=kept) if kept else spec)
         else:
             drawn.append(spec)
     return tuple(drawn), tuple(spares)

@@ -1,4 +1,4 @@
-"""D2 and D15 (layout deep dive): wires route in drawn order, never in handle order.
+"""Wires route in drawn order, never in handle order.
 
 Two identical coil columns on `examples/demo-parts`: a feed terminal, a breaker, a carrier relay
 coil, a side relay coil strapped to it (D2), and a zero terminal. The long wire runs from the
@@ -97,7 +97,7 @@ def _relative(points: tuple[Point, ...], origin: Point) -> tuple[Point, ...]:
 
 
 def test_the_long_wire_of_a_side_element_net_runs_on_the_carriers_lane() -> None:
-    """D2, D15: in both columns the long wire runs down the carrier's lane, drawn the same way.
+    """In both columns the long wire runs down the carrier's lane, drawn the same way.
 
     The handles of the two columns' wires sort opposite ways, so a handle-ordered router draws
     the long wire first in one column and second in the other, and the two columns differ.
@@ -132,7 +132,7 @@ def _routes(model: Model) -> dict[tuple[tuple[tuple[str, ...], str], ...], tuple
 
 
 def test_renaming_a_conductors_authoring_key_leaves_every_route_byte_identical() -> None:
-    """D15: a conductor's key feeds only its handle, so renaming one moves no route.
+    """A conductor's key feeds only its handle, so renaming one moves no route.
 
     Column 1's long wire is renamed with `n=`; its handle then sorts after its join, where it
     sorted before, and a handle-ordered router draws the column the other way round.

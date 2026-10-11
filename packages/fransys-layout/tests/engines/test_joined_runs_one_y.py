@@ -1,10 +1,10 @@
-"""S12: every run `references` joined lands on one y, on the goldens and the fixtures.
+"""Every run `references` joined lands on one y, on the goldens and the fixtures.
 
 `place` aligns each joined run (`place._align_joins`) on the stacking `references` decided it on
 (`place.page_stack`), so it never refuses one. The goldens (the cabinet on the house sheet and on
 its 158 mm sheet) join no run today, and neither do the example or a field case; the fixtures
 that do carry the proof: a feed fanning to three breakers (the feed XA:1 beside Q3, both N at
-their columns' tops: LD9's feeds along the top), the same breakers daisy-chained (level runs
+their columns' tops: the feeds along the top), the same breakers daisy-chained (level runs
 between neighbours), and a strip of 8 terminals wired in a chain (its single-terminal columns
 joined along their tops). Measured over every engine run of the layout and root suites on
 2026-09-27: 68 joined runs in 43 runs, every one on one y.
@@ -67,7 +67,7 @@ def test_every_joined_run_lands_on_one_y(case: str) -> None:
     (`_results`), since no other test of this package lays the cabinet out on the house sheet
     through a shared cache.
     """
-    # CAN-FAIL (S12's own): stages/place.py `place`: drop the `_align_joins(...)` call (`place`
+    # CAN-FAIL: stages/place.py `place`: drop the `_align_joins(...)` call (`place`
     #     then aligns nothing): the feed fanning's XA:1 - Q3:1 (8 G apart) and the terminal
     #     chain's columns (72 G apart) no longer land on one y
     ys = _port_ys(_results(case))

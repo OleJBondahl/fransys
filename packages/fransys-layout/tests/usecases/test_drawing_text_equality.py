@@ -1,12 +1,12 @@
-"""D2 equality: the stage's measured text equals the model's own reader (decision layout-0037).
+"""Equality: the stage's measured text equals the model's own reader (decision layout-0037).
 
 Proves `fransys_model.derive.drawing_text`'s readers reproduce, from the persisted
 `layout.*` records of a laid-out model alone, the text `fransys_layout` measured when it
 sized a label's slot or a marker's box.
 
-The wide cabinet golden (`tests/golden/cabinet_laid_out.json`, ROADMAP WP14) has no severed
-cut, so none of its markers comes from `links`; under the deep dive it does hold D9 star
-markers and D7 `CROSS_REFERENCE` labels (each contact's line and each coil's contact image).
+The wide cabinet golden (`tests/golden/cabinet_laid_out.json`) has no severed
+cut, so none of its markers comes from `links`; under the current rules it does hold star
+markers and `CROSS_REFERENCE` labels (each contact's line and each coil's contact image).
 Its marker and cross-reference counts are asserted explicitly. `label_text`'s TAG and MARKING
 branches are checked against the exact text the stage measured for each label's box,
 and the D7 labels against the positions of the coil and its contacts, read from the persisted
@@ -80,7 +80,7 @@ if TYPE_CHECKING:
 # requires: a width that gives all three required contents at once (a severed cut, a
 # `CROSS_REFERENCE` label, a net-group cut). 158, not the original 150: model-0040
 # draws board `A1`'s `edge` connector, which shifts where this cabinet splits;
-# 158 is the narrowest width that still gives all three (Q4, measured at 1 mm resolution),
+# 158 is the narrowest width that still gives all three (measured at 1 mm resolution),
 # and it is well within the 118-171 mm band `fransys-render`'s tests need (they load this
 # package's golden by path and hardcode a marker position and a page count; model-0040 has
 # the measured table); see `test_usecases.py`'s own `_NARROW_WIDTH_MM`, duplicated here, for
@@ -113,24 +113,24 @@ def regenerate(request: pytest.FixtureRequest) -> bool:
     return bool(request.config.getoption("--regenerate-golden"))
 
 
-# The wide golden's TAG + MARKING label count (WP14's cabinet): checked explicitly so
+# The wide golden's TAG + MARKING label count: checked explicitly so
 # a change to the fixture's shape fails this test loudly instead of silently checking fewer
-# labels. 66 = 40 + 26, counted from the fixture (no wire label stands on a page, V8):
-# - MARKING 40: every port of a drawn non-terminal function (D5 shows every port of the
+# labels. 66 = 40 + 26, counted from the fixture (no wire label stands on a page):
+# - MARKING 40: every port of a drawn non-terminal function (the box shows every port of the
 #   lamp's box): S0 4, K1 10, K2 10, Q1/Q2/S1/S2 2 each, F1 2, H1 2, K8 4. Board `A1`'s idle
-#   `edge` connector is not drawn (D8).
+#   `edge` connector is not drawn.
 # - TAG 26: one per drawn non-terminal function (F1, H1, K1 x3, K2 x3, K8 x2, Q1, Q2, S0 x2,
 #   S1, S2 = 16) and one per terminal on each page it stands on (X1:1, X1:2, X1:3, X2:1 x2,
 #   X3:1, X3:2, X4:1 x2, X4:2 = 10).
 _EXPECTED_TAG_MARKING_COUNT = 66
 
 # The wide golden's markers and CROSS_REFERENCE labels. Six markers: one line stub and five star
-# markers. HL1 draws `W1` (rails to the lamp `-H1`) as a line, which leaves page 1 in its one stub
-# (HL18). The 24 V net keeps four ports (`X2:1` external and the three stop-button ports 11): two
-# branches (S0's pin has `X2:1` over it, V4) and the reference on page 1; and a
-# turned pair (M12, `references.turned`): K1's aux port 13 faces N and its link to `S0:nc_2:22`
+# markers. `W1` (rails to the lamp `-H1`) is drawn as a line, which leaves page 1 in its one stub
+# The 24 V net keeps four ports (`X2:1` external and the three stop-button ports 11): two
+# branches (S0's pin has `X2:1` over it) and the reference on page 1; and a
+# turned pair (`references.turned`): K1's aux port 13 faces N and its link to `S0:nc_2:22`
 # runs to a device below K1's bottom edge, so it is a reference pair, `S0:nc_2:22` the
-# reference and K1:aux:13 the branch. Eight CROSS_REFERENCE labels (D7): a line under each of
+# reference and K1:aux:13 the branch. Eight CROSS_REFERENCE labels: a line under each of
 # the five contacts (K1 main and aux, K2 main and aux, K8 no_1) and a contact image under each
 # of the three coils.
 _EXPECTED_WIDE_MARKER_COUNT = 6
@@ -139,19 +139,19 @@ _EXPECTED_WIDE_CROSS_REFERENCE_COUNT = 8
 
 # The narrow golden's (158 mm) marker counts, checked explicitly for the same reason (spec
 # X5's "never iterated silently"): two severed markers (one cut, K1:14 to K2:13, a marker at
-# either end) and two D9 star markers (the branch `S1`, `S0` has `X2:1` over its pin (V4), and
-# the reference on page 1; HL1 takes the lamp `H1` off the star, `W1` is a line whose two leaving
-# ends are two line stubs, HL18), and two more star markers, the turned
-# pair of the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux stands on page 1 (layout-0049,
-# D2) above S0's contact, so the link from K1's N pin runs to a device below it and is a
-# reference pair (M12, `references.turned`), not a wire and not a cut.
+# either end) and two D9 star markers (the branch `S1`, `S0` has `X2:1` over its pin, and
+# the reference on page 1; the lamp `H1` comes off the star, `W1` is a line whose two leaving
+# ends are two line stubs), and two more star markers, the turned
+# pair of the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux stands on page 1 (layout-0049)
+# above S0's contact, so the link from K1's N pin runs to a device below it and is a
+# reference pair (`references.turned`), not a wire and not a cut.
 _EXPECTED_NARROW_SEVERED_MARKER_COUNT = 2
 _EXPECTED_NARROW_MARKER_COUNT = 6
 _EXPECTED_NARROW_LINE_STUB_COUNT = 2
-# ... and the same eight D7 CROSS_REFERENCE labels as the wide golden.
+# ... and the same eight CROSS_REFERENCE labels as the wide golden.
 _EXPECTED_NARROW_CROSS_REFERENCE_COUNT = 8
 
-# D7, per coil item of the cabinet: its contacts, in the order the image lists them (main
+# Per coil item of the cabinet: its contacts, in the order the image lists them (main
 # contacts first), each with the pin pairs of its terminals ("1-2" is ports 1 and 2). Read
 # from the fixture's parts: the contactor's `main` has ports 1-6, its `aux` 13-14; the relay's
 # `no_1` 13-14; every contact is normally open, so the images have no NC entry.
@@ -205,9 +205,9 @@ def _narrow_sheet_draft() -> Draft:
 def _placed_position(model: Model, inputs: StageInputs, function: Id[Any], reader: Id[Any]) -> str:
     """`function`'s one placement as `reader` prints it: the cell on its page, else `p<n>:<cell>`.
 
-    The position D7 puts on a contact's cross-reference line and in a coil's contact image.
-    Built from the record's page number, x and y with the three shared pure formatters
-    (LD5), not from a reader that takes a label.
+    The position given to a contact's cross-reference line and in a coil's contact image.
+    Built from the record's page number, x and y with the three shared pure formatters,
+    not from a reader that takes a label.
     """
     placements = layout_of(model, SymbolPlacement).values()
     (placement,) = (one for one in placements if one.function == function)
@@ -221,13 +221,13 @@ def _placed_position(model: Model, inputs: StageInputs, function: Id[Any], reade
 
 
 def _check_contact_references(model: Model, inputs: StageInputs, layout: Layout) -> None:
-    """D7, on the persisted labels: each contact's line and each coil's contact image.
+    """On the persisted labels: each contact's line and each coil's contact image.
 
     The reader's text of a contact's `tag` CROSS_REFERENCE label is its coil's position, and
     of a coil's `contacts` label the "NO | NC" table with one "<pins> <position>" row per
     contact pin pair, main contacts first. Each image's stage box (`layout.labels`, what the
     stage reserved) is as wide as twice its widest measured cell plus the marker padding on
-    both sides, and as high as a header, its rows and three paddings: the D2 equality for a
+    both sides, and as high as a header, its rows and three paddings: the equality for a
     text the reader rebuilds from the model.
     """
     function_of = {"/".join(record.key): i for i, record in model.tables["function"].items()}
@@ -266,7 +266,7 @@ def _check_contact_references(model: Model, inputs: StageInputs, layout: Layout)
 def test_tag_and_marking_label_text_matches_what_the_stage_measured() -> None:
     """For every TAG and MARKING label of the golden, the reader's text is the stage's.
 
-    The D7 CROSS_REFERENCE labels are checked by `_check_contact_references`; the D9 star
+    The CROSS_REFERENCE labels are checked by `_check_contact_references`; the star
     markers, all of the golden's markers, are counted here and their text is checked on the
     narrow golden, the one that also has severed cuts.
     """
@@ -354,13 +354,13 @@ def _narrow_layout(
         if plan.location is not None
     }
     units = {plan.drawing_set: plan.unit for plan in layout.pages}
-    # The engine draws a D9 star net by its markers and drops its conductors
+    # The engine draws a star net by its markers and drops its conductors
     # before `cuts` (stages/references/nets.py, `without_starred`, `dropped`):
     # a conductor with a star marker at both ends is a star's. This filter is
     # a second copy of the engine's star drop; one home would need the engine
     # to expose its pruned inputs (noted for the functional-core package).
     # Left in, a star reference that stands on another page than a branch
-    # (D7 moved `X2:1` to page 2) makes `cuts` cut it, and the re-run no
+    # (the move of `X2:1` to page 2) makes `cuts` cut it, and the re-run no
     # longer reproduces the engine's own markers.
     star_ports = {marker.port for marker in layout.markers if marker.star}
     connections = tuple(c for c in inputs.connections if not {c.a.port, c.b.port} <= star_ports)
@@ -384,12 +384,12 @@ def _narrow_layout(
 def _expected_line_count(stage_marker: StageLinkMarker, profile: StageProfile) -> int:
     """The number of text lines the stage reserved room for, from its own box alone.
 
-    S20 M1, M3: a vertical box is the horizontal one turned, so its lines stand side by side
+    A vertical box is the horizontal one turned, so its lines stand side by side
     across its width, and a horizontal box stacks them down its height; either way the
     thickness is `lines * profile.text_height + 2 * marker_padding`.
-    Layout builds no marker text at all (D4): `marker_text` prints every line at
+    Layout builds no marker text at all: `marker_text` prints every line at
     read time from the persisted records, so there is no literal stage-built text left to
-    compare word for word (the D2 equality this module otherwise proves). The stage's own
+    compare word for word (the equality this module otherwise proves). The stage's own
     line count is still exactly recoverable from its box, so the agreement is checked
     by count instead: a disagreement here means derive printed a different number of lines
     than the box the stage built has room for, a merged stub's extra line included.
@@ -402,8 +402,8 @@ def test_marker_text_line_count_matches_the_stage_reserved_box_on_the_narrow_gol
     *, regenerate: bool, normalized: Callable[[Model], Model]
 ) -> None:
     """For every `layout.link_marker` of the narrow golden, `marker_text`'s line count matches
-    the box height the stage reserved for it (D2 equality, mechanical: see
-    `_expected_line_count`) -- the one severed cut and the D9 star markers (branch and
+    the box height the stage reserved for it (equality check, mechanical: see
+    `_expected_line_count`) -- the one severed cut and the star markers (branch and
     reference), none a per-core off stub in this fixture; `W1`'s line stubs print one line.
     Every reference line of one marker shares one `#<n>-` prefix.
     """
@@ -426,7 +426,7 @@ def test_marker_text_line_count_matches_the_stage_reserved_box_on_the_narrow_gol
     line_stubs = 0
     for marker in layout_of(model, LinkMarker).values():
         if marker.key[3] == "line_stub":
-            # HL18: no stage marker; one line of text, no reference (C1)
+            # No stage marker; one line of text, no reference.
             assert "\n" not in marker_text(model, marker)
             assert not marker_text(model, marker).startswith("#")
             line_stubs += 1
@@ -451,7 +451,7 @@ def test_cross_reference_label_text_matches_the_stage_request_on_the_narrow_gold
 ) -> None:
     """For every `CROSS_REFERENCE` label of the narrow golden, the reader's text is the stage's.
 
-    Under D7 these are the contact lines and the contact images, each checked against the
+    These are the contact lines and the contact images, each checked against the
     positions of the coil and its contacts (`_check_contact_references`, the same check the
     wide golden gets). The tag echo of the K8 `LATCH` net group is gone: `links` finds no net
     group cut, so it has no `CROSS_REFERENCE` request to compare (asserted below).

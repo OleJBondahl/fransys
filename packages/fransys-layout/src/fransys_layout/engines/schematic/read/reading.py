@@ -38,6 +38,7 @@ from fransys_model.layout import Chain as ModelChain
 from fransys_model.layout import GroupHint as ModelGroupHint
 from fransys_model.layout import KeepTogether as ModelKeepTogether
 from fransys_model.layout import OrderHint as ModelOrderHint
+from fransys_model.layout import Profile as ModelProfile
 from fransys_model.layout import SheetFormat as ModelSheetFormat
 from fransys_model.layout import SymbolChoice as ModelSymbolChoice
 from fransys_model.layout import layout_of, profile_of
@@ -156,7 +157,7 @@ def rails(model: Model) -> tuple[Rail, ...]:
 
 
 def chains(model: Model) -> tuple[Chain, ...]:
-    """Every authored `layout.chain`, sorted by key."""
+    """Every authored `layout.chain`, sorted by key, with its `beside` host."""
     return tuple(
         sorted(
             (
@@ -167,6 +168,7 @@ def chains(model: Model) -> tuple[Chain, ...]:
                         ChainEntry(function=entry.function, index=entry.index)
                         for entry in chain.entries
                     ),
+                    beside=chain.beside,
                 )
                 for chain in layout_of(model, ModelChain).values()
             ),
@@ -299,9 +301,11 @@ def page_hints(model: Model) -> PageHints:
     )
 
 
-def profile_and_sheet(model: Model) -> tuple[Profile, SheetFormat, Id[Any] | None]:
-    """The model's profile (`profile_of`), the `layout.sheet_format` it names and that id."""
-    profile = profile_of(model)
+def profile_and_sheet(
+    model: Model, unit: Id[Any] | None = None
+) -> tuple[Profile, SheetFormat, Id[Any] | None]:
+    """The profile of `unit` (`profile_of`; `None`: the top), the sheet it names and that id."""
+    profile = profile_of(model, unit)
     if profile.sheet_format is None:
         return to_stage_profile(profile), DEFAULT_SHEET, None
     sheet_record = layout_of(model, ModelSheetFormat)[profile.sheet_format]
@@ -315,9 +319,12 @@ def profile_and_sheet(model: Model) -> tuple[Profile, SheetFormat, Id[Any] | Non
     return to_stage_profile(profile), sheet, profile.sheet_format
 
 
-def unused_sheet_formats(model: Model, used: Id[Any] | None) -> tuple[Id[Any], ...]:
-    """The id of every authored `layout.sheet_format` other than `used`, sorted."""
-    return tuple(sorted(handle for handle in layout_of(model, ModelSheetFormat) if handle != used))
+def unused_sheet_formats(model: Model) -> tuple[Id[Any], ...]:
+    """The id of every authored `layout.sheet_format` no profile, the top's or a unit's, names."""
+    used = {one.sheet_format for one in layout_of(model, ModelProfile).values()}
+    return tuple(
+        sorted(handle for handle in layout_of(model, ModelSheetFormat) if handle not in used)
+    )
 
 
 def _connection(model: Model, indexes: Indexes, conductor: Conductor) -> Connection:

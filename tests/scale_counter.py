@@ -1,6 +1,7 @@
 """Execution counts of `fransys_layout` and `fransys_render` code on the scale fixture.
 
-One harness for both counts: D10's Check (layout-0086) and RW3 (render-0006). `count_render(n)`
+One harness for both counts: the layout check (layout-0086) and the render count
+(render-0006). `count_render(n)`
 counts `fransys_render.pages` on `build_scale(n, with_document=True)`, no pass normalisation.
 
 `count_build(n)` runs `build_scale(n)` under stdlib `sys.monitoring` and counts, per code object of
@@ -11,7 +12,7 @@ the stack are divided by the number of such calls (a "pass"); events outside a p
 
 Stated limit: a C-level scan (`x in a_tuple`, `sorted`) is seen only through a Python callee.
 
-`build_scale`'s own default stays document-free (MODEL-BUILD acceptance 6); decision 0037 (PS1)
+`build_scale`'s own default stays document-free; decision 0037
 gates layout on a document, so counting real `fransys_layout` calls needs
 `build_scale(n, with_document=True)` instead -- this module's own build, never `build_scale`'s
 default.

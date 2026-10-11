@@ -1,4 +1,4 @@
-"""EA15 on the facade: ids after a build, subjects by handle or release name, the exports."""
+"""On the facade: ids after a build, subjects by handle or release name, the exports."""
 
 from typing import Any, NamedTuple
 

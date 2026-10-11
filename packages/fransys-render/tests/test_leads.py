@@ -219,7 +219,7 @@ def _local(local_x, local_y, *, placement):
     return placement.x + to_grid(local_x), placement.y + to_grid(local_y)
 
 
-# --- Acceptance 3: a terminal wired on N only draws one circle, one lead -----------------------
+# --- A terminal wired on N only draws one circle, one lead -----------------------
 
 
 def test_acceptance_3_terminal_wired_on_n_only_draws_one_circle_one_lead():
@@ -317,7 +317,7 @@ def test_a_link_marker_on_the_port_draws_its_lead():
 
 
 def test_a_fan_out_leg_ending_on_the_port_draws_its_lead():
-    """HL17, layout-0158: a harness line's leg ends on its pin as a wire does, so the lead draws."""
+    """layout-0158: a harness line's leg ends on its pin as a wire does, so the lead draws."""
     drawing_set = _drawing_set("fl")
     sheet = _sheet_format("fl")
     page = _page("fl", drawing_set=drawing_set, sheet_format=sheet)

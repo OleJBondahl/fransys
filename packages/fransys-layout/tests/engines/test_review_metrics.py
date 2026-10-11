@@ -1,4 +1,4 @@
-"""The review metrics on the invented cabinet (deep dive F7, decision layout-0047).
+"""The review metrics on the invented cabinet (decision layout-0047).
 
 All five metrics are findings: `OUT_OF_CONTENT_BOX` (texts outside), `WIRE_OVER_LABEL` and
 `TEXT_CROSSED_BY_ROUTE` (crossed texts), `LONE_CELL` and `CHAIN_BROKEN` (stranded cells, cut
@@ -139,7 +139,7 @@ def test_known_engine_defect_a_chain_cut_between_two_one_cell_columns(
     internal link, so this is a genuine D1 chain link, confirmed under the tightened
     `CHAIN_BROKEN` (a false positive would have dropped out once the check reads pole ports
     instead of kind). At 190 mm the `nc_2` of the `es` column is a second such partner of
-    `-K1` `aux`; deep-dive D2's column order puts the two columns side by side, so the group
+    `-K1` `aux`; the column order puts the two columns side by side, so the group
     split no longer cuts that pair (`tests/engines/test_pole_link_split.py`). D1 makes each pair one
     chain; the page split puts the two on different pages and severs the wire between them into
     a marker pair. Delete this test when the engine keeps such a pair's column whole across the

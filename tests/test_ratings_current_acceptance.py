@@ -1,4 +1,4 @@
-"""RATINGS-2 acceptance 1: the worked example through the real parts loader (model-0088).
+"""The worked example through the real parts loader (model-0088).
 
 A battery string (`DEMO-STRING-864V`, 186 A continuous), a partial-range fuse (`DEMO-FUSE-ABAT`,
 400 A) and a DC contactor pole (`DEMO-CONTACTOR-DC`, 150 A) on each pole, ending at an external

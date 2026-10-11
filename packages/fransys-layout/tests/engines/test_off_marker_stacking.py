@@ -1,4 +1,4 @@
-"""EF-C part 6 review (layout-0057): the n-th stub of one port stands n boxes out, counting the
+"""A fix (layout-0057): the n-th stub of one port stands n boxes out, counting the
 markers the port already carries and the stubs before it, so no two boxes of one port overlap.
 
 Can-fail, checked by hand: `stages/references/off_stubs.py` `off_markers` shifting a busy row by

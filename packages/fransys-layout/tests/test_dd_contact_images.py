@@ -1,4 +1,4 @@
-"""F5-C: undo tests for D7 (contact images) and D14 (their anchoring).
+"""Undo tests for contact images and their anchoring.
 
 A coil's contact image is a `CROSS_REFERENCE` label with slot "contacts"; its text is read with
 `label_text`, its box is rebuilt from that text with the same measurement the engine uses.
@@ -52,7 +52,7 @@ def _relays() -> Model:
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(
-        title="F5-C",
+        title="Contact images",
         number="P-5",
         customer="Example Co",
         revision=1,
@@ -140,11 +140,11 @@ def _lane_x(coil: SymbolPlacement) -> int:
     return coil.x + _geometry(coil).ports[0].at.x
 
 
-# ---- D7: the image's content ---------------------------------------------------------------
+# ---- The image's content ---------------------------------------------------------------
 
 
 def test_the_cabinet_coil_lists_every_contact_with_where_it_is_drawn() -> None:
-    """D7: NO | NC columns, one entry per contact pair "1-2 /1.3", main contacts before aux."""
+    """NO | NC columns, one entry per contact pair "1-2 /1.3", main contacts before aux."""
     # UNDO: fransys_model/derive/drawing_text.py contact_image: sort `no` descending, or
     # drop the `where` from the entry text.
     model = _cabinet()
@@ -159,7 +159,7 @@ def test_the_cabinet_coil_lists_every_contact_with_where_it_is_drawn() -> None:
 
 
 def test_a_changeover_contact_is_listed_in_both_columns() -> None:
-    """D7: a 2CO relay's contact 11 appears as 11-14 under NO and 11-12 under NC."""
+    """A 2CO relay's contact 11 appears as 11-14 under NO and 11-12 under NC."""
     # UNDO: fransys_model/derive/drawing_text.py contact_image, CONTACT_CO branch: append
     # only to `no` (drop the `nc.append`).
     model = _relays()
@@ -178,7 +178,7 @@ def test_a_changeover_contact_is_listed_in_both_columns() -> None:
 
 
 def test_each_contact_cross_reference_line_carries_its_coils_position() -> None:
-    """D7: the contact's own line under its tag names the coil's page and column."""
+    """The contact's own line under its tag names the coil's page and column."""
     # UNDO: stages/images.py `contact_images`: `RequestPartner(... x=home[s.function]
     # .at.x)` instead of `at.at.x` (label_text reads the partner x, not the request `text=`).
     for model, tag, functions_of in (
@@ -212,7 +212,7 @@ def _centre_cell(model: Model, placement: SymbolPlacement, reader: SymbolPlaceme
 
 
 def test_a_contacts_partner_text_names_the_cell_of_the_coils_drawn_body_centre() -> None:
-    """RR-O5-FIX: the contact's coil position is the frame cell holding the coil body's centre."""
+    """The contact's coil position is the frame cell holding the coil body's centre."""
     # UNDO: derive/drawing_text.py `_partner_row`: `placement.y + 142` (one row down) fails the
     # cabinet K1 and the relays K1, K2.
     checked = 0
@@ -236,11 +236,11 @@ def test_a_contacts_partner_text_names_the_cell_of_the_coils_drawn_body_centre()
     assert checked == 6
 
 
-# ---- D7: where the image stands ---------------------------------------------------------------
+# ---- Where the image stands ---------------------------------------------------------------
 
 
 def test_images_of_one_page_row_share_the_lowest_baseline_any_of_them_needs() -> None:
-    """D7: coils on one row share one image y, lower than the higher coil's own foot needs."""
+    """Coils on one row share one image y, lower than the higher coil's own foot needs."""
     # UNDO: stages/images.py `contact_images`, the row loop at its end: use
     # `label.box.y` instead of `max(one.box.y for one in row)`.
     model = _relays()
@@ -262,7 +262,7 @@ def test_images_of_one_page_row_share_the_lowest_baseline_any_of_them_needs() ->
 
 
 def test_an_image_stands_under_its_coils_cells_and_clear_of_markers() -> None:
-    """D7: room below the coil's column and its markers; no marker box under the image's box."""
+    """Room below the coil's column and its markers; no marker box under the image's box."""
     # UNDO: stages/images.py `contact_images`: `if False and below:` (the foot rule).
     # Only the foot rule is pinned: no fixture has a marker below a coil, so the `here` marker
     # loop (image pushed under a marker) is NOT exercised by this test.
@@ -284,7 +284,7 @@ def test_an_image_stands_under_its_coils_cells_and_clear_of_markers() -> None:
 
 
 def test_no_wire_crosses_a_contact_image() -> None:
-    """D7: no route segment enters the interior of any image box."""
+    """No route segment enters the interior of any image box."""
     # UNDO: no single mutation fails this test. It fails only with all three together: image
     # centred on the lane (`x = lane - width // 2`), the foot rule dropped (`if False and
     # below`), and the image removed from the router's obstacles (stages/pagerun.py
@@ -308,11 +308,11 @@ def test_no_wire_crosses_a_contact_image() -> None:
     assert checked >= 4
 
 
-# ---- D14: the image's near edge -------------------------------------------------------------
+# ---- The image's near edge -------------------------------------------------------------
 
 
 def test_an_image_keeps_one_offset_from_its_coils_wire_whatever_its_size() -> None:
-    """D14: every image's left edge stands the same distance right of its coil's wire."""
+    """Every image's left edge stands the same distance right of its coil's wire."""
     # UNDO: stages/images.py `contact_images`: `x = lane - width // 2` (centre it) or
     # `x = lane + width // 4`.
     offsets, sizes = set(), set()

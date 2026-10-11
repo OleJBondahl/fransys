@@ -19,6 +19,7 @@ band (T-c) is held too (R4). Both
 overflow and keep the grown-box search.
 """
 
+import re
 import tempfile
 from functools import cache
 from pathlib import Path
@@ -339,6 +340,9 @@ def test_t_c_a_line_end_below_the_box_of_a_page_no_cut_helps_still_routes() -> N
     built = _built(2, 0, 6, looms=False)
     assert _errors(built) == []
     assert {"OUT_OF_CONTENT_BOX", "PAGE_OVERFULL"} <= {f.code for f in built.findings}
+    out = [f.message for f in built.findings if f.code == "OUT_OF_CONTENT_BOX"]
+    assert any("harness line's ink" in m for m in out), out
+    assert all(re.search(r" at p\d+(\.\d+)?:\d+[A-Z]$", m, re.MULTILINE) for m in out), out
 
 
 def _crossings(built: fr.BuildResult, page: Any) -> list[tuple[Any, Any]]:
@@ -369,7 +373,7 @@ def test_t_a_the_cut_line_ends_in_a_stub_south_of_its_bar_and_no_line_crosses_a_
     """R1: on the upper band's page W1's trunk leaves the bar south and ends in its stub.
 
     UNDO: `line_pieces` gets no `trunk`: the stub stands at the root end's tip, facing north;
-    `_branches` keeps the bar one polyline and W1.3 has no line to carry its label.
+    `_branches` keeps the bar one polyline and the rule has no line to carry its label.
     """
     built = _built(2)
     (page,) = {

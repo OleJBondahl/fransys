@@ -32,6 +32,7 @@ from fransys_model.layout import (
     HarnessLine,
     LinkMarker,
     Page,
+    Route,
     SymbolPlacement,
     layout_of,
     page_slice,
@@ -50,7 +51,7 @@ def _built(name: str):
 
 @pytest.mark.parametrize("name", [*_CASES, "study"])
 def test_every_leaving_line_and_its_stub_stand_inside_the_frame(name: str) -> None:
-    """Defect 1, HL18: the room is kept beyond the pins' row, so nothing crosses the frame.
+    """Defect 1: the room is kept beyond the pins' row, so nothing crosses the frame.
 
     The lint's OUT_OF_CONTENT_BOX sees every line point, line label, stub and box (layout-0158).
     """
@@ -68,7 +69,7 @@ def test_every_leaving_line_and_its_stub_stand_inside_the_frame(name: str) -> No
 
 @pytest.mark.parametrize("name", _FANS)
 def test_each_leg_ends_on_its_pin_and_the_pin_draws_its_lead(name: str) -> None:
-    """Defect 2: a leg ends at its pin's port, as a wire does, so the port's lead is drawn (TL3)."""
+    """Defect 2: a leg ends at its pin's port, as a wire does, so the port's lead is drawn."""
     model = _built(name).model
     legs = 0
     for page in layout_of(model, Page).values():
@@ -90,9 +91,7 @@ def test_each_leg_ends_on_its_pin_and_the_pin_draws_its_lead(name: str) -> None:
                     assert port.id in wired
                     reached.add(at)
         boxed = {end for end in ends - reached if _on_a_box(end, model, page)}
-        assert (
-            reached | boxed == ends
-        )  # a boxed pin view draws no pin (HL6): its leg ends on the box
+        assert reached | boxed == ends  # a boxed pin view draws no pin: its leg ends on the box
     assert legs
 
 
@@ -153,7 +152,7 @@ def test_a_line_label_keeps_the_house_text_gap_from_its_line(name: str) -> None:
 def test_no_line_turns_back_on_itself(name: str) -> None:
     """Defect 2: the trunk of `-W11` ran past its split and back; a line stops on its ends.
 
-    A line turns back only at a fan's split, where it runs on to a further pin row (HL15).
+    A line turns back only at a fan's split, where it runs on to a further pin row.
     """
     model = _built(name).model
     lines = layout_of(model, HarnessLine).values()
@@ -171,21 +170,53 @@ def test_no_line_turns_back_on_itself(name: str) -> None:
     assert lines
 
 
-def test_the_stretched_box_over_k1_is_a_warning_until_hl19_lands() -> None:
-    """Known HL19 finding (ruling (b)): `-K1-J10` still spans its pin views' columns,
-    over K1's coil; the lint reports it as a WARNING TEXT_OVERLAP, never silently.
-
-    It goes when full HL19 lands (a later order): this test then fails and is removed.
-    """
+def _study_box_and_symbols():
     built = _built("study")
-    tag = {f.id: (items(built.model)[f.item].tag, f.name) for f in functions(built.model).values()}
-    box = next(fid for fid, one in tag.items() if one == ("J10", "x1"))
-    coil = next(fid for fid, one in tag.items() if one == ("K1", "coil"))
+    model = built.model
+    tag = {f.id: (items(model)[f.item].tag, f.name) for f in functions(model).values()}
+    by_tag = {one: fid for fid, one in tag.items()}
+    placed = {p.function: p for p in layout_of(model, SymbolPlacement).values()}
+    box = next(
+        b for b in layout_of(model, ConnectorBox).values() if b.function == by_tag[("J10", "x1")]
+    )
+    return built, box, placed, by_tag
+
+
+def test_hl19_the_box_over_k1_is_as_wide_as_its_cells_and_overlaps_no_text() -> None:
+    """(layout-0173) `-K1-J10` is 64 wide, never stretched over K1's columns.
+
+    UNDO: `box_views._box` takes `max(width, room.width)` again (probe hl19-stretch).
+    """
+    built, box, placed, by_tag = _study_box_and_symbols()
+    assert box.width == 64
+    assert len(box.cells) == 4
+    coil, aux = by_tag[("K1", "coil")], by_tag[("K1", "aux")]
     found = [
-        f for f in built.findings if f.code == "TEXT_OVERLAP" and set(f.subjects) == {box, coil}
+        f
+        for f in built.findings
+        if f.code == "TEXT_OVERLAP" and {by_tag[("J10", "x1")], coil} <= set(f.subjects)
     ]
-    assert len(found) == 1
-    assert found[0].severity.name == "WARNING"
+    assert found == []
+    # the symbols keep their places in their circuits: coil and contact stand in two columns
+    assert (placed[coil].x, placed[aux].x) == (232, 808)
+    assert not box.x <= placed[coil].x <= box.x + box.width
+
+
+def test_hl19_each_cell_of_the_box_has_a_routed_lead_to_its_symbol() -> None:
+    """A cell's lead is an ordinary route that starts under the cell and ends at its symbol.
+
+    UNDO: `engine.cells_placed` is skipped (the views stay in their columns, probe hl19-views).
+    """
+    built, box, _, _ = _study_box_and_symbols()
+    routes = list(layout_of(built.model, Route).values())
+    routed = 0
+    for cell in box.cells:  # the first cell's join is a power symbol standing on its view
+        centre = cell.x + cell.width // 2
+        leads = [r for r in routes if cell.port in (r.a, r.b) and r.page == box.page]
+        routed += bool(leads)
+        assert all(any(pt.x == centre for pt in r.points) for r in leads), cell
+        assert all(len({(pt.x, pt.y) for pt in r.points}) > 2 for r in leads), cell  # not a stub
+    assert routed == 3
 
 
 @pytest.mark.parametrize("name", [*_CASES, "study"])
@@ -207,21 +238,23 @@ def test_no_line_runs_along_an_outline_or_back_through_its_own_box(name: str) ->
             inside = Box(x=box.x, y=box.y, width=box.width, height=box.height)
             runs = itertools.pairwise(Point(x=p.x, y=p.y) for p in line.points)
             hit = [run for run in runs if through(run, inside)]
-            assert hit == [] or (name == "study" and _hl19_stretched(model, box)), (
+            assert hit == [] or (name == "study" and _mated_stack(model, box)), (
                 line.harness,
                 box.function,
             )
 
 
-def _hl19_stretched(model, box) -> bool:
-    """The known HL19 boxes (ruling (b)): `-K1-J10` and its plug `-W17-P18` span K1's columns."""
+def _mated_stack(model, box) -> bool:
+    """Known, and the same before the box fix: `-W17`'s trunk to `-W17-P18` runs down through
+    the mated stack `-K1-J10` / `-W17-P18`, whose lead side is the far side from the line.
+    """
     one = functions(model)[box.function]
     return items(model)[one.item].tag in {"J10", "P18"}
 
 
 @pytest.mark.parametrize("name", _FANS)
 def test_each_pin_row_gets_its_own_fan_and_no_leg_runs_oblique_beyond_it(name: str) -> None:
-    """Defect 4 (HL15, HL17): study `-W11` reached `-X1:5/6` with 60 mm legs from `-X1:1/3`'s fan.
+    """Defect 4: study `-W11` reached `-X1:5/6` with 60 mm legs from `-X1:1/3`'s fan.
 
     Legs leaving one split reach one row: their pins lie within the fan distance (32 G) of each
     other along the facing axis. Each split stands on its line.

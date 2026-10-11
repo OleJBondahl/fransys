@@ -1,4 +1,4 @@
-"""Reusable invented example data for vocab acceptance tests (ROADMAP WP8-WP13).
+"""Reusable invented example data for vocab acceptance tests.
 
 All data here is invented for this repo's tests; nothing names a real project or
 component (CLAUDE.md).
@@ -106,41 +106,6 @@ def relay_part_bundle() -> PartBundle:
     )
 
 
-def lamp_part_bundle() -> PartBundle:
-    """An invented indicator lamp: one `lamp` function with ports `X1` and `X2`."""
-    part_key = ("examples", "lamp")
-    part = Part(
-        id=make_id(Part, part_key),
-        key=part_key,
-        mpn="EXAMPLE-LAMP-1",
-        manufacturer="Example Co",
-        description="Invented example lamp for tests",
-        category=PartCategory.ELECTROMECHANICAL,
-        class_code="H",
-    )
-    lamp_key = (*part_key, "fn", "lamp")
-    lamp = FunctionTemplate(
-        id=make_id(FunctionTemplate, lamp_key),
-        key=lamp_key,
-        part=part.id,
-        name="lamp",
-        kind=FunctionKind.LOAD,
-    )
-    ports = tuple(
-        PortTemplate(
-            id=make_id(PortTemplate, (*lamp_key, "port", name)),
-            key=(*lamp_key, "port", name),
-            function=lamp.id,
-            name=name,
-            role=PortRole.GENERIC,
-        )
-        for name in ("X1", "X2")
-    )
-    return PartBundle(
-        part=part, function_templates=(lamp,), port_templates=ports, internal_links=()
-    )
-
-
 def bundle_records(bundle: PartBundle) -> tuple[Record, ...]:
     """The records a model needs before it can hold an instance of `bundle`'s part."""
     return (
@@ -152,8 +117,7 @@ def bundle_records(bundle: PartBundle) -> tuple[Record, ...]:
 
 
 def terminal_block_part() -> Part:
-    """An invented feed-through terminal-block `Part` (design/examples.md 11, strip
-    `X03`)."""
+    """An invented feed-through terminal-block `Part` (strip `X03`)."""
     key = ("examples", "terminal_block")
     return Part(
         id=make_id(Part, key),
@@ -163,20 +127,6 @@ def terminal_block_part() -> Part:
         description="Invented example feed-through terminal block for tests",
         category=PartCategory.TERMINAL,
         class_code="X",
-    )
-
-
-def cable_4_core_part() -> Part:
-    """An invented 4-core cable `Part` (design/examples.md 11, cable `W012`)."""
-    key = ("examples", "cable_4core")
-    return Part(
-        id=make_id(Part, key),
-        key=key,
-        mpn="EXAMPLE-CABLE-4G1.5",
-        manufacturer="Example Co",
-        description="Invented example 4x1.5mm2 control cable for tests",
-        category=PartCategory.CABLE,
-        class_code="W",
     )
 
 

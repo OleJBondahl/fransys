@@ -1,4 +1,4 @@
-"""Model diff acceptance (`derive.baseline.diff`, MODEL-DIFF work order, Part 1 of 3, M1).
+"""Model diff acceptance (`derive.baseline.diff`).
 
 Root test: built through the public API (`import fransys as fr`), the same reason
 `tests/test_baseline_listing.py` and `tests/test_units_worked_example.py` are root tests. The
@@ -278,7 +278,7 @@ def test_a_nested_units_revision_change_gives_exactly_one_units_row():
     assert change.after == "1.4"
 
 
-# -- untested sections (MODEL-DIFF-FIX1): mates, nets, item/boundary/nested-unit branches -----
+# -- untested sections: mates, nets, item/boundary/nested-unit branches -----
 
 
 def _empty_listing(*, revision=1):
@@ -479,7 +479,7 @@ def _x1_boundary(*, rating=None, operating=None):
 
 
 def test_boundary_rating_none_to_a_value_is_one_changed_row_empty_before():
-    """Ruling 2026-09-27 (MODEL DIFF FIX2 Part 4): `rating`/`operating` are diffed as
+    """Ruling 2026-09-27: `rating`/`operating` are diffed as
     changed fields, one row per changed key, field `rating.<key>` / `operating.<key>`. A key
     absent on one side (the whole `rating` was `None` there) reads an empty `before`/`after`."""
     before = _x1_boundary(rating=None)

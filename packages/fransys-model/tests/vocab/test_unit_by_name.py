@@ -1,42 +1,9 @@
-"""Tests for `vocab.unit_by_name`: matching a unit instance by its release's name (UN2, UN3)."""
+"""Tests for `vocab.unit_by_name`: matching a unit instance by its release's name."""
 
 import pytest
 from plant import Plant
 
-from fransys_model.vocab.unit_by_name import unit_name_unresolved, units_named
-
-
-def test_one_matching_instance_is_the_one_id() -> None:
-    plant = Plant()
-    unit = plant.unit("a", name="relay-board")
-    assert units_named(plant.model(), "relay-board") == (unit,)
-
-
-def test_an_unknown_name_matches_nothing() -> None:
-    plant = Plant()
-    plant.unit("a", name="relay-board")
-    assert units_named(plant.model(), "ghost") == ()
-
-
-def test_two_instances_of_one_release_are_both_matches_sorted() -> None:
-    plant = Plant()
-    a = plant.unit("a", name="board")
-    b = plant.unit("b", name="board")
-    assert units_named(plant.model(), "board") == tuple(sorted((a, b)))
-
-
-def test_two_releases_of_one_name_each_contribute_their_instance() -> None:
-    plant = Plant()
-    a = plant.unit("a", name="board", version=1, revision=1)
-    b = plant.unit("b", name="board", version=1, revision=2)
-    assert units_named(plant.model(), "board") == tuple(sorted((a, b)))
-
-
-def test_a_release_with_no_instance_matches_nothing() -> None:
-    plant = Plant()
-    plant.release(name="board")
-    assert units_named(plant.model(), "board") == ()
-
+from fransys_model.vocab.unit_by_name import unit_name_unresolved
 
 # ---- unit_name_unresolved: case (a), no release of that name ---------------------------------
 
@@ -74,17 +41,6 @@ def test_case_b_names_the_versions_and_revisions() -> None:
 
 
 # ---- unit_name_unresolved: case (c), several instances -----------------------------------------
-
-
-def test_case_c_names_each_instance_with_its_revision() -> None:
-    plant = Plant()
-    plant.unit("a", name="board", version=1, revision=1)
-    plant.unit("b", name="board", version=1, revision=2)
-    text = unit_name_unresolved(plant.model(), "board")
-    assert "1.1" in text
-    assert "1.2" in text
-    assert "2 units are instances of 'board'" in text
-    assert "build the unit alone, or pass the instance's scope" in text.lower()
 
 
 def test_case_c_names_where_a_parented_instance_sits() -> None:

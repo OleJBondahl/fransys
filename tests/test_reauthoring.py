@@ -1,4 +1,4 @@
-"""Re-authoring proof (WP order C3): the layout package's WP14 cabinet
+"""Re-authoring proof: the layout package's cabinet
 fixture (`packages/fransys-layout/tests/layout_cabinet.py::build_cabinet()`), the
 hand-built `Draft` the layout golden `cabinet_laid_out.json` came from, re-authored with
 `fransys_author` and compared structurally (fransys-v2's ruling): catalogue records
@@ -61,7 +61,7 @@ def _catalogue_from(hand_built: Draft) -> Draft:
 
 
 def _reauthor(catalogue: Draft) -> Draft:
-    """The WP14 cabinet (`build_cabinet()`'s defaults), re-authored with `fransys_author`.
+    """The cabinet (`build_cabinet()`'s defaults), re-authored with `fransys_author`.
 
     Mirrors `_supply`/`_pump`/`_estop_and_signal`/`_extras` in `layout_cabinet.py`, in the
     same construction order (so wire labels, the one place call order is content, match).
@@ -254,7 +254,7 @@ def test_items_functions_ports_match_by_content():
         # for terminals and part-less containers (strips), whose wording the fixture and
         # this API each chose independently ("Invented terminal strip" vs. "").
         # The fixture stores the part's text on the item; the API stores only an authored one
-        # (SC4), so the compared text is the one a list shows, `item_description`.
+        # so the compared text is the one a list shows, `item_description`.
         if key[0] != "terminal" and key[2] is not None:
             assert item_description(hand_model, hand_item.id) == item_description(
                 reauthored_model, reauth_item.id

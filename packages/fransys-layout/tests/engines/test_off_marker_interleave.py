@@ -1,4 +1,4 @@
-"""S20 M8 (amended after 4b6d's 8e stop): one box names several pins only when they are
+"""One box names several pins only when they are
 neighbours with one destination.
 
 A row whose destinations alternate (a changeover's four throws to X02, X01, X02, X01 in pin

@@ -4,8 +4,8 @@ The engineering shape: the top pin of three indicator lamps, each on the top row
 and on one plain net, which is one run of wire (V3: a rail net would draw power symbols and no
 wire). A feed-through terminal wired to the last lamp's pin attaches above that lamp, so its pin
 stands a row lower than the other two. Its wire to the first lamp's pin turns back past that lamp
-(S20 M12) and is no join. (The members were PLC card pins until V1 gave a module one box with its
-channels as pins, ITEM-BOX; the shape needs only column ends.)
+and is no join. (The members were PLC card pins until a module was given one box with its
+channels as pins; the shape needs only column ends.)
 
 The bug (cabinet page 4): the shifted member kept its references, with no wire and no finding.
 The rule (decision layout-0099): a run whose ends cannot share a y is

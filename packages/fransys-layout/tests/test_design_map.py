@@ -5,8 +5,9 @@ A row has three cells: rule, backticked `dotted.module.func` names (first is the
 function), backticked `path::test` refs; or four, with a leading rule-id cell naming the
 conventions-table rows (decision layout-0111) the rule holds, `-` for none. Every table row's
 id is in one doc row, and every doc id is a table row (checks g to i). `design_map_untested.txt`
-lists rows with no test yet and only shrinks. The core takes paths so the can-fail tests feed
-it tmp trees.
+lists rows with no test of their own yet and only shrinks; refs behind "reached through its
+caller:" are checked to resolve but are not a row's own test (check f). The core takes paths so
+the can-fail tests feed it tmp trees.
 """
 
 import ast
@@ -18,14 +19,19 @@ PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 SRC_ROOT = PACKAGE_ROOT / "src" / "fransys_layout"
 CELLS = (3, 4)
 TICKS = re.compile(r"`([^`]+)`")
+CALLER = "reached through its caller:"
 
 
 class Row(NamedTuple):
-    """One table row: its functions (first is the rule's), its test refs and its rule ids."""
+    """One table row: its functions (first is the rule's), its test refs and its rule ids.
+
+    `via_caller` is set when every ref stands behind the "reached through its caller:" marker.
+    """
 
     funcs: list[str]
     tests: list[str]
     ids: list[str] = []  # noqa: RUF012 -- a NamedTuple default, never mutated
+    via_caller: bool = False
 
 
 def _parse_line(line: str) -> Row | None:
@@ -36,7 +42,9 @@ def _parse_line(line: str) -> Row | None:
     if len(cells) not in CELLS or "`" not in cells[-2]:
         return None
     ids = re.findall(r"[A-Za-z][\w.]*", cells[0]) if len(cells) == max(CELLS) else []
-    return Row(TICKS.findall(cells[-2]), TICKS.findall(cells[-1]), ids)
+    own, marker, _ = cells[-1].partition(CALLER)
+    via_caller = bool(marker) and not TICKS.findall(own)
+    return Row(TICKS.findall(cells[-2]), TICKS.findall(cells[-1]), ids, via_caller)
 
 
 def parse_rows(rules_dir: Path) -> list[Row]:
@@ -145,11 +153,11 @@ def _coverage_problems(rows: list[Row], stages_root: Path) -> list[str]:
 
 def _allow_problems(rows: list[Row], allow: set[str]) -> list[str]:
     firsts = {row.funcs[0] for row in rows}
-    tested = {row.funcs[0] for row in rows if row.tests}
+    tested = {row.funcs[0] for row in rows if row.tests and not row.via_caller}
     problems = [
         f"(e) rule {row.funcs[0]} has no test and is not on the allow-list"
         for row in rows
-        if not row.tests and row.funcs[0] not in allow
+        if (not row.tests or row.via_caller) and row.funcs[0] not in allow
     ]
     problems += [
         f"(f) allow-list entry {entry} is stale: "
@@ -176,6 +184,22 @@ def _id_problems(rows: list[Row], table_ids: list[str]) -> list[str]:
     return problems
 
 
+BARE = re.compile(r"(?:\.\./)*tests/\S*?\.py(?:::[\w:\[\]-]+)?|\btest_\w+")
+
+
+def _bare_problems(rules_dir: Path) -> list[str]:
+    """(k) A test named outside backticks in a table row: `test_x` or a `tests/...py` path."""
+    if not rules_dir.is_dir():
+        return []
+    return [
+        f"(k) {md.name}:{n} cites a test outside backticks: {m}"
+        for md in sorted(rules_dir.glob("*.md"))
+        for n, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1)
+        if line.strip().startswith("|")
+        for m in BARE.findall(TICKS.sub("", line))
+    ]
+
+
 def check_design_map(
     rules_dir: Path,
     stages_root: Path,
@@ -183,7 +207,7 @@ def check_design_map(
     allow_file: Path,
     table_ids: list[str] | None = None,
 ) -> list[str]:
-    """Every problem (a) to (j) of the design map; empty when the map holds.
+    """Every problem (a) to (k) of the design map; empty when the map holds.
 
     `table_ids` is every row id of the conventions tables; None skips checks (g), (h) and (j).
     """
@@ -193,6 +217,7 @@ def check_design_map(
         *_coverage_problems(rows, stages_root),
         *_allow_problems(rows, read_allow(allow_file)),
         *([] if table_ids is None else _id_problems(rows, table_ids)),
+        *_bare_problems(rules_dir),
     ]
 
 
@@ -302,6 +327,22 @@ def test_f_stale_allow_entries_are_reported(tmp_path: Path) -> None:
 
 ID_ONE = "| T1.1 | rule one | `columns.replica_key`, `columns.helper` | `tests/test_x.py::test_a` |"
 ID_TWO = "| T1.2 | rule two | `refs.refs_main` | `tests/test_x.py::TestK::test_b[p]` |"
+ROW_VIA = ROW_THREE.replace("| - |", "| reached through its caller: `tests/test_x.py::test_a` |")
+
+
+def test_f_a_caller_citation_is_not_a_test_of_the_rule_itself(tmp_path: Path) -> None:
+    """(f) Refs only behind the marker need the entry; without the marker the entry is stale."""
+    assert _build(tmp_path, (ROW_ONE, ROW_TWO, ROW_VIA)) == []
+    problems = _build(tmp_path / "a", (ROW_ONE, ROW_TWO, ROW_VIA), allow="columns.replica_key")
+    assert problems == [
+        "(e) rule columns.untested has no test and is not on the allow-list",
+        "(f) allow-list entry columns.replica_key is stale: its row has a test",
+    ]
+    bare = ROW_VIA.replace("reached through its caller: ", "")
+    problems = _build(tmp_path / "b", (ROW_ONE, ROW_TWO, bare))
+    assert problems == ["(f) allow-list entry columns.untested is stale: its row has a test"]
+
+
 ID_NONE = "| T1.2 | rule three | `columns.untested` | - |"
 
 
@@ -334,6 +375,16 @@ def test_j_a_table_row_id_used_twice_is_reported(tmp_path: Path) -> None:
     """(j) Two table rows with one id."""
     problems = _build(tmp_path, (ID_ONE, ID_TWO, ROW_THREE), table_ids=["T1.1", "T1.2", "T1.2"])
     assert problems == ["(j) table row id T1.2 is used twice"]
+
+
+def test_k_a_bare_test_citation_is_reported(tmp_path: Path) -> None:
+    """(k) A test name or a `tests/` path outside backticks in a row; backticked refs pass."""
+    bare = ROW_ONE.replace("`tests/test_x.py::test_a`", "`tests/test_x.py::test_a` and test_a")
+    problems = _build(tmp_path, (bare, ROW_TWO, ROW_THREE))
+    assert problems == ["(k) r.md:3 cites a test outside backticks: test_a"]
+    path = ROW_TWO.replace("`tests/test_x.py::TestK::test_b[p]`", "tests/test_x.py::TestK")
+    problems = _build(tmp_path / "b", (ROW_ONE, path, ROW_THREE))
+    assert "(k) r.md:4 cites a test outside backticks: tests/test_x.py::TestK" in problems
 
 
 def test_a_geometry_function_resolves_beside_the_stages_ones() -> None:

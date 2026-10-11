@@ -1,4 +1,4 @@
-"""EA5: the pole rule and `pair`, each rule with a case that breaks when the rule does."""
+"""The pole rule and `pair`, each rule with a case that breaks when the rule does."""
 
 from typing import TYPE_CHECKING, Any
 

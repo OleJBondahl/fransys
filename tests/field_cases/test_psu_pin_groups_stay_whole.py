@@ -5,10 +5,10 @@ and a DC-OK contact (`13`, `14`) whose two pins are joined by a switched link. T
 pin `13` is wired to the 24 V output net, so both contact pins carry 24 V in service (the
 rail closure passes the switched link). Three lamps hang on the output.
 
-The bug: after pin ranks came from the supply (D2a), the contact's pins shared the rank of `+`
+The bug: after pin ranks came from the supply, the contact's pins shared the rank of `+`
 and sorted among the output pins: the bottom read `13`, `+`, `-`.
 
-The rule (CONVENTIONS-V06 V11, V1, decision model-0121): a pin group is a function; on a box
+The rule (decision layout-0099, model-0121): a pin group is a function; on a box
 side the groups stay whole, and inside a group the pins order by rank. The bottom reads `+`,
 `-`, then the contact's pins. The AC input stays on top, L left of N.
 """

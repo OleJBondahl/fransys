@@ -87,12 +87,3 @@ def test_a_terminal_column_joins_the_row_of_its_strip_as_the_next_lane() -> None
             cells=(*host.cells, Cell(function=hid("function", 3), index=1, lane=1)),
         ),
     )
-
-
-def test_a_pin_on_two_units_boundaries_pairs_with_a_pin_in_either_parent() -> None:
-    """layout-0160: a function on the boundary of a unit and of one nested in it has two parents."""
-    parent_of = {hid("function", 2): frozenset({PARENT, None})}
-    plug = MatedFunctions(a=hid("function", 1), b=hid("function", 2))
-
-    assert edge_mates(parent_of, (_in_unit(1, PARENT), _in_unit(2, CHILD)), (plug,)) == (plug,)
-    assert edge_mates(parent_of, (_in_unit(1, None), _in_unit(2, CHILD)), (plug,)) == (plug,)

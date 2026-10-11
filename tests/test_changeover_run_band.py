@@ -1,11 +1,11 @@
-"""S17, S20: a C21 run's box stands as its marker box, and the slot labels clear it.
+"""Layout-0090: a run's box stands as its marker box, and the slot labels clear it.
 
 The fixture is the field case `field_cases/test_changeover_throws_to_two_strips.py` with no
 `Unit` around it: poles 3 and 4 of a changeover, each throw wired to its own terminal of a field
-strip at another location. Its one page draws K1's four throw stubs as one C21 run (S14) and
-each strip terminal's stub back to K1. A run's box stands as its marker box (S17, S20): it is
+strip at another location. Its one page draws K1's four throw stubs as one run (layout-0090) and
+each strip terminal's stub back to K1. A run's box stands as its marker box: it is
 a marker of the page (`Layout.markers`, `shared_box`), so the first slot call (tags and
-markings) and the second (S18) hold it in their `occupied`.
+markings) and the second (layout-0090) hold it in their `occupied`.
 
 The rule: no K1 marking and no terminal tag stands over a marker's box, run box or stub box,
 and each is placed (no `LABEL_UNPLACED`). Markers standing over each other are not this

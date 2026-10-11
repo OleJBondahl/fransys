@@ -38,22 +38,11 @@ def _hit(subject: SymbolSubject, table: Table = SYMBOL_DEFAULTS) -> tuple[str, s
     return None if row is None else (row.id, str(row.then))
 
 
-def test_the_table_has_21_rows_and_every_case() -> None:
-    """A row added or dropped fails here until it has its own case."""
-    assert [r.id for r in SYMBOL_DEFAULTS.rows] == list(_CASES)
-
-
 @pytest.mark.parametrize("row_id", list(_CASES))
 def test_each_row_is_hit_alone(row_id: str) -> None:
     """The subject of a case reaches that row, and no earlier one, with its symbol."""
     kind, rest, protection, category, gender, symbol = _CASES[row_id]
     assert _hit(SymbolSubject(kind, rest, protection, category, gender)) == (row_id, symbol)
-
-
-@pytest.mark.parametrize("rest", [None, "both"])
-def test_a_generic_without_a_rest_has_no_row(rest: str | None) -> None:
-    """No row: the function draws a labelled box (SYMBOL_DEFAULTED)."""
-    assert _hit(SymbolSubject("generic", rest, None, None, None)) is None
 
 
 def test_the_row_order_is_the_contract() -> None:

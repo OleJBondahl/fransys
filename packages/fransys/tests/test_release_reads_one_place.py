@@ -1,4 +1,4 @@
-"""No facade code opens a file under a release folder outside the one reader (W2, acceptance 8)."""
+"""No facade code opens a file under a release folder outside the one reader."""
 
 import ast
 from pathlib import Path

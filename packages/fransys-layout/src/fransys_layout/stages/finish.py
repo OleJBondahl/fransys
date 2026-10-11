@@ -5,7 +5,7 @@
 """
 
 from collections import defaultdict
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
@@ -23,9 +23,10 @@ from .slices import (
     page_of,
     pages_of,
 )
+from .space import Blocks
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
 
     from fransys_model.kernel import Finding
 
@@ -57,6 +58,7 @@ class FinishRun:
     markers: tuple[LinkMarker, ...]
     references: tuple[LabelRequest, ...]
     routed_on: dict[Handle, tuple[int, int]]
+    blocks: Mapping[tuple[int, int], Blocks] = field(default_factory=dict)
 
 
 def finish_pages(
@@ -85,7 +87,7 @@ def finish_pages(
             net_groups=groups_at[index],
         )
         page_routes, page_labels, page_findings = finish_page(
-            PageState(placed, first, markers_at[index]),
+            PageState(placed, first, markers_at[index], run.blocks.get(here, Blocks())),
             drawn_at[index],
             page_inputs,
             references=references_at[index],

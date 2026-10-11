@@ -7,7 +7,7 @@ terminals that stand above the hub attach to the hub's one port.
 
 The bug (v0.11.0): both attachments were put at the host port's x, so `left` and `right` shared one
 spot (identical 16x16 keep-out boxes, `SYMBOL_OVERLAP`). The second takes the row's next free slot,
-the gap any neighbour in a row gets (R7.1, layout-0122, an existing rule).
+the gap any neighbour in a row gets (layout-0122, an existing rule).
 """
 
 from typing import Any

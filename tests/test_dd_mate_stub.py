@@ -1,9 +1,9 @@
-"""D10 (layout deep dive): a connector mated across a location gets the harness's off stub.
+"""A connector mated across a location gets the harness's off stub.
 
 The unit's boundary connector X1 (4 pins) is mated by a bare Mate to the plug P1 of the top-level
 harness -W3. The harness's core runs plug to plug, both plugs in the location +EXT, and P2 is mated
-to K1's port, also in +EXT. No conductor crosses a location; the MATE from X1 to P1 does. D10's
-worked example is "-W3 <- +EXT-K1" (HL18: no port). W3's cores make it a line (HL1), so the
+to K1's port, also in +EXT. No conductor crosses a location; the MATE from X1 to P1 does. The
+worked example is "-W3 <- +EXT-K1" (no port). W3's cores make it a line, so the
 unit's set shows X1's line leaving in one stub (owner C1), not one stub per pin; its text
 produced by `fransys_model.derive.drawing_text` (`stub_far_end`, `off_stub_line`,
 `off_stub_text`) and never built in `read/`.
@@ -116,7 +116,7 @@ def _item_tag(model, port) -> str | None:
 
 
 def _x1_stubs(model):
-    """The OFF markers on the cabinet's own pages: X1's pins, or the line leaving X1 (HL18)."""
+    """The OFF markers on the cabinet's own pages: X1's pins, or the line leaving X1."""
     return [
         m
         for m in layout_of(model, LinkMarker).values()
@@ -125,7 +125,7 @@ def _x1_stubs(model):
 
 
 def test_the_connectors_line_leaves_in_one_stub(model) -> None:
-    """HL18, owner C1: X1's line -W3 leaves the cabinet's page in one stub, not one per pin."""
+    """X1's line -W3 leaves the cabinet's page in one stub, not one per pin."""
     # UNDO: stages/offstubs.py: `mate_stub` returns None (the mate
     #   that crosses the location gives no stub: the base, no OFF marker on X1's pins)
     (stub,) = _x1_stubs(model)
@@ -134,7 +134,7 @@ def test_the_connectors_line_leaves_in_one_stub(model) -> None:
 
 
 def test_the_stub_text_is_the_worked_example_from_the_derive_function(model) -> None:
-    """D10, HL18: "-W3 <- +EXT-K1", the line's one stub form, facing north (`<-`), no far ports."""
+    """The line's one stub form, "-W3 <- +EXT-K1", facing north (`<-`), no far ports."""
     # UNDO: stages/offstubs.py: as the first test (no OFF marker)
     (stub,) = _x1_stubs(model)
     assert stub.facing is Side.N
@@ -165,7 +165,7 @@ def _load(name: str):
 
 
 def test_a_conductor_that_crosses_the_location_still_gives_its_stub_once() -> None:
-    """Control: the plug at the cabinet's location, the conductor crossing: one line stub (HL18)."""
+    """Control: the plug at the cabinet's location, the conductor crossing: one line stub."""
     # UNDO: engines/schematic/read/offstubs.py: `boundary_offs` skips every pair (a
     #   `continue` at the top of its loop): the pins carry no stub. A fix that also stubs the mate
     #   would give the line two stubs and fail the one-stub unpacking

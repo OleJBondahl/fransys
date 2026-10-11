@@ -1,7 +1,7 @@
-"""D9 (layout deep dive): a port the router leaves with no wire joins the net's markers.
+"""A port the router leaves with no wire joins the net's markers.
 
 Every drawn port of a net shows a wire or a marker. K5, K6, K7 are joined by conductors at the
-hub K6's `A2`, which faces away from the others' `A1` (ends of one side are wired, S20 M12), so
+hub K6's `A2`, which faces away from the others' `A1` (ends of one side are wired), so
 they form a star drawn as markers; a declared net `SHARED` also names K1. The net's wire-drawn ports
 are then K1 alone, so the router has no pair to span and K1 would show nothing: it gets its own
 branch marker and the star's reference lists it. Built through the `fransys` facade from
@@ -54,14 +54,14 @@ def test_a_port_the_router_leaves_with_no_wire_gets_a_marker_and_the_reference_l
     ]
     assert own in branches
     assert len(branches) == 3
-    assert marker_text(model, reference).endswith(" +2")  # C2: the first and a count
+    assert marker_text(model, reference).endswith(" +2")  # the first and a count
 
 
 def _build(tags, wires, nets):
     """Coil relays `tags`; `wires` join two coil ports, `nets` are declared over coil ports.
 
     An end is a tag (its `A1`) or `"K6.A2"`; a wire's third item names the port at both ends.
-    Same-side ends of one net are wire-joined (S20 M12), so a star needs ends of both sides.
+    Same-side ends of one net are wire-joined, so a star needs ends of both sides.
     Returns the model and the id of each port named, by its end.
     """
     parts = fransys_parts.load("demo_parts")

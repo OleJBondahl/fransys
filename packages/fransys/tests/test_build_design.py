@@ -1,4 +1,4 @@
-"""EA1: `fr.build(d)` takes a surface `Design`, standing for its parts library and its circuit."""
+"""`fr.build(d)` takes a surface `Design`, standing for its parts library and its circuit."""
 
 import fransys as fr
 

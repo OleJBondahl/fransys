@@ -1,4 +1,4 @@
-"""RATINGS-1 part 6, acceptance 5: Q5 (a unit's boundary values) and ruling (a), on demo parts.
+"""A unit's boundary values and the ruling, on demo parts.
 
 Unit `ub`'s boundary connector `xb` states a rating; unit `ua` declares supply `DC` (800 V and 0 V)
 and wires its own connector to `xb` (`ratings_fixtures_units.units_model`). The finding of a

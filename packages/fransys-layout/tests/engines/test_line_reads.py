@@ -1,4 +1,4 @@
-"""HL1, HL6: which conductors a line carries and which connector functions get a box.
+"""Which conductors a line carries, and which connector functions get a box.
 
 Built through the facade from `examples/demo-parts`; nothing names a real plant.
 """

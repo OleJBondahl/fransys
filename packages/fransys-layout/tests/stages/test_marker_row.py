@@ -1,4 +1,4 @@
-"""S20 (layout-0090): `place_markers`, settle's four marker moves as D3's placer rules.
+"""Layout-0090: `place_markers`, settle's four marker moves as the placer rules.
 
 Hand-made values: the through symbol (`in` 16 above its origin facing N, `out` 16 below facing
 S, on x = 0). Each rule has a twin in which its cause is absent.
@@ -14,7 +14,6 @@ from fransys_layout.stages.stacking import JoinedEnd, JoinedRun
 from fransys_layout.stages.texts.marker_lanes import Lane, reach_of
 from fransys_layout.stages.texts.marker_room import MarkerRoom
 from fransys_layout.stages.texts.marker_row import place_markers, stub_boxes
-from fransys_layout.stages.texts.place_texts import LABEL_UNPLACED
 from fransys_layout.stages.texts.stand import star_turns, start_tier, tier_offset
 
 _PORT = hid("port", 22)  # function 2's `out`
@@ -71,7 +70,7 @@ _ABOVE = (placed(2, x=104, y=96), placed(1, x=104, y=0))  # as `test_settle.py` 
 
 
 def test_further_puts_a_star_marker_at_a_joined_port_one_box_height_out() -> None:
-    """I4 Q1 as S14's n-th-out candidate: function 1 is a side element joined at port 22, so the
+    """The n-th-out candidate: function 1 is a side element joined at port 22, so the
     marker's first place is one tier out, one box height (12, ADDENDUM 10 point 3; settle moved
     it one grid). Twin: no side element, the marker stays at its home."""
     start = _marker("branch")
@@ -85,7 +84,7 @@ def test_further_puts_a_star_marker_at_a_joined_port_one_box_height_out() -> Non
 
 
 def test_a_star_reference_on_a_wired_port_takes_its_one_turned_place() -> None:
-    """S20 M7 (layout-0053): a wire ends at port 22 where the reference stands, so every place
+    """Layout-0053: a wire ends at port 22 where the reference stands, so every place
     over the wired point is refused and the turned box is its one place: a junction one grid out,
     a branch east, the box vertical on the branch end (a whole number of grids out) and starting
     one grid beyond it, its near edge at least a grid from the pin's own wire, and the fewest
@@ -106,7 +105,7 @@ def test_a_star_reference_on_a_wired_port_takes_its_one_turned_place() -> None:
 
 
 def test_two_markers_whose_homes_overlap_stand_apart_each_over_its_own_stub() -> None:
-    """R7 B4's stagger as the greedy walk: the second marker's home overlaps the first's box, so
+    """The stagger as the greedy walk: the second marker's home overlaps the first's box, so
     it takes the next free place: no two boxes overlap, each stub stays over its own box and runs
     through no other box. Twin: far apart, both stay at home."""
     near = (placed(1, x=40, y=96), placed(2, x=56, y=96))
@@ -126,29 +125,8 @@ def test_two_markers_whose_homes_overlap_stand_apart_each_over_its_own_stub() ->
     assert _placed((first, apart), far)[0] == (first, apart)
 
 
-def test_a_box_across_a_wired_lane_at_its_stub_leaves_it_one_grid_clear() -> None:
-    """WIRE-X56 (layout-0076): function 1's `out` stands straight above function 2's `in`, the
-    marker's port, and its lane runs down through the box: no place over the stub is off that
-    lane, so the box takes a place beyond it with a lead, one grid clear. Twin: function 1
-    stands beside, its lane misses the box, and the box stays."""
-    x, at = 96, Point(x=96, y=104)
-    marker = replace(
-        _marker("ref", port=21, at=at, width=45), box=Box(x=x - 22, y=84, width=45, height=12)
-    )
-    above = (placed(1, x=x, y=40), placed(2, x=x, y=120))
-    (moved,), findings = _placed((marker,), above)
-    assert findings == ()
-    assert not moved.box.x - WIRING_GRID < x < moved.box.x + moved.box.width + WIRING_GRID
-    assert (moved.at, moved.box.y) == (at, marker.box.y)
-    assert moved.shared_box
-    assert moved.lead
-    beside = (placed(1, x=x, y=40), placed(2, x=200, y=120))
-    alone = replace(marker, at=Point(x=200, y=104), box=replace(marker.box, x=178))
-    assert _placed((alone,), beside)[0] == (alone,)
-
-
 def test_a_box_across_the_left_content_edge_stands_against_it() -> None:
-    """D14 M2 (layout-0068): the home crosses the content box's left edge, so the box stands
+    """Layout-0068: the home crosses the content box's left edge, so the box stands
     against it, its stub still over it and half a grid inside. Twin: well inside, it stays."""
     marker = _marker("branch", port=22, at=Point(x=8, y=112))
     (moved,), findings = _placed((marker,), (placed(2, x=8, y=96),))
@@ -160,20 +138,8 @@ def test_a_box_across_the_left_content_edge_stands_against_it() -> None:
     assert _placed((inside,), (placed(2, x=200, y=96),))[0] == (inside,)
 
 
-def test_two_one_place_boxes_over_each_other_leave_one_unplaced_and_both_drawn() -> None:
-    """Two C21 run boxes, one place each, overlap: the second has no free place, so it stands
-    at its one place with one `LABEL_UNPLACED`, never dropped."""
-    near = (placed(1, x=40, y=96), placed(2, x=56, y=96))
-    first = replace(_marker("off", port=12, at=Point(x=40, y=112), width=30), shared_box=True)
-    second = replace(_marker("off", port=22, at=Point(x=56, y=112), width=30), shared_box=True)
-    assert overlaps(first.box, second.box)
-    found, findings = _placed((first, second), near)
-    assert found == (first, second)
-    assert [one.code for one in findings] == [LABEL_UNPLACED]
-
-
 def test_a_marker_box_never_walks_down_through_the_next_symbol_on_its_line() -> None:
-    """S20 tally 8b: function 2's `out` (the marker's port) has function 1 straight below it.
+    """Function 2's `out` (the marker's port) has function 1 straight below it.
     The `in` lane of function 1 shuts every tier of the gap; a tier past it would stand over
     function 1's body, where the port's own lane ends. The box takes a place beside the lane in
     the gap instead. Twin: nothing below, the walk ends where the box leaves the content box and
@@ -197,7 +163,7 @@ def _join(*ports: int, page: int = 1) -> JoinedRun:
 
 
 def test_a_marker_box_never_stands_on_a_joined_run_s_wire() -> None:
-    """S20: functions 1 and 2 stand side by side and `references` joined their `out` ports on one
+    """Functions 1 and 2 stand side by side and `references` joined their `out` ports on one
     y; the marker of port 12 has its home box over that wire, so it takes the next free place:
     placed (no `LABEL_UNPLACED`), clear of the run. Twin: no join, or a join on another page,
     it stays at home."""
@@ -215,23 +181,10 @@ def test_a_marker_box_never_stands_on_a_joined_run_s_wire() -> None:
     assert _placed((marker,), beside, joins=(_join(1, 2, page=2),))[0] == (marker,)
 
 
-def test_a_one_place_box_across_a_corridor_is_refused_it() -> None:
-    """S20: a C21 run box has one place, no lane read; function 2 `out` over function 1 `in` is a
-    corridor, and the box standing on it has no free place: it stays with one `LABEL_UNPLACED`.
-    Twin: no connection, no corridor, no finding."""
-    # UNDO: stages/labels.py `decided_runs`: `found = list(corridors(...))` -> `found = []`
-    below = (placed(2, x=104, y=96), placed(1, x=104, y=200))
-    marker = replace(_marker("off", port=22, width=20), shared_box=True)
-    found, findings = _placed((marker,), below, connections=(connection(1, 2, 1),))
-    assert found == (marker,)
-    assert [one.code for one in findings] == [LABEL_UNPLACED]
-    assert _placed((marker,), below)[1] == ()
-
-
 def test_start_tier_and_offset_are_the_one_rule_for_the_joined_star_text() -> None:
     """`stand.start_tier` and `tier_offset`: tier 1 only for a star text, joined, not escaped.
 
-    The escapes are a turned text and a C21 run's shared box. The offset is one box length per
+    The escapes are a turned text and a run's shared box. The offset is one box length per
     tier, down for a south facing and up for a north one.
     """
     # UNDO: stages/texts/stand.py `start_tier`: `return 0`

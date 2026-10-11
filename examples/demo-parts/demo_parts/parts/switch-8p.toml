@@ -1,0 +1,123 @@
+schema = 1
+
+[part]
+mpn = "DEMO-SW-8P"
+manufacturer = "Demo"
+description = "Ethernet switch, eight one-pin port connectors, 24 V DC supply"
+category = "generic"
+class_code = "U"
+
+[[function]]
+name = "supply"
+kind = "load"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+
+[[function]]
+name = "p1"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P1"
+
+[[function]]
+name = "p2"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P2"
+
+[[function]]
+name = "p3"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P3"
+
+[[function]]
+name = "p4"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P4"
+
+[[function]]
+name = "p5"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P5"
+
+[[function]]
+name = "p6"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P6"
+
+[[function]]
+name = "p7"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P7"
+
+[[function]]
+name = "p8"
+kind = "connector"
+ports = [
+    { name = "1", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "P8"

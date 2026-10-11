@@ -1,7 +1,7 @@
 """Invented models for the diagram engine's tests, each built once (`functools.cache`).
 
 Every builder returns a frozen, numbered `Model` (no facade, no layout engine run). `station` is
-the block-diagram spec's worked example 1; `chain(n)` is a path of boxes; `one_box`, `fanout`
+the block-diagram worked example 1; `chain(n)` is a path of boxes; `one_box`, `fanout`
 and `loose` are the three hand models of the diagram findings.
 """
 

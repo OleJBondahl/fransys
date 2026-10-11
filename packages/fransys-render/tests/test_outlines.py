@@ -226,7 +226,7 @@ def test_two_outline_records_on_one_page_draw_two_outlines_and_no_other_pages():
 
 
 def test_outlines_group_concatenates_glyphs_with_no_separator():
-    """`outlines_group` joins its glyphs with `""` (D8-style join): the exact returned string
+    """`outlines_group` joins its glyphs with `""`: the exact returned string
     is the concatenation of the two individual `_outline_glyph` calls, in `.id` order, with
     nothing between them.
     """
@@ -320,9 +320,9 @@ def test_pages_with_no_outline_record_render_no_outline():
 # Page counts, per golden (`conftest.py`'s own docstrings for the wide/narrow counts;
 # the two-location golden's counted directly, `layout_of(model, Page)`).
 _WIDE_GOLDEN_PAGE_COUNT = 2
-_NARROW_GOLDEN_PAGE_COUNT = 4  # was 5: harness lines (HL15-HL18) merge sup page 1 into page 0
-# 2, not 3: the golden's `=P1` and `sup` groups now share drawing set c1's page 1 (deep-dive D4,
-# "groups pack onto pages by their measured widths"), and `=P2` (drawing set c2) is the second.
+_NARROW_GOLDEN_PAGE_COUNT = 4  # was 5: harness lines merge sup page 1 into page 0
+# 2, not 3: the golden's `=P1` and `sup` groups now share drawing set c1's page 1
+# ("groups pack onto pages by their measured widths"), and `=P2` (drawing set c2) is the second.
 _TWO_LOCATION_GOLDEN_PAGE_COUNT = 2
 
 

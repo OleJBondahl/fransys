@@ -1,4 +1,4 @@
-"""DD-UNIT-SET (layout-0081, LD6): a unit is one drawing set, whatever locations it stands in.
+"""Per layout-0081, a unit is one drawing set, whatever locations it stands in.
 
 One unit `u1` holds six connectors `panel<i>` at an area FIELD, each wired to a connector `peer<i>`
 at an area CAB. The unit's own items stand in two locations, so `partition` used to file them under

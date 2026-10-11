@@ -1,7 +1,7 @@
-"""W3 (layout deep dive, ruling): a unit's boundary connector mated to the plug of
+"""A unit's boundary connector mated to the plug of
 a top-level harness shows, in the unit's own set, where the harness goes; a boundary connector
-declared unused draws no pin. W3's two cores make it a line (HL1): its end leaves the unit's
-set in one line stub naming the far device (HL18, owner C1), not one stub per pin.
+declared unused draws no pin. W3's two cores make it a line: its end leaves the unit's
+set in one line stub naming the far device, not one stub per pin.
 
 Can-fail, checked by hand: without `_boundary_offs` in `read_inputs` the cabinet's X1 pins
 carry no off-stub and the first test fails; with unused boundaries kept in
@@ -81,7 +81,7 @@ def test_the_units_boundary_pins_carry_the_top_level_harnesss_off_stub() -> None
         for m in layout_of(model, LinkMarker).values()
         if m.star is StarKind.OFF and _in_cabinet_set(model, m.page)
     ]
-    (stub,) = stubs  # HL18, owner C1: one stub for the line, not one per X1 pin
+    (stub,) = stubs  # One stub for the line, not one per X1 pin
     assert "line_stub" in stub.key
     assert stub.carrier is not None
     assert item_designation(model, stub.carrier) == "W3"

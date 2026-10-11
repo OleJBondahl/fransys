@@ -8,7 +8,7 @@ The bug: `d.add` took no place and ignored the open block, so the board's bounda
 neither `=PLC` nor `+C1`: its designation lost the function group (0.5.1 wrote scope at=C1,
 group=PLC).
 
-The rule (EA15, G27): `d.add` joins the open `d.function` block, takes the default place, and
+The rule: `d.add` joins the open `d.function` block, takes the default place, and
 takes `place=` with `device`'s meaning. The board's own drawing does not change.
 """
 
@@ -62,7 +62,7 @@ def test_add_takes_place_with_devices_meaning() -> None:
 def test_the_boards_own_drawing_does_not_carry_the_instances_place() -> None:
     """In the unit's own context X1 reads `-X1`; the cabinet's `=PLC+C1` is not the board's.
 
-    The instance tag A prints before it in the cabinet, `-A-X1` (UT2).
+    The instance tag A prints before it in the cabinet, `-A-X1`.
     """
     d = _design()
     with d.function("PLC", "Control"):

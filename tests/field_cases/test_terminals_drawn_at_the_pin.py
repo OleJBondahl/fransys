@@ -9,7 +9,7 @@ The bug (v0.5.2 look): the terminal stood once per page, as the home or one repl
 pin on the page was a branch of a star marker naming the terminal as the reference, and a replica
 serving two pins stood at neither. The one-relay layout already drew the replica over the pin.
 
-The rule (CONVENTIONS-V06 V4, decision layout-0099): every pin wired to a non-rail terminal shows
+The rule (decision layout-0108): every pin wired to a non-rail terminal shows
 the terminal at the pin, in every group and for any wire count; terminal references go.
 """
 

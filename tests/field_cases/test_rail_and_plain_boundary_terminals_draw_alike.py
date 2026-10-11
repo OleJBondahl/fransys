@@ -1,7 +1,7 @@
 """Field case: one unit whose boundary strip holds a bridged `24V` rail terminal and a plain
 terminal, both wired from the container to a lamp.
 
-The rule (RB1, owner C2, ruling 2026-10-06): the container's page draws a rail boundary
+The rule (owner ruling 2026-10-06): the container's page draws a rail boundary
 terminal, and its connection, exactly as it draws a non-rail boundary terminal of the same strip
 wired the same way. The comparison covers the kind of drawing (symbol, stub or routed wire)
 and the shape of the connection.

@@ -7,7 +7,7 @@ to the lamps, and the lamps' other pins to a 0 V row.
 The bug: a pin was ranked through the physical net, which stops at a switched link, so a pin
 behind a switch (a lamp, a box pin) lost its rank and its place beside the supply pins.
 
-The rule (CONVENTIONS-V06 V11, decision model-0121): a pin's rank follows the rail closure through
+The rule (decision model-0121): a pin's rank follows the rail closure through
 CONDUCTIVE and SWITCHED links, so the pin behind the switch ranks as 24 V. Power-symbol eligibility
 (V3) keeps the physical net: the switch's output is not on the 24 V net while the contact is open,
 so it draws no 24 V bar.

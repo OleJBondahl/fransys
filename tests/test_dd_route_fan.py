@@ -1,4 +1,4 @@
-"""ROUTE-FAN (layout deep dive D2, D9): the router draws only wire-drawn pairs.
+"""The router draws only wire-drawn pairs.
 
 A declared net whose conductors join some of its ports into a star is drawn as markers at those
 ports. The rest of its ports are the net group's wire-drawn ports: the router spans those and

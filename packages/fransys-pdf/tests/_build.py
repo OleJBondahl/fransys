@@ -169,7 +169,7 @@ def unit(  # noqa: PLR0913 -- one keyword per invented fact, as `document()` bel
 ) -> Unit:
     """A `Unit` instance, standing in for a nested cabinet, board or the like.
 
-    `title` and `number` (UNIT-ID I1) default to `""`, `UnitRelease`'s own default. The unit's
+    `title` and `number` default to `""`, `UnitRelease`'s own default. The unit's
     release (version 1) is remembered here and added to the model by `model()` below.
     """
     release_key = ("unit_release", name, "1", str(revision))
@@ -514,7 +514,7 @@ def external_port(key_part: str) -> Port:
 def plc_channel(
     key_part: str, *, module: Id[Item], name: str, signal: SignalType, channel: int
 ) -> tuple[Part, FunctionTemplate, Function, PlcChannelFacet]:
-    """An unbound PLC channel `name` of `module`, with its own invented module `Part` (P9)."""
+    """An unbound PLC channel `name` of `module`, with its own invented module `Part`."""
     module_part = part(f"{key_part}-part", description="Invented PLC module")
     template_key = ("plc_channel_template", key_part)
     template = FunctionTemplate(
@@ -559,7 +559,7 @@ def connector(  # noqa: PLR0913 -- one keyword per invented fact, as `document()
     gender: Gender = Gender.MALE,
     style: str = "header",
 ) -> tuple[Part, FunctionTemplate, Function, ConnectorFacet, tuple[Port, ...]]:
-    """A connector function `name` of `item`, one port per marking, with its own `Part` (P9)."""
+    """A connector function `name` of `item`, one port per marking, with its own `Part`."""
     connector_part = part(f"{key_part}-part", description="Invented connector")
     template_key = ("connector_template", key_part)
     template = FunctionTemplate(

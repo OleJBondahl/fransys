@@ -1,4 +1,4 @@
-"""F2 (layout deep dive, ruling): a device terminal's tag stands on the W of its
+"""A device terminal's tag stands on the W of its
 circle and its marking on the E, both level with the circle's centre.
 
 Can-fail, checked by hand: without the `level` branch in `_labelling.home` both boxes stay at

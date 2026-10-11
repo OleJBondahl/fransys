@@ -1,4 +1,4 @@
-"""`Scope.unit` writes a `UnitRelease` and a `Unit` of it; revision keys are per release (SC2)."""
+"""`Scope.unit` writes a `UnitRelease` and a `Unit` of it; revision keys are per release."""
 
 import pytest
 from fransys_author import AuthorError, Design

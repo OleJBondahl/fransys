@@ -13,7 +13,7 @@ from typing import cast
 import pytest
 
 ROOT = Path(__file__).parent.parent
-# The toolkit ships its design guide as package data (root decision 0015, toolkit decision D38):
+# The toolkit ships its design guide as package data (root decision 0015):
 # reading it through importlib.resources works whether symdef is installed from its
 # pinned git tag (the normal case) or from a local editable override, and it is never a sibling
 # checkout path -- there is no "../symdef" any more, the toolkit is its own repository.
@@ -27,7 +27,7 @@ NOT_LENGTHS = {"schema", "repeat", "pole_pitch"}
 ARC_ANGLES = {"start", "end"}
 # The guide is never edited, so its five examples carry its own ids (six in all: the push-button
 # block also names the actuator); each is compared with the repo file after the id is replaced by
-# the slug in `number` and in `use` (see D38).
+# the slug in `number` and in `use`.
 GUIDE_SLUGS = {
     "S00016": "connection-point",
     "S00171": "actuator-push",
@@ -36,12 +36,12 @@ GUIDE_SLUGS = {
     "S00254": "push-button",
     "S00305": "operating-device",
 }
-# The one line a file may add to its guide example (see D3 and C1 in the decisions file).
+# The one line a file may add to its guide example.
 GUIDE_EXTRA_LINE = {"push-button": "pole_pitch = 8\n"}
-# Guide examples the file draws mirrored top to bottom, by owner ruling (D44): the file is checked
+# Guide examples the file draws mirrored top to bottom, by owner ruling: the file is checked
 # against the guide's block mirrored (`check_mirrored`), not compared verbatim.
 GUIDE_MIRRORED = {"change-over-contact"}
-# Each protective-earth variant copies its base's geometry (see D33 and D34 in the decisions file).
+# Each protective-earth variant copies its base's geometry.
 VARIANT_PAIRS = [
     ("motor-3ph", "motor-3ph-pe"),
     ("motor-1ph", "motor-1ph-pe"),

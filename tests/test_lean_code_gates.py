@@ -76,7 +76,7 @@ def test_measure_ruff_sections_maps_qualnames_without_collision(tmp_path: Path) 
 
 
 def test_measure_ruff_sections_wired_through_check(tmp_path: Path) -> None:
-    """Acceptance 1: a 16-statement fixture function, unlisted, fails `lean_ceilings.check`
+    """A 16-statement fixture function, unlisted, fails `lean_ceilings.check`
     through `measure_ruff_sections`'s own qualname wiring -- not just `lean_ceilings`'s
     already-proven core.
     """
@@ -101,7 +101,7 @@ def _complexity_function(name: str, branches: int) -> str:
 
 
 def test_measure_ruff_sections_ignores_the_projects_per_file_ignores(tmp_path: Path) -> None:
-    """LEAN-GATE-FIX (decision 0114): the real root `pyproject.toml` ignores C901, PLR0912 and
+    """Decision 0114: the real root `pyproject.toml` ignores C901, PLR0912 and
     PLR0915 under `packages/*/src/**`; the gate still measures a 16-statement and a complexity-9
     function there.
     """
@@ -119,7 +119,7 @@ def test_measure_ruff_sections_ignores_the_projects_per_file_ignores(tmp_path: P
 def test_measure_ruff_sections_fails_when_the_call_fails_without_findings(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """LEAN-GATE-FIX: a uv or ruff failure (exit 1, empty stdout, an error on stderr) is not
+    """A uv or ruff failure (exit 1, empty stdout, an error on stderr) is not
     "no findings"; the gate raises instead of passing clean.
     """
     _write(
@@ -137,7 +137,7 @@ def test_measure_ruff_sections_fails_when_the_call_fails_without_findings(
 
 
 def test_unreasoned_bare_noqa_detected(tmp_path: Path) -> None:
-    """Acceptance 4a: a bare `# noqa: C901` (no reason) is an `unreasoned_sites` hit."""
+    """A bare `# noqa: C901` (no reason) is an `unreasoned_sites` hit."""
     module = tmp_path / "pkgtree" / "src" / "mod.py"
     _write(module, "x = 1  # noqa: C901\n")
 
@@ -149,7 +149,7 @@ def test_unreasoned_bare_noqa_detected(tmp_path: Path) -> None:
 
 
 def test_reasoned_noqa_passes(tmp_path: Path) -> None:
-    """Acceptance 4b: the identical line with `-- reason text` is not a hit."""
+    """The identical line with `-- reason text` is not a hit."""
     module = tmp_path / "pkgtree" / "src" / "mod.py"
     _write(module, "x = 1  # noqa: C901 -- reason text\n")
 

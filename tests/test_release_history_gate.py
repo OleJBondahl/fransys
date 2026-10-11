@@ -1,6 +1,6 @@
 """`RELEASE_HISTORY_UNRELEASED`: a history entry names a revision never released (W7).
 
-Acceptance 5, 6 and 12. Dates run in the order the entries are listed, so history order is the
+Dates run in the order the entries are listed, so history order is the
 listed order unless a test says otherwise.
 """
 
@@ -51,7 +51,7 @@ def test_an_entry_looks_for_its_folder_in_its_own_version(tmp_path):
 
 
 def test_entries_dated_before_the_first_release_stay_free_in_every_version(tmp_path):
-    """Acceptance 12: 1.1, 1.2, 2.1, 2.2 dated before the first release 1.3; then 1.4 releases."""
+    """1.1, 1.2, 2.1, 2.2 dated before the first release 1.3; then 1.4 releases."""
     old = [(1, 1, "2025-01-01"), (1, 2, "2025-01-02"), (2, 1, "2025-01-03"), (2, 2, "2025-01-04")]
     release_board(tmp_path, revision=3, history=[*old, (1, 3, "2026-02-01")])
     folder = release_board(

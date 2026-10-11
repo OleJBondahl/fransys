@@ -3,9 +3,17 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.stages.box_views import face_plugs, placed_boxes
+from fransys_layout.stages.box_views import (
+    cell_views,
+    face_plugs,
+    moved_markers,
+    moved_views,
+    placed_boxes,
+    slot_rows,
+)
 from fransys_layout.stages.content import content_box
 from fransys_layout.stages.outlines import OutlineInputs, unit_outlines
+from fransys_layout.stages.space import Blocks
 from fransys_layout.stages.texts.echoes import echo_requests
 
 from ._middle import with_middle
@@ -62,6 +70,25 @@ def boxed(
     return face_plugs(placed_box, plug_mates(lines))
 
 
+PageBlocks = dict[tuple[int, int], Blocks]
+
+
+def cells_placed(
+    pages: Pages,
+    placed_all: Sequence[PlacedFunction],
+    markers: tuple[LinkMarker, ...],
+    placed_box: Sequence[PlacedConnectorBox],
+) -> tuple[Pages, list[PlacedFunction], tuple[LinkMarker, ...], PageBlocks]:
+    """HL19: each celled pin view and its marker move under its cell; the slot row is closed."""
+    moves = cell_views(placed_all, placed_box)
+    return (
+        [(tuple(moved_views(on, moves)), labels) for on, labels in pages],
+        moved_views(placed_all, moves),
+        moved_markers(markers, moves),
+        slot_rows(placed_box),
+    )
+
+
 def outlined(
     model: Model,
     inputs: StageInputs,
@@ -101,3 +128,23 @@ def cross_references(
     )
     taken = {(r.subject, r.slot) for r in held}
     return (*held, *(r for r in contact_refs if (r.subject, r.slot) not in taken))
+
+
+def outlined_cells(
+    model: Model,
+    inputs: StageInputs,
+    columns: tuple[Column, ...],
+    laid: Laid,
+    placed_box: tuple[PlacedConnectorBox, ...],
+) -> tuple[
+    Pages,
+    tuple[PlacedOutline, ...],
+    tuple[PlacedConnectorBox, ...],
+    list[PlacedFunction],
+    tuple[LinkMarker, ...],
+    PageBlocks,
+]:
+    """`outlined`, then the pin views onto their cells (HL19): after it, so no group shifts."""
+    pages, outlines, placed_box = outlined(model, inputs, columns, laid, placed_box)
+    pages, placed, markers, blocks = cells_placed(pages, laid.placed, laid.markers, placed_box)
+    return pages, outlines, placed_box, placed, markers, blocks

@@ -1,4 +1,4 @@
-"""`d.layout.profile` names each profile field with its type: no `**numbers` (EA15)."""
+"""`d.layout.profile` names each profile field with its type: no `**numbers`."""
 
 import dataclasses
 import inspect
@@ -10,7 +10,7 @@ import pytest
 
 from fransys_model.layout import Profile, default_profile, profile_of
 
-_NOT_TUNABLE = {"id", "key", "sheet_format", "ext"}
+_NOT_TUNABLE = {"id", "key", "unit", "sheet_format", "ext"}
 
 
 def _profile_call() -> Callable[..., Any]:

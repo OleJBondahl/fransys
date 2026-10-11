@@ -1,4 +1,4 @@
-"""CONVENTIONS-V06 V3 (owner 2026-10-02): at an item box's pin a rail symbol faces away from it.
+"""At an item box's pin a rail symbol faces away from it.
 
 A two-pin lamp keeps its 24 V pin above and its 0 V pin below, so the bar stands above and the
 ground hangs below (R0). A PLC input module has both of its power pins on its top side: its 24 V

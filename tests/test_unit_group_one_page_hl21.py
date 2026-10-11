@@ -1,7 +1,7 @@
-"""Acceptance 16 (HL21): the study board's unit group stays on one page and moves whole.
+"""The study board's unit group stays on one page and moves whole.
 
 The group is the outline, its interfaces, the plug boxes on them and the columns its lines
-reach. Before layout-0153 P2c its last lower-band column spilled onto a second page, which drew
+reach. Before layout-0153 its last lower-band column spilled onto a second page, which drew
 a second outline with the same boxes. Built through `fr` from `demo_parts`, with and without
 the side hint (one module fixture per build).
 """

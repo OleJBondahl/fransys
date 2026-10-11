@@ -1,10 +1,10 @@
-"""EF-C Part 9: one conductor, one text. A unit's boundary pin mated outside its unit, whose
+"""One conductor, one text. A unit's boundary pin mated outside its unit, whose
 outside mate has two conductors leaving the location, shows two off stubs in the unit's own set,
 each naming its own far end (layout-0057: the k-th end of a port takes the k-th text).
 
 Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records. The
-stub tests carry the two conductors as single wires: two cores of one harness make a line (HL1),
-which leaves in one stub per line (HL18, owner C1), so the per-conductor rule has no stub to read.
+stub tests carry the two conductors as single wires: two cores of one harness make a line,
+which leaves in one stub per line, so the per-conductor rule has no stub to read.
 """
 
 from typing import Any
@@ -39,7 +39,7 @@ _PROJECT: dict[str, Any] = {
 def _build(*, wires: bool = False):
     """A cabinet unit at +C1 whose boundary pin X1:1 mates the plug P1 of the top-level harness
     W3; the plug's pin 1 carries two cores, one to Q1 and one to R1, both at +FLD. With `wires`
-    the two conductors are single wires and no harness: no line (HL1)."""
+    the two conductors are single wires and no harness: no line."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -96,8 +96,8 @@ def test_a_boundary_pin_whose_mate_has_two_conductors_shows_two_stubs_each_namin
     reason=(
         "layout-0093 known limit (ruling (a), 2026-10-02): two OFF stubs of one carrier "
         "to one far end on stacked neighbouring S pins of one column should share one box, but "
-        "the upper pin's stub runs into the lower pin's body, so no box stands clear of both "
-        "(M9); the pair keeps two boxes and the first stands on the lower pin"
+        "the upper pin's stub runs into the lower pin's body, so no box stands clear of both; "
+        "the pair keeps two boxes and the first stands on the lower pin"
     ),
 )
 def test_two_stubs_of_one_carrier_to_one_far_end_on_stacked_pins_share_one_box() -> None:

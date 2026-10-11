@@ -1,4 +1,4 @@
-"""EF-C2 part 3: a plug at `+EXT` wired to a relay coil and mated to a unit's boundary connector,
+"""A plug at `+EXT` wired to a relay coil and mated to a unit's boundary connector,
 with the harness and the relay at a location other than the unit's, lays out without a
 `LayoutError` ("two columns carry one authoring key") and with no ERROR finding.
 
@@ -29,7 +29,7 @@ _PROJECT: dict[str, Any] = {
 def test_a_plug_at_ext_wired_to_a_coil_and_mated_to_a_boundary_connector_lays_out(
     coil_pin, relay_where
 ) -> None:
-    # Not failing-first: EF-A3's crash ("two columns carry one authoring key") does not reproduce
+    # Not failing-first: the crash ("two columns carry one authoring key") does not reproduce
     # on this base; kept as a regression guard for the shape it described.
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)

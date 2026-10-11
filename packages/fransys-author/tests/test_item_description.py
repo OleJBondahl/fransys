@@ -1,4 +1,4 @@
-"""`Item.description` holds only what the author wrote; `item_description` reads the rest (SC4).
+"""`Item.description` holds only what the author wrote; `item_description` reads the rest.
 
 Six author paths make an item; each is frozen and read two ways: the stored field, and
 `derive.item_description`. The catalogue's parts have distinct, non-empty descriptions, so a

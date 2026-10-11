@@ -1,5 +1,4 @@
-"""WP6 tests: `kernel.encode`, the model as nested data and as canonical JSON
-(design/kernel-model.md 5.6).
+"""Tests: `kernel.encode`, the model as nested data and as canonical JSON.
 
 Every expected value below is written out by hand, never computed by the code under test.
 """
@@ -143,7 +142,7 @@ def test_the_model_is_tables_of_records_in_id_order_plus_aliases(origin: Origin)
     model = model_of(origin, second, first, make_owner("1"))
     data = to_data(model)
     assert list(data) == ["aliases", "schema_version", "tables"]
-    assert data["schema_version"] == 11
+    assert data["schema_version"] == 13
     assert data["aliases"] == ()
     assert list(data["tables"]) == ["canon_item_probe", "canon_owner_probe"]
     assert [entry["key"] for entry in data["tables"]["canon_item_probe"]] == [("2",), ("3",)]

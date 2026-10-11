@@ -1,4 +1,4 @@
-"""Fixtures of `test_ratings_acceptance_q5.py` (RATINGS-1 part 6, acceptance 5): units and supplies.
+"""Fixtures of `test_ratings_acceptance_q5.py` : units and supplies.
 
 Unit `ub` has a 2-port connector `xb` (`DEMO-CONN-2P`) that is its boundary, stating a rating or
 an operating envelope. Unit `ua` declares the supply `DC` (`+800` and `0V`) on its own connector

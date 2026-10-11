@@ -3,7 +3,7 @@
 The PE net of `test_dd_star_per_set` is three terminals: the hub `-X1:1` wired to `-X3:1` and
 `-X3:2`. In the unit's own set, on a page of its own (`fill` 3), `-X3:1` stands apart from the
 hub and is covered by a branch marker, which the star pass makes; on the hub's page (`fill` 1)
-M12 joins the three by wires, so routes cover them. `check_members` is handed the connections
+The three are joined by wires, so routes cover them. `check_members` is handed the connections
 and net groups from before the star nets are taken out, and the full layout with the star
 markers. Built through the
 `fransys` facade from `examples/demo-parts`: the build reports no `CONNECTION_NOT_DRAWN`, and
@@ -77,7 +77,7 @@ def test_a_star_net_without_its_branches_reports_the_branch_less_ports(
 
     The positive twin of the test above: it proves the engine calls `check_members` and that the
     finding reaches `fr.build`'s findings, an ERROR, as `fr.write` refuses on it. On one page
-    (`fill` 1) M12 joins the PE terminals by wires, so they lose no branch: the ports named are
+    (`fill` 1) the PE terminals are joined by wires, so they lose no branch: the ports named are
     the relays' of the fixture's other nets, which are still stars, and the routes stand for
     the terminals.
 

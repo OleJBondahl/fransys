@@ -1,6 +1,6 @@
-"""The cabinet with its cable `W1`'s two cores redrawn as plain wires (HL1 off for `W1`).
+"""The cabinet with its cable `W1`'s two cores redrawn as plain wires.
 
-HL1 draws `W1` (two cores, rails to lamp `-H1`) as a harness line, so the lamp's pins no longer
+`W1` (two cores, rails to lamp `-H1`) is drawn as a harness line, so the lamp's pins no longer
 pick their sides from wires and the rail star loses its `-H1` branch. Tests whose rule needs that
 geometry (a widened generic box, a branch marker beside a sibling lane, a text-shrunk page room)
 build this variant instead: the same records, `W1`'s cores turned into wires.

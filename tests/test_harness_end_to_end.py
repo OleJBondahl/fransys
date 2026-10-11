@@ -1,4 +1,4 @@
-"""D4b: a harnessed cabinet writes with no ERROR, and its harness lines are drawn in the SVG.
+"""A harnessed cabinet writes with no ERROR, and its harness lines are drawn in the SVG.
 
 The study board of `ha_study_board` (one unit with five interfaces on harnesses, beside PLC
 devices and a terminal strip), built and written once through `fr` from `demo_parts` (module

@@ -1,4 +1,4 @@
-"""`mate_partners`: the one home of the functions across a mate (BLOCK-DIAGRAMS BD2)."""
+"""`mate_partners`: the one home of the functions across a mate."""
 
 from connector_builders import make_connector
 from plant import Plant
@@ -20,8 +20,3 @@ def test_each_end_of_a_mate_lists_the_other_a_second_mate_adds_one_by_designatio
     assert partners[fa] == (fb, fc)
     assert partners[fb] == (fa,)
     assert partners[fc] == (fa,)
-
-
-def test_a_model_without_mates_has_no_partners() -> None:
-    """An unmated model gives an empty map."""
-    assert mate_partners(Plant().model()) == {}

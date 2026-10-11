@@ -1,4 +1,4 @@
-"""A wire on a harness plug belongs to that harness (HA2, model-0171, model-0148)."""
+"""A wire on a harness plug belongs to that harness (model-0171, model-0148)."""
 
 from typing import TYPE_CHECKING, Any
 

@@ -1,9 +1,9 @@
-"""F5-C gap tests (layout deep dive): D1 (a cyclic ring of poles), D4 (room for the first and last
-rows' texts inside the content box) and D9 (junction dot and stub of a wired reference), built
+"""Gap tests: a cyclic ring of poles, room for the first and last
+rows' texts inside the content box, and junction dot and stub of a wired reference, built
 through the `fransys` facade from `examples/demo-parts` and read from the laid-out
 `layout.*` records, `Finding` codes and the rendered SVG only.
 
-Box model of the D4 tests: a symbol's library keep-out, a label box (`x`, `y` top-left, one
+Box model of the room tests: a symbol's library keep-out, a label box (`x`, `y` top-left, one
 `text_height` per line), and a link marker's box one wiring grid beyond its port (above an N port,
 below an S port). A coil's A1 faces N and its A2 faces S; the marker record stores the port.
 """
@@ -72,7 +72,7 @@ def _coil(model, name):
     return [p for p in layout_of(model, SymbolPlacement).values() if p.function in ids]
 
 
-# -- D1: a cyclic ring of poles ------------------------------------------------------------
+# -- a cyclic ring of poles ------------------------------------------------------------
 
 
 def _ring(part: str, function: str, count: int):
@@ -88,8 +88,8 @@ def _ring(part: str, function: str, count: int):
 
 @pytest.mark.parametrize("count", [3, 4])
 def test_a_ring_of_poles_ends_where_it_closes_and_places_each_function_once(count) -> None:
-    """D1: chain discovery over a ring of poles terminates; each function has one place, and the
-    ring closes with a reference pair (M12)."""
+    """Chain discovery over a ring of poles terminates; each function has one place, and the
+    ring closes with a reference pair."""
     # UNDO: fransys_layout/stages/chains.py:discover_chains, drop the ring-termination guard
     #     `pole_of_port[q] not in visited` (backward walk) or `while cur not in walked` (forward).
     #     It fails only by HANGING (an endless walk); there is no pytest-timeout here, so a probe
@@ -107,7 +107,7 @@ def test_a_ring_of_poles_ends_where_it_closes_and_places_each_function_once(coun
     pitch = rows[1] - rows[0]
     assert pitch > 0
     assert all(b - a == pitch for a, b in pairwise(rows))
-    # M12 (a link that turns back around a device becomes a reference pair): the net that
+    # A link that turns back around a device becomes a reference pair: the net that
     # closes the ring is no wire spanning the column but a reference and a branch on its two
     # ports; the other `count - 1` nets are wires joining neighbouring rows
     y_of = {port: p.y for p in placed for port in _ports_of(model, p.function)}
@@ -128,7 +128,7 @@ def _ports_of(model, function):
 
 @pytest.mark.parametrize("count", [3, 4])
 def test_a_ring_of_generic_boxes_lays_out_and_places_each_function_once(count) -> None:
-    """D1/D2: a ring of one-element chains (boxes have no through path) must not crash the run."""
+    """A ring of one-element chains (boxes have no through path) must not crash the run."""
     # UNDO: stages/attach.py:hub_order, rekey the column as `(*branches[0], "hub")`
     #     (drop `*column.key`): two hubs of a ring share a lowest branch, and the run raises
     #     LayoutError 'two columns carry one authoring key'
@@ -138,7 +138,7 @@ def test_a_ring_of_generic_boxes_lays_out_and_places_each_function_once(count) -
     assert len({(p.page, p.x) for p in placed}) == count  # each box stands in a column of its own
 
 
-# -- D4: room for the first and last rows' texts inside the content box --------------------
+# -- room for the first and last rows' texts inside the content box --------------------
 
 
 def _boxes(model):
@@ -173,7 +173,7 @@ def _content_height() -> int:
 
 def _star(*wires):
     """Relays K1..K4 whose coil pins the `wires` join, each end a pin spec "K1.A2" ("A1" faces N,
-    "A2" faces S). The pins are mixed: M12 joins same-side pins by wires, so a star needs both."""
+    "A2" faces S). The pins are mixed: same-side pins are joined by wires, so a star needs both."""
     parts, d, c1, grp = _design()
     wire = d.wiring(colour="BU", gauge="0.5")
     relays = {
@@ -186,7 +186,7 @@ def _star(*wires):
 
 
 def test_the_first_row_keeps_room_above_for_its_markers_inside_the_content_box() -> None:
-    """D4, S20 M4: the hub's marker on the N port stands at or below the content-box top, and
+    """The hub's marker on the N port stands at or below the content-box top, and
     near it: the band along the top keeps the room for the turned box."""
     # UNDO: fransys_layout/stages/place.py `reference_band`: `return 0` (no band: the first
     #     row starts at the top and the marker box stands above the content box)
@@ -202,7 +202,7 @@ def test_the_first_row_keeps_room_above_for_its_markers_inside_the_content_box()
 
 
 def test_the_last_row_keeps_room_below_for_its_markers_inside_the_content_box() -> None:
-    """D4: markers on the S ports of the last row of a tall column end inside the content box."""
+    """Markers on the S ports of the last row of a tall column end inside the content box."""
     # UNDO: fransys_layout/stages/place.py:_space
     #     `_space(page, profile.row_spacing)` becomes `_space(page, 400)` (rows then run past the
     #     content-box bottom). The `sink` term of `_text_room` (room below the last row) is NOT
@@ -231,7 +231,7 @@ def test_the_last_row_keeps_room_below_for_its_markers_inside_the_content_box() 
     assert bottom <= _content_height()
 
 
-# -- D9: junction dot and stub of a wired reference ----------------------------------------
+# -- junction dot and stub of a wired reference ----------------------------------------
 
 
 def _grid(sheet, mm_x, mm_y):
@@ -243,9 +243,9 @@ def _grid(sheet, mm_x, mm_y):
 
 
 def test_a_reference_wired_to_a_member_leaves_its_list_by_a_junction_dot_and_an_east_stub() -> None:
-    """D9, S20 M7: hub K1.A1 is wired to K2.A1 and lists K3.A2 in a marker: dot one grid out, a
+    """Hub K1.A1 is wired to K2.A1 and lists K3.A2 in a marker: dot one grid out, a
     stub E to the box's centre line (the fewest whole grids), then the vertical box. K3 stands on
-    A2 so the net is a star: M12 would wire a same-side pair at any column distance."""
+    A2 so the net is a star: a same-side pair would be wired at any column distance."""
     # UNDO: stages/texts/marker_row.py, `_turns`: `return False` (the reference stays on its
     #     wire: no via, no dot, no E stub)
     parts, d, c1, grp = _design()
@@ -285,7 +285,7 @@ def test_a_reference_wired_to_a_member_leaves_its_list_by_a_junction_dot_and_an_
     assert reference.via_x is not None
     assert (reference.via_x, reference.via_y) == dot  # the junction is the marker's via
     assert reference.box_x is not None
-    end = (reference.box_x + reference.width // 2, dot[1])  # the box's centre line (M7)
+    end = (reference.box_x + reference.width // 2, dot[1])  # the box's centre line
     assert end[0] - dot[0] >= WIRING_GRID  # east of the dot by at least one grid
     assert (end[0] - dot[0]) % WIRING_GRID == 0  # and by whole grids
     assert (dot, end) in stubs
@@ -294,7 +294,7 @@ def test_a_reference_wired_to_a_member_leaves_its_list_by_a_junction_dot_and_an_
 def _terminal_hub(*, far: tuple[str, ...] = ()):
     """A strip terminal X1 (model port `external`) wired to relays K4, K5, K6 in one location: a net
     of four with one terminal point, so X1 is the reference. K6 is wired on its A2 (south) pin,
-    K4 and K5 on A1: M12 joins same-side pins by wires at any column distance, so a net of all-A1
+    K4 and K5 on A1: same-side pins are joined by wires at any column distance, so a net of all-A1
     pins has no star. Each tag in `far` is a relay in another location wired to X1's `external`
     too. Returns the build result."""
     parts, d, c1, grp = _design()
@@ -335,9 +335,9 @@ def _x1_markers(model) -> list[LinkMarker]:
 
 def _x1_reference(model) -> LinkMarker:
     """The marker on X1's `external` port that lists the branches, merged with a stub or not
-    (D9 F7): the `partner` every branch marker points at, `star` `REF` alone or `OFF` when
+    The `partner` every branch marker points at, `star` `REF` alone or `OFF` when
     merged with a stub -- read from the persisted link, not guessed from the now-symmetric
-    text (LD3 (d))."""
+    text."""
     markers = layout_of(model, LinkMarker)
     x1_ids = {m.id for m in _x1_markers(model)}
     (reference,) = {
@@ -349,9 +349,9 @@ def _x1_reference(model) -> LinkMarker:
 
 
 def test_a_terminal_reference_on_its_unwired_side_needs_no_turn() -> None:
-    """layout-0053: X1's wires end at one symbol port, its reference stands at the other one (C22,
-    `_free_side`): nothing crosses it, so it keeps its stub and draws no via (S20 M7 turns
-    a reference only where a wire ends)."""
+    """layout-0053: X1's wires end at one symbol port, its reference stands at the other one
+    (`_free_side`): nothing crosses it, so it keeps its stub and draws no via (a reference
+    turns only where a wire ends)."""
     # UNDO: stages/texts/marker_row.py, `_turns`, the turn's condition
     #     `(marker.drawing_set, marker.page, at.x, at.y) in room.wired_at` -> `True`: the
     #     reference turns although no wire ends on its symbol port
@@ -377,7 +377,7 @@ def test_a_terminal_reference_with_an_off_stub_on_its_unwired_side_needs_no_turn
 def test_two_far_ends_on_a_reference_port_are_each_named_and_the_list_stays_apart() -> None:
     """layout-0053/0057: X1 lists K4-K6 and is wired to K1 and K2 in another location. One record
     cannot name two far ends, so the reference keeps its list alone and each far end has a stub
-    (the two stubs share one box, S20 M3)."""
+    (the two stubs share one box)."""
     # UNDO: schematic/write/markers.py: link_markers, a reference with two far ends merges the
     #     last one into its own record: the stubs merge into the reference and K1 is named nowhere
     result = _terminal_hub(far=("K1", "K2"))
@@ -386,9 +386,9 @@ def test_two_far_ends_on_a_reference_port_are_each_named_and_the_list_stays_apar
     assert reference.star is StarKind.REF
     _stands_apart_from_the_wires(result, reference)
     # the list, no stub line. The columns are derived from where the branch markers stand, not
-    # pinned: they moved between 2/3 and 2/4 as the top-level tags shrank (D12, layout-0066) and the
-    # image lane width changed (D7, layout-0064). One `#n-[p<page>:]<col><row>` line per branch
-    # marker (LD3; the page only when another page than the reference's, model-0136), the marker's
+    # pinned: they moved between 2/3 and 2/4 as the top-level tags shrank (layout-0066) and the
+    # image lane width changed (layout-0064). One `#n-[p<page>:]<col><row>` line per branch
+    # marker (the page only when another page than the reference's, model-0136), the marker's
     # own position on the house sheet, sorted as `marker_text` sorts them.
     sheet = default_sheet_format()
     content_width = round(sheet.content_width_mm * 8 / float(sheet.module_mm))
@@ -419,7 +419,7 @@ def test_two_far_ends_on_a_reference_port_are_each_named_and_the_list_stays_apar
 
 
 def test_a_turned_reference_with_an_off_stub_renders_and_prints_the_measured_arrow() -> None:
-    """D9 (F7 merge, layout-0053): a reference that is wired AND carries a stub to another location
+    """Layout-0053: a reference that is wired AND carries a stub to another location
     turns E and stays one off-stub record; render draws it and prints the arrow layout measured."""
     # UNDO: fransys_render/_markers.py:_turned_glyphs, drop `far=None, carrier=None,
     #     facing=None` from its `dataclasses.replace(...)`: render raises SchemaError
@@ -445,10 +445,10 @@ def test_a_turned_reference_with_an_off_stub_renders_and_prints_the_measured_arr
 
 
 def test_a_turned_reference_that_carries_a_stub_is_one_merged_record_render_draws() -> None:
-    """S20 M7 with D9's F7 merge: a reference where a wire ends turns, and when it also carries a
+    """A reference where a wire ends turns, and when it also carries a
     stub to another location it stays one off-stub record (a via, the list's line and the stub's
     line in one box); render draws it and prints the arrow layout measured. K1.A1 is wired to
-    K2.A1, K4.A1 and K3.A2 (a star: M12 wires same-side pins), and a cable core leaves it for
+    K2.A1, K4.A1 and K3.A2 (a star: same-side pins are wired), and a cable core leaves it for
     +FLD."""
     # UNDO: fransys_render/_markers.py:_turned_glyphs, drop `far=None, carrier=None,
     #     facing=None` from its `dataclasses.replace(...)`: render raises SchemaError

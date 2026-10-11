@@ -6,7 +6,7 @@ stand in another drawing set than the coil, so the coil's contact table names th
 prefix ("53-54 +FLDp1:2A"), not the bare cell of the same set.
 
 The bug: layout sizes the contact image from the same-set text of that place, so the box is
-narrower than the text derive prints and the entry overflows the box (RW9).
+narrower than the text derive prints and the entry overflows the box.
 The fix: decision model-0144, one function gives the partner's position text and layout measures
 that text.
 """

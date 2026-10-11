@@ -1,4 +1,4 @@
-"""model-0122, F1: a `protective` link (a fuse or breaker) ends the physical net, not the rail.
+"""Decision model-0122: a `protective` link (a fuse or breaker) ends the physical net, not the rail.
 
 Built from `examples/demo-parts` only. A 24 V rail is declared on a fuse's input; the fuse's
 output goes to a terminal of strip X01 (the valve supply). The strip side is on no physical net of

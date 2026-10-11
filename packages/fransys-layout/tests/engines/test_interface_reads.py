@@ -1,4 +1,4 @@
-"""`interface_reads` feeds `edges` (HL13, model-0176): GND counts in the supply share.
+"""`interface_reads` feeds `edges` (model-0176): GND counts in the supply share.
 
 Built through `import fransys as fr` from `examples/demo-parts` only. J2 has two pins on GND
 and two signal pins; J1 has two signal pins and the lower designation.

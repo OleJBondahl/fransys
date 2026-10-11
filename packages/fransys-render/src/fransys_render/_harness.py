@@ -11,7 +11,7 @@ from fransys_model.layout import (
     HarnessLine,
     layout_of,
     page_slice,
-    profile_of,
+    profile_of_page,
     sheet_format_of,
 )
 
@@ -60,7 +60,7 @@ def _line_element(
 def harness_lines_group(model: Model, page: Page) -> str:
     """Every harness line on `page` as one `<polyline>` each, in `id` order, with its text."""
     sheet = sheet_format_of(model, page.sheet_format)
-    step = profile_of(model).text_height
+    step = profile_of_page(model, page).text_height
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return "".join(
         _line_element(model, sheet, step, line, unit)
@@ -110,7 +110,7 @@ def _box_element(
 def connector_boxes_group(model: Model, page: Page) -> str:
     """Every connector box on `page`: its rectangle, text lines and pin cells, in `id` order."""
     sheet = sheet_format_of(model, page.sheet_format)
-    step = profile_of(model).text_height
+    step = profile_of_page(model, page).text_height
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return "".join(
         _box_element(model, sheet, step, box, unit) for box in page_slice(model, ConnectorBox, page)

@@ -122,6 +122,7 @@ class JoinedEnd:
 
     column: AuthoringKey
     port: Id[Any]
+    drop: int = 0  # A beside run's host pin stands this far above (-) or below (+) the run's y
 
 
 @value
@@ -131,3 +132,4 @@ class JoinedRun:
     drawing_set: int
     page: int
     ends: tuple[JoinedEnd, ...]
+    aside: bool = False  # A beside column's wire (layout-0174): `route` draws it sideways

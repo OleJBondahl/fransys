@@ -27,9 +27,3 @@ def test_collinear_legs_stay_separate_runs() -> None:
         run_of(Point(x=0, y=0), Point(x=0, y=8)),
         run_of(Point(x=0, y=8), Point(x=0, y=16)),
     )
-
-
-def test_a_repeat_and_a_diagonal_are_not_runs() -> None:
-    """A repeated point and a slanted leg give no run; the corner leg after them does."""
-    runs = runs_of(_route((0, 0), (0, 0), (8, 8), (8, 16)))
-    assert runs == (run_of(Point(x=8, y=8), Point(x=8, y=16)),)

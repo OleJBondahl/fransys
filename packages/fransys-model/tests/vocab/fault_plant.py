@@ -4,7 +4,6 @@ Invented data only. A module is a two-port `supply` function that states a DC fa
 no current limit, so it is no position of the branch graph and the fault graph adds it (Q4).
 """
 
-import dataclasses
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -12,18 +11,12 @@ from current_plant import rate
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Operating, OperatingFacet
-from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import FunctionKind, LinkKind, PortRole
 from fransys_model.vocab.templates import FunctionTemplate, PortTemplate
 
 if TYPE_CHECKING:
-    from collections.abc import Collection
-
     from current_plant import Ports
     from plant import Plant
-
-    from fransys_model.kernel import Id
-    from fransys_model.vocab.core import Unit
 
 
 def module(plant: Plant, key: str, fault: str | None = "6000", tc: str | None = "2") -> Ports:
@@ -78,13 +71,3 @@ def breaker(plant: Plant, key: str, amps_ac: str = "16") -> list[Ports]:
     )
     ports = [plant.port(function, pin.name, template=pin.id) for pin in pins]
     return [(ports[at], ports[at + 1]) for at in (0, 2, 4)]
-
-
-def into(plant: Plant, unit: Id[Unit], keys: Collection[str]) -> None:
-    """Put the items keyed `keys` into `unit`."""
-    plant.records[:] = [
-        dataclasses.replace(record, unit=unit)
-        if isinstance(record, Item) and record.key[0] in keys
-        else record
-        for record in plant.records
-    ]

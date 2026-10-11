@@ -1,4 +1,4 @@
-"""D13: a label's width and height are the box the stage measured once.
+"""A label's width and height are the box the stage measured once.
 
 `Label.width` and `Label.height` are written from the placed label's box, and render draws from
 them and measures nothing. Text kinds are measured from the text render prints (`label_text`).
@@ -52,7 +52,7 @@ def _labels() -> list[Label]:
 
 
 def test_the_cabinet_has_every_kind_the_check_covers() -> None:
-    """The text kinds are present, and a contact image too (C19)."""
+    """The text kinds are present, and a contact image too."""
     kinds = {label.kind for label in _labels()}
     assert {LabelKind.TAG, LabelKind.MARKING} <= kinds
     assert any(label.slot == "contacts" for label in _labels())
@@ -86,7 +86,7 @@ _PRINTED = (LabelKind.TAG, LabelKind.MARKING, LabelKind.CROSS_REFERENCE)
 @pytest.mark.parametrize("kind", _PRINTED, ids=lambda kind: kind.name)
 def test_a_text_label_is_as_wide_as_the_text_render_prints(kind: LabelKind) -> None:
     model = _run()[0]
-    # a contact image (slot "contacts") is a two-column table sized by its own rule (C19)
+    # a contact image (slot "contacts") is a two-column table sized by its own rule
     found = [label for label in _labels() if label.kind is kind and label.slot != "contacts"]
     if not found:
         pytest.skip(f"the cabinet has no {kind.name} label")

@@ -119,21 +119,6 @@ class Derived:
         object.__setattr__(self, "twin", self.owner)
 
 
-@record(kind="freeze_derived_before_probe")
-class DerivedBefore:
-    """Holds a derived `init=False` field BEFORE a plain reference field that follows it."""
-
-    id: Id["DerivedBefore"]
-    key: AuthoringKey
-    twin: Id[Owner] = dataclasses.field(init=False)
-    owner: Id[Owner]
-    ext: frozendict[str, Value] = frozendict()
-
-    def __post_init__(self) -> None:
-        """Derive `twin`."""
-        object.__setattr__(self, "twin", self.owner)
-
-
 def owner_id(digit: str) -> Id[Any]:
     """An owner id made of one repeated hex digit."""
     return Id(kind="freeze_owner_probe", value=digit * 32)

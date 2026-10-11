@@ -1,4 +1,4 @@
-"""LD7 with LD6 (layout-0081): on a unit's own drawing set no stub label names an item of that unit.
+"""Per layout-0081, on a unit's own drawing set no stub label names an item of that unit.
 
 A unit is one drawing, so a wire between two of its own items is a wire (or a marker pair where a
 page break cuts it), never a stub, even when the two ends stand at two top-level locations. The

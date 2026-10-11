@@ -1,4 +1,4 @@
-"""F5-C: undo tests for D3 (stacking), D13/D14 (measured, anchored text) and D16 (house profile).
+"""Undo tests for row stacking, measured anchored text and the house profile.
 
 Everything is read from laid-out `layout.*` records; nothing here reads `ext`.
 Fixtures are invented: the layout package's cabinet and a small relay/lamp design on the
@@ -38,9 +38,9 @@ if TYPE_CHECKING:
 
 _AC_RAILS = {"L1": ("230", 0), "L2": ("230", 120), "L3": ("230", 240), "N": ("0", None)}
 _DC_RAILS = {"24V": ("24", None), "+": ("24", None), "0V": ("0", None)}
-_ROW_SPACING = 88  # D3, D16: the house value, 11 M
+_ROW_SPACING = 88  # The house value, 11 M
 _PROJECT: dict[str, Any] = {
-    "title": "F5-C",
+    "title": "Stacking text",
     "number": "P-5",
     "customer": "Example Co",
     "revision": 1,
@@ -79,7 +79,7 @@ def _design(*, second_tag: str = "K2", relays: bool = True, lamp_rails: tuple[st
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=c1, group=group)
     k2 = d.item("DEMO-RLY-2CO-24", tag=second_tag, at=c1, group=group)
     # each relay has its own feed terminal: two contacts between the same two nets would be
-    # strapped in parallel (D1, layout-0060), K2's a side element of K1's
+    # strapped in parallel (layout-0060), K2's a side element of K1's
     for relay, feed, zero in ((k1, feed1, zero1), (k2, feed2, zero2)):
         wire(feed.inner, relay.fn("coil")["A1"])
         wire(relay.fn("coil")["A2"], zero.inner)
@@ -137,15 +137,15 @@ def _columns(model: Model) -> list[list[tuple]]:
     return columns
 
 
-# ---- D3: stacking through the engine -------------------------------------------------------
+# ---- stacking through the engine -------------------------------------------------------
 
 
 def test_cells_of_a_column_stand_one_row_spacing_below_the_keep_out_before() -> None:
-    """D3: each cell sits `row_spacing` (88 G, to the grid) below the keep-out before it."""
+    """Each cell sits `row_spacing` (88 G, to the grid) below the keep-out before it."""
     # UNDO: fransys_model/layout/formats.py `Profile.row_spacing: int = 32` (or
     # stages/place.py `_space` gap: 0).
     model = _cabinet()
-    attached = {f.id for f in functions(model).values() if f.key[-1] == "terminal"}  # V4, R7 B8
+    attached = {f.id for f in functions(model).values() if f.key[-1] == "terminal"}
     gaps = [
         b[1] - a[2]
         for cells in _columns(model)
@@ -159,7 +159,7 @@ def test_cells_of_a_column_stand_one_row_spacing_below_the_keep_out_before() -> 
 
 
 def test_no_cell_is_pushed_to_the_page_foot_and_a_page_is_as_tall_as_its_tallest_column() -> None:
-    """D3: columns stack from the top; the page ends where its tallest column ends."""
+    """Columns stack from the top; the page ends where its tallest column ends."""
     # UNDO: stages/place.py `_space`: after the loop push each column's last block to the
     # content-box foot (`floor = sheet.content_height - block height`), the old fill.
     model = _cabinet()
@@ -179,9 +179,9 @@ def test_no_cell_is_pushed_to_the_page_foot_and_a_page_is_as_tall_as_its_tallest
 
 
 def test_a_column_of_only_boxes_and_terminals_stays_compact() -> None:
-    """D3: a generic box over its terminal keeps the row gap, not the 88 G spacing."""
+    """A generic box over its terminal keeps the row gap, not the 88 G spacing."""
     # UNDO: stages/place.py: delete the `if all(cell.boxy ...): continue` skip in `_space` AND
-    # break the `_blocks` glue (the terminal is an R7.1 attachment row; the two guards mask
+    # break the `_blocks` glue (the terminal is an attachment row; the two guards mask
     # each other, so either alone does not fail this test).
     model = _cabinet()
     placements = _by_key(model)
@@ -196,11 +196,11 @@ def test_a_column_of_only_boxes_and_terminals_stays_compact() -> None:
     assert 0 < below[0].y - box.y < _ROW_SPACING
 
 
-# ---- D16: the house profile ---------------------------------------------------------------
+# ---- the house profile ---------------------------------------------------------------
 
 
 def test_the_house_row_spacing_is_88() -> None:
-    """D16: `row_spacing` is 88 G (11 M) in the engine's house profile."""
+    """`row_spacing` is 88 G (11 M) in the engine's house profile."""
     # UNDO: fransys_model/layout/formats.py: `Profile.row_spacing: int = 87`.
     assert DEFAULT_PROFILE.row_spacing == _ROW_SPACING
 
@@ -232,17 +232,17 @@ def _switch_chain(row_spacing: int | None = None, switch_count: int = 5):
 
 
 def test_a_seven_block_column_ends_inside_the_page_at_the_house_row_spacing() -> None:
-    """M11, D3, D16: a column too tall for the house spacing narrows evenly, ends inside the page.
+    """A column too tall for the house spacing narrows evenly, ends inside the page.
 
     The column is a terminal, five make-contact switches and a terminal: six gaps, which at 88 G
-    would end below the floor (the content box less the bottom band, M4). The column narrows
+    would end below the floor (the content box less the bottom band). The column narrows
     its gaps evenly, to one value but for a grid of rounding, and not below `row_gap`, and ends
     above the bottom band with no `PAGE_OVERFULL`. The same design with an authored
     `layout.profile` of `row_spacing` 104 narrows to the same gaps: the fit sets them, not the
     spacing asked for.
     """
     # UNDO: stages/place.py `_stacked`: `return page, top, floor, gaps_of` after the first pass
-    # (no M11 narrowing): the house run reports PAGE_OVERFULL.
+    # (no narrowing): the house run reports PAGE_OVERFULL.
     house = _switch_chain()
     (house_column,) = _columns(house.model)
     wide = _switch_chain(row_spacing=104)
@@ -271,7 +271,7 @@ def test_a_seven_block_column_ends_inside_the_page_at_the_house_row_spacing() ->
 def test_an_authored_row_spacing_moves_the_blocks_of_a_column() -> None:
     """model-0060: `Profile.row_spacing` is read from the model, so 96 G stacks each gap 8 G wider.
 
-    The same five-block column (a column that fits at both spacings, so M11 narrows neither)
+    The same five-block column (a column that fits at both spacings, so narrowing changes neither)
     is laid out twice, the house profile and one authored at 96 G: the keep-outs are identical,
     so every gap grows by exactly the 8 G the spacing grew by.
     """
@@ -287,7 +287,7 @@ def test_an_authored_row_spacing_moves_the_blocks_of_a_column() -> None:
 
 
 _ORDER = ("L1", "L2", "L3", "24V", "N", "0V", "PE")
-# no ("24V", "N") pair: a DC bar against an AC reference is stacked by V3, not by rank
+# no ("24V", "N") pair: a DC bar against an AC reference is stacked by its rail rule, not by rank
 _PAIRS = [pair for pair in pairwise(_ORDER) if pair != ("24V", "N")]
 
 
@@ -298,7 +298,7 @@ def test_the_engine_puts_the_higher_potential_first(
     lower: str,
     swapped: bool,  # noqa: FBT001 -- a parametrized flag, one case per value
 ) -> None:
-    """D16: a load fed by two potentials draws the lower-rank one leftmost, whichever terminal."""
+    """A load fed by two potentials draws the lower-rank one leftmost, whichever terminal."""
     # UNDO: derive/potential.py `_order_key`: return `(0, 0)` for every rail (all tie).
     rails = (lower, higher) if swapped else (higher, lower)
     placed = _by_key(_design(relays=False, lamp_rails=rails))
@@ -315,7 +315,7 @@ def test_the_engine_puts_the_higher_potential_first(
     assert at[higher] < at[lower]  # leftmost, or on top when a power symbol stacks the column
 
 
-# ---- D13, D14: measured text kept at a fixed near edge ---------------------------------------
+# ---- measured text kept at a fixed near edge ---------------------------------------
 
 
 def _tag_of(model: Model, placement: SymbolPlacement) -> Label:
@@ -329,7 +329,7 @@ def _tag_of(model: Model, placement: SymbolPlacement) -> Label:
 
 
 def test_a_longer_tag_keeps_its_near_edge_and_pushes_the_column_by_the_width_difference() -> None:
-    """D13, D14: the W tag's right edge stays 20 G off the coil; the pitch grows by the text."""
+    """The W tag's right edge stays 20 G off the coil; the pitch grows by the text."""
     # UNDO: stages/place.py `_cells`: keep the fixed tag slot in the keep-out (skip `grow_keepout`
     # and `_without_tag`) or stages/labels.py: centre a W text on its slot.
     short, long = _design(second_tag="K2"), _design(second_tag="K2LONGTAG")
@@ -383,11 +383,11 @@ def _marker_offsets(model: Model) -> dict:
 
 
 def test_a_marker_box_keeps_its_near_edge_at_a_fixed_offset_whatever_its_thickness() -> None:
-    """D14: markers of one side and facing sit at one offset from their port at any thickness.
+    """Markers of one side and facing sit at one offset from their port at any thickness.
 
-    LD3 (c), decision layout-0089: a reference's box length is fixed per sheet format. On an N
-    or S pin the box is vertical (M1) and its lines stand side by side (M3), so the dimension
-    that still varies, with a reference's own line count (LD3 (d)), is the box's width, its
+    Decision layout-0089: a reference's box length is fixed per sheet format. On an N
+    or S pin the box is vertical and its lines stand side by side, so the dimension
+    that still varies, with a reference's own line count, is the box's width, its
     thickness. The invariant -- the near edge sits at one fixed offset from the port, whatever
     the box's own size -- is checked on that width.
     """

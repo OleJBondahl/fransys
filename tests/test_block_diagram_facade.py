@@ -97,7 +97,7 @@ def test_a_reading_with_no_line_gives_no_page_and_no_finding():
 
 
 def test_the_cabinets_own_document_writes_no_diagram_record_and_no_page(tmp_path):
-    """Acceptance 4: a unit document keeps no BLOCK_DIAGRAM page by default: nothing is laid out."""
+    """A unit document keeps no BLOCK_DIAGRAM page by default: nothing is laid out."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)

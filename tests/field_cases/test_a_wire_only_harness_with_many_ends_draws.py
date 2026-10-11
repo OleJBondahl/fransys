@@ -76,7 +76,7 @@ def _drawn(d: fr.Design, w1: Any, cover: Path) -> list[str]:
 def _order(
     d: fr.Design, w1: Any, cover: Path, tags: dict[str, Any]
 ) -> tuple[list[str], list[str], dict[str, list[str]]]:
-    """The tags of the top and bottom ends, and every end's pin markings, in drawing order (CD6)."""
+    """The tags of the top and bottom ends, and every end's pin markings, in drawing order."""
     model = _built(d, w1, cover).model
     by_id = {dev.id: tag for tag, dev in tags.items()}
     top, bottom = end_rows(model, w1.id, None)

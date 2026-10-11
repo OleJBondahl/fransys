@@ -6,7 +6,7 @@ board modules in a loop, and wants no tag numbers to keep track of.
 The bug: only `device` and `harness` took `None` for a tag. A strip, a cable and a unit instance
 had to be given a written tag, and a loop of modules had to count for itself.
 
-The rule (UT3), a strip taking the class code of its terminals' part (a strip with no terminal
+The rule: a strip taking the class code of its terminals' part (a strip with no terminal
 has no part to name a code): `terminal_strip(None, part, name=)`, `cable(None, part, name=)` and
 `d.add(definition, None, name=)` number from the class code, the part file's or the unit's own
 (`class_code=` on `@fr.unit`). Instances and items of one code in a container share one count.

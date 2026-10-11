@@ -1,4 +1,4 @@
-"""RW4's "one place" ruling (decision model-0108):
+"""The "one place" ruling (decision model-0108):
 every reader switches to `is_cable`/`cable_items` (`fransys_model.vocab.cables`), and none
 keeps its own copy of the old test, checked with stdlib `ast` the way `tests/test_boundaries.py`
 checks import layering.

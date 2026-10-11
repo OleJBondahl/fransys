@@ -1,11 +1,11 @@
-"""CRASH-BOUNDARY (layout-0057): two conductors of one port that leave for another location
+"""Layout-0057: two conductors of one port that leave for another location
 must not crash `write_layout` ("the records put name one id twice, with different content").
 
 A unit's boundary terminal `X1`, wired at the top level to two relays in another location: its
 `external` port carries two crossing conductors, so two off stubs stand on that one port. Each
 stub names its own far end; before the fix both read the last one (`+FLD-K1:A1 A1`, K2 never
 named) and both records took one key. An off stub's key names its far port where a paired
-marker names its partner's port. Stubs on one port share one box (S20 M3): one lead whose
+marker names its partner's port. Stubs on one port share one box: one lead whose
 `marker_text` has a line per far end, the box wide enough for every line.
 
 Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records,
@@ -69,7 +69,7 @@ def _stubs_of_x1(model) -> list[LinkMarker]:
 
 def test_two_relays_on_one_boundary_terminal_port_build_and_each_is_named() -> None:
     """One port, two far devices: two stubs with keys of their own, each far end named once, in
-    one shared box (M3)."""
+    one shared box."""
     # UNDO: schematic/write/markers.py: link_markers, the off stub's far end text: every stub
     #     takes the port's last end (K2 never named, both keys equal)
     model = _build((("K1", "A1"), ("K2", "A1")))
@@ -131,7 +131,7 @@ def test_three_far_ends_on_one_port_share_one_box_with_a_line_each() -> None:
 def test_a_port_wired_to_five_relays_gives_all_five_stubs_one_box() -> None:
     """X1's `external` is wired to five relays, two at +FLD and three at +C1 (layout-0080): each
     conductor leaving the unit is a stub at each end, whatever the location, so the port
-    carries five off stubs, one per relay, each far end named, in one shared box (M3)."""
+    carries five off stubs, one per relay, each far end named, in one shared box."""
     # UNDO: stages/texts/stand.py `joined_box`: `sum(b.width for b in boxes) - trim`
     #     -> `first.width` (the box holds one line's width, the lines overprint)
     result = _build_with_marker(("K1", "K2"))

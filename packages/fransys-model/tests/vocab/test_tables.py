@@ -1,5 +1,4 @@
-"""WP8 tests: typed accessors over `Model.tables` (ROADMAP WP8, design/kernel-model.md 5.5 and
-design/derive.md)."""
+"""Tests: typed accessors over `Model.tables`."""
 
 from typing import TYPE_CHECKING, Any
 

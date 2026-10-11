@@ -394,6 +394,7 @@ class Chain:
     chain: Id[Any]
     key: AuthoringKey
     entries: tuple[ChainEntry, ...]
+    beside: Id[Any] | None = None  # layout-0174: the host function this chain stands beside
 
     def __post_init__(self) -> None:
         """Sort `entries` by index."""
@@ -441,6 +442,7 @@ class Column:
     role: Role
     location: Id[Any] | None
     unit: Id[Any] | None = None
+    beside: Id[Any] | None = None  # layout-0174: the host function this column stands beside
 
     def __post_init__(self) -> None:
         """Sort `cells` by row, then lane."""

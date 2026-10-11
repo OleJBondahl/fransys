@@ -1,4 +1,4 @@
-"""F5-C, principle 5 (shuffle) on the example-sized fixture of `dd_stability_fixture`.
+"""Principle 5 (shuffle) on the example-sized fixture of `dd_stability_fixture`.
 
 `freeze` canonicalises, so authoring in another order (the facade variant below) hands the
 engine an equal model and proves almost nothing. The real proofs reorder what the engine

@@ -1,4 +1,4 @@
-"""The HARNESS-ASSEMBLIES worked example builds end to end (acceptance 11, model-0171, model-0172).
+"""The harness assemblies worked example builds end to end (model-0171, model-0172).
 
 A contactor on flying leads wears a housing, a relay module is mated to a harness plug, and the
 harness `W1` carries two wires between its plugs.

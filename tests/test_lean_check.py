@@ -112,7 +112,7 @@ def test_directory_exempt_covers_an_unreasoned_site_under_it(tmp_path: Path) -> 
 
 
 def test_layout_has_no_unreasoned_suppression_even_without_the_exempt_entry():
-    """LG1 backfill: every layout `noqa`/`ty: ignore` carries a reason, with no `[exempt]` help."""
+    """Every layout `noqa`/`ty: ignore` carries a reason, with no `[exempt]` help."""
     layout = ROOT / "packages/fransys-layout"
     sites = lean_check.lean_code_gates.unreasoned_sites([layout / "src", layout / "tests"], ROOT)
 

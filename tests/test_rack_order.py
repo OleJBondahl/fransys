@@ -1,4 +1,4 @@
-"""F1 (layout deep dive, ruling): a rack's child order is authored, so layout
+"""A rack's child order is authored, so layout
 follows it. The modules stand in `position` order, each with its own columns, whatever
 their keys or designations say.
 

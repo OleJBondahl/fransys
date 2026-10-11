@@ -1,4 +1,4 @@
-"""The typed parts module generator: names, collisions, determinism, digest (EA4)."""
+"""The typed parts module generator: names, collisions, determinism, digest."""
 
 import ast
 

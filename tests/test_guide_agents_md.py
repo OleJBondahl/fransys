@@ -1,5 +1,5 @@
 """`AGENTS.md`'s own text names the resource-loading mechanism it tells an agent to use to
-find the guide (CG5). This proves that mechanism actually works: it extracts the exact
+find the guide. This proves that mechanism actually works: it extracts the exact
 expression `AGENTS.md` gives (a plain, non-`python`-labeled fence) and executes it, rather
 than checking a hand-copied duplicate string against it. A test that only string-matched
 would still pass if the named call could never actually load anything.
@@ -20,8 +20,8 @@ def _agents_md_text() -> str:
 
 
 def _mechanism_expression(text: str) -> str:
-    """The one fenced snippet of `text` that is not language-tagged `python` (CG5:
-    `AGENTS.md`'s mechanism fence is deliberately plain prose, not a runnable python
+    """The one fenced snippet of `text` that is not language-tagged `python` (`AGENTS.md`'s
+    mechanism fence is deliberately plain prose, not a runnable python
     block, so it stays out of `test_guide_examples.py`'s block scan)."""
     fences = [body for lang, body in _FENCE.findall(text) if lang != "python"]
     assert len(fences) == 1, f"expected exactly one non-python fence, found {len(fences)}"

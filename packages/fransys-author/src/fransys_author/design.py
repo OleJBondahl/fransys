@@ -48,6 +48,7 @@ from fransys_model.vocab import (
 lazy from fransys_model.vocab import Function as ModelFunction
 lazy from fransys_model.vocab import Operating, Rating
 
+from ._beside import check_beside
 from ._boundary_values import build_boundary_values
 from ._catalogue import build_catalogue
 from ._decimal import as_decimal
@@ -103,7 +104,7 @@ _SHEET_REQUIRED, _SHEET_DEFAULTS = _required_and_defaults(
     ModelSheetFormat, exclude={"id", "key", "name", "ext"}
 )
 _PROFILE_REQUIRED, _PROFILE_DEFAULTS = _required_and_defaults(
-    ModelProfile, exclude={"id", "key", "sheet_format", "ext"}
+    ModelProfile, exclude={"id", "key", "unit", "sheet_format", "ext"}
 )
 
 
@@ -346,6 +347,43 @@ class Scope(LinkScope, SupplyScope):
         # Not `_add`: its name-clash AuthorError words a `name=` fix; two instances of one
         # release writing different entry text are the draft's own `MergeConflict`.
         self._design._draft.add(record, origin=caller_origin())
+
+    def sheet(self, name: str, **numbers: int | Decimal) -> Id[ModelSheetFormat]:
+        """A `layout.sheet_format`.
+
+        Raises:
+            AuthorError: `numbers` is missing one of the sheet's fields, or names one
+                the model does not have.
+        """
+        fields = _validated_fields(numbers, _SHEET_REQUIRED, _SHEET_DEFAULTS, what="sheet")
+        key = scoped(self._prefix, "sheet", name)
+        record = ModelSheetFormat(id=make_id(ModelSheetFormat, key), key=key, name=name, **fields)
+        self._design._add(record, caller_origin())
+        return record.id
+
+    def profile(
+        self, *, sheet: Id[ModelSheetFormat] | None = None, **numbers: int | frozendict[str, int]
+    ) -> None:
+        """A `layout.profile`; at most one per unit, and one for the top design.
+
+        Inside a unit body it is the unit's own profile: it governs the unit's own drawings
+        wherever they are built, and the top design's never reaches them (model-0192).
+        Every field not given keeps its house value; a field given replaces it whole (a
+        rank map is never merged). `sheet=None` is the house sheet.
+
+        Raises:
+            AuthorError: `numbers` names a field the model does not have (A-r4: "a
+                profile number the model does not have is an AuthorError").
+        """
+        fields = _validated_fields(numbers, _PROFILE_REQUIRED, _PROFILE_DEFAULTS, what="profile")
+        unit = self._unit
+        key = ("profile",)
+        if unit is not None:
+            key = (*cast("ModelUnit", self._design._draft.record_of(unit)).key, "profile")
+        record = ModelProfile(
+            id=make_id(ModelProfile, key), key=key, unit=unit, sheet_format=sheet, **fields
+        )
+        self._design._add(record, caller_origin())
 
     @property
     def unit_id(self) -> Id[ModelUnit] | None:
@@ -677,14 +715,22 @@ class Scope(LinkScope, SupplyScope):
 
     # -- layout hints --------------------------------------------------------------
 
-    def chain(self, *functions: Fn | Item | Terminal) -> None:
-        """One series chain of functions, source first."""
+    def chain(self, *functions: Fn | Item | Terminal, beside: Fn | Item | None = None) -> None:
+        """One series chain of functions, source first; `beside` stands it next to a host."""
         resolved = [_as_function(function) for function in functions]
+        host = None if beside is None else _as_function(beside)
+        if host is not None:
+            check_beside(self._design._draft.records(), resolved, host)
         entries = tuple(
             ChainEntry(function=fn.id, index=index) for index, fn in enumerate(resolved)
         )
         key = scoped(self._prefix, "chain", *(spliced(fn.key) for fn in resolved))
-        record = Chain(id=make_id(Chain, key), key=key, entries=entries)
+        record = Chain(
+            id=make_id(Chain, key),
+            key=key,
+            entries=entries,
+            beside=None if host is None else host.id,
+        )
         self._design._add(record, caller_origin())
 
     def keep_together(self, *groups: Group) -> None:
@@ -921,36 +967,6 @@ class Design(Scope):
             checked=checked,
             approved=approved,
         )
-
-    def sheet(self, name: str, **numbers: int | Decimal) -> Id[ModelSheetFormat]:
-        """A `layout.sheet_format`.
-
-        Raises:
-            AuthorError: `numbers` is missing one of the sheet's fields, or names one
-                the model does not have.
-        """
-        fields = _validated_fields(numbers, _SHEET_REQUIRED, _SHEET_DEFAULTS, what="sheet")
-        key = scoped(self._prefix, "sheet", name)
-        record = ModelSheetFormat(id=make_id(ModelSheetFormat, key), key=key, name=name, **fields)
-        self._add(record, caller_origin())
-        return record.id
-
-    def profile(
-        self, *, sheet: Id[ModelSheetFormat] | None = None, **numbers: int | frozendict[str, int]
-    ) -> None:
-        """A `layout.profile`; at most one per model.
-
-        Every field not given keeps its house value; a field given replaces it whole (a
-        rank map is never merged). `sheet=None` is the house sheet.
-
-        Raises:
-            AuthorError: `numbers` names a field the model does not have (A-r4: "a
-                profile number the model does not have is an AuthorError").
-        """
-        fields = _validated_fields(numbers, _PROFILE_REQUIRED, _PROFILE_DEFAULTS, what="profile")
-        key = ("profile",)
-        record = ModelProfile(id=make_id(ModelProfile, key), key=key, sheet_format=sheet, **fields)
-        self._add(record, caller_origin())
 
     def draft(self) -> Draft:
         """The `Draft` written so far; `fr.build` merges it with the part catalogue's own."""

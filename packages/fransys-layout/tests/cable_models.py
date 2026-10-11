@@ -1,4 +1,4 @@
-"""Invented models for the cable engine's golden and link tests (CT5-LINK), built from demo-parts.
+"""Invented models for the cable engine's golden and link tests, built from demo-parts.
 
 Each builder returns a `SimpleNamespace` with `model` (the frozen model after `lay_out_cables`),
 `frozen` (before it) and the ids a test names. `MODELS` lists them by name for the golden. Nothing
@@ -206,7 +206,7 @@ def ring() -> SimpleNamespace:
 
 @cache
 def l1_picture() -> SimpleNamespace:
-    """The owner's L1 picture: -X1 down to -H2; core 3 joins -H2:W and -H2:PE (a looped core)."""
+    """Strip -X1 down to -H2; core 3 joins -H2:W and -H2:PE (a looped core)."""
     parts, d = design()
     er, fld = d.location("ER", "Engine room"), d.location("FLD", "Field")
     g, gf = d.group("ER", "Cabinet"), d.group("FLD", "Field")

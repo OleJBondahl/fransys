@@ -2,7 +2,7 @@
 
 Run as `python _write_fixture.py WORK_DIR`: builds two harnesses of `demo_parts` (each a
 cable of two cores between two connectors), a `HARNESS_DRAWING` document per harness (PDF
-pages and their cable table pages, no schematic, no SVG, CT1/CT2), and writes `WORK_DIR/out`
+pages and their cable table pages, no schematic, no SVG), and writes `WORK_DIR/out`
 and `WORK_DIR/intermediates`. It imports only the facade, so a fresh interpreter needs nothing
 from pytest.
 """

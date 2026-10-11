@@ -1,4 +1,4 @@
-"""The signature walk of A8: no public callable takes a coordinate, page or column (A-r5).
+"""The signature walk: no public callable takes a coordinate, page or column.
 
 Every public callable of `Design`, `Scope` and the handle types is walked; a parameter
 named like a geometry concept, or annotated with a geometry type, fails the walk.
@@ -29,8 +29,8 @@ _FORBIDDEN_NAMES = frozenset(
 )
 _FORBIDDEN_ANNOTATION_WORDS = ("point", "coordinate")
 # Not forbidden: `Project.number` (a project number like "P-1001") is a business
-# field, not a layout page number; `position`/`index` are build facts (design/layout-namespace.md
-# already excludes only x/y/page/number/points from the *model's* authored-kind fields -- this is
+# field, not a layout page number; `position`/`index` are build facts (the model's
+# authored-kind fields already exclude only x/y/page/number/points -- this is
 # the author API's own, narrower list, since the API also carries `Project.number`).
 # `__call__` (the wire maker) and `__getitem__` (port-by-marking) are genuine public API
 # surfaces reached through operator syntax; every other dunder is implementation detail.

@@ -1,4 +1,4 @@
-"""WP14 end-to-end tests over this repo's invented cabinet (ROADMAP WP14, package-layout.md 9).
+"""End-to-end tests over this repo's invented cabinet.
 
 Golden files live in `tests/golden/`. They are regenerated, never edited by hand:
 `uv run pytest packages/fransys-layout --regenerate-golden` rewrites them from the current
@@ -184,8 +184,8 @@ def test_cabinet_layout_digest_matches_golden(
 def test_cabinet_findings_match_golden(*, regenerate: bool) -> None:
     """The findings of the cabinet run: lamp `H1`, the one function in no chain, and its box.
 
-    Under the deep dive the contact and coil functions the old golden listed as "in no chain"
-    take part in chain discovery (D1), and board `A1`'s idle `edge` connector is not drawn (D8),
+    Under the current rules the contact and coil functions the old golden listed as "in no chain"
+    take part in chain discovery, and board `A1`'s idle `edge` connector is not drawn,
     so its `FUNCTION_UNPLACED_IN_COLUMN` and `SYMBOL_DEFAULTED` are gone.
     """
     model, findings = _run()
@@ -243,8 +243,8 @@ def _leak(monkeypatch: pytest.MonkeyPatch, extra_gap: Callable[[Model], int]) ->
     """
     real = engine.read_inputs
 
-    def read(model: Model) -> StageInputs:
-        inputs = real(model)
+    def read(model: Model, unit: Id[Any] | None = None) -> StageInputs:
+        inputs = real(model, unit)
         gap = inputs.profile.column_gap + extra_gap(model)
         return replace(inputs, profile=replace(inputs.profile, column_gap=gap))
 
@@ -356,8 +356,8 @@ def test_no_coherence_findings_when_the_cabinet_is_split_over_more_pages(width_m
 
     The rule is that a cabinet split over pages stays coherent, so the precondition asserted
     is a split (more than one page) that severs a signal: a marker with no `star` kind, the
-    D9 star markers being on the sheet whether or not it is split. The page count itself is
-    not a rule: D4 packs groups by their measured widths (D13), so it moves with the text
+    star markers being on the sheet whether or not it is split. The page count itself is
+    not a rule: groups are packed by their measured widths, so it moves with the text
     (300 mm gives 2 pages now, 245 mm still gives 3); the narrow golden pins one exact split.
     """
     model = freeze(_on_sheet(width_mm))
@@ -408,7 +408,7 @@ def _on_sheet(width_mm: int, **options: bool) -> Draft:
 # `CROSS_REFERENCE` label, one net-group cut). 158, not the original 150: model-0040
 # draws board `A1`'s `edge` connector, which shifts where this cabinet splits
 # (model-0040 has the measured table); 150-157 mm give zero tag-echo decisions, 158 mm is
-# the narrowest that gives one (Q4: measured at 1 mm resolution, re-measured after
+# the narrowest that gives one (measured at 1 mm resolution, re-measured after
 # `effective_placement` landed -- unchanged, since this fixture places every function
 # directly, no fallback is exercised). `fransys-render`'s tests load this package's own
 # golden by path and hardcode a marker position and a page count, both of which 118-171 mm
@@ -458,7 +458,7 @@ def _added_placements(before: Model, after: Model) -> list[Id[Any]]:
 
 
 def test_adding_one_relay_moves_only_its_own_group(*, regenerate: bool) -> None:
-    """Stability (D17): the relay in `=P2` changes placements only on the pages of `=P2`.
+    """Stability: the relay in `=P2` changes placements only on the pages of `=P2`.
 
     A placement on a page that does not hold `=P2` never changes; a group sharing a page with
     it (`=SUP` after the relay, on `=P2`'s page) may shift along that page. The number of
@@ -522,7 +522,7 @@ def test_cabinet_narrow_layout_matches_golden(
     """The 158 mm cabinet's canonical JSON is byte-stable against the narrow golden file.
 
     This sheet is the one narrow enough to give a severed cut, a `CROSS_REFERENCE`
-    label and a net-group cut all at once, which is why the D2 equality test needs it.
+    label and a net-group cut all at once, which is why the equality test needs it.
     Written and compared through the `normalized` fixture (decision layout-0119).
     """
     actual = dumps(normalized(_narrow_laid_out()))
@@ -542,7 +542,7 @@ def test_cabinet_narrow_findings_match_golden(*, regenerate: bool) -> None:
     """The findings of the 158 mm cabinet run: no `ROUTE_FAILED` (decision `layout-0038`
     closed that), and one WARNING, `GROUP_SPLIT` for `=P1`, whose columns still do not fit one page.
 
-    D4 and D13 (groups packed by measured text widths) took the other `GROUP_SPLIT`s away, and
+    Packing groups by measured text widths took the other `GROUP_SPLIT`s away, and
     with them the label and content-box warnings the old, wider text slots caused.
     """
     model, findings = _narrow_run()
@@ -551,7 +551,7 @@ def test_cabinet_narrow_findings_match_golden(*, regenerate: bool) -> None:
 
 
 def test_adding_one_relay_on_the_narrow_sheet_moves_only_its_own_group(*, regenerate: bool) -> None:
-    """Stability at 158 mm (D17): the relay in `=P2` changes placements only on `=P2`'s pages.
+    """Stability at 158 mm: the relay in `=P2` changes placements only on `=P2`'s pages.
 
     Nine placements change (the golden), all of them `=P2`'s own: the relay widens `=P2`'s
     columns, which restacks the group and spreads it over a second page of its own; `=P1` and

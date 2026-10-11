@@ -8,12 +8,12 @@ harnesses built with no `Unit` around them route clean too (both measured 2026-0
 is a scale threshold inside a `Unit`'s own layout, not a shape the engine never handles. The
 unit carries its own `fr.document(...)` (the pattern
 `tests/test_write_unit_worked_example.py` uses) so the case still lays out once `fr.build` only
-lays out a model that holds a `Document` (decision PS1).
+lays out a model that holds a `Document`.
 
 Found by a consumer, reproduced 2026-09-26. The cause (2026-09-27): the unit's overview pages its
 plugs in tag order, which stands two harnesses' plugs on two pages there, while each core is wired
 between the plugs' boundary replicas on its location's sheet; so no cut was decided and neither
-overview page drew the core. Fixing decision: the layout redesign's S21 (`references` decides
+overview page drew the core. Fixing decision: layout-0090 (`references` decides
 every connection; ends on different pages of one drawing set are a `#n` reference, D4).
 """
 

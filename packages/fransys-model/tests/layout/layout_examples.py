@@ -1,28 +1,22 @@
 """Invented layout records shared by the layout tests."""
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Id
 from fransys_model.layout import (
     DrawingSet,
-    Orientation,
     Page,
     PageGroup,
     PageRole,
     SheetFormat,
-    SymbolPlacement,
 )
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import Aspect, FunctionKind
 
-if TYPE_CHECKING:
-    from fransys_model.vocab.templates import FunctionTemplate
-
 PRODUCED_BY = "example-engine 0.0.0"
 
-# design/layout-namespace.md: a drawing set is keyed by its engine, its kind and its location
+# A drawing set is keyed by its engine, its kind and its location
 # (`unlocated` here); a page by its drawing set, its first group, its role and an ordinal that is 0
 # unless split.
 DRAWING_SET_KEY = ("layout", "example-engine", "drawing_set", "unlocated")
@@ -32,11 +26,6 @@ PAGE_KEY = (*DRAWING_SET_KEY, "examples", "function", "pump1", "power", "0")
 def function_id(value: str) -> Id[Function]:
     """A function id made of one repeated hex digit."""
     return Id(kind="function", value=value * 32)
-
-
-def template_id(value: str) -> Id[FunctionTemplate]:
-    """A function-template id made of one repeated hex digit."""
-    return Id(kind="function_template", value=value * 32)
 
 
 def group_node() -> AspectNode:
@@ -112,22 +101,5 @@ def page() -> Page:
         role=PageRole.POWER,
         sheet_format=sheet_format().id,
         groups=(PageGroup(group=group_node().id, index=0),),
-        produced_by=PRODUCED_BY,
-    )
-
-
-def placement(*, x: int = 64) -> SymbolPlacement:
-    """The contact of `drawn_function()` placed on `page()` at (`x`, 96)."""
-    return SymbolPlacement(
-        id=Id(kind="layout.symbol_placement", value="9" * 32),
-        key=("layout", "example-engine", "symbol_placement", "examples", "pump1", "contactor"),
-        function=function_id("c"),
-        page=page().id,
-        x=x,
-        y=96,
-        orientation=Orientation.R0,
-        poles=3,
-        symbol="make-contact",
-        library_version="0.1.0",
         produced_by=PRODUCED_BY,
     )

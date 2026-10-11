@@ -1,4 +1,4 @@
-"""EF-D part 3: a wire that turns on another port's first step must not seal that port (D9).
+"""A wire that turns on another port's first step must not seal that port.
 
 The K1/K2 straps of `test_dd_chains.py::test_the_straps_of_a_function_that_is_a_side_element_
 nowhere_are_drawn`, with two contactors and no group tags, so the lanes are narrow and K2 stands
@@ -82,7 +82,7 @@ def test_a_cell_in_front_of_two_nets_ports_is_reserved_for_neither() -> None:
 
 
 def test_a_strap_between_neighbouring_cells_is_drawn_when_a_wire_turns_before_its_port() -> None:
-    """D9: K1:1 - K2:1 draws, and each of its ports shows a route or a marker."""
+    """K1:1 - K2:1 draws, and each of its ports shows a route or a marker."""
     # UNDO: stages/route.py route, start `along` empty (drop the `reserve_exits` seed)
     parts, d = design()
     c = d.location("C1", "Cabinet")
@@ -142,9 +142,9 @@ def test_a_neighbours_straight_run_no_longer_crosses_a_ports_own_first_step() ->
 
 
 def test_a_wire_round_a_symbol_does_not_seal_the_exit_of_another_port() -> None:
-    """D1/D9, M12: Q1:2 - K1:4 draws though XA:4 - K1:3 would go round K1 past Q1:2's first step.
+    """Q1:2 - K1:4 draws though XA:4 - K1:3 would go round K1 past Q1:2's first step.
 
-    XA:4 - K1:3 turns back on K1's own device, so it is a turned reference pair (S12, M12): a
+    XA:4 - K1:3 turns back on K1's own device, so it is a turned reference pair (layout-0090): a
     reference at XA:4 and a branch at K1:3, no wire to seal anything.
     """
     # UNDO: stages/route.py route, start `along` empty (drop the `reserve_exits` seed)

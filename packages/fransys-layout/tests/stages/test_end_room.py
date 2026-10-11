@@ -1,13 +1,13 @@
-"""S16: Room's N or S call on hand-made columns: a column-end text is margin, never a cell.
+"""Room's N or S call on hand-made columns: a column-end text is margin, never a cell.
 
 Function `n` is the through symbol (`samples.drawn`): port `10n + 1` at `in` on top of its
 32 G keep-out, facing N; port `10n + 2` at `out` at its bottom, facing S. Column `a` holds
-function 1 and column `b` function 2, whose keep-out a label box grows 24 G upward (C8(b)). So
+function 1 and column `b` function 2, whose keep-out a label box grows 24 G upward. So
 `b`'s `in` stands 24 G deeper than `a`'s, and the run joining the two meets there: `a` is
-lowered 24 G, and both columns then need 56 G of room (`join_y`). Every page keeps M4's band
+lowered 24 G, and both columns then need 56 G of room (`join_y`). Every page keeps a band
 above and below its columns, 48 G with `PROFILE`, and a column-end text that reaches past the
 band adds the excess to the page's margin. The texts are built through `page_texts`, as the
-engine builds them: each one line high (S16).
+engine builds them: each one line high.
 """
 
 from dataclasses import replace
@@ -27,7 +27,7 @@ _PLAN = page_plan(("a", "b"))
 _COLUMNS = (column("a", (1,)), column("b", (2,)))
 _FUNCTIONS = (drawn(1), drawn(2))
 _LABELS = {hid("function", 2): [("marking.in", Box(x=16, y=-40, width=16, height=8))]}
-_BAND = _reference_band(SHEET, PROFILE)  # M4: 48 G at the top and at the bottom of every page
+_BAND = _reference_band(SHEET, PROFILE)  # 48 G at the top and at the bottom of every page
 _RUN = ((("invented", "a"), hid("port", 11)), (("invented", "b"), hid("port", 21)))
 
 
@@ -87,8 +87,8 @@ def test_the_n_or_s_call_shrinks_the_room_and_changes_no_join_end() -> None:
 
 
 def test_a_merged_stubs_line_is_reserved_above_its_reference() -> None:
-    """A reference at `a`'s N port stays inside M4's band and costs no room; the same reference
-    with a stub merged into it (S5) is a longer turned box (M7) that reaches past the band, so
+    """A reference at `a`'s N port stays inside the band and costs no room; the same reference
+    with a stub merged into it is a longer turned box that reaches past the band, so
     the room shrinks by what passes the band, snapped to the grid."""
     # UNDO: stages/texts/stand.py `text_box`: `return box if one.merge is None else ...` ->
     #     `return box` (the merged stub's line is not reserved)
@@ -102,8 +102,8 @@ def test_a_merged_stubs_line_is_reserved_above_its_reference() -> None:
 
 
 def test_a_run_at_the_room_limit_fits_the_final_room_beside_a_long_list() -> None:
-    """The content box is cut to the 56 G the run needs, plus M4's bands above and below: a 3-line
-    list at `a`'s N port, on the run's own port, takes no more room than one line (S16), which
+    """The content box is cut to the 56 G the run needs, plus the bands above and below: a 3-line
+    list at `a`'s N port, on the run's own port, takes no more room than one line, which
     the band holds, so the run `references` joined still fits the room `place` places it in."""
     # UNDO: stages/place.py `_stack_page`: drop `lift, sink = max(lift, band), max(sink, band)`
     #     (no band: the room is 64 G longer than the run's, and the at-the-limit premise fails)

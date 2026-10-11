@@ -1,4 +1,4 @@
-"""A two-cable harness through the facade (CT5-4 P3, CD9, CD-H3): one dashed block in the export.
+"""A two-cable harness through the facade: one dashed block in the export.
 
 One SYSTEM document, harness `WH1` of cables `W1` and `W2` sharing one motor end (`demo_parts`).
 The write runs once and is shared by the tests.
@@ -49,9 +49,9 @@ def written(tmp_path_factory):
 
 
 def test_a_two_cable_harness_writes_one_block_with_a_dashed_box(written):
-    """CD9 through `fr.write`: one block SVG, the harness label and both headings in it, in a PDF.
+    """Through `fr.write`: one block SVG, the harness label and both headings in it, in a PDF.
 
-    The block is in the "No part number" run (CD-H3). Probe: the engine's `drawable` refusing
+    The block is in the "No part number" run. Probe: the engine's `drawable` refusing
     a harness block (the write then raises).
     """
     paths, inter, built = written()
@@ -86,7 +86,7 @@ def _unit_harness():
 
 
 def test_the_harness_label_is_its_printed_designation_in_every_reading():
-    """CD7, acceptance 22: the label is `-WH1`, as `printed_designation` gives, in both readings.
+    """The label is `-WH1`, as `printed_designation` gives, in both readings.
 
     Probe: label with `item_designation`, which has no dash.
     """
@@ -127,7 +127,7 @@ def _nested_unit_harness():
 
 
 def test_the_harness_label_in_a_nested_units_reading_drops_the_root_as_the_headings_do():
-    """CD7, acceptance 22: in unit `B1`'s own reading the label is `-WH1`, absolutely `-A1-B1-WH1`.
+    """In unit `B1`'s own reading the label is `-WH1`, absolutely `-A1-B1-WH1`.
 
     Probe: render's label call without `unit=`, which prints the absolute label in every reading.
     """

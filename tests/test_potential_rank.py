@@ -1,4 +1,4 @@
-"""V11, model-0121: `port_potential_rank` and `port_potential_current` read the supply's facts.
+"""Decision model-0121: `port_potential_rank` and `port_potential_current` read the supply's facts.
 
 Built from `examples/demo-parts` only. The rank order is AC phases, DC above 0 V, the AC rail at
 0 V, the DC rail at 0 V, DC below 0 V, then PE last; equal facts tie by potential text, since

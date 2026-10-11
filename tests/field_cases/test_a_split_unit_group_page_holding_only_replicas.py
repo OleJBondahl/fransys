@@ -4,13 +4,13 @@ The engineering shape: a board unit has one header with a harness line (a plug o
 headers with none, wired straight to outside headers. The wide one's ten wires make its column so
 tall that the page splits and that column stands alone on page 2.
 
-The bug: the group's outline part on page 2 (layout-0153, HL21: one outline part per page) draws
+The bug: the group's outline part on page 2 (layout-0153: one outline part per page) draws
 only the interfaces its columns reach, and the line interface reaches page 1 only. `_shape` took
 its lead from the first line box and raised IndexError on page 2, so the build crashed.
 The fix (decision layout-0164): the part's lead is the first no-line interface that has a replica
 on the page, so the outline part draws there holding the replicas.
 
-REPLICA-ROUTE (decision layout-0165): on that replica-only page the J4 replicas and the far device's
+Per decision layout-0165, on that replica-only page the J4 replicas and the far device's
 pins ran 1, 10, 2 ... (string order), and two wires ran inside the outline. The three tests at the
 end of the module hold both.
 

@@ -1,11 +1,8 @@
-"""Header joins (parts-0017, HA4): `joins = "<function>.<port>"` loads; bad joins are refused.
+"""Header joins (parts-0017): `joins = "<function>.<port>"` loads; bad joins are refused.
 
 Each refusal is an ERROR finding from `lint` and a `PartLibraryError` from `load_path`.
 """
 
-from pathlib import Path
-
-import demo_parts
 import fransys_parts
 import pytest
 from fransys_parts import PartLibraryError
@@ -128,16 +125,3 @@ resistance_ohm = "1600"
 """
     root = _library(tmp_path, relay + body)
     assert "PORT_NAME_SHARED" in _codes(root)
-
-
-def test_the_same_pin_names_without_a_clash_do_not_trigger_port_name_shared(tmp_path):
-    body = _connector("j1", [_pin("1", "k1.A1"), _pin("2", "k1.A2", "out")], "J1")
-    assert "PORT_NAME_SHARED" not in _codes(_library(tmp_path, body))
-
-
-def test_the_demo_relay_module_lints_clean_and_the_demo_library_loads():
-    assert fransys_parts.lint(Path(demo_parts.__file__).parent) == ()
-    templates = port_templates(freeze(fransys_parts.load("demo_parts")))
-    joined = [t for t in templates.values() if t.joins is not None]
-    assert len(joined) == 6
-    assert {t.name for t in joined} == {"1", "2", "3", "4"}

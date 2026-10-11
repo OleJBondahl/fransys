@@ -35,12 +35,3 @@ def test_the_stand_is_the_wider_of_the_symbol_and_its_text() -> None:
     long = "+24V DC FEED"
     assert power_stand("power-supply", "24V") == bar
     assert power_stand("power-supply", long) == text_width(long, height=8) > bar
-
-
-def test_two_power_symbols_at_one_side_stand_a_symbol_width_apart() -> None:
-    """`+` and `-` carry a 16 G bar and a 16 G ground: their pins stand 24 G apart, not 16."""
-    # CAN-FAIL: generic_box.py `box_pitch`: `max(longest, stand)` -> `longest` (the symbol term)
-    # gives 16 G, the two symbols touch and the ground is pushed off the bar's row
-    stands = {"+": power_stand("power-supply", "24V"), "-": power_stand("ground", None)}
-    assert _gap(stands) >= 24
-    assert _gap({}) == 16

@@ -1,15 +1,13 @@
-"""Decision model-0103's B5 and B10 fixes, proved by call count.
+"""Decision model-0103's fixes, proved by call count.
 
-`.fransys/AUDIT-REPEATED-WORK.md`.
-
-B5: the numbering pass's duplicate checks used to reach `designation.item_designation` with
-neither `relative_to` nor `unit`, many times per item, and every call rendered live. B5 puts
+The numbering pass's duplicate checks used to reach `designation.item_designation` with
+neither `relative_to` nor `unit`, many times per item, and every call rendered live. The cache puts
 `_plain_item_designations` (a `@digest_cached` map, built once per `model.digest`) in front of
 the live render; `item_designation` now serves a plain-shape call from that map and only falls
 through to the newly private `_render_item_designation` on a miss or a keyword call.
 
-B10: `takes_parents_designation`'s subtree check used to run a fresh `descendants` BFS per item
-asked about, O(depth) work every time. B10 replaces it with
+`takes_parents_designation`'s subtree check used to run a fresh `descendants` BFS per item
+asked about, O(depth) work every time. The fix replaces it with
 `_items_with_a_function_at_or_below`, a `@digest_cached` set built once per digest; the
 per-item BFS is gone from that call path entirely.
 
@@ -26,8 +24,8 @@ CAPTURE `number`'s own input once; the call counted for the assertions is a seco
 Gotcha: under `-n 2`/`-n 4` (parallel test workers sharing one process), a PRIOR test in the
 same worker can leave `_plain_item_designations` or `_items_with_a_function_at_or_below`
 already built for this exact model digest (both are `@digest_cached`, so they persist across
-calls, unlike a memo scoped to one call). Left uncleared, that warm cache would make the B5
-"live render" count read as low, or the B10 count read as already-satisfied, for reasons that
+calls, unlike a memo scoped to one call). Left uncleared, that warm cache would make the
+"live render" count read as low, or the subtree count read as already-satisfied, for reasons that
 have nothing to do with the fix under test. `_count_render_and_descendants_calls` clears both
 caches immediately before the one monitored call it measures, every time.
 """
@@ -57,10 +55,10 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import Model
 
-# Part 0a/4 baseline (`claude-tools/profile_numbering.py`, run on the unmodified base commit
-# 16ca1ec6): one `numbering.number(model)` call over `build_scale(8)`'s captured model,
-# counting `designation.item_designation`'s OLD live-render call count (before B5's cache
-# existed, so every call rendered live). Freshly measured after B5+B10: 144 calls into the new
+# Baseline (run before the caches existed):
+# one `numbering.number(model)` call over `build_scale(8)`'s captured model,
+# counting `designation.item_designation`'s OLD live-render call count (before the cache
+# existed, so every call rendered live). Freshly measured after both caches: 144 calls into the new
 # `_render_item_designation` over the same shape, comfortably under the `< 464 // 2 == 232`
 # bound below.
 _BASELINE_ITEM_DESIGNATION_CALLS_N8 = 464
@@ -151,8 +149,8 @@ def test_descendants_py_start_frame_one_up_is_its_own_caller() -> None:
 
 def _count_render_and_descendants_calls(model: Model) -> tuple[int, int]:
     """One monitored `numbering.number(model)` call: counts calls into the new private
-    `designation._render_item_designation` (B5's live-render path) and calls into
-    `unit_index.descendants` attributed to `takes_parents_designation`'s own frame (B10's old
+    `designation._render_item_designation` (the live-render path) and calls into
+    `unit_index.descendants` attributed to `takes_parents_designation`'s own frame (the old
     per-item subtree BFS, which the aggregate set now fully replaces).
 
     Clears both new `@digest_cached` builders immediately before the one monitored call: one
@@ -196,16 +194,16 @@ def _count_render_and_descendants_calls(model: Model) -> tuple[int, int]:
 def test_item_designation_render_and_accessory_subtree_check_stay_cheap(
     model_n8: Model,
 ) -> None:
-    """B5: before the fix, `claude-tools/profile_numbering.py`'s Part 0a measurement (base
-    commit 16ca1ec6, `build_scale(8)`'s captured model, one `numbering.number(model)` call)
+    """Before the fix, the profiling measurement
+    (pre-cache code, `build_scale(8)`'s captured model, one `numbering.number(model)` call)
     counted 464 live renders of `item_designation` -- the hardcoded
     `_BASELINE_ITEM_DESIGNATION_CALLS_N8` above. This test counts the same call shape against
-    the new private `_render_item_designation` after B5's plain-shape cache map sits in front
-    of it, and measures 144: comfortably under `464 // 2 == 232`, the margin the audit's own
+    the new private `_render_item_designation` after the plain-shape cache map sits in front
+    of it, and measures 144: comfortably under `464 // 2 == 232`, the margin the
     "about one render per item" estimate implies (roughly an 8x reduction against the
     consumer-scale total), not merely under the bare baseline.
 
-    B10: `takes_parents_designation`'s old per-item `descendants` BFS is fully replaced by
+    `takes_parents_designation`'s old per-item `descendants` BFS is fully replaced by
     `_items_with_a_function_at_or_below`, the once-per-digest aggregate set (model-0103); this
     asserts EXACTLY 0 calls attributed to `takes_parents_designation`'s own frame into
     `unit_index.descendants`, counted over the same single monitored `number(model)` call.
@@ -214,10 +212,10 @@ def test_item_designation_render_and_accessory_subtree_check_stay_cheap(
     assert render_calls < _BASELINE_ITEM_DESIGNATION_CALLS_N8 // 2, (
         f"_render_item_designation ran {render_calls} times, not under half the n=8 baseline "
         f"of {_BASELINE_ITEM_DESIGNATION_CALLS_N8} "
-        f"({_BASELINE_ITEM_DESIGNATION_CALLS_N8 // 2}): B5's plain-shape cache is not shielding "
+        f"({_BASELINE_ITEM_DESIGNATION_CALLS_N8 // 2}): the plain-shape cache is not shielding "
         "the live render path"
     )
     assert descendants_calls == 0, (
         f"takes_parents_designation called unit_index.descendants {descendants_calls} time(s): "
-        "B10's aggregate membership set is not fully replacing the per-item subtree BFS"
+        "the aggregate membership set is not fully replacing the per-item subtree BFS"
     )

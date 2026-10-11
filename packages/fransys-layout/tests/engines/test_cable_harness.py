@@ -1,4 +1,4 @@
-"""Harness blocks (CT5-4, CD9, CD5 colouring, Q2 to Q7): a dashed box around the cable boxes.
+"""Harness blocks: a dashed box around the cable boxes.
 
 Each test names its spec acceptance item and the probe that must make it fail. Models are
 invented; nothing here names a real plant.
@@ -63,7 +63,7 @@ def _lay(parts, d):
 
 @cache
 def _fan_out() -> SimpleNamespace:
-    """Harness WH1: W1 (M1:U, V to M2:U, V, 5000 mm) and W2 (M1:W to M3:U) share end -M1."""
+    """Harness: W1 (M1:U, V to M2:U, V, 5000 mm) and W2 (M1:W to M3:U) share end -M1."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH1", at=c1, group=g)
@@ -79,7 +79,7 @@ def _fan_out() -> SimpleNamespace:
 
 @cache
 def _short() -> SimpleNamespace:
-    """Harness WH6: W1 (5000 mm) and W2, one core each, from -M1 to -M2 and -M3."""
+    """Harness: W1 (5000 mm) and W2, one core each, from -M1 to -M2 and -M3."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH6", at=c1, group=g)
@@ -93,7 +93,7 @@ def _short() -> SimpleNamespace:
 
 @cache
 def _shared_lone() -> SimpleNamespace:
-    """A lone cable W1 whose cores 1 and 2 both land on -M1:U (CD-H7, P1)."""
+    """A lone cable W1 whose cores 1 and 2 both land on -M1:U."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     m1, m2 = (d.item(_MOTOR, tag=f"M{n}", at=c1, group=g) for n in (1, 2))
@@ -106,7 +106,7 @@ def _shared_lone() -> SimpleNamespace:
 
 @cache
 def _chain() -> SimpleNamespace:
-    """Harness WH2, a daisy chain: W1 joins -X1 to -X2, W2 joins -X2 to -X3."""
+    """Harness, a daisy chain: W1 joins -X1 to -X2, W2 joins -X2 to -X3."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH2", at=c1, group=g)
@@ -119,7 +119,7 @@ def _chain() -> SimpleNamespace:
 
 @cache
 def _pair() -> SimpleNamespace:
-    """Harness WH3: two independent cables, W1 from -A1 to -B1 and W2 from -A2 to -B2."""
+    """Harness: two independent cables, W1 from -A1 to -B1 and W2 from -A2 to -B2."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH3", at=c1, group=g)
@@ -134,7 +134,7 @@ def _pair() -> SimpleNamespace:
 
 @cache
 def _lone() -> SimpleNamespace:
-    """A part-less harness WH4 holding one cable: the cable is the subject (model-0148)."""
+    """A part-less harness holding one cable: the cable is the subject (model-0148)."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH4", at=c1, group=g)
@@ -147,7 +147,7 @@ def _lone() -> SimpleNamespace:
 
 @cache
 def _shared() -> SimpleNamespace:
-    """Harness WH5: W1 core 1 and W2 core 1 both land on -M1:U (CD-H7)."""
+    """Harness: W1 core 1 and W2 core 1 both land on -M1:U."""
     parts, d = _design()
     c1, g = d.location("C1", "Cabinet"), d.group("G", "Group")
     harness = d.harness(tag="WH5", at=c1, group=g)
@@ -175,7 +175,7 @@ def _rect(box):
 
 
 def test_a_two_cable_harness_is_one_dashed_box_around_two_solid_ones():
-    """CD9, acceptance 7: one HARNESS box holds two CABLE boxes, W1 left of W2, none touching.
+    """One HARNESS box holds two CABLE boxes, W1 left of W2, none touching.
 
     Probe: draw the dashed box for every harness (the lone test below fails).
     """
@@ -198,7 +198,7 @@ def test_a_two_cable_harness_is_one_dashed_box_around_two_solid_ones():
 
 
 def test_a_lone_cable_harness_has_a_cable_block_and_no_dashed_box():
-    """CD9, acceptance 7: the part-less one-cable harness is its cable; no HARNESS box.
+    """The part-less one-cable harness is its cable; no HARNESS box.
 
     Probe: draw the dashed box for every harness.
     """
@@ -209,7 +209,7 @@ def test_a_lone_cable_harness_has_a_cable_block_and_no_dashed_box():
 
 
 def test_two_cables_landing_on_one_end_draw_one_end_box_with_every_pin_landed():
-    """CD9 Q9, acceptance 14: -M1 has one end box; its three pins are landed by either cable.
+    """-M1 has one end box; its three pins are landed by either cable.
 
     Probe: one end box per cable and item.
     """
@@ -223,7 +223,7 @@ def test_two_cables_landing_on_one_end_draw_one_end_box_with_every_pin_landed():
 
 
 def test_harness_block_geometry_is_clean():
-    """CD8, acceptance 4, 5, 18: on the grid; no run enters a cable box; no shared stretch."""
+    """On the grid; no run enters a cable box; no shared stretch."""
     for s in (_fan_out(), _chain(), _pair()):
         _, boxes, ends, wires = _block(s.model, s.harness)
         runs = [run for w in wires for run in (w.run_a, w.run_b)]
@@ -237,9 +237,9 @@ def test_harness_block_geometry_is_clean():
 
 
 def test_a_daisy_chain_draws_with_its_middle_end_below():
-    """CD5 Q1, acceptance 20: X1 and X3 on top, X2 below; both cables and both cores drawn.
+    """X1 and X3 on top, X2 below; both cables and both cores drawn.
 
-    Probe: CD5's old rows (the lowest-ranked end alone on top).
+    Probe: the old rows (the lowest-ranked end alone on top).
     """
     s = _chain()
     _, boxes, ends, wires = _block(s.model, s.harness)
@@ -251,9 +251,9 @@ def test_a_daisy_chain_draws_with_its_middle_end_below():
 
 
 def test_two_independent_cables_draw_each_from_its_own_top_end():
-    """CD5 Q1, acceptance 20: A1 and A2 on top, B1 and B2 below.
+    """A1 and A2 on top, B1 and B2 below.
 
-    Probe: CD5's old rows.
+    Probe: the old rows.
     """
     s = _pair()
     _, _, ends, wires = _block(s.model, s.harness)
@@ -262,7 +262,7 @@ def test_two_independent_cables_draw_each_from_its_own_top_end():
 
 
 def test_a_short_cable_box_grows_the_pitch_until_its_heading_fits():
-    """CD9 Q2, acceptance 21: a one-core cable headed `-W1, 5000 mm` in a harness.
+    """A one-core cable headed `-W1, 5000 mm` in a harness.
 
     The pitch is above the plain pitch rule's, and no heading passes its box's edge. Probe: keep
     the pitch at its plain measure.
@@ -290,7 +290,7 @@ def _landing(wire, end):
 
 
 def test_a_pin_two_cores_land_on_is_a_cell_two_places_wide_with_a_core_in_each():
-    """CD-H7 at P1, acceptance 27: -M1:U holds two cores, so its cell is two pitches wide.
+    """-M1:U holds two cores, so its cell is two pitches wide.
 
     The cores land at the centres of its two places, one each, and no wire lies on another.
     Probe: give the pin one place (`PinFacts.places` returns 1); the cell is one pitch wide.
@@ -350,7 +350,7 @@ def _two_cable_facts(*, interleaved: bool):
 
 
 def test_interleaved_cable_columns_get_no_block():
-    """CD-H6, Q6: cable A on top pins 1 and 3 with cable B on pin 2 between: no block.
+    """Cable A on top pins 1 and 3 with cable B on pin 2 between: no block.
 
     Probe: drop the overlap test from `cable_boxes`. The side-by-side twin draws.
     """

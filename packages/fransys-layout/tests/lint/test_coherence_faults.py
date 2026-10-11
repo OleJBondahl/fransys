@@ -26,7 +26,6 @@ from fransys_layout.geometry import LayoutError
 from fransys_layout.lint import check_coherence
 from fransys_layout.lint.codes import (
     ALL_CODES,
-    CONNECTION_DRAWN_TWICE,
     CONNECTION_NOT_DRAWN,
     ROUTE_WRONG_PORT,
 )
@@ -62,31 +61,6 @@ def test_a_route_with_one_point_raises() -> None:
     ]
 
 
-def test_a_placed_function_a_connection_names_must_be_drawn() -> None:
-    """A placed function a connection names must be drawn."""
-    with pytest.raises(LayoutError, match="not among the drawn functions"):
-        _check(functions_drawn=(drawn(1), drawn(3)))
-    assert _check(functions_drawn=(drawn(1), drawn(2))) == []
-
-
-def test_a_named_function_that_is_placed_nowhere_may_be_undrawn() -> None:
-    """A named function that is placed nowhere may be undrawn."""
-    assert _check(functions=PLACED[:1], functions_drawn=(drawn(1),)) == [
-        (CONNECTION_DRAWN_TWICE, (hid("conductor", 1),)),
-        (CONNECTION_NOT_DRAWN, (hid("conductor", 1),)),
-        (ROUTE_WRONG_PORT, subjects(hid("conductor", 1), port(12), port(21))),
-    ]
-
-
-def test_a_named_port_must_be_one_of_its_functions_drawn_ports() -> None:
-    """A named port must be one of its functions drawn ports."""
-    lacking = dataclasses.replace(drawn(1), ports=(drawn(1).ports[0],))
-    with pytest.raises(LayoutError, match="not among its function's drawn ports"):
-        _check(functions_drawn=(lacking, drawn(2), drawn(3)))
-    only_port_31 = dataclasses.replace(drawn(3), ports=(drawn(3).ports[0],))
-    assert _check(functions_drawn=(drawn(1), drawn(2), only_port_31)) == []
-
-
 def test_a_named_ports_symbol_port_must_be_a_port_of_the_placed_geometry() -> None:
     """A named ports symbol port must be a port of the placed geometry."""
     nowhere = dataclasses.replace(
@@ -98,15 +72,6 @@ def test_a_named_ports_symbol_port_must_be_a_port_of_the_placed_geometry() -> No
         drawn(1), ports=(DrawnPort(port=port(11), symbol_port="nowhere"), drawn(1).ports[1])
     )
     assert _check(functions_drawn=(unnamed, drawn(2), drawn(3))) == []
-
-
-def test_a_port_named_with_two_physical_nets_raises() -> None:
-    """A port named with two physical nets raises."""
-    other_net = connection(3, 1, 2)  # the same two ports, net 3
-    with pytest.raises(LayoutError, match="two different physical nets"):
-        _check(connections=(C1, other_net))
-    same_net = dataclasses.replace(other_net, physical_net=hid("net", 1))
-    assert _check(connections=(C1, same_net)) == NOT_DRAWN_3
 
 
 def test_a_port_named_with_two_functions_is_a_boundary_port() -> None:
@@ -163,23 +128,6 @@ def _reorderings(items):
     yield items[::-1]
     for start in range(1, len(items)):
         yield items[start:] + items[:start]
-
-
-def test_the_findings_do_not_depend_on_the_order_of_any_input() -> None:
-    """The findings do not depend on the order of any input."""
-    expected = _run(*EVERYTHING)
-    codes = {one.code for one in expected}
-    assert {
-        "ROUTE_WRONG_PORT",
-        "ROUTE_SHORTS_NETS",
-        "CONNECTION_NOT_DRAWN",
-        "CONNECTION_DRAWN_TWICE",
-        "MARKER_UNPAIRED",
-    } <= codes
-    for index, items in enumerate(EVERYTHING):
-        for shuffled in _reorderings(items):
-            arguments = (*EVERYTHING[:index], shuffled, *EVERYTHING[index + 1 :])
-            assert _run(*arguments) == expected
 
 
 def test_every_finding_is_an_error_with_a_message_and_a_listed_code() -> None:

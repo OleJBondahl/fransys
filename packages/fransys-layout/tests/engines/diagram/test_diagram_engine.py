@@ -1,4 +1,4 @@
-"""The diagram engine's glue (BD5, BD8): the pass, the lint scene feed and the cut acceptance."""
+"""The diagram engine's glue: the pass, the lint scene feed and the cut acceptance."""
 
 from dataclasses import replace
 from functools import cache

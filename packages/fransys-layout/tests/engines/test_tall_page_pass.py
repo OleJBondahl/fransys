@@ -27,7 +27,7 @@ UNIT = hid("unit", 1)
 def test_the_cabinet_with_no_tall_group_plans_its_pages_twice_as_before(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The cabinet's widths grow once (C21): two plans, the cut pass is not a third."""
+    """The cabinet's widths grow once: two plans, the cut pass is not a third."""
     calls: list[int] = []
     plan = engine.plan_pages
     monkeypatch.setattr(engine, "plan_pages", lambda *args: (calls.append(1), plan(*args))[1])

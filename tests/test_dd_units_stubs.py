@@ -1,4 +1,4 @@
-"""F5-C undo tests for D10 (stub labels) and D11 (unit outlines), through the facade.
+"""Undo tests for stub labels and unit outlines, through the facade.
 
 Every test reads public records only: `layout.*` records, the `drawing_text` readers and the
 rendered SVG of `fransys_render.pages`; none reads `ext` or a private name. Each test
@@ -78,8 +78,8 @@ def _build_two_connectors(*, relay_between: bool, lines: bool = True):
     """A cabinet unit `+C1` with boundary connectors X1 and X2, each mated to the plug of its
     own top-level harness. With `relay_between` the plugs stand in groups A and C and a top-level
     relay in group B, so a column that is none of the unit's stands between the two connectors.
-    Without `lines` single wires stand for each harness: no line (HL1), so per-pin stubs and
-    D11 frames."""
+    Without `lines` single wires stand for each harness: no line, so per-pin stubs and
+    unit outlines."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_OFF_STUB._PROJECT)
@@ -133,7 +133,7 @@ def _two_location_cable_model():
 
 
 def _two_location_wires_model():
-    """`_two_location_cable_model` with two single wires for the cable: no line (HL1)."""
+    """`_two_location_cable_model` with two single wires for the cable: no line."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_OFF_STUB._PROJECT)
@@ -197,31 +197,31 @@ def _page_svg(model, page_id):
     return render_pages(model)[f"{page_id.kind}:{page_id.value}"]
 
 
-# -- D10 ------------------------------------------------------------------------------------
+# -- Stub labels ----------------------------------------------------------------------------
 
 
 def test_a_units_boundary_stub_names_the_outermost_carrier_then_the_far_end() -> None:
-    """D10: stub text is the outermost carrier (-W3, not -W1), an arrow, the far end."""
+    """Stub text is the outermost carrier (-W3, not -W1), an arrow, the far end."""
     # UNDO: fransys_layout/engines/schematic/read/offstubs.py: `end_text` stops walking to the
     #   top carrier (drop the `while carrier ... parent` loop, so the cable -W1 is named)
     stubs = _stubs(_off_stub_model(), own_set=True)
-    (stub,) = stubs  # HL18, owner C1: the line -W3 leaves X1 in one stub, not one per pin
+    (stub,) = stubs  # The line -W3 leaves X1 in one stub, not one per pin
     assert "line_stub" in stub.key
     text = marker_text(_off_stub_model(), stub)
     assert text.startswith("-W3 ")
     assert text[len("-W3 ")] in _ARROWS
     assert "+FLD" in text
-    assert ":" not in text  # HL18: the harness draws as a line, so its stub names no far port
+    assert ":" not in text  # The harness draws as a line, so its stub names no far port
 
 
 def test_the_unit_side_of_a_mated_top_level_cable_reads_like_the_top_level_side() -> None:
-    """D10: a cable mated at a unit's boundary is drawn the same from the unit's side."""
+    """A cable mated at a unit's boundary is drawn the same from the unit's side."""
     # UNDO: fransys_layout/engines/schematic/read/offstubs.py: `boundary_offs` returns no
     #   off-stub for a unit's boundary pins, or `full_port` names the far end differently from
     #   the plug side
     model = _off_stub_model()
     own = _stubs(model, own_set=True)
-    boundary = {_port_function(model, m) for m in own}  # HL18: a line's stub stands at X1
+    boundary = {_port_function(model, m) for m in own}  # A line's stub stands at X1
     plug_side = {
         _normal(marker_text(model, m))
         for m in _stubs(model, own_set=False)
@@ -239,8 +239,8 @@ def _port_function(model, marker):
 
 
 def test_every_stub_row_shares_one_box_and_every_wire_ends_on_it() -> None:
-    """D10: a run of stubs gets one box at least as wide as the run; every wire ends on its box.
-    Single wires: a line's conductors leave in one stub (HL18), so no run to share a box."""
+    """A run of stubs gets one box at least as wide as the run; every wire ends on its box.
+    Single wires: a line's conductors leave in one stub, so no run to share a box."""
     # UNDO: fransys_layout/stages/references/off_stubs.py: `_runs` `if any(before[0] < at <
     #   end[0] for at in cuts):` -> `if True:` (each stub its own box; verified by probe). The
     #   run-width rule alone is not caught here: only the shared box and the wire ends are pinned
@@ -260,8 +260,8 @@ def test_every_stub_row_shares_one_box_and_every_wire_ends_on_it() -> None:
     ("build", "least"), [(_off_stub_model, 2), (_system_model, 6)], ids=["off-stub", "system"]
 )
 def test_every_wire_of_every_stub_on_every_page_ends_on_a_box(build, least) -> None:
-    """D10: on every page of both fixtures, each stub's wire ends on the edge of a marker box.
-    The off-stub fixture's W3 is a line: one stub per set it leaves (HL18), no per-pin stubs;
+    """On every page of both fixtures, each stub's wire ends on the edge of a marker box.
+    The off-stub fixture's W3 is a line: one stub per set it leaves, no per-pin stubs;
     the line itself runs on to its stub's box, which draws no stub (layout-0158)."""
     # UNDO: fransys_render/_markers.py: `_stub_glyph` ends the stub one grid short of the box
     #   edge
@@ -283,7 +283,7 @@ def test_every_wire_of_every_stub_on_every_page_ends_on_a_box(build, least) -> N
 
 
 def test_a_top_level_stub_prints_the_carrier_and_the_far_ends_product_designation() -> None:
-    """D10: top-level stubs read "-WM1 -> +ER+C1-X2:1", no function segment."""
+    """Top-level stubs read "-WM1 -> +ER+C1-X2:1", no function segment."""
     # UNDO: fransys_model/derive/drawing_text.py: `stub_far_end` (which `full_port` in
     #   engines/schematic/read/offstubs.py calls) `product_designation` -> `reference_designation`
     #   (the two-location cable below has far ends with a function segment: "=G+B-P2" would
@@ -298,7 +298,7 @@ def test_a_top_level_stub_prints_the_carrier_and_the_far_ends_product_designatio
         f"-WM2S {arrow} +ER+C2-X2:2",
     }
     # far ends that DO stand in a function group "=G": still named "+B-P2", "+A-P1"; the
-    # two-core W1 is a line, one stub per set (HL18, owner C1)
+    # two-core W1 is a line, one stub per set
     cable = _two_location_cable_model()
     assert sorted(_normal(marker_text(cable, m)) for m in _stubs(cable, own_set=False)) == [
         f"-W1 {arrow} +A-P1",
@@ -307,7 +307,7 @@ def test_a_top_level_stub_prints_the_carrier_and_the_far_ends_product_designatio
 
 
 def test_a_unit_side_stub_names_a_top_level_far_end_without_its_function_segment() -> None:
-    """D10: a cabinet-set stub to the motor reads "+FLD-M1:U", no "=FLD"."""
+    """A cabinet-set stub to the motor reads "+FLD-M1:U", no "=FLD"."""
     # UNDO: fransys_model/derive/drawing_text.py: `stub_far_end` (which `full_port` in
     #   engines/schematic/read/offstubs.py calls) `product_designation` -> `reference_designation`
     #   (the unit-side text gains "=FLD")
@@ -327,11 +327,11 @@ def _off_stubs(model):
 
 
 def test_an_off_stub_box_is_shared_only_by_stubs_of_one_carrier_and_one_far_device() -> None:
-    """D10, EF-C part 5: off stubs of one page, `box_x` and `y` name one cable and far item.
+    """Off stubs of one page, `box_x` and `y` name one cable and far item.
 
-    HL11 (layout-0153): the system's boards are middle outlines, so their cabinet columns lose
-    the X1 and P1 views and no stub there turns or shares a box. A line leaves in one stub
-    (HL18), so single wires to two far devices make the shared boxes.
+    Layout-0153: the system's boards are middle outlines, so their cabinet columns lose
+    the X1 and P1 views and no stub there turns or shares a box. A line leaves in one stub,
+    so single wires to two far devices make the shared boxes.
     """
     # UNDO: fransys_layout/stages/references/off_stubs.py: the `rows[...]` key and the `pins`
     #   destination drop `end_text.cable, end_text.far` for `"", ""` (stubs to Q1 and Q2 share a
@@ -346,7 +346,7 @@ def test_an_off_stub_box_is_shared_only_by_stubs_of_one_carrier_and_one_far_devi
 
 
 def test_stubs_of_different_row_keys_on_one_row_stand_in_boxes_side_by_side() -> None:
-    """D10, EF-C part 5: on one page and `y`, stubs that name different cables or far ends never
+    """On one page and `y`, stubs that name different cables or far ends never
     share a box; their boxes stand clear of each other. Each of the fixture's 8 stubs is named."""
     # UNDO: stages/texts/marker_row.py: `place_markers` takes each marker's first candidate place
     #   without asking Room whether it is free (-WM1S and -WM2S on the field wiring page overlap)
@@ -373,8 +373,8 @@ def test_stubs_of_different_row_keys_on_one_row_stand_in_boxes_side_by_side() ->
             row = (left, left + m.width, marker_text(model, m), m.stub_extra, m.height)
             rows[m.page, m.y].append(row)
     pairs = [sorted(boxes) for boxes in rows.values() if len(boxes) > 1]
-    # the motors' page (two U boxes beyond their sibling lanes: D14), the two pump cabinets'
-    # pages (X2:1 and X2:2, staggered on two tiers: GOLDEN-FIX 2) and the field wiring page
+    # the motors' page (two U boxes beyond their sibling lanes), the two pump cabinets'
+    # pages (X2:1 and X2:2, staggered on two tiers) and the field wiring page
     assert len(pairs) == 4
     for (_, right, _, near, height), (left, _, _, other, other_height) in pairs:
         # side by side, or one tier's box (its extent along the stub, `stub_extra` out, its own
@@ -384,8 +384,8 @@ def test_stubs_of_different_row_keys_on_one_row_stand_in_boxes_side_by_side() ->
 
 
 def test_stubs_of_one_row_key_share_one_box_listing_every_far_port() -> None:
-    """D10, EF-C part 5: one carrier to one far device, two pins: one box per page, one text.
-    Single wires: a two-core cable is a line, one stub per page naming no port (HL18)."""
+    """One carrier to one far device, two pins: one box per page, one text.
+    Single wires: a two-core cable is a line, one stub per page naming no port."""
     # UNDO: fransys_layout/stages/references/off_stubs.py: `_runs` `if any(before[0] < at <
     #   end[0] for at in cuts):` -> `if True:` (each stub its own run, its own box; by probe)
     model = _two_location_wires_model()
@@ -402,7 +402,7 @@ def test_stubs_of_one_row_key_share_one_box_listing_every_far_port() -> None:
         assert text.endswith(("+A-P1:1 2", "+B-P2:1 2"))  # every far port, in one text
 
 
-# -- D11 ------------------------------------------------------------------------------------
+# -- Unit outlines --------------------------------------------------------------------------
 
 
 def _top_level_page_with_outline(model):
@@ -430,7 +430,7 @@ def _boxes(model, page, key_prefix):
     for b in found:
         lines = connector_box_lines(model, b.function, unit=_set_of(model, page).unit)
         assert len(b.texts) == len(lines)
-        assert b.cells == ()  # a plug box and a unit interface box have no cells (HL5)
+        assert b.cells == ()  # a plug box and a unit interface box have no cells
     return sorted(found, key=lambda b: b.x)
 
 
@@ -444,8 +444,8 @@ def _inside(outline, box) -> bool:
 
 
 def test_a_units_outline_top_edge_stands_on_the_mating_line_with_the_plug_outside() -> None:
-    """D11: the outline top sits on the mating line; the parent's plug is outside.
-    HL6 (layout-0155): plug and boundary connector are boxes, face to face on that line."""
+    """The outline top sits on the mating line; the parent's plug is outside.
+    Layout-0155: plug and boundary connector are boxes, face to face on that line."""
     # UNDO: fransys_layout/stages/outlines.py: `unit_outlines` ignores `mating` (top = min
     #   body y - margin)
     model = _off_stub_model()
@@ -475,11 +475,11 @@ def _titles(model):
 
 
 def test_an_outline_title_is_above_left_when_that_is_free() -> None:
-    """D11: the title stands above-left of its outline when that is free.
+    """The title stands above-left of its outline when that is free.
 
     Nothing stands above a top-level page's outline. A nested board at a harness line's end is a
-    middle outline on its parent unit's page, its title inside (HL12, layout-0153).
-    HL6 (layout-0155): boxes widen the outline; a title left of `TEXT_GAP` moves to it
+    middle outline on its parent unit's page, its title inside (layout-0153).
+    Layout-0155: boxes widen the outline; a title left of `TEXT_GAP` moves to it
     (layout-0104).
     """
     # UNDO: fransys_layout/stages/outlines.py: `unit_outlines` sets `title = below` always
@@ -496,7 +496,7 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
             assert title.y + height < outline.y
             above += 1
         else:
-            # HL12 (layout-0153): the board's X1 ends the harness WH1, so on its cabinet's page
+            # Layout-0153: the board's X1 ends the harness, so on its cabinet's page
             # the board is a middle outline, its title inside, left, between its two edges
             assert outline.x < title.x < outline.x + outline.width
             assert outline.y < title.y
@@ -506,8 +506,8 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
 
 
 def test_an_outline_title_falls_below_left_when_the_plug_and_its_tag_take_the_space_above() -> None:
-    """D11: with the parent's plug directly above the outline, the title goes below-left instead.
-    Single wires: a unit with a line at an interface is a middle outline, title inside (HL12)."""
+    """With the parent's plug directly above the outline, the title goes below-left instead.
+    Single wires: a unit with a line at an interface is a middle outline, title inside."""
     # UNDO: fransys_layout/stages/outlines.py: `unit_outlines` sets `title = above` always
     model = _build_two_connectors(relay_between=False, lines=False)
     (outline,) = layout_of(model, Outline).values()
@@ -518,8 +518,8 @@ def test_an_outline_title_falls_below_left_when_the_plug_and_its_tag_take_the_sp
 
 
 def test_a_units_boundary_pins_in_neighbouring_columns_stand_in_one_outline() -> None:
-    """D11: two boundary connectors in neighbouring columns share one outline: one per run.
-    Single wires: with a line at an interface the unit is one middle outline (HL12, condition 1)."""
+    """Two boundary connectors in neighbouring columns share one outline: one per run.
+    Single wires: with a line at an interface the unit is one middle outline."""
     # UNDO: fransys_layout/stages/outlines.py: `_column_runs` starts a new run for every
     #   column
     model = _build_two_connectors(relay_between=False, lines=False)
@@ -532,8 +532,8 @@ def test_a_units_boundary_pins_in_neighbouring_columns_stand_in_one_outline() ->
 
 
 def test_a_column_that_is_not_the_units_cuts_its_outline_in_two() -> None:
-    """D11: another column between two boundary connectors cuts the outline in two.
-    Single wires: with a line at an interface the unit is one middle outline (HL12, condition 1)."""
+    """Another column between two boundary connectors cuts the outline in two.
+    Single wires: with a line at an interface the unit is one middle outline."""
     # UNDO: fransys_layout/stages/outlines.py: `_column_runs` never cuts (one run per
     #   unit)
     model = _build_two_connectors(relay_between=True, lines=False)
@@ -551,8 +551,8 @@ def test_a_column_that_is_not_the_units_cuts_its_outline_in_two() -> None:
 
 
 def test_a_board_that_is_the_sole_root_of_its_unit_is_drawn_in_the_units_own_set() -> None:
-    """D11: a sole-root board is drawn in its unit's own set, with no outline.
-    HL6 (layout-0155): its `X1`, at a harness line's end, is drawn there as a connector box."""
+    """A sole-root board is drawn in its unit's own set, with no outline.
+    Layout-0155: its `X1`, at a harness line's end, is drawn there as a connector box."""
     # UNDO: fransys_model/derive/structure.py: `schematic_functions` `excluded` -> `return True`
     #   (a sole-root board's contents are dropped from the schematic)
     model = _system_model()
@@ -581,7 +581,7 @@ def test_a_board_that_is_the_sole_root_of_its_unit_is_drawn_in_the_units_own_set
 
 
 def test_a_top_level_plug_at_a_units_location_does_not_take_the_location_from_the_unit() -> None:
-    """D11: a harness plug at +C1 does not take +C1 from the cabinet unit."""
+    """A harness plug at +C1 does not take +C1 from the cabinet unit."""
     # UNDO: fransys_model/derive/designation.py: `own_nodes` counts cable and harness items again
     model = _off_stub_model()
     (cabinet,) = units(model)
@@ -590,7 +590,7 @@ def test_a_top_level_plug_at_a_units_location_does_not_take_the_location_from_th
 
 
 def test_a_node_holding_a_top_level_device_is_not_the_units_own() -> None:
-    """D11: a node holding a top-level device is not the unit's own."""
+    """A node holding a top-level device is not the unit's own."""
     # UNDO: fransys_model/derive/designation.py: `own_nodes` returns every node any of the unit's
     #   items touches
     model = _system_model()

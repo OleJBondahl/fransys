@@ -1,7 +1,7 @@
 """`layout.symbol_choice.template` precedence: function > template > part > kind.
 
 Model decision 0030 adds the `template` selector; `reading.symbol_choices` resolves it
-into function-level stage entries (`stages/types.py` is frozen, design/stages.md 6.1). These tests
+into function-level stage entries (`stages/types.py` is frozen). These tests
 build a tiny two-relay model directly, without `layout_cabinet`'s bigger cabinet fixture,
 because only symbol resolution is under test here, not connectivity or placement.
 """

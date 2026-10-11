@@ -1,4 +1,4 @@
-"""EA11: every public name of the engine with its surface spelling, or why it has none.
+"""Every public name of the engine with its surface spelling, or why it has none.
 
 `ROWS` maps "Class.name" (the engine class that defines the name) to a tuple of entries. One
 entry is `("surface", spelling)`, `("pending", order, spelling)` or `("dropped", reason)`. A name
@@ -16,7 +16,7 @@ def surface(spelling: str) -> tuple[Entry, ...]:
 
 
 def pending(order: str, spelling: str) -> tuple[Entry, ...]:
-    """One pending entry: `order` is EA-SERIES or EA-UNITS-RUNS and lands the spelling."""
+    """One pending entry: `order` names the pending work that lands the spelling."""
     return (("pending", order, spelling),)
 
 
@@ -85,6 +85,6 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.symbol": surface("Layout.symbol"),
     "Scope.draw_in": surface("Layout.draw_in"),
     "Scope.side": surface("Layout.side"),
-    "Design.sheet": surface("Layout.sheet"),
-    "Design.profile": surface("Layout.profile"),
+    "Scope.sheet": surface("Layout.sheet"),
+    "Scope.profile": surface("Layout.profile"),
 }

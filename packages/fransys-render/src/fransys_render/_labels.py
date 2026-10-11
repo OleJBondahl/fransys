@@ -9,7 +9,7 @@ from fransys_model.derive.drawing_text import (
     contact_image,
     label_text,
 )
-from fransys_model.layout import Label, page_slice, profile_of, sheet_format_of
+from fransys_model.layout import Label, page_slice, profile_of_page, sheet_format_of
 from fransys_model.vocab import functions, items, ports
 
 from ._constants import ASCENT_RATIO
@@ -104,7 +104,7 @@ def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: La
 def labels_group(model: Model, page: Page) -> str:
     """Every label on `page` as one `<text>` each, in id order, `not-installed` if uninstalled."""
     sheet = sheet_format_of(model, page.sheet_format)
-    profile = profile_of(model)
+    profile = profile_of_page(model, page)
     return "".join(
         _label_element(model, sheet, profile, label) for label in labels_on_page(model, page)
     )

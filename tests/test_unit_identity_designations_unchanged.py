@@ -1,10 +1,10 @@
-"""UNIT-ID acceptance 7: the board set's child designations and KiCad netlist do not move.
+"""The board set's child designations and KiCad netlist do not move.
 
-UNIT-ID only stops the board's own root tag from printing on the board's own set (I4); it changes
+Unit identity only stops the board's root tag printing on its own set (model-0061); it changes
 neither `item_designation` nor `printed_designation`, and `board_netlist` keeps its path. Proven on
 the units worked example (the same board the units spec built): the children print unit-relative
 exactly as at v0.3.0 (`-X1`, `-K1`; the values below are the v0.3.0 ones, measured by
-building `_build_system()` at base commit `73fd159`, before UNIT-ID, and equal on this branch),
+building `_build_system()` at base commit `73fd159`, before this change, and equal on this branch),
 the root still prints `-U1`
 everywhere but the board's own BOM and designation rows, and the board's KiCad netlist is the text
 `test_units_worked_example.py::test_step_4b_the_kicad_netlist_of_the_board_is_board_relative`

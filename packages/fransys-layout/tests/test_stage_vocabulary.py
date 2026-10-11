@@ -1,4 +1,4 @@
-"""No stage names a function kind or reads an authoring-key prefix (design/foundations.md 2.8, F3).
+"""No stage names a function kind or reads an authoring-key prefix.
 
 Stdlib `ast`, as in `test_layering.py`. A stage reads what the engine stamped into
 `KindRoles`; it never compares a kind string, and it never slices or indexes `.key`.

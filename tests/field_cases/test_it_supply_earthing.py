@@ -4,7 +4,7 @@ The engineering shape: a 24 V DC supply from a PSU that is not earthed on either
 AC supply that is earthed (the default).
 
 The bug: `Earthing` was not on the surface, so a consumer script could not say `IT`, and the
-supply was declared earthed. The rule (EA15, G25): `fr.IT` and `fr.EARTHED` are bare constants,
+supply was declared earthed. The rule: `fr.IT` and `fr.EARTHED` are bare constants,
 as `fr.DO` is: `earthing=fr.IT`. `Earthing` itself stays unpublished.
 """
 

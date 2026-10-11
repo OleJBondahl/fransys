@@ -56,7 +56,7 @@ def test_a_conductor_between_two_pages_is_routed_on_the_page_where_its_ends_are_
 
 
 def test_the_ports_of_a_net_group_with_a_mate_on_the_page_are_wired_there() -> None:
-    """S20 M7: `route` joins a declared net's ports on a page, so each has a wire there; a net
+    """`route` joins a declared net's ports on a page, so each has a wire there; a net
     port alone on its page (function 3, page 2) has none."""
     # UNDO: stages/onepage.py `page_wiring`: `| net_wired(net_groups, at_home)` -> nothing
     #   (a net group's ports are not wired: FAILED this test alone)

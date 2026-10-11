@@ -82,7 +82,7 @@ def test_document_no_drawings_blocks_every_export_but_the_typ_still_writes(parts
 
     The default `CABINET_SCHEMATIC` preset carries `SCHEMATIC`, and `fransys_render` is
     still a scaffold, so `fransys_pdf.check` finds no drawing set for it -- proving decision
-    0011 and pdf-0001's P11 amendment hold together at the facade seam.
+    0011 and pdf-0001's amendment hold together at the facade seam.
     """
     c1 = design.location("C1", "Demo cabinet")
     document_draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=_cover(tmp_path))
@@ -139,7 +139,7 @@ def test_the_printed_date_and_the_embedded_timestamp_are_the_current_entrys(part
 def test_a_unit_documents_embedded_date_is_the_unit_revisions_date_not_the_projects(
     parts, tmp_path
 ):
-    """A unit document prints and embeds its unit revision's date (UNIT-ID I2); a project
+    """A unit document prints and embeds its unit revision's date; a project
     document beside it in the same build keeps the project's (the two dates differ).
 
     The embedded date is the source's own `#set document(date: ...)` line

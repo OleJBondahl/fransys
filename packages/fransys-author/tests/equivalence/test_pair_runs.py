@@ -1,4 +1,4 @@
-"""EA5, EA9: two named runs on one strip fed by a DC supply, by hand and by series, one model."""
+"""Two named runs on one strip fed by a DC supply, by hand and by series, one model."""
 
 from typing import TYPE_CHECKING
 

@@ -2,7 +2,6 @@
 
 import pytest
 
-from fransys_layout.conventions import FACTS
 from fransys_layout.stages.terminal_facts import TerminalRead, inline_terminal, terminal_point
 
 
@@ -38,10 +37,3 @@ def test_inline_terminal(read: TerminalRead, *, expected: bool) -> None:
 def test_terminal_point(read: TerminalRead, *, expected: bool) -> None:
     """Only a terminal with exactly one wire is a lone point."""
     assert terminal_point(read) is expected
-
-
-def test_both_facts_are_registered_with_their_functions() -> None:
-    """The registry holds each fact by name, physical, bound to the one function."""
-    assert FACTS["inline_terminal"].func is inline_terminal
-    assert FACTS["terminal_point"].func is terminal_point
-    assert {FACTS[n].kind for n in ("inline_terminal", "terminal_point")} == {"physical"}

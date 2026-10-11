@@ -1,4 +1,4 @@
-"""D10 (layout deep dive): the branches of `stages/offstubs.py` and `read/offstubs.py`, one by one.
+"""The branches of `stages/offstubs.py` and `read/offstubs.py`, one by one.
 
 `test_dd_mate_stub.py` covers the worked example (a cabinet connector mated across a location
 to a harness plug, the core plug to plug, the far plug mated to a device). These cases cover

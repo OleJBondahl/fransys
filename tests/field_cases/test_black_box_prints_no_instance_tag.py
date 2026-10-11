@@ -3,7 +3,7 @@
 The engineering shape: a top-level design holds a lamp `M1` wired to pin 1 of an I/O board
 instance tagged `U2`. The board is a unit, so its container draws it as a black box.
 
-The rule (UT2, owner ruling E1, 2026-10-05): the black box's title line stays the release title
+The rule (owner ruling, 2026-10-05): the black box's title line stays the release title
 and revision, with no instance tag; the tag stands in every boundary text (`-U2-J1:1`).
 
 The decision that fixes it: model-0134.

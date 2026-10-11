@@ -2,7 +2,7 @@
 
 `fransys_layout.engines.schematic.defaults` keys `KIND_ROLES` and `SYMBOL_DEFAULTS` (T2)
 by the string
-value of a `FunctionKind` and imports no `vocab` (acceptance 6). This test sits
+value of a `FunctionKind` and imports no `vocab`. This test sits
 outside the package, where `vocab` may be imported, so a misspelt kind string cannot drift.
 """
 

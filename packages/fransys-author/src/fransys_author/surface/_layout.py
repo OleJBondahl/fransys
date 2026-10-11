@@ -31,13 +31,17 @@ class Layout:
         """Hold the engine `Design`; `d.layout` makes these."""
         self._engine = engine
 
-    def chain(self, *functions: Fn | Device | Terminal) -> None:
+    def chain(self, *functions: Fn | Device | Terminal, beside: Fn | Device | None = None) -> None:
         """Advise one drawn current path through the functions, source first.
 
+        `beside` names a host function whose two nets the chain's ends sit on: the chain is
+        drawn next to the host, joined to it by short horizontals. Wire first: it raises
+        `AuthorError` when the chain's end nets are not two nets of the host.
         Does not connect anything: it only advises the layout engine.
         """
         handles = [engine_handle(f, "d.layout.chain", terminal=True) for f in functions]
-        self._engine.chain(*handles)
+        host = None if beside is None else engine_handle(beside, "d.layout.chain beside=")
+        self._engine.chain(*handles, beside=host)  # ty: ignore[invalid-argument-type] -- Item | EngineFn, never a Terminal here
 
     def keep_together(self, *groups: Group) -> None:
         """Advise that these function groups share a page when they fit.

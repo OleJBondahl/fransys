@@ -3,8 +3,8 @@
 The engineering shape: the top pins of two indicator lamps, each on the top row of neighbouring
 columns and wired together. A feed-through terminal wired to the second lamp's pin attaches above
 that lamp, so its pin stands a row lower than the first lamp's. The wire turns back past the
-first lamp (S20 M12) and is no join. (The members were PLC card pins until V1 gave a module one
-box with its channels as pins, ITEM-BOX; the shape needs only column ends.)
+first lamp and is no join. (The members were PLC card pins until V1 gave a module one
+box with its channels as pins; the shape needs only column ends.)
 
 The bug: the two members lost their join with no wire reference and no finding, because no run
 had joined either end (V6 only named a turned wire with an end a run joined).

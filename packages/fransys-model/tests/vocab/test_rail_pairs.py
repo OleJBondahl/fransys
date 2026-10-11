@@ -1,8 +1,8 @@
-"""CONTACT-STATES CS4 tests: `rail_pairs`, the rails that can stand across a function at once.
+"""Tests: `rail_pairs`, the rails that can stand across a function at once.
 
 A rail reaches a port under conditions, the state each contact item on its way must be in: a
 `rest` link needs its item at rest, an `operated` link needs it operated, `both` links, conductors
-and mates need nothing. One item is at rest or operated as a whole (CS1). Every plant here is
+and mates need nothing. One item is at rest or operated as a whole. Every plant here is
 hand-built and invented: two rails `A` and `B` of one AC supply and a load with two ports.
 
 Can-fail probes, each one Edit in `vocab/closure.py`, run and undone: `_agree` returning `True`
@@ -274,7 +274,7 @@ def test_a_changeovers_own_throw_ports_still_stand_across_its_open_gap() -> None
 def test_a_changeovers_rail_pairs_do_not_depend_on_how_its_pins_are_named(
     names: tuple[str, str, str],
 ) -> None:
-    """Acceptance 4: the roles decide, not the pin names. Every naming scheme gives what `11/12/14`
+    """The roles decide, not the pin names. Every naming scheme gives what `11/12/14`
     gives: no pair across the load, the open-gap pair at the pole; with no roles the load's pair."""
     default_model, default_relay, default_load = _changeover(_PROPER_ROLES)
     default_load_pairs = rail_pairs(default_model, default_load.function)

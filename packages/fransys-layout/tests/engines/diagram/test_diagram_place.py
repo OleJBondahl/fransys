@@ -1,4 +1,4 @@
-"""The diagram placer (BD5): routes, tabs, cut stubs, markers and labels on hand facts."""
+"""The diagram placer: routes, tabs, cut stubs, markers and labels on hand facts."""
 
 from dataclasses import replace
 from functools import cache

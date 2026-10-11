@@ -1,4 +1,4 @@
-"""`_symbol_geometry.oriented_symbol` (the D6 recipe) against the real layout goldens.
+"""`_symbol_geometry.oriented_symbol` against the real layout goldens.
 
 The marker-facing derivation (D8, layout-0038) rests on one property: for every real
 `layout.link_marker`, exactly one port of the owning placement's oriented symbol lands
@@ -30,17 +30,17 @@ _ORIGIN = Origin(
 )
 
 # The narrow golden holds 7 markers, not 9. The removed pair is the K1:aux:13 <-> S0:nc_2:22 wire
-# (wire 17): K1's aux now stands on page 1 (layout-0049, D2: the aux stands second in =P1), so
+# (wire 17): K1's aux now stands on page 1 (layout-0049: the aux stands second in =P1), so
 # the wire is drawn on page 1 and is no longer cut.
-# Step 5 (layout-0093, M12): a wire that turns back round its device is a reference pair, so the
+# Step 5 (layout-0093): a wire that turns back round its device is a reference pair, so the
 # wide golden holds 8 markers and the narrow one 9.
-# DRAWN-ENDS (layout-0099 V5, layout-0103): a contact moves under its far pin, so one more wire
+# A contact moves under its far pin (layout-0103), so one more wire
 # is drawn whole: 7 and 8.
 _EXPECTED_MARKER_COUNTS = {
     "cabinet_laid_out": 6,
     "cabinet_narrow_laid_out": 8,
 }
-# HL15-HL18 (layout-0154): a harness line leaves its page by an OFF line stub at the end of a
+# A harness line (layout-0154) leaves its page by an OFF line stub at the end of a
 # 48 G leaving line, not at a port, so these markers are counted but match no port.
 _EXPECTED_LINE_STUB_COUNTS = {"cabinet_laid_out": 1, "cabinet_narrow_laid_out": 2}
 

@@ -7,7 +7,7 @@ and wires its pins to a lamp of its own.
 The bug: the mate puts the board's connector pins on the cabinet's rails, so V3 gave the black box
 on the cabinet's page a bar and a ground inside the board's outline, where its leads end.
 
-The rule (CONVENTIONS-V06 V3, decision layout-0099; black box, owner 2026-09-23): a nested unit's
+The rule (decision layout-0099; black box, owner 2026-09-23): a nested unit's
 boundary port is boundary-only on its parent's page and takes no rail symbol there. The plug's
 pins, on the cabinet's own set, keep theirs. The board's own pages still draw them.
 """

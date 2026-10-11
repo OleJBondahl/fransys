@@ -1,4 +1,4 @@
-"""SET-DIGITS: the room `place` reserves for a reference is no narrower than its drawn box.
+"""The room `place` reserves for a reference is no narrower than its drawn box.
 
 The band (`place._reference_band`) and the box (`reference_box_width`) are sized from the same
 set's `Digits` (layout-0135). A run of several sets prints `p<set>.<page>` and `+<location>`

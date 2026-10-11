@@ -1,4 +1,4 @@
-"""The study board of acceptance 12: one unit with five interfaces, each on a harness.
+"""The study board: one unit with five interfaces, each on a harness.
 
 `build(hint=True)` adds the side hint that fixes `bus_in` on top. Built from `demo_parts` only.
 """

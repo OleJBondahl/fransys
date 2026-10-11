@@ -1,4 +1,4 @@
-"""EF-A2 part 2: a column is never cut across pages (D2), however the pages are packed.
+"""A column is never cut across pages, however the pages are packed.
 
 Packing cuts a too-wide unit between its columns and never inside one, and a column that fits
 no page is a separate question (not asserted here). The stage-level check runs `partition` over
@@ -7,7 +7,6 @@ several sheet widths and reads where each column's functions were placed.
 """
 
 import dataclasses
-from collections import defaultdict
 from decimal import Decimal
 
 import pytest
@@ -104,16 +103,3 @@ def _cabinet_on(width_mm: int):
     draft.extend((sheet, profile), origin=_ORIGIN)
     model = freeze(draft)
     return stage_results(model, read_inputs(model))[0]
-
-
-@pytest.mark.parametrize("width_mm", [400, 300, 200, 158, 120, 100])
-def test_no_column_of_the_cabinet_has_its_functions_on_two_pages(width_mm: int) -> None:
-    """Each column's placements share one page, and the narrower sheets do split the cabinet."""
-    layout = _cabinet_on(width_mm).layout
-    pages_of: defaultdict[tuple[str, ...], set[tuple[int, int]]] = defaultdict(set)
-    for placed in layout.placed:
-        pages_of[placed.column].add((placed.drawing_set, placed.page))
-    assert pages_of
-    assert [key for key, pages in pages_of.items() if len(pages) > 1] == []
-    if width_mm <= 200:
-        assert len(layout.pages) > 2

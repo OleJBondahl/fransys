@@ -4,7 +4,7 @@ silently, whether or not their ends are drawn; a mixed one is not drawn and repo
 every case is proven directly, not inferred from `layout_cabinet.py`'s shared fixture. Each
 test builds only its own scenario, so one test's finding cannot leak into another's.
 
-Deep dive D8: a connector is drawn as one view per wired pin (the view's handle is the pin's
+A connector is drawn as one view per wired pin (the view's handle is the pin's
 port), and an idle connector is not drawn. A connection or net group dropped as board-internal
 leaves its pins idle, so a test that used to see the connector drawn now sees no function at all.
 """

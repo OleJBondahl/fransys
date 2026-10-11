@@ -1,7 +1,8 @@
 """Import-layer check via stdlib `ast`, as in fransys-model.
 
-Enforces package-layout.md 4. The layers are `engines` → `lint` → `stages` → `conventions` →
-`geometry` (decision layout-0111), and a layer imports only layers to its right. Every layer may
+Enforces the layer table. The layers are `engines` → `lint` → `stages` →
+`conventions` → `geometry` (decision layout-0111), and a layer imports only layers to its right.
+Every layer may
 import
 `fransys_model.kernel`; only `engines` may import anything else of `fransys_model`,
 with one recorded exception (decision layout-0037, extended by layout-0089): any module may import
@@ -12,7 +13,7 @@ and the rest, which take a model) stay engine-only, like every other `derive` na
 `geometry/symbols.py` may import the symbol libraries. Inside `engines`, only the `read/`
 package may import `fransys_model.derive` or `vocab` (`drawing_text` formatters
 excepted), and only the `read/` and `write/` packages may import `fransys_model.layout`
-(FC4's three enums `Orientation`, `MarkerSide` and `LabelKind` excepted); the modules that
+(the three enums `Orientation`, `MarkerSide` and `LabelKind` excepted); the modules that
 still do are listed in `ENGINE_ALLOWED_OFFENDERS`, which is empty and stays as the refusal.
 """
 
@@ -66,14 +67,14 @@ DRAWING_TEXT_FORMATTERS = frozenset(
 
 SYMBOL_LIBRARIES = ("symdef", "electrical_symbols")
 SYMBOL_ADAPTER = SRC_ROOT / "geometry" / "symbols.py"
-# `units.py` takes the two grid constants from the library's one home (RR-O4); `symbols.py`
+# `units.py` takes the two grid constants from the library's one home; `symbols.py`
 # imports `units`, so the constants cannot come through it. `units.py` may import nothing else.
 UNITS_MODULE = SRC_ROOT / "geometry" / "units.py"
 UNITS_ALLOWED = frozenset({"WIRING_GRID", "G_PER_MODULE"})
 
 # Inside `engines`, only the `read/` package may import `fransys_model.derive` or
 # `fransys_model.vocab` (the `drawing_text` formatters excepted), and only the `read/` and
-# `write/` packages may import `fransys_model.layout`, except FC4's three enums, which any
+# `write/` packages may import `fransys_model.layout`, except the three enums, which any
 # engine module may import by name from `fransys_model.layout`.
 MODEL_DERIVE = "fransys_model.derive"
 MODEL_VOCAB = "fransys_model.vocab"
@@ -257,7 +258,7 @@ def _model_targets(node: ast.Import | ast.ImportFrom) -> set[str]:
 
 
 def _is_layout_target(target: str) -> bool:
-    """Whether `target` is a `fransys_model.layout` name other than FC4's three enums."""
+    """Whether `target` is a `fransys_model.layout` name other than the three enums."""
     is_enum = target.rpartition(".")[0] == MODEL_LAYOUT and (
         target.rpartition(".")[2] in LAYOUT_ENUMS
     )
@@ -275,7 +276,7 @@ def _is_derive_or_vocab_target(target: str) -> bool:
 
 
 def _forbidden_engine_imports(module_name: str, source: str, *, is_init: bool) -> set[str]:
-    """The `derive`/`vocab`/`layout` names `source` imports that its package may not (D6).
+    """The `derive`/`vocab`/`layout` names `source` imports that its package may not.
 
     `read/` is exempt from all three; `write/` is exempt from `layout` only.
     """
@@ -577,7 +578,7 @@ def test_checker_allows_the_drawing_text_formatters_from_a_stage() -> None:
 
 
 def test_symbol_adapter_may_import_only_the_model_orientation_from_layout() -> None:
-    """LC7: `Orientation` is the model's; the adapter may import it, and no other layout name."""
+    """`Orientation` is the model's; the adapter may import it, and no other layout name."""
     ok = "from fransys_model.layout import Orientation\n"
     bad = "from fransys_model.layout import Orientation, SymbolPlacement\n"
     assert _layout_names(ok) == {"Orientation"}

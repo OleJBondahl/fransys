@@ -272,11 +272,11 @@ def test_junction_clause_ii_endpoint_inside_other_route_segment():
     assert 'class="junction"' not in svg_diff
 
 
-# --- 5. Two routes meeting only at a port: no junction (I4 D1) ---------------------------------
+# --- 5. Two routes meeting only at a port: no junction ---------------------------------
 
 
 def test_two_routes_meeting_only_at_a_port_are_no_junction():
-    """I4 D1: a dot goes where three or more wire segments of one net meet; a
+    """A dot goes where three or more wire segments of one net meet; a
     symbol's pin is no wire segment, so two wires on one port, W and E, get no dot (the old
     clause (iii) drew one). A third wire leaving the port's point makes it a junction."""
     s = (10, 10)
@@ -347,7 +347,7 @@ def test_two_routes_meeting_only_at_a_port_are_no_junction():
 
 
 def test_a_wire_joining_one_grid_out_from_a_port_gets_the_dot_at_the_t():
-    """I4 D1: a side element's wire joins the coil's line one grid out from A1: the dot is
+    """A side element's wire joins the coil's line one grid out from A1: the dot is
     at that T, not at the port where the line ends."""
     drawing_set = _drawing_set("t7")
     page = _page("t7", drawing_set=drawing_set)
@@ -365,7 +365,7 @@ def test_a_wire_joining_one_grid_out_from_a_port_gets_the_dot_at_the_t():
     assert _circle_marker(sheet, 10, 20) not in svg
 
 
-# --- 6. Ordering: routes by id, junctions by position (D11) ------------------------------------
+# --- 6. Ordering: routes by id, junctions by position ------------------------------------
 
 
 def test_routes_and_junctions_are_ordered_by_id_and_position():

@@ -1,15 +1,15 @@
-"""Every ```python``` block of the consumer guide's twelve pages actually runs (CG2).
+"""Every ```python``` block of the consumer guide's twelve pages actually runs.
 
-Deliberately not BUILD-ONCE: each page gets its own fresh namespace so that a page's blocks
+Deliberately not built once: each page gets its own fresh namespace so that a page's blocks
 can build on each other (a later block reuses an earlier one's imports and variables) while
 two different pages never share state. The guide's twelve pages are written by parallel
 subagents working on their own files at the same time; a shared namespace across pages would
 let one page's leftover state mask or cause another page's failure, making a probe's FAILED
 test id ambiguous about which page actually broke. So this module shares no build across its
-parametrized cases at all, unlike the BUILD-ONCE modules elsewhere in this suite (root
-CLAUDE.md's speed-work rule). `documents.md`'s two builds run a full layout on a real cabinet,
-which is this module's main cost; every other page's blocks are small enough to stay well
-under 1 s each, `examples.md`'s included (it builds a document but keeps its designs tiny).
+parametrized cases at all, unlike the modules elsewhere in this suite that build once.
+`documents.md`'s two builds run a full layout on a real cabinet, which is this module's main cost;
+every other page's blocks are small enough to stay well under 1 s each, `examples.md`'s included
+(it builds a document but keeps its designs tiny).
 """
 
 import ast
@@ -18,7 +18,7 @@ import re
 import sys
 from importlib.resources import files
 
-# The fixed twelve guide pages (CG2's own list), by filename stem; `AGENTS.md` is not one of
+# The fixed twelve guide pages, by filename stem; `AGENTS.md` is not one of
 # them. Parametrize id is the page name itself (e.g. `test_...[build]`), not a discovered
 # file path: a page that does not exist yet, and a missing page surfaces as a normal,
 # uncaught `FileNotFoundError` at its own test id.
@@ -155,7 +155,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("page", GUIDE_PAGES, ids=GUIDE_PAGES)
 
 
-# CG2's twelve pages plus AGENTS.md (not one of the twelve, CG5): the guide folder's whole,
+# The twelve pages plus AGENTS.md (not one of the twelve): the guide folder's whole,
 # fixed file list. Only meaningful once every guide file exists, which is why this
 # assertion is not staged disabled inside an earlier commit: written here, at the point
 # in this order's own sequence where all twelve are first committed together.
@@ -163,7 +163,7 @@ _EXPECTED_GUIDE_FILES = frozenset({f"{page}.md" for page in GUIDE_PAGES} | {"AGE
 
 
 def test_all_twelve_guide_pages_and_agents_exist():
-    """The installed package's `guide/` folder holds exactly CG2's twelve pages and `AGENTS.md`,
+    """The installed package's `guide/` folder holds exactly twelve pages and `AGENTS.md`,
     no more and no fewer -- a page renamed, dropped or left over from a probe is caught here.
     """
     guide_dir = files("fransys").joinpath("guide")

@@ -1,4 +1,4 @@
-"""S20 M12 acceptance: a wire that would turn back round a device is drawn as a reference pair.
+"""Layout-0090: a wire that would turn back round a device is drawn as a reference pair.
 
 The unit (the root-port tests' K1) wires each relay's coil pins to the root's
 connector pins (`-K1:A1` to `-X1:1`, `-K2:A1` to `-X2:1`, and the A2 pins to the pins 2). The A1

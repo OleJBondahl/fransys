@@ -1,4 +1,4 @@
-"""Every built site page carries the Beta banner, which comes from `website/mkdocs.yml` (PM9)."""
+"""Every built site page carries the Beta banner, which comes from `website/mkdocs.yml`."""
 
 import importlib
 import sys

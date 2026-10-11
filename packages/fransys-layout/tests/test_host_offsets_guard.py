@@ -1,4 +1,4 @@
-"""R7.1 attachment x: two adjacent cells with no attachment keep the dx the span stage gave them."""
+"""Attachment x: two adjacent cells with no attachment keep the dx the span stage gave them."""
 
 from types import SimpleNamespace
 from typing import Any, cast

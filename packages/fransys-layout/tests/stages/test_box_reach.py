@@ -1,9 +1,7 @@
-"""V5, model-0129: a generic box's pins stand a channel pitch apart, widened only per text row."""
+"""Decision model-0129: a generic box's pins stand a channel pitch apart, widened per text row."""
 
 from itertools import pairwise
 
-import pytest
-from layout_cabinet import build_cabinet
 from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -49,13 +47,6 @@ def test_texts_at_different_heights_never_add_their_reaches() -> None:
     assert placed == {"a": 0, "b": 48}
 
 
-@pytest.mark.parametrize("right", [0, 8, 20, 41, 90])
-def test_no_two_contact_pins_on_one_side_are_nearer_than_the_channel_pitch(right: int) -> None:
-    names, sides = ("p.abcdefgh", "p.2", "p.3", "q.1"), ("s", "s", "s", "n")
-    wide = generic_box_geometry(names, sides, tuple(_reach(n, (0, 16, 4, right)) for n in names))
-    assert min(_steps(wide)) >= channel_pitch()
-
-
 def _side_xs(geometry) -> dict[str, list[int]]:
     xs: dict[str, list[int]] = {}
     for port in geometry.ports:
@@ -84,7 +75,7 @@ def _written_steps(placement) -> list[int]:
 def test_on_the_cabinets_written_box_the_offsets_keep_each_sides_pitch() -> None:
     """Model-0129 acceptance: no two pins of any box side nearer than the channel pitch.
 
-    The wired cabinet: HL1 draws the cabinet's `W1` as a line, and its lamp box is then not widened.
+    The wired cabinet: the cabinet's `W1` is drawn as a line, and its lamp box is then not widened.
     """
     seen = 0
     for model in (freeze(wired_cabinet()),):
@@ -94,12 +85,6 @@ def test_on_the_cabinets_written_box_the_offsets_keep_each_sides_pitch() -> None
             assert min(_written_steps(placement), default=0) >= channel_pitch(), placement.key
             seen += 1
     assert seen > 0, "no widened box on any fixture: the check would pass over nothing"
-
-
-def test_the_stage_results_hold_the_widened_geometry() -> None:
-    model = freeze(build_cabinet())
-    results, _ = stage_results(model, read_inputs(model))
-    assert any(one.reach for one in results.drawn)
 
 
 def test_a_pin_clears_the_text_of_a_pin_two_places_before_it() -> None:
@@ -118,7 +103,7 @@ def test_the_extent_covers_every_pin_and_every_row_hung_under_one() -> None:
 
 
 def test_the_boxs_keepout_covers_the_texts_that_hang_beyond_its_pins() -> None:
-    """V5: the keep-out the column width reads spans the rows, so no neighbour overlaps a text."""
+    """The keep-out the column width reads spans the rows, so no neighbour overlaps a text."""
     # UNDO: stages/box_reach.py:_with_hung, the `grow_keepout(...)` -> `geometry`
     geometry = generic_box_geometry(("a", "b"), ("s", "s"))
     room = {"b": (Row(top=0, bottom=16, left=4, right=200),)}

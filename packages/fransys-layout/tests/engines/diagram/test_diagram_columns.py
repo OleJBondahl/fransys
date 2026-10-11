@@ -1,4 +1,4 @@
-"""Stage columns on abstract graphs (BD5): boxes are single letters, already in text order."""
+"""Stage columns on abstract graphs: boxes are single letters, already in text order."""
 
 import itertools
 

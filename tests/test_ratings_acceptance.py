@@ -1,4 +1,4 @@
-"""RATINGS-1 step 2, acceptance 5: the rating check on demo parts, end to end (model-0079).
+"""The rating check on demo parts, end to end (model-0079).
 
 Every case builds a design over `examples/demo-parts`, freezes it and reads `check_ratings`. A
 demo part's function template gets another rating for one test by replacing its `RatingFacet`

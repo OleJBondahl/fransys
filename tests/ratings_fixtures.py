@@ -1,4 +1,4 @@
-"""Fixtures of `test_ratings_acceptance.py` (RATINGS-1 step 2, acceptance 5): demo parts only.
+"""Fixtures of `test_ratings_acceptance.py`: demo parts only.
 
 A design over the demo parts with the 400 V supply declared, the record helpers that give a demo
 part's function template another rating for one test, and the three plants of the spec: a line

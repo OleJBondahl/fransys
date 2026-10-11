@@ -1,4 +1,4 @@
-"""Hand-built `BlockFacts` for the cable placer's tests (CT5-3): no model, only widths and ids.
+"""Hand-built `BlockFacts` for the cable placer's tests: no model, only widths and ids.
 
 `block_facts(cores)` takes one `(top end, bottom end)` pair per core, core keys 1, 2, ...; each
 row runs its ends by lowest core key and each end its pins in core order, as `end_rows` and

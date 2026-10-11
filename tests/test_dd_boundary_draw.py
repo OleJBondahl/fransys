@@ -1,7 +1,7 @@
-"""BOUNDARY-DRAW (layout-0080, ruling 2026-09-25): how a unit's boundary pin is drawn.
+"""Layout-0080 (ruling 2026-09-25): how a unit's boundary pin is drawn.
 
 Rule 1: a top-level unit's boundary pin wired out of the unit (to the top level or to another
-top-level unit) gets a D10 stub label (an OFF `LinkMarker`) on the unit's own page, whatever the
+top-level unit) gets a stub label (an OFF `LinkMarker`) on the unit's own page, whatever the
 location. Rule 2: the other end gets the mirror stub, an item at the top level in the top-level
 drawing set, the far unit's pin in that unit's drawing set. Rule 5: a NESTED unit (parent is
 another unit) is unchanged: the wire is drawn in the parent's set at the black box's replica
@@ -114,7 +114,7 @@ def _build_top_level_units(*, second_unit: bool, same: bool):
     ],
 )
 def test_a_unit_boundary_pin_wired_to_the_top_level_gets_a_stub_pair(same, expected) -> None:
-    """Rules 1 and 2, G-A. The item `h` at the same location (C1) or another (C2).
+    """Rules 1 and 2. The item `h` at the same location (C1) or another (C2).
 
     Exactly one OFF marker stands in ua's set and one in the top-level set, whatever the
     location. Base: the other-location case passes (a control); the same-location case
@@ -135,7 +135,7 @@ def test_a_unit_boundary_pin_wired_to_the_top_level_gets_a_stub_pair(same, expec
     ],
 )
 def test_two_top_level_units_boundary_pins_wired_together_get_a_stub_each(same, expected) -> None:
-    """Rules 1 and 2, G-A. `f.1` of `ua` wired to `g.1` of `ub` at the top level, `g` at the
+    """Rules 1 and 2. `f.1` of `ua` wired to `g.1` of `ub` at the top level, `g` at the
     same location (C1) or another (C2): one OFF marker in ua's set, one in ub's, none
     anywhere else. Base: the other-location case passes (a control); the same-location case
     reports `CONNECTION_NOT_DRAWN` on both pins and draws no stub."""

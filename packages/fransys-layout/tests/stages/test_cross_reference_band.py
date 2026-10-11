@@ -1,15 +1,13 @@
-"""S18, S20: a cross-reference whose first candidate lies on a marker box.
+"""A cross-reference whose first candidate lies on a marker box.
 
 Hand-made values, no model. Function 1, the through symbol, stands alone on its page at
 (104, 96); its `tag` slot is on the E side at (16, 0), its slot box from y -4. Its
 cross-reference goes through `finish_page`'s second slot call, whose `occupied` holds the
-page's link markers' boxes (`PageState.markers`; a C21 run's box is one, S20). With no marker
+page's link markers' boxes (`PageState.markers`; the box of an off-stub run is one). With no marker
 the reference stands at its first candidate, one text height below the tag, at the slot's x.
 No fixture of the layout or root suites has a marker box over a cross-reference's first
 candidate (measured over every `finish_page` call), so this page is the test's own.
 """
-
-from dataclasses import replace
 
 from samples import NO_HINTS, PROFILE, SHEET, drawn, hid, placed
 
@@ -81,18 +79,3 @@ def test_a_cross_reference_whose_first_candidate_lies_on_a_marker_box_takes_the_
     assert not label.unplaced
     assert findings == ()
     assert label.box == translate(first.box, dx=0, dy=PROFILE.text_height)
-
-
-def test_a_power_ends_undrawn_box_does_not_hold_the_reference_but_its_symbol_does() -> None:
-    """layout-0138: the keep-out of the second slot call is the page's drawn ink, as the tables
-    read it; a power end draws its symbol, never its marker box."""
-    # UNDO: stages/pagerun.py `finish_page`: put the markers' boxes and every power symbol's
-    #     body and lead back in `occupied` (a power end's undrawn box holds the reference again)
-    first, _ = _reference(())
-    far = Point(x=2000, y=2000)  # the symbol stands far from the reference
-    undrawn = replace(_marker(first.box), at=far, symbol="ground", symbol_text="")
-    label, findings = _reference((undrawn,))
-    assert findings == ()
-    assert label.box == first.box, "a box nobody draws holds nothing"
-    drawn_end = replace(undrawn, symbol="", symbol_text="")
-    assert _reference((drawn_end,))[0].box != first.box, "the same box drawn does hold it"

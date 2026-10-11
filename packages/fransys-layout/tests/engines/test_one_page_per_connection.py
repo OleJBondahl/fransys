@@ -1,12 +1,12 @@
 """A connection is drawn on exactly one page, though both its ends may be on several (layout-0030).
 
 The model is local: groups `=P1` and `=P2` on a sheet narrow enough to give each its own page
-(D4: groups pack by measured width, and several may share a page, so 210 mm still splits these
+(groups pack by measured width, and several may share a page, so 210 mm still splits these
 two). Terminals `-X1:1` (home `=P1`), `-X1:2`, `-X1:3` and `-X1:5` (home `=P2`) each head a
 chain of their own (a terminal-only column has no group of its own, so a wire from it to a
 lamp of a group asks for a replica in that group's page: `replicate_terminals`). Each terminal's
 internal port is wired to one lamp of the other group, and only the external ports are wired to
-each other, so both wires under test are plain 2-port nets, not D9 fan-out nets, and the chains
+each other, so both wires under test are plain 2-port nets, not fan-out nets, and the chains
 stay one element long. Both ends of each wire are then on both pages:
 `-X1:1` to `-X1:5` has one home end on each page (a tie), `-X1:2` to `-X1:3` has two on page 2.
 
@@ -191,8 +191,8 @@ def test_a_net_group_edge_with_two_common_pages_is_routed_once() -> None:
 
 
 def test_a_wire_drawn_on_one_page_has_no_marker_and_no_wire_label() -> None:
-    """Both ends are visible on the chosen page: nothing is cut, and no label is printed (V8)."""
-    # S20 M12: a lamp-to-terminal wire of the fixture turns back round its device and is a
+    """Both ends are visible on the chosen page: nothing is cut, and no label is printed."""
+    # A lamp-to-terminal wire of the fixture turns back round its device and is a
     # reference pair, so only the markers at the two wires under test are counted
     model, _ = run()
     ends = {
@@ -213,7 +213,7 @@ def test_a_wire_with_a_common_page_is_not_cut_and_has_no_decision() -> None:
     results, _ = stage_results(model, read_inputs(model))
     handles = {decision.connection for decision in results.layout.decisions}
     assert not handles & {_HOMES, _TIE}
-    # S20 M12: the fixture's lamp-to-terminal wires may turn back, so only these two are counted
+    # The fixture's lamp-to-terminal wires may turn back, so only these two are counted
     assert not [m for m in results.layout.markers if m.connection in {_HOMES, _TIE}]
 
 

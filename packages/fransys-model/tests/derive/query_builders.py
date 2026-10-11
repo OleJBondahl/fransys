@@ -1,4 +1,4 @@
-"""Invented plants for the WP16 query tests: strips, PLC racks, cables, boards, trees.
+"""Invented plants for the query tests: strips, PLC racks, cables, boards, trees.
 
 Every id comes from `make_id` over a key the caller chooses; nothing names a real project.
 """
@@ -8,19 +8,15 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.kernel import Id, Model, make_id
-from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Function, Item, Port
 from fransys_model.vocab.enums import (
-    Aspect,
     ConductorKind,
     FunctionKind,
     PartCategory,
     PortRole,
     SignalType,
 )
-from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
-from fransys_model.vocab.facets.pcb import FootprintFacet
-from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.facets.plc import PlcChannelFacet
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part
@@ -145,84 +141,6 @@ def make_channels(
     return found
 
 
-def bind_device(
-    plant: Plant, device: str, designation: str | None, channel: Id[Function]
-) -> Id[Function]:
-    """A numbered field device whose function `signal` is bound to `channel`."""
-    function = plant.function(plant.item(device, designation=designation), "signal")
-    plant.add(
-        PlcRequestFacet(
-            id=make_id(PlcRequestFacet, (device, "signal", "request")),
-            key=(device, "signal", "request"),
-            subject=function,
-            signal=SignalType.DI,
-            signal_name=f"tag_{device}",
-            priority=1,
-        ),
-        PlcBindingFacet(
-            id=make_id(PlcBindingFacet, (device, "signal", "plc_binding")),
-            key=(device, "signal", "plc_binding"),
-            subject=function,
-            channel=channel,
-        ),
-    )
-    return function
-
-
-def make_plc(plant: Plant) -> tuple[list[Id[Function]], Id[Function], Terminal]:
-    """A DI, an AI and a DI channel; device `dev` on the first, wired to a terminal, at `+C1`."""
-    channels = make_channels(
-        plant, "mod", "A1", (SignalType.DI, SignalType.AI_CURRENT, SignalType.DI)
-    )
-    device = bind_device(plant, "dev", "B7", channels[0])
-    plant.item("x2", designation="X2")
-    terminal = make_terminal(plant, "x2", "t1", group="S", index=1)
-    plant.wire(plant.port(device, "1"), terminal.external, key="dev-wire")
-    location = AspectNode(
-        id=make_id(AspectNode, ("c1",)),
-        key=("c1",),
-        aspect=Aspect.LOCATION,
-        parent=None,
-        label="C1",
-        description="Invented",
-    )
-    product = AspectNode(
-        id=make_id(AspectNode, ("k9",)),
-        key=("k9",),
-        aspect=Aspect.PRODUCT,
-        parent=None,
-        label="-K9",
-        description="Invented",
-    )
-    dev_item = make_id(Item, ("dev",))
-    plant.add(
-        location,
-        product,
-        make_placement("dev-product", dev_item, product.id),
-        make_placement("dev-location", dev_item, location.id),
-    )
-    return channels, device, terminal
-
-
-def make_placement(key: str, item: Id[Item], node: Id[AspectNode]) -> Placement:
-    """A placement of `item` at `node`."""
-    return Placement(id=make_id(Placement, (key,)), key=(key,), item=item, node=node)
-
-
-def make_node(
-    key: str, parent: Id[AspectNode] | None, aspect: Aspect = Aspect.LOCATION
-) -> AspectNode:
-    """An aspect node labelled with its upper-cased key."""
-    return AspectNode(
-        id=make_id(AspectNode, (key,)),
-        key=(key,),
-        aspect=aspect,
-        parent=parent,
-        label=key.upper(),
-        description="Invented",
-    )
-
-
 def reversed_tables(model: Model) -> Model:
     """Tables backwards, under another digest so the model's own cached result is not reused.
 
@@ -260,54 +178,6 @@ def make_part(
     return part.id
 
 
-def make_core(
-    plant: Plant, name: str, cable: Id[Item], ends: tuple[Id[Port], Id[Port]], *, index: int
-) -> Id[Any]:
-    """A core of `cable` between `ends`, with a `core` facet and a colour `colour-{index}`.
-
-    A core's colour is its cable product's `core_colours[index - 1]` (SC4): `cable` gets a part
-    and a product when it has none, and a product with fewer colours than `index` grows.
-    """
-    conductor = plant.core(*ends, key=name, carrier=cable)
-    plant.add(
-        CoreFacet(
-            id=make_id(CoreFacet, (name, "facet")),
-            key=(name, "facet"),
-            subject=conductor,
-            index=index,
-        )
-    )
-    _colour_core(plant, cable, index)
-    return conductor
-
-
-def _colour_core(plant: Plant, cable: Id[Item], index: int) -> None:
-    """Make `cable`'s product hold a colour at `index`, `colour-{index}` when it has none."""
-    item = next(r for r in plant.records if r.id == cable)
-    if item.part is None:
-        name = "-".join(item.key)
-        part = make_part(plant, f"{name}-part", f"MPN-{name}")
-        plant.records[plant.records.index(item)] = item = dataclasses.replace(item, part=part)
-    product = next(
-        (r for r in plant.records if isinstance(r, CableProductFacet) and r.subject == item.part),
-        None,
-    )
-    if product is None:
-        key = ("-".join(item.key), "auto-product")
-        product = CableProductFacet(
-            id=make_id(CableProductFacet, key),
-            key=key,
-            subject=item.part,
-            core_colours=(),
-            gauge_mm2=Decimal("0.5"),
-            shielded=False,
-        )
-        plant.add(product)
-    colours = product.core_colours
-    colours += tuple(f"colour-{n}" for n in range(len(colours) + 1, index + 1))
-    plant.records[plant.records.index(product)] = dataclasses.replace(product, core_colours=colours)
-
-
 def make_labelled(plant: Plant, key: str, a: Id[Port], b: Id[Port], label: str | None) -> Id[Any]:
     """A wire between `a` and `b` with a `wire` facet carrying `label`."""
     conductor = plant.wire(a, b, key=key)
@@ -325,13 +195,6 @@ def make_labelled(plant: Plant, key: str, a: Id[Port], b: Id[Port], label: str |
     return conductor
 
 
-def ports_against_ids(plant: Plant, count: int) -> list[Id[Port]]:
-    """`count` numbered ports; `K1`, `K2`... run opposite to their ids, so the later one is `a`."""
-    keys = [f"i{n}" for n in range(count)]
-    by_id = sorted(keys, key=lambda k: make_id(Port, (k, "f", "1")), reverse=True)
-    return [make_pin(plant, key, f"K{n}") for n, key in enumerate(by_id, start=1)]
-
-
 def leg_net(plant: Plant, *, wired_to: int | None) -> tuple[Id[Net], Id[Item], list[Id[Port]]]:
     """Net of one port on `src` and two on other items; `src` wired to candidate `wired_to`."""
     src = make_pin(plant, "src", "S1")
@@ -340,43 +203,6 @@ def leg_net(plant: Plant, *, wired_to: int | None) -> tuple[Id[Net], Id[Item], l
         plant.wire(src, candidates[wired_to], key="leg")
     net = plant.net("n", (src, *candidates))
     return net, item_of(plant, src), candidates
-
-
-def make_footprint(plant: Plant, key: str, name: str) -> Id[Part]:
-    """A part with a `footprint` facet."""
-    part_id = make_part(plant, f"fp-{key}", f"MPN-{key}")
-    plant.add(
-        FootprintFacet(
-            id=make_id(FootprintFacet, (key, "footprint")),
-            key=(key, "footprint"),
-            subject=part_id,
-            library="ExampleLib",
-            name=name,
-        )
-    )
-    return part_id
-
-
-def make_board(plant: Plant) -> Id[Item]:
-    """Board `A1` with resistors `R2` and `R10`."""
-    board = plant.item("board", designation="A1")
-    resistor = make_footprint(plant, "r", "R_0603")
-    for key, designation in (("r2", "R2"), ("r10", "R10")):
-        plant.item(key, parent=board, part=resistor, designation=designation)
-    return board
-
-
-def make_tree(plant: Plant) -> dict[str, Id[AspectNode]]:
-    """`root` > `left` > `leaf`, `root` > `right` (a PRODUCT node), and a separate `lone`."""
-    nodes = {
-        "root": make_node("root", None),
-        "left": make_node("left", make_id(AspectNode, ("root",))),
-        "leaf": make_node("leaf", make_id(AspectNode, ("left",))),
-        "right": make_node("right", make_id(AspectNode, ("root",)), Aspect.PRODUCT),
-        "lone": make_node("lone", None),
-    }
-    plant.add(*nodes.values())
-    return {name: node.id for name, node in nodes.items()}
 
 
 def with_ext(plant: Plant, record_id: Id[Any], ext: dict[str, Any]) -> None:

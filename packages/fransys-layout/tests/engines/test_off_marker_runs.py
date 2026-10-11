@@ -1,4 +1,4 @@
-"""R1 (layout deep dive, ruling): an off-stub box sits over the columns it names,
+"""An off-stub box sits over the columns it names,
 and every stub ends on it. A row of one cable's stubs is cut where another column stands
 between two ends, and a shared box is at least as wide as its run of stubs.
 

@@ -139,21 +139,22 @@ def test_demo_library_record_counts_and_keys():
     (1/2/1/1) and two function-less fuse links (`fuse-link-4a-t.toml`, `fuse-link-500ma-t.toml`);
     adds `connector-header-2p-lettered.toml` (1/2/0/1),
     adds `psu-24v-5out.toml` (2 functions/7 ports),
-    PIN-LABELS adds `ctrl-8.toml` (4 functions/16 ports),
-    ACCESSORY-HOLDER adds `jumper-bar-3p.toml` (no function, no port),
-    GND-NAME adds `psu-24v-pm.toml` (2 functions/4 ports),
-    HA7 adds `housing-4f.toml` and `housing-4m.toml` (1 function/4 ports/1 symbol choice each),
-    HA8 adds `crimp-contact-f.toml` and `crimp-contact-m.toml` (no function, no port),
-    HA4 adds `relay-mod-2.toml` (5 functions/12 ports/4 symbol choices, 6 header joins),
-    HA5 adds `contactor-leads.toml` (2 functions/4 ports/2 symbol choices, 1 link),
-    so 53 parts, 108 templates, 261 ports, 46 links, 48 symbol choices)."""
+    adds `ctrl-8.toml` (4 functions/16 ports),
+    adds `jumper-bar-3p.toml` (no function, no port),
+    adds `psu-24v-pm.toml` (2 functions/4 ports),
+    adds `housing-4f.toml` and `housing-4m.toml` (1 function/4 ports/1 symbol choice each),
+    adds `crimp-contact-f.toml` and `crimp-contact-m.toml` (no function, no port),
+    adds `relay-mod-2.toml` (5 functions/12 ports/4 symbol choices, 6 header joins),
+    adds `contactor-leads.toml` (2 functions/4 ports/2 symbol choices, 1 link),
+    adds `switch-8p.toml` (9 functions/10 ports, no link or symbol choice),
+    so 54 parts, 117 templates, 271 ports, 46 links, 48 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 53
-    assert len(function_templates(model)) == 108
-    assert len(port_templates(model)) == 261
+    assert len(parts(model)) == 54
+    assert len(function_templates(model)) == 117
+    assert len(port_templates(model)) == 271
     assert len(internal_links(model)) == 46
     assert len(model.tables["layout.symbol_choice"]) == 48
 
@@ -167,6 +168,20 @@ def test_demo_library_record_counts_and_keys():
     assert a1.key == (*coil.key, "port", "A1")
 
 
+def test_the_demo_switch_has_eight_one_pin_connectors_and_a_supply():
+    """DEMO-SW-8P: eight one-pin connector functions beside one 24 V supply function."""
+    from fransys_model.kernel import freeze
+    from fransys_model.vocab import function_templates, parts, port_templates
+
+    model = freeze(fransys_parts.load_path(DEMO))
+    part = next(p for p in parts(model).values() if p.mpn == "DEMO-SW-8P")
+    mine = [t for t in function_templates(model).values() if t.part == part.id]
+    kinds = sorted(t.kind.value for t in mine)
+    assert kinds == ["connector"] * 8 + ["load"]
+    ports = [p for p in port_templates(model).values() if p.function in {t.id for t in mine}]
+    assert len(ports) == 10
+
+
 def test_two_loads_give_equal_drafts():
     """Loading the same library twice is deterministic: same records, same origins."""
     first = fransys_parts.load_path(DEMO)
@@ -176,7 +191,7 @@ def test_two_loads_give_equal_drafts():
 
 
 def test_port_marking_loads_onto_the_port_template(tmp_path):
-    """model-0053 (F2): `ports[].marking` loads onto `PortTemplate.marking`, one case each --
+    """model-0053: `ports[].marking` loads onto `PortTemplate.marking`, one case each --
     an explicit marking, an explicit empty marking (no printed text) and no key at all."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import port_templates
@@ -208,7 +223,7 @@ def test_port_marking_loads_onto_the_port_template(tmp_path):
 
 
 def test_port_marking_round_trips_from_the_part_file_to_an_instance(tmp_path):
-    """model-0053 (F2): a marking loaded from TOML survives `instantiate` onto the `Port`,
+    """model-0053: a marking loaded from TOML survives `instantiate` onto the `Port`,
     unchanged, for all three cases."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import (
@@ -306,7 +321,7 @@ def test_connector_marking_loads_onto_the_connector_facet(tmp_path):
 
 
 def test_moving_a_part_file_to_another_name_changes_no_id(tmp_path):
-    """P7: authoring keys come from content, never from a file name or position."""
+    """Authoring keys come from content, never from a file name or position."""
     relay_text = (DEMO / "parts" / "relay-2co-24vdc.toml").read_text()
     library_text = (DEMO / "library.toml").read_text()
     root_a, root_b = tmp_path / "a", tmp_path / "b"
@@ -340,7 +355,7 @@ def test_load_reads_an_installed_data_package():
 
 
 def test_a_loaded_cable_product_carries_its_colours_and_no_core_count():
-    """SC4: the part file's `core_count` is the author's checksum; the facet holds no count."""
+    """The part file's `core_count` is the author's checksum; the facet holds no count."""
     from fransys_model.vocab.facets.cable import CableProductFacet
 
     (facet,) = (
@@ -351,7 +366,7 @@ def test_a_loaded_cable_product_carries_its_colours_and_no_core_count():
 
 
 def test_internal_link_loads_the_same_record_whichever_end_is_written_first(tmp_path):
-    """model-0096 (SC7): `InternalLink.__post_init__` orders its ends itself, so the loader
+    """model-0096: `InternalLink.__post_init__` orders its ends itself, so the loader
     no longer normalizes `a`/`b`; the stored record's ends are the same regardless of which
     port name a part file's `links` entry writes first as `a`."""
     from fransys_model.kernel import freeze
@@ -561,7 +576,7 @@ def test_demo_redundancy_module_takes_class_code_r():
 
 
 def test_demo_housings_name_the_parts_they_mate_with():
-    """HA7 / parts-0016: `mates` is data on the connector facet; schema version 10."""
+    """parts-0016: `mates` is data on the connector facet; schema version 10."""
     from fransys_model.kernel import SCHEMA_VERSION, freeze
     from fransys_model.vocab import function_templates, parts
     from fransys_model.vocab.facets.connector import ConnectorFacet
@@ -579,4 +594,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 11
+    assert SCHEMA_VERSION == 13

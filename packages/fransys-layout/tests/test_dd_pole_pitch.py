@@ -1,4 +1,4 @@
-"""D2 (layout deep dive), EF-A1 part 4a: a multi-pole function with only some poles wired.
+"""A multi-pole function with only some poles wired.
 
 Same method as `test_dd_columns.py`: small invented designs on `examples/demo-parts`, read back
 through the laid-out `SymbolPlacement` records and the findings of `fr.build`.

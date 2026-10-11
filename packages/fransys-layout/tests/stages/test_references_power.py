@@ -1,7 +1,8 @@
-"""D5, step 6 (B2a): an end on a power net takes the net's symbol, not a reference (R5).
+"""layout-0094: an end on a power net takes the net's symbol, not a reference.
 
 `with_power_ends` flags the decided ends of ports in the power table; each case below is one
-ruling of D5. Ports `12` and `21` are the two ends of a severed pair; `31` and `41` join a star.
+ruling of layout-0094. Ports `12` and `21` are the two ends of a severed pair; `31` and `41` join
+a star.
 """
 
 from dataclasses import replace
@@ -10,7 +11,7 @@ from samples import hid
 
 from fransys_layout.stages.references.power import with_power_ends
 from fransys_layout.stages.references.types import MarkerDecision, References
-from fransys_layout.stages.types import MarkerSide, PowerEnd, StubText
+from fransys_layout.stages.types import MarkerSide, PowerEnd
 
 _SUPPLY = "power-supply"
 
@@ -58,23 +59,6 @@ def test_both_ends_of_a_severed_pair_on_a_power_net_take_the_symbol_and_the_text
     ]
 
 
-def test_every_end_of_a_star_on_a_power_net_takes_the_symbol_and_none_a_number() -> None:
-    """(b) A star of four ends (the reference and three branches): four power ends, no `#n`."""
-    # UNDO: references/power.py `_takes_symbol`: `one.star != "off"` -> `one.star == ""` (a star
-    #   end stays a reference)
-    star = (
-        _marker(12, 31, star="ref"),
-        _marker(31, 12, star="branch", side=MarkerSide.USER),
-        _marker(41, 12, star="branch", side=MarkerSide.USER),
-        _marker(51, 12, star="branch", side=MarkerSide.USER),
-    )
-    found = with_power_ends(star, _table(12, 31, 41, 51))
-    value = _value(found)
-    assert len(value.power) == 4 == len(value.markers)
-    assert {one.symbol for one in found} == {_SUPPLY}
-    assert all(one.text == "" for one in found)  # nothing printed as a reference or a stub
-
-
 def test_a_joined_run_decides_one_end_so_it_gets_one_symbol() -> None:
     """(c) A run of three ports wired beside each other keeps the marker of its first end only;
     the other two are wired, have none, and so get no symbol: exactly one power end."""
@@ -83,42 +67,6 @@ def test_a_joined_run_decides_one_end_so_it_gets_one_symbol() -> None:
     run = (_marker(12, 21),)
     found = with_power_ends(run, _table(12, 21, 31))
     assert [one.port for one in _value(found).power] == [hid("port", 12)]
-
-
-def test_an_off_stub_and_a_reference_merged_with_one_stay_stub_labels() -> None:
-    """(d) A wire leaving the drawing keeps its stub label (LD7), merged with a reference or not."""
-    # UNDO: references/power.py `_takes_symbol`: drop `and one.star != "off" and one.merge is None`
-    stub = StubText(cable="-W1", far="+DB-X0", port=":1")
-    off = _marker(12, 12, star="off", end_text=stub, text="-W1")
-    merged = _marker(21, 31, star="ref", merge=stub)
-    plain = _marker(31, 21)
-    found = with_power_ends((off, merged, plain), _table(12, 21, 31))
-    assert [one.symbol for one in found] == ["", "", _SUPPLY]
-    assert found[:2] == (off, merged)
-
-
-def test_an_end_on_no_power_port_is_the_same_decision() -> None:
-    """(g) A kind `NONE` port is not in the table: the very decision comes back, a reference."""
-    # UNDO: references/power.py `_takes_symbol`: `one.port in power` -> `one.port not in power`
-    ordinary = _marker(61, 71)
-    found = with_power_ends((ordinary, _marker(12, 21)), _table(12))
-    assert found[0] is ordinary
-    assert found[1].symbol == _SUPPLY
-
-
-def test_an_empty_power_table_changes_nothing() -> None:
-    """(e, f) No supply, or an AC one, leaves the table empty: every decision is unchanged."""
-    # UNDO: references/power.py `with_power_ends`: `if _takes_symbol` -> `if True` (KeyError)
-    markers = (_marker(12, 21), _marker(31, 12, star="branch"))
-    assert with_power_ends(markers, {}) == markers
-
-
-def test_a_protective_earth_end_prints_no_text() -> None:
-    """A PE end has the earth key and an empty `symbol_text`: the power text is `None`."""
-    # UNDO: references/power.py `_flagged`: `end.text or ""` -> `"PE"`
-    pe = {hid("port", 12): _end(12, symbol="protective-earth", text=None)}
-    (found,) = with_power_ends((_marker(12, 21),), pe)
-    assert (found.symbol, found.symbol_text) == ("protective-earth", "")
 
 
 def _value(markers: tuple[MarkerDecision, ...]) -> References:

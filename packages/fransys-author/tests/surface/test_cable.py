@@ -1,4 +1,4 @@
-"""EA5, EA7: `d.cable` and `W1.core` build the engine script's records, and fail by name."""
+"""`d.cable` and `W1.core` build the engine script's records, and fail by name."""
 
 from typing import TYPE_CHECKING, Any
 

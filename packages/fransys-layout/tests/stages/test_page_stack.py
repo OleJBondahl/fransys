@@ -1,8 +1,8 @@
-"""S12: `place.page_stack` gives each port the offset `place` gives it, on `place`'s own inputs.
+"""`place.page_stack` gives each port the offset `place` gives it, on `place`'s own inputs.
 
-Hand-made values, no model. Column `a`: function 1, then function 2 attached under it (R7.1,
+Hand-made values, no model. Column `a`: function 1, then function 2 attached under it (
 glued at the row gap), then function 3, whose keep-out a label box above its body grows 24 G
-upward (C8(b)). Column `b`: function 4. One page, no band with two members, so `place` moves no
+upward. Column `b`: function 4. One page, no band with two members, so `place` moves no
 row after it has stacked the page and each placed port stands at its stacked offset below the
 page's first row top.
 """

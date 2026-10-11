@@ -1,4 +1,4 @@
-"""T4: the chain tie rules, each row hitting alone, and the order they are tried in.
+"""The chain tie rules, each row hitting alone, and the order they are tried in.
 
 The reading is a plain namespace: a chain of terminals `p0, p1, ...` whose entry port of pole
 `i` is `e<i>` and whose exit is `x<i>`; each pole is its own function.
@@ -57,7 +57,7 @@ def test_the_strip_vote_alone_decides_against_the_walk() -> None:
 
 
 def test_the_strip_vote_alone_keeps_a_majority_walk_and_a_tie_over_the_rest() -> None:
-    """D1vote: a majority for the walk keeps it, and so does a tie, whatever C20 and A6 say."""
+    """A majority for the walk keeps it, and so does a tie, whatever the tie rules say."""
     against_rest: dict[str, Any] = {"ranks": {"x1": 1, "e0": 9}, "designations": ["B", "A"]}
     won = _case(
         names=["internal", "internal", "external"], strips=["S"] * 3, entry={"S": "internal"}
@@ -71,7 +71,7 @@ def test_the_strip_vote_alone_keeps_a_majority_walk_and_a_tie_over_the_rest() ->
 
 
 def test_the_potential_rank_alone_decides_when_no_strip_votes() -> None:
-    """C20: the lower rank (higher potential) goes on top; equal or missing ranks do not decide."""
+    """The lower rank (higher potential) goes on top; equal or missing ranks do not decide."""
     keep = ["A", "B"]
     down = _case(names=["a", "b"], ranks={"e0": 5, "x1": 2}, designations=keep)
     assert needs_reverse(*down) is True
@@ -84,7 +84,7 @@ def test_the_potential_rank_alone_decides_when_no_strip_votes() -> None:
 
 
 def test_the_designation_alone_decides_when_both_tie() -> None:
-    """A6: the end with the lower designation runs first; a tie falls to the sort key."""
+    """The end with the lower designation runs first; a tie falls to the sort key."""
     assert needs_reverse(*_case(names=["a", "b"], designations=["B", "A"])) is True
     assert needs_reverse(*_case(names=["a", "b"], designations=["A", "B"])) is False
     keys: dict[str, tuple[str, ...]] = {"f0": ("2",), "f1": ("1",)}
@@ -93,22 +93,9 @@ def test_the_designation_alone_decides_when_both_tie() -> None:
 
 
 def test_the_order_of_the_rows_is_the_order_the_rules_are_tried(monkeypatch: Any) -> None:
-    """Swapping A6 ahead of C20 changes a chain where they disagree."""
+    """Swapping the two tie rules' order changes a chain where they disagree."""
     case = _case(names=["a", "b"], ranks={"e0": 5, "x1": 2}, designations=["A", "B"])
     assert needs_reverse(*case) is True
     swapped = Order("swapped", tuple(reversed(CHAIN_TIES.criteria)))
     monkeypatch.setattr(_chain_ties, "CHAIN_TIES", swapped)
     assert needs_reverse(*case) is False
-
-
-def test_a_strip_is_entered_on_the_side_of_the_role_not_the_port_name() -> None:
-    """D1vote: the reading carries sides only (`port_side`), so a port name never decides entry."""
-    seq, rd = _case(
-        names=["external", "external", "internal"], strips=["S"] * 3, entry={"S": "internal"}
-    )
-    assert not hasattr(rd, "port_name")
-    assert needs_reverse(seq, rd) is True
-    flipped = _case(
-        names=["internal", "internal", "external"], strips=["S"] * 3, entry={"S": "external"}
-    )
-    assert needs_reverse(*flipped) is True

@@ -7,7 +7,7 @@ The bug (the risk the instance tag brings): printing the container's tag into th
 designations would change a released unit's listing, drawings and exports with the place it
 happens to be used in.
 
-The rule (UT2): the unit's own document does not change. In the container the item prints the
+The rule: the unit's own document does not change. In the container the item prints the
 instance tag (`-U3-J1`); with `unit=` it prints `-J1`, byte for byte as in the standalone build.
 
 The decision that fixes it: model-0134.

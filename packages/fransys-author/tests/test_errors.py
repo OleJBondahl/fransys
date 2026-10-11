@@ -549,7 +549,7 @@ def test_a_units_revision_key_does_not_collide_with_the_projects_own(parts):
     `(*prefix, "revision", revision)` -- so a unit made directly off `Design` and the
     project's own history never collide, even on the identical revision string. (Before
     the amendment this was a documented, deliberate limitation; the amendment closes it.)
-    Since SC2 the unit's key is release-scoped: `(*release key, "revision", version, revision)`.
+    The unit's key is release-scoped: `(*release key, "revision", version, revision)`.
     """
     d = Design(parts)
     u = d.unit("demo-unit", revision=1, interface="1")

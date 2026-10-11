@@ -1,6 +1,6 @@
 """The count test: no layout code object grows by more than 2.5x when the scale doubles.
 
-D10's Check (docs/specs/2026-09-25-layout-redesign.md; decision layout-0086). No code object is
+The check (decision layout-0086). No code object is
 exempt by name. `count_build` (tests/scale_counter.py) counts calls, generator resumes and loop
 iterations per code object on `build_scale(8)` and `build_scale(16)`; a code object whose count
 grows by more than 2.5x with count(16) >= 100 is flagged. Ratios only, never exact counts; no wall

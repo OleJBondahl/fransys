@@ -68,7 +68,7 @@ def test_author_build_write_produces_the_cabinet_exports(tmp_path):
 def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_document, tmp_path):
     """The demo cabinet document's PDF has one page per resolved `PageKind` and embeds the font.
 
-    The acceptance bullet: "a page count equal to `document_pages` expanded per P10
+    The acceptance bullet: "a page count equal to `document_pages` expanded
     ... the Liberation Serif family name in the bytes ... `<stem>.typ` in the intermediates
     that compiles on its own." Byte-equality on a second write is the separate test below.
     """
@@ -85,7 +85,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
     assert pdf_bytes.startswith(b"%PDF-")
 
     # Every resolved page kind (COVER, NOTES, SCHEMATIC, PLC_LIST, TERMINAL_LIST, BOM here --
-    # SCHEMATIC added by the render work package's wiring, PART 5; none of these holds enough
+    # SCHEMATIC added by the render wiring; none of these holds enough
     # rows/pages to overflow onto a second physical page for this small demo cabinet) gives
     # exactly one `/Type /Page` object; pinned exactly, not a lower bound, because the
     # controller confirmed this same 6-kind shape against a real compiled PDF.
@@ -99,7 +99,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
     typ_files = list(intermediates.glob("*.typ"))
     assert len(typ_files) == 1
 
-    # The render work package's page SVGs land in intermediates too (`_write_intermediates`,
+    # The page SVGs land in intermediates too (`_write_intermediates`,
     # `_file_safe`'s `:` -> `-`): one `layout.page-*.svg` per `layout.page` record of the
     # WHOLE model (`fransys_render.pages`' own contract) -- this cabinet lays out
     # two drawing sets (one at C1, one location-less), so two, not one; not scoped to just
@@ -130,7 +130,7 @@ def test_document_pdf_is_byte_equal_on_a_second_write(demo_cabinet_document, tmp
 
 
 def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
-    """Page-frame spec acceptance 1: every page carries the project number and `n of N`.
+    """Every page carries the project number and `n of N`.
 
     `fransys_render` is still a scaffold (`NotImplementedError`), so this cannot go
     through `fr.write`: it calls `fransys_pdf.source` directly with a stand-in SVG for

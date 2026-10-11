@@ -1,4 +1,4 @@
-"""The diagram engine's reader: facts of each reading and the findings of the diagram (BD3, BD6)."""
+"""The diagram engine's reader: facts of each reading and the findings of the diagram."""
 
 import pytest
 from diagram_models import chain, fanout, loose, one_box, station

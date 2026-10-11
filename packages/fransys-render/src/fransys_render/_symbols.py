@@ -8,7 +8,7 @@ from fransys_model.layout import (
     PowerSymbol,
     SymbolPlacement,
     page_slice,
-    profile_of,
+    profile_of_page,
     sheet_format_of,
 )
 from fransys_model.vocab import functions, items
@@ -115,7 +115,7 @@ def _symbol_fragment(
 def symbols_group(model: Model, page: Page) -> str:
     """Every placement on `page`: its real symbol body, or the 8x8 G placeholder (unknown key)."""
     sheet = sheet_format_of(model, page.sheet_format)
-    profile = profile_of(model)
+    profile = profile_of_page(model, page)
     parts = []
     for placement in symbols_on_page(model, page):
         symbol = oriented_symbol(model, placement)

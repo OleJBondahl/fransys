@@ -1,6 +1,6 @@
 """Render's SVG pages fit the sheet exactly; every drawn coordinate lies in the content box.
 
-Spec acceptance (render work order, PART 5): on the demo cabinet document, for every
+On the demo cabinet document, for every
 schematic page, the SVG's `width`/`height`/`viewBox` equal the sheet `resolve_sheet_format`
 gives PDF, and every coordinate the SVG draws lies inside that sheet's content box. Root
 tests are the one place `fransys_render` and `fransys_pdf` may both be imported (spec
@@ -39,7 +39,7 @@ _SVG_NS = "{http://www.w3.org/2000/svg}"
 _MIN_PAGE_COUNT = 1
 _MIN_COORDINATE_COUNT = 1
 
-# Every direct child `_render_page` can put on a page (D11's fixed content-group order):
+# Every direct child `_render_page` can put on a page (the fixed content-group order):
 # `<style>` carries no coordinate, the rest are checked by `_element_coordinates`. An
 # unrecognised top-level tag is a real gap in this test, not something to skip quietly.
 _KNOWN_TOP_TAGS = frozenset({"style", "g", "rect", "text", "polyline", "circle", "line"})

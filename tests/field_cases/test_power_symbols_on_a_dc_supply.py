@@ -10,7 +10,7 @@ The rule (decisions model-0117, layout-0094, render-0005): an end that would be
 a reference on a DC supply's rail takes a symbol instead: a bar for a rail above or below 0 V,
 the ground symbol for 0 V, protective earth for a PE net. Only the bar prints a text, the net's
 name (else the potential); ground and PE print none. The symbol continues its pin's direction,
-turned as needed. An AC supply keeps its references (LD8). Owner's A4-A6, 2026-10-02: A4 is
+turned as needed. An AC supply keeps its references. Owner's A4-A6, 2026-10-02: A4 is
 supply-only text, A5 and A6 confirmed.
 
 Bars: a symbol per cut end and none per joined run, no `#n` and no `CONNECTION_NOT_DRAWN`, the
@@ -383,7 +383,7 @@ def test_a_negative_dc_rail_is_a_supply_printing_its_name_with_the_sign(tmp_path
 
 
 def test_an_ac_supply_keeps_its_references(tmp_path) -> None:
-    """LD8: the same plant on L2 and L3 of an AC supply: no symbol, references as before."""
+    """The same plant on L2 and L3 of an AC supply: no symbol, references as before."""
     plant = _dc_plant(motor_on_24=True, earth=False, ac=True)
     model = _build(tmp_path, plant).model
     assert _symbols(model) == []

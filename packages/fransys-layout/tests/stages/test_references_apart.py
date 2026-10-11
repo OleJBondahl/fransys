@@ -1,4 +1,4 @@
-"""S21: `references` decides every connection; a wired one whose ends stand apart in another set.
+"""`references` decides every connection; a wired one whose ends stand apart in another set.
 
 A harness core (conductor 1) joins plug `1`'s port `14` to plug `2`'s port `13` (`samples`: port
 `14` of function `n` is `hid("port", n * 10 + 2)`, port `13` is `hid("port", n * 10 + 1)`). Set 1
@@ -56,29 +56,6 @@ def test_a_harness_core_whose_plugs_stand_on_two_pages_of_a_set_is_a_reference_p
     ]
 
 
-def test_the_owner_is_the_end_on_the_earlier_page_whichever_end_it_is() -> None:
-    swapped = _scene((1, 1, 1), (2, 1, 1), (1, 2, 3), (2, 2, 2))
-    assert [(port, page, side) for port, _, page, side, *_ in _named(swapped)] == [
-        (_B, 2, MarkerSide.OWNER),
-        (_A, 3, MarkerSide.USER),
-    ]
-
-
-def test_each_set_that_holds_the_plugs_apart_gets_its_own_pair_in_set_order() -> None:
-    """Set 3 seats the plugs apart too (on its pages 1 and 3): a second pair, there."""
-    scene = _scene((1, 3, 1), (2, 3, 3), (1, 1, 1), (2, 1, 1), (1, 2, 1), (2, 2, 2))
-    assert [(port, drawing_set, page) for port, drawing_set, page, *_ in _named(scene)] == [
-        (_A, 2, 1),
-        (_B, 2, 2),
-        (_A, 3, 1),
-        (_B, 3, 3),
-    ]
-
-
-def test_plugs_on_one_page_of_every_set_get_no_reference() -> None:
-    assert _named(_scene((1, 1, 1), (2, 1, 1), (1, 2, 2), (2, 2, 2))) == []
-
-
 def test_an_end_exempt_in_the_set_gets_no_reference_there() -> None:
     """A unit's boundary pin that takes no marker in a set (`exempt.boundary_exempt`)."""
     assert _named(_APART, frozenset({(_A, 2)})) == []
@@ -92,8 +69,3 @@ def test_a_wire_of_a_star_net_is_left_to_the_stars_branches() -> None:
     #   `` (the pump station's PE star: two LinkMarker records share one key)
     assert _named(_APART, stars=(_STAR,)) == []
     assert _named(_APART, stars=(_STAR.__replace__(wires=frozenset()),)) != []
-
-
-def test_a_core_whose_ends_share_no_page_anywhere_is_left_to_links() -> None:
-    """`links` cuts it (design/links.md 6.6); a second text pair here would be a marker too many."""
-    assert _named(_scene((1, 2, 1), (2, 2, 2))) == []

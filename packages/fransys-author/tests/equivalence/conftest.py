@@ -1,4 +1,4 @@
-"""The equivalence helper (EA12): two scripts, one model digest, and the first differing records."""
+"""The equivalence helper: two scripts, one model digest, and the first differing records."""
 
 from collections.abc import Callable
 from itertools import islice

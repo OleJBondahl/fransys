@@ -273,7 +273,7 @@ def test_an_item_with_a_function_two_levels_below_it_is_no_accessory() -> None:
     item that carries no function of its own -- still makes it no accessory: `holder` sits
     above `intermediate` (no function), which sits above the terminal that carries the
     function. Proves the has-a-function-below set is transitive across two or more levels,
-    not just a direct-children shortcut (model-0103 B10).
+    not just a direct-children shortcut (model-0103).
     """
     plant = Plant()
     top = plant.item("top", part=plant.part("U"), designation="U1")

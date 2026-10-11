@@ -1,4 +1,4 @@
-"""S13 (decision layout-0090): a changeover's two throws hang under its pole in two rows.
+"""Layout-0090: a changeover's two throws hang under its pole in two rows.
 
 The fixture is the field case `field_cases/test_changeover_throws_to_two_strips.py` inside its
 unit: poles 3 and 4 of a changeover, each throw wired to its own terminal of a field strip
@@ -6,7 +6,7 @@ that stands at another location than the relay. That field case routes clean wit
 the second row, so its pass says nothing about where the second throw stands; this test does.
 
 Row 1 is the throw the layout already hung under its pole, the break throw. The second throw
-is the one not in row 1 (S13's own definition): the make throw, whose terminal the chain used
+is the one not in row 1 (layout-0090): the make throw, whose terminal the chain used
 to continue into and `cut_locations` then cut away into the strip's own column. It stands in
 row 2 under its pole, in its pole's lane, on a straight wire, with no reference at either end.
 

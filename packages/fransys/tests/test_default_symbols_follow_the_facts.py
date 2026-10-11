@@ -1,4 +1,4 @@
-"""EF-B2 spec test: a switch or protection part with no `symbol` draws the symbol its facts name.
+"""A switch or protection part with no `symbol` draws the symbol its facts name.
 
 The engineering shape: a stop push button (one break contact, closed at rest) whose part names
 no `symbol`, an emergency stop that names `emergency-stop`, and a fuse, a miniature circuit

@@ -8,7 +8,7 @@ ports and distributes.
 The bug: a two-port net on a 24 V potential drew a supply bar and a ground symbol at each end,
 where the owner reads a point-to-point connection as a wire.
 
-The rule (decision model-0117, amended; CONVENTIONS-V06 V3): `power_kind` is NONE for a physical
+The rule (decision model-0117, amended): `power_kind` is NONE for a physical
 net of exactly two ports, whatever its potential, and a net of three or more ports keeps its
 kind and its symbols. The two-port net keeps its potential for the voltage check.
 """

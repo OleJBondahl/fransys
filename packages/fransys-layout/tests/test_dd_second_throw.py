@@ -1,9 +1,9 @@
-"""Step 5 Part 5 (layout-0090, S13): D1's second throw stands under its own port, in its lane.
+"""D1's second throw stands under its own port, in its lane.
 
 The changeover fixture of `test_dd_strap_route.py::test_a_neighbours_straight_run_no_longer_
 crosses_a_ports_own_first_step` (two adjacent poles of a 4-pole changeover inside a `Unit`,
 each throw wired to its own terminal of a different field strip): `chains.py`'s `_stack_
-attachments` (S13, decision layout-0090) puts the break throw's terminal in row 1, glued under
+attachments` (decision layout-0090) puts the break throw's terminal in row 1, glued under
 the pole as today, and the make throw's terminal -- the second throw -- in row 2, under the
 same pole, in the pole's own lane, on a straight vertical wire, with no reference at either
 end. That neighbour test only proves the wire routes clean (no `ROUTE_FAILED`/
@@ -74,13 +74,13 @@ def _markers_on(model: Model, port: Any) -> list[LinkMarker]:
 
 
 def test_each_second_throw_stands_under_its_own_pole_in_its_own_lane() -> None:
-    """S13 (layout-0090): row 2, in its throw's own lane, on a straight wire, no reference."""
+    """Row 2, in its throw's own lane, on a straight wire, no reference."""
     model = _built()
     row2_x = {}
     for pole in (3, 4):
         co = _placement(model, "K1", f"co_{pole}")
         row1 = _placement(model, "X02", f"RUN{pole}")  # break throw, row 1: unchanged today
-        row2 = _placement(model, "X01", f"RUN{pole}")  # make throw, row 2: D1's second throw
+        row2 = _placement(model, "X01", f"RUN{pole}")  # make throw, row 2: the second throw
         assert co.page == row1.page == row2.page
         # row 2 stands further below the pole than row 1, both below it, under the pole
         assert co.y < row1.y < row2.y

@@ -1,4 +1,4 @@
-"""EA12 pair 1: 16 sensors from a dict, typed and untyped, against today's engine."""
+"""Pair 1: 16 sensors from a dict, typed and untyped, against today's engine."""
 
 from typing import TYPE_CHECKING, ClassVar
 

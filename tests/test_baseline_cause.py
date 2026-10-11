@@ -1,4 +1,4 @@
-"""`BASELINE_DIFFERS` names the child whose release moved (WORKFLOW-BLOCKS W8, acceptance 7)."""
+"""`BASELINE_DIFFERS` names the child whose release moved."""
 
 import sys
 from pathlib import Path

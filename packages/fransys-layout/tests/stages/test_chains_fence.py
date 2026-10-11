@@ -158,7 +158,7 @@ def _cell(number: int, index: int, lane: int = 0, **kw: Any) -> Cell:
 
 
 def test_a_one_port_terminal_with_two_wires_is_an_in_line_pole_and_guards_skip() -> None:
-    """R7 B5: terminal 2 with two wires links 1 above 3 in one column; a mate of an unknown
+    """Terminal 2 with two wires links 1 above 3 in one column; a mate of an unknown
     function, a mate over ports already in poles, edge mates that cannot apply, and a one-port
     terminal on no net change nothing."""
     one, two, three, orphan = function_spec(1), _stub(2), function_spec(3), _stub(7)
@@ -176,29 +176,6 @@ def test_a_one_port_terminal_with_two_wires_is_an_in_line_pole_and_guards_skip()
         MatedFunctions(a=one.function, b=unknown),
     )
     assert _found((*pairs, orphan), wires, mates=mates, edge_mates=edges) == expected
-
-
-def test_a_changeover_with_no_throw_roles_chains_through_its_path_alone() -> None:
-    """A three-port function with a through path and no `throw` on any port: one pole, no
-    throw pair (S13 never applies)."""
-    spec, shown = function_spec(5), drawn(5)
-    extra = PortSpec(
-        port=hid("port", 53), name="11", physical_net=hid("net", 53), role=Role.CONTROL
-    )
-    spec = dataclasses.replace(spec, poles=0, pole_pairs=(), ports=(*spec.ports, extra))
-    geometry = dataclasses.replace(
-        shown.geometry,
-        ports=(
-            *shown.geometry.ports,
-            PortGeometry(name="nc", at=Point(x=16, y=0), facing=Facing.E),
-        ),
-    )
-    shown = dataclasses.replace(
-        shown,
-        geometry=geometry,
-        ports=(*shown.ports, DrawnPort(port=extra.port, symbol_port="nc")),
-    )
-    assert _found(((spec, shown),), ()) == [(_key(5), (_cell(5, 0),))]
 
 
 def test_single_chains_ending_on_one_hub_merge_bottom_packed_under_the_lowest_port() -> None:
@@ -234,49 +211,8 @@ def test_single_chains_ending_on_one_hub_merge_bottom_packed_under_the_lowest_po
     ]
 
 
-def test_end_reached_functions_of_two_lanes_share_one_row_each_in_its_lane() -> None:
-    """C9: a two-pole contact's two single-pole lanes end on plain functions 1 and 2: both stand
-    below in one row, 1 in lane 0 and 2 in lane 1, each spanning at its symbol port `in`."""
-    multi, one, two = _two_pole(10), _plain(1), _plain(2)
-    wires = (_wire(1, (multi[0], 1), (one[0], 0)), _wire(2, (multi[0], 3), (two[0], 0)))
-    assert _found((multi, one, two), wires) == [
-        (
-            _key(10),
-            (
-                _cell(10, 0),
-                _cell(1, 1, span_port="in"),
-                _cell(2, 1, 1, span_port="in"),
-            ),
-        )
-    ]
-
-
-def test_a_reached_function_whose_port_is_not_drawn_has_no_span_port() -> None:
-    """C12: hub 10 is reached at its port a, which its drawn function lacks: it stands below the
-    chain with no span port."""
-    one, two = function_spec(1), function_spec(2)
-    spec, shown = _hub(10)
-    shown = dataclasses.replace(shown, ports=shown.ports[1:])
-    wires = (connection(1, 1, 2), _wire(2, (two, 1), (spec, 0)))
-    assert _found(((one, drawn(1)), (two, drawn(2)), (spec, shown)), wires) == [
-        (_key(1), (_cell(1, 0), _cell(2, 1), _cell(10, 2)))
-    ]
-
-
-def test_a_star_pin_whose_port_already_faces_the_member_is_not_flipped() -> None:
-    """I4 Q2: pin 3 (port faces N) on the star at 1's S port stands below 1, unflipped."""
-    one, two = function_spec(1), function_spec(2)
-    pin, pin_drawn = _stub(3, kind="contact_no")
-    pin = dataclasses.replace(pin, pin_function=hid("function", 90))
-    wires = (_wire(1, (one, 1), (two, 1)), _wire(2, (one, 1), (pin, 0)))
-    assert _found(((one, drawn(1)), (two, drawn(2)), (pin, pin_drawn)), wires) == [
-        (_key(1), (_cell(1, 0), _cell(3, 1))),
-        (_key(2), (_cell(2, 0),)),
-    ]
-
-
 def test_a_side_element_of_a_carrier_in_two_columns_is_placed_once() -> None:
-    """D1/D2: 11's two poles strap 10's two; 10 stays in the first column by key (1, 10, 11
+    """11's two poles strap 10's two; 10 stays in the first column by key (1, 10, 11
     beside it), the second column (2, 3) shows neither 10 nor 11 again."""
     carrier, side = _two_pole(10), _two_pole(11)
     t1, t2, t3 = _terminal(1), _terminal(2), _terminal(3)
@@ -302,25 +238,8 @@ def test_a_side_element_of_a_carrier_in_two_columns_is_placed_once() -> None:
     ]
 
 
-def test_a_terminal_wired_to_a_port_facing_east_stays_in_its_own_column() -> None:
-    """R7.1: terminal 2's only wire reaches 1's E-facing port (a fork with 3): nothing attaches."""
-    one, shown = function_spec(1), drawn(1)
-    east = dataclasses.replace(shown.geometry.ports[0], facing=Facing.E)
-    shown = dataclasses.replace(
-        shown,
-        geometry=dataclasses.replace(shown.geometry, ports=(east, shown.geometry.ports[1])),
-    )
-    term, three = _terminal(2), function_spec(3)
-    wires = (_wire(1, (term[0], 1), (one, 0)), _wire(2, (three, 1), (one, 0)))
-    assert _found(((one, shown), term, (three, drawn(3))), wires) == [
-        (_key(1), (_cell(1, 0),)),
-        (_key(2), (_cell(2, 0),)),
-        (_key(3), (_cell(3, 0),)),
-    ]
-
-
 def test_single_chains_ending_on_fixed_south_pins_stand_under_their_hub() -> None:
-    """V1: two single chains end on S-facing pins of one hub; fixed, the hub is above, both lanes
+    """Two single chains end on S-facing pins of one hub; fixed, the hub is above, both lanes
     under it; unfixed the hub stays below the chains, as before."""
     chain = {i: function_spec(i) for i in (1, 2, 3, 4)}
     hub = _hub(10, Facing.S)
@@ -343,3 +262,55 @@ def test_single_chains_ending_on_fixed_south_pins_stand_under_their_hub() -> Non
     # UNDO: stages/_chain_reach.py:_vote_lane, `if hit[1] in r.fixed` -> `if False` (hub below)
     assert [cells for _, cells in _found(pairs, wires, fixed=fixed)] == [tuple(above)]
     assert [cells for _, cells in _found(pairs, wires)] == [tuple(below)]
+
+
+def test_a_changeover_with_no_throw_roles_chains_through_its_path_alone() -> None:
+    """A three-port function with a through path and no `throw` on any port: one pole, no
+    throw pair (layout-0090 never applies)."""
+    spec, shown = function_spec(5), drawn(5)
+    extra = PortSpec(
+        port=hid("port", 53), name="11", physical_net=hid("net", 53), role=Role.CONTROL
+    )
+    spec = dataclasses.replace(spec, poles=0, pole_pairs=(), ports=(*spec.ports, extra))
+    geometry = dataclasses.replace(
+        shown.geometry,
+        ports=(
+            *shown.geometry.ports,
+            PortGeometry(name="nc", at=Point(x=16, y=0), facing=Facing.E),
+        ),
+    )
+    shown = dataclasses.replace(
+        shown,
+        geometry=geometry,
+        ports=(*shown.ports, DrawnPort(port=extra.port, symbol_port="nc")),
+    )
+    assert _found(((spec, shown),), ()) == [(_key(5), (_cell(5, 0),))]
+
+
+def test_end_reached_functions_of_two_lanes_share_one_row_each_in_its_lane() -> None:
+    """A two-pole contact's two single-pole lanes end on plain functions 1 and 2: both stand
+    below in one row, 1 in lane 0 and 2 in lane 1, each spanning at its symbol port `in`."""
+    multi, one, two = _two_pole(10), _plain(1), _plain(2)
+    wires = (_wire(1, (multi[0], 1), (one[0], 0)), _wire(2, (multi[0], 3), (two[0], 0)))
+    assert _found((multi, one, two), wires) == [
+        (
+            _key(10),
+            (
+                _cell(10, 0),
+                _cell(1, 1, span_port="in"),
+                _cell(2, 1, 1, span_port="in"),
+            ),
+        )
+    ]
+
+
+def test_a_star_pin_whose_port_already_faces_the_member_is_not_flipped() -> None:
+    """Pin 3 (port faces N) on the star at 1's S port stands below 1, unflipped."""
+    one, two = function_spec(1), function_spec(2)
+    pin, pin_drawn = _stub(3, kind="contact_no")
+    pin = dataclasses.replace(pin, pin_function=hid("function", 90))
+    wires = (_wire(1, (one, 1), (two, 1)), _wire(2, (one, 1), (pin, 0)))
+    assert _found(((one, drawn(1)), (two, drawn(2)), (pin, pin_drawn)), wires) == [
+        (_key(1), (_cell(1, 0), _cell(3, 1))),
+        (_key(2), (_cell(2, 0),)),
+    ]

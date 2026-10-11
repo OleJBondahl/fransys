@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = ROOT / "packages"
 
-# `lean_surface` is the one home of "the surface" (MS1, MS2, MS6): loaded like `test_lean_
+# `lean_surface` is the one home of "the surface": loaded like `test_lean_
 # surface.py` loads it (`importlib.util.spec_from_file_location`, not a package module).
 _lean_surface_spec = importlib.util.spec_from_file_location(
     "fransys_lean_surface", ROOT / "scripts" / "lean_surface.py"
@@ -152,9 +152,9 @@ def test_the_third_party_check_can_fail():
     assert third_party_violations("fransys_reports", "import symdef") == {"symdef"}
 
 
-# --- The import surface (SURFACE spec, decision 0046, MS1/MS3/MS6): outside a package, source
+# --- The import surface (decision 0046): outside a package, source
 # crosses into another workspace package only through that package's own top-level `__all__`
-# (MS6), or, for the model, one of its eleven named modules (MS1). `lean_surface` is the one home
+# or, for the model, one of its eleven named modules. `lean_surface` is the one home
 # of "the surface"; this test keeps no module list of its own. `symdef` is outside:
 # it is third-party, never a workspace package, so it never reaches `FIRST_PARTY` at all.
 
@@ -163,7 +163,7 @@ SURFACE_NAMES: dict[str, tuple[str, ...]] = lean_surface.surface_names()
 
 # Layout's own imports of `fransys_model` are still its pre-redesign deep paths (step 5 is
 # mid-rewrite); this ONE dated line exempts that one pair until its follow-up rewrites them to
-# the eleven surface modules and removes it. Nothing else is exempt (2026-09-27, SURFACE MS3).
+# the eleven surface modules and removes it. Nothing else is exempt (2026-09-27).
 SURFACE_EXEMPT: frozenset[tuple[str, str]] = frozenset({("fransys_layout", "fransys_model")})
 
 
@@ -189,10 +189,10 @@ def _surface_import_targets(
 
 
 def surface_violations(package: str, source: str) -> set[str]:
-    """Every crossing import or attribute read in `source` that MS1, MS3 or MS6 forbids.
+    """Every crossing import or attribute read in `source` that the surface rules forbid.
 
     A name whose full dotted path is itself a surface module (`lean_surface.surface_modules()`)
-    binds that module (MS3): the import itself passes, and every attribute the file later reads
+    binds that module: the import itself passes, and every attribute the file later reads
     off its bound name must be in THAT module's own `__all__`, checked in a second pass over the
     whole file (an attribute read may be anywhere, not only beside the import). Any other
     crossing name must already be in its own module's `__all__`, that module must itself be a
@@ -242,33 +242,33 @@ def test_package_crosses_into_another_package_only_through_its_surface(package_d
 
 
 def test_the_surface_check_can_fail():
-    # Acceptance 1: a deep path, even of a name in its entry point's own `__all__`, fails; the
+    # A deep path, even of a name in its entry point's own `__all__`, fails; the
     # same name from the surface module itself passes.
     assert surface_violations("fransys_render", "from fransys_model.vocab.tables import items") == {
         "fransys_model.vocab.tables.items"
     }
     assert surface_violations("fransys_render", "from fransys_model.vocab import items") == set()
-    # Acceptance 2: a name not in the module's `__all__` fails, and so does a `_` name.
+    # A name not in the module's `__all__` fails, and so does a `_` name.
     assert surface_violations(
         "fransys_render", "from fransys_model.vocab import not_a_real_name"
     ) == {"fransys_model.vocab.not_a_real_name"}
     assert surface_violations("fransys_render", "from fransys_model.vocab import _hidden") == {
         "fransys_model.vocab._hidden"
     }
-    # Acceptance 3: a name in `derive.drawing_text`'s own `__all__` passes.
+    # A name in `derive.drawing_text`'s own `__all__` passes.
     assert (
         surface_violations(
             "fransys_render", "from fransys_model.derive.drawing_text import outline_title"
         )
         == set()
     )
-    # Acceptance 5 (MS6): a facade import from layout's internals fails; the same name from
+    # A facade import from layout's internals fails; the same name from
     # layout's own top level passes.
     assert surface_violations(
         "fransys", "from fransys_layout.engines.schematic import lay_out_schematic"
     ) == {"fransys_layout.engines.schematic.lay_out_schematic"}
     assert surface_violations("fransys", "from fransys_layout import lay_out_schematic") == set()
-    # Acceptance 9 (MS3, module binding): `baseline.listing` passes; `baseline._common_location`
+    # Module binding: `baseline.listing` passes; `baseline._common_location`
     # and a submodule bound directly (`designation`, not one of the eleven) both fail.
     assert (
         surface_violations(
@@ -299,7 +299,7 @@ def test_the_surface_check_can_fail():
         "fransys",
         "from fransys_model.derive import cable_drawing\ncable_drawing._hidden()\n",
     ) == {"fransys_model.derive.cable_drawing._hidden"}
-    # Layout's own deep model imports are exempt (MS3), until step 5's follow-up.
+    # Layout's own deep model imports are exempt, until its follow-up.
     assert (
         surface_violations("fransys_layout", "from fransys_model.derive.order import bom_sort_key")
         == set()
@@ -307,7 +307,7 @@ def test_the_surface_check_can_fail():
 
 
 def test_a_leading_underscore_fails_even_when_the_surface_itself_lists_it(monkeypatch):
-    """MS1's `_`-prefix rule fires on its own, not only as a side effect of a name being absent
+    """The `_`-prefix rule fires on its own, not only as a side effect of a name being absent
     from `__all__` -- every other `_` case above is also absent, so this proves the clause
     matters by making the checker's own copy of a real `__all__` list a `_` name, which no
     module's real `__all__` ever does.
@@ -323,7 +323,7 @@ def test_a_leading_underscore_fails_even_when_the_surface_itself_lists_it(monkey
 
 
 def test_a_leading_underscore_attribute_fails_even_when_listed(monkeypatch):
-    """The same proof as above, for MS3's attribute-off-a-bound-module check."""
+    """The same proof as above, for the attribute-off-a-bound-module check."""
     monkeypatch.setitem(
         SURFACE_NAMES,
         "fransys_model.derive.baseline",
@@ -432,9 +432,9 @@ FORBIDDEN_SYS_ATTRS: frozenset[str] = frozenset(
 # `electrical_symbols` bundle read at import (invariant 4) is real, recorded there, and
 # invisible to this ast scan of our own source: the read happens inside
 # `symdef.load_bundle`, not a name on either deny-list. It needs no entry here, and
-# adding one anyway would let a reader mistake this table for the exhaustive list. CT1 removed
-# the workspace's other such exception, the wireviz `dot` spawn: no third-party package spawns a
-# subprocess for this workspace any more.
+# adding one anyway would let a reader mistake this table for the exhaustive list.
+# The other such exception, the wireviz `dot` spawn, was removed: no third-party package
+# spawns a subprocess for this workspace any more.
 PURITY_EXEMPT: frozenset[tuple[str, str]] = frozenset(
     {
         ("fransys_kicad", "__main__.py"),  # invariant 4: developer command (kicad-sym skeleton)

@@ -1,4 +1,4 @@
-"""EA15 handles and kinds: model ids, a tagless harness, net kind names, a unit child's history."""
+"""Handles and kinds: model ids, a tagless harness, net kind names, a unit child's history."""
 
 from typing import Any
 
@@ -66,7 +66,7 @@ def test_a_unit_child_refuses_revision_and_the_parent_does_not(parts: Draft) -> 
 
 
 def test_a_part_less_harness_with_no_cable_is_a_harness_and_prints_its_plugs(parts: Draft) -> None:
-    """HA1: `d.harness` writes `facet.harness`, so a plug under it prints `W1-P1` with no cable."""
+    """`d.harness` writes `facet.harness`, so a plug under it prints `W1-P1` with no cable."""
     d = design(parts, place="C1")
     w1 = d.harness("W1")
     p1 = d.device("P1", "TEST-CONN-2P", parent=w1)

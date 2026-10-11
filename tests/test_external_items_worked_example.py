@@ -45,8 +45,8 @@ _DASH_ATTR = ' stroke-dasharray="'  # an element attribute, not the stylesheet's
 
 def _build(*, x0_external=True, switch_external=True):
     """`demo_system` with an external switch `K1` and a scratch strip `X0` wired to it, plus a
-    `SYSTEM` document (CD10: "by others" is drawn on the cable blocks, a dashed end box and a
-    label, Y3)."""
+    `SYSTEM` document ("by others" is drawn on the cable blocks, a dashed end box and a
+    label)."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -188,7 +188,7 @@ def test_a_round_trip_of_the_unflagged_design_has_no_external_item(unflagged_mod
     assert not any(item.external for item in items_of(loaded).values())
 
 
-# -- 4. cable blocks (CD10): the dashed end box and the "by others" label ----------------
+# -- 4. cable blocks: the dashed end box and the "by others" label ----------------
 
 
 def _end_boxes(model, cable_key):
@@ -214,7 +214,7 @@ def _by_others(model, item):
 
 
 def test_the_block_of_a_cable_to_the_switch_draws_the_switch_dashed_only(default_model):
-    """CD10 (Y3): `WM1S` is not external itself, but its end at the switch `K1` is -- `K1`'s end
+    """`WM1S` is not external itself, but its end at the switch `K1` is -- `K1`'s end
     box is dashed and labelled "by others", the cabinet end is solid."""
     model = default_model
     boxes = _end_boxes(model, "WM1S")

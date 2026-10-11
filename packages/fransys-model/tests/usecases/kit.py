@@ -1,4 +1,4 @@
-"""Helpers both synthetic designs share: stamp parts and items, wire ports by name (WP17).
+"""Helpers both synthetic designs share: stamp parts and items, wire ports by name.
 
 Every id comes from `make_id` over a key the design chooses, and instance keys are the ones
 `instantiate` builds, so no design hand-writes a hex id or a second key rule. All data is

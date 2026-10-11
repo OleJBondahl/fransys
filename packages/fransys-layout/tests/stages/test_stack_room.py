@@ -1,4 +1,4 @@
-"""S20 M9: room for a vertical box between two ports stacked along a stub.
+"""Room for a vertical box between two ports stacked along a stub.
 
 Function `n` is the through symbol (`samples.drawn`): port `10n + 1` at `in` on top of its
 keep-out, facing N; port `10n + 2` at `out` at its bottom, facing S. One column holds

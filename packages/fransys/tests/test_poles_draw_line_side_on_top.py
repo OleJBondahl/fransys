@@ -1,4 +1,4 @@
-"""EF-B2 spec test: a two-pole contact draws each pole's line end on top, in marking order.
+"""A two-pole contact draws each pole's line end on top, in marking order.
 
 The engineering shape: a two-pole switching part whose poles are marked 9/10 and 13/14 (also 1/2
 and 3/4 with 13/14), each pole a switched link. The odd marking is the line end (spec

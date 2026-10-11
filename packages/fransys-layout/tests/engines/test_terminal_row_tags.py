@@ -1,4 +1,4 @@
-"""D12 (item-only strip text): a run of terminals is the terminals of one strip, not of one text.
+"""Item-only strip text: a run of terminals is the terminals of one strip, not of one text.
 
 At top level a strip's text is its item designation only ("-X2"), so two different strips of
 one designation (`+ER+C1-X2`, `+ER+C2-X2`) print the same text: the run groups by the strip

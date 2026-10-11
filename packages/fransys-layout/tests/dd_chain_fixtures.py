@@ -1,4 +1,4 @@
-"""Small invented designs and readers for the D1/D2 tests (layout deep dive, F5-C part A).
+"""Small invented designs and readers for the tests.
 
 Designs are built through the author facade on `examples/demo-parts` (invented parts only), then
 laid out by `fr.build`. The readers look at the laid-out records only: `SymbolPlacement`,

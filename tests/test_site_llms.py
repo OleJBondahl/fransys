@@ -1,4 +1,4 @@
-"""CG6: `just site` writes `llms.txt`, one line per guide page in nav order (llmstxt.org form)."""
+"""`just site` writes `llms.txt`, one line per guide page in nav order (llmstxt.org form)."""
 
 import importlib
 import re

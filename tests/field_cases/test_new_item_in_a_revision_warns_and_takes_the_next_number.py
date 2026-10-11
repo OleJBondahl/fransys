@@ -7,7 +7,7 @@ The bug: tags floated in development with nothing to hold them after a release, 
 could not take a number without a written tag. The unit's container is the test, not the
 system: system pins are deferred, so a system-level case would pass without proving anything.
 
-The rule (UT4, FD1): within a version a released number never moves and is never given again.
+The rule: within a version a released number never moves and is never given again.
 A new item with no tag takes the next free number and gives the WARNING
 `DESIGNATION_NEW_IN_REVISION`, naming its key and its number, where the pins are read and at
 `fr.release`. A new item with a written tag gives none. Retagging a released item is

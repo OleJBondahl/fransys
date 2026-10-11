@@ -3,6 +3,7 @@
 from typing import Any
 
 from fransys_model.kernel import Id, Model, SchemaError, namespace_of
+from fransys_model.vocab.core import Unit  # noqa: TC001 -- signature hints resolve at runtime
 from fransys_model.vocab.enums import PageKind
 from fransys_model.vocab.tables import kind_of, table_of
 
@@ -14,6 +15,7 @@ from .formats import (
     default_sheet_format,
 )
 from .kinds import DERIVED_KINDS
+from .results import DrawingSet, Page
 
 
 def layout_of[R](model: Model, record_type: type[R]) -> frozendict[Id[R], R]:
@@ -32,15 +34,19 @@ def layout_of[R](model: Model, record_type: type[R]) -> frozendict[Id[R], R]:
     return table_of(model, record_type)
 
 
-def profile_of(model: Model) -> Profile:
-    """The profile `model` authors, or the house one (`default_profile()`).
+def profile_of(model: Model, unit: Id[Unit] | None = None) -> Profile:
+    """The profile `unit` authors (`None`: the top design), or the house one (`default_profile()`).
 
-    `Profile` is a singleton layout kind: `layout_of(model, Profile)` has 0 or 1 entries.
+    The one reader of a profile. It matches `unit` exactly and never falls back to a containing
+    unit or to the top's: a unit with no profile of its own draws with the house numbers.
     """
-    profiles = layout_of(model, Profile)
-    if not profiles:
-        return default_profile()
-    return next(iter(profiles.values()))
+    found = (one for one in layout_of(model, Profile).values() if one.unit == unit)
+    return next(found, default_profile())
+
+
+def profile_of_page(model: Model, page: Page) -> Profile:
+    """The profile of the unit `page`'s drawing set belongs to: how that page is drawn."""
+    return profile_of(model, layout_of(model, DrawingSet)[page.drawing_set].unit)
 
 
 def sheet_format_of(model: Model, sheet_format: Id[SheetFormat] | None) -> SheetFormat:
@@ -50,15 +56,15 @@ def sheet_format_of(model: Model, sheet_format: Id[SheetFormat] | None) -> Sheet
     return layout_of(model, SheetFormat)[sheet_format]
 
 
-def sheet_for(model: Model, kind: PageKind) -> SheetFormat:
-    """The sheet of a page of `kind`: the one function that gives a page kind's sheet.
+def sheet_for(model: Model, kind: PageKind, unit: Id[Unit] | None = None) -> SheetFormat:
+    """The sheet of a page of `kind` of `unit`: the one function that gives a page kind's sheet.
 
-    A block diagram is on the house A2 sheet; every other kind is on the profile's sheet,
+    A block diagram is on the house A2 sheet; every other kind is on the unit's profile's sheet,
     the authored `SheetFormat` it names or the house A3.
     """
     if kind is PageKind.BLOCK_DIAGRAM:
         return a2_sheet_format()
-    return sheet_format_of(model, profile_of(model).sheet_format)
+    return sheet_format_of(model, profile_of(model, unit).sheet_format)
 
 
 def derived_layout_ids(

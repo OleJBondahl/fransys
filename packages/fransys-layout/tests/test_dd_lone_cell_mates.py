@@ -1,4 +1,4 @@
-"""EF-C2 part 1: `LONE_CELL` reads a pin's mate as wired (D5 for pins), built through the facade.
+"""`LONE_CELL` reads a pin's mate as wired, built through the facade.
 
 A device connector mated to a harness plug is drawn only as the pins whose plug pin is wired
 (`_without_idle_pins`); such a pin view has no conductor of its own, so `LONE_CELL` must count

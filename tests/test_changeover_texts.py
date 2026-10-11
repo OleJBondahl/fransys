@@ -1,7 +1,7 @@
 """PNG READ 2's checks (d) and (e) (2026-09-27) on the changeover field case's page.
 
 The fixture is the field case `field_cases/test_changeover_throws_to_two_strips.py` inside its
-unit, the page the review read (its PDF's page 2, after the cover). Before S18 two slot labels
+unit, the page the review read (its PDF's page 2, after the cover). Before layout-0090 two labels
 there had no free candidate among those `reserve_slots` offered (its moves stayed inside the
 owner's keep-out, then the mirror side), and each stood where it was going to anyway:
 
@@ -9,9 +9,9 @@ owner's keep-out, then the mirror side), and each stood where it was going to an
   text on top of each other, left of the throw: throw 34's wire blocked the right side, and the
   strip tag fell back to its slot, over the point text (`LABEL_UNPLACED`);
 - (e) the first contact's position text `p1:3A`, a cross-reference placed after the page shift
-  (C22b shifts first-call labels only), crossed the content box's left edge onto row letter A.
+  (shifts first-call labels only), crossed the content box's left edge onto row letter A.
 
-S18 (step 5 ADDENDUM 7) places both through D3's placer (`texts.place_texts`): a candidate is
+Layout-0090 places both through the placer (`texts.place_texts`): a candidate is
 bounded by the table's steps, never by the keep-out, so the strip tag takes a free step below
 its home (d); and the cross-reference call admits a candidate only inside the content box
 (`Space.holds`), so `p1:3A` stands on its first free candidate inside it (e).

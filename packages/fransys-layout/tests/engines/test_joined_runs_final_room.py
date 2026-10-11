@@ -1,23 +1,23 @@
-"""S16: on real layouts, the texts change each page's room alone, and every run fits that room.
+"""On real layouts, the texts change each page's room alone, and every run fits that room.
 
 `references` decides a page's joined runs on the page as `place` stacks it before any text
-exists (`place.page_stack`, S12). `place` then stacks the page with its reference and stub texts
-(`texts`), whose room at a column's end is the page's margin (S16, Room's N or S call). Each
+exists (`place.page_stack`). `place` then stacks the page with its reference and stub texts
+(`texts`), whose room at a column's end is the page's margin (Room's N or S call). Each
 case's build records every `place` call of the engine (`pagerun.place`, every attempt), with the
 page as `references` read it and as `place` stacks it with the texts. Two claims: the texts
 change `room` alone, never a port's row or offset, a column's height or its last row; and every
-joined run fits the final room (`join_y`), since `place` never refuses a run (S12) and a run
+joined run fits the final room (`join_y`), since `place` never refuses a run and a run
 that stopped fitting would show only as a finding.
 
 The cases: the goldens (the cabinet on the house sheet and on its 158 mm sheet), the wired
-cabinet (`W1`'s cores as wires, the premise's case since HL1), the S12
+cabinet (`W1`'s cores as wires), the
 joining fixtures (a feed fanning to three breakers, the same breakers daisy-chained, a strip of
-8 terminals wired in a chain) and the D9 coil hub (`tests/test_dd_gap_rules.py`: `K1:A1` and
+8 terminals wired in a chain) and the coil hub (`tests/test_dd_gap_rules.py`: `K1:A1` and
 `K2:A1` joined at row 0 facing N, and `K1:A1` a star reference listing K3). The goldens join
-no run today (S12's test): they carry the first claim, and stay among the second's cases so a
+no run today: they carry the first claim, and stay among the second's cases so a
 run they come to join is checked too. The example and the field cases join no run either;
 every engine run of the layout and root suites, and the example's, was measured on 2026-09-27
-with this recorder instead (the hand-back of step 5's 2b-3). Each case builds once per module
+with this recorder instead. Each case builds once per module
 (`_pages`).
 """
 
@@ -133,7 +133,7 @@ def test_the_texts_change_each_pages_room_alone(case: str) -> None:
 def test_the_cabinets_texts_shrink_a_pages_room() -> None:
     """Premise of the claims above: a pushed first-row text shrinks a cabinet page's room.
 
-    On the wired cabinet: with `W1` drawn as a line (HL1) no cabinet page's text pushes a first row.
+    On the wired cabinet: with `W1` drawn as a line, no cabinet page's text pushes a first row.
     """
     assert any(page.final.room < page.decided.room for page in _pages("cabinet_wired"))
 

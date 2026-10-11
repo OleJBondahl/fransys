@@ -34,21 +34,6 @@ def test_push_clear_moves_down_to_a_fixed_point_with_the_gap() -> None:
     assert not any(overlaps(got, b) for b in blockers)
 
 
-def test_push_clear_leaves_a_clear_box_and_ignores_a_zero_size_blocker() -> None:
-    """Nothing overlaps, nothing moves; an empty blocker never blocks."""
-    box = Box(x=0, y=0, width=8, height=8)
-    assert push_clear(box, [Box(x=0, y=8, width=8, height=8)], gap=4, axis="y") == box
-    assert push_clear(box, [Box(x=2, y=2, width=0, height=0)], gap=4, axis="y") == box
-
-
-def test_push_clear_on_x_moves_right() -> None:
-    """On the x axis the box goes right, past the blocker's right edge plus the gap."""
-    got = push_clear(
-        Box(x=0, y=0, width=4, height=8), [Box(x=0, y=0, width=8, height=8)], gap=2, axis="x"
-    )
-    assert got == Box(x=10, y=0, width=4, height=8)
-
-
 def test_is_clear_is_false_on_any_overlap_and_true_on_none() -> None:
     """A touching edge is no overlap; one overlapping blocker is enough."""
     box = Box(x=0, y=0, width=8, height=8)

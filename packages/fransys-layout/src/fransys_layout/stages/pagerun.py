@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 lazy from fransys_layout.geometry import Box
 
+from ._chain_beside import beside_links
 from ._page_requests import _page_requests
 from ._polelinks import pole_links
 from .boxes import box_sides
@@ -42,6 +43,7 @@ from .slices import (
     pages_of,
     rooms_by_page,
 )
+from .space import Blocks
 from .tags import TagTexts, one_module_tag
 from .texts.power import drawn_shapes, with_power_rooms
 from .texts.stand import joined_ports, page_texts
@@ -100,6 +102,7 @@ class PageInputs:
     # layout-0154 (layout-0158): each (function, port) a line's conductor lands on
     line_ends: frozenset[tuple[Handle, Handle]] = frozenset()
     heads: Mapping[Handle, str] = field(default_factory=dict)  # layout-0170: coil -> table heading
+    aside: frozenset[tuple[Handle, Handle]] = frozenset()  # layout-0174: a beside wire's ports
 
 
 @dataclass(frozen=True)
@@ -109,6 +112,7 @@ class PageState:
     placed: tuple[PlacedFunction, ...]
     labels: tuple[PlacedLabel, ...]
     markers: tuple[LinkMarker, ...]
+    blocks: Blocks = field(default_factory=Blocks)
 
 
 @dataclass(frozen=True)
@@ -166,7 +170,14 @@ def plan_pages(
             groups=inputs.groups,
             locations=inputs.locations,
             units=inputs.units,
-            pole_links=pole_links(columns, drawn, inputs.connections, inputs.net_groups),
+            pole_links=tuple(
+                sorted(
+                    {
+                        *pole_links(columns, drawn, inputs.connections, inputs.net_groups),
+                        *beside_links(columns),
+                    }
+                )
+            ),
             bands=middle_bands(inputs.middle, inputs.profile),
         ),
         hints=inputs.hints,
@@ -391,7 +402,16 @@ def finish_page(
         inputs.net_groups,
         placed,
         drawn,
-        PageRoom(reserved=held, profile=inputs.profile, sheet=inputs.sheet, markers=markers),
+        PageRoom(
+            reserved=held,
+            profile=inputs.profile,
+            sheet=inputs.sheet,
+            markers=markers,
+            blocks=page.blocks,
+            aside=frozenset(
+                c.handle for c in inputs.connections if (c.a.port, c.b.port) in inputs.aside
+            ),
+        ),
     )
     return routes, slot_labels, (*second_findings, *route_findings)
 

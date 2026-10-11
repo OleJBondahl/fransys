@@ -6,7 +6,7 @@ assigned real coordinates to everything else on the page too.
 
 `io_board`/`pump_cabinet`/`_PROJECT`/`_system_design`/`_build_system` below are copied
 verbatim from `tests/test_units_worked_example.py` (not imported: that file's own job is
-STEP 4's model/layout acceptance, not render, and it is mid-flight from separate,
+its model/layout acceptance, not render, and it is mid-flight from separate,
 already-accepted work in this worktree -- not to be touched here). Root tests are where
 `fransys` (the facade) and `fransys_render` may both be imported (the import table:
 `fransys` imports everything; a root test is bound by no package's own import table).
@@ -119,7 +119,7 @@ def _build_system():
 
 def _body_g(model, placement):
     """`placement`'s own absolute body extent, grid units (the symbol's ink, no slots).
-    A `ConnectorBox` (HL6) is its own rectangle; its texts are checked against its lines."""
+    A `ConnectorBox` is its own rectangle; its texts are checked against its lines."""
     if isinstance(placement, ConnectorBox):
         assert len(placement.texts) == len(connector_box_lines(model, placement.function))
         x, y = placement.x, placement.y
@@ -172,16 +172,16 @@ _EXPECTED_NON_MEMBERS_PER_TWO_MEMBER_GROUP = 0
 
 def test_every_outline_group_encloses_its_own_members_and_nothing_else():
     """The acceptance line, against real geometry: "encloses every black-box function on the
-    page and nothing else". Layout owns the outline (I2a, ruling): for every
+    page and nothing else". Layout owns the outline (layout-0153): for every
     `layout.outline` record, every member's body lies inside its rectangle, no other
     placement's body on that page intersects it, and its title label sits inside the
     content area and outside the rectangle. A member is a placement whose item belongs to
     the outline's unit.
 
-    R7 A (deep dive, G1): a connector is drawn as one placement per pin, so a group and its
+    A connector is drawn as one placement per pin, so a group and its
     non-members are counted in functions, not placements.
-    HL6 (layout-0155): a connector at a harness line's end is one box; boxes count as bodies.
-    HL12 (layout-0153): the board at the line WH1's end is a middle outline, its title inside.
+    Per layout-0155, a connector at a harness line's end is one box; boxes count as bodies.
+    Per layout-0153, the board at the line WH1's end is a middle outline, its title inside.
     """
     result = _build_system()
     model = result.model
@@ -233,7 +233,7 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
         member_functions = {p.function for p in members}
         other_functions = {p.function for p in non_members}
         if len(member_functions) == 1:
-            # HL12 (layout-0153): the board's X1 ends the harness WH1, so the board is a middle
+            # Per layout-0153, the board's X1 ends the harness WH1, so the board is a middle
             # outline and its title stands inside, left, between its edges
             assert not outside
             assert box[0] < title.x
@@ -242,7 +242,7 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
             single_member_group_count += 1
             assert len(other_functions) == _EXPECTED_NON_MEMBERS_PER_SINGLE_MEMBER_GROUP
         elif len(member_functions) == 2:
-            assert outside  # D11: a frame's title stands outside it
+            assert outside  # A frame's title stands outside it
             two_member_group_count += 1
             assert len(other_functions) == _EXPECTED_NON_MEMBERS_PER_TWO_MEMBER_GROUP
         else:

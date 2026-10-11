@@ -85,7 +85,7 @@ def _laid_out(
     """The frozen cabinet, its stage results, and the model `write_layout` makes of them.
 
     With `width_mm` the model authors a sheet and a profile that name it; with `wired`, `W1`'s
-    cores are wires, not a line (HL1).
+    cores are wires, not a line.
     """
     draft = (wired_cabinet if wired else build_cabinet)(second_location=second_location)
     if width_mm is not None:
@@ -520,7 +520,7 @@ def test_a_replica_with_no_group_gets_the_ungrouped_discriminator() -> None:
     """Without one its key would be the home placement's (decision layout-0029)."""
     model, results, _ = _laid_out()
     (function,) = (f.id for f in model.tables["function"].values() if f.key == _X2)
-    # V4: the only replica of the cabinet is attached, a cell of its host's column
+    # The only replica of the cabinet is attached, a cell of its host's column
     hosting = {
         c.key
         for c in results.columns
@@ -549,10 +549,10 @@ def _signal_ports(model: Model) -> set:
 
 
 def test_each_marker_points_at_the_other_end_and_the_other_end_points_back() -> None:
-    """A wire cut by a page break (links.md 6.6, which D9 leaves: it is no net of 3 or more ports)
+    """A wire cut by a page break (it is no net of 3 or more ports)
     has a pair: opposite sides, two pages, `partner` of `partner` is itself.
 
-    Across two locations the same conductor is a stub label at each end (D10), so the cut is
+    Across two locations the same conductor is a stub label at each end, so the cut is
     made by the 250 mm sheet's page break.
     """
     model, _, out = _laid_out(width_mm=250)
@@ -569,15 +569,15 @@ def test_each_marker_points_at_the_other_end_and_the_other_end_points_back() -> 
 def test_a_net_of_three_or_more_ports_has_a_reference_marker_and_branch_markers_that_name_it() -> (
     None
 ):
-    """D9: one marker per port; the reference is the net's single terminal point.
+    """One marker per port; the reference is the net's single terminal point.
 
     The 24 V rail net has five ports: terminal `-X2:1` (external side) and the contacts and
     lamp `-S0:11`, `-S1:11`, `-S2:11`, `-H1:1`. Its only terminal point is `-X2:1`, so it is the
     reference. Each branch names it, on its own page when the reference stands there (page 1
     has `-S0`, `-S1`, `-S2`, page 2 has `-H1`, and `-X2:1` is on both), and each reference
     marker leads to a branch on its page. The cabinet's other net, K1:13 to S0:22, is a turned
-    reference pair (S12, M12), its own ref and branch: it is not this net's and is left out.
-    On the wired cabinet: HL1 draws `W1` to `-H1` as a line, which takes `-H1:1` off the star.
+    reference pair, its own ref and branch: it is not this net's and is left out.
+    On the wired cabinet: a line drawn from `W1` to `-H1` takes `-H1:1` off the star.
     """
     model, results, out = _laid_out(wired=True)
     port_of = {port.key: id_ for id_, port in model.tables["port"].items()}
@@ -598,7 +598,7 @@ def test_a_net_of_three_or_more_ports_has_a_reference_marker_and_branch_markers_
     ]
     assert stars
     assert {marker.port for marker in stars if marker.star == "ref"} == {rail}
-    # V4: -X2:1 stands over -S0's pin on page 1, so -S0 needs no branch of the star
+    # -X2:1 stands over -S0's pin on page 1, so -S0 needs no branch of the star
     under_the_terminal = port_of["cabinet", "s0", "fn", "nc_1", "port", "11"]
     branches = sorted(marker.port for marker in stars if marker.star == "branch")
     assert branches == sorted(others - {under_the_terminal})
@@ -652,7 +652,7 @@ def test_a_run_leaves_the_engineering_digests_alone_and_repeats_its_own() -> Non
 
 
 def test_no_page_carries_a_wire_label_while_tags_and_markings_are_still_written() -> None:
-    """V8: the wire label is in the wire list and the sleeves only; pages print none."""
+    """The wire label is in the wire list and the sleeves only; pages print none."""
     _, _, out = _laid_out()
     kinds = {x.kind for x in _table(out, "label").values()}
     assert ModelLabelKind.WIRE not in kinds

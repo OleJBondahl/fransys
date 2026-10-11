@@ -63,11 +63,11 @@ def test_an_item_in_no_unit_at_er_leaves_er_owned_by_no_unit():
     assert _own_by_unit(models.item_in_no_unit_at_er()) == without_er
 
 
-def test_f9_an_item_in_no_unit_does_not_unown_a_function_node():
+def test_an_item_in_no_unit_does_not_unown_a_function_node():
     assert _own_by_unit(models.item_in_no_unit_in_fld()) == SCALE
 
 
-def test_f9_an_item_of_another_unit_unowns_a_function_node():
+def test_an_item_of_another_unit_unowns_a_function_node():
     """The container's item in `pump1`'s `=FLD` group: `pump1` loses it, `pump2` keeps its own."""
     expected = {**SCALE, "pump1/unit": ["pump1/io/group/BRD", "pump1/location/C1"]}
     assert _own_by_unit(models.item_of_another_unit_in_fld()) == expected

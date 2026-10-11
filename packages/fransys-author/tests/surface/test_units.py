@@ -1,4 +1,4 @@
-"""EA8 first half: `@unit` and `d.add` build a child design that carries its unit release."""
+"""First half: `@unit` and `d.add` build a child design that carries its unit release."""
 
 from typing import NamedTuple
 
@@ -102,7 +102,7 @@ def test_unit_is_on_the_surface_and_off_the_package_root() -> None:
     assert "unit" not in fransys_author.__all__
 
 
-# --- U2: the boundary marks and the parent's mate ---
+# --- The boundary marks and the parent's mate ---
 
 
 def _unconnected(d):

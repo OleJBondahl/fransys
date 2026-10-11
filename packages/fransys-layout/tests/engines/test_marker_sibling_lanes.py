@@ -1,7 +1,7 @@
-"""WIRE-X56 (decision layout-0054) in the markers' call: a box never covers a sibling port's lane.
+"""In the markers' call, a box never covers a sibling port's lane (layout-0054).
 
 A wire leaving port `2` of a function straight out must not run through the box of the marker
-at port `1` of the same function. The markers' call (`place_markers`, S20) admits a place only
+at port `1` of the same function. The markers' call (`place_markers`) admits a place only
 off every lane (`marker_row._lanes_beside`): the box stands one grid clear of it, with its stub
 still over it, or beyond the lane with a lead (layout-0054). The router's test is closed (a step
 that only touches a box edge is blocked), so a lane on the home box's edge counts.
@@ -234,7 +234,7 @@ def test_a_marker_box_clear_of_every_sibling_lane_stays_where_it_is() -> None:
 
 def test_a_marker_box_that_cannot_clear_the_lane_stays_and_is_reported() -> None:
     """A box wider than the room between the sibling's lane and the content box has no free
-    place: it stays at its first candidate, drawn, and `LABEL_UNPLACED` names its port (S20).
+    place: it stays at its first candidate, drawn, and `LABEL_UNPLACED` names its port.
 
     # UNDO: `_place` admits a place on a lane (`fits=True` always): no finding, a box on the lane
     """
@@ -249,7 +249,7 @@ def test_a_marker_box_that_cannot_clear_the_lane_stays_and_is_reported() -> None
 def test_a_marker_box_another_marker_box_blocks_takes_the_next_free_place() -> None:
     """Marker 11 stands first (the port nearer the left) at x=90..110, over its own stub's lane
     side; marker 12's nearest clear place (x=64..99) meets that box, so the greedy walk takes the
-    next free place (S20): the same place one tier out, a box height further down, its stub
+    next free place: the same place one tier out, a box height further down, its stub
     running down the clear x=72. The other box stays.
 
     # UNDO: `place_texts` admits a place that overlaps a box already placed (x=64..99 at tier 0)
@@ -267,7 +267,7 @@ def test_a_marker_box_another_marker_box_blocks_takes_the_next_free_place() -> N
 
 
 def test_a_shared_marker_box_is_left_alone() -> None:
-    """A box already shared (a C21 run's, `shared_box`) has one place, where it stands.
+    """A box already shared (`shared_box`) has one place, where it stands.
 
     # UNDO: `_row` drops `marker.shared_box or` from its one-place test (the box is moved)
     """
@@ -325,7 +325,7 @@ def _wide_box_at_the_left_edge() -> LinkMarker:
 
 
 def test_a_lone_box_at_the_edge_that_would_cover_a_sibling_lane_takes_the_place_beyond_it() -> None:
-    """D14 and D15 (layout-0068): the box centred on its stub (x=16) crosses the left edge.
+    """The box centred on its stub (x=16) crosses the left edge (layout-0068).
     Standing against the edge (x=0..85) covers the sibling's lane (x=32), and no place left of the
     lane keeps the stub under an 85 G box, in any tier. After the last tier it takes
     layout-0054's place beyond the lane: one grid clear of it (x=40), inside the content box, the
@@ -363,7 +363,7 @@ def test_a_lone_box_at_the_right_edge_takes_the_place_beyond_the_lane_to_its_lef
 
 
 def test_a_lone_box_with_no_free_span_beyond_the_lane_stays_and_is_reported() -> None:
-    """D14: the page is 100 G wide: x=40 leaves an 85 G box 25 G past the edge, and the other
+    """The page is 100 G wide: x=40 leaves an 85 G box 25 G past the edge, and the other
     side of the stub has no room. The box stays at its first candidate with `LABEL_UNPLACED`.
 
     # UNDO: `_beyond` drops its `x <= room.width - box.width` bound (x=40..125 is taken)
@@ -396,7 +396,7 @@ def test_two_lone_boxes_over_two_motors_lanes_are_placed_clear_of_every_lane_and
     """The pump station's page: motor 1 at x=16 (lane 32) and motor 2 at x=136 (lane 152), both
     with an 85 G box over the port at the left of the pair. The first, placed first, takes the
     place beyond its lane, x=40..125. The second's nearest place clear of its lane (x=59..144)
-    meets that box, so the greedy walk takes it one tier out (S20), at y=92, its stub running
+    meets that box, so the greedy walk takes it one tier out, at y=92, its stub running
     down x=136 clear of the first box. No box covers a lane, none meets another, and none is
     reported, on a page 400 wide and on one 200 wide (where the greedy walk never moves the
     first box for the second).

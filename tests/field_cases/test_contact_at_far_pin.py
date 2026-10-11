@@ -10,7 +10,7 @@ contacts stayed in their own group, bundled with the device's other contacts, so
 lone contact column did not reach them. The module also holds power pins, so it is no all-channel
 box: the channel pins are flagged per port. The main contact has one wire, so it is drawn.
 
-The rule (CONVENTIONS-V06 V5, decision layout-0099): a contact whose one wire goes to a pin in
+The rule (decision layout-0099): a contact whose one wire goes to a pin in
 another group is homed under that pin, once, and references its coil; a contact with a second
 wire stays home.
 

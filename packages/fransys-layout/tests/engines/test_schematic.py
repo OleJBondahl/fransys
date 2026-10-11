@@ -1,8 +1,8 @@
-"""WP13 acceptance skeletons: the schematic engine's read and write (ROADMAP WP13, engine.md 7).
+"""Acceptance skeletons: the schematic engine's read and write.
 
-The authored and derived `layout.*` kinds live in `fransys_model.layout` (foundations.md 11,
-P4). These tests use the WP14 cabinet fixture and read the model's typed accessors
-`layout_of` and `derived_layout_ids`. Items are found by authoring key, never by designation.
+The authored and derived `layout.*` kinds live in `fransys_model.layout`. These tests use the
+cabinet fixture and read the model's typed accessors `layout_of` and `derived_layout_ids`.
+Items are found by authoring key, never by designation.
 """
 
 import dataclasses
@@ -92,7 +92,7 @@ def test_read_skips_cable_functions_and_draws_not_installed_items() -> None:
     """Cable items are not drawn; a board's `CONNECTOR` is, when wired, its other items are not
     (model-0040); an `installed=False` item is drawn.
 
-    D8: an idle connector is not drawn, and the cabinet's board `A1` has one unwired `CONNECTOR`
+    An idle connector is not drawn, and the cabinet's board `A1` has one unwired `CONNECTOR`
     (a wired board connector is drawn: `test_board_internal`).
     """
     model = freeze(build_cabinet())
@@ -184,14 +184,14 @@ def test_derived_keys_hold_no_page_number_or_position() -> None:
 
 
 def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placement() -> None:
-    """The docs/design/engine.md 7 discriminator (model-0025, layout-0022, layout-0052).
+    """The link marker's discriminator (model-0025, layout-0022, layout-0052).
 
     A pair marker is its port key, its side and its partner's port key. An off stub is its own
     partner, so it ends in its far port's key (layout-0057). A star marker, a reference (also
     one that carries a stub's text), a branch, names no partner and no role (the role is a
     field, never in the key): its port key, the segment `star`, and its placement's
     discriminator, nothing for a home placement and the column's group key for a replica. A
-    leaving line's one stub (HL18) is `line_stub`, its line's item key and `branch` and number.
+    leaving line's one stub is `line_stub`, its line's item key and `branch` and number.
     """
     # the second location has stubs and a merged reference; the extra relay cuts a wire (a pair)
     models = (

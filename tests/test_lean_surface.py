@@ -26,8 +26,8 @@ lean_surface = importlib.util.module_from_spec(_spec)
 sys.modules[_spec.name] = lean_surface
 _spec.loader.exec_module(lean_surface)
 
-#: The workspace's own ~21-entry surface (MS1, MS2, MS6, MS8; MS1 amended 2026-09-27 to seven
-#: model modules, model-0159 to eight, model-0167 to nine; CT1 dropped `fransys_wireviz`),
+#: The workspace's own ~21-entry surface (seven model modules, then eight (model-0159) and nine
+#: (model-0167); the wireviz package is no longer one),
 #: spelled out so a change to it is visible in review rather than hidden behind a recomputed
 #: assertion.
 _EXPECTED_SURFACE_MODULES = (
@@ -61,15 +61,15 @@ _EXPECTED_SURFACE_MODULES = (
 
 def test_surface_modules_is_the_expected_25_entries():
     """Every `packages/*` top-level module (`fransys_model` excepted), its nine named
-    modules (MS1), `fransys.colours` and the author package's two surface modules (MS8):
+    modules, `fransys.colours` and the author package's two surface modules:
     no more, no fewer.
     """
     assert lean_surface.surface_modules() == _EXPECTED_SURFACE_MODULES
 
 
 def test_surface_names_matches___all___for_drawing_text_baseline_and_numbering_pins():
-    """`derive.drawing_text`/`.baseline`/`.numbering_pins` each carry a real `__all__` now
-    (main's SURFACE Part 1) -- `surface_names` reports exactly that tuple, non-empty, for each.
+    """`derive.drawing_text`/`.baseline`/`.numbering_pins` each carry a real `__all__` now.
+    `surface_names` reports exactly that tuple, non-empty, for each.
     """
     from fransys_model.derive import (
         baseline,
@@ -92,7 +92,7 @@ def test_surface_names_matches___all___for_drawing_text_baseline_and_numbering_p
 
 
 def test_surface_names_empty_when_a_real_module_has_no___all__():
-    """`fransys_model` itself has no `__all__` (excluded from the surface entirely, MS1) --
+    """`fransys_model` itself has no `__all__` (excluded from the surface entirely) --
     `surface_names` reports `()` for it when asked, never raises.
     """
     import fransys_model
@@ -165,7 +165,7 @@ def test_literal_docstring_finds_a_real_one():
 
 
 def test_docstring_line_count_counts_source_lines_inclusive():
-    """Lines from the opening triple-quote line to the closing one, inclusive (LC3's own rule)."""
+    """Lines from the opening triple-quote line to the closing one, inclusive."""
     tree = ast.parse('def f():\n    """One.\n\n    Two.\n    """\n')
     node = lean_surface.find_def(tree, "f")
     docstring = lean_surface.literal_docstring(node)

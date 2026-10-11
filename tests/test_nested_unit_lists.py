@@ -127,7 +127,7 @@ def test_a_nested_units_connector_list_page_draws_no_mate_column(worked):
 def test_a_nested_units_connector_csv_keeps_its_columns_with_the_mate_cells_empty(worked, tmp_path):
     result, _cabinet, board = worked
     written = fr.write(result, tmp_path, unit=board)
-    # the board is its own unit's root, so its list is the bare kind name (UNIT-ID I5)
+    # the board is its own unit's root, so its list is the bare kind name
     (csv_path,) = (path for path in written if path.name.endswith("connectors.csv"))
     lines = csv_path.read_text(encoding="utf-8").splitlines()
     assert lines[0].startswith("designation,style,pincount,gender,mate_designation,")
@@ -319,7 +319,7 @@ def _plc_model(*, nested_host):
     strip terminal, channel 2 to `kout`'s strip terminal (`wired_to` reads the wiring, not the
     binding; which relay a channel serves is the allocator's, so the tests key rows by channel).
     `kout` is in no unit, yet allocation binds it to channel 2 because it is wired there
-    (PLC-WIRED, model-0083); the fixture no longer binds it by hand.
+    (model-0083); the fixture no longer binds it by hand.
     """
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)

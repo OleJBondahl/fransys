@@ -162,7 +162,7 @@ def test_a_units_wire_label_csv_equals_the_pdf_wire_label_list_row_for_row(built
 
 
 def test_a_units_connector_csv_mate_pins_equal_the_pdf_connector_list_cell_for_cell(built):
-    """Both mate pins are outside the board: each prints its whole path (FAR-END-ONE-HOME A2)."""
+    """Both mate pins are outside the board: each prints its whole path."""
     m, _unit_id, doc, _strip, board = built
     rows = _read(_unit_exports(built), "connectors-")
     csv_cells = [(r["designation"], r["marking"], r["mate_port_designation"]) for r in rows]

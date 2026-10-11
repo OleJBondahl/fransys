@@ -12,7 +12,7 @@ Root tests are the one place `fransys_render` and `fransys_pdf` may both be impo
 `tests/test_symbol_not_installed_compiles_grey.py` and
 `tests/test_marker_text_compiles_inside_box.py`'s cross-package pattern). `font_paths` and
 `ignore_system_fonts` mirror the facade's own compile call (`fransys/pipeline.py`'s
-`_compile_pdf`) -- the visual-review script this work order just ran found this necessary
+`_compile_pdf`) -- the visual-review script found this necessary
 for label glyphs to render correctly at all. `_png.py`'s PNG decoder is loaded the same
 dynamic-`importlib` way `test_symbol_not_installed_compiles_grey.py` already does it (`ty`
 cannot see a `sys.path` insert statically, and root `pyproject.toml` is not this work

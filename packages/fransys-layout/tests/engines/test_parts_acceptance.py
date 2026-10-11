@@ -68,7 +68,7 @@ def test_relay_coil_and_contacts_are_drawn_through_the_template_choice():
 
 
 def test_the_demo_relay_changeovers_bind_by_their_roles_as_their_symbol_port_did():
-    """CS3 step 4: the part files dropped `symbol_port`; 11/12/14 and 21/22/24 still draw at
+    """The part files dropped `symbol_port`; 11/12/14 and 21/22/24 still draw at
     `com`/`nc`/`no`, the binding the removed `symbol_port` entries gave."""
     model, _part_id = _relay_model()
     functions = reading.drawn_functions(model, build_indexes(model))

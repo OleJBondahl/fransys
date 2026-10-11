@@ -1,11 +1,11 @@
-"""F9 (layout deep dive, D10-D12): a field motor that belongs to a pump's function group `=P1`
+"""A field motor that belongs to a pump's function group `=P1`
 sits outside the cabinet unit, at a top-level `+EXT`, in no unit and in no field group of its
 own. It never un-owns `=P1` for the cabinet, so the cabinet's own set titles the page with the
 group ("Pump 1", not the unit's name) and `own_nodes` keeps `=P1` and `+C1` and leaves `+EXT`
 out; an off-stub names the far end by its product designation, "+EXT-M1:...", with no
 function segment. A function node an item of another unit sits in is not the unit's own: the
 relay board nested in the cabinet, in the cabinet's `=PLC`, keeps its short designation list
-("-J1") and its unit-name page title (D15: a unit's own groups title its pages).
+("-J1") and its unit-name page title (a unit's own groups title its pages).
 
 Can-fail, checked by hand: with `own_nodes` un-owning a function node for any outside item
 (`if item not in members: outside.add(node_id)` for both aspects) the page-title tests and

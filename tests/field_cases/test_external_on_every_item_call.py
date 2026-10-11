@@ -4,7 +4,7 @@ The engineering shape: an upstream strip, cable or harness supplied by others. A
 takes `external=True`; the other three item-making calls did not, so only a device could be
 marked "by others" and the rest showed in the bill of materials.
 
-The rule (EA15, G24): `external=True` flags the item. A strip's terminals are external through
+The rule: `external=True` flags the item. A strip's terminals are external through
 the parent chain; a cable's conductors carry no flag; no item flagged
 external reaches the bill of materials.
 """

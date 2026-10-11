@@ -3,10 +3,10 @@
 The engineering shape: a cabinet written for 0.5 adds its board as `d.add(board, "io1")`, where
 the second argument was a key.
 
-The bug: from UNIT-TAGS on the argument is the printed tag, so `"io1"` would print `-io1` on
+The bug: the argument is the printed tag, so `"io1"` would print `-io1` on
 every page and in every list, with no sign that the key had become a tag.
 
-The rule (UT5): a `d.add` tag with a lowercase letter raises `AuthorError`, and the message shows
+The rule: a `d.add` tag with a lowercase letter raises `AuthorError`, and the message shows
 both forms, the uppercase tag and `None` with `name=`. No other tag-form check is added.
 
 The decision that fixes it: author-0019.

@@ -1,4 +1,4 @@
-"""Pins `fransys.__all__` against MODEL-BUILD PS3's new re-exports.
+"""Pins `fransys.__all__` against the new re-exports.
 
 A consumer needs `Draft`, `Model` (from the kernel) and `PartLibraryError` (from
 `fransys_parts`) reachable one layer up through `fransys`; this pins that they are both
@@ -11,7 +11,7 @@ _NEW_NAMES = frozenset({"Draft", "Model", "PartLibraryError"})
 
 
 def test_fransys_all_lists_the_new_model_build_names() -> None:
-    """`fransys.__all__` is a superset of MODEL-BUILD PS3's three new names."""
+    """`fransys.__all__` is a superset of the three new names."""
     assert set(fr.__all__) >= _NEW_NAMES
 
 

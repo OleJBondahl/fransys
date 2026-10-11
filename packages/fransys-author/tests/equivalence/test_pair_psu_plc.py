@@ -1,4 +1,4 @@
-"""EA6, EA12, EA14: a DC supply, a contact into a PLC channel and a PLC-driven coil, one model."""
+"""A DC supply, a contact into a PLC channel and a PLC-driven coil, one model."""
 
 from typing import TYPE_CHECKING
 

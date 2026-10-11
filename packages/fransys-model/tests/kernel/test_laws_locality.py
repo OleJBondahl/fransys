@@ -1,4 +1,4 @@
-"""SC8: three locality laws, beside M2's kernel laws (`test_laws.py`).
+"""Three locality laws, beside the kernel laws (`test_laws.py`).
 
 Each law and its `*_check_fails_*` counterpart follow `test_laws.py`'s pattern: a real law must
 pass, and a deliberately broken implementation of the same shape must be caught, so no law here
@@ -10,7 +10,7 @@ can pass vacuously (REVIEW-M M2).
    changes no designation outside that group.
 2. PLC allocation: a request added to one serving queue -- `(unit, signal)` -- changes no
    binding in another queue.
-3. SC7: permuting the authored order of `InternalLink.a`/`b` (built via `laws_pool.pools()`,
+3. Permuting the authored order of `InternalLink.a`/`b` (built via `laws_pool.pools()`,
    which already includes one `InternalLink` in every pool) leaves the whole model's digest
    unchanged.
 """
@@ -414,7 +414,7 @@ def test_plc_allocation_is_local_to_its_queue(
     check_plc_locality(case)
 
 
-# Law 3: SC7 permutation invariance.
+# Law 3: permutation invariance.
 
 
 def check_link_permutation_invariant(
@@ -422,7 +422,7 @@ def check_link_permutation_invariant(
 ) -> None:
     """Permuting `InternalLink.a`/`b`'s authored order leaves the whole model's digest unchanged.
 
-    `unsorted=True` simulates a `__post_init__` that never sorts (SC7's gap before this order):
+    `unsorted=True` simulates a `__post_init__` that never sorts (the gap before this order):
     the swapped copy is forced back to its swapped fields instead of letting the real
     `__post_init__` re-normalise them, so this twin must fail.
     """

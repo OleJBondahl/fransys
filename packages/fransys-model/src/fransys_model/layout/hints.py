@@ -36,6 +36,7 @@ class Chain:
     id: Id[Chain]
     key: AuthoringKey
     entries: tuple[ChainEntry, ...]
+    beside: Id[Function] | None = None
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:

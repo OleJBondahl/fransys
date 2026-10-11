@@ -1,4 +1,4 @@
-"""UT4, FD1, FD5, FD6: floating tags hold after release; a new floating one warns.
+"""Floating tags hold after release; a new floating one warns.
 
 A cabinet unit holds floating relays and board instances (floating tags need a release
 `class_code`, which `_cabinet` gives each release). Revision 1 is released; revision 2 builds

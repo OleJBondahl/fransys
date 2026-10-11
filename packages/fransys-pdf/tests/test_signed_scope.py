@@ -1,4 +1,4 @@
-"""The title block's subject label keeps the BARE label (page-frame R10, pdf-0005 item 4).
+"""The title block's subject label keeps the BARE label (pdf-0005 item 4).
 
 Owner ruling: "the subject label keeps the bare location label: C1 Demo cabinet, no +". A
 follow-up asked for a signed scope (`+C1 Demo cabinet`); it was retracted as an error

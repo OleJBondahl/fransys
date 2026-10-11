@@ -40,7 +40,7 @@ def test_two_processes_with_different_hash_seeds_write_byte_equal_files(tmp_path
     The third document is a cabinet document at C1: it carries the schematic SVG (record 0118).
     Here every file of `out_dir` and of the intermediates directory is compared: the PDFs, the
     `.typ` sources and the one remaining SVG. Both harness pages are cable tables now
-    (CT1/CT2), no SVG of their own; `fransys_render.pages` still draws one `layout.page:...`
+    no SVG of their own; `fransys_render.pages` still draws one `layout.page:...`
     SVG for the whole model regardless of either document's own `remove=(PageKind.SCHEMATIC,)`
     (`_draw_svgs`'s own docstring), so exactly one survives, not zero.
 
@@ -57,6 +57,6 @@ def test_two_processes_with_different_hash_seeds_write_byte_equal_files(tmp_path
     suffixes = [name.rpartition(".")[2] for name in names]
     assert suffixes.count("pdf") == 3
     assert suffixes.count("typ") == 3
-    assert suffixes.count("svg") == 3  # CT5-2: one schematic page, two cable blocks
+    assert suffixes.count("svg") == 3  # One schematic page, two cable blocks
     assert all(first[name] for name in names)
     assert [name for name in names if first[name] != second[name]] == []

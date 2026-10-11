@@ -1,4 +1,4 @@
-"""D9 (ruling F7): a reference and an off stub on one port are ONE marker, one record.
+"""A reference and an off stub on one port are ONE marker, one record.
 
 The two-location cabinet draws a star reference and a stub to the other location on the same port
 of `-X2:1`. Before F7 the engine drew both, the stub one box further out, and the lower marker's
@@ -22,7 +22,7 @@ from fransys_model.layout import LinkMarker, StarKind, layout_of
 
 
 def test_a_reference_and_an_off_stub_on_one_port_are_one_marker_reference_list_first() -> None:
-    """D9 (F7): one record per (port, page); its lines are the reference's list, then the stub's."""
+    """One record per (port, page); its lines are the reference's list, then the stub's."""
     # UNDO: stages/off_markers.py, the `refs={...}` argument of `OffStubs(...)` in
     #     `with_off_markers` -> `refs={}`
     #     draws the stub as a second marker on the port; the one-record count fails
@@ -39,14 +39,14 @@ def test_a_reference_and_an_off_stub_on_one_port_are_one_marker_reference_list_f
     )
     *listed, stub = marker_text(model, merged).split("\n")
     assert listed
-    assert all(line.startswith("#") for line in listed)  # the branches it names come first (LD3)
+    assert all(line.startswith("#") for line in listed)  # the branches it names come first
     assert stub == "\u2192 +C2-S2:11"  # the stub's own text, the far target, last
     profile = DEFAULT_PROFILE
-    # M1: a stub on an S pin is vertical, its box the turned frame: the width is the thickness
+    # A stub on an S pin is vertical, its box the turned frame: the width is the thickness
     # (one text line each) and the height the length along the wire
     assert merged.vertical
     assert merged.width == (len(listed) + 1) * profile.text_height + 2 * profile.marker_padding
-    # the box holds every line (LD3 (c): the reference part of the box is the sheet's fixed length,
+    # the box holds every line (the reference part of the box is the sheet's fixed length,
     # which a run of two sets sizes for `p<set>.<page>` and `+<location>`; a longer stub grows it)
     widest = max(text_width(line, height=profile.text_height) for line in (*listed, stub))
     assert merged.height >= widest + 2 * profile.marker_padding

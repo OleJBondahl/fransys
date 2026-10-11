@@ -1,6 +1,6 @@
-"""The cable engine, whole: `lay_out_cables` over invented models built once (CT5-2 P1, CD5-CD11).
+"""The cable engine, whole: `lay_out_cables` over invented models built once.
 
-Each test names its spec acceptance item and the probe that must make it fail.
+Each test names the probe that must make it fail.
 """
 
 from functools import cache
@@ -61,7 +61,7 @@ def _design():
 def _flat() -> SimpleNamespace:
     """Strip -X1 (6 terminals) and -X2 (3), motors -M1 and -M2, and three cables.
 
-    W1: X1:1..4 to M1 U, V, W, PE. W2: X1:5 to X1:6 (one item at both ends, CD-H5).
+    W1: X1:1..4 to M1 U, V, W, PE. W2: X1:5 to X1:6 (one item at both ends).
     W3: cores land on X2:3, X2:1, X2:2 (out of pin order), far end M2 U, V, W in order.
     """
     parts, d = _design()
@@ -130,7 +130,7 @@ def _nested() -> SimpleNamespace:
 @cache
 def _long_label() -> SimpleNamespace:
     """One core from strip -X1 to a motor whose end label, `+NORTHFARFIELDPUMPHOUSE-M1`, is far
-    wider than its one-pin end box and than the cable box (test gap 1, acceptance 15)."""
+    wider than its one-pin end box and than the cable box."""
     parts, d = _design()
     er, far = d.location("ER", "Engine room"), d.location("NORTHFARFIELDPUMPHOUSE", "Far field")
     g = d.group("ER", "Cabinet")
@@ -163,7 +163,7 @@ def _all_cable_records(model):
 
 
 def test_drawable_block_written():
-    """CD2/CD5: a two-end 4-core cable gets its whole block; the skip is only for the undrawable.
+    """A two-end 4-core cable gets its whole block; the skip is only for the undrawable.
 
     Probe: the `drawable` skip widened to this block.
     """
@@ -172,7 +172,7 @@ def test_drawable_block_written():
     assert box.block == head.id
     assert sorted(e.row.name for e in ends.values()) == ["BOTTOM", "TOP"]
     assert len(wires) == 4
-    # W1, W2 (a cable of one row link, CD-H8 at V1) and W3 are drawn
+    # W1, W2 (a cable of one row link) and W3 are drawn
     assert (len(layout_of(s.model, CableBlock)), len(layout_of(s.model, CableBox))) == (3, 3)
     assert s.findings == ()
 
@@ -183,7 +183,7 @@ def _cell_x(end, port):
 
 
 def test_wire_x_equals_its_cell_x():
-    """CD5/CD6: each core's wire ends at the centre x of the pin cells it lands on, both ends.
+    """Each core's wire ends at the centre x of the pin cells it lands on, both ends.
 
     Probe: a pin cell's x moved by one grid unit.
     """
@@ -204,7 +204,7 @@ def test_wire_x_equals_its_cell_x():
 
 
 def test_out_of_order_cores_draw_straight():
-    """CD5/CD6, acceptance 2: cores landing out of pin order are still one vertical segment each.
+    """Cores landing out of pin order are still one vertical segment each.
 
     Probe: the end's pins laid out in pin order instead of core order.
     """
@@ -231,7 +231,7 @@ def _coordinates(model):
 
 
 def test_every_coordinate_on_the_grid():
-    """CD8, acceptance 5: every coordinate of every cable record is a multiple of 8.
+    """Every coordinate of every cable record is a multiple of 8.
 
     The nested model adds a blank end (STUB and height 0). Probe: a half-grid offset in the placer.
     """
@@ -242,7 +242,7 @@ def test_every_coordinate_on_the_grid():
 
 
 def test_engine_measures_derives_text():
-    """CD7, acceptance 6: box width and pitch come from `core_text` and `cable_heading` widths.
+    """Box width and pitch come from `core_text` and `cable_heading` widths.
 
     The cores' texts are spelled out here, so a change to `core_text` breaks the match.
     Probe: a trailing space appended in `core_text`.
@@ -257,7 +257,7 @@ def test_engine_measures_derives_text():
     widths = [text_width(t, height=h) for t in texts]
     heading = text_width(cable_heading(s.frozen, cable, None), height=h)
     pad = profile.marker_padding
-    assert box.height >= max(widths) + 2 * pad  # the box holds its longest core text (N1)
+    assert box.height >= max(widths) + 2 * pad  # the box holds its longest core text
     assert box.width == snap_up(max(heading + 2 * pad, *(e.width for e in ends.values())))
     assert box.width == max(e.width for e in ends.values())  # W1's columns are its cells
     top, bottom = end_rows(s.frozen, s.ids.w1, None)
@@ -274,7 +274,7 @@ def _style_of(model, cable, item, unit=None):
 
 
 def test_by_others_end_dashed_only_in_the_absolute_reading():
-    """CD10, acceptance 8: an external end is DASHED in the absolute reading, SOLID in the unit's.
+    """An external end is DASHED in the absolute reading, SOLID in the unit's.
 
     Probe: the by-others mark applied in every reading.
     """
@@ -285,7 +285,7 @@ def test_by_others_end_dashed_only_in_the_absolute_reading():
 
 
 def test_a_cable_of_row_links_alone_draws_its_row_and_a_heading_only_box():
-    """CD-H8 at V1, acceptance 26: W2 joins two pins of one strip; the block holds that row, one
+    """W2 joins two pins of one strip; the block holds that row, one
     link on the box side, and the heading-only box under it. No run touches the box.
 
     Probe: route the link's core through the box.
@@ -329,17 +329,17 @@ def _texts(model, block):
     for wire in layout_of(model, CoreWire).values():
         if wire.block == block.id:
             w = text_width(core_text(cores[wire.conductor]), height=h)
-            if wire.conductor in links:  # L1: along the straight run, h high at its middle
+            if wire.conductor in links:  # Along the straight run, h high at its middle
                 x0, y0 = wire.text_x - w / 2, wire.text_y - h / 2
                 out.append(("link", x0, x0 + w, y0, y0 + h, None))
                 continue
-            y0 = wire.text_y - w / 2  # turned: it reads upward, h wide on its axis (N1)
+            y0 = wire.text_y - w / 2  # turned: it reads upward, h wide on its axis
             out.append(("core", wire.text_x - h / 2, wire.text_x + h / 2, y0, y0 + w, None))
     return out
 
 
 def test_every_text_stays_inside_its_block():
-    """CD7/CD8: every printed text lies inside its block; labels clear their end box, heading
+    """Every printed text lies inside its block; labels clear their end box, heading
     and core texts stay inside the cable box horizontally.
 
     Positive: texts of every kind are checked. Probe: `_origin` in place.py returning 0.
@@ -357,10 +357,10 @@ def test_every_text_stays_inside_its_block():
                 assert y1 <= block.height, where
                 if kind == "label":
                     assert (y1 <= rec.y) or (y0 >= rec.y + rec.height), where
-                elif kind != "link":  # a link's text stands at its row, outside the box (L1)
+                elif kind != "link":  # a link's text stands at its row, outside the box
                     assert x0 >= box.x, where
                     assert x1 <= box.x + box.width, where
-                if kind == "core":  # N1: under the heading, inside the box
+                if kind == "core":  # Under the heading, inside the box
                     h, pad = (profile_of(model).text_height, profile_of(model).marker_padding)
                     assert y0 >= box.y + 2 * pad + h, where
                     assert y1 <= box.y + box.height, where
@@ -375,7 +375,7 @@ def _records(model):
 
 
 def test_cable_and_schematic_passes_commute():
-    """CD2, Q3, acceptance 13: S,C,S,C and C,S,C,S give equal records; each pass keeps the other's.
+    """S,C,S,C and C,S,C,S give equal records; each pass keeps the other's.
 
     Probe: one kind tuple shared by both passes.
     """
@@ -391,7 +391,7 @@ def test_cable_and_schematic_passes_commute():
 
 
 def test_a_long_right_hand_label_sets_the_block_width():
-    """Test gap 1, acceptance 15: the block reaches the right end of a label wider than its box,
+    """The block reaches the right end of a label wider than its box,
     so pdf's size check sees the true width. Probe: `_right` without its label term."""
     s = _long_label()
     head, box, ends, _ = _block(s.model, s.cable)
@@ -417,7 +417,7 @@ def _enters(a, b, rect):
 
 
 def test_no_run_enters_the_cable_box_and_no_text_crosses_a_wire():
-    """CD8 closed box, acceptance 18: every run stops at the cable box's edge; no text crosses
+    """Every run stops at the cable box's edge; no text crosses
     a run. Positive: runs touch the box edges. Probe: one straight run through the box."""
     touching = 0
     for model in (_flat().model, _unit().model, _nested().model, _long_label().model):

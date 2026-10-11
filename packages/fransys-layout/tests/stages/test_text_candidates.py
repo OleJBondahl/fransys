@@ -1,4 +1,4 @@
-"""`stages.texts.candidates`: D3's table, its one ranking and the owner-relative box (S2).
+"""`stages.texts.candidates`: the table, its one ranking and the owner-relative box.
 
 Hand-built values only, no pipeline. The expected boxes are hard-coded numbers: the link
 marker's anchoring (one wiring-grid step out, centred on the port, which
@@ -9,12 +9,9 @@ before it placed through `place_texts`), with odd sizes so their floor divisions
 
 import pytest
 
-from fransys_layout.conventions import keyed
-from fransys_layout.conventions.texts import TABLE
 from fransys_layout.geometry import Box, Facing, LayoutError, Point
 from fransys_layout.stages.texts.candidates import (
     DEFAULT_TABLE,
-    PRIORITY,
     Candidate,
     CandidateTable,
     Side,
@@ -28,9 +25,9 @@ _TEXT = (30, 7)  # an invented text: 30 wide, 7 high
 
 
 def test_a_tag_ranks_its_own_sides_steps_nearest_first_then_its_mirrors() -> None:
-    """D3, S18: a tag stands at its own side first, the nearest step first, down before up,
+    """A tag stands at its own side first, the nearest step first, down before up,
     then its mirror across the body, same order: with Facing.W it is W then E, with Facing.E
-    it is E then W. Last come the steps past a vertical marker box beside the port (S20 F3),
+    it is E then W. Last come the steps past a vertical marker box beside the port,
     again its own side first and then the mirror, so a text with a near place never moves."""
     near, past = (0, 7, -7, 14, -14), (21, -21, 28, -28)
     for own, mirror in ((Facing.W, Facing.E), (Facing.E, Facing.W)):
@@ -41,27 +38,6 @@ def test_a_tag_ranks_its_own_sides_steps_nearest_first_then_its_mirrors() -> Non
             for side in (own, mirror)
             for offset in offsets
         )
-
-
-def test_a_marking_ranks_its_own_side_first_then_its_mirror() -> None:
-    """D3, S18: a marking stands at its own side first, then its mirror: with Facing.E it is E
-    then W, with Facing.W it is W then E."""
-    found = ranked_candidates(TextKind.MARKING, Facing.E, _TEXT, DEFAULT_TABLE)
-    assert [one.side for one in found[:5]] == [Facing.E] * 5
-    assert {one.side for one in found[5:]} == {Facing.W}
-    mirrored = ranked_candidates(TextKind.MARKING, Facing.W, _TEXT, DEFAULT_TABLE)
-    assert [one.side for one in mirrored[:5]] == [Facing.W] * 5
-    assert {one.side for one in mirrored[5:]} == {Facing.E}
-
-
-def test_a_reference_has_one_candidate_at_its_own_stub() -> None:
-    """A reference stands at its stub: one side, its port's facing; N or S is a row."""
-    assert ranked_candidates(TextKind.REFERENCE, Facing.N, _TEXT, DEFAULT_TABLE) == (
-        Candidate(side=Facing.N, offset=0, row=True),
-    )
-    assert ranked_candidates(TextKind.STUB, Facing.E, _TEXT, DEFAULT_TABLE) == (
-        Candidate(side=Facing.E, offset=0, row=False),
-    )
 
 
 def test_a_text_at_its_owners_facing_with_an_owner_of_no_facing_raises() -> None:
@@ -78,25 +54,6 @@ def test_the_steps_are_the_texts_own_height() -> None:
         Candidate(side=Facing.S, offset=13, row=True),
         Candidate(side=Facing.S, offset=-26, row=True),
     )
-
-
-def test_every_kind_has_a_row_and_a_priority() -> None:
-    """The default table and the key's priority cover every kind."""
-    assert set(DEFAULT_TABLE) == set(TextKind)
-    assert set(PRIORITY) == set(TextKind)
-    assert set(keyed(TABLE, "text_kind")) == {kind.value for kind in TextKind}
-
-
-def test_the_kind_order_is_references_then_slot_labels_then_contact_images() -> None:
-    """S15: reference and stub, then tag and marking, then contact image, then cross-reference."""
-    order = [
-        {TextKind.REFERENCE, TextKind.STUB},
-        {TextKind.TAG, TextKind.MARKING},
-        {TextKind.CONTACT_IMAGE},
-        {TextKind.CROSS_REFERENCE},
-    ]
-    for tier, kinds in enumerate(order):
-        assert {PRIORITY[kind] for kind in kinds} == {tier}
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-"""Speed guard for RW4: `vocab.cables`'s `cable_items` builds once per digest (model-0108).
+"""Speed guard: `vocab.cables`'s `cable_items` builds once per digest (model-0108).
 
 `is_cable(model, item)` reads `cable_items(model)` for every item it is asked about; the whole
 point is that the underlying `digest_cached` builder runs once per model digest, not once per

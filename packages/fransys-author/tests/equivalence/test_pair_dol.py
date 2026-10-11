@@ -1,4 +1,4 @@
-"""EA5, EA6, EA12, EA14: the motor starter with its latch, by hand and by series, one model."""
+"""The motor starter with its latch, by hand and by series, one model."""
 
 from typing import TYPE_CHECKING
 

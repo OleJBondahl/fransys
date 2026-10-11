@@ -1,7 +1,7 @@
-"""The block-diagram spec's two worked examples, as tests on invented models (BD-1 M3).
+"""The block-diagram spec's two worked examples, as tests on invented models.
 
-`docs/specs/2026-10-07-block-diagrams.md`, "Worked example 1" and "Worked example 2", acceptance 1
-to 4. Example 1 is a station-shaped system built from the demo parts: one tagged cabinet with no
+"Worked example 1" and "Worked example 2" of the block-diagram spec. Example 1 is a
+station-shaped system built from the demo parts: one tagged cabinet with no
 place, four top-level cables, three of them to field items, one of those by others. Example 2 is
 the units fixture's own cabinet reading.
 """
@@ -87,7 +87,7 @@ def test_a_cabinets_own_reading_draws_its_cable_to_the_board_box_with_a_full_tab
 
 
 def test_a_core_landing_on_a_second_strip_drops_the_cabinet_tab_of_that_line():
-    """Acceptance 2: `-W11` lands on two strips, so its cabinet end has no tab."""
+    """`-W11` lands on two strips, so its cabinet end has no tab."""
     model = _station(second_strip=True)
     tabs = sorted(
         (line.designation, tab)

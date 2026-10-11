@@ -1,9 +1,9 @@
-"""Regression: a chain between two rails draws its supply end on top (C20, layout-0115 D5).
+"""Regression: a chain between two rails draws its supply end on top (layout-0115).
 
 A 24 V power supply feeds breaker Q2, lamp H1 and breaker Q1 in series, back to its 0 V output.
 Q2 is wired to `+` and Q1 to `-`, so the designations run against the current. The potential rank
 of the two end pins decides, so the breaker at `+` is drawn above the one at `-`, whatever the
-designation text says. This guards C20; it never failed, so it carries no xfail.
+designation text says. This guards that rule; it never failed, so it carries no xfail.
 """
 
 import fransys as fr

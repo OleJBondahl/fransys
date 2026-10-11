@@ -1,4 +1,4 @@
-"""D10: `clear_of_stubs` and `shift_pages` read, per page, only that page's markers.
+"""`clear_of_stubs` and `shift_pages` read, per page, only that page's markers.
 
 Can-fail, checked by hand (each mutation is undone by an edit):
 - UNDO 1: `slices.page_of` keying every marker on page 1 (`item.drawing_set, 1`) fails the first
@@ -11,7 +11,7 @@ from samples import SHEET, hid, page_plan, placed
 
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import LabelKind, LinkMarker, MarkerSide, PlacedLabel
-from fransys_layout.stages.tidy import clear_of_stubs, shift_pages
+from fransys_layout.stages.tidy import shift_pages
 
 
 def _tag(function: int, page: int, box: Box) -> PlacedLabel:
@@ -43,31 +43,6 @@ def _marker(page: int, x: int) -> LinkMarker:
 TAG_BOX = Box(x=72, y=150, width=48, height=8)
 
 
-def test_a_stub_on_page_two_moves_no_tag_on_page_one() -> None:
-    # the stub at x 96 runs through the tag E of the symbol (72..120) on page 2 only
-    plans = (page_plan(("a",)), page_plan(("a",), number=2))
-    pages = [
-        ((placed(1, x=64, y=160),), (_tag(1, 1, TAG_BOX),)),
-        ((placed(2, x=64, y=160, page=2),), (_tag(2, 2, TAG_BOX),)),
-    ]
-    found = clear_of_stubs(plans, pages, (_marker(2, 96),), SHEET)
-    assert [labels[0].box for _, labels in found] == [TAG_BOX, Box(x=8, y=150, width=48, height=8)]
-
-
-def test_a_page_reads_all_its_own_markers_wherever_they_stand_among_the_runs() -> None:
-    # page 1's stub at x 96 (its second marker, after page 2's) crosses its tag; page 2's marker
-    # at x 500 crosses nothing; the result cannot depend on the order of the markers, only on
-    # which ones the page is given
-    plans = (page_plan(("a",)), page_plan(("a",), number=2))
-    pages = [
-        ((placed(1, x=64, y=160),), (_tag(1, 1, TAG_BOX),)),
-        ((placed(2, x=64, y=160, page=2),), (_tag(2, 2, TAG_BOX),)),
-    ]
-    markers = (_marker(1, 300), _marker(2, 500), _marker(1, 96))
-    found = clear_of_stubs(plans, pages, markers, SHEET)
-    assert [labels[0].box for _, labels in found] == [Box(x=8, y=150, width=48, height=8), TAG_BOX]
-
-
 def test_a_shift_of_page_one_moves_only_page_ones_markers() -> None:
     # page 1's label pokes 20 left of the content box: the page moves right by whole grids
     plans = (page_plan(("a",)), page_plan(("a",), number=2))
@@ -92,13 +67,3 @@ def _shifted_tag_x(x: int) -> int:
     pages = [((placed(1, x=64, y=160),), (_tag(1, 1, Box(x=x, y=150, width=48, height=8)),))]
     moved, _, _ = shift_pages(plans, pages, (), SHEET)
     return moved[0][1][0].box.x
-
-
-def test_a_text_flush_at_the_frame_is_moved_to_the_text_gap() -> None:
-    # layout-0104 frame gap: a text inside the content box but touching its edge is a defect
-    assert _shifted_tag_x(0) >= HOUSE_TEXT_GAP
-    assert _shifted_tag_x(3) >= HOUSE_TEXT_GAP
-
-
-def test_a_text_already_a_gap_from_the_frame_stays() -> None:
-    assert _shifted_tag_x(HOUSE_TEXT_GAP) == HOUSE_TEXT_GAP

@@ -1,8 +1,8 @@
 """List headings of a unit's own document (pdf-0012): unit-relative, and the terminal sides.
 
-4a (R2/D12). A unit's own document heads each strip's table with the strip's designation read
+A unit's own document heads each strip's table with the strip's designation read
 unit-relative (`-X2`), as the rows below it already are; a location document keeps the full
-text (`-JB1-X2`, a strip inside a board). 4b (model-0054 section 3). The two ends columns of a
+text (`-JB1-X2`, a strip inside a board). See model-0054 section 3. The two ends columns of a
 strip's terminal list are headed by the terminal part's port markings when the part names both
 its internal and its external port, else "Side A" / "Side B". No demo part carries a marking,
 so 4b builds a throwaway part library in `tmp_path` (never `examples/demo-parts`).

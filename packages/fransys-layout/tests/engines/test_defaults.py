@@ -1,4 +1,4 @@
-"""The schematic engine's shipped defaults (docs/design/stages.md 6.1, docs/design/engine.md 7)."""
+"""The schematic engine's shipped defaults."""
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES
 from fransys_layout.engines.schematic.read import read_inputs
@@ -13,7 +13,7 @@ _ORIGIN = Origin(file="tests/engines/test_defaults.py", line=1, note="defaults.p
 
 
 def test_the_default_sheet_is_the_model_house_sheet_in_grid_units() -> None:
-    """One copy of the numbers (model-0029, model-0033, model-0051, spec page-frame R11.1):
+    """One copy of the numbers (model-0029, model-0033, model-0051):
     content box 410 x 267 mm at module 2.5 mm is floor(410*8/2.5) x floor(267*8/2.5) =
     1312 x 854.
     """
@@ -39,11 +39,11 @@ def test_every_default_rule_names_a_symbol_in_the_library() -> None:
 
 
 def test_default_rules_map_the_kinds_design_names() -> None:
-    """docs/design/stages.md 6.1's six kinds, plus D6's `plc-channel` and D8's connector contacts.
+    """The six kinds, plus `plc-channel` and connector contacts.
 
-    D6: a wired PLC channel is drawn with `plc-channel`. D8 and the mated-pair spec: a connector
+    A wired PLC channel is drawn with `plc-channel`. A connector
     pin view is drawn with `contact`, or `contact-female` / `contact-male` by the connector
-    facet's gender. `switch` -> `make-contact` is the prototype's stand-in (R7 B1); no D rule
+    facet's gender. `switch` -> `make-contact` is the prototype's stand-in ; no rule
     names it.
     """
     assert {(rule.kind, rule.category, rule.gender): rule.symbol for rule in DEFAULT_RULES} == {

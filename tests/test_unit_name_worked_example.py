@@ -1,5 +1,5 @@
-"""spec unit-subject-by-name (UN1-UN4), Acceptance 1 and 2, against the units worked
-example's real facade-built geometry (UNIT-NAME Part 7).
+"""Unit subject by name, against the units worked
+example's real facade-built geometry.
 
 Does not modify `test_units_worked_example.py`'s shared fixture functions
 (`pump_cabinet`/`_system_design`): only imports and calls them, the same pattern
@@ -54,14 +54,14 @@ def _codes(result):
     return [f.code for f in result.findings]
 
 
-# -- Acceptance 1: the spec's own worked example, literally -------------------------------
+# -- The spec's own worked example, literally -------------------------------
 
 
 def test_unit_name_subject_gives_the_same_pdf_and_bom_bytes_as_the_unit_id(tmp_path):
     """A one-cabinet model, where `demo-pump-cabinet` is unique: a document naming it by its
     release name resolves to the same unit a document naming it by `Id` does, so `write`
-    produces the same file set and byte-identical PDF and `bom.csv` either way (UN1, UN2, UN4;
-    spec's worked example and Acceptance 1). Probe (per spec): edit `derive.document_unit`'s
+    produces the same file set and byte-identical PDF and `bom.csv` either way.
+    Probe (per spec): edit `derive.document_unit`'s
     `unit_name` branch to `return None`; the by-name write then drops `cabinet.pdf` from its
     export set (it no longer resolves to the unit at all), and the file-name-set assertion
     below fails.
@@ -90,14 +90,14 @@ def test_unit_name_subject_gives_the_same_pdf_and_bom_bytes_as_the_unit_id(tmp_p
     ).read_bytes()
 
 
-# -- Acceptance 2: an unresolved unit_name is one DOCUMENT_UNIT_UNRESOLVED ----------------
+# -- An unresolved unit_name is one DOCUMENT_UNIT_UNRESOLVED ----------------
 
 
 def test_unit_name_subject_with_two_instances_gives_one_document_unit_unresolved(tmp_path):
     """The real two-cabinet system: `demo-pump-cabinet` names two instances, so a document
     subject naming it gives exactly one `DOCUMENT_UNIT_UNRESOLVED`, its message
     `unit_name_unresolved`'s own several-instances sentence naming both real cabinets, not a
-    second copy of it (UN3)."""
+    second copy of it."""
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts)
     cover = _cover(tmp_path, "cabinet.md", "# Cabinet\n")
@@ -114,7 +114,7 @@ def test_unit_name_subject_with_two_instances_gives_one_document_unit_unresolved
 
 def test_unit_name_subject_unknown_name_gives_one_document_unit_unresolved(tmp_path):
     """Same real two-cabinet system: an unknown release name gives exactly one
-    `DOCUMENT_UNIT_UNRESOLVED`, case (a)'s "no unit release is named" sentence (UN3)."""
+    `DOCUMENT_UNIT_UNRESOLVED`, case (a)'s "no unit release is named" sentence."""
     parts = fransys_parts.load("demo_parts")
     d, _field1, _field2 = _system_design(parts)
     cover = _cover(tmp_path, "cabinet.md", "# Cabinet\n")

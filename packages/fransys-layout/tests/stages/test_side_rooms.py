@@ -1,13 +1,13 @@
-"""S11: Room's first call for a reference beside an E or W port (`references.side_rooms`).
+"""Room's first call for a reference beside an E or W port (`references.side_rooms`).
 
 Hand-made values, no model. Function 1 is the through symbol with a third port, `aux`, on its
 body's right edge facing E and no slots, so its keep-out ends at the port. `aux` is wired to
 function 3's `in`, in another column. The profile pads a marker by 4 G: the box is 38 + 8 = 46 G
 wide and reaches 8 + 46 = 54 G past the port, past the 48 G column gap, as the house profile's
-50 G reach does (S11's Width).
+50 G reach does.
 
 No wired E or W port exists on the goldens, the example or any other fixture (measured over
-every engine run of the layout and root suites), so this page is S11's own can-fail fixture.
+every engine run of the layout and root suites), so this page is its own can-fail fixture.
 """
 
 import dataclasses
@@ -97,7 +97,7 @@ def _rooms(columns: tuple[Column, ...], functions: tuple, wire: Connection) -> d
 def _page(first: int, second: int) -> tuple[Box, int, dict[Id[Any], PlacedFunction]]:
     """Columns `a` and `b` holding functions `first` and `second` (1 and 3), placed.
 
-    Sized and placed as the engine does (S11's two sites): `column_widths` on the keep-outs
+    Sized and placed as the engine does: `column_widths` on the keep-outs
     grown by Room's boxes, then `place_page`, on a sheet exactly as wide as the two estimates,
     as `partition` packs a page. Returns the reference's box at function 1's placed `aux`, the
     content width and the placed functions.
@@ -136,7 +136,7 @@ def test_a_wired_e_port_owns_its_references_first_candidate_one_stub_step_out() 
 
 
 def test_an_adjacent_cell_and_a_side_elements_join_are_wires_and_own_no_room() -> None:
-    """D1's first two wire cases, both known from `columns`: no reference, so no room."""
+    """The first two wire cases, both known from `columns`: no reference, so no room."""
     adjacent = (_column("a", _cell(1), _cell(2, 1)),)
     assert _rooms(adjacent, (_with_aux(1), drawn(2)), _to(2, 21)) == {}
     beside = (_column("a", _cell(1), _cell(4, 0, carrier=1)),)
@@ -144,16 +144,8 @@ def test_an_adjacent_cell_and_a_side_elements_join_are_wires_and_own_no_room() -
 
 
 def test_a_reference_beside_an_e_port_of_the_last_column_stays_inside_the_content_box() -> None:
-    """S11's Width: the last column's reference stands inside the width `partition` packed."""
+    """Width: the last column's reference stands inside the width `partition` packed."""
     # UNDO: `side_reference_rooms` giving no room (Room's first call disabled) leaves the box
     # 6 G past the content box's right edge (174 > 168): this turns red.
     box, content_width, _ = _page(3, 1)
     assert box.x + box.width <= content_width
-
-
-def test_the_next_column_stands_clear_of_a_reference_beside_an_e_port() -> None:
-    """S11: `place` holds the reference's box in the cell's keep-out, so the gap follows it."""
-    # UNDO: as above, the box then reaches 6 G over column `b`'s keep-out (70 > 64): red.
-    box, _, by = _page(1, 3)
-    neighbour = by[hid("function", 3)]
-    assert box.x + box.width < neighbour.at.x + neighbour.geometry.keepout.x

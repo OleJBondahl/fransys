@@ -1,4 +1,4 @@
-"""R2 (order PERF-DRAFT, decision model-0093): `_strip_key` and `s.unit`'s two error-path
+"""Decision model-0093: `_strip_key` and `s.unit`'s two error-path
 scans use `Draft.record_of`, not `Draft.records()` — ordinary authoring never re-sorts the
 whole draft to find one record it already knows the id of."""
 
@@ -11,7 +11,7 @@ _STRIP_COUNT = 20
 
 
 def test_authoring_many_bridges_and_a_repeated_unit_calls_records_zero_times(parts, monkeypatch):
-    """Acceptance 2: at least 20 bridged strips plus a unit built twice (the second call
+    """At least 20 bridged strips plus a unit built twice (the second call
     hits `s.unit`'s two `record_of` scans) call `Draft.records()` zero times."""
     d = Design(parts)  # build_catalogue's one records() call happens here, outside the span
     calls = 0

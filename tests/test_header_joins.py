@@ -1,4 +1,4 @@
-"""HA4 (parts-0017): a header pin `joins` a function port, and the model reads the join as a wire.
+"""A header pin `joins` a function port, and the model reads the join as a wire (parts-0017).
 
 Built through `import fransys as fr` from `examples/demo-parts` (DEMO-RELAY-MOD-2) and one
 throwaway one-header part. The join puts the header pin and the function port on one physical
@@ -78,7 +78,7 @@ def _net_designations(model: Model, designation: str) -> set[str]:
 
 
 def test_a_mated_plug_pin_the_header_pin_and_the_relay_port_share_one_net() -> None:
-    """Acceptance 4: pin n of the plug, header pin n and the relay port are one physical net."""
+    """Pin n of the plug, header pin n and the relay port are one physical net."""
     result, *_ = _module(mate=True)
     model = result.model
     for pin, relay_port in [("1", "A1"), ("2", "A2"), ("3", "B1"), ("4", "B2")]:
@@ -134,14 +134,14 @@ def test_a_joined_relay_port_is_in_use_and_an_unjoined_one_is_unused() -> None:
 
 
 def test_a_two_header_module_prints_its_pins_with_the_header_segment() -> None:
-    """Acceptance 12: two headers J1, J2 print `-M1-J1:1` and `-M1-J2:1`; a relay port `-M1:A1`."""
+    """Two headers J1, J2 print `-M1-J1:1` and `-M1-J2:1`; a relay port `-M1:A1`."""
     result, *_ = _module(mate=False)
     printed = {port_designation(result.model, p) for p in ports(result.model)}
     assert {"-M1-J1:1", "-M1-J2:1", "-M1:A1"} <= printed
 
 
 def test_a_one_header_module_prints_its_pin_without_a_segment(tmp_path: Path) -> None:
-    """Acceptance 12: a lone header adds no segment, so its pin reads `-M1:1`."""
+    """A lone header adds no segment, so its pin reads `-M1:1`."""
     (tmp_path / "library.toml").write_text(
         'schema = 1\nname = "t"\nversion = "0.0.0"\ndescription = "d"\n'
     )

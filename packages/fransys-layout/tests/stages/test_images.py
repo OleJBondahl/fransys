@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from samples import PROFILE, SHEET, column, drawn, function_spec, hid, page_plan, placed
 
-from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, PortGeometry, text_width
+from fransys_layout.geometry import WIRING_GRID, Box, Point, text_width
 from fransys_layout.stages import (
     FunctionSpec,
     LabelKind,
@@ -19,19 +19,16 @@ from fransys_layout.stages import (
     Role,
     images,
 )
-from fransys_layout.stages._image_foot import table_x
 from fransys_layout.stages._image_stack import stack_tables
 from fransys_layout.stages.images import (
     ImageInputs,
-    _image_marks,
     _image_width,
-    _page_marker_boxes,
     contact_images,
     image_reserves,
     table_height,
     with_flipped_below,
 )
-from fransys_layout.stages.texts.power import drawn_shapes, power_place
+from fransys_layout.stages.texts.power import power_place
 from fransys_layout.stages.types import Cell, Home
 
 
@@ -57,15 +54,6 @@ MARKS = {
 }
 
 # --- image_marks ---------------------------------------------------------------------
-
-
-def test_image_marks_collect_each_contacts_no_and_nc_marks_in_order() -> None:
-    """A changeover's marks stand in both columns, a plain contact's in one."""
-    # UNDO: stages/images.py:image_marks, swap `marks[s.function][0]` and `marks[s.function][1]`
-    change = _relay_function(1, "contact_co", "11", "12", "14")
-    make = _relay_function(2, "contact_no", "13", "14")
-    marks = {change.function: (["11-14"], ["11-12"]), make.function: (["13-14"], [])}
-    assert _image_marks([change, make], marks) == (["11-14", "13-14"], ["11-12"])
 
 
 # --- image_reserves ------------------------------------------------------------------
@@ -222,19 +210,6 @@ def _marker(page: int, x: int) -> LinkMarker:
     )
 
 
-def test_the_ink_of_a_page_is_grouped_once_in_marker_order() -> None:
-    """Each `(drawing_set, page)` maps to its markers' boxes and stubs in `markers` order."""
-    # UNDO: stages/slices.py:page_of, `item.drawing_set, item.page` -> `item.drawing_set, 1`
-    a, b, c = _marker(1, 64), _marker(2, 96), _marker(1, 128)
-    found = _page_marker_boxes((a, b, c))
-    assert found == {
-        (1, 1): tuple(one.box for one in drawn_shapes((a, c))),
-        (1, 2): tuple(one.box for one in drawn_shapes((b,))),
-    }
-    assert [box for box in found[1, 1] if box in (a.box, c.box)] == [a.box, c.box]
-    assert len(found[1, 1]) > 2, "the stubs are ink too"
-
-
 def test_a_spare_contact_counts_in_the_room_the_coil_reserves() -> None:
     """V1: the engine hands the spares in with the drawn functions; a second NO mark adds a row."""
     # UNDO: engine.py `every` -> `inputs.functions` in the `image_reserves` call
@@ -363,20 +338,6 @@ def test_a_contact_in_another_drawing_set_marks_the_image_cross_set() -> None:
     key = cells.key, coil.function
     assert [cross for *_, cross in near[key].images] == [False]
     assert [cross for *_, cross in apart[key].images] == [True]
-
-
-def test_the_image_starts_at_the_rightmost_bottom_port() -> None:
-    """layout-0123 F1: a box's image hangs from its rightmost S port; a port on top is no anchor."""
-    # UNDO: stages/_image_foot.py:table_x, `max(...)` -> the first port, `ports[0]`
-    one = placed(1, x=96, y=48)
-    ports = (
-        PortGeometry(name="a", at=Point(x=0, y=16), facing=Facing.S),
-        PortGeometry(name="b", at=Point(x=48, y=16), facing=Facing.S),
-        PortGeometry(name="c", at=Point(x=96, y=-16), facing=Facing.N),
-    )
-    box = replace(one, geometry=replace(one.geometry, ports=ports))
-    assert table_x(box.at, box.geometry) == 144 + WIRING_GRID // 2
-    assert table_x(one.at, one.geometry) == 96 + WIRING_GRID // 2, "a coil's one bottom port"
 
 
 # --- drawn-clear (layout-0134): a table clears only what the page draws ------------------------

@@ -1,6 +1,6 @@
-"""EF-C2 part 2: one wired set. A port on a net group, or on a conductor or net group dropped for
-an undrawn end, is wired: its pin view is kept (R7 B5) and a PLC channel on it is a pin of its
-module's box like an unwired one (V1, C2 is gone). Hand-built models, the helpers of
+"""One wired set. A port on a net group, or on a conductor or net group dropped for
+an undrawn end, is wired: its pin view is kept and a PLC channel on it is a pin of its
+module's box like an unwired one. Hand-built models, the helpers of
 `test_board_internal.py`.
 """
 
@@ -135,7 +135,7 @@ def test_a_plc_channel_wired_only_through_a_net_group_or_a_stranded_conductor_is
     wiring: str,
 ) -> None:
     """Module `DO1` has channels `do_1` and `do_2`; only `do_1` is wired, never by a kept
-    conductor. Wired or not, both channels are pins of the module's one box (V1)."""
+    conductor. Wired or not, both channels are pins of the module's one box."""
     board_part = _board_part("board-a")
     board = _item("board-a", designation="A1", part=board_part)
     module = _item("do", designation="DO1")
@@ -181,7 +181,7 @@ def test_a_plc_channel_wired_only_through_a_net_group_or_a_stranded_conductor_is
 
 
 def test_the_item_box_carries_the_item_view_and_channel_facts() -> None:
-    """The box is the spec whose function is an item id: `roles.item_view` says so (RR-O1)."""
+    """The box is the spec whose function is an item id: `roles.item_view` says so."""
     module = _item("do", designation="DO1")
     do_1, do_2 = (_function("do", name, FunctionKind.PLC_CHANNEL) for name in ("do_1", "do_2"))
     p1, p2 = _port(do_1, "1"), _port(do_2, "1")

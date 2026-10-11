@@ -155,8 +155,8 @@ def test_a_three_phase_feed_through_a_strip_routes_all_three_phases(
 ) -> None:
     """Q1 (3-pole contactor) feeds three terminals of strip `strip` (L1..L3, point 1) from its
     poles 2, 4 and 6; the point text is forced to the full form `-X..:L2:1`, wider than the
-    terminal pitch (D12 amended prints the short "L2:1" in such a run, which needs no guard: this
-    test keeps the guard exercised with a wide text). All three wires are drawn, whatever the
+    terminal pitch (the amended rule prints the short "L2:1" in such a run, which needs no guard:
+    this test keeps the guard exercised with a wide text). All three wires are drawn, whatever the
     strip is called."""
     monkeypatch.setattr(
         drawing_text,

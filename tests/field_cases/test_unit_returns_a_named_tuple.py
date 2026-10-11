@@ -6,7 +6,7 @@ strip's run, which the parent cabinet reads by name.
 The bug: a unit returned a `dict[str, Device]`, so every boundary was typed `Device` and a
 misspelt name was found at run time only.
 
-The rule (EA15, owner "C1"): a unit function returns an instance of a `typing.NamedTuple`
+The rule: a unit function returns an instance of a `typing.NamedTuple`
 class and `d.add` returns that instance. Any other return raises and shows the `NamedTuple`
 form.
 """

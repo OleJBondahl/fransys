@@ -1,4 +1,4 @@
-"""A small invented plant on three power nets, for the D5 power-symbol tests (step 6, B2b).
+"""A small invented plant on three power nets, for the power-symbol tests (layout-0094).
 
 A supply `PSU` (ports `24`, `0`) and three loads `LA`, `LB`, `LC` (ports `p24`, `p0`, `pe`),
 wired as three nets of four, four and three ports: the 24 V net (text `+24`) takes the supply

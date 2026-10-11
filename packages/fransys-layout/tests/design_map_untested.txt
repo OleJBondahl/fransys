@@ -22,7 +22,7 @@ space.run_of
 slices.connection_ends
 pagerun.plan_pages
 finish.finish_pages
-# caller-only (layout-0095 R4): the row's test reaches the rule through a caller, not hand-made values
+# reached through its caller (layout-0095 R4): the row has no test of its own; its test reaches the rule through a caller
 # step 1
 resolve.throw_port
 # step 2

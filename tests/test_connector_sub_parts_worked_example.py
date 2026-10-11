@@ -1,4 +1,4 @@
-"""Decision model-0071, part 2 spec acceptance 3: a device with connectors X1 and X2, end to end.
+"""Decision model-0071: a device with connectors X1 and X2, end to end.
 
 The demo part `DEMO-IO-2X` has two connector functions `x1` and `x2`, marked `X1` and `X2`. The
 item `A1` at `+B` is wired from two plugs `P1` and `P2` at `+A` by one cable `-W1`, core 1 to
@@ -9,7 +9,7 @@ texts), never a private name.
 
 Can-fail: with `connector_segment` (`fransys_model.derive.designation`) returning `""`, the
 build carries an ERROR finding and draws nothing, and every test here fails (checked by hand on
-a scratch copy, HL18 landing): a test id, not a collection error.
+a scratch copy): a test id, not a collection error.
 """
 
 import functools
@@ -68,7 +68,7 @@ def test_the_build_completes_and_carries_no_error_finding() -> None:
     severities = {finding.severity for finding in result.findings}
     assert Severity.ERROR not in severities
     assert severities <= {Severity.WARNING, Severity.INFO}
-    # HL18, owner C1: the line -W1 leaves each of its two sets in one stub, not one per core
+    # The line -W1 leaves each of its two sets in one stub, not one per core
     stubs = layout_of(result.model, LinkMarker).values()
     assert len(stubs) == 2
     assert all("line_stub" in m.key and m.star is StarKind.OFF for m in stubs)
@@ -90,7 +90,7 @@ def test_the_connector_list_names_each_connector_of_the_device_behind_its_tag() 
 
 def test_the_drawn_boxes_of_the_device_name_the_connector() -> None:
     """(c) `A1` draws two boxes, `-A1-X1` and `-A1-X2`; no box reads `-A1`, no pin is tagged.
-    HL6 (layout-0155): every connector of the line `-W1` is a box; this test pinned pin tags."""
+    Layout-0155: every connector of the line `-W1` is a box; this test pinned pin tags."""
     # UNDO: fransys_model/derive/designation.py: `connector_designation` `return
     #   printed_designation(model, item, unit=unit) + segment` -> `return printed_designation(model,
     #   item, unit=unit)` (both boxes of `A1` read `-A1`)
@@ -105,15 +105,15 @@ def test_the_drawn_boxes_of_the_device_name_the_connector() -> None:
     for box in layout_of(model, ConnectorBox).values():
         lines = connector_box_lines(model, box.function)
         assert len(box.texts) == len(lines)
-        assert box.cells == ()  # every pin is wired by a conductor the line carries (HL5)
+        assert box.cells == ()  # every pin is wired by a conductor the line carries
         designations.add(lines[0])
     assert designations == {"-A1-X1", "-A1-X2", "-P1", "-P2"}
 
 
 def test_the_two_stubs_on_the_cabinet_side_name_different_connectors_of_the_far_device() -> None:
-    """(d) The line's one stub at `+A` names `-A1-X1`, `A1`'s connector, not bare `-A1` (HL18).
+    """(d) The line's one stub at `+A` names `-A1-X1`, `A1`'s connector, not bare `-A1`.
 
-    Owner C1: one stub per line, so `+A` prints one far device and `+B` names `+A-P1`."""
+    One stub per line, so `+A` prints one far device and `+B` names `+A-P1`."""
     # UNDO: fransys_model/derive/designation.py: `connector_segment`'s last `return` -> `return ""`
     #   (both connectors print `-A1`: an ERROR finding, and the stub no longer reads `-A1-X1`)
     model = _build().model

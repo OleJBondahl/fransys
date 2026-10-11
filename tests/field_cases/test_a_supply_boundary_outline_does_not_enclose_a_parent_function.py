@@ -6,7 +6,7 @@ cell above and the `-` pin cell below the lamp.
 
 The bug: the unit's outline is one box over its black-box members, so it spans both boundary
 rows and encloses the parent's lamp, a function that is not the unit's. The black box must never
-enclose a function that is not the unit's (designer, 2026-10-11).
+enclose a function that is not the unit's (2026-10-11).
 Decision: layout-0169.
 """
 

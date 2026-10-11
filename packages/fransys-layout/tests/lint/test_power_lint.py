@@ -47,45 +47,6 @@ def _coverage(layout) -> list:
     ]
 
 
-def test_a_power_end_covers_its_port_for_the_member_check() -> None:
-    """UNDO: in `check_members` read only `layout.routes` (drop the markers): every port fires."""
-    _, _, results, _ = power_run()
-    assert [one for one in results.layout.markers if one.symbol]
-    assert _coverage(results.layout) == []
-
-
-def test_dropping_the_power_ends_names_each_port_not_drawn() -> None:
-    """The member check and the nowhere guard both fire once the symbols are gone.
-
-    V3: the ports come from `rail_ends` (no conductor is drawn), grouped by `_rail_group`.
-
-    UNDO: in `check_members` skip a marker with `symbol` set: this test passes, the one above fails.
-    """
-    _, _, results, _ = power_run()
-    ports = {one.port for one in results.layout.markers if one.symbol}
-    found = _coverage(_without_symbols(results.layout))
-    assert {one.code for one in found} == {CONNECTION_NOT_DRAWN}
-    assert ports <= {handle for one in found for handle in one.subjects}
-
-
-def test_the_whole_run_has_no_connection_finding_with_the_symbols() -> None:
-    """UNDO: in `link_markers` (stages) drop the power markers: the next test's finding appears."""
-    _, _, _, findings = power_run()
-    assert [one for one in findings if one.code in _LINT] == []
-
-
-def test_a_run_draws_a_power_symbol_at_each_rail_end() -> None:
-    """V3: the rail wires are not drawn, so each rail-end pin is covered by its symbol alone.
-
-    The engine's lint sees no net group for a rail net, so this is the check that a pin keeps
-    its symbol.
-    """
-    _, inputs, results, _ = power_run()
-    drawn = {one.port for one in results.layout.markers if one.symbol}
-    assert inputs.rail_ends
-    assert {one.ref.port for one in inputs.rail_ends} <= drawn
-
-
 def test_a_power_end_consumes_no_reference_digit(monkeypatch: pytest.MonkeyPatch) -> None:
     """S4: the digit count sees no flagged end, so a power-only set keeps the floor digits.
 

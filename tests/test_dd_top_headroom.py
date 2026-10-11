@@ -1,5 +1,5 @@
 """The records above row 0 stay inside the content box with the shipped headroom lanes
-(layout-0031), and with none (S20 M4's top reference band).
+(layout-0031), and with none (the top reference band).
 
 `packages/fransys-layout/tests/engines/test_top_headroom.py` shows the cabinet is clean with no
 lanes, because the band lifts the first row. A unit outline stands close above the first row's
@@ -128,7 +128,7 @@ def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
     top = _highest_top(layout)
     assert top >= 0  # nothing stands above the content box
     # and the first row still starts near it: the bound is the model's own band, sized by the
-    # widest digits of this run (S4, layout-0135)
+    # widest digits of this run (layout-0135)
     inputs = read_inputs(model_of())
     band = real(inputs.sheet, inputs.profile, max(seen)[1])
     assert top <= engine.TOP_HEADROOM_LANES * WIRING_GRID + band - _REACH_ABOVE_ROW
@@ -137,8 +137,8 @@ def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
 def test_without_headroom_the_unit_outlines_stay_below_the_top_reference_band(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """S20 M4: with no lane the outlines of the first row still stand inside the content box,
-    because the columns start below the top band every page keeps. (Before M4 the outlines of
+    """With no lane the outlines of the first row still stand inside the content box,
+    because the columns start below the top band every page keeps. (Before the band, the outlines of
     this model stood above the box top with no lane: the constant is no longer what holds them.)
     """
     # UNDO: stages/place.py `_stack_page`: `band = reference_band(sheet, profile)` -> `band = 0`

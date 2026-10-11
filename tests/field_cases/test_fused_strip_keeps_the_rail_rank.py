@@ -8,9 +8,9 @@ The bug: a fuse link was `conductive`, so the physical net ran through the fuse 
 drew a 24 V bar as if it were the supply itself; ranked through the physical net alone, it had no
 rank once that link stopped being conductive.
 
-The rule (decision layout-0105, spec electrical-facts F1, CONVENTIONS-V06 V3 and V11): a fuse
-link is `protective`. The physical net stops at it, so the strip pin draws no bar (V3), but the
-rail closure crosses it, so the pin ranks as 24 V (V11). The return keeps the 0 V bar.
+The rule (decision layout-0105): a fuse
+link is `protective`. The physical net stops at it, so the strip pin draws no bar, but the
+rail closure crosses it, so the pin ranks as 24 V. The return keeps the 0 V bar.
 """
 
 import fransys as fr

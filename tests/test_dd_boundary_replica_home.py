@@ -1,4 +1,4 @@
-"""DD-REPLICA-HOME (layout-0076): a child unit's boundary terminal, wired to a device in another
+"""Layout-0076: a child unit's boundary terminal, wired to a device in another
 group, builds ("the records put name one id twice, with different content" before the fix).
 
 Unit `inner` (a child of unit `outer`) holds, all at location FIELD, a strip terminal `T` in group

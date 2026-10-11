@@ -1,4 +1,4 @@
-"""The diagram engine's writer: placed diagrams to derived `layout.diagram_*` records (BD8)."""
+"""The diagram engine's writer: placed diagrams to derived `layout.diagram_*` records."""
 
 from functools import cache
 

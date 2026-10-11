@@ -1,8 +1,8 @@
-"""ENGINE-DIGITS (layout-0140): a column holds the side reference box its page draws.
+"""A column holds the side reference box its page draws (layout-0140).
 
 `_sizing.py` sizes columns with `side_reference_rooms` at the floor digits, before any page is
 planned. In a run of two sets the page draws the box wider (`p<set>.<page>`, `+<location>`), so
-the early estimate is narrower than the drawn box. C21 (`placed_widths`) grows each column to
+the early estimate is narrower than the drawn box. `placed_widths` grows each column to
 its placed keep-out, which holds the per-page box, and the second `_placed` pass starts from
 those widths. The final widths therefore hold the box and the early FLOOR call needs no fix.
 """

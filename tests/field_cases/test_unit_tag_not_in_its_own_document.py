@@ -9,7 +9,7 @@ own WAGO xml named the channels `U1_K2_RUN` and `U1_U2_K1_RUN`. The cabinet's ow
 leaked into its own document, because the black box's tag texts and the rack's channel names did
 not take the unit they are printed for.
 
-The rule (UT2, "a unit knows only below"): the cabinet's own document prints the board as
+The rule ("a unit knows only below"): the cabinet's own document prints the board as
 `-U2-J1:1` and names the channels `K2_RUN` and `U2_K1_RUN`; the system's document keeps `-U1-U2`.
 
 The decision that fixes it: model-0142.

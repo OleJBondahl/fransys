@@ -1,6 +1,6 @@
 """The block-diagram spec's two worked examples through the diagram engine (BD-2 P3).
 
-Both readings lay out with none of the four BD8 geometry findings, and write their records.
+Both readings lay out with none of the four geometry findings, and write their records.
 """
 
 import sys

@@ -10,7 +10,7 @@ column in its relay's group, because a module box is one function with every cha
 so the single-pin test saw two wires. The coil's contacts then referenced a coil on a page that
 did not show its channel.
 
-The rule (CONVENTIONS-V06 V5, decision layout-0099): a coil wired to a PLC output channel is drawn
+The rule (decision layout-0099): a coil wired to a PLC output channel is drawn
 under that channel, its other end draws the rail's ground symbol, and its contacts reference it.
 """
 

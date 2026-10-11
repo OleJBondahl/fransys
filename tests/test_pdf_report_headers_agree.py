@@ -44,7 +44,7 @@ def test_reports_csv_uses_the_derive_object(name):
     assert _is_derive_object(reports, name)
 
 
-# CONTENTS has no CSV export (out of RW5's scope: no contents.csv), so this is pdf-only, not
+# CONTENTS has no CSV export (no contents.csv), so this is pdf-only, not
 # folded into `_COLUMNS`/`_REPORTS_NAMES` above.
 @pytest.mark.parametrize("name", ["CONTENTS_COLUMNS"])
 def test_pdf_contents_uses_the_derive_object(name):

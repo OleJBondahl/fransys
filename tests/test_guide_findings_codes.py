@@ -1,4 +1,4 @@
-"""The consumer guide's `findings.md` lists exactly the finding codes the workspace emits (CG4).
+"""The consumer guide's `findings.md` lists exactly the finding codes the workspace emits.
 
 `Finding(code=...)` is constructed three ways, all resolved here with `ast` (no import, no
 execution): a literal kwarg (`Finding(code="COVER_OVERFLOW", ...)`); a module-level string
@@ -7,9 +7,9 @@ one (e.g. `fransys_layout.lint.codes`); and a per-module helper (`_finding`, `_e
 `_warn`, `fransys_parts._toml.finding`) that takes `code` as its own parameter and passes it
 through, the literal then living at the helper's own call sites, positional or keyword.
 
-This is BUILD-ONCE in spirit: the scan walks every `.py` file under `packages/*/src` once per
+This builds once in spirit: the scan walks every `.py` file under `packages/*/src` once per
 test module, in `scanned_finding_codes()`, called from the module-scoped `scanned_codes` fixture
-rather than at collection (root CLAUDE.md's speed rule: computed once, not per test, and no
+rather than at collection (the speed rule: computed once, not per test, and no
 longer paid at collection time by every one of the gate's workers).
 """
 

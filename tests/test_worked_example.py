@@ -1,6 +1,6 @@
 """The spec's worked example, completed with the demo parts (spec acceptance, WP order C2).
 
-`fr.parts`/`fr.author`/`fr.build` do not exist yet (the facade is a later work package):
+`fr.parts`/`fr.author`/`fr.build` do not exist yet (the facade comes later):
 this test uses `fransys_parts`/`fransys_author` and the model's own passes plus
 the layout engine directly, the same pipeline `fr.build` will run.
 """

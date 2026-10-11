@@ -1,9 +1,9 @@
-"""Every random 1:3 and 2:2 cable of 2 to 8 cores routes (CT5-3 P4, spec acceptance 19, Q4).
+"""Every random 1:3 and 2:2 cable of 2 to 8 cores routes.
 
 Hand-built facts: each core takes a random top end and bottom end, ends fill by lowest core key
 and pins by core key, as `end_rows` and `drawn_pins` give them. The profile is derandomized so
 the gate is reproducible. A case that does not route is a design question, not a skip. Every end
-of a drawn case also carries one row link (CT5-LINK, acceptance 24): two extra pins and a core
+of a drawn case also carries one row link: two extra pins and a core
 between them.
 """
 
@@ -55,7 +55,7 @@ def _touches(run, box) -> bool:
 )  # top pin 3 is the link's first pin
 @given(_cable())
 def test_every_random_cable_routes_cleanly(case):
-    """Acceptance 19, 24: it routes with a link on every end, no two wires share a stretch, none
+    """It routes with a link on every end, no two wires share a stretch, none
     enters the box, all on grid, no link touches the box. The example stands a crossing core's
     top column on a link pin, so the link must join the channel's constraints.
 

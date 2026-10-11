@@ -6,23 +6,22 @@ may state a source limit in either kind. A port may stand on rails (a `Net` with
 as `rating_plant.load` does, so a check test can put a string on a supply.
 """
 
-import dataclasses
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from plant import Plant
+lazy from plant import Plant
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Operating, OperatingFacet, PartRatingFacet, Rating
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import FunctionKind, LinkKind, PortRole
-from fransys_model.vocab.templates import FunctionTemplate, InternalLink, PortTemplate
+from fransys_model.vocab.templates import FunctionTemplate, PortTemplate
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from fransys_model.kernel import Id
-    from fransys_model.vocab.core import Port, Unit
+    from fransys_model.vocab.core import Port
     from fransys_model.vocab.templates import Part
 
 Ports = tuple["Id[Port]", "Id[Port]"]
@@ -139,13 +138,6 @@ def connector(plant: Plant, key: str, *, amps: str | None = None) -> Id[Port]:
     return plant.port(function, "p")
 
 
-def mated(plant: Plant, plug: str, socket: str, *, amps: str | None = None) -> Ports:
-    """A plug and its socket, mated; the plug is rated `amps`. Returns the two ports."""
-    ports = connector(plant, plug, amps=amps), connector(plant, socket)
-    plant.mate(Plant.function_id(plug, "f"), Plant.function_id(socket, "f"), key=f"mate-{plug}")
-    return ports
-
-
 def run(plant: Plant, start: Id[Port], devices: Sequence[Ports], end: Id[Port] | None) -> None:
     """Wire `start`, each device's two ports in turn, then `end`, into one line."""
     at = start
@@ -189,37 +181,6 @@ def open_string(plant: Plant, source: Ports, devices: Sequence[Ports], key: str 
     run(plant, source[1], devices, external(plant, f"{key}1"))
 
 
-def sense_pin(plant: Plant, key: str) -> None:
-    """Give item `key` (made by `device`) a second function `m` with one pin `p`, linked to the
-    first port of its function `f` by an internal link: a link from a port to another function."""
-    part = plant.part(key)
-    template = FunctionTemplate(
-        id=make_id(FunctionTemplate, (key, "m")),
-        key=(key, "m"),
-        part=part,
-        name="m",
-        kind=FunctionKind.GENERIC,
-    )
-    pin = PortTemplate(
-        id=make_id(PortTemplate, (key, "m", "p")),
-        key=(key, "m", "p"),
-        function=template.id,
-        name="p",
-        role=PortRole.GENERIC,
-    )
-    link_key = (key, "m-link")
-    link = InternalLink(
-        id=make_id(InternalLink, link_key),
-        key=link_key,
-        a=pin.id,
-        b=make_id(PortTemplate, (key, "f", "1")),
-        kind=LinkKind.CONDUCTIVE,
-    )
-    plant.add(template, pin, link)
-    function = plant.function(make_id(Item, (key,)), "m", template=template.id)
-    plant.port(function, "p", template=pin.id)
-
-
 def changeover(
     plant: Plant, key: str, amps: str | None = "500"
 ) -> tuple[Id[Port], Id[Port], Id[Port]]:
@@ -259,168 +220,3 @@ def changeover(
     )
     com, no, nc = (plant.port(function, pin.name, template=pin.id) for pin in pins)
     return com, no, nc
-
-
-def make_and_break(plant: Plant, key: str) -> tuple[Ports, Ports]:
-    """One item `key` with two contacts in one part: a make contact `no` and a break contact `nc`.
-
-    Each is a function with two ports (`1`, `2`) and one switched link, rated 500 A DC. Returns
-    the ports of `no` (closed when operated) and of `nc` (closed at rest): CS1 moves them together.
-    """
-    part = rate(plant, key, "500")
-    item = plant.item(key, part=part)
-    made = []
-    for name, kind in (("no", FunctionKind.CONTACT_NO), ("nc", FunctionKind.CONTACT_NC)):
-        template = FunctionTemplate(
-            id=make_id(FunctionTemplate, (key, name)),
-            key=(key, name),
-            part=part,
-            name=name,
-            kind=kind,
-        )
-        pins = [
-            PortTemplate(
-                id=make_id(PortTemplate, (key, name, pin)),
-                key=(key, name, pin),
-                function=template.id,
-                name=pin,
-                role=PortRole.GENERIC,
-            )
-            for pin in ("1", "2")
-        ]
-        plant.add(template, *pins)
-        plant.link(pins[0], pins[1], LinkKind.SWITCHED, key=f"link-{key}-{name}")
-        function = plant.function(item, name, template=template.id, kind=kind)
-        made.append(
-            (
-                plant.port(function, "1", template=pins[0].id),
-                plant.port(function, "2", template=pins[1].id),
-            )
-        )
-    return made[0], made[1]
-
-
-def switch_string(
-    plant: Plant, tag: str, count: int, *, tap: bool = False, through: str = "make"
-) -> None:
-    """`T0 - S - C0 - C1 - ... - D - T1`: a 186 A source, `count` unrated changeovers in series
-    and a 20 A load; item keys start with `tag`. With `tap` a second external item sits after `S`.
-
-    Each changeover passes its `through` throw into the next node (`make`, closed when
-    operated, or `break`, closed at rest); the other throw is wired to nothing. So the line is a
-    loop through the outside only when every changeover is in the state that closes it.
-    """
-    source = device(plant, f"{tag}S", limit="186")
-    wire(plant, source[0], external(plant, f"{tag}T0"))
-    node = source[1]
-    for at in range(count):
-        common, make, brk = changeover(plant, f"{tag}C{at:02d}", None)
-        wire(plant, node, common)
-        node = make if through == "make" else brk
-    load = device(plant, f"{tag}D", amps="20")
-    wire(plant, node, load[0])
-    wire(plant, load[1], external(plant, f"{tag}T1"))
-    if tap:
-        wire(plant, source[1], external(plant, f"{tag}Ta"))
-
-
-def capped_changeover(plant: Plant, others: int, source: Ports, d_amps: str = "150") -> None:
-    """The plant where opening an unrated changeover's links gives a false bound.
-
-    An unrated changeover `CO` (the one of `others + 1` with the LARGEST item id, so the one
-    above the enumeration cap when they are more than the cap) with `D` (rated `d_amps`) from its
-    common to `X`, `P` from `X` to its break port, `R` from there to its make port, `source`
-    (limited to 400 A) from the make port to `Y`, `Q` from `Y` to the common, and a 100 A
-    full-range fuse `L` from `X` to `Y`. The `others` unrated changeovers hang their commons on
-    `Y`. Every real state of `CO` has `L` on each loop through `D` (bound 100 A); with all its
-    links open the loop `D, P, R, source, Q` avoids `L` (bound 400 A).
-    """
-    names = [f"C{n}" for n in range(others + 1)]
-    chosen = max(names, key=lambda name: make_id(Item, (name,)))
-    x, y = hub(plant, "X"), hub(plant, "Y")
-    common, make, brk = changeover(plant, chosen, None)
-    for name in names:
-        if name != chosen:
-            wire(plant, y, changeover(plant, name, None)[0])
-
-    def between(pair: Ports, first: Id[Port], second: Id[Port]) -> None:
-        wire(plant, first, pair[0])
-        wire(plant, pair[1], second)
-
-    between(device(plant, "D", amps=d_amps), common, x)
-    between(device(plant, "P", amps="500"), x, brk)
-    between(device(plant, "R", amps="500"), brk, make)
-    between(source, make, y)
-    between(device(plant, "Q", amps="500"), y, common)
-    between(fuse(plant, "L", "100"), x, y)
-
-
-def shorted_when_closed(plant: Plant, source: Ports, d_amps: str = "100") -> None:
-    """`T0 - source - CO.common`, `D` from the common to the make port, `T1` on the make port.
-
-    `CO` is an unrated changeover: at rest its common joins its break port and `D` lies on the
-    loop with the source; operated, the common joins the make port and shorts `D`. With every
-    link closed `D` is shorted too, yet it has its bound at rest.
-    """
-    common, make, _ = changeover(plant, "CO", None)
-    wire(plant, source[0], external(plant, "T0"))
-    wire(plant, source[1], common)
-    load = device(plant, "D", amps=d_amps)
-    wire(plant, common, load[0])
-    wire(plant, load[1], make)
-    wire(plant, make, external(plant, "T1"))
-
-
-def in_unit(plant: Plant, unit: Id[Unit]) -> None:
-    """Put every item of the plant into `unit`, so that the plant is that unit built alone."""
-    plant.records[:] = [
-        dataclasses.replace(record, unit=unit) if isinstance(record, Item) else record
-        for record in plant.records
-    ]
-
-
-def with_role(plant: Plant, port: Id[Port], role: PortRole) -> None:
-    """Give the port `port` of the plant the role `role` (the plant's ports are `GENERIC`)."""
-    plant.records[:] = [
-        dataclasses.replace(record, role=role) if record.id == port else record
-        for record in plant.records
-    ]
-
-
-def bypass_plant(
-    *, fuse_in_branch: bool = False, prefix: str = "", main_fuse: str = "400"
-) -> Plant:
-    """Source, fuse, a contactor with a precharge branch around it, plug, load; unrated leads.
-
-    `S - F - N1 - [K || (R - PK)] - N2 - plug ~ sock - Z`, an unrated sense lead on each node
-    and an unrated insulation monitor between them. The source `S` is limited to 186 A and the
-    fuse `F` rated `main_fuse` A. With `fuse_in_branch` the branch holds its own 10 A full-range
-    fuse `PF` and `PK` is rated 20 A. Every item key gets `prefix`, which changes the ids and so
-    their order without changing the plant.
-    """
-
-    def k(name: str) -> str:
-        return prefix + name
-
-    plant = Plant()
-    source = device(plant, k("S"), limit="186")
-    wire(plant, source[0], external(plant, k("T0")))
-    n1, n2 = hub(plant, k("N1")), hub(plant, k("N2"))
-    run(plant, source[1], [fuse(plant, k("F"), main_fuse)], n1)
-    run(plant, n1, [contactor(plant, k("K"))], n2)
-    branch = [
-        device(plant, k("R"), amps="5", link=LinkKind.CONDUCTIVE),
-        contactor(plant, k("PK"), "20" if fuse_in_branch else "5"),
-    ]
-    if fuse_in_branch:
-        branch.append(fuse(plant, k("PF"), "10"))
-    run(plant, n1, branch, n2)
-    run(plant, n1, [device(plant, k("sense1"))], None)
-    run(plant, n2, [device(plant, k("sense2"))], None)
-    run(plant, n1, [device(plant, k("imd"))], n2)
-    plug, socket = mated(plant, k("plug"), k("sock"), amps="100")
-    wire(plant, n2, plug)
-    load = device(plant, k("Z"), amps="20")
-    wire(plant, socket, load[0])
-    wire(plant, load[1], external(plant, k("T1")))
-    return plant

@@ -1,4 +1,4 @@
-"""`fr.verify` re-hashes every released file (WORKFLOW-BLOCKS W5, W6; acceptance 1 to 4, 13).
+"""`fr.verify` re-hashes every released file.
 
 One module fixture releases the board once; each test edits its own copy.
 """
@@ -104,7 +104,7 @@ def test_a_pdf_with_changed_line_ends_still_counts(copy):
 
 
 def test_a_manifest_cut_in_half_is_a_changed_file_for_verify_and_value_error_for_releases(copy):
-    """Acceptance 13: the folder is reported, never skipped."""
+    """The folder is reported, never skipped."""
     into, result = copy
     manifest = _folder(into) / "baseline" / "manifest.json"
     manifest.write_bytes(manifest.read_bytes()[:40])
@@ -124,7 +124,7 @@ def test_a_release_the_model_no_longer_has_is_still_checked(copy):
 
 
 def test_a_folder_with_a_manifest_and_no_listing_is_listed_but_not_a_previous_release(copy):
-    """Acceptance 14: `fr.releases` lists it; the previous-release lookup still skips it."""
+    """`fr.releases` lists it; the previous-release lookup still skips it."""
     into, _result = copy
     (_folder(into) / "baseline" / "listing.json").unlink()
     (release,) = fr.releases(into)

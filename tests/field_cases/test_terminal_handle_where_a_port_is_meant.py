@@ -7,7 +7,7 @@ The bug (engine, old API): `wire(a, t)` and `cable.core(n, t, b)` with `t` a ter
 accepted at the call, then failed at build with a bare `FreezeError` that named no line of the
 author's code. The surface designs it out: a terminal handle is never ambiguous.
 
-The rule (EA15, G8): a terminal given to `d.wire` lands on its inner side; given to `W1.core` it
+The rule: a terminal given to `d.wire` lands on its inner side; given to `W1.core` it
 lands on its outer side. `.outer` is also a valid `d.wire` end, and it lands on the outer side.
 """
 

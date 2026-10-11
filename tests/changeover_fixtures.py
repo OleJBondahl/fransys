@@ -1,4 +1,4 @@
-"""Fixture of `test_changeover_rail_pairs.py` (CONTACT-STATES acceptance 1 and 2): demo parts only.
+"""Fixture of `test_changeover_rail_pairs.py`: demo parts only.
 
 Two independent IT supplies, `MAIN` (`M_L1..M_L3` and `M_N`) and `EMERG` (`E_L1..E_L3`, no
 neutral), a four-pole changeover `q1` that puts MAIN on its make throws and EMERG on its break

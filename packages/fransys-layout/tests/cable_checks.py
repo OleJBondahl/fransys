@@ -1,4 +1,4 @@
-"""What every cable block must satisfy (CT5-3, spec acceptance 4, 18, 5): checks on runs and a box.
+"""What every cable block must satisfy : checks on runs and a box.
 
 A run is a sequence of points with `.x` and `.y`, from a `PlacedWire` or a `CoreWire` alike.
 """
@@ -14,7 +14,7 @@ def _points(run) -> tuple[Point, ...]:
 
 
 def assert_no_shared_stretch(runs) -> None:
-    """Acceptance 4: two wires meet only across, one `h` against one `v`, never at a corner."""
+    """Two wires meet only across, one `h` against one `v`, never at a corner."""
     found = [_points(run) for run in runs]
     for one, other in combinations(found, 2):
         mine, theirs = axes_of(one), axes_of(other)
@@ -23,7 +23,7 @@ def assert_no_shared_stretch(runs) -> None:
 
 
 def assert_outside_the_box(runs, box: tuple[int, int, int, int]) -> None:
-    """Acceptance 18: no segment of any run has a point strictly inside the cable box."""
+    """No segment of any run has a point strictly inside the cable box."""
     x, y, width, height = box
     for run in runs:
         for a, b in pairwise(_points(run)):
@@ -37,6 +37,6 @@ def assert_outside_the_box(runs, box: tuple[int, int, int, int]) -> None:
 
 
 def assert_on_the_grid(runs) -> None:
-    """Acceptance 5: every point of every run lies on the wiring grid."""
+    """Every point of every run lies on the wiring grid."""
     for run in runs:
         assert all(p.x % WIRING_GRID == 0 and p.y % WIRING_GRID == 0 for p in run), run

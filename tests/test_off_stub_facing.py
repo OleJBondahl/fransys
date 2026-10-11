@@ -67,7 +67,7 @@ def _off_stubs(model):
 
 
 def _is_line_stub(model, marker) -> bool:
-    """HL18: a leaving line's stub stands at the line's end, not at a port."""
+    """A leaving line's stub stands at the line's end, not at a port."""
     return marker.carrier is not None and draws_as_line(model, marker.carrier)
 
 
@@ -78,7 +78,7 @@ def _is_line_stub(model, marker) -> bool:
 def test_the_stored_facing_agrees_with_the_geometry_render_derives(name, only_lines) -> None:
     """Every off stub stores its facing; a stub at a port agrees with the port's geometry.
 
-    A line stub (HL18) has no port geometry to agree with, so only its stored facing is checked.
+    A line stub has no port geometry to agree with, so only its stored facing is checked.
     """
     model = _models()[name]
     stubs = _off_stubs(model)
@@ -149,7 +149,7 @@ def test_turning_the_stored_facing_turns_the_arrow_and_the_drawn_stub(
 def test_a_marker_without_a_stored_facing_takes_the_geometry_facing() -> None:
     """No fixture lays out a page-boundary marker, so an off stub is turned into a plain one.
 
-    The stub is one at a port: a line stub (HL18) has no port geometry."""
+    The stub is one at a port: a line stub has no port geometry."""
     model = _models()["system"]
     stub = next(m for m in _off_stubs(model) if not _is_line_stub(model, m))
     plain = dataclasses.replace(stub, star=None, far=None, carrier=None, facing=None)

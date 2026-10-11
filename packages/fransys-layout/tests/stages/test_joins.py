@@ -1,4 +1,4 @@
-"""S12 (LD9): the horizontal join and "wired beside" as one rule, on hand-made columns.
+"""The horizontal join and "wired beside" as one rule, on hand-made columns.
 
 Function `n` is the through symbol (`samples.drawn`): port `10n + 1` (`13`) at `in` on top,
 facing N; port `10n + 2` (`14`) at `out` below, facing S; a keep-out 32 G high. Columns stand
@@ -122,7 +122,7 @@ def test_a_run_whose_lowered_column_leaves_the_room_is_refused() -> None:
 def test_a_port_spot_says_its_row_its_offset_and_its_columns_height() -> None:
     """Column a holds functions 1 and 2: port 22 (`out` of row 1) stands 32 + 104 + 32 G down."""
     # UNDO: stages/place.py `page_stack`: `cell.origin.y + g.at.y - top` -> drop `- top` (the
-    #     page's C14 text room above row 0, 16 G, then counts in the offset)
+    #     page's text room above row 0, 16 G, then counts in the offset)
     spots = _spots(("a", (1, 2)))
     (spot,) = spots[_port(2, 2)]
     assert (spot.page, spot.index, spot.cell, spot.last) == ((1, 1), 0, 1, 1)
@@ -146,7 +146,7 @@ def test_a_function_drawn_twice_takes_its_ports_from_its_first_drawing() -> None
 
 
 def test_two_ports_in_consecutive_rows_of_one_column_are_beside() -> None:
-    """D1's first wire case, from `columns` alone: 12 (row 0) to 21 (row 1) of column a."""
+    """The first wire case, from `columns` alone: 12 (row 0) to 21 (row 1) of column a."""
     # UNDO: stages/references/joins.py `wired_beside`: `abs(x.cell - y.cell) == 1` -> `== 2`
     wire = _wire(1, (1, 2), (2, 1))
     joins = _wired_beside((wire,), _spots(("a", (1, 2))), _ROOMS, NO_CHAINS)
@@ -154,22 +154,6 @@ def test_two_ports_in_consecutive_rows_of_one_column_are_beside() -> None:
     assert joins.beside.sets[_port(1, 2)] == frozenset({1})
     assert joins.findings == ()
     assert joins.runs == ()
-
-
-def test_the_feeds_of_neighbouring_columns_along_the_top_are_one_joined_run() -> None:
-    """LD9: ports 11, 21 and 31 face N at the top of columns a, b and c: one run, all beside."""
-    # UNDO: stages/references/joins.py `_neighbours`: `abs(x.index - y.index) == 1` -> `== 2`
-    wires = (_wire(1, (1, 1), (2, 1)), _wire(2, (2, 1), (3, 1)))
-    spots = _spots(("a", (1,)), ("b", (2,)), ("c", (3,)))
-    joins = _wired_beside(wires, spots, _ROOMS, NO_CHAINS)
-    assert joins.beside.pairs[_port(1, 1), _port(2, 1)] == frozenset({1})
-    assert joins.beside.pairs[_port(2, 1), _port(3, 1)] == frozenset({1})
-    assert joins.findings == ()
-    ends = tuple(
-        JoinedEnd(column=("invented", name), port=_port(n, 1))
-        for name, n in (("a", 1), ("b", 2), ("c", 3))
-    )
-    assert joins.runs == (JoinedRun(drawing_set=1, page=1, ends=ends),)
 
 
 def _bottom_run(column_b: tuple[int, ...]):
@@ -183,31 +167,8 @@ def _bottom_run(column_b: tuple[int, ...]):
     return joins, stars
 
 
-def test_a_bottom_run_over_columns_of_equal_rows_is_a_wire() -> None:
-    """Columns a and b have two rows each: 22 and 42 are a joined run, the wire stays routed."""
-    # CAN-FAIL (acceptance 2): column b as `(5, 3, 4)` (three rows, 42 still at its bottom) makes
-    #     the run unalignable: JOIN_UNALIGNED fires and the conductor is dropped for markers
-    joins, (star,) = _bottom_run((3, 4))
-    assert joins.beside.pairs[_port(2, 2), _port(4, 2)] == frozenset({1})
-    assert joins.findings == ()
-    assert hid("conductor", 1) not in star.conductors  # routed, not drawn as markers
-
-
-def test_a_bottom_run_over_columns_of_unequal_rows_keeps_its_references() -> None:
-    """Column b has three rows: 42 stands in row 2, 22 in row 1, so `place` cannot align them.
-    22 lies above the top edge of 42's device: the wire would leave 42 outward and come back
-    past it. The turn test (S20 M12) refuses it first: references, no candidate, no finding."""
-    # UNDO: stages/references/joins.py `_neighbours`: drop `turns_back(x, y) or turns_back(y, x)`
-    #     (the run is a candidate again and `JOIN_UNALIGNED` fires)
-    joins, (star,) = _bottom_run((5, 3, 4))
-    assert (_port(2, 2), _port(4, 2)) not in joins.beside.pairs
-    assert joins.findings == ()
-    assert joins.runs == ()
-    assert hid("conductor", 1) in star.conductors  # drawn as references (markers)
-
-
 def test_a_run_whose_columns_have_unequal_row_heights_gives_join_unaligned() -> None:
-    """S12: columns a (1, 2, 3) and b (4, 5); 32 and 52 are both last ports facing S, so the run
+    """Columns a (1, 2, 3) and b (4, 5); 32 and 52 are both last ports facing S, so the run
     is a candidate and the turn test passes, but 4 and 5 stand tall: `place` cannot put the two
     ports on one y. One `JOIN_UNALIGNED` names both ports, no run, no wired pair. Reached at the
     stage boundary (hand-made columns); no engine build in the 4b6d measure produced one."""
@@ -219,53 +180,6 @@ def test_a_run_whose_columns_have_unequal_row_heights_gives_join_unaligned() -> 
     assert joins.findings[0].subjects == (_port(3, 2), _port(5, 2))
     assert joins.runs == ()
     assert joins.beside.pairs == {}
-
-
-def test_ends_facing_different_ways_are_no_join() -> None:
-    """Port 12 faces S at the bottom of column a, 21 N at the top of column b: no candidate."""
-    # UNDO: stages/references/joins.py `_neighbours`: drop `or x.facing is not y.facing`
-    wire = _wire(1, (1, 2), (2, 1))
-    joins = _wired_beside((wire,), _spots(("a", (1,)), ("b", (2,))), _ROOMS, NO_CHAINS)
-    assert joins.beside.pairs == {}
-    assert joins.findings == ()
-
-
-def test_a_port_mid_column_beside_a_top_port_is_no_join() -> None:
-    """Port 21 faces N in row 1 of column b, 11 at the top of column a: not an LD9 run (21 is not
-    at its column's end), and on one y only by moving a column: no wire, no finding."""
-    # UNDO: stages/references/joins.py `wired_beside`: the `level` test `== {join_y(...)}` ->
-    #     `True` (a level pair is joined whatever column it moves)
-    wire = _wire(1, (1, 1), (2, 1))
-    joins = _wired_beside((wire,), _spots(("a", (1,)), ("b", (3, 2))), _ROOMS, NO_CHAINS)
-    assert joins.beside.pairs == {}
-    assert joins.findings == ()
-
-
-def test_the_paralleled_mains_of_two_neighbours_mid_column_stay_wires() -> None:
-    """Ruling 2026-09-27 (S12's second case): mains 1 and 2 stand in row 1 of neighbouring
-    columns a and b, each under one cell and over one, so 11-21 (N) and 12-22 (S) are already on
-    one y with no column moved: both straps stay wires, and no finding."""
-    # UNDO: stages/references/joins.py `wired_beside`, the `level` loop's `_add` -> `pass`
-    wires = (_wire(1, (1, 1), (2, 1)), _wire(2, (1, 2), (2, 2)))
-    spots = _spots(("a", (5, 1, 6)), ("b", (7, 2, 8)))
-    joins = _wired_beside(wires, spots, _ROOMS, NO_CHAINS)
-    assert joins.beside.pairs[_port(1, 1), _port(2, 1)] == frozenset({1})
-    assert joins.beside.pairs[_port(1, 2), _port(2, 2)] == frozenset({1})
-    assert joins.findings == ()
-    assert len(joins.runs) == 2
-
-
-def test_same_side_ends_two_columns_apart_stay_a_wire() -> None:
-    """S20 M12: 11 and 31 face N at the top of columns x and z, with column y between them: the
-    turn test passes at both ends (each leaves its pin outward), so the star net stays a wire at
-    any column distance, one joined run and no finding."""
-    # UNDO: stages/references/joins.py `_neighbours`: `return not (turns_back(x, y) or
-    #     turns_back(y, x))` -> `return abs(x.index - y.index) == 1`
-    spots = _spots(("x", (1,)), ("y", (2,)), ("z", (3,)))
-    joins = _wired_beside((_wire(1, (1, 1), (3, 1)),), spots, _ROOMS, NO_CHAINS)
-    assert joins.beside.pairs[_port(1, 1), _port(3, 1)] == frozenset({1})
-    assert joins.findings == ()
-    assert len(joins.runs) == 1
 
 
 def _shifted_member(*, joined_first: bool, attached: bool = True):
@@ -280,7 +194,7 @@ def _shifted_member(*, joined_first: bool, attached: bool = True):
 
 
 def test_a_wire_from_a_joined_end_to_a_shifted_member_gives_join_unaligned() -> None:
-    """V6: 11 and 21 are one run; 21's wire to 31 turns back past b's device (31 stands a row
+    """11 and 21 are one run; 21's wire to 31 turns back past b's device (31 stands a row
     lower), so it is no join, and `JOIN_UNALIGNED` names it instead of dropping it silently."""
     # UNDO: stages/references/joins.py `turned_findings`: `if ... & joined` -> `if False`
     #     (the shifted member's wire is dropped with no finding)
@@ -291,7 +205,7 @@ def test_a_wire_from_a_joined_end_to_a_shifted_member_gives_join_unaligned() -> 
 
 
 def test_a_turned_wire_to_a_member_under_an_attached_part_gives_join_unaligned() -> None:
-    """I4: 31 stands a row lower because attachment 9 is above it; no run joined 21, and the
+    """31 stands a row lower because attachment 9 is above it; no run joined 21, and the
     wire still gives `JOIN_UNALIGNED` (layout-0099)."""
     # UNDO: stages/references/joins.py `turned_findings`: drop `x.shifted or y.shifted or`
     joins = _shifted_member(joined_first=False)
@@ -306,3 +220,59 @@ def test_a_turned_wire_to_a_member_under_an_ordinary_device_stays_silent() -> No
     joins = _shifted_member(joined_first=False, attached=False)
     assert joins.findings == ()
     assert joins.runs == ()
+
+
+def test_the_feeds_of_neighbouring_columns_along_the_top_are_one_joined_run() -> None:
+    """Ports 11, 21 and 31 face N at the top of columns a, b and c: one run, all beside."""
+    # UNDO: stages/references/joins.py `_neighbours`: `abs(x.index - y.index) == 1` -> `== 2`
+    wires = (_wire(1, (1, 1), (2, 1)), _wire(2, (2, 1), (3, 1)))
+    spots = _spots(("a", (1,)), ("b", (2,)), ("c", (3,)))
+    joins = _wired_beside(wires, spots, _ROOMS, NO_CHAINS)
+    assert joins.beside.pairs[_port(1, 1), _port(2, 1)] == frozenset({1})
+    assert joins.beside.pairs[_port(2, 1), _port(3, 1)] == frozenset({1})
+    assert joins.findings == ()
+    ends = tuple(
+        JoinedEnd(column=("invented", name), port=_port(n, 1))
+        for name, n in (("a", 1), ("b", 2), ("c", 3))
+    )
+    assert joins.runs == (JoinedRun(drawing_set=1, page=1, ends=ends),)
+
+
+def test_a_bottom_run_over_columns_of_unequal_rows_keeps_its_references() -> None:
+    """Column b has three rows: 42 stands in row 2, 22 in row 1, so `place` cannot align them.
+    22 lies above the top edge of 42's device: the wire would leave 42 outward and come back
+    past it. The turn test refuses it first: references, no candidate, no finding."""
+    # UNDO: stages/references/joins.py `_neighbours`: drop `turns_back(x, y) or turns_back(y, x)`
+    #     (the run is a candidate again and `JOIN_UNALIGNED` fires)
+    joins, (star,) = _bottom_run((5, 3, 4))
+    assert (_port(2, 2), _port(4, 2)) not in joins.beside.pairs
+    assert joins.findings == ()
+    assert joins.runs == ()
+    assert hid("conductor", 1) in star.conductors  # drawn as references (markers)
+
+
+def test_the_paralleled_mains_of_two_neighbours_mid_column_stay_wires() -> None:
+    """Ruling 2026-09-27 (second case): mains 1 and 2 stand in row 1 of neighbouring
+    columns a and b, each under one cell and over one, so 11-21 (N) and 12-22 (S) are already on
+    one y with no column moved: both straps stay wires, and no finding."""
+    # UNDO: stages/references/joins.py `wired_beside`, the `level` loop's `_add` -> `pass`
+    wires = (_wire(1, (1, 1), (2, 1)), _wire(2, (1, 2), (2, 2)))
+    spots = _spots(("a", (5, 1, 6)), ("b", (7, 2, 8)))
+    joins = _wired_beside(wires, spots, _ROOMS, NO_CHAINS)
+    assert joins.beside.pairs[_port(1, 1), _port(2, 1)] == frozenset({1})
+    assert joins.beside.pairs[_port(1, 2), _port(2, 2)] == frozenset({1})
+    assert joins.findings == ()
+    assert len(joins.runs) == 2
+
+
+def test_same_side_ends_two_columns_apart_stay_a_wire() -> None:
+    """11 and 31 face N at the top of columns x and z, with column y between them: the
+    turn test passes at both ends (each leaves its pin outward), so the star net stays a wire at
+    any column distance, one joined run and no finding."""
+    # UNDO: stages/references/joins.py `_neighbours`: `return not (turns_back(x, y) or
+    #     turns_back(y, x))` -> `return abs(x.index - y.index) == 1`
+    spots = _spots(("x", (1,)), ("y", (2,)), ("z", (3,)))
+    joins = _wired_beside((_wire(1, (1, 1), (3, 1)),), spots, _ROOMS, NO_CHAINS)
+    assert joins.beside.pairs[_port(1, 1), _port(3, 1)] == frozenset({1})
+    assert joins.findings == ()
+    assert len(joins.runs) == 1

@@ -1,4 +1,4 @@
-"""DD-CHAIN-LANE (layout-0076): a chain of terminals on one page builds, every conductor drawn.
+"""Layout-0076: a chain of terminals on one page builds, every conductor drawn.
 
 A strip `X1` of `n` DEMO-TB-2.5 terminals wired inner-to-inner in a chain is one net, so the star
 rule draws a branch marker per terminal. The marker of terminal `k` stood in the gap under
@@ -91,7 +91,7 @@ def test_a_chain_of_terminals_builds_with_every_conductor_drawn(n: int) -> None:
 
 @pytest.mark.parametrize("n", [5, 12])
 def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
-    """S20 M12 (ADDENDUM 19 fix 3): the terminals of the chain stand in one row in strip order,
+    """The terminals of the chain stand in one row in strip order,
     their links are wires on one line below it, and no link is a reference (no `LinkMarker`)."""
     # UNDO: engines/schematic/engine.py: `all_columns = join_terminal_rows(` ... `)` is removed
     #     (the terminals stack in columns again and their links become references)
@@ -108,7 +108,7 @@ def test_a_chain_of_terminals_stands_in_one_row_on_one_line(n: int) -> None:
 
 
 def test_a_chain_too_long_for_one_row_stays_drawn_where_its_links_share_a_page() -> None:
-    """S20 M12 (ADDENDUM 20): twelve terminals on a sheet 100 mm wide cannot stand in one row, so
+    """Twelve terminals on a sheet 100 mm wide cannot stand in one row, so
     they stack in columns over several pages. A link between two terminals of one page is still
     a drawn route, never a reference pair; only the links a page boundary cuts have markers."""
     # UNDO: stages/terminal_rows.py `join_terminal_rows`: `if not fits(built):` -> `if False:`

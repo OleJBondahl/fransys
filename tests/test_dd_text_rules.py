@@ -1,4 +1,4 @@
-"""F5-C undo tests for D12 (designation text) and D15 (other drawing rules), through the facade.
+"""Undo tests for designation text and other drawing rules, through the facade.
 
 Public reads only: `layout.*` records, `label_text`, `page_title` and the rendered SVG of
 `fransys_render.pages`; nothing reads `ext` or a private name. Each test carries a
@@ -107,11 +107,11 @@ def _labels_in_unit_sets(model, unit_name, **kwargs):
     ]
 
 
-# -- D12 ------------------------------------------------------------------------------------
+# -- Designation text -----------------------------------------------------------------------
 
 
 def test_a_components_tag_in_a_units_own_set_is_its_item_designation_only() -> None:
-    """D12: unit-set tags carry no "+" or "=" and read "-X2" and "-K1"."""
+    """Unit-set tags carry no "+" or "=" and read "-X2" and "-K1"."""
     # UNDO: fransys_model/derive/drawing_text.py: `unit_tag_text` returns `reference_designation`
     #   (the aspects) again
     model = _system_model()
@@ -127,7 +127,7 @@ def test_a_components_tag_in_a_units_own_set_is_its_item_designation_only() -> N
 
 
 def test_a_contacts_cross_reference_line_in_a_units_set_uses_the_same_short_form() -> None:
-    """D12: a same-page cross-reference reads "2B", a contact image row "11-14 1B" (LD5's
+    """A same-page cross-reference reads "2B", a contact image row "11-14 1B" (
     `position_text`: no prefix, no set number, no page for a partner on the label's own page)."""
     # UNDO: fransys_model/derive/drawing_text.py: `cross_reference_text` and `contact_image`
     #   treat a same-set partner as another set
@@ -146,8 +146,8 @@ def test_a_contacts_cross_reference_line_in_a_units_set_uses_the_same_short_form
 
 
 def test_a_boundary_connector_at_a_line_end_prints_one_dashed_box_designation() -> None:
-    """D12: the board's `X1` prints "-X1" once, on its connector box, and no pin tag.
-    HL6 (layout-0155): `X1` is at a harness line's end; this test pinned its old "-X1:1" pins."""
+    """The board's `X1` prints "-X1" once, on its connector box, and no pin tag.
+    Per layout-0155, `X1` is at a harness line's end; this test pinned its old "-X1:1" pins."""
     # UNDO: fransys_model/derive/box_lines.py: `connector_box_lines` returns
     #   `(designation.lstrip("-"), ...)` (the box line reads "X1")
     model = _system_model()
@@ -160,15 +160,15 @@ def test_a_boundary_connector_at_a_line_end_prints_one_dashed_box_designation() 
             continue
         lines = connector_box_lines(model, box.function, unit=unit)
         assert len(box.texts) == len(lines)
-        assert box.cells == ()  # a unit interface box has no cells (HL5)
+        assert box.cells == ()  # a unit interface box has no cells
         designations.append(lines[0])
     assert designations == ["-X1", "-X1"]  # one box in each of the two board sets
 
 
 def test_a_connector_designation_on_a_pin_row_lead_has_the_dash_of_every_item_tag() -> None:
-    """D12 + ruling (GOLDEN-FIX 2 follow-up): `tag.conn` reads "-K1", never "K1": the
+    """`tag.conn` reads "-K1", never "K1": the
     `item_tag_text` of the connector's item, at top level and in a unit's own set alike.
-    HL6 (layout-0155): `-WH1-P1` and `-U1-X1` are at a harness line's end: boxes, no `tag.conn`."""
+    Per layout-0155, `-WH1-P1` and `-U1-X1` are at a harness line's end: boxes, no `tag.conn`."""
     # UNDO: fransys_model/derive/drawing_text.py: the `tag.conn` branch of `label_text` (top
     #   level) or of `unit_tag_text` (a unit's own set) returns `item_designation` again
     model = _system_model()
@@ -190,7 +190,7 @@ def test_a_connector_designation_on_a_pin_row_lead_has_the_dash_of_every_item_ta
             continue
         lines = connector_box_lines(model, box.function, unit=unit)
         assert len(box.texts) == len(lines)
-        assert box.cells == ()  # a plug box and a unit interface box have no cells (HL5)
+        assert box.cells == ()  # a plug box and a unit interface box have no cells
         assert lines[0] == item_tag_text(model, functions(model)[box.function].item, unit=unit)
         boxed.add(lines[0])
     assert boxed == {"-WH1-P1", "-U1-X1"}
@@ -272,7 +272,7 @@ def _derived_strip(model, lb) -> str:
 
 
 def _assert_terminal_texts_follow_d12(model) -> None:
-    """Acceptance 7: every terminal text is the full form "-<strip>:<point>" except a point text
+    """Every terminal text is the full form "-<strip>:<point>" except a point text
     in a run, which is short (no dash) and comes with the run's strip tag, once per run: a run is
     the point texts of one strip in one row of one page, and its strip tag says the derived
     strip text."""
@@ -312,7 +312,7 @@ def _assert_terminal_texts_follow_d12(model) -> None:
     ids=["system", "three_phase", "chance_neighbours", "lone", "unit_lone", "unit_run"],
 )
 def test_every_terminal_text_is_the_full_form_except_a_point_text_in_a_run(build) -> None:
-    """D12 / acceptance 7 over the worked example and the small fixtures."""
+    """Holds over the worked example and the small fixtures."""
     # UNDO: fransys_model/derive/drawing_text.py: `run_point_text` returns
     #   `terminal_designation` (the full form in a run), or `label_text` gives a lone terminal
     #   its short point text
@@ -320,8 +320,8 @@ def test_every_terminal_text_is_the_full_form_except_a_point_text_in_a_run(build
 
 
 def _check_top_level_designations_are_item_only(model) -> tuple[int, int]:
-    """Every TAG label of a top-level set prints an item designation only: no "=" or "+" (D12,
-    owner 2026-09-24, no top-level exception). Returns (labels checked, labels whose reference
+    """Every TAG label of a top-level set prints an item designation only: no "=" or "+",
+    with no top-level exception. Returns (labels checked, labels whose reference
     designation is longer than the item's), so a caller can tell the fixture is not vacuous."""
     labels = [lb for lb in _labels(model, own_set=False) if lb.function is not None]
     assert labels
@@ -338,7 +338,7 @@ def _check_top_level_designations_are_item_only(model) -> tuple[int, int]:
         elif lb.slot == "tag.item":  # a mixed-kind row's item tag
             assert text == f"-{item_designation(model, item.id)}"
         elif lb.slot == "tag.conn":  # a pin row's one connector tag: dashed since the ruling
-            assert text == item_tag_text(model, item.id)  # (GOLDEN-FIX 2 follow-up; D12 "-Q11")
+            assert text == item_tag_text(model, item.id)  # (a connector's tag is dashed, "-Q11")
         elif lb.slot.startswith("tag.pin."):
             assert re.fullmatch(r"-[^+=\s]+:\S+", text)
         elif lb.slot == "tag" and record.kind is FunctionKind.TERMINAL:
@@ -361,7 +361,7 @@ def _check_top_level_designations_are_item_only(model) -> tuple[int, int]:
     ids=["system", "three_phase", "relay_pair", "lamps", "cabinet", "stability"],
 )
 def test_a_top_level_tag_is_the_item_designation_only(build) -> None:
-    """D12 (amended, layout-0066) / acceptance 7: a top-level set prints "-Q1", never "=SUP+C1-Q1"
+    """Per layout-0066, a top-level set prints "-Q1", never "=SUP+C1-Q1"
     or "+C1-Q1": the component tag, the run's strip tag and a pin or item view's tag alike."""
     # UNDO: fransys_model/derive/drawing_text.py: `tag_text` returns `reference_designation`
     #   again (or `strip_tag_text` does, or the `tag.item` branch of `label_text`)
@@ -371,7 +371,7 @@ def test_a_top_level_tag_is_the_item_designation_only(build) -> None:
 
 
 def test_a_run_of_terminals_prints_its_strip_once_and_then_short_points() -> None:
-    """D12: on each of the four pump-cabinet pages two terminals of one strip stand in one row:
+    """On each of the four pump-cabinet pages two terminals of one strip stand in one row:
     the strip once (left of the run) and a point text each."""
     # UNDO: fransys_model/derive/drawing_text.py: `run_point_text` returns the full form
     model = _system_model()
@@ -382,22 +382,22 @@ def test_a_run_of_terminals_prints_its_strip_once_and_then_short_points() -> Non
     assert {label_text(model, lb) for lb in points} == {"1", "2"}
     assert all(label_text(model, lb) == _derived_strip(model, lb) for lb in strips)
     # two on the top-level pages and two in the units' own sets: all the item designation only
-    # (D12 amended, layout-0066: no top-level exception)
+    # (layout-0066: no top-level exception)
     assert [label_text(model, lb) for lb in strips] == ["-X2"] * 4
 
 
 def test_a_three_phase_row_prints_the_strip_once_and_l1_l2_l3_points() -> None:
-    """D12: both rows of the three-phase feed print the strip and "L1:1", "L2:1", "L3:1"."""
+    """Both rows of the three-phase feed print the strip and "L1:1", "L2:1", "L3:1"."""
     # UNDO: fransys_model/derive/drawing_text.py: `run_point_text` returns the full form
     model = _three_phase().model
     points = [label_text(model, lb) for lb in _labels(model, slot="tag.point")]
     strips = [label_text(model, lb) for lb in _labels(model, slot="tag.strip")]
     assert sorted(points) == ["L1:1"] * 2 + ["L2:1"] * 2 + ["L3:1"] * 2
-    assert sorted(strips) == ["-X01", "-X1"]  # D12 amended (layout-0066): no "+C1" at top level
+    assert sorted(strips) == ["-X01", "-X1"]  # layout-0066: no "+C1" at top level
 
 
 def test_two_terminals_of_a_strip_in_neighbouring_columns_keep_the_full_form() -> None:
-    """D12: terminals that stand at the same height in two columns only by chance print the
+    """Terminals that stand at the same height in two columns only by chance print the
     full form, "-X1:1", and no strip tag or point text at all."""
     # UNDO: fransys_layout/stages/tags.py: `terminal_row_tags` groups a strip's
     #   terminals of one page row instead of one column's row
@@ -422,7 +422,7 @@ def test_two_terminals_of_a_strip_in_neighbouring_columns_keep_the_full_form() -
 
 
 def test_a_terminal_alone_in_its_row_keeps_the_full_form() -> None:
-    """D12: a strip's one terminal, or one of two different strips in a row, is not a run."""
+    """A strip's one terminal, or one of two different strips in a row, is not a run."""
     # UNDO: fransys_model/derive/drawing_text.py: `label_text` gives a terminal's `tag` its
     #   `run_point_text`
     model = _lamps_through_a_terminal()
@@ -432,7 +432,7 @@ def test_a_terminal_alone_in_its_row_keeps_the_full_form() -> None:
 
 
 def test_a_three_phase_row_of_short_points_collides_with_nothing() -> None:
-    """D12 / acceptance 7: the -X01 row's three short points and its strip tag overlap no text,
+    """The -X01 row's three short points and its strip tag overlap no text,
     cross no wire, and every label is placed. (With the full form the row collides: below.)"""
     # UNDO: fransys_model/derive/drawing_text.py: `run_point_text` returns the full form
     for strip in ("X01", "X02", "X12"):
@@ -443,8 +443,8 @@ def test_a_three_phase_row_of_short_points_collides_with_nothing() -> None:
 def test_the_full_form_in_a_three_phase_row_overlaps_no_text_and_still_collides(
     monkeypatch,
 ) -> None:
-    """Acceptance 7's can-fail, kept as a test: "-X01:L2:1" (34 G) is wider than the 32 G pole
-    pitch. Since S18 (step 5 ADDENDUM 7) D3's placer steps a point text that meets its neighbour
+    """A can-fail kept as a test: "-X01:L2:1" (34 G) is wider than the 32 G pole
+    pitch. Since layout-0090, the placer steps a point text that meets its neighbour
     down to a free table step, so no two texts overlap (no TEXT_OVERLAP); but the rows still
     collide: a point text with no free step stands unplaced (LABEL_UNPLACED) and a wire crosses
     it (WIRE_OVER_LABEL), which the short points of the test above avoid."""
@@ -472,7 +472,7 @@ _COLLISIONS = {
 
 
 def test_the_runs_texts_are_one_derive_function_each() -> None:
-    """D12: `strip_tag_text` is the strip's text once ("-X01": the item designation, layout-0066),
+    """`strip_tag_text` is the strip's text once ("-X01": the item designation, layout-0066),
     `run_point_text` a terminal's own "group:index" without its strip, and `point_text` is the
     second for a strip terminal."""
     # UNDO: fransys_model/derive/drawing_text.py: `run_point_text` returns
@@ -493,7 +493,7 @@ def test_the_runs_texts_are_one_derive_function_each() -> None:
 
 
 def test_a_component_tag_is_one_derive_function_at_top_level_and_in_a_unit() -> None:
-    """D12 (amended, layout-0066): `item_tag_text` is "-" and the item designation, "-K1", with
+    """Per layout-0066, `item_tag_text` is "-" and the item designation, "-K1", with
     the aspects left out; a unit's own set's tag is the same function, unit-relative, and the
     run's strip tag and a function's tag call it."""
     # UNDO: fransys_model/derive/drawing_text.py: `item_tag_text` returns `reference_designation`
@@ -547,7 +547,7 @@ def _mounted_device_terminal(*, in_unit: bool):
 
 @pytest.mark.parametrize("in_unit", [False, True], ids=["top_level", "unit_set"])
 def test_a_device_terminal_prints_the_devices_own_designation_not_its_boards(in_unit) -> None:
-    """D12 (layout-0066): the device tag on the W of a device's own terminal is the device item's
+    """Per layout-0066, the device tag on the W of a device's own terminal is the device item's
     designation, also when the device is mounted on a board; only a real strip terminal's strip is
     its `item.parent`."""
     # UNDO: fransys_model/derive/drawing_text.py: `strip_tag_text` and `unit_tag_text`'s
@@ -569,7 +569,7 @@ def test_a_device_terminal_prints_the_devices_own_designation_not_its_boards(in_
 
 
 def test_a_lone_terminal_in_a_units_own_set_prints_the_unit_relative_full_form() -> None:
-    """D12: in a unit's own set a lone strip terminal prints "-X3:1", the unit's short form that
+    """In a unit's own set a lone strip terminal prints "-X3:1", the unit's short form that
     matches the short strip tag, not "-U1-X3:1" with the enclosing board's designation.
 
     The demo cabinet's strip has no parent item, so its two forms agree; here it sits under the
@@ -592,7 +592,7 @@ def test_a_lone_terminal_in_a_units_own_set_prints_the_unit_relative_full_form()
 
 
 def test_a_run_in_a_units_own_set_prints_the_short_strip_and_unit_independent_points() -> None:
-    """D12: in a unit's own set a three-phase run prints the unit-relative strip "-X3" once and
+    """In a unit's own set a three-phase run prints the unit-relative strip "-X3" once and
     the same short points as at top level; the point text does not depend on the unit."""
     # UNDO: fransys_model/derive/drawing_text.py: `unit_tag_text` returns the unit-relative
     #   full form for a non-device terminal's `tag.point` ("-X3:L1:1")
@@ -608,11 +608,11 @@ def test_a_run_in_a_units_own_set_prints_the_short_strip_and_unit_independent_po
         assert unit_tag_text(model, i, "tag.point", unit) in (None, run_point_text(model, i))
 
 
-# -- D15: page titles -----------------------------------------------------------------------
+# -- Page titles ----------------------------------------------------------------------------
 
 
 def test_a_page_of_a_units_own_set_is_titled_by_the_units_own_groups() -> None:
-    """D15: a unit set page is titled by the unit's own groups ("I/O board").
+    """A unit set page is titled by the unit's own groups ("I/O board").
 
     The worked example's unit pages hold no foreign group, so dropping the own-group filter is
     caught by the test below, not by this one; this one pins the own-group title itself."""
@@ -652,7 +652,7 @@ def _sibling_units(*, own_group_in_a: bool = False):
 
 
 def test_a_unit_page_shows_only_the_units_own_group_in_its_title_not_a_foreign_one() -> None:
-    """D15: a page holding an own and a foreign group is titled "Mine", not "Mine, Shared"."""
+    """A page holding an own and a foreign group is titled "Mine", not "Mine, Shared"."""
     # UNDO: fransys_model/derive/drawing_text.py: `page_title` drops its `if group.group in own`
     #   filter (the title becomes "Mine, Shared")
     model = _sibling_units(own_group_in_a=True)
@@ -670,7 +670,7 @@ def test_a_unit_page_shows_only_the_units_own_group_in_its_title_not_a_foreign_o
 
 
 def test_a_unit_page_with_none_of_the_units_own_groups_takes_the_units_name() -> None:
-    """D15: when every group on the page is another's, the page is titled by the unit's name."""
+    """When every group on the page is another's, the page is titled by the unit's name."""
     # UNDO: fransys_model/derive/drawing_text.py: `page_title` drops its `or
     #   units(model)[unit].name` fallback (title "")
     model = _sibling_units()
@@ -683,7 +683,7 @@ def test_a_unit_page_with_none_of_the_units_own_groups_takes_the_units_name() ->
 
 
 def test_a_group_two_units_share_is_the_own_group_of_neither() -> None:
-    """D11/D15: a group two units share is the own group of neither."""
+    """A group two units share is the own group of neither."""
     # UNDO: fransys_model/derive/designation.py: `own_nodes` ignores other units' items on a node
     model = _sibling_units()
     nodes = aspect_nodes(model)
@@ -697,7 +697,7 @@ def test_a_group_two_units_share_is_the_own_group_of_neither() -> None:
         assert {nodes[n].description for n in own_nodes(model, unit)} != set()
 
 
-# -- D15: columns, jumpers, junctions -------------------------------------------------------
+# -- Columns, jumpers, junctions ------------------------------------------------------------
 
 
 def _relay_pair(wire_up, *, bridge: tuple[int, int] | None = None):
@@ -746,7 +746,7 @@ def _lamps_through_a_terminal():
 
 
 def test_a_terminal_in_another_group_does_not_give_its_column_that_group() -> None:
-    """D15: a column's group comes from its device cells, never its terminals."""
+    """A column's group comes from its device cells, never its terminals."""
     # UNDO: fransys_layout/stages/columns.py: `build_column` sets `devices = members`
     #   (terminal cells count in the common group; verified by probe: the page then lists no
     #   group at all)
@@ -759,7 +759,7 @@ def test_a_terminal_in_another_group_does_not_give_its_column_that_group() -> No
 
 
 def test_a_jumper_is_no_schematic_connection_it_is_not_routed_and_has_no_wire_label() -> None:
-    """D15: a jumper is not routed and carries no wire label."""
+    """A jumper is not routed and carries no wire label."""
     # UNDO: fransys_layout/engines/schematic/read/reading.py: `connections` keeps
     #   `ConductorKind.JUMPER` conductors among the connections
     model = _relay_pair(_feed_relays, bridge=(0, 2))
@@ -767,7 +767,7 @@ def test_a_jumper_is_no_schematic_connection_it_is_not_routed_and_has_no_wire_la
     routes = layout_of(model, Route).values()
     assert len(routes) == 3
     assert jumper not in {r.conductor for r in routes}
-    assert not _labels(model, kind=LabelKind.WIRE)  # V8: no wire label stands on a page
+    assert not _labels(model, kind=LabelKind.WIRE)  # No wire label stands on a page
 
 
 def _grid_of_svg_dots(model, page):
@@ -823,7 +823,7 @@ def _crossed_feeds(wire, t, k1, k2) -> None:
 
 
 def test_a_junction_dot_stands_where_three_wire_directions_of_one_net_meet() -> None:
-    """D15: junction dots stand only at the T points of the routed geometry."""
+    """Junction dots stand only at the T points of the routed geometry."""
     # UNDO: fransys_render/_junctions.py: `_JUNCTION_THRESHOLD = 2` (a dot at every bend)
     model = _relay_pair(_two_terminals_feed_two_relays)
     (page,) = layout_of(model, Page).values()
@@ -833,7 +833,7 @@ def test_a_junction_dot_stands_where_three_wire_directions_of_one_net_meet() -> 
 
 
 def test_a_reference_at_a_joined_first_row_port_stays_inside_the_content_box() -> None:
-    """S20 I4 Q1, M4: Room reserves the tier a joined port's reference starts at, so it fits.
+    """Room reserves the tier a joined port's reference starts at, so it fits.
 
     The fixture's first-row terminal port is joined to a side element, so its vertical
     reference's row starts one box length out; Room's N call must have reserved that.
@@ -844,7 +844,7 @@ def test_a_reference_at_a_joined_first_row_port_stays_inside_the_content_box() -
 
 
 def test_wires_that_only_run_side_by_side_get_no_junction_dot() -> None:
-    """D15: four independent wires (each net of two ports) have routes and no dot."""
+    """Four independent wires (each net of two ports) have routes and no dot."""
     # UNDO: fransys_render/_junctions.py: `_JUNCTION_THRESHOLD = 1` (a dot at every wire end)
     model = _relay_pair(_crossed_feeds)
     (page,) = layout_of(model, Page).values()
@@ -852,7 +852,7 @@ def test_wires_that_only_run_side_by_side_get_no_junction_dot() -> None:
     assert _grid_of_svg_dots(model, page) == set()
 
 
-# -- D15: straight crossings ----------------------------------------------------------------
+# -- Straight crossings ---------------------------------------------------------------------
 
 
 def _cabinet_model():
@@ -902,15 +902,15 @@ def _crossings_and_overlaps(model):
 def test_routes_of_different_nets_only_cross_straight_and_share_no_track(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """D15: crossings are straight and no two nets share a track.
+    """Crossings are straight and no two nets share a track.
 
     The fixture is the chained cabinet (`discovery=False`) with `attach_replicas` off: its three
-    crossings came from the -X2:1 replica standing apart, and V4 now draws that replica over its
-    pin, which leaves the cabinet none. The discovery cabinet has none since S20 M12 turned its
-    same-side stars into wires. No
+    crossings came from the -X2:1 replica standing apart, and layout-0108 draws the replica over its
+    pin, which leaves the cabinet none. The discovery cabinet has none since its same-side
+    stars became wires. No
     single-line undo is known to fail this: the router avoids sharing a track on cost alone.
     It fails once both rules go (axes empty AND the profile's `route_crossing_penalty` 0: 2
-    touches, 1 shared track). D15's other tests carry the can-fail load for the rest of the
+    touches, 1 shared track). The other tests carry the can-fail load for the rest of the
     rule."""
     # UNDO: (two edits) fransys_layout/stages/route.py: drop the `axes` of foreign nets in
     #   `_draw` (`if foreign:` -> False) AND set `crossing_penalty=0` in its `Field`

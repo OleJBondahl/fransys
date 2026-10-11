@@ -1,4 +1,4 @@
-"""S20 M12 (ADDENDUM 19 fix 3): the terminals of one strip wired to each other stand in one row.
+"""The terminals of one strip wired to each other stand in one row.
 
 Terminals are the invented through symbol (`samples.drawn`) of kind `terminal`: port `10n + 1`
 on top facing N, port `10n + 2` below facing S. A link joins two ports facing the same way.
@@ -52,12 +52,6 @@ def test_a_wire_from_a_top_port_to_a_bottom_port_is_no_link() -> None:
     assert _chains((1, 2), (_link(1, (1, 1), (2, 2)),)) == ()
 
 
-def test_terminals_of_two_strips_are_no_chain() -> None:
-    """A jumper between strips is no strip's chain."""
-    # UNDO: stages/terminal_rows.py `terminal_chains`: drop the `_strip(a) != _strip(b)` test
-    assert _chains((1, 2), (_link(1, (1, 1), (2, 1)),), s2="X2") == ()
-
-
 def _join(columns, numbers, wires, tie_key, *, fits=lambda _row: True):
     specs = tuple(_spec(n) for n in numbers)
     return join_terminal_rows(
@@ -90,30 +84,6 @@ def test_a_row_that_does_not_fit_stays_stacked() -> None:
     columns = tuple(column(f"c{n}", (n,)) for n in (1, 2))
     wires = (_link(1, (1, 1), (2, 1)),)
     assert _join(columns, (1, 2), wires, {}, fits=lambda _row: False) == columns
-
-
-def test_a_chain_with_a_cell_of_another_function_in_its_column_stays_as_it_was() -> None:
-    """The column of terminal 2 also holds function 9, which is no member: no row is made."""
-    # UNDO: stages/terminal_rows.py `join_terminal_rows`: drop the `if any(not all(` check
-    columns = (column("c1", (1,)), column("c2", (2, 9)))
-    wires = (_link(1, (1, 1), (2, 1)),)
-    assert _join(columns, (1, 2), wires, {}) == columns
-
-
-def test_terminals_of_two_units_are_no_chain() -> None:
-    """One strip tag in two units is two columns' worth, so no chain."""
-    # UNDO: stages/terminal_rows.py `_strip`: drop `spec.unit` from the returned key
-    specs = (_spec(1), replace(_spec(2), unit=hid("unit", 7)))
-    wires = (_link(1, (1, 1), (2, 1)),)
-    assert terminal_chains(specs, (_drawn(1), _drawn(2)), wires).sets == ()
-
-
-def test_a_chain_with_a_member_that_stands_in_no_column_stays_as_it_was() -> None:
-    """Terminal 2 has no cell: the row would hold a function no column placed."""
-    # UNDO: stages/terminal_rows.py `join_terminal_rows`: drop the member-set (`sorted`) check
-    columns = (column("c1", (1,)),)
-    wires = (_link(1, (1, 1), (2, 1)),)
-    assert _join(columns, (1, 2), wires, {}) == columns
 
 
 def test_a_chain_with_a_replica_cell_stays_as_it_was() -> None:

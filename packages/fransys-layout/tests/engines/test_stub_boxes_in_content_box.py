@@ -1,4 +1,4 @@
-"""Every harness stub box, as render will draw it, lies inside its page's content box (S18, 5b)."""
+"""Every harness stub box, as render will draw it, lies inside its page's content box."""
 
 import pytest
 from layout_cabinet import build_cabinet

@@ -180,7 +180,7 @@ def test_module_at_limit_plus_code_lines_fails(tmp_path):
     assert lean_code_shape.measure_module_code_lines(root, limit=300) == {_MOD_KEY: 320}
 
 
-# --- LC2 amendment 2026-10-02: a pure re-export module is exempt ------------------------------
+# --- Amendment 2026-10-02: a pure re-export module is exempt ------------------------------
 
 
 def _reexport_source(n: int) -> str:

@@ -1,4 +1,4 @@
-"""Cable drawings through the facade (cable-drawings spec, Acceptance 10, 15 and 16, facade half).
+"""Cable drawings through the facade.
 
 One SYSTEM document, one drawable top-level two-end cable `W1` (a strip to a motor, `demo_parts`).
 The model is built once per variant and the good one is written once, shared by the tests.
@@ -21,8 +21,8 @@ _LONG_TAG = "W" + "L" * 300
 def _design(*, extra=None, cable_tag="W1"):
     """A strip `X1` and a motor `M1` joined by `cable_tag`; `extra` adds `W2` or a third core.
 
-    `extra="loop"`: W2 joins two strip terminals (a cable of row links, CD-H8 at V1).
-    `extra="interleave"`: harness WH7 whose cable W7's top columns lie round W8's (CD-H6).
+    `extra="loop"`: W2 joins two strip terminals (a cable of row links).
+    `extra="interleave"`: harness WH7 whose cable W7's top columns lie round W8's.
     """
     parts = fr.parts("demo_parts")
     d = fransys_author.Design(parts)
@@ -91,7 +91,7 @@ def _raised(variant: str, tmp_path):
 
 
 def test_write_embeds_the_cable_block_svg_in_the_typst_source(good_written):
-    """Acceptance 10, facade half: the SYSTEM `.typ` holds the block as an SVG image, not a table.
+    """Facade half: the SYSTEM `.typ` holds the block as an SVG image, not a table.
 
     Probe: `_draw_svgs` without `fransys_render.cable_blocks` (no block SVG, the pdf check then
     errors).
@@ -101,14 +101,14 @@ def test_write_embeds_the_cable_block_svg_in_the_typst_source(good_written):
     sources = [p.read_text(encoding="utf-8") for p in sorted(inter.glob("*.typ"))]
     assert len(sources) == 1
     assert 'format: "svg"' in sources[0]
-    # The cable block and, since BD-3, the SYSTEM block diagram sheet: one SVG each.
+    # The cable block and the SYSTEM block diagram sheet: one SVG each.
     assert sources[0].count('format: "svg"') == 2
     assert "-W1, 5000 mm" in sources[0]  # the block's heading, inside the SVG literal
     assert 'strong(text("Core"))' not in sources[0]  # the old core table's header cell
 
 
 def test_write_draws_a_cable_of_row_links(tmp_path):
-    """CD-H8 at V1, facade half: W2, both core ends on one strip, draws.
+    """Facade half: W2, both core ends on one strip, draws.
 
     Probe: the engine's `drawable` predicate refusing a cable of row links.
     """
@@ -117,7 +117,7 @@ def test_write_draws_a_cable_of_row_links(tmp_path):
 
 
 def test_write_refuses_a_cable_the_engine_cannot_draw(good_written, tmp_path):
-    """Acceptance 16, facade half: a harness whose cable columns interleave (CD-H6) fails the write.
+    """Facade half: a harness whose cable columns interleave fails the write.
 
     The good model (positive control, `good_written`) writes. Probe: the placer's overlap test of
     the cable boxes dropped, so the harness draws.
@@ -134,7 +134,7 @@ def test_write_refuses_a_cable_the_engine_cannot_draw(good_written, tmp_path):
 
 
 def test_write_refuses_a_block_wider_than_the_page(good_written, tmp_path):
-    """Acceptance 15, facade half: a block wider than the 1280 G page body fails the write.
+    """Facade half: a block wider than the 1280 G page body fails the write.
 
     Widened by a 300-character cable tag (`core` takes no label; the heading is the cable's
     designation). The good model (positive control) writes. Probe: pdf's block-size check skipped.

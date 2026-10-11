@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID, Box, Point, snap_up, text_width
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, snap_up, text_width
 from fransys_model.kernel import Id, value
 
 if TYPE_CHECKING:
@@ -21,6 +21,16 @@ class BoxCell:
 
 
 @value
+class BoxSlot:
+    """HL19: the point a pin's view stands at on its box's edge, and the way its pin faces."""
+
+    port: Id[Any]
+    x: int
+    y: int
+    facing: Facing
+
+
+@value
 class PlacedConnectorBox:
     """One connector box on one page: its rectangle, each text line's anchor and its cells."""
 
@@ -30,6 +40,7 @@ class PlacedConnectorBox:
     box: Box
     texts: tuple[Point, ...]
     cells: tuple[BoxCell, ...]
+    slots: tuple[BoxSlot, ...] = ()
 
 
 def has_cells(*, plug: bool, black_box: bool, board: bool, wired: bool) -> bool:

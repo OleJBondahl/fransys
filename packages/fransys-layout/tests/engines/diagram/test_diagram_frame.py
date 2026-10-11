@@ -1,4 +1,4 @@
-"""The diagram frame (BD5): box sizes, ends, channels, sheets and cuts on hand facts."""
+"""The diagram frame: box sizes, ends, channels, sheets and cuts on hand facts."""
 
 from functools import cache
 

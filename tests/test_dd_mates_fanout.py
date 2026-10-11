@@ -1,8 +1,8 @@
-"""F5-C (layout deep dive): one undo test per ruling for D8 (connectors and mated pairs) and D9
-(fan-out nets), built through the `fransys` facade from `examples/demo-parts` and read from
+"""One undo test per ruling for connectors and mated pairs and for fan-out nets, built
+through the `fransys` facade from `examples/demo-parts` and read from
 the laid-out `layout.*` records and `fransys_model.derive.drawing_text.marker_text` only.
 
-Not covered: D8's cross-unit mate with its boundary pin as a replica cell under the parent-side
+Not covered: the cross-unit mate with its boundary pin as a replica cell under the parent-side
 pin (needs the units worked example's fixture, which other tests own).
 """
 
@@ -53,11 +53,11 @@ def _placements(model, item, name):
     return sorted(found, key=lambda p: (p.page, p.x, p.y))
 
 
-# -- D8: connectors and mated pairs --------------------------------------------------------
+# -- connectors and mated pairs --------------------------------------------------------
 
 
 def test_a_connector_is_one_view_per_wired_pin_and_an_idle_one_is_not_drawn() -> None:
-    """D8: two wired pins are two views (mated pins too), and a connector with no wire is absent."""
+    """Two wired pins are two views (mated pins too), and a connector with no wire is absent."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:pin_views
     #     keeps a connector as one view (no pin views)
     # UNDO: fransys_layout/engines/schematic/read/views.py:without_idle_pins
@@ -106,7 +106,7 @@ def _one(model, item, name="x1"):
 
 @pytest.mark.parametrize("wired", ["ja", "jb"])
 def test_the_half_a_chain_enters_first_stands_on_top(wired) -> None:
-    """D8: the pair stands face to face, the wired half nearest the relay it is wired to."""
+    """The pair stands face to face, the wired half nearest the relay it is wired to."""
     # UNDO: fransys_layout/stages/chains.py:discover_chains
     #     `upper_of[p] = poles[p].functions[1 - index]` (the OTHER function of the pair)
     model = _mated_pair(contact=wired.upper())
@@ -119,7 +119,7 @@ def test_the_half_a_chain_enters_first_stands_on_top(wired) -> None:
 
 @pytest.mark.parametrize("coil", ["JA", "JB"])
 def test_a_pair_between_two_relays_faces_each_half_to_the_item_it_is_wired_to(coil) -> None:
-    """D8: with both halves wired, each half stands next to its own relay, none crossing."""
+    """With both halves wired, each half stands next to its own relay, none crossing."""
     # UNDO: fransys_layout/stages/chains.py:discover_chains
     #     `upper_of[p] = poles[p].functions[1 - index]` (the OTHER function of the pair)
     contact = "JB" if coil == "JA" else "JA"
@@ -136,7 +136,7 @@ def test_a_pair_between_two_relays_faces_each_half_to_the_item_it_is_wired_to(co
 
 
 def test_a_pair_in_no_chain_keeps_the_plug_on_top() -> None:
-    """D8: a harness plug over the device connector it mates, whatever the two keys say."""
+    """A harness plug over the device connector it mates, whatever the two keys say."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:_lower_rank
     #     `not _on_cable(...)` becomes `True`
     parts, d, c1, grp = _design()
@@ -153,12 +153,12 @@ def test_a_pair_in_no_chain_keeps_the_plug_on_top() -> None:
     assert upper.y < lower.y
 
 
-# -- D9: fan-out nets ----------------------------------------------------------------------
+# -- fan-out nets ----------------------------------------------------------------------
 
 
 def _star_of_relays(*wires, strip=False):
     """Four relays K1..K4 whose coil pins `wires` join, each end a pin spec "K4.A2": the
-    pins are mixed (A1 and A2) because M12 joins same-side pins by wires at any column distance,
+    pins are mixed (A1 and A2) because same-side pins are joined by wires at any column distance,
     so a net of all-A1 pins is wires and no star; a star needs the pins on both sides."""
     parts, d, c1, grp = _design()
     wire = d.wiring(colour="BU", gauge="0.5")
@@ -181,7 +181,7 @@ def _star_of_relays(*wires, strip=False):
 
 def _star(model):
     """The star's (reference marker, branch markers), told apart by the persisted `star` field:
-    `StarKind.REF` is the reference, `StarKind.BRANCH` every branch (LD3 (d): both markers now
+    `StarKind.REF` is the reference, `StarKind.BRANCH` every branch (both markers now
     print the identical symmetric text, a list of `#n-...` lines naming every other end, so
     there is no longer any text-shape difference to guess from)."""
     every = list(layout_of(model, LinkMarker).values())
@@ -196,7 +196,7 @@ _HUB_K3 = (("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), ("K3.A1", "K4.A2"))
 
 
 def test_a_fanout_net_gets_one_marker_per_port_and_no_wires() -> None:
-    """D9: four ports on one net that are not adjacent are four markers, none of them a route."""
+    """Four ports on one net that are not adjacent are four markers, none of them a route."""
     # UNDO: fransys_layout/stages/references/nets.py:star_nets
     #     returns `()` (wires drawn, no markers)
     model = _star_of_relays(*_CHAIN)
@@ -212,7 +212,7 @@ def test_a_fanout_net_gets_one_marker_per_port_and_no_wires() -> None:
 
 
 def test_the_reference_is_the_hub_not_the_first_designation() -> None:
-    """D9: K3 carries three conductors, so K3 (not K1, first by designation) is the reference."""
+    """K3 carries three conductors, so K3 (not K1, first by designation) is the reference."""
     # UNDO: fransys_layout/stages/references/nets.py:star_nets
     #     drop `-degree[port]` from the `ref` sort key
     model = _star_of_relays(*_HUB_K3)
@@ -230,7 +230,7 @@ def test_a_tie_for_hub_falls_to_the_port_whose_designation_sorts_first() -> None
 
 
 def test_a_single_terminal_point_is_the_reference_even_beside_a_bigger_hub() -> None:
-    """D9: X1:1 carries one conductor, K3 three; the terminal point still is the reference."""
+    """X1:1 carries one conductor, K3 three; the terminal point still is the reference."""
     # UNDO: fransys_layout/stages/references/nets.py:star_nets
     #     `if len(points) == 1` becomes `if False`
     model = _star_of_relays(("K3.A1", "K1.A2"), ("K3.A1", "K2.A2"), strip=True)
@@ -239,7 +239,7 @@ def test_a_single_terminal_point_is_the_reference_even_beside_a_bigger_hub() -> 
 
 
 def test_the_reference_lists_its_branches_and_each_branch_names_the_reference() -> None:
-    """D9: LD3 (d) made the reference's and every branch's text symmetric -- each of the star's
+    """The reference's and every branch's text is symmetric -- each of the star's
     four markers lists one line per OTHER end, so the reference lists its three branches and
     each branch's own text is the same shape, three lines, no duplicates. "Each branch names
     the reference" is the persisted `partner` link (unchanged by the text symmetry, a `star.py`
@@ -252,7 +252,7 @@ def test_the_reference_lists_its_branches_and_each_branch_names_the_reference() 
     for member in (ref, *branches):
         lines = text[member.id].split("\n")
         assert len(branches) == 3
-        assert len(lines) == 1  # C2: three other ends print the first and a count
+        assert len(lines) == 1  # three other ends print the first and a count
         assert lines[0].endswith(" +2")  # every OTHER member but the first, once each
     markers = layout_of(model, LinkMarker)
     assert all(markers[m.partner] is ref for m in branches)
@@ -260,7 +260,7 @@ def test_the_reference_lists_its_branches_and_each_branch_names_the_reference() 
 
 
 def test_a_black_box_pin_carries_no_star_marker() -> None:
-    """D9, layout-0080: a unit's boundary terminal wired to two relays of the top level is no star.
+    """Layout-0080: a unit's boundary terminal wired to two relays of the top level is no star.
     Each conductor leaving the unit is a stub, so there is no reference or branch marker anywhere:
     the pin's two off stubs stand in the unit's own set only, and the parent's page shows no marker
     of the pin (its black box hides its insides); each relay carries one mirror stub in the
@@ -302,7 +302,7 @@ def test_a_black_box_pin_carries_no_star_marker() -> None:
 
 
 def test_a_cross_unit_mate_stands_at_the_end_of_its_column_the_chain_enters_from() -> None:
-    """D8 (amended, layout-0069), HL6 (layout-0155): the harness plug P1 and the boundary
+    """Layout-0069 (amended) and layout-0155: the harness plug P1 and the boundary
     connector X1 it mates sit at a line's end, so on the parent page each draws as one box, no pin
     symbol, and the two boxes stand face to face, X1 above: the chain enters P1 from below."""
     # UNDO: fransys_layout/stages/box_views.py:_box

@@ -1,4 +1,4 @@
-"""S20 M8: a box over several pins is two lines high, as wide as its pins, and its text breaks."""
+"""A box over several pins is two lines high, as wide as its pins, and its text breaks."""
 
 from samples import PROFILE
 

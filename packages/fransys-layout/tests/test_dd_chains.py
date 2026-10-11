@@ -1,4 +1,4 @@
-"""D1 (layout deep dive): chains from connectivity, tested through the laid-out records.
+"""Chains from connectivity, tested through the laid-out records.
 
 Each design is a handful of invented parts (`examples/demo-parts`), built by `fr.build`; a test
 reads the `SymbolPlacement` of a function by its authoring key (same x = one column, larger y =
@@ -31,7 +31,7 @@ def _strip_of_terminals(count: int):
 
 @pytest.mark.parametrize("sense", ["forward", "backward"])
 def test_a_chain_runs_the_way_its_directed_pole_points(sense: str) -> None:
-    """D1: a chain runs top to bottom the way its breaker's in-port (N) to out-port (S) points."""
+    """A chain runs top to bottom the way its breaker's in-port (N) to out-port (S) points."""
     # UNDO: stages/_chain_walk.py `_vote_direction`, delete the `if backward > forward:` reversal
     forward = sense == "forward"
     parts, d, c, g, (t1, t2), wire = _strip_of_terminals(2)
@@ -47,7 +47,7 @@ def test_a_chain_runs_the_way_its_directed_pole_points(sense: str) -> None:
 
 
 def test_the_way_most_directed_poles_point_decides_the_whole_chain() -> None:
-    """D1: two breakers pointing down and one pointing up run down, the odd one out included."""
+    """Two breakers pointing down and one pointing up run down, the odd one out included."""
     # UNDO: stages/_chain_walk.py `_vote_direction`, delete the `if backward > forward:` reversal
     parts, d, c, g, (t1, t2), wire = _strip_of_terminals(2)
     z1, z2, z3 = (d.item(MCB, tag=f"Z{n}", at=c, group=g) for n in (1, 2, 3))
@@ -64,7 +64,7 @@ def test_the_way_most_directed_poles_point_decides_the_whole_chain() -> None:
 
 
 def test_a_net_of_three_ports_ends_both_chains_that_reach_it() -> None:
-    """D1: two wires from XA:1's outer port make a net of three, so it links no pole to a pole.
+    """Two wires from XA:1's outer port make a net of three, so it links no pole to a pole.
 
     Each breaker still chains with the terminal on its other side, in a column of its own;
     XA:1, the net's only other member, stands in a third column.
@@ -85,7 +85,7 @@ def test_a_net_of_three_ports_ends_both_chains_that_reach_it() -> None:
 
 @pytest.mark.parametrize("wired", ["down", "up"])
 def test_a_direction_free_chain_puts_the_lower_designation_on_top(wired: str) -> None:
-    """D1: two terminals, no directed pole: the lower designation (XA:1) is on top either way."""
+    """Two terminals, no directed pole: the lower designation (XA:1) is on top either way."""
     # UNDO: stages/_chain_ties.py `_designation_after`: `return False`
     parts, d, _, _, (t1, t2), wire = _strip_of_terminals(2)
     if wired == "down":
@@ -104,7 +104,7 @@ def test_a_direction_free_chain_puts_the_lower_designation_on_top(wired: str) ->
 def test_a_terminal_is_drawn_with_its_entry_port_facing_north(
     wired: str, orientation: Orientation
 ) -> None:
-    """D1: the chain enters XA:1 at its inner port when XA:1 wires down, else at its outer one."""
+    """The chain enters XA:1 at its inner port when XA:1 wires down, else at its outer one."""
     # UNDO: stages/_chain_walk.py `_note_turns`, drop `out.flipped.add(pole.function)` for terminals
     parts, d, _, _, (t1, t2), wire = _strip_of_terminals(2)
     if wired == "down":
@@ -118,7 +118,7 @@ def test_a_terminal_is_drawn_with_its_entry_port_facing_north(
 
 @pytest.mark.parametrize("strip", ["directed", "free"])
 def test_a_direction_free_chain_follows_a_strip_a_directed_chain_passes(strip: str) -> None:
-    """D1: XA:4 leads XA:3 only when a directed chain enters the strip at its inner port."""
+    """XA:4 leads XA:3 only when a directed chain enters the strip at its inner port."""
     # UNDO: stages/_chain_ties.py `_strip_entry_outvoted`: `return False`
     parts, d, c, g, (t1, t2, t3, t4), wire = _strip_of_terminals(4)
     if strip == "directed":
@@ -129,7 +129,7 @@ def test_a_direction_free_chain_follows_a_strip_a_directed_chain_passes(strip: s
     model = build(parts, d).model
     three, four = placed(model, *XA3), placed(model, *XA4)
     if strip == "directed":
-        # the strip's row (C15) takes XA:4 first, in the lane ahead of XA:3, both drawn upright
+        # the strip's row takes XA:4 first, in the lane ahead of XA:3, both drawn upright
         assert (four.y, three.y) == (placed(model, *XA1).y,) * 2
         assert four.x < three.x
         assert four.orientation is three.orientation is Orientation.R0
@@ -140,8 +140,8 @@ def test_a_direction_free_chain_follows_a_strip_a_directed_chain_passes(strip: s
 
 
 def test_a_changeover_contact_is_a_pole_from_com_to_no_and_nc_stays_off_the_chain() -> None:
-    """D1: COM to NO carries the chain through K1:co_1; NC only feeds a terminal below it."""
-    # UNDO: stages/_chain_poles.py `_changeover_pairs`: delete the I4 branch (through path)
+    """COM to NO carries the chain through K1:co_1; NC only feeds a terminal below it."""
+    # UNDO: stages/_chain_poles.py `_changeover_pairs`: delete the through-path branch
     parts, d, c, g, (t1, t2, t3), wire = _strip_of_terminals(3)
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=c, group=g)
     f1, f2 = (d.item(MCB, tag=tag, at=c, group=g) for tag in ("Q1", "Q2"))
@@ -164,7 +164,7 @@ def test_a_changeover_contact_is_a_pole_from_com_to_no_and_nc_stays_off_the_chai
 
 
 def test_a_chain_never_spans_two_units() -> None:
-    """D1: two breakers of a unit form their own chain; the terminals wired to them stay outside."""
+    """Two breakers of a unit form their own chain; the terminals wired to them stay outside."""
     # UNDO: engines/schematic/engine.py: discover_chains gets all connections, not same-unit ones
     parts, d = design()
     c = d.location("C1", "Cabinet")
@@ -195,7 +195,7 @@ def test_a_chain_never_spans_two_units() -> None:
 
 @pytest.mark.parametrize("wired", ["down", "up"])
 def test_terminals_of_two_strips_order_by_their_strip_qualified_designation(wired: str) -> None:
-    """D1: XA:1 and XB:1 (both `=G1-1`) tie on group+number; XA, the lower strip, is on top."""
+    """XA:1 and XB:1 (both `=G1-1`) tie on group+number; XA, the lower strip, is on top."""
     # UNDO: _chain_ties.py `_designation_after`: drop the `tie_key` comparison
     parts, d = design()
     c, g = d.location("C1", "Cabinet"), d.group("G1", "Group")
@@ -220,7 +220,7 @@ def test_terminals_of_two_strips_order_by_their_strip_qualified_designation(wire
 def test_an_authored_chain_draws_a_terminal_with_its_entry_port_facing_north(
     wired: str, orientation: Orientation
 ) -> None:
-    """D1: a `layout.chain` of XA:1, XA:2 enters each by its inner port when it wires down."""
+    """A `layout.chain` of XA:1, XA:2 enters each by its inner port when it wires down."""
     # UNDO: stages/columns.py columns_from_chains, build every authored `Cell` with `flip=False`
     parts, d, _, _, (t1, t2), wire = _strip_of_terminals(2)
     if wired == "down":
@@ -234,7 +234,7 @@ def test_an_authored_chain_draws_a_terminal_with_its_entry_port_facing_north(
 
 
 def test_poles_strapped_in_parallel_keep_the_chain_running() -> None:
-    """D1: a pole on the same two nets as another is its side element, so the strap ends nothing.
+    """A pole on the same two nets as another is its side element, so the strap ends nothing.
 
     Q1 feeds K1's main contact, whose poles 1-2 and 3-4 are strapped 1-3 and 2-4: one chain,
     XA:1, Q1, K1:main, XA:2, with K1:main drawn once, its two poles side by side.
@@ -258,7 +258,7 @@ def test_poles_strapped_in_parallel_keep_the_chain_running() -> None:
 
 
 def test_a_pole_of_two_functions_strapped_pole_to_pole_is_a_side_element() -> None:
-    """D1: K1 pole 1 and K2 pole 1 on the same two nets: K1, the lower designation, carries it.
+    """K1 pole 1 and K2 pole 1 on the same two nets: K1, the lower designation, carries it.
 
     Q1 feeds both contactors' pole 1, whose outputs are strapped and reach XA:2. K2:main is K1's
     side element: one chain, XA:1, Q1, K1:main, XA:2, with K2:main in K1:main's row, one lane over.
@@ -287,7 +287,7 @@ def test_a_pole_of_two_functions_strapped_pole_to_pole_is_a_side_element() -> No
 
 
 def test_a_function_that_carries_and_is_a_side_element_is_a_side_element_nowhere() -> None:
-    """D1: K2 carries K3 (pole 2) and is K1's side element (pole 1), so it is nobody's side.
+    """K2 carries K3 (pole 2) and is K1's side element (pole 1), so it is nobody's side.
 
     K1 and K2 share pole 1 (chain XA:1, K1, XA:2); K2 and K3 share pole 2 (chain XA:3, K2, XA:4).
     K2 keeps its own cell, in its own chain's column, and is not drawn in K1's row; K3 stands
@@ -321,7 +321,7 @@ def test_a_function_that_carries_and_is_a_side_element_is_a_side_element_nowhere
 
 
 def test_a_side_element_of_a_pole_in_the_carriers_second_column_stands_beside_the_carrier() -> None:
-    """D2: K3 straps K2's pole 2, which lies in chain B; K2 is drawn once, in chain A's column.
+    """K3 straps K2's pole 2, which lies in chain B; K2 is drawn once, in chain A's column.
 
     Chain A is XA:1, Q1, K2 pole 1, XA:2; chain B is XA:3, K2 pole 2, XA:4 (two columns). K3 stands
     beside K2's cell, in the row where K2 is drawn, and takes no lane in chain B's column.
@@ -347,7 +347,7 @@ def test_a_side_element_of_a_pole_in_the_carriers_second_column_stands_beside_th
 
 
 def test_a_side_element_of_two_carriers_is_a_side_element_nowhere() -> None:
-    """D1: K2's pole 1 is strapped to F1's and its pole 2 to K1's: K2 is neither's side element.
+    """K2's pole 1 is strapped to F1's and its pole 2 to K1's: K2 is neither's side element.
 
     F1 and K1 each feed their own terminals; K2 keeps a cell of its own and is drawn in neither
     F1's row nor K1's.
@@ -383,7 +383,7 @@ def test_a_side_element_of_two_carriers_is_a_side_element_nowhere() -> None:
 
 
 def test_an_unwired_pole_is_dropped_with_the_side_poles_strapped_to_it() -> None:
-    """D2: K1 and K2 strapped on all three poles; ports 1-2 and 3-4 wired to terminals, 5-6 to none.
+    """K1 and K2 strapped on all three poles; ports 1-2 and 3-4 wired to terminals, 5-6 to none.
 
     K1's third pole (5-6, strapped to K2:5-6) shares its nets only with its own side poles, so it
     is unwired and opens no column: one bundle column, XA:1 and XA:3 at one y, XA:2 and XA:4 at
@@ -418,7 +418,7 @@ def test_an_unwired_pole_is_dropped_with_the_side_poles_strapped_to_it() -> None
 
 
 def test_a_pole_strapped_only_to_a_side_element_nowhere_is_wired_and_keeps_its_own_column() -> None:
-    """D2: K1's pole 3 is strapped to K2 only, and K2 is a side element nowhere (it carries K3).
+    """K1's pole 3 is strapped to K2 only, and K2 is a side element nowhere (it carries K3).
 
     K1's poles 1 and 2 are wired to the terminals; pole 3 (ports 5-6) shares its nets only with
     K2:5-6. K2 keeps its own cell, so K2's ports are outside pole 3's group: the pole is wired,
@@ -446,10 +446,10 @@ def test_a_pole_strapped_only_to_a_side_element_nowhere_is_wired_and_keeps_its_o
 
 
 def test_the_straps_of_a_function_that_is_a_side_element_nowhere_are_drawn() -> None:
-    """D9: the straps K1-K2 (pole 1) and K2-K3 (pole 2) all draw; none may end in an ERROR."""
-    # UNDO: none. EF-D Part 2 (D7 lane width) moved K2 clear of K1, and this layout now routes; the
-    # router fault it once showed (a strap in a 3-port star net that D9's fallback misses) has its
-    # own test in EF-D Part 3
+    """The straps K1-K2 (pole 1) and K2-K3 (pole 2) all draw; none may end in an ERROR."""
+    # UNDO: none. A lane-width change moved K2 clear of K1, and this layout now routes; the
+    # router fault it once showed (a strap in a 3-port star net that the fallback misses) has its
+    # own test.
     parts, d, c, g, (t1, t2, t3, t4), wire = _strip_of_terminals(4)
     k1, k2, k3 = (
         d.item("DEMO-CTR-3P-24", tag=tag, at=c, group=g).fn("main") for tag in ("K1", "K2", "K3")

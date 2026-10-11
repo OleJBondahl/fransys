@@ -112,7 +112,11 @@ def _decided(
     stars = (
         *stars,
         *turned_stars(
-            tuple(c for c in inputs.connections if c.handle not in starred),
+            tuple(
+                c
+                for c in inputs.connections
+                if c.handle not in starred and (c.a.port, c.b.port) not in joins.beside.aside
+            ),
             inputs.functions,
             inputs.seating,
             chains=inputs.chains,

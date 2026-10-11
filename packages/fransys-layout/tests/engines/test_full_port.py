@@ -1,7 +1,7 @@
-"""F9 (layout deep dive, D10, amended): an off-stub's far end reads its product designation,
+"""An off-stub's far end reads its product designation,
 the shortest text that names the device: a location segment and the item, no `=` function
 segment, then the port suffix. `end_text` puts `stub_far_end`'s head and tail in the stub's
-`StubText` as they come (A3).
+`StubText` as they come.
 
 Can-fail, checked by hand on the old `full_port` (a join of `stub_far_end`'s pair, folded into
 `end_text` by A3): with its head read from `reference_designation` again the result carried the

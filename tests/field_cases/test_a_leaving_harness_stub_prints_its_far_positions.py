@@ -6,7 +6,7 @@ and the loom draws on both, each piece ending in a stub.
 
 The bug: the stub named one far device and no place (`-W1 ← -Q1-J1`), though the loom reaches
 -Q1-J1 and -Q2-J1, and an engineer had to search the set for them.
-The rule (STUB-POSITIONS P1, P2, R6): a stub lists every far device, each followed by where it is
+The rule: a stub lists every far device, each followed by where it is
 drawn in the same drawing set, in `derive.position_text`'s form: `-W1 ← -Q1-J1 p1:2C, -Q2-J1 p1:5C`.
 A far end drawn in another drawing set keeps the text without a place.
 

@@ -1,5 +1,4 @@
-"""FD acceptance 7:
-a unit at version 2, revision 1 prints `2.1` in each place a revision is printed.
+"""A unit at version 2, revision 1 prints `2.1` in each place a revision is printed.
 
 One shared facade build: a cabinet unit (version 1, revision 2) with a nested `demo-io-board` unit
 at version 2, revision 1, whose history holds two entries (`1.1` and `2.1`). One test per place;
@@ -24,7 +23,9 @@ from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import Label, Outline, layout_of
 from fransys_model.vocab import Document, DocumentPreset, PageKind, documents
 
-_ORIGIN = Origin(file="tests/test_revision_print_form.py", line=1, note="FD acceptance 7")
+_ORIGIN = Origin(
+    file="tests/test_revision_print_form.py", line=1, note="a revision print-form test origin"
+)
 _BOARD = "demo-io-board"
 _CABINET = "demo-pump-cabinet"
 

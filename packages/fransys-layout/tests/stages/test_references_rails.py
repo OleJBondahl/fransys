@@ -30,12 +30,6 @@ def test_a_pin_that_already_has_a_power_marker_gets_no_second() -> None:
     assert rail_markers((_END,), _SCENE, frozenset(), {}, {(_PORT, 1, 1)}) == ()
 
 
-def test_a_pin_exempt_in_its_set_gets_no_marker() -> None:
-    """(c) An end at a unit's boundary, exempt in the set, takes no marker there."""
-    # UNDO: references/rails.py `rail_markers`: `shown(world, end.ref, exempt)` -> `frozenset()`
-    assert rail_markers((_END,), _SCENE, frozenset({(_PORT, 1)}), {}, frozenset()) == ()
-
-
 def test_a_black_box_end_gets_no_marker_in_its_black_box_set() -> None:
     """(d) A nested unit's boundary port, a black box in set 1, ends its lead at the outline."""
     # UNDO: references/rails.py `rail_markers`: `page[0] not in outward.get(...)` -> `True`

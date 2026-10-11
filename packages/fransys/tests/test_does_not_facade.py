@@ -1,4 +1,4 @@
-"""EA13: every public function of `fransys` says what it does not do, on a line of its own."""
+"""Every public function of `fransys` says what it does not do, on a line of its own."""
 
 import inspect
 lazy from collections.abc import Iterator

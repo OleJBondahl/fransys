@@ -1,4 +1,4 @@
-"""`harness_wires` lists a harness's wires beside its cables (HA3, model-0171)."""
+"""`harness_wires` lists a harness's wires beside its cables (model-0171)."""
 
 from decimal import Decimal
 from typing import Any

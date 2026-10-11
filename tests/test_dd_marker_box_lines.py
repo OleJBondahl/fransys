@@ -1,4 +1,4 @@
-"""S20 M3 (ADDENDUM 19 fix 4): a box's lines never overprint, each target has its own line.
+"""A box's lines never overprint, each target has its own line.
 
 A marker box is one text height wide per line (a vertical box) or high per line. Where several
 markers stand at one pin, one box holds all their lines (`stand.joined_box`): sized for the sum,
@@ -40,7 +40,7 @@ def _pins(model):
 def test_a_box_holds_a_line_for_every_target_at_its_pin(fill: int) -> None:
     """Each lead's text has as many lines as its box is wide for, and a pin's lines are all of
     its markers' own: no box is drawn narrower than the targets it names, so none overprints.
-    With `fill` 1 M12 draws the PE net as wires, so the unit's set has only one-marker pins
+    With `fill` 1 the PE net is drawn as wires, so the unit's set has only one-marker pins
     (the boxes of the fixture's blue nets) and no pin to share; `fill` 3 puts two markers at
     three pins."""
     # UNDO: stages/texts/stand.py `joined_box`: `sum(b.width for b in boxes) - trim`

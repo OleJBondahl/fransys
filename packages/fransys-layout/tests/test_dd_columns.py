@@ -1,4 +1,4 @@
-"""D2 (layout deep dive): columns, bundles, side elements, end cells, splits and star nets.
+"""Columns, bundles, side elements, end cells, splits and star nets.
 
 Same method as `test_dd_chains.py`: small invented designs on `examples/demo-parts`, read back
 through the laid-out `SymbolPlacement`, `Route` and `LinkMarker` records.
@@ -33,7 +33,7 @@ def _pair(d, g1, g2=None):
 
 
 def test_chains_through_a_multi_pole_function_are_one_bundle_at_the_exact_pole_pitch() -> None:
-    """D2: three chains through K1:main are one bundle column, its lanes one pole pitch apart."""
+    """Three chains through K1:main are one bundle column, its lanes one pole pitch apart."""
     # UNDO: _chain_walk.py `_group_bundles` `and multi` -> False AND engine.py `join_strip_rows`
     # call removed
     parts, d = design()
@@ -56,7 +56,7 @@ def test_chains_through_a_multi_pole_function_are_one_bundle_at_the_exact_pole_p
 
 
 def test_a_two_port_pole_on_the_same_two_nets_is_a_side_element_one_lane_right() -> None:
-    """D2: Q2 in parallel with Q1 stands in Q1's row to its right, its wires kept (no markers)."""
+    """Q2 in parallel with Q1 stands in Q1's row to its right, its wires kept (no markers)."""
     # UNDO: stages/_chain_sides.py `_picks`: `if len(group) < 2:` -> `if True:`
     parts, d = design()
     g = d.group("G1", "Group")
@@ -82,7 +82,7 @@ def test_a_two_port_pole_on_the_same_two_nets_is_a_side_element_one_lane_right()
 
 
 def test_a_lone_terminal_is_an_end_cell_above_a_north_port_and_below_a_south_port() -> None:
-    """D2: a lamp's port 1 (N) has its terminal above, port 2 (S) below, one column, wired."""
+    """A lamp's port 1 (N) has its terminal above, port 2 (S) below, one column, wired."""
     # UNDO: stages/chains.py _attach: `continue` just before `found[host, facing].append(...)`
     parts, d = design()
     g = d.group("G1", "Group")
@@ -104,7 +104,7 @@ def test_a_lone_terminal_is_an_end_cell_above_a_north_port_and_below_a_south_por
 
 @pytest.mark.parametrize("groups", ["one", "two"])
 def test_a_chain_splits_where_the_authored_function_group_changes(groups: str) -> None:
-    """D2: Q1 to Q2 is one column in one group; with Q2 and XA:2 in another group they part."""
+    """Q1 to Q2 is one column in one group; with Q2 and XA:2 in another group they part."""
     # UNDO: _chain_walk.py `_split_at_groups`: `_group_of(a) == _group_of(b)` -> always true
     second_group = groups == "two"
     parts, d = design()
@@ -131,7 +131,7 @@ def test_a_chain_splits_where_the_authored_function_group_changes(groups: str) -
 
 
 def test_a_column_never_spans_two_locations_and_the_conductor_between_ends_in_markers() -> None:
-    """D2: Q2 at +C2 is on another page than Q1 at +C1; the wire between them ends in markers."""
+    """Q2 at +C2 is on another page than Q1 at +C1; the wire between them ends in markers."""
     # UNDO: engines/schematic/engine.py: delete the `discovered = cut_locations(...)` line
     parts, d = design()
     g = d.group("G1", "Group")
@@ -153,13 +153,13 @@ def test_a_column_never_spans_two_locations_and_the_conductor_between_ends_in_ma
 
 
 def test_a_feed_fanning_to_three_breakers_joins_each_by_one_level_wire_and_marks_none() -> None:
-    """D2, S12, M12: the feed terminal XA:1 stands in the column right of Q3, every port of the
-    net facing N at its column's top, so the three joins XA:1 - Q1:1, Q2:1, Q3:1 are LD9 runs
-    that the turn test passes at both ends (M12: a same-side join stays a wire at any column
+    """The feed terminal XA:1 stands in the column right of Q3, every port of the
+    net facing N at its column's top, so the three joins XA:1 - Q1:1, Q2:1, Q3:1 are runs
+    that the turn test passes at both ends (a same-side join stays a wire at any column
     distance). Each is a route, all three along one level, and no port of the net takes a
     marker."""
     # UNDO: stages/references/joins.py `wired_beside`, the `at_ends` loop's `_add` -> `pass`
-    #     (no LD9 run is joined): Q1:1 takes a marker and XA:1 - Q1:1 has no route
+    #     (no run is joined): Q1:1 takes a marker and XA:1 - Q1:1 has no route
     model = three_breakers(daisy=False)
     feed = (terminal_key("XA", 1), "external")
     levels = set()
@@ -173,14 +173,14 @@ def test_a_feed_fanning_to_three_breakers_joins_each_by_one_level_wire_and_marks
 
 
 def test_a_daisy_chain_joins_the_columns_it_can_level_and_marks_the_two_wired_parts() -> None:
-    """D2, S12, M12: XA:1 feeds Q1:1, which chains to Q2:1 and Q3:1, the breakers side by side.
+    """XA:1 feeds Q1:1, which chains to Q2:1 and Q3:1, the breakers side by side.
 
     Q1 stands below the feed terminal in its column, so Q1:1 is not at the column's end and its
-    join to Q2:1 is a level run that would move a column: it is not beside (S12, ruling
+    join to Q2:1 is a level run that would move a column: it is not beside (ruling
     2026-09-27: "beside only when join_y puts its ends on one y without moving any column"). The
     net is two wired parts, XA:1 - Q1:1 and Q2:1 - Q3:1, joined by one reference pair: the
-    reference at XA:1, the branch at Q3:1 (R7 B4), and no marker at Q1:1 or Q2:1. The test
-    asserted a wire Q1:1 - Q2:1 before M12 changed which joins are beside.
+    reference at XA:1, the branch at Q3:1, and no marker at Q1:1 or Q2:1. The test
+    asserted a wire Q1:1 - Q2:1 before the join rule changed which joins are beside.
     """
     model = three_breakers(daisy=True)
     feed = (terminal_key("XA", 1), "external")

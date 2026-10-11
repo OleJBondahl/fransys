@@ -1,7 +1,4 @@
-"""`changes_markdown` lists a boundary's added and removed ports in natural order (0135).
-
-Re-homed from test_changes.py, which TEST-TRIM A1 cut while SORT-ORDER added this case.
-"""
+"""`changes_markdown` lists a boundary's added and removed ports in natural order (0135)."""
 
 import dataclasses
 

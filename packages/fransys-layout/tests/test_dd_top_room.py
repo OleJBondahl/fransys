@@ -1,11 +1,11 @@
-"""S16, S20 M1: the room above the first row holds a first-row reference, with no lane at all.
+"""The room above the first row (layout-0090) holds a first-row reference, with no lane at all.
 
-`place`'s C14 lift is raised by S16's Room call to hold each first-row reference one line high at
-its own `out`; a terminal's star reference on the first row stands one C15 push (`2 *
-text_height`, 16 G) out along its stub. M1 makes the box of a reference at an N port a vertical
+`place`'s lift is raised by the Room call (layout-0090) to hold each first-row reference one line
+high at its own `out`; a terminal's star reference on the first row stands one push (`2 *
+text_height`, 16 G) out along its stub. The box of a reference at an N port is a vertical
 one. The first row therefore stands low enough that the box is inside the content box
-(`OUT_OF_CONTENT_BOX`), without `TOP_HEADROOM_LANES`. (The D2 stagger and its tiers are gone, S20
-M5: a marker has one place, straight out along its wire.)
+(`OUT_OF_CONTENT_BOX`), without `TOP_HEADROOM_LANES`. (The stagger and its tiers are gone;
+a marker has one place, straight out along its wire.)
 
 The real layout gives the first row's port y and the reference. The model is two terminals of one
 strip, each a star reference.
@@ -38,13 +38,13 @@ _PROJECT: dict[str, Any] = {
 
 
 def _first_row_reference() -> LinkMarker:
-    """The real star reference of a first-row terminal on page 1, its C15 push applied.
+    """The real star reference of a first-row terminal on page 1, its push applied.
 
     Strip `X1` has two terminals of group `G1`. Each is chained to a lamp of `G1` (the lamp stands
     below it in one column, so the wire between them is drawn on page 1) and wired to a second
     lamp of `G1` that stands apart: each terminal is the reference of a star, and its inner port
-    carries a wire drawn on the page, so the marker leaves by the free outer N port (C22,
-    layout-0053 amended: a wire drawn on another page does not count).
+    carries a wire drawn on the page, so the marker leaves by the free outer N port (layout-0053
+    amended: a wire drawn on another page does not count).
     """
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
@@ -84,15 +84,15 @@ def _outside(marker: LinkMarker) -> set:
 def test_the_top_room_holds_a_first_row_reference_with_no_headroom_lane(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """S16 + M1: with no lane the first-row reference is a vertical box above its port, one C15
+    """With no lane the first-row reference is a vertical box above its port, one
     push out, and stands inside the content box (top y >= 0)."""
     # UNDO: stages/place.py `_text_room`, first rows: drop `boxes += _owned(...)` (Room no longer
     #     holds the reference: with no lane the first row stands at the band alone, and the box
     #     top is y = -10, above the content box)
     monkeypatch.setattr(engine, "TOP_HEADROOM_LANES", 0)
     reference = _first_row_reference()
-    assert reference.stub_extra == 16  # premise: the reference stands one C15 push out
-    assert reference.box.width < reference.box.height  # M1: a vertical box at an N port
+    assert reference.stub_extra == 16  # premise: the reference stands one push out
+    assert reference.box.width < reference.box.height  # a vertical box at an N port
     assert reference.box.y + reference.box.height <= reference.at.y  # above its port
     assert reference.box.y >= 0
     assert _outside(reference) == set()

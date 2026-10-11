@@ -1,4 +1,4 @@
-"""`box_ports`: the one home of a generic box's port names, order, sides and grid (D47)."""
+"""`box_ports`: the one home of a generic box's port names, order, sides and grid."""
 
 import pytest
 

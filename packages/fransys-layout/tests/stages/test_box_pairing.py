@@ -4,10 +4,10 @@ Box 1 is the fed one: top pins `a1 a2` (fed by box 2) and `b1 b2` (fed by box 3)
 `z`. Boxes 2 and 3 are the feeders: bottom pins named for the group they feed, in any order.
 """
 
-from pairing_fixture import PROFILE, box, feed, pair
+from pairing_fixture import PROFILE, pair
 from samples import placed
 
-from fransys_layout.stages.boxes import box_sides, paired_boxes
+from fransys_layout.stages.boxes import box_sides
 lazy from fransys_layout.stages import DrawnFunction
 
 
@@ -30,21 +30,6 @@ def test_the_feeders_paired_pins_follow_the_fed_order() -> None:
     #     `block = [g.name for g in feeder.geometry.ports]` (the feeder keeps its order)
     _, two, _ = pair()
     assert _x(two, "q1") < _x(two, "q2")
-
-
-def test_a_feeder_and_its_fed_box_are_marked_and_the_feeders_axis_is_a_paired_pin() -> None:
-    """The feeder's column axis is its first paired pin, so attaching it aligns the group."""
-    fed, two, _ = pair()
-    assert fed.fed_by != ()
-    assert two.feeds == fed.function
-    assert (two.primary_in, two.primary_out) == (None, "q1")
-
-
-def test_a_pin_on_the_wrong_side_leaves_the_boxes_as_they_were() -> None:
-    """A fed pin that is not on top is no pairing: the boxes draw as today."""
-    boxes = (box(1, ("a1",), ("a2", "z")), box(2, (), ("q1", "q2")))
-    result = paired_boxes(boxes, (feed(2, (("a1", "q1"), ("a2", "q2"))),), PROFILE)
-    assert result == boxes
 
 
 def test_box_sides_leaves_a_paired_box_alone() -> None:

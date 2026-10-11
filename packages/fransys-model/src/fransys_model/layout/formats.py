@@ -8,6 +8,7 @@ one eighth of the symbol module).
 from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, Value, make_id, record
+from fransys_model.vocab.core import Unit
 
 
 @record(kind="layout.sheet_format")
@@ -64,9 +65,9 @@ def default_sheet_format() -> SheetFormat:
     )
 
 
-@record(kind="layout.profile", singleton=True)
+@record(kind="layout.profile")
 class Profile:
-    """The tunable numbers of the layout rules; at most one per model.
+    """The tunable numbers of the layout rules; at most one per unit and one for the top.
 
     Gaps, `row_spacing`, `route_margin`, `text_height` and `marker_padding` are in `G`;
     penalties are unitless. `row_spacing` is the gap a column's next block keeps below the
@@ -76,12 +77,14 @@ class Profile:
     sit beside `"terminal"`. `group_ranks` maps the label of a `=` aspect node to its rank;
     an unranked group sorts last. `hide_unused_pins` hides, on drawings only, a box-drawn
     pin with no conductor. Every field defaults to its house value; a set field replaces it
-    whole, a rank map is never merged. `profile_of(model)` returns the authored profile,
-    else `default_profile()`.
+    whole, a rank map is never merged. `unit` is the unit whose own drawings the profile
+    governs, `None` for the top design's; `profile_of(model, unit)` returns the authored
+    profile of exactly that unit, else `default_profile()`, never a containing unit's.
     """
 
     id: Id[Profile]
     key: AuthoringKey
+    unit: Id[Unit] | None = None
     # `None` is the house sheet (`default_sheet_format()`), which is no record.
     sheet_format: Id[SheetFormat] | None = None
     # Gaps in grid units G (1 M = 8 G): column gap 48, row gap 32. Pole pitch is the

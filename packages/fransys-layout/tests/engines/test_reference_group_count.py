@@ -1,9 +1,9 @@
-"""S4: layout counts each drawing set's reference groups from its own decisions, derive numbers
+"""Layout counts each drawing set's reference groups from its own decisions, derive numbers
 the placed markers, and the two agree; the box widens when a count reaches three digits.
 
 Layout's count is `references.digits._reference_groups` over the stage's markers; derive's is the
 highest `drawing_text.reference_number` among the written markers of a set (a pure off stub is
-no reference, D4).
+no reference).
 """
 
 from collections import Counter, defaultdict
@@ -67,7 +67,7 @@ def _numbered(name: str) -> dict[int, int]:
     found: dict[int, int] = defaultdict(int)
     for one in markers.values():
         if one.star is StarKind.OFF and one.id not in named:
-            continue  # a pure off stub: no reference (D4)
+            continue  # a pure off stub: no reference
         number = sets[pages[one.page].drawing_set].number
         found[number] = max(found[number], reference_number(written, one))
     return dict(found)
@@ -77,7 +77,7 @@ def _numbered(name: str) -> dict[int, int]:
 def test_layout_counts_as_many_reference_groups_per_set_as_derive_numbers(name: str) -> None:
     """Per drawing set: layout's own group count equals derive's highest `#n`.
 
-    Both ask `heads_group` (RR-O5, layout-0132), so this proves the one predicate, not two copies.
+    Both ask `heads_group` (layout-0132), so this proves the one predicate, not two copies.
     """
     # CAN-FAIL: stages/references/digits.py `_reference_groups`: the predicate call put back as its
     #     old inline condition with one clause flipped (`side is OWNER` -> `USER`) fails here
@@ -106,8 +106,8 @@ def test_the_cabinets_have_reference_groups_to_count() -> None:
     """Guard: the equality above is not vacuous; the narrow cabinet holds three groups.
 
     One severed cut (its owner marker), one page-group of the rail's star net and one turned
-    reference pair (S12, M12: a net of two ports whose join turns back is a reference and a
-    branch, not a wire). HL1 draws `W1` to `-H1` as a line, so the star's second page-group is gone.
+    reference pair (a net of two ports whose join turns back is a reference and a
+    branch, not a wire). A line draws `W1` to `-H1`, so the star's second page-group is gone.
     """
     markers, _ = _laid_out("narrow")
     kinds = Counter(one.star for one in markers if heads_group(one.star, one.side.value))

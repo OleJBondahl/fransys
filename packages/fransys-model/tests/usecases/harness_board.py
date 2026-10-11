@@ -1,4 +1,4 @@
-"""WP17 synthetic use case: a harness with a board (ROADMAP WP17).
+"""Synthetic use case: a harness with a board.
 
 All parts, MPNs and designations are invented for this repo; none describe a real
 product or project (CLAUDE.md invariant, red flag "Real project data in fixtures").
@@ -32,7 +32,7 @@ _CORE_COLOURS = ("BN", "WH", "BU", "SH")
 
 
 def build_harness_board() -> Draft:
-    """Build the WP17 harness-and-board fixture: a `Draft`, not yet frozen.
+    """Build the harness-and-board fixture: a `Draft`, not yet frozen.
 
     The invented design (the fan-out cable is the one item left unnumbered, so
     `passes.numbering` has a `W`-class item to number):

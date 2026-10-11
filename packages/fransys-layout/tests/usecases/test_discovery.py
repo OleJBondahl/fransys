@@ -1,11 +1,10 @@
-"""End-to-end chain discovery on the invented cabinet (deep-dive D1 and D2).
+"""End-to-end chain discovery on the invented cabinet.
 
 `build_cabinet(discovery=True)` suppresses every `layout.chain` and adds the potentials and
 the three invented circuits `discovery=False` never exercises (multi-pole, branch,
-reconvergent). D1 replaced the WP16 ladder discovery (rail-to-rail rungs, trunk and branch
-children, refused reconvergent pairs): every function takes part, a net of exactly two pole
-ports links two poles, and any other net ends a chain (a star, D9). The tests below assert the
-D1 and D2 results derived by hand from the fixture's wiring. All data invented.
+reconvergent). Every function takes part: a net of exactly two pole ports links two poles,
+and any other net ends a chain (a star). The tests below assert the results derived by hand
+from the fixture's wiring. All data invented.
 """
 
 from functools import cache
@@ -63,14 +62,13 @@ def test_no_coherence_error_on_the_discovery_cabinet() -> None:
 
 
 def test_the_recovery_table_matches_the_hinted_chains_exactly() -> None:
-    """The recovery table is spec-derived (D1), not the hinted chains cell for cell (layout-0034).
+    """The recovery table is spec-derived, not the hinted chains cell for cell (layout-0034).
 
-    D1: K1's main contact is wired on two parallel poles (`_discovery_extras`); the second
+    K1's main contact is wired on two parallel poles (`_discovery_extras`); the second
     pole is the first one's side element, its ports do not count on Q1's outlet net, so
-    `p1/power` recovers as one chain (layout-0050, as in the ladder era's merge of
-    parallel poles).
-    `p1/control` runs on through X4:1's cable core to the lamp H1, which D1 joins to it (a
-    two-port net with a pole).
+    `p1/power` recovers as one chain (layout-0050).
+    `p1/control` runs on through X4:1's cable core to the lamp H1, which the chain discovery
+    joins to it (a two-port net with a pole).
     """
     results, _ = stage_results(_model(discovery=True), _inputs(discovery=True))
     discovered = {
@@ -118,12 +116,12 @@ def _columns() -> dict[tuple[Id[Any], ...], Any]:
 
 
 def test_supply_and_control_chains_are_found_from_connectivity_alone() -> None:
-    """D1: each run of two-port nets is one chain, top to bottom, with no authored chain.
+    """Each run of two-port nets is one chain, top to bottom, with no authored chain.
 
     `sup`: X1:1 - F1 - X2:1 (the terminals link through their own pole, F1 through its through
     path). `p2/control`: S2 - K2 coil - X4:2. `p1/control` the same with S1, K1 and X4:1; the
-    cable core from X4:1 leads on to the lamp H1, which D1 joins to it (a two-port net with a
-    pole), so only the first three cells are asserted here.
+    cable core from X4:1 leads on to the lamp H1, which the chain discovery joins to it
+    (a two-port net with a pole), so only the first three cells are asserted here.
     """
     columns = _columns()
     key = _function
@@ -157,7 +155,7 @@ def test_supply_and_control_chains_are_found_from_connectivity_alone() -> None:
 
 
 def test_a_net_of_three_pole_ports_ends_a_chain() -> None:
-    """D1: Q1:2, Q2:1 and Q3:1 are three poles on one net, so the net links nothing.
+    """Q1:2, Q2:1 and Q3:1 are three poles on one net, so the net links nothing.
 
     X:1 - Q1 stays a chain (a two-port net links them); Q2 and Q3 each head a chain of their own.
     Re-based from K1's strap (layout-0050): a strapped pole is a side element, its ports do not
@@ -182,8 +180,8 @@ def test_a_net_of_three_pole_ports_ends_a_chain() -> None:
 
 
 def test_es_second_contact_is_placed_with_k1_aux_the_chain_cut_where_the_group_changes() -> None:
-    """D2: `s0.nc_2` and `k1.aux` are one chain; its group hint (`=P1`) cuts it from `s0.nc_1`
-    (`=ES`) upstream and, at `=P2`, from `k2.aux` downstream. Nothing is left out (D1).
+    """`s0.nc_2` and `k1.aux` are one chain; its group hint (`=P1`) cuts it from `s0.nc_1`
+    (`=ES`) upstream and, at `=P2`, from `k2.aux` downstream. Nothing is left out.
     """
     nc_1 = _function(_DISCOVERED, ("cabinet", "s0", "fn", "nc_1"))
     nc_2 = _function(_DISCOVERED, ("cabinet", "s0", "fn", "nc_2"))
@@ -201,7 +199,7 @@ def test_h1_is_newly_placed_a_topologically_real_one_hop_rung() -> None:
 
 
 def test_the_spare_relay_is_placed_as_one_chain_through_its_declared_net() -> None:
-    """D1: K8 (not installed, still drawn) has no conductor, but its declared LATCH net holds
+    """K8 (not installed, still drawn) has no conductor, but its declared LATCH net holds
     exactly two pole ports (`coil.A1`, `no_1.13`), which link: one column of both functions.
     """
     coil = _function(_DISCOVERED, ("cabinet", "k8", "fn", "coil"))
@@ -214,7 +212,7 @@ def test_the_spare_relay_is_placed_as_one_chain_through_its_declared_net() -> No
 def test_the_multi_pole_contact_is_one_cell_not_two() -> None:
     """K1's main contact, wired on two parallel poles, is one cell, not two.
 
-    The strap's second pole is the first one's side element (D1, layout-0050): the chain
+    The strap's second pole is the first one's side element (layout-0050): the chain
     `X1:2, Q1, K1:main, X3:1` runs on through it.
     """
     results, _ = stage_results(_model(discovery=True), _inputs(discovery=True))
@@ -231,11 +229,11 @@ def _port_of(function: Id[Any], name: str) -> Id[Any]:
 
 
 def test_the_fork_is_a_star_net_that_ends_three_chains_and_stays_one_level_wire() -> None:
-    """D1 + S12: the net `X7:1.external`, `S10:11`, `S11:11` has three ports, so it links nothing.
+    """The net `X7:1.external`, `S10:11`, `S11:11` has three ports, so it links nothing.
 
     `X7:1` is a chain of its own; `S10` and `S11` each head a chain down to their 0V terminal,
     the contact on top (its port `11` faces N). There is no trunk and no branch column. The three
-    ports stand on one y, so the net is a joined run (S12, M12: same-side ports at one y stay a
+    ports stand on one y, so the net is a joined run (same-side ports at one y stay a
     wire) and gets no star markers: each of its three ports ends a wire that runs along the one
     level (the topmost y of the routes) shared by all three.
     """
@@ -264,7 +262,7 @@ def test_the_fork_is_a_star_net_that_ends_three_chains_and_stays_one_level_wire(
 
 
 def test_the_parallel_pair_is_one_row_with_a_side_element_and_no_refusal() -> None:
-    """D2: K20 and K21 stand on the same two nets, so the later key (`k21`) is K20's side element.
+    """K20 and K21 stand on the same two nets, so the later key (`k21`) is K20's side element.
 
     It is drawn one lane to the right in K20's row, and the column runs on through K22's coil
     to the 0V terminal X9:1.

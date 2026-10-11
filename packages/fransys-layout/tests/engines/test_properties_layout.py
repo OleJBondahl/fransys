@@ -83,7 +83,7 @@ def _table(model: Model, name: str) -> dict:
 
 
 def _length(marker: StageLinkMarker) -> int:
-    """The box's extent along its text: a vertical box (M1, N or S pin) is the turned frame."""
+    """The box's extent along its text: a vertical box (on an N or S pin) is the turned frame."""
     return marker.box.height if marker.vertical else marker.box.width
 
 
@@ -125,12 +125,12 @@ def _signal_ports(model: Model) -> tuple:
 
 
 def test_a_wire_cut_by_a_page_break_has_a_marker_pair_that_says_where_its_partner_is() -> None:
-    """links.md 6.6 stands under D9: a net of 3 or more ports is D9's, a cut 2-port wire is a pair.
+    """A net of 3 or more ports is a fan-out, a cut 2-port wire is a pair.
 
     On the 250 mm sheet every group has a page of its own, `=P1` first, so the K1:14 to K2:13
     wire runs from page 1 to page 2. Its owner marker is at the earlier page, the two point at
-    each other, and each box is the sheet's fixed reference length (LD3 (c)), never measured,
-    one line thick (M1: a vertical box is the turned frame, its length its height).
+    each other, and each box is the sheet's fixed reference length, never measured,
+    one line thick (a vertical box is the turned frame, its length its height).
     """
     model, out, inputs, results = _run(250)
     k1, k2 = _signal_ports(model)
@@ -157,10 +157,10 @@ def test_a_wire_cut_by_a_page_break_has_a_marker_pair_that_says_where_its_partne
 
 
 def test_a_conductor_between_two_locations_ends_in_a_stub_label_at_each_end() -> None:
-    """D10, D13: across two locations the K1:14 to K2:13 conductor is no owner/user pair.
+    """Across two locations the K1:14 to K2:13 conductor is no owner/user pair.
 
     Each end carries a stub label in its own drawing set, an arrow and the far end's location
-    (`+C1`, `+C2`) and port, and its box, vertical on an N or S pin (M1), is as long as its
+    (`+C1`, `+C2`) and port, and its box, vertical on an N or S pin, is as long as its
     measured text plus the marker padding.
     """
     model, out, inputs, results = _run(second_location=True)

@@ -1,4 +1,4 @@
-"""ROOT-PORT measure: what a unit's own drawing set prints for a port of the unit's sole root.
+"""What a unit's own drawing set prints for a port of the unit's sole root.
 
 Ruling 2026-09-25: in a unit's OWN set a port held by the unit's own root
 (`is_own_unit_root`) prints without the root's tag, on drawings and in lists alike (`-X1:1`, not
@@ -7,7 +7,7 @@ Ruling 2026-09-25: in a unit's OWN set a port held by the unit's own root
 kind compares the text the own set DRAWS (`label_text`, `marker_text`) with the text the LISTS print
 for the same port, never with `port_designation` itself. A row of lone pins names its connector once
 (`tag.conn`): on the own set `-X1`, on the parent's `-U2-X1` (decision model-0073). The off stub in
-an own set that names a root pin is not measured here (UNIT-DRAWING step 3 removes those stubs).
+an own set that names a root pin is not measured here (a later step removes those stubs).
 
 Kinds: K1 a device with two labelled connector functions, K2 a device with one, K3 a terminal-kind
 function of a device root, K4 a terminal strip that is the unit's sole root, K5 the coil and contact
@@ -94,7 +94,7 @@ def _k1():
 
 
 @functools.cache
-def _k1_pin_rows():
+def _two_function_device_pin_rows():
     """K1 again, but the root's pins have no conductor inside the unit, so its set draws a row.
 
     Carries `CONNECTION_NOT_DRAWN` ERROR findings (the layout's own lint on the lone pins); the
@@ -261,7 +261,7 @@ def test_the_comparison_flags_a_root_tag_mismatch() -> None:
 # -- K1: a device with two labelled connector functions ---------------------------------------
 
 
-def test_k1_the_own_set_draws_each_root_pin_as_the_lists_print_it() -> None:
+def test_the_own_set_draws_each_root_pin_as_the_lists_print_it() -> None:
     """K1: `-X1:1` in the unit's set, in the connector list and in the wire list; MATCHES."""
     result = _k1()
     assert Severity.ERROR not in {f.severity for f in result.findings}
@@ -277,10 +277,10 @@ def test_k1_the_own_set_draws_each_root_pin_as_the_lists_print_it() -> None:
     assert _mismatches(model, drawn, wires) == []
 
 
-def test_k1_the_parent_set_keeps_the_roots_tag_on_its_pins_and_its_stubs() -> None:
+def test_the_parent_set_keeps_the_roots_tag_on_its_pins_and_its_stubs() -> None:
     """K1: the top-level set draws `-U2-X1:1` on the replica and `-U2-X1:1` in the off stubs.
 
-    Before BOUNDARY-DRAW (layout-0080) it drew a star branch marker `-U2-X2:1/2.01.4`
+    Before layout-0080 it drew a star branch marker `-U2-X2:1/2.01.4`
     for the second pin; now both boundary pins carry an off stub.
     """
     model = _k1().model
@@ -296,9 +296,9 @@ def test_k1_the_parent_set_keeps_the_roots_tag_on_its_pins_and_its_stubs() -> No
     assert stubs == {"\N{LEFTWARDS ARROW} -U2-X1:1", "\N{LEFTWARDS ARROW} -U2-X2:1"}
 
 
-def test_k1_a_row_of_lone_pins_in_the_own_set_names_the_connector_as_the_list_does() -> None:
+def test_a_row_of_lone_pins_in_the_own_set_names_the_connector_as_the_list_does() -> None:
     """K1: a row of two pins draws the connector once (`tag.conn`); the list names `-X1`, `-X2`."""
-    model = _k1_pin_rows().model
+    model = _two_function_device_pin_rows().model
     unit, root = _unit_root(model)
     drawn = {
         label.function: label_text(model, label)
@@ -355,7 +355,7 @@ def test_the_row_header_of_a_top_level_set_names_the_connector_behind_the_tag() 
 # -- K2: a device with one connector function -------------------------------------------------
 
 
-def test_k2_one_connector_device_root_draws_and_lists_the_same_text() -> None:
+def test_one_connector_device_root_draws_and_lists_the_same_text() -> None:
     """K2: `-J9:1` in the own set and in both lists, `-J9:1` in the parent set; MATCHES, tag kept.
 
     With one labelled connector `connector_segment` is empty, so no rule drops the root's tag; the
@@ -377,7 +377,7 @@ def test_k2_one_connector_device_root_draws_and_lists_the_same_text() -> None:
 # -- K3: a terminal-kind function of a device root --------------------------------------------
 
 
-def test_k3_a_device_terminal_root_draws_and_lists_the_same_text() -> None:
+def test_a_device_terminal_root_draws_and_lists_the_same_text() -> None:
     """K3: strip tag `-X9` + point `internal` in the own set, `-X9:internal` in the wire list."""
     model = _k3().model
     unit, root = _unit_root(model)
@@ -407,11 +407,11 @@ def test_k3_a_device_terminal_root_draws_and_lists_the_same_text() -> None:
 # -- K4: a terminal strip that is the unit's sole root ----------------------------------------
 
 
-def test_k4_a_strip_root_draws_and_lists_each_terminal_the_same() -> None:
+def test_a_strip_root_draws_and_lists_each_terminal_the_same() -> None:
     """K4: `-X7:1` and `-X7:2` in the own set, the terminal list and the wire list; MATCHES.
 
     The strip's tag is the terminal's identity, `-X7:1`; dropping it would leave `:1`. The two
-    terminals stand in one row (M12's terminal chain, a D12 run), so the set draws the strip once
+    terminals stand in one row (a chain of terminals), so the set draws the strip once
     (`tag.strip`) and a short `tag.point` each; the drawn text is the strip, a colon and the point.
     """
     model = _k4().model
@@ -445,7 +445,7 @@ def test_k4_a_strip_root_draws_and_lists_each_terminal_the_same() -> None:
 # -- K5: the coil and contact functions of a relay root ---------------------------------------
 
 
-def test_k5_a_relay_root_draws_and_lists_each_port_with_the_roots_tag() -> None:
+def test_a_relay_root_draws_and_lists_each_port_with_the_roots_tag() -> None:
     """K5: tag `-K7` + marking `A1` in the own set, `-K7:A1` in the wire list; MATCHES, tag kept.
 
     The unit marks no coil or contact as a boundary here, so the parent's set draws nothing

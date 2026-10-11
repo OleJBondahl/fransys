@@ -107,7 +107,7 @@ def test_surface_docstring_over_15_lines_fails(tmp_path):
 
 
 def test_surface_docstring_within_15_lines_with_returns_section_passes():
-    """`fransys.parts` (the real, shipped GUIDE/CG5 shape: Args, Returns, 11 lines) is on
+    """`fransys.parts` (the real, shipped guide shape: Args, Returns, 11 lines) is on
     the real surface and is not a violation -- the length cap and the Google-section allowance
     both hold for it.
     """

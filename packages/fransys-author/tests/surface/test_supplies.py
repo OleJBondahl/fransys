@@ -1,4 +1,4 @@
-"""EA6: `ac_supply` and `dc_supply` write what the same calls by hand write, and fail by name."""
+"""`ac_supply` and `dc_supply` write what the same calls by hand write, and fail by name."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING, NamedTuple

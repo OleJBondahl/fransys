@@ -1,6 +1,6 @@
 """The first python block of README.md is website/example.py, byte for byte.
 
-The README shows the one example the site and the tests run; a copy that drifts misleads (PM10).
+The README shows the one example the site and the tests run; a copy that drifts misleads.
 """
 
 from pathlib import Path

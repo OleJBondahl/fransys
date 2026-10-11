@@ -6,9 +6,9 @@ units, locations, a part-less generic box with ports 1, 2, 10 and 11, a contacto
 functions, and a board net with the pins 2 and 10. The design is built and written once under a
 first set of `name=` keys and once under a second set, so every Id changes and no printed text may.
 
-O1 (canary): each CSV list, each PDF list, the loom page order, the overview's links, the generic
+Canary: each CSV list, each PDF list, the loom page order, the overview's links, the generic
 box ports, the KiCad net name and the findings print `-X2` before `-X10`.
-O2 (rename): a change of the keys changes no CSV byte, no HTML byte (once each item Id is replaced
+Rename: a change of the keys changes no CSV byte, no HTML byte (once each item Id is replaced
 by the item's label, since the overview carries the Ids), no PDF text run on any page and no
 netlist byte. SVG draw order is not compared: it changes bytes, not the picture.
 

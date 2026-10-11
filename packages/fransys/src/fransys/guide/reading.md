@@ -213,7 +213,7 @@ its boundaries. `None` when the unit states none.
 `fransys.derive.boundary_operating(model, boundary)` returns the operating envelope a unit
 states on one of its boundaries. `None` when the unit states none.
 
-`fransys.derive.profile_of(model)` returns the layout profile the model authors, else the house one.
+`fransys.derive.profile_of(model, unit=None)` returns the layout profile that `unit` authors (`None`: the top design), else the house one; never a parent's.
 
 ## Checking a branch's current
 

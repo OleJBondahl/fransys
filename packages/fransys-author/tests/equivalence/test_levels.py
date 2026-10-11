@@ -1,4 +1,4 @@
-"""EA14: the easy level (written out) and the efficient level (a function, a loop) are one model."""
+"""The easy level (written out) and the efficient level (a function, a loop) are one model."""
 
 from typing import TYPE_CHECKING
 

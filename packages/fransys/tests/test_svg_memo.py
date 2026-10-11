@@ -44,7 +44,7 @@ def _document_build(parts, cover_dir, text="# Demo cabinet\n"):
 
 @pytest.fixture(scope="module")
 def result(tmp_path_factory) -> fr.BuildResult:
-    """The document build above, built once and shared (BUILD-ONCE): checked clean here so
+    """The document build above, built once and shared: checked clean here so
     every test below can assume a real draw, never an early findings-gate exit.
     """
     parts = fr.parts("demo_parts")

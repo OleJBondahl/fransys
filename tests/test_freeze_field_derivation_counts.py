@@ -1,4 +1,4 @@
-"""PERF-FREEZE Part 3: `fields_of`/`annotations_of` (kernel/schema.py) run once per class
+"""Speed guard: `fields_of`/`annotations_of` (kernel/schema.py) run once per class
 touched during a freeze, not once per record (decision model-0102). `checks.record_problems`
 and the hashing loop in `freeze._freeze` each build one `{class: FieldInfo}` memo
 (`schema.cached_field_info`) and share it across every record and nested `@value` class the

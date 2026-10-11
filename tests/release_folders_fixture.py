@@ -1,4 +1,4 @@
-"""One small board unit and its releases, from demo parts only (WORKFLOW-BLOCKS tests)."""
+"""One small board unit and its releases, from demo parts only."""
 
 import fransys as fr
 import fransys_author

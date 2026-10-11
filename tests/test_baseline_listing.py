@@ -286,7 +286,7 @@ def test_a_cabinet_declared_net_through_a_boards_boundary_pin_stays_out_of_the_b
 
 
 def test_two_releases_of_one_unit_in_one_cabinet_give_two_distinct_units_entries():
-    """Fixed-designations acceptance 7b: a board release at `1.5` and the same unit's release
+    """A board release at `1.5` and the same unit's release
     at `2.1`, each instantiated once in one cabinet, give two distinct `units` entries keyed
     by `(name, version, revision)`, not collapsed into one by name alone."""
     parts = fransys_parts.load("demo_parts")

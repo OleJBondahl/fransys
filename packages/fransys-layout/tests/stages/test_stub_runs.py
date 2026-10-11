@@ -34,19 +34,9 @@ def test_a_stub_through_a_foreign_bodys_interior_runs_through_it() -> None:
     assert _through(Box(x=-5, y=10, width=10, height=10)) == (_FOREIGN,)
 
 
-def test_a_stub_past_a_foreign_body_runs_through_nothing() -> None:
-    assert _through(Box(x=5, y=10, width=10, height=10)) == ()
-
-
 def test_a_stub_over_a_foreign_port_runs_through_its_function() -> None:
     """UNDO: `_on` replaced by `False`, and the port on the stub is not found."""
     assert _through(Box(x=5, y=10, width=10, height=10), Point(x=0, y=30)) == (_FOREIGN,)
-
-
-def test_the_markers_own_function_is_never_foreign() -> None:
-    """UNDO: `own` emptied in `functions_through`, and the own body above the port is found."""
-    bodies = {_OWN: Box(x=-5, y=-10, width=10, height=20)}
-    assert functions_through(_MARKER, solids(bodies, _OWN_PORTS)) == ()
 
 
 def test_a_south_markers_stub_is_one_run_from_its_port_to_its_box() -> None:

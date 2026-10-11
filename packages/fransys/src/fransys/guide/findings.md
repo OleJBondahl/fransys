@@ -69,7 +69,7 @@ Every code Fransys can emit, with severity, stage, meaning and fix.
 | NET_UNREALISED | WARNING | validators | A declared net's ports fall into more than one physical net, and no single board holds them all. | Wire the missing conductors, or accept it if intended. |
 | NODE_WITHOUT_COMPONENT | WARNING | kicad | A netlist pin belongs to an item with no footprint (or is the board's own pin), so KiCad drops it on import. | Give the item a footprint, or model the connector as a child item with one. |
 | ORDER_HINT_UNMET | WARNING | render | An authored order hint names two groups that are not on the same drawing set, so no page order can honour it. | Move both groups onto one drawing set, or drop the hint. |
-| OUT_OF_CONTENT_BOX | WARNING | render | A symbol's keep-out box, label, marker box or route vertex sits outside the page's content box. | Rearrange the layout (via authored hints) to fit. |
+| OUT_OF_CONTENT_BOX | WARNING | render | A symbol's keep-out box, label, marker box or route vertex sits outside the page's content box; the message ends " at p<page>:<cell>", with the drawing set before the page (`p<set>.<page>`) only when the layout has more than one. | Rearrange the layout (via authored hints) to fit. |
 | PAD_ON_MULTIPLE_NETS | ERROR | kicad | One component pad is in more than one KiCad netlist net. | Fix the wiring so each pad is on exactly one net. |
 | PAGE_OVERFULL | WARNING | render | A page's rows are taller than the content box; nothing is scaled. | Split the content across more pages, or shrink the grouping. |
 | PART_LIBRARY_VERSION_CONFLICT | ERROR | library load | Two `PartLibrary` records share a name but declare different versions. | Load only one version of each named part library. |

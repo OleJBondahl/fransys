@@ -1,4 +1,4 @@
-"""Rest state and protection type lints (ELECTRICAL-FACTS F2, F3): each fires on a planted part.
+"""Rest state and protection type lints: each fires on a planted part.
 
 `_codes` reads back the finding codes `lint` returned, so a test checks the code it owns. Every
 planted case has a clean twin: the same function with the one fact fixed.

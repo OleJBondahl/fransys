@@ -1,4 +1,4 @@
-"""D1 (layout deep dive): a function is a side element only when every wired pole is a side pole.
+"""A function is a side element only when every wired pole is a side pole.
 
 Each design is a few contactors and a strip of terminals, built by `fr.build`; a test reads the
 placements and the findings of the build.
@@ -55,7 +55,7 @@ def test_a_function_with_a_strapped_pole_and_a_live_pole_is_a_side_element_nowhe
 
 def test_a_function_that_is_a_side_element_of_two_carriers_is_unplaced_in_no_column() -> None:
     """D1: K2, strapped to F1 and to K1 both, keeps a cell of its own and no finding names it."""
-    # UNDO: none. A guard for the unmerge: it passed before EF-D Part 3b and no mutation of
+    # UNDO: none. A guard for the unmerge: no mutation of
     # `_side_nowhere` makes the columns pass raise this finding.
     parts, d, c, g, (t1, t2, t3, t4), wire = _strip_of_terminals(4)
     f1 = d.item("DEMO-MCB-C6", tag="F1", at=c, group=g)

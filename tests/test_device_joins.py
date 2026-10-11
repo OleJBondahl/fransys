@@ -1,4 +1,4 @@
-"""`d.device(..., parent=, joins=)` fits a connector item on its parent's own leads (HA5, HA6).
+"""`d.device(..., parent=, joins=)` fits a connector item on its parent's own leads.
 
 Built through the public API on `DEMO-CTR-LEADS`, a contactor on flying leads, and a housing.
 """

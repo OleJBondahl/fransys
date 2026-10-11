@@ -7,7 +7,7 @@ arms: `L1`/`24V` (baseline), `L`, `12V` and `L+`.
 The bug: a pin was ranked by its rail's name in a house table, so a rail named `L`, `12V` or `L+`
 had no rank and the pins swapped sides of the box: N left of L, `-` left of `+`.
 
-The rule (CONVENTIONS-V06 V11, decision model-0121): the rank comes from the supply's declared
+The rule (decision model-0121): the rank comes from the supply's declared
 facts, never the name: an AC phase before AC 0 V, a DC rail above 0 V before the DC 0 V rail. So
 `L` stands left of `N` and `+` left of `-`, with any rail names.
 """
@@ -20,7 +20,7 @@ from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 
 # arm: (DC live rail name or None for the default, DC 0 V name or None)
-# ac_named_L dropped: ac_supply has no names= (EA15, 2026-10-05)
+# ac_named_L dropped: ac_supply has no names= (2026-10-05)
 _ARMS = {
     "baseline": (None, None),
     "dc_named_12V": ("12V", "0V"),

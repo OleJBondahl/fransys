@@ -1,4 +1,4 @@
-"""EA11, EA12: each spelling of the coverage order, in the engine and the surface, one model."""
+"""Each spelling of the coverage order, in the engine and the surface, one model."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING

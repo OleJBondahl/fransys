@@ -47,6 +47,7 @@ class _Facts:
     cells: Mapping[tuple[str, ...], frozenset[Handle]]
     unwired: frozenset[Handle]
     cuttable: Mapping[Handle, tuple[Handle, Handle]]
+    kinds: Mapping[Handle, str]
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,6 +101,19 @@ def _facts(layout: Layout, records: StageRecords) -> _Facts:
             and one.b.port in poles.get(one.b.function, frozenset())
             and sizes[one.a.port] == _NET_OF_TWO
         },
+        kinds={function: one.kind for function, one in by_function.items()},
+    )
+
+
+def _split_by_pages(
+    ends: tuple[Handle, Handle],
+    kinds: Mapping[Handle, str],
+    pages: Mapping[Handle, set[tuple[int, int]]],
+) -> bool:
+    """Whether a link joins a coil and a contact that share no page: the intended IEC split."""
+    coil, other = sorted(kinds[end] for end in ends)  # "coil" sorts before "contact_*"
+    return (
+        coil == "coil" and other.startswith("contact") and pages[ends[0]].isdisjoint(pages[ends[1]])
     )
 
 
@@ -114,6 +128,9 @@ def lint_chains(
     placed: defaultdict[tuple[int, int, tuple[str, ...]], set[Handle]] = defaultdict(set)
     for one in layout.placed:
         placed[(one.drawing_set, one.page, one.column)].add(one.function)
+    pages: defaultdict[Handle, set[tuple[int, int]]] = defaultdict(set)
+    for one in layout.placed:
+        pages[one.function].add((one.drawing_set, one.page))
     findings = []
     seen: set[tuple[Handle, str]] = set()
     for (_, _, column), functions in placed.items():
@@ -146,7 +163,10 @@ def lint_chains(
         for handle in {
             one.connection
             for one in layout.markers
-            if one.side is MarkerSide.OWNER and not one.star and one.connection in facts.cuttable
+            if one.side is MarkerSide.OWNER
+            and not one.star
+            and one.connection in facts.cuttable
+            and not _split_by_pages(facts.cuttable[one.connection], facts.kinds, pages)
         }
     )
     return tuple(sorted(findings, key=lambda finding: (finding.code, finding.subjects)))

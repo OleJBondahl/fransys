@@ -1,13 +1,13 @@
-"""D9 across drawing sets: a branch is decided where a port stands, not once for the whole net.
+"""Across drawing sets: a branch is decided where a port stands, not once for the whole net.
 
 A unit's boundary terminals stand twice: as pins in the top-level set and where their group
 puts them in the unit's own set. The PE net here is three terminals, `-X1:1` (the hub) wired to
 `-X3:1` and to `-X3:2`. In the top-level set the three pins stand in one row, so `-X1:1` and
 `-X3:1` are side by side; in the unit's own set each terminal stands beside its group's relay,
-so no two of them are. The wire counts as drawn between neighbours (C3) and the neighbour
+so no two of them are. The wire counts as drawn between neighbours and the neighbour
 takes no marker; but the pair is neighbours in one set only, and in the other `-X3:1` must
-still show its branch. Where the terminals share a page (`fill` 1) M12 joins the same-side
-pins by wires at any column distance, so the unit's set draws wires and no marker. Built
+still show its branch. Where the terminals share a page (`fill` 1) same-side pins are joined
+by wires at any column distance, so the unit's set draws wires and no marker. Built
 through the `fransys` facade from `examples/demo-parts`, read from `layout.*` records and
 `marker_text`.
 
@@ -126,8 +126,8 @@ def _star_markers(model, port: Id, kind: StarKind, page=None) -> list[LinkMarker
 def test_a_port_apart_from_the_reference_in_the_unit_set_gets_a_branch_there(fill: int) -> None:
     """-X3:1 is beside the hub -X1:1 in the top-level set and apart in the unit's own set. On a
     page of its own (`fill` 3) it carries a branch marker there whose partner is the hub's
-    reference marker. On the hub's page (`fill` 1) it stands in the same row, and M12 joins
-    same-side pins by wires at any column distance: wires, no branch."""
+    reference marker. On the hub's page (`fill` 1) it stands in the same row, and same-side pins
+    are joined by wires at any column distance: wires, no branch."""
     # UNDO: stages/references/nets.py, `branch_pages`: the return statement to
     #     `return []` (no set takes a branch): FAILED on `len(branches)` (other-page)
     # UNDO (same-page): stages/references/joins.py `joined_runs`: join only ports of adjacent
@@ -152,9 +152,9 @@ def test_the_reference_in_the_unit_set_lists_the_branch_of_the_port_apart_from_i
     fill: int,
 ) -> None:
     """The hub's reference marker in the unit's own set lists -X3:1 and -X3:2, one line for each
-    branch marker that names them (M3: the box may share lines of other nets at that pin, so
-    only the lines of this net's own number are counted). On one page (`fill` 1) M12 draws
-    wires and the net has no reference to list."""
+    branch marker that names them (the box may share lines of other nets at that pin, so
+    only the lines of this net's own number are counted). On one page (`fill` 1) same-side pins are
+    joined by wires and the net has no reference to list."""
     # UNDO: `branch_pages` returns `[]` (other-page); same-page as in the first test
     model, (hub, near, far) = _build(_APART, fill=fill)
     if fill == 1:
@@ -187,7 +187,7 @@ def _on_top_set(model, marker: LinkMarker) -> bool:
 
 
 def _joined_by_wires(model, hub: Id, near: Id, far: Id) -> None:
-    """S20 M12: terminals standing on one page of the unit's set, apart as they are, are joined by
+    """Terminals standing on one page of the unit's set, apart as they are, are joined by
     wires at any column distance (the pins face the same side), so the net takes no marker."""
     own = _own_page(model, hub)
     assert _own_page(model, near) == _own_page(model, far) == own
@@ -201,8 +201,8 @@ def test_in_the_top_level_set_the_pair_stands_beside_and_takes_no_branch(fill: i
     """In the top-level set the hub, `near` and `far` stand in one row and the hub is beside
     `near`, so a wire joins them and `near` takes no branch marker there; its branch stands in
     the unit's own set and names the hub's reference marker on the hub's own page (an own-set
-    placement of the reference, never the top-level pin). On one page (`fill` 1) M12 joins the
-    three by wires in the unit's set, so there is no branch anywhere."""
+    placement of the reference, never the top-level pin). On one page (`fill` 1) the
+    three are joined by wires in the unit's set, so there is no branch anywhere."""
     # UNDO: stages/references/nets.py, `branch_pages`: the return
     #     statement to `return []`: FAILED on `(branch,) = ...` (other-page); same-page as in
     #     the first test
@@ -224,7 +224,7 @@ def test_in_the_top_level_set_the_pair_stands_beside_and_takes_no_branch(fill: i
 
 
 def test_control_a_pair_beside_each_other_in_both_sets_gets_no_marker_pair() -> None:
-    """C3: -X1:2 is beside the hub in both sets and joined to it by a wire: it takes no marker,
+    """-X1:2 is beside the hub in both sets and joined to it by a wire: it takes no marker,
     and the reference lists -X3:1 alone, the one port that stands apart from the hub in both
     sets (its marker stands in the unit's own set: the top-level set shows the unit's pins only,
     no star marker). Must pass on the base and after the fix."""

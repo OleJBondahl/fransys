@@ -1,4 +1,4 @@
-"""Each guide task shows an easy and an efficient level that build one model (EA14).
+"""Each guide task shows an easy and an efficient level that build one model.
 
 A python block whose first line is `# easy: <task>` or `# efficient: <task>` is a level of that
 task. Each such block is self-contained: it imports `fransys as fr` and ends with the design

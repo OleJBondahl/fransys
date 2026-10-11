@@ -16,6 +16,8 @@ from fransys_model.kernel import Finding, Severity
 from .codes import LINE_ON_OUTLINE, OUT_OF_CONTENT_BOX, WIRE_OVER_LABEL, WIRE_THROUGH_SYMBOL
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from fransys_layout.stages import PlacedFunction
     from fransys_layout.stages.connector_boxes import PlacedConnectorBox
     from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub
@@ -162,16 +164,24 @@ def _along(seg: Segment, box: Box) -> bool:
     return False
 
 
-def ink_outside(ink: PageInk, content: Box) -> list[Finding]:
-    """`OUT_OF_CONTENT_BOX`: a line point, a stub, a line label or a connector box outside it."""
-    hit = {subject for subject, box in ink.texts if not contains(content, box)}
-    hit |= {
-        owner
-        for owner, seg in ink.runs
-        for point in seg
-        if not contains(content, Box(x=point.x, y=point.y, width=0, height=0))
-    }
+def ink_outside(ink: PageInk, content: Box, at: Callable[[int, int], str]) -> list[Finding]:
+    """`OUT_OF_CONTENT_BOX`: a line point, a stub, a line label or a connector box outside it.
+
+    `at` names the page cell of a point; each finding names the first outside one of its subject.
+    """
+    hit: dict[Id[Any], tuple[int, int]] = {}
+    for subject, box in ink.texts:
+        if not contains(content, box):
+            hit.setdefault(subject, (box.x, box.y))
+    for owner, seg in ink.runs:
+        for point in seg:
+            if not contains(content, Box(x=point.x, y=point.y, width=0, height=0)):
+                hit.setdefault(owner, (point.x, point.y))
     return [
-        _warn(OUT_OF_CONTENT_BOX, (subject,), "a harness line's ink leaves the content box")
+        _warn(
+            OUT_OF_CONTENT_BOX,
+            (subject,),
+            f"a harness line's ink leaves the content box at {at(*hit[subject])}",
+        )
         for subject in sorted(hit)
     ]

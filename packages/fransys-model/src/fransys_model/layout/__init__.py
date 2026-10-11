@@ -65,7 +65,14 @@ from .results import (
     RoutePoint,
     SymbolPlacement,
 )
-from .tables import derived_layout_ids, layout_of, profile_of, sheet_for, sheet_format_of
+from .tables import (
+    derived_layout_ids,
+    layout_of,
+    profile_of,
+    profile_of_page,
+    sheet_for,
+    sheet_format_of,
+)
 
 __all__ = [
     "AUTHORED_KINDS",
@@ -129,6 +136,7 @@ __all__ = [
     "layout_of",
     "page_slice",
     "profile_of",
+    "profile_of_page",
     "sheet_for",
     "sheet_format_of",
 ]

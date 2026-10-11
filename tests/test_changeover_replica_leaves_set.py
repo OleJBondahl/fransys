@@ -1,9 +1,9 @@
-"""Layout-0076 for a terminal beside a changeover's throw (S20, 4b6c): a terminal never stands as a
+"""Layout-0076 for a terminal beside a changeover's throw: a terminal never stands as a
 host cell in another top-level drawing set.
 
 The fixture is `field_cases/test_changeover_throws_to_two_strips.py`: poles 3 and 4 of changeover
 -K1 at CAB, each throw wired to its own terminal of the strips -X01 and -X02 at FIELD. Built with no
-`Unit`, the terminals belong to +FIELD's drawing set, so -K1's throws 32, 34, 42 and 44 end in C21
+`Unit`, the terminals belong to +FIELD's drawing set, so -K1's throws 32, 34, 42 and 44 end in
 off stubs and the terminals stand in +FIELD's drawing with their stubs back. Built inside a `Unit`
 the whole circuit is one drawing set (layout-0081), so the terminals stay host cells under -K1's
 throws and no throw ends in a stub.

@@ -1,8 +1,8 @@
 """P3 (layout-0154): harness lines, leaving lines and middle units, built through `fr`.
 
-The study board (acceptance 17, 18, Part 2a's 6) and the P3 conditions: a unit whose
+The study board and the conditions: a unit whose
 only line leaves is a middle unit (1), a line between two top-level units leaves at both ends
-(2), a middle unit draws one outline and no D11 frame (3). One stub per leaving line (C1).
+(2), a middle unit draws one outline and no frame (3). One stub per leaving line (C1).
 """
 
 import functools
@@ -34,7 +34,7 @@ from fransys_model.layout import (
 )
 from fransys_model.vocab.tables import boundaries, functions, items
 
-LEAVE = 6 * WIRING_GRID  # HL18: 48 G to the stub
+LEAVE = 6 * WIRING_GRID  # 48 G to the stub
 TO_BOX = LEAVE + WIRING_GRID  # layout-0158: the line runs on to its stub box's edge
 
 
@@ -67,7 +67,7 @@ def _line_stubs(model) -> list[LinkMarker]:
 
 
 def test_each_leg_prints_its_ends_number_and_the_trunk_is_the_roots() -> None:
-    """Acceptance 18: -W17's three branches are 1, 2, 3; the trunk leaves the root's plug box.
+    """-W17's three branches are 1, 2, 3; the trunk leaves the root's plug box.
 
     UNDO: `line_paths` keys the trunk 0 and counts the legs from 1 (P3's look).
     """
@@ -90,7 +90,7 @@ def _is_interface(model, function) -> bool:
 
 
 def test_each_line_label_stands_beside_its_longest_run_and_none_overlap() -> None:
-    """Acceptance 17: a label's centre is within a text height, a grid and the house text gap
+    """A label's centre is within a text height, a grid and the house text gap
     (layout-0158) of its longest run.
 
     UNDO: `text_centre` returns a fixed spot, `Point(x=0, y=0)`.
@@ -111,7 +111,7 @@ def test_each_line_label_stands_beside_its_longest_run_and_none_overlap() -> Non
 
 
 def test_fan_out_legs_are_oblique_and_never_a_route_so_no_wire_is_reported() -> None:
-    """Part 2a acceptance 6: the legs slant, carry no route, and give no WIRE_NOT_ORTHOGONAL.
+    """The legs slant, carry no route, and give no WIRE_NOT_ORTHOGONAL.
 
     UNDO: the engine also writes each fan-out leg as a stage `Route` of its conductor.
     """
@@ -131,7 +131,7 @@ def test_a_unit_whose_only_line_leaves_draws_its_outline_a_leaving_line_and_one_
 
     Its interface's line runs 48 G straight out of the plug box to one stub naming the line, not
     one stub per core, and on to the stub's box (layout-0158). UNDO: `line_reach` drops a unit
-    with no reached line (P2b).
+    with no reached line.
     """
     model = _case("leaving").model
     w3 = _owner(model, "W3")
@@ -187,7 +187,7 @@ def test_a_line_between_two_top_level_units_leaves_at_both_ends() -> None:
 def test_a_middle_unit_has_one_outline_per_page_and_no_d11_frame() -> None:
     """Condition 3: the single-wire interface X2 stands inside the one outline, at an edge.
 
-    UNDO: `_unit_members` keeps the middle unit's members (today's D11 frames kept).
+    UNDO: `_unit_members` keeps the middle unit's members (today's frames kept).
     """
     model = _case("mixed").model
     outlines = Counter(o.page for o in layout_of(model, Outline).values())
@@ -207,7 +207,7 @@ def test_a_middle_unit_has_one_outline_per_page_and_no_d11_frame() -> None:
 
 @pytest.mark.parametrize("name", ["leaving", "two_units", "mixed"])
 def test_no_conductor_a_line_carries_is_routed(name: str) -> None:
-    """HL1: a line's conductors are drawn by the line, never as routes."""
+    """A line's conductors are drawn by the line, never as routes."""
     model = _case(name).model
     carried = {c for ids in line_conductors(model).values() for c in ids}
     assert carried

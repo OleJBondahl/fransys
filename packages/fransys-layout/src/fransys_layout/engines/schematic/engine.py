@@ -38,12 +38,13 @@ from ._arrange_columns import (
     arranged,
 )
 from ._decide import decide
-from ._finish import Laid, boxed, cross_references, outlined
+from ._finish import Laid, boxed, cross_references, outlined_cells
 from ._lines import DrawnPieces, LineScene, draw_lines, harness_ink, strip_lines
 from ._lint import LintScene, Members, lint_findings
 from ._middle import middle_inputs, moved_shapes, strip_middle
 from ._sizing import sized
 from .defaults import BOTTOM_HEADROOM_LANES, DEFAULT_RULES, TOP_HEADROOM_LANES
+from .profiles import lay_out
 from .read import read_inputs
 from .read.harness_lines import box_specs
 from .read.labels import label_requests
@@ -185,19 +186,29 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         placed_all,
         moved_shapes(placement.pages, placement.placed_all, placed_all),
     )
-    pages, outlines, placed_box = outlined(model, inputs, columns, laid, placed_box)
+    pages, outlines, placed_box, placed_all, markers, blocks = outlined_cells(
+        model, inputs, columns, laid, placed_box
+    )
     crossings = cross_references(model, inputs, placement, decided, contact_refs)
 
     routes, labels, page_findings = finish_pages(
         plans,
         pages,
-        FinishRun(columns, drawn, _page_inputs(inputs, img.heads), markers, crossings, routed_on),
+        FinishRun(
+            columns,
+            drawn,
+            _page_inputs(inputs, img.heads, decided.joins),
+            markers,
+            crossings,
+            routed_on,
+            blocks,
+        ),
     )
     findings.extend(page_findings)
     routes = onepage.keep_chosen_edges(routes, inputs.net_groups, at_home)
     # layout-0154: the lines over the finished page, clear of its symbols, boxes and texts
     scene = LineScene(
-        placed_all,
+        tuple(placed_all),
         drawn,
         placed_box,
         (*labels,),
@@ -259,7 +270,15 @@ def _placed(
     return placement, box_room_findings(decided, first)
 
 
-def _page_inputs(inputs: StageInputs, heads: Mapping[Id[Any], str]) -> PageInputs:
+def _pair(run: JoinedRun) -> tuple[Id[Any], Id[Any]]:
+    """The two ports of a beside run, in port order as a `Connection` keeps them."""
+    first, second = sorted(end.port for end in run.ends)
+    return first, second
+
+
+def _page_inputs(
+    inputs: StageInputs, heads: Mapping[Id[Any], str], joins: tuple[JoinedRun, ...] = ()
+) -> PageInputs:
     """The fields of `inputs` the page steps read, with the house headroom (`defaults`)."""
     return PageInputs(
         functions=inputs.functions,
@@ -275,6 +294,7 @@ def _page_inputs(inputs: StageInputs, heads: Mapping[Id[Any], str]) -> PageInput
         bottom_headroom_lanes=BOTTOM_HEADROOM_LANES,
         line_ends=frozenset((end.function, end.port) for c in inputs.carried for end in (c.a, c.b)),
         heads=heads,
+        aside=frozenset(_pair(run) for run in joins if run.aside),
     )
 
 
@@ -286,8 +306,14 @@ def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     authored in, and `digests["core"]`/`digests["facet"]` are unchanged. A model that
     already holds derived layout records has them replaced. Findings are sorted by
     `(code, subjects, message)`. A half-finished design still lays out; only structural
-    problems raise (`LayoutError`).
+    problems raise (`LayoutError`). Each unit with drawings is drawn with its own profile
+    (model-0192): one run per profile in use, spliced by drawing set (`profiles.py`).
     """
-    results, findings = stage_results(model, inputs := read_inputs(model))
+    return lay_out(model, _run_once)
+
+
+def _run_once(model: Model, unit: Id[Any] | None) -> tuple[Model, tuple[Finding, ...]]:
+    """The whole pass with the profile of `unit` (`None`: the top design's)."""
+    results, findings = stage_results(model, inputs := read_inputs(model, unit))
     keys = write_keys(model, inputs.functions)
     return write_layout(model, results, keys), findings

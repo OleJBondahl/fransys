@@ -1,4 +1,4 @@
-"""`stages.line_room` (HL18, layout-0158): a line's pins keep room for its fan, run and stub."""
+"""`stages.line_room` (layout-0158): a line's pins keep room for its fan, run and stub."""
 
 from types import SimpleNamespace
 from typing import Any

@@ -3,7 +3,7 @@
 The engineering shape: a redundancy module fed by two supplies (a box: two input groups, one
 output) with a service connector, wired on pin 1 to a strip terminal.
 
-The bug (BOX-CONTACT, layout-0123): the module's box-drawn functions form the box and the rest
+The bug (layout-0123): the module's box-drawn functions form the box and the rest
 draw apart, but the sides of the box's pins were still ranked over every drawn function of the
 item. The connector's pin views, named by their port, reached the rank as a function that is
 no function (KeyError), so the drawing could not be built.

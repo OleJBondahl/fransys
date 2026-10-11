@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 11,
+  "schema_version": 13,
   "tables": {
     "aspect_node": [
       {
@@ -1900,6 +1900,7 @@
     ],
     "layout.chain": [
       {
+        "beside": null,
         "entries": [
           {
             "function": "function:7220f358b642551a968d35ecacd5b79c",
@@ -1927,6 +1928,7 @@
         ]
       },
       {
+        "beside": null,
         "entries": [
           {
             "function": "function:e014637e3e6754d783907fb9124c9875",
@@ -1950,6 +1952,7 @@
         ]
       },
       {
+        "beside": null,
         "entries": [
           {
             "function": "function:b152e534388550838f619bbfd3dbb38d",
@@ -1972,6 +1975,7 @@
         ]
       },
       {
+        "beside": null,
         "entries": [
           {
             "function": "function:d0dcedc3d4725cd9a140d39c0bbdeb15",
@@ -1990,6 +1994,7 @@
         ]
       },
       {
+        "beside": null,
         "entries": [
           {
             "function": "function:ff1a82bf6a7157309692a1de38676abb",
@@ -2017,6 +2022,7 @@
         ]
       },
       {
+        "beside": null,
         "entries": [
           {
             "function": "function:171734551b48537dbbdc8f027f22ccd1",
@@ -2266,22 +2272,32 @@
           {
             "index": 1,
             "x": 552,
-            "y": 464
+            "y": 80
           },
           {
             "index": 2,
+            "x": 632,
+            "y": 80
+          },
+          {
+            "index": 3,
+            "x": 632,
+            "y": 464
+          },
+          {
+            "index": 4,
             "x": 688,
             "y": 464
           },
           {
-            "index": 3,
+            "index": 5,
             "x": 688,
             "y": 456
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 570,
-        "text_y": 276
+        "text_x": 650,
+        "text_y": 272
       },
       {
         "branch": 3,
@@ -2309,41 +2325,31 @@
           {
             "index": 1,
             "x": 552,
-            "y": 120
+            "y": 80
           },
           {
             "index": 2,
-            "x": 528,
-            "y": 120
+            "x": 632,
+            "y": 80
           },
           {
             "index": 3,
-            "x": 528,
-            "y": 168
-          },
-          {
-            "index": 4,
-            "x": 552,
-            "y": 168
-          },
-          {
-            "index": 5,
-            "x": 552,
+            "x": 632,
             "y": 488
           },
           {
-            "index": 6,
+            "index": 4,
             "x": 208,
             "y": 488
           },
           {
-            "index": 7,
+            "index": 5,
             "x": 208,
             "y": 464
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 380,
+        "text_x": 420,
         "text_y": 476
       },
       {
@@ -2396,8 +2402,8 @@
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 509,
-        "text_y": 148
+        "text_x": 546,
+        "text_y": 164
       }
     ],
     "layout.label": [

@@ -1,4 +1,4 @@
-"""D10: the page slices: which functions a page draws, and one pass that cuts a run into pages."""
+"""The page slices: which functions a page draws, and one pass that cuts a run into pages."""
 
 from operator import attrgetter, itemgetter
 

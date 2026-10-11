@@ -137,5 +137,5 @@ def test_the_container_page_draws_the_boundary_ports_as_pin_cells(case: str) -> 
         for svg in (root / "inter").glob("layout.page-*.svg")
     ]
     (texts,) = (page for page in pages if f"{title} rev 1.1" in page)
-    texts = [t for t in texts if t != f"{title} rev 1.1"]  # OUTLINE-ENCLOSE: one per outline run
+    texts = [t for t in texts if t != f"{title} rev 1.1"]  # One per outline run
     assert sorted(texts) == sorted(expected)

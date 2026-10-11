@@ -1,4 +1,4 @@
-"""HL21 (layout-0153 P2c): a unit group is one packing unit: whole on one page, first on it."""
+"""Layout-0153: a unit group is one packing unit: whole on one page, first on it."""
 
 import dataclasses
 
@@ -73,17 +73,8 @@ def test_a_group_packs_whole_at_its_first_columns_place() -> None:
     assert findings == ()
 
 
-def test_a_group_that_does_not_fit_beside_the_columns_before_it_moves_whole() -> None:
-    """Today b fits beside a and c spills; the group b over c is as wide as c and moves whole."""
-    widths = {"a": 1000, "b": 200, "c": 400}
-    assert _shape(_plan(widths, [])[0]) == [["a", "b"], ["c"]]
-    pages, findings = _plan(widths, [_band("b", "c")])
-    assert _shape(pages) == [["a"], ["b", "c"]]
-    assert findings == ()
-
-
 def test_two_groups_share_a_page_side_by_side_as_they_fold() -> None:
-    """HL20: two groups, each as wide as its wider band, pack together with the column after."""
+    """Two groups, each as wide as its wider band, pack together with the column after."""
     widths = {"a": 1000, "b": 300, "c": 300, "d": 300, "e": 300, "f": 300}
     assert _shape(_plan(widths, [])[0]) == [["a"], ["b", "c", "d", "e"], ["f"]]
     pages, _ = _plan(widths, [_band("b", "c"), _band("d", "e")])
@@ -106,7 +97,7 @@ def test_a_group_is_as_wide_as_its_wider_band_or_outline_a_shared_column_below()
 
 
 def test_two_bands_sharing_a_column_are_one_unit_side_by_side() -> None:
-    """HL20: the shared column b stays with the first band; the second adds its own width."""
+    """The shared column b stays with the first band; the second adds its own width."""
     widths: dict[AuthoringKey, int] = {_key("a"): 100, _key("b"): 200, _key("c"): 300}
     widths[_key("d")] = 50
     units = [_unit(n, w) for (_, n), w in widths.items()]
@@ -145,7 +136,7 @@ def test_a_keep_together_set_takes_the_unit_group_whole() -> None:
 
 
 def test_a_unit_group_wider_than_the_page_splits_with_unit_group_split() -> None:
-    """HL21 (ruling): a group wider than the page splits, with its own WARNING code."""
+    """A group wider than the page splits, with its own WARNING code."""
     widths = dict.fromkeys("abc", 600)
     pages, findings = _plan(widths, [_band("", "abc")])
     assert _shape(pages) == [["a", "b"], ["c"]]
@@ -195,3 +186,12 @@ def test_a_cut_group_with_no_lower_band_or_a_shared_column_stays_whole() -> None
     assert [u.columns for u in empty] == [(_key("a"), _key("b")), (_key("c"),)]
     shared = gather(units, banded([_band("a", "b", 10, cut=True), _band("b", "c", 10)]), widths)
     assert [u.break_before for u in shared] == [False]
+
+
+def test_a_group_that_does_not_fit_beside_the_columns_before_it_moves_whole() -> None:
+    """Today b fits beside a and c spills; the group b over c is as wide as c and moves whole."""
+    widths = {"a": 1000, "b": 200, "c": 400}
+    assert _shape(_plan(widths, [])[0]) == [["a", "b"], ["c"]]
+    pages, findings = _plan(widths, [_band("b", "c")])
+    assert _shape(pages) == [["a"], ["b", "c"]]
+    assert findings == ()

@@ -2,8 +2,8 @@
 
 The engineering shape: a contactor with a coil, a wired NO auxiliary contact and an NC auxiliary
 contact nobody wired, whose terminal 21 is only declared on a control net. A second contactor
-carries a clip-on add-on block (V10) whose NC contact nobody wired. With
-`d.layout.profile(hide_unused_pins=True)` a spare contact is left off the page (CONVENTIONS-V06 V1).
+carries a clip-on add-on block whose NC contact nobody wired. With
+`d.layout.profile(hide_unused_pins=True)` a spare contact is left off the page.
 
 The bug: layout kept a contact on a net with no conductor on the page, but the coil's contact table
 listed it as a spare, since the table asked a second, conductor-only question. The fix is

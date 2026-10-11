@@ -1,4 +1,4 @@
-"""A `GROUP_SPLIT` avoids severing a D1 pole link (deep-dive D4, EF-A2 part 6), on the cabinet.
+"""A `GROUP_SPLIT` avoids severing a pole link, on the cabinet.
 
 At a narrow content width `=P1` is wider than a page and splits between columns. Wire 17 joins
 the through paths of `-K1` `aux` and `-S0` `nc_2`, two columns of `=P1`, on a net of two ports:

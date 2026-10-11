@@ -13,7 +13,7 @@ from samples import hid
 
 from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, symbol_geometry
 from fransys_layout.stages import LinkMarker, MarkerSide
-from fransys_layout.stages.texts.power import _pin_facing, power_place, power_places
+from fransys_layout.stages.texts.power import power_place, power_places
 
 PIN = Point(x=160, y=200)
 SYMBOLS = ("power-supply", "ground", "protective-earth")
@@ -58,6 +58,22 @@ def test_the_port_point_is_one_wiring_grid_from_the_pin_along_its_facing(
     )
 
 
+def test_the_body_is_the_oriented_symbols_body_at_its_origin() -> None:
+    """UNDO: in `power_place` leave `body` at the origin (no `translate`)."""
+    place = power_place(_end("power-supply", Facing.N))
+    body = symbol_geometry("power-supply", orientation=place.orientation).body
+    assert (place.body.x, place.body.y) == (place.at.x + body.x, place.at.y + body.y)
+    assert (place.body.width, place.body.height) == (body.width, body.height)
+
+
+def test_several_ends_of_one_port_on_one_page_are_one_symbol() -> None:
+    """UNDO: in `power_places` drop the `not in found` test: two symbols on one pin."""
+    first, second = _end("ground", Facing.S, text=""), _end("ground", Facing.S, text="")
+    assert len(power_places((first, second))) == 1
+    reference = replace(first, symbol="", symbol_text="")
+    assert power_places((reference,)) == ()
+
+
 @pytest.mark.parametrize("facing", list(SIDES))
 @pytest.mark.parametrize("symbol", SYMBOLS)
 def test_the_symbols_port_faces_back_at_the_pin(symbol: str, facing: Facing) -> None:
@@ -77,25 +93,3 @@ def test_the_orientation_differs_by_side_for_one_symbol(facing: Facing) -> None:
     turns = {side: power_place(_end("ground", side)).orientation for side in SIDES}
     assert len(set(turns.values())) == len(SIDES)
     assert power_place(_end("ground", facing)).orientation is turns[facing]
-
-
-@pytest.mark.parametrize("facing", list(SIDES))
-def test_the_pin_facing_is_read_from_the_marker_box(facing: Facing) -> None:
-    """UNDO: in `pin_facing` return `Facing.N` for a box below the pin."""
-    assert _pin_facing(_end("ground", facing)) is facing
-
-
-def test_the_body_is_the_oriented_symbols_body_at_its_origin() -> None:
-    """UNDO: in `power_place` leave `body` at the origin (no `translate`)."""
-    place = power_place(_end("power-supply", Facing.N))
-    body = symbol_geometry("power-supply", orientation=place.orientation).body
-    assert (place.body.x, place.body.y) == (place.at.x + body.x, place.at.y + body.y)
-    assert (place.body.width, place.body.height) == (body.width, body.height)
-
-
-def test_several_ends_of_one_port_on_one_page_are_one_symbol() -> None:
-    """UNDO: in `power_places` drop the `not in found` test: two symbols on one pin."""
-    first, second = _end("ground", Facing.S, text=""), _end("ground", Facing.S, text="")
-    assert len(power_places((first, second))) == 1
-    reference = replace(first, symbol="", symbol_text="")
-    assert power_places((reference,)) == ()

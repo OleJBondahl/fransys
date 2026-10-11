@@ -44,7 +44,7 @@ def test_symdef_check_fails_on_a_stale_build(tmp_path):
     assert "stale-build" in {finding.rule for finding in check(tmp_path)}
 
 
-# TL2 : the terminal's four stub
+# The terminal's four stub
 # leads are bound to the port each one draws.
 
 

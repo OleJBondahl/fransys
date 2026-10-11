@@ -57,12 +57,6 @@ def link_cls() -> type[Link]:
 
 
 @pytest.fixture
-def label_cls() -> type[Label]:
-    """The toy `Label` value kind."""
-    return Label
-
-
-@pytest.fixture
 def origin() -> Origin:
     """A stable `Origin` for tests that don't care which line authored a record."""
     return Origin(file="conftest.py", line=1, note="fixture")

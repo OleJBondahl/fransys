@@ -1,4 +1,4 @@
-"""`scripts/lean_markdown.py`: LC4's token, opening-paragraph and sentence-length gates.
+"""`scripts/lean_markdown.py`: the token, opening-paragraph and sentence-length gates.
 
 Loaded like `test_lean_ceilings.py` loads `scripts/lean_ceilings.py` (`importlib.util.spec_from_
 file_location`), since the script is not a package module. Every case builds its own tmp_path
@@ -68,7 +68,7 @@ def test_covered_files_enumeration_matches_anchors_and_excludes_history(tmp_path
 
 
 def test_md_tokens_over_limit_fails_the_gate(tmp_path: Path):
-    """A covered file over 5k tokens fails `lean_ceilings.check` at the LC4 limit."""
+    """A covered file over 5k tokens fails `lean_ceilings.check` at the token limit."""
     covered = tmp_path / "docs" / "DESIGN.md"
     covered.parent.mkdir(parents=True)
     covered.write_text("# Design\n\n" + "word " * 6000, encoding="utf-8")

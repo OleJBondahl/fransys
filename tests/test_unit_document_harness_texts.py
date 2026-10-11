@@ -1,4 +1,4 @@
-"""HA-D4 UNITTEXT, acceptance 21: a unit's own document names items unit-locally.
+"""A unit's own document names items unit-locally.
 
 A cabinet unit `demo-cab` (instance `-U1`) holds a nested board unit `demo-board` (`-U2`, header
 `-J2`) and a harness `-W5` whose plug mates that header. The bug: the board's own page printed

@@ -1,8 +1,8 @@
-"""EF-A3 B4: a legal model must not crash `unit_outlines`. A unit's black box on a page can hold
+"""A legal model must not crash `unit_outlines`. A unit's black box on a page can hold
 pins of two mates whose chains enter from opposite sides; the top edge came from one mate and the
 bottom edge from another, so the outline's height came out negative ("box size must not be
-negative") or zero ("an outline's height must be positive"). Deep-dive D8 and D11 (amended
-2026-09-24): a mate stands at the end of its parent's column that the chain enters from; the
+negative") or zero ("an outline's height must be positive").
+A mate stands at the end of its parent's column that the chain enters from; the
 outline's edge toward the plug sits on the mating line (the top edge at a bottom end, the bottom
 edge at a top end), and mates at opposite ends stand in two outlines, so no outline mixes the
 two edges.

@@ -1,10 +1,10 @@
-"""S20 M4: the first rows keep room above them for their texts, inside the content box.
+"""The first rows keep room above them for their texts, inside the content box.
 
 The cabinet on the default sheet is the measuring stick. A constant, two lanes of headroom
 (decision layout-0031), was once the smallest that kept a north-facing port's route and wire
-label inside the content box. The top reference band every page keeps (M4, `place`'s
-`reference_band`, with C14's text room) now does that work, so with no lanes at all the cabinet
-still has no finding. The cabinet has no route over row 0 to show what the room is for (D1 turns
+label inside the content box. The top reference band every page keeps (`place`'s
+`reference_band`, with its text room) now does that work, so with no lanes at all the cabinet
+still has no finding. The cabinet has no route over row 0 to show what the room is for (turning
 the `-K8` contact that had one, so its route runs straight), so one relay wired to itself stands
 in for it.
 """
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 def _set_room(monkeypatch: pytest.MonkeyPatch, *, lanes: int, text_room: bool) -> None:
     """`lanes` lanes of headroom; `text_room=False` also turns the room off: `place` then gets
-    a text lift and sink of zero and a band of zero (M4). (`fransys_layout.stages.place`
+    a text lift and sink of zero and a band of zero. (`fransys_layout.stages.place`
     names the re-exported function, so the module comes from `importlib`.)
     """
     monkeypatch.setattr(engine, "TOP_HEADROOM_LANES", lanes)
@@ -96,7 +96,7 @@ def test_the_cabinet_has_no_content_box_finding_with_the_engine_constant() -> No
 def test_the_first_rows_keep_room_for_their_texts_with_no_headroom_lanes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """M4: with no headroom lane, every text, keep-out box and route vertex is still inside, and
+    """With no headroom lane, every text, keep-out box and route vertex is still inside, and
     row 0 stands below the band (a positive reading: its keep-out top is below the box top)."""
     layout, codes = _run(monkeypatch, lanes=0, text_room=True)
     assert OUT_OF_CONTENT_BOX not in codes
@@ -110,7 +110,7 @@ def test_the_first_rows_keep_room_for_their_texts_with_no_headroom_lanes(
 def test_without_the_text_room_and_without_headroom_a_route_leaves_the_content_box(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Can fail, and shows M4's band and C14's room are what keep them in: turn them and the
+    """Can fail, and shows the band and the text room are what keep them in: turn them and the
     lanes off, and a route leaving a north-facing port of row 0 turns above the content-box top
     (y < 0), which the lint reports. The frame gap (layout-0104) is off too: it moves the page
     right and down by a grid, which lifts this one route to y 0."""

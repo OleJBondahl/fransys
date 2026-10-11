@@ -1,4 +1,4 @@
-"""F1: the public surface (the engineer surface, no `author`), and the first-party import scan."""
+"""The public surface (the engineer surface, no `author`), and the first-party import scan."""
 
 import ast
 import re
@@ -122,7 +122,7 @@ def test_author_is_not_public():
 
 
 def test_every_surface_name_is_public():
-    """The facade's own `design` function stands for the surface's `design` (EA1)."""
+    """The facade's own `design` function stands for the surface's `design`."""
     surface = set(surface_module.__all__) - {"design"}
     assert surface <= set(fransys.__all__)
     assert fransys.design is not surface_module.design
@@ -159,10 +159,10 @@ def test_derive_top_level_cables_runs_on_a_built_model(demo_cabinet):
 # Named, commented exclusions from the docs/ scan below (default-deny at the root, so a doc
 # added anywhere else under docs/ is covered with no further action):
 # - docs/plans/: historical planning notes showing package-internal signatures
-#   (docs/archive/plans/2026-09-20-scaffold.md), not a script a consumer would copy and run.
+#   (an early scaffold plan), not a script a consumer would copy and run.
 # - docs/decisions/: decision records quote or reference internal signatures for context,
 #   not consumer-facing worked examples either.
-# - docs/archive/: history (LC4); the moved plans and specs show internal signatures too.
+# - docs/archive/: history; the moved plans and specs show internal signatures too.
 _DOCS_SCAN_EXCLUDED = ("plans", "decisions", "archive")
 
 
@@ -212,7 +212,7 @@ def test_the_import_scan_can_fail():
 
 
 def test_above_and_below_are_the_models_north_and_south() -> None:
-    """HL14, model-0177: `fr.ABOVE` and `fr.BELOW` name `Side.N` and `Side.S`, one enum serves."""
+    """model-0177: `fr.ABOVE` and `fr.BELOW` name `Side.N` and `Side.S`, one enum serves."""
     from fransys_model.layout import Side
 
     assert fransys.ABOVE is Side.N

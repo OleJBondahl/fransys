@@ -1,4 +1,4 @@
-"""HL14, author-0030: a side hint on an interface with no harness line warns and draws nothing.
+"""Decision author-0030: a side hint on an interface with no harness line warns and draws nothing.
 
 Built through `import fransys as fr` from `examples/demo-parts` only. The interface is a boundary
 connector left open on purpose, so no harness line stands at it.

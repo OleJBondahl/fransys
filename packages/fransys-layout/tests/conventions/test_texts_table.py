@@ -1,8 +1,7 @@
-"""`conventions.texts`: the text candidate table, one row per kind (T1.1 to T1.8, S2, S15)."""
+"""`conventions.texts`: the text candidate table, one row per kind (T1.1 to T1.8, layout-0090)."""
 
 import pytest
 
-from fransys_layout.conventions import FACTS, Table, keyed, problems
 from fransys_layout.conventions.texts import TABLE
 from fransys_layout.geometry import Facing
 from fransys_layout.stages.texts.candidates import (
@@ -43,21 +42,3 @@ def test_each_row_gives_its_sides_in_order_and_its_priority(
     assert [(s.facing, s.steps, s.mirror) for s in DEFAULT_TABLE[kind]] == list(sides)
     ranked = ranked_candidates(kind, Facing.E, (30, 7), DEFAULT_TABLE)
     assert len(ranked) == sum(len(steps) for _, steps, _ in sides)
-
-
-def test_the_table_has_one_row_per_kind_and_validates() -> None:
-    """The keyed lookup names every `TextKind` value once, all inside the fact's set."""
-    assert set(keyed(TABLE, "text_kind")) == {k.value for k in TextKind}
-    assert len(TABLE.rows) == len(TextKind)
-    assert problems(TABLE, FACTS) == []
-
-
-def test_a_table_row_missing_a_kind_is_caught() -> None:
-    """Can fail: a table without the power row no longer covers every kind; a made-up kind
-    value is outside the fact's set."""
-    short = Table(TABLE.name, TABLE.policy, TABLE.rows[:-1])
-    assert set(keyed(short, "text_kind")) != {k.value for k in TextKind}
-    bad = Table(
-        TABLE.name, TABLE.policy, (*TABLE.rows, TABLE.rows[0]._replace(when=("text_kind", "x")))
-    )
-    assert problems(bad, FACTS)

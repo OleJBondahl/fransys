@@ -21,7 +21,7 @@ two-location one added alongside this test: `cabinet_laid_out.json` has seven ma
 `cabinet_narrow_laid_out.json` has eight (each count is that golden's own explicit, named
 claim; the wide golden's seven are all branch/reference star markers, the narrow golden's eight
 mix star and plain ones), and `cabinet_two_location_laid_out.json` has eleven: five branches,
-two references and four off stubs. Every marker is turned (S20 M1, M7: a box along its wire),
+two references and four off stubs. Every marker is turned (a box along its wire),
 so its stored width and height are its long and short side swapped: the check reads a box's
 "along" (the wire's direction) and "across" sides, not `width` and `height`.
 """
@@ -62,7 +62,7 @@ _EXPECTED_MARKER_COUNTS: dict[str, int] = {
 
 
 def _sides(marker: LinkMarker) -> tuple[int, int]:
-    """`(along, across)`: the box's text-reading side and its other side (S20 M1).
+    """`(along, across)`: the box's text-reading side and its other side.
 
     A turned box (`vertical`) reads along its height; an upright one along its width.
     """
@@ -98,7 +98,7 @@ def _measured_size(
 
 
 def _is_merged_or_pure_reference(model: Model, marker: LinkMarker) -> bool:
-    """Whether `marker` is a reference (LD3), not a pure, unmerged off stub (D4 excludes one).
+    """Whether `marker` is a reference, not a pure, unmerged off stub.
 
     A plain severed pair (`star is None`) and every star/split marker (`REF`/`BRANCH`) are
     always a reference. `star is OFF` is a reference only when merged: some `BRANCH` names it
@@ -159,7 +159,7 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
             line_stubs += "line_stub" in str(marker.key)
             # Stronger than `<=` fit requires (decision layout-0089): a reference's (severed
             # pair, star or split) box is the sheet's fixed width exactly, never measured from
-            # its own text (LD3 (c)) -- unless a merged off stub's own line needed more
+            # its own text -- unless a merged off stub's own line needed more
             # (`off_markers._with_off`'s `max()`), in which case it is that wider, measured
             # value instead. A pure, unmerged off stub still gets its old exactly-measured
             # width. Either way `_fits`'s `<=` stays the correct general "fits" semantics;
@@ -182,14 +182,14 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
         total += expected_count
 
     assert total > 0, "every per-golden count passed by coincidence; nothing was actually checked"
-    # LD5 (d), decision layout-0089: marker text is now symmetric -- every counted end of a
+    # Decision layout-0089: marker text is now symmetric -- every counted end of a
     # 3+-end net gets its own multi-line box (one line per OTHER end), not only the one
     # "merged" reference the old hub-and-spoke shape gave a second line to. 11 was confirmed by
     # counting `marker.height` values above one line (12 G) across the three usecase goldens;
-    # V4 (layout-0099) took it from 11 to 7: -X2:1 stands over -S0's pin, so the wide and the
+    # layout-0099 took it from 11 to 7: -X2:1 stands over -S0's pin, so the wide and the
     # narrow cabinet each lose a branch and their star texts shrink (4, 3, 4 became 3, 0, 4).
-    # C2 (model-0139) took it from 7 to 4: a marker with three or more targets prints one line.
-    # HL15-HL18 (layout-0154): W1 is a harness line, not per-core markers; 4 became 6 with the
+    # model-0139 took it from 7 to 4: a marker with three or more targets prints one line.
+    # layout-0154: W1 is a harness line, not per-core markers; 4 became 6 with the
     # line stubs (one OFF stub per line leaving its page: 1 wide, 2 narrow) and the lost branches.
     assert line_stubs == 3, "the goldens' harness lines leave their pages by OFF line stubs"
     assert multi_line == 6, "LD5 (d)'s symmetric text: every 3+-end net's markers are multi-line"

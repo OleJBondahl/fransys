@@ -87,12 +87,15 @@ class StageInputs:
     carried: tuple[Connection, ...] = ()
 
 
-def read_inputs(model: Model) -> StageInputs:
-    """Read the drawn functions, their connections and every authored hint."""
+def read_inputs(model: Model, unit: Id[Any] | None = None) -> StageInputs:
+    """Read the drawn functions, their connections and every authored hint.
+
+    The profile and sheet are `unit`'s (`None`: the top design's), whatever is drawn.
+    """
     indexes = build_indexes(model)
     specs, undrawn, wires, rail_ends = steps.rail_reads(model, indexes)
-    profile, sheet, sheet_format = reading.profile_and_sheet(model)
-    unused_sheets = reading.unused_sheet_formats(model, sheet_format)
+    profile, sheet, sheet_format = reading.profile_and_sheet(model, unit)
+    unused_sheets = reading.unused_sheet_formats(model)
     refs, rails, findings, wired = steps.split_reads(model, specs, undrawn, wires, rail_ends)
     # A terminal on no connection, net group or mate is not drawn (terminal list only)
     specs = without_idle_terminals(model, specs, wired)

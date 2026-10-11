@@ -18,7 +18,7 @@ from fransys_model.layout import (
     SymbolPlacement,
     layout_of,
     page_slice,
-    profile_of,
+    profile_of_page,
     sheet_format_of,
 )
 from fransys_model.layout import Page as PageRecord
@@ -337,7 +337,7 @@ def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
 def markers_group(model: Model, page: Page) -> str:
     """Every marker on `page` as one stub + arrow-box + text, in id order."""
     sheet = sheet_format_of(model, page.sheet_format)
-    profile = profile_of(model)
+    profile = profile_of_page(model, page)
     parts = []
     stubs: set[tuple[int, int, int]] = set()  # a mate's stub is the lead's line: drawn once
     for marker in markers_on_page(model, page):

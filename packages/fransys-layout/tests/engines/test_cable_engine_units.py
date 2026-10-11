@@ -1,4 +1,4 @@
-"""The cable engine in a nested unit's document: the blank end (CT5 CD5, CD11; acceptance 9, 12).
+"""The cable engine in a nested unit's document: the blank end.
 
 Shape of `tests/test_nested_unit_lists.py::_nested_strip_model`: unit `outer` holds the plug -P9
 and the nested unit `inner`; `inner`'s own cable `w` has one core from -X5:2 (inside `inner`) to
@@ -79,9 +79,9 @@ def _children(model, block, record_type):
 
 
 def test_inner_reading_has_the_strip_on_top_and_the_outside_plug_blank_below():
-    """Acceptance 12 (CD5): in `inner`'s reading -X5 stands in TOP, -P9 in BOTTOM with BLANK.
+    """In `inner`'s reading -X5 stands in TOP, -P9 in BOTTOM with BLANK.
 
-    Positive: the block exists. Probe: CD4's any-unit key in place of the reading's subtree.
+    Positive: the block exists. Probe: the any-unit key in place of the reading's subtree.
     """
     model, inner, _outer, strip, p9, cable = _built()
     block = _block(model, inner, cable)
@@ -94,7 +94,7 @@ def test_inner_reading_has_the_strip_on_top_and_the_outside_plug_blank_below():
 
 
 def test_blank_end_draws_only_a_one_grid_stub_and_no_box():
-    """Acceptance 9 (CD11): the blank end has height 0 and its wire point is 8 G below the box.
+    """The blank end has height 0 and its wire point is 8 G below the box.
 
     The stub flag is true on the core's end at -P9 only. Probe: draw the blank end's box.
     """
@@ -116,7 +116,7 @@ def test_blank_end_draws_only_a_one_grid_stub_and_no_box():
 
 
 def test_no_end_is_blank_in_the_absolute_reading():
-    """CD11: blank only in a nested unit's document; the absolute block exists and has no blank.
+    """Blank only in a nested unit's document; the absolute block exists and has no blank.
 
     Probe: blank every end outside the reading's unit whatever the unit's nesting.
     """

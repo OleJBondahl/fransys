@@ -1,4 +1,4 @@
-"""EF-B2 spec test: a three-pole overload relay draws one thermal box per pole.
+"""A three-pole overload relay draws one thermal box per pole.
 
 The engineering shape: a motor feeder whose overload relay has three conductive main links,
 1/L1-2/T1, 3/L2-4/T2 and 5/L3-6/T3, each pin wired to a terminal. The relay's protection type

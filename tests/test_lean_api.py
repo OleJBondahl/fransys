@@ -1,4 +1,4 @@
-"""`scripts/lean_api.py`: `api`, `_package_modules` (MS9, `just api <package>`).
+"""`scripts/lean_api.py`: `api`, `_package_modules` (`just api <package>`).
 
 Loaded like `test_lean_surface_types.py` loads `scripts/lean_surface_types.py`
 (`importlib.util.spec_from_file_location`), since the script is not a package module. The
@@ -41,7 +41,7 @@ def _headers(output: str) -> list[tuple[str, str]]:
 
 
 def test_fransys_pdf_gives_exactly_its_seven_surface_names():
-    """Acceptance 8: `fransys_pdf`'s `__all__` has 7 names; `api()` prints exactly those 7,
+    """`fransys_pdf`'s `__all__` has 7 names; `api()` prints exactly those 7,
     including `PRESET_PAGES`, a plain data value with no signature of its own.
     """
     import fransys_pdf
@@ -62,12 +62,12 @@ def test_fransys_pdf_gives_exactly_its_seven_surface_names():
 
 
 def test_fransys_pdf_output_is_byte_identical_across_two_calls():
-    """Acceptance 8's other half: two calls on the same commit print the same bytes."""
+    """Two calls on the same commit print the same bytes."""
     assert lean_api.api("fransys_pdf") == lean_api.api("fransys_pdf")
 
 
 def test_model_package_maps_to_its_eleven_surface_modules():
-    """`_package_modules("fransys_model")` is exactly MS1's eleven dotted modules, sorted --
+    """`_package_modules("fransys_model")` is exactly the eleven public modules, sorted --
     the general prefix rule, not a special case for the model.
     """
     assert lean_api._package_modules("fransys_model") == (
@@ -105,7 +105,7 @@ def test_model_api_output_covers_all_eleven_modules_own_names():
 
 
 def test_fransys_maps_to_itself_and_its_colours_submodule():
-    """`fransys`'s own surface also picks up `fransys.colours` (MS8), by the same prefix
+    """`fransys`'s own surface also picks up `fransys.colours`, by the same prefix
     rule, with no special case.
     """
     assert lean_api._package_modules("fransys") == ("fransys", "fransys.colours")
@@ -140,7 +140,7 @@ def test_a_function_prints_a_real_signature():
 
 @pytest.mark.parametrize("module_path", ["fransys", "fransys_model.derive"])
 def test_md_page_lists_every_name_of_all_exactly_once(module_path):
-    """FS5 acceptance 4: the markdown page has one `###` heading per `__all__` name, no more."""
+    """The markdown page has one `###` heading per `__all__` name, no more."""
     import importlib
 
     module = importlib.import_module(module_path)
@@ -156,7 +156,7 @@ def test_md_entry_has_signature_in_code_block():
 
 
 def test_md_page_groups_names_by_kind_each_group_sorted():
-    """FS5: three `## ` groups in order; every `__all__` name once; names sorted within a group."""
+    """Three `## ` groups in order; every `__all__` name once; names sorted within a group."""
     page = lean_api.api_md("fransys")
     assert re.findall(r"^## (.+)$", page, re.MULTILINE) == ["Functions", "Classes", "Constants"]
     _, functions, classes, constants = re.split(r"^## .+$", page, flags=re.MULTILINE)

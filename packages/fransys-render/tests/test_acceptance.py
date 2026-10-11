@@ -10,7 +10,7 @@ gives equal bytes.
 
 `test_pin_map_not_covering_symbol_ports_is_a_finding`, the stub this file used to carry, is
 gone: `PIN_MAP_INCOMPLETE` left render's own `check()` for `fransys_layout`'s `resolve`
-stage (decision layout-0041, D12's amendment) -- render's `check()` has no such code left to
+stage (decision layout-0041) -- render's `check()` has no such code left to
 test.
 """
 
@@ -98,7 +98,7 @@ def test_every_tag_marker_and_wire_text_appears_on_its_page(
     cabinet_laid_out, cabinet_narrow_laid_out
 ):
     """Each expected text appears line by line: `_markers.py::_text_element` (decision
-    layout-0089) draws one `<text>` element per line of a multi-line marker (LD3 (d), symmetric,
+    layout-0089) draws one `<text>` element per line of a multi-line marker (symmetric,
     no more `LINE`-packing), never one element holding an embedded newline, so the joined,
     multi-line block `_expected_texts` builds can never appear as one substring past one line.
     """
@@ -113,7 +113,7 @@ def test_every_tag_marker_and_wire_text_appears_on_its_page(
                     assert line in svg
 
 
-# --- 3. two calls give equal bytes (D11: the same model digest gives the same bytes) ------------
+# --- 3. two calls give equal bytes (the same model digest gives the same bytes) ------------
 
 
 def test_two_calls_give_equal_bytes(cabinet_laid_out, cabinet_narrow_laid_out):
@@ -121,7 +121,7 @@ def test_two_calls_give_equal_bytes(cabinet_laid_out, cabinet_narrow_laid_out):
         assert pages(model) == pages(model)
 
 
-# --- 4. a model loaded from shuffled JSON gives equal bytes (D11) -------------------------------
+# --- 4. a model loaded from shuffled JSON gives equal bytes -------------------------------
 
 
 def _shuffled(name):

@@ -1,6 +1,6 @@
 """`check`: `MARKDOWN_UNSUPPORTED`, `DOCUMENT_MIXED_SHEET_FORMATS`, `DOCUMENT_NO_DRAWINGS`,
 `DOCUMENT_EMPTY_LIST`, `TITLE_BLOCK_NO_ROOM` (page-frame R6) and
-`DOCUMENT_NO_TOP_LEVEL_CABLES` (STEP 4b addition, decision pdf-0006).
+`DOCUMENT_NO_TOP_LEVEL_CABLES` (decision pdf-0006).
 """
 
 from decimal import Decimal
@@ -243,7 +243,7 @@ def _harness_with_one_cable():
 
 
 def test_no_drawings_finding_for_a_harness_cable_with_no_block_svg():
-    """Acceptance 16: the cable's block is keyed by `cable_block_key`; with no SVG for it the
+    """The cable's block is keyed by `cable_block_key`; with no SVG for it the
     ERROR names that key, as a missing schematic page key does, and with the SVG it is gone."""
     m, _doc, cable = _harness_with_one_cable()
     key = cable_block_key(None, cable.id)
@@ -482,7 +482,7 @@ def test_no_empty_list_finding_for_bom_when_a_part_linked_item_is_placed():
 
 
 def test_title_block_no_room_absent_for_the_house_sheets_exact_20mm_band():
-    """The boundary: `default_sheet_format()`'s 20mm band exactly fits (page-frame R2, R6)."""
+    """The boundary: `default_sheet_format()`'s 20mm band exactly fits."""
     m, _doc = _cabinet_with_pages(formats=(None,))
     findings = [f for f in check(m, {}) if f.code == "TITLE_BLOCK_NO_ROOM"]
     assert findings == []

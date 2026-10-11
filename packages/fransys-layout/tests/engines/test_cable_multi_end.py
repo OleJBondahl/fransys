@@ -1,4 +1,4 @@
-"""Multi-end cable blocks through the public author API (CT5-3 P3; CD5, CD8, CD9; acceptance 4, 18).
+"""Multi-end cable blocks through the public author API.
 
 F1 is a 1:3 fan-out (one strip, three motors), F2 a 2:2 swap in a unit's reading (two strips of
 the unit, two external motors). Each test names the probe that must make it fail.
@@ -50,7 +50,7 @@ def _laid_out(parts, d):
 
 
 @cache
-def _f1() -> SimpleNamespace:
+def _fan_out() -> SimpleNamespace:
     """Strip -X1 with three terminals, cores 1-3 to the U port of motors -M1, -M2, -M3."""
     parts, d = _design()
     er, fld = d.location("ER", "Engine room"), d.location("FLD", "Field")
@@ -65,7 +65,7 @@ def _f1() -> SimpleNamespace:
     return SimpleNamespace(frozen=frozen, model=model, cable=cable.id)
 
 
-def _f2_design(*, reverse: bool = False):
+def _swap_design(*, reverse: bool = False):
     """Unit strips -X5, -X6 (two terminals each), external motors -M1, -M2; cores swap columns.
 
     Core 1 X5:1-M1.U, 2 X5:2-M2.U, 3 X6:1-M1.V, 4 X6:2-M2.V, so the bottom row's pins run
@@ -89,8 +89,8 @@ def _f2_design(*, reverse: bool = False):
 
 
 @cache
-def _f2() -> SimpleNamespace:
-    parts, d, cable = _f2_design()
+def _swap() -> SimpleNamespace:
+    parts, d, cable = _swap_design()
     frozen, model = _laid_out(parts, d)
     return SimpleNamespace(frozen=frozen, model=model, cable=cable.id)
 
@@ -122,7 +122,7 @@ def _check(block):
 
 def _label_gaps(s, head, bottom):
     """The gap of each neighbouring pair: one pitch, or more where their labels would come
-    within a grid unit (CD8). One-pin boxes: the centres stand `apart` from each other."""
+    within a grid unit. One-pin boxes: the centres stand `apart` from each other."""
     profile, _, _ = profile_and_sheet(s.frozen)
     widths = [
         text_width(end_label(s.frozen, e.item, None), height=profile.text_height) for e in bottom
@@ -131,10 +131,10 @@ def _label_gaps(s, head, bottom):
     return [max(head.pitch, snap_up(one) - head.pitch) for one in apart]
 
 
-def test_f1_fan_out_draws_with_bends_and_its_ends_one_pitch_apart():
-    """Acceptance 4, Q5: a 1:3 block bends, no shared stretch; end boxes of a row stand one pitch
+def test_fan_out_draws_with_bends_and_its_ends_one_pitch_apart():
+    """A 1:3 block bends, no shared stretch; end boxes of a row stand one pitch
     apart, or as far as their labels need. Probe: `row_xs` spacing the end boxes three pitches."""
-    s = _f1()
+    s = _fan_out()
     head, _, ends, wires = _block(s.model, s.cable)
     top, *bottom = ends
     assert (top.row, [e.row for e in bottom]) == (BlockRow.TOP, [BlockRow.BOTTOM] * 3)
@@ -145,10 +145,10 @@ def test_f1_fan_out_draws_with_bends_and_its_ends_one_pitch_apart():
     _check(_block(s.model, s.cable))
 
 
-def test_f2_swap_in_a_unit_draws_one_jog_and_core_texts_follow_the_top_row():
-    """Acceptance 4 and 19: the 2:2 swap bends; each core text stands on its column, in the top
+def test_swap_in_a_unit_draws_one_jog_and_core_texts_follow_the_top_row():
+    """The 2:2 swap bends; each core text stands on its column, in the top
     row's order, with its core number. Probe: `_split` returning None (the cycle stays)."""
-    s = _f2()
+    s = _swap()
     head, box, ends, wires = _block(s.model, s.cable, in_unit=True)
     unit = head.unit
     assert unit is not None
@@ -163,12 +163,12 @@ def test_f2_swap_in_a_unit_draws_one_jog_and_core_texts_follow_the_top_row():
     _check(_block(s.model, s.cable, in_unit=True))
 
 
-def test_f2_is_the_same_whatever_order_the_cores_are_added_in():
+def test_swap_is_the_same_whatever_order_the_cores_are_added_in():
     """Layout invariant 5, through the model: cores added in reverse order give equal records and
     the same digest. The listing-order probe is stages/test_channel's shuffle test."""
-    parts, d, _ = _f2_design(reverse=True)
+    parts, d, _ = _swap_design(reverse=True)
     _, backward = _laid_out(parts, d)
-    forward = _f2().model
+    forward = _swap().model
     assert dict(layout_of(backward, CoreWire)) == dict(layout_of(forward, CoreWire))
     assert backward.digests == forward.digests
 

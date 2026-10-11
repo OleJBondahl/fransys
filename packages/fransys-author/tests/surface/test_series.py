@@ -1,4 +1,4 @@
-"""EA5: `series` and `parallel` build the wires the engine script builds, and fail by name."""
+"""`series` and `parallel` build the wires the engine script builds, and fail by name."""
 
 from typing import TYPE_CHECKING, Any
 

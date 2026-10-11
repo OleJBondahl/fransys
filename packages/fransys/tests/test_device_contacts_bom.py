@@ -1,4 +1,4 @@
-"""HA8 end to end: a housing's crimp contacts are counted once per wired pin in the BOM.
+"""End to end: a housing's crimp contacts are counted once per wired pin in the BOM.
 
 The engineering shape: a 4-way connector housing with a crimp contact part, wired on some pins.
 The contact part has no function, so only the BOM knows it (decision model-0170).

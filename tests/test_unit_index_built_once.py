@@ -64,8 +64,8 @@ def _lookups(model) -> int:
 
 def test_the_unit_index_and_the_own_nodes_are_each_built_once_per_model():
     # `with_document=True`: `_lookups` reads `layout_of_model(model, Page)`/`page_title`, both
-    # empty with no document under decision 0037 (PS1) -- `build_scale`'s own default must stay
-    # document-free (MODEL-BUILD acceptance 6), so this test asks for one explicitly instead.
+    # empty with no document under decision 0037 -- `build_scale`'s own default must stay
+    # document-free, so this test asks for one explicitly instead.
     model = build_scale(_N, with_document=True).model
     _cold_caches()
 

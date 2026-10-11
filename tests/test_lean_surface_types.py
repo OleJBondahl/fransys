@@ -53,7 +53,7 @@ def _entry(path: Path, name: str, qualname: str | None = None) -> object:
     )
 
 
-# --- Acceptance 6: ON the surface is measured, OFF the surface never is --------------------
+# --- ON the surface is measured, OFF the surface never is --------------------
 
 
 def test_any_param_on_the_surface_is_measured(monkeypatch, tmp_path):
@@ -259,7 +259,7 @@ def test_real_workspace_surface_types_are_report_only_today():
 
 
 def test_the_two_known_violators_are_closed_and_the_check_holds_them():
-    """MS7's two known violators (`write_json(data: object)`, `SymbolPortError.__init__`'s
+    """The two known violators (`write_json(data: object)`, `SymbolPortError.__init__`'s
     `function: Id[Any]`) are typed now, and the check reads both signatures: `__init__` is
     measured (`test_init_is_the_one_dunder_read_and_others_are_not`), so one typed back to `Any`
     or `object` shows up here again.

@@ -1,8 +1,8 @@
-"""WP17 golden tests over the two synthetic use cases (ROADMAP WP17).
+"""Golden tests over the two synthetic use cases.
 
 Golden files live in `tests/golden/`, written by `tests/usecases/regenerate_goldens.py`. Row-query
 golden tests are parametrized by query name so the parametrize id names the query,
-covering design/derive-queries.md's query table the way ROADMAP WP17 asks ("every row query").
+covering every row query.
 """
 
 from pathlib import Path
@@ -72,8 +72,7 @@ def test_harness_board_digest_matches_golden() -> None:
 def test_f1_is_two_distinct_items_across_the_merged_designs() -> None:
     """Merging both drafts keeps the board's `-F1` and the cabinet's `-F1` as two `Item`s.
 
-    Same designation string, different `Id`, different `parent` (design/examples.md
-    11).
+    Same designation string, different `Id`, different `parent`.
     """
     model = freeze(merge(build_cabinet(), build_harness_board()))
     f1_items = [i for i in items_of(model).values() if own_designation_or_none(model, i) == "F1"]

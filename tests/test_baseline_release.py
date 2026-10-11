@@ -3,7 +3,7 @@
 Builds one small design once (root CLAUDE.md's speed-work rule, a module fixture): a board
 unit with its own boundary connector and internal wiring (`_board_unit`, similar shape to the
 units worked example's `io_board`), nested once inside a cabinet unit (`_cabinet_unit`), each
-with its own document (`fr.document`, the unit itself as subject -- ruling LD6, since
+with its own document (`fr.document`, the unit itself as subject, since
 a location inside a unit has no drawing of its own). L4's five checks
 (`REVISION_ALREADY_RELEASED`, `RELEASE_NESTED_UNRELEASED`, `BASELINE_DIFFERS`,
 `INTERFACE_NOT_BUMPED`, `RELEASE_NO_HISTORY`) are exercised below, each with a clean twin next
@@ -496,7 +496,7 @@ def _board_with_spare(s, *, unused):
 def mate_scenario(tmp_path_factory):
     """A cabinet mating its `P1` to one of the board's two boundary connectors.
 
-    The mate is a CABINET-level fact (Part 2's own LCA-scoping decision): the cabinet's own
+    The mate is a CABINET-level fact: the cabinet's own
     top-level digest changes when the mate target swaps, never a nested one, so the board's
     own release stays untouched by this scenario.
     """
@@ -655,7 +655,7 @@ def test_an_empty_sibling_folder_is_skipped_not_read_by_the_previous_release_loo
 def test_removing_the_boards_revision_entry_gives_release_no_history(
     interface_scenario, tmp_path_factory
 ):
-    """`check()` itself already reports `REVISION_CURRENT_MISSING` (model schema SC5) for a
+    """`check()` itself already reports `REVISION_CURRENT_MISSING` for a
     revision with no history entry, an `ERROR` unrelated to this test's own L4 subject; the
     can-fail probe here is `RELEASE_NO_HISTORY`'s own presence in the raised set, not the
     whole code set (`check`'s own gap is a separate, already-existing finding).
@@ -679,7 +679,7 @@ def test_removing_the_boards_revision_entry_gives_release_no_history(
 def test_a_lower_version_released_after_a_higher_one_is_not_compared_against_it(
     tmp_path_factory,
 ):
-    """Versions run in parallel (FD4): releasing `2.1` first, then `1.1` of the same unit,
+    """Versions run in parallel: releasing `2.1` first, then `1.1` of the same unit,
     with the same interface and a genuinely different boundary, must NOT raise
     `INTERFACE_NOT_BUMPED` -- `2.1` sorts ABOVE `1.1` (`release_order((2, 1)) > release_order((1,
     1))`), so it is never "the previous release below" `1.1`, and `1.1` has no other sibling
@@ -851,7 +851,7 @@ def test_a_deep_board_change_gives_baseline_differs_for_the_board_not_the_module
     assert finding.subjects == (perturbed_board_scope.unit_id,)
 
 
-# -- FD5/FD6: DESIGNATION_MOVED (fixed-designations spec, Part 3) ----------------------------
+# -- DESIGNATION_MOVED ----------------------------
 # `_pin_source`/`_designation_moved_findings` (pipeline.py) and `_designation_pins.py`'s pure
 # joins over two `NumberingPins`. No document is authored in any of these fixtures (`release`
 # needs none): the point is the numbering pins alone.
@@ -862,7 +862,7 @@ def _relay_board(parts, *, revision, coil_b, aux, releases=None):
     always present; `coil-b`/`aux` each present only when asked. All three share one class
     code (`K`, `DEMO-RLY-2CO-24`), so free numbering counts them together in `(key, id)` order
     -- `aux` sorts before `coil-a` sorts before `coil-b`. `releases`, when given, is passed
-    straight through to `fr.build` (Part 4's own seeding).
+    straight through to `fr.build`.
     """
     design = fransys_author.Design(parts)
     u = design.scope("rb").unit("relay-board", revision=revision, interface="1")
@@ -884,7 +884,7 @@ def test_the_worked_examples_free_numbering_moves_coil_a_and_gives_designation_m
     id)` order, `passes.numbering.number`'s own rule). Revision `1.2` drops `coil-b` and adds
     `aux` (whose key sorts first): free numbering now gives `aux` -> `K1`, `coil-a` -> `K2` --
     `coil-a` itself never changed, but its printed number moved, which `DESIGNATION_MOVED`
-    must catch even with no seeding at all (Part 3 alone, per the work order).
+    must catch even with no seeding at all.
     """
     parts = fr.parts("demo_parts")
     into = tmp_path_factory.mktemp("relay_worked_example")
@@ -913,7 +913,7 @@ def test_the_worked_examples_free_numbering_moves_coil_a_and_gives_designation_m
 
 
 def test_two_releases_and_a_standalone_build_give_byte_equal_numbering(released, tmp_path_factory):
-    """FD3/FD5 (Part 3 acceptance 2): two releases of one build, plus a wholly separate build
+    """Two releases of one build, plus a wholly separate build
     of the same design, give byte-equal `baseline/numbering.json` for the board and the
     cabinet -- the same determinism `test_two_releases_of_the_same_model_give_byte_equal_trees`
     already proves for `listing.json`, extended to the new numbering file.
@@ -957,7 +957,7 @@ def _tagged_relay(parts, *, revision, tag):
 
 
 def test_a_changed_authored_tag_between_two_releases_gives_designation_moved(tmp_path_factory):
-    """Acceptance 6: the item itself is unchanged (same key, same part) between the two
+    """The item itself is unchanged (same key, same part) between the two
     releases -- only its AUTHORED tag changes, `K1` to `K5`. `DESIGNATION_MOVED` fires exactly
     as it does for a free-numbered move.
     """
@@ -980,7 +980,7 @@ def test_a_changed_authored_tag_between_two_releases_gives_designation_moved(tmp
 
 def _partless_tagged_item(parts, *, revision, tag):
     """A standalone unit with one part-less, tagged item (`item.part = None`, a structural
-    harness stand-in, `_module_unit`'s own `u.item(None, tag=...)` pattern): FD6's own words,
+    harness stand-in, `_module_unit`'s own `u.item(None, tag=...)` pattern):
     "a board or harness whose own text changes shows on its own pin."
     """
     design = fransys_author.Design(parts)
@@ -1014,7 +1014,7 @@ def test_a_partless_tagged_items_changed_tag_gives_designation_moved(tmp_path_fa
 
 
 def test_a_retirement_carries_forward_to_the_next_release(tmp_path_factory):
-    """FD5's `retired` carry-forward (`_designation_pins.gone_or_moved`): once `coil-b`'s own
+    """The `retired` carry-forward (`_designation_pins.gone_or_moved`): once `coil-b`'s own
     designation retires at revision `1.2` (it is dropped from `relay-board`), the NEXT release,
     `1.3`, still lists it in `baseline/numbering.json`'s own `retired` even though nothing
     changes between `1.2` and `1.3` -- `gone_or_moved` must fold the pin source's own `retired`
@@ -1061,7 +1061,7 @@ def _board_with_nested_relay(parts, *, revision, board_tag):
 def test_a_changed_ancestor_label_gives_designation_moved_only_for_the_ancestor(
     tmp_path_factory,
 ):
-    """FD6's comparison is the item's OWN label (`NumberingItem.text`), never the full
+    """The comparison is the item's OWN label (`NumberingItem.text`), never the full
     `item_designation` chain: renaming the enclosing board's own tag between two releases (a
     real move for the BOARD's own pin) while the nested relay's own tag stays `K1` must give
     exactly one `DESIGNATION_MOVED`, for the board alone -- the relay's own printed text never
@@ -1139,15 +1139,15 @@ def test_retiring_a_part_less_and_a_coded_item_together_does_not_crash_the_sort(
     assert retired_texts == {"W1", "K1"}
 
 
-# -- FD5: fr.build(releases=) seeding (fixed-designations spec, Part 4) ----------------------
+# -- fr.build(releases=) seeding ----------------------
 
 
 def test_the_worked_example_with_releases_keeps_coil_as_number_and_reserves_coil_bs(
     tmp_path_factory,
 ):
-    """Acceptance 1/2/9: with `releases=` at BUILD time, `coil-a` keeps `K1` across the
+    """With `releases=` at BUILD time, `coil-a` keeps `K1` across the
     revision that drops `coil-b` and adds `aux`, and `aux` gets `K3` (not `K2`, `coil-b`'s
-    retired number) -- both FD1's no-reuse and FD5's own seeding, together. The v1.2 release
+    retired number) -- both the no-reuse rule and the seeding, together. The v1.2 release
     succeeds with no `DESIGNATION_MOVED` (the seeding is exactly what makes that true; compare
     the un-seeded worked example above, which raises it).
     """
@@ -1173,7 +1173,7 @@ def test_the_worked_example_with_releases_keeps_coil_as_number_and_reserves_coil
 
 def _movable_relay(parts, *, revision, under_board2):
     """A unit with two boards and one relay of a stable key, nested under whichever board
-    `under_board2` names -- acceptance 4's own scenario: the relay's identity (`unit_relative_
+    `under_board2` names -- the relay's identity (`unit_relative_
     key`) never changes, only its designating ancestor.
     """
     design = fransys_author.Design(parts)
@@ -1189,12 +1189,12 @@ def _movable_relay(parts, *, revision, under_board2):
 def test_an_item_moved_to_another_board_takes_a_new_number_and_reserves_the_old_one(
     tmp_path_factory,
 ):
-    """Acceptance 4: `relay` moves from `board1` to `board2` between two revisions. Free
+    """`relay` moves from `board1` to `board2` between two revisions. Free
     numbering alone would give it `K1` in board2's group regardless (board2 has no other
     class-K item), so the real proof is in the pin file: `board1`'s old pin (`K1`, `scope`
     board1's relative key) is RESERVED, not silently dropped, and no `DESIGNATION_MOVED` fires
     (the relay's own printed text, `K1`, happens to stay the same; the RELEASE's own SCOPE
-    changed, which is exactly why FD6 does not compare on the bare text alone across a move --
+    changed, which is exactly why it does not compare on the bare text alone across a move --
     it never even reaches the seeded/current pair, since seeding only applies where scope AND
     code both still match).
     """
@@ -1234,8 +1234,8 @@ def test_an_item_moved_to_another_board_takes_a_new_number_and_reserves_the_old_
 
 
 def test_version_2s_first_release_seeds_no_pins_from_version_1(tmp_path_factory):
-    """Acceptance 5: version 2 starts again at revision 1, free-numbered -- `same_version`'s
-    filter (already proven at the release-order level by BASELINE-WRITER/FD4) means
+    """Version 2 starts again at revision 1, free-numbered -- `same_version`'s
+    filter (already proven at the release-order level) means
     `_pin_source` finds nothing for `(name, version=2, revision=1)` even though `1.1` of the
     same name is already released, so seeding never runs and version 2 numbers exactly as an
     un-pinned build would.
@@ -1267,7 +1267,7 @@ def test_version_2s_first_release_seeds_no_pins_from_version_1(tmp_path_factory)
 
 
 def test_an_authored_pin_is_never_auto_seeded_onto_a_now_untagged_item(tmp_path_factory):
-    """Acceptance (FD3's own words, "FD5 seeds only the assigned ones"): `coil`'s tag `K5` in
+    """Acceptance ("seeds only the assigned ones"): `coil`'s tag `K5` in
     `1.1` is an AUTHORED pin (`authored=True` in the stored file) -- deliberately a number free
     numbering would never itself produce for a single-item group, so seeding it would be
     visibly wrong. Revision `1.2` removes the tag; the seeding must skip an authored pin, so
@@ -1303,7 +1303,7 @@ def test_an_authored_pin_is_never_auto_seeded_onto_a_now_untagged_item(tmp_path_
 def test_seeding_skips_an_item_outside_the_unit_and_one_already_tagged(tmp_path_factory):
     """Coverage: `_current_item_positions`'s own-unit-only filter, exercised by a top-level
     item that belongs to no unit at all (`item.unit != unit`), and `_seed_assigned_for_unit`'s
-    SC3 guard, exercised by a current item that has since become independently tagged (`coil`
+    guard, exercised by a current item that has since become independently tagged (`coil`
     itself, `item_record.tag is not None`) -- neither is seeded, and this build still succeeds.
     """
     parts = fr.parts("demo_parts")
@@ -1391,7 +1391,7 @@ def test_pin_source_skips_a_sibling_with_no_stored_numbering_file(tmp_path_facto
     assert by_last_segment == {"aux": "K1", "coil-a": "K2"}
 
 
-# -- MODEL-DIFF: fr.diff and release()'s changes.md/.csv (M3, M4) ---------------------------
+# -- fr.diff and release()'s changes.md/.csv ---------------------------
 
 
 def _second_board_release(parts, into, *, revision, version=1, wire_colour):
@@ -1437,7 +1437,7 @@ def second_board_scenario(released, tmp_path_factory):
 
 
 def test_the_first_release_writes_neither_changes_file(released):
-    """Acceptance 1: `release`'s M4 code never runs at all on a unit's first release (no
+    """`release`'s code never runs at all on a unit's first release (no
     sibling folder yet, `_previous_release_listing` returns `None`).
     """
     _result, _into, board_target, _cabinet_target, _board_scope, _cabinet_scope = released
@@ -1448,7 +1448,7 @@ def test_the_first_release_writes_neither_changes_file(released):
 def test_a_second_release_writes_both_change_files_matching_the_independent_diff(
     second_board_scenario,
 ):
-    """Acceptance 2: `release`'s own `changes.md`/`.csv` are byte-equal to the same diff
+    """`release`'s own `changes.md`/`.csv` are byte-equal to the same diff
     computed independently from the two stored listings, and the Markdown names the actual
     wire colour change -- a content check beyond self-consistency, catching an argument-order
     regression even if this test's own diff call happened to share a bug with `release()`'s.
@@ -1463,7 +1463,7 @@ def test_a_second_release_writes_both_change_files_matching_the_independent_diff
 
 
 def test_the_manifest_lists_both_change_files_with_hashes(second_board_scenario):
-    """Acceptance 3: `_manifest`'s `files` entries cover `changes.md`/`.csv` too, each with a
+    """`_manifest`'s `files` entries cover `changes.md`/`.csv` too, each with a
     `sha256` matching the actual bytes on disk.
     """
     _parts, _into, second_target, _unit, _diff, _md, _csv = second_board_scenario
@@ -1480,7 +1480,7 @@ def test_the_manifest_lists_both_change_files_with_hashes(second_board_scenario)
 def test_sk_diff_before_releasing_matches_the_eventual_changes_md(
     released, second_board_scenario, tmp_path_factory
 ):
-    """Acceptance 4: `fr.diff`, called on the same second-revision build BEFORE it is ever
+    """`fr.diff`, called on the same second-revision build BEFORE it is ever
     released, against a fresh `into` holding only the first release, gives the same Markdown
     the eventual `release()` call writes to `changes.md`.
     """
@@ -1499,7 +1499,7 @@ def test_sk_diff_before_releasing_matches_the_eventual_changes_md(
 
 
 def test_sk_diff_with_no_release_at_all_raises_file_not_found(tmp_path_factory):
-    """Acceptance 5: no `<baselines>/<name>/` directory exists at all -- `fr.diff` raises
+    """No `<baselines>/<name>/` directory exists at all -- `fr.diff` raises
     `FileNotFoundError`, naming the directory it looked under.
     """
     parts = fr.parts("demo_parts")
@@ -1518,7 +1518,7 @@ def test_sk_diff_with_no_release_at_all_raises_file_not_found(tmp_path_factory):
 def test_sk_diff_against_the_current_release_shows_only_the_unreleased_edit(
     second_board_scenario,
 ):
-    """Acceptance 6: with `1.2` already released (wire BU to RD, `second_board_scenario`), one
+    """With `1.2` already released (wire BU to RD, `second_board_scenario`), one
     more in-memory edit at the SAME revision (wire RD to BK) makes `fr.diff`'s default branch
     read the CURRENT release folder as `a` -- the returned Markdown shows only the new edit,
     never the original `1.1` to `1.2` change.
@@ -1540,7 +1540,7 @@ def test_sk_diff_against_an_explicit_revision_reads_that_release_directly(
 ):
     """M3: `against=` names a specific released `<version>.<revision>` folder, read directly
     (`_stored_listing_text(candidate)`), distinct from the default branch's current-release
-    lookup -- the gap MODEL-DIFF-FIX1 left open in `fransys`'s own coverage. With `1.1` (wire
+    lookup -- the gap an earlier fix left open in `fransys`'s own coverage. With `1.1` (wire
     BU) and `1.2` (wire RD) both released (`second_board_scenario`) and a third, unreleased
     revision in memory (wire BK), the default call diffs against `1.2` while `against="1.1"`
     diffs against `1.1` directly -- two different bases, two different Markdown bodies, proving
@@ -1564,7 +1564,7 @@ def test_sk_diff_against_an_explicit_revision_reads_that_release_directly(
 
 
 def test_a_cross_version_release_gives_a_version_change_row(second_board_scenario):
-    """Acceptance 7: releasing `2.1` right after `1.2` (same boundary and interface, only the
+    """Releasing `2.1` right after `1.2` (same boundary and interface, only the
     release numbers differ) gives a `Change` row naming `version`, and `changes.md` matches
     the independently computed diff from `1.2`.
     """
@@ -1594,7 +1594,7 @@ def test_a_cross_version_release_gives_a_version_change_row(second_board_scenari
 
 
 def test_a_noop_rerelease_leaves_the_change_files_mtimes_unchanged(second_board_scenario):
-    """Acceptance 8: releasing the exact same model again over an already-released revision
+    """Releasing the exact same model again over an already-released revision
     takes `release`'s early-return no-op path, which never reaches the M4 code at all -- both
     `changes.md` and `.csv` keep their original mtimes.
     """

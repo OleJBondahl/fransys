@@ -1,4 +1,4 @@
-"""`fn.pins` reads a function's pins in the connector list's order, not the part file's (PN1)."""
+"""`fn.pins` reads a function's pins in the connector list's order, not the part file's."""
 
 import fransys as fr
 

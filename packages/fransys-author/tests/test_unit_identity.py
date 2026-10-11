@@ -1,4 +1,4 @@
-"""`Scope.unit(..., title=, number=)` writes the unit's own identity (UNIT-ID I1)."""
+"""`Scope.unit(..., title=, number=)` writes the unit's own identity."""
 
 from fransys_author import Design
 

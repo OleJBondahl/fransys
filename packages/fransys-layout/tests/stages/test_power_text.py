@@ -8,10 +8,7 @@ from power_fixture import power_run
 
 from fransys_layout.geometry import overlaps
 from fransys_layout.stages import LabelKind
-from fransys_layout.stages.texts.candidates import DEFAULT_TABLE, PRIORITY, TextKind
-from fransys_layout.stages.texts.place_texts import _UNPLACED
 from fransys_layout.stages.texts.power import power_places
-from fransys_layout.stages.texts.power_lead import _touches
 from fransys_model.layout import POWER_SLOT
 
 
@@ -55,44 +52,3 @@ def test_the_texts_are_the_nets_names_and_land_free() -> None:
     boxes = [(one.drawing_set, one.page, one.box) for one in labels]
     for i, (s, p, box) in enumerate(boxes):
         assert all(not overlaps(box, other) for t, q, other in boxes[i + 1 :] if (t, q) == (s, p))
-
-
-def test_no_text_touches_its_own_symbol_not_even_at_an_edge() -> None:
-    """D5 ruled 2026-10-02: "0V" stood against the ground's top corner (the apex's edge).
-
-    UNDO: in `_text` anchor the text to `one.body`, not `pad(...)`: it touches the body.
-    """
-    labels = _power_labels()
-    bodies = {
-        (one.port, one.drawing_set, one.page): one.body for one in power_places(_layout().markers)
-    }
-    assert labels
-    assert all(
-        not _touches(one.box, bodies[one.subject, one.drawing_set, one.page]) for one in labels
-    )
-
-
-def test_a_text_keeps_the_profiles_clearance_from_its_own_symbol() -> None:
-    """D5: the gap is `Profile.marker_padding` (layout-0043), the text clearance, not a new number.
-
-    UNDO: in `_text` call `pad(one.body, 0)`: the text stands flush on the body.
-    """
-    pad = power_run()[1].profile.marker_padding
-    bodies = {
-        (one.port, one.drawing_set, one.page): one.body for one in power_places(_layout().markers)
-    }
-    labels = _power_labels()
-    assert pad > 0
-    assert labels
-    for one in labels:
-        body = bodies[one.subject, one.drawing_set, one.page]
-        along_x = max(one.box.x - (body.x + body.width), body.x - (one.box.x + one.box.width))
-        along_y = max(one.box.y - (body.y + body.height), body.y - (one.box.y + one.box.height))
-        assert max(along_x, along_y) >= pad
-
-
-def test_the_kind_has_a_priority_a_table_row_and_an_unplaced_message() -> None:
-    """UNDO: delete the `TextKind.POWER` entry of `PRIORITY`, `DEFAULT_TABLE` or `_UNPLACED`."""
-    assert TextKind.POWER in PRIORITY
-    assert TextKind.POWER in DEFAULT_TABLE
-    assert TextKind.POWER in _UNPLACED

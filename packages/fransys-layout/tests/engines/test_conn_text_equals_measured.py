@@ -1,7 +1,7 @@
-"""GOLDEN-FIX 2 follow-up: the text a `tag.conn` label is measured from is the text render prints.
+"""The text a `tag.conn` label is measured from is the text render prints.
 
 A connector's designation on a row lead of pins is `connector_designation` ("-K1"; "-A1-X1" on a
-device with two labelled connectors, decision model-0073), one derive function (D12 + ruling).
+device with two labelled connectors, decision model-0073), one derive function.
 Layout sizes the label's box from its request text, so a request text of
 the port designation ("-K1:2") would over-reserve; the box width must be the width of
 `label_text` for every `tag.conn` label, at top level and in a unit's own set.

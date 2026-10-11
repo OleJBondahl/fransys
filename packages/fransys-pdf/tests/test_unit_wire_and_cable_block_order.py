@@ -1,4 +1,4 @@
-"""A unit document lists its cable blocks first (CD12), then wire-only harness blocks (pdf-0024)."""
+"""A unit document lists its cable blocks first, then wire-only harness blocks (pdf-0024)."""
 
 from typing import Any, NamedTuple
 

@@ -1,10 +1,10 @@
-"""The marker box work package's own proof, on REAL compiled pixels: a location-prefixed
+"""The marker box change's own proof, on REAL compiled pixels: a location-prefixed
 marker text (`+C1/1.2`, D2) -- THE DEFECT's own example (ruling, 2026-09-23: "on
 '+C1/1.2' the ink touches the outline") and the longest form a marker text ever takes, the
 exact case a render-side constant box could never have fit (render-0001's named limitation,
 closed by model-0037/layout-0043/this PART B) -- draws its ink inside the box render drew
 for it, clear of the outline on every edge, not merely unclipped past it (decision
-layout-0043's amendment, this work order). LD3/LD5 later gave the position
+layout-0043's amendment). Later rules gave the position
 text a `#n-` reference number and a row letter: the ruling's own text is now printed
 as `#1-+C1p1:2A`, still the same box-sizing defect, quoted verbatim above as the ruling wrote it.
 
@@ -21,7 +21,7 @@ would -- a generous guessed constant would prove nothing about the real
 defect (a fixed box too narrow for a longer text).
 `_png.py`'s PNG decoder is loaded the same dynamic-`importlib` way the other two compiled
 tests already do it (`ty` cannot see a `sys.path` insert statically, and root
-`pyproject.toml` is not this work order's to edit).
+`pyproject.toml` is not this change's to edit).
 """
 
 from __future__ import annotations
@@ -81,7 +81,7 @@ PPI = 144.0
 _ORIGIN = Origin(file="tests/test_marker_text_compiles_inside_box.py", line=1, note="invented")
 
 # The house sheet's own constants (`default_sheet_format()`), the same numbers the other two
-# compiled root tests hand-compute from -- content origin R11.1's 5 mm house margin, not the
+# compiled root tests hand-compute from -- content origin's 5 mm house margin, not the
 # old 10 mm one.
 _MODULE_MM = 2.5
 _CONTENT_ORIGIN_MM = 5
@@ -100,7 +100,7 @@ _PARTNER_PAGE_NUMBER = 1  # together with the column and row below, the owner ma
 # against the then-current text format, "+C1/1.2"): "the ink touches the outline".
 # `_PARTNER_X_G = 240` already gives frame column 2, `_PARTNER_Y_G - 16 = 64` gives row A
 # (`frame_column`/`frame_row`'s own arithmetic, unchanged by this rename); the model's one
-# severed pair is always reference number 1 (`reference_number`, LD3/LD5's `#n-` prefix).
+# severed pair is always reference number 1 (`reference_number`, the `#n-` prefix).
 
 _TEXT_HEIGHT_G = default_profile().text_height  # 8 G: the house profile's own marker box height
 _MARKER_PADDING_G = default_profile().marker_padding  # 2 G: decision layout-0043's amendment
@@ -390,7 +390,7 @@ def _real_box_bounds_mm(svg: str) -> tuple[float, float, float, float]:
 # `_OUTER_OFFSET_MM` clears that bleed: a direct probe of this box's own `<polyline
 # class="marker">` outline (`stroke-width: 0.25mm`, `_constants.STROKE_WIDTH_MM`) measured
 # about 0.93 mm of total rendered width on this Typst/resvg pipeline, roughly 3.7x
-# (~96/25.4) the intended 0.25 mm -- the same class of unit surprise PART 7 found for a
+# (~96/25.4) the intended 0.25 mm -- the same class of unit surprise found for a
 # `<text>`'s `font-size`, this time in `_style.py`'s CSS `stroke-width`. A `<line
 # class="wire">` measured the identical ~0.93 mm, so this is not specific to the marker
 # glyph's own path; not proven here for `.symbol`/`.junction` (a different shape, a
@@ -427,7 +427,7 @@ def _strip_ink(raster, x0_mm: float, x1_mm: float, y0_mm: float, y1_mm: float):
 # width, not the box edge itself. Measured on the compiled raster, not assumed from
 # `_constants.STROKE_WIDTH_MM` (0.25 mm): the box's own top edge (`box_y0_mm`) is a plain
 # horizontal stroke for an N-facing marker (the arrow's pulled-in corners are on the bottom,
-# near the stub, docs/design/links.md 6.6), scanned a little in from the box's left corner,
+# near the stub), scanned a little in from the box's left corner,
 # clear of both the arrow tip and the text.
 _STROKE_PROBE_INSET_MM = 0.3
 _STROKE_PROBE_WIDTH_MM = 0.4
@@ -449,7 +449,7 @@ def _measured_stroke_width_mm(raster, box_x0_mm: float, box_y0_mm: float) -> flo
 # The inner check's own margin, stated from the dpi (owner ruling, THE RULE): one rendered
 # pixel at 144 ppi (`_mm(1)` = 25.4/144 ~= 0.176 mm), covering anti-aliasing fuzz at the
 # stroke's own inner edge. The scanned band itself is deliberately narrow (`_INNER_STRIP_MM`):
-# the padding this work package adds is 2 G = 0.625 mm on the house profile, half of it
+# the padding this change adds is 2 G = 0.625 mm on the house profile, half of it
 # already spent clearing the stroke's own half-width (~0.125 mm), so the genuine clear gap
 # between the stroke's inner edge and the text's own ink is only a fraction of a millimetre --
 # a strip as wide as the outer one (1.5 mm) would reach the text itself and always find ink.
@@ -521,7 +521,7 @@ def test_location_prefixed_marker_text_ink_lies_inside_its_drawn_box(compiled_pa
     so this cannot pass by having found nothing to check against. Then two things, both
     proven able to fail (not only pass) below: no ink at all in a strip just outside either
     edge (overflow, `test_the_containment_check_can_fail`), and no ink in a strip just
-    inside the outline's own inner edge (touching, the padding this work package adds --
+    inside the outline's own inner edge (touching, the padding this change adds --
     `test_the_containment_check_fails_at_zero_padding`, plus the can-fail probe on the real
     glyph code quoted in the hand-back).
     """
@@ -557,13 +557,13 @@ def test_the_containment_check_can_fail(compiled_page):
     """The identical strip check, against render's own retired fixed-width box, finds ink.
 
     Not a git discard: the same real compiled raster the main test above reads (the
-    glyph code is untouched here), checked against a box this work package retired --
+    glyph code is untouched here), checked against a box this change retired --
     `MARKER_BOX_WIDTH_G = 12`, centred on the marker's own `x`, `box_origin`'s old N-facing
     formula (`marker.x - w // 2`) -- proves the strip check has the power to fail on a
     too-narrow box, not only to pass on the real one. Only the width is retired here (the
     real box's own, now-padded, `y`-bounds still apply): `MARKER_BOX_WIDTH_G` was
     render-0001's own width-only constant, and this probe is about the horizontal overflow
-    that decision closed, not the vertical padding this work package adds (that one is
+    that decision closed, not the vertical padding this change adds (that one is
     `test_the_containment_check_fails_at_zero_padding`, below).
     """
     model, raster, owner_id, svgs = compiled_page

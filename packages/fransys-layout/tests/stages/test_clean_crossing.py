@@ -1,4 +1,4 @@
-"""C22, one rule in one place: `clean_crossing`, the router's step test and the lint's touch test.
+"""One rule in one place: `clean_crossing`, the router's step test and the lint's touch test.
 
 The router asks it per step (`_crosses_cleanly`), the coherence lint of what was drawn
 (`_touches`, tested in `tests/lint/test_coherence_touch.py`); both call `clean_crossing`.

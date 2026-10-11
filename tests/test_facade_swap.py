@@ -5,7 +5,7 @@ before the facade existed: `merge`, `freeze`, `allocate_plc`, `number`,
 `lay_out_schematic`) and through `fr.build`, which the fixtures now actually call
 (`conftest.py`). `core` and `facet` are the real invariant and must be equal exactly.
 `layout` is compared between the two constructions in this same run, never hardcoded as a
-constant, because WP17 (in flight) legitimately moves it.
+constant, because it legitimately moves as the layout changes.
 """
 
 import sys
@@ -35,7 +35,7 @@ from fransys_model.kernel import freeze, merge  # noqa: E402
 def _by_hand(design_factory):
     parts = fransys_parts.load("demo_parts")
     design = design_factory(parts)
-    # The same `layout_trigger_document()` `_by_build` now needs (PS1/PS2, decision 0037) is merged
+    # The same `layout_trigger_document()` `_by_build` now needs (decision 0037) is merged
     # in here too, by hand: this path calls `lay_out_schematic` unconditionally and never reads
     # `_has_document` itself, but the two sides' `core` digest must still compare the same
     # record set, or this test would be comparing apples (no document) to oranges (one).
@@ -67,7 +67,7 @@ def test_core_and_facet_digests_are_unchanged_by_the_swap(design_factory):
     "design_factory", [cabinet_design, harness_with_board_design], ids=["cabinet", "harness_board"]
 )
 def test_layout_digest_matches_between_the_two_constructions_this_run(design_factory):
-    """Not pinned as a constant (WP17 moves it): only compared within this run."""
+    """Not pinned as a constant (it moves): only compared within this run."""
     hand_built = _by_hand(design_factory)
     built = _by_build(design_factory)
     assert hand_built.digests["layout"] == built.digests["layout"]

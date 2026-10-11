@@ -1,4 +1,4 @@
-"""EA4 ty proof: a circuit on the generated demo module type-checks; three slips, one error each.
+"""Ty proof: a circuit on the generated demo module type-checks; three slips, one error each.
 
 The module is generated and ty run once for the whole file (a module fixture), not per test.
 """

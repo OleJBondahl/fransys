@@ -291,7 +291,7 @@ def test_a_net_group_asks_for_no_replica_but_the_same_ports_as_a_conductor_do() 
 
 # --- board-unit home plans: retired `drop_board_unit_homes` (model-0041) ---
 #
-# OLD premise, both tests below tested `drop_board_unit_homes` directly: a unit in
+# Both tests below tested `drop_board_unit_homes` directly: a unit in
 # `board_units` (predicate `_reading.board_only_units`, also deleted) got no `PagePlan` of its
 # own at all, and a plan of another unit or the top level was unaffected. Both predicates
 # existed because a board that only held its own `CONNECTOR` function had nothing else the
@@ -493,7 +493,7 @@ def test_a_boundary_function_in_no_column_raises() -> None:
         _replicate_boundaries((), model, inputs.functions, ())
 
 
-# --- replicate_boundaries over hand-built UnitBoundary values (D8) ------------------------
+# --- replicate_boundaries over hand-built UnitBoundary values ------------------------
 
 _PARENT = hid("unit", 7)
 _PARENT_KEY = ("invented", "parent")
@@ -522,7 +522,7 @@ def test_a_unit_with_one_boundary_function_replicates_it_into_its_parents_column
 
 
 def test_a_boundary_rail_terminal_keeps_its_replica_and_loses_its_home_cell() -> None:
-    """RB2 (layout-0120): the parent draws the terminal; the unit's own pages do not."""
+    """The parent draws the terminal (layout-0120); the unit's own pages do not."""
     # UNDO: stages/replicate.py, `replicate_boundaries`: `_without_rail_homes(columns, functions)`
     #     -> `columns`
     spec = dataclasses.replace(function_spec(1), home=Home.ELSEWHERE)

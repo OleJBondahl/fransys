@@ -20,7 +20,7 @@ attribute or string-rewrite fallback was needed.
 The model here is built directly (not by importing `packages/fransys-pdf/tests/_build.py`
 as a bare module): that file is reachable at runtime only through a `sys.path` insert,
 which `ty` cannot see statically (root `pyproject.toml`'s own comment on its `extra-paths`
-list), and `pyproject.toml` is not this work order's to edit. `_png.py`'s PNG decoder is
+list), and `pyproject.toml` is not to be edited here. `_png.py`'s PNG decoder is
 reused, not duplicated, loaded by file path with `importlib` for the same reason -- a
 dynamic load, not a static `import`, so `ty` has nothing to fail to resolve.
 """
@@ -73,7 +73,7 @@ _ORIGIN = Origin(file="tests/test_symbol_not_installed_compiles_grey.py", line=1
 # Placement grid coordinates chosen as whole multiples of 8 (one module) so the absolute mm
 # position is an exact number, no long decimals to carry through this test's own hand-math.
 _MODULE_MM = 2.5  # the house sheet's own module_mm (`default_sheet_format()`)
-_CONTENT_ORIGIN_MM = 5  # the house sheet's own content_x_mm == content_y_mm (R11.1)
+_CONTENT_ORIGIN_MM = 5  # the house sheet's own content_x_mm == content_y_mm (model-0051)
 _A_X_G, _A_Y_G = 80, 80  # -> (30, 30) mm
 _B_X_G, _B_Y_G = 240, 80  # -> (80, 30) mm -- 50 mm from A, far clear of its symbol
 
@@ -317,7 +317,7 @@ def test_not_installed_symbol_stroke_and_fill_are_grey_on_compiled_output():
 # --- PART C: `.not-installed *`'s dash period, on compiled pixels, at a sheet's own scale ------
 
 _DASH_PPI = 600.0  # high enough to tell a 0.25 mm dash from the pre-fix ~0.625 mm one apart
-_EXPECTED_DASH_MM = 0.25  # D10/D11: `_constants.STROKE_WIDTH_MM`, the same value as a solid line
+_EXPECTED_DASH_MM = 0.25  # `_constants.STROKE_WIDTH_MM`, the same value as a solid line
 _DASH_TOLERANCE_MM = 3 * (25.4 / _DASH_PPI)  # +/-1 px (antialiasing) per edge, one extra px slack
 
 

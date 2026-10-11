@@ -1,8 +1,8 @@
-"""PART C: `.wire`'s compiled stroke thickness matches D11's 0.25 mm, on REAL compiled pixels.
+"""`.wire`'s compiled stroke thickness matches the 0.25 mm stroke width, on REAL compiled pixels.
 
 `_style.py`'s CSS `stroke-width: 0.25mm` compiled to about 0.93 mm on this Typst/resvg
 pipeline (roughly 96/25.4, CSS's own 96-px-per-inch default resolving the `mm` unit into
-user units, not this SVG's own `viewBox` scale) -- the same class of unit trap PART 7 found
+user units, not this SVG's own `viewBox` scale) -- the same class of unit trap found
 for `font-size`. The fix is the same shape: a bare, unitless number in the `<style>` block
 (`_style.style_block`), since this package's `viewBox` already makes 1 user unit equal 1 mm
 (D5). This test compiles a real page with one real wire, decodes the PNG Typst emits, and
@@ -58,7 +58,7 @@ PPI = 600.0  # high enough that 0.25 mm is several pixels wide (0.25 * 600 / 25.
 _ORIGIN = Origin(file="tests/test_stroke_width_compiles_correctly.py", line=1, note="invented")
 
 # The house sheet's own constants (`default_sheet_format()`), the same numbers the other
-# compiled root tests hand-compute from -- content origin R11.1's 5 mm house margin, not the
+# compiled root tests hand-compute from -- content origin's 5 mm house margin, not the
 # old 10 mm one.
 _MODULE_MM = 2.5
 _CONTENT_ORIGIN_MM = 5
@@ -69,7 +69,7 @@ _CONTENT_ORIGIN_MM = 5
 _WIRE_X0_G, _WIRE_X1_G, _WIRE_Y_G = 100, 250, 150
 _SCAN_X_G = 175  # mid-span: clear of both endpoints' own line-cap antialiasing
 
-_EXPECTED_STROKE_WIDTH_MM = 0.25  # D11, `_constants.STROKE_WIDTH_MM`
+_EXPECTED_STROKE_WIDTH_MM = 0.25  # `_constants.STROKE_WIDTH_MM`
 
 # Tolerance derived from the scan resolution, not guessed: a stroke edge can land anywhere
 # within one pixel (antialiasing spreads it over that pixel, and the `is_dark` threshold

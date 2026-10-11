@@ -6,7 +6,7 @@ a cable between their connectors.
 The bug: a stub's far end was cut out of the port text by string slicing, so it read the unit's
 own root tag (`-U9-J1`) for both boards and named neither instance.
 
-The rule (UT2): the one rendering in `fransys_model.derive` gives the far end its instance
+The rule: the one rendering in `fransys_model.derive` gives the far end its instance
 tag, head `-U1-J1` and tail `:1`; `stub_far_end` calls it and no longer slices strings.
 
 The decision that fixes it: model-0134.

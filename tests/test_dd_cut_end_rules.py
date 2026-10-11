@@ -1,4 +1,4 @@
-"""CUT-END rules 2 and 3 (ruling 2026-09-25): which pages a severed wire's cut uses.
+"""Which pages a severed wire's cut uses.
 
 Rule 2: when no one unit holds both ends' own pages but some unit holds a page of each end
 (two units' boundary functions wired to each other, meeting in their parent's drawing set, or
@@ -16,7 +16,7 @@ and gets no marker.
 The two boundary functions are 2-pin connectors wired pin 1 to pin 1, a net of two ports. With
 the units nested in a parent, the wire is drawn in the parent's set at the black boxes, each
 unit's own set ends at its pin with nothing (layout-0080 rule 5), and no error is reported.
-With two top-level units the wire ends in a D10 stub on each pin, and no error is reported.
+With two top-level units the wire ends in a stub on each pin, and no error is reported.
 
 Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records
 and, for the decisions, from `run_stages`.
@@ -170,7 +170,7 @@ def test_two_units_boundary_functions_wired_in_their_parent_get_a_marker_pair_th
 
 
 def test_two_top_level_units_boundary_functions_wired_get_a_stub_each() -> None:
-    """Rules 1 and 2 of BOUNDARY-DRAW (layout-0080). Two top-level units' boundary
+    """Layout-0080, rules 1 and 2. Two top-level units' boundary
     functions wired to each other at the top level: the wire leaves each unit's set, so each
     pin gets an OFF stub in its own unit's set naming the far pin, and no error, no owner/user
     marker pair stands anywhere."""

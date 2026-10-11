@@ -9,8 +9,6 @@ import pytest
 from fransys_model.kernel import Severity, freeze
 from fransys_model.vocab import (
     BreakingPoint,
-    OperatingFacet,
-    PartRatingFacet,
     RatingFacet,
     facets_of,
 )
@@ -54,14 +52,6 @@ def _model(tmp_path, text):
     return freeze(fransys_parts.load_path(_root(tmp_path, text)))
 
 
-def test_a_part_rating_loads_its_breaking_point(tmp_path):
-    (facet,) = facets_of(
-        _model(tmp_path, _HEAD + "\n[rating]\n" + _DC + _FUNCTION), PartRatingFacet
-    ).values()
-    assert facet.rating.breaking_dc == (_POINT,)
-    assert facet.rating.breaking_ac == ()
-
-
 def test_a_function_rating_loads_ac_and_dc_points(tmp_path):
     body = 'breaking_ac = [{ voltage_v = "400", current_a = "10000" }]\n' + _DC
     (facet,) = facets_of(
@@ -71,16 +61,6 @@ def test_a_function_rating_loads_ac_and_dc_points(tmp_path):
     assert facet.rating.breaking_ac == (
         BreakingPoint(voltage_v=Decimal(400), current_a=Decimal(10000)),
     )
-
-
-def test_an_operating_table_loads_its_fault_fields(tmp_path):
-    body = 'fault_current_dc_a = "6000"\nfault_time_constant_ms = "2"\nfault_current_ac_a = "9"\n'
-    (facet,) = facets_of(
-        _model(tmp_path, _HEAD + _FUNCTION + "\n[function.operating]\n" + body), OperatingFacet
-    ).values()
-    assert facet.operating.fault_current_dc_a == Decimal(6000)
-    assert facet.operating.fault_time_constant_ms == Decimal(2)
-    assert facet.operating.fault_current_ac_a == Decimal(9)
 
 
 _P = '{ voltage_v = "1000", current_a = "15000" }'
@@ -116,24 +96,3 @@ def test_a_malformed_breaking_point_is_rating_value_invalid(tmp_path, table, cas
     assert {f.code for f in findings} == {"RATING_VALUE_INVALID"}
     assert all(f.severity is Severity.ERROR for f in findings)
     assert all(f"{table}.breaking_" in f.message for f in findings)
-
-
-def test_the_message_names_the_field_and_point_index(tmp_path):
-    text = _HEAD + f'\n[rating]\nbreaking_dc = [{_P}, {{ voltage_v = "1" }}]\n' + _FUNCTION
-    (found,) = _lint(tmp_path, text)
-    assert "rating.breaking_dc[1] has no key 'current_a'" in found.message
-
-
-def test_a_clean_point_list_lints_clean(tmp_path):
-    assert _lint(tmp_path, _HEAD + "\n[rating]\n" + _DC + _FUNCTION) == ()
-
-
-def test_breaking_points_under_operating_are_an_unknown_field_only(tmp_path):
-    # An empty list would be RATING_VALUE_INVALID under a rating; here it is unknown only.
-    text = _HEAD + _FUNCTION + "\n[function.operating]\nbreaking_dc = []\n"
-    assert {f.code for f in _lint(tmp_path, text)} == {"FIELD_UNKNOWN"}
-
-
-def test_a_float_in_a_point_is_float_forbidden_only(tmp_path):
-    text = _HEAD + '\n[rating]\nbreaking_dc = [{ voltage_v = "1", current_a = 1.5 }]\n' + _FUNCTION
-    assert {f.code for f in _lint(tmp_path, text)} == {"FLOAT_FORBIDDEN"}

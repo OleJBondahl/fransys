@@ -1,4 +1,4 @@
-"""A public-surface docstring never cites a spec or decision id (FR7: the API text reads alone).
+"""A public-surface docstring never cites a spec or decision id (the API text reads alone).
 
 Covers every name in `fransys.__all__` and `fransys_model.derive.__all__`.
 """
@@ -59,7 +59,7 @@ def _hits() -> list[str]:
 
 
 def test_surface_docstrings_cite_no_spec_or_decision_id():
-    """No surface docstring holds `(FD5)`, `decision 0033`, `model-0121`, `(units spec U3)` ..."""
+    """No surface docstring holds `decision 0033`, `model-0121` ..."""
     assert _hits() == []
 
 

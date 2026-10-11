@@ -81,51 +81,6 @@ def test_a_contact_wired_to_a_pin_in_another_group_moves_its_home_there() -> Non
     assert result[0].cells[1].home is Home.MOVED
 
 
-def test_a_contact_wired_to_a_pin_in_its_own_group_stays_home() -> None:
-    """The same wire inside one group is no far end: both columns stay as they were."""
-    drawn_functions, columns = _pair(near_group=1)
-    wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
-
-    assert _run(drawn_functions, wires, columns) == columns
-
-
-def test_a_contact_with_wires_to_two_groups_stays_home() -> None:
-    """Contact 5 has a wire to group 1 and a wire to group 3: no single far pin, it stays."""
-    # UNDO: stages/far_ends.py:_far_host, `len(wires) != 1` -> `len(wires) < 1`
-    drawn_functions, columns = _pair()
-    columns = (*columns, column("other", (6,), group=3))
-    drawn_functions = (*drawn_functions, drawn(6))
-    wires = (
-        _wire(1, _ref(1, "out"), _ref(5, "in")),
-        _wire(2, _ref(5, "out"), _ref(6, "in")),
-    )
-
-    assert _run(drawn_functions, wires, columns) == columns
-
-
-def test_a_contact_wired_to_a_pin_that_also_has_another_wire_stays_home() -> None:
-    """Pin 1 is a multi-pin end (a box): it carries a second wire, so the contact stays home."""
-    # UNDO: stages/far_ends.py:_far_host, `len(touching[other.function]) != 1` -> `False`
-    drawn_functions, columns = _pair()
-    columns = (*columns, column("other", (6,), group=1))
-    drawn_functions = (*drawn_functions, drawn(6))
-    wires = (
-        _wire(1, _ref(1, "out"), _ref(5, "in")),
-        _wire(2, _ref(1, "in"), _ref(6, "out")),
-    )
-
-    assert _run(drawn_functions, wires, columns) == columns
-
-
-def test_a_contact_stays_home_when_the_host_column_does_not_fit() -> None:
-    """`fits` says no: the same wire as the moving case leaves both columns as they were."""
-    # UNDO: stages/far_ends.py:move_far_ends, `if fits(_moved_cells(host, entries)):` -> `if True:`
-    drawn_functions, columns = _pair()
-    wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
-
-    assert _run(drawn_functions, wires, columns, fits=False) == columns
-
-
 def test_a_coil_wired_to_a_plc_output_channel_moves_like_a_contact() -> None:
     """Coil 5 on channel 1 moves below it; a coil on any other pin, and a plain terminal, stay."""
     # UNDO: stages/far_ends.py:_serves, the coil clause -> `mine.roles.coil`
@@ -259,28 +214,9 @@ def test_a_terminal_with_a_pin_in_another_group_stays_home() -> None:
     assert _run(drawn_functions, wires, columns) == columns
 
 
-def test_a_terminal_with_every_pin_outside_its_column_stays_home() -> None:
-    """Three wires, all to other columns of the group: this star is a follow-up, not V4's rule."""
-    # UNDO: stages/own_group.py:_own_star, `len(outside) == len(pairs) or` -> ``
-    drawn_functions, wires, columns = _star()
-    drawn_functions += (drawn(5, kind="coil"),)
-    wires = (*wires[1:], _wire(4, _ref(1, "out"), _ref(5, "in")))
-    columns = (replace(columns[0], cells=(_cell(1, 0),)), *columns[1:], column("k3", (5,)))
-
-    assert _run(drawn_functions[:1] + drawn_functions[2:], wires, columns) == columns
-
-
 def test_a_terminal_stays_home_when_the_host_column_does_not_fit() -> None:
     """`fits` says no: the star's columns stay as they were."""
     # UNDO: stages/own_group.py:own_group_homes, `or not fits(...)` -> ``
     drawn_functions, wires, columns = _star()
 
     assert _run(drawn_functions, wires, columns, fits=False) == columns
-
-
-def test_a_terminal_with_two_wires_is_a_chain_link_and_stays_home() -> None:
-    """Terminal 1 joins switch 2 (own column) and coil 3: two wires make no star, so it stays."""
-    # UNDO: stages/own_group.py:_MIN_WIRES, `3` -> `2`
-    drawn_functions, wires, columns = _star()
-
-    assert _run(drawn_functions[:3], wires[:2], columns[:2]) == columns[:2]

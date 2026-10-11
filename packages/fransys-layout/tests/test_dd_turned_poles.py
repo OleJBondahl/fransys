@@ -1,4 +1,4 @@
-"""D1 (EF-D part 1): a directed pole against its chain is drawn turned; a vote tie has a rule.
+"""A directed pole against its chain is drawn turned; a vote tie has a rule.
 
 The running-lamp column: a `+` point, a changeover contact fed at its COM (11), a breaker
 standing for the lamp, a `0V` point. The contact stands R0 with 11 on top, so a chain fed at 11
@@ -46,7 +46,7 @@ def _lamp_column(*, plus_first: bool = True, fed_at: str = "11"):
     wire(k1.fn("co_1")[out_at], q1["1"])
     wire(q1["2"], second.inner)
     plus, zero = (first, second) if plus_first else (second, first)
-    # an AC supply keeps references (LD8): a DC one would draw power symbols and move the column
+    # an AC supply keeps references: a DC one would draw power symbols and move the column
     d.supply("S", current="ac", rails={"+": ("24", 0), "0V": ("0", None)})
     d.net("PLUS", plus.inner, cls="power", potential="+")
     d.net("ZERO", zero.inner, cls="power", potential="0V")
@@ -70,7 +70,7 @@ def _port_y(placement: SymbolPlacement, name: str) -> int:
 
 
 def test_a_changeover_fed_at_11_stands_r0_with_11_on_top_and_the_feed_runs_straight() -> None:
-    """D1: the contact fed at 11 points with its chain, so it is drawn R0, 11 on top; the
+    """The contact fed at 11 points with its chain, so it is drawn R0, 11 on top; the
     column has no failed connection.
     """
     # UNDO: stages/_chain_walk.py `_note_turns`, swap the branches of `elif pole.inn == e`
@@ -90,7 +90,7 @@ def test_a_changeover_fed_at_11_stands_r0_with_11_on_top_and_the_feed_runs_strai
 def test_a_vote_tie_puts_the_higher_potential_on_top_whatever_the_walk_order(
     plus_first: bool,  # noqa: FBT001 -- a parametrized flag, one case per value
 ) -> None:
-    """D1: one pole each way is a tie (the contact is fed at 14, against its chain, Q1 along);
+    """One pole each way is a tie (the contact is fed at 14, against its chain, Q1 along);
     `+` is on top with `+` on XA:1 (walk order) or on XA:2.
     """
     # UNDO: _chain_walk.py `_vote_direction`, its returned `directed`: mark a tied chain as directed
@@ -101,7 +101,7 @@ def test_a_vote_tie_puts_the_higher_potential_on_top_whatever_the_walk_order(
 
 
 def test_a_changeover_fed_at_14_is_drawn_turned_so_the_feed_runs_straight() -> None:
-    """D1: fed at 14 the chain enters the contact at its S-facing port, against its direction:
+    """Fed at 14 the chain enters the contact at its S-facing port, against its direction:
     the contact is drawn MR180, 14 on top, 11 and 12 below, and nothing loops round it.
     """
     # UNDO: stages/_chain_walk.py `walk_chains`, `out.flipped |= out.turned`: drop it
@@ -116,7 +116,7 @@ def test_a_changeover_fed_at_14_is_drawn_turned_so_the_feed_runs_straight() -> N
 
 
 def test_a_function_with_a_pole_that_points_with_its_chain_is_not_turned() -> None:
-    """D1: a turn is per function, so a 3P contactor whose pole 1-2 points with chain A and
+    """A turn is per function, so a 3P contactor whose pole 1-2 points with chain A and
     whose pole 4-3 points against chain B (a tie there) stays upright: the pole that points
     with its chain would be drawn against it, and the chain-A wire would loop round the symbol.
     """
@@ -146,7 +146,7 @@ def test_a_function_with_a_pole_that_points_with_its_chain_is_not_turned() -> No
 
 
 def test_a_pole_pin_turns_back_only_past_its_devices_edge() -> None:
-    """S20 M12: K1:4 (a bottom pin) to Q1:2 stands no higher than K1's top edge, so it is a
+    """K1:4 (a bottom pin) to Q1:2 stands no higher than K1's top edge, so it is a
     drawn wire; K1:3 (a top pin) to XA:4, which stands below the contactor, is a reference pair.
     """
     # UNDO: stages/references/turned.py `_turns_back`: `own.body[0]` -> `own.end.offset`
@@ -173,7 +173,7 @@ def test_a_pole_pin_turns_back_only_past_its_devices_edge() -> None:
 
 
 def test_a_mated_pin_view_turned_face_to_face_stays_r180() -> None:
-    """D1: only a turned directed pole is MR180; the device pin view under its plug is R180."""
+    """Only a turned directed pole is MR180; the device pin view under its plug is R180."""
     # UNDO: stages/place.py _cells, `Orientation.MR180 if cell.mirror` -> `if cell.flip`
     parts, d = design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
@@ -210,7 +210,7 @@ def _crossings(model: Model) -> int:
 
 
 def test_two_contactors_in_series_draw_no_crossed_phase_wires() -> None:
-    """D1 (MR180): K1 is entered at its outputs, so it is turned; a turned three-pole device
+    """MR180 case: K1 is entered at its outputs, so it is turned; a turned three-pole device
     keeps its lanes left to right (a plain R180 mirrors them), so the phases run straight
     from K2 down to K1 without crossing.
     """

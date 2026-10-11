@@ -9,7 +9,7 @@ and the mate `-P1`, dropping `+EXT` because the end sits at the unit's own locat
 stub on the cabinet's drawing prints `+EXT-X0`. A unit's own document knows only what is below
 it (owner 2026-09-24), so an end outside the unit is never short, wherever it sits.
 
-The decision that fixes it: model-0143, amended by FAR-END-ONE-HOME.
+The decision that fixes it: model-0143, amended by a later rule on far ends.
 """
 
 from functools import cache

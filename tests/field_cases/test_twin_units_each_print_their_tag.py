@@ -9,7 +9,7 @@ unit's own document gives its root (`-U9-J1` twice), so the build reported a dup
 circuit with nothing wrong in it, and the system pages of a cabinet printed `-X1:L1` with no
 sign of which cabinet.
 
-The rule (UT1, UT2): `d.add(definition, tag)` writes the instance's tag. In its container an
+The rule: `d.add(definition, tag)` writes the instance's tag. In its container an
 item prints the instance tag, then the designation the unit's own document prints, behind one
 dash: `-U1-J1`. A sole board root prints as the tag alone (`-U1`); a unit with several roots
 prints the tag before each (`-U1-X1:L1:1`). The unit's own document does not change. One tag

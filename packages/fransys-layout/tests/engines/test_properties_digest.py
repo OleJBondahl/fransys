@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 _ORIGIN = Origin(file="tests/engines/test_properties_digest.py", line=1, note="property tests")
 _KINDS = ("drawing_set", "page", "symbol_placement", "route", "link_marker", "label")
 _P2 = make_id(AspectNode, ("p2",))
-# a sheet content width (mm) on which `=P2` and `=SUP` share a page once K9 joins `=P2` (V4 drew
-# the rail terminal's replica over its pin, so the default sheet is one such width too)
+# a sheet content width (mm) on which `=P2` and `=SUP` share a page once K9 joins `=P2`
+# (a rail terminal's replica is drawn over its pin, so the default sheet is one such width too)
 _MERGING_WIDTH = 410  # was 400 before layout-0103 widened the PLC box for its contacts
 # a width on which `=P2` stands on a page of its own, apart from `=SUP`, with or without K9
 _APART_WIDTH = 360
@@ -185,7 +185,7 @@ def test_ids_survive_the_repagination_except_a_route_the_new_page_break_cuts(
     """`=P2` leaves the page it shared with `=P1`: the K1 to K2 wire is cut.
 
     This pins the exact set of ids the repagination loses. On the default sheet it is the cut
-    route alone: `=P2` stands on a page of its own, and `=SUP` keeps its own page (D7: a lane
+    route alone: `=P2` stands on a page of its own, and `=SUP` keeps its own page (a lane
     that carries a contact image reserves its width, so `=P2` and `=SUP` no longer fit together).
     On a sheet wide enough for `=P2` and `=SUP` to share a page (`_MERGING_WIDTH`) it is also the
     one page keyed by its first group (`=SUP`, merged into the next page). A star marker's key
@@ -245,15 +245,15 @@ def _groups_sharing_a_page_with_p2(*models: Model) -> set:
 def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_net(
     *, width_mm: int | None, cut: int, replica: bool, page_lost: bool
 ) -> None:
-    """D4, D9, D17: a device keeps its id whatever page it moves to; only what the repacking
+    """A device keeps its id whatever page it moves to; only what the repacking
     or K9's net changes is lost.
 
-    K9 joins the 24 V rail net of `-X2:1`, so a member wire of that net may become markers (D9),
+    K9 joins the 24 V rail net of `-X2:1`, so a member wire of that net may become markers,
     and a page is keyed by its first group, so one whose group moves onto P2's page is lost
     (`page_lost`). On the default sheet and on `_MERGING_WIDTH` `=P2` leaves the page it shared
     with `=P1`, so the K1:14 to K2:13 wire, the only one across the two, is cut and gets its
     marker pair (links.md 6.6): `cut` is 1 there and 0 on the 250 mm sheet, where every group has a
-    page of its own before and after. On the default sheet (D7) `=P2` also stands apart from
+    page of its own before and after. On the default sheet `=P2` also stands apart from
     `=SUP`, whose page keeps its key, so `=P2`'s page needs its own replica of the rail terminal
     `-X2:1` (`replica`), a new placement of `-X2`.
     """
@@ -281,7 +281,7 @@ def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_n
     sharing = _groups_sharing_a_page_with_p2(plain, extra)
     assert bool(lost["page"]) is page_lost
     assert all({entry.group for entry in page.groups} <= sharing for page in lost["page"])
-    # a lost route is the cut wire, or a wire of the rail net that K9 grew (D9)
+    # a lost route is the cut wire, or a wire of the rail net that K9 grew
     ends = [{port_key[route.a], port_key[route.b]} for route in lost["route"]]
     assert ends
     assert all(end == set(_SIGNAL) or _RAIL in end for end in ends)

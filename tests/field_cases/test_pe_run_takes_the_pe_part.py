@@ -7,7 +7,7 @@ The bug: a run took the strip's one feed-through part, so the PE terminals count
 as feed-through ones; there was no part-per-run keyword (owner: "all terminals except PE are of
 the same part").
 
-The rule (EA15, G23): a run labelled exactly "PE" takes the strip's `pe=` part; on a strip
+The rule: a run labelled exactly "PE" takes the strip's `pe=` part; on a strip
 without `pe=` it raises `_take_pe`'s message. An explicit `X1[n]` is unchecked.
 """
 

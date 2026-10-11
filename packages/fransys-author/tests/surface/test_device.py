@@ -1,4 +1,4 @@
-"""EA4 runtime half: `device`, typed and string parts, and checked pin and function access."""
+"""Runtime half: `device`, typed and string parts, and checked pin and function access."""
 
 from typing import Any, ClassVar
 

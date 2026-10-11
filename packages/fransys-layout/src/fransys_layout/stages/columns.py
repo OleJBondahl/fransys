@@ -1,11 +1,13 @@
 """Stage 2, columns: the series chains that are placed top to bottom."""
 
 import itertools
+from dataclasses import replace
 from typing import TYPE_CHECKING, TypeGuard
 
 from fransys_layout.geometry import HintError, LayoutError
 from fransys_model.kernel import Finding, Severity
 
+from ._chain_beside import read_down
 from .types import ROLE_ORDER, Cell, Column, Role
 
 if TYPE_CHECKING:
@@ -73,12 +75,16 @@ def columns_from_chains(
             claimed.add(spec.function)
             steps.append((entry, spec))
         _check_series(chain, steps)
-        flipped = _entered_from_south(steps, drawn_by, connections)
+        steps = read_down(chain, steps, specs, drawn_by)
+        flipped = _entered_from_south(
+            steps, drawn_by, connections, any_function=chain.beside is not None
+        )
         cells = tuple(
             Cell(function=entry.function, index=entry.index, flip=entry.function in flipped)
-            for entry in chain.entries
+            for entry, _ in steps
         )
-        columns.append(build_column(chain.key, cells, [spec for _, spec in steps]))
+        column = build_column(chain.key, cells, [spec for _, spec in steps])
+        columns.append(replace(column, beside=chain.beside))
     findings = []
     for spec in sorted(specs.values(), key=lambda spec: spec.function):
         if spec.function in claimed:
@@ -115,10 +121,10 @@ def _joined_ports(connections: tuple[Connection, ...]) -> set[tuple[Handle, Hand
 
 
 def _terminal_drawing(
-    spec: FunctionSpec, drawn_of: Mapping[Handle, DrawnFunction]
+    spec: FunctionSpec, drawn_of: Mapping[Handle, DrawnFunction], *, any_function: bool
 ) -> DrawnFunction | None:
-    """The drawing of a strip terminal, None for any other function or when nothing is drawn."""
-    if not spec.roles.terminal or len(spec.ports) != _TERMINAL_PORTS:
+    """The drawing of a strip terminal (any function when asked), None for others or undrawn."""
+    if not any_function and (not spec.roles.terminal or len(spec.ports) != _TERMINAL_PORTS):
         return None
     drawing = drawn_of.get(spec.function)
     if drawing is None and drawn_of:
@@ -143,11 +149,22 @@ def _entry_ports(
     return []
 
 
+def _other_port(spec: FunctionSpec, entry: PortSpec) -> PortSpec | None:
+    """The port across the entry port's pole, or the one other port of a two-port function."""
+    if len(spec.ports) == _TERMINAL_PORTS:
+        return next(port for port in spec.ports if port is not entry)
+    for pair in spec.pole_pairs:
+        if entry.name in (pair.first, pair.second):
+            across = pair.second if entry.name == pair.first else pair.first
+            return next((port for port in spec.ports if port.name == across), None)
+    return None
+
+
 def _enters_south(spec: FunctionSpec, entry: PortSpec, drawing: DrawnFunction) -> bool:
     """Whether the terminal's entry port faces S and its other port faces N in the drawing."""
-    (other,) = (port for port in spec.ports if port is not entry)
+    other = _other_port(spec, entry)
     symbol_port = {dp.port: dp.symbol_port for dp in drawing.ports}
-    if entry.port not in symbol_port or other.port not in symbol_port:
+    if other is None or entry.port not in symbol_port or other.port not in symbol_port:
         msg = "a terminal port of a chain does not map to a symbol port"
         raise LayoutError(msg)
     facing = {g.name: g.facing.value for g in drawing.geometry.ports}
@@ -158,12 +175,14 @@ def _entered_from_south(
     steps: Sequence[tuple[ChainEntry, FunctionSpec]],
     drawn_of: Mapping[Handle, DrawnFunction],
     connections: tuple[Connection, ...],
+    *,
+    any_function: bool = False,
 ) -> set[Handle]:
-    """The terminals of a chain entered by their S-facing port; an ambiguous one stays."""
+    """The terminals of a chain (any function of a beside chain) entered by their S-facing port."""
     joined = _joined_ports(connections)
     flipped: set[Handle] = set()
     for at, (_, spec) in enumerate(steps):
-        drawing = _terminal_drawing(spec, drawn_of)
+        drawing = _terminal_drawing(spec, drawn_of, any_function=any_function)
         if drawing is None:
             continue
         entries = _entry_ports(steps, at, joined)

@@ -6,8 +6,8 @@ box stands under the poles and the lamp box under the auxiliary lane, in one row
 
 The bug: the lamp's lane lay inside the motor box's width, so the two boxes shared an edge and
 read as one rectangle with two compartments (SYMBOL_OVERLAP). The lane offset of a box that
-spans lanes (C12) ignored the box before it.
-The fix (BOX-GAP): `place._keep_gap`, a row keeps the column gap between any two neighbours
+spans lanes ignored the box before it.
+The fix: `place._keep_gap`, a row keeps the column gap between any two neighbours
 after the lane offsets, the later box and its right-hand neighbours move right.
 """
 

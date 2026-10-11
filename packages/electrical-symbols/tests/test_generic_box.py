@@ -1,4 +1,4 @@
-"""`generic_box`: the labelled-box placeholder as a real toolkit symbol (decision D41)."""
+"""`generic_box`: the labelled-box placeholder as a real toolkit symbol."""
 
 import pytest
 from symdef.boxes import body_box, slot_box
@@ -58,7 +58,7 @@ def test_the_symbol_is_never_repeated():
 
 
 def test_explicit_sides_overrides_the_alternating_rule():
-    """R7 C5: `sides` puts every named port where asked, not on the alternating N/S rule."""
+    """`sides` puts every named port where asked, not on the alternating N/S rule."""
     symbol = _box(("a", "b"), sides=("n", "n"))
     assert [port.direction for port in symbol.ports] == [Direction.N, Direction.N]
 
@@ -66,13 +66,13 @@ def test_explicit_sides_overrides_the_alternating_rule():
 def test_sides_shorter_than_port_names_raises():
     # `match=r"."` only satisfies ruff's PT011 (a bare `pytest.raises(ValueError)` is "too
     # broad"); it asserts nothing about the message's wording, which is `zip`'s own, an
-    # implementation detail this test does not pin (review R3).
+    # implementation detail this test does not pin.
     with pytest.raises(ValueError, match=r"."):
         _box(("a", "b"), sides=("n",))
 
 
 def test_a_marking_slot_sits_beside_each_port():
-    """R7 B3: one `marking.<port id>` slot per port, E of its wire, just inside the body."""
+    """One `marking.<port id>` slot per port, E of its wire, just inside the body."""
     symbol = _box(("a", "b", "c"))
     markings = symbol.slots[1:]
     assert [marking.id for marking in markings] == ["marking.a", "marking.b", "marking.c"]
@@ -84,7 +84,7 @@ def test_a_marking_slot_sits_beside_each_port():
 
 
 def test_pitch_rounds_the_offset_up_not_down():
-    """R7 B3: pitch is `ceil(text_width / 8 + 0.5)` M; "longmarking" (41 G) needs 6 M, not 5."""
+    """Pitch is `ceil(text_width / 8 + 0.5)` M; "longmarking" (41 G) needs 6 M, not 5."""
     # CAN-FAIL: generic_box.py `_pitch`: `math.ceil` -> `math.floor` (5 M) fails the box width
     symbol = _box(("function.longmarking",))
     assert body_box(symbol) == Box(Point(-2, -2), Point(10, 2))

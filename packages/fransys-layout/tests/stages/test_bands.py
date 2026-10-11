@@ -1,4 +1,4 @@
-"""T5: the band key of a cell, by its row in the column: first, last, middle, a single row."""
+"""The band key of a cell, by its row in the column: first, last, middle, a single row."""
 
 import pytest
 
@@ -24,5 +24,5 @@ RANKS = frozendict({"relay": 1, "relay.first": 0, "relay.last": 2, "plain": 3, "
 def test_the_band_key_follows_the_row_of_the_cell(
     kind: str, index: int, of: int, band: str | None
 ) -> None:
-    """T5.1 first, T5.2 last, T5.3 neither; one row is first; a missing rank falls back."""
+    """First, last and middle rows get their band; one row is first; a missing rank falls back."""
     assert band_of(kind, RANKS, index=index, of=of) == band

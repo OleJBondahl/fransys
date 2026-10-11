@@ -1,8 +1,8 @@
-"""Names gate (FRANSYS FR1, FR2, FR4): the old project name appears only in the allowed places.
+"""Names gate: the old project name appears only in the allowed places.
 
 Any tracked file outside the skip list that holds the word, in any case, fails. The allowances are
 the moving page that names the old spellings, the two seed strings that keep model ids and KiCad
-tstamps stable (FR2), the consumer-guide quote (an owner's words), and the two gitleaks history
+tstamps stable, the consumer-guide quote (an owner's words), and the two gitleaks history
 fingerprints, which name a file by its path in that commit.
 """
 

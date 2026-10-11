@@ -1,8 +1,8 @@
-"""F5-C (layout deep dive): one undo test per ruling for D4 (rack order, page packing), D5 (item
-views and generic boxes) and D6 (PLC channels), built through the `fransys` facade from
+"""One undo test per ruling for rack order and page packing, item views and generic boxes, and
+PLC channels, built through the `fransys` facade from
 `examples/demo-parts` and read from the laid-out `layout.*` records only.
 
-Not covered: D4's "the rack's supply is drawn as rails in their own band" and D5's "an item
+Not covered: "the rack's supply is drawn as rails in their own band" and "an item
 whose functions all choose one named symbol is one view" (the PSU). Both need a multi-function
 part whose functions are not PLC channels and whose ports fit one symbol; the only such demo parts
 are the relay (8 ports) and the contactor (10), and no library symbol has more than 5.
@@ -66,7 +66,7 @@ def _placed(model, item, name):
 
 
 def _box(model, item):
-    """The one placement of the item authored as `item`: a PLC module is one box (V1)."""
+    """The one placement of the item authored as `item`: a PLC module is one box."""
     (found,) = _placements_of_item(model, item)
     return found
 
@@ -98,7 +98,7 @@ def _rack_of_three_modules():
 
 
 def test_a_racks_modules_and_their_attached_columns_stand_in_authored_position_order() -> None:
-    """D4: modules run in position order, each with the columns attached to it beside it."""
+    """Modules run in position order, each with the columns attached to it beside it."""
     # UNDO: fransys_layout/stages/arrange.py:rack_order
     #     returns `columns` unchanged (modules then stand a, m, z)
     model = _rack_of_three_modules()
@@ -112,7 +112,7 @@ def test_a_racks_modules_and_their_attached_columns_stand_in_authored_position_o
 
 
 def test_several_groups_share_one_page() -> None:
-    """D4: groups pack onto pages by measured width, so small groups stand together."""
+    """Groups pack onto pages by measured width, so small groups stand together."""
     # UNDO: fransys_layout/stages/_packing.py:pack
     #     `used + run.width > content_width` becomes `True`
     parts, d = _design()
@@ -154,7 +154,7 @@ def _marking_labels(model, placement, item):
 
 
 def test_an_item_of_generic_functions_is_one_box_showing_every_functions_ports() -> None:
-    """D5: two or more generic functions of one item are one box carrying all their ports."""
+    """Two or more generic functions of one item are one box carrying all their ports."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
     #     never merges (`found.extend(group)` for every group)
     model = _plc_modules()
@@ -177,7 +177,7 @@ def _channel_pin_y(model, item, channel):
 
 
 def test_a_wired_plc_channel_is_a_pin_on_the_south_side_of_its_modules_box() -> None:
-    """D6, V1: each wired channel is a pin of the module's one box; the wire leaves side S."""
+    """Each wired channel is a pin of the module's one box; the wire leaves side S."""
     # UNDO: fransys_layout/engines/schematic/read/item_sides.py:item_sides
     #     returns `{}` for a box with a PLC channel (the old landing order): pins then take the
     #     default sides, not S
@@ -191,9 +191,9 @@ def test_a_wired_plc_channel_is_a_pin_on_the_south_side_of_its_modules_box() -> 
 
 
 def test_no_plc_module_is_drawn_with_channel_symbols_wired_or_not() -> None:
-    """D6, V1: wired DO1 and unwired DI1 are each one generic box; no plc-channel end exists."""
+    """Wired DO1 and unwired DI1 are each one generic box; no plc-channel end exists."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
-    #     keeps a wired one-port channel as its own view (rule C2, gone with layout-0099)
+    #     keeps a wired one-port channel as its own view (gone with layout-0099)
     model = _plc_modules()
     for item in ("do", "di"):
         assert [p.symbol for p in _placements_of_item(model, item)] == [_GENERIC_BOX]
@@ -201,7 +201,7 @@ def test_no_plc_module_is_drawn_with_channel_symbols_wired_or_not() -> None:
 
 
 def test_a_module_tag_is_shown_once_on_its_box() -> None:
-    """D6, V1: the two channels of one module print the module tag once, on the box."""
+    """The two channels of one module print the module tag once, on the box."""
     # UNDO: fransys_layout/stages/tags.py:one_module_tag
     #     returns `requests` unchanged
     model = _plc_modules()
@@ -217,7 +217,7 @@ def test_a_module_tag_is_shown_once_on_its_box() -> None:
 
 
 def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -> None:
-    """D5: pitch = ceil(text_width / 8 + 0.5) M, at least 2 M, by the name after its dot."""
+    """Pitch = ceil(text_width / 8 + 0.5) M, at least 2 M, by the name after its dot."""
 
     # UNDO: layout geometry/symbols.py:_generic measures the whole name (drop
     # `box_port_marking`), or generic_box.py:box_pitch drops the `math.ceil`
@@ -232,7 +232,7 @@ def test_a_boxs_port_pitch_comes_from_its_longest_port_name_in_whole_modules() -
 
 
 def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
-    """D5: the unwired motor's ports on one side stand 2 M (16 G) apart."""
+    """The unwired motor's ports on one side stand 2 M (16 G) apart."""
     # UNDO: electrical_symbols/generic_box.py:_pitch returns 1.0
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
@@ -265,7 +265,7 @@ def _motor_with_partner(relay_function, relay_port, motor_port):
 def test_box_ports_face_their_placed_partners(
     relay_function, relay_port, motor_port, partner_above
 ) -> None:
-    """D5: a wired box port stands on the side that faces its partner."""
+    """A wired box port stands on the side that faces its partner."""
     # UNDO: fransys_layout/stages/pagerun.py:place_pages
     #     skips `stages.boxes.box_sides` (`turned = drawn`)
     model, port = _motor_with_partner(relay_function, relay_port, motor_port)
@@ -278,9 +278,9 @@ def test_box_ports_face_their_placed_partners(
 
 
 def test_an_unwired_channel_of_a_half_wired_module_is_a_port_on_the_modules_box() -> None:
-    """D6: with one channel wired and one not, both are pins of the module's one box."""
+    """With one channel wired and one not, both are pins of the module's one box."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
-    #     keeps a wired one-port channel as its own view (rule C2, gone with layout-0099)
+    #     keeps a wired one-port channel as its own view (gone with layout-0099)
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
     do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
@@ -320,10 +320,10 @@ channel = {n}
 def test_a_three_channel_module_with_one_wired_channel_is_one_box_holding_all_three_pins(
     tmp_path,
 ) -> None:
-    """D5/D6, V1: a 3-channel module with 1 wired and 2 unwired channels is ONE box holding all
+    """A 3-channel module with 1 wired and 2 unwired channels is ONE box holding all
     three channels' pins; the wired channel is not a column end of its own."""
     # UNDO: fransys_layout/engines/schematic/read/views.py:item_views
-    #     keeps a wired one-port channel as its own view (rule C2, gone with layout-0099)
+    #     keeps a wired one-port channel as its own view (gone with layout-0099)
     root = tmp_path / "demo_parts"
     with as_file(files("demo_parts")) as demo_parts:
         shutil.copytree(demo_parts, root, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))

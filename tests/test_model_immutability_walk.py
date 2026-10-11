@@ -17,14 +17,14 @@ reaches the recursion limit.
 N = 1 is the smallest that works: the fixture builds 21 record kinds at N = 0 and 41 at N = 1, 2
 and 3 (`test_n_is_the_smallest_build_that_reaches_every_kind` below re-proves it; the demo parts'
 rating tables added `facet.rating`, `facet.part_rating` and `facet.operating`, model-0079; the
-project's `Revision` entry added `revision`, schema SC4; the numbering pass's
-`facet.assigned_designation` added one, the SC3 split; a unit's release record added
-`unit_release`, SC2; FUSE-LINK's PCB fuse holder added `facet.footprint`, the demo
+project's `Revision` entry added `revision`; the numbering pass's
+`facet.assigned_designation` added one, after a split; a unit's release record added
+`unit_release`; a PCB fuse holder added `facet.footprint`, the demo
 library's first), and
 immutability is a property of a type, not of how many instances a build has. Two of the two
 kind-counting tests below build through `_build_scale_with_document`, not `build_scale`
-directly: decision 0037 (PS1) gates layout on the model holding a `Document`, and `build_scale`
-itself must stay document-free (acceptance 6 of MODEL-BUILD -- the examples' largest build with
+directly: decision 0037 gates layout on the model holding a `Document`, and `build_scale`
+itself must stay document-free (the examples' largest build with
 its documents left out), so this file's own document-bearing variant is what reaches the
 `layout.*` kinds and adds `document` itself (one more kind than the pre-0037 39, since no build
 here ever held a document before). Thirteen of the 54 registered kinds are still not built by
@@ -69,9 +69,9 @@ MIN_OBJECTS = 1500  # the walk of the N = 1 build visits 1914; an empty walk can
 def _build_scale_with_document(n: int):
     """`build_scale(n)`'s own design, with a `layout_trigger_document()` merged in.
 
-    `build_scale` itself must stay document-free (`tests/test_scale_units_fixture.py`,
-    acceptance 6 of MODEL-BUILD: it is the "examples' largest build with its documents left
-    out" measurement). Decision 0037 (PS1) gates layout on a document, so without one this
+    `build_scale` itself must stay document-free (`tests/test_scale_units_fixture.py`:
+    it is the "examples' largest build with its documents left
+    out" measurement). Decision 0037 gates layout on a document, so without one this
     walk's own build reaches none of the `layout.*` kinds -- this helper is this file's own
     document-bearing build, reached from `scale_design` directly, never from `build_scale`.
     """
@@ -192,10 +192,8 @@ def test_n_is_the_smallest_build_that_reaches_every_kind():
     assert _built_kinds(N - 1) < kinds_at_n
     assert _built_kinds(N + 1) == kinds_at_n
     assert kinds_at_n >= REQUIRED_KINDS
-    assert (
-        len(kinds_at_n) == 52
-    )  # CT5-2: layout.cable_*; BD-3: diagram_*; HA1: facet.harness; HL6: layout.connector_box;
-    # HL1, HL17: the cabinet's -WH1 draws layout.harness_line and layout.harness_fan_out
+    assert len(kinds_at_n) == 52  # layout.cable_*; diagram_*; facet.harness; layout.connector_box;
+    # the cabinet's -WH1 draws layout.harness_line and layout.harness_fan_out
 
 
 def test_a_mutable_value_smuggled_into_a_real_record_is_found_by_its_path():

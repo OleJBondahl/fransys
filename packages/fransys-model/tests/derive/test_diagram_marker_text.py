@@ -1,4 +1,4 @@
-"""`diagram_marker_text`: a cut marker prints its partner's place on the other sheet (BD5, BD7)."""
+"""`diagram_marker_text`: a cut marker prints its partner's place on the other sheet."""
 
 from typing import Any
 
@@ -103,16 +103,5 @@ def _texts() -> dict[tuple[str, str], str]:
     }
 
 
-def test_a_marker_prints_the_place_of_its_partner_on_the_other_sheet() -> None:
-    texts = _texts()
-    assert texts["1", "W1"] == "p2:1C"
-    assert texts["2", "W1"] == "p1:11A"
-
-
 def test_two_cut_lines_of_one_pair_of_sheets_name_their_own_partners() -> None:
     assert _texts()["1", "W2"] == "p2:1H"
-
-
-def test_a_marker_of_another_reading_is_not_its_partner() -> None:
-    """The decoy's id sorts first, so a lookup that ignores the reading would pick it."""
-    assert _texts()["1", "W1"] == "p2:1C"

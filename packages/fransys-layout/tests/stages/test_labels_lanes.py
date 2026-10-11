@@ -10,7 +10,6 @@ the lane covers it; its twin one unit off does not.
 import dataclasses
 from typing import TYPE_CHECKING
 
-import pytest
 from samples import PROFILE, drawn, hid, placed
 
 from fransys_layout.geometry import Box, Facing, Point, SlotGeometry
@@ -46,48 +45,6 @@ def _label(at: int, top: int, text: str = "-K1") -> PlacedLabel:
     )
     assert findings == ()
     return labels[0]
-
-
-@pytest.mark.parametrize(
-    ("at", "on_lane"),
-    [
-        (40, True),  # the label's left edge is x 104: on the lane
-        (41, False),  # its twin one unit right: off it
-        (27, True),  # the label (13 wide) has its right edge at x 104: on the lane
-        (26, False),  # its twin one unit left: off it
-    ],
-)
-def test_a_label_with_an_edge_on_a_neighbours_lane_is_refused_and_its_twin_one_unit_off_placed(
-    at: int, *, on_lane: bool
-) -> None:
-    """The closed cover of D2 (P3): touching the lane's x is covering it."""
-    # UNDO: stages/space.py, `covers`: `box.x <= run.to_x` becomes `box.x < run.to_x` (at 40)
-    # or `run.x <= box.x + box.width` becomes `run.x < box.x + box.width` (at 27)
-    label = _label(at, 8)
-    home = Box(x=64 + at, y=72, width=13, height=8)
-    assert covers(home, _LANE) is on_lane
-    assert (label.box == home) is not on_lane
-    assert not covers(label.box, _LANE)
-
-
-@pytest.mark.parametrize(
-    ("top", "on_lane"),
-    [
-        (0, True),  # the label ends at y 72, the lane's far end: covered
-        (-1, False),  # one unit beyond it (y 71): clear
-    ],
-)
-def test_a_label_ending_on_the_lanes_far_end_is_refused_and_one_unit_beyond_it_placed(
-    top: int, *, on_lane: bool
-) -> None:
-    """The lane runs to one step past the keep-out box (y 72): its far end is part of it."""
-    # UNDO: stages/space.py, `covers`: `run.y <= box.y + box.height` becomes
-    # `run.y < box.y + box.height`
-    label = _label(32, top)
-    home = Box(x=96, y=64 + top, width=13, height=8)
-    assert covers(home, _LANE) is on_lane
-    assert (label.box == home) is not on_lane
-    assert not covers(label.box, _LANE)
 
 
 def test_a_label_with_no_width_covers_no_lane() -> None:

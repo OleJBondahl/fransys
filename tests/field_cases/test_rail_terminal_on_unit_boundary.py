@@ -5,7 +5,7 @@ The bug: layout raised `LayoutError` "a unit's boundary names a function that ha
 read drops a rail terminal (V3), so the boundary terminal had no `FunctionSpec`, yet the
 container's page must draw it.
 
-The rule (RB1, owner C2): the container's page draws the child's boundary terminal as its black-box
+The rule: the container's page draws the child's boundary terminal as its black-box
 terminal with the container's wire to it (a stub on the lamp pin, as for any black box), also
 where the unit's own pages draw the same terminal as its rail's power symbol. One data, two views.
 
@@ -90,7 +90,7 @@ def test_the_container_draws_the_boundary_terminal_and_the_unit_its_power_symbol
     drawn = {
         owner[s.page] for s in layout_of(model, SymbolPlacement).values() if s.function == first
     }
-    assert drawn == {None}  # the unit's own pages draw it as no terminal (RB3)
+    assert drawn == {None}  # the unit's own pages draw it as no terminal
     # the container's wire to a black box: a stub on the lamp pin naming the terminal (0080)
     stubs = layout_of(model, LinkMarker).values()
     assert any(

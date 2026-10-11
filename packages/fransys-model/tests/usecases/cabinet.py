@@ -1,4 +1,4 @@
-"""WP17 synthetic use case: a small cabinet (ROADMAP WP17).
+"""Synthetic use case: a small cabinet.
 
 All parts, MPNs and designations are invented for this repo; none describe a real
 product or project (CLAUDE.md invariant, red flag "Real project data in fixtures").
@@ -345,7 +345,7 @@ def _field(kit: Kit, catalogue: Catalogue, things: Things) -> None:
 
 
 def build_cabinet() -> Draft:
-    """Build the WP17 cabinet fixture: a `Draft`, not yet frozen.
+    """Build the cabinet fixture: a `Draft`, not yet frozen.
 
     The invented design (every item but the terminals is numbered by hand, and a terminal
     is named by its `terminal` facet; only the harness leaves an item, its cable, for the

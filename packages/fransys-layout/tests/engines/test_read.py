@@ -1,7 +1,6 @@
-"""WP13 unit tests for the `read/` package alone: poles, tags, group hints, authored profile
-(docs/design/engine.md 7).
+"""Unit tests for the `read/` package alone: poles, tags, group hints, authored profile.
 
-`test_schematic.py` holds the acceptance skeletons shared with the rest of WP13; this file
+`test_schematic.py` holds the acceptance skeletons shared with the schematic tests; this file
 covers `read_inputs` behaviour that fixture's skeletons do not reach. Items and functions are
 found by authoring key, never by designation.
 """
@@ -67,8 +66,8 @@ def test_a_function_with_no_internal_link_has_one_pole_and_no_pairs() -> None:
 
 
 def test_tag_text_of_a_normal_function_is_the_item_designation() -> None:
-    """A non-terminal function's TAG text is the item designation only, "-K1" (D12 amended,
-    layout-0066: no aspect segments, top level included)."""
+    """A non-terminal function's TAG text is the item designation only, "-K1"
+    (layout-0066: no aspect segments, top level included)."""
     model = freeze(build_cabinet())
     function = _function(model, ("cabinet", "k1"), "coil")
     inputs = read_inputs(model)
@@ -77,7 +76,7 @@ def test_tag_text_of_a_normal_function_is_the_item_designation() -> None:
 
 
 def test_tag_text_of_a_terminal_function_is_strip_colon_marking() -> None:
-    """A terminal function's TAG text is the strip designation, a colon, its marking (6b(i)),
+    """A terminal function's TAG text is the strip designation, a colon, its marking,
     always dash-prefixed (decision model-0052)."""
     model = freeze(build_cabinet())
     function = _function(model, ("cabinet", "x1", "1"), "terminal")
@@ -213,7 +212,7 @@ def _boundary(unit: Unit, function_id) -> Boundary:
 
 
 def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> None:
-    """OLD premise (`board_only_units`/`drop_board_unit_homes`, deleted this work order): a
+    """Before `board_only_units`/`drop_board_unit_homes` were deleted: a
     unit whose direct items are all on a board held nothing the schematic engine drew of its
     own, so its home-set `PagePlan` was dropped entirely -- the board rule excluded everything
     but the board's own `CONNECTOR` function, and `replicate_boundaries` redrew that connector
@@ -268,7 +267,7 @@ def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> 
         for placed in layout.placed
         if placed.drawing_set == own_page.drawing_set and placed.page == own_page.number
     }
-    # R7 A (deep dive): the edge connector is drawn as its pin views
+    # The edge connector is drawn as its pin views
     edge_pins = {s.function for s in inputs.functions if s.pin_function == edge.id}
     assert edge_pins
     assert edge_pins <= placed_here
@@ -311,7 +310,7 @@ def test_a_jumper_is_no_layout_connection_and_is_never_routed() -> None:
 
 
 def test_a_port_the_part_marks_with_nothing_gets_no_marking_label() -> None:
-    """I4 R1: a port whose part prints no marking (`Port.marking == ""`) gets no MARKING
+    """A port whose part prints no marking (`Port.marking == ""`) gets no MARKING
     label; one with a marking prints it in place of its name. Can-fail: read the port's name
     again and the first assertion fails."""
     from fransys_layout.engines import lay_out_schematic

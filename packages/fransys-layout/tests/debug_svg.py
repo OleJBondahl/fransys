@@ -1,4 +1,4 @@
-"""Test-side debug drawing of a stage-side `Layout` (design/package-layout.md 9, "Looking at it").
+"""Test-side debug drawing of a stage-side `Layout`.
 
 Not package code and not a renderer: boxes, ports, routes and label boxes only, so an
 agent or a human can look at a page. It takes a `Layout` value, not a `Model`, so it
@@ -35,12 +35,12 @@ WIRE_COLOURS = ("#2a7a4a", "#8a2a6a", "#2a5a9a", "#9a5a1a", "#4a4a4a")
 
 
 def write_debug_pages(layout: Layout, directory: Path, *, sheet: SheetFormat) -> tuple[Path, ...]:
-    """Write one SVG per page of `layout` into `directory` (WP7, extended by WP8, WP10).
+    """Write one SVG per page of `layout` into `directory`.
 
-    WP7 draws the content box and each `PlacedFunction` as its body and keep-out boxes
-    with port dots. WP8 adds each `Route` as a polyline, a junction dot where a route
+    It draws the content box and each `PlacedFunction` as its body and keep-out boxes
+    with port dots. It adds each `Route` as a polyline, a junction dot where a route
     ends on another route of its own net, and each `LinkMarker` as a triangle carrying
-    the partner's `/page.column` and its box, dashed orange. WP10 adds each `PlacedLabel` as
+    the partner's `/page.column` and its box, dashed orange. It adds each `PlacedLabel` as
     its box. All in grid units. Returns the paths sorted by `(drawing_set, page)`.
     """
     paths = []
@@ -201,7 +201,7 @@ def _marker(marker: LinkMarker) -> Iterator[str]:
     yield _text(
         at.x + (tip if tip > 0 else tip - 28),
         at.y - 10,
-        # A visual aid only, the page: LD3's `#n-p<sheet>:<col><row>` needs the persisted
+        # A visual aid only, the page: the marker's `#n-p<sheet>:<col><row>` needs the persisted
         # model's numbering and row, which this stage-side debug helper has no `Model` to
         # read (decision layout-0089). `marker_text` on the written model is the real text.
         f"p{marker.partner_page}",

@@ -1,4 +1,4 @@
-"""CT1 accept: no subprocess (`dot` or otherwise) is spawned building a full document build.
+"""No subprocess (`dot` or otherwise) is spawned building a full document build.
 
 `packages/fransys-wireviz` is archived; nothing left in this workspace's own source calls
 `subprocess` while building a document (confirmed: `_tool_versions`'s own `dot -V` probe is

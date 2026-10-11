@@ -1,4 +1,4 @@
-"""RB2 (model-0152): a wire from a sub-unit's pin to the parent unit's boundary rail terminal.
+"""A wire from a sub-unit's pin to the parent unit's boundary rail terminal (model-0152).
 
 An end in sub-unit B of A lies inside A's subtree but in another unit, and every nested unit is
 boundary-only on its parent, so the wire enters B's box: the parent's wire, kept, not a rail end.

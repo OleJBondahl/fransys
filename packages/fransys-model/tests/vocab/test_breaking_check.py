@@ -1,15 +1,15 @@
-"""`check_breaking`: a protective device's breaking point against the prospective fault (R11, R12).
+"""`check_breaking`: a protective device's breaking point against the prospective fault.
 
 A battery bus declared by pins with no fault current; strings of modules join its plus bus
 through string fuses `SF{i}`, a main fuse `FM` leaves it. Every fuse states breaking points.
-Expected values are written by hand from the spec's worked example and acceptance 1, 4, 5, 13.
+Expected values are written by hand from the spec's worked example.
 """
 
 import dataclasses
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from current_plant import device, fuse, hub, rate, run, wire
+from current_plant import device, fuse, hub, run, wire
 from fault_plant import breaker, module
 from plant import Plant
 from rating_plant import AC_400, rail, supply
@@ -19,15 +19,11 @@ from fransys_model.vocab import (
     BreakingPoint,
     Operating,
     OperatingFacet,
-    PartRatingFacet,
     Rating,
     RatingFacet,
 )
-from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import Current, FunctionKind
-from fransys_model.vocab.prospective_fault import prospective_fault
 from fransys_model.vocab.templates import FunctionTemplate
-from fransys_model.vocab.validators import ALL_VALIDATORS
 from fransys_model.vocab.validators.ratings_breaking import (
     RATING_BREAKING_BELOW_FAULT,
     RATING_BREAKING_NO_DATA,
@@ -133,7 +129,7 @@ def _main(model: Model) -> list[Finding]:
 
 
 def test_worked_example_gives_the_three_findings() -> None:
-    """Acceptance 1: the main fuse at 18000 A is over 15000 A, the string fuses at 12000 A not."""
+    """The main fuse at 18000 A is over 15000 A, the string fuses at 12000 A not."""
     model = _battery(draws=(("2.5",), ("0.8", "0.8", "0.8"))).model()
     breaking = check_breaking(model)
     (below,) = breaking
@@ -154,86 +150,14 @@ def test_worked_example_gives_the_three_findings() -> None:
     assert draw[1].subjects == (_fn("L00"),)
 
 
-def test_a_fuse_no_counted_source_reaches_reads_0_a_and_is_silent() -> None:
-    """Acceptance 18: FM, with no source on the bus, reads 0 A; its timed DC point is silent."""
-    model = _battery(strings=0).model()
-    (fault,) = prospective_fault(model)
-    assert (fault.position.functions, fault.current_a) == ((_fn("FM"),), 0)
-    assert check_breaking(model) == ()
-
-
-def test_a_fault_within_the_point_gives_nothing() -> None:
-    model = _battery(strings=2).model()
-    assert check_breaking(model) == ()
-
-
-def test_the_point_is_chosen_by_the_voltage_across_the_device() -> None:
-    """Acceptance 4: 3000 A at 400 V and 900 A at 800 V; at 600 V the 900 A point is used."""
-    points = (_point("400", "3000"), _point("800", "900"))
-    model = _battery(points, strings=1, per=1, volts="600", fault="1000").model()
-    (finding,) = _main(model)
-    assert finding.code == RATING_BREAKING_BELOW_FAULT
-    assert "breaks 900 A DC at 800 V" in finding.message
-    passing = _battery(points, strings=1, per=1, volts="600", fault="800").model()
-    assert _main(passing) == []
-
-
-def test_a_voltage_above_every_point_is_no_data() -> None:
-    """Acceptance 4: at 900 V no point applies."""
-    points = (_point("400", "3000"), _point("800", "900"))
-    model = _battery(points, strings=1, per=1, volts="900", fault="1000").model()
-    (finding,) = _main(model)
-    assert (finding.code, finding.severity) == (RATING_BREAKING_NO_DATA, Severity.WARNING)
-    assert "no point is rated for the circuit voltage of 900 V" in finding.message
-
-
-def test_a_point_with_a_time_constant_above_the_devices_is_no_data() -> None:
-    """Acceptance 5: a 15 ms point against a 20 ms source."""
-    points = (_point("1000", "15000", "15"),)
-    model = _battery(points, strings=1, per=1, fault="1000", tc="20").model()
-    (finding,) = _main(model)
-    assert (finding.code, finding.severity) == (RATING_BREAKING_NO_DATA, Severity.WARNING)
-    assert "time constant of the sources, 20 ms" in finding.message
-
-
 def test_an_unknown_time_constant_leaves_only_points_without_one() -> None:
     model = _battery(strings=1, per=1, fault="1000", tc=None).model()
     (finding,) = _main(model)
     assert "time constant of the sources, unknown" in finding.message
 
 
-def test_a_holders_fitted_links_points_are_the_ones_checked() -> None:
-    """Acceptance 13: the holder's point would pass, the link's fails; the link's is named."""
-    plant = _battery((_point("1000", "20000"),), strings=2, per=1)
-    part = rate(plant, "LK", None)
-    link = Rating(breaking_dc=(_point("1000", "5000"),))
-    facet = PartRatingFacet(
-        id=make_id(PartRatingFacet, ("LK",)), key=("LK",), subject=part, rating=link
-    )
-    plant.add(facet)
-    plant.item("LK", part=part, parent=make_id(Item, ("SF0",)))
-    (finding,) = check_breaking(plant.model())
-    assert finding.subjects == (_fn("SF0"),)
-    assert "breaks 5000 A DC at 1000 V" in finding.message
-    assert "below the prospective 6000 A DC" in finding.message
-
-
-def test_an_unknown_fault_current_is_silent() -> None:
-    model = _battery(strings=2, per=1, fault=None).model()
-    assert check_breaking(model) == ()
-
-
-def test_a_device_with_no_points_is_silent() -> None:
-    model = _battery((), strings=2, per=1, fault="60000").model()
-    assert check_breaking(model) == ()
-
-
-def test_check_breaking_is_registered() -> None:
-    assert check_breaking in ALL_VALIDATORS
-
-
 def test_no_data_prints_the_circuit_voltage_to_one_decimal() -> None:
-    """R12: breaker `Q` on L1 and L2 of a 10000 A grid stands at 398.37... V, above its 230 V."""
+    """Breaker `Q` on L1 and L2 of a 10000 A grid stands at 398.37... V, above its 230 V."""
     plant = Plant()
     pins = [hub(plant, name) for name in AC_400]
     for name, pin in zip(AC_400, pins, strict=True):

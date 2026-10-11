@@ -1,4 +1,4 @@
-"""EA11 and EA13: every public name of the author engine has a row in the coverage table.
+"""Every public name of the author engine has a row in the coverage table.
 
 The engine's public names are found by walking the union of the MROs of Scope, Design,
 LinkScope, Fn, Item, Strip, Terminal, Cable and Wiring. A class counts when its module is in

@@ -1,4 +1,4 @@
-"""The page frame, grid and title block (acceptance 1-5)."""
+"""The page frame, grid and title block."""
 
 from decimal import Decimal
 
@@ -64,7 +64,7 @@ def test_a_19mm_band_does_not_fit():
 
 
 def test_title_block_band_too_small_still_draws_frame_and_grid_with_no_title_block():
-    """R6: a band under 20mm leaves the frame and grid drawn; only the title block is empty."""
+    """A band under 20mm leaves the frame and grid drawn; only the title block is empty."""
     c1 = location("C1", "Demo cabinet")
     key = ("sheet_format", "tight12")
     tight = SheetFormat(
@@ -131,7 +131,7 @@ def test_row_strips_sit_in_the_true_left_and_right_margins():
 
 
 def test_grid_columns_come_from_the_sheet_format_not_a_constant():
-    """Acceptance 2: the grid's column count and content width are `sheet`'s, not hard-coded.
+    """The grid's column count and content width are `sheet`'s, not hard-coded.
 
     `content_width_mm=380` on a 420 mm sheet with `content_x_mm=10` is deliberately *not*
     `width_mm - 2*content_x_mm` (400): a grid strip that read the frame border's own width
@@ -199,7 +199,7 @@ def test_grid_columns_with_six_columns_differ_from_eight():
 
 
 def test_no_header_or_footer_argument_on_any_page_kind():
-    """Acceptance 4: the header/footer P4 gave every page are gone (page-frame R4)."""
+    """The header and footer every page had are gone."""
     c1 = location("C1", "Demo cabinet")
     doc = document(
         "d1",
@@ -237,8 +237,8 @@ def _harness_with_one_cable():
 
 
 def test_harness_table_page_keeps_the_content_box_margin():
-    """CT2: a cable run's page keeps the same 5 mm content-box margin (R3, R4;
-    decision pdf-0009, RULING W3's clearance) the WireViz image used, even with no image left
+    """A cable run's page keeps the same 5 mm content-box margin (decision pdf-0009)
+    the WireViz image used, even with no image left
     to protect the frame border from -- the house text-page padding, not a bare content-box
     fit.
     """

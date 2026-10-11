@@ -1,7 +1,7 @@
-"""S12's list (layout-0090): `side_by_side` is gone, and the one end it kept stays a wire.
+"""layout-0090: `side_by_side` is gone, and the one end it kept stays a wire.
 
 The only end `side_by_side` wired on the goldens, the example and the field cases was
-cabinet_narrow's `-S2:11` to `-X2:1`: consecutive rows of one column, D1's first wire case (an
+cabinet_narrow's `-S2:11` to `-X2:1`: consecutive rows of one column, the first wire case (an
 adjacent cell), which `references.joins` decides from `columns` alone. `-X2:1` is its star net's
 reference, with markers on the pages where the net's other ports stand apart; on the page the
 wire is drawn it carries none.
@@ -34,7 +34,7 @@ def _ports_named(*names: str) -> list[set]:
 
 def test_s2_11_to_x2_1_is_a_wire_decided_through_columns_alone() -> None:
     """The conductor is routed on one page, `-S2:11` carries no marker, `-X2:1` none there."""
-    # CAN-FAIL (S12's probe): stages/references/joins.py `wired_beside`,
+    # CAN-FAIL: stages/references/joins.py `wired_beside`,
     #     `abs(x.cell - y.cell) == 1` -> `== 2`: the end becomes a reference and this fails
     results, _ = narrow_results(_NARROW_WIDTH_MM)
     s2, x2 = _ports_named("-S2:11", "-X2:1")

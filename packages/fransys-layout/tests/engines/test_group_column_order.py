@@ -1,4 +1,4 @@
-"""A group's column order does not depend on the content width (deep-dive D2, EF-A2 part 7).
+"""A group's column order does not depend on the content width.
 
 In key order `=P1` runs `es`, `p1/control`, `p1/power`, then `-K1` `aux`; the `x2` terminal
 replica is attached to a host column (V4), so it has no column of its own. Wire 17 joins `-K1`

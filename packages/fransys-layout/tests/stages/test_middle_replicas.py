@@ -1,4 +1,4 @@
-"""HL11: a middle unit's no-line interfaces' replicas, split by edge, measured and placed."""
+"""A middle unit's no-line interfaces' replicas, split by edge, measured and placed."""
 
 from fractions import Fraction
 
@@ -51,7 +51,7 @@ def _group() -> MiddleGroup:
 
 
 def test_replicas_split_the_no_line_views_by_their_interfaces_edge() -> None:
-    """HL11: 10 and 11 are the top edge's, 12 the bottom's; 13 (a line) and 14 (none's) are out.
+    """10 and 11 are the top edge's, 12 the bottom's; 13 (a line) and 14 (none's) are out.
 
     UNDO: drop `if not one.edge.line` in `replicas`, and view 13 joins the top edge.
     """
@@ -62,7 +62,7 @@ def test_replicas_split_the_no_line_views_by_their_interfaces_edge() -> None:
 
 
 def test_replica_width_sums_each_keepout_width_plus_a_gap() -> None:
-    """HL11: two replicas and a gap of 8 are 2 * (56 + 8); no replica, nothing.
+    """Two replicas and a gap of 8 are 2 * (56 + 8); no replica, nothing.
 
     UNDO: `replica_width` leaves the `+ gap` out.
     """
@@ -72,7 +72,7 @@ def test_replica_width_sums_each_keepout_width_plus_a_gap() -> None:
 
 
 def test_replica_height_is_the_tallest_keepout_and_zero_for_none() -> None:
-    """HL11: the keep-outs are all 32 high; an empty edge is 0.
+    """The keep-outs are all 32 high; an empty edge is 0.
 
     UNDO: `replica_height` returns the first replica's height times the count.
     """
@@ -81,7 +81,7 @@ def test_replica_height_is_the_tallest_keepout_and_zero_for_none() -> None:
 
 
 def test_top_replicas_stand_a_grid_below_the_frames_top_side_by_side_from_x() -> None:
-    """HL11: the keep-outs start at frame.y + 8, the first at x 100, the next a width and gap on.
+    """The keep-outs start at frame.y + 8, the first at x 100, the next a width and gap on.
 
     UNDO: place the top replicas at `frame.y` instead of `frame.y + WIRING_GRID`.
     """
@@ -97,7 +97,7 @@ def test_top_replicas_stand_a_grid_below_the_frames_top_side_by_side_from_x() ->
 
 
 def test_bottom_replicas_stand_a_grid_above_the_frames_bottom_side() -> None:
-    """HL11: the keep-outs end at frame.y + height - 8, so start 32 above that.
+    """The keep-outs end at frame.y + height - 8, so start 32 above that.
 
     UNDO: place the bottom replicas with the top rule.
     """

@@ -1,5 +1,4 @@
-"""WP6 tests: `kernel.canonical`, `dumps`/`loads` and the digests (ROADMAP WP6,
-design/kernel-model.md 5.6)."""
+"""Tests: `kernel.canonical`, `dumps`/`loads` and the digests."""
 
 from decimal import Decimal
 from typing import Any
@@ -123,7 +122,7 @@ def test_a_decimal_comes_back_equal_though_written_in_its_canonical_form(origin:
 
 
 def test_two_spellings_of_one_decimal_give_one_dump_and_one_digest(origin: Origin) -> None:
-    """The ROADMAP's own case: they compare and hash equal, so they must dump equal."""
+    """The case: they compare and hash equal, so they must dump equal."""
     spelt_long = model_of(origin, make_owner("1"), make_item("2", amount=Decimal("1.50")))
     spelt_short = model_of(origin, make_owner("1"), make_item("2", amount=Decimal("1.5")))
     assert dumps(spelt_long) == dumps(spelt_short)
@@ -150,7 +149,7 @@ def test_the_canonical_text_is_pinned_byte_for_byte() -> None:
     assert text == (
         "{\n"
         '  "aliases": [],\n'
-        '  "schema_version": 11,\n'
+        '  "schema_version": 13,\n'
         '  "tables": {\n'
         '    "canon_owner_probe": [\n'
         "      {\n"

@@ -1,6 +1,6 @@
-"""Invented stub parts for the series tests (EA5, EA6): breaker, contactor, motor, PSU, cables.
+"""Invented stub parts for the series tests: breaker, contactor, motor, PSU, cables.
 
-`series_library()` extends `build_test_catalogue()`. Each part lists its F9 facts in one comment.
+`series_library()` extends `build_test_catalogue()`. Each part lists its facts in one comment.
 """
 
 from decimal import Decimal

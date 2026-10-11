@@ -1,11 +1,11 @@
-"""S10: the one re-partition pass re-runs `plan_pages` and `references`: no stale decision.
+"""The one re-partition pass re-runs `plan_pages` and `references`: no stale decision.
 
 Hand-built (`dd_chain_fixtures.contactor_with_pole_one_wired`): K1 beside three 2CO relays K2, K3
 and K4, fed from the XA strip. On the estimated column widths the first pass's plan ends page 1 with
 K3's coil and the column of an XA terminal side by side, and `references` joins the run of their
-ports at the columns' top (S12). Placed, a column takes more than its estimate (C21), and the
+ports at the columns' top (layout-0090). Placed, a column takes more than its estimate, and the
 re-partition moves that terminal's column to page 2: the run has no neighbour left. Every
-decision of the final pass must come from the final plans (S10), so that run is no longer joined
+decision of the final pass must come from the final plans, so that run is no longer joined
 and its ports are drawn by references. Reusing the first pass's decisions instead hands `place`
 a join whose column is not on its page.
 """

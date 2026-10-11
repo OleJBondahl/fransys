@@ -1,13 +1,13 @@
 """An invented board and PLC rack, built with raw part/item records through `fr.build`
-(facade WP: F4 and F6's board/rack legs). `examples/demo-parts` carries no `[pcb]`-faceted
+(the board and rack legs of the facade's build). `examples/demo-parts` carries no `[pcb]`-faceted
 part and neither root fixture uses a PLC module, so `connectors-*.csv`, `wago-*.xml`,
 `netlist-*.net` and `fransys_kicad.check` are otherwise unexercisable from the two pinned
 fixtures (whose `core`/`facet` digests must not move). Every part, MPN and
 designation here is invented (CLAUDE.md invariant 6), following the pattern of
 `packages/fransys-kicad/tests/conftest.py` and `packages/fransys-wago/tests/conftest.py`.
 
-One `Function` record in this model, directly on `board_item` (render work order, PART 5b,
-model-0039): it proves `schematic_functions(model)` correctly excludes a real board-mounted
+One `Function` record in this model, directly on `board_item` (model-0039):
+it proves `schematic_functions(model)` correctly excludes a real board-mounted
 function (the board exclusion covers the board item's own leaf, not only its descendants --
 see `structure.schematic_functions`'s docstring), so `fransys_render.check`'s
 `LAYOUT_MISSING` -- which now fires on `schematic_functions(model)`, not every `Function`
@@ -17,7 +17,7 @@ board/rack-only submission built through the real pipeline (`fr.build`, not a ha
 the can-fail proof of this. The module's channel content (a `FunctionTemplate` +
 `PlcChannelFacet` naming a real `Function`) is exactly what
 `packages/fransys-wago/tests/conftest.py`'s own fixtures already exercise; this facade-
-level fixture only needs to prove F6's naming/routing, which a channel-less module still
+level fixture only needs to prove the naming and routing, which a channel-less module still
 does (`fransys_wago.modules.modules_xml`'s own `if not module.channels: continue` skips
 the module's `<Module>` element but the rack still writes a `wago-R1.xml`, and
 `fransys._subjects.racks` finds `R1` by its module's `PartCategory.PLC_MODULE`, never by

@@ -1,11 +1,11 @@
 """Field case: a place R's page, a unit's boundary strip and a lamp, both in R's sub-place S1.
 
-The rule (STUB-PAGE-CONTEXT, on the roadmap before 1.0): an off stub on a page prints no place
+The rule (planned before 1.0): an off stub on a page prints no place
 the page's subject states, so on R's page a far end in `+R+S1` prints `+S1-U1-X1:SIG:1`.
 
 The gap: layout-0121 reads the near end's place, which here is S1, so the stub prints
 `-U1-X1:SIG:1` and drops a sub-place the page does not state. The final rule is relative to the
-page subject (R). Strict xfail until STUB-PAGE-CONTEXT lands.
+page subject (R). Strict xfail until the fix lands.
 
 The decision that pins the interim: layout-0121.
 """
@@ -46,7 +46,7 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     return fr.build(d, fr.document(preset, room, cover=tmp_path / "r.md"))
 
 
-@pytest.mark.xfail(strict=True, reason="STUB-PAGE-CONTEXT: the stub is relative to the near end")
+@pytest.mark.xfail(strict=True, reason="the stub is relative to the near end")
 def test_a_stub_on_the_place_page_prints_the_sub_place_below_the_page_subject(
     tmp_path: Path,
 ) -> None:

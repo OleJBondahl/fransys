@@ -26,7 +26,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/labels.py::labels" = 19
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/placements.py::placements" = 23
 "packages/fransys-layout/src/fransys_layout/lint/_jogs.py::_chains" = 18
-"packages/fransys-layout/src/fransys_layout/lint/chains.py::lint_chains" = 18
+"packages/fransys-layout/src/fransys_layout/lint/chains.py::lint_chains" = 20
 "packages/fransys-layout/src/fransys_layout/lint/geometric.py::lint_geometry" = 26
 "packages/fransys-layout/src/fransys_layout/stages/_labelling.py::home" = 29
 "packages/fransys-layout/src/fransys_layout/stages/attach.py::_with_attached" = 19
@@ -36,7 +36,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/boxes.py::box_sides" = 17
 "packages/fransys-layout/src/fransys_layout/stages/chains.py::_attach" = 34
 "packages/fransys-layout/src/fransys_layout/stages/chains.py::discover_chains" = 18
-"packages/fransys-layout/src/fransys_layout/stages/columns.py::columns_from_chains" = 28
+"packages/fransys-layout/src/fransys_layout/stages/columns.py::columns_from_chains" = 30
 "packages/fransys-layout/src/fransys_layout/stages/exempt.py::boundary_exempt" = 18
 "packages/fransys-layout/src/fransys_layout/stages/far_ends.py::move_far_ends" = 16
 "packages/fransys-layout/src/fransys_layout/stages/finish.py::finish_pages" = 17
@@ -49,12 +49,13 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/partition.py::partition" = 22
 "packages/fransys-layout/src/fransys_layout/stages/place.py::_cells" = 19
 "packages/fransys-layout/src/fransys_layout/stages/place.py::_text_room" = 25
+"packages/fransys-layout/src/fransys_layout/stages/references/beside_runs.py::beside_runs" = 18
 "packages/fransys-layout/src/fransys_layout/stages/references/joins.py::_wired_beside" = 22
-"packages/fransys-layout/src/fransys_layout/stages/references/joins.py::port_spots" = 18
+"packages/fransys-layout/src/fransys_layout/stages/references/joins.py::port_spots" = 19
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::drop_attached_replicas" = 16
 "packages/fransys-layout/src/fransys_layout/stages/replicate.py::replicate_terminals" = 25
 "packages/fransys-layout/src/fransys_layout/stages/route.py::port_end" = 18
-"packages/fransys-layout/src/fransys_layout/stages/route.py::route" = 24
+"packages/fransys-layout/src/fransys_layout/stages/route.py::route" = 26
 "packages/fransys-layout/src/fransys_layout/stages/terminal_rows.py::join_terminal_rows" = 18
 "packages/fransys-layout/src/fransys_layout/stages/terminal_rows.py::terminal_chains" = 20
 "packages/fransys-layout/src/fransys_layout/stages/texts/place_texts.py::place_texts" = 22
@@ -130,11 +131,12 @@ surface_docstring_lines = 15
 "packages/fransys-render/src/fransys_render/_leads.py::visible_symbol" = 1
 
 [module_code_lines]
-"packages/fransys-author/src/fransys_author/design.py" = 722
+"packages/fransys-author/src/fransys_author/design.py" = 736
 "packages/fransys-layout/src/fransys_layout/stages/images.py" = 311
 "packages/fransys-layout/src/fransys_layout/stages/middle_fold.py" = 309
-"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 318
-"packages/fransys-layout/src/fransys_layout/stages/place.py" = 625
+"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 338
+"packages/fransys-layout/src/fransys_layout/stages/place.py" = 630
+"packages/fransys-layout/src/fransys_layout/stages/route.py" = 321
 "packages/fransys-model/src/fransys_model/derive/designation.py" = 360
 "packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 558
 "packages/fransys-model/src/fransys_model/derive/rows.py" = 322
@@ -187,8 +189,11 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"packages/fransys-layout/docs/rules/step-5-place.md" = 5204
-"packages/fransys/src/fransys/guide/findings.md" = 6624
+"packages/fransys-layout/docs/rules/step-4-references.md" = 5102
+"packages/fransys-layout/docs/rules/step-5-place.md" = 5261
+"packages/fransys/src/fransys/guide/authoring.md" = 5050
+"packages/fransys/src/fransys/guide/findings.md" = 6657
+"packages/fransys/src/fransys/guide/reading.md" = 5012
 
 [md_long_sentences]
 "CLAUDE.md" = 8

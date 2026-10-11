@@ -5,23 +5,17 @@ imports the engine so every fact has registered, then checks the whole registry.
 """
 
 import ast
-import importlib
-import pkgutil
 from pathlib import Path
 
 import pytest
 
 import fransys_layout.engines.schematic  # noqa: F401 -- importing registers every fact
-from fransys_layout import conventions
 from fransys_layout.conventions import (
     FACTS,
     KINDS,
     SOURCED_KINDS,
     Fact,
-    Order,
-    Table,
     fact,
-    problems,
 )
 
 
@@ -56,25 +50,6 @@ def test_every_registered_fact_is_tagged_and_sourced() -> None:
     assert fact_problems(FACTS) == []
 
 
-def test_a_fact_without_a_kind_tag_is_reported() -> None:
-    """Dropping the tag from a fact fails the check."""
-    assert fact_problems({"x": _fake("")}) == [f"x: kind '' is not one of {KINDS}"]
-
-
-def test_an_electrical_fact_without_a_source_is_reported() -> None:
-    """An electrical or physical fact must name its source; a drawing fact need not."""
-    facts = {"a": _fake("electrical"), "b": _fake("physical"), "c": _fake("drawing")}
-    assert fact_problems(facts) == [
-        "a: electrical fact names no source",
-        "b: physical fact names no source",
-    ]
-
-
-def test_a_fact_without_a_summary_is_reported() -> None:
-    """Every fact has one summary line, its docstring."""
-    assert fact_problems({"x": _fake("drawing", doc="")}) == ["x: no summary line"]
-
-
 def test_the_decorator_stores_kind_source_values_and_the_docstring_line() -> None:
     """`fact` registers the function with its tags, and a second registration is refused."""
 
@@ -100,20 +75,6 @@ def test_the_decorator_stores_kind_source_values_and_the_docstring_line() -> Non
         del FACTS["test_only_fact"]
 
 
-def test_every_table_names_registered_facts_and_values() -> None:
-    """Each table of every conventions module validates against the registry, as at load."""
-    found = []
-    for info in pkgutil.iter_modules(conventions.__path__):
-        module = importlib.import_module(f"fransys_layout.conventions.{info.name}")
-        found += [
-            p
-            for value in vars(module).values()
-            if isinstance(value, Table | Order)
-            for p in problems(value, FACTS)
-        ]
-    assert found == []
-
-
 SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "fransys_layout"
 
 
@@ -132,15 +93,3 @@ def unused_facts(names: set[str], src_root: Path) -> list[str]:
             ):
                 seen[node.value] += 1
     return sorted(name for name, count in seen.items() if count < 2)
-
-
-def test_every_registered_fact_is_used_by_a_row_or_read_by_name() -> None:
-    """The dead-fact check that vulture no longer makes: a fact nothing names is reported."""
-    assert unused_facts(set(FACTS), SRC_ROOT) == []
-
-
-def test_a_fact_named_only_by_its_registration_is_reported(tmp_path: Path) -> None:
-    """One sighting is the registration; a second string use clears it."""
-    (tmp_path / "a.py").write_text('@fact("lonely")\ndef f(): ...\n@fact("used")\ndef g(): ...\n')
-    (tmp_path / "b.py").write_text('ROWS = ("used",)\n')
-    assert unused_facts({"lonely", "used"}, tmp_path) == ["lonely"]

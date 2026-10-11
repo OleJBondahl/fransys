@@ -6,7 +6,7 @@ by a rail link (X1 on 24 V, X2 on 0 V), and three lamps wired from pin 1 to X1 a
 The bug: the terminal rows were drawn and each lamp pin was wired or referenced to a terminal box
 that only repeats the rail.
 
-The rule (CONVENTIONS-V06 V3, decision layout-0099, model-0118): a rail terminal is not drawn on
+The rule (decision layout-0120, model-0118): a rail terminal is not drawn on
 schematic pages, and a pin wired to it draws the rail's power symbol, a bar for 24 V and ground for
 0 V. The terminal table still lists every landing.
 """

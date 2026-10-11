@@ -1,8 +1,8 @@
-"""WP14 synthetic use case: a small cabinet with chain hints (ROADMAP WP14, package-layout.md 9).
+"""Synthetic use case: a small cabinet with chain hints.
 
 All parts, designations and groups are invented for this repo; none describe a real
 product or project. This repo keeps its own fixture until fransys-model's use-case
-fixtures exist (its WP17); then WP14 switches to those, extended with chain hints.
+fixtures exist; then this fixture switches to those, extended with chain hints.
 """
 
 from dataclasses import dataclass
@@ -175,8 +175,8 @@ class _Builder:
     def __init__(self, *, second_location: bool, chains_enabled: bool = True) -> None:
         """Start with the part library, the group nodes and the location node(s).
 
-        `chains_enabled=False` (WP16, `discovery=True`) makes `chain` a no-op, the same
-        suppression the WP15 spike used, so the fixture's functions are left for
+        `chains_enabled=False` (`discovery=True`) makes `chain` a no-op, the same
+        suppression an earlier spike used, so the fixture's functions are left for
         `discover_chains` to find instead of an authored `layout.chain`.
         """
         self.records: list[Record] = []
@@ -381,7 +381,7 @@ class _Builder:
     def chain(self, key: Key, *cells: tuple[_Ref, str]) -> None:
         """A `layout.chain` of `(item, function name)` cells, indexed 0, 1, 2 ... in order.
 
-        A no-op when `chains_enabled` is `False` (WP16).
+        A no-op when `chains_enabled` is `False`.
         """
         if not self.chains_enabled:
             return
@@ -392,7 +392,7 @@ class _Builder:
         self.add(Chain(id=make_id(Chain, key), key=key, entries=entries))
 
     def rail(self, key: Key, potential: str, port: Id[Port]) -> None:
-        """A declared `Net` naming one port, giving it `potential` (WP16, model decision 0011).
+        """A declared `Net` naming one port, giving it `potential` (model decision 0011).
 
         The port itself carries no conductor of its own: it is the open end a project
         would feed from outside the drawing (the incoming supply, a return busbar).
@@ -439,7 +439,7 @@ def _pump(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet, n: int) -> No
     """Group `=Pn`: a power chain and a control chain around contactor `Kn`.
 
     `inlet` and `field` are also kept in `cab` (`x1/<n+1>`, `x3/<n>`), unused by the
-    default cabinet: WP16's `discovery=True` extras declare distribution rails there.
+    default cabinet: the `discovery=True` extras declare distribution rails there.
     """
     group = f"p{n}"
     inlet = cab[f"x1/{n + 1}"] = b.terminal(parts["terminal"], cab["x1"], n + 1, group)
@@ -538,23 +538,23 @@ def _extra_relay(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> Non
 
 
 def _discovery_extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
-    """WP16 (`discovery=True`): potentials on the rail nets, and the three invented circuits
+    """With `discovery=True`: potentials on the rail nets, and the three invented circuits
     ladder discovery needs that no hinted chain in this fixture exercises (layout-0034,
     "What the fixture lacks").
 
     Rails: `L1` on the incoming feed and each pump's own inlet (the natural feed and the
-    two distribution points read as one physical net through the fuse pass-through,
-    Finding 1); `24V` on the control-bus rail terminal and on a second, dedicated terminal
+    two distribution points read as one physical net through the fuse pass-through),
+    `24V` on the control-bus rail terminal and on a second, dedicated terminal
     `X6:1` (so the branch and reconvergent circuits below do not further crowd `X2:1`,
     already fanning out to five existing devices); `0V` on both zero-volt returns (two
     rails, one text); `M1`/`M2` on each pump's own field terminal. A wired second pole of
-    `K1`'s main contact, in parallel with pole 1 (a side element, D1: the chain runs on
+    `K1`'s main contact, in parallel with pole 1 (a side element: the chain runs on
     through it, layout-0050). A terminal `X7:1`
     fed from the second `24V` terminal, fanning through two invented contacts `S10`/`S11`
-    to two invented `0V` terminals (the branch case, a shared device before the fork,
-    Finding 4). Two invented relays `K20`/`K21`, their `no_1` contacts wired in parallel
-    between the second `24V` terminal and one coil `K22`'s `A1`, `A2` to one invented `0V`
-    terminal (the reconvergent case, hint-mandatory, 13.5, Finding 5).
+    to two invented `0V` terminals (the branch case,
+    a shared device before the fork). Two invented relays `K20`/`K21`, their `no_1` contacts
+    wired in parallel between the second `24V` terminal and one coil `K22`'s `A1`, `A2` to
+    one invented `0V` terminal (the reconvergent case, hint-mandatory).
     """
     b.rail(("cabinet", "rail", "l1", "feed"), "L1", cab["x1/1"].port("terminal", "external"))
     b.rail(("cabinet", "rail", "l1", "p1"), "L1", cab["x1/2"].port("terminal", "external"))
@@ -566,18 +566,18 @@ def _discovery_extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
     b.rail(("cabinet", "rail", "m2"), "M2", cab["x3/2"].port("terminal", "external"))
 
     # a wired second pole of K1's main contact, in parallel with pole 1: its ports do not
-    # count on Q1's outlet net, the chain runs on (D1, layout-0050)
+    # count on Q1's outlet net, the chain runs on (layout-0050)
     k1 = cab["k1"]
     b.wire(k1.port("main", "1"), k1.port("main", "3"))
     b.wire(k1.port("main", "2"), k1.port("main", "4"))
 
     # a second, dedicated 24V terminal, so the two circuits below do not crowd X2:1's own
-    # port further: exercises Finding 1 again (two rails, one text) for the source end
+    # port further: exercises two rails with one text for the source end
     x6 = b.terminal(parts["terminal"], b.strip("X6"), 1, "sup")
     b.rail(("cabinet", "rail", "24v", "2"), "24V", x6.port("terminal", "external"))
 
     # a shared terminal fed from the second 24V terminal, fanning through two contacts to
-    # two 0V terminals: the branch case (Finding 4)
+    # two 0V terminals: the branch case
     x7 = b.terminal(parts["terminal"], b.strip("X7"), 1, "sup")
     s10 = b.stamp(parts["pushbutton"], ("cabinet", "s10"), "S10", "sup")
     s11 = b.stamp(parts["pushbutton"], ("cabinet", "s11"), "S11", "sup")
@@ -593,7 +593,7 @@ def _discovery_extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -
     b.rail(("cabinet", "rail", "0v", "x8", "2"), "0V", x8_2.port("terminal", "external"))
 
     # two relays in parallel between the second 24V terminal and one coil: reconvergent,
-    # hint-mandatory (13.5, Finding 5)
+    # hint-mandatory
     k20 = b.stamp(parts["relay"], ("cabinet", "k20"), "K20", "sup")
     k21 = b.stamp(parts["relay"], ("cabinet", "k21"), "K21", "sup")
     k22 = b.stamp(parts["relay"], ("cabinet", "k22"), "K22", "sup")
@@ -632,7 +632,7 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     discovery: bool = False,
     side_terminals: bool = False,
 ) -> Draft:
-    """Build the WP14 cabinet fixture: a `Draft`, not yet frozen (WP14).
+    """Build the cabinet fixture: a `Draft`, not yet frozen.
 
     The invented design this must produce, in location `+C1`. Groups are the top-level
     `FUNCTION` nodes `SUP`, `P1`, `P2`, `ES`; every item is placed at one of them and at
@@ -688,11 +688,11 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     adds a second location node `+C2` and places the items of `=P2` (and only those) there,
     so `=P2` is drawn in another drawing set. The shared terminal `-X2:1` stays in `=SUP`
     at `+C1`, so the control chain of `=P2` then crosses locations. `side_terminals=True`
-    draws every terminal's `internal` port at `w` and `external` at `e` (ENGINE-DIGITS): the
+    draws every terminal's `internal` port at `w` and `external` at `e`: the
     rail terminal `-X2:1` then carries a reference beside an E port.
 
-    `discovery=True` (WP16) leaves out every `layout.chain` above (`chain` becomes a no-op,
-    the WP15 spike's own method) and authors a `layout.profile` with a wider sheet,
+    `discovery=True` leaves out every `layout.chain` above (`chain` becomes a no-op,
+    the spike's own method) and authors a `layout.profile` with a wider sheet,
     the house numbers otherwise unchanged, so ladder discovery must find every rung this
     fixture's chains would otherwise have hinted, plus `_discovery_extras`' three invented
     circuits. Not combined with `broken_chain` or `extra_relay`: nothing here reads that

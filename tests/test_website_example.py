@@ -1,4 +1,4 @@
-"""`website/example.py`, the home page's script, still builds and writes its PDF (FS3).
+"""`website/example.py`, the home page's script, still builds and writes its PDF.
 
 One full build, and the only one in this module, so it takes the few seconds a layout and a PDF
 cost: the test would prove nothing with a stubbed build, since a name the surface lost only
@@ -18,7 +18,7 @@ MAX_LINES = 50
 
 
 def test_example_stays_short():
-    """FS3 keeps the home example at 50 lines or fewer (CABINET-UNIT raised it from 30)."""
+    """The home example stays at 50 lines or fewer (raised from 30 for the cabinet unit)."""
     assert len(EXAMPLE.read_text(encoding="utf-8").splitlines()) <= MAX_LINES
 
 
@@ -47,7 +47,7 @@ def test_example_builds_with_no_error_and_no_warning(tmp_path, monkeypatch):
 
 
 def test_cabinet_bom_holds_no_field_device_and_x1_rows_end_in_pe(tmp_path, monkeypatch):
-    """The motor and cable stand in the top design (CU3); X1 ends in a PE run and part (acc 8)."""
+    """The motor and cable stand in the top design; X1 ends in a PE run and part (acc 8)."""
     monkeypatch.chdir(tmp_path)
     result = runpy.run_path(str(EXAMPLE))["result"]
     out = tmp_path / "unit"

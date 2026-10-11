@@ -1,7 +1,7 @@
 """Cases and checkers for `test_laws.py`: each law is a plain function of an implementation.
 
 `What == on a Model compares`: `schema_version`, `tables`, `aliases`, `hashes`, `digests` and
-`digest`, but NOT `origins` (`compare=False`, design/kernel-records.md 5.4). So every check that
+`digest`, but NOT `origins` (`compare=False`). So every check that
 involves an origin (merge keeps the smaller one, evolve attributes its puts) also compares `origins`
 by hand. `merge` returns a `Draft`, which has no `==`: drafts are compared as `state`, the triple
 `(records(), origins(), alias_map())`.

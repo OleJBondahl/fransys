@@ -1,15 +1,14 @@
-"""CONTACT-STATES acceptance 1 and 2: a changeover's throws are alternatives, on demo parts.
+"""A changeover's throws are alternatives, on demo parts.
 
 `changeover_fixtures.changeover_bus` puts MAIN on the make throws of `q1` and EMERG on its break
-throws, behind a two-pole breaker `f1` and a 264 V AC power supply `t1`. Acceptance 1: the check
+throws, behind a two-pole breaker `f1` and a 264 V AC power supply `t1`. The check
 gives nothing at `t1` and `f1`. The control is the same wiring on a changeover whose ports have no
 throw roles, which gives the false finding, so the silence is not one the check cannot break.
-Acceptance 2: a pole of `q1` itself still sees both supplies across its open gap.
+A pole of `q1` itself still sees both supplies across its open gap.
 
 Can-fail probes, each one Edit, run and undone: `link_state` returning `"both"` for every link
-(`vocab/contacts.py`) fails the acceptance 1 tests; a rail's starting condition at an end of a
-contact link holding that link's state (`_rail_states` in `vocab/closure.py`) fails the
-acceptance 2 test.
+(`vocab/contacts.py`) fails the no-finding tests; a rail's starting condition at an end of a
+contact link holding that link's state (`_rail_states` in `vocab/closure.py`) fails the pole test.
 """
 
 import sys

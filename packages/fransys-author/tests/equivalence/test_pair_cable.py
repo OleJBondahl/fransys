@@ -1,4 +1,4 @@
-"""EA5, EA7, EA12, EA14: a strip, a four-core cable with a GNYE core and a motor, one model."""
+"""A strip, a four-core cable with a GNYE core and a motor, one model."""
 
 from typing import TYPE_CHECKING
 

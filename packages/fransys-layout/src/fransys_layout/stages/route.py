@@ -1,10 +1,12 @@
 """Stage 7, route: one orthogonal polyline per connection on a page."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
+    OPPOSITE,
     Box,
+    Facing,
     LayoutError,
     Point,
     on_wiring_grid,
@@ -18,7 +20,7 @@ from . import lookups
 from ._sides import Edge, drawn_key, drawn_order, joined, joins_of, located, retarget
 from .content import content_box
 from .grid_path import Field, axes_of, cells_of, grid_path, reserve_exits
-from .space import End, Obstacle, Shape, Space, span
+from .space import Blocks, End, Obstacle, Shape, Space, span
 from .types import Route, RoutePoint
 
 if TYPE_CHECKING:
@@ -49,6 +51,7 @@ class _Page:
     space: Space
     content: Box
     profile: Profile
+    bare: Space | None = None  # `space` without the soft shapes, for an edge they shut in (HL19)
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,6 +62,8 @@ class PageRoom:
     profile: Profile
     sheet: SheetFormat
     markers: tuple[LinkMarker, ...] = ()
+    aside: frozenset[Handle] = frozenset()  # conductors of a beside column (layout-0174)
+    blocks: Blocks = field(default_factory=Blocks)  # the shapes of the boxes over moved pin views
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,18 +92,10 @@ def route(
     edges, ends = _edges(connections, net_groups, placed_of, drawn_of)
     page_inputs = _Page(
         ends=ends,
-        space=Space(
-            shapes=tuple(
-                Shape(owner=one.function, box=lookups.placed_keepout(one)) for one in placed
-            )
-            + tuple(Shape(owner=None, box=box) for box in room.reserved)
-            + tuple(
-                Shape(owner=_marker_owner(marker, owner_of), box=marker.box)
-                for marker in room.markers
-            )
-        ),
+        space=_space(placed, room, owner_of, soft=True),
         content=content_box(room.sheet),
         profile=room.profile,
+        bare=_space(placed, room, owner_of, soft=False) if room.blocks.soft else None,
     )
     used: dict[Cell, frozenset[Handle]] = {}
     # Each net's axes per cell; seeded with every port's first step (layout-0064)
@@ -116,8 +113,10 @@ def route(
     failures = []
     joins: list[Join] = []
     for edge in drawn_order(edges, ends, placed_of):
-        aim = retarget(edge, joins, ends, placed_of)
-        points = _polyline(edge, aim, page_inputs, _Taken(used, along, port_exits))
+        beside = edge.connection in room.aside
+        aim = (edge, None, None) if beside else retarget(edge, joins, ends, placed_of)
+        here = _sideways(edge, page_inputs) if beside else page_inputs
+        points = _polyline(edge, aim, here, _Taken(used, along, port_exits))
         if points is None:
             failures.append(
                 Finding(
@@ -149,6 +148,29 @@ def route(
         tuple(sorted(routes, key=lambda one: (one.connection, one.a, one.b))),
         tuple(sorted(failures, key=lambda one: (one.code, one.subjects))),
     )
+
+
+def _sideways(edge: Edge, page: _Page) -> _Page:
+    """`page` with a level edge's ends facing each other along x: a beside wire leaves sideways."""
+    start, goal = page.ends[located(edge.a)], page.ends[located(edge.b)]
+    if start.at.x == goal.at.x:
+        return page
+    if start.at.y == goal.at.y:
+        way = Facing.E if goal.at.x > start.at.x else Facing.W
+        ends = {**page.ends, located(edge.a): replace(start, facing=way)}
+        return replace(page, ends={**ends, located(edge.b): replace(goal, facing=OPPOSITE[way])})
+    # The shallower pin keeps its way when it leaves down, else the deeper one when it leaves up;
+    # the other end is entered sideways
+    high, low = (edge.a, edge.b) if start.at.y < goal.at.y else (edge.b, edge.a)
+    top, bottom = page.ends[located(high)], page.ends[located(low)]
+    if top.facing is Facing.S:
+        keeper, tail, key = top, bottom, located(low)
+    elif bottom.facing is Facing.N:
+        keeper, tail, key = bottom, top, located(high)
+    else:
+        return page
+    way = Facing.W if keeper.at.x < tail.at.x else Facing.E
+    return replace(page, ends={**page.ends, key: replace(tail, facing=way)})
 
 
 def _marker_owner(marker: LinkMarker, owner_of: Mapping[Handle, Handle]) -> Handle:
@@ -261,6 +283,25 @@ def _order(
     return group, distance, upper, lower, one.port, other.port
 
 
+def _space(
+    placed: tuple[PlacedFunction, ...],
+    room: PageRoom,
+    owner_of: Mapping[Handle, Handle],
+    *,
+    soft: bool,
+) -> Space:
+    """The page's obstacles: keep-outs, labels, blocks and markers; the soft blocks if `soft`."""
+    return Space(
+        shapes=tuple(Shape(owner=one.function, box=lookups.placed_keepout(one)) for one in placed)
+        + tuple(Shape(owner=None, box=box) for box in room.reserved)
+        + room.blocks.hard
+        + (room.blocks.soft if soft else ())
+        + tuple(
+            Shape(owner=_marker_owner(marker, owner_of), box=marker.box) for marker in room.markers
+        )
+    )
+
+
 def _polyline(
     edge: Edge, aim: tuple[Edge, Join | None, Join | None], page: _Page, taken: _Taken
 ) -> tuple[Point, ...] | None:
@@ -274,6 +315,20 @@ def _polyline(
 
 
 def _draw(
+    edge: Edge,
+    page: _Page,
+    used: Mapping[Cell, frozenset[Handle]],
+    along: Mapping[Cell, dict[Handle, frozenset[str]]] | None = None,
+    port_exits: Mapping[Cell, dict[Handle, frozenset[str]]] | None = None,
+) -> tuple[Point, ...] | None:
+    """One edge's polyline; where the soft blocks shut every path, through them (HL19)."""
+    found = _search(edge, page, used, along, port_exits)
+    if found is None and page.bare is not None:
+        found = _search(edge, replace(page, space=page.bare), used, along, port_exits)
+    return found
+
+
+def _search(
     edge: Edge,
     page: _Page,
     used: Mapping[Cell, frozenset[Handle]],

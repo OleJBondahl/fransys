@@ -12,7 +12,7 @@ and collides on `REFERENCE_DESIGNATION_DUPLICATE` for a reason unrelated to unit
 
 Root tests build through `fr.build` (not `packages/fransys-author/tests`, which cannot
 import the facade `fransys` without a layering exception; the choice is logged in the
-STEP 4 hand-back).
+hand-back).
 """
 
 import dataclasses
@@ -98,7 +98,7 @@ _PROJECT: dict[str, Any] = {
 def io_board(s, *, mark_boundary=True):
     """Worked example: a board unit with one boundary connector, `X1`.
 
-    `DEMO-PCB-IO` is a real board (`category = "board"`, a `[pcb]` facet, STEP 4b, decision
+    `DEMO-PCB-IO` is a real board (`category = "board"`, a `[pcb]` facet, decision
     model-0040, closing author-0002's `KNOWN DEVIATION`), and the *sole* root item of its own
     nested unit `demo-io-board` (board-unit ruling, model-0041):
     the board is itself a whole unit, not board-inside-a-unit furniture, so in its own home
@@ -249,7 +249,7 @@ def test_no_unit_in_the_system_build_is_standalone():
 
 
 def test_pump1s_item_designations_match_between_the_system_and_its_own_build():
-    """STEP 4 acceptance: pump1's items keep their designation once integrated (U7)."""
+    """pump1's items keep their designation once integrated."""
     system, _, _ = _build_system()
     own, _ = _build_cabinet_own(prefix="p", name="C1")
     system_by_key = _designations_by_stripped_key(system.model, prefix="pump1")
@@ -289,7 +289,7 @@ def test_reference_designations_carry_each_cabinets_own_location():
 
 
 def test_numbering_without_unit_in_the_sibling_group_diverges_on_the_second_boards_letter():
-    """Can-fail: STEP 4's own comparison test would not have caught a regression that
+    """Can-fail: the comparison test would not have caught a regression that
     dropped `unit` from the numbering pass's sibling-group key, proven
     directly against the model layer, not by editing `derive/passes/numbering.py`.
 
@@ -364,8 +364,8 @@ def _build_bare_two_cabinets():
 
 
 def test_an_unwired_field_terminal_is_boundary_unconnected_four_times():
-    """OLD premise: this was `_build_system()`'s own state (the fixture's known,
-    pre-existing gap). NEW premise (fixture fix below, ruling 2026-09-23):
+    """This was `_build_system()`'s own state (the fixture's known,
+    pre-existing gap). Since the fixture fix below (ruling 2026-09-23),
     `_system_design` now wires every field terminal to a real top-level motor cable, so this
     scenario -- an explicitly unwired two-cabinet build -- is exercised on its own local
     `_bare_two_cabinet_design`, kept alive rather than lost.
@@ -383,10 +383,9 @@ def test_an_unwired_field_terminal_is_boundary_unconnected_four_times():
 
 
 def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_clears():
-    """NEW test (fixture fix, ruling 2026-09-23, "Acceptance 5's unfiltered write
-    proves it"): `_system_design` now wires every field terminal to a real top-level motor
-    cable, crossing each cabinet's own unit boundary, so `BOUNDARY_UNCONNECTED` no longer
-    fires at all on `_build_system()`; every other U5 code still stays at zero.
+    """Fixture fix (ruling 2026-09-23): `_system_design` now wires every field terminal to a real
+    top-level motor cable, crossing each cabinet's own unit boundary, so `BOUNDARY_UNCONNECTED` no
+    longer fires at all on `_build_system()`; every other U5 code still stays at zero.
     """
     result, _, _ = _build_system()
     codes = _codes(result)
@@ -406,7 +405,7 @@ _LINES_SEEN = (
 
 @pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
-    """S20 tally 8b: on each cabinet the two sibling pins of the connector row carry a tall
+    """On each cabinet the two sibling pins of the connector row carry a tall
     marker box over a 112-high gap above the terminal row. Each box stands beside the pins'
     lanes, one nearer its port than the other, and the leads cross no box: no marker is left
     unplaced and no wire runs over a label."""
@@ -418,9 +417,9 @@ def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
 
 
 def test_boundary_unconnected_clears_once_every_field_terminal_is_declared_unused():
-    """OLD premise: built through `_system_design`, whose field terminals were unwired, so
+    """Built through `_system_design`, whose field terminals were unwired, so
     declaring all four `unused` cleared `BOUNDARY_UNCONNECTED`.
-    NEW premise (fixture fix, ruling 2026-09-23): `_system_design`'s field terminals
+    Since the fixture fix (ruling 2026-09-23), `_system_design`'s field terminals
     are now really wired (see `test_the_system_builds_field_terminals_are_wired_...` above),
     so this scenario moved to `_bare_two_cabinet_design`, which keeps them unwired -- the
     same rule under test (an explicitly `unused` boundary with no real connection still
@@ -484,7 +483,7 @@ def test_removing_the_boards_boundary_gives_unit_boundary_bypassed():
     example's function, not an edit to it) drops `u.boundary(x1)`. The cabinet's mate onto
     the board's `X1` then crosses a unit boundary that is nobody's declared interface:
     "function pump1/io/X1/fn/x1 crosses out of unit pump1/io/unit without being its
-    boundary" (captured verbatim from this scenario for the STEP 4 hand-back).
+    boundary" (captured verbatim from this scenario for the hand-back).
     """
 
     def broken_pump_cabinet(s, *, name):
@@ -517,7 +516,7 @@ def test_removing_the_boards_boundary_gives_unit_boundary_bypassed():
     assert "crosses out of unit" in bypassed[0].message
 
 
-# -- STEP 4b (model-0040/layout-0044): DEMO-PCB-IO is a real board -----------------------
+# -- model-0040/layout-0044: DEMO-PCB-IO is a real board -----------------------
 
 
 def _function_of(model, item_id, name):
@@ -551,13 +550,12 @@ def _box_pages_of(model, function_id):
     for b in boxes:
         unit = sets[pages[b.page].drawing_set].unit
         assert len(b.texts) == len(connector_box_lines(model, function_id, unit=unit))
-        assert b.cells == ()  # a plug box and a unit interface box have no cells (HL5)
+        assert b.cells == ()  # a plug box and a unit interface box have no cells
     return {(pages[b.page].drawing_set, pages[b.page].number) for b in boxes}
 
 
-@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit() -> None:
-    """OLD premise (before the board-unit ruling):
+    """Before the board-unit ruling:
     `io_board`'s internal wiring (`X1`-`K1`, two wires) and its one internal net (`K1`'s
     `co_1`/`co_2` pins) were board-internal and produced no route, no marker and no finding;
     `X1` had no route of its own (only a `Mate` to `P1`, closure not a drawn connection), so
@@ -576,8 +574,8 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
     NEW assertions: both internal conductors and the internal net are routed; `X1` is placed
     on both its own home page (shared with `K1`'s coil) and `P1`'s page; both `X1`'s and
     `P1`'s own ports are touched by a route (the wires to `K1`, and the cable cores, in turn).
-    HL6 (layout-0155): `X1` and `P1` stand at the harness line's end, so each is a box.
-    HL1, HL12 (layout-0153): the cable cores are the line's, no route; the board is a middle
+    Per layout-0155, `X1` and `P1` stand at the harness line's end, so each is a box.
+    Per layout-0153, the cable cores are the line's, no route; the board is a middle
     outline.
     """
     result = _build_system()[0]
@@ -635,8 +633,8 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
 
         p1_ports = _ports_of(model, p1_fn.id)
         x1_ports = _ports_of(model, x1_fn.id)
-        # HL1 (layout-0153): the cable WH1 is a harness line, so its cores are no route; the
-        # line draws them (P3), and P1's page draws the board as one middle outline (HL12)
+        # Per layout-0153, the cable WH1 is a harness line, so its cores are no route; the
+        # line draws them, and P1's page draws the board as one middle outline
         assert not (p1_ports & route_ports), "the cable cores no longer route onto P1"
         board = items_of(model)[x1_item].unit
         page_of = {p.id: (p.drawing_set, p.number) for p in layout_of_model(model, Page).values()}
@@ -674,7 +672,7 @@ def _cabinet_terminal_straight_to_board_relay(s, *, name):
 def test_a_cabinet_terminal_wired_straight_to_the_board_relay_bypasses_its_own_unit_boundary() -> (
     None
 ):
-    """OLD premise (before the board-unit ruling): exactly one `CONNECTION_TO_UNDRAWN`, subjects
+    """Before the board-unit ruling: exactly one `CONNECTION_TO_UNDRAWN`, subjects
     the relay coil's one wired port --
     the field terminal was drawn, the board relay was not (the blanket exclusion),
     and they shared no common board (the terminal is off any board), so this was not
@@ -938,7 +936,7 @@ def _cross_unit_probe_model():
             *placements(p1_item, grp_fld, c1),
             *placements(p2_item, grp_xtr, c1),
             *placements(x1_item, grp_sub, c1),
-            # C21 (deep dive): a conductor between two locations is a stub, never a cut, so
+            # Per layout-0090, a conductor between two locations is a stub, never a cut, so
             # the same-unit cut is P1 to P2 in one location, P2's `=XTR` on a page of its own
             grp_xtr,
             BreakBefore(
@@ -1203,23 +1201,23 @@ def test_a_top_level_units_boundary_wired_to_unitless_content_ends_in_a_stub_at_
         if column.key in page_column_keys
         for cell in column.cells
     }
-    # R7 A (deep dive, G1): a connector is drawn as one view per pin, keyed by the pin's port
+    # A connector is drawn as one view per pin, keyed by the pin's port
     pins = {_port_named(model, x1_fn, "1"), _port_named(model, p1_fn, "1")}
     assert pins <= functions_in_page
 
 
-# -- PART 4 (Q2's board-relative fix threaded into pin_of's fallback) --------------------
+# -- The board-relative fix threaded into pin_of's fallback --------------------
 
 
 def test_step_4b_the_kicad_netlist_of_the_board_is_board_relative() -> None:
     """`fransys_kicad.netlist(model, pump1/io/board)` reads `K1`, not `U1-K1`: `pin_of`'s
     fallback (an item with no footprint row, `DEMO-RLY-2CO-24` has none) now threads
     `relative_to=board` into `item_designation`, the same board-relative rule `board_netlist`
-    already applies to its own `parts` rows (decision model-0040, Q2's board-relative KiCad
-    refinement, PART 4). Hand-built expectation: the board has no footprinted parts (empty
+    already applies to its own `parts` rows (decision model-0040, the board-relative KiCad
+    refinement). Hand-built expectation: the board has no footprinted parts (empty
     `components`); its content is now the `X1`-`K1` board-internal wiring too, not only the
     one internal net -- `board_netlist`'s grouping (decision model-0042, the board-netlist-
-    conductors work package) gives each of the two `X1`-`K1` wires its own undeclared net,
+    conductors change) gives each of the two `X1`-`K1` wires its own undeclared net,
     `Net-(K1-A1)` and `Net-(K1-A2)`, `K1` beating `X1` as the smaller board-relative
     reference, and its pins listing in that order; `internal`, the one declared net, sorts after
     both (`'N' < 'i'`).

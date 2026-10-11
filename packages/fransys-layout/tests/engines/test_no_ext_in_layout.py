@@ -1,8 +1,8 @@
-"""F1 (spec acceptance 3): the layout engine writes no `ext` key on any layout record.
+"""The layout engine writes no `ext` key on any layout record.
 
 Every fact the engine hands to render is a typed field of its record (model layout-namespace.md).
 This test lays out the cabinet (contact images, replicas), the cabinet with a second location,
-the narrow cabinet (pair markers), a PLC rack (item boxes) and the D10 and W3 stub fixtures
+the narrow cabinet (pair markers), a PLC rack (item boxes) and the stub fixtures
 (off stubs, unit stand-ins, pin views), walks every derived layout record and fails if any of
 them holds a non-empty `ext`. The generic `ext` field stays on the record for a consumer's own
 use; the engine leaves it empty.

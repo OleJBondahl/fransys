@@ -52,7 +52,7 @@ _FILLED = {
 
 
 def test_skeleton_lint_trips_only_the_human_fields(tmp_path):
-    """The raw skeleton lints clean except the fields P10 says a human must fill."""
+    """The raw skeleton lints clean except the fields a human must fill."""
     kicad_sym = _kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
     skeleton = part_file_skeleton(kicad_sym, "DEMO-CONN-2P")
     root = _library(tmp_path, skeleton)

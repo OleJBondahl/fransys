@@ -1,4 +1,4 @@
-"""Row links in the cable engine (CT5-LINK P2; CD5 and CD8 at L1, acceptance 23, 24, 26).
+"""Row links in the cable engine.
 
 A link is a core with both ends in one row: two runs from its pins to a track beside that row and
 a straight run between the corners, its text horizontal on the track. The model tests read the
@@ -102,8 +102,8 @@ def _closed(box):
     return box.x, box.x + box.width, box.y, box.y + box.height
 
 
-def test_l1_picture_draws_its_looped_core_at_the_row_outside_the_box():
-    """Acceptance 23: core 3 joins two pins of -H2; both runs stand on those cells at the row's
+def test_looped_core_picture_draws_it_at_the_row_outside_the_box():
+    """Core 3 joins two pins of -H2; both runs stand on those cells at the row's
     edge, none of its points is in the box or on its edge, its text is outside the box, no text
     overlaps a wire, and the box holds the texts of the two crossing cores only.
 
@@ -137,7 +137,7 @@ def test_l1_picture_draws_its_looped_core_at_the_row_outside_the_box():
 
 
 def test_the_ring_draws_its_highest_keyed_core_as_the_one_link_and_an_empty_box():
-    """Acceptance 24, layout half: of WH7's three cores the highest-keyed (W3's) is the one link;
+    """Of the three cores of one cable, the highest-keyed (W3's) is the one link;
     W3's box is heading-only, no wire reaches it, and no text overlaps a wire.
 
     Probe: `end_rows` colouring the ring so the link is the lowest-keyed core.
@@ -187,7 +187,7 @@ def _all_segments(block):
 
 
 def test_a_link_text_wider_than_its_span_avoids_a_wire_between_the_pins():
-    """CD8 at L1: a crossing core's drop stands between a top link's pins and the text is wider
+    """A crossing core's drop stands between a top link's pins and the text is wider
     than the span; the text is moved off the middle and meets no vertical wire, a pad apart.
 
     Probe: `place_links._left` returning `wanted`.
@@ -204,7 +204,7 @@ def test_a_link_text_wider_than_its_span_avoids_a_wire_between_the_pins():
 
 
 def test_two_links_on_one_level_keep_their_texts_apart():
-    """CD8 at L1: two disjoint top links share a track, their texts are wider than their spans,
+    """Two disjoint top links share a track, their texts are wider than their spans,
     and the second text moves clear of the first and of every vertical wire.
 
     Probe: `place_links._wire` not adding its text to `blocked`.
@@ -226,7 +226,7 @@ def _drop(block):
 
 
 def test_a_top_link_moves_the_cable_box_down_one_room_a_level():
-    """CD8 at L1: one link, or two disjoint ones, lowers the box and the block by one room; two
+    """One link, or two disjoint ones, lowers the box and the block by one room; two
     overlapping links take two tracks a room apart and lower them by two.
 
     Probe: `place_links.lift` multiplying by the link count instead of the level count.
@@ -252,7 +252,7 @@ def test_a_top_link_moves_the_cable_box_down_one_room_a_level():
 
 
 def test_a_bottom_link_raises_the_lower_band_by_its_text_room():
-    """CD8 at L1: a bottom-row link is a net of the lower band; the gap from the box to the row is
+    """A bottom-row link is a net of the lower band; the gap from the box to the row is
     `rise` for one link track plus a grid unit, and its text stands above its track.
 
     Probe: `place._place_at` passing `head` 0 to `rise`.

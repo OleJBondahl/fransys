@@ -1,4 +1,4 @@
-"""WP14 ruling 2: an authored `layout.sheet_format` no `layout.profile` names is reported.
+"""An authored `layout.sheet_format` no `layout.profile` names is reported.
 
 `read_inputs` carries the ids of the unused sheet formats along and turns each into one
 `SHEET_FORMAT_UNUSED` warning in `read_findings`, which the engine returns (engine.md 7, decision

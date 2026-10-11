@@ -57,8 +57,8 @@ _circuit_unit = fr.unit(
 def _build(tmp_path, *, in_unit: bool) -> fr.BuildResult:
     """The circuit inside a unit or bare, in one `CABINET_SCHEMATIC` document.
 
-    A `CABINET_SCHEMATIC` document is a third draft (MODEL-BUILD PS4, decision 0037): with no
-    document, decision 0037's own gate (PS1) skips layout entirely, and this field case's
+    A `CABINET_SCHEMATIC` document is a third draft (decision 0037): with no
+    document, decision 0037's own gate skips layout entirely, and this field case's
     `ROUTE_FAILED`/`CONNECTION_NOT_DRAWN` codes -- both layout findings -- would never fire
     either way, passing vacuously with no proof layout-0088's fix still holds. A unit is one
     drawing set: a unit's drawings take the unit as subject, not a location inside it (a

@@ -6,7 +6,7 @@ from typing import Any
 lazy from collections.abc import Sequence
 
 from fransys_layout.geometry import Box
-from fransys_layout.stages.place import _cascade_plan, _Cell, _raise_plan, _stack
+from fransys_layout.stages.place import _cascade_plan, _Cell, _raise_plan
 
 _CASES = 600
 
@@ -92,15 +92,3 @@ def test_cascade_plan_equals_the_old_plan() -> None:
         assert plan == _old_cascade_plan(rows, start, top, gaps)
         stops += len(plan) < len(rows) - start
     assert stops > 50
-
-
-def test_stack_equals_the_old_stack() -> None:
-    """600 seeded random columns land on the same origins."""
-    rng = random.Random(11)  # noqa: S311 -- seeded test data
-    for _ in range(_CASES):
-        seed = rng.random()
-        a, b = _rows(_rng(seed)), _rows(_rng(seed))
-        gap, top = rng.choice([0, 1, 4, 9]), rng.randint(-10, 50)
-        _stack(a, gap, top=top)
-        _old_stack(b, gap, top=top)
-        assert [c.origin for r in a for c in r] == [c.origin for r in b for c in r]

@@ -102,11 +102,30 @@ def _path(
         turn_penalty=grid.turn_penalty,
         crossing_penalty=grid.busy_penalty,
     )
-    points = grid_path(start, goal, field) or grid_path(start, goal, replace(field, obstacles=()))
+    points = (
+        grid_path(start, goal, field)
+        or grid_path(
+            start, goal, replace(field, obstacles=_not_around(grid.obstacles, start, goal))
+        )
+        or grid_path(start, goal, replace(field, obstacles=()))
+    )
     if points is None:
         msg = f"no orthogonal path for harness line branch {branch}"
         raise LayoutError(msg)
     return _unspiked(points)
+
+
+def _not_around(obstacles: tuple[Obstacle, ...], start: End, goal: End) -> tuple[Obstacle, ...]:
+    """The keep-outs but those an end stands inside, so a text over an end frees only itself."""
+    return tuple(
+        one
+        for one in obstacles
+        if not any(
+            one.box.x < end.at.x < one.box.x + one.box.width
+            and one.box.y < end.at.y < one.box.y + one.box.height
+            for end in (start, goal)
+        )
+    )
 
 
 def _unspiked(points: tuple[Point, ...]) -> tuple[Point, ...]:

@@ -1,4 +1,4 @@
-"""CD8 at N1 (CT5-TURN, acceptance 25): core text no longer sets the pitch, the box holds it.
+"""Core text no longer sets the pitch, the box holds it.
 
 Hand-built facts, widths in G at the house text height. Each test names its probe.
 """
@@ -47,7 +47,7 @@ def _facts(cores: int, pins: int, core_text: str = _CORE):
 
 
 def test_34_cores_to_a_37_pin_end_fit_the_a3_body():
-    """Acceptance 25: the pitch is the pin marking's, so 37 cells fit the page body.
+    """The pitch is the pin marking's, so 37 cells fit the page body.
 
     Probe: `_widest` in place.py also takes the core text widths (the pitch by core text again).
     """
@@ -59,7 +59,7 @@ def test_34_cores_to_a_37_pin_end_fit_the_a3_body():
 
 
 def test_the_box_holds_the_core_text_turned_under_the_heading():
-    """N1: the box is taller than the longest core text, and every text centres below the heading.
+    """The box is taller than the longest core text, and every text centres below the heading.
 
     Probe: `box_room` in place_frame.py returning the least height whatever the core text.
     """

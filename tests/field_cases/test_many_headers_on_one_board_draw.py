@@ -5,7 +5,7 @@ and two two-pin headers, one net joining a pin of the first four-pin header to a
 two-pin header. One header or two build; three or more raised "two LinkMarker records share one
 key".
 
-The bug (LINKMARKER-KEY, layout-0127): with three or more headers the page set splits and the
+The bug (layout-0127): with three or more headers the page set splits and the
 net's headers draw once per drawing set. A cut's two markers were keyed by their port, side and
 partner port alone, so the two sets' markers of that one cut shared a key.
 The fix: such markers also carry their port's placement discriminator, and the coherence lint no

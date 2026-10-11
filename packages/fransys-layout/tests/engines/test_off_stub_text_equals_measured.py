@@ -1,13 +1,13 @@
-"""F1 part 3d (D13): an off stub stores its far port, carrier and facing and no text; the text
+"""An off stub stores its far port, carrier and facing and no text; the text
 derived from them (`off_stub_text`) equals the text layout MEASURED the stub's box from (the stage
 marker's `.text`) for every stub of every fixture. The text a stub's box was sized from is the
 text render prints.
 
-The fixtures are the ones the D10 and W3 stub tests build (a cabinet unit whose boundary plug
+The fixtures are the ones the stub tests build (a cabinet unit whose boundary plug
 mates a harness, the two-cabinet system, two boundary connectors with and without a foreign
 column between, a top-level cable between two locations), the same two plugs wired by plain
 wires, and the layout cabinet with a second location. `off_ends` is checked by hand-built pairs
-of one text. A line's one stub (HL1, HL18) stores no text: its box is checked against its derived
+of one text. A line's one stub stores no text: its box is checked against its derived
 text's measure (`stub_size`), the plain wires keep a shared-box run without a carrier.
 
 Can-fail, checked by hand: with `write/markers.py` writing no `carrier` the equality test fails on
@@ -52,7 +52,7 @@ def _load(name: str):
 
 
 _UNITS = _load("test_dd_units_stubs.py")
-# STUB-POSITIONS: a loom cut over two pages, whose stubs list far devices with their places
+# A loom cut over two pages, whose stubs list far devices with their places
 _CUT_LOOM = _load("field_cases/test_a_harness_line_on_an_overfull_page_still_routes.py")
 
 
@@ -111,7 +111,7 @@ _FIXTURES = {
 
 
 def _line_stub(marker: LinkMarker) -> bool:
-    """HL18: a leaving line's one stub, keyed `line_stub` (write/harness.py)."""
+    """A leaving line's one stub, keyed `line_stub` (write/harness.py)."""
     return marker.key[3] == "line_stub"
 
 
@@ -145,7 +145,7 @@ def test_the_derived_stub_text_equals_the_measured_text(name: str) -> None:
     measured = {
         (one.port, one.at.x, one.at.y): one.text
         for one in results.layout.markers
-        if one.text  # an off stub, or (D9, F7) the reference that carries one
+        if one.text  # an off stub, or the reference that carries one
     }
     boxes = {
         (one.port, one.at.x, one.at.y): (one.box.width, one.box.height)
@@ -199,7 +199,7 @@ def test_far_and_carrier_are_records_of_the_model(name: str) -> None:
 def test_a_stand_in_stub_carries_its_mates_far_end_and_carrier() -> None:
     """The unit's boundary X1 reads the parent's stub at X1: the same far port and carrier.
 
-    HL18: W3 is a line, so each side's one stub stands at the connector it mates, X1.
+    W3 is a line, so each side's one stub stands at the connector it mates, X1.
     """
     model = _unit_stub()
     top = {ports(model)[m.port].function: m for m in _stubs(model) if not _in_unit_set(model, m)}

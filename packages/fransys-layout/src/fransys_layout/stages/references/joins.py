@@ -20,9 +20,11 @@ from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Sequence
 
 from fransys_layout.geometry import Facing
-from fransys_layout.stages.stacking import JoinedEnd, JoinedRun, JoinEnd, join_y
+from fransys_layout.stages._chain_beside import beside_hosts
+from fransys_layout.stages.stacking import JoinedEnd, JoinedRun, JoinEnd, StackedPort, join_y
 from fransys_model.kernel import Finding, Id, Severity, UnionFind
 
+from .beside_runs import beside_runs, joined_pairs
 from .clear_runs import always_clear, run_clearance
 from .nets import star_wires
 from .types import Beside, Joins
@@ -61,6 +63,7 @@ class Spot:
     end: JoinEnd
     body: tuple[int, int]
     shifted: bool = False  # An attached part stands above this port's function in its column
+    crowded: bool = False  # Another pin of the cell ends at the same offset, facing the same way
 
 
 def joined_runs(
@@ -76,7 +79,14 @@ def joined_runs(
     spots = port_spots(columns, seating.plans, drawn, stacks)
     rooms = {page: stack.room for page, stack in stacks.items()}
     clear = run_clearance(spots, drawn, power)
-    return _wired_beside(star_wires(connections, functions, columns), spots, rooms, chains, clear)
+    wires = star_wires(connections, functions, columns)
+    hosts = beside_hosts(columns)
+    candidates = _same_page(wires, spots)
+    side, side_runs, refused = beside_runs(candidates, hosts, rooms)
+    asked = {c.handle for c, x, y in candidates if _beside_wire(x, y, hosts)}
+    rest = tuple(c for c in wires if c.handle not in asked)
+    base = _wired_beside(rest, spots, rooms, chains, clear)
+    return _with_beside(base, joined_pairs(side), side_runs, refused)
 
 
 def port_spots(
@@ -114,10 +124,19 @@ def port_spots(
             shifted = _under_attachment(column, cell)
             for port, stacked in own:
                 end = JoinEnd(port=port.port, row=stacked.row, offset=stacked.offset, height=height)
+                crowded = _crowded(own, port.port, stacked)
                 found[port.port].append(
-                    Spot(*where, cell.index, last, stacked.facing, end, body, shifted)
+                    Spot(*where, cell.index, last, stacked.facing, end, body, shifted, crowded)
                 )
     return {port: tuple(spots) for port, spots in found.items()}
+
+
+def _crowded(own: Sequence[tuple[Any, StackedPort]], port: Id[Any], one: StackedPort) -> bool:
+    """Whether another pin of the cell ends at `one`'s offset facing the same way."""
+    return any(
+        (other.offset, other.facing) == (one.offset, one.facing) and found.port != port
+        for found, other in own
+    )
 
 
 def _under_attachment(column: Column, cell: Cell) -> bool:
@@ -286,3 +305,21 @@ def _unaligned(run: tuple[JoinEnd, ...]) -> Finding:
         subjects=tuple(end.port for end in run),
         message="a horizontal join's row could not be aligned; drawn as references instead",
     )
+
+
+def _beside_wire(x: Spot, y: Spot, hosts: Mapping[AuthoringKey, AuthoringKey]) -> bool:
+    """Whether a wire joins a beside column to its host's: `beside_runs` decides it alone."""
+    return hosts.get(x.column) == y.column or hosts.get(y.column) == x.column
+
+
+def _with_beside(
+    base: Joins,
+    aside: Mapping[tuple[Id[Any], Id[Any]], set[int]],
+    runs: Sequence[JoinedRun],
+    refused: Sequence[tuple[JoinEnd, JoinEnd]],
+) -> Joins:
+    """`base` with the wires of beside columns: their pairs, their runs first, their refusals."""
+    pairs = {**base.beside.pairs, **{pair: frozenset(sets) for pair, sets in aside.items()}}
+    beside = Beside(pairs=pairs, sets=base.beside.sets, aside=frozenset(aside))
+    findings = (*base.findings, *(_unaligned(pair) for pair in refused))
+    return Joins(beside, (*runs, *base.runs), findings)

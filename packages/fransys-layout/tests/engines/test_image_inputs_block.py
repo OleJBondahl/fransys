@@ -1,4 +1,4 @@
-"""V10, model-0119: `image_inputs` hands a block's contacts to its parent's contact table.
+"""model-0119: `image_inputs` hands a block's contacts to its parent's contact table.
 
 Contactor `K1` (a coil and a contact of its own) carries an untagged add-on block of one NO and
 one NC contact. The block is no device: its contacts are owned by `K1`, so they are listed in

@@ -1,7 +1,7 @@
 """Fixtures for the wago tests: an invented PLC rack built with the model API.
 
 Every part, MPN and designation here is invented (CLAUDE.md invariant 6); the module MPNs are
-public WAGO catalogue numbers of module types, which the work order allows. The builder holds
+public WAGO catalogue numbers of module types. The builder holds
 records, not a frozen model, so a test can reorder them before they reach a `Draft`.
 """
 

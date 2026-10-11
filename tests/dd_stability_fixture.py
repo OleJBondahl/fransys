@@ -1,4 +1,4 @@
-"""Shared fixture of the F5-C shuffle and stability tests: an example-sized facade cabinet.
+"""Shared fixture of the shuffle and stability tests: an example-sized facade cabinet.
 
 Seven groups (six device groups `A`..`F` of a 3-pole contactor, a relay and three terminals
 each, and a `PLC` rack with one output module), four pages, three of them shared by two
@@ -67,7 +67,7 @@ def build_result(
     """The cabinet; `extra` adds one relay `KX` to that group; `reverse` authors it backwards.
 
     `crowd` adds `CROWD` relays `KY1`.. to that group, so the group overflows onto a second page
-    and every later page is numbered one higher (B1). `branch` adds one relay `KV` to that group,
+    and every later page is numbered one higher. `branch` adds one relay `KV` to that group,
     its coil wired to `KA`'s coil `A1`: the star net of `KA.A1`, the terminal `XA` and the PLC
     output gains a branch in another group. `terminal` adds two terminals to that group, wired to
     the PLC output of the same net: the net then has three terminal points and the PLC output has

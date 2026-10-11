@@ -1,4 +1,4 @@
-"""CONTACT-STATES CS3, Acceptance 4 (binding half): a changeover is bound by its throw roles.
+"""A changeover is bound by its throw roles.
 
 Three invented relays differ only in the names of the changeover's ports: `11/12/14`,
 `COM/NC/NO` and `I/II/III`, each with roles `common`/`break`/`make` and no `symbol_port`. Each

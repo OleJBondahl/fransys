@@ -1,4 +1,4 @@
-"""HL6's boxes over placed pin views: hand-made views, no model and no engine."""
+"""Boxes over placed pin views: hand-made views, no model and no engine."""
 
 from types import SimpleNamespace
 
@@ -13,9 +13,18 @@ from fransys_layout.geometry import (
     PortGeometry,
     SymbolGeometry,
 )
-from fransys_layout.stages.box_views import BoxSpec, drawn_hidden, hidden_views, placed_boxes
+from fransys_layout.stages.box_views import (
+    BoxSpec,
+    cell_views,
+    drawn_hidden,
+    hidden_views,
+    moved_markers,
+    moved_views,
+    placed_boxes,
+    slot_rows,
+)
 from fransys_layout.stages.connector_boxes import CELL_ROWS, HALF, box_size
-from fransys_layout.stages.types import PlacedFunction
+from fransys_layout.stages.types import LinkMarker, MarkerSide, PlacedFunction
 
 G = WIRING_GRID  # 8
 TH = 8  # text height; text_width("DEMO-HSG-4M") = 57 at it, so the box is 72 wide
@@ -78,19 +87,90 @@ def test_a_box_is_centred_over_one_narrow_view_at_its_natural_width() -> None:
     assert box.box.x == 8
 
 
-def test_a_box_over_wide_views_spans_them() -> None:
-    # bodies from 40 - 8 to 200 + 8: wider than the natural 72
+def test_a_box_over_wide_views_is_as_wide_as_its_cells_and_starts_at_the_first() -> None:
+    # HL19: views at 40 and 200 no longer stretch the box; it starts under the first pin's cell
     (box,) = placed_boxes([view(1, x=40), view(2, x=200)], [spec(1, (1, 2))], TH, PAGE)
-    assert (box.box.x, box.box.width) == (32, 176)
-    assert box.box.width >= box_size(LINES, ["1", "2"], text_height=TH)[0]
+    assert (box.box.x, box.box.width) == (32, box_size(LINES, ["1", "2"], text_height=TH)[0])
 
 
-def test_a_cell_stands_under_each_pin_on_the_pins_edge_and_the_texts_start_past_it() -> None:
+def test_a_cell_stands_beside_the_last_on_the_pins_edge_and_the_texts_start_past_it() -> None:
     (box,) = placed_boxes([view(1, x=40), view(2, x=200)], [spec(1, (1, 2))], TH, PAGE)
     assert [cell.port for cell in box.cells] == [hid("port", 1), hid("port", 2)]
-    assert [cell.box.x + cell.box.width // 2 for cell in box.cells] == [40, 200]
+    assert [cell.box.x + cell.box.width // 2 for cell in box.cells] == [40, 56]
     assert {cell.box.y for cell in box.cells} == {100}
     assert box.texts == (Point(x=32 + HALF, y=100 + CELL_ROWS * G + HALF),)
+
+
+def test_a_view_moves_onto_its_slot_and_every_boxed_view_loses_its_keepout() -> None:
+    # HL19: the lead from a cell to its symbol is the route from the moved view
+    views = [view(1, x=40), view(2, x=200)]
+    (box,) = placed_boxes(views, [spec(1, (1, 2))], TH, PAGE)
+    moves = cell_views(views, [box])
+    assert moves == {
+        (hid("port", 1), 1, 1): (0, 0, Facing.N),
+        (hid("port", 2), 1, 1): (-144, 0, Facing.N),
+    }
+    moved = moved_views(views, moves)
+    assert {v.geometry.keepout for v in moved} == {Box(x=0, y=0, width=0, height=0)}
+    assert [(v.function, v.at.x) for v in moved] == [
+        (hid("port", 1), 40),
+        (hid("port", 2), 56),
+    ]
+
+
+def test_a_cell_less_box_gives_each_pin_two_grids_in_pin_order() -> None:
+    views = [view(2, x=200), view(1, x=40)]
+    (box,) = placed_boxes(views, [spec(1, (1, 2), cells=False)], TH, PAGE)
+    assert [(s.port, s.x) for s in box.slots] == [(hid("port", 1), 40), (hid("port", 2), 56)]
+    assert box.cells == ()
+
+
+def test_each_box_and_the_cells_between_its_slots_are_blocked_and_the_slots_are_not() -> None:
+    views = [view(1, x=40), view(2, x=72)]
+    (box,) = placed_boxes(views, [spec(1, (1, 2), cells=False)], TH, PAGE)
+    y = box.slots[0].y
+    blocks = slot_rows([box])[box.drawing_set, box.page]
+    assert [(s.box.x, s.box.y) for s in blocks.hard] == [(48, y)]
+    assert [s.box for s in blocks.soft] == [box.box]
+
+
+def test_a_view_facing_into_its_box_turns_to_face_away_and_stands_on_the_far_side_of_its_slot() -> (
+    None
+):
+    # a pin facing S under a box hanging from the row: its lead would have to enter the box
+    views = [view(1, x=40), view(2, x=56, facing=Facing.S)]
+    (box,) = placed_boxes(views, [spec(1, (1, 2))], TH, PAGE)
+    moves = cell_views(views, [box])
+    assert moves[hid("port", 2), 1, 1][2] is Facing.N
+    moved = moved_views(views, moves)
+    assert [v.geometry.ports[0].facing for v in moved] == [Facing.N, Facing.N]
+
+
+def _marker(*, y: int, port: int = 2) -> LinkMarker:
+    return LinkMarker(
+        connection=hid("conductor", 1),
+        port=hid("port", port),
+        side=MarkerSide.USER,
+        drawing_set=1,
+        page=1,
+        at=Point(x=40, y=100),
+        box=Box(x=34, y=y, width=12, height=56),
+        partner_page=2,
+        vertical=True,
+    )
+
+
+def test_a_marker_moves_with_its_view_and_a_marker_on_no_moved_view_stays() -> None:
+    other = _marker(y=108, port=9)
+    moves = {(hid("port", 2), 1, 1): (16, -8, Facing.S)}
+    moved, same = moved_markers([_marker(y=108), other], moves)
+    assert (moved.at, moved.box.x, moved.box.y) == (Point(x=56, y=92), 50, 100)
+    assert same == other
+
+
+def test_a_marker_on_the_side_the_pin_does_not_face_is_mirrored_about_the_pin() -> None:
+    (moved,) = moved_markers([_marker(y=108)], {(hid("port", 2), 1, 1): (0, 0, Facing.N)})
+    assert (moved.box.y, moved.box.height) == (100 - 8 - 56, 56)
 
 
 def test_south_facing_cells_stand_on_the_bottom_edge_and_the_texts_at_the_top() -> None:

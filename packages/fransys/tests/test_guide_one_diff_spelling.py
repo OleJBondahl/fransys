@@ -1,4 +1,4 @@
-"""The guide teaches `fr.diff` alone for the change list, not `derive.baseline.diff` (O13)."""
+"""The guide teaches `fr.diff` alone for the change list, not `derive.baseline.diff`."""
 
 from importlib.resources import files
 

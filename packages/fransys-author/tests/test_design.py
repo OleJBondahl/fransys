@@ -861,7 +861,7 @@ def test_the_full_worked_example_shape_freezes(parts):
 
 
 def test_three_instances_of_one_unit_release_with_no_entry_give_one_error(parts):
-    """SC5: `relay-board` rev 01 built in three scopes, no entry authored: ONE ERROR, not three."""
+    """`relay-board` rev 01 built in three scopes, no entry authored: ONE ERROR, not three."""
     d = Design(parts)
     for prefix in ("a", "b", "c"):
         d.scope(prefix).unit("relay-board", revision=1, interface="1")

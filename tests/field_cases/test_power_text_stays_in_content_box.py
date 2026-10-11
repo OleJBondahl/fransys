@@ -11,13 +11,13 @@ page 8 units right, which left the text flush on the border instead of clear of 
 
 The rule (the owner's predefined text positions, best wins, 2026-09-25): a text
 candidate that crosses the content box is never chosen. The fix passes the page's content box
-to the power texts' space (work order TEXT-IN-FRAME).
+to the power texts' space.
 
 The second bug: with that rule the PSU's "24V" had no place on its page. Its right side is the
 PSU's own 0 V stem, its left side was outside the content box, and the unplaced text lay on the
 stem. The PSU's box also stood on the frame's left line, because only the old page shift had
 ever given the left text room. The fix counts a supply text in its column's room, as a tag is
-counted (work order TEXT-ROOM).
+counted.
 
 Layout-0114 (owner 2026-10-05): a supply text stands past its bar, centred on the lead, never
 beside it, so it needs no room to the left of the box, and the box may stand at the frame's

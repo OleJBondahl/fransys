@@ -1,5 +1,4 @@
-"""The debug drawing helper: one SVG per page of a stage-side `Layout` (WP7, WP8,
-package-layout.md 9)."""
+"""The debug drawing helper: one SVG per page of a stage-side `Layout`."""
 
 import dataclasses
 
@@ -81,14 +80,14 @@ def test_one_svg_per_page_holds_its_boxes_and_port_dots(tmp_path) -> None:
     assert svg.count("stroke-dasharray") == 2
     assert svg.count('width="56" height="32" fill="none" stroke="#c08080"') == 2
     assert svg.count('width="16" height="32" fill="#eef2f8"') == 2
-    # M4: every page keeps a reference band along its top, so the first row's keep-out top
+    # Every page keeps a reference band along its top, so the first row's keep-out top
     # stands one band below the content box's top, its `in` port there and its `out` port 32 G
     # lower.
     band = _reference_band(SHEET, PROFILE)
     assert band > 0
     assert f'<circle cx="8" cy="{band}" r="4" fill="#c03030"/>' in svg
     assert f'<circle cx="8" cy="{band + 32}" r="4" fill="#c03030"/>' in svg
-    # D3: the lower keep-out top stands `row_spacing` below the upper keep-out bottom
+    # The lower keep-out top stands `row_spacing` below the upper keep-out bottom
     # (band + 32 G), not pushed to the page foot.
     lower_in = band + 32 + PROFILE.row_spacing
     assert PROFILE.row_spacing == 104
@@ -136,7 +135,7 @@ def test_a_marker_is_a_triangle_pointing_away_on_the_owner_side(tmp_path) -> Non
     """The owner's triangle points right and both carry the partner's `p<page>`.
 
     A visual aid only, the page alone, not the real printed text (decision layout-0089): this
-    helper has no `Model` to read LD3's `#n`, column or row from, and a stage marker no longer
+    helper has no `Model` to read a marker's `#n`, column or row from, and a stage marker no longer
     carries the partner's column.
     """
     layout = _layout(
@@ -239,7 +238,7 @@ def test_a_marker_box_outside_the_content_box_is_inside_the_canvas(tmp_path) -> 
 
 
 def test_label_boxes_are_drawn_on_their_own_page_named_by_their_kind(tmp_path) -> None:
-    """WP10: one violet box per `PlacedLabel`, and page 2 keeps its own."""
+    """One violet box per `PlacedLabel`, and page 2 keeps its own."""
     layout = _layout(
         (page_plan(("a",)), (column("a", (1,)),), (drawn(1),)),
         (dataclasses.replace(page_plan(("b",), number=2)), (column("b", (2,)),), (drawn(2),)),

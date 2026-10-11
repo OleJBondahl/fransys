@@ -5,7 +5,7 @@ from fransys_render import pages
 from fransys_model.kernel import Id
 from fransys_model.vocab import PageKind
 
-pytestmark = [pytest.mark.wp("pdf"), pytest.mark.skip(reason="work package: pdf")]
+pytestmark = [pytest.mark.wp("pdf"), pytest.mark.skip(reason="the pdf package is not built yet")]
 
 # Placeholder ids: a real one would come from `fransys.document(...)`, which stores a
 # `fransys_model.vocab.Document` record.

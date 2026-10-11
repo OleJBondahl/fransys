@@ -86,7 +86,7 @@ def _codes(entries):
     return [e["code"] for e in entries]
 
 
-# -- acceptance 1: an untagged new instance is listed with its listing text ----------------
+# -- An untagged new instance is listed with its listing text ----------------
 
 
 @pytest.fixture
@@ -120,7 +120,7 @@ def test_a_new_untagged_instance_is_listed_by_its_listing_text(released: Path) -
     assert listed == [["-U3"]]
 
 
-# -- acceptance 2: a sibling unit's item warning is not listed --------------------------------
+# -- A sibling unit's item warning is not listed --------------------------------
 
 
 def test_a_sibling_units_item_warning_is_not_listed(system) -> None:
@@ -142,7 +142,7 @@ def test_a_system_release_keeps_every_warning(system) -> None:
     assert _codes(_warning_entries(model, None, both)) == ["A", "B"]
 
 
-# -- acceptance 3: a sibling's cable (cable + product) is not listed, and nothing raises -------
+# -- A sibling's cable (cable + product) is not listed, and nothing raises -------
 
 
 def test_a_siblings_short_cable_is_not_listed_and_the_release_does_not_raise(
@@ -157,7 +157,7 @@ def test_a_siblings_short_cable_is_not_listed_and_the_release_does_not_raise(
     assert _codes(_warning_entries(result.model, scope_a.unit_id, tuple(raw))) == []
 
 
-# -- acceptance 4: a net-only warning is listed ----------------------------------------------
+# -- A net-only warning is listed ----------------------------------------------
 
 
 def test_a_net_only_warning_is_listed_in_a_unit_release(manifest_a) -> None:
@@ -168,7 +168,7 @@ def test_a_net_only_warning_is_listed_in_a_unit_release(manifest_a) -> None:
     assert listed == [["net/mw-net"]]
 
 
-# -- acceptance 5: the unit's own document warning is listed, a sibling's is not ----------------
+# -- The unit's own document warning is listed, a sibling's is not ----------------
 
 
 def test_the_units_own_document_warning_is_listed(system) -> None:

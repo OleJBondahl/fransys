@@ -114,7 +114,7 @@ def test_the_worked_examples_two_top_level_sets_are_replica_only_with_one_info_e
     """The real geometry `_is_replica_only_undrawn` assumes: both cabinets' top-level (unit=
     None) drawing sets hold only their own two field-terminal boundary replicas, no other
     placement, no route, no marker -- confirmed here by count, not assumed by a hand-built
-    fixture (`_REPLICA_ONLY_SET_COUNT` is the work order's own "two in the system build, one
+    fixture (`_REPLICA_ONLY_SET_COUNT` is "two in the system build, one
     per cabinet location")."""
     model, c1_id, c2_id = _build()
     model, docs = _with_documents(model, c1_id, c2_id)
@@ -218,7 +218,7 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
         cover="# Cover",
         notes=None,
     )
-    # A second root in the io-board unit: a unit's sole root prints no heading (UNIT-ID I4),
+    # A second root in the io-board unit: a unit's sole root prints no heading,
     # which is not what this test is about. It is no board, so the board count stays one.
     io_second_root = Item(
         id=make_id(Item, ("probe-doc", "io-second-root")),
@@ -377,13 +377,13 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
     assert [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"] == []
 
     text = source(model, doc.id, svgs)
-    # CD12: the cable is one drawn block, its SVG from `render.cable_blocks`.
+    # The cable is one drawn block, its SVG from `render.cable_blocks`.
     assert text.count('format: "svg"') == 1
     assert '#par(text("No drawings."))' not in text
 
 
 def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
-    """BOM acceptance (STEP 4 work order): "The cabinet PDF's title block reads
+    """BOM acceptance: "The cabinet PDF's title block reads
     `pump-cabinet` `02` `2026-09-23`. Its BOM holds the board line and no relay" (mapped
     fixture names `demo-pump-cabinet`/`demo-io-board`). Scoped to the cabinet unit's own id
     (`_bom_scope`'s unit branch), the BOM holds the nested `demo-io-board`
@@ -419,8 +419,7 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
 def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
     """The board-unit ruling (model-0041): `DEMO-PCB-IO` is the sole
     root item of its own nested unit `demo-io-board`, so its unit document's SCHEMATIC
-    section is no longer `NO_DRAWINGS` (that was STEP 4's own finding, captured as
-    `step4-board-schematic-no-drawings.png` in the STEP 4 review) -- it now has a real page,
+    section is no longer `NO_DRAWINGS` -- it now has a real page,
     with `K1`'s own coil function on it, and no `ERROR` finding.
     """
     model, _c1_id, _c2_id = _build()

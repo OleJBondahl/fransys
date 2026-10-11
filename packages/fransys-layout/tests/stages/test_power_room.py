@@ -1,4 +1,4 @@
-"""TEXT-ROOM (layout-0094): a column's room counts a supply text's first free box, one side only.
+"""layout-0094: a column's room counts a supply text's first free box, one side only.
 
 On `power_fixture`'s plant a placed function with a supply symbol (text `+24`) has a keep-out that
 reaches, right of that symbol's body, the text's width and the profile's text clearance (its

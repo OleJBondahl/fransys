@@ -54,6 +54,7 @@ _ = _Whitelist()
 # fransys-model/src itself.
 _.nets_by_port  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/roles.py:48
 _.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/steps.py:129
+_.beside  # OTHER fransys-layout/src/fransys_layout/stages/columns.py:80
 _.internal_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
 _.external_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
 _.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:576
@@ -138,7 +139,7 @@ _.__singleton__  # DICT fransys-model/src/fransys_model/kernel/checks.py:154
 
 # `kernel/record.py:130`: `FieldSpec.ref_kind`, read by plain attribute access but only from
 # fransys-model's own tests (never from any package's src, including its own).
-_.ref_kind  # TESTS fransys-model/tests/kernel/test_record.py:95
+_.ref_kind  # TESTS fransys-model/tests/kernel/test_record.py:27
 
 # `kernel/cache.py`: `DigestCached.builds`, a cache-hit counter read only by fransys-model's
 # own tests to assert a builder ran the expected number of times; never read from any src.

@@ -7,10 +7,10 @@ in one location throughout. `_reading.location_path` (the stage side) and
 `location_prefix`/`position_text` formatters do.
 
 A declared `Net` (not a `Connection`) between two locations with no common ancestor gives each
-end a stub label (D4, LD7: "a wire that leaves its drawing ends in a stub label... both of its
+end a stub label ("a wire that leaves its drawing ends in a stub label... both of its
 ends always carry one number"), not a `#` reference. The stub's box is sized to its own text
-(its `+<label>` location prefix included, LD5): the box's length along the text
-(`height` for a vertical N/S box, S20 M1/M2, else `width`) holds the printed text.
+(its `+<label>` location prefix included): the box's length along the text
+(`height` for a vertical N/S box, else `width`) holds the printed text.
 """
 
 from fransys_layout.engines import lay_out_schematic
@@ -88,9 +88,9 @@ def test_marker_text_fits_its_box_across_two_unrelated_locations() -> None:
     """`+ER+C1` to `+AR+C1`: net `S`, page `p1` in EACH drawing set (the `ER`/`AR` sets), the
     two probe ports `p1_port`/`p2_port` -- named precisely, as requested.
 
-    Confirms each end is a stub label (D4, `star is StarKind.OFF`, `far` set to the other
-    port), never a `#` reference (LD7: a wire that leaves its drawing ends in a stub label,
-    not a reference), and that the stub's box -- sized to its own text, not LD3's fixed
+    Confirms each end is a stub label (`star is StarKind.OFF`, `far` set to the other
+    port), never a `#` reference (a wire that leaves its drawing ends in a stub label,
+    not a reference), and that the stub's box -- sized to its own text, not the fixed
     reference box -- fits the real printed text (with its `+<label>` prefix, U7). Measured,
     not assumed.
     """
@@ -108,7 +108,7 @@ def test_marker_text_fits_its_box_across_two_unrelated_locations() -> None:
     )
     p1_item, p1_fn, p1_port = _item_at("p1")
     p2_item, p2_fn, p2_port = _item_at("p2")
-    # C21 (deep dive): a conductor between two locations is drawn as stubs, not markers; a
+    # A conductor between two locations is drawn as stubs, not markers; a
     # declared net between them is still a marker pair, so the fixture's cut is a net
     net = Net(
         id=make_id(Net, ("probe", "net")),
@@ -147,7 +147,7 @@ def test_marker_text_fits_its_box_across_two_unrelated_locations() -> None:
     assert {pages[m.page].number for m in markers.values()} == {1}
     assert {m.port for m in markers.values()} == {p1_port.id, p2_port.id}
 
-    # D4/LD7: no common ancestor means a stub label at each end, never a `#` reference.
+    # No common ancestor means a stub label at each end, never a `#` reference.
     for marker in markers.values():
         assert marker.star is StarKind.OFF
         assert marker.far in {p1_port.id, p2_port.id}

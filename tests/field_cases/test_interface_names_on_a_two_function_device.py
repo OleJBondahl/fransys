@@ -6,7 +6,7 @@ cabinet plugs into, `x2` a spare connector left open on purpose.
 The bug: `interface=True` and `unused=True` took the device's one function, so a device with two
 functions could not take them, and a script reached for the engine's own `boundary` and `unused`.
 
-The rule (EA15, G26, owner "B1"): `interface=` and `unused=` take `True` (every function) or a
+The rule: `interface=` and `unused=` take `True` (every function) or a
 tuple of the part's function names. A name the part lacks raises and names its functions. A name
 in `unused` is a boundary too.
 """

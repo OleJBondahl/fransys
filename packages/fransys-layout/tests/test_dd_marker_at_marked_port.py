@@ -1,6 +1,6 @@
-"""D9 (deep dive): a link marker stands at the side of the port it marks, on the page it stands on.
+"""A link marker stands at the side of the port it marks, on the page it stands on.
 
-A terminal's branch marker leaves by the symbol port that carries no drawn wire (C22, `_free_side`).
+A terminal's branch marker leaves by the symbol port that carries no drawn wire (`_free_side`).
 "Drawn" means drawn on THIS page. Before the fix `_linked` passed `routed`, the ports of every
 kept connection, so a terminal whose inner port is joined to the hub by a wire that is drawn in
 ANOTHER drawing set (the wire is kept: the two are side by side there) counted as wired here, so
@@ -14,8 +14,8 @@ are side by side and that wire is drawn there; in the unit's own set no two are,
 terminals take a branch marker. The two must stand alike: at the N port, the inner one.
 Built through the `fransys` facade from `examples/demo-parts`, read from `layout.*` records.
 
-The last test is the other half of C22: a terminal whose inner port carries a wire drawn on the
-marker's own page still leaves by its free S port.
+The last test is the other half of that rule: a terminal whose inner port carries a wire drawn on
+the marker's own page still leaves by its free S port.
 """
 
 from functools import cache
@@ -113,7 +113,7 @@ def _inward(model, port: Id) -> int:
 
 def test_a_marker_stands_at_its_ports_side_though_its_wire_is_drawn_in_another_set() -> None:
     """-X3:1 is joined to the hub by a wire drawn in the top-level set only: on its own page the
-    inner port has no wire, so its branch marker stands at the inner port (D9)."""
+    inner port has no wire, so its branch marker stands at the inner port."""
     # UNDO: stages/star_markers.py:_free_side, `(facing_of[f], *end.page) not in wired` ->
     #     `facing_of[f] not in {port for port, *_ in wired}` (wired on any page or set counts):
     #     FAILED test_a_marker_stands_at_its_ports_side_though_its_wire_is_drawn_in_another_set
@@ -144,7 +144,7 @@ def test_two_pumps_markers_for_one_pe_net_stand_at_the_same_side() -> None:
 
 
 def test_a_terminal_whose_inner_wire_is_drawn_on_the_page_leaves_by_the_outer_port() -> None:
-    """C22 kept: -X3:1 and -X3:2 stand beside each other with a wire drawn between them on the
+    """Kept: -X3:1 and -X3:2 stand beside each other with a wire drawn between them on the
     page, and the star's one marker for that pair stands at whichever sorts first. That inner
     port carries a wire drawn here, so the marker leaves by the free outer port."""
     # UNDO: stages/star_markers.py:_free_side, `if len(free) == 1:` -> `if False:` (the marker keeps

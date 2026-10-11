@@ -12,6 +12,7 @@ or one over a symbol body it does not belong to.
 """
 
 from dataclasses import dataclass
+from functools import partial
 from itertools import combinations, pairwise
 from typing import TYPE_CHECKING
 
@@ -43,6 +44,7 @@ from ._harness import (
 from ._jogs import routes_with_a_jog
 from ._segments import own_ends_at, runs_of
 from ._texts import text_crossings, text_overlaps
+from ._where import where
 from .codes import (
     OUT_OF_CONTENT_BOX,
     REDUNDANT_JOG,
@@ -60,6 +62,7 @@ if TYPE_CHECKING:
         PlacedFunction,
         PlacedLabel,
         Route,
+        RoutePoint,
         SheetFormat,
     )
     from fransys_layout.stages.types import PlacedOutline
@@ -82,6 +85,9 @@ class _Page:
     outlines: tuple[PlacedOutline, ...]
     ink: PageInk
     hidden: frozenset[tuple[Handle, int, int]]
+    sheet: SheetFormat
+    here: tuple[int, int]
+    several_sets: bool
 
 
 def lint_geometry(
@@ -91,13 +97,13 @@ def lint_geometry(
 
     Harness lines, stubs and connector boxes follow layout-0158.
     """
-    content = content_box(sheet)
     placed_on = by_key(layout.placed, page_of)
     routes_on = by_key(layout.routes, page_of)
     labels_on = by_key(layout.labels, page_of)
     markers_on = by_key(layout.markers, page_of)
     outlines_on, inks = by_key(layout.outlines, page_of), inks_by_page(ink)
     pages = sorted({*placed_on, *routes_on, *labels_on, *markers_on, *inks})
+    several_sets = len({one[0] for one in pages}) > 1
     findings: list[Finding] = []
     for here in pages:
         placed = tuple(sorted(placed_on.get(here, ()), key=lambda one: one.function))
@@ -117,10 +123,13 @@ def lint_geometry(
             routes=routes,
             labels=tuple(labels_on.get(here, ())),
             markers=tuple(markers_on.get(here, ())),
-            content=content,
+            content=content_box(sheet),
             outlines=outlines_on.get(here, ()),
             ink=inks.get(here, PageInk()),
             hidden=ink.hidden,
+            sheet=sheet,
+            here=here,
+            several_sets=several_sets,
         )
         findings.extend(_wires(page))
         findings.extend(_jogs(page))
@@ -217,7 +226,7 @@ def _harness(page: _Page) -> list[Finding]:
         *runs_over_texts(page.ink, texts),
         *runs_through_symbols(page.ink, bodies),
         *runs_on_outlines(page.ink, page.outlines),
-        *ink_outside(page.ink, page.content),
+        *ink_outside(page.ink, page.content, partial(_at, page)),
     ]
 
 
@@ -239,7 +248,10 @@ def _jogs(page: _Page) -> list[Finding]:
 
 
 def _symbols(page: _Page) -> list[Finding]:
-    """`SYMBOL_OVERLAP`: two keep-out boxes of the page share interior, the pair in handle order."""
+    """`SYMBOL_OVERLAP`: two keep-out boxes of the page share interior, the pair in handle order.
+
+    A boxed pin view draws nothing (layout-0155), so it has no keep-out to overlap (HL19).
+    """
     return [
         _warn(
             SYMBOL_OVERLAP,
@@ -248,34 +260,70 @@ def _symbols(page: _Page) -> list[Finding]:
         )
         for (one, box), (other, other_box) in combinations(page.boxes, 2)
         if overlaps(box, other_box)
+        and not any((v.function, v.drawing_set, v.page) in page.hidden for v in (one, other))
     ]
+
+
+def _at(page: _Page, x: int, y: int) -> str:
+    """The page and frame cell of the point `x`, `y`: derive's one position text."""
+    return where(page.sheet, page.here, x, y, several_sets=page.several_sets)
+
+
+def _corner(box: Box) -> tuple[int, int]:
+    """The top-left corner of `box`, the point a finding names the cell of."""
+    return box.x, box.y
+
+
+def _outside(page: _Page, route: Route) -> RoutePoint | None:
+    """The first vertex of `route` outside the content box, `None` when all are inside."""
+    return next(
+        (
+            point
+            for point in route.points
+            if not contains(page.content, Box(x=point.at.x, y=point.at.y, width=0, height=0))
+        ),
+        None,
+    )
 
 
 def _content(page: _Page) -> list[Finding]:
     """`OUT_OF_CONTENT_BOX`: a keep-out box, a label or marker box or a route vertex outside it."""
     findings = [
-        _warn(OUT_OF_CONTENT_BOX, (one.function,), "a symbol's keep-out box leaves the content box")
+        _warn(
+            OUT_OF_CONTENT_BOX,
+            (one.function,),
+            f"a symbol's keep-out box leaves the content box at {_at(page, *_corner(box))}",
+        )
         for one, box in page.boxes
         if not contains(page.content, box)
         and (one.function, one.drawing_set, one.page)
         not in page.hidden  # layout-0155: draws nothing
     ]
     findings.extend(
-        _warn(OUT_OF_CONTENT_BOX, (label.subject,), "a label box leaves the content box")
+        _warn(
+            OUT_OF_CONTENT_BOX,
+            (label.subject,),
+            f"a label box leaves the content box at {_at(page, *_corner(label.box))}",
+        )
         for label in page.labels
         if not contains(page.content, label.box)
     )
     findings.extend(
-        _warn(OUT_OF_CONTENT_BOX, (marker.port,), "a link marker's box leaves the content box")
+        _warn(
+            OUT_OF_CONTENT_BOX,
+            (marker.port,),
+            f"a link marker's box leaves the content box at {_at(page, *_corner(marker.box))}",
+        )
         for marker in page.markers
         if not contains(page.content, marker.box)
     )
     findings.extend(
-        _warn(OUT_OF_CONTENT_BOX, _identity(route), "a route leaves the content box")
-        for route in page.routes
-        if any(
-            not contains(page.content, Box(x=point.at.x, y=point.at.y, width=0, height=0))
-            for point in route.points
+        _warn(
+            OUT_OF_CONTENT_BOX,
+            _identity(route),
+            f"a route leaves the content box at {_at(page, outside.at.x, outside.at.y)}",
         )
+        for route in page.routes
+        if (outside := _outside(page, route)) is not None
     )
     return findings

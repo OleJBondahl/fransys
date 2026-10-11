@@ -74,6 +74,14 @@ class Shape:
     box: Box
 
 
+@value
+class Blocks:
+    """The shapes no wire may cross, and the ones a wire keeps clear of where a path is left."""
+
+    hard: tuple[Shape, ...] = ()
+    soft: tuple[Shape, ...] = ()
+
+
 def unowned(boxes: Iterable[Box]) -> tuple[Shape, ...]:
     """`boxes` as shapes no lane is exempt from."""
     return tuple(Shape(owner=None, box=box) for box in boxes)

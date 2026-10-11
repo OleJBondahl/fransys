@@ -1,4 +1,4 @@
-"""WP14: the synthetic cabinet freezes in every flag combination and holds what its spec lists."""
+"""The synthetic cabinet freezes in every flag combination and holds what its spec lists."""
 
 import itertools
 from typing import TYPE_CHECKING, Any

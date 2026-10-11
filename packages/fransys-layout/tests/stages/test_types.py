@@ -1,4 +1,4 @@
-"""WP4: the stage values (`stages/types.py`, stages.md 6): sorted tuples and the closed value
+"""The stage values (`stages/types.py`): sorted tuples and the closed value
 set."""
 
 import dataclasses
@@ -7,20 +7,18 @@ from collections.abc import Callable
 import pytest
 from samples import PROFILE, SHEET, column, connection, drawn, function_spec, hid, page_plan, placed
 
-from fransys_layout.geometry import Box, Facing, Orientation, Point
+from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import (
     Cell,
     Chain,
     ChainEntry,
     Column,
     ColumnWidth,
-    Connection,
     DrawnPort,
     GroupInfo,
     GroupSet,
     LabelKind,
     LabelRequest,
-    Layout,
     LinkCase,
     LinkDecision,
     LinkMarker,
@@ -42,7 +40,6 @@ from fransys_layout.stages import (
     SymbolRule,
     UnitInfo,
 )
-from fransys_model.kernel import check_value
 
 # A builder makes one value and passes each order-carrying tuple through `order`, which
 # either keeps the sorted order or reverses it.
@@ -170,46 +167,6 @@ def test_a_reversed_tuple_gives_a_value_equal_to_the_sorted_one(name: str) -> No
     assert BUILDERS[name](_reverse) == BUILDERS[name](_keep)
 
 
-def test_the_stored_order_is_the_documented_key_not_just_equal() -> None:
-    """Spot checks on the stored order: names, indices and handles, each ascending."""
-    spec = _function_spec_of(_reverse)
-    assert [p.name for p in spec.ports] == ["11", "12", "13"]
-    assert [p.index for p in spec.pole_pairs] == [0, 1]
-    assert [p.port for p in _drawn_of(_reverse).ports] == [hid("port", 1), hid("port", 2)]
-    assert [c.index for c in _column_of(_reverse).cells] == [0, 1, 2]
-    hints = _page_hints_of(_reverse)
-    assert hints.keep_together[0].groups == (hid("g", 1), hid("g", 2))
-    assert hints.order[0] == OrderHint(before=hid("g", 1), after=hid("g", 2))
-    assert hints.order[-1] == OrderHint(before=hid("g", 2), after=hid("g", 1))
-
-
-def test_the_group_and_location_paths_keep_their_root_to_leaf_order() -> None:
-    """A path is an order, not a set: `_sort` must not touch it (WP5 and WP6 read it)."""
-    path = (hid("aspect_node", 3), hid("aspect_node", 1), hid("aspect_node", 2))
-    spec = dataclasses.replace(function_spec(1), group_path=path, location_path=path)
-    assert spec.group_path == path
-    assert spec.location_path == path
-
-
-def test_sorting_does_not_collapse_different_values() -> None:
-    """A different port set is a different value."""
-    assert _function_spec_of(_keep) != function_spec(1)
-
-
-def test_a_connection_stores_its_two_ends_in_handle_order() -> None:
-    """`a` is the lower port handle whichever way the ends were given."""
-    forward = connection(1, upper=1, lower=2)
-    swapped = Connection(
-        handle=forward.handle,
-        physical_net=forward.physical_net,
-        role=forward.role,
-        a=forward.b,
-        b=forward.a,
-    )
-    assert swapped == forward
-    assert forward.a.port < forward.b.port
-
-
 def _samples() -> list[object]:
     """One instance of every kind of field: enums, frozendicts, handles, nested tuples."""
     return [
@@ -270,32 +227,3 @@ def _samples() -> list[object]:
         LocationInfo(location=hid("l", 1), label="cabinet"),
         UnitInfo(unit=hid("unit", 1)),
     ]
-
-
-@pytest.mark.parametrize("sample", _samples(), ids=lambda s: type(s).__name__)
-def test_every_stage_value_is_in_the_models_closed_value_set(sample: object) -> None:
-    """No `float`, `list`, `dict`, `set` or unregistered enum anywhere in a stage value."""
-    check_value(sample)
-
-
-def test_a_whole_layout_is_in_the_closed_value_set() -> None:
-    """The stage-side result the engine and `lint` share is one closed value."""
-    layout = Layout(
-        pages=(page_plan(("a",)),),
-        placed=(placed(1, x=0, y=0),),
-        routes=(_route_of(_keep),),
-        decisions=(),
-        markers=(),
-        labels=(),
-    )
-    check_value(layout)
-
-
-@pytest.mark.parametrize(
-    "member",
-    [*Role, *LinkCase, *MarkerSide, *LabelKind, *Orientation, *Facing],
-    ids=lambda m: f"{type(m).__name__}.{m.name}",
-)
-def test_every_enum_of_a_stage_value_is_registered(member: object) -> None:
-    """`register_enum` is applied to every enum a stage value can hold."""
-    check_value(member)

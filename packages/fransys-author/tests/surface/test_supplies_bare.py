@@ -1,4 +1,4 @@
-"""EA15 G1 and G2: a DC supply with no source device, a mid rail, and one or three AC phases."""
+"""A DC supply with no source device, a mid rail, and one or three AC phases."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING

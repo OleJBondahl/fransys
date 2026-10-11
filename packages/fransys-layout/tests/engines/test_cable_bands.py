@@ -1,4 +1,4 @@
-"""The cable placer's bands (CT5-3 P1, CD8): only the lower band grows, one track at a time.
+"""The cable placer's bands: only the lower band grows, one track at a time.
 
 Hand-built facts, no model. Each test names the probe that must make it fail.
 """
@@ -24,8 +24,8 @@ def _bands(block):
     return top, bottom, bottom.y - (block.boxes[0].box.y + block.boxes[0].box.height)
 
 
-def test_one_track_is_ct5_2s_block():
-    """One track keeps CT5-2's geometry: a 2G band each side of the 4G box (acceptance 18).
+def test_one_track_is_the_block_with_a_2g_band_each_side():
+    """One track keeps the block's geometry: a 2G band each side of the 4G box.
 
     Probe: the lower band constant changed from 2G.
     """

@@ -1,7 +1,7 @@
-"""D5, step 6 (B2a): `read` tells, for every port on a power net, its symbol key and its text.
+"""`read` tells, for every power-net port, its symbol key and its text (layout-0094).
 
 A power supply `PSU` (ports `24`, `0`) feeds a load `PLC` (ports `p24`, `p0`, `q24`, `q0`, `pe`)
-by two wires each, so that each rail has three ports and distributes (V3), with the supply
+by two wires each, so that each rail has three ports and distributes, with the supply
 declared by `_model`. Every net is invented; nothing names a real plant.
 """
 
@@ -118,7 +118,7 @@ def _records(
         *ports.values(),
         _wire("w24", ports["psu.24"], ports["plc.p24"]),
         _wire("w0", ports["psu.0"], ports["plc.p0"]),
-        _wire("w24b", ports["psu.24"], ports["plc.q24"]),  # a third port: a rail (V3)
+        _wire("w24b", ports["psu.24"], ports["plc.q24"]),  # a third port: a rail
         _wire("w0b", ports["psu.0"], ports["plc.q0"]),
         _net("rail24", ports["psu.24"], potential="24V", name=net_name),
         _net("rail0", ports["psu.0"], potential="0V"),
@@ -173,7 +173,7 @@ def test_a_net_name_is_the_text_before_the_potential() -> None:
 
 
 def test_an_ac_supply_and_no_supply_give_no_end_but_earth() -> None:
-    """LD8: AC rails get references; a net in no declared supply gets references; PE needs none."""
+    """AC rails get references; a net in no declared supply gets references; PE needs none."""
     # UNDO: model `_potential_kind`: `supply.current is not Current.DC` -> `False` (AC: ends)
     for current in (Current.AC, None):
         ends = _power(current)

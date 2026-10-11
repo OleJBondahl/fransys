@@ -112,7 +112,7 @@ def place(
 ) -> tuple[tuple[PlacedFunction, ...], tuple[Finding, ...]]:
     """Place the columns of `plan` left to right, cells top to bottom (layout-0035)."""
     drawn_of = lookups.drawn_of(drawn, "place")
-    page, _, floor, gaps_of = _stacked(plan, columns, drawn_of, stacking, joins)
+    page, top, floor, gaps_of = _stacked(plan, columns, drawn_of, stacking, joins)
     # Each row's top at minimum pitch with the spacing kept (blocks `row_spacing`
     # apart, `row_gap` inside a block and in a column of only boxes): how high it can go
     stacked = {
@@ -121,6 +121,7 @@ def place(
         for i, row in enumerate(rows)
     }
     _align_bands(page, stacking.profile.band_ranks, gaps_of, floor=floor, stacked=stacked)
+    _align_joins(page, tuple(run for run in joins if run.aside), drawn_of, top, gaps_of)
     _align_sides(page)
     _align_faces(page)
     flat = [cell for rows in page for row in rows for cell in row]
@@ -194,15 +195,19 @@ def _align_joins(
     by_key = {rows[0][0].column: rows for rows in page}
     for run in joins:
         ends = [
-            (by_key[end.column], dict(_column_ports(by_key[end.column], drawn_of, top))[end.port])
+            (
+                by_key[end.column],
+                dict(_column_ports(by_key[end.column], drawn_of, top))[end.port],
+                end.drop,
+            )
             for end in run.ends
         ]
-        y = join_offset(one.offset for _, (_, one) in ends)
-        for rows, (first, one) in ends:
-            if one.offset == y:
+        y = join_offset(one.offset + drop for _, (_, one), drop in ends)
+        for rows, (first, one), drop in ends:
+            if one.offset + drop == y:
                 continue
             start = next(index for index, row in enumerate(rows) if row is first)
-            new_top = min(cell.top for cell in first) + y - one.offset
+            new_top = min(cell.top for cell in first) + y - one.offset - drop
             _cascade(rows, start, new_top, gaps_of(rows))
 
 

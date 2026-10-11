@@ -1,4 +1,4 @@
-"""EA11 `d.layout.*` and the function handle: each hint writes the engine's records."""
+"""`d.layout.*` and the function handle: each hint writes the engine's records."""
 
 from decimal import Decimal
 from types import SimpleNamespace

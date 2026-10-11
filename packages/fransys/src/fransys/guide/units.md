@@ -129,7 +129,8 @@ assert not [f for f in fr.build(d).findings if f.code == "UNIT_BOUNDARY_BYPASSED
 
 ## Leaving one instance open
 
-`unused=True` on `d.device` sits inside the unit, so it marks every instance. To leave the boundary
+`unused=True` on `d.device` sits inside the unit, so it marks every instance. A switch's spare ports
+are declared once there: `d.device("X2", "DEMO-CONN-2P", interface=True, unused=True)`. To leave the boundary
 of one placed instance open, the container names it on `d.add`. `unused=("X1",)` takes every boundary
 function of the device in the unit's field `X1`. `unused=("X1.x1",)` takes that one function. A field that holds a tuple of devices takes an index, `"X[0]"` or `"X[0].x1"`. The bare `"X"` takes every element. A
 misspelt field raises and lists the fields. A name that is no boundary raises and lists the boundary

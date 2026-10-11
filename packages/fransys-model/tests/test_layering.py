@@ -1,7 +1,7 @@
 """Import-layer check via stdlib `ast`.
 
 Replaces `import-linter`, which does not run on this Python (root decision 0010; the root
-`tests/test_boundaries.py` does the same for the workspace). Enforces design/foundations.md 4: the
+`tests/test_boundaries.py` does the same for the workspace). Enforces the layer rule: the
 layers are `derive` → `layout` → `vocab` → `kernel`, and a layer imports only layers to its right.
 """
 

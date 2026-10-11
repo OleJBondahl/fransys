@@ -1,4 +1,4 @@
-"""A LEAD joins a device's own lead to a pin of a fitted connector (HA5, HA6, model-0172).
+"""A LEAD joins a device's own lead to a pin of a fitted connector (model-0172).
 
 It is a link like a mount: it closes its net, is never a wire, and the connector reads through
 its parent device (`K1-J1`) while no other child of a device changes.

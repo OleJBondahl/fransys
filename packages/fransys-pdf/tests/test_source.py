@@ -1,4 +1,4 @@
-"""`source`: page geometry, cover and notes. Determinism is Part 5."""
+"""`source`: page geometry, cover and notes."""
 
 from _build import (
     cable_facet,
@@ -36,7 +36,7 @@ from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, documen
 
 K = PageKind
 
-# Part 1 (unit documents): named non-zero counts for the two-drawing-set fixtures below.
+# Unit documents: named non-zero counts for the two-drawing-set fixtures below.
 _UNIT_DOCUMENT_PAGE_COUNT = 2
 
 
@@ -61,8 +61,8 @@ def test_cover_and_notes_pages_are_separated_by_a_page_break():
 
 
 def test_cover_has_no_facts_table_but_keeps_its_own_heading_and_text():
-    """R10 (owner's appearance pass): the cover drops the six `Project` facts as a table; the
-    title block (page-frame R3) already carries them on every page, the cover included. Paired
+    """The cover drops the six `Project` facts as a table; the
+    title block already carries them on every page, the cover included. Paired
     absence/presence on `cover_page` alone, not the whole `source()`, so a blank cover cannot
     pass this check by accident -- the whole document still contains the facts through the
     title block in the page background."""
@@ -125,10 +125,10 @@ def test_schematic_pages_are_inlined_in_number_order_when_every_key_is_present()
         render_id(p2.id): "<svg>two</svg>",
     }
     text = source(m, doc.id, svgs)
-    assert text.count("#page(margin: 0mm, background:") == 2  # page-frame R1, R4: full bleed
+    assert text.count("#page(margin: 0mm, background:") == 2  # full bleed
     assert text.index("<svg>one</svg>") < text.index("<svg>two</svg>")
     assert text.count("#pagebreak()") == 2  # COVER|SCHEMATIC, then between the two SCHEMATIC pages
-    # R3's sheet counter (`n / N` within the drawing set) is its own number, not the document
+    # The sheet counter (`n / N` within the drawing set) is its own number, not the document
     # counter: page 1's cell reads "1 / 2", page 2's reads "2 / 2", each in its own block.
     assert 'text(size: 10pt, text("1 / 2"))' in text
     assert 'text(size: 10pt, text("2 / 2"))' in text
@@ -240,9 +240,9 @@ def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_o
 
 def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
     """Integration proof, end to end through `source()`'s own `schematic_source` section, not
-    the lower-level functions alone: `document_facts`' unit revision/date (Part 2), the
+    the lower-level functions alone: `document_facts`' unit revision/date, the
     unit-name scope cell (`subject_label`), and the per-drawing-set `n / N` counter (a bug
-    only reachable once a unit document can span more than one set, Part 1's own capability).
+    only reachable once a unit document can span more than one set).
     Two drawing sets of one page each, so a document-wide `len(pages_found)` counter (the old
     body) would wrongly print `1 / 2` on each page instead of `1 / 1`.
     """
@@ -492,7 +492,7 @@ def test_subject_label_for_an_item_without_a_part_falls_back_to_its_own_descript
 
 def _harness_with_two_cables(*, remove=(K.BOM,)):
     """A harness with two cables, `W1` and `W2`, each with its own part and product facts
-    (RW4b, decision model-0108: a cable is `is_cable`'s own, so both need a cable part)."""
+    (decision model-0108: a cable is `is_cable`'s own, so both need a cable part)."""
     harness = item("wh1", description="Demo harness")
     demo_part = part("cab1", description="Invented 4-core cable")
     cable1 = item("w1", description="Cable one", part=demo_part.id, parent=harness.id)
@@ -624,16 +624,16 @@ def test_contents_page_is_left_out_when_added_to_a_location_subject_document():
     assert "None." not in text
     assert '#heading(level: 1, text("Cover"))' in text  # the cover is still there
     assert text.count("#pagebreak()") == 0  # the cover alone: the empty list has no page (pdf-0019)
-    assert text.count("#table") == 0  # no cable table; the cover carries no table either (R10)
+    assert text.count("#table") == 0  # no cable table; the cover carries no table either
 
 
 def test_harness_drawing_renders_one_block_per_harness():
-    """A harness of two cables is one block (CD9), keyed by the harness, in the "No part number"
+    """A harness of two cables is one block, keyed by the harness, in the "No part number"
     run since the harness has no part of its own: not one page per cable, not the cables' parts."""
     m, doc, cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.BOM))
     text = source(m, doc.id, {cable_block_key(None, cable1.parent): "<svg>harness-block</svg>"})
     assert text.count("<svg>harness-block</svg>") == 1
-    assert "#align(center)" not in text  # P8's caption is gone (page-frame R3, R4)
+    assert "#align(center)" not in text  # The caption is gone
     assert '"No part number"' in text
     assert '"SIM-CAB1"' not in text
     assert '"SIM-CAB2"' not in text
@@ -792,7 +792,7 @@ def test_harness_drawing_falls_back_to_no_drawings_for_a_cableless_harness():
 
 
 def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page():
-    """The confirmed bug (page-frame R3, R4): `schematic_source`'s NO_DRAWINGS early return
+    """The confirmed bug: `schematic_source`'s NO_DRAWINGS early return
     used to be a bare paragraph with no `#set page`/`#page` of its own, so in Typst's
     page-flow model it silently inherited whichever `#set page(background: ...)` was last in
     effect -- here, the preceding NOTES page's own title "Notes", not its own. A cabinet
@@ -818,7 +818,7 @@ def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page(
 
 def test_harness_drawing_no_drawings_page_sets_its_own_title_block_after_a_notes_page():
     """Same bug, `harness_drawing_source`'s own NO_DRAWINGS path. Moved from the `system`
-    document with no cable this test originally used (decision pdf-0006, STEP 4b addition):
+    document with no cable this test originally used (decision pdf-0006):
     that case no longer falls back to NO_DRAWINGS at all (`DOCUMENT_NO_TOP_LEVEL_CABLES`
     INFO, no page -- `test_harness_drawing_no_cable_source_variants` below), so the
     NO_DRAWINGS-after-NOTES regression shape now needs a genuine harness document naming a

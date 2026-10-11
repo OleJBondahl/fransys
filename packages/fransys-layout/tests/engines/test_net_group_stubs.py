@@ -1,11 +1,11 @@
-"""D4, S15: a declared net whose ports stand in two locations ends in stubs, as a conductor does.
+"""A declared net whose ports stand in two locations ends in stubs, as a conductor does.
 
 `stages/offstubs.py::groups_by_location` splits a `NetGroup` into its location parts by
 `ends_in_stubs`; a part of two or more ports stays a group, and consecutive parts are joined by
 one stub pair between their lowest-handle ports (`read/offstubs.py::off_texts` names each end).
 The model is hand-built: items in `+ER+C1` and `+AR+C1`, two locations with no common ancestor,
 and one declared `Net` over one port of each (the fixture of the root
-`test_marker_text_agrees_across_nested_locations.py`, rewritten in step 5's Part 5 to assert a
+`test_marker_text_agrees_across_nested_locations.py`, which asserts a
 stub label at each end and no `#` reference).
 
 Can-fail, checked by probe: with `groups_by_location` returning the groups unsplit and no join,

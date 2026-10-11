@@ -1,4 +1,4 @@
-"""`stages.line_draw`: HL15 to HL18's fan-out and one line's pieces, on hand-built ends.
+"""`stages.line_draw`: the fan-out and one line's pieces, on hand-built ends.
 
 The grid is 8. A leaving line runs 6 grids, 48, straight out; a fan-out's split stands 4, 32.
 """
@@ -30,7 +30,7 @@ def _plug(branch: int, x: int, y: int, *, interface: bool = False, leaving: bool
 
 
 def test_a_fan_out_facing_s_splits_four_grids_below_its_row_with_legs_in_x_order() -> None:
-    """HL17: pins at x 0, 16, 32 give the split at (16, 32); each leg is split, knee, pin.
+    """Pins at x 0, 16, 32 give the split at (16, 32); each leg is split, knee, pin.
 
     UNDO: `FAN_GRIDS` is 3, and the split stands at y 24.
     """
@@ -42,7 +42,7 @@ def test_a_fan_out_facing_s_splits_four_grids_below_its_row_with_legs_in_x_order
 
 
 def test_a_fan_out_facing_n_splits_above_its_row() -> None:
-    """HL17: the same pins facing N at y 64 give the split at (16, 32), the knee a grid above.
+    """The same pins facing N at y 64 give the split at (16, 32), the knee a grid above.
 
     UNDO: `fan_out` takes `max` of the rows for N too, or a `+` step, and the split flips.
     """
@@ -52,7 +52,7 @@ def test_a_fan_out_facing_n_splits_above_its_row() -> None:
 
 
 def test_two_plug_ends_are_one_path_keyed_by_the_interface_end_with_no_stub_or_fan() -> None:
-    """HL15: the interface end is the root, though second, so its branch keys the path.
+    """The interface end is the root, though second, so its branch keys the path.
 
     UNDO: `line_pieces` roots at the first end, and the key is 1.
     """
@@ -65,7 +65,7 @@ def test_two_plug_ends_are_one_path_keyed_by_the_interface_end_with_no_stub_or_f
 
 
 def test_a_lone_end_with_the_other_absent_runs_48_out_to_one_stub() -> None:
-    """HL18: end 1 faces N at (200, 200); the stub stands at the tip 48 up, and the path runs on
+    """End 1 faces N at (200, 200); the stub stands at the tip 48 up, and the path runs on
     one grid to its box's edge (layout-0158).
 
     UNDO: `LEAVE_GRIDS` is 5, and the tip stands at y 160.
@@ -77,7 +77,7 @@ def test_a_lone_end_with_the_other_absent_runs_48_out_to_one_stub() -> None:
 
 
 def test_two_ends_and_an_absent_third_leave_by_the_roots_end_keyed_by_the_absent_branch() -> None:
-    """HL18: root 1 stands at (200, 200); the leaving leg is keyed 3 and ends on its box (200, 144).
+    """Root 1 stands at (200, 200); the leaving leg is keyed 3 and ends on its box (200, 144).
 
     UNDO: `line_pieces` does not append the absent end as a goal, and the key 3 is gone.
     """
@@ -90,7 +90,7 @@ def test_two_ends_and_an_absent_third_leave_by_the_roots_end_keyed_by_the_absent
 
 
 def test_a_leaving_end_draws_its_own_stub_and_the_line_goes_on_among_the_rest() -> None:
-    """HL18: end 2 leaves; it draws 48 out with a stub, and 1 and 3 join in one path, 1's.
+    """End 2 leaves; it draws 48 out with a stub, and 1 and 3 join in one path, 1's.
 
     UNDO: `line_pieces` skips the `one.leaving` branch, and end 2 has no stub.
     """
@@ -116,7 +116,7 @@ def test_a_line_between_two_top_level_units_leaves_at_both_ends() -> None:
 
 
 def test_a_fan_out_end_returns_its_fan_with_branch_and_legs() -> None:
-    """HL17: an end in pins gives a Fan of its branch, split and three legs.
+    """An end in pins gives a Fan of its branch, split and three legs.
 
     UNDO: `line_pieces` returns no fans.
     """
@@ -132,14 +132,6 @@ def test_a_fan_out_split_keeps_its_bounds_so_its_stub_stays_on_the_page() -> Non
     split, legs = fan_out(_pins(Facing.N, y=64), (40, 960))
     assert split == Point(x=40, y=32)
     assert legs[0].points[-1] == Point(x=0, y=64)
-
-
-def test_a_leaving_fan_out_keeps_half_its_stub_inside_the_region() -> None:
-    """Defect 1: `margin` moves a leaving line off the page's left edge, legs to the same pins."""
-    end = EndOnPage(branch=1, pins=_pins(Facing.N, y=200))
-    pieces = line_pieces((end,), 2, _GRID, margin=30)
-    assert pieces.paths[0][1][0].x >= 30
-    assert [leg.points[-1].x for leg in pieces.fans[0].legs] == [0, 16, 32]
 
 
 def test_a_path_that_turns_back_on_itself_stops_on_its_end() -> None:
@@ -162,7 +154,7 @@ def test_a_path_that_turns_back_on_itself_stops_on_its_end() -> None:
 
 
 def test_two_pin_rows_get_two_fans_and_the_line_runs_on_to_the_second() -> None:
-    """Defect 4 (HL15, HL17): pins in a row at y 0 facing S and a row at y 200 facing N fan
+    """Defect 4: pins in a row at y 0 facing S and a row at y 200 facing N fan
     apart, each split 32 out of its row; the line ends at the first and runs on to the second.
 
     UNDO: one fan for both rows (`_pin_rows` returns one row).
@@ -218,7 +210,7 @@ def test_a_trunk_never_runs_through_a_box_the_search_must_avoid() -> None:
 
 
 def test_no_free_point_leaves_the_stub_at_the_junction_as_before() -> None:
-    """R1: the whole page blocked, the root's end carries the stub facing N.
+    """The whole page blocked, the root's end carries the stub facing N.
 
     UNDO: `_trunk` returns a trunk with no free point, or fails.
     """

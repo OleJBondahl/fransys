@@ -1,10 +1,10 @@
-"""STRIP-ADDITIONS (decision author-0022): `Terminal.limits` (TL), a partly bridged run (PB), a run
-with no size (RS) and a strip or run as a wire or core end (RE).
+"""Decision author-0022: `Terminal.limits`, a partly bridged run, a run
+with no size and a strip or run as a wire or core end.
 
-TL: a unit rates a terminal boundary as it rates a device function; a circuit above the rating
-gives RATING_VOLTAGE_BELOW_CIRCUIT. PB: `run(label, n, bridged=(first, last))` jumpers terminals
-`first` to `last` only, and the listing's jumper group follows. RS: `run(label, bridged=True)`
-grows with each connection. RE: `d.wire` and `W1.core` take the next free terminal. Demo parts only.
+A unit rates a terminal boundary as it rates a device function; a circuit above the rating
+gives RATING_VOLTAGE_BELOW_CIRCUIT. `run(label, n, bridged=(first, last))` jumpers terminals
+`first` to `last` only, and the listing's jumper group follows. `run(label, bridged=True)`
+grows with each connection. `d.wire` and `W1.core` take the next free terminal. Demo parts only.
 
 Can-fail probes (`just probe`): a `Terminal.limits` that writes nothing fails the TL test;
 bridging the whole run for any pair fails the PB test; bridging only terminals 1-2 of a growing

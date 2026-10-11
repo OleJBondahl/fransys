@@ -1,4 +1,4 @@
-"""Row order in the stage columns (BD5): one pass down, one pass up, on abstract graphs."""
+"""Row order in the stage columns: one pass down, one pass up, on abstract graphs."""
 
 from fransys_layout.engines.diagram.order import order_columns
 

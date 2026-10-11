@@ -1,4 +1,4 @@
-"""EA8, EA12: a board unit with a boundary, an open connector and a mate in a cabinet, one model."""
+"""A board unit with a boundary, an open connector and a mate in a cabinet, one model."""
 
 from typing import TYPE_CHECKING, NamedTuple
 

@@ -1,4 +1,4 @@
-"""F9: a port's pole side and conductor mark, from its marking or as stated (parts-0010)."""
+"""A port's pole side and conductor mark, from its marking or as stated (parts-0010)."""
 
 import itertools
 from pathlib import Path
@@ -147,7 +147,7 @@ def test_a_stated_conductor_m_loads_as_the_mid_conductor(tmp_path):
 
 
 def test_the_demo_three_pole_parts_carry_pole_sides_and_conductors():
-    """EA-PARTS-MODULE: the demo breaker and overload state line/load and L1..L3 per pole."""
+    """The demo breaker and overload state line/load and L1..L3 per pole."""
     model = freeze(fransys_parts.load_path(DEMO))
     for mpn in ("DEMO-MCB-3P", "DEMO-OVERLOAD-3P"):
         (part,) = (p for p in parts(model).values() if p.mpn == mpn)
@@ -171,7 +171,7 @@ _TWO_PINS = (
 
 
 def test_an_overload_main_path_takes_side_from_its_markings(tmp_path):
-    """A protection function's conductive link is a pole too (parts-0012, F9)."""
+    """A protection function's conductive link is a pole too (parts-0012)."""
     ports = _TWO_PINS
     links = 'links = [{ a = "a", b = "b", kind = "conductive" }]'
     model = _model(tmp_path, _function("protection", ports, links))

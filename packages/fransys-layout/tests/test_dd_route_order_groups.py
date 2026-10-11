@@ -1,4 +1,4 @@
-"""D15 (layout deep dive): a net group's spanning tree is built in drawn order, not handle order.
+"""A net group's spanning tree is built in drawn order, not handle order.
 
 Four relay coils stand in one row on `examples/demo-parts`. A declared net names both ports of K2
 and both ports of K3 and no conductor joins them, so the router spans the four ports itself. K2's
@@ -23,7 +23,7 @@ RELAY = "DEMO-RLY-2CO-24"
 TAGS = ("K1", "K2", "K3", "K4")
 MEMBERS = (("K2", "A1"), ("K2", "A2"), ("K3", "A1"), ("K3", "A2"))
 # `name=` of K2 becomes its key and so its port handles; its tag (the designation) is unchanged.
-# Found by scratch search (claude-tools/probe_net_tree_rename.py) over K1 to K4 with suffixes a-h:
+# Found by a scratch search over K1 to K4 with suffixes a-h:
 # only this rename of K2 flips the tie on the base router.
 RENAMED = "K2a"
 
@@ -70,7 +70,7 @@ def _member_ports(model: Model) -> list[End]:
 
 
 def test_renaming_an_item_leaves_every_route_of_a_net_group_byte_identical() -> None:
-    """D15: an item's name feeds only handles, so renaming K2 moves no wire of the net.
+    """An item's name feeds only handles, so renaming K2 moves no wire of the net.
 
     The rename changes the handles of K2's two ports and so the order the four ports sort in. On
     the handle-ordered tree that changes which of the two equally long links between K2's and K3's

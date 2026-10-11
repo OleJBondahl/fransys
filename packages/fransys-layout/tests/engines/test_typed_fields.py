@@ -1,8 +1,8 @@
-"""The engine writes the typed `SymbolPlacement` and `LinkMarker` fields, never ext keys (F1).
+"""The engine writes the typed `SymbolPlacement` and `LinkMarker` fields, never ext keys.
 
 A placement's `view`, `ports` and `sides`, and a marker's `box_x`, `lead`, `stub_extra`,
 `via_x`, `via_y` and `star`, are written from the stage results; the generic `ext` carries
-nothing (an off stub's text is derived, `off_stub_text`, F1 part 3d).
+nothing (an off stub's text is derived, `off_stub_text`).
 """
 
 import dataclasses
@@ -28,7 +28,7 @@ from fransys_model.vocab.tables import items, ports
 
 @cache
 def _laid_out(*, second_location: bool = False, wired: bool = False):
-    """The cabinet laid out; `wired` gives `W1`'s cores as wires, not a line (HL1)."""
+    """The cabinet laid out; `wired` gives `W1`'s cores as wires, not a line."""
     model = freeze((wired_cabinet if wired else build_cabinet)(second_location=second_location))
     results, _ = stage_results(model, read_inputs(model))
     return model, results, write_layout(model, results, write_keys(model))
@@ -100,7 +100,7 @@ def test_a_pin_view_placement_has_the_pin_view() -> None:
 def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawing_order() -> None:
     """The generic box of the cabinet (not an item view) writes its own port list.
 
-    The wired cabinet's lamp box: drawn as `W1`'s line end (HL1), its names are in plain order.
+    The wired cabinet's lamp box: drawn as `W1`'s line end, its names are in plain order.
     """
     _, results, out = _laid_out(wired=True)
     generic = _generic_box(results)
@@ -113,7 +113,7 @@ def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawin
 
 
 def test_a_box_port_standing_north_is_written_before_the_one_south_of_it() -> None:
-    """RR-O4: at one x the drawing order is N then S, whatever the names sort to."""
+    """At one x the drawing order is N then S, whatever the names sort to."""
     _, results, _ = _laid_out()
     box = dataclasses.replace(_generic_box(results), geometry=generic_box_geometry(("b", "a")))
     names, sides, _ = _placement_fields(box, PlacementView.ITEM)
@@ -166,7 +166,7 @@ def test_marker_fields_come_from_the_stage_marker(changes: dict, expected: tuple
 
 
 def _line_stub(marker) -> bool:
-    """HL18: a leaving line's one stub, written from `results.lines`, not a stage marker."""
+    """A leaving line's one stub, written from `results.lines`, not a stage marker."""
     return marker.key[3] == "line_stub"
 
 
@@ -228,8 +228,8 @@ def test_a_pair_marker_writes_the_marker_fields_and_carries_no_ext() -> None:
 def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
     _, results, out = _laid_out(second_location=True)
     written = list(dict(out.tables["layout.link_marker"]).values())
-    # D9 (F7): the reference on the stub's port is that one marker, an off stub; a reference of
-    # a turned pair (M12) stands alone on a port with no stub
+    # The reference on the stub's port is that one marker, an off stub; a reference of
+    # a turned pair stands alone on a port with no stub
     assert {m.star for m in written} == {StarKind.OFF, StarKind.BRANCH, StarKind.REF}
     stub_ports = {m.port for m in written if m.star is StarKind.OFF}
     assert not [m for m in written if m.star is StarKind.REF and m.port in stub_ports]
@@ -245,7 +245,7 @@ def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
 
 
 def test_a_cabinet_with_only_reference_and_branch_stars_carries_no_marker_ext() -> None:
-    """Besides its line's stubs (HL18: `W1` leaves its lamp's page), the cabinet has stars only."""
+    """Besides its line's stubs (`W1` leaves its lamp's page), the cabinet has stars only."""
     _, results, out = _laid_out()
     written = list(dict(out.tables["layout.link_marker"]).values())
     stubs = [m for m in written if _line_stub(m)]

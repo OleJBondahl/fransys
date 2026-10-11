@@ -1,4 +1,4 @@
-"""WP17 tests beyond the goldens: the two designs are healthy and say what they set out to.
+"""Tests beyond the goldens: the two designs are healthy and say what they set out to.
 
 The golden files pin every byte; these tests pin the reasons: no validator complains, the
 PLC bindings are the ones the pass would choose, the numbering pass handles the unnumbered
@@ -181,7 +181,7 @@ def test_the_l1_terminals_share_a_jumper_group_and_the_others_have_none() -> Non
 
 
 def test_a_sensor_is_on_the_board_net_through_the_harness_core_and_the_mate() -> None:
-    """design/examples.md 11: from `B10`, through core 1 and the mate, to the
+    """From `B10`, through core 1 and the mate, to the
     board-edge pin `J1:1`."""
     model = _design("harness_board")
     net = net_of(model, _port(model, "b10", "signal", "signal"))

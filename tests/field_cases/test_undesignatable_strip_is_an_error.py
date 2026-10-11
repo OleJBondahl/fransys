@@ -10,7 +10,7 @@ died on a bare `SchemaError` ("the item has no designation") when it first print
 The rule: such a strip is an ERROR finding that names the strip key and says why (no terminals,
 or the codes that disagree); `fr.write` raises `BuildErrors` and writes nothing.
 
-The decision that fixes it: model-0134 (numbering), FLOATING-STRIP-ERROR.
+The decision that fixes it: model-0134 (numbering).
 """
 
 import tempfile

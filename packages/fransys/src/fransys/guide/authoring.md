@@ -467,6 +467,9 @@ unit's interface above its outline, and `fr.BELOW` below it. It takes a field of
 returns. An interface with no harness line ignores it. `d.layout.profile(hide_unused_pins=True)` hides
 every box-drawn pin with no conductor, and a function with none, on the drawings. Every list keeps
 every pin. The house value is off.
+The design's profile governs the design's own pages only. A unit sets its own in its body. A unit with none uses the house values, never its parent's.
+
+`d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)` draws the chain in a column next to the element `k1.main`, joined by short horizontals with no marker. Wire the chain and the element first: the chain's two end nets must be two nets of that element, or `AuthorError` names them.
 
 ```python
 import fransys as fr

@@ -1,6 +1,6 @@
 """The PLC list is a wiring list (model-0065): `plc.csv` names where each channel is wired.
 
-Release-read fixes spec, acceptance 5 on the export side: the facade's `plc.csv` (the whole
+On the export side, the facade's `plc.csv` (the whole
 model's and a unit's own) has the header `channel_designation,signal,wired_to,signal_name`, names
 no field device, and holds the far end of the wire on a channel's pin, printed in the list's
 context (a unit's own list reads it short, the whole model's by its location path).

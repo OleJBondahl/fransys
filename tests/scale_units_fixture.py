@@ -79,8 +79,8 @@ def scale_design(parts, n):
 def build_scale(n, *, with_document: bool = False) -> fr.BuildResult:
     """`fr.build` of the `n`-instance design, the facade call the worked example uses.
 
-    `with_document=False` (the default): no document, the shape MODEL-BUILD acceptance 6 (the
-    examples' largest build with its documents left out) measures -- decision 0037 (PS1) then
+    `with_document=False` (the default): no document, the shape of the scale check (the
+    examples' largest build with its documents left out) measures -- decision 0037 then
     runs no layout at all, so this default must never change. `with_document=True` adds a
     `layout_trigger_document()` draft (`_model_build_cover.py`): for a caller that
     specifically needs this design laid out (`tests/test_scale_call_counts.py`'s own

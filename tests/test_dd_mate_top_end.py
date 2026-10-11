@@ -1,4 +1,4 @@
-"""Deep-dive D8 and D11 (amended 2026-09-24, acceptance 10): a cross-unit mate stands at an end of
+"""A cross-unit mate stands at an end of
 its parent's column, and the boundary pin's replica stands outside the column at that end.
 
 At a column's bottom end the replica is below the parent-side pin, the plug's wire leaves upward,
@@ -6,7 +6,7 @@ the outline's top edge is on the mating line and the outline stands below the pl
 top end (the chain enters from the unit edge, so the column runs down from the pin) the replica
 is above the parent-side pin, the plug is turned so its wire leaves downward into the column, the
 outline's bottom edge is on the mating line and the outline stands above the plug; its title is
-below-left when free, else above-left inside D4's top room (page y >= 0).
+below-left when free, else above-left inside the top room (page y >= 0).
 
 Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
 The mating line is the middle of the plug's and the replica's origins: the two symbols are turned

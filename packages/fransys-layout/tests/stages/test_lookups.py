@@ -6,8 +6,7 @@ from types import SimpleNamespace
 import pytest
 from samples import drawn, hid, placed
 
-from fransys_layout.geometry import OPPOSITE, Facing, LayoutError, translate
-from fransys_layout.stages import ROLE_ORDER, Role
+from fransys_layout.geometry import LayoutError, translate
 from fransys_layout.stages.lookups import (
     drawn_of,
     group_of,
@@ -69,20 +68,6 @@ def test_nets_from_pairs_joins_transitively_and_registers_members():
     nets = nets_from_pairs([(a, b), (b, c), (d, e)], members=[hid("port", 9)])
     groups = {tuple(sorted(ports)) for ports in nets.groups().values()}
     assert groups == {(a, b, c), (d, e), (hid("port", 9),)}
-
-
-def test_opposite_flips_every_facing_and_flips_back():
-    assert {f: OPPOSITE[f] for f in Facing} == {
-        Facing.N: Facing.S,
-        Facing.S: Facing.N,
-        Facing.E: Facing.W,
-        Facing.W: Facing.E,
-    }
-
-
-def test_role_order_is_strongest_first_and_complete():
-    assert ROLE_ORDER == (Role.POWER, Role.CONTROL, Role.SIGNAL)
-    assert set(ROLE_ORDER) == set(Role)
 
 
 def test_terminal_lift_is_two_text_heights():

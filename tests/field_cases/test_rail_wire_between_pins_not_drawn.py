@@ -7,7 +7,7 @@ an overload relay's pass-through A2 wired to a bridged 0 V terminal row of the s
 The bug: the wire J2:1 to K1:11 was drawn with the 24 V bar standing in its middle, and the pump
 page's A2 and its 0 V terminal were two ends of a same-page `#n` reference pair.
 
-The rule (CONVENTIONS-V06 V3, decision layout-0099): between two pins that both draw a rail's
+The rule (decision layout-0120): between two pins that both draw a rail's
 power symbol no wire is drawn; each pin draws its own symbol, and the wire list keeps the wire. A
 pin wired to a rail terminal draws the symbol, with no reference pair left.
 """

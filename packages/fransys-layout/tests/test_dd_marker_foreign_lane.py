@@ -1,8 +1,8 @@
-"""DD-CHAIN-LANE (layout-0076): a marker box never covers the lane of another function's port.
+"""A marker box never covers the lane of another function's port (layout-0076).
 
 Function 1's `out` (facing S) stands straight above function 2's `in` (facing N, the marker's
 port); the marker's box in the gap between them would stand across function 1's only exit lane.
-The markers' call (`place_markers`, WIRE-X56 in S20) takes no place on that lane.
+The markers' call (`place_markers`) takes no place on that lane.
 """
 
 from dataclasses import replace

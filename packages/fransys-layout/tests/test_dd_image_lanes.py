@@ -1,6 +1,6 @@
-"""EF-D part 2: undo tests for D7's "a lane that carries an image reserves the image's width".
+"""Undo tests for "a lane that carries an image reserves the image's width".
 
-K1 and K2 are two 2CO relays whose coils are wired in parallel (D1: K2's coil is K1's side
+K1 and K2 are two 2CO relays whose coils are wired in parallel (K2's coil is K1's side
 element, in K1's row one lane over), each with contacts elsewhere, so each has a contact image.
 The items carry no group, so their tags are short and the lane pitch is narrower than an image.
 An image is a `CROSS_REFERENCE` label with slot "contacts", read as `test_dd_contact_images.py`
@@ -33,7 +33,7 @@ def _parallel_coils() -> tuple[Model, tuple[Finding, ...]]:
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(
-        title="EF-D",
+        title="Image lanes",
         number="P-6",
         customer="Example Co",
         revision=1,
@@ -59,7 +59,7 @@ def _parallel_coils() -> tuple[Model, tuple[Finding, ...]]:
 
 
 def test_the_two_coils_stand_in_one_row_and_each_image_under_its_own_lane() -> None:
-    """D7: K2's coil is K1's side element (one row, two lanes); each image is at its coil's wire."""
+    """K2's coil is K1's side element (one row, two lanes); each image is at its coil's wire."""
     model, _ = _parallel_coils()
     k1, k2 = (_placement(model, tag, "coil") for tag in ("K1", "K2"))
     assert k1.page == k2.page
@@ -72,7 +72,7 @@ def test_the_two_coils_stand_in_one_row_and_each_image_under_its_own_lane() -> N
 
 
 def test_the_next_lane_stands_clear_of_an_image_and_no_text_overlaps() -> None:
-    """D7: an image ends left of the next lane's leftmost text; the images do not overlap."""
+    """An image ends left of the next lane's leftmost text; the images do not overlap."""
     # UNDO: stages/images.py `reserved`: drop the width from the grown keep-out
     # (no `beside` box: `grow_keepout(one.geometry, [below])` only).
     model, findings = _parallel_coils()
@@ -90,7 +90,7 @@ def test_the_next_lane_stands_clear_of_an_image_and_no_text_overlaps() -> None:
 
 
 def test_the_widest_place_text_covers_every_page_and_column() -> None:
-    """D7, D13: whatever page a contact lands on, its place text is no wider than the reserve's."""
+    """Whatever page a contact lands on, its place text is no wider than the reserve's."""
     # UNDO: stages/_image_widest.py `widest_where`: `range(1, 2)` for the pages.
     height = DEFAULT_PROFILE.text_height
     columns = DEFAULT_SHEET.frame_columns
@@ -104,7 +104,7 @@ def test_the_widest_place_text_covers_every_page_and_column() -> None:
 
 
 def test_a_drawn_image_is_never_wider_than_the_width_reserved_for_it() -> None:
-    """D7, D13: the reserve measures the widest place text, so no drawn image outgrows it."""
+    """The reserve measures the widest place text, so no drawn image outgrows it."""
     # UNDO: stages/images.py `image_width`: `return 2 * (column + 2 * profile
     # .marker_padding) - 8` (the reserve is then narrower than the image `_box` rebuilds).
     checked = 0

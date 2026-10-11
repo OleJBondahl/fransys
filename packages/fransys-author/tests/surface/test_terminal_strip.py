@@ -1,4 +1,4 @@
-"""EA9 core: `terminal_strip` and `X1[3]`, explicit numbers only."""
+"""`terminal_strip` and `X1[3]`, explicit numbers only."""
 
 from typing import NamedTuple
 

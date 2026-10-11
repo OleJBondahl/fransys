@@ -1,4 +1,4 @@
-"""WP2 tests: `kernel.ids` (ROADMAP WP2, design/kernel-records.md 5.2)."""
+"""Tests: `kernel.ids`."""
 
 from itertools import permutations
 from typing import Any

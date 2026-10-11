@@ -1,4 +1,4 @@
-"""HL11 to HL13 and HL20: a middle unit's stripped columns, groups, bands and folded outline."""
+"""A middle unit's stripped columns, groups, bands and folded outline."""
 
 from dataclasses import dataclass, replace
 from fractions import Fraction
@@ -103,7 +103,7 @@ def test_a_far_end_reaches_only_on_its_interfaces_drawing_set() -> None:
         cols("far2", (40,), None, there),
     ]
     reach, (kept,) = line_reach(columns, [unit])
-    # J2's line reaches no column of +A: it leaves (HL18), its own column its group's anchor
+    # J2's line reaches no column of +A: it leaves, its own column its group's anchor
     assert reach == {J1: (key("far1"),), J2: (key("j2"),)}
     assert kept.interfaces == (j1, replace(j2, leaving=True))
 
@@ -111,7 +111,7 @@ def test_a_far_end_reaches_only_on_its_interfaces_drawing_set() -> None:
 def test_a_unit_whose_only_line_reaches_nowhere_is_a_middle_unit_with_a_leaving_line() -> None:
     """Condition 1: reached or not, a unit with a line interface is a middle unit.
 
-    UNDO: P2b's rule, a unit with no reached line interface is dropped from the units.
+    UNDO: a unit with no reached line interface is dropped from the units.
     """
     here, there = hid("aspect_node", 1), hid("aspect_node", 2)
     j2 = interface(J2, views=[hid("function", 20)], far=[hid("function", 40)])
@@ -213,7 +213,7 @@ def test_a_folded_outline_lies_between_its_bands_with_its_boxes_on_it() -> None:
 
 
 def test_two_groups_stand_side_by_side_and_a_shared_column_stays_with_the_first() -> None:
-    """HL20: B shares column b with A (a line between them); b stays in A's band, B goes right."""
+    """B shares column b with A (a line between them); b stays in A's band, B goes right."""
     first = fold_group()
     unit = MiddleUnit(OTHER, (interface(J3, share=1),), frozenset(), title="-U2")
     reach = {J3: (key("c"), key("b"))}
@@ -242,7 +242,7 @@ def test_shape_boxes_lists_each_outline_then_its_title_then_its_boxes() -> None:
 
 
 def test_a_split_group_draws_on_each_page_only_the_interfaces_its_columns_reach() -> None:
-    """HL21 ruling (a): the page holding only b draws J2's box; J1 and its plug go with a.
+    """Ruling (a): the page holding only b draws J2's box; J1 and its plug go with a.
 
     UNDO: `_edges` keeps every line interface of the unit on every page.
     """
@@ -279,7 +279,7 @@ def test_a_cut_group_has_no_outline_on_the_page_of_its_upper_band() -> None:
 
 
 def test_a_cut_group_draws_every_line_interface_on_the_page_of_its_lower_band() -> None:
-    """T3: J1 reaches only column a, on the page before, yet its box and plug stand here.
+    """J1 reaches only column a, on the page before, yet its box and plug stand here.
 
     UNDO: `_edges` filters a cut group's interfaces by the columns they reach.
     """
@@ -341,7 +341,7 @@ def test_tall_groups_names_the_units_whose_one_shape_passes_the_page_unless_held
     }
     assert tall_groups(pages_of(shape), high, index) == {}
     assert tall_groups(pages_of(replace(shape, held=True)), low, index) == {}
-    assert tall_groups(pages_of(shape, shape), low, index) == {}  # T7: split over pages
+    assert tall_groups(pages_of(shape, shape), low, index) == {}  # split over pages
 
 
 def test_tall_groups_leaves_out_a_group_recut_would_hold() -> None:

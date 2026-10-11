@@ -1,7 +1,7 @@
-"""`scripts/ci_gates.py` (AW14, GATE-SPEED): gates run side by side, print as ordered blocks.
+"""`scripts/ci_gates.py`: gates run side by side, print as ordered blocks.
 
 Synthetic one-liner gates stand in for the real ones; the real `just ci` wiring is proved by the
-GATE-SPEED probe (a lint error fails it with ruff's block printed).
+probe (a lint error fails it with ruff's block printed).
 """
 
 import importlib.util

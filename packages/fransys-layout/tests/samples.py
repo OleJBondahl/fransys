@@ -1,4 +1,4 @@
-"""Hand-made, invented stage inputs shared by the acceptance tests (design/package-layout.md 9).
+"""Hand-made, invented stage inputs shared by the acceptance tests.
 
 Stage tests build their inputs here, not from the model and not from the symbol
 library, so a stage can be tested alone. All data is invented.
@@ -213,7 +213,7 @@ def placed(number: int, *, x: int, y: int, page: int = 1, name: str = "a") -> Pl
 
 
 def built_links(connections, net_groups, placed_functions, drawn_functions, **options):
-    """`references.links` (S9's decisions), then what `texts` builds of them on the placed pages.
+    """`references.links` (the decisions), then what `texts` builds of them on the placed pages.
 
     Returns `(decisions, markers, cross-reference requests, findings)`: each marker decision
     built into its `LinkMarker` and each tag-echo cut into its `CROSS_REFERENCE` request, both
@@ -246,13 +246,13 @@ def built_links(connections, net_groups, placed_functions, drawn_functions, **op
 
 
 def standing(scene: MarkerScene, off: OffStubs) -> OffStubs:
-    """`off` with S14's stands and column order read off `scene`'s hand-built placements."""
+    """`off` with the stands and column order read off `scene`'s hand-built placements."""
     stands, order = stands_of(scene.seats, scene.drawn)
     return dataclasses.replace(off, stands=stands, order=order)
 
 
 def built(scene: MarkerScene, decisions: tuple, *, wired: frozenset = frozenset()) -> tuple:
-    """What `texts` builds of `decisions` on `scene`'s hand-built placements (S9)."""
+    """What `texts` builds of `decisions` on `scene`'s hand-built placements."""
     placed_functions = cast("tuple[PlacedFunction, ...]", scene.seats)
     return link_markers(
         decisions,
@@ -264,7 +264,7 @@ def built(scene: MarkerScene, decisions: tuple, *, wired: frozenset = frozenset(
 
 
 def stands_of(placed_functions: tuple, drawn_functions: tuple) -> tuple:
-    """S14's inputs read off hand-built placements, as `place` would stack those pages.
+    """Inputs read off hand-built placements, as `place` would stack those pages.
 
     `(stands, order)`: each drawn port's `StackedPort` by `(port, (set, page))` (its y as the
     offset, its x, its facing), and each page's columns left to right by their first placed x.

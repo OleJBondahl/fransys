@@ -1,4 +1,4 @@
-"""R2 and R4 (layout deep dive, rulings), on invented pages.
+"""Page tidying on invented pages.
 
 R2: a tag a marker's stub runs through moves to the mirror side of its own symbol.
 R4: one item tag per item per page, on its main view; a separately drawn function of the

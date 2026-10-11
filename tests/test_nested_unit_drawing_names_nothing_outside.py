@@ -1,9 +1,8 @@
-"""A nested unit's own drawing names nothing outside it (unit documents U2, deep-dive D10;
-owner rule 2026-09-24).
+"""A nested unit's own drawing names nothing outside it (owner rule 2026-09-24).
 
 The units worked example's nested board (`demo-io-board`, prefix `pump1`) sits in the
 cabinet (`demo-pump-cabinet`, prefix `pump1`), which sits at `+ER+C1` beside a harness
-`-WH1` and field wiring to `+FLD`. The board's own pages end at the boundary box (`-X1`, HL6):
+`-WH1` and field wiring to `+FLD`. The board's own pages end at the boundary box (`-X1`):
 no stub label, no marker, no text naming the harness, a location or the cabinet. The
 cabinet's page draws the boundary at the black box: the board's `-X1` inside the outline,
 the harness plug `-WH1-P1` outside it on the mating line.
@@ -104,8 +103,8 @@ def _outside_hits(texts):
 
 
 def test_the_boards_own_pages_name_nothing_outside_and_end_at_the_boundary_pin() -> None:
-    """U2/D10: no text of the board's pages names anything outside it; the page ends at `-X1`.
-    HL6 (layout-0155): `-X1` is at the harness line's end, so it is one box, not two pin tags."""
+    """No text of the board's pages names anything outside it; the page ends at `-X1`.
+    layout-0155: `-X1` is at the harness line's end, so it is one box, not two pin tags."""
     # UNDO: give the board's set a `star=off` stub (`_texts` gains "-WH1 -> +ER+C1-X1:1") and
     #   the hit set is no longer empty
     pages = _pages_of(_MODEL, _BOARD)
@@ -116,7 +115,7 @@ def test_the_boards_own_pages_name_nothing_outside_and_end_at_the_boundary_pin()
     lines = connector_box_lines(_MODEL, box.function, unit=_BOARD)
     assert lines[0] == "-X1"
     assert len(box.texts) == len(lines)
-    assert box.cells == ()  # a unit interface box has no cells (HL5)
+    assert box.cells == ()  # a unit interface box has no cells
     texts += list(lines)
     assert "-K1" in texts  # and holds the board's own content
     assert not [m for m in layout_of(_MODEL, LinkMarker).values() if m.page in page_ids]
@@ -133,10 +132,10 @@ def test_the_cabinets_own_set_does_name_outside_things_so_the_collector_can_fail
 
 
 def test_the_cabinets_page_draws_the_boards_boundary_pin_mated_to_the_harness_plug() -> None:
-    """U2/D10: on the cabinet's page the board's `-X1` is a black box inside the board's
+    """On the cabinet's page the board's `-X1` is a black box inside the board's
     outline, and the harness plug it mates stands outside on the mating line, box over box.
     A mate has no route: it is the adjacency of the plug and the boundary connector.
-    HL6 (layout-0155): both are at the harness line's end, so each is one connector box."""
+    layout-0155: both are at the harness line's end, so each is one connector box."""
     # UNDO: layout stops replicating the boundary function on the parent's page (no black-box
     #   box) and `boundary` below is empty
     model = _MODEL
@@ -149,7 +148,7 @@ def test_the_cabinets_page_draws_the_boards_boundary_pin_mated_to_the_harness_pl
     (boundary,) = _boxes_of_unit_items(model, _BOARD, {outline.page})
     assert functions(model)[boundary.function].key[-3:-1] == ("X1", "fn")
     assert len(boundary.texts) == len(connector_box_lines(model, boundary.function, unit=_CABINET))
-    assert boundary.cells == ()  # a box mated to a plug has no cells (HL5)
+    assert boundary.cells == ()  # a box mated to a plug has no cells
     assert outline.x <= boundary.x
     assert boundary.x + boundary.width <= outline.x + outline.width
     assert outline.y <= boundary.y
@@ -230,8 +229,8 @@ def _own_set_stubs(model, unit):
 
 
 def test_a_nested_units_boundary_pin_mated_to_a_top_level_harness_draws_no_stub() -> None:
-    """D10/U2: the nested unit's own set ends at the pin: no off-stub for the mate's cable.
-    HL6 (layout-0155): X1 is at the harness line's end, so it is drawn there as one box."""
+    """The nested unit's own set ends at the pin: no off-stub for the mate's cable.
+    layout-0155: X1 is at the harness line's end, so it is drawn there as one box."""
     # UNDO: engine.py `_off_inputs`: `outward = black_box_sets(...)` becomes `outward = {}` (the
     #   stub "-W3 <- +FLD-P2:1 2" is drawn in the nested unit's own set)
     model, unit = _build_boundary_mated_to_top_level_harness(nested=True)
@@ -241,12 +240,12 @@ def test_a_nested_units_boundary_pin_mated_to_a_top_level_harness_draws_no_stub(
     (x1_box,) = _boxes_of_unit_items(model, unit, page_ids)  # X1 is drawn there, as a box
     assert "X1" in functions(model)[x1_box.function].key
     assert len(x1_box.texts) == len(connector_box_lines(model, x1_box.function, unit=unit))
-    assert x1_box.cells == ()  # a unit interface box has no cells (HL5)
+    assert x1_box.cells == ()  # a unit interface box has no cells
     assert _own_set_stubs(model, unit) == []
 
 
 def test_a_top_level_units_boundary_pin_keeps_the_stub_of_the_mated_cable() -> None:
-    """D10: the top-level unit's own set keeps "-W3 <- +FLD..." (passes before and after)."""
+    """The top-level unit's own set keeps "-W3 <- +FLD..." (passes before and after)."""
     # UNDO: fransys_layout/engines/schematic/read/offstubs.py: `boundary_offs` skips every unit
     model, unit = _build_boundary_mated_to_top_level_harness(nested=False)
     stubs = _own_set_stubs(model, unit)
@@ -258,8 +257,8 @@ def test_a_top_level_units_boundary_pin_keeps_the_stub_of_the_mated_cable() -> N
 def test_the_parent_page_draws_the_stub_of_a_top_level_cable_mated_at_a_nested_boundary_pin() -> (
     None
 ):
-    """D10: for a nested unit the stub stands on the parent's page, at the black box's pin.
-    HL6, HL18: X1 there is a box at W3's line end, and the line leaves it in one stub."""
+    """For a nested unit the stub stands on the parent's page, at the black box's pin.
+    X1 there is a box at W3's line end, and the line leaves it in one stub."""
     # UNDO: engines/schematic/_lines.py `_pages`: drop the plug's boxes (`found.update(...
     #   world.boxes.get(end.plug, {})))` -> `pass`): the line stands on no page, no stub there
     model, unit = _build_boundary_mated_to_top_level_harness(nested=True)

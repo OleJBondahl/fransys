@@ -193,7 +193,7 @@ def _cable_facet(item):
 
 
 def _cable_part(name):
-    """A cable-product `Part` (RW4b, model-0108): the fact that makes an item a cable.
+    """A cable-product `Part` (model-0108): the fact that makes an item a cable.
 
     No `Conductor` of kind `core` names this fixture's cable items as carrier, so
     `core_colours=()` is correct here.

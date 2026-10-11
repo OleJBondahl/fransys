@@ -1,4 +1,4 @@
-"""CONTACT-STATES CS4 fallback (Acceptance 8): the voltage to earth stands only with no pair.
+"""Fallback: the voltage to earth stands only with no pair.
 
 An IT 400 V supply with N: L1, L2, L3 at 230 V max and 0/120/240 degrees, N at 0 V. An IT phase
 stands 398.4 V to earth. A function with a rail pair in some state checks at its pairs, even

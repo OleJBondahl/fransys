@@ -312,7 +312,7 @@ def test_a_port_not_in_the_model_carries_nothing() -> None:
 def test_the_conditional_rail_table_reaches_what_port_rails_reaches_on_the_demo_plants(
     build: Callable[[], tuple[Model, dict]],
 ) -> None:
-    """CS4: every contact of an item moves together, so no demo path needs one item in two
+    """Every contact of an item moves together, so no demo path needs one item in two
     states, and the table `rail_pairs` reads holds exactly the pairs of `port_rails`."""
     model, _ = build()
     table = {port: frozenset(rails) for port, rails in closure._rail_states(model).at_port.items()}

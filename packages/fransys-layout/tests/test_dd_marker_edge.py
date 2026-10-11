@@ -1,15 +1,15 @@
-"""D14 (M2) and D17 (deep-dive spec, GOLDEN-FIX 2 part 3c): a marker box never shifts the page.
+"""A marker box never shifts the page.
 
 A marker box that would cross a side edge of the content box stands against that edge instead,
 its stub still at its port and still over the box, and grows away from the edge (layout-0068).
-A star reference at the first column has its box past the left edge (LD3 (c): the sheet's fixed
+A star reference at the first column has its box past the left edge (the sheet's fixed
 reference width); its list growing taller from two entries to three (a branch added on another
-page) must not move the whole page (`shift_pages`, C22b).
+page) must not move the whole page (`shift_pages`).
 
 The page test builds three lamps' star (`H1` is the reference on page 1, `H2`, `H3`, `H4` the
 branches on pages 2 to 4) and adds the third branch. The unit tests state the rule at the left
-and right edge, for the markers' call (`place_markers`, S20 M5) and for a run box (C21, M8), and
-the cases where the box stays (a shared box, M3; a neighbour in the way).
+and right edge, for the markers' call (`place_markers`) and for a run box, and
+the cases where the box stays (a shared box; a neighbour in the way).
 """
 
 from dataclasses import replace
@@ -91,12 +91,12 @@ def _page_one(result):
 
 
 def test_a_reference_list_that_grows_at_the_first_column_moves_nothing() -> None:
-    """D17 with M1 and M3: page 1's placements are the same with two branches and with three.
+    """Page 1's placements are the same with two branches and with three.
 
-    The reference at the first column is vertical (M1): the sheet's fixed reference width
-    (LD3 (c)) is its length, 42 G, and the third branch adds one line side by side (M3), one
+    The reference at the first column is vertical: the sheet's fixed reference width
+    is its length, 42 G, and the third branch adds one line side by side, one
     `text_height` wider. Vertical, it no longer crosses the left edge (it stood at x=0 once the
-    centred box did, D14 M2), so it stays centred on its stub inside the content box and the
+    centred box did), so it stays centred on its stub inside the content box and the
     page does not shift for it.
 
     # UNDO: `stand.vertical` returns False (the box is horizontal: `ref.vertical` fails, and the
@@ -105,13 +105,13 @@ def test_a_reference_list_that_grows_at_the_first_column_moves_nothing() -> None
     before, after = _star(third_branch=False), _star(third_branch=True)
     (placed_before, ref_before), (placed_after, ref) = _page_one(before), _page_one(after)
     assert ref.vertical
-    # C2 (model-0139): the third branch makes four ends, so the box prints the first target and
+    # Model-0139: the third branch makes four ends, so the box prints the first target and
     # a count, one line where two branches printed two: one `text_height` narrower, still no move
     assert ref_before.width - ref.width == PROFILE.text_height
-    assert ref.height == ref_before.height  # LD3 (c): the fixed reference length
+    assert ref.height == ref_before.height  # The fixed reference length
     assert ref.box_x is None  # centred on its stub ...
     assert ref.x - ref.width // 2 >= 0  # ... and inside the content box
-    assert placed_after == placed_before  # D17: no placement of page 1 moved
+    assert placed_after == placed_before  # No placement of page 1 moved
     assert ref.x == ref_before.x  # the port did not move
     assert not [f for f in after.findings if f.severity is Severity.ERROR]
     assert "OUT_OF_CONTENT_BOX" not in {f.code for f in after.findings}
@@ -154,7 +154,7 @@ def _placed_alone(*markers: LinkMarker) -> tuple[tuple[LinkMarker, ...], tuple]:
 
 
 def test_a_box_crossing_the_right_edge_stands_against_it_and_grows_left() -> None:
-    """D14 M2 at the right edge: the box ends at `content_width`, its stub is still over it.
+    """At the right edge: the box ends at `content_width`, its stub is still over it.
 
     The markers' call (`marker_row._tier`) offers the box against either content edge among its
     places, and `Space.holds` refuses the centred home that crosses it.
@@ -184,7 +184,7 @@ def test_a_box_inside_the_content_box_is_left_alone() -> None:
 
 
 def test_a_box_flush_with_the_content_edge_stays_and_one_unit_past_it_moves() -> None:
-    """The content box is closed (D2 P3): a box ending exactly at `content_width`, or starting at
+    """The content box is closed: a box ending exactly at `content_width`, or starting at
     x=0, is inside it and stays; one unit past either edge is not, and moves.
 
     # UNDO: `Space.holds` tests `contains` with a strict comparison (the flush box moves)
@@ -203,7 +203,7 @@ def test_a_box_flush_with_the_content_edge_stays_and_one_unit_past_it_moves() ->
 
 def _pump_motor(*, wide: bool):
     """Motor `M1` at the first column (x=16 before any shift): ports U and W a lane apart (16 G)
-    are the hubs of two stars, so their vertical reference boxes stand side by side (M1).
+    are the hubs of two stars, so their vertical reference boxes stand side by side.
 
     U's list names one page ("/2.1", 17 G), or two when `wide` (a branch added in group G3, 31 G).
     W's list names three pages (45 G). Groups G2 to G4 are pages of their own (eight lamps each).
@@ -238,12 +238,12 @@ def _x_span(ref) -> tuple[int, int]:
 
 
 def test_a_reference_row_that_grows_wider_moves_no_placement_of_its_page() -> None:
-    """D17 with M1 and C2: U's list growing by a branch never shifts the page.
+    """U's list growing by a branch never shifts the page.
 
-    The reference boxes of the pins U and W (16 G apart) are vertical (M1) and as long as the
-    sheet's fixed reference width (LD3 (c)). U's two-line box (two targets, printed in full)
+    The reference boxes of the pins U and W (16 G apart) are vertical and as long as the
+    sheet's fixed reference width. U's two-line box (two targets, printed in full)
     leaves W room beside it. With the added branch U has three targets and prints the first
-    and a count (C2, model-0139): one line, narrower, so W still stands beside it. W's own
+    and a count (model-0139): one line, narrower, so W still stands beside it. W's own
     three targets print one line. No box leaves the content box and none is left without a
     place. The tier (`stub_extra`) a wider box would force is tested in `test_marker_row`.
 
@@ -254,16 +254,12 @@ def test_a_reference_row_that_grows_wider_moves_no_placement_of_its_page() -> No
         _motor_page(before),
         _motor_page(after),
     )
-    assert placed_after == placed_before  # D17: nothing on the page moved
+    assert placed_after == placed_before  # Nothing on the page moved
     for refs in (refs_before, refs_after):
         assert set(refs) == {"U", "W"}
-        assert all(
-            m.vertical and m.height == refs["U"].height for m in refs.values()
-        )  # M1, LD3 (c)
+        assert all(m.vertical and m.height == refs["U"].height for m in refs.values())
         assert min(_x_span(m)[0] for m in refs.values()) >= 0  # inside the content box
-    assert (
-        refs_before["U"].width - refs_after["U"].width == PROFILE.text_height
-    )  # C2: two lines, one
+    assert refs_before["U"].width - refs_after["U"].width == PROFILE.text_height  # Two lines, one
     for refs in (refs_before, refs_after):
         assert refs["U"].stub_extra == refs["W"].stub_extra == 0
         assert _x_span(refs["U"])[1] <= _x_span(refs["W"])[0]  # side by side
@@ -304,9 +300,9 @@ def _star_marker(number: int, x: int, width: int) -> LinkMarker:
 
 
 def test_a_row_at_the_left_edge_stands_inside_the_content_box_each_over_its_own_stub() -> None:
-    """D14 M2 for a row: stubs at 16 and 48, lists 45 G wide each. Centred, the first box would
+    """For a row: stubs at 16 and 48, lists 45 G wide each. Centred, the first box would
     stand at x=-6 (past the edge) and the second at x=26 and they would meet once the first is
-    against the edge (0..45). The greedy walk (S20) puts the first (the port nearer the edge) at
+    against the edge (0..45). The greedy walk puts the first (the port nearer the edge) at
     the edge and the second, which has no place beside it, one tier out at its own centred x:
     both inside the content box, each over its own stub with half a grid of margin, no two
     boxes meeting, nothing reported.
@@ -328,7 +324,7 @@ def test_a_row_at_the_left_edge_stands_inside_the_content_box_each_over_its_own_
 
 
 def test_a_marker_box_past_the_left_edge_moves_no_placement() -> None:
-    """D14 M2 (C): `shift_pages` measures placements, keep-outs and labels only. A marker box
+    """`shift_pages` measures placements, keep-outs and labels only. A marker box
     at x=-25 and nothing else past the edge: the function at (64, 160) and the marker stay.
     """
     # UNDO: `shift_pages`: `boxes += [label.box for label in first]` -> `boxes += [label.box
@@ -342,7 +338,7 @@ def test_a_marker_box_past_the_left_edge_moves_no_placement() -> None:
 
 
 def _off_run(*xs: int) -> tuple[LinkMarker, ...]:
-    """C21: off stubs of one cable to one far end, functions 1.. placed at `xs` on one row: a
+    """Off stubs of one cable to one far end, functions 1.. placed at `xs` on one row: a
     run that draws one shared box (`off_markers`), its stubs at the ports of the functions."""
     numbers = range(1, len(xs) + 1)
     scene = MarkerScene(
@@ -371,7 +367,7 @@ def _run_is_over_its_box(run: tuple[LinkMarker, ...]) -> None:
 
 
 def test_an_off_stub_run_at_the_left_edge_stands_against_it_and_grows_right() -> None:
-    """D14 M2, C21, M8: the run's box spans half a pin pitch before the first stub to half a pitch
+    """The run's box spans half a pin pitch before the first stub to half a pitch
     after the last (two pins at least, 48 G), centred across them. With stubs at 8 and 32 that
     starts left of x=0. It stands at x=0, grows right, every stub of the run still over it; it
     did not change size.
@@ -384,7 +380,7 @@ def test_an_off_stub_run_at_the_left_edge_stands_against_it_and_grows_right() ->
     width = run[0].box.width
     assert (first.at.x + last.at.x) // 2 - width // 2 < 0  # premise: centred, it crosses the edge
     assert first.box.x == 0
-    assert width == 6 * WIRING_GRID  # M8: two pin pitches of 3 G, unchanged by the move
+    assert width == 6 * WIRING_GRID  # Two pin pitches of 3 G, unchanged by the move
     _run_is_over_its_box(run)
 
 
@@ -404,7 +400,7 @@ def test_an_off_stub_run_at_the_right_edge_stands_against_it_and_grows_left() ->
 
 def test_an_off_stub_run_inside_the_content_box_stays_centred_across_its_stubs() -> None:
     """A run that crosses no edge keeps its centred place, half a pitch past the outer stubs
-    (M8): the clamp moves nothing else.
+    The clamp moves nothing else.
 
     # UNDO: `stand.run_box`: the centred `left` -> `left = 0` (every run at the left edge)
     """
@@ -416,9 +412,9 @@ def test_an_off_stub_run_inside_the_content_box_stays_centred_across_its_stubs()
 
 
 def test_a_shared_box_stays_and_a_box_that_would_meet_it_goes_one_tier_out() -> None:
-    """A C21 run's shared box has one place, where it stands, even past the edge (nothing moves
+    """A run's shared box has one place, where it stands, even past the edge (nothing moves
     it alone). A box whose edge place (x=0..45) would meet a neighbour's shared box at 40..70
-    takes the next free place instead (S20): its stub's tier one box height out, at the edge.
+    takes the next free place instead: its stub's tier one box height out, at the edge.
 
     # UNDO: `_row` drops `marker.shared_box or` from its one-place test (the shared box moves)
     """

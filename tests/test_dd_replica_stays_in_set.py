@@ -1,4 +1,4 @@
-"""DD-REPLICA-SET (layout-0076): a terminal replica never leaves its terminal's drawing set.
+"""Per layout-0076, a terminal replica never leaves its terminal's drawing set.
 
 A strip terminal `T` in group GA at location FIELD, a connector `k` in group GB at location CAB,
 wired `k.1` to `T.inner`, and `T` wired elsewhere too (a cable core from a device at a third
@@ -6,7 +6,7 @@ location to `T.external`). FIELD and CAB are under one top location BOX. `replic
 to ask for a replica of `T` beside `k` (another drawing set), so the wire was drawn there, `links`
 cut nothing, and `T`'s home in its own set kept an inner port that nothing covered:
 `CONNECTION_NOT_DRAWN`. Now nothing is asked across locations and `links` draws the wire with a
-marker pair. With FIELD and CAB at the top level (C21) it is a pair of off stubs.
+marker pair. With FIELD and CAB at the top level (layout-0090) it is a pair of off stubs.
 
 Built through the `fransys` facade from `examples/demo-parts`; read from `layout.*` records.
 """
@@ -88,7 +88,7 @@ def test_a_terminal_wired_across_two_leaf_locations_gets_a_marker_pair_and_no_re
 
 
 def test_the_same_wire_across_top_level_locations_is_a_pair_of_off_stubs() -> None:
-    """Control (C21): two top-level locations draw the wire with off stubs, and it builds."""
+    """Control: two top-level locations draw the wire with off stubs, and it builds."""
     # No UNDO: a control that passes on the base.
     result = _build(under_box=False)
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []

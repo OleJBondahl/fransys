@@ -1,4 +1,4 @@
-"""PS1/PS2: `build`/`check`/`write` run layout only when the frozen model holds a `Document`.
+"""`build`/`check`/`write` run layout only when the frozen model holds a `Document`.
 
 Layout exists only to draw documents. With no document there is nothing to draw, so `fr.build`
 returns the numbered, validated model unlaid, with no layout call attempted -- no flag, no new
@@ -32,7 +32,7 @@ def _spy(monkeypatch, module, name):
 
 
 def _spy_every_gated_call(monkeypatch):
-    """One call list per function PS1/PS2 gates, keyed by name."""
+    """One call list per function the gate covers, keyed by name."""
     calls = {name: _spy(monkeypatch, _layout_need, name) for name in _GATED_PIPELINE_NAMES}
     calls["fransys_pdf.check"] = _spy(monkeypatch, fransys_pdf, "check")
     calls["fransys_render.check"] = _spy(monkeypatch, fransys_render, "check")
@@ -81,7 +81,7 @@ def test_document_build_runs_layout_and_render(tmp_path, monkeypatch):
     parts = fr.parts("demo_parts")
     # `_document_build` is deterministic (same digest every call, decision 0054); clear the
     # memo so this call is a real draw, not a hit left warm by an earlier test in this process
-    # (no autouse clear covers this any more, FIX1).
+    # (no autouse clear covers this any more).
     pipeline._svgs_cache.cache_clear()
     calls = _spy_every_gated_call(monkeypatch)
 
@@ -137,7 +137,7 @@ def test_no_document_build_does_not_raise_but_a_document_build_does(tmp_path, mo
 
     # `_document_build` is deterministic (same digest every call, decision 0054); clear the
     # memo so the raise below fires from a real (gated) call, not a hit that skips the gated
-    # function entirely and so never raises (no autouse clear covers this any more, FIX1).
+    # function entirely and so never raises (no autouse clear covers this any more).
     pipeline._svgs_cache.cache_clear()
     with pytest.raises(AssertionError, match="ran on a build that should have skipped it"):
         _document_build(parts, tmp_path)

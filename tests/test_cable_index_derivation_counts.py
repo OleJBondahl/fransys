@@ -1,4 +1,4 @@
-"""Speed guard for RW4: `derive.reports`'s two cable indexes build once per digest.
+"""Speed guard: `derive.reports`'s two cable indexes build once per digest.
 
 `_cable_products_by_part` and `_cores_by_cable` (`derive/reports.py`) replace two per-call
 O(n) scans (`_product_colours`'s linear search over every `CableProductFacet`, and

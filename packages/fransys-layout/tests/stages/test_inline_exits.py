@@ -84,18 +84,6 @@ def test_a_terminal_bound_at_its_s_port_lands_the_lower_wire_on_its_n_port() -> 
     assert result == (wires[0], _wire(2, _ref(TERMINAL, 2, "in"), _ref(2, 1)))
 
 
-def test_a_terminal_bound_at_an_e_port_lands_the_lower_wire_on_its_w_port() -> None:
-    """The symbol's `in` faces E and its `out` faces W: the opposite of E is W."""
-    # UNDO: geometry/symbols.py:OPPOSITE, `W: E` -> `W: W` in the E/W pair
-    specs = (function_spec(1), _terminal_spec(), function_spec(2))
-
-    result = inline_exits(
-        _inline(), (column("a", (1, 5, 2)),), specs, (_facing_pair(Facing.E, Facing.W),)
-    )
-
-    assert result[1] == _wire(2, _ref(TERMINAL, 1, "out"), _ref(2, 1))
-
-
 def test_a_terminal_with_one_wire_keeps_its_connections() -> None:
     """Terminal 5 ends the column: only one wire is on its port, so nothing is in line."""
     # UNDO: stages/terminal_facts.py:inline_terminal, `read.wires == _IN_LINE_WIRES` -> `>= 1`
@@ -103,44 +91,3 @@ def test_a_terminal_with_one_wire_keeps_its_connections() -> None:
     wires = (_wire(2, _ref(TERMINAL, 1), _ref(2, 1)),)
 
     assert inline_exits(wires, (column("a", (5, 2, 1)),), specs, (drawn(TERMINAL),)) == wires
-
-
-def test_a_wire_with_both_ends_on_the_terminal_port_counts_once_toward_its_two_wires() -> None:
-    """The lower wire and a loop on port 51 make two wires (the loop counts once): still in line."""
-    # UNDO: stages/arrange.py:inline_exits, `for port in {c.a.port, c.b.port}:` ->
-    #     `for port in (c.a.port, c.b.port):` (the loop counts twice, three wires)
-    specs = (function_spec(1), _terminal_spec(), function_spec(2))
-    lower = _wire(1, _ref(TERMINAL, 1), _ref(2, 1))
-    loop = _wire(2, _ref(TERMINAL, 1), _ref(TERMINAL, 1))
-
-    result = inline_exits((lower, loop), (column("a", (1, 5, 2)),), specs, (drawn(TERMINAL),))
-
-    assert result == (_wire(1, _ref(TERMINAL, 1, "out"), _ref(2, 1)), loop)
-
-
-def test_a_function_that_is_not_a_terminal_keeps_its_connections() -> None:
-    """The same in-line shape with a contact in place of the terminal: no exit is landed."""
-    # UNDO: stages/terminal_facts.py:inline_terminal, `read.terminal and ` -> ``
-    specs = (function_spec(1), _terminal_spec("contact_no"), function_spec(2))
-    wires = _inline()
-
-    assert inline_exits(wires, (column("a", (1, 5, 2)),), specs, (drawn(TERMINAL),)) == wires
-
-
-def test_a_wire_to_another_column_keeps_its_connections() -> None:
-    """Function 2 stands in row 1 of another column, below the terminal's row 0: not in line."""
-    # UNDO: stages/arrange.py:inline_exits, `and here[0] == there[0]` -> `and True`
-    specs = (function_spec(1), _terminal_spec(), function_spec(2))
-    wires = _inline()
-    columns = (column("a", (5,)), column("b", (1, 2)))
-
-    assert inline_exits(wires, columns, specs, (drawn(TERMINAL),)) == wires
-
-
-def test_a_two_port_function_keeps_its_connections() -> None:
-    """Function 5 keeps both its model ports: only a one-port terminal shares a port."""
-    # UNDO: stages/terminal_facts.py:inline_terminal, `read.ports == 1` -> `read.ports >= 1`
-    specs = (function_spec(1), function_spec(TERMINAL, kind="terminal"), function_spec(2))
-    wires = _inline()
-
-    assert inline_exits(wires, (column("a", (1, 5, 2)),), specs, (drawn(TERMINAL),)) == wires

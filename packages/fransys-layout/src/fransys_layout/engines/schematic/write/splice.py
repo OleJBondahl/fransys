@@ -4,6 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
 from fransys_layout.engines.schematic.write import produced_by
+from fransys_layout.engines.schematic.write.homes import Homes, drawn_by
 from fransys_layout.geometry import LayoutError
 from fransys_model.kernel import Origin, evolve
 from fransys_model.layout import (
@@ -77,7 +78,7 @@ def spliced(
     put = {record.id: record for record in _derived(base) if record.id not in gone}
     for part in parts:
         put.update(part)
-    put.update(_repaged(put, *_drawn_by(base, gone, parts)))
+    put.update(_repaged(put, drawn_by(base, gone, runs, parts)))
     sets = sorted(
         (record for record in put.values() if isinstance(record, DrawingSet)),
         key=lambda one: (rank.get(one.unit, 0), one.number),
@@ -88,61 +89,28 @@ def spliced(
     return evolve(base, remove=derived_layout_ids(base), put=list(put.values()), origin=origin)
 
 
-def _drawn_by(
-    base: Model, gone: Mapping[Id[Any], Record], parts: Iterable[Mapping[Id[Any], Record]]
-) -> tuple[dict[Id[Any], frozenset[Id[Page]]], dict[Id[Any], tuple[Id[Page], int]]]:
-    """Per label, the pages its own run owns; per port, the page and `x` the owning run draws it at.
-
-    A run names the pages and columns of its own drawing sets only; the base run owns the rest.
-    A port takes the first end that its own run puts on a page that run owns.
-    """
-    kept = frozenset(one.id for one in layout_of(base, Page).values() if one.id not in gone)
-    sources: list[tuple[Mapping[Id[Any], Record], frozenset[Id[Any]]]] = [
-        (layout_of(base, Label), kept)
-    ]
-    sources += [
-        (part, frozenset(i for i, one in part.items() if isinstance(one, Page))) for part in parts
-    ]
-    owner: dict[Id[Any], frozenset[Id[Page]]] = {}
-    homes: dict[Id[Any], tuple[Id[Page], int]] = {}
-    for records, own in sources:
-        for one in records.values():
-            if isinstance(one, Label):
-                owner[one.id] = own
-                for end in one.partners:
-                    if end.page in own:
-                        homes.setdefault(end.port, (end.page, end.x))
-    return owner, homes
-
-
-def _repaged(
-    put: Mapping[Id[Any], Record],
-    owner: Mapping[Id[Any], frozenset[Id[Page]]],
-    homes: Mapping[Id[Any], tuple[Id[Page], int]],
-) -> dict[Id[Any], Record]:
+def _repaged(put: Mapping[Id[Any], Record], homes: Homes) -> dict[Id[Any], Record]:
     """A label's partner on a page its own run does not own, moved to where the owning run draws it.
 
     A page's id follows its first drawn group, so another profile can rename the page and shift
-    the columns. A port no owning run puts a label end on raises.
+    the columns. A port its owning run draws on no page a label of that run names raises.
     """
     found: dict[Id[Any], Record] = {}
     for one in put.values():
         if not isinstance(one, Label):
             continue
-        moved = tuple(
-            end if end.page in owner[one.id] else _homed(end, homes) for end in one.partners
-        )
+        run, own = homes.owner[one.id]
+        moved = tuple(end if end.page in own else _homed(end, homes, run) for end in one.partners)
         if moved != one.partners:
             found[one.id] = replace(one, partners=moved)
     return found
 
 
-def _homed(
-    end: CrossReferencePartner, homes: Mapping[Id[Any], tuple[Id[Page], int]]
-) -> CrossReferencePartner:
-    """`end` on the page and `x` the run that owns its port's page draws it at."""
-    if end.port not in homes:
+def _homed(end: CrossReferencePartner, homes: Homes, run: int) -> CrossReferencePartner:
+    """`end` on the page and `x` the run that owns its page draws its port at."""
+    owning = homes.run_of[run][end.page]
+    if (owning, end.port) not in homes.drawn:
         msg = f"cross-reference partner {end.port} is on a replaced page its unit's run lacks"
         raise LayoutError(msg)
-    page, x = homes[end.port]
+    page, x = homes.drawn[owning, end.port]
     return replace(end, page=page, x=x)

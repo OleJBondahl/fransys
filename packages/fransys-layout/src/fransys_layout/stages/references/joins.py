@@ -7,7 +7,7 @@ columns of one page at any distance, facing the same way, that leave their pins 
 turn test, `turns_back`) and that the
 one offset function `join_y` puts on one y -- an LD9 run at the columns' ends (N at their first
 rows, S at their last), which `place` aligns, or neighbours anywhere in their columns already
-on one y with no column moved (designer 2026-09-27). An LD9 run it cannot align keeps its
+on one y with no column moved (ruling 2026-09-27). An LD9 run it cannot align keeps its
 references and gives `JOIN_UNALIGNED` (`WARNING`), and so does a wire from an end of a joined run to
 a neighbour its turn test skipped (V6, layout-0099), or a turned wire with an end under an
 attached part (I4). A port's row, offset and facing are `place`'s

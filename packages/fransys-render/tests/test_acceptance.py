@@ -2,7 +2,7 @@
 
 Reads the layout package's golden laid-out cabinets through `conftest.py`'s
 `cabinet_laid_out`/`cabinet_narrow_laid_out` fixtures (JSON loaded with the model's own
-`loads`); this file never imports `fransys_layout` (spec section 5). The spec's own four
+`loads`); this file never imports `fransys_layout`. The spec's own four
 acceptance items for render are here, each its own test: every page of both goldens renders
 and its SVG parses as XML; every TAG designation, marker text and wire label of a page
 appears in that page's SVG; two calls give equal bytes; a model loaded from shuffled JSON

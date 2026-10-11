@@ -8,10 +8,10 @@ from enum import Enum
 from functools import cache
 from typing import TYPE_CHECKING
 
-from graphical_symbols import Orientation as LibraryOrientation
-from graphical_symbols import UnknownSymbolError as LibraryUnknownSymbolError
-from graphical_symbols import body_box, keepout_box, orient, repeat, slot_box
-from graphical_symbols.model import nodes_of
+from symdef import Orientation as LibraryOrientation
+from symdef import UnknownSymbolError as LibraryUnknownSymbolError
+from symdef import body_box, keepout_box, orient, repeat, slot_box
+from symdef.model import nodes_of
 
 from electrical_symbols import (
     GENERIC_BOX_KEY,
@@ -53,9 +53,9 @@ __all__ = (  # re-exported by `geometry`: the generic box's home is `electrical_
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from graphical_symbols import Box as LibraryBox
-    from graphical_symbols import Point as LibraryPoint
-    from graphical_symbols import Symbol
+    from symdef import Box as LibraryBox
+    from symdef import Point as LibraryPoint
+    from symdef import Symbol
 
 
 @register_enum

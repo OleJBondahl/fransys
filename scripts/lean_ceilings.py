@@ -2,7 +2,7 @@
 
 The one shared home for every other LEAN-GATES part's ceilings-file logic. `ceilings.toml` (a
 root-level tracked file, not written by this module) holds scalar `[limits]`, one ceilings table
-per check section (site -> its recorded ceiling), and a designer-ruled `[exempt]` table (site ->
+per check section (site -> its recorded ceiling), and a ruled `[exempt]` table (site ->
 reason). `check` and `lower` share one contract: `measured` holds only sites already over the
 plain numeric limit -- a checker never puts a within-limit site in `measured`.
 
@@ -52,7 +52,7 @@ LIMIT_NOTES: dict[str, str] = {
 class CeilingsFile:
     """A parsed `ceilings.toml`.
 
-    Scalar limits, one ceilings table per check section, and the designer-ruled exempt table.
+    Scalar limits, one ceilings table per check section, and the ruled exempt table.
     `sections` holds only the sections actually present in the file (empty sections are simply
     absent, never an empty table).
     """

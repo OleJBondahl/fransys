@@ -8,7 +8,7 @@ from fransys_layout.stages.references import BlackBoxReads
 from fransys_layout.stages.replicate import UnitBoundary
 from fransys_model.derive import black_box_unit
 from fransys_model.vocab.membership import boundary, units
-from fransys_model.vocab.tables import functions, items, unused_boundaries
+from fransys_model.vocab.tables import functions, items
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.unit_index import unit_index
 
@@ -65,7 +65,9 @@ def unit_boundaries(model: Model) -> tuple[UnitBoundary, ...]:
         parent_key = unit_table[unit.parent].key if unit.parent is not None else None
         found.append(
             UnitBoundary(
-                functions=boundary(model, unit_id), parent=unit.parent, parent_key=parent_key
+                functions=boundary(model, unit_id),
+                parent=unit.parent,
+                parent_key=parent_key,
             )
         )
     return tuple(found)
@@ -101,11 +103,6 @@ def black_box_reads(model: Model, nested: frozenset[Id[Any] | None]) -> BlackBox
 def boundary_edge_set(model: Model) -> frozenset[Id[Any]]:
     """Every unit's boundary functions, in one set (`own_set_texts`)."""
     return frozenset(f for unit in units(model) for f in boundary(model, unit))
-
-
-def unused_functions(model: Model) -> frozenset[Id[Any]]:
-    """The functions declared unused boundaries (W3): they draw no pin."""
-    return frozenset(one.function for one in unused_boundaries(model).values())
 
 
 def shared_boundaries(model: Model) -> frozenset[Id[Any]]:

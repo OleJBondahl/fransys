@@ -79,7 +79,7 @@ def project(  # noqa: PLR0913 -- one keyword per invented fact, each independent
     The printed revision date is the `Revision` entry's (`revision_entry(..., unit=None)`), not
     the project's: add one to the model where a test needs a date.
 
-    `notice` (spec page-frame R11.4, decision model-0051) defaults to `""`, `Project`'s own
+    `notice` (decision model-0051) defaults to `""`, `Project`'s own
     default -- an empty title-block notice cell, the same "invented default" every other
     field here already follows.
     """
@@ -109,7 +109,7 @@ def location(label: str, description: str) -> AspectNode:
 
 
 def function_node(label: str, description: str) -> AspectNode:
-    """A `FUNCTION` aspect node, standing in for a page's own `=` group (spec R3, R11.7)."""
+    """A `FUNCTION` aspect node, standing in for a page's own `=` group."""
     key = ("function_node", label)
     return AspectNode(
         id=make_id(AspectNode, key),
@@ -167,7 +167,7 @@ def unit(  # noqa: PLR0913 -- one keyword per invented fact, as `document()` bel
     title: str = "",
     number: str = "",
 ) -> Unit:
-    """A `Unit` instance (units spec U1), standing in for a nested cabinet, board or the like.
+    """A `Unit` instance, standing in for a nested cabinet, board or the like.
 
     `title` and `number` (UNIT-ID I1) default to `""`, `UnitRelease`'s own default. The unit's
     release (version 1) is remembered here and added to the model by `model()` below.
@@ -199,7 +199,7 @@ def revision_entry(  # noqa: PLR0913 -- one keyword per invented fact, as `docum
     checked: str = "",
     approved: str = "",
 ) -> Revision:
-    """A `Revision` history entry (units spec U4): of `unit`'s release, or the project (`None`)."""
+    """A `Revision` history entry: of `unit`'s release, or the project (`None`)."""
     key = ("revision", key_part)
     return Revision(
         id=make_id(Revision, key),
@@ -296,7 +296,7 @@ def layout_page(
 ) -> Page:
     """A `layout.page` of `drawing_set`, naming `sheet_format` (or the house sheet).
 
-    `groups` (spec page-frame R3/R11.7's page-title rule) defaults to `()`, unchanged.
+    `groups` defaults to `()`, unchanged.
     """
     key = ("page", key_part)
     return Page(
@@ -312,7 +312,7 @@ def layout_page(
 
 
 def page_group(*, node: AspectNode, index: int) -> PageGroup:
-    """One `=` group drawn on a page (spec page-frame R3/R11.7), `node`'s own aspect node."""
+    """One `=` group drawn on a page, `node`'s own aspect node."""
     return PageGroup(group=node.id, index=index)
 
 
@@ -329,8 +329,8 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
 ) -> Document:
     """A `Document` record about `subject` (a location node, an item or a unit).
 
-    `subject=None` is the `SYSTEM` preset's own case (units spec U3): none of the three.
-    `logo` (spec page-frame R11.3, decision model-0051) defaults to `None`, `Document`'s own
+    `subject=None` is the `SYSTEM` preset's own case: none of the three.
+    `logo` (decision model-0051) defaults to `None`, `Document`'s own
     default -- an empty title-block logo cell, the same "invented default" every other field
     here already follows.
     """
@@ -351,7 +351,7 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
 
 
 def symbol_placement(key_part: str, *, function: Id[Function], page: Id[Page]) -> SymbolPlacement:
-    """A `layout.symbol_placement` of `function` on `page` (units spec U1's black-box reader)."""
+    """A `layout.symbol_placement` of `function` on `page` (the black-box reader)."""
     key = ("symbol_placement", key_part)
     return SymbolPlacement(
         id=make_id(SymbolPlacement, key),
@@ -377,7 +377,7 @@ def route(  # noqa: PLR0913 -- one keyword per invented fact, as `document()` ab
     conductor: Id[Conductor] | None = None,
     net: Id[Net] | None = None,
 ) -> Route:
-    """A `layout.route` on `page` between ports `a` and `b` (STEP 4 addition's conductor check)."""
+    """A `layout.route` on `page` between ports `a` and `b` (the conductor check)."""
     key = ("route", key_part)
     return Route(
         id=make_id(Route, key),
@@ -395,7 +395,7 @@ def route(  # noqa: PLR0913 -- one keyword per invented fact, as `document()` ab
 def link_marker_pair(
     key_part: str, *, page_a: Id[Page], port_a: Id[Port], page_b: Id[Page], port_b: Id[Port]
 ) -> tuple[LinkMarker, LinkMarker]:
-    """A paired `layout.link_marker` (one signal severed by a page boundary, spec R6-adjacent).
+    """A paired `layout.link_marker` (one signal severed by a page boundary).
 
     Real pairing matters: `freeze()` resolves `partner` as an ordinary reference.
     """
@@ -433,7 +433,7 @@ def link_marker_pair(
 
 
 def place(key_part: str, *, item: Id[Item], node: Id[AspectNode]) -> Placement:
-    """A `Placement` of `item` at `node` (spec P9 terminal-strip/board location scoping)."""
+    """A `Placement` of `item` at `node` (terminal-strip/board location scoping)."""
     key = ("placement", key_part)
     return Placement(id=make_id(Placement, key), key=key, item=item, node=node)
 
@@ -441,7 +441,7 @@ def place(key_part: str, *, item: Id[Item], node: Id[AspectNode]) -> Placement:
 def terminal(
     key_part: str, *, strip: Id[Item], group: str, index: int
 ) -> tuple[Item, TerminalFacet]:
-    """An unused terminal `group:index`, child of `strip` (spec P9 TERMINAL_LIST)."""
+    """An unused terminal `group:index`, child of `strip` (TERMINAL_LIST)."""
     key = ("item", key_part)
     child = Item(
         id=make_id(Item, key),
@@ -466,7 +466,7 @@ def terminal(
 def bridged_terminal(
     key_part: str, *, strip: Id[Item], group: str, index: int
 ) -> tuple[Item, TerminalFacet, Function, Port]:
-    """A terminal `group:index` with one real `internal` port, child of `strip` (spec T2).
+    """A terminal `group:index` with one real `internal` port, child of `strip`.
 
     `terminal()` above builds an unused terminal with no function at all; a `jumper`
     conductor needs a real port to land on (`conductor()` below, `kind=ConductorKind.JUMPER`),
@@ -545,7 +545,7 @@ def plc_channel(
 
 
 def pcb_facet(key_part: str, *, subject: Id[Part], revision: str = "A") -> PcbFacet:
-    """A `pcb` facet on `subject`, marking its item a board (spec P9 CONNECTOR_LIST)."""
+    """A `pcb` facet on `subject`, marking its item a board (CONNECTOR_LIST)."""
     key = ("pcb_facet", key_part)
     return PcbFacet(id=make_id(PcbFacet, key), key=key, subject=subject, revision=revision)
 
@@ -609,8 +609,8 @@ def conductor(
     kind: ConductorKind = ConductorKind.WIRE,
     carrier: Id[Item] | None = None,
 ) -> Conductor:
-    """A conductor between ports `a` and `b` (spec P9 WIRE_LABEL_LIST); `carrier` is the cable
-    item for a `CORE` conductor (spec P8 CONTENTS "Ends"), `None` for a loose wire or jumper."""
+    """A conductor between ports `a` and `b` (WIRE_LABEL_LIST); `carrier` is the cable
+    item for a `CORE` conductor (CONTENTS "Ends"), `None` for a loose wire or jumper."""
     key = ("conductor", key_part)
     return Conductor(id=make_id(Conductor, key), key=key, a=a, b=b, kind=kind, carrier=carrier)
 
@@ -622,7 +622,7 @@ def core_facet(key_part: str, *, subject: Id[Conductor], index: int) -> CoreFace
 
 
 def wire_facet(key_part: str, *, subject: Id[Conductor], label: str | None) -> WireFacet:
-    """A `wire` facet on `subject`, carrying `label` (spec P9 WIRE_LABEL_LIST)."""
+    """A `wire` facet on `subject`, carrying `label` (WIRE_LABEL_LIST)."""
     key = ("wire_facet", key_part)
     return WireFacet(
         id=make_id(WireFacet, key),
@@ -638,7 +638,7 @@ def wire_facet(key_part: str, *, subject: Id[Conductor], label: str | None) -> W
 def pin(
     key_part: str, designation: str, *, unit: Id[Unit] | None = None
 ) -> tuple[Item, Function, Port]:
-    """A numbered item with one function `f` and one port `1` (spec P9 WIRE_LABEL_LIST ends)."""
+    """A numbered item with one function `f` and one port `1` (WIRE_LABEL_LIST ends)."""
     item_key = ("item", key_part)
     subject = Item(
         id=make_id(Item, item_key),

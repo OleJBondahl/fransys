@@ -7,7 +7,7 @@ a field switch. Both items have only functions with no IEC symbol of their own.
 The bug (v0.5.0 look): the supply's pins alternated top and bottom, its input split over both
 sides, and the module drew each wired channel as a column end of its own, apart from its box (the
 drawn-ends work, decision layout-0099, made each channel a pin of the box).
-The rule (spec CONVENTIONS-V06 V1, decision layout-0099): one box per item, the side order AC
+The rule (decision layout-0099): one box per item, the side order AC
 above DC, then power above signal, then load above supply; the first-ranked functions take the
 top side and every other function the bottom.
 """

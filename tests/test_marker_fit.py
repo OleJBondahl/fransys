@@ -51,7 +51,7 @@ _GOLDEN_DIR = (
     Path(__file__).resolve().parent.parent / "packages" / "fransys-layout" / "tests" / "golden"
 )
 
-# Every `*_laid_out.json` golden, and its own marker count, named explicitly (spec X5's "never
+# Every `*_laid_out.json` golden, and its own marker count, named explicitly (the "never
 # iterated silently" pattern): a future golden that adds markers and forgets this dict fails the
 # coverage check below instead of being silently skipped.
 _EXPECTED_MARKER_COUNTS: dict[str, int] = {

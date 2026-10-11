@@ -39,7 +39,10 @@ IGNORED_DIRS = {
 ALLOWED_LINES = {
     ("packages/fransys-model/src/fransys_model/kernel/ids.py", '"schematika-model:id"'),
     ("packages/fransys-kicad/src/fransys_kicad/netlist.py", '"schematika_kicad"'),
-    ("docs/specs/2026-09-26-consumer-guide.md", "external consumers of schematika, so when"),
+    (
+        "docs/archive/specs/2026-09-26-consumer-guide.md",
+        "external consumers of schematika, so when",
+    ),
     (
         "security-allowlist.toml",
         ":packages/schematika-model/tests/kernel/test_record.py:generic-api-key:",

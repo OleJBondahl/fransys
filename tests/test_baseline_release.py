@@ -3,7 +3,7 @@
 Builds one small design once (root CLAUDE.md's speed-work rule, a module fixture): a board
 unit with its own boundary connector and internal wiring (`_board_unit`, similar shape to the
 units worked example's `io_board`), nested once inside a cabinet unit (`_cabinet_unit`), each
-with its own document (`fr.document`, the unit itself as subject -- designer ruling LD6, since
+with its own document (`fr.document`, the unit itself as subject -- ruling LD6, since
 a location inside a unit has no drawing of its own). L4's five checks
 (`REVISION_ALREADY_RELEASED`, `RELEASE_NESTED_UNRELEASED`, `BASELINE_DIFFERS`,
 `INTERFACE_NOT_BUMPED`, `RELEASE_NO_HISTORY`) are exercised below, each with a clean twin next
@@ -314,7 +314,7 @@ def test_release_atomicity_leaves_no_target_and_no_temp_dir_on_a_rename_failure(
 
 
 # -- L4: REVISION_ALREADY_RELEASED for the system release (unit=None) ------------------------
-# Spec amended 2026-09-27: applies to the system exactly as to a unit (a released revision's
+# Amended 2026-09-27: applies to the system exactly as to a unit (a released revision's
 # folder never changes), with no subject to name (`subjects=()`, since there is no unit id).
 
 
@@ -472,7 +472,7 @@ def _board_with_spare(s, *, unused):
     """Like `_board_unit`, plus a second boundary connector `X2` (the mate-swap scenario).
 
     `unused` names which connector ("X1" or "X2") has no real connection in this build and is
-    declared `unused` (units spec U6, `d.unused(...)`'s own pattern in
+    declared `unused` (`d.unused(...)`'s own pattern in
     `test_units_worked_example.py`): the mate-swap probe below mates the cabinet's `P1` to
     whichever one is NOT named here.
     """
@@ -785,7 +785,7 @@ def _module_unit(s, *, wire_colour="BU"):
     `_nested_unit_rows`'s own `min(...)` over `unit_own_roots` needs at least one item of the
     module's own to name an instance, so the module owns a small part-less carrier item
     beside the board it nests (advisor-flagged gap, fixed here). The module also declares the
-    board's own `X1` its own boundary too (`UNIT_BOUNDARY_BYPASSED`, units spec U4: a function
+    board's own `X1` its own boundary too (`UNIT_BOUNDARY_BYPASSED`: a function
     that crosses out of an intermediate unit must be that unit's own boundary as well, not
     only the innermost one's), so the cabinet's mate to `X1` can cross both unit walls.
     """
@@ -800,7 +800,7 @@ def _module_unit(s, *, wire_colour="BU"):
 
 @pytest.fixture(scope="module")
 def two_level_scenario(tmp_path_factory):
-    """Board nested in a module nested in a cabinet (spec step 3's own two-level case).
+    """Board nested in a module nested in a cabinet (a two-level case of its own).
 
     Releasing the cabinet after an inner board change gives `BASELINE_DIFFERS` naming the
     board itself, though the module's own listing (which names the board only by name,
@@ -993,7 +993,7 @@ def _partless_tagged_item(parts, *, revision, tag):
 
 def test_a_partless_tagged_items_changed_tag_gives_designation_moved(tmp_path_factory):
     """A part-less item's own tag counts too (`code=None` in its `NumberingItem`, per the
-    2026-09-27 designer ruling): `numbering_pins.pins` includes it, so its tag change between
+    2026-09-27 ruling): `numbering_pins.pins` includes it, so its tag change between
     two releases is caught the same as a part-carrying item's.
     """
     parts = fr.parts("demo_parts")
@@ -1614,13 +1614,13 @@ def test_a_noop_rerelease_leaves_the_change_files_mtimes_unchanged(second_board_
     assert (second_target / "changes.csv").stat().st_mtime_ns == csv_mtime
 
 
-# -- L5: fr.verify (baseline spec L5, decision 0051) -----------------------------------------
+# -- L5: fr.verify (decision 0051) -----------------------------------------
 # `released` and `colour_twin`, above, are step 3's own module-scope fixtures (root CLAUDE.md's
 # speed rule: a test over 1 s shares its build), reused here rather than building a third pair.
 
 
 def test_verify_after_the_fixtures_own_releases_is_empty(released):
-    """Acceptance (baseline spec L5): with the board and cabinet both released and nothing
+    """Acceptance (L5): with the board and cabinet both released and nothing
     changed since, `verify` reports nothing at all.
     """
     result, into, _board_target, _cabinet_target, _board_scope, _cabinet_scope = released
@@ -1646,7 +1646,7 @@ def test_verify_after_the_colour_change_gives_one_baseline_differs_for_the_board
 def test_verify_gives_one_baseline_differs_per_board_instance_not_per_release(
     tmp_path_factory,
 ):
-    """Acceptance (spec step 4's own words, "one `BASELINE_DIFFERS` per board instance"): two
+    """Acceptance ("one `BASELINE_DIFFERS` per board instance"): two
     cabinets, each nesting its own instance of the SAME `baseline-board` release (equal
     content, so they dedupe onto one `UnitRelease`, `_cabinet_unit`'s own two-call pattern), one
     release each (releasing through either instance covers the shared release identity). Both

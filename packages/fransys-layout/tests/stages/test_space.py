@@ -24,6 +24,7 @@ from fransys_layout.stages.space import (
     obstacle_index,
     run_admitted,
     step_admitted,
+    unowned,
 )
 
 _BOX = Box(x=16, y=16, width=24, height=16)
@@ -855,3 +856,8 @@ def test_a_step_tests_only_the_obstacles_in_its_cells(monkeypatch: pytest.Monkey
     # UNDO: `CellIndex.meeting` returns every item (the count then follows the page)
     assert _touches_for_a_step(5, monkeypatch) == 1
     assert _touches_for_a_step(50, monkeypatch) == 1
+
+
+def test_unowned_gives_each_box_a_shape_no_lane_is_exempt_from() -> None:
+    boxes = [Box(x=0, y=0, width=2, height=2), Box(x=4, y=0, width=2, height=2)]
+    assert unowned(boxes) == (Shape(owner=None, box=boxes[0]), Shape(owner=None, box=boxes[1]))

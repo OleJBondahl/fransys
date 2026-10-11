@@ -399,7 +399,7 @@ def test_two_nested_locations_under_one_parent_stay_two_drawing_sets() -> None:
 
 
 def test_a_column_whose_cells_share_a_unit_takes_it() -> None:
-    """All cells drawn for one unit make a column of that unit (units spec U1)."""
+    """All cells drawn for one unit make a column of that unit."""
     unit = hid("unit", 1)
     specs = (
         dataclasses.replace(function_spec(1), unit=unit),
@@ -540,7 +540,9 @@ def _discover(
     *,
     rank_of: dict[Id[Any], int] | None = None,
 ) -> tuple[Column, ...]:
-    return discover_chains(ChainRecords(specs, _drawn_for(specs), wires, (), ()), rank_of=rank_of)
+    return discover_chains(
+        ChainRecords(specs, _drawn_for(specs), wires, (), ()), rank_of=rank_of, key_order={}
+    )
 
 
 def _functions_of(columns: tuple[Column, ...]) -> list[list[Id[Any]]]:
@@ -661,7 +663,7 @@ def test_two_parallel_chains_through_a_multi_pole_function_are_one_bundle_column
         _wire(4, (multi, 3), (load_b, 0)),  # pole 1, out -> load B
     )
     drawns = (*_drawn_for((feed_a, feed_b)), multi_drawn, *_drawn_for((load_a, load_b)))
-    (column,) = discover_chains(ChainRecords(specs, drawns, wires, (), ()))
+    (column,) = discover_chains(ChainRecords(specs, drawns, wires, (), ()), key_order={})
     cells = {cell.function: cell for cell in column.cells}
     assert len(column.cells) == len(cells) == 5  # the contact is one cell, not two
     assert {f: (c.index, c.side) for f, c in cells.items()} == {
@@ -682,9 +684,9 @@ def test_discovery_is_independent_of_the_order_of_its_inputs() -> None:
     columns. Two chains (1-2 and 3-4-5) so the columns' own order is exercised too."""
     specs = tuple(function_spec(n) for n in (1, 2, 3, 4, 5))
     wires = (connection(2, 1, 2), connection(4, 3, 4), connection(5, 4, 5))
-    forward = discover_chains(ChainRecords(specs, _drawn_for(specs), wires, (), ()))
+    forward = discover_chains(ChainRecords(specs, _drawn_for(specs), wires, (), ()), key_order={})
     backward = discover_chains(
-        ChainRecords(specs[::-1], _drawn_for(specs)[::-1], wires[::-1], (), ())
+        ChainRecords(specs[::-1], _drawn_for(specs)[::-1], wires[::-1], (), ()), key_order={}
     )
     assert forward == backward
     assert sorted(_functions_of(forward)) == [
@@ -812,7 +814,8 @@ def test_a_function_left_out_as_already_chained_is_not_pulled_into_a_discovered_
     """
     fn2 = function_spec(2)
     columns = discover_chains(
-        ChainRecords((fn2,), _drawn_for((function_spec(1), fn2)), (connection(2, 1, 2),), (), ())
+        ChainRecords((fn2,), _drawn_for((function_spec(1), fn2)), (connection(2, 1, 2),), (), ()),
+        key_order={},
     )
     assert _functions_of(columns) == [[hid("function", 2)]]
 
@@ -835,7 +838,9 @@ def test_a_one_port_terminal_on_an_unwired_pole_is_still_placed() -> None:
         _wire(3, (stub, 0), (multi, 3)),
     )
     drawns = (*_drawn_for((feed,)), multi_drawn, *_drawn_for((load,)), stub_drawn)
-    columns = discover_chains(ChainRecords((feed, multi, load, stub), drawns, wires, (), ()))
+    columns = discover_chains(
+        ChainRecords((feed, multi, load, stub), drawns, wires, (), ()), key_order={}
+    )
     assert stub.function in {cell.function for column in columns for cell in column.cells}
 
 
@@ -948,7 +953,8 @@ def _edge_column(*, top: bool) -> tuple[Column, Cell, Cell, Cell]:
             (),
             (),
             edge_mates=(MatedFunctions(a=plug.function, b=pin.function),),
-        )
+        ),
+        key_order={},
     )
     cells = {cell.function: cell for cell in column.cells}
     return column, cells[plug.function], cells[pin.function], cells[relay.function]

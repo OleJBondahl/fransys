@@ -1,4 +1,4 @@
-"""Validator: revision history entries (units spec U4)."""
+"""Validator: revision history entries."""
 
 import re
 from typing import TYPE_CHECKING, Any, Final

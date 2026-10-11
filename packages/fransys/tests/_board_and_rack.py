@@ -2,7 +2,7 @@
 (facade WP: F4 and F6's board/rack legs). `examples/demo-parts` carries no `[pcb]`-faceted
 part and neither root fixture uses a PLC module, so `connectors-*.csv`, `wago-*.xml`,
 `netlist-*.net` and `fransys_kicad.check` are otherwise unexercisable from the two pinned
-fixtures (whose `core`/`facet` digests must not move, spec F9). Every part, MPN and
+fixtures (whose `core`/`facet` digests must not move). Every part, MPN and
 designation here is invented (CLAUDE.md invariant 6), following the pattern of
 `packages/fransys-kicad/tests/conftest.py` and `packages/fransys-wago/tests/conftest.py`.
 

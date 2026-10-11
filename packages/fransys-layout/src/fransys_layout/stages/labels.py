@@ -105,6 +105,7 @@ def place_slot_labels(
                 box=one.box,
                 partners=request.partners,
                 unplaced=one.unplaced,
+                function=request.function,
             )
         )
     labels.sort(key=lambda one: (one.subject, one.slot, one.kind.value))
@@ -142,13 +143,12 @@ def _port_points(
     placed: tuple[PlacedFunction, ...], drawn: tuple[DrawnFunction, ...]
 ) -> dict[Handle, tuple[int, int]]:
     """Each placed port's page point `(x, y)`, as `place` placed it."""
-    symbol = {port.port: port.symbol_port for one in drawn for port in one.ports}
     drawn_of = {one.function: one for one in drawn}
     at = {}
     for one in placed:
         geometry = {g.name: g for g in one.geometry.ports}
         for port in drawn_of[one.function].ports:
-            g = geometry.get(symbol[port.port])
+            g = geometry.get(port.symbol_port)
             if g is not None:
                 here = port_page_at(one.at, g)
                 at[port.port] = (here.x, here.y)
@@ -223,6 +223,8 @@ def _placement(
     owner_of: Mapping[Handle, Handle],
 ) -> PlacedFunction:
     """The placed function a request belongs to: its subject, or its port's function."""
+    if request.function is not None and request.function in placed_of:
+        return placed_of[request.function]
     if request.subject in placed_of:
         return placed_of[request.subject]
     function = owner_of.get(request.subject)

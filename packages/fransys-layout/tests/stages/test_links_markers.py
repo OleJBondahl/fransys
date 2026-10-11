@@ -225,7 +225,7 @@ def test_across_two_drawing_sets_a_severed_markers_box_is_still_the_fixed_width(
 
 def test_swapping_the_partners_label_swaps_the_tag_echo_prefixes() -> None:
     """A severed marker's box ignores the prefix (fixed width); `_tag_echo_text` still doesn't:
-    swapping the two labels swaps the two texts (units spec U7, via a tag echo)."""
+    swapping the two labels swaps the two texts (via a tag echo)."""
     swapped = frozendict({1: ((_C1, "C22"),), 2: ((_C2, "C1"),)})
     _, markers, requests, _ = _run(
         _two_pages(drawing_set_of_two=2),
@@ -239,7 +239,7 @@ def test_swapping_the_partners_label_swaps_the_tag_echo_prefixes() -> None:
     }
 
 
-# --- nested locations: the nearest common ancestor (units spec U7) ---------------------
+# --- nested locations: the nearest common ancestor ---------------------
 
 _ER = hid("aspect_node", 800)
 _ER_C1 = hid("aspect_node", 801)
@@ -249,7 +249,7 @@ _AR_C1 = hid("aspect_node", 804)
 
 
 def test_a_shared_parent_prefixes_only_the_path_below_it() -> None:
-    """`+ER+C1` to `+ER+FLD`: the prefix is `+FLD`, not the shared `+ER+FLD` (units spec U7).
+    """`+ER+C1` to `+ER+FLD`: the prefix is `+FLD`, not the shared `+ER+FLD`.
     A severed marker's box no longer measures this at all (LD3 (c)); `_tag_echo_text` does, via
     a tag echo."""
     paths = frozendict({1: ((_ER, "ER"), (_ER_C1, "C1")), 2: ((_ER, "ER"), (_ER_FLD, "FLD"))})

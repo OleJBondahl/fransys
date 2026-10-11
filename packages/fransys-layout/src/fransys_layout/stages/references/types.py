@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 type Page = tuple[int, int]
 
 # A location's root-to-leaf path: each node's handle paired with its own label, root first
-# (units spec U7), mirroring `fransys_model.derive.drawing_text.LocationPath`. Fed straight
+# , mirroring `fransys_model.derive.drawing_text.LocationPath`. Fed straight
 # to `location_prefix`, whose common-ancestor walk compares the handle half, never the label.
 type LocationPath = tuple[tuple[Handle, str], ...]
 

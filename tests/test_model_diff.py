@@ -479,7 +479,7 @@ def _x1_boundary(*, rating=None, operating=None):
 
 
 def test_boundary_rating_none_to_a_value_is_one_changed_row_empty_before():
-    """Designer ruling 2026-09-27 (MODEL DIFF FIX2 Part 4): `rating`/`operating` are diffed as
+    """Ruling 2026-09-27 (MODEL DIFF FIX2 Part 4): `rating`/`operating` are diffed as
     changed fields, one row per changed key, field `rating.<key>` / `operating.<key>`. A key
     absent on one side (the whole `rating` was `None` there) reads an empty `before`/`after`."""
     before = _x1_boundary(rating=None)

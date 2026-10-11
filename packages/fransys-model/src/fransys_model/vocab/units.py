@@ -1,4 +1,4 @@
-"""Vocabulary: a unit's interface (units spec U3)."""
+"""Vocabulary: a unit's interface."""
 
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 

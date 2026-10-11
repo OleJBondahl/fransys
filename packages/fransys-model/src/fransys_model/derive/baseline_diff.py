@@ -1,4 +1,4 @@
-"""`diff(a, b)` (baseline spec M1), composed from the per-section diffs."""
+"""`diff(a, b)`, composed from the per-section diffs."""
 
 from fransys_model.kernel import SchemaError
 
@@ -18,7 +18,7 @@ from .rows import (
 
 
 def diff(a: Listing, b: Listing) -> ListingDiff:
-    """The change list from listing `a` (earlier) to `b` (later) (baseline spec M1).
+    """The change list from listing `a` (earlier) to `b` (later).
 
     One `Change` row per difference, in section, subject, field order. A moved identity is one
     removed and one added row; a nested unit compares only its release triple.

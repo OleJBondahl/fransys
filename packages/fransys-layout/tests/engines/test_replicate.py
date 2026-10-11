@@ -1,6 +1,5 @@
-"""`replicate_terminals`/`replicate_boundaries`: replica columns added after `columns` (layout-0021,
-units spec U1).
-"""
+"""`replicate_terminals`/`replicate_boundaries`: replica columns added after `columns`
+(layout-0021)."""
 
 import dataclasses
 from typing import Any
@@ -10,7 +9,7 @@ from layout_cabinet import build_cabinet, unit_with_release
 from samples import column, connection, function_spec, hid
 
 from fransys_layout.engines.schematic.read import StageInputs, read_inputs
-from fransys_layout.engines.schematic.read.units import unit_boundaries, unused_functions
+from fransys_layout.engines.schematic.read.units import unit_boundaries
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages import Cell, Column, Home, Role, boundary_key, columns_from_chains
 from fransys_layout.stages.replicate import (
@@ -150,7 +149,7 @@ def test_a_replica_across_sub_locations_of_one_unit_is_asked_for(location) -> No
 
 
 def test_a_replica_across_units_is_not_asked_for() -> None:
-    """Units spec U2: `F`'s column and `T`'s home column must share a unit, or no replica is
+    """`F`'s column and `T`'s home column must share a unit, or no replica is
     asked for at all -- a foreign unit's terminal never lands on another unit's own pages,
     even though their groups differ (which alone would ask for one)."""
     home = dataclasses.replace(_HOME, unit=hid("unit", 1))
@@ -290,13 +289,13 @@ def test_a_net_group_asks_for_no_replica_but_the_same_ports_as_a_conductor_do() 
     assert (_X3, make_id(AspectNode, ("sup",))) in wired
 
 
-# --- board-unit home plans: retired `drop_board_unit_homes` (units spec U1, model-0041) ---
+# --- board-unit home plans: retired `drop_board_unit_homes` (model-0041) ---
 #
 # OLD premise, both tests below tested `drop_board_unit_homes` directly: a unit in
 # `board_units` (predicate `_reading.board_only_units`, also deleted) got no `PagePlan` of its
 # own at all, and a plan of another unit or the top level was unaffected. Both predicates
 # existed because a board that only held its own `CONNECTOR` function had nothing else the
-# schematic engine drew (board spec B1). NEW premise: after the board-unit carve-out
+# schematic engine drew. NEW premise: after the board-unit carve-out
 # (`schematic_functions`, `is_sole_unit_root`, model-0041), a board that is the *sole* root of
 # its own unit is a nested unit, not empty furniture, so its home plan is never dropped; there
 # is no longer a predicate or a drop function to unit-test directly. NEW assertion: see
@@ -306,7 +305,7 @@ def test_a_net_group_asks_for_no_replica_but_the_same_ports_as_a_conductor_do() 
 # real content (the board's connector and its child's function) placed on it.
 
 
-# --- replicate_boundaries (units spec U1's black box) -----------------------------------
+# --- replicate_boundaries (a unit's black box) -----------------------------------
 
 
 def _boundary_model() -> tuple[Model, Id[Any], Unit, Unit]:
@@ -380,7 +379,7 @@ def _top_level_boundary_model() -> tuple[Model, Id[Any]]:
 
 def test_a_boundary_function_gets_a_black_box_replica_in_its_parent_unit() -> None:
     """The replica takes its location, group and role from the home column; its own unit is
-    the boundary unit's *parent*, and its key is `boundary_key`'s (units spec U1)."""
+    the boundary unit's *parent*, and its key is `boundary_key`'s."""
     model, function_id, top, child = _boundary_model()
     inputs = read_inputs(model)
     (spec,) = (s for s in inputs.functions if s.function == function_id)
@@ -447,9 +446,8 @@ def test_a_boundary_function_with_no_outside_connection_still_replicates() -> No
 
 
 def test_a_top_level_units_own_boundary_gets_a_replica_in_the_top_level_set() -> None:
-    """`Unit.parent is None`: the black box goes to the top level, not skipped (units spec U1,
-    "or the top level"). The replica's own `unit` is `None` and its key uses `boundary_key`'s
-    `("top",)` branch."""
+    """`Unit.parent is None`: the black box goes to the top level, not skipped ("or the top level").
+    The replica's own `unit` is `None` and its key uses `boundary_key`'s `("top",)` branch."""
     model, function_id = _top_level_boundary_model()
     inputs = read_inputs(model)
     (spec,) = (s for s in inputs.functions if s.function == function_id)
@@ -472,11 +470,19 @@ def test_a_top_level_units_own_boundary_gets_a_replica_in_the_top_level_set() ->
     assert replica.key[-2:] == ("boundary", "top")
 
 
-def test_a_boundary_function_with_no_spec_raises() -> None:
-    """A unit's boundary names a function `read_inputs` never drew: an assembly fault."""
-    model, _function_id, _, _child = _boundary_model()
-    with pytest.raises(LayoutError, match="no spec"):
-        _replicate_boundaries((), model, (), ())
+def test_a_boundary_function_with_no_spec_draws_nothing_and_is_no_fault() -> None:
+    """A boundary function with no spec and no pin view (a PLC channel in its box, no landed port)
+    draws nothing; its unit's other boundary functions still replicate."""
+    # UNDO: stages/boundary_specs.py, `unit_specs`: raise `LayoutError` for a function with no spec
+    spec = function_spec(1)
+    ghost = hid("function", 2)
+    home = column("home", (1,), group=1)
+    unit = UnitBoundary(functions=(ghost, spec.function), parent=_PARENT, parent_key=_PARENT_KEY)
+
+    result = replicate_boundaries((home,), (unit,), (spec,), (home,))
+
+    (replica,) = _replicas(result, (home,))
+    assert replica.cells == (Cell(function=spec.function, index=0, home=Home.ELSEWHERE),)
 
 
 def test_a_boundary_function_in_no_column_raises() -> None:
@@ -496,13 +502,13 @@ _PARENT_KEY = ("invented", "parent")
 def test_a_unit_with_one_boundary_function_replicates_it_into_its_parents_column() -> None:
     """One `UnitBoundary`: its function gets one replica, in the parent's unit, keyed by
     `boundary_key`, with the home column's group, role and location."""
-    # UNDO: stages/replicate.py, `replicate_boundaries`: `unit=unit.parent` ->
+    # UNDO: stages/replicate.py, `_replica`: `unit=unit.parent` ->
     #     `unit=home_column.unit`
     spec = function_spec(1)
     home = column("home", (1,), group=1)
     unit = UnitBoundary(functions=(spec.function,), parent=_PARENT, parent_key=_PARENT_KEY)
 
-    result = replicate_boundaries((home,), (unit,), frozenset(), (spec,), (home,))
+    result = replicate_boundaries((home,), (unit,), (spec,), (home,))
 
     (replica,) = _replicas(result, (home,))
     assert replica.cells == (Cell(function=spec.function, index=0, home=Home.ELSEWHERE),)
@@ -515,20 +521,6 @@ def test_a_unit_with_one_boundary_function_replicates_it_into_its_parents_column
     )
 
 
-def test_an_unused_boundary_function_with_no_spec_is_skipped() -> None:
-    """W3: a boundary function declared unused draws no pin, so it is no assembly fault."""
-    # UNDO: stages/replicate.py, `replicate_boundaries`: `if function_id in unused:` -> `if False:`
-    ghost = hid("function", 2)
-    unit = UnitBoundary(functions=(ghost,), parent=_PARENT, parent_key=_PARENT_KEY)
-    home = column("home", (1,), group=1)
-
-    result = replicate_boundaries((home,), (unit,), frozenset({ghost}), (), (home,))
-
-    assert result == (home,)
-    with pytest.raises(LayoutError, match="no spec"):
-        replicate_boundaries((home,), (unit,), frozenset(), (), (home,))
-
-
 def test_a_boundary_rail_terminal_keeps_its_replica_and_loses_its_home_cell() -> None:
     """RB2 (layout-0120): the parent draws the terminal; the unit's own pages do not."""
     # UNDO: stages/replicate.py, `replicate_boundaries`: `_without_rail_homes(columns, functions)`
@@ -537,7 +529,7 @@ def test_a_boundary_rail_terminal_keeps_its_replica_and_loses_its_home_cell() ->
     home = column("home", (1,), group=1)
     unit = UnitBoundary(functions=(spec.function,), parent=_PARENT, parent_key=_PARENT_KEY)
 
-    result = replicate_boundaries((home,), (unit,), frozenset(), (spec,), (home,))
+    result = replicate_boundaries((home,), (unit,), (spec,), (home,))
 
     (only,) = result
     assert only.unit == _PARENT
@@ -548,6 +540,18 @@ def _replicate_boundaries(
     columns: tuple[Column, ...], model: Model, functions: tuple[Any, ...], homes: tuple[Column, ...]
 ) -> tuple[Column, ...]:
     """The stage fed what `read.units` reads from `model`."""
-    return replicate_boundaries(
-        columns, unit_boundaries(model), unused_functions(model), functions, homes
-    )
+    return replicate_boundaries(columns, unit_boundaries(model), functions, homes)
+
+
+def test_a_boundary_function_with_pin_views_replicates_its_pin_cells_not_itself() -> None:
+    """model-0188: a landed port is a pin view; the black box draws it, not the function."""
+    # UNDO: stages/boundary_specs.py, `unit_specs`: `if function in pins:` -> `if False:`
+    own = function_spec(1)
+    pins = [dataclasses.replace(function_spec(n), pin_function=own.function) for n in (2, 3)]
+    home = column("home", (1, 2, 3), group=1)
+    unit = UnitBoundary(functions=(own.function,), parent=_PARENT, parent_key=_PARENT_KEY)
+
+    result = replicate_boundaries((home,), (unit,), (own, *pins), (home,))
+
+    drawn = {cell.function for one in _replicas(result, (home,)) for cell in one.cells}
+    assert drawn == {hid("function", 2), hid("function", 3)}

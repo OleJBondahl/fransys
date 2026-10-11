@@ -1,4 +1,4 @@
-"""Generic table-field checking shared by every part-file table (spec P8).
+"""Generic table-field checking shared by every part-file table.
 
 One `_Field` spec per table (`_LIBRARY_FIELDS`, `_PART_FIELDS`, ...) says a field's raw TOML
 type, whether it is required, and, for an enum field, which `fransys_model.vocab.enums`
@@ -163,9 +163,9 @@ def _check_field(table: dict[str, Any], name: str, field: _Field, loc: _Loc) -> 
 
 def _check_present_field(value: object, name: str, field: _Field, loc: _Loc) -> list[Finding]:
     if type(value) is Decimal:
-        # A bare TOML float anywhere in the file is `_toml.value_findings`' job (spec P8:
-        # "anywhere ... in an unknown table or field too"), so this field is skipped here
-        # rather than reported a second time.
+        # A bare TOML float anywhere in the file is `_toml.value_findings`' job
+        # ("anywhere ... in an unknown table or field too"), so this field is skipped here rather
+        # than reported a second time.
         return []
     if field.enum is not None:
         return _check_enum(value, field.enum, loc, name)

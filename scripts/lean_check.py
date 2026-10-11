@@ -46,8 +46,9 @@ CEILINGS_PATH = ROOT / "ceilings.toml"
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
 _HEADER = (
-    "# The lean gates' ceilings: a ceiling only goes down; the dev checkout lowers them with its\n"
-    "# ceil-lower tool. Every comment here comes from lean_ceilings.py and lean_check.py.\n\n"
+    "# The lean gates' ceilings: a landing may raise one with a reason in its commit message\n"
+    "# (decision 0121), and a cleanup round lowers it with the ceil-lower tool. Every comment\n"
+    "# here comes from lean_ceilings.py and lean_check.py.\n\n"
 )
 
 #: LC1's own worked example, hand-authored (Part A): the starting `[limits]`, this order's only.
@@ -62,7 +63,7 @@ STARTING_LIMITS: dict[str, int] = {
     "sentence_words": 30,
 }
 
-#: Hand-authored (Part A), designer-ruled reasons verbatim; do not improvise different text.
+#: Hand-authored, ruled reasons verbatim; do not improvise different text.
 STARTING_EXEMPT: dict[str, str] = {
     "packages/fransys-overview/src/fransys_overview/_vendor_cytoscape.py": (
         "generated (overview-0001)"

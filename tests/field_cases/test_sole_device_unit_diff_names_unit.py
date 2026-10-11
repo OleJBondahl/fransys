@@ -1,9 +1,9 @@
 """Field case: a unit whose only item is one plain device, released, then given another part.
 
 The bug: a sole root item of a unit has the designation `""` in the baseline listing, because
-its designation is a fact of the instance and the parent names the instance (baseline spec L2,
-board black-box B3). `fr.diff` printed that row's subject as the empty string, so the change
-note read "Changed : mpn ..." and named nothing.
+its designation is a fact of the instance and the parent names the instance (board black-box B3).
+`fr.diff` printed that row's subject as the empty string, so the change note read
+"Changed : mpn ..." and named nothing.
 
 Reproduced 2026-10-05. Fixed by decision model-0132: a `Change` on a `""` row names the unit
 itself, `<unit name> <version>.<revision>`; listings and stored baselines do not move.

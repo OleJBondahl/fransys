@@ -13,8 +13,8 @@ from fransys_model.layout import default_profile, default_sheet_format
 
 # The model's house sheet (decision model-0029), in grid units: floor(mm / (module / 8)), so
 # A3 landscape's content box of 410 x 267 mm at module 2.5 mm is 1312 x 854 (267 mm, not 277 or
-# 287, since render spec D9 asked for a title-block band: decision model-0033, halved to 5 mm
-# margins by page-frame spec R11.1, decision model-0051). One copy of the numbers: a `Page`
+# 287, since the render rules asked for a title-block band: decision model-0033, halved to 5 mm
+# margins by decision model-0051). One copy of the numbers: a `Page`
 # with no sheet format is drawn on this.
 _HOUSE_SHEET = default_sheet_format()
 DEFAULT_SHEET = SheetFormat(

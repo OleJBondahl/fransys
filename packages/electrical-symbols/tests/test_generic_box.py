@@ -1,9 +1,9 @@
 """`generic_box`: the labelled-box placeholder as a real toolkit symbol (decision D41)."""
 
 import pytest
-from graphical_symbols.boxes import body_box, slot_box
-from graphical_symbols.geometry import Box, Direction, Point, Polyline
-from graphical_symbols.model import SymbolKind
+from symdef.boxes import body_box, slot_box
+from symdef.geometry import Box, Direction, Point, Polyline
+from symdef.model import SymbolKind
 
 from electrical_symbols import GENERIC_BOX_KEY, box_pitch, generic_box
 

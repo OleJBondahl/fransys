@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from .lookups import nets_from_pairs
+from .slices import by_key
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -76,9 +77,7 @@ def boundary_exempt(inputs: ExemptInputs, nesting: UnitNesting) -> frozenset[tup
     black_boxes = {
         one.function for one in inputs.seats if unit_of[one.function] != set_unit[one.drawing_set]
     }
-    ports_of = defaultdict(list)
-    for port, function in owner.items():
-        ports_of[function].append(port)
+    ports_of = by_key(owner, owner.__getitem__)
 
     def leaves(mate: Id[Any], unit: Id[Any] | None) -> bool:
         """Whether the port `mate` lies outside `unit` (not in it, nor in a unit nested in it)."""

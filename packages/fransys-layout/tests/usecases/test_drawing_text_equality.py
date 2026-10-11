@@ -13,7 +13,7 @@ and the D7 labels against the positions of the coil and its contacts, read from 
 placements.
 
 The narrow cabinet golden (`tests/golden/cabinet_narrow_laid_out.json`, the 158 mm sheet of
-`docs/archive/specs/2026-09-22-cross-reference-partner.md` X5, moved from the spec's 150 by
+the cross-reference partner rule X5, moved from 150 by
 model-0040 -- see `_NARROW_WIDTH_MM` below) is where `marker_text` is checked for every marker
 kind: one severed cut (two `layout.link_marker` records) and the D9 star markers. Its
 `CROSS_REFERENCE` labels are the D7 ones. The K8 `LATCH` net-group cut that once gave two tag
@@ -76,10 +76,10 @@ if TYPE_CHECKING:
     from fransys_layout.stages.types import Profile as StageProfile
     from fransys_model.kernel import Draft, Id, Model
 
-# The narrow sheet width spec X5 (`docs/archive/specs/2026-09-22-cross-reference-partner.md`)
+# The narrow sheet width the cross-reference partner rule
 # requires: a width that gives all three required contents at once (a severed cut, a
-# `CROSS_REFERENCE` label, a net-group cut). 158, not the spec's original 150: model-0040
-# (spec B1) draws board `A1`'s `edge` connector, which shifts where this cabinet splits;
+# `CROSS_REFERENCE` label, a net-group cut). 158, not the original 150: model-0040
+# draws board `A1`'s `edge` connector, which shifts where this cabinet splits;
 # 158 is the narrowest width that still gives all three (Q4, measured at 1 mm resolution),
 # and it is well within the 118-171 mm band `fransys-render`'s tests need (they load this
 # package's golden by path and hardcode a marker position and a page count; model-0040 has

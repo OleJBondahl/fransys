@@ -1,7 +1,7 @@
-"""PNG READ 2's checks (d) and (e) (designer, 2026-09-27) on the changeover field case's page.
+"""PNG READ 2's checks (d) and (e) (2026-09-27) on the changeover field case's page.
 
 The fixture is the field case `field_cases/test_changeover_throws_to_two_strips.py` inside its
-unit, the page the designer read (its PDF's page 2, after the cover). Before S18 two slot labels
+unit, the page the review read (its PDF's page 2, after the cover). Before S18 two slot labels
 there had no free candidate among those `reserve_slots` offered (its moves stayed inside the
 owner's keep-out, then the mirror side), and each stood where it was going to anyway:
 

@@ -1,8 +1,8 @@
-"""PLC-SCOPE tests: a request is served by the first unit on its chain that declares its signal.
+"""Tests: a request is served by the first unit on its chain that declares its signal.
 
 The chain is the request's own unit, its `Unit.parent`s, and the top level (`Item.unit` None)
 last. One free-channel queue per (unit, signal type), the order inside each queue unchanged; an
-exhausted serving unit gets `PLC_REQUEST_UNSERVABLE` with no fall-through (designer ruling
+exhausted serving unit gets `PLC_REQUEST_UNSERVABLE` with no fall-through (ruling
 2026-09-25). Invented data: unit B's rack key sorts before unit A's, so a model-wide queue
 would hand unit A the channels of unit B.
 """

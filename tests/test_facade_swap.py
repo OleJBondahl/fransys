@@ -1,4 +1,4 @@
-"""The root fixtures' digest is unchanged by the swap to `fr.build` (facade spec F9).
+"""The root fixtures' digest is unchanged by the swap to `fr.build`.
 
 Each fixture is built two ways in one test run: by hand (the pipeline the fixtures used
 before the facade existed: `merge`, `freeze`, `allocate_plc`, `number`,

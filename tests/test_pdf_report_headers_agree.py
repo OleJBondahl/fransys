@@ -1,4 +1,4 @@
-"""The list columns, terminal labels and cell text have one home: `derive.rows` (spec P9).
+"""The list columns, terminal labels and cell text have one home: `derive.rows`.
 
 `fransys_pdf._lists` and `fransys_reports.csv` may not import each other (root CLAUDE.md
 invariant 2), so each used to keep its own copy of the header tuples and of the cell formatter,

@@ -28,10 +28,11 @@ at `2.1`. `interface_version` is the unit's boundary version.
 
 ## The interface
 
-`d.device(tag, part, interface=True)` marks a device as part of the unit's interface: the
-connector or terminal a container may reach into the unit through. Only a terminal or a
-connector can be an interface; marking a coil or a contact gives the error `BOUNDARY_KIND` at
-build time.
+`d.device(tag, part, interface=True)` marks a device as part of the unit's interface: the point a
+container may reach into the unit through. Any function may be an interface: a connector, a terminal,
+a PLC channel, a coil or a supply output. A cable landing straight on a channel, with no strip
+between, is the use. `interface=True` marks every function of the device; `interface=("coil",)`
+names some, and the others stay inside the unit.
 
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,
 so the build does not ask for it to be wired. `unused=True` on a device that is not an

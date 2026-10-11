@@ -5,7 +5,7 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 `pages(model) -> frozendict[str, str]` renders every `layout.page` of a laid-out model to one
 SVG each, keyed by `render_id(page.id)`: unit outlines (decision layout-0045: one dash-dot
 outline, labelled `<unit title> rev <revision>`, per black-box unit instance on the page), symbols (real library symbols and
-the generic box, drawn through `graphical_symbols.to_fragment`; a truly unknown key gets an 8x8
+the generic box, drawn through `symdef.to_fragment`; a truly unknown key gets an 8x8
 G placeholder), routes, D8's junction dots, D8's link markers, and D7's label text, in that fixed
 order; a bound lead (`Line.port`) draws only when its port has a route, marker or marking label
 on it (decision render-0002). The
@@ -13,7 +13,7 @@ SVG carries schematic content only -- no frame, grid or title block (`fransys_pd
 those, once, on every page). `check(model) -> tuple[Finding, ...]` reports `UNKNOWN_SYMBOL_KEY`,
 `LIBRARY_VERSION_MISMATCH` and `LAYOUT_MISSING`; `PIN_MAP_INCOMPLETE` moved into
 `fransys_layout` (decision layout-0041, the binding it needs lives there). This package
-imports `fransys_model`, `graphical_symbols` and `electrical_symbols` only, never
+imports `fransys_model`, `symdef` and `electrical_symbols` only, never
 `fransys_layout`.
 
 `cable_blocks(model) -> frozendict[str, str]` renders every `layout.cable_block` to one SVG, keyed `cable_block_key(unit, subject)` (render-0007). It draws only what the block's records hold, and every text is a `derive.cable_drawing` function's. A core is two runs that stop at the closed cable box. A harness block's dashed box surrounds its cable boxes and carries the harness's `printed_designation`. A by-others end box is dashed, its edges and dividers in one phase.

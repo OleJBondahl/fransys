@@ -1,4 +1,4 @@
-"""Diff of the unit, item, nested-unit and boundary sections (baseline spec M1)."""
+"""Diff of the unit, item, nested-unit and boundary sections."""
 
 from typing import TYPE_CHECKING, cast
 

@@ -1,4 +1,4 @@
-"""The cover/notes Markdown subset: parsing, escaping and Typst emission (spec P6).
+"""The cover/notes Markdown subset: parsing, escaping and Typst emission.
 
 Every text run reaches Typst as a string literal (`text("...")`), never as markup: a `#`,
 `*`, `_`, `@`, `<`, `$` or backtick an engineer types is printed as typed, whether or not the
@@ -214,7 +214,7 @@ def _handle_line(blocks: _Blocks, index: int, line: str) -> None:
 
 
 def parse(text: str) -> tuple[Element, ...]:
-    """`text`'s Markdown subset as elements, in reading order. Never raises (spec P6)."""
+    """`text`'s Markdown subset as elements, in reading order. Never raises."""
     blocks = _Blocks()
     for index, line in enumerate(text.splitlines(), start=1):
         _handle_line(blocks, index, line)

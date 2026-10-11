@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from graphical_symbols import Orientation as LibraryOrientation
-from graphical_symbols import UnknownSymbolError, orient, repeat
+from symdef import Orientation as LibraryOrientation
+from symdef import UnknownSymbolError, orient, repeat
 
 from electrical_symbols import (
     G_PER_MODULE,
@@ -19,7 +19,7 @@ from fransys_model.layout import PlacementView
 from fransys_model.vocab import functions, ports
 
 if TYPE_CHECKING:
-    from graphical_symbols.model import Symbol
+    from symdef.model import Symbol
 
     from fransys_model.kernel import Model
     from fransys_model.layout import Orientation, PowerSymbol, SymbolPlacement

@@ -109,7 +109,7 @@ def test_group_and_location_paths_come_from_the_items_placements() -> None:
 
 
 def test_a_function_specs_unit_is_none_with_no_units_authored() -> None:
-    """The default cabinet authors no `Unit`: every spec's `unit` is `None` (units spec U1)."""
+    """The default cabinet authors no `Unit`: every spec's `unit` is `None`."""
     model = freeze(build_cabinet())
     spec = _spec(model, ("cabinet", "k1"), "coil")
     assert spec.unit is None
@@ -117,7 +117,7 @@ def test_a_function_specs_unit_is_none_with_no_units_authored() -> None:
 
 
 def test_a_function_specs_unit_is_copied_from_its_items_own_unit() -> None:
-    """`unit` on `FunctionSpec` is copied straight from the item's own `unit` (units spec U1)."""
+    """`unit` on `FunctionSpec` is copied straight from the item's own `unit`."""
     model = freeze(build_cabinet())
     item_id = make_id(Item, ("cabinet", "k1"))
     unit, release = unit_with_release(("cabinet", "unit-k1"), name="unit-k1")
@@ -215,11 +215,11 @@ def _boundary(unit: Unit, function_id) -> Boundary:
 def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> None:
     """OLD premise (`board_only_units`/`drop_board_unit_homes`, deleted this work order): a
     unit whose direct items are all on a board held nothing the schematic engine drew of its
-    own, so its home-set `PagePlan` was dropped entirely -- board spec B1 excluded everything
+    own, so its home-set `PagePlan` was dropped entirely -- the board rule excluded everything
     but the board's own `CONNECTOR` function, and `replicate_boundaries` redrew that connector
     in the parent unit's set, so home was empty by construction.
 
-    NEW premise (units spec U1's board-unit ruling, model-0041): this same board (`A1`, with
+    NEW premise (board-unit ruling, model-0041): this same board (`A1`, with
     child fuse `F10`) is the *sole* root item of its own unit, so it is itself a nested unit,
     not board-inside-a-unit furniture -- `schematic_functions` now draws the fuse's function
     too, not only the board's edge connector, so the unit's home set is no longer empty and
@@ -284,7 +284,7 @@ def test_a_net_group_role_comes_from_its_net_class() -> None:
 
 
 def test_a_jumper_is_no_layout_connection_and_is_never_routed() -> None:
-    """Terminal bridges spec T3: a `jumper` conductor is not drawn, routed or labelled and
+    """Terminal bridges: a `jumper` conductor is not drawn, routed or labelled and
     joins no net for discovery, while a wire between the same two ports would be. Can-fail:
     make the conductor a `wire` and both assertions fail."""
     from fransys_layout.engines import lay_out_schematic

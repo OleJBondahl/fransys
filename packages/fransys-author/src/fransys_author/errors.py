@@ -1,4 +1,4 @@
-"""`AuthorError`: a mistake seen at the call (spec A11); the rest is `freeze`'s (A-r2).
+"""`AuthorError`: a mistake seen at the call; the rest is `freeze`'s (A-r2).
 
 The builder never calls `freeze` and never re-implements a model rule.
 """

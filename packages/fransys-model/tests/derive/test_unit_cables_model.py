@@ -1,4 +1,4 @@
-"""Tests for `unit_cables` (units spec U3, decision pdf-0015).
+"""Tests for `unit_cables` (decision pdf-0015).
 
 See design/derive-queries-structure.md.
 """

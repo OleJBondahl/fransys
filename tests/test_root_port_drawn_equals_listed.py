@@ -1,6 +1,6 @@
 """ROOT-PORT measure: what a unit's own drawing set prints for a port of the unit's sole root.
 
-Designer ruling 2026-09-25: in a unit's OWN set a port held by the unit's own root
+Ruling 2026-09-25: in a unit's OWN set a port held by the unit's own root
 (`is_own_unit_root`) prints without the root's tag, on drawings and in lists alike (`-X1:1`, not
 `-U2-X1:1`); the parent's set keeps the root's tag. The lists already pass `unit=` to
 `port_designation` (`connector_rows`, `terminal_rows`, `wire_rows`). One test per root-port
@@ -448,7 +448,7 @@ def test_k4_a_strip_root_draws_and_lists_each_terminal_the_same() -> None:
 def test_k5_a_relay_root_draws_and_lists_each_port_with_the_roots_tag() -> None:
     """K5: tag `-K7` + marking `A1` in the own set, `-K7:A1` in the wire list; MATCHES, tag kept.
 
-    A coil or a contact cannot be a boundary (`BOUNDARY_KIND`), so the parent's set draws nothing
+    The unit marks no coil or contact as a boundary here, so the parent's set draws nothing
     of this root.
     """
     model = _k5().model

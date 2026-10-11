@@ -176,7 +176,7 @@ def test_a_daisy_chain_joins_the_columns_it_can_level_and_marks_the_two_wired_pa
     """D2, S12, M12: XA:1 feeds Q1:1, which chains to Q2:1 and Q3:1, the breakers side by side.
 
     Q1 stands below the feed terminal in its column, so Q1:1 is not at the column's end and its
-    join to Q2:1 is a level run that would move a column: it is not beside (S12, designer
+    join to Q2:1 is a level run that would move a column: it is not beside (S12, ruling
     2026-09-27: "beside only when join_y puts its ends on one y without moving any column"). The
     net is two wired parts, XA:1 - Q1:1 and Q2:1 - Q3:1, joined by one reference pair: the
     reference at XA:1, the branch at Q3:1 (R7 B4), and no marker at Q1:1 or Q2:1. The test

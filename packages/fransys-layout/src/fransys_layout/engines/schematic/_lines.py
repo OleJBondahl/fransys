@@ -28,6 +28,7 @@ from fransys_model.kernel import Finding, value
 
 from .read.harness_lines import drawn_on, line_reads
 from .read.line_texts import LineTexts, line_texts, stub_box, widest_stub
+from .read.stub_places import line_spots
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -123,10 +124,13 @@ def draw_lines(
 ) -> DrawnPieces:
     """HL15 to HL18: each line on each page its ends stand on, its labels placed (HL16)."""
     world = _world(carried, units, scene)
-    texts = line_texts(model, lines)
+    texts = replace(
+        line_texts(model, lines), spots=line_spots(model, lines, world), sheet=scene.sheet
+    )
     grid = Grid(content_box(scene.sheet), (), scene.profile.route_turn_penalty)
     pieces: dict[_Page, list[tuple[LineRead, Pieces]]] = defaultdict(list)
     covered: dict[_Page, frozenset[Any]] = defaultdict(frozenset)
+    away: dict[tuple[Id[Any], _Page], tuple[int, ...]] = {}
     for line in lines.lines:
         for page in _pages(line, world):
             if not drawn_on(line, scene.units.get(page[0]), lines.top):
@@ -134,18 +138,31 @@ def draw_lines(
             ends, absent = _ends_on(line.ends, page, world)
             if ends:
                 here = replace(_grid(grid, page, world), busy=covered[page], busy_penalty=BUSY)
-                wide = widest_stub(texts, line, scene.units.get(page[0]), scene.profile)
-                trunk = _trunk(line, ends, (page, here), world)
-                size = (wide, scene.profile.text_height + 2 * scene.profile.marker_padding)
-                made = line_pieces(
-                    ends, absent, here, margin=wide // 2, trunk=trunk and (trunk, size)
-                )
+                away[line.owner, page] = tuple(absent)
+                made = _route_line(line, (page, ends, absent), here, (texts, world, scene))
                 pieces[page].append((line, made))
                 covered[page] |= frozenset().union(*(cells_of(pts) for _, pts in made.paths))
     found = DrawnPieces()
     for page in sorted(pieces):
-        found = _page_pieces(found, page, pieces[page], (texts, world, scene))
+        found = _page_pieces(found, page, pieces[page], (texts, world, scene, away))
     return found
+
+
+def _route_line(
+    line: LineRead,
+    on: tuple[_Page, Sequence[Any], Sequence[int]],
+    here: Grid,
+    context: tuple[LineTexts, _World, LineScene],
+) -> Pieces:
+    """One line's pieces on one page; routes keep the unplaced stub width, only the box grows."""
+    (page, ends, absent), (texts, world, scene) = on, context
+    bare = replace(texts, spots={})
+    wide = widest_stub(bare, line, (page, scene.units.get(page[0]), ()), scene.profile)
+    trunk = _trunk(line, ends, (page, here), world)
+    size = (wide, scene.profile.text_height + 2 * scene.profile.marker_padding)
+    return line_pieces(
+        ends, absent[0] if absent else None, here, margin=wide // 2, trunk=trunk and (trunk, size)
+    )
 
 
 def _world(carried: Sequence[Connection], units: Sequence[MiddleUnit], scene: LineScene) -> _World:
@@ -202,14 +219,14 @@ def _pages(line: LineRead, world: _World) -> list[_Page]:
 
 def _ends_on(
     ends: Sequence[HarnessLineEnd], page: _Page, world: _World
-) -> tuple[list[EndOnPage], int | None]:
-    """The line's ends drawn on `page`, and the first end's branch that is not."""
+) -> tuple[list[EndOnPage], list[int]]:
+    """The line's ends drawn on `page`, and the branches of those that are not, in order."""
     found: list[EndOnPage] = []
-    absent: int | None = None
+    absent: list[int] = []
     for end in ends:
         one = _end_on(end, page, world)
         if one is None:
-            absent = end.branch if absent is None else absent
+            absent.append(end.branch)
         else:
             found.append(one)
     return found, absent
@@ -288,10 +305,10 @@ def _page_pieces(
     found: DrawnPieces,
     page: _Page,
     pieces: Sequence[tuple[LineRead, Pieces]],
-    run: tuple[LineTexts, _World, LineScene],
+    run: tuple[LineTexts, _World, LineScene, Mapping[tuple[Id[Any], _Page], tuple[int, ...]]],
 ) -> DrawnPieces:
     """One page's lines with their labels placed in one `place_texts` call, fans and stubs."""
-    texts, world, scene = run
+    texts, world, scene, away = run
     paths = [(line.owner, branch, points) for line, one in pieces for branch, points in one.paths]
     centres, unplaced = _label_boxes(paths, texts, world.shapes.get(page, []), scene)
     lines = tuple(
@@ -319,7 +336,13 @@ def _page_pieces(
         for fan in one.fans
     )
     stubs = tuple(
-        stub_box(texts, line, stub, (page, scene.units.get(page[0])), scene.profile)
+        stub_box(
+            texts,
+            line,
+            stub,
+            (page, scene.units.get(page[0]), away[line.owner, page]),
+            scene.profile,
+        )
         for line, one in pieces
         for stub in one.stubs
     )

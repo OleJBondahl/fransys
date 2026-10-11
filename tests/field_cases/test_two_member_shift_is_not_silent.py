@@ -8,7 +8,7 @@ box with its channels as pins, ITEM-BOX; the shape needs only column ends.)
 
 The bug: the two members lost their join with no wire reference and no finding, because no run
 had joined either end (V6 only named a turned wire with an end a run joined).
-The rule (spec CONVENTIONS-V06 V1, decision layout-0099): a pin with an attached part above it
+The rule (decision layout-0099): a pin with an attached part above it
 either aligns with its run or gives `JOIN_UNALIGNED`, a WARNING.
 """
 

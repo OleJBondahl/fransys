@@ -243,7 +243,7 @@ def vote_columns(r: _Reach, walks: _Walks, connections: tuple[Connection, ...]) 
     for function in sorted(r.votes, key=lambda f: r.specs[f].key):
         if _claim(r, function):
             walks.flipped.add(function)
-    # I4 Q2 (designer): a pin whose only net is a star (three or more ports) joins the column
+    # I4 Q2: a pin whose only net is a star (three or more ports) joins the column
     # of the star's first member by designation, below it when that member's port faces S,
     # above it when N; that end is then a wire, the other members keep their markers
     lane_of_pole = {

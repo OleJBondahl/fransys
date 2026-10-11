@@ -1,4 +1,4 @@
-"""The two root fixtures build a laid-out model (spec section 10, WP order Part C1)."""
+"""The two root fixtures build a laid-out model (WP order Part C1)."""
 
 
 def test_demo_cabinet_builds_a_laid_out_model(demo_cabinet):

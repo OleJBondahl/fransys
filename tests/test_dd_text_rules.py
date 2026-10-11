@@ -166,7 +166,7 @@ def test_a_boundary_connector_at_a_line_end_prints_one_dashed_box_designation() 
 
 
 def test_a_connector_designation_on_a_pin_row_lead_has_the_dash_of_every_item_tag() -> None:
-    """D12 + designer ruling (GOLDEN-FIX 2 follow-up): `tag.conn` reads "-K1", never "K1": the
+    """D12 + ruling (GOLDEN-FIX 2 follow-up): `tag.conn` reads "-K1", never "K1": the
     `item_tag_text` of the connector's item, at top level and in a unit's own set alike.
     HL6 (layout-0155): `-WH1-P1` and `-U1-X1` are at a harness line's end: boxes, no `tag.conn`."""
     # UNDO: fransys_model/derive/drawing_text.py: the `tag.conn` branch of `label_text` (top
@@ -337,7 +337,7 @@ def _check_top_level_designations_are_item_only(model) -> tuple[int, int]:
             assert text == strip_tag_text(model, lb.function)  # the derive function knows the item
         elif lb.slot == "tag.item":  # a mixed-kind row's item tag
             assert text == f"-{item_designation(model, item.id)}"
-        elif lb.slot == "tag.conn":  # a pin row's one connector tag: dashed since designer ruling
+        elif lb.slot == "tag.conn":  # a pin row's one connector tag: dashed since the ruling
             assert text == item_tag_text(model, item.id)  # (GOLDEN-FIX 2 follow-up; D12 "-Q11")
         elif lb.slot.startswith("tag.pin."):
             assert re.fullmatch(r"-[^+=\s]+:\S+", text)

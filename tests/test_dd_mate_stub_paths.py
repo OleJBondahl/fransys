@@ -128,7 +128,7 @@ def test_a_far_plug_with_no_mate_is_named_itself() -> None:
 def test_a_mate_inside_one_location_stubs_a_top_level_units_pin() -> None:
     """Everything in the cabinet's location: the mate crosses no location, yet X1 is the
     boundary pin of a top-level unit and its mate stands in no unit, so the pin gets the stub
-    (units spec U2, layout-0080): the unit rule, not the location rule, writes it."""
+    (layout-0080): the unit rule, not the location rule, writes it."""
     # UNDO: stages/offstubs.py: `ends_in_stubs` returns only
     #   `crosses_location(a, b)` (no stub for a boundary pin whose far end is outside its unit)
     model = _build(one_location=True)

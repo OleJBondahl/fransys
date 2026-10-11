@@ -1,5 +1,5 @@
 """Bound-lead visibility: a lead draws only when its port has a route, marker or marking label
-on it; an unbound lead always draws (spec TL3, decision render-0002).
+on it; an unbound lead always draws (decision render-0002).
 """
 
 from decimal import Decimal
@@ -151,7 +151,7 @@ def _conductor(key_part, *, a, b):
 def _route_ending_at(key_part, *, page, at):
     """A route between two fresh, unrelated ports, one endpoint at `at` (grid units).
 
-    Purely geometric (spec TL3, render-0002): this package matches a route's endpoint against
+    Purely geometric (render-0002): this package matches a route's endpoint against
     a symbol port's own position, never the route's `a`/`b` port identity, so the route's own
     ports need no relation to the placement under test.
     """
@@ -356,7 +356,7 @@ def test_a_fan_out_leg_ending_on_the_port_draws_its_lead():
 
 
 # --- A marking label naming the port also draws its lead (unit-tested: terminal has no marking
-# slots of its own, spec TL2, so this exercises the mechanism directly against a hand-built model)
+# slots of its own, so this exercises the mechanism directly against a hand-built model)
 
 
 def test_a_marking_label_on_the_port_is_counted_as_wired():

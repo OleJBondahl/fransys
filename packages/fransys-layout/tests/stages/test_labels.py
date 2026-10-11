@@ -34,7 +34,7 @@ def _tag(number: int, text: str) -> LabelRequest:
 
 def test_a_short_tag_sits_in_its_slot() -> None:
     """`-K1` is narrower than its 32 G slot: the label box is its measured text (13 G) from
-    the slot's anchor, so the tag stands close to its symbol (designer's ruling)."""
+    the slot's anchor, so the tag stands close to its symbol (ruling)."""
     labels, findings = place_slot_labels(
         (_tag(1, "-K1"),),
         (placed(1, x=104, y=96),),

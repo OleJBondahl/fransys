@@ -1,4 +1,4 @@
-"""Load a part library into a Draft (spec section 7, rulings P2, P5, P7).
+"""Load a part library into a Draft (rulings P2, P5, P7).
 
 `load_path` runs `lint` first and raises `PartLibraryError` if it finds an `ERROR`; from
 then on every field lint checked is trusted, so the record-building code below is

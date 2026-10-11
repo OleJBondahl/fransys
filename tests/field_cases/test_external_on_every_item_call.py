@@ -5,7 +5,7 @@ takes `external=True`; the other three item-making calls did not, so only a devi
 marked "by others" and the rest showed in the bill of materials.
 
 The rule (EA15, G24): `external=True` flags the item. A strip's terminals are external through
-the parent chain (spec Y1); a cable's conductors carry no flag (spec Y2); no item flagged
+the parent chain; a cable's conductors carry no flag; no item flagged
 external reaches the bill of materials.
 """
 

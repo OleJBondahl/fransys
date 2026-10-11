@@ -74,7 +74,7 @@ def test_the_page_side_rooms_carry_the_sets_digits_the_early_call_keeps_the_floo
     carries a width past the floor.
     """
     pagerun = import_module("fransys_layout.stages.pagerun")
-    engine = import_module("fransys_layout.engines.schematic.engine")
+    engine = import_module("fransys_layout.engines.schematic._sizing")
     model = freeze(build_cabinet(second_location=True))
     calls: dict[str, list[Any]] = {"engine": [], "page": []}
 

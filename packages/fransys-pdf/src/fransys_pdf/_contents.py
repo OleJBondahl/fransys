@@ -1,4 +1,4 @@
-"""The CONTENTS page: one table over the subject harness's cables (spec P8)."""
+"""The CONTENTS page: one table over the subject harness's cables."""
 
 from typing import TYPE_CHECKING
 

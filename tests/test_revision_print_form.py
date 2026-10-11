@@ -1,4 +1,4 @@
-"""FD acceptance 7 (`docs/archive/specs/2026-09-26-fixed-designations.md`):
+"""FD acceptance 7:
 a unit at version 2, revision 1 prints `2.1` in each place a revision is printed.
 
 One shared facade build: a cabinet unit (version 1, revision 2) with a nested `demo-io-board` unit

@@ -2,7 +2,7 @@
 
 Render's tests read the golden JSON files directly, loaded with the model's `loads`;
 they never import `fransys_layout` (the boundary gate holds render to
-`fransys_model`, `graphical_symbols`, `electrical_symbols`).
+`fransys_model`, `symdef`, `electrical_symbols`).
 
 The golden's own recorded `library_version` (a snapshot from whenever it was regenerated) is
 replaced on load by the currently INSTALLED `electrical_symbols.library_version()` (decision
@@ -14,7 +14,6 @@ for a reason that has nothing to do with the layout itself. `produced_by` is unt
 render check reads it.
 """
 
-import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -30,10 +29,6 @@ if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
     from fransys_model.kernel import Record
-
-# --import-mode=importlib leaves the test directory off sys.path; tests import `_cable_build` by
-# name. Workspace rule: conftests append to sys.path, never insert(0).
-sys.path.append(str(Path(__file__).parent))
 
 _GOLDEN_DIR = (
     next(

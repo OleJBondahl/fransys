@@ -28,8 +28,8 @@ if TYPE_CHECKING:
 
 ROOT = Path(__file__).resolve().parents[1]
 
-#: `fransys_model`'s own nine surface modules (MS1, amended 2026-09-27 by the designer on
-#: Part 0's draft to add `derive.numbering_pins`, and by model-0159 to add
+#: `fransys_model`'s own nine surface modules (amended 2026-09-27 to add
+#: `derive.numbering_pins`, and by model-0159 to add
 #: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`): not its top-level package,
 #: which is excluded from the surface entirely -- only these nine dotted paths are read by
 #: other packages.

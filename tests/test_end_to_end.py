@@ -1,4 +1,4 @@
-"""One root end-to-end test: author, build, write (spec section 10, facade spec F9)."""
+"""One root end-to-end test: author, build, write."""
 
 import re
 
@@ -16,9 +16,9 @@ from fransys_model.vocab import documents
 # inspecting a real PDF (plan `.fransys/sdd-plan-pdf-stage2.md`, Task 7).
 _PDF_PAGE = re.compile(rb"/Type\s*/Page(?!s)")
 
-# A minimal valid SVG, sized to the house sheet's content box (page-frame spec R4): enough
+# A minimal valid SVG, sized to the house sheet's content box: enough
 # for Typst to place and compile, standing in for `fransys_render.pages` (still a
-# scaffold, spec P11) so a `SCHEMATIC` page can be compiled at all.
+# scaffold) so a `SCHEMATIC` page can be compiled at all.
 _STUB_DRAWING_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" width="400mm" height="257mm" '
     'viewBox="0 0 400 257"></svg>'
@@ -30,7 +30,7 @@ def test_author_build_write_produces_the_cabinet_exports(tmp_path):
 
     `SCHEMATIC` is removed: `fransys_render` is still a scaffold, so a cabinet document
     that keeps its `SCHEMATIC` pages carries `DOCUMENT_NO_DRAWINGS` and does not export at
-    all (decision 0011, pdf spec P11). The fuller PDF assertion (page count, font family,
+    all (decision 0011). The fuller PDF assertion (page count, font family,
     byte-equality) is a separate, later task's job.
     """
     parts = fr.parts("demo_parts")
@@ -68,7 +68,7 @@ def test_author_build_write_produces_the_cabinet_exports(tmp_path):
 def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_document, tmp_path):
     """The demo cabinet document's PDF has one page per resolved `PageKind` and embeds the font.
 
-    Spec P13's acceptance bullet: "a page count equal to `document_pages` expanded per P10
+    The acceptance bullet: "a page count equal to `document_pages` expanded per P10
     ... the Liberation Serif family name in the bytes ... `<stem>.typ` in the intermediates
     that compiles on its own." Byte-equality on a second write is the separate test below.
     """
@@ -101,7 +101,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
 
     # The render work package's page SVGs land in intermediates too (`_write_intermediates`,
     # `_file_safe`'s `:` -> `-`): one `layout.page-*.svg` per `layout.page` record of the
-    # WHOLE model (`fransys_render.pages`' own contract, spec P1) -- this cabinet lays out
+    # WHOLE model (`fransys_render.pages`' own contract) -- this cabinet lays out
     # two drawing sets (one at C1, one location-less), so two, not one; not scoped to just
     # this document's own schematic pages (`schematic_pages` returns only one of the two).
     render_svgs = list(intermediates.glob("layout.page-*.svg"))
@@ -110,7 +110,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
 
 
 def test_document_pdf_is_byte_equal_on_a_second_write(demo_cabinet_document, tmp_path):
-    """Writing the same built model twice gives byte-identical PDF bytes (spec P1, P13).
+    """Writing the same built model twice gives byte-identical PDF bytes.
 
     It checks `source`/`write`'s determinism, not the pages' visual content.
     """

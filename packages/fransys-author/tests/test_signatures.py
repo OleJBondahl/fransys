@@ -28,7 +28,7 @@ _FORBIDDEN_NAMES = frozenset(
     {"x", "y", "page", "column", "row", "page_number", "column_number", "row_number", "points"}
 )
 _FORBIDDEN_ANNOTATION_WORDS = ("point", "coordinate")
-# Not forbidden: `Project.number` (a project number like "P-1001", spec A2) is a business
+# Not forbidden: `Project.number` (a project number like "P-1001") is a business
 # field, not a layout page number; `position`/`index` are build facts (design/layout-namespace.md
 # already excludes only x/y/page/number/points from the *model's* authored-kind fields -- this is
 # the author API's own, narrower list, since the API also carries `Project.number`).

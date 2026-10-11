@@ -275,7 +275,7 @@ def _image_top(
 def _on_one_baseline(
     tables: Mapping[tuple[int, int], list[PlacedLabel]], home: Mapping[Handle, PlacedFunction]
 ) -> dict[tuple[int, int], list[PlacedLabel]]:
-    """I4 (designer): the contact images of one page row share one baseline, the lowest needed."""
+    """I4: the contact images of one page row share one baseline, the lowest needed."""
     found = {}
     for page, labels in tables.items():
         rows: dict[int, list[PlacedLabel]] = {}

@@ -1,4 +1,4 @@
-"""Unit, board and harness membership (units spec U8, decisions model-0040 and model-0043).
+"""Unit, board and harness membership (decisions model-0040 and model-0043).
 
 `units`, `unit_subtree`, `unit_items`, `standalone`, `boundary`, `item_chain`,
 `enclosing_boards`, `external`, `unit_own_roots`, `is_sole_unit_root`, `in_reading`,
@@ -43,7 +43,7 @@ def require[R](found: R | None, kind: str, target: Id[Any]) -> R:
 
 
 def units(model: Model) -> tuple[Id[Unit], ...]:
-    """Every `Unit` id in `model`, in `Id` order (units spec U8)."""
+    """Every `Unit` id in `model`, in `Id` order."""
     return tuple(sorted(units_table(model)))
 
 

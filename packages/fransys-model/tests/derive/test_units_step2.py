@@ -1,7 +1,7 @@
-"""Units spec STEP 2: `derive.units`/`unit_subtree`/`unit_items`/`standalone`/`boundary` (U8)
-and per-unit numbering (U7).
+"""Tests for `derive.units`, `unit_subtree`, `unit_items`, `standalone`, `boundary`,
+and per-unit numbering.
 
-`docs/archive/specs/2026-09-22-units.md` U7, U8; `docs/decisions/model-0038-units.md`.
+`docs/decisions/model-0038-units.md`.
 """
 
 import dataclasses
@@ -132,7 +132,7 @@ def test_unit_subtree_unit_items_and_standalone_refuse_an_unknown_unit() -> None
 
 
 def test_external_refuses_an_unknown_item() -> None:
-    """`external`'s own locator raises for an unknown item id, not a unit id (units spec U8)."""
+    """`external`'s own locator raises for an unknown item id, not a unit id."""
     plant = Plant()
     _nested_units(plant, outside_item=False)
     model = plant.model()
@@ -184,7 +184,7 @@ def _two_instances(plant: Plant) -> tuple[Id[Unit], Id[Unit], Id[Item], Id[Item]
 
 
 def test_two_instances_of_one_unit_each_number_k1() -> None:
-    """Per-unit numbering: the sibling group is `(unit, parent, class_code)` (units spec U7)."""
+    """Per-unit numbering: the sibling group is `(unit, parent, class_code)`."""
     plant = Plant()
     _unit_a, _unit_b, relay_a, relay_b = _two_instances(plant)
     model, findings = number(plant.model())

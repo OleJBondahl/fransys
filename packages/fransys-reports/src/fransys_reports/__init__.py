@@ -1,4 +1,4 @@
-"""Fransys output: derive rows formatted as CSV (spec sections 4, 6 and 10)."""
+"""Fransys output: derive rows formatted as CSV (6 and 10)."""
 
 from .changes import changes_csv, changes_markdown
 from .csv import (

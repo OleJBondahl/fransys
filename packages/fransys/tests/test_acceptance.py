@@ -102,11 +102,11 @@ def test_a_blocked_write_draws_no_svg_where_the_unblocked_write_draws_them(
     assert list(intermediates.glob("*.svg")) == []
 
 
-# -- Windows page-key filenames (orchestrator ruling 2026-09-22) ----------------------
+# -- Windows page-key filenames (ruling 2026-09-22) ----------------------
 
 
 def test_file_safe_strips_the_colon_from_a_page_key():
-    """`render_id` renders a page key as `kind:value` (e.g. `item:<hex>`, spec F6)."""
+    """`render_id` renders a page key as `kind:value` (e.g. `item:<hex>`)."""
     assert ":" not in _file_safe("item:0123456789abcdef")
 
 
@@ -483,10 +483,10 @@ def test_check_calls_kicad_check_for_every_board():
 
 
 def test_board_and_rack_model_has_no_layout_missing_finding():
-    """D12/model-0039 can-fail proof: a real board-mounted `Function` is correctly excluded.
+    """Can-fail proof for model-0039: a real board-mounted `Function` is correctly excluded.
 
-    `build_board_and_rack_model()` authors one `Function` directly on the board item
-    (render work order PART 5b) and is never given a `layout.page` (it has no location to
+    `build_board_and_rack_model()` authors one `Function` directly on the board item and is never
+    given a `layout.page` (it has no location to
     lay anything out at). Before model-0039, `LAYOUT_MISSING` fired on any non-empty
     `functions(model)`, so this model -- a genuine board/rack-only submission -- tripped a
     false-positive `ERROR` and would have blocked `fr.write` entirely. `schematic_functions`
@@ -712,7 +712,7 @@ def _model_with_an_extra_port_symbol_mismatch() -> tuple[Draft, Id]:
     vocab/validators/part_conformance.py:97-102`) already names this shape --
     `ITEM_PART_MISMATCH`, "has port ..., which no port template declares" -- as one of its
     ordinary findings, not a `freeze()`-time refusal. Since decision 0028 that ERROR ends
-    `fransys.build` before layout (spec F3), so the test hands the built model to
+    `fransys.build` before layout, so the test hands the built model to
     `lay_out_schematic` itself to reach `resolve`. The `FunctionTemplate` declares one port,
     `in` (which would bind fine, by name, to `operating-device`'s own `in` port -- this test
     never needs to prove that): the `Function` carries only the *extra* port, `WRONG`,
@@ -816,8 +816,7 @@ def test_symbol_port_missing_falls_back_to_the_part_with_no_matching_port_templa
 def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id]:
     """A part-less item's function, authored directly, with a port matching no symbol port.
 
-    Reachable: `fransys_model` design/vocabulary.md 7
-    (`packages/fransys-model/docs/design/vocabulary.md:80`) documents this shape directly --
+    Reachable: the model's vocabulary notes document this shape directly --
     "Items without a part (`part=None`) declare functions and ports directly. This is for early
     design; the `ITEM_WITHOUT_PART` finding (`INFO`) ... tracks them" -- not a refusal.
     `fransys_layout`'s own reading code (`_drawn.py:48`, `category =
@@ -888,14 +887,14 @@ def test_symbol_port_missing_falls_back_to_the_function_with_no_part_at_all():
     )
 
 
-# -- units spec U6 / root decision 0016: cables.csv, a system-only export -----------
+# -- decision 0016: cables.csv, a system-only export -----------
 
 
 def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
     """A one-item unit `U1` and one top-level (`unit=None`) cable `W1` with a single core.
 
     `cable_list_rows` (and so `cables_csv`) only ever returns `unit=None` cables by
-    construction, so this fixture keeps the cable outside `unit`, the way units spec U3's
+    construction, so this fixture keeps the cable outside `unit`, the way the
     "cable drawings" rule already treats a top-level cable -- there is no scoped-to-a-unit
     cable to build here. The core gives WireViz's `top_level_drawings` something to draw
     (a cable with zero cores raises inside `wireviz.Harness.add_cable`, not a shape this
@@ -1063,7 +1062,7 @@ def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
 
 
 def test_write_unit_none_includes_cables_csv_and_a_unit_write_excludes_it(tmp_path):
-    """`cables.csv` is a system view, same as `overview.html` (units spec U6, decision 0016).
+    """`cables.csv` is a system view, same as `overview.html`.
 
     `unit=None` writes it; `unit=<a real unit>` does not, on the same model -- a top-level
     cable and a unit-owned item both exist here, so the two cases are non-vacuous.

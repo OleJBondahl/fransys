@@ -145,7 +145,7 @@ def test_a_keep_together_set_takes_the_unit_group_whole() -> None:
 
 
 def test_a_unit_group_wider_than_the_page_splits_with_unit_group_split() -> None:
-    """HL21 (designer ruling): a group wider than the page splits, with its own WARNING code."""
+    """HL21 (ruling): a group wider than the page splits, with its own WARNING code."""
     widths = dict.fromkeys("abc", 600)
     pages, findings = _plan(widths, [_band("", "abc")])
     assert _shape(pages) == [["a", "b"], ["c"]]

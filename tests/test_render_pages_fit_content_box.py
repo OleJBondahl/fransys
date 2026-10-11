@@ -45,7 +45,7 @@ _MIN_COORDINATE_COUNT = 1
 _KNOWN_TOP_TAGS = frozenset({"style", "g", "rect", "text", "polyline", "circle", "line"})
 
 # Inside a `<g class="symbol">` wrapper, the toolkit's own fragment tags
-# (`graphical_symbols.svg._element`/`to_fragment`): `line`, `polygon`/`polyline`, `circle`,
+# (`symdef.svg._element`/`to_fragment`): `line`, `polygon`/`polyline`, `circle`,
 # `text` carry a simple local x/y pair; `path` (an SVG arc, `_arc`) does not -- its `d`
 # mixes coordinate and flag numbers in path-command syntax, not a plain point list, and is
 # a known gap here (see `_symbol_fragment_coordinates`'s docstring). Bare `g` is the

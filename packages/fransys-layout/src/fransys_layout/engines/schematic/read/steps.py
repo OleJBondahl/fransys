@@ -10,6 +10,13 @@ lazy from collections.abc import Callable, Mapping
 lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.engines.schematic.read import labels, offstubs, reading
+from fransys_layout.engines.schematic.read.boundary_pins import (
+    Landings,
+    land_on_pins,
+    pin_landings,
+    pin_ports,
+    pin_specs,
+)
 from fransys_layout.engines.schematic.read.connections import (
     split_connections,
     split_net_groups,
@@ -59,8 +66,10 @@ type Views = dict[Id[Any], Id[Any]]
 
 
 def boxed(specs: Specs, view_of: Mapping[Id[Any], Id[Any]]) -> Specs:
-    """The specs with a port in an item box."""
-    return tuple(s for s in specs if any(p.port in view_of for p in s.ports))
+    """The specs with a port in an item box; a pin view is no part of its box."""
+    return tuple(
+        s for s in specs if s.pin_function is None and any(p.port in view_of for p in s.ports)
+    )
 
 
 def rail_reads(
@@ -113,14 +122,17 @@ def _remap(fn: Callable[[Any], Any], refs: Refs) -> Refs:
 
 def pin_reads(
     model: Model, specs: Specs, wired: AbstractSet[Id[Any]], refs: Refs
-) -> tuple[Specs, Views, Refs]:
-    """The specs with pin views, the pin-view map, and the refs named by pin view."""
+) -> tuple[Specs, Views, Refs, Landings]:
+    """The specs with pin views, the pin-view map, the refs named by pin view, and the landings."""
     # R7 A: connectors are drawn per pin; connections and nets name the pin views
+    landings = pin_landings(model, specs, refs[0])
     specs, pin_of = pin_views(specs)
     refs = _remap(lambda ref: repin(ref, pin_of), refs)
     # R7 B5: a pin with no conductor or net, whose mated pin has none either, is not drawn
     specs, pin_of = without_idle_pins(model, specs, pin_of, wired)
-    return specs, pin_of, refs
+    # model-0188: a boundary function that is no terminal or connector has pin views in the
+    # parent's black box; `land_on_pins` points the wires from outside the unit at them
+    return (*specs, *pin_specs(specs, landings)), pin_of, refs, landings
 
 
 def unused_reads(
@@ -138,7 +150,7 @@ def unused_reads(
 
 
 def item_reads(
-    model: Model, specs: Specs, wired: AbstractSet[Id[Any]], refs: Refs
+    model: Model, specs: Specs, wired: AbstractSet[Id[Any]], refs: Refs, landings: Landings
 ) -> tuple[Specs, Views, tuple[SymbolChoice, ...], tuple[tuple[Id[Any], ...], ...], Refs]:
     """The specs with item boxes, the item map and choices, the box sides, and the refs by item."""
     # R7 B2: an item whose every drawn function is symbol-defaulted is one box
@@ -147,7 +159,8 @@ def item_reads(
     # V1: each item box's pins on the side of their function's rank; the functions that stand
     # apart from the box (a contact, a connector's pin views) are no part of it
     sides = pin_sides(model, boxed(drawn_specs, view_of), set(view_of.values()))
-    return specs, view_of, view_choices, sides, _remap(lambda ref: reitem(ref, view_of), refs)
+    refs = _remap(lambda ref: reitem(ref, view_of), refs)
+    return specs, view_of, view_choices, sides, (land_on_pins(refs[0], landings), *refs[1:])
 
 
 def off_reads_of(
@@ -164,7 +177,7 @@ def off_reads_of(
     # is in `crossing` only, never in `connections`, since it is no conductor of the model
     net_groups, joins = groups_by_location(specs, net_groups, reads)
     off_texts, off_ends = offstubs.off_texts(model, maps, split[1], joins)
-    # W3 (designer's ruling): a unit's boundary pin mated outside the unit carries its mate's
+    # W3 (ruling): a unit's boundary pin mated outside the unit carries its mate's
     # off-stub (conductors only: `boundary_offs` reads each one's record)
     offs, off_more, ends_more = offstubs.boundary_offs(
         model, reads, specs, pin_mates(model, pin_of), split
@@ -178,14 +191,26 @@ def off_reads_of(
 
 
 def label_texts(
-    model: Model, indexes: Indexes, drawn: AbstractSet[Id[Any]], pin_of: Views, view_of: Views
+    model: Model,
+    indexes: Indexes,
+    drawn: AbstractSet[Id[Any]],
+    views: tuple[Views, Views, Landings],
 ) -> tuple[LabelText, ...]:
-    """The label texts of the functions, then of each pin view and each item box."""
+    """The label texts of the functions, then of each pin view and each item box.
+
+    `views`: the connector pin views, the item boxes, and the boundary landings.
+    """
+    pin_of, view_of, landings = views
+    landed = pin_ports(landings)
     return (
         *labels.label_texts(model, indexes, drawn),
         *(
             LabelText(kind=LabelKind.TAG, subject=port, text=pin_text(model, port))
             for port in sorted(pin_of)
+        ),
+        *(
+            LabelText(kind=LabelKind.TAG, subject=pin, text=pin_text(model, landed[pin]))
+            for pin in sorted(landed)
         ),
         *(
             LabelText(kind=LabelKind.TAG, subject=item, text=item_text(model, item))

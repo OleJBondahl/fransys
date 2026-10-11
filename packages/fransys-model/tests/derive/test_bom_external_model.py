@@ -1,4 +1,4 @@
-"""Tests for `bom_lines` and external items (external-items spec Y1, Y2).
+"""Tests for `bom_lines` and external items.
 
 An external item, or any item below an external one, has no BOM line: someone else supplies
 and owns it, exactly as for `installed=False`. Every scope kind gives the same answer.

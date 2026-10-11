@@ -1,5 +1,5 @@
 """Tests for `derive.black_box`: `is_black_box_item`, `drawing_set_is_replica_only`
-(units spec U1), against a hand-built nested-unit black-box shape and a clean twin.
+, against a hand-built nested-unit black-box shape and a clean twin.
 """
 
 import itertools

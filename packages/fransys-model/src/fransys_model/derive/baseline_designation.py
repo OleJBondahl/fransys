@@ -1,4 +1,4 @@
-"""The listing's designation and cross-unit port texts (baseline spec L2): `unit_designation`."""
+"""The listing's designation and cross-unit port texts: `unit_designation`."""
 
 from typing import TYPE_CHECKING, cast
 
@@ -90,7 +90,7 @@ def _location_keep(
 
 
 def unit_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str:
-    """`item`'s designation relative to `unit` (baseline spec L2).
+    """`item`'s designation relative to `unit`.
 
     `reference_designation`'s rule, except the `+` (location) segment drops `unit`'s own common
     location (`_common_location`); the `=` (group) segment is never truncated, as a group move
@@ -126,7 +126,7 @@ def _instance_prefix(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit]) 
     """`"<instance name>/"` for the unit `owner_unit`, an instance nested somewhere in `unit`.
 
     The instance name is the smallest, in sort order, of its own root items' `unit_designation`
-    in `unit` (baseline spec L2); a tagged instance is named by its tags instead (UT2).
+    in `unit`; a tagged instance is named by its tags instead (UT2).
     """
     if tags := instance_tags(model, owner_unit, unit):
         return f"{instance_name(tags)}/"
@@ -165,7 +165,7 @@ def _cross_port_text(model: Model, unit: Id[Unit] | None, port_id: Id[Port]) -> 
 
 
 def _cross_function_text(model: Model, unit: Id[Unit] | None, function_id: Id[Function]) -> str:
-    """`function_id`'s baseline text for `unit`'s own listing (mate ends, baseline spec L2)."""
+    """`function_id`'s baseline text for `unit`'s own listing (mate ends)."""
     fn = functions(model)[function_id]
     owner = items(model)[fn.item]
     if owner.unit == unit:

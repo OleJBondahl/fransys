@@ -1,4 +1,4 @@
-"""HA-D3B-FIX (layout-0158): the designer's FIX FIRST on P3, each defect a case through `fr`.
+"""HA-D3B-FIX (layout-0158): the FIX FIRST on P3, each defect a case through `fr`.
 
 Defect 1: a leaving line and its stub stand inside the frame (pump p03's `-W1`, `field_cable`).
 Defect 2: legs end on their pins with the pins' leads drawn, a leaving line ends on its stub box's
@@ -172,7 +172,7 @@ def test_no_line_turns_back_on_itself(name: str) -> None:
 
 
 def test_the_stretched_box_over_k1_is_a_warning_until_hl19_lands() -> None:
-    """Known HL19 finding (designer, ruling (b)): `-K1-J10` still spans its pin views' columns,
+    """Known HL19 finding (ruling (b)): `-K1-J10` still spans its pin views' columns,
     over K1's coil; the lint reports it as a WARNING TEXT_OVERLAP, never silently.
 
     It goes when full HL19 lands (a later order): this test then fails and is removed.

@@ -1,4 +1,4 @@
-"""`d.wire`: one wire, or a daisy chain, built through the engine's wiring (spec A6)."""
+"""`d.wire`: one wire, or a daisy chain, built through the engine's wiring."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING

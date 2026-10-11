@@ -13,8 +13,9 @@ The first fix (decision layout-0166): a line that no path in the content box can
 over the box grown to hold its ends, so the build succeeds. The page then reported
 OUT_OF_CONTENT_BOX (not PAGE_OVERFULL: that check misses a fold-made overflow, layout-0166 D2).
 The second fix (decision layout-0167, TALL-PAGE): the unit group cuts at its outline's top edge, so
-no page overflows and neither reports a finding. Longer lower columns (T-b) are held (designer
-R3: the fallback is its own order); a group with no lower band (T-c) is held too (R4). Both
+no page overflows and neither reports a finding. Longer lower columns (T-b) are held (R3: the
+fallback is its own order); a group with no lower
+band (T-c) is held too (R4). Both
 overflow and keep the grown-box search.
 """
 
@@ -310,7 +311,7 @@ def test_t_a_the_contactors_stand_on_one_page_and_the_board_with_its_lower_ends_
     assert sorted(_w1_stub_pages(built)) == [first, first + 1]
 
 
-_HELD = "TALL-PAGE T4 held (designer R3)"
+_HELD = "TALL-PAGE T4 held (R3)"
 
 
 @pytest.mark.xfail(strict=True, reason=_HELD)

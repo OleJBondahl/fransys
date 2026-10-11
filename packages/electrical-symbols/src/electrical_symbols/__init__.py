@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from graphical_symbols import LIBRARY_VERSION as _GRAPHICAL_LIBRARY_VERSION
-from graphical_symbols import Library, load_bundle
+from symdef import LIBRARY_VERSION as _SYMDEF_LIBRARY_VERSION
+from symdef import Library, load_bundle
 
 from electrical_symbols._version import LIBRARY_VERSION
 from electrical_symbols.box_ports import (
@@ -50,8 +50,8 @@ LIBRARY: Library = load_bundle(Path(__file__).parent / "bundle.json")
 
 
 def library_version() -> str:
-    """Both packages' versions, one string: `"electrical-symbols <v> / graphical-symbols <v>"`.
+    """Both packages' versions, one string: `"electrical-symbols <v> / symdef <v>"`.
 
-    The one home for this string (render spec D3, decision D40); layout and render re-use it.
+    The one home for this string (decision D40); layout and render re-use it.
     """
-    return f"electrical-symbols {LIBRARY_VERSION} / graphical-symbols {_GRAPHICAL_LIBRARY_VERSION}"
+    return f"electrical-symbols {LIBRARY_VERSION} / symdef {_SYMDEF_LIBRARY_VERSION}"

@@ -1,15 +1,15 @@
 """The marker box work package's own proof, on REAL compiled pixels: a location-prefixed
-marker text (`+C1/1.2`, D2) -- THE DEFECT's own example (designer's ruling, 2026-09-23: "on
+marker text (`+C1/1.2`, D2) -- THE DEFECT's own example (ruling, 2026-09-23: "on
 '+C1/1.2' the ink touches the outline") and the longest form a marker text ever takes, the
 exact case a render-side constant box could never have fit (render-0001's named limitation,
 closed by model-0037/layout-0043/this PART B) -- draws its ink inside the box render drew
 for it, clear of the outline on every edge, not merely unclipped past it (decision
-layout-0043's amendment, this work order). LD3/LD5 (spec 2026-09-25) later gave the position
-text a `#n-` reference number and a row letter: the designer's ruling's own text is now printed
+layout-0043's amendment, this work order). LD3/LD5 later gave the position
+text a `#n-` reference number and a row letter: the ruling's own text is now printed
 as `#1-+C1p1:2A`, still the same box-sizing defect, quoted verbatim above as the ruling wrote it.
 
 Root tests are the one place `fransys_render` and `fransys_pdf` may
-both be imported (spec section 5's boundary table holds neither to import
+both be imported (the import table holds neither to import
 the other; mirrors `tests/test_marker_fit.py`'s and
 `tests/test_symbol_not_installed_compiles_grey.py`'s cross-package
 pattern). This file also imports `fransys_layout.geometry.text_width`,
@@ -95,7 +95,7 @@ _FRAME_ROWS = 6
 _OWNER_X_G, _OWNER_Y_G = 80, 80  # the un-prefixed drawing set's placement -> the printed page
 _PARTNER_X_G, _PARTNER_Y_G = 240, 80  # +C1's placement -- never printed, only cited by the text
 _PARTNER_PAGE_NUMBER = 1  # together with the column and row below, the owner marker's text is
-# #1-+C1p1:2A: the same defect example the designer named (2026-09-23 ruling, THE DEFECT,
+# #1-+C1p1:2A: the same defect example the ruling named (2026-09-23, THE DEFECT,
 # against the then-current text format, "+C1/1.2"): "the ink touches the outline".
 # `_PARTNER_X_G = 240` already gives frame column 2, `_PARTNER_Y_G - 16 = 64` gives row A
 # (`frame_column`/`frame_row`'s own arithmetic, unchanged by this rename); the model's one

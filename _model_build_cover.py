@@ -1,13 +1,12 @@
-"""A shared `SYSTEM` document for MODEL-BUILD PS4's no-document test builds.
+"""A shared `SYSTEM` document for the test builds that have no document of their own.
 
-`.fransys/WORK-ORDER-MODEL-BUILD.md`, Part 3: a test that asserts a layout or render fact
-needs its build to hold a `Document`, since decision 0037 (PS1/PS2) gates layout on one. This
-module's `system_document()` gives that build a `SYSTEM`-preset document (no subject, units
-spec: the only preset with none) with every one of its own default pages removed
-(`HARNESS_DRAWING`, `CABLE_LIST`, `BOM` -- `packages/fransys-pdf/src/fransys_pdf/
-presets.py`'s `PRESET_PAGES[DocumentPreset.SYSTEM]`, `COVER`/`NOTES` kept and never empty),
-leaving nothing for `fransys_pdf.check` to report as empty (`DOCUMENT_EMPTY_LIST`,
-`DOCUMENT_NO_TOP_LEVEL_CABLES`) regardless of what the design does or does not contain.
+A test that asserts a layout or render fact needs its build to hold a `Document`, since decision
+0037 gates layout on one. This module's `system_document()` gives that build a `SYSTEM`-preset
+document (no subject: the only preset with none) with every one of its own default pages removed
+(`HARNESS_DRAWING`, `CABLE_LIST`, `BOM` -- `packages/fransys-pdf/src/fransys_pdf/ presets.py`'s
+`PRESET_PAGES[DocumentPreset.SYSTEM]`, `COVER`/`NOTES` kept and never empty), leaving nothing for
+`fransys_pdf.check` to report as empty (`DOCUMENT_EMPTY_LIST`, `DOCUMENT_NO_TOP_LEVEL_CABLES`)
+regardless of what the design does or does not contain.
 
 Verified on the order's own base commit (`model-build-base`, a detached worktree at `3bd82b40`,
 where layout still ran unconditionally so both sides of the comparison are real): adding this

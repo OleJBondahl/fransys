@@ -1,14 +1,13 @@
-"""`source` compared against a golden string, for one model (spec P3, Part 5's own test).
+"""`source` compared against a golden string, for one model.
 
 The root byte-equality test (two writes of one compiled result, byte-equal) is Stage 2: it
 needs the facade to compile. This one only needs `source` itself to be stable, and it stays
 valid once Stage 2 adds the other page kinds because the fixture document is trimmed by
 `remove` to `COVER` and `NOTES` (docs/decisions/pdf-0001-...md, Part 4 addendum).
 
-CHOSEN APPEARANCE (page-frame R10, the owner's appearance pass, `pdf-0005`): this golden now
-encodes the design the owner reviewed and accepted -- R5's values, the cover's dropped facts
-table -- not an unfinished default. A future change to it is a design change, made with the
-designer, not a routine regeneration.
+CHOSEN APPEARANCE (page-frame R10, the owner's appearance pass, `pdf-0005`): this golden now encodes
+the design the owner reviewed and accepted -- R5's values, the cover's dropped facts table -- not an
+unfinished default. A future change to it is a design change, not a routine regeneration.
 """
 
 from _build import document, location, model, project, revision_entry

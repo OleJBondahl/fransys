@@ -21,13 +21,12 @@ Status: alpha, under construction, a package of the Fransys workspace
 - `build/` and `src/electrical_symbols/bundle.json`: the generated output, tracked in git so a
   symbol change shows up as a reviewable diff.
 
-The toolkit `graphical-symbols` validates, resolves, lints and renders the files. It is its own
-repository again, pinned by an exact git tag in the root `pyproject.toml` (root decision 0015). Later data packages for other
+The toolkit `symdef` validates, resolves, lints and renders the files. It is a public library on PyPI, pinned by an exact version in the root `pyproject.toml` (root decisions 0015 and 0128). Later data packages for other
 standards follow the same pattern.
 
 ## The design
 
-The toolkit's packaged design guide (`graphical_symbols`' `docs/SYMBOL_INTERFACE.html`, read
+The toolkit's packaged design guide (`symdef`'s `docs/SYMBOL_INTERFACE.html`, read
 through `importlib.resources`, root decision 0015 -- the one copy, shipped in its wheel) is the
 binding, final spec and file format. Open it in a browser from the toolkit's own repository.
 Symbols are definitions with role-named ports (`in`, `out`,

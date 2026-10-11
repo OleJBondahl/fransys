@@ -1,6 +1,6 @@
 """Chain discovery, walk phase: the chains, their direction, and the bundles (chains.py)."""
 
-from collections import Counter, defaultdict
+from collections import Counter
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Set as AbstractSet
@@ -12,6 +12,7 @@ from ._chain_sides import _wired
 from ._chain_state import _LINK_PORTS, _Links, _Reading, _Synthetic, _Walks
 from ._chain_ties import _strip_of, needs_reverse
 from .lookups import group_of
+from .slices import by_key
 from .terminal_facts import TerminalRead
 
 if TYPE_CHECKING:
@@ -176,7 +177,7 @@ def _note_edges(seq: Sequence[tuple[_PoleId, Handle, Handle]], rd: _Reading, out
 def _note_upper(
     seq: Sequence[tuple[_PoleId, Handle, Handle]], poles: Mapping[_PoleId, _Pole], out: _Walks
 ) -> None:
-    """R7 A (designer, amends J3 inside a chain): the pin the chain enters first is on top."""
+    """R7 A (amends J3 inside a chain): the pin the chain enters first is on top."""
     # A pair in no chain keeps the J3 order
     if len(seq) > 1:
         for p, e, _ in seq:
@@ -344,7 +345,7 @@ def _pole_order(
 
 
 def _group_bundles(
-    by_sig: Mapping[tuple[Any, ...], list[list[_PoleId]]],
+    by_sig: Mapping[tuple[Any, ...], Sequence[list[_PoleId]]],
     per_item: Mapping[Any, int],
     poles: Mapping[_PoleId, _Pole],
     specs: Mapping[Handle, FunctionSpec],
@@ -373,7 +374,7 @@ def bundle_chains(
     """Fill `walks.bundles`: chains with one signature, one column each."""
     poles = state.poles
     per_item = Counter((pole.item, pole.kind) for pole in poles.values())
-    by_sig: dict[tuple[Any, ...], list[list[_PoleId]]] = defaultdict(list)
-    for chain in walks.chains:
-        by_sig[_signature(chain, poles, walks.ends_of, links.detached)].append(chain)
+    by_sig = by_key(
+        walks.chains, lambda chain: _signature(chain, poles, walks.ends_of, links.detached)
+    )
     walks.bundles = _group_bundles(by_sig, per_item, poles, specs, key_order)

@@ -1,4 +1,4 @@
-"""The one reader of a `Document`'s subject unit, by id or by release name (spec UN1, UN2)."""
+"""The one reader of a `Document`'s subject unit, by id or by release name."""
 
 from fransys_model.vocab.unit_by_name import units_named
 lazy from fransys_model.kernel import Id, Model

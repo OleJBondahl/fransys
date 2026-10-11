@@ -1,7 +1,6 @@
-"""`fransys_pdf`'s replica-only drawing-set skip rule (STEP 4 addition,
-`.fransys/WORK-ORDER-UNIT-DOCUMENTS.md`'s "STEP 2b RULING AND A STEP 4 ADDITION"), proven
+"""`fransys_pdf`'s replica-only drawing-set skip rule, proven
 against the units worked example's own real, facade-built geometry -- not a hand-built layout
-fixture. `packages/fransys-pdf/tests/test_replica_only.py` proves the predicate's logic
+fixture. The pdf package unit tests prove the predicate's logic
 directly against hand-built `layout.*` records (the package's own unit of testing); this file
 proves the real worked example actually has the shape that predicate assumes, and that a real
 author-level rewiring flips it, both on `fr.build`'s own output.
@@ -43,7 +42,7 @@ _IO_BOARD_COUNT = 1  # a `demo-io-board` unit's own single board
 _CABINET_OWN_STRIP_COUNT = 1  # a `demo-pump-cabinet` unit's own single strip, X2
 _UNWIRED_FIELD_TERMINALS = 2  # the first two field terminals; a third is wired to a neighbour
 _ORIGIN = Origin(
-    file="tests/test_pdf_replica_only_units_worked_example.py", line=1, note="STEP 4 addition"
+    file="tests/test_pdf_replica_only_units_worked_example.py", line=1, note="replica-only probe"
 )
 
 
@@ -139,8 +138,8 @@ def test_the_worked_examples_two_top_level_sets_are_replica_only_with_one_info_e
 
 def test_a_real_rewired_replica_boundary_draws_its_set_and_drops_the_info():
     """Can-fail 1, on real geometry: rebuilding with a third field terminal on pump1's own
-    cabinet, wired to a brand-new unitless item at the same location (units spec U2's "an
-    ordinary same-set connection"), makes pump1's top-level set a real page -- pump2's own,
+    cabinet, wired to a brand-new unitless item at the same location (an "ordinary same-set
+    connection"), makes pump1's top-level set a real page -- pump2's own,
     untouched, stays replica-only, so this is a genuine behavioural difference for one
     cabinet, not a global flag flip.
     """
@@ -165,7 +164,7 @@ def test_a_real_rewired_replica_boundary_draws_its_set_and_drops_the_info():
 
 
 def _unit_by_name_and_prefix(model, *, name, prefix):
-    """The one unit of `model` named `name` whose own key starts with `prefix` (units spec U6).
+    """The one unit of `model` named `name` whose own key starts with `prefix`.
 
     `_build()` instantiates `demo-pump-cabinet` and, nested in it, `demo-io-board` once per
     cabinet (`pump1`, `pump2`); both units of one name are real content, so this also proves
@@ -180,7 +179,7 @@ def _unit_by_name_and_prefix(model, *, name, prefix):
 
 
 def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
-    """`fransys_pdf._lists._boards_for`/`_terminal_strips_for` (units spec U6, decision
+    """`fransys_pdf._lists._boards_for`/`_terminal_strips_for` (decision
     pdf-0006), proven on the worked example's real, facade-built geometry: a unit document's
     TERMINAL_LIST/CONNECTOR_LIST cover only items whose own `Item.unit` is that unit,
     directly -- never the recursive subtree.
@@ -257,7 +256,7 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
 
 
 def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to_end():
-    """`document_facts`'s unit branch (units spec U3, decision pdf-0006), proven end to end
+    """`document_facts`'s unit branch (decision pdf-0006), proven end to end
     through `source()` on the worked example's real, facade-built geometry -- not only
     `packages/fransys-pdf/tests/test_source.py`'s own hand-built-fixture proof
     (`test_unit_document_source_wires_title_block_scope_and_per_set_counter`). The worked
@@ -301,7 +300,7 @@ def _system_document(id_suffix: str) -> Document:
 
 
 def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_the_info():
-    """Units spec U3's amended "cable drawings" bullet (STEP 4b addition, decision pdf-0006),
+    """The "cable drawings" rule (decision pdf-0006),
     proven on the worked example's real, facade-built geometry: every cable the worked
     example authors is a unit's own (`pump_cabinet`'s `w1c`, built inside `u.unit(...)`), so
     the model has no top-level cable at all -- confirmed here by finding, not assumed
@@ -387,7 +386,7 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
     """BOM acceptance (STEP 4 work order): "The cabinet PDF's title block reads
     `pump-cabinet` `02` `2026-09-23`. Its BOM holds the board line and no relay" (mapped
     fixture names `demo-pump-cabinet`/`demo-io-board`). Scoped to the cabinet unit's own id
-    (`_bom_scope`'s unit branch, units spec U5/U6), the BOM holds the nested `demo-io-board`
+    (`_bom_scope`'s unit branch), the BOM holds the nested `demo-io-board`
     unit as one line (`derive.bom_lines`'s own "mpn the instance's name" convention for a
     nested unit line) and none of that board's own components -- the relay `DEMO-RLY-2CO-24`
     is a `demo-io-board` member, not a direct `demo-pump-cabinet` one.
@@ -413,12 +412,12 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
     assert "DEMO-RLY-2CO-24" not in text
 
 
-# -- STEP 4b(b): the board unit's own SCHEMATIC section now draws (units spec U1's board-unit
+# -- the board unit's own SCHEMATIC section now draws (board-unit
 # ruling, model-0041) -----------------------------------------------------------------------
 
 
 def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
-    """STEP 4b(b) (units spec U1's board-unit ruling, model-0041): `DEMO-PCB-IO` is the sole
+    """The board-unit ruling (model-0041): `DEMO-PCB-IO` is the sole
     root item of its own nested unit `demo-io-board`, so its unit document's SCHEMATIC
     section is no longer `NO_DRAWINGS` (that was STEP 4's own finding, captured as
     `step4-board-schematic-no-drawings.png` in the STEP 4 review) -- it now has a real page,

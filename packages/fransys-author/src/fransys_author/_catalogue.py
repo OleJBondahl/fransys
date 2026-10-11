@@ -1,4 +1,4 @@
-"""The part catalogue read from `parts` once (spec A1, A-r1); A5's checks run in `find()`."""
+"""The part catalogue read from `parts` once; A5's checks run in `find()`."""
 
 import difflib
 from dataclasses import dataclass
@@ -39,7 +39,7 @@ class Catalogue:
     operating_envelopes: dict[Id[FunctionTemplate], Operating]
 
     def find(self, mpn: str | tuple[str, str]) -> Part:
-        """The `Part` named by a bare MPN or an explicit `(manufacturer, mpn)` (spec A5)."""
+        """The `Part` named by a bare MPN or an explicit `(manufacturer, mpn)`."""
         if isinstance(mpn, tuple):
             manufacturer, number = mpn
             found = self.by_manufacturer_mpn.get((manufacturer, number))
@@ -140,7 +140,7 @@ def build_catalogue(parts: Draft) -> Catalogue:
             _index_value(record, template_ratings, part_ratings, operating_envelopes)
     for record in records:
         if isinstance(record, InternalLink):
-            # designer ruling 2026-09-27, S-A: direct index, no guard. A part file can never
+            # ruling 2026-09-27, S-A: direct index, no guard. A part file can never
             # produce a link whose port owns no function template (parts lint's
             # LINK_PORT_UNKNOWN rejects it at the source), so this must raise loudly, not
             # silently drop the link, if that impossible state ever arises.

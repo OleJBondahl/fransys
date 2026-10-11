@@ -1,4 +1,4 @@
-"""Derive rows formatted as CSV (spec sections 6 and 10)."""
+"""Derive rows formatted as CSV."""
 
 import csv
 import io
@@ -97,7 +97,7 @@ def plc_csv(
 
     Formats ``fransys_model.derive.queries.plc_channel_rows``: channel, signal, where the
     channel is wired to (`wired_to`) and signal name, one row per allocated PLC channel.
-    `unit` and `context` pass through (units spec U6). Pure.
+    `unit` and `context` pass through. Pure.
 
     Args:
         model: A frozen, numbered model with PLC allocation applied.
@@ -116,8 +116,7 @@ def bom_csv(
     """Write the bill of materials as CSV.
 
     Formats ``fransys_model.derive.queries.bom_lines``, one row per part used by an
-    `installed=True` item. `scope` restricts the lines as `bom_lines` does (units spec U5,
-    reports-0002). Pure.
+    `installed=True` item. `scope` restricts the lines as `bom_lines` does (reports-0002). Pure.
 
     Args:
         model: A frozen, numbered model.
@@ -139,7 +138,7 @@ def wires_csv(
 
     Formats ``fransys_model.derive.wire_rows``, one row per wire: `from`, `to`, `colour`,
     `cross_section_mm2` and the `label` printed at both ends. `unit` and `context` pass
-    through (units spec U6). Pure.
+    through. Pure.
 
     Args:
         model: A frozen, numbered model.
@@ -156,7 +155,7 @@ def designations_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
     """Write the designation (tag) list as CSV.
 
     Formats ``fransys_model.derive.queries.designation_list``, one row per item,
-    sorted by designation. `unit` passes through (units spec U6). Pure.
+    sorted by designation. `unit` passes through. Pure.
 
     Args:
         model: A frozen, numbered model.
@@ -198,7 +197,7 @@ def connectors_csv(
 
 
 def cables_csv(model: Model) -> str:
-    """Write the top-level cable list as CSV (units spec U3, root decision 0016).
+    """Write the top-level cable list as CSV (root decision 0016).
 
     Formats ``fransys_model.derive.queries.cable_list_rows``, one row per `unit=None` cable.
     It takes no `unit=`: those cables are top-level by construction, so a unit scope is empty.

@@ -23,7 +23,7 @@ def _kind(row: str, kind: str, symbol: str) -> Row:
     return Row(row, ("function_kind", kind), symbol)
 
 
-# A row's `port_map`, model port name to symbol port: only T2.21 has one (PATCH-0132 E4), the
+# A row's `port_map`, model port name to symbol port: only T2.21 has one, the
 # `external` side of a terminal with no part. The author's part-less terminal and the demo terminal
 # part name that port `external`, so the name lives in two packages.
 SYMBOL_PORT_MAPS: frozendict[str, frozendict[str, str]] = frozendict(

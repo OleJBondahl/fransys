@@ -1,4 +1,4 @@
-"""Lint a part library without building a model (spec section 7, rulings P4-P8).
+"""Lint a part library without building a model (rulings P4-P8).
 
 Every check is `ERROR` unless the call site passes `severity=Severity.WARNING`. Codes are
 listed next to the check that raises them, and every finding's message carries its file
@@ -28,7 +28,7 @@ _CLASS_CODE = re.compile(r"^[A-Z]{1,3}$")
 # IEC 81346-2:2019: "The letters A, I and O shall not be used as a class code."
 _FORBIDDEN_CLASS_CODES: frozenset[str] = frozenset({"A", "I", "O"})
 # IEC 81346-2:2019 reserves D, L, V, Y and Z. J is also reserved by the standard but is
-# deliberately not in this set: the owner overrides IEC on J for connectors (spec C2).
+# deliberately not in this set: the owner overrides IEC on J for connectors.
 _RESERVED_CLASS_CODES: frozenset[str] = frozenset({"D", "L", "V", "Y", "Z"})
 
 _PART_FILE_TABLES = frozenset(

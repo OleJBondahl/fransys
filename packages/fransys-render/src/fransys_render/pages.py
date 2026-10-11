@@ -1,4 +1,4 @@
-"""Laid-out model to SVG pages (spec sections 4, 6 and 9)."""
+"""Laid-out model to SVG pages (6 and 9)."""
 
 from typing import TYPE_CHECKING
 

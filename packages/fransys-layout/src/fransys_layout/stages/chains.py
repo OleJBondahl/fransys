@@ -110,7 +110,7 @@ def discover_chains(
     *,
     rank_of: Mapping[Handle, int] | None = None,
     tie_key: Mapping[Handle, tuple[str, ...]] | None = None,
-    key_order: Mapping[Handle, tuple[Any, ...]] | None = None,
+    key_order: Mapping[Handle, tuple[Any, ...]],
 ) -> tuple[Column, ...]:
     """Find the chains and bundles, one column each; `tie_key` breaks end ties (D1, model-0052)."""
     functions, connections = records.functions, records.connections
@@ -123,7 +123,7 @@ def discover_chains(
     links = find_links(state, nets, specs, connections)
     walks = walk_chains(state, links, specs, rank_of, tie_key)
     drop_unwired_poles(walks, state, nets, found)
-    bundle_chains(walks, state, links, specs, key_order or {})
+    bundle_chains(walks, state, links, specs, key_order)
     reach = start_reach(state, nets, specs, drawn_of, found.side_info)
     reach.fixed = records.fixed
     vote_columns(reach, walks, connections)

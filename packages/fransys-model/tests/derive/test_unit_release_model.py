@@ -1,4 +1,4 @@
-"""Tests for `derive.unit_release`, the one reader of a unit's release facts (schema spec SC2)."""
+"""Tests for `derive.unit_release`, the one reader of a unit's release facts."""
 
 import pytest
 

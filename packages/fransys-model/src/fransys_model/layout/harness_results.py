@@ -1,4 +1,4 @@
-"""Derived layout kinds of harness lines on schematic pages (decision model-0173, spec HL9).
+"""Derived layout kinds of harness lines on schematic pages (decision model-0173).
 
 Render draws each by kind and reads every coordinate from the record. Texts are never stored:
 the box texts come from `derive`, only their slot positions are kept here.
@@ -11,7 +11,7 @@ from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port
 
 from .order import by_index, holder_of
-from .results import Page, RoutePoint
+from .results import LinkMarker, Page, RoutePoint
 
 
 @record(kind="layout.harness_line")
@@ -136,3 +136,25 @@ class HarnessFanOut:
             for leg in legs
         )
         object.__setattr__(self, "legs", ordered)
+
+
+@record(kind="layout.stub_end")
+class StubEnd:
+    """One far end of a leaving harness-line stub: where that end is drawn (STUB-POSITIONS P1).
+
+    `marker` is the stub, `index` the end's place in its list (the line's end order), `port` the
+    far end's port. `page` is the page that end is placed on in the stub's drawing set and `x`,
+    `y` its drawn position there (grid units), as `CrossReferencePartner` has them; `page` is
+    `None`, `x` and `y` 0, when it is drawn in no page of that set (P2).
+    """
+
+    id: Id[StubEnd]
+    key: AuthoringKey
+    marker: Id[LinkMarker]
+    index: int
+    port: Id[Port]
+    page: Id[Page] | None
+    x: int
+    y: int
+    produced_by: str
+    ext: frozendict[str, Value] = frozendict()

@@ -1,4 +1,4 @@
-"""Unit directions a wire leaves a grid point (spec D8, `_junctions._directions`)."""
+"""Unit directions a wire leaves a grid point (`_junctions._directions`)."""
 
 from fransys_render._junctions import _directions
 

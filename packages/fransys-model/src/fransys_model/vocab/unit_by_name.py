@@ -18,7 +18,7 @@ def units_named(model: Model, name: str) -> tuple[Id[Unit], ...]:
     """The ids of every `Unit` instance of a release named `name`, in id order.
 
     Every version and revision of that name counts; an id order that does not depend on
-    hash order (units spec U8's tie-break).
+    hash order (the tie-break).
 
     Example: two `UnitRelease`s named `"relay-board"` (`1.1` and `1.2`), one `Unit`
     instance of each: `units_named(model, "relay-board")` returns both ids, sorted.

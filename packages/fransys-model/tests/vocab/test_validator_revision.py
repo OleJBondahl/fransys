@@ -1,4 +1,4 @@
-"""Tests for `validators.revisions` (units spec U4, schema spec SC2, SC5)."""
+"""Tests for `validators.revisions` ."""
 
 import re
 

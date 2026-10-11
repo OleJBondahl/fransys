@@ -1,6 +1,6 @@
 """The pole side and conductor of a port: the stated value, else the one a standard marking gives.
 
-Decision parts-0010 (spec F9). One function, `facts`, so the marking tables live here only.
+Decision parts-0010. One function, `facts`, so the marking tables live here only.
 """
 
 from __future__ import annotations

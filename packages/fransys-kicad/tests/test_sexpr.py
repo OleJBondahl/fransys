@@ -1,4 +1,4 @@
-"""Direct tests for the s-expression reader (spec section 8; mutmut triage rank 2: no direct
+"""Direct tests for the s-expression reader (mutmut triage rank 2: no direct
 test file existed before, only indirect exercise via bootstrap.py, which never fed it an escape
 sequence or a malformed atom)."""
 

@@ -91,7 +91,7 @@ def _pages_holding_p2(model: Model) -> set:
 
 
 def _moved_off_shared_pages(plain: Model, extra: Model, group: object) -> list:
-    """The page-local promise (designer): a group that shares no page with `group`, before or
+    """The page-local promise: a group that shares no page with `group`, before or
     after, keeps every placement byte-identical. A group sharing such a page may shift along
     it, the price of packing. Returns the placements that break it."""
     pages = [*_table(plain, "page").values(), *_table(extra, "page").values()]

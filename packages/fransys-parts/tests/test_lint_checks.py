@@ -1,4 +1,4 @@
-"""One can-fail test and one clean twin per P8 lint code (spec P8, ROADMAP rule 4).
+"""One can-fail test and one clean twin per lint code.
 
 Every test builds a small library in `tmp_path`: a `library.toml` and, unless a test is
 about `library.toml` itself, one part file under `parts/`. `_codes` reads back the set of
@@ -866,7 +866,7 @@ def test_changeover_link_skips_a_conductive_link_and_a_bad_link(tmp_path):
 
 
 def test_throw_roles_on_another_kind_trigger_neither_changeover_code(tmp_path):
-    """Only a `contact_co` function is held to the throw roles (spec CS2)."""
+    """Only a `contact_co` function is held to the throw roles."""
     codes = _changeover_codes(tmp_path, kind="contact_no", roles=("common", "break", "make"))
     assert codes.isdisjoint({"CHANGEOVER_ROLE", "CHANGEOVER_LINK"})
     generic = _changeover_codes(tmp_path, kind="contact_no", roles=("generic",) * 3)
@@ -886,7 +886,7 @@ def test_changeover_symbol_port(tmp_path):
 
 
 def test_a_symbol_port_on_another_kind_is_not_a_changeover_error(tmp_path):
-    """Only a `contact_co` function is refused a `symbol_port` (spec CS3)."""
+    """Only a `contact_co` function is refused a `symbol_port`."""
     no_contact = _changeover(kind="contact_no", roles=("generic",) * 3).replace(
         'ports = [{ name = "11", role = "generic" }',
         'symbol = "make-contact"\nports = [{ name = "11", role = "generic", symbol_port = "in" }',

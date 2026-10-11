@@ -25,7 +25,7 @@ from fransys_layout.geometry import (
 )
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.sizing import with_rooms
-from fransys_layout.stages.space import Shape, Space
+from fransys_layout.stages.space import Shape, Space, unowned
 from fransys_layout.stages.types import LabelKind, PlacedLabel
 
 from .candidates import DEFAULT_TABLE, TextKind
@@ -137,11 +137,27 @@ def drawn_shapes(markers: tuple[LinkMarker, ...]) -> tuple[Shape, ...]:
             if not m.symbol
             for box in (m.box, *stub_boxes(m))
         ),
-        *(
-            Shape(owner=None, box=box)
-            for one in power_places(markers)
-            for box in (one.body, one.lead)
-        ),
+        *unowned(box for one in power_places(markers) for box in (one.body, one.lead)),
+    )
+
+
+def page_shapes(
+    markers: tuple[LinkMarker, ...],
+    placed: tuple[PlacedFunction, ...],
+    labels: tuple[PlacedLabel, ...],
+    *,
+    symbols: bool,
+) -> tuple[Shape, ...]:
+    """What a power text or symbol must clear: functions, ordinary ends, labels, and the symbols."""
+    ends = (
+        drawn_shapes(markers)
+        if symbols
+        else drawn_shapes(tuple(m for m in markers if not m.symbol))
+    )
+    return (
+        *(Shape(owner=one.function, box=placed_keepout(one)) for one in placed),
+        *ends,
+        *unowned(one.box for one in labels),
     )
 
 
@@ -177,11 +193,7 @@ def with_power_labels(
     )
     if not texts:
         return labels, ()
-    shapes = (
-        *(Shape(owner=one.function, box=placed_keepout(one)) for one in placed),
-        *drawn_shapes(markers),
-        *(Shape(owner=None, box=one.box) for one in labels),
-    )
+    shapes = page_shapes(markers, placed, labels, symbols=True)
     done, findings = place_texts(texts, Space(shapes=shapes, content=frame.content), DEFAULT_TABLE)
     by_port = {one.port: one for one in places}
     made = tuple(
@@ -193,6 +205,7 @@ def with_power_labels(
             page=by_port[one.handle].page,
             box=one.box,
             unplaced=one.unplaced,
+            function=owners.get(by_port[one.handle].pin),
         )
         for one in done
     )
@@ -254,7 +267,7 @@ def _own_shapes(geometry: SymbolGeometry, places: tuple[PowerPlace, ...]) -> tup
     stems = (corridor(g.at, port_exit(g.at, g.facing)) for g in geometry.ports if g.at not in pins)
     boxes = [geometry.body, *(s.box for s in geometry.slots if s.slot == "tag"), *stems]
     boxes += [box for one in places for box in (one.body, one.lead)]
-    return tuple(Shape(owner=None, box=box) for box in boxes)
+    return unowned(boxes)
 
 
 def _room(

@@ -1,6 +1,6 @@
 """G4: a parent wired straight to a nested unit's connector is drawn, and a boundary pin is open.
 
-`lint_chains` reads the drawn boundary functions of every unit as open ends (units spec U2).
+`lint_chains` reads the drawn boundary functions of every unit as open ends.
 """
 
 from typing import Any
@@ -71,7 +71,7 @@ def test_a_parent_wired_straight_to_a_nested_connector_is_drawn_and_x1_is_open()
     `CONNECTION_NOT_DRAWN`. The cabinet's own unwired boundary connector `X1` is open, so no
     `LONE_CELL`.
 
-    # UNDO: engines/schematic/engine.py, pass `open_ends=frozenset()` to `_lint_findings`
+    # UNDO: engines/schematic/engine.py, pass `open_ends=frozenset()` to `lint_findings`
     """
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)

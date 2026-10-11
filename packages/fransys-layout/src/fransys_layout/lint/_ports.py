@@ -49,7 +49,7 @@ def locate(
     named = _named(connections, net_groups)
     also = _also(connections, where)
     return Ports(
-        net={port: net for port, (_, net) in named.items()},
+        net={port: net for (port, _), net in named.items()},
         at=_at(named, where, {one.function: one for one in drawn}),
         also={key: frozenset(points) for key, points in also.items()},
         pages={function: tuple(sorted(pages)) for function, pages in where.items()},
@@ -69,14 +69,13 @@ def _placements(placed: tuple[PlacedFunction, ...]) -> dict[Handle, dict[Page, P
 
 
 def _at(
-    named: Mapping[Handle, tuple[Handle, Handle]],
+    named: Mapping[tuple[Handle, Handle], Handle],
     where: Mapping[Handle, Mapping[Page, PlacedFunction]],
     drawn_of: Mapping[Handle, DrawnFunction],
 ) -> dict[tuple[Handle, Page], Point]:
     """The page position of each named port of a placed function."""
     at: dict[tuple[Handle, Page], Point] = {}
-    for port in sorted(named):
-        function = named[port][0]
+    for port, function in sorted(named):
         if function not in where:
             continue
         name = _symbol_port(port, drawn_of.get(function))
@@ -103,14 +102,14 @@ def _also(
 
 def _named(
     connections: tuple[Connection, ...], net_groups: tuple[NetGroup, ...]
-) -> dict[Handle, tuple[Handle, Handle]]:
-    """Each named port with its function and physical net; a port named two ways is a fault."""
-    found: dict[Handle, tuple[Handle, Handle]] = {}
+) -> dict[tuple[Handle, Handle], Handle]:
+    """Each (port, function) name with its physical net; a boundary port has two functions."""
+    found: dict[tuple[Handle, Handle], Handle] = {}
     refs = [(ref, one.physical_net) for one in connections for ref in (one.a, one.b)]
     refs += [(ref, group.physical_net) for group in net_groups for ref in group.ports]
     for ref, net in refs:
-        if found.setdefault(ref.port, (ref.function, net)) != (ref.function, net):
-            msg = "one port is named with two different functions or physical nets"
+        if found.setdefault((ref.port, ref.function), net) != net:
+            msg = "one port of one function is named with two different physical nets"
             raise LayoutError(msg)
     return found
 

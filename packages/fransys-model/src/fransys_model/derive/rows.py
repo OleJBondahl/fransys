@@ -168,7 +168,7 @@ class WireRow:
 
 @value
 class DesignationRow:
-    """One line of the tag/designation list (design/derive-queries.md `designation_list`)."""
+    """One line of the tag/designation list (`designation_list`)."""
 
     item: Id[Item]
     designation: str
@@ -343,7 +343,20 @@ class HarnessCable:
 
 
 @value
-class CableListRow:
+class _CableFacts:
+    """The facts `CableListRow` and `ContentsRow` share: `HarnessCable`'s, `None` if absent."""
+
+    cable: Id[Item]
+    designation: str
+    mpn: str | None
+    description: str | None
+    core_count: int | None
+    gauge_mm2: Decimal | None
+    length_mm: int | None
+
+
+@value
+class CableListRow(_CableFacts):
     """One top-level cable of the system document's cable list.
 
     `mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
@@ -355,19 +368,12 @@ class CableListRow:
     both are.
     """
 
-    cable: Id[Item]
-    designation: str
-    mpn: str | None
-    description: str | None
-    core_count: int | None
-    gauge_mm2: Decimal | None
-    length_mm: int | None
     from_label: str
     to_label: str
 
 
 @value
-class ContentsRow:
+class ContentsRow(_CableFacts):
     """One cable of a document's CONTENTS page.
 
     `mpn`, `description`, `core_count`, `gauge_mm2` and `length_mm` are `HarnessCable`'s own
@@ -377,13 +383,6 @@ class ContentsRow:
     every end. It is text, not a tuple, so `cell_text` cannot join it with `CELL_SEPARATOR`.
     """
 
-    cable: Id[Item]
-    designation: str
-    mpn: str | None
-    description: str | None
-    core_count: int | None
-    gauge_mm2: Decimal | None
-    length_mm: int | None
     ends: str
 
 
@@ -478,7 +477,7 @@ class ExtUsage:
     subjects: tuple[Id[Any], ...]
 
 
-# -- baseline listing rows (baseline spec L2, `derive.baseline`) ----------------------------
+# -- baseline listing rows (`derive.baseline`) ----------------------------
 
 
 @value
@@ -504,17 +503,13 @@ class BaselineItem:
 
 
 @value
-class BaselineNestedUnit:
+class BaselineNestedUnit(BaselineUnit):
     """One `units` entry: a unit release directly nested in the listed unit, with its instances.
 
     `instances` names each instance sharing this `(name, version, revision)` release: the
     smallest, in sort order, of its own root items' unit designations in the listed unit.
     """
 
-    name: str
-    version: int
-    revision: int
-    interface: str
     instances: tuple[str, ...]
 
 
@@ -530,7 +525,7 @@ class BaselineBoundary:
 
 @value
 class BaselineConductor:
-    """One `conductors` entry: a conductor belonging to the listed unit (units spec U6)."""
+    """One `conductors` entry: a conductor belonging to the listed unit."""
 
     kind: str
     a: str
@@ -576,7 +571,7 @@ class BaselineNet:
 
 @value
 class Listing:
-    """A unit's baseline listing (baseline spec L2): designation-relative, format-versioned."""
+    """A unit's baseline listing: designation-relative, format-versioned."""
 
     unit: BaselineUnit
     items: tuple[BaselineItem, ...]
@@ -597,7 +592,7 @@ class Change:
     "between `a` and `b`" or "`instance` (name)" shapes without ever parsing `subject` (reports
     package rule: never parse a designation). `detail` is a short rendered description for an
     `added`/`removed` row that needs more than its bare identity to be legible (populated only
-    for `items` and `boundary`, per the spec's own worked example -- every other section's
+    for `items` and `boundary`, per the worked example -- every other section's
     `added`/`removed` rows carry `detail=""`; `changed` rows always carry `detail=""` too, since
     `field`/`before`/`after` already say what changed).
     """
@@ -624,7 +619,7 @@ class ListingDiff:
 CHANGE_COLUMNS = ("section", "change", "subject", "field", "before", "after")
 
 
-# -- numbering pins (fixed-designations spec FD3, `derive.numbering_pins`) ------------------
+# -- numbering pins (`derive.numbering_pins`) ------------------
 
 
 @value
@@ -634,7 +629,7 @@ class NumberingItem:
     `key` is `derive.unit_relative_key`'s (FD2). `scope` is the relative key of the board or
     harness the item's designation reads through, `None` for none. `code` is the item's
     part's `class_code`, or `None` for a part-less item -- one record, one spelling of
-    absence, matching `scope`'s own `None` (designer ruling 2026-09-27); `code` never gates
+    absence, matching `scope`'s own `None` (ruling 2026-09-27); `code` never gates
     reuse, a reserved text is taken by its `text` alone in its group (FD5). `text` is the
     item's OWN label (`derive.designation.own_designation_or_none`), never the full
     `item_designation` chain -- the release check (FD6) compares on this field, not the

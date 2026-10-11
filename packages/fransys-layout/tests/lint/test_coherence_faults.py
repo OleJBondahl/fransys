@@ -103,21 +103,21 @@ def test_a_named_ports_symbol_port_must_be_a_port_of_the_placed_geometry() -> No
 def test_a_port_named_with_two_physical_nets_raises() -> None:
     """A port named with two physical nets raises."""
     other_net = connection(3, 1, 2)  # the same two ports, net 3
-    with pytest.raises(LayoutError, match="two different functions or physical nets"):
+    with pytest.raises(LayoutError, match="two different physical nets"):
         _check(connections=(C1, other_net))
     same_net = dataclasses.replace(other_net, physical_net=hid("net", 1))
     assert _check(connections=(C1, same_net)) == NOT_DRAWN_3
 
 
-def test_a_port_named_with_two_functions_raises() -> None:
-    """A port named with two functions raises."""
+def test_a_port_named_with_two_functions_is_a_boundary_port() -> None:
+    """A port named by a function and a pin cell (model-0188) is located per function."""
     elsewhere = dataclasses.replace(
         C1, handle=hid("conductor", 3), a=PortRef(function=hid("function", 9), port=port(12))
     )
-    with pytest.raises(LayoutError, match="two different functions or physical nets"):
-        _check(connections=(C1, elsewhere))
-    same = dataclasses.replace(C1, handle=hid("conductor", 3))
-    assert _check(connections=(C1, same)) == NOT_DRAWN_3
+    assert _check(connections=(C1, elsewhere)) == NOT_DRAWN_3
+    other_net = dataclasses.replace(elsewhere, physical_net=hid("net", 3))
+    with pytest.raises(LayoutError, match="two different physical nets"):
+        _check(connections=(C1, other_net, elsewhere))
 
 
 # --- order, severity ------------------------------------------------------------------

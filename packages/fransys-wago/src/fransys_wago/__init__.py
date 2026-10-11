@@ -1,4 +1,4 @@
-"""Fransys output: WAGO module XML (spec sections 4 and 6)."""
+"""Fransys output: WAGO module XML."""
 
 from .modules import modules_xml
 

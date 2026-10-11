@@ -1,6 +1,6 @@
 """Each CSV of a unit's write prints what the PDF list beside it prints (model-0054 section 4).
 
-Designer ruling (a), 2026-09-24: a unit's `terminals-*.csv`, `connectors-*.csv` and
+Ruling (a), 2026-09-24: a unit's `terminals-*.csv`, `connectors-*.csv` and
 `wires.csv` get the SAME document context as the unit document's PDF lists, so their end
 cells are equal cell for cell; `out/all/` (`unit=None`) has no document, so it prints the full
 location path of every located end. The invented model: strip `X3` (terminal `T:1`) and board

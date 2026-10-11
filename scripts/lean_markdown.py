@@ -38,7 +38,7 @@ _PATTERNS: tuple[str, ...] = (
 # git's ls-files glob crosses "/" (unlike a shell glob), so "packages/*/README.md" also matches
 # the generated packages/electrical-symbols/build/README.md. That file is build output, not
 # source truth (LC4 covers current truth only), so it is dropped here by name -- a scoping
-# decision the designer should confirm, not a code exemption.
+# decision to confirm, not a code exemption.
 _EXCLUDED_PATHS: frozenset[str] = frozenset({"packages/electrical-symbols/build/README.md"})
 
 

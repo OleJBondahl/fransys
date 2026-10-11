@@ -1,4 +1,4 @@
-"""First-party import boundaries of the workspace (spec section 5), checked with stdlib ast."""
+"""First-party import boundaries of the workspace (the import table), checked with stdlib ast."""
 
 import ast
 import importlib.util
@@ -47,11 +47,11 @@ FIRST_PARTY = frozenset(ALLOWED) | {"fransys"}
 # root DESIGN 4's third-party column for that package.
 THIRD_PARTY: dict[str, frozenset[str]] = {
     "fransys_model": frozenset(),
-    "electrical_symbols": frozenset({"graphical_symbols"}),
+    "electrical_symbols": frozenset({"symdef"}),
     "fransys_parts": frozenset(),
     "fransys_author": frozenset(),
-    "fransys_layout": frozenset({"graphical_symbols"}),
-    "fransys_render": frozenset({"graphical_symbols"}),
+    "fransys_layout": frozenset({"symdef"}),
+    "fransys_render": frozenset({"symdef"}),
     "fransys_reports": frozenset(),
     "fransys_pdf": frozenset(),
     "fransys_kicad": frozenset(),
@@ -144,20 +144,18 @@ def test_the_check_can_fail():
 def test_the_third_party_check_can_fail():
     assert third_party_violations("electrical_symbols", "import jsonschema") == {"jsonschema"}
     assert third_party_violations("fransys_model", "import deal") == {"deal"}
-    assert third_party_violations("electrical_symbols", "import graphical_symbols") == set()
+    assert third_party_violations("electrical_symbols", "import symdef") == set()
     assert third_party_violations("electrical_symbols", "from . import x\nimport typing") == set()
     assert (
         third_party_violations("fransys_model", "from _typeshed import DataclassInstance") == set()
     )
-    assert third_party_violations("fransys_reports", "import graphical_symbols") == {
-        "graphical_symbols"
-    }
+    assert third_party_violations("fransys_reports", "import symdef") == {"symdef"}
 
 
 # --- The import surface (SURFACE spec, decision 0046, MS1/MS3/MS6): outside a package, source
 # crosses into another workspace package only through that package's own top-level `__all__`
 # (MS6), or, for the model, one of its nine named modules (MS1). `lean_surface` is the one home
-# of "the surface"; this test keeps no module list of its own. `graphical_symbols` is outside:
+# of "the surface"; this test keeps no module list of its own. `symdef` is outside:
 # it is third-party, never a workspace package, so it never reaches `FIRST_PARTY` at all.
 
 SURFACE_MODULES: frozenset[str] = frozenset(lean_surface.surface_modules())
@@ -365,7 +363,7 @@ def test_a_plain_top_level_import_still_checks_its_attribute_reads():
 # --- Output purity (design section 3, invariant 4): every package in PURITY_SCOPE is checked for
 # a stdlib-name and call-name deny-list. Matching is deliberately crude, by name only, never by
 # type or scope: a false positive is fixed by renaming a method, a false negative is the thing
-# this guards against (designer's ruling; see decision 0012).
+# this guards against (ruling; see decision 0012).
 
 # Every first-party package except `fransys` (the facade may do all of it) and
 # `fransys_parts` (reads part files by contract).
@@ -435,7 +433,7 @@ FORBIDDEN_SYS_ATTRS: frozenset[str] = frozenset(
 # fires on. This is not the workspace's full list of file I/O -- invariant 4 is. The
 # `electrical_symbols` bundle read at import (invariant 4) is real, recorded there, and
 # invisible to this ast scan of our own source: the read happens inside
-# `graphical_symbols.load_bundle`, not a name on either deny-list. It needs no entry here, and
+# `symdef.load_bundle`, not a name on either deny-list. It needs no entry here, and
 # adding one anyway would let a reader mistake this table for the exhaustive list. CT1 removed
 # the workspace's other such exception, the wireviz `dot` spawn: no third-party package spawns a
 # subprocess for this workspace any more.

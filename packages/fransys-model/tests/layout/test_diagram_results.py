@@ -1,4 +1,4 @@
-"""BD-M4: the block diagram's layout records and its A2 sheet (decision model-0167, spec BD6)."""
+"""The block diagram's layout records and its A2 sheet (decision model-0167)."""
 
 import dataclasses
 from decimal import Decimal

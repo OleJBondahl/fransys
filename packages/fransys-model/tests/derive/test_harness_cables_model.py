@@ -1,4 +1,4 @@
-"""Tests for `harness_cables` (design/derive-queries-structure.md, decision 0027)."""
+"""Tests for `harness_cables` (decision 0027)."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -343,7 +343,7 @@ def test_a_harness_that_is_not_an_item_raises() -> None:
 
 def test_a_cable_end_on_two_terminals_of_one_strip_is_one_node() -> None:
     """Two cores land on different terminals of strip `X1`: one end, the strip, not two, pins
-    marked by each terminal's own designation (decision model-0046, designer ruling
+    marked by each terminal's own designation (decision model-0046, ruling
     2026-09-23 "cable-end-per-strip")."""
     harness = _Harness()
     strip = harness.plant.item("x1", designation="X1")
@@ -393,7 +393,7 @@ def test_two_strips_whose_terminals_share_one_designation_are_two_ends() -> None
 def test_a_placed_strips_end_prints_its_product_designation_always() -> None:
     """A strip placed in the location aspect prints the same text the terminal list and every
     other export already print for it, `product_designation`'s own `"+DB-X0"` (decision
-    model-0044) -- unconditionally, whatever the cable's other end does (designer ruling
+    model-0044) -- unconditionally, whatever the cable's other end does (ruling
     2026-09-24, model-0046's own amendment: "the rule is the text every other list prints for
     that strip, so a cable drawing never disagrees with the terminal list")."""
     plant = Plant()
@@ -477,7 +477,7 @@ def test_an_unnumbered_cable_or_end_raises() -> None:
 def test_every_core_of_a_multi_core_cable_runs_the_same_way_round() -> None:
     """Two cores between a strip and two different devices: whichever port a `Conductor` happens
     to hash smaller (`vocab.connectivity.Conductor`'s own "direction is not a fact"), `cable_rows`
-    reorients every core to the cable's one direction (decision model-0048, designer ruling
+    reorients every core to the cable's one direction (decision model-0048, ruling
     2026-09-24: "every core runs A->B"). The strip is placed at a location, the two devices are
     not, so `cable_end_rank` puts the strip first for both cores regardless of port-id luck:
     `end_a` is always one of the strip's two terminal ports, never a device port.
@@ -515,8 +515,8 @@ def test_every_core_of_a_multi_core_cable_runs_the_same_way_round() -> None:
 
 
 def test_every_cores_end_ports_are_pins_of_its_own_rows_ends() -> None:
-    """Pins the invariant `harness_input`'s own removed guard once asserted (WORK ORDER
-    WIREVIZ-CORE-GUARD, designer 2026-09-27, mutmut suspect 2): every `HarnessCore.end_a`/
+    """Pins the invariant `harness_input`'s own removed guard once asserted (ruling
+    2026-09-27, mutmut suspect 2): every `HarnessCore.end_a`/
     `end_b` a row carries is the `port` of one of that same row's own `HarnessEnd.pins`,
     whatever shape the row takes -- a connector end, a plain device, or a terminal strip, one
     end per row or several. `_ends` guarantees this by construction (it builds each end's pins

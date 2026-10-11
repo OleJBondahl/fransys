@@ -1,4 +1,4 @@
-"""Interactive system overview HTML (spec section 6)."""
+"""Interactive system overview HTML."""
 
 import json
 from html import escape

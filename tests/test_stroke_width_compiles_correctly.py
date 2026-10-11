@@ -9,7 +9,7 @@ for `font-size`. The fix is the same shape: a bare, unitless number in the `<sty
 measures the wire's own ink thickness perpendicular to its run, in millimetres.
 
 Root tests are the one place `fransys_render` and `fransys_pdf` may both be imported
-(spec section 5's boundary table holds neither to import the other; mirrors
+(the boundary table holds neither to import the other; mirrors
 `tests/test_marker_text_compiles_inside_box.py`'s cross-package pattern). `_png.py`'s PNG
 decoder is loaded the same dynamic-`importlib` way the other compiled tests already do it
 (`ty` cannot see a `sys.path` insert statically, and root `pyproject.toml` is not this work

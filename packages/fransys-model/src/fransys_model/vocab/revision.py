@@ -1,4 +1,4 @@
-"""Vocabulary: a unit release's or the project's revision history (units spec U4, SC2)."""
+"""Vocabulary: a unit release's or the project's revision history."""
 
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 
@@ -8,7 +8,7 @@ from .release_version import refuse_below_one
 
 @record(kind="revision")
 class Revision:
-    """One entry of a unit release's or the project's revision history (units spec U4, SC2).
+    """One entry of a unit release's or the project's revision history.
 
     `release=None` is the project's own history; a set `release` is that release's own history,
     shared by every instance of it, not any unit nested in or under it. `version` and `revision`

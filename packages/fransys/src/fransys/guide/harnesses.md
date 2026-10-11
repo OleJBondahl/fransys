@@ -50,7 +50,9 @@ Cable ends and single-wire ends merge into one order, plugs first by designation
 number from it; never number ends yourself.
 
 `line_designation(model, harness, branch)` prints `-W13` between two ends and `-W13.n` on a branch of
-three or more. `line_stub_line(line, north=, far=)` prints a leaving line's one stub, `-W3 → +EXT-M1`.
+three or more. `line_stub_line(line, north=, far=)` prints a leaving line's one stub. `far` lists each far
+device with where it is drawn in the same drawing set, as `(device, place)` pairs; `""` is no place. With
+`far=[("+EXT-M1", "p2:4A")]` it prints `-W3 → +EXT-M1 p2:4A`, and with no place at all just `-W3 → +EXT-M1`.
 An off stub prints that form when its cable draws as a line; a one-conductor cable keeps the per-core form.
 `connector_box_lines(model, function, unit=)` returns a connector box's lines: its designation, the
 part's MPN when every function of its item is a connector function, and the interface name when it

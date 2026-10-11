@@ -140,8 +140,7 @@ import fransys as fr
 | `fransys-overview` | Output: interactive system overview HTML |
 | `electrical-symbols` | IEC 60617 symbol data |
 
-The symbols are built with [`graphical-symbols`](https://github.com/OleJBondahl/graphical-symbols),
-a separate public toolkit that Fransys pins by tag.
+The symbols are built with [`symdef`](https://olejbondahl.github.io/symdef/), a separate public toolkit on PyPI that Fransys pins by exact version.
 
 ## Develop
 

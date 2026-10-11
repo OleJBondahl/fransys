@@ -1,13 +1,16 @@
 """The harness line, fan-out and stub builders: unique keys, ordered points, an off stub."""
 
+from dataclasses import replace
+
 from fransys_layout.engines.schematic.write.harness import (
     harness_fan_outs,
     harness_lines,
     line_stubs,
+    stub_ends,
 )
 from fransys_layout.engines.schematic.write.keys import PREFIX, WriteKeys
 from fransys_layout.geometry import Box, Facing, Point
-from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLeg, DrawnLine, LineStub
+from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLeg, DrawnLine, FarEnd, LineStub
 from fransys_model.kernel import make_id
 from fransys_model.layout import DrawingSet, MarkerSide, Page, PageRole, Side, StarKind
 from fransys_model.vocab import Item, Port
@@ -161,3 +164,29 @@ def test_the_builders_write_only_their_own_kinds_never_a_route() -> None:
         *line_stubs(_keys(), [_stub(1)], page_of, sets, "t"),
     ]
     assert {type(r).__name__ for r in records} == {"HarnessLine", "HarnessFanOut", "LinkMarker"}
+
+
+def test_a_stub_writes_one_end_record_per_far_end_in_list_order() -> None:
+    """STUB-POSITIONS P1: a placed end keeps its page and x, y; one drawn nowhere keeps none."""
+    sets, page_of = _world()
+    ends = (
+        FarEnd(port=FAR, page=2, x=24, y=40),
+        FarEnd(port=PORT, page=None, x=0, y=0),
+    )
+    stub = replace(_stub(1), ends=ends)
+    (marker,) = line_stubs(_keys(), [stub], page_of, sets, "t")
+    placed, nowhere = stub_ends(_keys(), [stub], page_of, sets, "t")
+    assert (placed.marker, nowhere.marker) == (marker.id, marker.id)
+    assert [(e.index, e.port) for e in (placed, nowhere)] == [(0, FAR), (1, PORT)]
+    assert (placed.page, placed.x, placed.y) == (page_of[1, 2].id, 24, 40)
+    assert (nowhere.page, nowhere.x, nowhere.y) == (None, 0, 0)
+    assert placed.key[len(PREFIX) :] == (
+        "stub_end",
+        "h1",
+        "branch",
+        "0",
+        "drawing_set",
+        "one",
+        "end",
+        "0",
+    )

@@ -1,4 +1,4 @@
-"""Task 6 (Part 5b): facade wiring of `fransys_pdf.check` and PDF export (spec F6, P1, P11)."""
+"""Facade wiring of `fransys_pdf.check` and PDF export."""
 
 import fransys as fr
 import fransys_author
@@ -58,7 +58,7 @@ def test_write_produces_a_pdf_and_a_typ_intermediate(parts, design, tmp_path):
 
 
 def test_write_compiles_a_pdf_with_no_project_record(parts, tmp_path):
-    """No `Project` record: the compile still succeeds (spec P1, P3)."""
+    """No `Project` record: the compile still succeeds."""
     design = fransys_author.Design(parts)
     c1 = design.location("C1", "Demo cabinet")
     document_draft = fr.document(
@@ -82,7 +82,7 @@ def test_document_no_drawings_blocks_every_export_but_the_typ_still_writes(parts
 
     The default `CABINET_SCHEMATIC` preset carries `SCHEMATIC`, and `fransys_render` is
     still a scaffold, so `fransys_pdf.check` finds no drawing set for it -- proving decision
-    0011 and pdf-0001's P11 amendment hold together at the facade seam (spec F5, P11).
+    0011 and pdf-0001's P11 amendment hold together at the facade seam.
     """
     c1 = design.location("C1", "Demo cabinet")
     document_draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=_cover(tmp_path))
@@ -125,7 +125,7 @@ def _export_dated(parts, tmp_path, date):
 
 def test_the_printed_date_and_the_embedded_timestamp_are_the_current_entrys(parts, tmp_path):
     """Change the current `Revision` entry's date and both the title block and the PDF's
-    `CreationDate` move with it (schema spec SC4: the date lives on the entry alone)."""
+    `CreationDate` move with it (the date lives on the entry alone)."""
     typ_a, pdf_a = _export_dated(parts, tmp_path / "a", "2026-09-22")
     typ_b, pdf_b = _export_dated(parts, tmp_path / "b", "2026-11-05")
     assert 'text("2026-09-22")' in typ_a

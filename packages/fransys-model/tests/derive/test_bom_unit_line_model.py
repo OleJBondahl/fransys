@@ -1,4 +1,4 @@
-"""Tests for a unit instance's BOM-line `designations` (units spec U5, amended 2026-09-24)."""
+"""Tests for a unit instance's BOM-line `designations` (amended 2026-09-24)."""
 
 from typing import TYPE_CHECKING
 

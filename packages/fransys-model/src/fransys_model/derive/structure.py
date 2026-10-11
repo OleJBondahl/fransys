@@ -1,6 +1,6 @@
 """Board netlists, aspect trees, units and `ext` usage (design/derive-queries-structure.md).
 
-`boundary`, `standalone`, `unit_items`, `unit_subtree` and `units` (units spec U8), and
+`boundary`, `standalone`, `unit_items`, `unit_subtree` and `units`, and
 `enclosing_boards` (decision model-0040), are re-exported from `vocab.membership`, the same
 shape `derive.closure` already uses for `vocab.closure` (decision 0019): they live in `vocab`
 because `vocab.validators.units` (U5) and `vocab.validators.connectivity` (design/connectivity.md)

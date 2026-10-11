@@ -4,7 +4,7 @@ from fransys_model.kernel import Id, Model, SchemaError
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import printed_designation
-from .drawing_text import off_stub_line
+from .drawing_text import line_stub_line
 from .harness_line_ends import harness_line_ends
 
 _PLAIN_LINE = 2  # a line between two ends carries no branch number
@@ -26,15 +26,6 @@ def line_designation(
         return ""
     designation = printed_designation(model, harness, unit=unit)
     return designation if count == _PLAIN_LINE else f"{designation}.{branch}"
-
-
-def line_stub_line(line: str, *, north: bool, far: str) -> str:
-    """A leaving line's single stub, `-W3 → +EXT-M1`: the line, an arrow, the far device.
-
-    Beside `off_stub_line`, which prints one stub per core with the far ports. The arrow
-    points up (`←`) for a stub facing north, else `→`.
-    """
-    return off_stub_line(line, north=north, far=far, ports=())
 
 
 __all__ = ["line_designation", "line_stub_line"]

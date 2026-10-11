@@ -159,7 +159,7 @@ def test_board_own_listing_matches_the_worked_example_text():
 
 
 def test_both_board_instances_and_both_cabinets_give_equal_listings(two_cabinet_system):
-    """Units spec U7: two instances of one unit number alike, so their baseline listings --
+    """Two instances of one unit number alike, so their baseline listings --
     designation-relative -- are equal, board and cabinet alike."""
     result, cab1_id, board1_id, cab2_id, board2_id = two_cabinet_system
 
@@ -179,7 +179,7 @@ def test_both_board_instances_and_both_cabinets_give_equal_listings(two_cabinet_
 
 def test_standalone_board_listing_equals_the_nested_instances_own_listing(two_cabinet_system):
     """The board's own listing, built standalone, equals the same unit's listing read out of
-    the system build that nests it (baseline spec L2's own worked-example claim)."""
+    the system build that nests it (the worked example's own claim)."""
     parts = fransys_parts.load("demo_parts")
     d = _new_design(parts)
     u, _x1 = _board(d)
@@ -208,7 +208,7 @@ def test_loads_refuses_an_unknown_listing_version(two_cabinet_system):
 
 
 def test_system_listing_names_the_project_and_the_top_level_units(two_cabinet_system):
-    """`listing(model, unit=None)` (baseline spec L2): `unit` comes from the model's one
+    """`listing(model, unit=None)`: `unit` comes from the model's one
     `Project`, and `units` holds the top-level units -- here both cabinets, one release with
     two instances, since they share `(name, version, revision)`."""
     result, _cab1_id, _board1_id, _cab2_id, _board2_id = two_cabinet_system
@@ -243,7 +243,7 @@ def _cabinet_with_boundary_net(scope):
     """A `demo-pump-cabinet` nesting one board, with a CABINET-declared net that also reaches
     the board's own boundary pin (`X1`'s port `"2"`, already mated to `P1`'s `"2"`).
 
-    Designer ruling 2026-09-27: `nets` follows U6's lowest-common-unit rule too, the same as
+    Ruling 2026-09-27: `nets` follows U6's lowest-common-unit rule too, the same as
     `conductors`/`mates` -- the literal "a member port on an item of U itself" wording would
     put this net in the board's OWN listing too (the pin is, after all, its own item), so the
     board's standalone listing would differ from its nested one (the net does not exist when

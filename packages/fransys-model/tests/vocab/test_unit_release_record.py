@@ -1,4 +1,4 @@
-"""The `unit_release` kind and the version and revision rule (schema spec SC2, FD4).
+"""The `unit_release` kind and the version and revision rule.
 
 A version or a revision below 1 is refused when a `UnitRelease`, `Project` or `Revision` is
 made, through one helper (`release_version.refuse_below_one`). Invented data only.

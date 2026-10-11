@@ -75,7 +75,7 @@ def page_wiring(
     net_groups: tuple[NetGroup, ...] = (),
 ) -> tuple[Homes, dict[Handle, Page], frozenset[tuple[Any, int, int]]]:
     """The one definition of "wired on this page": homes, conductor pages, wired ends (S10)."""
-    # I4 (designer's (A)): a star reference on a port a drawn wire also reaches leaves
+    # I4 (A): a star reference on a port a drawn wire also reaches leaves
     # the wire sideways, so the wire never crosses it (D9: a hub pin or a member's port alike)
     away = frozenset(
         (cell.function, column.key)

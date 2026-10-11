@@ -30,7 +30,7 @@ def test_project_has_the_designed_fields() -> None:
 
 
 def test_project_notice_defaults_to_empty_and_round_trips() -> None:
-    """The title block's IP notice cell text; empty leaves the cell empty (spec R11.4)."""
+    """The title block's IP notice cell text; empty leaves the cell empty."""
     assert _project("1").notice == ""
     noticed = dataclasses.replace(_project("1"), notice="Invented IP notice, all rights reserved.")
     draft = Draft()

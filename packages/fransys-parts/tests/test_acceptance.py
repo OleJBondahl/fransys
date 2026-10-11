@@ -60,7 +60,7 @@ def test_a_float_in_a_part_file_is_a_finding(tmp_path):
 
 
 def test_part_library_error_holds_every_finding_warnings_included(tmp_path):
-    """spec P5 (corrected): `findings` is the whole `lint()` report, not only the `ERROR`s."""
+    """`findings` is the whole `lint()` report, not only the `ERROR`s."""
     from fransys_model.kernel import Severity
 
     (tmp_path / "library.toml").write_text('schema = 1\nname = "bad"\nversion = "0.0.0"\n')
@@ -83,7 +83,7 @@ def test_part_library_error_holds_every_finding_warnings_included(tmp_path):
 
 
 def test_connector_facet_origin_is_its_own_header_line():
-    """spec P6 (corrected): a `[function.connector]` facet's origin is its own header line."""
+    """A `[function.connector]` facet's origin is its own header line."""
     from fransys_model.kernel import freeze
 
     text = (DEMO / "parts" / "connector-header-2p.toml").read_text()
@@ -93,7 +93,7 @@ def test_connector_facet_origin_is_its_own_header_line():
         if line.strip() == "[function.connector]"
     )
     model = freeze(fransys_parts.load_path(DEMO))
-    # NEW (unit-documents worked example, designer's own choice): the demo library also
+    # NEW (unit-documents worked example): the demo library also
     # carries `switch-2p.toml`'s own `[function.connector]` (DEMO-SWITCH-2P's `x1`) now, so
     # `facet.connector` has two entries, not one -- filtered to the one under test.
     facet = next(
@@ -107,37 +107,38 @@ def test_connector_facet_origin_is_its_own_header_line():
 
 
 def test_demo_library_record_counts_and_keys():
-    """P3, P7: 16 demo parts (units WP added pcb-io, a part-less-container board part; the
+    """16 demo parts (added pcb-io, a part-less-container board part; the
     unit-documents worked example added `switch-2p.toml`'s field switch, 2 functions/4
     ports/1 internal link/2 symbol choices more, measured directly against this build; the
     connector-sub-part work added `io-2-connectors.toml`, 2 functions/4 ports/2 symbol choices
     more; `io-clamps-and-sockets.toml` (lint-print) adds a part with 4 functions/33 ports, no
     symbol choice, so 14 parts; the ratings work adds `terminal-dual-rated-2p.toml`, 1
     function/2 ports/1 internal link/1 symbol choice, and `cell-3v6.toml`, 1 function/2 ports;
-    RATINGS-2 adds `fuse-abat.toml`, 1 function/2 ports/1 internal link/1 symbol choice, and
+    adds `fuse-abat.toml`, 1 function/2 ports/1 internal link/1 symbol choice, and
     `string-864v.toml`, 1 function/2 ports; the check adds `contactor-dc.toml`, 1 function/2
-    ports/1 internal link/1 symbol choice, so 19 parts; CONTACT-STATES adds `changeover-4p.toml`,
-    `mcb-2p.toml` and `psu-24v.toml`, 3 more parts, so 22; MARKER-CLEAR adds
-    `overload-a2.toml`, 1 function/1 port/1 symbol choice, so 23; ACCESSORY-BLOCK adds
+    ports/1 internal link/1 symbol choice, so 19 parts; the contact-states case adds
+    `changeover-4p.toml`,
+    `mcb-2p.toml` and `psu-24v.toml`, 3 more parts, so 22; adds
+    `overload-a2.toml`, 1 function/1 port/1 symbol choice, so 23; adds
     `contact-block-addon.toml`, 2 functions/4 ports/2 internal links/2 symbol choices, so 24;
-    ITEM-BOX adds `plc-di-4ch-pwr.toml` (5 functions/6 ports), `psu-24v-dcok.toml` (3/6) and
-    `redundancy-2in.toml` (3/6), no link or symbol choice, so 27; I2b adds
+    adds `plc-di-4ch-pwr.toml` (5 functions/6 ports), `psu-24v-dcok.toml` (3/6) and
+    `redundancy-2in.toml` (3/6), no link or symbol choice, so 27; adds
     `contactor-3p-aux-nc.toml` (4 functions/12 ports/5 links/4 symbol choices), so 28;
-    EA-PARTS-MODULE adds `mcb-3p.toml` (1 function/6 ports/3 links),
+    adds `mcb-3p.toml` (1 function/6 ports/3 links),
     `overload-3p.toml` (2/8/4/1 symbol choice) and `pb-nc.toml` (1/2/1/1), so 31;
-    EA-SERIES-FIX adds `terminal-pe-2_5.toml` (1/2/1/1), so 32;
+    adds `terminal-pe-2_5.toml` (1/2/1/1), so 32;
     the 16-channel DI module adds `plc-di-16ch.toml` (16 functions/16 ports), so 33;
-    CONTAINER-GAPS adds `connector-header-4p.toml` and `connector-header-4p-mixed.toml`
+    adds `connector-header-4p.toml` and `connector-header-4p-mixed.toml`
     (1 function/4 ports/1 symbol choice each), so 35;
-    HIDDEN-PINS adds `plc-ai-4ch.toml` (4 functions/8 ports, no link or symbol choice), so 36;
-    DRAWN-ENDS gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links;
-    BOX-CONTACT gave `redundancy-2in.toml` a DC-OK contact: 83 functions, 194 ports, 42 links;
-    GROUP-FUNCTION-ID adds `redundancy-2in-net.toml` (4/8/1 symbol choice), so 37;
-    the guide's current check adds `fuse-dc-160.toml` (1/2/1/1), so 38; FUSE-LINK adds
+    adds `plc-ai-4ch.toml` (4 functions/8 ports, no link or symbol choice), so 36;
+    gave the DC-OK contact of `psu-24v-dcok.toml` its switched link, so 41 links;
+    gave `redundancy-2in.toml` a DC-OK contact: 83 functions, 194 ports, 42 links;
+    adds `redundancy-2in-net.toml` (4/8/1 symbol choice), so 37;
+    the guide's current check adds `fuse-dc-160.toml` (1/2/1/1), so 38; adds
     `fuse-holder-pcb.toml` (1 function/2 ports/1 link/1 symbol choice), `switch-dc-2a.toml`
     (1/2/1/1) and two function-less fuse links (`fuse-link-4a-t.toml`, `fuse-link-500ma-t.toml`);
-    RR-O6 adds `connector-header-2p-lettered.toml` (1/2/0/1),
-    FEEDER-PORTS adds `psu-24v-5out.toml` (2 functions/7 ports),
+    adds `connector-header-2p-lettered.toml` (1/2/0/1),
+    adds `psu-24v-5out.toml` (2 functions/7 ports),
     PIN-LABELS adds `ctrl-8.toml` (4 functions/16 ports),
     ACCESSORY-HOLDER adds `jumper-bar-3p.toml` (no function, no port),
     GND-NAME adds `psu-24v-pm.toml` (2 functions/4 ports),
@@ -396,7 +397,7 @@ def test_supply_footprint_cable_product_and_pcb_facets_load_their_fields_and_ori
     part file, or reads back a `SupplyFacet.note`, a `FootprintFacet`'s fields, a
     `CableProductFacet`'s `gauge_mm2`/`shielded`, or a `PcbFacet.revision` -- so this loads
     every one of them at once, through `load_path` + `freeze`, and checks each facet's own
-    header line is its origin (spec P6)."""
+    header line is its origin."""
     from decimal import Decimal
 
     from fransys_model.kernel import Origin, freeze
@@ -513,7 +514,7 @@ def test_part_records_its_library_and_the_part_headers_own_line(tmp_path):
     """mutmut triage rank 2: no test in this package ever reads `Part.library` back, or puts
     `[part]` after a comment and checks the resulting `Origin.line` against the real header
     line, so `_build_part_file`'s `library=library_id` and `origins.get(("part",), 1)` survive
-    untested (spec P6)."""
+    untested."""
     from fransys_model.kernel import Origin, freeze, make_id
     from fransys_model.vocab import PartLibrary, parts
 
@@ -578,4 +579,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 10
+    assert SCHEMA_VERSION == 11

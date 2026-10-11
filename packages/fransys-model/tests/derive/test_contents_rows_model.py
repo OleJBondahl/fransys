@@ -1,4 +1,4 @@
-"""Tests for `contents_rows` (units spec P8, pdf-0016)."""
+"""Tests for `contents_rows` (pdf-0016)."""
 
 from fransys_model.derive import contents_rows
 from fransys_model.derive.rows import HarnessCable, HarnessEnd

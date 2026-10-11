@@ -66,12 +66,12 @@ _EXPECTED_ALL = [
     "write",
 ]
 
-# Every first-party import name besides `fransys` itself (spec F1: a consumer script
+# Every first-party import name besides `fransys` itself (a consumer script
 # imports nothing else).
 _FIRST_PARTY_NOT_FRANSYS = frozenset(
     {
         "fransys_model",
-        "graphical_symbols",
+        "symdef",
         "electrical_symbols",
         "fransys_parts",
         "fransys_author",

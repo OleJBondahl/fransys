@@ -70,8 +70,35 @@ def replica_only_sets(
 def schematic_missing_keys(
     pages_found: tuple[Page, ...], svgs: Mapping[str, str]
 ) -> tuple[str, ...]:
-    """The `render_id`s of `pages_found` that `svgs` has no entry for (spec P7, P11)."""
+    """The `render_id`s of `pages_found` that `svgs` has no entry for."""
     return tuple(render_id(page.id) for page in pages_found if render_id(page.id) not in svgs)
+
+
+def schematic_fields(
+    model: Model, record: Document, pages_found: tuple[Page, ...]
+) -> tuple[TitleBlockFields, ...]:
+    """The title block of each `pages_found` page, `n / N` counted per drawing set (R3, U3)."""
+    assert (  # noqa: S101 -- `pages_found` is non-empty only when one of these three is
+        record.location is not None or record.unit is not None or record.unit_name is not None
+    )
+    scope = (
+        location_label(model, record.location)
+        if record.location is not None
+        else subject_label(model, record)
+    )
+    totals = Counter(page.drawing_set for page in pages_found)
+    return tuple(
+        TitleBlockFields(
+            *document_facts(model, record),
+            page_title=page_title(model, page),
+            scope=scope,
+            sheet_counter=f"{page.number} / {totals[page.drawing_set]}",
+            notice=project_notice(model),
+            logo=record.logo,
+            page_title_fallback=_page_title_labels(model, page),
+        )
+        for page in pages_found
+    )
 
 
 def schematic_source(
@@ -93,28 +120,11 @@ def schematic_source(
         )
         margin = text_margin(sheet)
         return f"#page(margin: {margin}, background: {background(sheet, fields)})[{NO_DRAWINGS}]"
-    assert (  # noqa: S101 -- `pages_found` is non-empty only when one of these three is
-        record.location is not None or record.unit is not None or record.unit_name is not None
-    )
-    scope = (
-        location_label(model, record.location)
-        if record.location is not None
-        else subject_label(model, record)
-    )
-    totals = Counter(page.drawing_set for page in pages_found)
+    fields = schematic_fields(model, record, pages_found)
     blocks = []
-    for page in pages_found:
-        fields = TitleBlockFields(
-            *document_facts(model, record),
-            page_title=page_title(model, page),
-            scope=scope,
-            sheet_counter=f"{page.number} / {totals[page.drawing_set]}",
-            notice=project_notice(model),
-            logo=record.logo,
-            page_title_fallback=_page_title_labels(model, page),
-        )
+    for page, page_fields in zip(pages_found, fields, strict=True):
         image = f'#image(bytes({literal(svgs[render_id(page.id)])}), format: "svg")'
-        blocks.append(f"#page(margin: 0mm, background: {background(sheet, fields)})[{image}]")
+        blocks.append(f"#page(margin: 0mm, background: {background(sheet, page_fields)})[{image}]")
     return "\n#pagebreak()\n".join(blocks)
 
 
@@ -145,7 +155,7 @@ def harness_cables_for(
 def system_has_no_top_level_cables(
     record: Document, cables_found: tuple[HarnessCable, ...]
 ) -> bool:
-    """A SYSTEM document whose model has no top-level cable at all (units spec U3)."""
+    """A SYSTEM document whose model has no top-level cable at all."""
     return record.preset is DocumentPreset.SYSTEM and not cables_found
 
 
@@ -218,14 +228,40 @@ def cable_blocks(
     return tuple(blocks.values())
 
 
-def run_headings(model: Model, record: Document, cables: tuple[HarnessCable, ...]) -> list[str]:
-    """The part heading of each run, in page order: the title-block `page_title` of its pages."""
-    return [heading for heading, _ in part_groups(cable_blocks(model, record, cables))]
-
-
 def block_missing_keys(blocks: tuple[Block, ...], svgs: Mapping[str, str]) -> tuple[str, ...]:
     """The keys of `blocks` that `svgs` has no entry for, as `schematic_missing_keys` does."""
     return tuple(block.key for block in blocks if block.key not in svgs)
+
+
+def harness_run_fields(
+    model: Model, record: Document, blocks: tuple[Block, ...]
+) -> tuple[tuple[TitleBlockFields, list[Block]], ...]:
+    """Each part run's title block (its `page_title` the part heading, pdf-0020) and blocks."""
+    assert (  # noqa: S101 -- a harness document's subject is an item or a unit, or this is SYSTEM
+        record.item is not None
+        or record.unit is not None
+        or record.unit_name is not None
+        or record.preset is DocumentPreset.SYSTEM
+    )
+    scope = (
+        item_designation(model, record.item)
+        if record.item is not None
+        else subject_label(model, record)
+    )
+    return tuple(
+        (
+            TitleBlockFields(
+                *document_facts(model, record),
+                page_title=heading,
+                scope=scope,
+                sheet_counter="",
+                notice=project_notice(model),
+                logo=record.logo,
+            ),
+            group,
+        )
+        for heading, group in part_groups(blocks)
+    )
 
 
 def _cable_runs(
@@ -239,33 +275,14 @@ def _cable_runs(
 
     A block with no SVG is left out: `check` reports it, and only intermediates show the page.
     """
-    assert (  # noqa: S101 -- a harness document's subject is an item or a unit, or this is SYSTEM
-        record.item is not None
-        or record.unit is not None
-        or record.unit_name is not None
-        or record.preset is DocumentPreset.SYSTEM
-    )
-    scope = (
-        item_designation(model, record.item)
-        if record.item is not None
-        else subject_label(model, record)
-    )
     runs = []
-    for index, (heading, group) in enumerate(part_groups(blocks)):
-        fields = TitleBlockFields(
-            *document_facts(model, record),
-            page_title=heading,
-            scope=scope,
-            sheet_counter="",
-            notice=project_notice(model),
-            logo=record.logo,
-        )
+    for index, (fields, group) in enumerate(harness_run_fields(model, record, blocks)):
         bodies = [
             f'#image(bytes({literal(svgs[block.key])}), format: "svg")'
             for block in group
             if block.key in svgs
         ]
-        line = group[0].line if group[0].mpn else heading
+        line = group[0].line if group[0].mpn else fields.page_title
         runs.append(run_page(sheet, index, line, background(sheet, fields), bodies))
     return "\n#pagebreak()\n".join(runs)
 

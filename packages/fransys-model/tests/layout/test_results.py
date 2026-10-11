@@ -56,6 +56,7 @@ from fransys_model.layout import (
     Side,
     SideHint,
     StarKind,
+    StubEnd,
     SymbolChoice,
     default_sheet_format,
     derived_layout_ids,
@@ -332,7 +333,7 @@ def test_page_with_a_duplicate_group_index_is_a_schema_error() -> None:
 
 
 def test_a_drawing_set_with_a_unit_round_trips() -> None:
-    """`unit` names the drawing set's unit (units spec U1); comes back equal and reachable."""
+    """`unit` names the drawing set's unit; comes back equal and reachable."""
     release_key = ("unit_release", "board", "1", "1")
     release = UnitRelease(
         id=make_id(UnitRelease, release_key),
@@ -382,7 +383,7 @@ def test_a_page_naming_a_sheet_format_that_is_not_in_the_model_is_a_freeze_error
 
 
 def test_the_house_sheet_is_a_constant_and_not_a_record_of_any_model() -> None:
-    """A3 landscape, content 410 x 267 mm at (5, 5), 8 x 6 frame, module 2.5 mm (spec R11.1)."""
+    """A3 landscape, content 410 x 267 mm at (5, 5), 8 x 6 frame, module 2.5 mm."""
     house = default_sheet_format()
     assert isinstance(house, SheetFormat)
     assert house == default_sheet_format()
@@ -448,6 +449,32 @@ def test_a_pair_of_link_markers_referencing_each_other_freezes() -> None:
     owner, user = _marker_pair()
     model = _freeze((*_engineering(), sheet_format(), drawing_set(), page(), owner, user))
     assert layout_of(model, LinkMarker)[owner.id].partner == user.id
+
+
+def _stub_end(marker: Id[LinkMarker], index: int, *, placed: bool) -> StubEnd:
+    return StubEnd(
+        id=Id(kind="layout.stub_end", value=str(index) * 32),
+        key=("layout", "example-engine", "stub_end", str(index)),
+        marker=marker,
+        index=index,
+        port=_HIGH_PORT,
+        page=page().id if placed else None,
+        x=24 if placed else 0,
+        y=40 if placed else 0,
+        produced_by=PRODUCED_BY,
+    )
+
+
+def test_stub_ends_freeze_round_trip_and_need_their_marker() -> None:
+    """STUB-POSITIONS: a placed and an unplaced far end resolve; one without a marker is refused."""
+    owner, user = _marker_pair()
+    ends = (_stub_end(owner.id, 1, placed=True), _stub_end(owner.id, 2, placed=False))
+    base = (*_engineering(), sheet_format(), drawing_set(), page(), owner, user)
+    model = _freeze((*base, *ends))
+    assert loads(dumps(model)) == model
+    assert [e.page is None for e in layout_of(model, StubEnd).values()].count(True) == 1
+    with pytest.raises(FreezeError):
+        _freeze((*base, _stub_end(Id(kind="layout.link_marker", value="7" * 32), 1, placed=True)))
 
 
 def test_link_marker_with_a_missing_partner_is_a_freeze_error() -> None:

@@ -23,6 +23,7 @@ from .boxes import box_sides
 from .content import content_box
 from .images import reserved, rooms, unreserve
 from .labels import SlotFrame, decided_runs, place_slot_labels
+from .lookups import owner_of
 from .middle_fold import folded_page, middle_bands, shape_boxes
 from .onepage import page_wiring
 from .page_stacking import PageStacking
@@ -241,9 +242,7 @@ def _place_each(
     specs_at = by_page(run.inputs.functions, FUNCTION, on_page, len(plans))
     requests_at = by_page(
         run.pin_requests,
-        partial(
-            _function_of, owner={port.port: one.function for one in drawn for port in one.ports}
-        ),
+        partial(_function_of, owner=owner_of(drawn)),
         on_page,
         len(plans),
     )
@@ -400,4 +399,5 @@ def finish_page(
 
 def _function_of(request: LabelRequest, owner: Mapping[Handle, Handle]) -> Handle:
     """The function a request is drawn on: a `MARKING` subject is a model port."""
-    return owner[request.subject] if request.kind is LabelKind.MARKING else request.subject
+    marking = request.kind is LabelKind.MARKING
+    return (request.function or owner[request.subject]) if marking else request.subject

@@ -341,7 +341,7 @@ def test_rows_sort_by_designation_then_by_connector_id_as_a_tiebreak() -> None:
 
 
 def test_a_mate_outside_a_nested_unit_blanks_its_text_but_keeps_the_ids() -> None:
-    """units spec U2, model-0056: a nested unit's own reading blanks an outside mate's printed
+    """Model-0056: a nested unit's own reading blanks an outside mate's printed
     text (`mate_designation`, `mate_port_designation`), but `mate` and `mate_port` keep the
     ids so the row still says who it is."""
     plant = Plant()

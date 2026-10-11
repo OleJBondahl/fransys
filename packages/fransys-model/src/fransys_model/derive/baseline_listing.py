@@ -1,4 +1,4 @@
-"""The listing writer (baseline spec L2): the sorted row builders and `listing`."""
+"""The listing writer: the sorted row builders and `listing`."""
 
 from typing import TYPE_CHECKING
 
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Port
 
 
-# -- sort keys (None- and non-orderable-safe, baseline spec L2's own field order) ------------
+# -- sort keys (None- and non-orderable-safe, in the listing's own field order) ------------
 
 
 def _opt_key(value: str | None) -> tuple[bool, str]:
@@ -64,7 +64,7 @@ def _repr_key(value: object) -> tuple[bool, str]:
     return (value is None, "" if value is None else repr(value))
 
 
-# -- listing(model, unit) (baseline spec L2) -------------------------------------------------
+# -- listing(model, unit) -------------------------------------------------
 
 
 def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
@@ -270,7 +270,7 @@ def _listing_unit(model: Model, unit: Id[Unit] | None) -> BaselineUnit:
 
 
 def listing(model: Model, unit: Id[Unit] | None) -> Listing:
-    """`unit`'s baseline listing (baseline spec L2): every section, sorted, designation-relative.
+    """`unit`'s baseline listing: every section, sorted, designation-relative.
 
     `unit=None` is the system listing: `unit` comes from the model's one `Project`, `items`
     are the items of no unit, `units` the top-level units, and `boundary` is always empty (no

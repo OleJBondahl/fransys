@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from graphical_symbols import to_fragment
+from symdef import to_fragment
 
 from fransys_model.layout import (
     PowerSymbol,
@@ -20,7 +20,7 @@ from ._numbers import format_decimal, grid_to_mm
 from ._symbol_geometry import oriented_power_symbol, oriented_symbol, to_grid
 
 if TYPE_CHECKING:
-    from graphical_symbols.model import Symbol
+    from symdef.model import Symbol
 
     from fransys_model.kernel import Model
     from fransys_model.layout import Page, Profile, SheetFormat

@@ -77,6 +77,11 @@ class Shape:
     box: Box
 
 
+def unowned(boxes: Iterable[Box]) -> tuple[Shape, ...]:
+    """`boxes` as shapes no lane is exempt from."""
+    return tuple(Shape(owner=None, box=box) for box in boxes)
+
+
 @value
 class Space:
     """A page's placed shapes, frozen (D2), and the content box a text is placed inside (S18)."""

@@ -1,6 +1,6 @@
 """The limits a current path states and the law that says which position they bound (RATINGS-2).
 
-The law (spec C3): a limit bounds a device when every loop through the device that holds a source
+The law: a limit bounds a device when every loop through the device that holds a source
 also passes through the limit. The positions and the edges to the outside form a multigraph; a
 loop is a simple cycle, and every cycle lies in one block (`current_blocks`). In a block of two
 or more edges any two edges lie on a common simple cycle, so `block_bounds` answers exactly, with

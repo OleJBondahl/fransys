@@ -1,4 +1,4 @@
-"""Render-time checks, reported as findings (spec section 6, D12)."""
+"""Render-time checks, reported as findings."""
 
 from typing import TYPE_CHECKING
 

@@ -359,7 +359,7 @@ def test_a_terminal_port_under_an_unnumbered_strip_raises_through_the_strip() ->
     assert excinfo.value.record_id == _item_id("x03")
 
 
-# ---- board designations (model-0040, spec B3) ----------------------------------------------
+# ---- board designations (model-0040) ----------------------------------------------
 
 
 def _board_part(plant: Plant, key: str) -> Id[Part]:
@@ -381,7 +381,7 @@ def _board_part(plant: Plant, key: str) -> Id[Part]:
 
 
 def test_the_board_connectors_designation_is_a1_x1() -> None:
-    """The owner's own preview text (model-0040, spec B3)."""
+    """The owner's own preview text (model-0040)."""
     plant = Plant()
     board = plant.item("board", part=_board_part(plant, "board"), designation="A1")
     x1 = plant.item("x1", parent=board, designation="X1")
@@ -404,7 +404,7 @@ def test_two_boards_each_with_an_unplaced_k1_read_a1_k1_and_a2_k1() -> None:
 
 
 def test_a_board_inside_a_board_prefixes_outermost_first() -> None:
-    """The chain is every enclosing `pcb`-faceted item, outermost first (spec B3)."""
+    """The chain is every enclosing `pcb`-faceted item, outermost first."""
     plant = Plant()
     outer = plant.item("outer", part=_board_part(plant, "outer"), designation="A2")
     inner = plant.item("inner", part=_board_part(plant, "inner"), parent=outer, designation="B1")
@@ -422,7 +422,7 @@ def test_a_terminal_on_a_strip_reads_as_today_unaffected_by_board_chains() -> No
 
 
 def test_a_strip_and_its_terminal_under_a_board_give_the_chain_once() -> None:
-    """`-A1-X03:L1:1`, not `-A1-X03:A1-L1:1` (model-0040, spec B3's refinement): the chain is
+    """`-A1-X03:L1:1`, not `-A1-X03:A1-L1:1` (model-0040): the chain is
     the strip's `item_designation` alone, the terminal contributes only its own label."""
     plant = Plant()
     board = plant.item("board", part=_board_part(plant, "board"), designation="A1")
@@ -574,8 +574,8 @@ def test_relative_to_naming_a_harness_changes_nothing() -> None:
 
 
 def test_a_part_less_harness_with_no_designation_raises_naming_the_harness() -> None:
-    """A part-less harness has no class letter, so numbering never gives it one (spec H2's
-    amendment): `item_designation` on a member now refuses with the harness's own key and
+    """A part-less harness has no class letter, so numbering never gives it one:
+    `item_designation` on a member now refuses with the harness's own key and
     text, not the item's generic "run numbering" refusal."""
     plant = Plant()
     w3 = plant.item("w3")

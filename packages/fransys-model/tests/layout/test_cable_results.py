@@ -1,4 +1,4 @@
-"""CT5-1C: the cable drawing's layout records (decision model-0158, spec CD2, Q3, Q5, Q9)."""
+"""The cable drawing's layout records (decision model-0158)."""
 
 import dataclasses
 from typing import Any

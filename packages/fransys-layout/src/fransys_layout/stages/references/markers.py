@@ -9,6 +9,7 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.types import Home
 from fransys_model.derive.drawing_text import marker_lines
 
@@ -36,7 +37,7 @@ def star_markers(stars: tuple[Star, ...], scene: MarkerScene) -> tuple[MarkerDec
     world = link_world(scene)
     plans = [plan for star in stars if (plan := _star_plan(star, world)) is not None]
     found = [m for plan in plans for m in _page_markers(plan, scene)]
-    owner = {port.port: one.function for one in scene.drawn for port in one.ports}
+    owner = owner_of(scene.drawn)
     terminals = {one.function for one in scene.drawn if one.roles.terminal}
     step = terminal_lift(scene.profile)
     return tuple(

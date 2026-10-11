@@ -6,7 +6,7 @@ and 0 V rails. Each supply's output is wired plus to plus and minus to minus to 
 
 The bug: the module's groups do not stand under their feeders, so the supply wires bend or cross
 on the way to the module, and a supply authored second can end up over the first one's group.
-The rule (spec CONVENTIONS-V06 V1, decision layout-0107): a box fed by one box over a whole pin
+The rule (decision layout-0107): a box fed by one box over a whole pin
 group is placed so pin stands under pin, and every wire between them is one vertical segment.
 """
 

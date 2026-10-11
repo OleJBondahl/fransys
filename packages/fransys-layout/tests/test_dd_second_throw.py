@@ -8,7 +8,7 @@ the pole as today, and the make throw's terminal -- the second throw -- in row 2
 same pole, in the pole's own lane, on a straight vertical wire, with no reference at either
 end. That neighbour test only proves the wire routes clean (no `ROUTE_FAILED`/
 `CONNECTION_NOT_DRAWN`); it says nothing about where the second throw's terminal actually
-lands (the designer's gap, 2026-09-26 evening amendment), which is what this test asserts
+lands (the gap, 2026-09-26 evening amendment), which is what this test asserts
 directly.
 """
 

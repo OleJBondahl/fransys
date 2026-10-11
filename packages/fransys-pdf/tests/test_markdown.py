@@ -1,4 +1,4 @@
-"""The cover/notes Markdown subset: parsing, escaping and Typst emission (spec P6)."""
+"""The cover/notes Markdown subset: parsing, escaping and Typst emission."""
 
 from fransys_pdf._markdown import (
     BulletList,
@@ -48,7 +48,7 @@ def test_bold_and_italic_runs():
 
 
 def test_spaced_asterisks_stay_literal_but_closed_ones_still_open_emphasis():
-    """Spec P6 amendment: emphasis opens only before a non-space and closes only after one
+    """Emphasis opens only before a non-space and closes only after one
     (CommonMark's flanking rule, reduced to this subset). The spec names this exact contrast.
     """
     assert parse("a * b * c") == (Paragraph(1, (Run("plain", "a * b * c"),)),)

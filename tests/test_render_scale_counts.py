@@ -17,14 +17,14 @@ if str(_TESTS_DIR) not in sys.path:
     # `--import-mode=importlib` (root pyproject.toml) never puts this folder on `sys.path`.
     sys.path.insert(0, str(_TESTS_DIR))
 
-from scale_counter import BuildCounts, count_render, flagged  # noqa: E402
+from scale_counter import BuildCounts, count_pair, flagged  # noqa: E402
 
 _METRICS = ("jumps", "calls", "resumes")
 
 
 @pytest.fixture(scope="module")
 def builds() -> tuple[BuildCounts, BuildCounts]:
-    return count_render(8), count_render(16)
+    return count_pair("render", 8, 16)
 
 
 def test_no_render_code_object_grows_faster_than_2_5x_per_doubling(builds):

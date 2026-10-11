@@ -142,7 +142,7 @@ def test_the_feedthrough_terminal_s_internal_link_is_indexed_in_the_catalogue(de
 
 
 def test_an_internal_link_whose_port_owns_no_function_template_raises_loudly():
-    """Designer ruling 2026-09-27, S-A: `_catalogue.build_catalogue`'s InternalLink-indexing
+    """Ruling 2026-09-27, S-A: `_catalogue.build_catalogue`'s InternalLink-indexing
     loop indexes `port_template_function` and `function_template_part` directly, with no
     guard. A part file can never produce this state (parts lint's `LINK_PORT_UNKNOWN` rejects
     a link naming a port its own function does not own), so it is hand-built here: two port

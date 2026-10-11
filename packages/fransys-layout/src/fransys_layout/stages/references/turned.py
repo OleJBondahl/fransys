@@ -9,10 +9,10 @@ joins (S12). A link of a terminal chain (`terminal_rows`) never turns: its row
 holds them level, and where the row cannot fit it stays a wire all the same.
 """
 
-from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.slices import by_key
 from fransys_model.kernel import UnionFind
 
 from .joins import Spot, port_spots, turns_back
@@ -43,9 +43,7 @@ def turned_stars(
     joined: UnionFind[Id[Any]] = UnionFind()
     for one in turned:
         joined.union(one.a.port, one.b.port)
-    groups: dict[Id[Any], list[Connection]] = defaultdict(list)
-    for one in turned:
-        groups[joined.find(one.a.port)].append(one)
+    groups = by_key(turned, lambda one: joined.find(one.a.port))
     stars = (wires_star(wires, specs) for wires in groups.values())
     found = (_at_stub(star, off_ports) for star in stars if star is not None)
     return tuple(sorted(found, key=lambda s: s.ref.port))

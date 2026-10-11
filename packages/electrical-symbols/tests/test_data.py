@@ -14,14 +14,12 @@ import pytest
 
 ROOT = Path(__file__).parent.parent
 # The toolkit ships its design guide as package data (root decision 0015, toolkit decision D38):
-# reading it through importlib.resources works whether graphical_symbols is installed from its
+# reading it through importlib.resources works whether symdef is installed from its
 # pinned git tag (the normal case) or from a local editable override, and it is never a sibling
-# checkout path -- there is no "../graphical-symbols" any more, the toolkit is its own repository.
-# `files()` is typed to return the abstract `Traversable`, but graphical_symbols is a regular,
+# checkout path -- there is no "../symdef" any more, the toolkit is its own repository.
+# `files()` is typed to return the abstract `Traversable`, but symdef is a regular,
 # non-namespace, non-zipped package, so this is always a real `Path` at runtime.
-GUIDE = cast(
-    "Path", importlib.resources.files("graphical_symbols").joinpath("docs/SYMBOL_INTERFACE.html")
-)
+GUIDE = cast("Path", importlib.resources.files("symdef").joinpath("docs/SYMBOL_INTERFACE.html"))
 SYMBOL_FILES = sorted((ROOT / "symbols").glob("*.toml"))
 PORT_ID = re.compile(r"^[a-z][a-z0-9_]*$")
 # Numbers that are not lengths in modules: the schema version, arc angles, counts and pitches.
@@ -271,11 +269,25 @@ BROKEN = {
 }
 
 
-def test_library_toml_has_the_three_keys():
+def test_library_toml_declares_its_keys_words_and_rules():
     assert LIBRARY == {
         "standard": "IEC 60617",
         "title": "Electrical graphical symbols",
         "number_pattern": r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "package": "electrical_symbols",
+        "vocabulary": {
+            "path_kinds": [
+                "conductor",
+                "switch_open",
+                "switch_closed",
+                "impedance",
+                "source",
+                "diode",
+            ],
+            "potentials": ["earth", "protective_earth", "functional_earth", "frame"],
+            "links": ["mechanical_link"],
+        },
+        "rules": {"required_slots": ["tag", "marking.<port>"]},
     }
 
 
@@ -349,7 +361,7 @@ def test_guide_is_read_from_the_toolkits_distribution_not_a_workspace_path():
 
 
 def test_the_distribution_path_check_can_fail():
-    workspace_path = ROOT.parent / "graphical-symbols" / "docs" / "SYMBOL_INTERFACE.html"
+    workspace_path = ROOT.parent / "symdef" / "docs" / "SYMBOL_INTERFACE.html"
     assert not guide_is_the_toolkits_own_copy(workspace_path)
 
 

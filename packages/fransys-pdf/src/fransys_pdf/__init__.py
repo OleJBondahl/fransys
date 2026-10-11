@@ -1,4 +1,4 @@
-"""Fransys output: document assembly to Typst source (spec sections 4, 6 and 9)."""
+"""Fransys output: document assembly to Typst source (6 and 9)."""
 
 from ._drawings import requests_harness_pages
 from .checks import check

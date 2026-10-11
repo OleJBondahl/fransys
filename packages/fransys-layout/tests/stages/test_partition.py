@@ -371,7 +371,7 @@ _LEGACY_LOCATION_PAGE_COUNT = 2
 
 
 def test_no_units_gives_byte_identical_drawing_sets_to_before_units_existed() -> None:
-    """Regression pin (units spec U1): with `units=()` every plan's `unit` is `None` and the
+    """Regression pin: with `units=()` every plan's `unit` is `None` and the
     drawing-set numbering is exactly what `test_one_drawing_set_per_location_in_label_order`
     already pinned before this dimension existed."""
     locations = (

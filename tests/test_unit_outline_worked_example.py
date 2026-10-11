@@ -1,4 +1,4 @@
-"""The unit boundary outline (units spec U1), probed against the units worked example's
+"""The unit boundary outline, probed against the units worked example's
 own real, laid-out geometry -- not `packages/fransys-render/tests/test_outlines.py`'s
 hand-built placements, which prove the grouping and box math correct but cannot show
 whether the "kept together" guarantee actually holds once the real layout engine has
@@ -8,7 +8,7 @@ assigned real coordinates to everything else on the page too.
 verbatim from `tests/test_units_worked_example.py` (not imported: that file's own job is
 STEP 4's model/layout acceptance, not render, and it is mid-flight from separate,
 already-accepted work in this worktree -- not to be touched here). Root tests are where
-`fransys` (the facade) and `fransys_render` may both be imported (spec section 5:
+`fransys` (the facade) and `fransys_render` may both be imported (the import table:
 `fransys` imports everything; a root test is bound by no package's own import table).
 """
 
@@ -19,7 +19,7 @@ import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
 from fransys_render._symbol_geometry import oriented_symbol, to_grid
-from graphical_symbols.boxes import body_box
+from symdef.boxes import body_box
 
 from fransys_model.derive import connector_box_lines
 from fransys_model.layout import (
@@ -44,7 +44,7 @@ _PROJECT: dict[str, Any] = {
 
 
 def io_board(s, *, mark_boundary=True):
-    """Units spec worked example: a board unit with one boundary connector, `X1`."""
+    """Worked example: a board unit with one boundary connector, `X1`."""
     u = s.unit("demo-io-board", revision=3, interface="2")
     u.revision(3, date="2026-01-01", text="First release", created="XX")
     grp = u.group("BRD", "I/O board")
@@ -61,7 +61,7 @@ def io_board(s, *, mark_boundary=True):
 
 
 def pump_cabinet(s, *, name):
-    """Units spec worked example: a cabinet unit with two field-terminal boundaries."""
+    """Worked example: a cabinet unit with two field-terminal boundaries."""
     u = s.unit("demo-pump-cabinet", revision=2, interface="1")
     u.revision(2, date="2026-01-01", text="First release", created="XX")
     c = u.location(name, "Pump cabinet")
@@ -141,8 +141,8 @@ def _intersects(box_a, box_b):
     return ax0 < bx1 and bx0 < ax1 and ay0 < by1 and by0 < ay1
 
 
-# 7, not 4 (measured directly against this build, a probe script, not guessed): units spec
-# U1's board-unit ruling (model-0041) makes `DEMO-PCB-IO` -- the sole root item of its own
+# 7, not 4 (measured directly against this build, a probe script, not guessed): the board-unit
+# ruling (model-0041) makes `DEMO-PCB-IO` -- the sole root item of its own
 # nested unit `demo-io-board` -- draw its own home set now, one page per cabinet instance
 # (`X1`, `K1`'s coil, `co_1`, `co_2`, four placements, zero outline groups: everything on it
 # is that unit's own content, none of it another unit's black-box replica). Those two pages
@@ -172,7 +172,7 @@ _EXPECTED_NON_MEMBERS_PER_TWO_MEMBER_GROUP = 0
 
 def test_every_outline_group_encloses_its_own_members_and_nothing_else():
     """The acceptance line, against real geometry: "encloses every black-box function on the
-    page and nothing else". Layout owns the outline (I2a, designer's ruling): for every
+    page and nothing else". Layout owns the outline (I2a, ruling): for every
     `layout.outline` record, every member's body lies inside its rectangle, no other
     placement's body on that page intersects it, and its title label sits inside the
     content area and outside the rectangle. A member is a placement whose item belongs to
@@ -256,7 +256,7 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
 
 
 def test_every_unit_outline_and_its_title_stay_inside_the_content_box() -> None:
-    """R3 (designer): a black box at the content box's left edge keeps its frame and title
+    """R3: a black box at the content box's left edge keeps its frame and title
     inside it, so no `OUT_OF_CONTENT_BOX`. Can-fail, checked by hand: without the clamp in
     `_outlines` a title starts left of the content box and both assertions fail."""
     result = _build_system()

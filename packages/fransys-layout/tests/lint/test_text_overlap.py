@@ -1,6 +1,6 @@
 """`TEXT_OVERLAP`: two texts, or a text over a foreign symbol body (lint/_texts.py, layout-0047).
 
-Moved from the designer's test-side `text_overlaps` helper (`tests/engines/test_review_metrics.py`
+Moved from the test-side `text_overlaps` helper (`tests/engines/test_review_metrics.py`
 before F7) into the lint, next to `TEXT_CROSSED_BY_ROUTE`; these cases are its unit tests, run
 through `lint_geometry` as `test_text_crossed.py` runs its own.
 """

@@ -77,7 +77,7 @@ def test_statement_order_does_not_change_any_id(parts):
 
 
 def test_terminal_index_is_the_one_exception_call_order_counts(parts):
-    """Spec A7: a terminal's auto index counts up in call order, so swapping calls swaps it."""
+    """A terminal's auto index counts up in call order, so swapping calls swaps it."""
     from fransys_author import Design
 
     forward = Design(parts)

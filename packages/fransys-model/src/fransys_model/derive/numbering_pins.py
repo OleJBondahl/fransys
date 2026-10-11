@@ -9,8 +9,7 @@ read at all (`fransys_model` reads no file, root CLAUDE.md invariant 6); that is
 `numbering_version`.
 
 Reached as `fransys_model.derive.numbering_pins.<name>`, never re-exported from
-`derive/__init__.py` -- `derive.baseline`'s own precedent, and `derive.unit_relative_key`'s
-(orchestrator appendix point 4).
+`derive/__init__.py` -- `derive.baseline`'s own precedent, and `derive.unit_relative_key`.
 """
 
 from typing import cast

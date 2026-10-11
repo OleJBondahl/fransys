@@ -5,7 +5,7 @@ Poles and aspect paths are read here; the pole-pairing rule itself is
 exclusion moved to `fransys_model.derive.schematic_functions` (model-0039):
 `reading.drawn_functions` filters `functions(model)` through it instead of a private copy of
 the walk. Placement resolution moved to `fransys_model.derive.effective_placement`
-(model-0040, spec B1's amendment): `_placement_leaf` reads through it instead of a private,
+(model-0040): `_placement_leaf` reads through it instead of a private,
 item-only lookup, so a board connector with no placement of its own draws in its nearest
 placed ancestor's drawing set.
 """
@@ -49,7 +49,7 @@ def function_spec(
     function: Function,
     group_hints: Mapping[Id[Function], Id[AspectNode]],
 ) -> FunctionSpec:
-    """One `FunctionSpec` read from `function`; `unit` is the item's own `unit` (units spec U1)."""
+    """One `FunctionSpec` read from `function`; `unit` is the item's own `unit`."""
     item = items(model)[function.item]
     category = parts(model)[item.part].category.value if item.part is not None else None
     poles, pole_pairs = _poles_and_pairs(model, function)

@@ -6,7 +6,7 @@ for either: only the terminal names are known, and for the feeder its voltage an
 
 The bug (v0.13.1): `d.terminal_strip("X8", None, 4, external=True)` and `d.device("Q8", None,
 external=True, pins=...)` raised `AuthorError: part must be an MPN string or a part class with an
-mpn, not None`. The rule (PATCH-0132 E1 to E6, decisions author-0033, model-0183, layout-0161): an
+mpn, not None`. The rule (decisions author-0033, model-0183, layout-0161): an
 external device or strip may take `None` for its part, needs a tag, has no BOM line and draws as
 a generic box or as terminals.
 """

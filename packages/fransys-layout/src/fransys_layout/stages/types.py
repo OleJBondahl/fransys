@@ -707,6 +707,7 @@ class LabelRequest:
     text: str
     partners: tuple[RequestPartner, ...] = ()
     level: bool = False
+    function: Id[Any] | None = None  # a MARKING's function, when its port is drawn by two
 
 
 @value
@@ -721,6 +722,7 @@ class PlacedLabel:
     box: Box
     partners: tuple[RequestPartner, ...] = ()
     unplaced: bool = False
+    function: Id[Any] | None = None  # a MARKING's function, when its port is drawn by two
 
 
 @value

@@ -1,4 +1,4 @@
-"""Unit boundaries (units spec U1): one dash-dot outline per black-box unit instance."""
+"""Unit boundaries: one dash-dot outline per black-box unit instance."""
 
 from typing import TYPE_CHECKING
 

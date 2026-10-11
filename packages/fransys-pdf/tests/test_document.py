@@ -1,5 +1,5 @@
 """`document_pages`: the preset's pages plus additions and removals, NOTES dropped without
-notes text (spec P10; `document_pages` was the scaffold's until this part)."""
+notes text (`document_pages` was the scaffold's until this part)."""
 
 from _build import document, location, model
 from fransys_pdf import document_pages

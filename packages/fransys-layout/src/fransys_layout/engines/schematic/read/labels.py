@@ -73,6 +73,7 @@ def label_requests(
                         subject=port.port,
                         slot=slot,
                         text=text_of[LabelKind.MARKING, port.port],
+                        function=function.function,
                     )
                 )
     return tuple(sorted(requests, key=lambda r: (r.kind.value, r.subject, r.slot)))

@@ -8,7 +8,7 @@ its pins run to other plugs or headers.
 
 The bug: the HARNESS_DRAWING document stops with DOCUMENT_NO_DRAWINGS, "missing drawing for"
 W1, and writes nothing. The same harness with three ends (a) or with the far pins in order (b)
-draws. Diagnosis: HARNESS-ENDS-1. Fixed by layout-0163: the retry plans again at its own origin.
+draws. Fixed by layout-0163: the retry plans again at its own origin.
 
 The drawn order: a wire's core key ran as a plain string, so pin 10 sorted before pin 2 and the
 plugs came out J2, J4, J3. Fixed by model-0185: the key is the natural order of the printed ends.

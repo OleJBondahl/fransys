@@ -1,4 +1,4 @@
-"""KiCad-side ERC, reported as findings (spec section 8)."""
+"""KiCad-side ERC, reported as findings."""
 
 from collections import defaultdict
 from dataclasses import dataclass

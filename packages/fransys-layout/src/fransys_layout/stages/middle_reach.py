@@ -1,6 +1,6 @@
 """HL13, HL18: which columns each middle interface's line reaches, or that it leaves.
 
-The one answer both the middle groups and the leaving lines read (designer's P3 condition 1).
+The one answer both the middle groups and the leaving lines read (P3 condition 1).
 """
 
 from dataclasses import replace

@@ -1,6 +1,6 @@
 """`geometry.clear`: the first free candidate and a box pushed clear (cleanup step 2, F3)."""
 
-from fransys_layout.geometry import Box, first_clear, overlaps, push_clear
+from fransys_layout.geometry import Box, first_clear, is_clear, overlaps, push_clear
 
 
 def test_first_clear_takes_the_first_unblocked_candidate_lazily() -> None:
@@ -47,3 +47,11 @@ def test_push_clear_on_x_moves_right() -> None:
         Box(x=0, y=0, width=4, height=8), [Box(x=0, y=0, width=8, height=8)], gap=2, axis="x"
     )
     assert got == Box(x=10, y=0, width=4, height=8)
+
+
+def test_is_clear_is_false_on_any_overlap_and_true_on_none() -> None:
+    """A touching edge is no overlap; one overlapping blocker is enough."""
+    box = Box(x=0, y=0, width=8, height=8)
+    assert is_clear(box, [Box(x=8, y=0, width=8, height=8)])
+    assert not is_clear(box, [Box(x=8, y=0, width=8, height=8), Box(x=4, y=4, width=8, height=8)])
+    assert is_clear(box, [])

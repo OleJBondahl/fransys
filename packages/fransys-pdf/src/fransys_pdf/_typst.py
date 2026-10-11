@@ -1,4 +1,4 @@
-"""Typst string literals: the one place engineer-authored text becomes Typst source (spec P6)."""
+"""Typst string literals: the one place engineer-authored text becomes Typst source."""
 
 
 def literal(text: str) -> str:

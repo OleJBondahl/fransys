@@ -1,4 +1,4 @@
-"""BOUNDARY-DRAW (layout-0080, designer ruling 2026-09-25): how a unit's boundary pin is drawn.
+"""BOUNDARY-DRAW (layout-0080, ruling 2026-09-25): how a unit's boundary pin is drawn.
 
 Rule 1: a top-level unit's boundary pin wired out of the unit (to the top level or to another
 top-level unit) gets a D10 stub label (an OFF `LinkMarker`) on the unit's own page, whatever the

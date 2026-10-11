@@ -102,8 +102,8 @@ def _docstring_line_numbers(tree: ast.Module) -> set[int]:
 def count_code_lines(source: str) -> int:
     """Lines of `source` that are code: not blank, not comment-only, not inside a docstring.
 
-    LC3 gates docstrings separately, so counting them here would charge them twice (designer
-    ruling 2026-10-01, decision 0044 amendment).
+    LC3 gates docstrings separately, so counting them here would charge them twice (ruling
+    2026-10-01, decision 0044 amendment).
     """
     docstring_lines = _docstring_line_numbers(ast.parse(source))
     return sum(

@@ -99,7 +99,7 @@ def _highest_top(layout: Layout) -> int:
             marks=pytest.mark.xfail(
                 strict=True,
                 reason="layout-0158 F1: the harness-ink checks see the system's lines over labels "
-                "(WIRE_OVER_LABEL), still after F5; named for the designer",
+                "(WIRE_OVER_LABEL), still after F5; named for the review",
             ),
         ),
     ],

@@ -1,4 +1,4 @@
-"""`external=` on `item`, `strip`, `cable` and `harness` (external-items spec Y1, Y2)."""
+"""`external=` on `item`, `strip`, `cable` and `harness`."""
 
 from fransys_author import Design
 

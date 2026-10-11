@@ -2,7 +2,7 @@
 
 Layout exists only to draw documents. With no document there is nothing to draw, so `fr.build`
 returns the numbered, validated model unlaid, with no layout call attempted -- no flag, no new
-function (docs/archive/specs/2026-09-26-public-model-build.md). Every absence assertion below is
+function. Every absence assertion below is
 paired with the positive case that proves the same mechanism can produce the opposite result
 (root CLAUDE.md's field-cases convention, applied here to a unit test rather than a field case).
 """

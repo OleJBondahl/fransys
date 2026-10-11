@@ -8,10 +8,10 @@ them; `texts.markers` builds their markers from the placed page (S9).
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, replace
-from itertools import count, pairwise
+from itertools import count
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import Facing
+from fransys_layout.geometry import Facing, cut_runs
 from fransys_layout.stages.types import Home
 from fransys_model.derive.drawing_text import off_stub_line
 
@@ -294,9 +294,4 @@ def _runs(
     cuts: Sequence[tuple[int, ...]],
 ) -> list[list[tuple[tuple[int, int], Id[Any], PortEnd, str, StubText]]]:
     """R1, S14, M8: `ends` (one page, in column order) cut into runs wherever a cut lies between."""
-    runs = [[ends[0]]]
-    for before, end in pairwise(ends):
-        if any(before[0] < at < end[0] for at in cuts):
-            runs.append([])
-        runs[-1].append(end)
-    return runs
+    return cut_runs(ends, lambda end: end[0], cuts)

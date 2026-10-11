@@ -45,6 +45,7 @@ def write_layout(model: Model, results: StageResults, keys: WriteKeys) -> Model:
         *harness.harness_lines(keys, results.lines.lines, page_of, sets, stamp),
         *harness.harness_fan_outs(keys, results.lines.fan_outs, page_of, sets, stamp),
         *harness.line_stubs(keys, results.lines.stubs, page_of, sets, stamp),
+        *harness.stub_ends(keys, results.lines.stubs, page_of, sets, stamp),
     ]
     check_unique(keys, records, {page.id: sets[at[0]].key for at, page in page_of.items()})
     origin = Origin(file=stamp, line=1, note="derived layout record")

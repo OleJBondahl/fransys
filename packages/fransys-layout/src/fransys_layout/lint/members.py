@@ -51,13 +51,16 @@ def check_members(
     sets: dict[Handle, set[int]] = defaultdict(set)
     for one in layout.placed:
         sets[one.function].add(one.drawing_set)
+    named = _named_by(connections, net_groups)
     bare = set()
     for function in drawn:
         for drawing_set in sets.get(function.function, ()):
             bare.update(
                 (one.port, drawing_set)
                 for one in function.ports
-                if one.port in root_of
+                # model-0188: a port the net names by its pin cell is drawn there, not here
+                if function.function in named.get(one.port, {function.function})
+                and one.port in root_of
                 and size[root_of[one.port]] >= _NET_MIN
                 and (one.port, drawing_set) not in covered
                 and (one.port, drawing_set) not in exempt
@@ -69,6 +72,20 @@ def check_members(
     return tuple(
         _finding(port, drawing_set, at_port.get(port, ())) for port, drawing_set in sorted(bare)
     )
+
+
+def _named_by(
+    connections: tuple[Connection, ...], net_groups: tuple[NetGroup, ...]
+) -> dict[Handle, set[Handle]]:
+    """Each port, with the functions the connections and net groups name it by."""
+    named: dict[Handle, set[Handle]] = defaultdict(set)
+    for one in connections:
+        for end in (one.a, one.b):
+            named[end.port].add(end.function)
+    for group in net_groups:
+        for ref in group.ports:
+            named[ref.port].add(ref.function)
+    return named
 
 
 def _finding(port: Handle, drawing_set: int, conductors: Sequence[Connection]) -> Finding:

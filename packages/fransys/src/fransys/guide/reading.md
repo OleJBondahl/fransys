@@ -87,8 +87,7 @@ designations joined by one space in a fixed order, the text the wire list and sl
 a core, a link, a harness wire: none. `fr.write` writes these rows as `<set>-wires.csv`.
 
 `fransys.derive.boundary(model, unit)` returns the functions that make up a unit's
-interface, as a tuple of function ids in id order. Only `TERMINAL` and `CONNECTOR` functions
-can be a unit's boundary.
+interface, as a tuple of function ids in id order. A function of any kind can be a unit's boundary.
 
 `fransys.derive.FunctionKind` is the enum of what a `Function` exposes: `COIL`,
 `CONTACT_NO`, `TERMINAL`, `CONNECTOR`, `SUPPLY`, and so on. A function's `kind` is one of

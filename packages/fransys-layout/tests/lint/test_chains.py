@@ -196,7 +196,7 @@ def test_a_symbol_placed_in_two_drawing_sets_is_reported_once() -> None:
 
 
 def test_an_open_end_is_no_lone_cell_when_unwired_but_a_twin_is() -> None:
-    """A boundary function's outside is open (units spec U2): function 1 is silent, 4 fires.
+    """A boundary function's outside is open: function 1 is silent, 4 fires.
 
     Both stand in a one-cell column and have no wire; only function 1 is in `open_ends`.
 

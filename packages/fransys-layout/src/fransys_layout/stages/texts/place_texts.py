@@ -6,9 +6,9 @@ greedy and never moves a text it has placed (D1, Room: nothing is shifted after 
 """
 
 from typing import TYPE_CHECKING, Any
-lazy from collections.abc import Sequence
+lazy from collections.abc import Iterable, Sequence
 
-from fransys_layout.geometry import Box, Facing, LayoutError, Point, overlaps
+from fransys_layout.geometry import Box, Facing, LayoutError, Point, first_clear, is_clear, overlaps
 from fransys_layout.stages.space import Run, covers, crosses
 from fransys_model.kernel import Finding, Id, Severity, value
 
@@ -108,20 +108,14 @@ def place_texts(
         foreign = [one.box for one in placed if one.handle != text.handle]
         others = [_run(shape.box) for shape in lanes if shape.owner not in text.own]
         options = _options(text, table)
-        index = next(
-            (
-                i
-                for i, (place, fits) in enumerate(options)
-                if fits
-                and space.holds(place.box)
-                and _free(place.box, crossing, others, runs)
-                and not any(overlaps(part, box) for part in place.stub for box in foreign)
-            ),
-            None,
+        fitting = (
+            (i, place)
+            for i, (place, fits) in enumerate(options)
+            if fits and not any(overlaps(part, box) for part in place.stub for box in foreign)
         )
-        unplaced = index is None
-        if index is None:
-            index = 0
+        found = _first_free(fitting, space, crossing, others, runs)
+        index = 0 if found is None else found[0]
+        if found is None:
             findings.append(
                 Finding(
                     code=LABEL_UNPLACED,
@@ -138,11 +132,31 @@ def place_texts(
                 handle=text.handle,
                 slot=text.slot,
                 box=place.box,
-                unplaced=unplaced,
+                unplaced=found is None,
                 index=index,
             )
         )
     return tuple(placed), tuple(findings)
+
+
+def _option_box(option: tuple[int, Place]) -> Box:
+    """The box of an `(index, place)` option."""
+    return option[1].box
+
+
+def _first_free(
+    options: Iterable[tuple[int, Place]],
+    space: Space,
+    crossing: Sequence[Box],
+    others: Sequence[Run],
+    runs: tuple[Run, ...],
+) -> tuple[int, Place] | None:
+    """The first `(index, place)` of `options` that `space` holds and nothing blocks."""
+    return first_clear(
+        options,
+        box_of=_option_box,
+        blocked=lambda box: not (space.holds(box) and _free(box, crossing, others, runs)),
+    )
 
 
 def _options(text: TextToPlace, table: CandidateTable) -> list[tuple[Place, bool]]:
@@ -171,7 +185,7 @@ def _key(text: TextToPlace) -> tuple[int, int, int, int, Handle, str]:
 
 def _free(box: Box, blockers: Sequence[Box], lanes: Sequence[Run], runs: tuple[Run, ...]) -> bool:
     """Whether `box` overlaps no blocker, covers no lane (when it has an area), crosses no run."""
-    if any(overlaps(box, blocker) for blocker in blockers):
+    if not is_clear(box, blockers):
         return False
     if box.width > 0 and box.height > 0 and any(covers(box, lane) for lane in lanes):
         return False

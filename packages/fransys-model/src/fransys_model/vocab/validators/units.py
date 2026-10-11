@@ -1,4 +1,4 @@
-"""Validator: a unit's boundary (units spec U3, U4, U5)."""
+"""Validator: a unit's boundary."""
 
 from typing import TYPE_CHECKING, Any, Final
 
@@ -34,11 +34,10 @@ UNIT_CONNECTOR_DANGLING: Final[str] = "UNIT_CONNECTOR_DANGLING"
 MATE_PORT_MISMATCH: Final[str] = "MATE_PORT_MISMATCH"
 CONNECTOR_WIRED_WITHOUT_MATE: Final[str] = "CONNECTOR_WIRED_WITHOUT_MATE"
 UNUSED_CONTRADICTED: Final[str] = "UNUSED_CONTRADICTED"
-BOUNDARY_KIND: Final[str] = "BOUNDARY_KIND"
 BOUNDARY_NOT_IN_UNIT: Final[str] = "BOUNDARY_NOT_IN_UNIT"
 MATE_NOT_CONNECTOR: Final[str] = "MATE_NOT_CONNECTOR"
 
-_BOUNDARY_KINDS: Final = frozenset({FunctionKind.TERMINAL, FunctionKind.CONNECTOR})
+_TERMINAL_OR_CONNECTOR: Final = frozenset({FunctionKind.TERMINAL, FunctionKind.CONNECTOR})
 _GENDERED: Final = frozenset({Gender.MALE, Gender.FEMALE})
 
 
@@ -47,7 +46,7 @@ def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message
 
 
 class _Plant:
-    """The lookups every check shares, built once per model (units spec U4)."""
+    """The lookups every check shares, built once per model."""
 
     def __init__(self, model: Model) -> None:
         self.model = model
@@ -188,7 +187,7 @@ def _unit_connector_dangling(plant: _Plant) -> list[Finding]:
     found = []
     for function in plant.functions.values():
         item = plant.items[function.item]
-        if item.unit is None or function.kind not in _BOUNDARY_KINDS:
+        if item.unit is None or function.kind not in _TERMINAL_OR_CONNECTOR:
             continue
         if function.id in plant.boundary_of[item.unit]:
             continue
@@ -225,7 +224,7 @@ def _mate_not_connector(plant: _Plant) -> list[Finding]:
     for mate in plant.mates.values():
         for end in (mate.a, mate.b):
             function = plant.functions[end]
-            if function.kind in _BOUNDARY_KINDS:
+            if function.kind in _TERMINAL_OR_CONNECTOR:
                 continue
             message = (
                 f"mate {key_text(mate)} has end {key_text(function)} of kind "
@@ -286,18 +285,10 @@ def _unused_contradicted(plant: _Plant) -> list[Finding]:
     return found
 
 
-def _boundary_kind_and_membership(plant: _Plant) -> list[Finding]:
+def _boundary_membership(plant: _Plant) -> list[Finding]:
     found = []
     for boundary in plant.boundaries.values():
         function = plant.functions[boundary.function]
-        if function.kind not in _BOUNDARY_KINDS:
-            message = (
-                f"boundary function {key_text(function)} has kind {function.kind.value}, not "
-                "terminal or connector"
-            )
-            found.append(
-                _finding(BOUNDARY_KIND, Severity.ERROR, (boundary.unit, boundary.function), message)
-            )
         item_unit = plant.items[function.item].unit
         if item_unit not in plant.subtree_of[boundary.unit]:
             message = (
@@ -312,7 +303,7 @@ def _boundary_kind_and_membership(plant: _Plant) -> list[Finding]:
 def check_units(model: Model) -> tuple[Finding, ...]:
     """Check every unit's boundary and every mate's kind; `UNIT_CYCLE` is `check_structure`'s.
 
-    `ERROR`: the boundary codes `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`, `BOUNDARY_KIND`,
+    `ERROR`: the boundary codes `BOUNDARY_UNCONNECTED`, `UNIT_BOUNDARY_BYPASSED`,
     `BOUNDARY_NOT_IN_UNIT`, and `MATE_NOT_CONNECTOR`; the others `WARNING`. Sorted by code.
     """
     plant = _Plant(model)
@@ -324,6 +315,6 @@ def check_units(model: Model) -> tuple[Finding, ...]:
         *_mate_not_connector(plant),
         *_connector_wired_without_mate(plant),
         *_unused_contradicted(plant),
-        *_boundary_kind_and_membership(plant),
+        *_boundary_membership(plant),
     ]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

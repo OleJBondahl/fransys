@@ -1,6 +1,6 @@
 """Lint: a chain the layout broke, as a stranded symbol or as a severed 2-port connection.
 
-These are the designer's review metrics C0 (`LONE_CELL`) and C0b (`CHAIN_BROKEN`).
+These are the review metrics C0 (`LONE_CELL`) and C0b (`CHAIN_BROKEN`).
 `lint_geometry` cannot host them: they read no `drawn` functions, no columns and no
 connections, and which ports are wired and which cells a column holds are not in a `Layout`.
 """

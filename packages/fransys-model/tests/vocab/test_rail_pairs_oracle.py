@@ -1,10 +1,10 @@
-"""CONTACT-STATES acceptance 3: a brute-force oracle for `derive.rail_pairs`.
+"""A brute-force oracle for `derive.rail_pairs`.
 
 The oracle knows nothing of conditions. For every rest-or-operated assignment of the items that
 hold stateful links it builds the model with only the links that assignment closes, asks
 `port_rails` for the rails of each port, and pairs two different rails at two different ports of
 one function. The union of those pairs over all assignments must equal `rail_pairs` on the model
-that has every contact link (spec CS1, CS2, CS4).
+that has every contact link.
 
 A generated `_Spec` is plain data (items as tuples of pole kinds, attachments of a rail to a
 port, wires between two ports); `_build` turns it into a model. Invented data only.

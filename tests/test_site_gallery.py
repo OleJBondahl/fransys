@@ -1,4 +1,4 @@
-"""The gallery links every file under the example's `out/` (public monorepo spec PM7, acceptance 6).
+"""The gallery links every file under the example's `out/`.
 
 Staging only, no Zensical: `site_gallery.build_gallery` on a tiny invented example folder.
 """

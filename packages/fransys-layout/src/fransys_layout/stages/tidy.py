@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Callable, Sequence
 
-from fransys_layout.geometry import WIRING_GRID, Box, Point, contains, overlaps, translate
+from fransys_layout.geometry import WIRING_GRID, Box, Point, contains, is_clear, translate
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.stages.space import Run, crosses
 
@@ -43,7 +43,7 @@ def clear_of_stubs(
     markers: tuple[LinkMarker, ...],
     sheet: SheetFormat,
 ) -> list[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]]:
-    """R2 (designer): a tag a marker's stub runs through moves to its symbol's mirror side."""
+    """R2: a tag a marker's stub runs through moves to its symbol's mirror side."""
     content = content_box(sheet)
     found = []
     for (placed, labels), mine in zip(pages, by_plan(markers, page_of, plans), strict=True):
@@ -63,8 +63,8 @@ def clear_of_stubs(
             clear = (
                 contains(content, box)
                 and not any(crosses(box, stub) for stub in stubs)
-                and not any(overlaps(box, other) for other in (*bodies, *others))
-                and not any(overlaps(box, m.box) for m in mine)
+                and is_clear(box, (*bodies, *others))
+                and is_clear(box, (m.box for m in mine))
             )
             if clear:
                 kept[index] = replace(label, box=box)

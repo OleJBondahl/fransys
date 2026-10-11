@@ -1,4 +1,4 @@
-"""A nested unit's lists print an end outside the unit as an EMPTY cell (units spec U2, 2026-09-24).
+"""A nested unit's lists print an end outside the unit as an EMPTY cell (2026-09-24).
 
 Owner rule: "every drawing of a specific unit/part only knows whats going on below them in the
 system ... the pcb drawing does not know what cabinet it will get placed into." For a NESTED

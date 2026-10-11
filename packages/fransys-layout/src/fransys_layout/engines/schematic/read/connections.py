@@ -1,4 +1,4 @@
-"""Reads of the model for the connection filters of `read_inputs` (decision layout-0044, spec B2).
+"""Reads of the model for the connection filters of `read_inputs` (decision layout-0044).
 
 A connection, net group or rail whose ends all sit on one opaque board is dropped silently; one
 with an undrawn end is dropped and reported `CONNECTION_TO_UNDRAWN`.

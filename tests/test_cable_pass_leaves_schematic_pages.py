@@ -1,6 +1,6 @@
 """The cable pass leaves every schematic page SVG as it was (cable-drawings spec, acceptance 10).
 
-Standing test (designer ruling after the PNG read): pages equal with the cable pass on and
+Standing test (ruling after the PNG read): pages equal with the cable pass on and
 off, and in either pass order. The fixture has a top-level cable, so a block really is drawn.
 """
 

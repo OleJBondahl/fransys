@@ -1,6 +1,6 @@
 """Field case: a container page scoped to place C1, a unit's boundary strip wired to lamps.
 
-The rule (owner 2026-09-24: shortest designations; designer's ruling 2026-10-06): a link marker
+The rule (owner 2026-09-24: shortest designations; ruling 2026-10-06): a link marker
 on a page prints no place the page already states. The container page's off stubs name the
 strip `-U1-X1:...`, never `+C1-U1-X1:...`.
 

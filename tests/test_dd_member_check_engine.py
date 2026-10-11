@@ -81,7 +81,7 @@ def test_a_star_net_without_its_branches_reports_the_branch_less_ports(
     the relays' of the fixture's other nets, which are still stars, and the routes stand for
     the terminals.
 
-    # UNDO: engines/schematic/engine.py, delete the `check_members` call in `_lint_findings`
+    # UNDO: engines/schematic/_lint.py, delete the `check_members` call in `lint_findings`
     """
     monkeypatch.setattr(star, "branch_pages", lambda *_args, **_kwargs: [])
     (result,) = _recorded_build(monkeypatch, fill)

@@ -1,4 +1,4 @@
-"""The rules the engine used to hold (spec D6, D8): hand-made values, no model.
+"""The rules the engine used to hold: hand-made values, no model.
 
 `without_starred` (stages/star), `with_off_markers` and `black_box_sets` (stages/off_markers) and
 `off_ends` (stages/offstubs). Function `n` has ports `n1`... `samples`: port `13` is `hid("port",

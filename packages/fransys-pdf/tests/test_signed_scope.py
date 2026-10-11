@@ -1,7 +1,7 @@
 """The title block's subject label keeps the BARE label (page-frame R10, pdf-0005 item 4).
 
 Owner ruling: "the subject label keeps the bare location label: C1 Demo cabinet, no +". A
-follow-up asked for a signed scope (`+C1 Demo cabinet`); the designer retracted it as an error
+follow-up asked for a signed scope (`+C1 Demo cabinet`); it was retracted as an error
 against this ruling (model-0054 section 6). These tests are the regression guard: a location's
 label, an item document's designation and a harness page's scope print with no sign in the
 Scope cell and the document heading, and each test fails if a sign is added.

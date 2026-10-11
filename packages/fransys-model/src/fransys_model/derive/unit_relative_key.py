@@ -1,8 +1,8 @@
 """FD2: an item's designation identity is its key with its unit's own prefix dropped.
 
 Reached as `fransys_model.derive.unit_relative_key.unit_relative_key`, never re-exported
-from `derive/__init__.py` -- `derive.baseline`'s own precedent (orchestrator appendix point 4:
-no new top-level `derive` export for this).
+from `derive/__init__.py` -- `derive.baseline`'s own precedent: no new top-level
+`derive` export for this.
 """
 
 from fransys_model.vocab.tables import items
@@ -17,7 +17,7 @@ def unit_relative_key(model: Model, item: Id[Item]) -> AuthoringKey:
     """`item`'s key, relative to its own unit (FD2): the identity every build of it shares.
 
     Two instances of one release, and a standalone build, all give the same key -- "key for
-    key" (units spec U7). An item of no unit (`item.unit is None`) keeps its whole key. An
+    key". An item of no unit (`item.unit is None`) keeps its whole key. An
     item of a unit: the unit's own record's `key` always ends with the literal segment
     `"unit"` (`fransys_author.design.Scope.unit`), and every item made through that
     unit's own `Scope`, or a scope nested in it, shares the SAME prefix (`Scope.unit()`

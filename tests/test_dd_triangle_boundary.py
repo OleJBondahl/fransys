@@ -2,7 +2,7 @@
 build ("the records put name one id twice, with different content" before the fix).
 
 A unit's strip `X1` holds three terminals `t1`, `t2`, `t3`, each declared `boundary`, wired
-t1-t2, t1-t3, t2-t3: one net of three ports (spec D9). Each terminal is drawn in the unit's own
+t1-t2, t1-t3, t2-t3: one net of three ports. Each terminal is drawn in the unit's own
 drawing set and, as a boundary replica, in the top-level set. The engine re-keys the hub columns of
 the triangle, so the unit's home columns were counted as replicas too and one placement key stood
 twice. The chain (wired 1-2 and 2-3 only) and the same triangle with no unit are the controls.

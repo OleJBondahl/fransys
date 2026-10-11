@@ -141,7 +141,7 @@ def test_the_scoped_lines_do_not_depend_on_table_order() -> None:
         assert bom_lines(reversed_tables(model), scope) == bom_lines(model, scope)
 
 
-# ---- units spec U5: a unit's own scope, TOP_LEVEL, and unit BOM lines -------------------
+# ---- a unit's own scope, TOP_LEVEL, and unit BOM lines -------------------
 
 
 def _two_level() -> tuple[Plant, Id[Unit], Id[Unit]]:

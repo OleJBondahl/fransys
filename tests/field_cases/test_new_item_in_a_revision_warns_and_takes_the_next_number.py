@@ -17,6 +17,7 @@ The decisions that fix it: model-0135 (the warning) and model-0134 (instance num
 """
 
 import json
+import shutil
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
@@ -50,6 +51,12 @@ def released(tmp_path_factory: pytest.TempPathFactory) -> Path:
     fr.release(result, into, unit=board)
     fr.release(result, into, unit="demo-cab")
     return into
+
+
+@pytest.fixture
+def own_releases(released: Path, tmp_path: Path) -> Path:
+    """A private copy of the releases, for a test that releases into it."""
+    return shutil.copytree(released, tmp_path / "releases")
 
 
 def _build(
@@ -169,19 +176,19 @@ def test_a_new_item_with_a_written_tag_gives_no_such_finding(released: Path) -> 
     assert _numbers(second)["m2"] == "-U2-J1"
 
 
-def test_retagging_a_released_item_is_designation_moved_at_release(released: Path) -> None:
+def test_retagging_a_released_item_is_designation_moved_at_release(own_releases: Path) -> None:
     second = _build(
-        2, relays=("k_a", "k_b"), modules=("m1", "m2"), written={"k_a": "K9"}, releases=released
+        2, relays=("k_a", "k_b"), modules=("m1", "m2"), written={"k_a": "K9"}, releases=own_releases
     )
     with pytest.raises(fr.BuildErrors) as raised:
-        fr.release(second, released, unit="demo-cab")
+        fr.release(second, own_releases, unit="demo-cab")
     assert "DESIGNATION_MOVED" in {f.code for f in raised.value.findings}
 
 
-def test_releasing_the_revision_reports_the_warning_in_the_manifest(released: Path) -> None:
+def test_releasing_the_revision_reports_the_warning_in_the_manifest(own_releases: Path) -> None:
     """`fr.release` returns only a path: the warning is read back from `baseline/manifest.json`."""
-    second = _build(2, relays=("k_a", "k_b", "k_c"), modules=("m1", "m2"), releases=released)
-    target = fr.release(second, released, unit="demo-cab")
+    second = _build(2, relays=("k_a", "k_b", "k_c"), modules=("m1", "m2"), releases=own_releases)
+    target = fr.release(second, own_releases, unit="demo-cab")
     manifest = json.loads((target / "baseline" / "manifest.json").read_text(encoding="utf-8"))
     codes = [w["code"] for w in manifest["warnings"]]
     assert _CODE in codes

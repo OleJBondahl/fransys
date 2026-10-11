@@ -1,4 +1,4 @@
-"""Fransys facade: pipeline, findings policy, file writing (spec F1).
+"""Fransys facade: pipeline, findings policy, file writing.
 
 The CLI is deferred (F10).
 """

@@ -1,4 +1,4 @@
-"""`d.wiring(...)`: a wire maker with defaults (spec A6)."""
+"""`d.wiring(...)`: a wire maker with defaults."""
 
 from dataclasses import dataclass
 from itertools import pairwise
@@ -30,7 +30,7 @@ class _Recorder(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class Wiring:
-    """A wire maker: `wire(a, b, **overrides)` and `wire.run(a, b, c, ...)` (spec A6)."""
+    """A wire maker: `wire(a, b, **overrides)` and `wire.run(a, b, c, ...)`."""
 
     _recorder: _Recorder
     _prefix: AuthoringKey
@@ -38,7 +38,7 @@ class Wiring:
     gauge: Decimal
     label: str | None
 
-    def __call__(  # noqa: PLR0913 -- the two ports and four per-wire overrides (spec A6)
+    def __call__(  # noqa: PLR0913 -- the two ports and four per-wire overrides
         self,
         a: Port,
         b: Port,
@@ -84,7 +84,7 @@ class Wiring:
         gauge: str | Decimal | None = None,
         label: str | None = None,
     ) -> None:
-        """One wire between each neighbouring pair of `ports`: a daisy chain (spec A6)."""
+        """One wire between each neighbouring pair of `ports`: a daisy chain."""
         if len(ports) < _MINIMUM_RUN_POINTS:
             msg = f"wire.run needs at least {_MINIMUM_RUN_POINTS} ports, got {len(ports)}"
             raise AuthorError(msg)

@@ -1,4 +1,4 @@
-"""Named facts: the one registry the conventions' tables read (spec C5, decision layout-0111).
+"""Named facts: the one registry the conventions' tables read (decision layout-0111).
 
 A fact is a function of one subject, registered by name where it is defined. A boolean fact
 answers true or false; a valued fact answers one string of its value set. Every fact carries

@@ -291,7 +291,7 @@ def test_a_changeover_wired_to_two_supplies_keeps_each_throw_on_its_own_rail() -
 
 @pytest.mark.parametrize("potential", [None, "X9"], ids=["no-potential", "no-supply"])
 def test_a_net_that_carries_no_supplied_rail_is_transparent(potential: str | None) -> None:
-    """Rule B (spec Q3, ruling 2026-09-25): only a net of another supplied rail blocks."""
+    """Rule B (ruling 2026-09-25): only a net of another supplied rail blocks."""
     model, p = _line_motor(named=True, potential=potential)
     q1, fuses, m1 = p["q1"].fn("main"), p["f"], p["m1"]
     assert [_rails(model, m1[pole]) for pole in ("U", "V", "W")] == [["L1"], ["L2"], ["L3"]]

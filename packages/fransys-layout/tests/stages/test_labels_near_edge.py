@@ -1,4 +1,4 @@
-"""D14 (designer ruling 5): a label that is reflected keeps its near edge at a fixed offset.
+"""D14 (ruling 5): a label that is reflected keeps its near edge at a fixed offset.
 
 The near edge is the one facing the symbol. A reflected label is mirrored to the opposite
 side of the body, and the mirror of the slot's anchor is where its near edge lands, whatever

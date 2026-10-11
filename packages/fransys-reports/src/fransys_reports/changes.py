@@ -5,7 +5,7 @@ from fransys_model.derive.baseline import CHANGE_COLUMNS, Change, ListingDiff
 
 from .csv import _csv
 
-# Fixed `##` section order (baseline spec M1's own diff order, minus `unit`, which never
+# Fixed `##` section order (the diff's own order, minus `unit`, which never
 # becomes a bullet section -- the heading and the interface line are built from
 # `ListingDiff.a`/`.b` directly).
 _SECTION_ORDER = ("items", "units", "boundary", "conductors", "mates", "nets")
@@ -96,7 +96,7 @@ def changes_markdown(diff: ListingDiff) -> str:
 
     A `#` heading, an `Interface X to Y.` line when the interface changed, then one `##`
     section per non-`unit` section with a `Change` row, one bullet per subject; no such
-    section gives `No changes.` (reports-0004, spec M2). Pure.
+    section gives `No changes.` (reports-0004). Pure.
 
     Args:
         diff: A `ListingDiff` from `fransys_model.derive.baseline.diff`.

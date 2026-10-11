@@ -1,6 +1,6 @@
 """The geometric lint sees harness ink (layout-0158): lines, legs, line labels, stubs, boxes.
 
-Each case is one construct the study board's page 2 drew unseen after P3 (the designer's
+Each case is one construct the study board's page 2 drew unseen after P3 (review
 defect 3): a connector box over a symbol and a label, a line label over a box text and a label,
 a leg over a terminal's point label, a line along the outline's bottom edge, and a stub over the
 frame (defect 1).

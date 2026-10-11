@@ -1,4 +1,4 @@
-"""Tests for `derive.current_revision` (schema spec SC4, units spec U4)."""
+"""Tests for `derive.current_revision` ."""
 
 from typing import Any
 

@@ -60,7 +60,7 @@ def test_the_worked_example_runs_freezes_numbers_allocates_and_lays_out():
     k1.fn("coil").plc("do", "PUMP1_RUN")
 
     # t1 (=SUP) is reached by its wire and drawn again in =P1 by the layout engine; it is
-    # not itself in the chain (spec A8, worked example, corrected 2026-09-22).
+    # not itself in the chain (worked example, corrected 2026-09-22).
     d.chain(q1, k1.fn("coil"), t2)
 
     draft = d.draft()

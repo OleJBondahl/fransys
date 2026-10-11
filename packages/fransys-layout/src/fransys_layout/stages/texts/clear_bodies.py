@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Box, port_page_at, translate
-from fransys_layout.stages.space import Shape, Space
+from fransys_layout.stages.space import Shape, Space, unowned
 from fransys_layout.stages.stub_runs import functions_through, solids
 
 from .candidates import DEFAULT_TABLE
@@ -57,7 +57,7 @@ def place_clear_of_bodies(
         )
         for one in here
     )
-    runs = tuple(Shape(owner=None, box=box) for box in decided)
+    runs = unowned(decided)
     space = Space(shapes=(*bodies, *runs), content=content)
     done, findings = place_texts(_stub_clear(texts, rows, here), space, DEFAULT_TABLE)
     if findings:

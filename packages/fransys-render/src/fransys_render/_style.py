@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from graphical_symbols.geometry import Weight
+from symdef.geometry import Weight
 
 from ._constants import OUTLINE_DASH_GAP_MM, OUTLINE_DASH_LONG_MM, STROKE_WIDTH_MM
 from ._numbers import format_decimal

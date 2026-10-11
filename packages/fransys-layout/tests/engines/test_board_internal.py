@@ -1,4 +1,4 @@
-"""Layout-0044 (spec B2, amended): board-internal connections/net groups are skipped
+"""Layout-0044 (amended): board-internal connections/net groups are skipped
 silently, whether or not their ends are drawn; a mixed one is not drawn and reports
 `CONNECTION_TO_UNDRAWN`. Hand-built models, board `A1`'s own edge connectors included, so
 every case is proven directly, not inferred from `layout_cabinet.py`'s shared fixture. Each

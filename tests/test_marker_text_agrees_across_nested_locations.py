@@ -1,4 +1,4 @@
-"""Units spec U7: the stage's marker box and the model reader's `marker_text` must agree on a
+"""The stage's marker box and the model reader's `marker_text` must agree on a
 severed cut with no common ancestor at all (`+ER+C1` to `+AR+C1`) -- the one shape the narrow
 golden (`test_drawing_text_equality.py`) never reaches, by its own docstring, since it stays
 in one location throughout. `_reading.location_path` (the stage side) and
@@ -9,7 +9,7 @@ in one location throughout. `_reading.location_path` (the stage side) and
 A declared `Net` (not a `Connection`) between two locations with no common ancestor gives each
 end a stub label (D4, LD7: "a wire that leaves its drawing ends in a stub label... both of its
 ends always carry one number"), not a `#` reference. The stub's box is sized to its own text
-(its `+<label>` location prefix included, LD5 units spec U7): the box's length along the text
+(its `+<label>` location prefix included, LD5): the box's length along the text
 (`height` for a vertical N/S box, S20 M1/M2, else `width`) holds the printed text.
 """
 
@@ -86,7 +86,7 @@ def _placements(item: Item, group: AspectNode, location: AspectNode) -> tuple[Pl
 
 def test_marker_text_fits_its_box_across_two_unrelated_locations() -> None:
     """`+ER+C1` to `+AR+C1`: net `S`, page `p1` in EACH drawing set (the `ER`/`AR` sets), the
-    two probe ports `p1_port`/`p2_port` -- named precisely, per the designer's own request.
+    two probe ports `p1_port`/`p2_port` -- named precisely, as requested.
 
     Confirms each end is a stub label (D4, `star is StarKind.OFF`, `far` set to the other
     port), never a `#` reference (LD7: a wire that leaves its drawing ends in a stub label,
@@ -142,7 +142,7 @@ def test_marker_text_fits_its_box_across_two_unrelated_locations() -> None:
     markers = layout_of(written, LinkMarker)
     assert len(markers) == _EXPECTED_MARKER_COUNT
     pages = layout_of(written, Page)
-    # Named for the designer, precisely: net "S" (net.name above), page "p1" in each of the
+    # Named for the review, precisely: net "S" (net.name above), page "p1" in each of the
     # two drawing sets (ER's and AR's), the two probe ports p1_port/p2_port (below).
     assert {pages[m.page].number for m in markers.values()} == {1}
     assert {m.port for m in markers.values()} == {p1_port.id, p2_port.id}

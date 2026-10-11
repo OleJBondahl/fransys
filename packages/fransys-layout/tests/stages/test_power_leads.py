@@ -10,7 +10,7 @@ from samples import hid
 
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import LinkMarker, MarkerSide
-from fransys_layout.stages.texts.power import power_place
+from fransys_layout.stages.texts.power import page_shapes, power_place
 from fransys_layout.stages.texts.power_lead import (
     MOST_GRIDS,
     POWER_SYMBOL_UNPLACED,
@@ -107,3 +107,15 @@ def test_a_symbol_no_lead_clears_keeps_one_grid_and_the_warning_names_the_most_g
     assert marker.symbol_grids == 1
     assert [f.code for f in findings] == [POWER_SYMBOL_UNPLACED]
     assert f"up to {MOST_GRIDS} grids" in findings[0].message
+
+
+def test_page_shapes_draws_a_power_symbol_only_when_asked() -> None:
+    """The lead search clears the page without the symbols; the text placer clears them too."""
+    power = _end(1, 0)
+    ordinary = replace(_end(2, 40), symbol="")
+    without = page_shapes((power, ordinary), (), (), symbols=False)
+    with_symbols = page_shapes((power, ordinary), (), (), symbols=True)
+    assert {one.owner for one in without} == {ordinary.port}
+    assert ordinary.box in {one.box for one in without}
+    assert len(with_symbols) == len(without) + 2
+    assert [one for one in with_symbols if one.owner is None] == list(with_symbols[len(without) :])

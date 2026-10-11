@@ -7,12 +7,12 @@ import dataclasses
 import re
 from itertools import pairwise
 
-import graphical_symbols
 import pytest
-from graphical_symbols import Direction as LibraryDirection
-from graphical_symbols import Line, Style, Weight
-from graphical_symbols import Orientation as LibraryOrientation
-from graphical_symbols import Point as LibraryPoint
+import symdef
+from symdef import Direction as LibraryDirection
+from symdef import Line, Style, Weight
+from symdef import Orientation as LibraryOrientation
+from symdef import Point as LibraryPoint
 
 import electrical_symbols
 from electrical_symbols import LIBRARY
@@ -89,14 +89,13 @@ def test_library_version_names_both_libraries() -> None:
     """The recorded version names both distributions; the numbers are not asserted."""
     version = library_version()
     assert "electrical-symbols" in version
-    assert "graphical-symbols" in version
+    assert "symdef" in version
 
 
 def test_library_version_joins_the_two_exported_constants() -> None:
     """The version is read from `LIBRARY_VERSION` of each package, not from package metadata."""
     assert library_version() == (
-        f"electrical-symbols {electrical_symbols.LIBRARY_VERSION}"
-        f" / graphical-symbols {graphical_symbols.LIBRARY_VERSION}"
+        f"electrical-symbols {electrical_symbols.LIBRARY_VERSION} / symdef {symdef.LIBRARY_VERSION}"
     )
 
 
@@ -408,7 +407,7 @@ def test_a_symbol_with_no_declared_nodes_has_only_implicit_singletons() -> None:
 
 def test_library_version_has_a_version_after_each_name() -> None:
     """Each distribution name is followed by a version token."""
-    assert re.fullmatch(r"electrical-symbols \S+ / graphical-symbols \S+", library_version())
+    assert re.fullmatch(r"electrical-symbols \S+ / symdef \S+", library_version())
 
 
 @pytest.mark.parametrize(

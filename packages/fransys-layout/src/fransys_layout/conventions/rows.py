@@ -1,4 +1,4 @@
-"""Rows, criteria and tables: the conventions as data (spec C5, decision layout-0111).
+"""Rows, criteria and tables: the conventions as data (decision layout-0111).
 
 A condition is an atom or a combination. An atom is a boolean fact name, or a pair
 `(fact, value)` tested by equality; a combination is built by `all_`, `any_` and `not_`

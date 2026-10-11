@@ -9,9 +9,9 @@ candidate beside the owner's placed anchor, so `place` can rank before any posit
 `texts` walks the whole list (D3); neither ranks on its own (S2).
 
 The table is data in `conventions/texts.py`, one row per kind: the sides in
-try-order, and along each side its steps in try-order. Its defaults are the designer's and
-follow today's anchoring (D13, D14): a tag, a
-marking and a cross-reference on their slot's own side first, then its mirror across the body
+try-order, and along each side its steps in try-order. Its defaults follow
+today's anchoring (D13, D14): a tag, a marking and a cross-reference on their slot's own side first,
+then its mirror across the body
 (S18, owner-relative), a reference or a stub at its stub. Along a side the nearest step comes
 first, down (or right) before up (or left). A row's steps are the whole bound of its moves:
 the placer adds only the content box, never the owner's keep-out (S18, amended after 2b-6). No

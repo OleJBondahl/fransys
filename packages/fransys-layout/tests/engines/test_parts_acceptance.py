@@ -1,6 +1,6 @@
 """Cross-package acceptance: a relay from the demo part library, drawn via `template` choices.
 
-`fransys_parts` (spec P2) writes one `layout.symbol_choice` per function that names a
+`fransys_parts` writes one `layout.symbol_choice` per function that names a
 `symbol`, selecting by `template`. This is the layout-side half of that acceptance item: a
 relay instantiated from `examples/demo-parts`' `relay-2co-24vdc.toml` is drawn with its coil
 and contact symbols chosen through those `template` records, not by falling back to

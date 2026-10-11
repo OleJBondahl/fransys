@@ -43,7 +43,7 @@ class Rating:
     # `min_breaking_current_a` (decision model-0088) is set on a partial-range fuse only: the
     # lowest current it breaks. Its presence alone marks the protective device partial-range,
     # which bounds no continuous current.
-    # `power_loss_w` (spec F8) is the heat given off at the rated load, above 0 in a rating. A later
+    # `power_loss_w` is the heat given off at the rated load, above 0 in a rating. A later
     # heat sum reads the part's own rating once and each template's rating, and never
     # `effective_rating`, which hands the part's rating to every function without one.
 

@@ -17,6 +17,7 @@ from fransys_model.layout import (
     RoutePoint,
     Side,
     StarKind,
+    StubEnd,
 )
 
 if TYPE_CHECKING:
@@ -161,6 +162,48 @@ def harness_fan_outs(
     return records
 
 
+def _stub_key(keys: WriteKeys, kind: str, stub: LineStub, tail: AuthoringKey) -> AuthoringKey:
+    """The key of a stub's `kind` record: its line's item key, branch and drawing set."""
+    head = (*PREFIX, kind, *(("line_stub",) if kind == "link_marker" else ()))
+    return (*head, *keys.item[stub.harness], "branch", str(stub.branch), *tail)
+
+
+def stub_ends(
+    keys: WriteKeys,
+    stubs: Sequence[LineStub],
+    page_of: Mapping[PageId, Page],
+    sets: Mapping[int, DrawingSet],
+    stamp: str,
+) -> list[StubEnd]:
+    """One `StubEnd` per far end of each stub, in the stub's list order (P1)."""
+    records = []
+    for stub, tail in _tails(stubs, sets):
+        marker = make_id(LinkMarker, _stub_key(keys, "link_marker", stub, tail))
+        for index, end in enumerate(stub.ends):
+            key = (*_stub_key(keys, "stub_end", stub, tail), "end", str(index))
+            page = None if end.page is None else page_of[stub.drawing_set, end.page].id
+            records.append(
+                StubEnd(
+                    id=make_id(StubEnd, key),
+                    key=key,
+                    marker=marker,
+                    index=index,
+                    port=end.port,
+                    page=page,
+                    x=end.x,
+                    y=end.y,
+                    produced_by=stamp,
+                )
+            )
+    return records
+
+
+def _slid(stub: LineStub) -> int | None:
+    """The box's own x when it was slid off the stub's centre to stay in the content box."""
+    centred = stub.at.x - stub.box.width // 2
+    return None if stub.box.x == centred else stub.box.x
+
+
 def line_stubs(
     keys: WriteKeys,
     stubs: Sequence[LineStub],
@@ -171,8 +214,7 @@ def line_stubs(
     """One off `LinkMarker` per leaving-line stub; it is its own partner."""
     records = []
     for stub, tail in _tails(stubs, sets):
-        item, branch = keys.item[stub.harness], str(stub.branch)
-        key = (*PREFIX, "link_marker", "line_stub", *item, "branch", branch, *tail)
+        key = _stub_key(keys, "link_marker", stub, tail)
         marker_id = make_id(LinkMarker, key)
         records.append(
             LinkMarker(
@@ -186,6 +228,7 @@ def line_stubs(
                 y=stub.at.y,
                 width=stub.box.width,
                 height=stub.box.height,
+                box_x=_slid(stub),
                 produced_by=stamp,
                 star=StarKind.OFF,
                 far=stub.far,

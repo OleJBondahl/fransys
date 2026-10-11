@@ -91,7 +91,7 @@ def _link(
 def build_test_catalogue() -> Draft:
     """A `Draft` with one library and: a relay, a terminal, a cable and a connector part.
 
-    Also two parts sharing one MPN across two manufacturers (spec A5's ambiguity case).
+    Also two parts sharing one MPN across two manufacturers (the ambiguity case).
     """
     draft = Draft()
     library = _library(draft, "test-parts")
@@ -115,7 +115,7 @@ def build_test_catalogue() -> Draft:
     _link(draft, co2, p21, p22, LinkKind.SWITCHED)
     _link(draft, co2, p21, p24, LinkKind.SWITCHED)
 
-    # two functions sharing a marking (spec A4's ambiguous-marking case at item()/[] level).
+    # two functions sharing a marking (the ambiguous-marking case at item()/[] level).
     clash = _part(
         draft,
         library,
@@ -223,7 +223,7 @@ def build_test_catalogue() -> Draft:
         letter="X",
     )
 
-    # spec A5: one MPN, two manufacturers -> ambiguous at item() time.
+    # One MPN, two manufacturers -> ambiguous at item() time.
     _part(
         draft,
         library,
@@ -246,5 +246,5 @@ def build_test_catalogue() -> Draft:
 
 @pytest.fixture
 def parts() -> Draft:
-    """A fresh test catalogue `Draft` (spec A1: `Design(parts)`)."""
+    """A fresh test catalogue `Draft` (`Design(parts)`)."""
     return build_test_catalogue()

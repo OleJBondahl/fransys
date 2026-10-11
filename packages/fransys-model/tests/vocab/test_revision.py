@@ -1,4 +1,4 @@
-"""Tests for `Revision`, the unit's or the project's history entry (units spec U4)."""
+"""Tests for `Revision`, the unit's or the project's history entry."""
 
 from typing import Any
 

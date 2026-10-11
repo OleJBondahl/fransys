@@ -10,12 +10,13 @@ dev = [
     "hypothesis==6.168.3",
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
+    "pytest-testmon==2.2.0",
     "pytest-xdist==3.8.0",
     "ruff==0.16.9",
     "ty==0.0.84",
     "typst==0.15.0",
     "vulture==2.16",
-    "graphical-symbols==0.3.0",
+    "symdef==0.5.0",
     "electrical-symbols",
     "fransys-model",
     "fransys-layout",
@@ -53,7 +54,6 @@ members = [
 [tool.uv.sources]
 fransys-model = { workspace = true }
 fransys-layout = { workspace = true }
-graphical-symbols = { git = "https://github.com/OleJBondahl/graphical-symbols", tag = "v0.3.0" }
 electrical-symbols = { workspace = true }
 fransys = { workspace = true }
 fransys-parts = { workspace = true }

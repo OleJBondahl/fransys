@@ -517,8 +517,8 @@ def _extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
             ports=(spare.port("coil", "A1"), spare.port("no_1", "13")),
         )
     )
-    # a board and its parts: the engine draws only its CONNECTOR function `edge` (model-0040,
-    # spec B1); its fuse `F10` stays undrawn
+    # a board and its parts: the engine draws only its CONNECTOR function `edge` (model-0040);
+    # its fuse `F10` stays undrawn
     board = b.stamp(parts["board"], ("cabinet", "a1"), "A1", "sup")
     b.facet(PcbFacet, ("board", "pcb"), subject=parts["board"].part.id, revision="A")
     b.stamp(parts["fuse"], ("cabinet", "a1", "f1"), "F10", "sup", parent=board.item)

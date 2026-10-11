@@ -90,7 +90,7 @@ def _geometry(spec: FunctionSpec, symbol: str | None) -> SymbolGeometry:
 
 
 def _defaulted(spec: FunctionSpec) -> Finding:
-    """`SYMBOL_DEFAULTED`; a part-less function gets none (PATCH-0132 E4: its box is intended)."""
+    """`SYMBOL_DEFAULTED`; a part-less function gets none (its box is intended)."""
     message = f"no symbol for function kind {spec.kind!r}: drawn as a labelled box"
     return Finding(
         code=SYMBOL_DEFAULTED, severity=Severity.INFO, subjects=(spec.function,), message=message

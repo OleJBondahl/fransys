@@ -16,7 +16,7 @@ alone is sufficient evidence" (whitelist.py's own docstring), so they keep the o
 workspace-wide "still defined somewhere under packages/*/src" check.
 
 `ignore_names` predates this order by one absorption move (decision 0015): its 15 entries were
-`graphical-symbols`' own enum members, back when that package's `src` was still scanned by
+`symdef`' own enum members, back when that package's `src` was still scanned by
 `packages/*/src`; since it became an external, pinned, unscanned dependency none of the 15
 resolves in `packages/*/src` any more, and none is this order's to fix (root `pyproject.toml`).
 `_LEGACY_IGNORE_NAMES` names them so the "still a real enum member" check below applies only to
@@ -47,7 +47,7 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 
 # Today's count (this branch), shrink-only: lowered as entries are removed, never raised except
 # by adding real, reasoned entries.
-# 90 + ConductorKind.MOUNT and Scope.link (links order, designer ruling), each with its reader
+# 90 + ConductorKind.MOUNT and Scope.link (links order, ruling), each with its reader
 # + cross_section_mm2 (WIRE-LIST) + LabelKind.WIRE (WIRE-LIST-2: model twin, tests)
 # + four F8 data-only fields (nominal_power_w, nominal_current_a, power_loss_w, resistance_ohm)
 # + F9: PoleSide.LINE, six ConductorMark members, pole_side and conductor_mark (POLE-SIDES)

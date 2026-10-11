@@ -1,6 +1,6 @@
-"""Units spec STEP 3: `vocab/validators/units.py`, the U5 checks.
+"""Tests for `vocab/validators/units.py`, the unit checks.
 
-`docs/archive/specs/2026-09-22-units.md` U3, U4, U5; `docs/decisions/model-0038-units.md`.
+`docs/decisions/model-0038-units.md`.
 """
 
 from plant import Plant
@@ -11,7 +11,6 @@ from fransys_model.kernel import Severity
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import conductors, mates, nets
 from fransys_model.vocab.validators.units import (
-    BOUNDARY_KIND,
     BOUNDARY_NOT_IN_UNIT,
     BOUNDARY_UNCONNECTED,
     MATE_NOT_CONNECTOR,
@@ -347,11 +346,11 @@ def test_can_fail_unused_contradicted_twin_a_real_unconnected_boundary_reports_n
     assert [f for f in check_units(model) if f.code == UNUSED_CONTRADICTED] == []
 
 
-# ---- BOUNDARY_KIND ---------------------------------------------------------------------
+# ---- any function may be a boundary (model-0188) ---------------------------------------
 
 
-def test_boundary_kind_for_a_relay_coil_marked_boundary() -> None:
-    """A `COIL` function marked as a unit's boundary: neither `TERMINAL` nor `CONNECTOR`."""
+def test_a_relay_coil_marked_boundary_reports_no_kind_finding() -> None:
+    """A `COIL` function marked as a unit's boundary is accepted: any function may be one."""
     plant = Plant()
     unit = plant.unit("cabinet")
     item = plant.item("item", unit=unit)
@@ -361,25 +360,7 @@ def test_boundary_kind_for_a_relay_coil_marked_boundary() -> None:
     model = plant.model()
     # examined: the coil really is declared this unit's boundary
     assert unit_boundary(model, unit) == (function,)
-    findings = [f for f in check_units(model) if f.code == BOUNDARY_KIND]
-    assert len(findings) == 1
-    (finding,) = findings
-    assert finding.severity == Severity.ERROR
-    assert set(finding.subjects) == {unit, function}
-    assert "coil" in finding.message
-
-
-def test_can_fail_boundary_kind_twin_a_connector_reports_nothing() -> None:
-    """Twin: the same unit's boundary is a `CONNECTOR` function instead (U5)."""
-    plant = Plant()
-    unit = plant.unit("cabinet")
-    item = plant.item("item", unit=unit)
-    function = plant.function(item, "x1", kind=FunctionKind.CONNECTOR)
-    plant.port(function, "1")
-    plant.boundary(unit, function)
-    model = plant.model()
-    assert unit_boundary(model, unit) == (function,)
-    assert [f for f in check_units(model) if f.code == BOUNDARY_KIND] == []
+    assert [f for f in check_units(model) if f.severity == Severity.ERROR] == []
 
 
 # ---- BOUNDARY_NOT_IN_UNIT ---------------------------------------------------------------------

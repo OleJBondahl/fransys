@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, follow
 from fransys_layout.stages.labels import decided_runs
+from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.tidy import turned
 
 from .candidates import TextKind
@@ -75,7 +76,7 @@ def place_markers(
     model_port = {(one.function, p.symbol_port): p.port for one in drawn for p in one.ports}
     base = _Page(
         lanes=(),
-        owner={port.port: one.function for one in drawn for port in one.ports},
+        owner=owner_of(drawn),
         joined=joined_ports(around.connections, around.columns),
         wired_at=wired_points(placed, drawn, around.wired),
         width=around.sheet.content_width,

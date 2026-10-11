@@ -1,5 +1,5 @@
 """Declared-dependency gate: every import a package's `src` makes must be declared in that
-package's OWN `pyproject.toml` `[project] dependencies` (spec section 5, root CLAUDE.md
+package's OWN `pyproject.toml` `[project] dependencies` (root CLAUDE.md
 invariant 2).
 
 `test_boundaries.py` checks imports against the allowed-import TABLE, never against each

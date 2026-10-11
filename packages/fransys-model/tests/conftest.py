@@ -17,8 +17,7 @@ for directory in ("derive", "kernel", "layout", "usecases", "vocab"):
     sys.path.append(str(Path(__file__).parent / directory))
 
 # Decision 0020: derandomized so `just ci` is deterministic, no deadline so a slow CI runner
-# never flakes a property, max_examples bounded so the property suite stays fast (measured
-# in WORK-ORDER-PROPS.md's hand-back).
+# never flakes a property, max_examples bounded so the property suite stays fast.
 settings.register_profile("fransys", deadline=None, derandomize=True, max_examples=25)
 settings.load_profile("fransys")
 

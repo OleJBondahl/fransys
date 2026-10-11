@@ -1,8 +1,6 @@
-"""The units spec's worked example, completed with the demo parts (STEP 4 acceptance).
+"""The worked example, completed with the demo parts.
 
-`docs/archive/specs/2026-09-22-units.md`, "A worked example" and "Steps and acceptance", STEP 4.
-
-Adapted from the spec's literal text, as its own note invites ("the implementer uses the
+Adapted from the spec's literal text, as its own note invites ("use the
 real ones"): the field terminals' cable-side ports are marked `.outer` (their role), not
 `"1"`/`"2"` (`DEMO-TB-2.5` has no such markings); every item that a wire or mate touches
 needs a `group=` placement for `fransys_layout` to find it a column (the spec's own
@@ -80,7 +78,6 @@ from fransys_model.vocab.tables import nets as nets_of
 from fransys_model.vocab.tables import ports as ports_of
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.validators.units import (
-    BOUNDARY_KIND,
     BOUNDARY_NOT_IN_UNIT,
     BOUNDARY_UNCONNECTED,
     MATE_PORT_MISMATCH,
@@ -99,16 +96,16 @@ _PROJECT: dict[str, Any] = {
 
 
 def io_board(s, *, mark_boundary=True):
-    """Units spec worked example: a board unit with one boundary connector, `X1`.
+    """Worked example: a board unit with one boundary connector, `X1`.
 
     `DEMO-PCB-IO` is a real board (`category = "board"`, a `[pcb]` facet, STEP 4b, decision
     model-0040, closing author-0002's `KNOWN DEVIATION`), and the *sole* root item of its own
-    nested unit `demo-io-board` (units spec U1's board-unit ruling, model-0041, STEP 4b(b)):
+    nested unit `demo-io-board` (board-unit ruling, model-0041):
     the board is itself a whole unit, not board-inside-a-unit furniture, so in its own home
     set the schematic engine draws its functions and its board-internal wiring like any
     unit's set, not as a black box. `X1`'s two wires to `K1`'s coil and the net below
     therefore draw normally -- a real route each, no `CONNECTION_TO_UNDRAWN` -- in
-    `demo-io-board`'s own home set; the board-internal silent-drop rule (spec B2, decision
+    `demo-io-board`'s own home set; the board-internal silent-drop rule (decision
     layout-0044) still applies exactly as before to a board that is merely *inside* a larger
     unit (B1's ordinary case, `enclosing_boards` non-empty but not `is_sole_unit_root`),
     which this ruling leaves unchanged.
@@ -129,7 +126,7 @@ def io_board(s, *, mark_boundary=True):
 
 
 def pump_cabinet(s, *, name):
-    """Units spec worked example: a cabinet unit with two field-terminal boundaries."""
+    """Worked example: a cabinet unit with two field-terminal boundaries."""
     u = s.unit("demo-pump-cabinet", revision=2, interface="1")
     u.revision(2, date="2026-01-01", text="First release", created="XX")
     c = u.location(name, "Pump cabinet")
@@ -153,15 +150,15 @@ def _wire_field_to_motor(d, field, *, fld, grp, motor_tag):
     worked example, amended 2026-09-23: "Every boundary terminal of each cabinet is wired at
     the use site, here by a top-level cable to a field item"). `d.cable` (unlike `u.cable`
     inside `pump_cabinet`) is authored directly on `Design`, so the motor and cable items
-    carry `unit=None`: a real top-level cable (units spec U3/U6), not one scoped inside either
+    carry `unit=None`: a real top-level cable, not one scoped inside either
     unit. The field terminal's `outer` (external/field-cable side) port already carries one
     conductor from `pump_cabinet`'s own internal `w1c` cable (to `P1`, inside the same unit)
     -- this adds a second, external one, so the boundary function's interface genuinely
-    crosses its unit (units spec validator `_boundary_unconnected`: "any conductor or mate
+    crosses its unit (validator `_boundary_unconnected`: "any conductor or mate
     end" on the function, not the port alone), clearing `BOUNDARY_UNCONNECTED` for real
     instead of routing around it.
 
-    NEW (designer's own recommended reading of the worked example's "-M1, -M2, -A3", three
+    NEW (the recommended reading of the worked example's "-M1, -M2, -A3", three
     top-level devices, four top-level cables): each cabinet's two field terminals no longer
     share one cable to the cabinet's own motor. `field[0]` gets its own one-core cable to the
     motor here; `field[1]` gets a separate one-core cable to the one shared switch
@@ -241,7 +238,7 @@ def test_the_system_build_has_four_units_two_per_cabinet_instance():
 
 
 def test_no_unit_in_the_system_build_is_standalone():
-    """Every unit's subtree misses the other cabinet's items (units spec U2)."""
+    """Every unit's subtree misses the other cabinet's items."""
     result, _, _ = _build_system()
     found = sorted(units(result.model))
     assert len(found) == 4
@@ -293,13 +290,13 @@ def test_reference_designations_carry_each_cabinets_own_location():
 
 def test_numbering_without_unit_in_the_sibling_group_diverges_on_the_second_boards_letter():
     """Can-fail: STEP 4's own comparison test would not have caught a regression that
-    dropped `unit` from the numbering pass's sibling-group key (units spec U7), proven
+    dropped `unit` from the numbering pass's sibling-group key, proven
     directly against the model layer, not by editing `derive/passes/numbering.py`.
 
     The board (`DEMO-PCB-IO`, class code `U`), not the relay, is the item that moves:
     the relay's `parent` is its own per-instance board item, already unique, so `parent`
     alone disambiguates it with or without `unit`. The board itself has `parent=None`
-    (units spec worked example: `u.item("DEMO-PCB-IO", name="board")`, no `parent=`), the
+    (`u.item("DEMO-PCB-IO", name="board")`, no `parent=`), the
     one item in this worked example that collides once `unit` stops telling the two
     cabinets' boards apart: pump1's board sorts first by `(key, id)` and keeps `U1`;
     pump2's, sharing the same `(None, None)` group once stripped, becomes `U2`.
@@ -324,7 +321,7 @@ def test_numbering_without_unit_in_the_sibling_group_diverges_on_the_second_boar
         model,
         put=stripped_items,
         remove=[item.id for item in stripped_items],
-        origin=Origin(file="<can-fail probe>", line=1, note="units spec U7"),
+        origin=Origin(file="<can-fail probe>", line=1, note="can-fail probe"),
     )
     broken, _ = number_pass(stripped_model)
     broken_by_key_1 = _designations_by_stripped_key(broken, prefix="pump1")
@@ -340,7 +337,6 @@ _OTHER_U5_CODES = (
     UNIT_CONNECTOR_DANGLING,
     MATE_PORT_MISMATCH,
     UNUSED_CONTRADICTED,
-    BOUNDARY_KIND,
     BOUNDARY_NOT_IN_UNIT,
 )
 
@@ -369,7 +365,7 @@ def _build_bare_two_cabinets():
 
 def test_an_unwired_field_terminal_is_boundary_unconnected_four_times():
     """OLD premise: this was `_build_system()`'s own state (the fixture's known,
-    pre-existing gap). NEW premise (fixture fix below, designer ruling 2026-09-23):
+    pre-existing gap). NEW premise (fixture fix below, ruling 2026-09-23):
     `_system_design` now wires every field terminal to a real top-level motor cable, so this
     scenario -- an explicitly unwired two-cabinet build -- is exercised on its own local
     `_bare_two_cabinet_design`, kept alive rather than lost.
@@ -387,7 +383,7 @@ def test_an_unwired_field_terminal_is_boundary_unconnected_four_times():
 
 
 def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_clears():
-    """NEW test (fixture fix, designer ruling 2026-09-23, "Acceptance 5's unfiltered write
+    """NEW test (fixture fix, ruling 2026-09-23, "Acceptance 5's unfiltered write
     proves it"): `_system_design` now wires every field terminal to a real top-level motor
     cable, crossing each cabinet's own unit boundary, so `BOUNDARY_UNCONNECTED` no longer
     fires at all on `_build_system()`; every other U5 code still stays at zero.
@@ -404,7 +400,7 @@ def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_cl
 
 _LINES_SEEN = (
     "layout-0158 F1: the harness-ink checks see the worked example's lines over labels "
-    "(WIRE_OVER_LABEL), still after F5; named for the designer"
+    "(WIRE_OVER_LABEL), still after F5; named for the review"
 )
 
 
@@ -424,7 +420,7 @@ def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
 def test_boundary_unconnected_clears_once_every_field_terminal_is_declared_unused():
     """OLD premise: built through `_system_design`, whose field terminals were unwired, so
     declaring all four `unused` cleared `BOUNDARY_UNCONNECTED`.
-    NEW premise (fixture fix, designer ruling 2026-09-23): `_system_design`'s field terminals
+    NEW premise (fixture fix, ruling 2026-09-23): `_system_design`'s field terminals
     are now really wired (see `test_the_system_builds_field_terminals_are_wired_...` above),
     so this scenario moved to `_bare_two_cabinet_design`, which keeps them unwired -- the
     same rule under test (an explicitly `unused` boundary with no real connection still
@@ -561,20 +557,20 @@ def _box_pages_of(model, function_id):
 
 @pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit() -> None:
-    """OLD premise (spec acceptance 2, amended B2, before units spec U1's board-unit ruling):
+    """OLD premise (before the board-unit ruling):
     `io_board`'s internal wiring (`X1`-`K1`, two wires) and its one internal net (`K1`'s
     `co_1`/`co_2` pins) were board-internal and produced no route, no marker and no finding;
     `X1` had no route of its own (only a `Mate` to `P1`, closure not a drawn connection), so
     every route onto its designation's page came from `P1`'s cable cores alone.
 
-    NEW premise (units spec U1's board-unit ruling, model-0041, STEP 4b(b)): `DEMO-PCB-IO` is
+    NEW premise (board-unit ruling, model-0041): `DEMO-PCB-IO` is
     the sole root item of its own nested unit `demo-io-board`, so `is_sole_unit_root` makes
     both `schematic_functions` (both wire ends now drawn) and `_is_board_internal` (the board
     no longer counts as opaque) stop suppressing this wiring -- the two wires and the internal
     net now get a real route each, still with no finding (`fr.build` still raises nothing);
     true for both cabinet instances, not just one. `X1` is now placed on *two* pages: its own
     home page (`demo-io-board`'s own set, alongside `K1`) and the boundary replica on `P1`'s
-    page (unconditional replication, unit-documents spec U1, unchanged by this ruling) -- so
+    page (unconditional replication, unchanged by this ruling) -- so
     `X1`'s own ports are now touched by a route too (the two wires to `K1`), not only `P1`'s.
 
     NEW assertions: both internal conductors and the internal net are routed; `X1` is placed
@@ -652,7 +648,7 @@ def test_step_4b_board_internal_wiring_and_net_now_route_in_the_boards_own_unit(
 
 def _cabinet_terminal_straight_to_board_relay(s, *, name):
     """Scratch variant of `pump_cabinet`/`io_board`: a cabinet terminal wired straight to
-    the board's relay coil, bypassing `X1`/`P1` entirely (spec acceptance 2's second model,
+    the board's relay coil, bypassing `X1`/`P1` entirely (the second model,
     can-fail against the base commit)."""
     u = s.unit("demo-pump-cabinet", revision=2, interface="1")
     u.revision(2, date="2026-01-01", text="First release", created="XX")
@@ -678,13 +674,13 @@ def _cabinet_terminal_straight_to_board_relay(s, *, name):
 def test_a_cabinet_terminal_wired_straight_to_the_board_relay_bypasses_its_own_unit_boundary() -> (
     None
 ):
-    """OLD premise (spec acceptance 2's second model, before units spec U1's board-unit
-    ruling): exactly one `CONNECTION_TO_UNDRAWN`, subjects the relay coil's one wired port --
-    the field terminal was drawn, the board relay was not (board spec B1's blanket exclusion),
+    """OLD premise (before the board-unit ruling): exactly one `CONNECTION_TO_UNDRAWN`, subjects
+    the relay coil's one wired port --
+    the field terminal was drawn, the board relay was not (the blanket exclusion),
     and they shared no common board (the terminal is off any board), so this was not
     board-internal either; the finding was purely "an end is not drawn".
 
-    NEW premise (units spec U1's board-unit ruling, model-0041, STEP 4b(b)): `DEMO-PCB-IO` is
+    NEW premise (board-unit ruling, model-0041): `DEMO-PCB-IO` is
     now the sole root item of its own nested unit `demo-io-board`, so `K1`'s coil is drawn in
     that unit's own home set -- nothing about this wire is undrawn any more. But the wire
     still reaches `k1`'s coil directly from outside `demo-io-board`, bypassing its one
@@ -733,7 +729,7 @@ def test_a_cabinet_terminal_wired_straight_to_the_board_relay_bypasses_its_own_u
     assert x1_fn.id in unconnected[0].subjects
 
 
-# -- units spec U2: cross-unit cuts -------------------------------------------------------
+# -- cross-unit cuts -------------------------------------------------------
 
 
 def _probe_release(name: str) -> UnitRelease:
@@ -954,7 +950,7 @@ def _cross_unit_probe_model():
             same_unit_wire,
             boundary_record,
         ),
-        origin=Origin(file="<cross-unit probe>", line=1, note="units spec U2"),
+        origin=Origin(file="<cross-unit probe>", line=1, note="cross-unit probe"),
     )
     return freeze(draft)
 
@@ -978,14 +974,14 @@ def test_no_cross_unit_decision_for_a_correctly_authored_boundary() -> None:
 
 
 def _cabinet_terminal_straight_to_unit_relay(s, *, name):
-    """Units spec U2's guard shape: a field terminal wired straight to another unit's relay
+    """Guard shape: a field terminal wired straight to another unit's relay
     coil, both ends drawn, no board involved at all (unlike
-    `_cabinet_terminal_straight_to_board_relay`, which is a board-unit case and, since units
-    spec U1's board-unit ruling, model-0041, is also a `UNIT_BOUNDARY_BYPASSED` case rather
+    `_cabinet_terminal_straight_to_board_relay`, which is a board-unit case and, since the
+    board-unit ruling, model-0041, is also a `UNIT_BOUNDARY_BYPASSED` case rather
     than the `CONNECTION_TO_UNDRAWN` it used to be -- see that fixture's own test for the
     current split between the model-level finding and any layout-side classification).
     `replicate_terminals` now refuses a replica whose asking column's unit differs from the
-    terminal's own home unit (units spec U2), whatever group is involved, so the bypass
+    terminal's own home unit, whatever group is involved, so the bypass
     always reaches `links` as a genuine cross-unit cut rather than being silently patched
     onto the wrong unit's pages by ordinary group-crossing replication.
     """
@@ -1032,7 +1028,7 @@ def test_a_wire_bypassing_a_units_boundary_is_caught_and_drawn_cross_unit() -> N
 
 def _top_level_boundary_to_unitless_probe_model():
     """A top-level unit's own declared boundary (`X1`), wired to unitless content (`P1`) at
-    the same location: units spec U1's "or the top level" -- the black-box replica this fix
+    the same location: "or the top level" -- the black-box replica this fix
     adds gives `X1` a page in the top-level set alongside `P1`, so the two share a page and
     the wire is an ordinary same-set connection, not a cut of any case.
     """
@@ -1148,7 +1144,7 @@ def _top_level_boundary_to_unitless_probe_model():
             wire,
             boundary_record,
         ),
-        origin=Origin(file="<top-level boundary probe>", line=1, note="units spec U1"),
+        origin=Origin(file="<top-level boundary probe>", line=1, note="boundary probe"),
     )
     return freeze(draft)
 
@@ -1158,7 +1154,7 @@ def test_a_top_level_units_boundary_wired_to_unitless_content_ends_in_a_stub_at_
     this fails -- `X1` then has no top-level replica, so the wire has no shared page with
     `P1` and is classified `CROSS_UNIT` instead. With the fix, the top-level set (`unit=None`)
     holds both `X1`'s black-box replica and `P1`, so the wire is no decision of any case,
-    cross-unit least of all, and no cut. Layout-0080 (units spec U2): a wire leaving a
+    cross-unit least of all, and no cut. Layout-0080: a wire leaving a
     top-level unit's set is not drawn between the replica and `P1` (no `Route`): it ends in an
     off stub at each end, `X1`'s in the unit's own set naming `P1`, `P1`'s in the top-level
     set naming `X1`.
@@ -1166,8 +1162,8 @@ def test_a_top_level_units_boundary_wired_to_unitless_content_ends_in_a_stub_at_
     Not asserted here: U2's own text also promises a cross-reference marker back on `X1`'s
     *home* page ("the boundary port gets a cross-reference marker to that page, like any cut
     connection"). `results.layout.markers` is `()` for this fixture -- `_cuts` never treats a
-    function's home placement and its own replica as two ends of anything (units spec U2,
-    by construction), so nothing currently asks for that marker, on a top-level boundary or a
+    function's home placement and its own replica as two ends of anything (by construction), so
+    nothing currently asks for that marker, on a top-level boundary or a
     nested one. That gap predates and is outside this fix; not asserted as correct here.
     """
     model = _top_level_boundary_to_unitless_probe_model()

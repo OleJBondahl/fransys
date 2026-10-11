@@ -1,7 +1,4 @@
-"""The BOM query: `bom_lines`, its unit scope and `TOP_LEVEL`.
-
-See design/derive-queries.md, units spec U5.
-"""
+"""The BOM query: `bom_lines`, its unit scope and `TOP_LEVEL`."""
 
 from typing import TYPE_CHECKING, Final, cast
 
@@ -45,7 +42,7 @@ class TopLevelScope:
 
 
 TOP_LEVEL: Final = TopLevelScope()
-"""`bom_lines` scope: items with no unit, plus one line per top-level unit (units spec U5).
+"""`bom_lines` scope: items with no unit, plus one line per top-level unit.
 
 Distinct from `None`, which counts the whole model with no unit lines at all.
 """

@@ -1,4 +1,4 @@
-"""Happy-path coverage of every public builder call (spec A1-A9)."""
+"""Happy-path coverage of every public builder call."""
 
 import dataclasses
 from decimal import Decimal
@@ -153,7 +153,7 @@ def test_part_less_item_has_no_functions(parts):
 
 
 def test_item_at_and_group_write_two_placements(parts):
-    """`at=`/`group=` are both placements (spec A8): one at `+`, one at `=`, no hints."""
+    """`at=`/`group=` are both placements: one at `+`, one at `=`, no hints."""
     d = Design(parts)
     c1 = d.location("C1", "cabinet")
     g1 = d.group("G1", "group")
@@ -479,7 +479,7 @@ def test_mate_from_a_nested_scope_prefixes_the_key(parts):
 
 
 def test_bridge_makes_one_jumper_per_consecutive_pair_on_internal_ports(parts):
-    """Spec T1's worked example: three terminals bridged give two `jumper` conductors."""
+    """Three terminals bridged give two `jumper` conductors."""
     d = Design(parts)
     x01 = d.strip("X01")
     l1 = [x01.terminal("TEST-TB", "L1") for _ in range(3)]
@@ -805,7 +805,7 @@ def test_draft_returns_only_the_design_s_own_records_not_the_parts(parts):
 
 
 def test_draw_in_writes_one_group_hint_and_nothing_else(parts):
-    """spec A8: `draw_in` is the only way to hint a group; `group=` stays a placement."""
+    """`draw_in` is the only way to hint a group; `group=` stays a placement."""
     d = Design(parts)
     p1, es = d.group("P1"), d.group("ES")
     estop = d.item("TEST-RLY-2CO", tag="S0", group=es)

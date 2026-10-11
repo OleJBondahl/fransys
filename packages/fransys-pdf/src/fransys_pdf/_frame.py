@@ -1,6 +1,6 @@
 """The page frame, grid and title block: the Typst page background, on every page.
 
-`docs/archive/specs/2026-09-22-page-frame.md`, R1-R6 and R11 (the owner's second appearance pass).
+Page-frame rules R1-R6 and R11 (the owner's second appearance pass).
 `fransys_pdf` draws the frame border, the grid reference and the title block once, from
 the document's `SheetFormat` alone (R2); `fransys_render` draws none of it (R1).
 Appearance -- stroke widths, font sizes, the title-block cell layout -- is R5's defaults,
@@ -42,7 +42,7 @@ _PAGE_COUNTER = (
 )
 
 # R11.2's house column widths, c1-c7, left to right (mm, exact on the 410 mm house frame
-# width once the 20 mm square logo column is set aside): the designer's defaults for the
+# width once the 20 mm square logo column is set aside): the defaults for the
 # owner's look, "not the numbers" (R11.2). `title_columns` scales them to any other sheet.
 _TITLE_COL_WEIGHTS = (60, 60, 100, 55, 35, 35, 45)
 
@@ -420,15 +420,16 @@ def one_line_field(
     bold: bool = False,
     width_mm: float,
     fallback: str | None = None,
-) -> str:
-    """One-line cell text (R11.7): `preferred` if it fits, else `fallback` if it fits, else cut."""
+) -> tuple[str, bool]:
+    """`(text, fits)` (R11.7): `preferred` if it fits, else `fallback` if it fits, else the base.
+
+    The one rule for which text a one-line cell prints and whether it needs the cut; the base is
+    `fallback` when given, else `preferred`.
+    """
     if fits(preferred, size_pt=size_pt, bold=bold, width_mm=width_mm):
-        return preferred
-    if fallback is not None and fits(fallback, size_pt=size_pt, bold=bold, width_mm=width_mm):
-        return fallback
-    base = fallback if fallback is not None else preferred
-    cut, _was_cut = cut_to_width(base, size_pt=size_pt, bold=bold, width_mm=width_mm)
-    return cut
+        return preferred, True
+    base = preferred if fallback is None else fallback
+    return base, fits(base, size_pt=size_pt, bold=bold, width_mm=width_mm)
 
 
 def title_columns(
@@ -455,15 +456,24 @@ def field_size_pt(field: str) -> float:
     return 12.0 if field == "title" else 10.0
 
 
+def field_cell(
+    sheet: SheetFormat, field: str, text: str, *, fallback: str | None = None
+) -> tuple[str, bool, str]:
+    """`(base, fits, printed)` of a title-block field's one-line cell (R11.7).
+
+    `one_line_field` at the field's own cell; `printed` is the base, cut if it misses.
+    """
+    metrics = {
+        "size_pt": field_size_pt(field),
+        "bold": field == "title",
+        "width_mm": title_block_field_width_mm(sheet, field),
+    }
+    base, ok = one_line_field(text, fallback=fallback, **metrics)
+    return base, ok, base if ok else cut_to_width(base, **metrics)[0]
+
+
 def _one_line(sheet: SheetFormat, field: str, text: str, *, fallback: str | None = None) -> str:
-    width_mm = title_block_field_width_mm(sheet, field)
-    return one_line_field(
-        text,
-        size_pt=field_size_pt(field),
-        bold=(field == "title"),
-        width_mm=width_mm,
-        fallback=fallback,
-    )
+    return field_cell(sheet, field, text, fallback=fallback)[2]
 
 
 def notice_cell_size_mm(sheet: SheetFormat) -> tuple[float, float]:

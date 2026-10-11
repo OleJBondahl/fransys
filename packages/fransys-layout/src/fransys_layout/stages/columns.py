@@ -176,7 +176,7 @@ def _group_devices(members: Sequence[FunctionSpec]) -> Sequence[FunctionSpec]:
     """The members whose group the column takes, narrowed by three rules."""
     # C21 (deep dive): a column's group is its devices' group; a terminal at its end is a
     # boundary of another group (X01 of =SUP heading =P1's chain), not a member
-    # (nor a PLC channel end: F12 97/98 -> DI1 is P1's feedback column, designer ruling)
+    # (nor a PLC channel end: F12 97/98 -> DI1 is P1's feedback column, ruling)
     devices = [
         spec for spec in members if spec.roles.sets_group and spec.pin_function is None
     ] or members

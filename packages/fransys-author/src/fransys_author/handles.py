@@ -1,4 +1,4 @@
-"""Handles (spec A2); writes go through `_Recorder`: never import `design.py` (author-0002).
+"""Handles; writes go through `_Recorder`: never import `design.py` (author-0002).
 
 Later calls take handles, never a designation string: no code parses a designation.
 """
@@ -63,7 +63,7 @@ class _Recorder(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class Location:
-    """A `+` aspect node: where something physically is (spec A2).
+    """A `+` aspect node: where something physically is.
 
     Attributes:
         id: This node's id.
@@ -106,7 +106,7 @@ class Port:
 
 @dataclass(frozen=True, slots=True)
 class Fn:
-    """One function of one item (spec A4): what `d.chain(...)` and `d.symbol(...)` name.
+    """One function of one item: what `d.chain(...)` and `d.symbol(...)` name.
 
     Attributes:
         id: This function's id.
@@ -133,7 +133,7 @@ class Fn:
         return _port_by_marking(self.ports, marking, owner="function")
 
     def plc(self, signal: str, signal_name: str, priority: int = 0) -> Fn:
-        """Request a PLC channel of `signal` for this function (spec A7); returns `self`.
+        """Request a PLC channel of `signal` for this function; returns `self`.
 
         Args:
             signal: A `SignalType` member's value (e.g. `"do"`, `"ai_current"`).
@@ -162,7 +162,7 @@ class Fn:
     def scale(
         self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]
     ) -> Fn:
-        """Engineering-unit scaling for this function (spec A7); returns `self`.
+        """Engineering-unit scaling for this function; returns `self`.
 
         Args:
             unit: The engineering unit's name (e.g. `"bar"`).
@@ -190,7 +190,7 @@ class Fn:
 
 @dataclass(frozen=True, slots=True)
 class Item:
-    """One physical thing (spec A2): the item `d.item(...)` (or `d.harness(...)`) stamped.
+    """One physical thing: the item `d.item(...)` (or `d.harness(...)`) stamped.
 
     Attributes:
         id: This item's id.
@@ -203,7 +203,7 @@ class Item:
     functions: tuple[Fn, ...]
 
     def fn(self, name: str) -> Fn:
-        """The function of this item named `name` (spec A4).
+        """The function of this item named `name`.
 
         Args:
             name: A function name of this item.
@@ -222,7 +222,7 @@ class Item:
         raise AuthorError(msg)
 
     def __getitem__(self, marking: str) -> Port:
-        """The port marked `marking` on any function of this item (spec A4).
+        """The port marked `marking` on any function of this item.
 
         Raises:
             AuthorError: no port of the item carries `marking`, or two functions of it do
@@ -232,7 +232,7 @@ class Item:
         return _port_by_marking(ports, marking, owner="item")
 
     def as_function(self) -> Fn:
-        """This item's one function, for a call that expects a function (spec A4).
+        """This item's one function, for a call that expects a function.
 
         Raises:
             AuthorError: the item has zero, or more than one, function.
@@ -263,7 +263,7 @@ class Terminal:
 
     @property
     def inner(self) -> Port:
-        """The `internal` (panel-wiring side) port (spec A2).
+        """The `internal` (panel-wiring side) port.
 
         Returns:
             This terminal's `internal` port.
@@ -275,7 +275,7 @@ class Terminal:
 
     @property
     def outer(self) -> Port:
-        """The `external` (field-cable side) port (spec A2).
+        """The `external` (field-cable side) port.
 
         Returns:
             This terminal's `external` port.
@@ -312,7 +312,7 @@ def as_port(value: Port | Terminal) -> Port:
 
 @dataclass(slots=True)
 class Strip:
-    """A part-less item that only holds terminals (spec A5, A7): `d.strip(tag)`.
+    """A part-less item that only holds terminals: `d.strip(tag)`.
 
     Attributes:
         id: This strip's id.
@@ -333,7 +333,7 @@ class Strip:
         index: int | None = None,
         group: Group | None = None,
     ) -> Terminal:
-        """One terminal on this strip (spec A7).
+        """One terminal on this strip.
 
         Args:
             mpn: The part's MPN, `(manufacturer, mpn)` if ambiguous, or `None` for no part (E2).
@@ -387,7 +387,7 @@ class Strip:
 
 @dataclass(slots=True)
 class Cable:
-    """A cable item (spec A6): `d.cable(mpn, ...)`, then `cable.core(index, a, b)`.
+    """A cable item: `d.cable(mpn, ...)`, then `cable.core(index, a, b)`.
 
     Attributes:
         id: This cable's id.
@@ -436,7 +436,7 @@ class Cable:
 
 
 def _write_group_hint(recorder: _Recorder, function: Fn, group: Group, origin: Origin) -> None:
-    """Write one `layout.group_hint` for `function` (spec A8, `d.draw_in`)."""
+    """Write one `layout.group_hint` for `function` (`d.draw_in`)."""
     key = scoped(function.key, "group_hint")
     hint = GroupHint(id=make_id(GroupHint, key), key=key, function=function.id, group=group.id)
     recorder._add(hint, origin)
@@ -456,7 +456,7 @@ def _write_placement(
     node: Location | Group,
     origin: Origin,
 ) -> None:
-    """One `placement` of `item_id` at `node`, a `+` or `=` node (spec A8: `group=` on an item)."""
+    """One `placement` of `item_id` at `node`, a `+` or `=` node (`group=` on an item)."""
     key = scoped(item_key, "at", *node.key)
     placement = Placement(id=make_id(Placement, key), key=key, item=item_id, node=node.id)
     recorder._add(placement, origin)

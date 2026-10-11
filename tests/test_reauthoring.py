@@ -1,4 +1,4 @@
-"""Re-authoring proof (spec acceptance, WP order C3): the layout package's WP14 cabinet
+"""Re-authoring proof (WP order C3): the layout package's WP14 cabinet
 fixture (`packages/fransys-layout/tests/layout_cabinet.py::build_cabinet()`), the
 hand-built `Draft` the layout golden `cabinet_laid_out.json` came from, re-authored with
 `fransys_author` and compared structurally (fransys-v2's ruling): catalogue records
@@ -131,8 +131,8 @@ def _reauthor(catalogue: Draft) -> Draft:
     return d.draft()
 
 
-# Every other record kind, compared by exact count (spec acceptance: "same count per
-# record kind, every field equal except id/key/origin" -- orchestrator's terms). Two
+# Every other record kind, compared by exact count (acceptance: "same count per
+# record kind, every field equal except id/key/origin"). Two
 # kinds are excluded here because they are explained, not equal (see the module
 # docstring's cousin below, and the test that documents them).
 _COUNT_ONLY_KINDS = (
@@ -156,7 +156,7 @@ _COUNT_ONLY_KINDS = (
     "port",
     "port_template",
 )
-# Explained, not equal: my cable() always writes a `facet.cable` (spec A6's `length_mm=`
+# Explained, not equal: my cable() always writes a `facet.cable` (`length_mm=`
 # is a real parameter, so the facet always exists, `length_mm=None` before it is given);
 # the fixture's cable was stamped with the generic item helper, which never adds one.
 _HAND_BUILT_CABLE_FACETS = 0

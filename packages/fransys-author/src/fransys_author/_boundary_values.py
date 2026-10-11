@@ -1,4 +1,4 @@
-"""A `BoundaryValuesFacet` from `s.boundary(...)` (spec Q5); a non-`Decimal` is `freeze`'s.
+"""A `BoundaryValuesFacet` from `s.boundary(...)`; a non-`Decimal` is `freeze`'s.
 
 An empty `Rating` or `Operating` says nothing, so the builder refuses it.
 """

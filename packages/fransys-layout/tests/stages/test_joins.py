@@ -242,7 +242,7 @@ def test_a_port_mid_column_beside_a_top_port_is_no_join() -> None:
 
 
 def test_the_paralleled_mains_of_two_neighbours_mid_column_stay_wires() -> None:
-    """Designer 2026-09-27 (S12's second case): mains 1 and 2 stand in row 1 of neighbouring
+    """Ruling 2026-09-27 (S12's second case): mains 1 and 2 stand in row 1 of neighbouring
     columns a and b, each under one cell and over one, so 11-21 (N) and 12-22 (S) are already on
     one y with no column moved: both straps stay wires, and no finding."""
     # UNDO: stages/references/joins.py `wired_beside`, the `level` loop's `_add` -> `pass`

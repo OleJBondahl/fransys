@@ -1,23 +1,19 @@
-"""What `fransys_pdf.source` cannot draw (spec P11).
+"""What `fransys_pdf.source` cannot draw.
 
-`MARKDOWN_UNSUPPORTED` (P6), `DOCUMENT_MIXED_SHEET_FORMATS` (P4), `DOCUMENT_NO_DRAWINGS` (P7,
-P8), `DOCUMENT_EMPTY_LIST` (P9), `TITLE_BLOCK_NO_ROOM` (page-frame spec R6),
-`DRAWING_SET_REPLICA_ONLY` (STEP 4 addition, `.fransys/WORK-ORDER-UNIT-DOCUMENTS.md`),
-`DOCUMENT_NO_TOP_LEVEL_CABLES` (units spec U3's amended "cable drawings" bullet, decision
-pdf-0006), `TITLE_BLOCK_NOTICE_OVERFLOW` and `TITLE_BLOCK_TEXT_OVERFLOW` (page-frame spec
-R11.4, R11.7) and `TITLE_BLOCK_UNIT_IDENTITY_MISSING` (UNIT-ID I3: a unit document whose unit
-has an empty `title` or `number`, one WARNING per document).
+`MARKDOWN_UNSUPPORTED` (P6), `DOCUMENT_MIXED_SHEET_FORMATS` (P4), `DOCUMENT_NO_DRAWINGS` (P7, P8),
+`DOCUMENT_EMPTY_LIST` (P9), `TITLE_BLOCK_NO_ROOM`, `DRAWING_SET_REPLICA_ONLY`,
+`DOCUMENT_NO_TOP_LEVEL_CABLES` (decision pdf-0006), `TITLE_BLOCK_NOTICE_OVERFLOW` and
+`TITLE_BLOCK_TEXT_OVERFLOW` and `TITLE_BLOCK_UNIT_IDENTITY_MISSING` (a unit document whose unit has
+an empty `title` or `number`, one WARNING per document).
 
 `TITLE_BLOCK_TEXT_OVERFLOW` covers all nine one-line fields (R11.7: "every field except the
 notice"): the six document-level ones (`title`, `number`, `customer`, `revision`,
 `revision_date`, `author`, from `_geometry.document_facts`, the same reader `_title_block`
-itself cuts) and the three page-level ones (`page_title`, `scope`, `sheet_counter`), built per
-page kind by the same readers `_drawings.py`/`document.py` use (`drawing_text.page_title`,
-`_page_title_labels`, `_HEADING_WORDS`, `location_label`/`item_designation`/`subject_label`),
-imported rather than duplicated so this can never disagree with what the page shows.
+itself cuts) and the three page-level ones (`page_title`, `scope`, `sheet_counter`), read from
+the `TitleBlockFields` that `schematic_fields`, `harness_run_fields` and `section_fields`
+build for the pages themselves, so this can never disagree with what the page shows.
 """
 
-from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -26,11 +22,9 @@ from fransys_model.derive import (
     cable_list_rows,
     designation_list,
     document_unit,
-    item_designation,
     location_node_designation,
     unit_release,
 )
-from fransys_model.derive.drawing_text import page_title
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import PageKind, documents, projects
 
@@ -38,30 +32,27 @@ from ._cable_checks import harness_block_messages
 from ._cover_checks import cover_overflow_findings
 from ._diagrams import diagram_no_drawings_messages
 from ._drawings import (
-    _page_title_labels,
     cable_blocks,
     harness_cables_for,
+    harness_run_fields,
     replica_only_sets,
-    run_headings,
+    schematic_fields,
     schematic_missing_keys,
     schematic_pages,
     system_has_no_top_level_cables,
 )
 from ._frame import (
+    TitleBlockFields,
     band_height_mm,
-    field_size_pt,
-    fits,
+    field_cell,
     notice_cell_size_mm,
     notice_fits,
-    title_block_field_width_mm,
     title_block_fits,
 )
 from ._geometry import (
     document_facts,
-    location_label,
     mixed_sheet_formats,
     resolve_sheet_format,
-    subject_label,
 )
 from ._lists import (
     _boards_for,
@@ -73,7 +64,7 @@ from ._lists import (
     wire_rows_for,
 )
 from ._markdown import parse, unsupported
-from .document import _HEADING_WORDS, document_pages
+from .document import _HEADING_WORDS, document_pages, section_fields
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -159,14 +150,9 @@ def _one_line_overflow_finding(
     target: _FieldTarget, field: str, text: str, *, where: str, fallback: str | None
 ) -> Finding | None:
     """One `TITLE_BLOCK_TEXT_OVERFLOW` finding if `text` and `fallback` both miss (R11.7)."""
-    width_mm = title_block_field_width_mm(target.sheet, field)
-    size_pt = field_size_pt(field)
-    bold = field == "title"
-    if fits(text, size_pt=size_pt, bold=bold, width_mm=width_mm):
+    shown, ok, _printed = field_cell(target.sheet, field, text, fallback=fallback)
+    if ok:
         return None
-    if fallback is not None and fits(fallback, size_pt=size_pt, bold=bold, width_mm=width_mm):
-        return None
-    shown = fallback if fallback is not None else text
     return Finding(
         code="TITLE_BLOCK_TEXT_OVERFLOW",
         severity=Severity.WARNING,
@@ -199,103 +185,55 @@ def _document_level_overflow_findings(
     return tuple(findings)
 
 
-@dataclass(frozen=True, slots=True)
-class _OverflowContext:
-    """The model, subject, record, pages and sheet format every per-page overflow check shares."""
-
-    model: Model
-    subject: _DocId
-    record: Document
-    pages: tuple[PageKind, ...]
-    sheet: SheetFormat
-
-
-def _schematic_page_overflow_findings(
-    ctx: _OverflowContext, svgs: Mapping[str, str]
+def _page_fields_overflow_findings(
+    target: _FieldTarget, pages: tuple[tuple[TitleBlockFields, str], ...], *, kind: str
 ) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` for the page-level fields of real `SCHEMATIC` pages (R11.7)."""
-    if PageKind.SCHEMATIC not in ctx.pages:
+    """`TITLE_BLOCK_TEXT_OVERFLOW` for the scope and each page's `(fields, where)` (R11.7).
+
+    The fields are the very ones the page source prints, from `schematic_fields`,
+    `harness_run_fields` and `section_fields`, so this can never disagree with the page.
+    """
+    if not pages:
         return ()
-    pages_found = schematic_pages(ctx.model, ctx.record, ctx.pages)
-    if not pages_found or schematic_missing_keys(pages_found, svgs):
-        return ()
-    target = _FieldTarget(subject=ctx.subject, sheet=ctx.sheet)
-    findings = []
-    scope = (
-        location_label(ctx.model, ctx.record.location)
-        if ctx.record.location is not None
-        else subject_label(ctx.model, ctx.record)
-    )
-    finding = _one_line_overflow_finding(target, "scope", scope, where="SCHEMATIC", fallback=None)
-    if finding is not None:
-        findings.append(finding)
-    totals = Counter(page.drawing_set for page in pages_found)
-    for page in pages_found:
-        where = f"page {page.number}"
-        joined = page_title(ctx.model, page)
-        labels = _page_title_labels(ctx.model, page)
-        finding = _one_line_overflow_finding(
-            target, "page_title", joined, where=where, fallback=labels or None
-        )
-        if finding is not None:
-            findings.append(finding)
-        counter = f"{page.number} / {totals[page.drawing_set]}"
-        finding = _one_line_overflow_finding(
-            target, "sheet_counter", counter, where=where, fallback=None
-        )
-        if finding is not None:
-            findings.append(finding)
-    return tuple(findings)
+    findings = [
+        _one_line_overflow_finding(target, "scope", pages[0][0].scope, where=kind, fallback=None)
+    ]
+    for fields, where in pages:
+        for name, text, fallback in (
+            ("page_title", fields.page_title, fields.page_title_fallback or None),
+            ("sheet_counter", fields.sheet_counter, None),
+        ):
+            findings.append(
+                _one_line_overflow_finding(target, name, text, where=where, fallback=fallback)
+            )
+    return tuple(finding for finding in findings if finding is not None)
 
 
-def _harness_page_overflow_findings(ctx: _OverflowContext) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` for `page_title`/`scope` on `HARNESS_DRAWING` pages (R11.7)."""
-    if PageKind.HARNESS_DRAWING not in ctx.pages:
-        return ()
-    cables_found = harness_cables_for(ctx.model, ctx.record, ctx.pages)
-    if not cable_blocks(ctx.model, ctx.record, cables_found):
-        return ()
-    target = _FieldTarget(subject=ctx.subject, sheet=ctx.sheet)
-    findings = []
-    scope = (
-        item_designation(ctx.model, ctx.record.item)
-        if ctx.record.item is not None
-        else subject_label(ctx.model, ctx.record)
-    )
-    finding = _one_line_overflow_finding(
-        target, "scope", scope, where="HARNESS_DRAWING", fallback=None
-    )
-    if finding is not None:
-        findings.append(finding)
-    for heading in run_headings(ctx.model, ctx.record, cables_found):
-        finding = _one_line_overflow_finding(
-            target, "page_title", heading, where=heading, fallback=None
-        )
-        if finding is not None:
-            findings.append(finding)
-    return tuple(findings)
-
-
-def _other_page_overflow_findings(
-    model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...], sheet: SheetFormat
+def _page_overflow_findings(
+    model: Model,
+    target: _FieldTarget,
+    record: Document,
+    pages: tuple[PageKind, ...],
+    svgs: Mapping[str, str],
 ) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` for `_HEADING_WORDS` and `subject_label`, as printed (R11.7)."""
+    """The page-level fields of `SCHEMATIC`, `HARNESS_DRAWING` and the `_HEADING_WORDS` kinds."""
+    found: list[Finding] = []
+    schematic = schematic_pages(model, record, pages) if PageKind.SCHEMATIC in pages else ()
+    if schematic and not schematic_missing_keys(schematic, svgs):
+        fields = schematic_fields(model, record, schematic)
+        wheres = tuple(f"page {page.number}" for page in schematic)
+        found += _page_fields_overflow_findings(
+            target, tuple(zip(fields, wheres, strict=True)), kind="SCHEMATIC"
+        )
+    cables = harness_cables_for(model, record, pages)
+    blocks = cable_blocks(model, record, cables) if PageKind.HARNESS_DRAWING in pages else ()
+    runs = harness_run_fields(model, record, blocks) if blocks else ()
+    pairs = tuple((fields, fields.page_title) for fields, _ in runs)
+    found += _page_fields_overflow_findings(target, pairs, kind="HARNESS_DRAWING")
     kinds = [kind for kind in pages if kind in _HEADING_WORDS]
-    if not kinds:
-        return ()
-    target = _FieldTarget(subject=subject, sheet=sheet)
-    findings = []
-    scope = subject_label(model, record)
-    finding = _one_line_overflow_finding(target, "scope", scope, where=kinds[0].name, fallback=None)
-    if finding is not None:
-        findings.append(finding)
-    for kind in kinds:
-        finding = _one_line_overflow_finding(
-            target, "page_title", _HEADING_WORDS[kind], where=kind.name, fallback=None
-        )
-        if finding is not None:
-            findings.append(finding)
-    return tuple(findings)
+    sections = tuple((section_fields(model, record, kind), kind.name) for kind in kinds)
+    found += _page_fields_overflow_findings(target, sections, kind=kinds[0].name if kinds else "")
+    return tuple(found)
 
 
 def _text_overflow_findings(
@@ -309,12 +247,9 @@ def _text_overflow_findings(
     sheet = resolve_sheet_format(model, record, pages)
     if not title_block_fits(sheet):
         return ()
-    ctx = _OverflowContext(model=model, subject=subject, record=record, pages=pages, sheet=sheet)
-    return (
-        _document_level_overflow_findings(model, subject, record, sheet)
-        + _schematic_page_overflow_findings(ctx, svgs)
-        + _harness_page_overflow_findings(ctx)
-        + _other_page_overflow_findings(model, subject, record, pages, sheet)
+    target = _FieldTarget(subject=subject, sheet=sheet)
+    return _document_level_overflow_findings(model, subject, record, sheet) + (
+        _page_overflow_findings(model, target, record, pages, svgs)
     )
 
 
@@ -368,7 +303,7 @@ def _schematic_no_drawings_message(
     pages_found = schematic_pages(model, record, pages)
     if not pages_found:
         if replica_only_sets(model, record, pages):
-            # STEP 4 addition: every matched set was replica-only and dropped -- there was
+            # Every matched set was replica-only and dropped -- there was
             # really something there, just deliberately not drawn (its own INFO finding
             # below), not the genuine "no drawing set found" case this ERROR means otherwise.
             return None

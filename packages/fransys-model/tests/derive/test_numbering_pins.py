@@ -144,7 +144,7 @@ def test_a_terminal_is_excluded_even_though_its_own_text_would_print() -> None:
 
 
 def test_a_part_less_tagged_item_appears_with_null_code() -> None:
-    """Designer ruling 2026-09-27: `code` is `None`, not `""`, for a part-less item -- one
+    """Ruling 2026-09-27: `code` is `None`, not `""`, for a part-less item -- one
     record, one spelling of absence, matching `scope`'s own `None`."""
     release = _release("cab-release")
     unit = _unit(("cab",), release)

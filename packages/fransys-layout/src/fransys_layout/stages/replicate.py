@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping
 
 from fransys_layout.geometry import LayoutError
-from fransys_layout.stages.columns import boundary_key, replica_key
+from fransys_layout.stages.boundary_specs import boundary_replica, unit_specs
+from fransys_layout.stages.columns import replica_key
 from fransys_layout.stages.types import Cell, Column, Home
 
 if TYPE_CHECKING:
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class UnitBoundary:
-    """One unit's boundary, as `replicate_boundaries` reads it (units spec U1, U3)."""
+    """One unit's boundary, as `replicate_boundaries` reads it."""
 
     functions: tuple[Handle, ...]
     parent: Handle | None
@@ -121,11 +122,13 @@ def _split_pair(
 def replicate_boundaries(
     columns: tuple[Column, ...],
     units: tuple[UnitBoundary, ...],
-    unused: frozenset[Handle],
     functions: tuple[FunctionSpec, ...],
     homes: tuple[Column, ...],
 ) -> tuple[Column, ...]:
-    """Every column, plus one black-box replica per boundary function of every unit (U1)."""
+    """Every column, plus one black-box replica per boundary function of every unit (U1).
+
+    A function with pin views is its pin cells' replicas, else its own spec's (model-0188).
+    """
     specs = {spec.function: spec for spec in functions}
     pins: dict[Handle, list[FunctionSpec]] = {}
     for spec in functions:
@@ -146,32 +149,14 @@ def replicate_boundaries(
     }
     replicas = []
     for unit in units:
-        for function_id in unit.functions:
-            # R7 A (deep dive): a connector is drawn as one view per wired pin, so its black
-            # box is its pins' views; an idle pin has no view and is not drawn
-            views = pins.get(function_id, ())
-            if function_id not in specs and not views:
-                if function_id in unused:  # W3: a connector declared unused draws no pin
-                    continue
-                msg = "a unit's boundary names a function that has no spec"
+        for spec in unit_specs(unit.functions, specs, pins):
+            if (spec.function, unit.parent) in faced:
+                continue
+            home_column = home.get(spec.function)
+            if home_column is None:
+                msg = "a unit's boundary names a function that is in no column"
                 raise LayoutError(msg)
-            for spec in (specs[function_id],) if function_id in specs else views:
-                if (spec.function, unit.parent) in faced:
-                    continue
-                home_column = home.get(spec.function)
-                if home_column is None:
-                    msg = "a unit's boundary names a function that is in no column"
-                    raise LayoutError(msg)
-                replicas.append(
-                    Column(
-                        key=boundary_key(spec.key, unit.parent_key),
-                        cells=(Cell(function=spec.function, index=0, home=Home.ELSEWHERE),),
-                        group=home_column.group,
-                        role=home_column.role,
-                        location=home_column.location,
-                        unit=unit.parent,
-                    )
-                )
+            replicas.append(boundary_replica(spec, unit.parent, unit.parent_key, home_column))
     return tuple(
         sorted(
             (*_without_rail_homes(columns, functions), *replicas),

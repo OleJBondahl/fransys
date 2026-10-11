@@ -1,4 +1,4 @@
-"""The page frame, grid and title block (page-frame spec R1-R6, acceptance 1-5)."""
+"""The page frame, grid and title block (acceptance 1-5)."""
 
 from decimal import Decimal
 

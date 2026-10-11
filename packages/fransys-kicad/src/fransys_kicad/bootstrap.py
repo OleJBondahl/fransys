@@ -1,10 +1,10 @@
-"""KiCad symbol to part-file skeleton (spec section 8; dev tool, not a runtime input)."""
+"""KiCad symbol to part-file skeleton (dev tool, not a runtime input)."""
 
 from typing import cast
 
 from ._sexpr import Sexpr, parse_sexpr
 
-# The fields a human must fill in, in the order they are written under [part] (spec P10).
+# The fields a human must fill in, in the order they are written under [part].
 _HUMAN_FIELDS = ("mpn", "manufacturer", "description", "category", "class_code")
 
 # A symbol's own body style, second segment of a nested "<symbol>_<unit>_<style>" name.
@@ -21,7 +21,7 @@ _NO_NAME = "~"
 
 
 def part_file_skeleton(kicad_sym: str, symbol: str) -> str:
-    """Build a part-file skeleton (spec section 7, `kicad-0002`) from one symbol of a library text.
+    """Build a part-file skeleton (`kicad-0002`) from one symbol of a library text.
 
     One port template per pin; a pin's KiCad name is its `marking` (F2), left out when it is `"~"`.
 
@@ -84,7 +84,7 @@ def _pin_tag(pin_node: Sexpr, tag: str) -> str | None:
 
 
 def _pin(pin_node: Sexpr) -> tuple[str, str | None] | None:
-    """A pin's `(number, marking)`, or `None` when it has no number (spec P10, F2)."""
+    """A pin's `(number, marking)`, or `None` when it has no number."""
     number = _pin_tag(pin_node, "number")
     if number is None:
         return None

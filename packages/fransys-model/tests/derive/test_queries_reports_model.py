@@ -1,4 +1,4 @@
-"""WP16 tests: BOM, PLC channel, cable, wire label and designation queries."""
+"""Tests: BOM, PLC channel, cable, wire label and designation queries."""
 
 import dataclasses
 from decimal import Decimal
@@ -113,7 +113,7 @@ def _terminal_item(  # noqa: PLR0913 -- one param per field the tests vary, kept
 def test_two_strips_sharing_a_bare_terminal_designation_have_distinct_bom_designations() -> None:
     """A BOM designation for a terminal is `<strip>:<terminal>`, sorted by strip, group, index.
 
-    `X1` and `X01` each have an `L1:1` terminal (the designer's own worked example, the fault
+    `X1` and `X01` each have an `L1:1` terminal (a worked example: the fault
     decision model-0046 fixed for cable ends): without the strip prefix, both terminals would
     print the identical bare text `"L1:1"` twice in one BOM line and name neither.
     """
@@ -377,7 +377,7 @@ def test_designation_list_refuses_an_unnumbered_item() -> None:
         designation_list(plant.model())
 
 
-# ---- units spec U6: the unit scope of plc_channel_rows, wire_rows, designation_list -----
+# ---- the unit scope of plc_channel_rows, wire_rows, designation_list -----
 
 
 def _nested_units(plant: Plant) -> tuple[Id[Unit], Id[Unit]]:
@@ -441,9 +441,9 @@ def test_designation_list_with_a_unit_keeps_only_that_units_own_items() -> None:
 def test_wire_rows_with_a_unit_include_a_wire_crossing_into_a_nested_unit() -> None:
     """A wire from a cabinet's own item to a nested board's item belongs to the cabinet.
 
-    Units spec U6, amended 2026-09-23: a conductor belongs to the *lowest* unit whose
+    Amended 2026-09-23: a conductor belongs to the *lowest* unit whose
     subtree holds both ends' items, not to a unit only when both ends belong to it directly,
-    and not to *every* common ancestor either. The designer's own two examples: a wire from
+    and not to *every* common ancestor either. Two examples: a wire from
     a cabinet terminal to a board connector, the board nested in the cabinet, belongs to the
     cabinet; a wire inside the board belongs to the board, not also to the cabinet -- this
     second example is what tells "lowest" apart from "every ancestor", and is the reason a

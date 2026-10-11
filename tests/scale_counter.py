@@ -17,7 +17,9 @@ gates layout on a document, so counting real `fransys_layout` calls needs
 default.
 """
 
+import multiprocessing
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -167,14 +169,31 @@ def _counts(mon: _Monitor) -> BuildCounts:
     return BuildCounts(len(mon.passes), mon.normalised(2), mon.normalised(0), mon.normalised(1))
 
 
-def count_build(n: int) -> BuildCounts:
-    """Count one `build_scale(n)`, after an uncounted `build_scale(2)` that fills module caches."""
-    build_scale(2, with_document=True)
+def count_build(n: int, *, warm: tuple[int, ...] = ()) -> BuildCounts:
+    """Count one `build_scale(n)`, after an uncounted `build_scale(2)` and each `warm` size."""
+    for size in (2, *warm):
+        build_scale(size, with_document=True)
     return _counts(_monitored(_LAYOUT_MARK, _PASS_CODE, lambda: build_scale(n, with_document=True)))
 
 
-def count_render(n: int) -> BuildCounts:
+def count_render(n: int, *, warm: tuple[int, ...] = ()) -> BuildCounts:
     """Count `fransys_render.pages` alone on `build_scale(n)`; the build is not monitored."""
-    fransys_render.pages(build_scale(2, with_document=True).model)
+    for size in (2, *warm):
+        fransys_render.pages(build_scale(size, with_document=True).model)
     model = build_scale(n, with_document=True).model
     return _counts(_monitored(_RENDER_MARK, None, lambda: fransys_render.pages(model)))
+
+
+def _child(counter: str, n: int, warm: tuple[int, ...]) -> BuildCounts:
+    return {"build": count_build, "render": count_render}[counter](n, warm=warm)
+
+
+def count_pair(counter: str, small: int, big: int) -> tuple[BuildCounts, BuildCounts]:
+    """The counts at `small` and `big`, in two child processes at once (`sys.monitoring` is per
+    process). The `big` child runs its warm-up, then `small` uncounted, so the caches the small
+    build fills are as warm as when both counted builds shared one process.
+    """
+    with ProcessPoolExecutor(2, mp_context=multiprocessing.get_context("spawn")) as pool:
+        first = pool.submit(_child, counter, small, ())
+        second = pool.submit(_child, counter, big, (small,))
+        return first.result(), second.result()

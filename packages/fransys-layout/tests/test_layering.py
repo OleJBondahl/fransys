@@ -4,13 +4,13 @@ Enforces package-layout.md 4. The layers are `engines` → `lint` → `stages` �
 `geometry` (decision layout-0111), and a layer imports only layers to its right. Every layer may
 import
 `fransys_model.kernel`; only `engines` may import anything else of `fransys_model`,
-with one recorded exception (decision layout-0037, extended by units spec U7 and step4's
-layout-0089): any module may import `fransys_model.derive.drawing_text` for its pure
-formatters (`frame_column`, `frame_row`, `row_letter`, `position_text`, `location_prefix`,
-`off_stub_line`); the readers it also holds (`marker_text`
+with one recorded exception (decision layout-0037, extended by layout-0089): any module may import
+`fransys_model.derive.drawing_text` for its pure formatters
+(`frame_column`, `frame_row`, `row_letter`, `position_text`, `location_prefix`, `off_stub_line`);
+the readers it also holds (`marker_text`
 and the rest, which take a model) stay engine-only, like every other `derive` name. Only
 `geometry/symbols.py` may import the symbol libraries. Inside `engines`, only the `read/`
-package may import `fransys_model.derive` or `vocab` (spec D6, `drawing_text` formatters
+package may import `fransys_model.derive` or `vocab` (`drawing_text` formatters
 excepted), and only the `read/` and `write/` packages may import `fransys_model.layout`
 (FC4's three enums `Orientation`, `MarkerSide` and `LabelKind` excepted); the modules that
 still do are listed in `ENGINE_ALLOWED_OFFENDERS`, which is empty and stays as the refusal.
@@ -43,7 +43,7 @@ KERNEL_ONLY_LAYERS = ("geometry", "conventions", "stages", "lint")
 MODEL = "fransys_model"
 MODEL_KERNEL = "fransys_model.kernel"
 
-# decision layout-0037 (extended by units spec U7 and step4's layout-0089): any layer may
+# decision layout-0037 (extended by layout-0089): any layer may
 # import this module, but only for its pure formatters; its readers (which take a model) are
 # as off-limits outside `engines` as any other `fransys_model.derive` name.
 DRAWING_TEXT_MODULE = "fransys_model.derive.drawing_text"
@@ -61,14 +61,14 @@ DRAWING_TEXT_FORMATTERS = frozenset(
     }
 )
 
-SYMBOL_LIBRARIES = ("graphical_symbols", "electrical_symbols")
+SYMBOL_LIBRARIES = ("symdef", "electrical_symbols")
 SYMBOL_ADAPTER = SRC_ROOT / "geometry" / "symbols.py"
 # `units.py` takes the two grid constants from the library's one home (RR-O4); `symbols.py`
 # imports `units`, so the constants cannot come through it. `units.py` may import nothing else.
 UNITS_MODULE = SRC_ROOT / "geometry" / "units.py"
 UNITS_ALLOWED = frozenset({"WIRING_GRID", "G_PER_MODULE"})
 
-# spec D6: inside `engines`, only the `read/` package may import `fransys_model.derive` or
+# Inside `engines`, only the `read/` package may import `fransys_model.derive` or
 # `fransys_model.vocab` (the `drawing_text` formatters excepted), and only the `read/` and
 # `write/` packages may import `fransys_model.layout`, except FC4's three enums, which any
 # engine module may import by name from `fransys_model.layout`.
@@ -362,12 +362,9 @@ def test_units_takes_only_the_two_grid_constants_from_the_symbol_libraries() -> 
 
 
 def test_checker_fails_when_units_imports_more_than_the_grid_constants() -> None:
-    """A third `electrical_symbols` name, or any `graphical_symbols` import, is found."""
-    source = (
-        "from electrical_symbols import WIRING_GRID, LIBRARY\n"
-        "from graphical_symbols.orient import turn\n"
-    )
-    assert _units_library_names(source) == {"LIBRARY", "graphical_symbols.orient"}
+    """A third `electrical_symbols` name, or any `symdef` import, is found."""
+    source = "from electrical_symbols import WIRING_GRID, LIBRARY\nfrom symdef.orient import turn\n"
+    assert _units_library_names(source) == {"LIBRARY", "symdef.orient"}
 
 
 def test_only_the_reader_imports_derive_vocab_or_layout_in_engines() -> None:
@@ -591,9 +588,9 @@ def test_checker_fails_when_a_stage_imports_a_drawing_text_reader() -> None:
 
 def test_checker_fails_when_a_stage_imports_a_symbol_library() -> None:
     """The symbol-library check catches both libraries, in either import form."""
-    source = "import graphical_symbols\nfrom electrical_symbols import LIBRARY\n"
+    source = "import symdef\nfrom electrical_symbols import LIBRARY\n"
     imported = _imported_modules("fransys_layout.stages.bad", source, is_init=False)
-    assert _symbol_library_imports(imported) == {"graphical_symbols", "electrical_symbols"}
+    assert _symbol_library_imports(imported) == {"symdef", "electrical_symbols"}
 
 
 CABLE_DERIVE = "from fransys_model.derive.cable_drawing import cable_drawing\n"

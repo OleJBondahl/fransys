@@ -547,7 +547,7 @@ def test_two_functions_of_different_items_are_a_severed_signal() -> None:
     assert requests == ()
 
 
-# --- cross-unit cuts (units spec U2) ---------------------------------------------------
+# --- cross-unit cuts ---------------------------------------------------
 
 
 def test_a_cut_between_two_units_drawing_sets_is_cross_unit() -> None:

@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.geometry import (
     WIRING_GRID,
     Box,
+    cut_runs,
+    first_clear,
     hull,
-    overlaps,
+    is_clear,
     port_exit,
     port_page_at,
     text_width,
@@ -114,14 +116,8 @@ def _column_stretches(
     for one in members:
         x_of[one.column] = min(x_of.get(one.column, one.at.x), one.at.x)
     others = [one.at.x for one in placed if one.column not in own]
-    stretches: list[list[AuthoringKey]] = []
-    last = None
-    for column in sorted(own, key=lambda key: (x_of[key], str(key))):
-        if last is None or any(x_of[last] < x < x_of[column] for x in others):
-            stretches.append([])
-        stretches[-1].append(column)
-        last = column
-    return stretches
+    ordered = sorted(own, key=lambda key: (x_of[key], str(key)))
+    return cut_runs(ordered, lambda key: x_of[key], others)
 
 
 def _column_runs(
@@ -257,12 +253,16 @@ def _title_box(box: Box, text: str, taken: Sequence[Box], *, drawn_top: bool, he
     at_x = max(box.x, TEXT_GAP)
     above = Box(x=at_x, y=box.y - margin - height, width=width, height=height)
     below = Box(x=at_x, y=box.y + box.height + margin, width=width, height=height)
-    if drawn_top:
-        # the mirror: below-left when free, else above-left (D4's top room holds it)
-        free = not any(overlaps(below, other) for other in taken)
-        return below if free else above
-    free = above.y >= 0 and not any(overlaps(above, other) for other in taken)
-    return above if free else below
+    # drawn_top, the mirror: below-left when free, else above-left (D4's top room holds it)
+    order = (below, above) if drawn_top else (above, below)
+    return (
+        first_clear(
+            order,
+            box_of=lambda one: one,
+            blocked=lambda one: not is_clear(one, taken) or (not drawn_top and one.y < 0),
+        )
+        or order[1]
+    )
 
 
 def _page_taken(

@@ -1,4 +1,4 @@
-"""Route polylines and junction dots (spec D8, the routes/junctions part of this work package)."""
+"""Route polylines and junction dots."""
 
 from decimal import Decimal
 
@@ -276,7 +276,7 @@ def test_junction_clause_ii_endpoint_inside_other_route_segment():
 
 
 def test_two_routes_meeting_only_at_a_port_are_no_junction():
-    """I4 D1 (designer): a dot goes where three or more wire segments of one net meet; a
+    """I4 D1: a dot goes where three or more wire segments of one net meet; a
     symbol's pin is no wire segment, so two wires on one port, W and E, get no dot (the old
     clause (iii) drew one). A third wire leaving the port's point makes it a junction."""
     s = (10, 10)

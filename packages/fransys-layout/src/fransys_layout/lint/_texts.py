@@ -1,6 +1,6 @@
 """`TEXT_CROSSED_BY_ROUTE` and `TEXT_OVERLAP`, private to the geometric lint (F7, layout-0047).
 
-The designer's review metric `text_crossed_by_route` is the union of two codes, one defect
+The review metric `text_crossed_by_route` is the union of two codes, one defect
 each, never both:
 
 - a *route* run through a label box or a marker box is `WIRE_OVER_LABEL` (`geometric._wires`);
@@ -13,7 +13,7 @@ glyphs in `fransys_render/_markers.py`: one line from the port, or from `turn`, 
 for a box beside its stub, beyond a sibling lane, the stub down to the box's near edge and the
 lead along that edge to its near corner).
 
-`text_overlaps` is the designer's review metric of the same name: two texts of one page whose
+`text_overlaps` is the review metric of the same name: two texts of one page whose
 boxes overlap, or a text's box overlapping a symbol body it is not the tag of.
 """
 

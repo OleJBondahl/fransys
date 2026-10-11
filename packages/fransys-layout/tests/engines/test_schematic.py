@@ -90,7 +90,7 @@ def test_read_outputs_are_sorted_and_order_free() -> None:
 
 def test_read_skips_cable_functions_and_draws_not_installed_items() -> None:
     """Cable items are not drawn; a board's `CONNECTOR` is, when wired, its other items are not
-    (model-0040, spec B1); an `installed=False` item is drawn.
+    (model-0040); an `installed=False` item is drawn.
 
     D8: an idle connector is not drawn, and the cabinet's board `A1` has one unwired `CONNECTOR`
     (a wired board connector is drawn: `test_board_internal`).

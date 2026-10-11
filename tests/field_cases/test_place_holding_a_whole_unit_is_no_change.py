@@ -3,7 +3,7 @@
 The engineering shape: a unit whose devices all sit in one place `C1` inside it, so each reference
 designation prints `+C1-<tag>`. A new issue drops the place and the references print `-<tag>`.
 
-The rule (baseline spec L2, decision model-0146): a change list is relative to the unit. The listing
+The rule (decision model-0146): a change list is relative to the unit. The listing
 drops the location that holds every item of the unit, so both issues list the same designations, the
 change list reads "No changes." and `fr.verify` of the stored first issue stays clean.
 """

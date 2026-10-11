@@ -1,4 +1,4 @@
-"""Tests for `derive.external` and the `Item.external` field (external-items spec Y1, Y4).
+"""Tests for `derive.external` and the `Item.external` field.
 
 The flag is a fact on one item; the derivation reads the `parent` chain, so the terminals of
 an external strip are external without carrying it. `installed` is a separate fact.

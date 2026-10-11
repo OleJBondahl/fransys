@@ -424,7 +424,7 @@ def _mated_pair(*, with_mate: bool) -> tuple[Record, ...]:
 
     `with_mate=True` also joins the two functions with a `Mate`, so `_join_mates` unions
     the ports (equal name) into one physical net, per the model's own connectivity: a mate
-    joins its pins into one physical net (units spec U8).
+    joins its pins into one physical net.
     """
     item_a = Item(
         id=Id(kind="item", value="a" * 32),

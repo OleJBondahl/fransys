@@ -1,4 +1,4 @@
-"""W3 (layout deep dive, designer's ruling): a unit's boundary connector mated to the plug of
+"""W3 (layout deep dive, ruling): a unit's boundary connector mated to the plug of
 a top-level harness shows, in the unit's own set, where the harness goes; a boundary connector
 declared unused draws no pin. W3's two cores make it a line (HL1): its end leaves the unit's
 set in one line stub naming the far device (HL18, owner C1), not one stub per pin.

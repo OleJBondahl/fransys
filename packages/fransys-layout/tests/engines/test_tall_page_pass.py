@@ -62,13 +62,18 @@ def _middle(*, lower: bool) -> dict[Any, Any]:
     return {"u": (group,), "l": (group,)}
 
 
-def _shape(bottom: int) -> GroupShape:
+def _shape(bottom: int, *, held: bool = False) -> GroupShape:
     box = Box(x=0, y=0, width=0, height=0)
-    return GroupShape(UNIT, UNIT, 1, 1, box, box, (), bottom=bottom)
+    return GroupShape(UNIT, UNIT, 1, 1, box, box, (), bottom=bottom, held=held)
 
 
 def _passes(
-    monkeypatch: pytest.MonkeyPatch, *, bottom: int, grew: bool, lower: bool = True
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    bottom: int,
+    grew: bool,
+    lower: bool = True,
+    held: bool = False,
 ) -> list[Any]:
     """The `middle` each `plan_pages` call saw, with `place_pages` stubbed to one folded shape."""
     seen: list[Any] = []
@@ -77,7 +82,7 @@ def _passes(
         seen.append(run.inputs.middle)
         return SimpleNamespace(plans=(), columns=())
 
-    page = (None, SimpleNamespace(shapes=[_shape(bottom)]))
+    page = (None, SimpleNamespace(shapes=[_shape(bottom, held=held)]))
     decided = (
         SimpleNamespace(digits=(SetDigits(drawing_set=1, refs=2, sheets=2),), markers=()),
         (),
@@ -114,3 +119,8 @@ def test_a_tall_group_rides_the_width_pass_and_asks_for_one_only_when_alone(
 def test_a_tall_group_recut_would_hold_costs_no_pass(monkeypatch: pytest.MonkeyPatch) -> None:
     """UNDO: `tall_groups` passes a group with no lower band, and the engine re-plans for it."""
     assert len(_passes(monkeypatch, bottom=FLOOR + 1, grew=False, lower=False)) == 1
+
+
+def test_a_held_tall_shape_costs_no_pass(monkeypatch: pytest.MonkeyPatch) -> None:
+    """UNDO: `tall_groups` drops its `not shape.held` test, and the engine re-plans for it."""
+    assert len(_passes(monkeypatch, bottom=FLOOR + 1, grew=False, held=True)) == 1

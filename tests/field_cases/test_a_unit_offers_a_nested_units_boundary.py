@@ -7,7 +7,7 @@ container mates a harness plug to that connector and wires the plug.
 
 The bug: `write_boundaries` wrote a `Boundary` only for a device the scope's own `interface=True`
 held, so the returned field made no boundary of the assembly, and the container's wire gave
-`UNIT_BOUNDARY_BYPASSED`. The rule (decision author-0032, spec patch-0-13-1 P1 to P5): a field
+`UNIT_BOUNDARY_BYPASSED`. The rule (decision author-0032): a field
 that holds a boundary function of a directly nested unit makes it this unit's boundary too, one
 level at a time; a field holding a function that is no boundary of the nested unit writes
 nothing. The print is the real path from the document's unit: `-U1-U2-X7` on the

@@ -1,4 +1,4 @@
-"""Unit tests for `part_file_skeleton` and `python -m fransys_kicad` (spec P10).
+"""Unit tests for `part_file_skeleton` and `python -m fransys_kicad`.
 
 Every KiCad symbol name and pin layout here is invented (CLAUDE.md invariant 6): the
 `DEMO-` prefix marks it, the way `examples/demo-parts` marks its invented parts.

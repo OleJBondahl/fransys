@@ -1,4 +1,4 @@
-"""Page geometry: paper, margins, header, footer, type sizes (spec P4, P5, P10)."""
+"""Page geometry: paper, margins, header, footer, type sizes."""
 
 from typing import TYPE_CHECKING
 

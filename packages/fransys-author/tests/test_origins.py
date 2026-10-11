@@ -1,4 +1,4 @@
-"""Origins: every record's file and line is the calling test line (spec A10).
+"""Origins: every record's file and line is the calling test line.
 
 The frame walk finds the first frame outside `fransys_author`, comparing module
 names, not paths; this test file's own lines are what every assertion checks against.

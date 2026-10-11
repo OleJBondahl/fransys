@@ -1,4 +1,4 @@
-"""Every `AuthorError` case: a failing test and a passing twin (spec A11, B, Q5)."""
+"""Every `AuthorError` case: a failing test and a passing twin."""
 
 from typing import Any
 
@@ -287,7 +287,7 @@ def test_bridge_with_a_terminal_given_twice_is_refused(parts):
 
 
 def test_bridging_the_same_pair_twice_from_one_scope_is_a_no_op(parts):
-    """Spec T1: the jumper's key is its pair's two terminal keys, so re-bridging the same
+    """The jumper's key is its pair's two terminal keys, so re-bridging the same
     pair with identical content is the existing duplicate-key no-op, not a second record."""
     from fransys_model.vocab.connectivity import Conductor
 
@@ -369,7 +369,7 @@ def test_chain_rejects_an_unrelated_type(parts):
 
 
 def test_harness_without_a_tag_is_a_type_error(parts):
-    """`tag` is required, keyword-only (decision author-0003, spec H2's amendment): a
+    """`tag` is required, keyword-only (decision author-0003): a
     part-less harness gets no class letter from numbering, so an untagged one would never
     gain a designation. `name=` alone used to be enough (the old signature's `tag` had a
     default, so a real call giving only `name=` -- the case the ruling is about -- built a
@@ -526,7 +526,7 @@ def test_revision_on_a_scope_with_no_unit_is_refused(parts):
 def test_design_revision_writes_with_unit_none_even_though_design_has_no_unit(parts):
     """The discriminating test: `Design._unit` is also `None`, like a plain unit-less
     `Scope`, but `Design.revision` is special-cased to write anyway (unit=None is the
-    project's own history, units spec U4), never raising `s.revision()`'s own guard."""
+    project's own history), never raising `s.revision()`'s own guard."""
     d = Design(parts)
     assert d.unit_id is None
     d.revision(1, date="2026-09-23", text="First issue", created="OJB")
@@ -544,7 +544,7 @@ def test_scope_unit_id_round_trips_through_unit(parts):
 
 
 def test_a_units_revision_key_does_not_collide_with_the_projects_own(parts):
-    """Units spec U4 (amended 2026-09-23, designer): a unit's own revision key is
+    """A unit's own revision key (amended 2026-09-23) is
     `(*prefix, "unit", <unit name>, "revision", revision)`, not the project's own flat
     `(*prefix, "revision", revision)` -- so a unit made directly off `Design` and the
     project's own history never collide, even on the identical revision string. (Before

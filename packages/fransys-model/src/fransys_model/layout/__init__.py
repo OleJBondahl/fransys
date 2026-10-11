@@ -37,6 +37,7 @@ from .harness_results import (
     FanLeg,
     HarnessFanOut,
     HarnessLine,
+    StubEnd,
 )
 from .hints import (
     BreakBefore,
@@ -117,6 +118,7 @@ __all__ = [
     "Side",
     "SideHint",
     "StarKind",
+    "StubEnd",
     "SymbolChoice",
     "SymbolPlacement",
     "TabCell",

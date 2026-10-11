@@ -40,6 +40,20 @@ class DrawnFanOut:
 
 
 @value
+class FarEnd:
+    """One far end of a leaving line's stub: its port, and its page number and `x`, `y` there.
+
+    `page` is the end's lowest page in the stub's drawing set, or `None` when it is drawn in
+    none (STUB-POSITIONS P1, P2).
+    """
+
+    port: Id[Any]
+    page: int | None
+    x: int
+    y: int
+
+
+@value
 class LineStub:
     """A leaving line's one stub (HL18): at the line's end, facing out, its text's box size.
 
@@ -55,3 +69,4 @@ class LineStub:
     at: Point
     facing: Facing
     box: Box
+    ends: tuple[FarEnd, ...] = ()

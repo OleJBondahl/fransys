@@ -24,5 +24,5 @@ def test_notes_page_dropped_when_no_notes_text(demo_cabinet):
 
 
 def test_bom_is_the_last_page(demo_harness_with_board):
-    """Every document's page order ends with the BOM (spec section 9)."""
+    """Every document's page order ends with the BOM."""
     assert document_pages(demo_harness_with_board, _PCB_DOC)[-1] is PageKind.BOM

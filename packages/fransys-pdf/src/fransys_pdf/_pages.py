@@ -1,4 +1,4 @@
-"""Cover and notes page content (spec P5, amended by page-frame R11.5, R11.6)."""
+"""Cover and notes page content (amended by page-frame R11.5, R11.6)."""
 
 from typing import TYPE_CHECKING
 

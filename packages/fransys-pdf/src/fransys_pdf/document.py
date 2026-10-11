@@ -1,4 +1,4 @@
-"""Document assembly to Typst source (spec P1, P4, P5, P10; page-frame R1-R6)."""
+"""Document assembly to Typst source (page-frame R1-R6)."""
 
 from typing import TYPE_CHECKING
 
@@ -55,9 +55,9 @@ _HEADING_WORDS: dict[PageKind, str] = {
 _SELF_FRAMED = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC, PageKind.HARNESS_DRAWING)
 
 
-def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: PageKind) -> str:
-    """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC` (R3, R4)."""
-    fields = TitleBlockFields(
+def section_fields(model: Model, record: Document, kind: PageKind) -> TitleBlockFields:
+    """The title block shared by every page of `kind` but `SCHEMATIC` (R3, R4)."""
+    return TitleBlockFields(
         *document_facts(model, record),
         page_title=_HEADING_WORDS[kind],
         scope=subject_label(model, record),
@@ -65,6 +65,11 @@ def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: Pa
         notice=project_notice(model),
         logo=record.logo,
     )
+
+
+def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: PageKind) -> str:
+    """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC` (R3, R4)."""
+    fields = section_fields(model, record, kind)
     return f"#set page(margin: {text_margin(sheet)}, background: {background(sheet, fields)})"
 
 

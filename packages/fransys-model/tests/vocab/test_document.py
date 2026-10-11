@@ -81,7 +81,7 @@ def test_a_document_about_an_item_freezes() -> None:
 
 
 def test_a_document_about_a_unit_round_trips() -> None:
-    """`unit` may be a unit's own id (units spec U3); comes back equal and reachable."""
+    """`unit` may be a unit's own id; comes back equal and reachable."""
     release_key = ("unit_release", "board", "1", "1")
     release = UnitRelease(
         id=make_id(UnitRelease, release_key),

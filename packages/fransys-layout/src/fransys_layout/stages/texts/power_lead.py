@@ -9,21 +9,18 @@ from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Sequence
 
 from fransys_layout.geometry import Box, boxes_meet, overlaps, port_page_at
-from fransys_layout.stages.lookups import placed_keepout
 from fransys_model.kernel import Finding, Severity
 
-from .marker_row import stub_boxes
-from .power import PowerPlace, power_place
+from .power import PowerPlace, page_shapes, power_place
 
 if TYPE_CHECKING:
+    from fransys_layout.stages.space import Shape
     from fransys_layout.stages.types import LinkMarker, PlacedFunction, PlacedLabel
     from fransys_model.kernel import Id
 
 # The longest lead tried, in grids; a symbol nothing clears keeps the nearest one
 MOST_GRIDS = 12
 POWER_SYMBOL_UNPLACED = "POWER_SYMBOL_UNPLACED"
-
-type Block = tuple[Id[Any] | None, Box]
 
 
 def with_power_leads(
@@ -32,7 +29,7 @@ def with_power_leads(
     labels: tuple[PlacedLabel, ...],
 ) -> tuple[tuple[LinkMarker, ...], tuple[Finding, ...]]:
     """`markers` with each symbol on the fewest lead grids that clear it; one none clears warns."""
-    blocks = _blocks(markers, placed, labels)
+    blocks = page_shapes(markers, placed, labels, symbols=False)
     owners = {port_page_at(one.at, g): one.function for one in placed for g in one.geometry.ports}
     taken: list[Box] = []
     findings: list[Finding] = []
@@ -70,7 +67,7 @@ def _unplaced(marker: LinkMarker) -> Finding:
 def _led(
     marker: LinkMarker,
     own: tuple[Id[Any] | None, ...],
-    blocks: tuple[Block, ...],
+    blocks: tuple[Shape, ...],
     taken: Sequence[Box],
 ) -> LinkMarker | None:
     """`marker` with the fewest lead grids whose symbol is clear, or None when none is."""
@@ -84,11 +81,11 @@ def _led(
 def _clear(
     place: PowerPlace,
     own: tuple[Id[Any] | None, ...],
-    blocks: tuple[Block, ...],
+    blocks: tuple[Shape, ...],
     taken: Sequence[Box],
 ) -> bool:
     """Whether the body touches no block or earlier symbol and the lead crosses no block."""
-    others = [box for owner, box in blocks if owner not in own]
+    others = [one.box for one in blocks if one.owner not in own]
     if any(_touches(place.body, box) for box in (*others, *taken)):
         return False
     return not any(_crosses(place.lead, box) for box in others)
@@ -102,16 +99,3 @@ def _touches(a: Box, b: Box) -> bool:
 def _crosses(a: Box, b: Box) -> bool:
     """Whether `a` and `b` share area: an edge or a corner alone does not count."""
     return overlaps(a, b)
-
-
-def _blocks(
-    markers: tuple[LinkMarker, ...],
-    placed: tuple[PlacedFunction, ...],
-    labels: tuple[PlacedLabel, ...],
-) -> tuple[Block, ...]:
-    """Every box a symbol must clear, with its owner: a function, a port, or none (a label)."""
-    return (
-        *((one.function, placed_keepout(one)) for one in placed),
-        *((m.port, box) for m in markers if not m.symbol for box in (m.box, *stub_boxes(m))),
-        *((None, one.box) for one in labels),
-    )

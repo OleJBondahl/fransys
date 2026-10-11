@@ -1,4 +1,4 @@
-"""WAGO module XML (spec section 6)."""
+"""WAGO module XML."""
 
 import re
 from typing import TYPE_CHECKING

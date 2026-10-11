@@ -90,7 +90,7 @@ class LinkKind(Enum):
 
 @register_enum
 class LinkRest(Enum):
-    """The state a `SWITCHED` `InternalLink` is in at rest, before it is operated (spec F2).
+    """The state a `SWITCHED` `InternalLink` is in at rest, before it is operated.
 
     Example: a push button's normally open contact is `OPEN`; an emergency stop's is `CLOSED`.
     """
@@ -112,7 +112,7 @@ class Energy(Enum):
 
 @register_enum
 class ProtectionType(Enum):
-    """The device type of a `kind = protection` function (spec F3), which picks its symbol.
+    """The device type of a `kind = protection` function, which picks its symbol.
 
     Example: a `fuse` draws the fuse symbol, an `mcb` the circuit-breaker symbol.
     """
@@ -278,7 +278,7 @@ class Earthing(Enum):
 
 @register_enum
 class PoleSide(Enum):
-    """Which side of a switching or protective device a pin sits on (IEC 60947-1; spec F9).
+    """Which side of a switching or protective device a pin sits on (IEC 60947-1).
 
     Example: the contactor's pin `1` is `LINE` (supply side), pin `2` is `LOAD`.
     """
@@ -289,7 +289,7 @@ class PoleSide(Enum):
 
 @register_enum
 class ConductorMark(Enum):
-    """A conductor designation of IEC 60445 (spec F9); protective earth is a `PortRole`, not one.
+    """A conductor designation of IEC 60445; protective earth is a `PortRole`, not one.
 
     Example: a motor's `U` pin carries `L1`; a PSU's `+` output carries `L+`.
     """

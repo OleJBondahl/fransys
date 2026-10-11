@@ -1,4 +1,4 @@
-"""Pipeline: merge drafts, freeze, run passes, findings policy, write files (spec F2-F6, F10)."""
+"""Pipeline: merge drafts, freeze, run passes, findings policy, write files."""
 
 import dataclasses
 import glob
@@ -100,7 +100,7 @@ if TYPE_CHECKING:
 
 _SEVERITY_RANK = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
 
-# Top-level `out_dir` export names `write` owns (spec F6): everything else is left alone. The
+# Top-level `out_dir` export names `write` owns: everything else is left alone. The
 # three bare names are a unit's own root's exports (UNIT-ID I5), beside the `<kind>-*` globs.
 _STALE_EXPORT_PATTERNS = (
     "*.pdf",
@@ -145,8 +145,8 @@ class BuildErrors(Exception):  # noqa: N818 -- plural on purpose: it carries eve
         super().__init__("\n".join(lines))
 
 
-class ExportNameClash(Exception):  # noqa: N818 -- the exact name spec F6 gives it
-    """Two subjects resolve to the same export file name in `out_dir` (spec F6)."""
+class ExportNameClash(Exception):  # noqa: N818 -- the exact name the contract gives it
+    """Two subjects resolve to the same export file name in `out_dir`."""
 
 
 def _export_name_clash(
@@ -400,6 +400,12 @@ def _svgs(model: Model) -> dict[str, str]:
     return dict(_svgs_cache(model))
 
 
+def _result_svgs(result: BuildResult) -> dict[str, str]:
+    """The drawing of a laid-out `result` (no `ERROR`, a `Document`); `{}` otherwise."""
+    laid_out = not _has_error(result.findings) and _has_document(result.model)
+    return _svgs(result.model) if laid_out else {}
+
+
 def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, ...]:
     """Every finding of a build before `describe`.
 
@@ -431,12 +437,7 @@ def check(result: BuildResult) -> tuple[Finding, ...]:
 
     Does not raise on findings, write files or draw a page for a model that was never laid out.
     """
-    svgs = (
-        _svgs(result.model)
-        if not _has_error(result.findings) and _has_document(result.model)
-        else {}
-    )
-    return _check(result, svgs)
+    return _check(result, _result_svgs(result))
 
 
 def _file_safe(page_key: str) -> str:
@@ -469,7 +470,7 @@ class _ExportLedger:
     """Export names, and with `names_only=False` their bytes, refusing a name two subjects want.
 
     `names` maps `(kind, subject)` to the name: one traversal gives `write` its bytes and
-    `export_names` its names, so the naming rule has one home (spec F6).
+    `export_names` its names, so the naming rule has one home.
     """
 
     def __init__(self, model: Model, *, names_only: bool = False) -> None:
@@ -535,7 +536,7 @@ def _resolve_unit(model: Model, unit: object) -> Id[ModelUnit] | None:
 
 
 def _add_system_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit] | None) -> None:
-    """The CSV reports, and with `unit=None` the two whole-system views (units spec U6)."""
+    """The CSV reports, and with `unit=None` the two whole-system views."""
     made: dict[str, tuple[str, Callable[[], str]]] = {
         "bom": ("csv", partial(bom_csv, model, unit)),
         "plc": ("csv", partial(plc_csv, model, unit=unit)),
@@ -557,7 +558,7 @@ def _list_context(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) ->
 def _item_subjects(
     model: Model, unit: Id[ModelUnit] | None
 ) -> tuple[tuple[Id[Any], ...], tuple[Id[Any], ...], tuple[Id[Any], ...]]:
-    """The strips, boards and racks of `unit` (all of them with `unit=None`), units spec U6."""
+    """The strips, boards and racks of `unit` (all of them with `unit=None`)."""
     strips, boards, racks = _subjects.strips(model), _subjects.boards(model), _subjects.racks(model)
     if unit is None:
         return strips, boards, racks
@@ -693,7 +694,7 @@ def write(
     """
     model = result.model
     resolved_unit = _resolve_unit(model, unit)
-    svgs = _svgs(model) if not _has_error(result.findings) and _has_document(model) else {}
+    svgs = _result_svgs(result)
     out_dir.mkdir(parents=True, exist_ok=True)
     if intermediates is not None:
         intermediates.mkdir(parents=True, exist_ok=True)
@@ -970,7 +971,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     """
     model = result.model
     resolved_unit = _resolve_unit(model, unit)
-    svgs = _svgs(model) if not _has_error(result.findings) and _has_document(model) else {}
+    svgs = _result_svgs(result)
     l4 = _l4_findings(model, resolved_unit, into)
     raw_findings = _revision_pins.with_warnings(_raw_findings(result, svgs), l4)
     findings = _resolved(raw_findings, model)

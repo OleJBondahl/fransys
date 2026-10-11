@@ -1,4 +1,4 @@
-"""The one reader of a unit's release facts (schema spec SC2, decision model-0087)."""
+"""The one reader of a unit's release facts (decision model-0087)."""
 
 from fransys_model.vocab.tables import unit_releases, units
 lazy from fransys_model.kernel import Id, Model

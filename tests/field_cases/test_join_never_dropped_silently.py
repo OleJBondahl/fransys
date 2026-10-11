@@ -8,7 +8,7 @@ stands a row lower than the other two. Its wire to the first lamp's pin turns ba
 channels as pins, ITEM-BOX; the shape needs only column ends.)
 
 The bug (cabinet page 4): the shifted member kept its references, with no wire and no finding.
-The rule (spec CONVENTIONS-V06 V6, decision layout-0099): a run whose ends cannot share a y is
+The rule (decision layout-0099): a run whose ends cannot share a y is
 aligned or gives `JOIN_UNALIGNED`, never neither.
 """
 

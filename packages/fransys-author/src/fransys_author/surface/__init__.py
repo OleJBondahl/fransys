@@ -1,6 +1,6 @@
-"""The engineer surface over the author engine (spec ENGINEER-API).
+"""The engineer surface over the author engine .
 
-Its names stay off `fransys_author.__all__` until the facade swap (EA-SWAP).
+Its names stay off `fransys_author.__all__` until the facade swap.
 """
 
 from fransys_author.handles import Terminal

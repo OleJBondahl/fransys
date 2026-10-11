@@ -1,4 +1,4 @@
-"""`COVER_OVERFLOW` (page-frame spec R11.6): the cover and the revision table may overlap.
+"""`COVER_OVERFLOW`: the cover and the revision table may overlap.
 
 The cover text and the revision-history table can be estimated to overlap.
 

@@ -1,4 +1,4 @@
-"""FC8 purity check (layout-redesign spec D8, layout-0096), a pure AST scan of `src`.
+"""FC8 purity check (layout-0096), a pure AST scan of `src`.
 
 Fails on (a) a parameter whose annotation is a mutable type at its top level, (b) `nonlocal`,
 (c) a module-level binding of a mutable value. The core takes a tree so the can-fail tests

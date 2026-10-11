@@ -1,4 +1,4 @@
-"""Where the vendored fonts live (spec P2)."""
+"""Where the vendored fonts live."""
 
 from importlib.resources import files
 from typing import TYPE_CHECKING, cast

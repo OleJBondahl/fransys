@@ -12,7 +12,7 @@ import dataclasses
 import importlib.util
 from pathlib import Path
 
-from fransys_layout.engines.schematic import engine, run_stages
+from fransys_layout.engines.schematic import _lint, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint import check_nowhere
 from fransys_layout.lint.codes import CONNECTION_NOT_DRAWN
@@ -49,15 +49,15 @@ def test_the_engine_reports_what_the_guard_finds(monkeypatch) -> None:
     """The wiring: a build's findings hold what `check_nowhere` returns for the run's layout.
 
     The guard is replaced in the engine by one that finds a sentinel net, so the assert holds
-    only if `_lint_findings` calls it and passes its result on (the `fr.write` refusal on ERROR
+    only if `lint_findings` calls it and passes its result on (the `fr.write` refusal on ERROR
     follows from that severity).
 
-    # UNDO: engines/schematic/engine.py, delete the `check_nowhere` call in `_lint_findings`
+    # UNDO: engines/schematic/_lint.py, delete the `check_nowhere` call in `lint_findings`
     """
     marker = Finding(
         code=CONNECTION_NOT_DRAWN, severity=Severity.ERROR, subjects=(), message="sentinel"
     )
-    monkeypatch.setattr(engine, "check_nowhere", lambda *_args, **_kwargs: (marker,))
+    monkeypatch.setattr(_lint, "check_nowhere", lambda *_args, **_kwargs: (marker,))
     result = _DRAW._build_nested_wire()
     assert marker in result.findings
 
@@ -82,20 +82,20 @@ def test_a_stubbed_conductor_is_drawn_by_its_stubs_and_nowhere_without_them() ->
 
 
 def test_the_engine_hands_the_guard_the_stubbed_conductors(monkeypatch) -> None:
-    """`_lint_findings` gives `check_nowhere` the conductors that end in stubs too: the one of
+    """`lint_findings` gives `check_nowhere` the conductors that end in stubs too: the one of
     the same build as above reaches it, ends `f.1` and `h.1`.
 
-    # UNDO: engines/schematic/engine.py, `_lint_findings` passes `connections` alone to
+    # UNDO: engines/schematic/_lint.py, `lint_findings` passes `connections` alone to
     #   `check_nowhere` (the crossing conductors are not in it)
     """
     given = []
-    real = engine.check_nowhere
+    real = _lint.check_nowhere
 
     def spy(layout, connections, *rest):
         given.append(connections)
         return real(layout, connections, *rest)
 
-    monkeypatch.setattr(engine, "check_nowhere", spy)
+    monkeypatch.setattr(_lint, "check_nowhere", spy)
     result = _DRAW._build_top_level_units(second_unit=False, same=True)
     ends = {_DRAW._pin_one(result.model, "f"), _DRAW._pin_one(result.model, "h")}
     (seen,) = given

@@ -1,4 +1,4 @@
-"""The designer's review metrics on the invented cabinet (deep dive F7, decision layout-0047).
+"""The review metrics on the invented cabinet (deep dive F7, decision layout-0047).
 
 All five metrics are findings: `OUT_OF_CONTENT_BOX` (texts outside), `WIRE_OVER_LABEL` and
 `TEXT_CROSSED_BY_ROUTE` (crossed texts), `LONE_CELL` and `CHAIN_BROKEN` (stranded cells, cut
@@ -102,7 +102,7 @@ def _review(findings: tuple[Finding, ...]) -> list[str]:
 
 _LINES_SEEN = (
     "layout-0158 F1: the harness-ink checks see the cabinet's W1 line; after F5 its label has no "
-    "place and its stub stands on lamp H1 (TEXT_OVERLAP, WIRE_OVER_LABEL), named for the designer"
+    "place and its stub stands on lamp H1 (TEXT_OVERLAP, WIRE_OVER_LABEL), named for the review"
 )
 
 

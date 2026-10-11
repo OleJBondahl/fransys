@@ -1,4 +1,4 @@
-"""Design map check (layout-redesign spec D7), pure AST and markdown parse.
+"""Design map check, pure AST and markdown parse.
 
 The tables in `docs/rules/*.md` map every public `stages` function to a rule and a test.
 A row has three cells: rule, backticked `dotted.module.func` names (first is the rule's

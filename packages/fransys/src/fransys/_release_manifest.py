@@ -1,4 +1,4 @@
-"""The release manifest (`baseline/manifest.json`, baseline spec L3): its fields and its text."""
+"""The release manifest (`baseline/manifest.json`): its fields and its text."""
 
 import hashlib
 import importlib.metadata
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab import Unit as ModelUnit
 
 # Every workspace package's own distribution name (root `pyproject.toml`'s `[tool.uv.workspace]
-# members`, confirmed): the manifest's `packages` list (baseline spec L3).
+# members`, confirmed): the manifest's `packages` list.
 _WORKSPACE_PACKAGES = (
     "fransys",
     "fransys-model",

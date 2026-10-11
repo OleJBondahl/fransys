@@ -1,4 +1,4 @@
-"""Fransys output: interactive system overview HTML (spec sections 4 and 6)."""
+"""Fransys output: interactive system overview HTML."""
 
 from .html import html
 

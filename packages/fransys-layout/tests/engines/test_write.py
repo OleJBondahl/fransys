@@ -182,7 +182,7 @@ _DRAWING_SET_KEY_PREFIX_LEN = 3  # ("layout", "schematic", "drawing_set")
 
 
 def test_a_plan_with_no_unit_gives_the_pre_units_drawing_set_key_byte_for_byte() -> None:
-    """Regression pin (units spec U1): `plan.unit=None` adds no key segment at all."""
+    """Regression pin: `plan.unit=None` adds no key segment at all."""
     _, _, out = _laid_out()
     (drawing_set,) = _table(out, "drawing_set").values()
     assert drawing_set.unit is None
@@ -190,7 +190,7 @@ def test_a_plan_with_no_unit_gives_the_pre_units_drawing_set_key_byte_for_byte()
 
 
 def test_two_units_at_one_location_give_two_drawing_sets_with_distinct_keys() -> None:
-    """Units spec U1: the "unit" tag segment keeps two units' drawing sets at one location
+    """The "unit" tag segment keeps two units' drawing sets at one location
     apart, and neither collides with the fixture's own `unit=None` drawing set there."""
     _, results, _ = _laid_out()
     plan = results.layout.pages[0]
@@ -274,7 +274,7 @@ def _placements_of(out: Model, function: Function) -> list:
 
 
 def test_a_boundary_replicas_placement_never_collides_with_its_homes() -> None:
-    """Units spec U1's black box: a boundary function drawn in its own unit's set (the home)
+    """A black box: a boundary function drawn in its own unit's set (the home)
     and again in the parent unit's set (the black box) gets two distinct `SymbolPlacement`
     ids and keys -- confirmed here, not assumed, because `replicate_boundaries` gives the
     replica no new `write/placements.py` handling of its own: it relies on the replica discriminator

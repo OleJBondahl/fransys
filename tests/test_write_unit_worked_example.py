@@ -1,4 +1,4 @@
-"""units spec U6: `fr.write(result, out_dir, unit=)` and `fr.document(...)`'s new subject
+"""`fr.write(result, out_dir, unit=)` and `fr.document(...)`'s new subject
 kinds, proven against the units worked example's real, facade-built geometry (STEP 5).
 
 Does not modify `test_units_worked_example.py`'s shared fixture functions
@@ -36,7 +36,7 @@ def _only_record(draft) -> ModelDocument:
     return record
 
 
-# The pump1 unit=write's exact expected file set (units spec U6's table, this fixture's real
+# The pump1 unit=write's exact expected file set (the table of this fixture's real
 # strips/boards/racks): its own cabinet document, the four whole-model-shaped CSVs (each
 # correctly scoped to pump1 alone), and pump1's own strip's terminal list. No overview.html
 # (a system view), no connectors-* (the board's connector belongs to the nested board unit,
@@ -52,7 +52,7 @@ _PUMP1_WRITE_FILES = frozenset(
     }
 )
 
-# The pump1 io-board unit's own write (units spec U6's table): its own PCB_SCHEMATIC
+# The pump1 io-board unit's own write (the table): its own PCB_SCHEMATIC
 # document, the four whole-model-shaped CSVs (scoped to the board alone), and the board
 # item's own connector list (`_subjects.boards`'s predicate -- a PLC-module parent -- the
 # board unit's `x1` connector, not a strip: no terminals-* file). No overview.html or
@@ -177,7 +177,7 @@ def test_write_unit_pump1_excludes_pump2s_own_terminal_list(pump1_cabinet_write)
 
 def test_write_unit_pump1_excludes_the_nested_boards_connector_list(pump1_cabinet_write):
     """The io-board's connector belongs to the board's own (nested) unit, not the cabinet's
-    (units spec U6: "each nested unit is a set of its own")."""
+    ("each nested unit is a set of its own")."""
     written = pump1_cabinet_write
     assert not any("connectors-" in p.name for p in written)
     assert "demo-io-board-v1.3.pdf" not in {p.name for p in written}
@@ -205,7 +205,7 @@ def test_write_unit_pump1_board_writes_exactly_its_own_file_set(built, tmp_path)
     assert {p.name for p in written} == _PUMP1_BOARD_WRITE_FILES
 
 
-# -- fr.document(...): one test per new subject kind (units spec U3) ---------------------------
+# -- fr.document(...): one test per new subject kind ---------------------------
 
 
 def test_document_subject_none_is_the_system_preset(tmp_path):

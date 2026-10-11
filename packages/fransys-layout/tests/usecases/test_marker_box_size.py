@@ -58,7 +58,9 @@ _EXPECTED_NARROW_LOCATION_CROSSING_COUNT = 0
 # decision layout-0089): every plain pair and star reference (REF or BRANCH) on this sheet
 # shares this one value, never measured from its own text.
 _FIXED_REFERENCE_WIDTH_G = 42
-_LINE_STUB_WIDTH_G = 43  # HL15-HL18: the OFF stub at the end of a leaving harness line
+# HL15-HL18: the OFF stub at the end of a leaving harness line; its text now lists every far
+# device with its place (STUB-POSITIONS), so the two narrow stubs measure 65 and 104 G
+_LINE_STUB_WIDTHS_G = {65, 104}
 
 
 def _crosses_location(model: Model, marker: LinkMarker) -> bool:
@@ -128,11 +130,11 @@ def test_the_location_prefix_and_width_checks_can_fail() -> None:
 
     assert _location_crossing_count(model) == _EXPECTED_NARROW_LOCATION_CROSSING_COUNT
     assert {_along(marker) for marker in pairs} == {_FIXED_REFERENCE_WIDTH_G}
-    # HL15-HL18 (layout-0154): a harness line leaving the page ends in an OFF line stub, 43 G
-    # long, not a reference; every other marker keeps the fixed reference width.
+    # HL15-HL18 (layout-0154): a harness line leaving the page ends in an OFF line stub,
+    # 65 and 104 G long, not a reference; every other marker keeps the fixed reference width.
     line_stubs = [m for m in markers.values() if "line_stub" in str(m.key)]
     assert len(line_stubs) == 2
-    assert {_along(marker) for marker in line_stubs} == {_LINE_STUB_WIDTH_G}
+    assert {_along(marker) for marker in line_stubs} == _LINE_STUB_WIDTHS_G
     assert {_along(m) for m in markers.values() if m not in line_stubs} == {
         _FIXED_REFERENCE_WIDTH_G
     }

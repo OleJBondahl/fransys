@@ -1,11 +1,11 @@
-"""render-0001, the empirical proof the orchestrator's correction (2026-09-22) demanded:
+"""render-0001, the empirical proof the correction (2026-09-22) demanded:
 does `_style.py`'s `.not-installed` descendant/attribute CSS actually override the
 toolkit's inline presentation attributes on Typst's own compiled SVG output (usvg/resvg),
 not just on a browser? Root tests are the one place `fransys_render`, `fransys_pdf`
-and `fransys_model` may all be imported (spec section 5's boundary table holds none of
+and `fransys_model` may all be imported (the import table holds none of
 these to import each other; mirrors `tests/test_marker_text_compiles_inside_box.py`'s
 render/pdf compiled-pixel pattern and
-`packages/fransys-pdf/tests/test_frame_compiled.py`'s PNG route).
+the `_png.py` helper route).
 
 Two `fuse` placements (`electrical-symbols/symbols/fuse.toml`) on one schematic page, far
 apart: one installed, one not. `fuse` has both a stroke-only element (the centre line) and
@@ -181,7 +181,7 @@ def _placement(key_part: str, *, function: Function, page: Page, x: int, y: int)
 
 def _document_and_page():
     """One COVER + one SCHEMATIC page (`remove` drops CABINET_SCHEMATIC's other pages, same
-    tuple `packages/fransys-pdf/tests/test_frame_compiled.py` uses for the same reason).
+    tuple the pdf package tests used for the same reason).
     """
     location = _location()
     project = _project()

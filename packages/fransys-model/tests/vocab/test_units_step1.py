@@ -1,6 +1,6 @@
-"""Units spec STEP 1: `Unit`, `Item.unit`, `Boundary`, `UnusedBoundary`, `UNIT_CYCLE`.
+"""Tests for `Unit`, `Item.unit`, `Boundary`, `UnusedBoundary`, `UNIT_CYCLE`.
 
-`docs/archive/specs/2026-09-22-units.md` U1, U3; `docs/decisions/model-0038-units.md`.
+`docs/decisions/model-0038-units.md`.
 """
 
 from plant import Plant

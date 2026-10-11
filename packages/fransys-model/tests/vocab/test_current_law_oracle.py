@@ -1,6 +1,6 @@
-"""RATINGS-2 acceptance 3g: the law is the oracle for `current_chains`.
+"""The law is the oracle for `current_chains`.
 
-The oracle below is written from the spec's text ("The outside", "The law"), not from the
+The oracle below is written from the rule's text ("The outside", "The law"), not from the
 implementation. A random drawing is a position MULTIgraph: at most eight nodes and a handful of
 positions between them (parallel positions and a position between two open ends allowed), some
 nodes flagged open. A position is a plain rated device (no limit, no source), a full-range
@@ -537,7 +537,7 @@ def stateful_drawings(draw: st.DrawFn) -> Drawing:
 # --- the properties ----------------------------------------------------------------------------
 
 _FIXED = {
-    # (a) the orchestrator's two open ends: + is node 0, - is node 1; source between + and -.
+    # (a) the two open ends: + is node 0, - is node 1; source between + and -.
     "two_open_ends": Drawing(
         (source(1, 4, 186), plain(4, 0), plain(0, 2), plain(0, 3)), frozenset({1, 2, 3})
     ),
@@ -765,12 +765,12 @@ def test_every_device_is_in_a_chain() -> None:
         assert {Plant.function_id(f"e{i}", "f") for i in range(len(drawing.positions))} <= seen
 
 
-# --- item states (spec C3 "Switch states", acceptance 3g's last sentences and 3i) -----------------
+# --- item states -----------------
 # Per consistent assignment of rest or operated to the (at most three) items, the oracle deletes
 # the positions open in that state, joins the nodes of the closed wires, and runs the same brute
 # force. A device's bound is the highest over the states in which it is present and has one.
 #
-# HELD items. The spec (C3 "Switch states") says: "an item whose links in the block all close in
+# HELD items. The rule ("Switch states") says: "an item whose links in the block all close in
 # one state (only make, or only break) is held in that state. Its other state has fewer real
 # loops, so this can only miss a finding, never invent one". A rated NO or NC contact, or an
 # unrated wire that closes in one state only, is such a link. So the law over ALL states is
@@ -938,7 +938,7 @@ def _capped_bounds(drawing: Drawing, cap: int) -> dict[int, Decimal | None]:
 def test_items_above_the_cap_are_held_at_rest_and_never_invent_a_bound(
     drawing: Drawing, cap: int
 ) -> None:
-    """Spec C3 "Switch states": the items above `MAX_ENUMERATED_ITEMS` are HELD AT REST (their
+    """The "Switch states" rule: the items above `MAX_ENUMERATED_ITEMS` are HELD AT REST (their
     rest links closed, their operated links open), the others enumerated, and every evaluated
     state is consistent. So with three stateful items and a cap of 1 or 2 no bound is above the
     law's highest over ALL consistent assignments, and a bound the code gives is the law's bound

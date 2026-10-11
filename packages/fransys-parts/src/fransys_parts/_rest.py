@@ -1,4 +1,4 @@
-"""Parts lints for the rest state of a switched link (spec F2).
+"""Parts lints for the rest state of a switched link.
 
 Codes: `SWITCHED_LINK_WITHOUT_REST`, `REST_ON_UNSWITCHED_LINK`, `REST_DISAGREES_WITH_KIND`,
 `CONTACT_WITHOUT_SWITCHED_LINK` and `SYMBOL_REST_MISMATCH`. The symbol table is static:

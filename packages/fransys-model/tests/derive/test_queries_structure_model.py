@@ -87,7 +87,7 @@ def test_board_netlist_ties_on_designation_fall_to_the_item_id() -> None:
 
 
 def test_board_netlist_relative_designations_drop_the_chain_up_to_the_board() -> None:
-    """`K1`, not `-A1-K1` (model-0040, spec B3's KiCad refinement): the board's own
+    """`K1`, not `-A1-K1` (model-0040): the board's own
     `item_designation` prefix is stripped from every part's, `board_designation` unchanged."""
     plant = Plant()
     board_part = _board_part(plant, "board")
@@ -582,7 +582,7 @@ def test_schematic_functions_includes_an_ordinary_function() -> None:
 
 
 def test_schematic_functions_includes_a_connector_on_a_board_item() -> None:
-    """A `CONNECTOR` function on the board item itself is drawn (model-0040, spec B1);
+    """A `CONNECTOR` function on the board item itself is drawn (model-0040);
     the board's other function stays excluded."""
     plant = Plant()
     board_part = plant.board_part()
@@ -599,7 +599,7 @@ def test_schematic_functions_includes_a_connector_on_a_board_item() -> None:
 
 def test_schematic_functions_includes_a_connector_two_levels_under_a_board_item() -> None:
     """The `CONNECTOR` exception applies through the whole ancestor chain, not only the
-    board item's own functions (model-0040, spec B1)."""
+    board item's own functions (model-0040)."""
     plant = Plant()
     board_part = plant.board_part()
     board = plant.item("board", part=board_part, designation="A1")
@@ -624,15 +624,15 @@ def test_schematic_functions_can_fail_a_terminal_on_a_board_item_stays_excluded(
     assert schematic_functions(model) == ()
 
 
-# -- schematic_functions and is_sole_unit_root (units spec U1's board-unit ruling, model-0041) --
+# -- schematic_functions and is_sole_unit_root (board-unit ruling, model-0041) --
 
 _BOARD_UNIT_FUNCTION_COUNT = 2  # the board's own edge connector plus the relay coil
 
 
 def test_schematic_functions_includes_a_board_functions_when_the_board_is_its_own_unit() -> None:
-    """A board that is the *sole* root item of its own `Unit` is a nested unit (units spec U1):
+    """A board that is the *sole* root item of its own `Unit` is a nested unit:
     its non-`CONNECTOR` function (the relay coil) is drawn, not excluded, in its own home set --
-    its `CONNECTOR` function was already drawn before this change (model-0040, spec B1)."""
+    its `CONNECTOR` function was already drawn before this change (model-0040)."""
     plant = Plant()
     board_part = plant.board_part()
     unit = plant.unit("io-board-unit")
@@ -696,7 +696,7 @@ def test_is_sole_unit_root_false_with_no_unit_at_all() -> None:
     assert is_sole_unit_root(model, item) is False
 
 
-# -- effective_placement (model-0040, spec B1's amendment) ------------------------------
+# -- effective_placement (model-0040) ------------------------------
 
 
 def test_effective_placement_reads_the_items_own_placement() -> None:

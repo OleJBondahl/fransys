@@ -5,7 +5,7 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
-from graphical_symbols import Direction
+from symdef import Direction
 
 from electrical_symbols import WIRING_GRID
 from fransys_model.derive import draws_as_line

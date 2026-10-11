@@ -4,8 +4,7 @@ The marker-facing derivation (D8, layout-0038) rests on one property: for every 
 `layout.link_marker`, exactly one port of the owning placement's oriented symbol lands
 on the marker's own recorded `(x, y)`. This is proven here, directly, over both goldens,
 because it is the foundation every later marker-drawing test builds on -- if this ever
-stops holding for a real placement, that is a stop-and-ask, not a fallback (orchestrator
-and designer ruling, 2026-09-22).
+stops holding for a real placement, that is a stop-and-ask, not a fallback (ruling, 2026-09-22).
 """
 
 import dataclasses

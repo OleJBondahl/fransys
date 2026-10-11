@@ -78,15 +78,6 @@ wheels = [
 ]
 
 [[package]]
-name = "deal"
-version = "4.24.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c1/da/76d4c3898ed8901116c8ad9dc1e5babd466e50289ce3808de55f72760d0f/deal-4.24.6.tar.gz", hash = "sha256:1cf4d4bbcb2e84767535e066d3888d2809662d7356dee420331380ff94210a1d", size = 723315, upload-time = "2025-11-30T10:55:43.765Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/4d/2a940ef9caa02bb3d6ca2a78ecbcaf158e98da972a54bc3fd8f29f7d86a9/deal-4.24.6-py3-none-any.whl", hash = "sha256:44afc0b11df6be5a4edd81409c7cd02ab0188ad9e90e93a71b4ef3d46d04c546", size = 204440, upload-time = "2025-11-30T10:55:40.954Z" },
-]
-
-[[package]]
 name = "deepmerge"
 version = "3.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -97,19 +88,19 @@ wheels = [
 
 [[package]]
 name = "demo-parts"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "examples/demo-parts" }
 
 [[package]]
 name = "electrical-symbols"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/electrical-symbols" }
 dependencies = [
-    { name = "graphical-symbols" },
+    { name = "symdef" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "graphical-symbols", git = "https://github.com/OleJBondahl/graphical-symbols?tag=v0.3.0" }]
+requires-dist = [{ name = "symdef", specifier = "==0.5.0" }]
 
 [[package]]
 name = "execnet"
@@ -122,7 +113,7 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys" }
 dependencies = [
     { name = "fransys-author" },
@@ -155,7 +146,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-author"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-author" }
 dependencies = [
     { name = "fransys-model" },
@@ -166,7 +157,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-kicad"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-kicad" }
 dependencies = [
     { name = "fransys-model" },
@@ -177,29 +168,29 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-layout"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-layout" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-model" },
-    { name = "graphical-symbols" },
+    { name = "symdef" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "graphical-symbols", git = "https://github.com/OleJBondahl/graphical-symbols?tag=v0.3.0" },
+    { name = "symdef", specifier = "==0.5.0" },
 ]
 
 [[package]]
 name = "fransys-model"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-overview"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-overview" }
 dependencies = [
     { name = "fransys-model" },
@@ -210,7 +201,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-parts"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-parts" }
 dependencies = [
     { name = "fransys-model" },
@@ -221,7 +212,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-pdf"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-pdf" }
 dependencies = [
     { name = "fransys-model" },
@@ -232,24 +223,24 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-render"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-render" }
 dependencies = [
     { name = "electrical-symbols" },
     { name = "fransys-model" },
-    { name = "graphical-symbols" },
+    { name = "symdef" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "graphical-symbols", git = "https://github.com/OleJBondahl/graphical-symbols?tag=v0.3.0" },
+    { name = "symdef", specifier = "==0.5.0" },
 ]
 
 [[package]]
 name = "fransys-reports"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-reports" }
 dependencies = [
     { name = "fransys-model" },
@@ -260,7 +251,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-wago"
-version = "0.13.5"
+version = "0.13.6"
 source = { editable = "packages/fransys-wago" }
 dependencies = [
     { name = "fransys-model" },
@@ -281,15 +272,16 @@ dev = [
     { name = "fransys" },
     { name = "fransys-layout" },
     { name = "fransys-model" },
-    { name = "graphical-symbols" },
     { name = "hypothesis" },
     { name = "pillow" },
     { name = "pypdfium2" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pytest-testmon" },
     { name = "pytest-xdist" },
     { name = "ruff" },
     { name = "rust-just" },
+    { name = "symdef" },
     { name = "ty" },
     { name = "typst" },
     { name = "vulture" },
@@ -307,28 +299,21 @@ dev = [
     { name = "fransys", editable = "packages/fransys" },
     { name = "fransys-layout", editable = "packages/fransys-layout" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "graphical-symbols", git = "https://github.com/OleJBondahl/graphical-symbols?tag=v0.3.0" },
     { name = "hypothesis", specifier = "==6.168.3" },
     { name = "pillow", specifier = "==12.3.0" },
     { name = "pypdfium2", specifier = "==5.14.0" },
     { name = "pytest", specifier = "==9.1.1" },
     { name = "pytest-cov", specifier = "==7.1.0" },
+    { name = "pytest-testmon", specifier = "==2.2.0" },
     { name = "pytest-xdist", specifier = "==3.8.0" },
     { name = "ruff", specifier = "==0.16.9" },
     { name = "rust-just", specifier = "==1.58.0" },
+    { name = "symdef", specifier = "==0.5.0" },
     { name = "ty", specifier = "==0.0.84" },
     { name = "typst", specifier = "==0.15.0" },
     { name = "vulture", specifier = "==2.16" },
 ]
 site = [{ name = "zensical", specifier = "==0.0.68" }]
-
-[[package]]
-name = "graphical-symbols"
-version = "0.3.0"
-source = { git = "https://github.com/OleJBondahl/graphical-symbols?tag=v0.3.0#f07beffa7c930c4251fe1382c82bae604eab9e64" }
-dependencies = [
-    { name = "deal" },
-]
 
 [[package]]
 name = "hypothesis"
@@ -589,6 +574,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-testmon"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "coverage" },
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4d/1d/3e4230cc67cd6205bbe03c3527500c0ccaf7f0c78b436537eac71590ee4a/pytest_testmon-2.2.0.tar.gz", hash = "sha256:01f488e955ed0e0049777bee598bf1f647dd524e06f544c31a24e68f8d775a51", size = 23108, upload-time = "2025-12-01T07:30:24.76Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/55/ebb3c2f59fb089f08d00f764830d35780fc4e4c41dffcadafa3264682b65/pytest_testmon-2.2.0-py3-none-any.whl", hash = "sha256:2604ca44a54d61a2e830d9ce828b41a837075e4ebc1f81b148add8e90d34815b", size = 25199, upload-time = "2025-12-01T07:30:23.623Z" },
+]
+
+[[package]]
 name = "pytest-xdist"
 version = "3.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -663,6 +661,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e8/c4/ba2f8066cceb6f23394729afe52f3bf7adec04bf9ed2c820b39e19299111/sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88", size = 30594, upload-time = "2021-05-16T22:03:42.897Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0", size = 29575, upload-time = "2021-05-16T22:03:41.177Z" },
+]
+
+[[package]]
+name = "symdef"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/74/2a0c7799655b5855d19a7734b6b3da5b729229a8af8c91601cdeebaa8aa8/symdef-0.5.0.tar.gz", hash = "sha256:f14367b5a7f44583f3c9bdcc27ae91b54505308dc2fc1715c2a0449debb6a548", size = 273577, upload-time = "2026-10-07T18:44:10.953Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/83/0aecfd56481cdfbb1507803f253ba2e5b9bf812f5e2c9d8d6ccfbdef18e9/symdef-0.5.0-py3-none-any.whl", hash = "sha256:644abb9fcc597be6a52a2efff7e3db1ade5b79a41f2155c88a27f17f86f4482e", size = 89038, upload-time = "2026-10-07T18:44:09.731Z" },
 ]
 
 [[package]]

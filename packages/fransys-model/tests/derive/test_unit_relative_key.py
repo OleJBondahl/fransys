@@ -66,7 +66,7 @@ def test_an_item_nested_under_a_board_inside_the_unit_still_drops_only_the_units
 
 
 def test_two_instances_of_one_release_give_the_same_key() -> None:
-    """FD2's own acceptance: "key for key" (units spec U7)."""
+    """FD2's own acceptance: "key for key"."""
     release = _release("shared-release")
     unit1 = _unit(("cab1",), release)
     unit2 = _unit(("cab2",), release)

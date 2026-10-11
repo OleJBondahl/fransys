@@ -3,7 +3,7 @@
 Refs: links.md 6.6.
 
 A cut belongs to the unit whose drawing draws the wire. A boundary function stands twice: at
-home, in its own unit's drawing set, and as a black box in its parent's (units spec U1); the black
+home, in its own unit's drawing set, and as a black box in its parent's; the black
 box draws the unit's interface, not its insides. So the earliest page of a function is not always
 the page its wire is drawn on (decision layout-0078).
 """

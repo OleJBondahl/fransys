@@ -1,13 +1,14 @@
 """Geometry layer: units, boxes, the symbol-library adapter and text metrics (geometry.md 5)."""
 
 from .boxes import Box, contains, hull, overlaps, pad, translate, union
-from .clear import first_clear, push_clear
+from .clear import first_clear, is_clear, push_clear
 from .errors import GeometryError, HintError, LayoutError, SymbolPortError, UnknownSymbolError
 from .exits import FACING_STEP, port_exit
 from .flow import flow
 from .follow import follow
 from .legs import legs
 from .meet import Span, boxes_meet, contains_point, meets
+from .runs import cut_runs
 from .symbols import (
     GENERIC_BOX_KEY,
     NORTH,
@@ -68,6 +69,7 @@ __all__ = (
     "boxes_meet",
     "contains",
     "contains_point",
+    "cut_runs",
     "default_order",
     "default_sides",
     "draw_order",
@@ -76,6 +78,7 @@ __all__ = (
     "follow",
     "generic_box_geometry",
     "hull",
+    "is_clear",
     "legs",
     "library_version",
     "meets",

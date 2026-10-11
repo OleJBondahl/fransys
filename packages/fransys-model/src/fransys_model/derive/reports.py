@@ -83,13 +83,13 @@ def _cores_by_cable(model: Model) -> frozendict[Id[Item], tuple[tuple[Conductor,
 
 
 def _require_unit(model: Model, unit: Id[Unit] | None) -> None:
-    """Refuse `unit` if it names no `Unit` of `model`; `None` is always fine (units spec U6)."""
+    """Refuse `unit` if it names no `Unit` of `model`; `None` is always fine."""
     if unit is not None:
         require(units_table(model).get(unit), "unit", unit)
 
 
 def _item_belongs(model: Model, item_id: Id[Item], unit: Id[Unit]) -> bool:
-    """Whether `item_id` is directly a member of `unit` (units spec U6): `item.unit == unit`.
+    """Whether `item_id` is directly a member of `unit`: `item.unit == unit`.
 
     Direct membership only, never `unit_subtree`: an item of a nested unit belongs to that
     nested unit alone, never to its ancestor.
@@ -116,7 +116,7 @@ def unit_boards(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:
 def _lowest_common_unit(model: Model, a: Id[Unit] | None, b: Id[Unit] | None) -> Id[Unit] | None:
     """The lowest unit whose subtree holds both `a` and `b`; `None` if either is `None`.
 
-    Either end with no unit at all means the conductor belongs to no unit (units spec U6).
+    Either end with no unit at all means the conductor belongs to no unit.
     """
     if a is None or b is None:
         return None
@@ -140,7 +140,7 @@ def _conductor_unit(model: Model, conductor: Conductor) -> Id[Unit] | None:
 
 
 def _conductor_belongs(model: Model, conductor: Conductor, unit: Id[Unit]) -> bool:
-    """Whether `conductor` belongs to `unit` (units spec U6): `_conductor_unit(...) == unit`."""
+    """Whether `conductor` belongs to `unit`: `_conductor_unit(...) == unit`."""
     return _conductor_unit(model, conductor) == unit
 
 

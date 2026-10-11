@@ -1,5 +1,6 @@
 """The shared stage lookups: each is the one home of a rule several stages used to copy."""
 
+import dataclasses
 from types import SimpleNamespace
 
 import pytest
@@ -35,6 +36,15 @@ def test_owner_of_maps_each_drawn_port_to_its_function():
     one = drawn(1)
     assert owner_of((one,)) == {port.port: one.function for port in one.ports}
     assert owner_of((one,))
+
+
+def test_a_port_drawn_by_its_function_and_by_its_pin_cell_is_owned_by_the_function():
+    # UNDO: stages/lookups.py, `owner_of`: the `owner.get(...) == port.port` test -> `True`
+    whole = drawn(1)
+    port = whole.ports[0]
+    cell = dataclasses.replace(drawn(2), function=port.port, ports=(port,))
+    for order in ((whole, cell), (cell, whole)):
+        assert owner_of(order)[port.port] == whole.function
 
 
 def test_placed_keepout_is_the_keepout_moved_by_the_origin():

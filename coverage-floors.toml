@@ -1,5 +1,5 @@
 # Fixed at 95.0 per package (decision 0048): a high industry-standard bar, set once and never
-# raised. No ratchet, no `cov-raise`; a lower floor needs a designer ruling in its own commit.
+# raised. No ratchet, no `cov-raise`; a lower floor needs a ruling in its own commit.
 electrical_symbols = 95.0
 fransys = 95.0
 fransys_author = 95.0

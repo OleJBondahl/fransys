@@ -1,10 +1,10 @@
-"""The two root fixtures' `Design`s, not yet built (spec F9).
+"""The two root fixtures' `Design`s, not yet built.
 
 A module of its own, not part of `conftest.py`: every `packages/*/tests/` directory in this
 workspace has its own `conftest.py`, none of them a Python package (no `__init__.py`), so
 the bare name `conftest` is ambiguous workspace-wide -- whichever one Python happens to
 import first wins the module cache, and `from conftest import ...` elsewhere silently
-resolves to the wrong file. `test_facade_swap.py` (spec F9) needs to build each fixture's
+resolves to the wrong file. `test_facade_swap.py` needs to build each fixture's
 `Design` twice in one test run (by hand and through `fr.build`), so these live under a name
 that is not ambiguous.
 """

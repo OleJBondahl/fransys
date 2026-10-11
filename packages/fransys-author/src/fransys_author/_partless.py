@@ -1,4 +1,4 @@
-"""The records of a part-less external item (PATCH-0132 E2, E3): no template on any."""
+"""The records of a part-less external item: no template on any."""
 
 from fransys_author._keys import scoped
 from fransys_author.errors import AuthorError

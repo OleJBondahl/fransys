@@ -1,6 +1,6 @@
 """HL11: a middle unit's no-line interfaces, today's pin replicas, inside its outline at an edge.
 
-Designer's P3 condition 3: no D11 frame for a middle unit; its replicas stand on the outline's
+P3 condition 3: no D11 frame for a middle unit; its replicas stand on the outline's
 edges that HL13's step 2 gives them, after that edge's boxes.
 """
 

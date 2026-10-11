@@ -1,4 +1,4 @@
-"""WP14 tests: what the numbering pass assigns, keeps and reports (design/derive.md)."""
+"""What the numbering pass assigns, keeps and reports."""
 
 import dataclasses
 import re
@@ -124,7 +124,7 @@ def test_each_class_code_has_its_own_counter() -> None:
 
 
 def test_a_multi_letter_class_code_has_its_own_counter_from_a_single_letter_one() -> None:
-    """`Q`, `Q` and `QA` in one group give `Q1`, `Q2` and `QA1` (designation codes spec C3)."""
+    """`Q`, `Q` and `QA` in one group give `Q1`, `Q2` and `QA1` (designation codes)."""
     plant = Plant()
     q = plant.part("Q")
     qa = plant.part("QA")
@@ -234,7 +234,7 @@ def test_terminals_are_never_numbered_and_do_not_use_up_a_number() -> None:
 
 def test_g11_an_unnumbered_child_of_a_tagged_partless_container_avoids_its_tag() -> None:
     """A part-less container's authored `U1` and its unnumbered `U`-class child's own group
-    collide -- gracefully (designer 2026-09-23, G11): the child is numbered `U2`, not `U1`,
+    collide -- gracefully (2026-09-23, G11): the child is numbered `U2`, not `U1`,
     and no finding fires.
 
     Can-fail (grouping alone reverted to `(item.unit, item.parent)`): the child's own group
@@ -357,7 +357,7 @@ def test_two_authored_duplicates_are_one_error_each_and_are_kept() -> None:
 
     Both items also share `unit=None` and print the same bare, unplaced text `-K1`, so
     `PRODUCT_DESIGNATION_DUPLICATE` fires too, alongside the two `DESIGNATION_DUPLICATE`
-    findings (spec `2026-09-23-designation-codes.md` C3b's amendment): unplaced items with
+    findings (amended): unplaced items with
     one designation in one unit instance print alike.
     """
     plant = Plant()
@@ -380,7 +380,7 @@ def test_two_authored_duplicates_are_one_error_each_and_are_kept() -> None:
 
 def test_three_duplicates_are_three_findings() -> None:
     """One `DESIGNATION_DUPLICATE` per colliding item, plus one `PRODUCT_DESIGNATION_DUPLICATE`
-    for the one bare, unplaced, same-unit group all three share (spec amendment)."""
+    for the one bare, unplaced, same-unit group all three share."""
     plant = Plant()
     for key in ("a", "b", "c"):
         plant.item(key, designation="F1")
@@ -388,7 +388,7 @@ def test_three_duplicates_are_three_findings() -> None:
 
 
 def test_the_same_designation_under_different_parents_is_no_duplicate() -> None:
-    """A board's `F1` and the cabinet's `F1` (design/examples.md 11)."""
+    """A board's `F1` and the cabinet's `F1`."""
     plant = Plant()
     board, cabinet = plant.item("board", part=plant.board_part()), plant.item("cabinet")
     plant.item("board-f", parent=board, designation="F1")
@@ -398,8 +398,7 @@ def test_the_same_designation_under_different_parents_is_no_duplicate() -> None:
 
 def test_a_duplicate_is_found_across_class_codes_as_a_whole_string() -> None:
     """Whatever the parts say, `K1` twice is twice: 2 `DESIGNATION_DUPLICATE`, plus 1
-    `PRODUCT_DESIGNATION_DUPLICATE` for the shared bare, unplaced, same-unit text (spec
-    amendment)."""
+    `PRODUCT_DESIGNATION_DUPLICATE` for the shared bare, unplaced, same-unit text."""
     plant = Plant()
     plant.item("a", part=plant.part("K"), designation="K1")
     plant.item("b", part=plant.part("F"), designation="K1")
@@ -573,8 +572,7 @@ def test_product_designation_duplicate_for_one_location_two_function_aspects() -
 
 def test_product_designation_duplicate_for_two_unplaced_items_in_one_unit_instance() -> None:
     """Two authored `-K1`s, no `LOCATION` placement, both in the SAME unit instance: they
-    print the same bare text there, so `PRODUCT_DESIGNATION_DUPLICATE` fires (spec
-    `2026-09-23-designation-codes.md` C3b's amendment)."""
+    print the same bare text there, so `PRODUCT_DESIGNATION_DUPLICATE` fires."""
     plant = Plant()
     unit = plant.unit("cab")
     item_a = plant.item("k1-a", designation="K1", unit=unit)
@@ -588,7 +586,7 @@ def test_product_designation_duplicate_for_two_unplaced_items_in_one_unit_instan
 
 def test_no_product_designation_duplicate_across_two_unit_instances() -> None:
     """The same two authored `-K1`s, no `LOCATION` placement, but each in a DIFFERENT unit
-    instance: two instances of one unit number alike on purpose (units spec U7), so no
+    instance: two instances of one unit number alike on purpose, so no
     finding fires."""
     plant = Plant()
     unit_a = plant.unit("cab-a")
@@ -604,10 +602,10 @@ def test_no_product_designation_duplicate_across_two_unit_instances() -> None:
 
 def test_harness_end_ambiguous_for_a_cable_between_two_unplaced_unit_instances() -> None:
     """Two unit instances' unplaced `X1` strips print the same bare text `"-X1"` -- fine on
-    their own, no `PRODUCT_DESIGNATION_DUPLICATE` (units spec U7,
-    `test_no_product_designation_duplicate_across_two_unit_instances` above) -- but a
+    their own, no `PRODUCT_DESIGNATION_DUPLICATE`
+    (`test_no_product_designation_duplicate_across_two_unit_instances` above) -- but a
     top-level cable that joins them draws two identically-titled ends in one picture:
-    `HARNESS_END_AMBIGUOUS` (designer ruling 2026-09-24), subjects the cable and both strips."""
+    `HARNESS_END_AMBIGUOUS` (ruling 2026-09-24), subjects the cable and both strips."""
     plant = Plant()
     unit_a = plant.unit("cab-a")
     unit_b = plant.unit("cab-b")
@@ -776,7 +774,7 @@ def test_findings_are_sorted_across_parents_not_grouped_by_them() -> None:
     item. None is placed in the location aspect, so none is compared by
     `PRODUCT_DESIGNATION_DUPLICATE`'s location-wide branch, but all 8 share `unit=None` and
     the same bare, unplaced text `-K1`, so they fall into one `by_unit_text` group and add
-    one more `PRODUCT_DESIGNATION_DUPLICATE` (spec amendment) -- 9 findings, not 8.
+    one more `PRODUCT_DESIGNATION_DUPLICATE` -- 9 findings, not 8.
     """
     plant = Plant()
     parents = [plant.item(f"p{n}") for n in range(4)]
@@ -806,8 +804,7 @@ def test_numbering_does_not_depend_on_the_order_of_a_models_tables() -> None:
     """Tables backwards: the same designations and the same findings.
 
     `dup-a`/`dup-b` collide on `DESIGNATION_DUPLICATE` (2 findings) and, sharing `unit=None`
-    and the bare, unplaced text `-Z9`, on `PRODUCT_DESIGNATION_DUPLICATE` too (1 more, spec
-    amendment): 3 findings.
+    and the bare, unplaced text `-Z9`, on `PRODUCT_DESIGNATION_DUPLICATE` too (1 more): 3 findings.
     """
     plant = _busy(None)
     for key in ("dup-a", "dup-b"):

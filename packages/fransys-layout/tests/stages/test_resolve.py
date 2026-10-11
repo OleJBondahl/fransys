@@ -125,14 +125,14 @@ def _with_part(spec):
 
 
 def test_a_function_with_no_part_and_no_symbol_is_a_box_without_a_finding() -> None:
-    """PATCH-0132 E4: a part-less box is its intended drawing, so `SYMBOL_DEFAULTED` skips it."""
+    """A part-less box is its intended drawing, so `SYMBOL_DEFAULTED` skips it."""
     drawn, findings = resolve((function_spec(1, kind="generic"),), rules=RULES, choices=())
     assert drawn[0].geometry.key == GENERIC_BOX_KEY
     assert findings == ()
 
 
 def test_the_default_terminal_rule_binds_a_lone_external_port_to_the_south_side() -> None:
-    """PATCH-0132 E4: T2.21 carries `external` to `s`, for a terminal with no part."""
+    """The default terminal rule carries `external` to `s`, for a terminal with no part."""
     spec = function_spec(1, kind="terminal")
     lone = dataclasses.replace(spec, ports=(dataclasses.replace(spec.ports[0], name="external"),))
     drawn, findings = resolve((lone,), rules=DEFAULT_RULES, choices=())

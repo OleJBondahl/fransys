@@ -1,4 +1,4 @@
-"""Document drafts: preset, subject, cover and notes text (spec F7)."""
+"""Document drafts: preset, subject, cover and notes text."""
 
 from typing import Any
 lazy from pathlib import Path

@@ -399,7 +399,7 @@ def _fit_row(
         for cell in lanes:
             cell.geometry = _without_tag(cell.geometry)
     # C8(b): the keep-out grows over the labels' measured boxes (a tag-less lane's tag
-    # stays out); the designer: a tag's keep-out is its measured text, not the fixed slot
+    # stays out); a tag's keep-out is its measured text, not the fixed slot
     for cell in row:
         boxes = [
             box

@@ -1,5 +1,5 @@
 """`check`: `MARKDOWN_UNSUPPORTED`, `DOCUMENT_MIXED_SHEET_FORMATS`, `DOCUMENT_NO_DRAWINGS`,
-`DOCUMENT_EMPTY_LIST` (spec P4, P6, P7, P8, P9, P11), `TITLE_BLOCK_NO_ROOM` (page-frame R6) and
+`DOCUMENT_EMPTY_LIST`, `TITLE_BLOCK_NO_ROOM` (page-frame R6) and
 `DOCUMENT_NO_TOP_LEVEL_CABLES` (STEP 4b addition, decision pdf-0006).
 """
 
@@ -36,7 +36,7 @@ from fransys_model.vocab import DocumentPreset, PageKind, SignalType
 _PRESET = DocumentPreset.CABINET_SCHEMATIC
 K = PageKind
 # Trims a `CABINET_SCHEMATIC` document to COVER (+NOTES): no SCHEMATIC or list page, so `check`
-# has nothing new to report beyond what a test itself sets up (spec P7, P9, P11).
+# has nothing new to report beyond what a test itself sets up.
 _NO_SCHEMATIC_OR_LISTS = (K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM)
 
 
@@ -163,7 +163,7 @@ def test_mixed_sheet_formats_names_the_house_default_when_a_page_names_no_format
 
 
 def test_no_drawings_for_a_pcb_schematic_document_with_no_drawing_set():
-    """A `pcb_schematic` board has no drawing-set engine yet (spec P7): always `No drawings.`."""
+    """A `pcb_schematic` board has no drawing-set engine yet: always `No drawings.`."""
     board_part = part("boarditem", description="Invented board")
     board = item("jb1", description="Invented board", part=board_part.id)
     pcb = pcb_facet("boarditem", subject=board_part.id)
@@ -192,7 +192,7 @@ def test_no_drawings_for_a_harness_with_no_cable():
 
 
 def test_no_top_level_cables_for_a_system_document_over_a_model_with_no_cable():
-    """Units spec U3's amended "cable drawings" bullet (STEP 4b addition, decision pdf-0006):
+    """The "cable drawings" bullet (decision pdf-0006):
     a `system` document over a model with no top-level cable at all gives its cable-drawings
     section no page (`test_source.py`'s own proof) and one `DOCUMENT_NO_TOP_LEVEL_CABLES`
     INFO -- never `DOCUMENT_NO_DRAWINGS`'s ERROR, which stays for a harness document naming a
@@ -209,8 +209,8 @@ def test_no_top_level_cables_for_a_system_document_over_a_model_with_no_cable():
 
 
 def test_no_top_level_cables_finding_is_absent_once_a_top_level_cable_exists():
-    """The clean twin: one top-level cable in the model (`unit=None`, harness or not, units
-    spec U3's own "harness cables included") clears the INFO -- `harness_cables_for`'s
+    """The clean twin: one top-level cable in the model (`unit=None`, harness or not,
+    "harness cables included") clears the INFO -- `harness_cables_for`'s
     `SYSTEM` branch (`derive.top_level_cables`) finds it, so the section has something to
     draw."""
     cable_part = part("w1", description="Cable one part")

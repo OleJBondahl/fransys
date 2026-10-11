@@ -1,6 +1,6 @@
 """P3 (layout-0154): harness lines, leaving lines and middle units, built through `fr`.
 
-The study board (acceptance 17, 18, Part 2a's 6) and the designer's P3 conditions: a unit whose
+The study board (acceptance 17, 18, Part 2a's 6) and the P3 conditions: a unit whose
 only line leaves is a middle unit (1), a line between two top-level units leaves at both ends
 (2), a middle unit draws one outline and no D11 frame (3). One stub per leaving line (C1).
 """

@@ -9,6 +9,11 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
 
+def is_clear(box: Box, blockers: Iterable[Box]) -> bool:
+    """Whether `box` overlaps none of `blockers`."""
+    return not any(overlaps(box, blocker) for blocker in blockers)
+
+
 def first_clear[C](
     candidates: Iterable[C],
     *,

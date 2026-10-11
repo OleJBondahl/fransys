@@ -1,4 +1,4 @@
-"""Determinism: the authored date, never the clock (spec P3)."""
+"""Determinism: the authored date, never the clock."""
 
 from _build import document, location, model, project, revision_entry
 from fransys_pdf._geometry import document_metadata

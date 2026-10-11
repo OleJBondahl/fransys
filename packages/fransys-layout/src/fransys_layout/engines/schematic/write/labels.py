@@ -59,9 +59,6 @@ def labels(
     stamp: str,
 ) -> list[Label]:
     """One `Label` per placed label: its subject, kind and slot and the box's top-left corner."""
-    owner_of = {
-        port.port: function.function for function in results.drawn for port in function.ports
-    }
     records = []
     for label in results.layout.labels:
         kind = ModelLabelKind[label.kind.name]
@@ -69,7 +66,7 @@ def labels(
         real, pin = None, None  # bound on every path; only a function label sets them
         if marking:
             tail = keys.port[label.subject]
-            extra = discriminator[owner_of[label.subject], label.drawing_set, label.page]
+            extra = discriminator[label.function or label.subject, label.drawing_set, label.page]
         else:
             real, pin = real_function(keys, label.subject)
             tail = keys.function[real]

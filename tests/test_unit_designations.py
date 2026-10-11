@@ -94,7 +94,7 @@ def test_a_units_own_bom_and_terminal_rows_leave_out_its_root() -> None:
 
 
 def test_a_top_level_cables_end_plug_in_a_units_location_leaves_that_location_own() -> None:
-    """W3 (designer's refinement of R2): a cable crosses locations by nature, so a top-level
+    """W3 (refinement of R2): a cable crosses locations by nature, so a top-level
     harness whose plug is placed at the cabinet's `+C1` (mated to the cabinet's boundary
     connector) never un-owns `+C1`: the cabinet's own set still prints "+C1".
     Can-fail, checked by hand: count cable and harness items in `own_nodes` again and "C1"
@@ -129,7 +129,7 @@ def test_a_top_level_cables_end_plug_in_a_units_location_leaves_that_location_ow
 
 
 def test_a_mate_outside_the_unit_reads_as_it_does_outside_it_in_the_units_connector_list() -> None:
-    """W3 (designer's ruling), reconciled with model-0054 section 4 in the SYNC2 merge: R2
+    """W3 (ruling), reconciled with model-0054 section 4 in the SYNC2 merge: R2
     applies only to items inside the unit. The board's header X1 mates the cabinet harness plug
     P1, outside the board unit. In the board unit's own connector list X1 reads unit-relative
     ("-X1", not "-U1-X1"). The mate reads as it did in W3 only in the whole model's list: an

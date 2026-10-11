@@ -1,4 +1,4 @@
-"""`Design` and `Scope`: the builder, no global state (spec A1, A9); `fr.build` merges `parts`."""
+"""`Design` and `Scope`: the builder, no global state; `fr.build` merges `parts`."""
 
 import dataclasses
 import itertools
@@ -86,7 +86,7 @@ _SYMBOL_CHOICE_FIELDS = {f.name for f in dataclasses.fields(SymbolChoice)}
 def _required_and_defaults(
     cls: type[DataclassInstance], *, exclude: set[str]
 ) -> tuple[tuple[str, ...], dict[str, Any]]:
-    """The tunable fields of a record `cls` (spec A-r4): its required and its defaulted fields."""
+    """The tunable fields of a record `cls`: its required and its defaulted fields."""
     required: list[str] = []
     defaults: dict[str, Any] = {}
     for field_ in dataclasses.fields(cls):
@@ -114,7 +114,7 @@ class _Identity:
 
 
 def _identity(name: str | None, tag: str | None) -> _Identity:
-    """Resolve `name=`/`tag=` into the key segment and the designation (spec A3)."""
+    """Resolve `name=`/`tag=` into the key segment and the designation."""
     if name is not None:
         return _Identity(name=name, tag=tag)
     if tag is not None:
@@ -136,28 +136,20 @@ def _as_function(value: Fn | Item | Terminal) -> Fn:
     raise TypeError(msg)
 
 
-def _with_unit(records: tuple[Record, ...], unit: Id[ModelUnit] | None) -> tuple[Record, ...]:
-    """Stamp `unit` onto the `Item` record `instantiate()` made (U6, `author-0002`)."""
-    if unit is None:
-        return records
+def _stamped(
+    records: tuple[Record, ...], *, unit: Id[ModelUnit] | None, external: bool
+) -> tuple[Record, ...]:
+    """Stamp `unit` and `external` onto the `Item` record `instantiate()` made."""
     return tuple(
-        dataclasses.replace(record, unit=unit) if isinstance(record, ModelItem) else record
-        for record in records
-    )
-
-
-def _with_external(records: tuple[Record, ...], *, external: bool) -> tuple[Record, ...]:
-    """Stamp `external=True` onto the `Item` record only, as `_with_unit` does (spec Y1)."""
-    if not external:
-        return records
-    return tuple(
-        dataclasses.replace(record, external=True) if isinstance(record, ModelItem) else record
+        dataclasses.replace(record, unit=unit, external=external)
+        if isinstance(record, ModelItem)
+        else record
         for record in records
     )
 
 
 class Scope(LinkScope, SupplyScope):
-    """A design-like object whose keys start with its own prefix (spec A9).
+    """A design-like object whose keys start with its own prefix.
 
     `d.scope("p1", at=c1, group=g1)` returns one, for a reusable unit: a plain Python
     function taking a `Scope` and its own options. `at`/`group` are this scope's
@@ -188,38 +180,40 @@ class Scope(LinkScope, SupplyScope):
     # -- structure --------------------------------------------------------------
 
     def location(self, name: str, description: str = "", outer: Location | None = None) -> Location:
-        """A `+` aspect node (spec A2).
+        """A `+` aspect node.
 
-        Nests under `outer`, else under the scope's own `at` node when it has one (units spec
-        U6): a location a unit creates hangs under the location the unit was instantiated at
-        (`+ER+C1-K1`). A `Design` has no `at`, so a script's top-level locations stay at
-        the root, as before.
+        Nests under `outer`, else under the scope's own `at` node when it has one: a location a
+        unit creates hangs under the location the unit was instantiated at (`+ER+C1-K1`). A
+        `Design` has no `at`, so a script's top-level locations stay at the root, as before.
         """
-        key = scoped(self._prefix, "location", name)
-        node = AspectNode(
-            id=make_id(AspectNode, key),
-            key=key,
-            aspect=Aspect.LOCATION,
-            parent=at.id if (at := outer or self._at) else None,
-            label=name,
-            description=description,
-        )
-        self._design._add(node, caller_origin())
-        return Location(id=node.id, key=key)
+        parent = at.id if (at := outer or self._at) else None
+        node = self._aspect_node("location", Aspect.LOCATION, name, description, parent)
+        return Location(id=node.id, key=node.key)
 
     def group(self, name: str, description: str = "") -> Group:
-        """A `=` aspect node: a functional group (spec A2)."""
-        key = scoped(self._prefix, "group", name)
+        """A `=` aspect node: a functional group."""
+        node = self._aspect_node("group", Aspect.FUNCTION, name, description, None)
+        return Group(id=node.id, key=node.key)
+
+    def _aspect_node(
+        self,
+        kind: str,
+        aspect: Aspect,
+        name: str,
+        description: str,
+        parent: Id[AspectNode] | None,
+    ) -> AspectNode:
+        key = scoped(self._prefix, kind, name)
         node = AspectNode(
             id=make_id(AspectNode, key),
             key=key,
-            aspect=Aspect.FUNCTION,
-            parent=None,
+            aspect=aspect,
+            parent=parent,
             label=name,
             description=description,
         )
         self._design._add(node, caller_origin())
-        return Group(id=node.id, key=key)
+        return node
 
     def scope(self, name: str, *, at: Location | None = None, group: Group | None = None) -> Scope:
         """A nested scope; every key it writes starts with this scope's prefix plus `name`."""
@@ -287,7 +281,7 @@ class Scope(LinkScope, SupplyScope):
             release=release,
         )
 
-    def revision(  # noqa: PLR0913 -- the revision's own seven fields (units spec U4)
+    def revision(  # noqa: PLR0913 -- the revision's own seven fields
         self,
         revision: int,
         *,
@@ -298,7 +292,7 @@ class Scope(LinkScope, SupplyScope):
         approved: str = "",
         version: int | None = None,
     ) -> None:
-        """Write one `Revision` history entry for this scope's own unit release (units spec U4).
+        """Write one `Revision` history entry for this scope's own unit release.
 
         `version=None` is the release's own version. The key is scoped to the release, not to
         this scope's prefix, so every instance of one release writes identical records, which
@@ -356,10 +350,10 @@ class Scope(LinkScope, SupplyScope):
 
     @property
     def unit_id(self) -> Id[ModelUnit] | None:
-        """This scope's own unit, or `None` (units spec U6: "the scope's `unit` attribute").
+        """This scope's own unit, or `None`.
 
         Named `unit_id`, not `unit`: that name is already `Scope.unit(...)`, the method that
-        creates a *nested* unit scope (implementer's own choice, orchestrator-approved).
+        creates a *nested* unit scope (approved).
         """
         return self._unit
 
@@ -371,7 +365,7 @@ class Scope(LinkScope, SupplyScope):
         operating: Operating | None = None,
         name: str | None = None,
     ) -> None:
-        """Mark `target` part of this scope's unit's interface (spec U6, U3).
+        """Mark `target` part of this scope's unit's interface.
 
         `target` is an `Fn`, or a handle whose item has exactly one `TERMINAL` or
         `CONNECTOR` function (the rule `d.mate` already uses for items). `rating` and
@@ -402,7 +396,7 @@ class Scope(LinkScope, SupplyScope):
             self._design._add(facet, origin)
 
     def operating(self, mpn: str | tuple[str, str], function: str) -> Operating | None:
-        """The operating envelope of function template `function` of part `mpn` (spec Q6).
+        """The operating envelope of function template `function` of part `mpn`.
 
         `mpn` resolves as `item()` does. `function` is the function template's name in the part
         file. A read: it adds nothing to the draft, and it needs no unit.
@@ -418,7 +412,7 @@ class Scope(LinkScope, SupplyScope):
         return catalogue.operating(catalogue.find(mpn), function)
 
     def rating(self, mpn: str | tuple[str, str], function: str | None = None) -> Rating | None:
-        """The rating of part `mpn`, or of its function template `function` (spec Q6, Q1).
+        """The rating of part `mpn`, or of its function template `function`.
 
         `mpn` resolves as `item()` does. With no `function` this is the part's own `Rating`.
         With one it is that function's rating: the template's, else the part's, replaced whole
@@ -436,7 +430,7 @@ class Scope(LinkScope, SupplyScope):
         return catalogue.rating(catalogue.find(mpn), function)
 
     def unused(self, target: Fn | Item | Terminal) -> None:
-        """Declare `target` a boundary function left unconnected on purpose (spec U6).
+        """Declare `target` a boundary function left unconnected on purpose.
 
         `target` follows the same rule as `boundary()`.
 
@@ -464,9 +458,9 @@ class Scope(LinkScope, SupplyScope):
         installed: bool = True,
         external: bool = False,
     ) -> Item:
-        """One physical thing (spec A2-A5): a part instance, or part-less with `mpn=None`.
+        """One physical thing: a part instance, or part-less with `mpn=None`.
 
-        `external=True` marks it supplied and owned by someone else (external spec Y1).
+        `external=True` marks it supplied and owned by someone else.
         """
         ident = _identity(name, tag)
         key = scoped(self._prefix, ident.name)
@@ -499,8 +493,7 @@ class Scope(LinkScope, SupplyScope):
                 description=description,
                 installed=installed,
             )
-            stamped = _with_unit(stamped, self._unit)
-            stamped = _with_external(stamped, external=external)
+            stamped = _stamped(stamped, unit=self._unit, external=external)
             self._design._extend(stamped, origin)
             handle = _item_from_stamped(key, stamped, self._design)
         self._place_and_group(handle, at=at, group=group, origin=origin)
@@ -515,10 +508,10 @@ class Scope(LinkScope, SupplyScope):
         external: bool = False,
         description: str = "",
     ) -> Strip:
-        """A part-less terminal strip (spec A5, A7).
+        """A part-less terminal strip.
 
         `external=True` flags the strip alone; its terminals are external through the
-        parent chain (external spec Y1). `description` prints at the strip's list heading.
+        parent chain. `description` prints at the strip's list heading.
         """
         ident = _identity(name, tag)
         key = scoped(self._prefix, ident.name)
@@ -535,7 +528,7 @@ class Scope(LinkScope, SupplyScope):
             external=external,
         )
         self._design._add(record, origin)
-        self._place_at(record.id, key, at=at, origin=origin)
+        self._place(record.id, key, at=at, default=self._at, origin=origin)
         return Strip(self._design, record.id, key, self._unit)
 
     def cable(  # noqa: PLR0913 -- identity, placement and the cable's own build facts
@@ -550,9 +543,9 @@ class Scope(LinkScope, SupplyScope):
         parent: Item | None = None,
         external: bool = False,
     ) -> Cable:
-        """A cable item (spec A6): `cable.core(index, a, b)` reads colour from the part.
+        """A cable item: `cable.core(index, a, b)` reads colour from the part.
 
-        `external=True` flags the cable's item; its conductors carry no flag (external spec Y2).
+        `external=True` flags the cable's item; its conductors carry no flag.
         """
         ident = _identity(name, tag)
         key = scoped(self._prefix, ident.name)
@@ -560,14 +553,8 @@ class Scope(LinkScope, SupplyScope):
         part = self._design._catalogue.find(mpn)
         bundle = self._design._catalogue.bundle(part)
         parent_id = parent.id if parent is not None else None
-        stamped = instantiate(
-            bundle,
-            key,
-            tag=ident.tag,
-            parent=parent_id,
-        )
-        stamped = _with_unit(stamped, self._unit)
-        stamped = _with_external(stamped, external=external)
+        stamped = instantiate(bundle, key, tag=ident.tag, parent=parent_id)
+        stamped = _stamped(stamped, unit=self._unit, external=external)
         self._design._extend(stamped, origin)
         handle = _item_from_stamped(key, stamped, self._design)
         facet_key = scoped(key, "cable_facet")
@@ -589,11 +576,11 @@ class Scope(LinkScope, SupplyScope):
         group: Group | None = None,
         external: bool = False,
     ) -> Item:
-        """A harness item (spec A6, model decision 0026): a part-less `d.item(...)`.
+        """A harness item: a part-less `d.item(...)`.
 
-        `external=True` is passed to `item` (external spec Y1).
+        `external=True` is passed to `item`.
 
-        `tag` is required (spec H2's amendment, decision author-0003): a part-less harness
+        `tag` is required: a part-less harness
         gets no class letter from numbering, so an untagged harness would never gain a
         designation, and `derive.item_designation` now refuses to render one of its
         members instead of silently rendering it flat (model-0043's amendment).
@@ -603,7 +590,7 @@ class Scope(LinkScope, SupplyScope):
     # -- connectivity --------------------------------------------------------------
 
     def wiring(self, *, colour: str, gauge: str | Decimal, label: str | None = None) -> Wiring:
-        """A wire maker with defaults (spec A6)."""
+        """A wire maker with defaults."""
         return Wiring(
             self._design,
             self._prefix,
@@ -615,7 +602,7 @@ class Scope(LinkScope, SupplyScope):
     def net(
         self, name: str, *ports: Port, cls: str = "control", potential: str | None = None
     ) -> None:
-        """A declared `Net` (spec A6)."""
+        """A declared `Net`."""
         net_class = member(NetClass, cls, field="net class")
         key = scoped(self._prefix, "net", name)
         record = Net(
@@ -629,7 +616,7 @@ class Scope(LinkScope, SupplyScope):
         self._design._add(record, caller_origin())
 
     def mate(self, a: Fn | Item, b: Fn | Item) -> None:
-        """Two CONNECTOR or TERMINAL functions plugged together (spec A6); others are refused."""
+        """Two CONNECTOR or TERMINAL functions plugged together; others are refused."""
         fn_a, fn_b = _as_function(a), _as_function(b)
         ends = sorted_pair(fn_a.key, fn_b.key)
         key = scoped(self._prefix, "mate", spliced(ends[0]), spliced(ends[1]))
@@ -637,7 +624,7 @@ class Scope(LinkScope, SupplyScope):
         self._design._add(record, caller_origin())
 
     def bridge(self, *terminals: Terminal) -> None:
-        """A `jumper` conductor between each consecutive pair of `terminals` (spec T1, author-0004).
+        """A `jumper` conductor between each consecutive pair of `terminals`.
 
         At least two terminals, all children of one strip, none repeated. Each jumper sits
         on its pair's `internal` ports, carries no `wire` facet and no label. The jumper's
@@ -692,7 +679,7 @@ class Scope(LinkScope, SupplyScope):
     # -- layout hints --------------------------------------------------------------
 
     def chain(self, *functions: Fn | Item | Terminal) -> None:
-        """One series chain of functions, source first (spec A8)."""
+        """One series chain of functions, source first."""
         resolved = [_as_function(function) for function in functions]
         entries = tuple(
             ChainEntry(function=fn.id, index=index) for index, fn in enumerate(resolved)
@@ -702,7 +689,7 @@ class Scope(LinkScope, SupplyScope):
         self._design._add(record, caller_origin())
 
     def keep_together(self, *groups: Group) -> None:
-        """Put these `=` groups on one page when they fit (spec A8)."""
+        """Put these `=` groups on one page when they fit."""
         ordered = sorted(groups, key=lambda group: group.id)
         key = scoped(self._prefix, "keep_together", *(spliced(group.key) for group in ordered))
         record = KeepTogether(
@@ -711,13 +698,13 @@ class Scope(LinkScope, SupplyScope):
         self._design._add(record, caller_origin())
 
     def break_before(self, group: Group) -> None:
-        """Start a new page before this `=` group (spec A8)."""
+        """Start a new page before this `=` group."""
         key = scoped(group.key, "break_before")
         record = BreakBefore(id=make_id(BreakBefore, key), key=key, group=group.id)
         self._design._add(record, caller_origin())
 
     def order(self, *groups: Group) -> None:
-        """Draw each neighbour pair of `groups` in order (spec A8): one `order_hint` each."""
+        """Draw each neighbour pair of `groups` in order: one `order_hint` each."""
         if len(groups) < _MINIMUM_ORDER_GROUPS:
             msg = f"d.order needs at least {_MINIMUM_ORDER_GROUPS} groups, got {len(groups)}"
             raise AuthorError(msg)
@@ -735,7 +722,7 @@ class Scope(LinkScope, SupplyScope):
         symbol: str,
         port_map: dict[str, str] | None = None,
     ) -> None:
-        """The library symbol for a function, every function of an item, or a whole kind (spec A8).
+        """The library symbol for a function, every function of an item, or a whole kind.
 
         An item lowers to one `layout.symbol_choice` per function of the item: the model
         has no "by part" selector this package exposes, since that could not tell one
@@ -800,7 +787,7 @@ class Scope(LinkScope, SupplyScope):
         self._design._add(record, origin)
 
     def draw_in(self, function: Fn, group: Group) -> None:
-        """Draw `function` with `group`, whatever its item's own `=` placement says (spec A8).
+        """Draw `function` with `group`, whatever its item's own `=` placement says.
 
         The only way to hint a group: the straddling case (a function of one item drawn
         in another group), never a default and never written for every function of an
@@ -835,21 +822,16 @@ class Scope(LinkScope, SupplyScope):
             )
             self._design._add(placement, origin)
 
-    def _place_at(
-        self, item_id: Id[ModelItem], key: AuthoringKey, *, at: Location | None, origin: Origin
-    ) -> None:
-        self._place(item_id, key, at=at, default=self._at, origin=origin)
-
     def _place_and_group(
         self, item: Item, *, at: Location | None, group: Group | None, origin: Origin
     ) -> None:
-        """`group=` is a placement at the `=` node (spec A8), exactly like `at=` at `+`."""
+        """`group=` is a placement at the `=` node, exactly like `at=` at `+`."""
         self._place(item.id, item.key, at=at, default=self._at, origin=origin)
         self._place(item.id, item.key, at=group, default=self._group, origin=origin)
 
 
 class Design(Scope):
-    """The builder: holds the draft being written and the part catalogue (spec A1)."""
+    """The builder: holds the draft being written and the part catalogue."""
 
     __slots__ = ("_assumed_version", "_catalogue", "_draft", "_project_version")
 
@@ -861,7 +843,7 @@ class Design(Scope):
         self._assumed_version = False
         super().__init__(self, ())
 
-    def project(  # noqa: PLR0913 -- the title-block facts, spec's own project() shape
+    def project(  # noqa: PLR0913 -- the title-block facts, project()'s own shape
         self,
         *,
         title: str,
@@ -876,7 +858,7 @@ class Design(Scope):
 
         `revision` is an int from 1 (the record refuses less) and names the current history
         entry; its date is that entry's (`revision(..., date=...)`). `notice` is the title
-        block's IP notice cell text (spec page-frame R11.4); the default `""` fills an empty
+        block's IP notice cell text; the default `""` fills an empty
         cell. `version` is the project's release version; `revision(...)` without `version=`
         writes entries of it.
 
@@ -918,7 +900,7 @@ class Design(Scope):
         approved: str = "",
         version: int | None = None,
     ) -> None:
-        """Write one `Revision` history entry for the project (units spec U4: `release=None`).
+        """Write one `Revision` history entry for the project (`release=None`).
 
         Unlike `Scope.revision`, a bare `Design` has no release (the project's own history, the
         valid case), so no guard. `version=None` is the project's version (`d.project(version=)`),
@@ -942,7 +924,7 @@ class Design(Scope):
         )
 
     def sheet(self, name: str, **numbers: int | Decimal) -> Id[ModelSheetFormat]:
-        """A `layout.sheet_format` (spec A8, A-r4).
+        """A `layout.sheet_format`.
 
         Raises:
             AuthorError: `numbers` is missing one of the sheet's fields, or names one
@@ -957,7 +939,7 @@ class Design(Scope):
     def profile(
         self, *, sheet: Id[ModelSheetFormat] | None = None, **numbers: int | frozendict[str, int]
     ) -> None:
-        """A `layout.profile` (spec A8, A-r4); at most one per model.
+        """A `layout.profile`; at most one per model.
 
         Every field not given keeps its house value; a field given replaces it whole (a
         rank map is never merged). `sheet=None` is the house sheet.

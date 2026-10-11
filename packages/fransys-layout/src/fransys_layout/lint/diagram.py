@@ -2,7 +2,7 @@
 
 from itertools import combinations, pairwise
 
-from fransys_layout.geometry import Box, Point, overlaps
+from fransys_layout.geometry import Box, Point, contains_point, overlaps
 from fransys_layout.stages.space import crosses, run_of
 from fransys_model.kernel import Finding, Severity
 
@@ -53,9 +53,8 @@ def check_line_through_box(scene: Scene) -> tuple[Finding, ...]:
 
 
 def _on_outline(point: Point, rect: Box) -> bool:
-    inside = rect.x <= point.x <= rect.x + rect.width and rect.y <= point.y <= rect.y + rect.height
     interior = rect.x < point.x < rect.x + rect.width and rect.y < point.y < rect.y + rect.height
-    return inside and not interior
+    return contains_point(rect, point.x, point.y) and not interior
 
 
 def _ends_on(point: Point, box: Ident, scene: Scene) -> bool:

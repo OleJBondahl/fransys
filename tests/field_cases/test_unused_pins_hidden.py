@@ -4,8 +4,8 @@ The engineering shape: a power supply with a DC-OK signal contact that nobody wi
 input module with four channels of which the fourth is a spare. Both are drawn as boxes.
 
 The bug (v0.5.0 look): the supply's box carried the idle contact's two pins and the module's
-box one pin per channel, so a page showed pins that lead nowhere. The rule (spec CONVENTIONS-V06
-V1, `d.profile(hide_unused_pins=True)`): with the switch on, a box leaves out its pins and its
+box one pin per channel, so a page showed pins that lead nowhere. The rule
+(`d.profile(hide_unused_pins=True)`): with the switch on, a box leaves out its pins and its
 functions without a conductor; every list keeps them, and with it off nothing changes.
 """
 

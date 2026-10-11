@@ -1,6 +1,6 @@
 """UNIT-ID I1, I4, I6 (model half): a unit's own title and number, and its own root's silence.
 
-`docs/archive/specs/2026-09-25-unit-own-identity.md`. The fixture is a cabinet (`+C1`, two root
+The fixture is a cabinet (`+C1`, two root
 parts) that places a relay interface board `-U2` (a real board, `PcbFacet`) holding one relay `-K1`.
 """
 

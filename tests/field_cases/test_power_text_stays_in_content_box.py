@@ -9,7 +9,7 @@ The bug: the bar's text was placed with no content box, so the first free candid
 the bar, at x = -8, across the drawing frame's left border. The page shift then moved the whole
 page 8 units right, which left the text flush on the border instead of clear of it.
 
-The rule (spec P3, S18; the owner's predefined text positions, best wins, 2026-09-25): a text
+The rule (the owner's predefined text positions, best wins, 2026-09-25): a text
 candidate that crosses the content box is never chosen. The fix passes the page's content box
 to the power texts' space (work order TEXT-IN-FRAME).
 

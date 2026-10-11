@@ -2,7 +2,7 @@
 
 Private to `middle_fold`. A cut group draws its outline only on the page of its lower band (T2,
 T3). T4 (the lower columns that pass the bottom standing beside the outline) is held out of 0.13.5
-(designer R3); the fallback's own order rebuilds it.
+(R3); the fallback's own order rebuilds it.
 """
 
 from dataclasses import replace

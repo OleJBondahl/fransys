@@ -6,7 +6,7 @@ on the same two rails and motors whose earth pins sit on a PE net. Every pin is 
 rail's hub, so on a plant this size a page of pins is cut from its hub and each cut end, today,
 is a reference box with a `#n` digit, and the rails run as horizontal bands.
 
-The rule (decisions model-0117, layout-0094, render-0005; spec LD4, LD8, D5): an end that would be
+The rule (decisions model-0117, layout-0094, render-0005): an end that would be
 a reference on a DC supply's rail takes a symbol instead: a bar for a rail above or below 0 V,
 the ground symbol for 0 V, protective earth for a PE net. Only the bar prints a text, the net's
 name (else the potential); ground and PE print none. The symbol continues its pin's direction,
@@ -179,7 +179,7 @@ def test_each_cut_24v_end_is_a_bar_and_each_cut_0v_end_a_ground(main) -> None:
         {"power-supply": 12, "ground": 6, "protective-earth": 3}
     )  # the PSU's 0 V and the last lamp's 0 V are a fallen-back join, two grounds (D5, step 6)
     # 12 bars, not 11: the fixture declares T1's AC side (MAINS on L1 and N), so T1:+ no longer
-    # shares a wire with P4:1 and each gets its own bar (D5, designer's ruling of 2026-10-02)
+    # shares a wire with P4:1 and each gets its own bar (D5, ruling of 2026-10-02)
     # one symbol per port and page, never two at a pin
     assert len({(one.port, one.page) for one in _symbols(model)}) == len(_symbols(model))
     # the fixture spans three sheets of schematic

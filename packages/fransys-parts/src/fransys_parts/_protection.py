@@ -33,7 +33,7 @@ def check_protection_links(entry: _toml.Table, path: str, line: int) -> list[Fin
     ]
 
 
-# A symbol that is one protection type's; a symbol not in it is not checked (spec F3).
+# A symbol that is one protection type's; a symbol not in it is not checked.
 _SYMBOL_TYPE = {"fuse": "fuse", "circuit-breaker": "mcb"}
 
 

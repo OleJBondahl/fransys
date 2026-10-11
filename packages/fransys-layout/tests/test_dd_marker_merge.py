@@ -1,4 +1,4 @@
-"""D9 (designer ruling F7): a reference and an off stub on one port are ONE marker, one record.
+"""D9 (ruling F7): a reference and an off stub on one port are ONE marker, one record.
 
 The two-location cabinet draws a star reference and a stub to the other location on the same port
 of `-X2:1`. Before F7 the engine drew both, the stub one box further out, and the lower marker's

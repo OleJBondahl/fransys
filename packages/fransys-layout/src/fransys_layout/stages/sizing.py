@@ -7,7 +7,7 @@ lazy from collections.abc import Mapping
 from fransys_layout.geometry import hull
 
 from ._labelling import slot_box
-from .lookups import placed_keepout
+from .lookups import owner_of, placed_keepout
 from .room import grow_keepout
 from .types import ColumnWidth, DrawnFunction, LabelKind
 
@@ -22,14 +22,14 @@ def label_boxes(
     drawn: tuple[DrawnFunction, ...], requests: tuple[LabelRequest, ...], profile: Profile
 ) -> dict[Handle, list[tuple[str, Box]]]:
     """C8(b): per function, its TAG and MARKING labels' preferred boxes, as (slot, box)."""
-    owner = {port.port: one.function for one in drawn for port in one.ports}
+    owner = owner_of(drawn)
     geometry = {one.function: one.geometry for one in drawn}
     found: dict[Any, list[tuple[str, Box]]] = {}
     for request in requests:
         if request.kind is LabelKind.TAG:
             function, slot_name = request.subject, "tag"
         elif request.kind is LabelKind.MARKING:
-            function, slot_name = owner.get(request.subject), request.slot
+            function, slot_name = request.function or owner.get(request.subject), request.slot
         else:
             continue
         slot = (

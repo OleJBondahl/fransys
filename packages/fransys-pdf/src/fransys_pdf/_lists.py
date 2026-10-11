@@ -1,4 +1,4 @@
-"""The six list/BOM pages: tables over model-wide or per-subject derive rows (spec P9).
+"""The six list/BOM pages: tables over model-wide or per-subject derive rows.
 
 The header tuples, the terminal ends labels and the cell text are `fransys_model.derive`'s
 own (`derive.rows`), the same objects `fransys_reports.csv` prints from: a root test pins
@@ -70,7 +70,7 @@ if TYPE_CHECKING:
 
 
 def _humanise(field: str) -> str:
-    """`field` as a table header: underscores to spaces, first letter upper-cased (spec P9)."""
+    """`field` as a table header: underscores to spaces, first letter upper-cased."""
     spaced = field.rstrip("_").replace("_", " ")
     return spaced[0].upper() + spaced[1:]
 
@@ -128,7 +128,7 @@ def plc_channel_rows_for(model: Model, record: Document) -> tuple[PlcChannelRow,
 
 
 def plc_list_page(model: Model, record: Document) -> str:
-    """The PLC_LIST table: every PLC channel, scoped to the document's unit (spec P9, U6)."""
+    """The PLC_LIST table: every PLC channel, scoped to the document's unit."""
     return _table(
         PLC_COLUMNS,
         column_rows(plc_channel_rows_for(model, record), PLC_COLUMNS),
@@ -181,7 +181,7 @@ def designation_list_page(model: Model, record: Document) -> str:
 
 
 def cable_list_page(model: Model) -> str:
-    """The CABLE_LIST table: one row per top-level cable, model-wide (units spec U3)."""
+    """The CABLE_LIST table: one row per top-level cable, model-wide."""
     return _table(
         CABLE_LIST_COLUMNS,
         column_rows(cable_list_rows(model), CABLE_LIST_COLUMNS),
@@ -202,7 +202,7 @@ def _bom_scope(
 
 
 def bom_page(model: Model, record: Document) -> str:
-    """The BOM table, scoped by `_bom_scope` (spec P9, units spec U5)."""
+    """The BOM table, scoped by `_bom_scope`."""
     return _table(
         BOM_COLUMNS,
         column_rows(bom_lines(model, scope=_bom_scope(model, record)), BOM_COLUMNS),
@@ -266,12 +266,12 @@ def _side_headings(model: Model, strip: Id[Item]) -> tuple[str, str]:
     return TERMINAL_LABELS["internal_ends"], TERMINAL_LABELS["external_ends"]
 
 
-# -- the Bridge column (spec T2, pdf-0007) --------------------------------------------------
+# -- the Bridge column (pdf-0007) --------------------------------------------------
 
 _TERMINAL_DATA = TERMINAL_COLUMNS[:-1]  # designation, group, index, internal_ends, external_ends
 _TERMINAL_SIDES = ("internal_ends", "external_ends")  # both unbounded text: `1fr` each (pdf-0008)
-_BRIDGE_COLUMN_WIDTH_MM = 15  # spec T2 amendment: fixed column width
-_BRIDGE_LANE_GAP_MM = 3  # spec T2 amendment: lanes centred in the column, this far apart
+_BRIDGE_COLUMN_WIDTH_MM = 15  # fixed column width
+_BRIDGE_LANE_GAP_MM = 3  # lanes centred in the column, this far apart
 _BRIDGE_TICK_HALF_WIDTH_MM = 1
 _BRIDGE_STROKE = "0.5pt"
 
@@ -286,7 +286,7 @@ class _BridgeMark:
 
 
 def _bridge_spans(groups: tuple[int | None, ...]) -> dict[int, tuple[int, int]]:
-    """Each jumper group's (first, last) row index in `groups`, 0-based (spec T2)."""
+    """Each jumper group's (first, last) row index in `groups`, 0-based."""
     first: dict[int, int] = {}
     last: dict[int, int] = {}
     for index, group in enumerate(groups):

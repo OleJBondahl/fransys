@@ -90,7 +90,7 @@ class DrawingSet:
     """One drawing set: the pages drawn for one location, by default one per top-level `+` node.
 
     `location=None` is the drawing set of everything without a location; a model with no
-    unit gets `unit=None` throughout (units spec U1). `number` orders the drawing sets.
+    unit gets `unit=None` throughout. `number` orders the drawing sets.
     """
 
     id: Id[DrawingSet]
@@ -316,7 +316,7 @@ class LinkMarker:
 
 @record(kind="layout.outline")
 class Outline:
-    """The dash-dot boundary of one unit instance's black box on one page (units spec U1).
+    """The dash-dot boundary of one unit instance's black box on one page.
 
     `x`, `y` is the rectangle's top-left corner, `width`/`height` its size, in G. Layout
     works it out from the black-box members' bodies and measured labels; render draws it

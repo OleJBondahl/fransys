@@ -12,3 +12,5 @@ dist/
 claude-tools/
 .fransys/
 .superpowers/
+.env*
+.hypothesis/

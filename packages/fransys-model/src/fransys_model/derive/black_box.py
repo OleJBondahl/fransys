@@ -1,4 +1,4 @@
-"""Black-box content (units spec U1): a boundary replica, one item or a whole drawing set.
+"""Black-box content: a boundary replica, one item or a whole drawing set.
 
 Shared by `fransys_render`'s own outline reader and `fransys_pdf`'s replica-only
 check, since neither output package may import the other (DESIGN 4).

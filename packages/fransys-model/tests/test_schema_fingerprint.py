@@ -146,7 +146,7 @@ def _fingerprint() -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-_PINNED_FINGERPRINT = "c1c20e59d88101550b0b7e9890962cd4f0052c55eff207f11cc0ba66bca38db2"
+_PINNED_FINGERPRINT = "b69a3633b7cbcf14744879b5524f2ea09c5a9e8c4537a78314e57f644d63a38d"
 
 
 def test_schema_fingerprint_matches_the_pinned_value() -> None:

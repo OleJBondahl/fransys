@@ -20,6 +20,7 @@ from fransys_layout.geometry import box_port_name
 from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
 from fransys_layout.stages.resolve import _symbol_for, choice_index, throw_port
+from fransys_layout.stages.slices import by_key
 from fransys_layout.stages.types import MatedFunctions
 from fransys_model.derive import enclosing_boards, is_sole_unit_root
 from fransys_model.derive.designation import port_designation
@@ -71,9 +72,7 @@ def item_views(
     table = {(rule.kind, rule.category, rule.gender): rule for rule in DEFAULT_RULES}
     index = choice_index(choices)
     first_choice = {function: found[0] for function, found in index.by_function.items()}
-    by_item: dict[Id[Any], list[FunctionSpec]] = defaultdict(list)
-    for spec in specs:
-        by_item[spec.item].append(spec)
+    by_item = by_key(specs, lambda spec: spec.item)
     found: list[FunctionSpec] = []
     view_of: dict[Id[Any], Id[Any]] = {}
     view_choices: list[SymbolChoice] = []
@@ -255,7 +254,7 @@ def repin(ref: PortRef, pin_of: Mapping[Id[Any], Id[Any]]) -> PortRef:
 
 
 def pin_mates(model: Model, pin_of: Mapping[Id[Any], Id[Any]]) -> tuple[MatedFunctions, ...]:
-    """R7 A: each mate's equal-named pins, upper (plug) side first (mated-pair spec J3)."""
+    """R7 A: each mate's equal-named pins, upper (plug) side first."""
     pins: dict[Id[Any], dict[str, Id[Any]]] = defaultdict(dict)
     for port, function in pin_of.items():
         pins[function][ports_table(model)[port].name] = port

@@ -52,7 +52,7 @@ A rung written in a front end lowers to ordinary connectivity plus a `layout.cha
 
 ## Dependencies and prerequisites
 
-Runtime dependencies are `fransys-model` and `electrical-symbols`, both workspace members, and `graphical-symbols`, pinned by an exact git tag to its own repository (root decision 0015). No solver and no graph library. Python 3.15, because the model needs the builtin `frozendict`.
+Runtime dependencies are `fransys-model` and `electrical-symbols`, both workspace members, and `symdef`, pinned by an exact PyPI version (root decisions 0015 and 0128). No solver and no graph library. Python 3.15, because the model needs the builtin `frozendict`.
 
 Every outside prerequisite of WP1 to WP19 is met. The list is in the archived roadmap.
 

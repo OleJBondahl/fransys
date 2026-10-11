@@ -1,4 +1,4 @@
-"""Diff of the conductor, mate and net sections (baseline spec M1)."""
+"""Diff of the conductor, mate and net sections."""
 
 from typing import cast
 

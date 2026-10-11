@@ -5,7 +5,7 @@ status = "unverified"
 reference = { standard = "IEC 60617", number = "contact-male" }
 
 # one contact per pole; the mating face is the south edge, geometry and not a port
-# (mated-pair spec J1): a mate makes equal pin names conductive, no conductor crosses it
+# A mate makes equal pin names conductive, no conductor crosses it
 ports = [
   { id = "in", at = [0, -2], dir = "N", description = "wire side" },
 ]

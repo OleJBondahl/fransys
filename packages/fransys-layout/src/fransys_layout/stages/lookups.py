@@ -42,8 +42,17 @@ def placed_of(placed: Iterable[PlacedFunction], caller: str) -> dict[Handle, Pla
 
 
 def owner_of(drawn: Iterable[DrawnFunction]) -> dict[Handle, Handle]:
-    """Every drawn port's owning function."""
-    return {port.port: function.function for function in drawn for port in function.ports}
+    """Every drawn port's owning function.
+
+    A boundary port drawn as a pin view in the parent (model-0188) is also a port of its own
+    function, drawn on the unit's pages: the function owns it, the pin view only itself.
+    """
+    owner: dict[Handle, Handle] = {}
+    for function in drawn:
+        for port in function.ports:
+            if owner.get(port.port, port.port) == port.port:
+                owner[port.port] = function.function
+    return owner
 
 
 def placed_keepout(one: PlacedFunction) -> Box:

@@ -1,4 +1,4 @@
-"""Cable ends are product designations and cable tags carry their sign (designer ruling 2026-09-24).
+"""Cable ends are product designations and cable tags carry their sign (ruling 2026-09-24).
 
 Every `HarnessEnd.designation` is `product_designation` (a strip, a plug and a plain device alike);
 `cable_list_rows`' `from_label`/`to_label` are those very values; a cable's own tag reads `"-W1"`

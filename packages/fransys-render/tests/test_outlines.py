@@ -1,4 +1,4 @@
-"""Unit boundaries: one dash-dot outline per `layout.outline` record (units spec U1, I2a).
+"""Unit boundaries: one dash-dot outline per `layout.outline` record.
 
 Layout owns the rectangle and the title label; render draws the record as it is.
 """
@@ -101,7 +101,7 @@ def _unit(key_part, *, name, revision, parent=None, title=""):
 
 def _pin(key_part, designation, *, unit=None):
     """A bare item/function/port, one pin (mirrors `test_markers.py:_pin`); `unit` is the
-    item's own unit membership (units spec U1), `None` by default.
+    item's own unit membership, `None` by default.
     """
     item_key = ("item", key_part)
     item = Item(

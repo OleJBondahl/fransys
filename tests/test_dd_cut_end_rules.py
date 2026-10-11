@@ -1,4 +1,4 @@
-"""CUT-END rules 2 and 3 (designer ruling 2026-09-25): which pages a severed wire's cut uses.
+"""CUT-END rules 2 and 3 (ruling 2026-09-25): which pages a severed wire's cut uses.
 
 Rule 2: when no one unit holds both ends' own pages but some unit holds a page of each end
 (two units' boundary functions wired to each other, meeting in their parent's drawing set, or
@@ -170,7 +170,7 @@ def test_two_units_boundary_functions_wired_in_their_parent_get_a_marker_pair_th
 
 
 def test_two_top_level_units_boundary_functions_wired_get_a_stub_each() -> None:
-    """Rules 1 and 2 of BOUNDARY-DRAW (layout-0080, units spec U2). Two top-level units' boundary
+    """Rules 1 and 2 of BOUNDARY-DRAW (layout-0080). Two top-level units' boundary
     functions wired to each other at the top level: the wire leaves each unit's set, so each
     pin gets an OFF stub in its own unit's set naming the far pin, and no error, no owner/user
     marker pair stands anywhere."""

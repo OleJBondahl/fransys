@@ -1,7 +1,7 @@
-"""Shared synthetic fixtures (spec section 10). Built only from examples/demo-parts.
+"""Shared synthetic fixtures. Built only from examples/demo-parts.
 
 Each fixture authors through `fransys_author`, then merges, freezes, numbers, allocates
-PLC and lays out through `fr.build(...)` (facade spec F9): the facade's acceptance, the
+PLC and lays out through `fr.build(...)`: the facade's acceptance, the
 proof that `build` is the real pipeline. Root tests may import every workspace package.
 """
 
@@ -89,3 +89,22 @@ def demo_cabinet_document(tmp_path: Path) -> BuildResult:
     )
     document_draft = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
     return fr.build(parts, design.draft(), document_draft)
+
+
+HEAVY_MODULES = ("test_scale_call_counts.py", "test_render_scale_counts.py")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Put each scale-count module at the start of its own xdist worker slice (AW15).
+
+    Each module holds a worker for a `build_scale(16)`. xdist gives worker k the k-th slice of
+    `len(items) // workers` tests and runs it in order. Order only; the rest keep theirs.
+    """
+    workers = getattr(config, "workerinput", {}).get("workercount", 1)
+    names = [Path(str(item.path)).name for item in items]
+    groups = [[i for i, n in zip(items, names, strict=True) if n == m] for m in HEAVY_MODULES]
+    rest = [i for i, n in zip(items, names, strict=True) if n not in HEAVY_MODULES]
+    step = len(items) // workers if workers > 1 else 0
+    for k in range(len(groups)):
+        rest[k * step : k * step] = groups[k]
+    items[:] = rest

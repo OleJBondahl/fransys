@@ -1,4 +1,4 @@
-"""Vendored fonts: Liberation Serif 2.1.5, four faces plus its licence (spec P2)."""
+"""Vendored fonts: Liberation Serif 2.1.5, four faces plus its licence."""
 
 from fransys_pdf import font_dir
 

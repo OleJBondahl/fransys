@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.write.keys import PREFIX
+from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.texts.power import power_places
 from fransys_model.kernel import make_id
 from fransys_model.layout import PowerSymbol
@@ -35,12 +36,10 @@ def power_symbols(
     stamp: str,
 ) -> list[PowerSymbol]:
     """One `PowerSymbol` per power port and page, keyed by the port and its placement."""
-    owner_of = {
-        port.port: function.function for function in results.drawn for port in function.ports
-    }
+    owner = owner_of(results.drawn)
     records = []
     for one in power_places(results.layout.markers):
-        where = discriminator[owner_of[one.port], one.drawing_set, one.page]
+        where = discriminator[owner[one.port], one.drawing_set, one.page]
         key = (*PREFIX, "power_symbol", *keys.port[one.port], *where)
         records.append(
             PowerSymbol(

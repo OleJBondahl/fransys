@@ -1,6 +1,6 @@
 """Read one part-file TOML file: parse it, and find the line of every table header.
 
-`tomllib` gives no line numbers (spec P6): this module scans a file's text once for its
+`tomllib` gives no line numbers: this module scans a file's text once for its
 own table headers (`[part]`, `[[function]]`, `[function.connector]`, `[[supply]]` and so
 on) and records the line each one starts on, so the rest of the package can attribute one
 line to every record without writing a TOML parser. It is a header scan, not a TOML
@@ -54,7 +54,7 @@ def location(path: str, line: int, text: str) -> str:
 def finding(
     code: str, path: str, line: int, text: str, *, severity: Severity = Severity.ERROR
 ) -> Finding:
-    """One `Finding` with no subjects; the message carries `path` and `line` (spec P6)."""
+    """One `Finding` with no subjects; the message carries `path` and `line`."""
     return Finding(code=code, severity=severity, subjects=(), message=location(path, line, text))
 
 
@@ -93,7 +93,7 @@ def _copy(value: Any) -> Any:  # noqa: ANN401 - a TOML value is a dict, list, st
 
 
 def value_findings(data: dict[str, Any], rel: str, origins: dict[TablePath, int]) -> list[Finding]:
-    """`FLOAT_FORBIDDEN` and `MULTILINE_STRING` over every parsed value (spec P6, P8)."""
+    """`FLOAT_FORBIDDEN` and `MULTILINE_STRING` over every parsed value."""
     findings: list[Finding] = []
     for key, value in data.items():
         if type(value) is list and (key, 0) in origins:

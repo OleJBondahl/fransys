@@ -13,7 +13,9 @@ under 1 s each, `examples.md`'s included (it builds a document but keeps its des
 """
 
 import ast
+import importlib
 import re
+import sys
 from importlib.resources import files
 
 # The fixed twelve guide pages (CG2's own list), by filename stem; `AGENTS.md` is not one of
@@ -43,7 +45,7 @@ GUIDE_PAGES = (
 _FIRST_PARTY_NOT_FRANSYS = frozenset(
     {
         "fransys_model",
-        "graphical_symbols",
+        "symdef",
         "electrical_symbols",
         "fransys_parts",
         "fransys_author",
@@ -83,14 +85,59 @@ def _page_blocks(page: str) -> list[str]:
     return _python_blocks(text)
 
 
+def run_blocks(page: str, blocks: list[str]) -> None:
+    """Run `blocks` in one namespace; leave `sys.path`, `sys.modules` and the finder cache as found.
+
+    The import caches are invalidated before each block: a block that creates a package in the
+    working directory within the finder's cached directory mtime tick would not find it.
+    """
+    path, modules, finders = list(sys.path), set(sys.modules), set(sys.path_importer_cache)
+    namespace: dict = {}
+    try:
+        for block in blocks:
+            importlib.invalidate_caches()
+            exec(compile(block, f"<{page}.md>", "exec"), namespace, namespace)  # noqa: S102 (the page's own runnable block)
+    finally:
+        sys.path[:] = path
+        for name in set(sys.modules) - modules:
+            del sys.modules[name]
+        for entry in set(sys.path_importer_cache) - finders:
+            del sys.path_importer_cache[entry]
+
+
 def test_guide_page_blocks_run(page, tmp_path, monkeypatch):
     blocks = _page_blocks(page)
     page_dir = tmp_path / page
     page_dir.mkdir()
     monkeypatch.chdir(page_dir)
-    namespace: dict = {}
-    for block in blocks:
-        exec(compile(block, f"<{page}.md>", "exec"), namespace, namespace)  # noqa: S102 (the page's own runnable block)
+    run_blocks(page, blocks)
+
+
+def test_a_block_creating_a_package_in_the_cached_tick_still_imports_it(tmp_path, monkeypatch):
+    """UNDO: drop `importlib.invalidate_caches()` from `run_blocks`; block 2 cannot import."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "dont_write_bytecode", True)  # a __pycache__ would move the mtime
+    first = (
+        "import sys\nsys.path.insert(0, '.')\n"
+        "open('one_mod.py', 'w').write('X = 1')\nimport one_mod\n"
+    )
+    # Block 2 sets the directory's mtime back to what block 1's import cached: the same tick.
+    second = (
+        "import os\nstamp = os.stat('.').st_mtime_ns\n"
+        "os.mkdir('two_pkg')\nopen('two_pkg/__init__.py', 'w').write('Y = 2')\n"
+        "os.utime('.', ns=(stamp, stamp))\nimport two_pkg\nassert two_pkg.Y == 2\n"
+    )
+    run_blocks("tick", [first, second])
+
+
+def test_run_blocks_restores_sys_path_and_modules(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    before = list(sys.path), set(sys.modules), set(sys.path_importer_cache)
+    block = (
+        "import sys\nsys.path.insert(0, '.')\nopen('gone_mod.py', 'w').write('')\nimport gone_mod\n"
+    )
+    run_blocks("restore", [block])
+    assert (list(sys.path), set(sys.modules), set(sys.path_importer_cache)) == before
 
 
 def test_guide_page_imports_only_fransys(page):

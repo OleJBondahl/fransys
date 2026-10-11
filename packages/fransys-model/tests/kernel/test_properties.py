@@ -1,6 +1,6 @@
-"""Hypothesis property tests for the determinism rules (decision 0020, WORK-ORDER-PROPS.md).
+"""Hypothesis property tests for the determinism rules (decision 0020).
 
-Properties, numbered as in the work order:
+Properties, numbered as below:
 
 1. Freeze is order-independent: the same records, added in any permutation, freeze to one
    `Model.digest`.

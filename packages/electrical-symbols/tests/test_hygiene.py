@@ -45,13 +45,6 @@ SOURCING = ["confirmed against", "subscription", r"\.pdf", "snapshot", "https?:/
 SOURCING_EXEMPT = {GUIDE, HANDLING, "tests/test_hygiene.py"}
 # The SVG namespace in the generated build/.
 ALLOWED_URLS = ("http://www.w3.org/2000/svg",)
-# A pin to our own toolkit's release tag is a dependency, not a source citation (D42): exempt in
-# pyproject.toml ONLY, and only up to the tag's closing quote -- a branch or another file with the
-# same URL still fails.
-GRAPHICAL_SYMBOLS_PIN = re.compile(
-    r"git\+https://github\.com/OleJBondahl/graphical-symbols@v\d+\.\d+\.\d+(?=\")"
-)
-GRAPHICAL_SYMBOLS_PIN_EXEMPT_PATH = "pyproject.toml"
 
 
 def phrases(words):
@@ -91,14 +84,12 @@ def phrase_problems(files):
 
 
 def sourcing_problems(files):
-    def without_urls(path, text):
+    def without_urls(text):
         for url in ALLOWED_URLS:
             text = text.replace(url, "")
-        if path == GRAPHICAL_SYMBOLS_PIN_EXEMPT_PATH:
-            text = GRAPHICAL_SYMBOLS_PIN.sub("", text)
         return text
 
-    return scan([(p, without_urls(p, t)) for p, t in files], phrases(SOURCING), SOURCING_EXEMPT)
+    return scan([(p, without_urls(t)) for p, t in files], phrases(SOURCING), SOURCING_EXEMPT)
 
 
 def tracked_text():
@@ -228,27 +219,6 @@ def test_sourcing_check_allows_the_svg_namespace_and_the_exempt_files():
     assert sourcing_problems([("pyproject.toml", "https://github.com/other/repo.git")]) != []
     for path in SOURCING_EXEMPT:
         assert sourcing_problems([(path, "a subscription")]) == []
-
-
-def test_sourcing_check_allows_the_graphical_symbols_tag_pin_in_pyproject_toml_only():
-    pinned = 'dependencies = ["graphical-symbols @ git+https://github.com/OleJBondahl/graphical-symbols@v0.1.2"]\n'
-    assert sourcing_problems([("pyproject.toml", pinned)]) == []
-
-
-def test_sourcing_check_still_fires_on_the_graphical_symbols_url_at_a_branch():
-    # D42's exemption is anchored on an exact tag: a branch is still a sourcing marker (it is not
-    # even a valid direct-reference pin -- decision 0014/0017's gate would reject it too).
-    branch = 'x = "git+https://github.com/OleJBondahl/graphical-symbols@main"\n'
-    assert sourcing_problems([("pyproject.toml", branch)]) != []
-
-
-def test_sourcing_check_still_fires_on_the_graphical_symbols_tag_outside_pyproject_toml():
-    # The same URL is a real citation anywhere but the one file that names it as a dependency.
-    # Properly quoted (a real closing `"` for GRAPHICAL_SYMBOLS_PIN's lookahead to find): an
-    # unquoted string here would never match the pattern regardless of path, so the path guard
-    # itself would go untested.
-    tagged = '"git+https://github.com/OleJBondahl/graphical-symbols@v0.1.2"\n'
-    assert sourcing_problems([("README.md", tagged)]) != []
 
 
 STEMS = sorted(p.stem for p in (ROOT / "symbols").glob("*.toml"))

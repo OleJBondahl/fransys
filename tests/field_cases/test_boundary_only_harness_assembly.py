@@ -6,7 +6,7 @@ The bug: 19 harnesses in the unit gives `CONNECTION_NOT_DRAWN` ERRORs (a cable c
 unit's own two boundary plugs is never routed); 18 harnesses routes clean, and the same 19
 harnesses built with no `Unit` around them route clean too (both measured 2026-09-26). So this
 is a scale threshold inside a `Unit`'s own layout, not a shape the engine never handles. The
-unit carries its own `fr.document(...)` (units spec U3, the pattern
+unit carries its own `fr.document(...)` (the pattern
 `tests/test_write_unit_worked_example.py` uses) so the case still lays out once `fr.build` only
 lays out a model that holds a `Document` (decision PS1).
 

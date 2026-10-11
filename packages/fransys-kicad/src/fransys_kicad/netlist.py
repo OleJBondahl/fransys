@@ -1,4 +1,4 @@
-"""KiCad netlist writer (spec sections 6 and 8)."""
+"""KiCad netlist writer."""
 
 import uuid
 from typing import TYPE_CHECKING

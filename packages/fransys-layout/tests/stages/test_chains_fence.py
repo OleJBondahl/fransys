@@ -145,7 +145,7 @@ def _found(
         kw.pop("edge_mates", ()),
         fixed=kw.pop("fixed", frozenset()),
     )
-    columns: tuple[Column, ...] = discover_chains(records, **kw)
+    columns: tuple[Column, ...] = discover_chains(records, key_order=kw.pop("key_order", {}), **kw)
     return [(column.key, column.cells) for column in columns]
 
 
@@ -204,7 +204,7 @@ def test_a_changeover_with_no_throw_roles_chains_through_its_path_alone() -> Non
 def test_single_chains_ending_on_one_hub_merge_bottom_packed_under_the_lowest_port() -> None:
     """A hub reached through a merged (iii) group takes the lane of that group's chain.
 
-    Hub 11 is reached by chain 1-2-3, merged under chain 4-5 (designer ruling 2026-10-02), so it
+    Hub 11 is reached by chain 1-2-3, merged under chain 4-5 (ruling 2026-10-02), so it
     stands in lane 1 above that chain and spans at its port `c`, not at lane 0 with no span port.
     """
     chain = {i: function_spec(i) for i in (1, 2, 3, 4, 5)}

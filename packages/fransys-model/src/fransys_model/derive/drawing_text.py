@@ -18,7 +18,7 @@ exception (DESIGN 4, decision layout-0037) is keyed to the qualified module path
 
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, cast
-lazy from collections.abc import Iterable
+lazy from collections.abc import Iterable, Sequence
 lazy from decimal import Decimal
 
 from fransys_model.derive.contact_entries import (
@@ -60,6 +60,7 @@ from fransys_model.layout import (
     SheetFormat,
     Side,
     StarKind,
+    StubEnd,
     layout_of,
     sheet_format_of,
 )
@@ -286,9 +287,51 @@ def off_stub_line(cable: str, *, north: bool, far: str, ports: Iterable[str]) ->
     return " ".join(part for part in (cable, arrow, f"{far}:{tails}" if tails else far) if part)
 
 
+def line_stub_line(line: str, *, north: bool, far: Sequence[tuple[str, str]]) -> str:
+    """A leaving line's single stub, `-W3 → +EXT-M1 p2:4A, +EXT-M2 p2:5C`: line, arrow, far devices.
+
+    `far` is each far device with where it is drawn in the stub's drawing set, `position_text`'s
+    form, or "" for none. No place at all keeps the first device alone, the text without places
+    (STUB-POSITIONS P2). The arrow points up (`←`) for a stub facing north, else `→`.
+    """
+    listed = far if any(place for _, place in far) else far[:1]
+    devices = ", ".join(f"{device} {place}" if place else device for device, place in listed)
+    return off_stub_line(line, north=north, far=devices, ports=())
+
+
 def _stub_end_of(model: Model, marker: LinkMarker, unit: Id[Unit] | None) -> tuple[str, str]:
     """`stub_far_end` of an off stub `marker`'s far port, printed in `unit`'s document."""
     return stub_far_end(model, cast("Id[Port]", marker.far), marker.port, unit=unit)
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def _stub_ends(model: Model) -> dict[Id[LinkMarker], list[StubEnd]]:
+    found: dict[Id[LinkMarker], list[StubEnd]] = defaultdict(list)
+    for end in sorted(layout_of(model, StubEnd).values(), key=lambda e: (e.marker, e.index)):
+        found[end.marker].append(end)
+    return found
+
+
+def _line_stub_far(
+    model: Model, marker: LinkMarker, unit: Id[Unit] | None, head: str
+) -> list[tuple[str, str]]:
+    """A line stub's far devices with their places, from its `StubEnd` records (P1, R6).
+
+    A stub with none keeps its `far` port's device alone (a hand-made marker, an old model).
+    """
+    ends = _stub_ends(model).get(marker.id)
+    if not ends:
+        return [(head, "")]
+    pages = layout_of(model, Page)
+    return [
+        (
+            stub_far_end(model, end.port, marker.port, unit=unit)[0],
+            ""
+            if end.page is None
+            else place_text(model, pages[marker.page], pages[end.page], end.x, end.y),
+        )
+        for end in ends
+    ]
 
 
 def off_stub_text(model: Model, marker: LinkMarker) -> str:
@@ -304,7 +347,8 @@ def off_stub_text(model: Model, marker: LinkMarker) -> str:
     cable = "" if marker.carrier is None else printed_designation(model, marker.carrier, unit=unit)
     head, _ = stub_far_end(model, marker.far, marker.port, unit=unit)
     if marker.carrier is not None and draws_as_line(model, marker.carrier):
-        return off_stub_line(cable, north=marker.facing is Side.N, far=head, ports=())
+        far = _line_stub_far(model, marker, unit, head)
+        return line_stub_line(cable, north=marker.facing is Side.N, far=far)
     run = [marker]
     if marker.box_x is not None:
         run = sorted(
@@ -513,6 +557,13 @@ def _position_between(model: Model, own_page: Page, partner_page: Page, x: int, 
     sheet = sheet_format_of(model, partner_page.sheet_format)
     column = frame_column(_content_width_grid(sheet), sheet.frame_columns, x)
     return partner_position_text(_seat(model, own_page), _seat(model, partner_page), column, row)
+
+
+def place_text(model: Model, own_page: Page, partner_page: Page, x: int, y: int) -> str:
+    """The cell at `x`, `y` on `partner_page` as `own_page` reads it (LD5): derive's one text."""
+    sheet = sheet_format_of(model, partner_page.sheet_format)
+    row = frame_row(_content_height_grid(sheet), sheet.frame_rows, y)
+    return _position_between(model, own_page, partner_page, x, row)
 
 
 def _marker_position(model: Model, marker: LinkMarker, partner: LinkMarker) -> str:
@@ -919,6 +970,7 @@ __all__ = [
     "is_device_terminal",
     "item_tag_text",
     "label_text",
+    "line_stub_line",
     "location_path",
     "location_prefix",
     "marker_lines",
@@ -928,6 +980,7 @@ __all__ = [
     "page_title",
     "page_title_groups",
     "partner_position_text",
+    "place_text",
     "point_text",
     "port_marking",
     "position_text",

@@ -1,4 +1,4 @@
-"""WP "drawing text": `derive.drawing_text` (render spec D2, decision model-0032).
+"""WP "drawing text": `derive.drawing_text` (decision model-0032).
 
 Hand-built records only, on the model's synthetic plant: every formatter case and every
 branch of every reader (`marker_text`, `cross_reference_text`, `label_text`, `page_title`).
@@ -273,7 +273,7 @@ def test_position_text_with_a_location_label() -> None:
 
 
 def test_position_text_with_two_location_labels() -> None:
-    """`+<label>+<label>` in front when two are given, root first (units spec U7)."""
+    """`+<label>+<label>` in front when two are given, root first."""
     assert position_text(2, 5, "C", ("AR", "C1")) == "+AR+C1p2:5C"
 
 
@@ -442,7 +442,7 @@ def _nested_pair(
     origin: Origin, *, leaf_a: tuple[str, str, str], leaf_b: tuple[str, str, str]
 ) -> tuple[Model, LinkMarker, LinkMarker]:
     """Two markers, each on its own drawing set: `leaf_a`/`leaf_b` are `(root key, root
-    label, leaf label)`, the leaf a child of a root node of its own (units spec U7).
+    label, leaf label)`, the leaf a child of a root node of its own.
     """
     new_id = _ids()
     draft = Draft()
@@ -548,7 +548,7 @@ def _nested_pair(
 def test_marker_text_across_nested_locations_prefixes_below_the_shared_ancestor(
     origin: Origin,
 ) -> None:
-    """`+ER+C1` to `+ER+FLD`: the prefix is `+FLD`, not the shared `+ER+FLD` (units spec U7)."""
+    """`+ER+C1` to `+ER+FLD`: the prefix is `+FLD`, not the shared `+ER+FLD`."""
     model, marker_a, marker_b = _nested_pair(
         origin, leaf_a=("er", "ER", "C1"), leaf_b=("er", "ER", "FLD")
     )
@@ -1167,7 +1167,7 @@ def test_label_text_cross_reference_with_no_function_raises(origin: Origin) -> N
 # --------------------------------------------------------------------------------------
 #
 # The old model-0032 conductor-walking tests no longer apply under the new `Label`-taking
-# signature (spec X3): `cross_reference_text` no longer looks up a function, so there is
+# signature: `cross_reference_text` no longer looks up a function, so there is
 # nothing "unknown" for it to raise on; and it no longer walks conductors to find whether a
 # function is placed, so there is no "unplaced function" path either -- it only formats
 # `label.partners`, which `Label.__post_init__` (task 1) already guarantees is non-empty for

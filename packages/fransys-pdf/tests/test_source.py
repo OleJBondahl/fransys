@@ -1,4 +1,4 @@
-"""`source`: page geometry, cover and notes (spec P4, P5, P10). Determinism is Part 5."""
+"""`source`: page geometry, cover and notes. Determinism is Part 5."""
 
 from _build import (
     cable_facet,
@@ -185,7 +185,7 @@ def test_schematic_pages_fall_back_to_no_drawings_for_an_item_subject():
 
 
 def test_location_document_picks_only_the_unit_none_set_at_its_location():
-    """The join-key fix (model-0041 amending decision 0024, units spec U1): a location subject
+    """The join-key fix (model-0041 amending decision 0024): a location subject
     matches `unit is None` at that location, never a nested unit's own set that happens to
     share the location node. `ds_nested`'s `number` (1) sorts before `ds_top`'s (2) on
     purpose: the old `min(..., key=number)` body, filtering by location alone, would have
@@ -214,7 +214,7 @@ def test_location_document_picks_only_the_unit_none_set_at_its_location():
 def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_order():
     """A unit document's schematic pages span every drawing set of its unit, any location,
     sorted by the sets' own `number` (layout-0045: unit-then-location order), then page
-    number within each set (units spec U3's "in location order" for `cabinet_schematic` with
+    number within each set ("in location order" for `cabinet_schematic` with
     a unit)."""
     c1 = location("C1", "First cabinet")
     c2 = location("C2", "Second cabinet")
@@ -347,7 +347,7 @@ def test_document_facts_for_a_location_document_matches_project_facts():
 
 
 def test_document_facts_for_a_unit_document_uses_the_units_own_current_revision_and_date():
-    """Units spec U3, amended by UNIT-ID I2: title/number are the unit's own (empty here, the
+    """Title/number are the unit's own (empty here, the
     fixture sets none), customer is empty, author stays `Project`'s; revision and revision
     date come from the unit's release's own history entry whose `revision` matches
     `UnitRelease.revision` -- not merely its latest entry (`UnitRelease.revision=1` here,
@@ -668,7 +668,7 @@ _SYSTEM_CABLE_PAGE_COUNT = 2
 
 
 def test_system_preset_renders_a_harness_drawing_page_per_top_level_cable():
-    """Units spec U3: the `system` document's cable drawings are every top-level cable
+    """The `system` document's cable drawings are every top-level cable
     (`derive.top_level_cables`), not a single harness subject -- it has none of the three.
     Exercises the whole `system` preset end to end: its default pages (`presets.py`) resolve,
     render and check without crashing, with a sensible, non-crashing scope label."""
@@ -693,7 +693,7 @@ def test_system_preset_renders_a_harness_drawing_page_per_top_level_cable():
 
 
 def test_system_preset_with_no_top_level_cable_contributes_no_harness_drawing_page():
-    """STEP 4b addition (decision pdf-0006, units spec U3's amended "cable drawings" bullet):
+    """The "cable drawings" bullet (decision pdf-0006):
     a `system` document over a model with no top-level cable at all gives its HARNESS_DRAWING
     section no page at all -- not even the NO_DRAWINGS text page a harness-with-no-cable
     document still gets (`test_harness_drawing_falls_back_to_no_drawings_for_a_cableless_

@@ -312,6 +312,7 @@ _FIELDS: dict[type, set[str]] = {
         "legs",
         "produced_by",
     },
+    layout.StubEnd: {"marker", "index", "port", "page", "x", "y", "produced_by"},
     layout.Route: {"page", "conductor", "net", "a", "b", "points", "produced_by"},
     layout.LinkMarker: {
         "page",

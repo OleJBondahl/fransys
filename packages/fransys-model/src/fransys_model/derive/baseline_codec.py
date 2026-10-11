@@ -1,4 +1,4 @@
-"""The listing's JSON codec and section check (baseline spec L2): `dumps`, `loads`, ..."""
+"""The listing's JSON codec and section check: `dumps`, `loads`, ..."""
 
 import dataclasses
 from decimal import Decimal
@@ -23,7 +23,7 @@ from .rows import (
 _LISTING_VERSION = 1
 
 
-# -- dumps / loads (canonical JSON, baseline spec L2) ----------------------------------------
+# -- dumps / loads (canonical JSON) ----------------------------------------
 
 
 _POINT_FIELDS = frozenset({"breaking_ac", "breaking_dc"})
@@ -139,7 +139,7 @@ def _net_dict(n: BaselineNet) -> dict[str, JsonValue]:
 
 
 def dumps(listing: Listing) -> str:
-    """`listing` as canonical JSON (baseline spec L2): UTF-8, sorted keys, one trailing newline.
+    """`listing` as canonical JSON: UTF-8, sorted keys, one trailing newline.
 
     Args:
         listing: The listing to encode.

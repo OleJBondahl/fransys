@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 10,
+  "schema_version": 11,
   "tables": {
     "aspect_node": [
       {
@@ -5339,7 +5339,7 @@
           "fn",
           "nc_1"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5365,7 +5365,7 @@
           "fn",
           "element"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5391,7 +5391,7 @@
           "fn",
           "coil"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5417,7 +5417,7 @@
           "fn",
           "element"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5444,7 +5444,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5470,7 +5470,7 @@
           "fn",
           "element"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5496,7 +5496,7 @@
           "fn",
           "no_1"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "mr180",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5522,7 +5522,7 @@
           "fn",
           "main"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 3,
@@ -5548,7 +5548,7 @@
           "fn",
           "coil"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5574,7 +5574,7 @@
           "fn",
           "aux"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5600,7 +5600,7 @@
           "fn",
           "nc_1"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5627,7 +5627,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r180",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5654,7 +5654,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r180",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5681,7 +5681,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5707,7 +5707,7 @@
           "fn",
           "main"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 3,
@@ -5733,7 +5733,7 @@
           "fn",
           "nc_2"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5759,7 +5759,7 @@
           "fn",
           "lamp"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5785,7 +5785,7 @@
           "fn",
           "aux"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5812,7 +5812,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5839,7 +5839,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:ccc8957bfa8f54c4a43a32d328336255",
         "poles": 1,
@@ -5866,7 +5866,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r180",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5892,7 +5892,7 @@
           "fn",
           "nc_1"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5918,7 +5918,7 @@
           "fn",
           "coil"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,
@@ -5945,7 +5945,7 @@
           "fn",
           "terminal"
         ],
-        "library_version": "electrical-symbols 0.0.0 / graphical-symbols 0.0.0",
+        "library_version": "electrical-symbols 0.0.0 / symdef 0.0.0",
         "orientation": "r0",
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "poles": 1,

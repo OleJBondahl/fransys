@@ -1,4 +1,4 @@
-"""Tests for `derive.revision_history` (units spec U4)."""
+"""Tests for `derive.revision_history`."""
 
 from typing import Any
 

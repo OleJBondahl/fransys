@@ -1,4 +1,4 @@
-"""A device with no part (PATCH-0132 E3): `d.device("Q8", None, external=True, pins=(...))`."""
+"""A device with no part: `d.device("Q8", None, external=True, pins=(...))`."""
 
 from typing import TYPE_CHECKING
 

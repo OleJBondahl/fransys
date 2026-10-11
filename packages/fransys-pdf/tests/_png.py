@@ -1,4 +1,4 @@
-"""PNG decode and ink scanning, for R9's compiled-page checks (`test_frame_compiled.py`).
+"""PNG decode and ink scanning, for the compiled-page checks in the root tests.
 
 `typst.compile(..., format="png")` emits one 8-bit RGBA, non-interlaced PNG per page -- verified
 against its own `IHDR` chunk (colour type 6, bit depth 8, interlace 0) before this module was

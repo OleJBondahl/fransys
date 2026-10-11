@@ -5,8 +5,8 @@ A real toolkit symbol, not a consumer's private struct (decision layout-0042, D4
 
 import math
 
-from graphical_symbols.geometry import Direction, Point, Polyline
-from graphical_symbols.model import Port, Reference, Slot, Status, Symbol, SymbolKind
+from symdef.geometry import Direction, Point, Polyline
+from symdef.model import Port, Reference, Slot, Status, Symbol, SymbolKind
 
 from electrical_symbols.box_ports import (
     G_PER_MODULE,

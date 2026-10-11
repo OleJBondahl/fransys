@@ -27,7 +27,8 @@ dead-code:
 
 # electrical-symbols: regenerate the tracked build/ and src/electrical_symbols/bundle.json
 build-electrical-symbols:
-    uv run python packages/electrical-symbols/scripts/build.py
+    uv run python packages/electrical-symbols/scripts/write_version.py
+    uv run symdef build packages/electrical-symbols
 
 # the full suite; electrical-symbols, fransys-model, fransys-layout, fransys-parts,
 # fransys-author and the reports, kicad, wago, overview and pdf output packages and
@@ -35,20 +36,20 @@ build-electrical-symbols:
 cov:
     uv run pytest -n {{pytest_workers}} --dist worksteal --cov=electrical_symbols --cov=fransys_model --cov=fransys_layout --cov=fransys_parts --cov=fransys_author --cov=fransys_reports --cov=fransys_kicad --cov=fransys_wago --cov=fransys_overview --cov=fransys_pdf --cov=fransys_render --cov=fransys --cov-report=term-missing --cov-report=json:.fransys/coverage.json --durations=20
 
-ci: check dead-code cov
-    uv run python scripts/cov_floors.py check .fransys/coverage.json coverage-floors.toml
-    uv run python scripts/lean_check.py hard
-    uv run python scripts/lean_check.py enforce
-    uv run python scripts/lean_check.py report
+# the gates run side by side and print as blocks in this order: check, dead-code, cov, the coverage
+# floors, lean hard, enforce, report (AW14); the exit code is the first failing gate's
+ci:
+    uv run python scripts/ci_gates.py
 
 fmt:
     uv run ruff format .
     uv run ruff check --fix .
 
-# tests only, in parallel; ARGS narrows them (paths, -k, ...). Set PYTEST_WORKERS=4 when three or more
-# test jobs run at once
+# tests only, in parallel, on a fresh AWS spot instance (decision 0134); ARGS narrows them (paths, -k, ...).
+# No local fallback; PYTEST_WORKERS applies to the local `just ci` only
+[positional-arguments]
 test *ARGS:
-    uv run pytest -n {{pytest_workers}} --dist worksteal {{ARGS}}
+    uv run python internal/scripts/aws_run.py run -- pytest -n auto --dist worksteal "$@"
 
 # rewrite the tracked model and layout goldens on a work branch, then their diff stat; refused on main
 regen-goldens *PKG:

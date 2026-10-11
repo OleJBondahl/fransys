@@ -2,7 +2,7 @@
 
 See derive-queries-structure.md.
 
-Decision 0027 and units spec U3; all built on the same per-cable facts and end discovery.
+Decision 0027; all built on the same per-cable facts and end discovery.
 """
 
 from dataclasses import dataclass
@@ -218,7 +218,7 @@ def _cable_ids_of_unit(model: Model, unit: Id[Unit] | None) -> set[Id[Item]]:
 
 
 def _top_level_cable_ids(model: Model) -> set[Id[Item]]:
-    """Every cable item (`is_cable`) with no unit (units spec U3's "cable drawings" rule).
+    """Every cable item (`is_cable`) with no unit (the "cable drawings" rule).
 
     Shared by `top_level_cables` and `cable_list_rows` so the two can never disagree about
     which cables are top-level. A cable is `is_cable`'s own (decision model-0108).

@@ -111,7 +111,7 @@ def _with_bumped_versions(model: Model) -> Model:
             if hasattr(record, "produced_by"):
                 changed["produced_by"] = "fransys-layout/schematic 9.9.9"
             if hasattr(record, "library_version"):
-                changed["library_version"] = "electrical-symbols 9.9.9 / graphical-symbols 9.9.9"
+                changed["library_version"] = "electrical-symbols 9.9.9 / symdef 9.9.9"
             if changed:
                 remove_ids.append(record_id)
                 put_records.append(
@@ -132,7 +132,7 @@ def test_normalized_keeps_names_and_ignores_only_versions(
     original = dumps(normalized(model))
     assert dumps(normalized(_with_bumped_versions(model))) == original
     assert "fransys-layout/schematic 0.0.0" in original
-    assert "electrical-symbols 0.0.0 / graphical-symbols 0.0.0" in original
+    assert "electrical-symbols 0.0.0 / symdef 0.0.0" in original
 
     renamed = loads(dumps(model).replace("fransys-layout/", "other-layout/"))
     assert dumps(normalized(renamed)) != original
@@ -403,17 +403,16 @@ def _on_sheet(width_mm: int, **options: bool) -> Draft:
     return draft
 
 
-# The width spec X5 (`docs/archive/specs/2026-09-22-cross-reference-partner.md`) requires: a width
+# The width requirement: a width
 # that gives all three required contents at once (at least one severed cut, one
-# `CROSS_REFERENCE` label, one net-group cut). 158, not the spec's original 150: model-0040
-# (spec B1) draws board `A1`'s `edge` connector, which shifts where this cabinet splits
+# `CROSS_REFERENCE` label, one net-group cut). 158, not the original 150: model-0040
+# draws board `A1`'s `edge` connector, which shifts where this cabinet splits
 # (model-0040 has the measured table); 150-157 mm give zero tag-echo decisions, 158 mm is
 # the narrowest that gives one (Q4: measured at 1 mm resolution, re-measured after
 # `effective_placement` landed -- unchanged, since this fixture places every function
 # directly, no fallback is exercised). `fransys-render`'s tests load this package's own
 # golden by path and hardcode a marker position and a page count, both of which 118-171 mm
-# still give, so 158 keeps those green too (the root spec needs the new number, listed in
-# the hand-back).
+# still give, so 158 keeps those green too.
 _NARROW_WIDTH_MM = 158
 
 
@@ -468,7 +467,7 @@ def test_adding_one_relay_moves_only_its_own_group(*, regenerate: bool) -> None:
     """
     before, after = _laid_out(), _laid_out(extra_relay=True)
     changed = _changed_placements(before, after)
-    # 15 since the tag keep-out trim (designer): narrower columns put more of =P2 on shared
+    # 15 since the tag keep-out trim: narrower columns put more of =P2 on shared
     # pages, so more of its own placements shift; the locality checks below are unchanged
     stored = _golden("cabinet_stability.txt", f"{len(changed)}\n", regenerate=regenerate)
     assert len(changed) == int(stored.split()[0])
@@ -522,7 +521,7 @@ def test_cabinet_narrow_layout_matches_golden(
 ) -> None:
     """The 158 mm cabinet's canonical JSON is byte-stable against the narrow golden file.
 
-    Spec X5: this sheet is the one narrow enough to give a severed cut, a `CROSS_REFERENCE`
+    This sheet is the one narrow enough to give a severed cut, a `CROSS_REFERENCE`
     label and a net-group cut all at once, which is why the D2 equality test needs it.
     Written and compared through the `normalized` fixture (decision layout-0119).
     """

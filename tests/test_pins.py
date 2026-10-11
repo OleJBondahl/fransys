@@ -291,13 +291,13 @@ def test_every_root_source_is_a_workspace_member_or_an_exact_pin(name: str):
     assert source_violation(_root_sources()[name]) is None
 
 
-def test_root_sources_names_graphical_symbols():
+def test_root_sources_names_the_workspace_members():
     """A named expectation, not just a non-empty check: if `[tool.uv.sources]` were emptied or
     this entry renamed, the parametrized test above would collect zero cases and pass silently --
     the exact defect family (a smaller collected count, not a red test) this package exists to
     close.
     """
-    assert "graphical-symbols" in _root_sources()
+    assert "fransys-model" in _root_sources()
 
 
 def test_the_source_gate_can_fail():

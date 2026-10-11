@@ -93,7 +93,7 @@ def test_unconnected_pin_is_a_finding(demo_board):
 
 
 def test_skeleton_lists_every_pin():
-    """One `[[function]]`, one port per pin (spec P10; P1's ports are inline, not a table)."""
+    """One `[[function]]`, one port per pin (P1's ports are inline, not a table)."""
     kicad_sym = _kicad_sym("DEMO-CONN-2P", {"1_1": ["1", "2"]})
     skeleton = part_file_skeleton(kicad_sym, "DEMO-CONN-2P")
     assert skeleton.count("[[function]]") == 1

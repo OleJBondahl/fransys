@@ -1,4 +1,4 @@
-"""Tests for `cable_list_rows` (design/derive-queries-structure.md, units spec U3)."""
+"""Tests for `cable_list_rows`."""
 
 from decimal import Decimal
 
@@ -65,7 +65,7 @@ def test_two_unlocated_ends_order_by_product_designation() -> None:
     """`from_label`/`to_label` follow the product-designation tie-break, not the `Item` id.
 
     Neither end has a `LOCATION` placement, so `cable_end_rank` (decision model-0048) falls
-    straight to `product_designation` (designer ruling 2026-09-24, moved from the old smaller-id
+    straight to `product_designation` (ruling 2026-09-24, moved from the old smaller-id
     rule).
     The keys are sorted by `Item` id first, then handed designations in *reverse* alphabetical
     order ("K2" to the smaller-id item, "K1" to the larger), so a correct assertion of literal
@@ -199,7 +199,7 @@ def test_a_cable_inside_a_harness_is_still_a_top_level_cable() -> None:
 
 def test_two_cables_between_the_same_two_locations_read_the_same_way_round() -> None:
     """`W11` (a motor to a cabinet strip) and `W21` (another motor to another cabinet strip), the
-    same two locations each time: both read motor-first (decision model-0048, designer ruling
+    same two locations each time: both read motor-first (decision model-0048, ruling
     2026-09-24) -- the end order is a property of the two *locations*, `"aa-motor"` sorting
     before `"zz-cabinet"`, never of which end happened to hash the smaller `Item` id.
 

@@ -1,4 +1,4 @@
-"""The one table from a `SignalType` to how a WAGO channel is written (spec section 6)."""
+"""The one table from a `SignalType` to how a WAGO channel is written."""
 
 from dataclasses import dataclass
 from typing import Final

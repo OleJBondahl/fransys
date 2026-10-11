@@ -6,8 +6,8 @@ that is `coherence`.
 Text crossed by a route is split by what crosses it, so one defect is one finding: a route run
 through a label or marker box is `WIRE_OVER_LABEL` (`_wires`); a link marker's stub, which
 render draws and the layout does not store, through a text box is `TEXT_CROSSED_BY_ROUTE`
-(`_texts`). Their union is the designer's review metric `text_crossed_by_route`. `TEXT_OVERLAP`
-(`_texts`) is the designer's review metric of the same name: two texts of a page that overlap,
+(`_texts`). Their union is the review metric `text_crossed_by_route`. `TEXT_OVERLAP`
+(`_texts`) is the review metric of the same name: two texts of a page that overlap,
 or one over a symbol body it does not belong to.
 """
 

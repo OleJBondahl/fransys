@@ -8,7 +8,7 @@ test compiles a real page with one known label, decodes the PNG Typst emits, and
 the actual ink height of the label's glyph in millimetres.
 
 Root tests are the one place `fransys_render` and `fransys_pdf` may both be imported
-(spec section 5's boundary table holds neither to import the other; mirrors
+(the boundary table holds neither to import the other; mirrors
 `tests/test_symbol_not_installed_compiles_grey.py` and
 `tests/test_marker_text_compiles_inside_box.py`'s cross-package pattern). `font_paths` and
 `ignore_system_fonts` mirror the facade's own compile call (`fransys/pipeline.py`'s

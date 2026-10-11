@@ -94,7 +94,7 @@ def test_a_boundary_pin_whose_mate_has_two_conductors_shows_two_stubs_each_namin
 @pytest.mark.xfail(
     strict=True,
     reason=(
-        "layout-0093 known limit (designer ruling (a), 2026-10-02): two OFF stubs of one carrier "
+        "layout-0093 known limit (ruling (a), 2026-10-02): two OFF stubs of one carrier "
         "to one far end on stacked neighbouring S pins of one column should share one box, but "
         "the upper pin's stub runs into the lower pin's body, so no box stands clear of both "
         "(M9); the pair keeps two boxes and the first stands on the lower pin"

@@ -17,6 +17,7 @@ the cable segment; with `facing` always `Side.S` it fails on the arrow of an N-f
 import dataclasses
 import importlib.util
 from functools import cache
+from pathlib import Path
 
 import fransys as fr
 import fransys_author
@@ -42,7 +43,7 @@ _ROOT_TESTS = WORKSPACE_ROOT / "tests"
 
 def _load(name: str):
     """A root test module, loaded by path (root tests are not a package)."""
-    spec = importlib.util.spec_from_file_location(name[:-3], _ROOT_TESTS / name)
+    spec = importlib.util.spec_from_file_location(Path(name).stem, _ROOT_TESTS / name)
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -51,6 +52,8 @@ def _load(name: str):
 
 
 _UNITS = _load("test_dd_units_stubs.py")
+# STUB-POSITIONS: a loom cut over two pages, whose stubs list far devices with their places
+_CUT_LOOM = _load("field_cases/test_a_harness_line_on_an_overfull_page_still_routes.py")
 
 
 @cache
@@ -103,6 +106,7 @@ _FIXTURES = {
     "top-level-cable": _cable,
     "top-level-wires": _wires,
     "cabinet-two-location": _cabinet_two_location,
+    "cut-loom-with-places": lambda: _CUT_LOOM._built(2).model,
 }
 
 

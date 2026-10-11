@@ -1,4 +1,4 @@
-"""Fransys output: laid-out model to SVG pages (spec sections 4 and 6)."""
+"""Fransys output: laid-out model to SVG pages."""
 
 from .cables import cable_blocks
 from .check import check

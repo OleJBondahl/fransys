@@ -105,18 +105,27 @@ def line_pieces(
         leave.append(joint.pop())
     paths = [(end.branch, _out(end.end)) for end in leave]
     stubs = [Stub(end.branch, _far(absent, others, end.branch), tip(end.end)) for end in leave]
+    more, stub = _joint_pieces(joint, absent, grid, trunk)
+    fans = tuple(fan for _, _, fan in drawn if fan)
+    return _through_rows([*paths, *more], fans, [*stubs, *stub], grid)
+
+
+def _joint_pieces(
+    joint: Sequence[LineEnd],
+    absent: int | None,
+    grid: Grid,
+    trunk: tuple[Facing, tuple[int, int]] | None,
+) -> tuple[list[tuple[int, tuple[Point, ...]]], list[Stub]]:
+    """The paths and stubs of the joint ends: the trunk out, or a stub to the end off the page."""
     out = _trunk(joint, absent, grid, trunk)
     if out is not None:
-        paths.extend(out[0])
-        stubs.append(out[1])
-        joint = []
-    elif joint and absent is not None:
+        return out[0], [out[1]]
+    stubs: list[Stub] = []
+    if joint and absent is not None:
         first = root(joint)
         stubs.append(Stub(first.branch, absent, tip(first.end)))
-        joint.append(LineEnd(branch=absent, end=_goal(first.end)))
-    if len(joint) > 1:
-        paths.extend(line_paths(joint, grid).items())
-    return _through_rows(paths, tuple(fan for _, _, fan in drawn if fan), stubs, grid)
+        joint = [*joint, LineEnd(branch=absent, end=_goal(first.end))]
+    return (list(line_paths(joint, grid).items()) if len(joint) > 1 else []), stubs
 
 
 def _trunk(

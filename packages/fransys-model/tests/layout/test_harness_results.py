@@ -1,4 +1,4 @@
-"""HA-D1: the harness-line layout records (decision model-0173, spec HL9)."""
+"""The harness-line layout records (decision model-0173)."""
 
 import dataclasses
 from typing import Any

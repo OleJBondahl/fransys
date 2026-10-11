@@ -1,6 +1,6 @@
 """ENGINE-DIGITS (layout-0140): a column holds the side reference box its page draws.
 
-`engine.py` sizes columns with `side_reference_rooms` at the floor digits, before any page is
+`_sizing.py` sizes columns with `side_reference_rooms` at the floor digits, before any page is
 planned. In a run of two sets the page draws the box wider (`p<set>.<page>`, `+<location>`), so
 the early estimate is narrower than the drawn box. C21 (`placed_widths`) grows each column to
 its placed keep-out, which holds the per-page box, and the second `_placed` pass starts from
@@ -28,6 +28,7 @@ def _run() -> tuple[StageResults, dict[str, Any]]:
     """The two-location cabinet with side terminals: results and what the engine passed."""
     seen: dict[str, Any] = {"early": [], "page": [], "passes": []}
     model = freeze(build_cabinet(second_location=True, side_terminals=True))
+    sizing = import_module("fransys_layout.engines.schematic._sizing")
     engine = import_module("fransys_layout.engines.schematic.engine")
     pagerun = import_module("fransys_layout.stages.pagerun")
 
@@ -49,7 +50,7 @@ def _run() -> tuple[StageResults, dict[str, Any]]:
         return found
 
     with (
-        watch("early", engine),
+        watch("early", sizing),
         watch("page", pagerun),
         patch.object(engine, "place_pages", passes),
     ):

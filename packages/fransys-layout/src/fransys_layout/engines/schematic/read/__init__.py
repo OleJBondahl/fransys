@@ -97,9 +97,11 @@ def read_inputs(model: Model) -> StageInputs:
     # R6 D5: a terminal on no connection, net group or mate is not drawn (terminal list only)
     specs = without_idle_terminals(model, specs, wired)
     drawn = {spec.function for spec in specs}
-    specs, pin_of, refs = steps.pin_reads(model, specs, wired, refs)
+    specs, pin_of, refs, landings = steps.pin_reads(model, specs, wired, refs)
     specs, spares, drawn = steps.unused_reads(model, specs, drawn, profile)
-    specs, view_of, view_choices, (north, south), refs = steps.item_reads(model, specs, wired, refs)
+    specs, view_of, view_choices, (north, south), refs = steps.item_reads(
+        model, specs, wired, refs, landings
+    )
     refs, crossing, off_texts, off_ends = steps.off_reads_of(model, specs, refs, pin_of)
     connections, net_groups, rail_ends = refs
     return StageInputs(
@@ -113,7 +115,7 @@ def read_inputs(model: Model) -> StageInputs:
         locations=reading.location_infos(model),
         units=reading.unit_infos(model),
         hints=reading.page_hints(model),
-        label_texts=steps.label_texts(model, indexes, drawn, pin_of, view_of),
+        label_texts=steps.label_texts(model, indexes, drawn, (pin_of, view_of, landings)),
         profile=profile,
         sheet=sheet,
         sheet_format=sheet_format,

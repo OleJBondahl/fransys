@@ -1,4 +1,4 @@
-"""Fransys input: the authoring engine under the `fr.design` surface (spec R11).
+"""Fransys input: the authoring engine under the `fr.design` surface.
 
 Worked example::
 

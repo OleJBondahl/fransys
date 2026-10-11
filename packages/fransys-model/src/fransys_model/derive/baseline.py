@@ -15,7 +15,7 @@ disjoint from it). This module is the surface only; the code lives beside it by 
 - `baseline_codec`: `dumps`/`loads`, the canonical JSON codec, and `differing_sections`, which
   names the top-level fields two listings disagree on, for `REVISION_ALREADY_RELEASED` and
   `BASELINE_DIFFERS`'s messages.
-- `baseline_diff`, `baseline_diff_units`, `baseline_diff_wiring`: `diff` (baseline spec M1).
+- `baseline_diff`, `baseline_diff_units`, `baseline_diff_wiring`: `diff`.
 """
 
 from .baseline_codec import differing_sections, dumps, loads

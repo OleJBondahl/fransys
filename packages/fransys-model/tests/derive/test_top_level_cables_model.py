@@ -1,4 +1,4 @@
-"""Tests for `top_level_cables` (design/derive-queries-structure.md, units spec U3)."""
+"""Tests for `top_level_cables` (design/derive-queries-structure.md)."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING

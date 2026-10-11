@@ -277,7 +277,7 @@ def test_no_conductor_is_lost_at_any_narrow_content_width(width_mm: int) -> None
 
 _LINES_SEEN = (
     "layout-0158 F1: the harness-ink checks see the cabinet's W1 line through a symbol "
-    "(WIRE_THROUGH_SYMBOL), still after F5; named for the designer"
+    "(WIRE_THROUGH_SYMBOL), still after F5; named for the review"
 )
 
 

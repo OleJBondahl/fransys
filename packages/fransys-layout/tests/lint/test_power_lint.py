@@ -56,10 +56,10 @@ def test_a_power_end_consumes_no_reference_digit(monkeypatch: pytest.MonkeyPatch
     seen: list = []
     real = module.set_digits
 
-    def spy(markers, plans, location_paths):
+    def spy(markers, plans, location_paths, unit_paths):
         markers = tuple(markers)
         seen.extend(markers)
-        return real(markers, plans, location_paths)
+        return real(markers, plans, location_paths, unit_paths)
 
     monkeypatch.setattr(module, "set_digits", spy)
     model = power_model(60)

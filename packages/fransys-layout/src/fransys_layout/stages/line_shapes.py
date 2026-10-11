@@ -1,9 +1,13 @@
 """Layout-0154: a harness line's drawn pieces on one page, as `write/` takes them."""
 
-from typing import Any
+from itertools import pairwise
+from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import Box, Facing, Point
+from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point
 from fransys_model.kernel import Id, value
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @value
@@ -70,3 +74,19 @@ class LineStub:
     facing: Facing
     box: Box
     ends: tuple[FarEnd, ...] = ()
+
+
+def slant_boxes(points: Sequence[Point]) -> list[Box]:
+    """Boxes along a polyline, one per half grid of each segment, so a slant's boxes stay thin."""
+    boxes: list[Box] = []
+    for one, two in pairwise(points):
+        n = max(abs(two.x - one.x), abs(two.y - one.y)) // (WIRING_GRID // 2) or 1
+        at = [
+            Point(x=one.x + (two.x - one.x) * i // n, y=one.y + (two.y - one.y) * i // n)
+            for i in range(n + 1)
+        ]
+        boxes += [
+            Box(x=min(a.x, b.x), y=min(a.y, b.y), width=abs(a.x - b.x), height=abs(a.y - b.y))
+            for a, b in pairwise(at)
+        ]
+    return boxes

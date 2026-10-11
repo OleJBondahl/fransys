@@ -1,17 +1,19 @@
 """Every OUT_OF_CONTENT_BOX message names the page and frame cell it stands on (LEGACY-CHAINS 5b).
 
 The messages built the page and cell nowhere, so a consumer could not find the symbol. The cell
-text is `derive.drawing_text.position_text`'s, the one form every printed position has.
+text is `derive.drawing_text.position_text`'s, the one form every printed position has. The
+overflow is vertical (layout-0175 moves a column that is too wide, not one that is too tall).
 """
 
 import re
 import tempfile
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
 
-_COLUMNS = 9
+_CHAIN = 20  # one column of twenty switches stands taller than the content box
 _AT = re.compile(r" at p(?:\d+\.)?(?P<page>\d+):(?P<column>\d+)(?P<row>[A-Z])$", re.MULTILINE)
 
 
@@ -30,19 +32,14 @@ class _Strips(NamedTuple):
     number="N-1",
 )
 def _control(d: Any) -> _Strips:
-    d.layout.profile(hide_unused_pins=True, column_gap=16)  # the unit's own profile (model-0192)
     x4 = d.terminal_strip("X4", "DEMO-TB-2.5")
-    x5 = d.terminal_strip("X5", "DEMO-TB-2.5")
-    plus, minus = x4.run("24V", bridged=True), x5.run("0V", bridged=True)
+    plus = x4.run("24V", bridged=True)
     with d.function("DRV", "Drives"):
-        for n in range(1, _COLUMNS + 1):
-            coil = d.device(f"K{n}", "DEMO-CTR-3P-24").coil
-            first, second = (d.device(f"B{n}{m}", "DEMO-PB-NC").sw for m in (1, 2))
-            d.wire(plus, first["A"], wire=("RD", 0.75))
-            d.wire(first["B"], second["A"], wire=("RD", 0.75))
-            d.wire(second["B"], coil["A1"], wire=("RD", 0.75))
-            d.wire(coil["A2"], minus, wire=("BK", 0.75))
-            d.layout.chain(first, second, coil)
+        switches = [d.device(f"B{n}", "DEMO-PB-NC").sw for n in range(_CHAIN)]
+        d.wire(plus, switches[0]["A"], wire=("RD", 0.75))
+        for above, below in pairwise(switches):
+            d.wire(above["B"], below["A"], wire=("RD", 0.75))
+        d.layout.chain(*switches)
     return _Strips(x4)
 
 
@@ -59,8 +56,9 @@ def _findings() -> list[fr.Finding]:
 
 def test_each_out_of_content_box_message_names_its_page_and_cell() -> None:
     findings = _findings()
-    assert len(findings) == 3
+    assert findings  # a column taller than the box cannot move to another page (layout-0175)
     for finding in findings:
         found = _AT.search(finding.message)
         assert found is not None, finding.message
-        assert found["column"] == "8"  # the last frame column: the box stands against the frame
+        assert found["column"] == "1"
+        assert found["row"] == "F"  # the last frame row: the chain runs out of the box below

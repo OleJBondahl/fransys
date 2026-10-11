@@ -94,14 +94,7 @@ def _highest_top(layout: Layout) -> int:
     "model_of",
     [
         _top_level_model,
-        pytest.param(
-            _system_model,
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="layout-0158 F1: the harness-ink checks see the system's lines over labels "
-                "(WIRE_OVER_LABEL), still after F5; named for the review",
-            ),
-        ),
+        _system_model,
     ],
 )
 def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(

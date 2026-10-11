@@ -71,11 +71,21 @@ def grown(
 def placed_widths(
     widths: tuple[ColumnWidth, ...], placed: tuple[PlacedFunction, ...], gap: int
 ) -> tuple[ColumnWidth, ...]:
-    """Each column's width, the larger of its estimate and its placed extent plus the gap."""
-    held: dict[tuple[AuthoringKey, int, int], list[Box]] = {}
+    """Each column's width, the larger of its estimate and its room on the page (layout-0175).
+
+    The room is the pitch to the next column's ink, or the last column's ink plus the gap; the
+    axes are snapped up to the grid, so the pitch can exceed the keep-out width plus the gap.
+    """
+    held: dict[tuple[int, int], dict[AuthoringKey, list[Box]]] = {}
     for one in placed:
-        held.setdefault((one.column, one.drawing_set, one.page), []).append(placed_keepout(one))
+        page = held.setdefault((one.drawing_set, one.page), {})
+        page.setdefault(one.column, []).append(placed_keepout(one))
     actual: dict[AuthoringKey, int] = {}
-    for (column, _, _), boxes in held.items():
-        actual[column] = max(actual.get(column, 0), hull(boxes).width + gap)
+    for page in held.values():
+        inks = sorted((hull(boxes) for boxes in page.values()), key=lambda ink: ink.x)
+        keys = sorted(page, key=lambda key: hull(page[key]).x)
+        for index, key in enumerate(keys):
+            ink = hull(page[key])
+            right = inks[index + 1].x if index + 1 < len(keys) else ink.x + ink.width + gap
+            actual[key] = max(actual.get(key, 0), right - ink.x)
     return tuple(replace(one, width=max(one.width, actual.get(one.column, 0))) for one in widths)

@@ -40,6 +40,9 @@ type Page = tuple[int, int]
 # to `location_prefix`, whose common-ancestor walk compares the handle half, never the label.
 type LocationPath = tuple[tuple[Handle, str], ...]
 
+# A unit's root-to-leaf path of unit ids; `()` is the top level (UNIT-REF-BOX)
+type UnitPath = tuple[Id[Any], ...]
+
 
 class Seated(Protocol):
     """A function's seat on a page: the column it stands in there (a placement is one)."""
@@ -262,6 +265,7 @@ class ReferenceInputs:
     functions: tuple[FunctionSpec, ...]
     seating: Seating
     location_paths: Mapping[int, LocationPath]
+    unit_paths: Mapping[int, UnitPath]
     exempt: frozenset[tuple[Id[Any], int]]
     crossing: tuple[Connection, ...]
     off_texts: tuple[PortText, ...]

@@ -7,7 +7,7 @@ from .exits import FACING_STEP, port_exit
 from .flow import flow
 from .follow import follow
 from .legs import legs
-from .meet import Span, boxes_meet, contains_point, meets
+from .meet import Span, boxes_meet, contains_point, meets, through
 from .runs import cut_runs
 from .symbols import (
     GENERIC_BOX_KEY,
@@ -91,6 +91,7 @@ __all__ = (
     "snap_up",
     "symbol_geometry",
     "text_width",
+    "through",
     "to_grid",
     "translate",
     "union",

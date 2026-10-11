@@ -74,9 +74,11 @@ def _build(spec: tuple[tuple[str, int], ...], *, fill: int):
             tag += 1
             relay = cab.item("DEMO-RLY-2CO-24", tag=f"K{tag}", at=c1, group=groups[n])
             blue(relay.fn("coil")["A1"], relay.fn("coil")["A2"])
-            # layout-0112: an unwired contact is not drawn, and the relays must fill the page
-            blue(relay.fn("co_1")["11"], relay.fn("co_1")["14"])
-            blue(relay.fn("co_2")["21"], relay.fn("co_2")["24"])
+            # layout-0112: an unwired contact is not drawn, and the relays must fill the page;
+            # layout-0175: on one page (`fill` 1) the contacts would push the ink past the box
+            if fill > 1:
+                blue(relay.fn("co_1")["11"], relay.fn("co_1")["14"])
+                blue(relay.fn("co_2")["21"], relay.fn("co_2")["24"])
             if k == 0:
                 blue(terminal.outer, relay.fn("coil")["A1"])
     result = fr.build(parts, d.draft(), layout_trigger_document())

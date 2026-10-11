@@ -48,6 +48,8 @@ class Grid:
     turn_penalty: int
     busy: frozenset[Cell] = frozenset()  # The cells the page's placed lines cover
     busy_penalty: int = 0  # what each such cell costs: a line crosses, but never runs along
+    stub: tuple[int, int] = (0, 0)  # The size of a leaving line's stub box
+    wires: tuple[Box, ...] = ()  # The page's routed wires, as spans: a stub's box never sits on one
 
 
 def root(ends: Sequence[LineEnd]) -> LineEnd:
@@ -121,8 +123,8 @@ def _not_around(obstacles: tuple[Obstacle, ...], start: End, goal: End) -> tuple
         one
         for one in obstacles
         if not any(
-            one.box.x < end.at.x < one.box.x + one.box.width
-            and one.box.y < end.at.y < one.box.y + one.box.height
+            one.box.x <= end.at.x <= one.box.x + one.box.width
+            and one.box.y <= end.at.y <= one.box.y + one.box.height
             for end in (start, goal)
         )
     )

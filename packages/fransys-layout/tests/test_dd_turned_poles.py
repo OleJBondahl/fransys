@@ -26,7 +26,7 @@ CONTACT, LAMP = ("K1", "fn", "co_1"), ("Q1", "fn", "element")
 _BAD = {"ROUTE_FAILED", "CONNECTION_NOT_DRAWN"}
 
 
-def _lamp_column(*, plus_first: bool = True, fed_at: str = "11"):
+def _lamp_column(*, plus_first: bool = True, fed_at: str = "11", authored: bool = False):
     """XA:1 -> K1:co_1 (11, then 14) -> Q1 (1, then 2) -> XA:2; `+` on XA:1, else on XA:2.
 
     With `fed_at="14"` the contact is entered at 14 and left at 11 instead.
@@ -45,6 +45,8 @@ def _lamp_column(*, plus_first: bool = True, fed_at: str = "11"):
     wire(first.outer, k1.fn("co_1")[fed_at])
     wire(k1.fn("co_1")[out_at], q1["1"])
     wire(q1["2"], second.inner)
+    if authored:
+        d.chain(first, k1.fn("co_1"), q1, second)
     plus, zero = (first, second) if plus_first else (second, first)
     # an AC supply keeps references: a DC one would draw power symbols and move the column
     d.supply("S", current="ac", rails={"+": ("24", 0), "0V": ("0", None)})
@@ -73,7 +75,7 @@ def test_a_changeover_fed_at_11_stands_r0_with_11_on_top_and_the_feed_runs_strai
     """The contact fed at 11 points with its chain, so it is drawn R0, 11 on top; the
     column has no failed connection.
     """
-    # UNDO: stages/_chain_walk.py `_note_turns`, swap the branches of `elif pole.inn == e`
+    # UNDO: stages/_chain_walk.py `_note_turns`, `turn = pole.inn != e` -> `pole.inn == e`
     result = _lamp_column()
     model = result.model
     contact = placed(model, *CONTACT)
@@ -236,3 +238,95 @@ def test_two_contactors_in_series_draw_no_crossed_phase_wires() -> None:
         assert len(set(xs)) == 3
     assert _port_at(upper, "1.out")[0] == _port_at(turned, "1.out")[0]  # phase 1 stays put
     assert not {f.code for f in result.findings} & _BAD
+
+
+def test_an_authored_chain_turns_a_directed_pole_it_enters_against_its_direction() -> None:
+    """layout-0062: `layout.chain` turns a changeover fed at 14 as a discovered chain does."""
+    # UNDO: stages/columns.py `_entered_from_south`, skip a function that is not a strip terminal
+    result = _lamp_column(fed_at="14", authored=True)
+    model = result.model
+    contact = placed(model, *CONTACT)
+    assert contact.orientation is Orientation.MR180
+    assert _port_y(contact, "no") < _port_y(contact, "com")
+    assert len({placed(model, *key).x for key in (TOP, CONTACT, LAMP, BOTTOM)}) == 1
+    assert not {f.code for f in result.findings} & _BAD
+
+
+def _contactor_column(*, authored: bool, wired_poles: int, along: frozenset[int] = frozenset()):
+    """Per pole n: XA:2n-1 -> K1 main of a 3P contactor (out port, then in port) -> Qn -> XA:2n.
+
+    `+` is on the odd terminals; every pole is entered against its direction and the breaker
+    points with the chain: a tie that the potential breaks, as in `_lamp_column`. A pole
+    number in `along` is entered at its other port instead, so it runs along its direction.
+    With `authored` the first chain is also a `layout.chain`.
+    """
+    parts, d = design()
+    c, g = d.location("C1", "Cabinet"), d.group("G1", "Group")
+    strip = d.strip("XA", at=c)
+    terminals = [strip.terminal(TERMINAL, group=g) for _ in range(2 * wired_poles)]
+    k1 = d.item("DEMO-CTR-3P-24", tag="K1", at=c, group=g).fn("main")
+    wire = d.wiring(colour="BU", gauge="0.75")
+    d.supply("S", current="ac", rails={"+": ("24", 0), "0V": ("0", None)})
+    for n in range(wired_poles):
+        first, second = terminals[2 * n], terminals[2 * n + 1]
+        breaker = d.item(MCB, tag=f"Q{n + 1}", at=c, group=g)
+        fed, out = (2 * n + 1, 2 * n + 2) if n + 1 in along else (2 * n + 2, 2 * n + 1)
+        wire(first.outer, k1[str(fed)])
+        wire(k1[str(out)], breaker["1"])
+        wire(breaker["2"], second.inner)
+        if authored and n == 0:
+            d.chain(first, k1, breaker, second)
+        d.net(f"PLUS{n}", first.inner, cls="power", potential="+")
+        d.net(f"ZERO{n}", second.inner, cls="power", potential="0V")
+    return build(parts, d)
+
+
+def _contactor_turns(
+    wired_poles: int, along: frozenset[int] = frozenset()
+) -> tuple[Orientation, Orientation]:
+    """K1's orientation with its chain discovered, then with its first chain authored."""
+
+    def turn(*, authored: bool) -> Orientation:
+        column = _contactor_column(authored=authored, wired_poles=wired_poles, along=along)
+        return placed(column.model, "K1", "fn", "main").orientation
+
+    return turn(authored=False), turn(authored=True)
+
+
+def test_an_authored_chain_turns_a_multi_pole_function_as_a_discovered_one_does() -> None:
+    """layout-0062: a 3P contactor with all three poles entered against their direction is
+    drawn MR180 whether its chains are discovered or its first chain is authored.
+    """
+    # UNDO: stages/columns.py columns_from_chains, `mirror=` -> `mirror=False`
+    assert _contactor_turns(3) == (Orientation.MR180, Orientation.MR180)
+
+
+def test_an_authored_chain_turns_a_one_pole_wired_contactor_as_a_discovered_one_does() -> None:
+    """layout-0062 (TURN-VOTE): unwired poles send no vote, so the one wired pole turns K1."""
+    # UNDO: stages/_chain_walk.py `settle_turns`, count every pole: drop the `_pole_wired` filter
+    # and file a spare pole's vote as along
+    assert _contactor_turns(1) == (Orientation.MR180, Orientation.MR180)
+
+
+def test_a_discovered_contactor_with_a_wired_pole_along_stays_upright() -> None:
+    """layout-0062 (TURN-VOTE): pole 2 runs along its direction, so no turn."""
+    # UNDO: stages/lookups.py `device_turns`, `all(votes)` -> `any(votes)`
+    discovered, _ = _contactor_turns(2, frozenset({2}))
+    assert discovered is Orientation.R0
+
+
+def test_a_discovered_contactor_whose_wired_poles_disagree_stays_upright() -> None:
+    """layout-0062 (TURN-VOTE): pole 1 runs against, pole 2 along: a split vote keeps R0."""
+    # UNDO: stages/lookups.py `device_turns`, `all(votes)` -> `any(votes)`
+    discovered, _ = _contactor_turns(2, frozenset({1}))
+    assert discovered is Orientation.R0
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="authored votes need the device pole table (TURN-VOTE-B)",
+)
+def test_an_authored_chain_keeps_a_contactor_with_a_wired_pole_along_upright() -> None:
+    """layout-0062 (TURN-VOTE): the authored path reads only the entered pole's vote today."""
+    discovered, authored = _contactor_turns(2, frozenset({2}))
+    assert authored is discovered

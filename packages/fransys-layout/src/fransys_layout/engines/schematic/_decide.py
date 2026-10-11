@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt
 from fransys_layout.stages.references import ReferenceInputs, black_box_sets, references
 
-from .read.location_paths import location_paths
+from .read.location_paths import location_paths, unit_paths
 from .read.units import black_box_reads
 
 if TYPE_CHECKING:
@@ -62,6 +62,7 @@ def _reference_inputs(
         functions=inputs.functions,
         seating=seating,
         location_paths=location_paths(model, seating.plans),
+        unit_paths=unit_paths(model, seating.plans),
         exempt=exempt,
         crossing=inputs.crossing,
         off_texts=inputs.off_texts,

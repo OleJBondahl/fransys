@@ -7,7 +7,15 @@ line enters the root's box, and ends in its stub. The stub's box is measured fro
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, boxes_meet, port_exit
+from fransys_layout.geometry import (
+    WIRING_GRID,
+    Box,
+    Facing,
+    Point,
+    boxes_meet,
+    port_exit,
+    through,
+)
 
 from .space import End, span
 from .texts.candidates import Candidate, box_of, stub_anchor
@@ -36,8 +44,8 @@ def trunk_end(
 ) -> End | None:
     """The free point of `bar` nearest its middle, left first on a tie, facing `entry`.
 
-    Free: the run to the stub and the stub's box cross no keep-out and no run of the bar, and
-    stand inside the region. `None` when no point is free.
+    Free: the run and the stub's box cross no keep-out and no run of the bar (CABLE-BOX-SELF),
+    and stand inside the region. `None` when no point is free.
     """
     runs = [one for points in bar.values() for one in pairwise(points)]
     points = [point for points in bar.values() for point in points]
@@ -48,7 +56,7 @@ def trunk_end(
     on_bar = frozenset(at for one in runs for at in _grid_points(*one))
     for at in sorted(on_bar, key=lambda p: (abs(p.x - middle.x) + abs(p.y - middle.y), p.x, p.y)):
         end = End(at=at, facing=entry)
-        if _free(end, on_bar, grid, size):
+        if _free(end, (on_bar, runs), grid, size):
             return end
     return None
 
@@ -64,11 +72,17 @@ def _grid_points(first: Point, second: Point) -> list[Point]:
     ]
 
 
-def _free(end: End, bar: frozenset[Point], grid: Grid, size: tuple[int, int]) -> bool:
+def _free(
+    end: End,
+    bar: tuple[frozenset[Point], Sequence[tuple[Point, Point]]],
+    grid: Grid,
+    size: tuple[int, int],
+) -> bool:
     out = edge(end)
     run = span(end.at, out)
     box = box_of(Candidate(side=end.facing, offset=0), stub_anchor(tip(end).at), size)
     ahead = {at for at in _grid_points(end.at, out) if at != end.at}
+    on_bar, runs = bar
     region = grid.region
     inside = (
         region.x <= box.x
@@ -78,7 +92,8 @@ def _free(end: End, bar: frozenset[Point], grid: Grid, size: tuple[int, int]) ->
     )
     return (
         inside
-        and not ahead & bar
+        and not ahead & on_bar
+        and not any(through(one, box) for one in runs)
         and not any(_meets(one.box, (run, box)) for one in grid.obstacles)
     )
 

@@ -8,12 +8,14 @@ from samples import drawn, hid, placed
 
 from fransys_layout.geometry import LayoutError, translate
 from fransys_layout.stages.lookups import (
+    device_turns,
     drawn_of,
     group_of,
     nets_from_pairs,
     owner_of,
     placed_keepout,
     placed_of,
+    turn_mirrors,
 )
 
 
@@ -89,3 +91,19 @@ def test_link_world_holds_the_drawn_functions_by_handle_and_the_seats_by_page():
     world = link_world(MarkerScene(seats=(), drawn=(one,), sheet=SHEET, profile=PROFILE))
     assert world.drawn_of == {one.function: one}
     assert world.where == {}
+
+
+def test_turn_mirrors_spares_a_terminal() -> None:
+    """The one form of a turn: a strip terminal turns at R180, any other pole at MR180."""
+    # UNDO: stages/lookups.py `turn_mirrors`, return `terminal`
+    assert turn_mirrors(terminal=False) is True
+    assert turn_mirrors(terminal=True) is False
+
+
+def test_device_turns_needs_a_wired_pole_and_every_vote_against() -> None:
+    """layout-0062 (TURN-VOTE): no vote keeps R0, a split vote keeps R0."""
+    # UNDO: stages/lookups.py `device_turns`, return `bool(votes)`
+    assert device_turns([True]) is True
+    assert device_turns([True, True]) is True
+    assert device_turns([True, False]) is False
+    assert device_turns([]) is False

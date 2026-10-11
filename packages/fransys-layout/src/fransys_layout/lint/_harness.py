@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import Box, Point, contains, port_page_at
+from fransys_layout.geometry import Box, Point, contains, port_page_at, through
 from fransys_layout.stages.slices import by_key
 from fransys_model.kernel import Finding, Severity
 
@@ -82,22 +82,6 @@ def _page(one: DrawnLine | DrawnFanOut | LineStub | PlacedConnectorBox) -> tuple
 
 def _leg_runs(fan: DrawnFanOut) -> list[Segment]:
     return [seg for leg in fan.legs for seg in pairwise(leg.points)]
-
-
-def through(segment: Segment, box: Box) -> bool:
-    """Whether `segment` passes through `box`'s interior; touching an edge does not count."""
-    (a, b), low, high = segment, 0.0, 1.0
-    for start, delta, lo, hi in (
-        (a.x, b.x - a.x, box.x, box.x + box.width),
-        (a.y, b.y - a.y, box.y, box.y + box.height),
-    ):
-        if delta == 0:
-            if not lo < start < hi:
-                return False
-            continue
-        one, two = (lo - start) / delta, (hi - start) / delta
-        low, high = max(low, min(one, two)), min(high, max(one, two))
-    return low < high
 
 
 def _warn(code: str, subjects: tuple[Id[Any], ...], message: str) -> Finding:

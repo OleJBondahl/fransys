@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import WIRING_GRID, Facing
-from fransys_layout.stages.stacking import JoinedEnd, JoinedRun, join_offset
+from fransys_layout.stages.stacking import JoinedEnd, JoinedRun
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -44,22 +44,30 @@ def beside_runs(
     runs: list[JoinedRun] = []
     refused: list[tuple[JoinEnd, JoinEnd]] = []
     for c, branch, host in ((w[0], w[1], w[2]) for w in found):
-        ends = [(branch, shift[branch.page, branch.column]), (host, shift[host.page, host.column])]
-        y = join_offset(spot.end.offset + moved + _drop(spot) for spot, moved in ends)
-        deep = any(
-            spot.end.height + moved + y - spot.end.offset - moved - _drop(spot) > rooms[spot.page]
-            for spot, moved in ends
-        )
-        in_order = all(last.get((s.page, s.column), -1) < s.end.row for s, _ in ends)
-        if deep or not in_order:
+        # The host stays where it stands: the branch lowers to its pin, or, standing deeper
+        # already, joins by an L (layout-0174)
+        y = host.end.offset + _drop(host)
+        level = branch.end.offset + shift[branch.page, branch.column] + _drop(branch) <= y
+        if level and not _fits(branch, y, rooms, last):
             refused.append((branch.end, host.end))
             continue
-        for spot, _ in ends:
-            shift[spot.page, spot.column] = y - spot.end.offset - _drop(spot)
-            last[spot.page, spot.column] = spot.end.row
+        if level:
+            shift[branch.page, branch.column] = y - branch.end.offset - _drop(branch)
+            last[branch.page, branch.column] = branch.end.row
         joined.append((c, branch, host))
         runs.append(_run(branch, host))
     return joined, runs, refused
+
+
+def _fits(
+    branch: Spot, y: int, rooms: Mapping[Page, int], last: Mapping[tuple[Page, AuthoringKey], int]
+) -> bool:
+    """Whether the branch, lowered to `y`, stays in its page's room and its rows' order."""
+    lowered = branch.end.height + y - branch.end.offset - _drop(branch)
+    return (
+        lowered <= rooms[branch.page]
+        and last.get((branch.page, branch.column), -1) < branch.end.row
+    )
 
 
 def _is_beside(wire: _Wire, hosts: Mapping[AuthoringKey, AuthoringKey]) -> bool:
@@ -88,7 +96,8 @@ def _run(branch: Spot, host: Spot) -> JoinedRun:
     """The run as `place` aligns it: both ends, each port with its column, in column order."""
     ordered = sorted((branch, host), key=lambda spot: (spot.index, spot.end.port))
     ends = tuple(
-        JoinedEnd(column=spot.column, port=spot.end.port, drop=_drop(spot)) for spot in ordered
+        JoinedEnd(column=spot.column, port=spot.end.port, drop=_drop(spot), anchor=spot is host)
+        for spot in ordered
     )
     return JoinedRun(drawing_set=branch.page[0], page=branch.page[1], ends=ends, aside=True)
 

@@ -77,9 +77,9 @@ def test_a_star_net_without_its_branches_reports_the_branch_less_ports(
 
     The positive twin of the test above: it proves the engine calls `check_members` and that the
     finding reaches `fr.build`'s findings, an ERROR, as `fr.write` refuses on it. On one page
-    (`fill` 1) the PE terminals are joined by wires, so they lose no branch: the ports named are
-    the relays' of the fixture's other nets, which are still stars, and the routes stand for
-    the terminals.
+    (`fill` 1) the PE terminals are joined by wires, so they lose no branch, and the relay
+    contact nets are not stars there: the ports named are the relays' of the coil and outer
+    nets, and the routes stand for the terminals.
 
     # UNDO: engines/schematic/_lint.py, delete the `check_members` call in `lint_findings`
     """

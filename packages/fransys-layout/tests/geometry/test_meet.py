@@ -1,6 +1,6 @@
 """`geometry.meet`: closed and open meeting of spans, boxes and points (cleanup step 2, F1)."""
 
-from fransys_layout.geometry import Box, boxes_meet, contains_point, meets
+from fransys_layout.geometry import Box, Point, boxes_meet, contains_point, meets, through
 
 
 def test_open_a_leaves_out_exactly_the_named_end() -> None:
@@ -35,3 +35,12 @@ def test_contains_point_is_closed() -> None:
     assert contains_point(box, 16, 16)
     assert not contains_point(box, 17, 12)
     assert not contains_point(box, 12, 7)
+
+
+def test_through_counts_the_interior_only() -> None:
+    """A run across the inside passes through; one along an edge, or short of the box, does not."""
+    box = Box(x=8, y=8, width=8, height=8)
+    assert through((Point(x=12, y=0), Point(x=12, y=20)), box)
+    assert through((Point(x=0, y=12), Point(x=20, y=20)), box)
+    assert not through((Point(x=8, y=0), Point(x=8, y=20)), box)
+    assert not through((Point(x=12, y=0), Point(x=12, y=8)), box)

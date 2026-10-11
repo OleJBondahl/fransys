@@ -123,6 +123,7 @@ class JoinedEnd:
     column: AuthoringKey
     port: Id[Any]
     drop: int = 0  # A beside run's host pin stands this far above (-) or below (+) the run's y
+    anchor: bool = False  # A beside run's host end: it never moves, the branch lowers to it
 
 
 @value

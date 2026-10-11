@@ -43,13 +43,14 @@ from ._lines import DrawnPieces, LineScene, draw_lines, harness_ink, strip_lines
 from ._lint import LintScene, Members, lint_findings
 from ._middle import middle_inputs, moved_shapes, strip_middle
 from ._sizing import sized
+from ._wire_spans import route_spans
 from .defaults import BOTTOM_HEADROOM_LANES, DEFAULT_RULES, TOP_HEADROOM_LANES
 from .profiles import lay_out
 from .read import read_inputs
 from .read.harness_lines import box_specs
 from .read.labels import label_requests
 from .read.line_texts import marker_keepouts
-from .read.location_paths import location_paths
+from .read.location_paths import location_paths, unit_paths
 from .read.tag_texts import tag_texts
 from .read.units import (
     boundary_edge_set,
@@ -123,6 +124,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         pin_requests,
         reserves,
         partial(location_paths, model),
+        partial(unit_paths, model),
         power,
     )
     # layout-0080: the ports at a unit's boundary that draw nothing, in the markers and the check
@@ -217,16 +219,17 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         inputs.sheet,
         frozenset(hidden),
         {plan.drawing_set: plan.unit for plan in plans},
+        route_spans(routes),
     )
     drawn_lines = draw_lines(model, lines, inputs.carried, middle, scene)
 
     layout = Layout(
         pages=plans,
-        placed=ink_keepouts(placed_all, labels, drawn),
+        placed=ink_keepouts(placed_all, drawn_lines.labels, drawn),
         routes=tuple(routes),
         decisions=decided.decisions,
         markers=markers,
-        labels=tuple(labels),
+        labels=drawn_lines.labels,
         outlines=outlines,
     )
     # layout-0158: the lint reads the lines, the boxes, and the boxed pin views that draw nothing

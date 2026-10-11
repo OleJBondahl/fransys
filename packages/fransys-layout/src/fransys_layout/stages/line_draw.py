@@ -7,10 +7,21 @@ are elsewhere leaves: it runs `LEAVE` straight out and ends in one stub (layout-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, Point, port_exit
+from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, Point, pad, port_exit
+from fransys_layout.geometry.meet import contains_point
 
 from .harness_route import LineEnd, line_paths, root
 from .line_shapes import DrawnLeg
+from .line_side import (
+    across_by_room,
+    aim,
+    aside,
+    crosses_keepout,
+    faced,
+    stub_in,
+    stub_on_wire,
+    turned,
+)
 from .line_trunk import edge, halves, tip, trunk_end
 from .space import End
 
@@ -22,18 +33,28 @@ if TYPE_CHECKING:
     from .harness_route import Grid
 
 FAN_GRIDS = 4  # layout-0154: the split stands 32 G, four grids, before its pins' row
+FAN_CLEAR = 2 * WIRING_GRID  # layout-0172: and that far from another symbol's keep-out, or nearer
 
 
 @dataclass(frozen=True)
 class PinAt:
     """A fan-out end's pin on the page: the conductor that lands on it, and where it points.
 
-    `row` is its symbol's keep-out along the facing axis: pins whose rows meet share a fan.
+    `row`: its keep-out along the facing axis. A pin re-faced (layout-0172) takes `across` as
+    `row`; `reach` is the keep-out's edge it faces, `lead` the point one grid out of the pin.
     """
 
     conductor: Id[Any]
     end: End
     row: tuple[int, int] = (0, 0)
+    across: tuple[int, int] = (0, 0)
+    reach: Point | None = None
+    lead: Point | None = None
+
+    @property
+    def stands(self) -> Point:
+        """Where the fan counts its split from: `reach`, else the pin."""
+        return self.reach or self.end.at
 
 
 @dataclass(frozen=True)
@@ -76,6 +97,22 @@ class Stub:
 
 
 @dataclass(frozen=True)
+class Way:
+    """How an end's pins fan: toward a point, clear of boxes, or turned to a side (layout-0172).
+
+    `turn` is a side every pin faces and the grids its split stands past them: a lone core
+    clear of a symbol (round 5).
+    """
+
+    toward: Point | None = None
+    apart: Sequence[Box] = ()
+    turn: tuple[Facing, int] | None = None
+
+
+NO_WAY = Way()
+
+
+@dataclass(frozen=True)
 class Pieces:
     """What one line draws on one page: polylines by branch, fan-outs and stubs."""
 
@@ -97,7 +134,7 @@ def line_pieces(
     `absent` is the first end's branch off this page; `margin` keeps a fan-out's split inside
     (layout-0158); `trunk` is set when the root is off the page (`line_trunk`).
     """
-    drawn = [_drawn(one, _within(grid.region, margin)) for one in ends]
+    drawn = _all_drawn(ends, absent, _within(grid.region, margin), grid)
     others = [end.branch for _, end, _ in drawn]
     joint = [end for one, end, _ in drawn if not one.leaving]
     leave = [end for one, end, _ in drawn if one.leaving]
@@ -108,6 +145,70 @@ def line_pieces(
     more, stub = _joint_pieces(joint, absent, grid, trunk)
     fans = tuple(fan for _, _, fan in drawn if fan)
     return _through_rows([*paths, *more], fans, [*stubs, *stub], grid)
+
+
+def _all_drawn(
+    ends: Sequence[EndOnPage],
+    absent: int | None,
+    bounds: tuple[int, int],
+    grid: Grid,
+) -> Sequence[tuple[EndOnPage, LineEnd, Fan | None]]:
+    """Each end drawn, its mixed pins fanned toward the line's other end (layout-0172).
+
+    Two ends whose splits then coincide leave no bundle between them: the line fans as before.
+    """
+    toward = aim(ends, absent)
+    drawn = _clear_of_symbols(
+        [_drawn(one, bounds, grid, Way(toward.get(one.branch))) for one in ends], ends, bounds, grid
+    )
+    apart = _side_boxes([fan for _, _, fan in drawn if fan], grid)
+    if apart:
+        drawn = [_drawn(one, bounds, grid, Way(toward.get(one.branch), apart)) for one in ends]
+        drawn = _clear_of_symbols(drawn, ends, bounds, grid)
+    if len({end.end.at for _, end, _ in drawn}) < len(drawn):
+        return [_drawn(one, bounds, grid) for one in ends]
+    return drawn
+
+
+def _clear_of_symbols(
+    drawn: Sequence[tuple[EndOnPage, LineEnd, Fan | None]],
+    ends: Sequence[EndOnPage],
+    bounds: tuple[int, int],
+    grid: Grid,
+) -> Sequence[tuple[EndOnPage, LineEnd, Fan | None]]:
+    """A lone core's bundle that would leave over a symbol turns to a side that is clear.
+
+    The core leaves its pin along the lead, then turns; its split stands nearer its pins until
+    the stub's box sits on no wire (layout-0172, round 5).
+    """
+    if len(drawn) != 1 or drawn[0][2] is None or len(ends[0].pins) != 1:
+        return drawn
+    one, end, _ = drawn[0]
+    pin = ends[0].pins[0].end.at
+    if not crosses_keepout(end.end, pin, grid.obstacles):
+        return drawn
+    tries = [
+        found
+        for side in across_by_room(end.end.facing, end.end.at, grid.region)
+        for grids in range(FAN_GRIDS, 0, -1)
+        if _clear_leave(found := _drawn(one, bounds, grid, Way(turn=(side, grids))), pin, grid)
+    ]
+    off_wires = (f for f in tries if not stub_on_wire(f[1].end, grid.stub, grid.wires))
+    return [next(off_wires, tries[0])] if tries else drawn
+
+
+def _clear_leave(found: tuple[EndOnPage, LineEnd, Fan | None], pin: Point, grid: Grid) -> bool:
+    """Whether the leaving run out of `found` crosses no keep-out and its stub box stands in."""
+    end = found[1].end
+    return not crosses_keepout(end, pin, grid.obstacles) and stub_in(end, grid.stub, grid.region)
+
+
+def _side_boxes(fans: Sequence[Fan], grid: Grid) -> list[Box]:
+    """The obstacle boxes that hold the pins of a side fan (two or more legs): its cores' lanes."""
+    pins = [leg.points[-1] for fan in fans if fan.legs[1:] for leg in fan.legs]
+    return [
+        one.box for one in grid.obstacles if any(contains_point(one.box, p.x, p.y) for p in pins)
+    ]
 
 
 def _joint_pieces(
@@ -171,13 +272,22 @@ def _far(absent: int | None, others: Sequence[int], branch: int) -> int:
     return next((b for b in others if b != branch), branch)
 
 
-def _drawn(one: EndOnPage, bounds: tuple[int, int]) -> tuple[EndOnPage, LineEnd, Fan | None]:
-    """The end's `LineEnd`, and its fan-out when it ends in pins."""
+def _drawn(
+    one: EndOnPage,
+    bounds: tuple[int, int],
+    grid: Grid,
+    way: Way = NO_WAY,
+) -> tuple[EndOnPage, LineEnd, Fan | None]:
+    """The end's `LineEnd`, and its fan-out when it ends in pins (to one side, as `way` says)."""
     if one.box is not None:
         return one, LineEnd(one.branch, _box_end(one.box, one.mate), one.interface), None
-    rows = _pin_rows(one.pins)
+    rows = _pin_rows(turned(one.pins, way.turn[0]) if way.turn else faced(one.pins, way.toward))
     facing = rows[0][0].end.facing  # the line ends at the first row's split, out of that row
-    fans = [fan_out(row, bounds) for row in rows]
+    avoid = [one.box for one in grid.obstacles]
+    fans = [
+        fan_out(row, bounds, avoid, way.apart, way.turn[1] if way.turn else FAN_GRIDS)
+        for row in rows
+    ]
     (split, _), legs = fans[0], tuple(leg for _, row in fans for leg in row)
     further = tuple(
         End(at, row[0].end.facing) for (at, _), row in zip(fans[1:], rows[1:], strict=True)
@@ -186,9 +296,9 @@ def _drawn(one: EndOnPage, bounds: tuple[int, int]) -> tuple[EndOnPage, LineEnd,
     return one, LineEnd(one.branch, End(at=split, facing=facing), one.interface), fan
 
 
-def drawn_end(one: EndOnPage, bounds: tuple[int, int]) -> LineEnd:
+def drawn_end(one: EndOnPage, bounds: tuple[int, int], grid: Grid) -> LineEnd:
     """The end's `LineEnd` as `line_pieces` draws it: its point and the way it faces."""
-    return _drawn(one, bounds)[1]
+    return _drawn(one, bounds, grid)[1]
 
 
 def _pin_rows(pins: Sequence[PinAt]) -> list[list[PinAt]]:
@@ -245,17 +355,10 @@ def _row_run(fan: Fan, grid: Grid) -> tuple[Point, ...]:
     run: list[Point] = [fan.at]
     facing = fan.facing
     for end in fan.rows:
-        start = End(run[-1], _aside(run[-1], end.at, facing))
+        start = End(run[-1], aside(run[-1], end.at, facing))
         run.extend(line_paths((LineEnd(0, start), LineEnd(0, end)), grid)[0][1:])
         facing = end.facing
     return tuple(run)
-
-
-def _aside(at: Point, target: Point, facing: Facing) -> Facing:
-    """Across `facing`, toward `target` (east or south on a tie)."""
-    if facing in (Facing.N, Facing.S):
-        return Facing.E if target.x >= at.x else Facing.W
-    return Facing.S if target.y >= at.y else Facing.N
 
 
 def _box_end(box: Box, mate: Box | None) -> End:
@@ -270,15 +373,19 @@ def _box_end(box: Box, mate: Box | None) -> End:
 
 
 def fan_out(
-    pins: Sequence[PinAt], bounds: tuple[int, int] | None = None
+    pins: Sequence[PinAt],
+    bounds: tuple[int, int] | None = None,
+    avoid: Sequence[Box] = (),
+    apart: Sequence[Box] = (),
+    grids: int = FAN_GRIDS,
 ) -> tuple[Point, tuple[DrawnLeg, ...]]:
     """Layout-0154: the split `FAN_GRIDS` past the pins' row, centred; each leg split, knee, pin.
 
-    The knee stands one grid out of its pin; the leg's slant follows from the split distance.
-    A split across a vertical row stays within `bounds` (x), so its stub stays on the page.
+    A split across a vertical row stays within `bounds` (x). It stands nearer its pins when it
+    would stand within `FAN_CLEAR` of a box of `avoid` that holds none of them (layout-0172).
     """
     facing = pins[0].end.facing
-    points = [pin.end.at for pin in pins]
+    points = [pin.stands for pin in pins]
     if facing in (Facing.N, Facing.S):
         row = min(p.y for p in points) if facing is Facing.N else max(p.y for p in points)
         mid = sum(p.x for p in points) // len(points)
@@ -289,12 +396,53 @@ def fan_out(
         row = min(p.x for p in points) if facing is Facing.W else max(p.x for p in points)
         mid = sum(p.y for p in points) // len(points)
         base = Point(x=row, y=mid - mid % WIRING_GRID)
-    split = port_exit(base, facing, FAN_GRIDS)
+    split = _split(base, facing, _foreign(avoid, pins), _foreign(apart, pins), grids)
     legs = tuple(
-        DrawnLeg(conductor=pin.conductor, points=(split, port_exit(pin.end.at, facing), pin.end.at))
+        DrawnLeg(conductor=pin.conductor, points=(split, *_knees(pin, facing), pin.end.at))
         for pin in sorted(pins, key=lambda pin: (pin.end.at.x, pin.end.at.y, pin.conductor))
     )
     return split, legs
+
+
+def _foreign(avoid: Sequence[Box], pins: Sequence[PinAt]) -> list[Box]:
+    """The boxes of `avoid` that hold none of the pins: another symbol's keep-out."""
+    ats = [pin.end.at for pin in pins]
+    return [pad(b, FAN_CLEAR) for b in avoid if not any(contains_point(b, a.x, a.y) for a in ats)]
+
+
+def _split(
+    base: Point,
+    facing: Facing,
+    foreign: Sequence[Box],
+    apart: Sequence[Box] = (),
+    most: int = FAN_GRIDS,
+) -> Point:
+    """The split `FAN_GRIDS` past `base`, or nearer, clear of the `foreign` boxes' insides.
+
+    The grid past it, where the bundle line arrives, is also clear of the `apart` boxes (a side
+    fan's symbol): else the bundle runs over that fan's cores (layout-0172 round 4).
+    """
+    for grids in range(most, 1, -1):
+        split = port_exit(base, facing, grids)
+        if not _in(split, foreign) and not _in(port_exit(base, facing, grids + 1), apart):
+            return split
+    return port_exit(base, facing, 1)
+
+
+def _in(at: Point, boxes: Sequence[Box]) -> bool:
+    return any(b.x < at.x < b.x + b.width and b.y < at.y < b.y + b.height for b in boxes)
+
+
+def _knees(pin: PinAt, facing: Facing) -> tuple[Point, ...]:
+    """The knees of a leg: one grid out of the pin, or a re-faced pin's lead (layout-0172).
+
+    A re-faced pin's core turns at `lead`, then runs to the keep-out's edge, off any outline.
+    """
+    if pin.reach is None or pin.lead is None:
+        return (pin.reach or port_exit(pin.end.at, facing),)
+    sideways = facing in (Facing.E, Facing.W)
+    turn = Point(x=pin.reach.x, y=pin.lead.y) if sideways else Point(x=pin.lead.x, y=pin.reach.y)
+    return (turn, pin.lead)
 
 
 def _goal(end: End) -> End:

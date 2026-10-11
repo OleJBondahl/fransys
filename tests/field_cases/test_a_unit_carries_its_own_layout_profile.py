@@ -220,3 +220,47 @@ def test_a_unit_wired_to_another_unit_reads_no_profile_from_it(tmp_path: Path) -
     assert first_pdf == _two_pdfs(same_a, tmp_path / "o-a")[0]
     assert second_pdf == _two_pdfs(same_b, tmp_path / "o-b")[1]
     assert first_pdf != _two_pdfs(same_b, tmp_path / "o-b")[0]
+
+
+class _StarIo(NamedTuple):
+    lamp: fr.Device
+
+
+def _star_box() -> Any:
+    """A unit whose first lamp pin heads a net of three: its pages print reference boxes."""
+
+    @fr.unit("demo-star-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
+    def box(u: fr.Design) -> _StarIo:
+        lamp, second, third = (u.device(f"P{n}", "DEMO-LAMP-24") for n in (2, 3, 4))
+        u.wire(lamp["1"], second["1"], wire=("WH", 0.75))
+        u.wire(lamp["1"], third["1"], wire=("WH", 0.75))
+        u.wire(lamp["2"], second["2"], wire=("WH", 0.75))
+        return _StarIo(lamp)
+
+    return box
+
+
+def _star_pdf(tmp_path: Path, *, parent_sets: bool) -> bytes:
+    d = fr.design("demo_parts", place="C1")
+    d.location("C1", "Cabinet")
+    d.add(_star_box(), "U1")
+    if parent_sets:
+        d.location("LONGPLACE-LONGER", "Panel")
+        for n in range(3):
+            far = d.device(f"P{10 + n}", "DEMO-LAMP-24", place="LONGPLACE-LONGER")
+            near = d.device(f"P{20 + n}", "DEMO-LAMP-24", place="C1")
+            d.wire(far["1"], near["1"], wire=("WH", 0.75))
+    (tmp_path / "star.md").write_text("# Star box\n", encoding="utf-8")
+    preset = fr.DocumentPreset.CABINET_SCHEMATIC
+    result = fr.build(d, fr.document(preset, "demo-star-box", cover=tmp_path / "star.md"))
+    fr.write(result, tmp_path / "out")
+    return (tmp_path / "out" / "demo-star-box-v1.1.pdf").read_bytes()
+
+
+def test_a_unit_reference_box_is_sized_from_the_units_own_sets(tmp_path: Path) -> None:
+    """A parent with more drawing sets and a long location path widens no box in the unit."""
+    for sub in ("alone", "inside"):
+        (tmp_path / sub).mkdir()
+    assert _star_pdf(tmp_path / "alone", parent_sets=False) == _star_pdf(
+        tmp_path / "inside", parent_sets=True
+    )

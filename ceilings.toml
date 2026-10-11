@@ -35,7 +35,7 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/boxes.py::_turned_box" = 17
 "packages/fransys-layout/src/fransys_layout/stages/boxes.py::box_sides" = 17
 "packages/fransys-layout/src/fransys_layout/stages/chains.py::_attach" = 34
-"packages/fransys-layout/src/fransys_layout/stages/chains.py::discover_chains" = 18
+"packages/fransys-layout/src/fransys_layout/stages/chains.py::discover_chains" = 19
 "packages/fransys-layout/src/fransys_layout/stages/columns.py::columns_from_chains" = 30
 "packages/fransys-layout/src/fransys_layout/stages/exempt.py::boundary_exempt" = 18
 "packages/fransys-layout/src/fransys_layout/stages/far_ends.py::move_far_ends" = 16
@@ -132,9 +132,10 @@ surface_docstring_lines = 15
 
 [module_code_lines]
 "packages/fransys-author/src/fransys_author/design.py" = 736
+"packages/fransys-layout/src/fransys_layout/engines/schematic/_lines.py" = 305
 "packages/fransys-layout/src/fransys_layout/stages/images.py" = 311
 "packages/fransys-layout/src/fransys_layout/stages/middle_fold.py" = 309
-"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 338
+"packages/fransys-layout/src/fransys_layout/stages/pagerun.py" = 339
 "packages/fransys-layout/src/fransys_layout/stages/place.py" = 630
 "packages/fransys-layout/src/fransys_layout/stages/route.py" = 321
 "packages/fransys-model/src/fransys_model/derive/designation.py" = 360
@@ -189,8 +190,10 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"packages/fransys-layout/docs/rules/step-4-references.md" = 5102
-"packages/fransys-layout/docs/rules/step-5-place.md" = 5261
+"packages/fransys-layout/docs/rules/harness-lines.md" = 5101
+"packages/fransys-layout/docs/rules/shared-support.md" = 5073
+"packages/fransys-layout/docs/rules/step-4-references.md" = 5177
+"packages/fransys-layout/docs/rules/step-5-place.md" = 5355
 "packages/fransys/src/fransys/guide/authoring.md" = 5050
 "packages/fransys/src/fransys/guide/findings.md" = 6657
 "packages/fransys/src/fransys/guide/reading.md" = 5012

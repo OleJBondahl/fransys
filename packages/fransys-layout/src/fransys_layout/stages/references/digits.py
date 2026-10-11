@@ -6,6 +6,7 @@ forms of a place in another set: `p<set>.<page>` and the `+<location>` prefix (l
 """
 
 from collections import Counter
+from types import MappingProxyType
 from typing import TYPE_CHECKING, NamedTuple, Protocol
 
 from fransys_layout.geometry import text_width
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
     from fransys_layout.stages.types import MarkerSide, PagePlan
 
-    from .types import LocationPath
+    from .types import LocationPath, UnitPath
 
 
 class Grouped(Protocol):
@@ -89,20 +90,51 @@ def _widest_prefix(location_paths: Mapping[int, LocationPath]) -> tuple[str, ...
     return max(paths, key=lambda labels: text_width("".join(labels), height=8), default=())
 
 
+def _subtrees(paths: Mapping[int, UnitPath]) -> dict[UnitPath, list[int]]:
+    """Each unit path's subtree: the sets whose unit path starts with it (the top's is empty)."""
+    found: dict[UnitPath, list[int]] = {}
+    for number, path in paths.items():
+        for depth in range(len(path) + 1):
+            found.setdefault(path[:depth], []).append(number)
+    return found
+
+
 def set_digits(
     markers: Iterable[Grouped],
     plans: Iterable[PagePlan],
     location_paths: Mapping[int, LocationPath],
+    unit_paths: Mapping[int, UnitPath] = MappingProxyType({}),
 ) -> tuple[SetDigits, ...]:
-    """Every drawing set's `SetDigits`, from its reference groups and its sheets, by set."""
+    """Every drawing set's `SetDigits`, from its reference groups and its sheets, by set.
+
+    A set sizes its other-set forms from the sets of its own subtree only: those whose unit path
+    starts with its own (UNIT-REF-BOX, layout-0132).
+    """
     sheets = Counter(plan.drawing_set for plan in plans)
     groups = _reference_groups(markers)
-    other = len(str(max(sheets))) if len(sheets) > 1 else 0
-    prefix = _widest_prefix(location_paths) if other else ()
+    paths = {one: unit_paths.get(one, ()) for one in sheets}
+    subtrees = _subtrees(paths)
+    sized: dict[UnitPath, tuple[int, tuple[str, ...]]] = {}
+    for path, mates in subtrees.items():
+        other = len(str(max(mates))) if len(mates) > 1 else 0
+        widest = _widest_prefix({n: location_paths[n] for n in mates if n in location_paths})
+        sized[path] = (other, widest if other else ())
     found = []
     for one in sorted(sheets):
+        other, prefix = sized[paths[one]]
         refs, pages = _digit_widths(groups[one], sheets[one])
         found.append(
             SetDigits(drawing_set=one, refs=refs, sheets=pages, other_sets=other, prefix=prefix)
         )
     return tuple(found)
+
+
+def digits_by_set(
+    plans: Iterable[PagePlan],
+    location_paths: Mapping[int, LocationPath],
+    unit_paths: Mapping[int, UnitPath],
+) -> dict[int, Digits]:
+    """Each set's box sizing before `place`, from its pages alone (no reference group yet)."""
+    return {
+        one.drawing_set: one.digits for one in set_digits((), plans, location_paths, unit_paths)
+    }

@@ -2115,7 +2115,7 @@
               {
                 "index": 0,
                 "x": 688,
-                "y": 456
+                "y": 432
               },
               {
                 "index": 1,
@@ -2133,7 +2133,7 @@
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "x": 688,
-        "y": 456
+        "y": 432
       },
       {
         "branch": 3,
@@ -2159,7 +2159,7 @@
               {
                 "index": 0,
                 "x": 208,
-                "y": 464
+                "y": 440
               },
               {
                 "index": 1,
@@ -2177,7 +2177,7 @@
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "x": 208,
-        "y": 464
+        "y": 440
       },
       {
         "branch": 1,
@@ -2202,16 +2202,21 @@
             "points": [
               {
                 "index": 0,
-                "x": 552,
-                "y": 96
+                "x": 616,
+                "y": 144
               },
               {
                 "index": 1,
-                "x": 552,
+                "x": 592,
                 "y": 120
               },
               {
                 "index": 2,
+                "x": 552,
+                "y": 120
+              },
+              {
+                "index": 3,
                 "x": 552,
                 "y": 128
               }
@@ -2223,16 +2228,21 @@
             "points": [
               {
                 "index": 0,
-                "x": 552,
-                "y": 192
+                "x": 616,
+                "y": 144
               },
               {
                 "index": 1,
-                "x": 552,
+                "x": 592,
                 "y": 168
               },
               {
                 "index": 2,
+                "x": 552,
+                "y": 168
+              },
+              {
+                "index": 3,
                 "x": 552,
                 "y": 160
               }
@@ -2241,8 +2251,8 @@
         ],
         "page": "layout.page:2c44b2c0c4075cc6a7e4c62981d5e93e",
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "x": 552,
-        "y": 96
+        "x": 616,
+        "y": 144
       }
     ],
     "layout.harness_line": [
@@ -2266,38 +2276,33 @@
         "points": [
           {
             "index": 0,
-            "x": 552,
-            "y": 88
+            "x": 648,
+            "y": 144
           },
           {
             "index": 1,
-            "x": 552,
-            "y": 80
+            "x": 656,
+            "y": 144
           },
           {
             "index": 2,
-            "x": 632,
-            "y": 80
+            "x": 656,
+            "y": 440
           },
           {
             "index": 3,
-            "x": 632,
-            "y": 464
+            "x": 688,
+            "y": 440
           },
           {
             "index": 4,
             "x": 688,
-            "y": 464
-          },
-          {
-            "index": 5,
-            "x": 688,
-            "y": 456
+            "y": 432
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 650,
-        "text_y": 272
+        "text_x": 674,
+        "text_y": 300
       },
       {
         "branch": 3,
@@ -2319,37 +2324,32 @@
         "points": [
           {
             "index": 0,
-            "x": 552,
-            "y": 88
+            "x": 648,
+            "y": 144
           },
           {
             "index": 1,
-            "x": 552,
-            "y": 80
+            "x": 656,
+            "y": 144
           },
           {
             "index": 2,
-            "x": 632,
-            "y": 80
+            "x": 656,
+            "y": 488
           },
           {
             "index": 3,
-            "x": 632,
+            "x": 208,
             "y": 488
           },
           {
             "index": 4,
             "x": 208,
-            "y": 488
-          },
-          {
-            "index": 5,
-            "x": 208,
-            "y": 464
+            "y": 440
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 420,
+        "text_x": 432,
         "text_y": 476
       },
       {
@@ -2372,38 +2372,18 @@
         "points": [
           {
             "index": 0,
-            "x": 552,
-            "y": 192
+            "x": 616,
+            "y": 144
           },
           {
             "index": 1,
-            "x": 552,
-            "y": 200
-          },
-          {
-            "index": 2,
-            "x": 528,
-            "y": 200
-          },
-          {
-            "index": 3,
-            "x": 528,
-            "y": 96
-          },
-          {
-            "index": 4,
-            "x": 552,
-            "y": 96
-          },
-          {
-            "index": 5,
-            "x": 552,
-            "y": 88
+            "x": 648,
+            "y": 144
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 546,
-        "text_y": 164
+        "text_x": 624,
+        "text_y": 132
       }
     ],
     "layout.label": [
@@ -4296,7 +4276,7 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
         "width": 13,
-        "x": 572,
+        "x": 519,
         "y": 140
       },
       {

@@ -5,7 +5,12 @@ emptiness guard here: `boxes_meet` of a zero-size box answers by the comparisons
 that needs the guard (`overlaps`) keeps it.
 """
 
+from typing import TYPE_CHECKING
+
 from .boxes import Box, pad
+
+if TYPE_CHECKING:
+    from .units import Point
 
 type Span = tuple[int, int]
 
@@ -32,3 +37,19 @@ def boxes_meet(a: Box, b: Box, *, closed: bool, gap: int = 0) -> bool:
 def contains_point(box: Box, x: int, y: int) -> bool:
     """Whether the point `(x, y)` is in `box`, edges included."""
     return box.x <= x <= box.x + box.width and box.y <= y <= box.y + box.height
+
+
+def through(segment: tuple[Point, Point], box: Box) -> bool:
+    """Whether `segment` passes through `box`'s interior; touching an edge does not count."""
+    (a, b), low, high = segment, 0.0, 1.0
+    for start, delta, lo, hi in (
+        (a.x, b.x - a.x, box.x, box.x + box.width),
+        (a.y, b.y - a.y, box.y, box.y + box.height),
+    ):
+        if delta == 0:
+            if not lo < start < hi:
+                return False
+            continue
+        one, two = (lo - start) / delta, (hi - start) / delta
+        low, high = max(low, min(one, two)), min(high, max(one, two))
+    return low < high

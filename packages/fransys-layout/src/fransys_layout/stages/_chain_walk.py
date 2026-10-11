@@ -11,7 +11,7 @@ from fransys_layout.geometry import follow
 from ._chain_sides import _wired
 from ._chain_state import _LINK_PORTS, _Links, _Reading, _Synthetic, _Walks
 from ._chain_ties import _strip_of, needs_reverse
-from .lookups import group_of
+from .lookups import device_turns, group_of, turn_mirrors
 from .slices import by_key
 from .terminal_facts import TerminalRead
 
@@ -148,20 +148,18 @@ def _note_turns(
     seq: Sequence[tuple[_PoleId, Handle, Handle]], poles: Mapping[_PoleId, _Pole], out: _Walks
 ) -> None:
     """A terminal's entry port faces N; drawn at R180 when it is the S-facing one."""
-    # So is a non-terminal function whose directed poles all point against their chains
-    # (a mate pole has no `inn`); the turn is per function, so a pole that points with its
-    # chain vetoes it
+    # So is a non-terminal function whose wired poles all point against their chains
+    # (a mate pole has no `inn`); the turn is per function: only wired poles vote, and when
+    # they disagree the device stays R0 (`settle_turns`)
     for p, e, _ in seq:
         pole = poles[p]
         if pole.inn is None:
             continue
-        if pole.terminal:
-            if pole.inn != e:
-                out.flipped.add(pole.function)
-        elif pole.inn == e:
-            out.along.add(pole.function)
-        else:
-            out.against.add(pole.function)
+        turn = pole.inn != e
+        if turn_mirrors(terminal=pole.terminal):
+            out.votes.setdefault(pole.function, []).append((p, turn))
+        elif turn:
+            out.flipped.add(pole.function)
 
 
 def _note_edges(seq: Sequence[tuple[_PoleId, Handle, Handle]], rd: _Reading, out: _Walks) -> None:
@@ -265,9 +263,16 @@ def walk_chains(
     out = _Walks()
     for walk in walks:
         _settle_walk(walk, rd, links, out)
-    out.turned = out.against - out.along  # Only these are drawn MR180
-    out.flipped |= out.turned
     return out
+
+
+def settle_turns(walks: _Walks, state: _Poles, nets: _Nets, found: _Sides) -> None:
+    """The functions drawn MR180: each wired pole votes, and `device_turns` decides."""
+    for function, votes in walks.votes.items():
+        wired = [a for pid, a in votes if _pole_wired(pid, state, nets, found.side_ports)]
+        if device_turns(wired):
+            walks.turned.add(function)
+    walks.flipped |= walks.turned
 
 
 def _spare(
@@ -283,10 +288,16 @@ def _spare(
     return (
         not pole.terminal
         and pole.function in longer
-        and not _wired(
-            pole.ports, (*pole.ports, *side_ports.get(pid, ())), nets.net_of, nets.net_size
-        )
+        and not _pole_wired(pid, state, nets, side_ports)
     )
+
+
+def _pole_wired(
+    pid: _PoleId, state: _Poles, nets: _Nets, side_ports: Mapping[_PoleId, set[Handle]]
+) -> bool:
+    """Whether a port outside the pole's group shares its nets (the group: `drop_unwired_poles`)."""
+    pole = state.poles[pid]
+    return _wired(pole.ports, (*pole.ports, *side_ports.get(pid, ())), nets.net_of, nets.net_size)
 
 
 def drop_unwired_poles(walks: _Walks, state: _Poles, nets: _Nets, found: _Sides) -> None:

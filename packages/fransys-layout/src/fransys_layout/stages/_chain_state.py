@@ -122,10 +122,8 @@ class _Walks:
     flipped: set[Handle] = dataclasses.field(default_factory=set)
     # Edge poles entered from the edge
     edge_top: set[_PoleId] = dataclasses.field(default_factory=set)
-    # A directed pole against its chain
-    against: set[Handle] = dataclasses.field(default_factory=set)
-    # A directed pole along its chain
-    along: set[Handle] = dataclasses.field(default_factory=set)
+    # Per function, (pole, against its chain) for each directed pole
+    votes: dict[Handle, list[tuple[_PoleId, bool]]] = dataclasses.field(default_factory=dict)
     upper_of: dict[_PoleId, Handle] = dataclasses.field(default_factory=dict)
     turned: set[Handle] = dataclasses.field(default_factory=set)
     bundles: list[list[list[_PoleId]]] = dataclasses.field(default_factory=list)

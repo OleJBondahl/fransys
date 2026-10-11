@@ -14,16 +14,18 @@ from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, pad
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.lint import HarnessInk
 from fransys_layout.stages.content import content_box, drawn_extent
+from fransys_layout.stages.fan_tags import tags_out_of_fans
 from fransys_layout.stages.grid_path import cells_of
 from fransys_layout.stages.harness_route import Grid, line_text, text_centre
 from fransys_layout.stages.line_draw import EndOnPage, PinAt, drawn_end, line_pieces
-from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub
+from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub, slant_boxes
 from fransys_layout.stages.line_trunk import LEAVE_GRIDS
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.route import port_end
 from fransys_layout.stages.space import Shape, Space, span
 from fransys_layout.stages.texts.candidates import DEFAULT_TABLE
 from fransys_layout.stages.texts.place_texts import place_texts
+from fransys_layout.stages.types import PlacedLabel
 from fransys_model.kernel import Finding, value
 
 from .read.harness_lines import drawn_on, line_reads
@@ -36,13 +38,7 @@ if TYPE_CHECKING:
     from fransys_layout.stages.connector_boxes import PlacedConnectorBox
     from fransys_layout.stages.line_draw import Pieces
     from fransys_layout.stages.middle import MiddleUnit
-    from fransys_layout.stages.types import (
-        Connection,
-        DrawnFunction,
-        PlacedFunction,
-        PlacedLabel,
-        Profile,
-    )
+    from fransys_layout.stages.types import Connection, DrawnFunction, PlacedFunction, Profile
     from fransys_model.kernel import Id, Model
 
     from .read import StageInputs
@@ -81,6 +77,7 @@ class LineScene:
     sheet: Any
     hidden: frozenset[Id[Any]] = frozenset()  # layout-0155: boxed pin views, which draw nothing
     units: Mapping[int, Id[Any] | None] = MappingProxyType({})  # each drawing set's unit
+    wires: Mapping[_Page, tuple[Any, ...]] = MappingProxyType({})  # each page's wires as spans
 
 
 @value
@@ -91,6 +88,7 @@ class DrawnPieces:
     fan_outs: tuple[DrawnFanOut, ...] = ()
     stubs: tuple[LineStub, ...] = ()
     findings: tuple[Finding, ...] = ()
+    labels: tuple[PlacedLabel, ...] = ()  # the page's labels, a tag a fan wraps moved aside
 
 
 @dataclass(frozen=True)
@@ -134,7 +132,8 @@ def draw_lines(
     found = DrawnPieces()
     for page in sorted(pieces):
         found = _page_pieces(found, page, pieces[page], (texts, world, scene))
-    return found
+    tags = tags_out_of_fans(scene.labels, scene.placed, found.fan_outs, found.lines, scene.sheet)
+    return replace(found, labels=tags)
 
 
 def _route_pages(lines: LineReads, grid: Grid, context: _Context) -> _Routed:
@@ -160,12 +159,18 @@ def _route_line(
 ) -> Pieces:
     """One line's pieces on one page; routes keep the unplaced stub width, only the box grows."""
     (page, ends, absent), (texts, world, scene) = on, context
-    bare = replace(texts, spots={})
-    wide = widest_stub(bare, line, (page, scene.units.get(page[0]), ()), scene.profile)
+    unit = scene.units.get(page[0])
+    wide = widest_stub(replace(texts, spots={}), line, (page, unit, ()), scene.profile)
     trunk = _trunk(line, ends, (page, here), world)
-    size = (wide, scene.profile.text_height + 2 * scene.profile.marker_padding)
+    high = scene.profile.text_height + 2 * scene.profile.marker_padding
+    room = widest_stub(texts, line, (page, unit, tuple(absent)), scene.profile), high
+    here = replace(here, stub=room, wires=scene.wires.get(page, ()))
     return line_pieces(
-        ends, absent[0] if absent else None, here, margin=wide // 2, trunk=trunk and (trunk, size)
+        ends,
+        absent[0] if absent else None,
+        here,
+        margin=wide // 2,
+        trunk=trunk and (trunk, (wide, high)),
     )
 
 
@@ -182,8 +187,8 @@ def _world(carried: Sequence[Connection], units: Sequence[MiddleUnit], scene: Li
     for box in scene.boxes:
         boxes[box.function][box.drawing_set, box.page] = box
         shapes[box.drawing_set, box.page].append(Shape(owner=box.function, box=box.box))
-    for page, label in _labels(scene):
-        shapes[page].append(Shape(owner=None, box=label.box))
+    for label in scene.labels:
+        shapes[label.drawing_set, label.page].append(Shape(owner=None, box=label.box))
     for page, owner, box in scene.keepouts:
         shapes[page].append(Shape(owner=owner, box=box))
     refs: dict[Id[Any], list[tuple[Id[Any], Any]]] = defaultdict(list)
@@ -201,10 +206,6 @@ def _world(carried: Sequence[Connection], units: Sequence[MiddleUnit], scene: Li
         frozenset(one.edge.function for one in every if one.leaving),
         frozenset(one.edge.function for unit in units if unit.top for one in unit.interfaces),
     )
-
-
-def _labels(scene: LineScene) -> list[tuple[_Page, Any]]:
-    return [((label.drawing_set, label.page), label) for label in scene.labels]
 
 
 def _pages(line: LineRead, world: _World) -> list[_Page]:
@@ -248,7 +249,7 @@ def _trunk(
         found = _end_on(first, other, world)
         if found is not None:
             region = grid.region
-            return OPPOSITE[drawn_end(found, (region.x, region.x + region.width)).end.facing]
+            return OPPOSITE[drawn_end(found, (region.x, region.x + region.width), grid).end.facing]
     return None
 
 
@@ -284,15 +285,14 @@ def _pins(end: HarnessLineEnd, page: _Page, world: _World) -> list[PinAt]:
             placed = world.where.get(ref.function, {}).get(page)
             if placed is not None:
                 at = port_end(ref, {ref.function: placed}, world.drawn_of)
-                found.append(PinAt(conductor, at, _row(placed_keepout(placed), at.facing)))
+                found.append(PinAt(conductor, at, *_rows(placed_keepout(placed), at.facing)))
     return found
 
 
-def _row(keepout: Box, facing: Facing) -> tuple[int, int]:
-    """A pin's row for its fan (layout-0154 item 5): its symbol's keep-out along the facing axis."""
-    if facing in (Facing.N, Facing.S):
-        return keepout.y, keepout.y + keepout.height
-    return keepout.x, keepout.x + keepout.width
+def _rows(keepout: Box, facing: Facing) -> tuple[tuple[int, int], tuple[int, int]]:
+    """A pin's rows (layout-0154 item 5): its keep-out along the facing axis, then across."""
+    along = (keepout.y, keepout.y + keepout.height), (keepout.x, keepout.x + keepout.width)
+    return along if facing in (Facing.N, Facing.S) else (along[1], along[0])
 
 
 def _grid(grid: Grid, page: _Page, world: _World) -> Grid:
@@ -314,7 +314,8 @@ def _page_pieces(
     """One page's lines with their labels placed in one `place_texts` call, fans and stubs."""
     texts, world, scene = run
     paths = [(line.owner, branch, points) for line, one in pieces for branch, points in one.paths]
-    centres, unplaced = _label_boxes(paths, texts, world.shapes.get(page, []), scene)
+    legs = [leg.points for _, one in pieces for fan in one.fans for leg in fan.legs]
+    centres, unplaced = _label_boxes(paths, legs, texts, world.shapes.get(page, []), scene)
     lines = tuple(
         DrawnLine(
             harness=owner,
@@ -360,19 +361,22 @@ def _page_pieces(
 
 def _label_boxes(
     paths: Sequence[tuple[Id[Any], int, tuple[Any, ...]]],
+    legs: Sequence[tuple[Any, ...]],
     texts: LineTexts,
     shapes: Sequence[Shape],
     scene: LineScene,
 ) -> tuple[dict[tuple[Id[Any], int], Any], tuple[Finding, ...]]:
     """Each path's designation at the first free candidate along its longest run.
 
-    Every run keeps every label the house text gap off, its own line's too (layout-0158).
+    Every run keeps every label the house text gap off (layout-0158); a fan-out leg is kept clear
+    along its slant, sampled every `WIRING_GRID // 2`.
     """
     runs = [
         Shape(owner=None, box=pad(span(first, second), TEXT_GAP))
         for _, _, points in paths
         for first, second in pairwise(points)
     ]
+    runs += [Shape(owner=None, box=box) for leg in legs for box in slant_boxes(leg)]
     to_place = tuple(
         line_text(owner, branch, points, texts.size(owner, branch, scene.profile))
         for owner, branch, points in paths

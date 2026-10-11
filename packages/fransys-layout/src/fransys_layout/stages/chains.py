@@ -46,7 +46,7 @@ from ._chain_cells import build_cells
 from ._chain_poles import build_poles
 from ._chain_reach import start_reach, vote_columns
 from ._chain_sides import build_nets, find_sides
-from ._chain_walk import bundle_chains, drop_unwired_poles, find_links, walk_chains
+from ._chain_walk import bundle_chains, drop_unwired_poles, find_links, settle_turns, walk_chains
 from .attach import _entry
 from .columns import build_column
 from .slices import by_key
@@ -123,6 +123,7 @@ def discover_chains(
     links = find_links(state, nets, specs, connections)
     walks = walk_chains(state, links, specs, rank_of, tie_key)
     drop_unwired_poles(walks, state, nets, found)
+    settle_turns(walks, state, nets, found)
     bundle_chains(walks, state, links, specs, key_order)
     reach = start_reach(state, nets, specs, drawn_of, found.side_info)
     reach.fixed = records.fixed

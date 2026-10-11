@@ -77,7 +77,10 @@ def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]
     decided, findings = _decided(inputs, joins, MappingProxyType({}))
     # A power end prints no `#n`, so it is no reference group
     digits = set_digits(
-        (one for one in decided.markers if not one.symbol), seating.plans, inputs.location_paths
+        (one for one in decided.markers if not one.symbol),
+        seating.plans,
+        inputs.location_paths,
+        inputs.unit_paths,
     )
     wider = {one.drawing_set: one.digits for one in digits}
     if any(counts != FLOOR for counts in wider.values()):

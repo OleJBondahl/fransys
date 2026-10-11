@@ -159,3 +159,23 @@ def test_a_set_of_a_hundred_groups_gets_three_digits_and_its_neighbour_two() -> 
         SetDigits(drawing_set=1, refs=3, sheets=2, other_sets=1),
         SetDigits(drawing_set=2, refs=2, sheets=2, other_sets=1),
     )
+
+
+def test_a_set_is_sized_from_its_own_unit_subtree_only() -> None:
+    """Top (set 1, path ()) sees every set; outer (2, (U,)) sees its inner (10, (U, V)); inner
+    and a sibling unit (3, (W,)) see only themselves (UNIT-REF-BOX, layout-0132)."""
+    # CAN-FAIL: stages/references/digits.py `_subtrees`: `path[:depth]` -> `path`
+    #     (only the set's own path) (equal-unit grouping) leaves outer at 0 other sets
+    plans = [replace(page_plan(("a",)), drawing_set=s) for s in (1, 2, 3, 10)]
+    unit, inner, other = hid("unit", 1), hid("unit", 2), hid("unit", 3)
+    paths = {1: (), 2: (unit,), 3: (other,), 10: (unit, inner)}
+    places = {
+        2: ((hid("p", 1), "A"),),
+        3: ((hid("p", 2), "SIBLING-LONG-LABEL"),),
+        10: ((hid("p", 3), "INNER-LABEL"),),
+    }
+    found = {one.drawing_set: one for one in set_digits((), plans, places, paths)}
+    assert {n: one.other_sets for n, one in found.items()} == {1: 2, 2: 2, 3: 0, 10: 0}
+    assert found[1].prefix == ("SIBLING-LONG-LABEL",)
+    assert found[2].prefix == ("INNER-LABEL",)  # the outer's prefix grows from its inner's label
+    assert found[10].prefix == ()  # the inner takes nothing from the outer

@@ -275,13 +275,6 @@ def test_no_conductor_is_lost_at_any_narrow_content_width(width_mm: int) -> None
     assert "CONNECTION_NOT_DRAWN" not in codes
 
 
-_LINES_SEEN = (
-    "layout-0158 F1: the harness-ink checks see the cabinet's W1 line through a symbol "
-    "(WIRE_THROUGH_SYMBOL), still after F5; named for the review"
-)
-
-
-@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 @pytest.mark.parametrize("width_mm", [250, 150])
 def test_a_severed_signal_has_a_marker_pair_that_no_wire_runs_over(width_mm: int) -> None:
     """The K1 to K2 signal is cut; no wire ever runs over a MARKER box, at either width.

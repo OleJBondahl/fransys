@@ -73,3 +73,15 @@ def nets_from_pairs(
     for first, second in pairs:
         nets.union(first, second)
     return nets
+
+
+def device_turns(against: Iterable[bool]) -> bool:
+    """A device drawn in one cell turns as a whole: with a wired pole, each one running against."""
+    # `against` holds one vote per wired pole; an unwired pole has no direction and sends none
+    votes = tuple(against)
+    return bool(votes) and all(votes)
+
+
+def turn_mirrors(*, terminal: bool) -> bool:
+    """The form of a turned pole: a strip terminal turns at R180, every other one at MR180."""
+    return not terminal

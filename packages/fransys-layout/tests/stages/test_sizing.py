@@ -62,3 +62,20 @@ def test_a_column_is_as_wide_as_its_placed_extent_plus_the_gap_when_that_is_more
 
     # extent: from 104 - 8 = 96 to 112 - 8 + 56 = 160, so 64, plus the gap 48
     assert found == (ColumnWidth(column=("invented", "a"), width=112), wide)
+
+
+def test_a_column_counts_its_pitch_to_the_next_ink_and_the_last_counts_ink_plus_gap() -> None:
+    """Columns `a` and `b` share a page; `b`'s ink is 200 past `a`'s, over 56 + 48 (layout-0175)."""
+    # UNDO: stages/sizing.py:placed_widths, `right = inks[index + 1].x ...` -> `ink.x + ink.width`
+    #     plus the gap (the old hull-plus-gap rule)
+    first = ColumnWidth(column=("invented", "a"), width=10)
+    last = ColumnWidth(column=("invented", "b"), width=10)
+    placements = (placed(1, x=104, y=0, name="a"), placed(2, x=304, y=0, name="b"))
+
+    found = placed_widths((first, last), placements, 48)
+
+    # a: ink from 96, next ink from 296 -> 200; b: ink 56 wide plus the gap 48
+    assert found == (
+        ColumnWidth(column=("invented", "a"), width=200),
+        ColumnWidth(column=("invented", "b"), width=104),
+    )

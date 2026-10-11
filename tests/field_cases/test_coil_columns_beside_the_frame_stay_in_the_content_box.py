@@ -6,8 +6,10 @@ terminals on other pages, so their ends carry link markers.
 
 The bug: the last column stands against the frame and its terminal's label, keep-out box and
 marker box leave the content box (`OUT_OF_CONTENT_BOX`, three findings). The consumer sees the same
-finding on coil ports A1 and A2, which demo parts do not reach (a missing demo part:
-`DEMO-SW-8P` comes with UNIT-PROFILE). Open: designer ruling LEGACY-CHAINS, so strict xfail.
+finding on coil ports A1 and A2, which demo parts do not reach (`DEMO-SW-8P` now
+exists; a coil-at-frame case with it has the same cause and is not added).
+The fix (decision layout-0175): packing counts a column's placed pitch, so a column whose ink would
+leave the box moves whole to the next page.
 """
 
 import tempfile
@@ -15,10 +17,8 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import fransys as fr
-import pytest
 
 _COLUMNS = 9
-_HELD = "a column next to the frame leaves the content box: designer ruling LEGACY-CHAINS"
 
 
 class _Strips(NamedTuple):
@@ -52,7 +52,6 @@ def _control(d: Any) -> _Strips:
     return _Strips(x4)
 
 
-@pytest.mark.xfail(strict=True, reason=_HELD)
 def test_coil_columns_beside_the_frame_stay_in_the_content_box() -> None:
     d = fr.design("demo_parts")
     d.add(_control, "U1")

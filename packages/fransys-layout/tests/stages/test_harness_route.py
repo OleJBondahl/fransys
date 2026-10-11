@@ -169,3 +169,24 @@ def test_two_legs_of_one_harness_place_their_labels_in_one_call() -> None:
     placed, _ = place_texts(texts, Space(shapes=()), DEFAULT_TABLE)
     assert {one.slot for one in placed} == {"1", "2"}
     assert text_centre(next(one for one in placed if one.slot == "2")) == Point(x=23, y=80)
+
+
+def test_a_goal_on_a_keep_outs_edge_frees_that_keep_out_but_not_a_text_inside_it() -> None:
+    """UNIT-CABLE-ROUTE-FIX: a goal facing into the keep-out it stands on; the line avoids a text.
+
+    UNDO: `_not_around` compares with `<` instead of `<=`, so the edge-standing keep-out stays,
+    the search drops every obstacle and the path runs through the text.
+    """
+    wall = Box(x=-16, y=24, width=32, height=40)
+    text = Box(x=-4, y=36, width=8, height=16)
+    grid = Grid(
+        region=_OPEN.region,
+        obstacles=(Obstacle(box=wall, lanes=()), Obstacle(box=text, lanes=())),
+        turn_penalty=8,
+    )
+    (path,) = line_paths((_end(1, 0, 0, Facing.S), _end(2, 0, 64, Facing.N)), grid).values()
+    assert (path[0], path[-1]) == (Point(x=0, y=0), Point(x=0, y=64))
+    assert not any(
+        text.x < c[0] < text.x + text.width and text.y < c[1] < text.y + text.height
+        for c in cells_of(path)
+    )

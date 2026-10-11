@@ -8,6 +8,7 @@ from fransys_layout.geometry import HintError, LayoutError
 from fransys_model.kernel import Finding, Severity
 
 from ._chain_beside import read_down
+from .lookups import turn_mirrors
 from .types import ROLE_ORDER, Cell, Column, Role
 
 if TYPE_CHECKING:
@@ -76,12 +77,15 @@ def columns_from_chains(
             steps.append((entry, spec))
         _check_series(chain, steps)
         steps = read_down(chain, steps, specs, drawn_by)
-        flipped = _entered_from_south(
-            steps, drawn_by, connections, any_function=chain.beside is not None
-        )
+        flipped = _entered_from_south(steps, drawn_by, connections)
         cells = tuple(
-            Cell(function=entry.function, index=entry.index, flip=entry.function in flipped)
-            for entry, _ in steps
+            Cell(
+                function=entry.function,
+                index=entry.index,
+                flip=entry.function in flipped,
+                mirror=entry.function in flipped and turn_mirrors(terminal=_is_terminal(spec)),
+            )
+            for entry, spec in steps
         )
         column = build_column(chain.key, cells, [spec for _, spec in steps])
         columns.append(replace(column, beside=chain.beside))
@@ -120,12 +124,15 @@ def _joined_ports(connections: tuple[Connection, ...]) -> set[tuple[Handle, Hand
     return {(c.a.port, c.b.port) for c in connections} | {(c.b.port, c.a.port) for c in connections}
 
 
-def _terminal_drawing(
-    spec: FunctionSpec, drawn_of: Mapping[Handle, DrawnFunction], *, any_function: bool
+def _is_terminal(spec: FunctionSpec) -> bool:
+    """Whether the function is a strip terminal: the form of its turn is `turn_mirrors`."""
+    return spec.roles.terminal and len(spec.ports) == _TERMINAL_PORTS
+
+
+def _drawing_of(
+    spec: FunctionSpec, drawn_of: Mapping[Handle, DrawnFunction]
 ) -> DrawnFunction | None:
-    """The drawing of a strip terminal (any function when asked), None for others or undrawn."""
-    if not any_function and (not spec.roles.terminal or len(spec.ports) != _TERMINAL_PORTS):
-        return None
+    """The drawing of a chain function, None when nothing is drawn."""
     drawing = drawn_of.get(spec.function)
     if drawing is None and drawn_of:
         msg = "a terminal of a chain has no drawn function to read its facing from"
@@ -160,29 +167,41 @@ def _other_port(spec: FunctionSpec, entry: PortSpec) -> PortSpec | None:
     return None
 
 
-def _enters_south(spec: FunctionSpec, entry: PortSpec, drawing: DrawnFunction) -> bool:
-    """Whether the terminal's entry port faces S and its other port faces N in the drawing."""
+def _across(
+    spec: FunctionSpec, entry: PortSpec, drawing: DrawnFunction, symbol_port: Mapping[Handle, str]
+) -> str | None:
+    """The symbol port across the entry port's pole: its twin port, else the through path's end."""
     other = _other_port(spec, entry)
+    if other is not None:
+        return symbol_port.get(other.port)
+    through = drawing.geometry.through
+    here = symbol_port.get(entry.port)
+    if through is None or here not in (through.start, through.end):
+        return None
+    return through.end if here == through.start else through.start
+
+
+def _enters_south(spec: FunctionSpec, entry: PortSpec, drawing: DrawnFunction) -> bool:
+    """Whether the entry port faces S and the port across its pole faces N in the drawing."""
     symbol_port = {dp.port: dp.symbol_port for dp in drawing.ports}
-    if other is None or entry.port not in symbol_port or other.port not in symbol_port:
-        msg = "a terminal port of a chain does not map to a symbol port"
+    if entry.port not in symbol_port:
+        msg = "a port of a chain does not map to a symbol port"
         raise LayoutError(msg)
+    across = _across(spec, entry, drawing, symbol_port)
     facing = {g.name: g.facing.value for g in drawing.geometry.ports}
-    return facing.get(symbol_port[entry.port]) == "s" and facing.get(symbol_port[other.port]) == "n"
+    return facing.get(symbol_port[entry.port]) == "s" and facing.get(across) == "n"
 
 
 def _entered_from_south(
     steps: Sequence[tuple[ChainEntry, FunctionSpec]],
     drawn_of: Mapping[Handle, DrawnFunction],
     connections: tuple[Connection, ...],
-    *,
-    any_function: bool = False,
 ) -> set[Handle]:
-    """The terminals of a chain (any function of a beside chain) entered by their S-facing port."""
+    """The functions of a chain entered by their S-facing port, against the pole's direction."""
     joined = _joined_ports(connections)
     flipped: set[Handle] = set()
     for at, (_, spec) in enumerate(steps):
-        drawing = _terminal_drawing(spec, drawn_of, any_function=any_function)
+        drawing = _drawing_of(spec, drawn_of)
         if drawing is None:
             continue
         entries = _entry_ports(steps, at, joined)

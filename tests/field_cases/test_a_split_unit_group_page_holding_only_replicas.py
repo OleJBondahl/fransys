@@ -19,6 +19,7 @@ on a lead housing at the line's far end, is cut and builds with no replica-only 
 `test_the_original_input_with_a_contactor_is_cut_and_builds`. The replica-only page is still held
 by the same input with the contactor swapped for a plain 4-pin header end; the other tests use it.
 A landed field case's input never changes silently: the premise moved to a second input.
+layout-0175: the content was grown (J2 and J4 to ten and fourteen pins) so the group splits again.
 """
 
 import tempfile
@@ -121,9 +122,9 @@ class _Board(NamedTuple):
 def _board(u: Any) -> _Board:
     return _Board(
         a=u.device("J1", "FLD-HDR-14", interface=True),
-        b=u.device("J2", "FLD-HDR-4", interface=True),
+        b=u.device("J2", "FLD-HDR-10", interface=True),
         c=u.device("J3", "FLD-HDR-2", interface=True),
-        d=u.device("J4", "FLD-HDR-10", interface=True),
+        d=u.device("J4", "FLD-HDR-14", interface=True),
     )
 
 
@@ -148,9 +149,9 @@ def _wire_the_board(u: Any, b: Any, p: Any, lp: Any) -> None:
     for pin in range(1, 5):
         u.wire(p[str(pin)], lp[str(pin)], wire=("WH", 0.5))
     for tag, part, board_pin, count in (
-        ("Y1", "FLD-HDR-4", b.b, 4),
+        ("Y1", "FLD-HDR-10", b.b, 10),
         ("Z1", "FLD-HDR-10", b.c, 2),
-        ("Z2", "FLD-HDR-14", b.d, 10),
+        ("Z2", "FLD-HDR-14", b.d, 14),
     ):
         far = u.device(tag, part)
         for pin in range(1, count + 1):
@@ -246,7 +247,7 @@ def _pins_left_to_right(tag: str) -> list[str]:
     return [pin for _, pin in sorted(found)]
 
 
-_NATURAL = [str(n) for n in range(1, 11)]
+_NATURAL = [str(n) for n in range(1, 15)]
 
 
 def test_the_replicas_run_in_pin_order() -> None:

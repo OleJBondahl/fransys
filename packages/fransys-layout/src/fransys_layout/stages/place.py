@@ -29,7 +29,7 @@ from .line_room import line_room
 from .references.marker_boxes import FLOOR, Digits, reference_box_width
 from .room import grow_keepout, room_offset
 from .stack_room import make_room
-from .stacking import JoinedRun, PageStack, StackedPort, blocks, gaps_below, join_offset
+from .stacking import JoinedRun, PageStack, StackedPort, blocks, gaps_below
 from .texts.stand import end_boxes
 from .types import PlacedFunction
 
@@ -202,13 +202,13 @@ def _align_joins(
             )
             for end in run.ends
         ]
-        y = join_offset(one.offset + drop for _, (_, one), drop in ends)
-        for rows, (first, one), drop in ends:
-            if one.offset + drop == y:
-                continue
-            start = next(index for index, row in enumerate(rows) if row is first)
-            new_top = min(cell.top for cell in first) + y - one.offset - drop
-            _cascade(rows, start, new_top, gaps_of(rows))
+        offsets = [one.offset + drop for _, (_, one), drop in ends]
+        y = next((at for at, e in zip(offsets, run.ends, strict=True) if e.anchor), max(offsets))
+        for (rows, (first, one), drop), at in zip(ends, offsets, strict=True):
+            if at < y:  # else at the run's y, or a branch end already deeper than its anchor
+                start = next(index for index, row in enumerate(rows) if row is first)
+                new_top = min(cell.top for cell in first) + y - one.offset - drop
+                _cascade(rows, start, new_top, gaps_of(rows))
 
 
 def _stacked(
@@ -224,7 +224,7 @@ def _stacked(
         gaps_of = _gaps_of(stacking.profile, narrowed)
         page, top, floor = _stack_page(plan, columns, drawn_of, stacking, narrowed)
         _align_joins(page, joins, drawn_of, top, gaps_of)
-        runs = [frozenset(end.column for end in run.ends) for run in joins]
+        runs = [frozenset(end.column for end in run.ends) for run in joins if not run.aside]
         again = _narrowed(page, floor, narrowed, stacking.profile, runs)
         if again == narrowed:
             return page, top, floor, gaps_of

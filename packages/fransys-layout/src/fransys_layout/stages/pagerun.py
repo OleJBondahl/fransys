@@ -29,7 +29,7 @@ from .page_stacking import PageStacking
 from .partition import ColumnTables, partition
 from .place import page_stack, place
 from .references import Wiring, side_reference_rooms
-from .references.digits import FLOOR, Digits, set_digits
+from .references.digits import FLOOR, Digits, digits_by_set
 from .references.types import Seat, Seating
 from .replicate import drop_attached_replicas, drop_replicas
 from .route import PageRoom, route
@@ -56,7 +56,7 @@ if TYPE_CHECKING:
 
     from .middle import MiddleGroup
     from .middle_fold import GroupShape
-    from .references.types import LocationPath, References
+    from .references.types import LocationPath, References, UnitPath
     from .stacking import JoinedRun, PageStack
     from .texts.stand import PageTexts
     from .types import (
@@ -126,6 +126,7 @@ class PageRun:
     reserves: dict[tuple[AuthoringKey, Handle], Any]
     # Each drawing set's location path, read from the planned pages (known before `place`)
     paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, LocationPath]]
+    unit_paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, UnitPath]]
     # The power kinds and the item-box sides, by port (`boxes.power_maps`)
     power: tuple[dict[Handle, str], dict[Handle, str]] = ({}, {})
 
@@ -261,7 +262,7 @@ def _place_each(
     )
     rooms_at = rooms_by_page(page_rooms, plans)
     # layout-0135: each set's box width, from the digits known before `place` (not `refs`)
-    sized = {one.drawing_set: one.digits for one in set_digits((), plans, run.paths_of(plans))}
+    sized = digits_by_set(plans, run.paths_of(plans), run.unit_paths_of(plans))
     work = [
         PageSlices(
             plan,

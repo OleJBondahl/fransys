@@ -3,7 +3,6 @@
 The grid is 8. A leaving line runs 6 grids, 48, straight out; a fan-out's split stands 4, 32.
 """
 
-import itertools
 from dataclasses import replace
 
 from samples import hid
@@ -11,6 +10,7 @@ from samples import hid
 from fransys_layout.geometry import Box, Facing, Point
 from fransys_layout.stages.harness_route import Grid, _unspiked
 from fransys_layout.stages.line_draw import EndOnPage, PinAt, Stub, fan_out, line_pieces
+from fransys_layout.stages.line_side import faced
 from fransys_layout.stages.space import End, Obstacle
 
 _GRID = Grid(region=Box(x=0, y=0, width=1000, height=1000), obstacles=(), turn_penalty=8)
@@ -154,13 +154,13 @@ def test_a_path_that_turns_back_on_itself_stops_on_its_end() -> None:
 
 
 def test_two_pin_rows_get_two_fans_and_the_line_runs_on_to_the_second() -> None:
-    """Defect 4: pins in a row at y 0 facing S and a row at y 200 facing N fan
-    apart, each split 32 out of its row; the line ends at the first and runs on to the second.
+    """Defect 4: pins in a row at y 200 and a row at y 0, all facing S, fan apart, each split
+    32 out of its row; the line ends at the first and runs on to the second.
 
     UNDO: one fan for both rows (`_pin_rows` returns one row).
     """
     low = tuple(
-        PinAt(conductor=_C[n], end=End(at=Point(x=16 * n, y=200), facing=Facing.N), row=(200, 216))
+        PinAt(conductor=_C[n], end=End(at=Point(x=16 * n, y=200), facing=Facing.S), row=(200, 216))
         for n in (0, 1)
     )
     high = (PinAt(conductor=_C[2], end=End(at=Point(x=64, y=0), facing=Facing.S), row=(-16, 0)),)
@@ -168,15 +168,84 @@ def test_two_pin_rows_get_two_fans_and_the_line_runs_on_to_the_second() -> None:
     pieces = line_pieces((_plug(1, 400, 400, interface=True), pins), None, _GRID)
     (fan,) = pieces.fans
     starts = {leg.points[0] for leg in fan.legs}
-    assert starts == {Point(x=8, y=168), Point(x=64, y=32)}
+    assert starts == {Point(x=8, y=232), Point(x=64, y=32)}
     ((_, path),) = pieces.paths
     assert set(path) >= starts
-    # no run reaches a split through its own row: south of the S row's, north of the N row's
-    near = [(a, b) for a, b in itertools.pairwise(path)] + [
-        (b, a) for a, b in itertools.pairwise(path)
-    ]
-    assert all(b.y >= 32 for a, b in near if a == Point(x=64, y=32))
-    assert all(b.y <= 168 for a, b in near if a == Point(x=8, y=168))
+
+
+def _coil_end(branch: int, x: int) -> EndOnPage:
+    """A coil's two pins, one facing N and one S, its keep-out 40 wide around x, 80 high."""
+    return EndOnPage(
+        branch=branch,
+        pins=(
+            PinAt(
+                _C[0],
+                End(at=Point(x=x, y=100), facing=Facing.N),
+                row=(100, 180),
+                across=(x - 20, x + 20),
+            ),
+            PinAt(
+                _C[1],
+                End(at=Point(x=x, y=180), facing=Facing.S),
+                row=(100, 180),
+                across=(x - 20, x + 20),
+            ),
+        ),
+    )
+
+
+def test_pins_facing_apart_fan_once_to_the_side_of_the_other_end() -> None:
+    """Layout-0172: a coil's N and S pins fan to the east when the other end lies east, to the
+    west when it lies west; one split level with the coil, past its keep-out, no row run.
+
+    UNDO: `faced` returns its pins as given, and there are two fans' rows and a run round the coil.
+    """
+    east = line_pieces((_coil_end(1, 100), _coil_end(2, 400)), None, _GRID)
+    west = line_pieces((_coil_end(1, 400), _coil_end(2, 100)), None, _GRID)
+    (one, two) = east.fans
+    assert (one.at, one.facing, one.rows) == (Point(x=152, y=136), Facing.E, ())
+    assert (two.at, two.facing, two.rows) == (Point(x=344, y=136), Facing.W, ())
+    assert {fan.at: fan.facing for fan in west.fans} == {
+        Point(x=344, y=136): Facing.W,
+        Point(x=152, y=136): Facing.E,
+    }
+    assert [len(points) for _, points in east.paths] == [2]
+
+
+def test_two_coinciding_splits_leave_the_line_fanned_as_before() -> None:
+    """Layout-0172: coils whose side splits meet at one point leave no bundle: the pins fan N and S
+    as before (the probe's one-point polyline crashed `longest_run`).
+
+    UNDO: `_all_drawn` keeps the side fans, and the line is one point.
+    """
+    pieces = line_pieces((_coil_end(1, 100), _coil_end(2, 204)), None, _GRID)
+    assert {fan.facing for fan in pieces.fans} == {Facing.N}
+    ((_, path),) = pieces.paths
+    assert len(path) > 1
+
+
+def test_pins_spread_along_their_line_keep_their_rows() -> None:
+    """Layout-0172: a motor's pins along its top and bottom would be reached through its body by a
+    side fan, so they fan N and S as before (the website example's cable).
+
+    UNDO: `faced` drops `_one_line`, and the fan faces east.
+    """
+    spread = (
+        PinAt(_C[0], End(at=Point(x=100, y=100), facing=Facing.N), (100, 180), (80, 120)),
+        PinAt(_C[1], End(at=Point(x=116, y=180), facing=Facing.S), (100, 180), (80, 120)),
+    )
+    assert faced(spread, Point(x=400, y=140)) == spread
+    assert faced(_coil_end(1, 100).pins, Point(x=400, y=140)) != _coil_end(1, 100).pins
+
+
+def test_a_line_with_an_end_off_the_page_keeps_its_pins_rows() -> None:
+    """Layout-0172: with the far end absent the line aims nowhere, and N and S pins fan apart.
+
+    UNDO: `aim` ignores `absent`, and the fan faces east.
+    """
+    pieces = line_pieces((_coil_end(1, 100), _coil_end(2, 400)), 3, _GRID)
+    assert {fan.facing for fan in pieces.fans} == {Facing.N}
+    assert all(fan.rows for fan in pieces.fans)
 
 
 _TRUNK = (Facing.S, (40, 16))
@@ -218,3 +287,69 @@ def test_no_free_point_leaves_the_stub_at_the_junction_as_before() -> None:
     wall = Obstacle(box=Box(x=0, y=0, width=1000, height=1000), lanes=())
     pieces = line_pieces(ends, 3, replace(_GRID, obstacles=(wall,)), trunk=_TRUNK)
     assert pieces == line_pieces(ends, 3, replace(_GRID, obstacles=(wall,)))
+
+
+def test_a_side_fans_core_leaves_its_pin_along_the_pin_then_turns_at_the_keep_outs_edge() -> None:
+    """Layout-0172 round 3: a re-faced pin's leg runs a grid out along its own pin, turns there
+    and runs to the keep-out's edge; the leg never runs on the pin's row, the symbol's outline.
+
+    UNDO: `_knees` returns the keep-out edge on the pin's row alone: the turn stands at y 100.
+    """
+    (fan, _) = line_pieces((_coil_end(1, 100), _coil_end(2, 400)), None, _GRID).fans
+    split = fan.at
+    assert [leg.points for leg in fan.legs] == [
+        (split, Point(x=120, y=92), Point(x=100, y=92), Point(x=100, y=100)),
+        (split, Point(x=120, y=188), Point(x=100, y=188), Point(x=100, y=180)),
+    ]
+
+
+def test_a_fan_split_stands_nearer_its_pins_when_it_would_stand_by_a_foreign_keepout() -> None:
+    """Layout-0172 round 3: a box that holds none of the pins keeps the split `FAN_CLEAR` away.
+
+    UNDO: `_foreign` returns no boxes, and the split stands at y 32 on the box.
+    """
+    foreign = Box(x=0, y=40, width=48, height=32)
+    split, legs = fan_out(_pins(Facing.S), None, (foreign,))
+    assert split.y <= foreign.y - 16
+    assert split == Point(x=16, y=24)
+    assert all(leg.points[0] == split for leg in legs)
+    own = Box(x=-8, y=-8, width=64, height=48)
+    assert fan_out(_pins(Facing.S), None, (own,))[0] == Point(x=16, y=32)
+
+
+def test_a_fan_split_leaves_the_grid_where_its_bundle_arrives_clear_of_a_side_fans_symbol() -> None:
+    """Layout-0172 round 4: the split clear of a box is not enough; the grid past it must be.
+
+    The box's clearance starts at y 32: a split there stands clear, but the bundle line arrives
+    at y 40, inside it, over that symbol's cores.
+
+    UNDO: `_split` ignores `apart`, and the split stands at y 32.
+    """
+    foreign = Box(x=0, y=48, width=48, height=32)
+    assert fan_out(_pins(Facing.S), None, (foreign,))[0] == Point(x=16, y=32)
+    assert fan_out(_pins(Facing.S), None, (), (foreign,))[0] == Point(x=16, y=24)
+
+
+def test_a_motors_pins_facing_apart_in_two_rows_fan_each_row_its_own_way() -> None:
+    """Mixed-facing rows: pins at y 400 facing S and two at y 200 facing N, no side to aim at.
+
+    The south pair splits 32 below its row, the north pair 32 above its own; the line runs on
+    from the first split to the second.
+
+    UNDO: `_meet` ignores facing, and one row of five pins fans south.
+    """
+    low = tuple(
+        PinAt(conductor=_C[n], end=End(at=Point(x=16 * n, y=400), facing=Facing.S), row=(200, 416))
+        for n in (0, 1)
+    )
+    high = tuple(
+        PinAt(conductor=_C[2], end=End(at=Point(x=x, y=200), facing=Facing.N), row=(200, 416))
+        for x in (64, 80)
+    )
+    pins = EndOnPage(branch=2, pins=(*low, *high))
+    pieces = line_pieces((_plug(1, 700, 700, interface=True), pins), None, _GRID)
+    (fan,) = pieces.fans
+    assert (fan.at, fan.facing) == (Point(x=8, y=432), Facing.S)
+    assert fan.rows == (End(at=Point(x=72, y=168), facing=Facing.N),)
+    ((_, path),) = pieces.paths
+    assert set(path) >= {fan.at, fan.rows[0].at}

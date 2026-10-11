@@ -22,7 +22,6 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-import pytest
 from _model_build_cover import layout_trigger_document
 from fransys_kicad import netlist as kicad_netlist
 
@@ -397,13 +396,6 @@ def test_the_system_builds_field_terminals_are_wired_and_boundary_unconnected_cl
     assert len(boundaries(result.model)) == 6
 
 
-_LINES_SEEN = (
-    "layout-0158 F1: the harness-ink checks see the worked example's lines over labels "
-    "(WIRE_OVER_LABEL), still after F5; named for the review"
-)
-
-
-@pytest.mark.xfail(strict=True, reason=_LINES_SEEN)
 def test_the_two_connector_markers_above_the_terminal_row_each_find_a_place():
     """On each cabinet the two sibling pins of the connector row carry a tall
     marker box over a 112-high gap above the terminal row. Each box stands beside the pins'

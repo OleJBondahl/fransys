@@ -1,4 +1,4 @@
-"""Label text (D7): one `<text>` per `layout.label` on a page, ordered by `id` (D11)."""
+"""Label text: one `<text>` per `layout.label` on a page, ordered by `id`."""
 
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 def labels_on_page(model: Model, page: Page) -> tuple[Label, ...]:
-    """Every `layout.label` on `page`, ordered by `id` (D11)."""
+    """Every `layout.label` on `page`, ordered by `id`."""
     return page_slice(model, Label, page)
 
 
@@ -31,7 +31,7 @@ def _item_installed(model: Model, item: Id[Item]) -> bool:
 
 
 def _not_installed(model: Model, label: Label) -> bool:
-    """D10: a label whose subject's item has `installed=False`."""
+    """A label whose subject's item has `installed=False`."""
     if label.function is not None:
         return not _item_installed(model, functions(model)[label.function].item)
     if label.port is not None:
@@ -41,7 +41,7 @@ def _not_installed(model: Model, label: Label) -> bool:
 
 
 def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
-    """C19: a coil's contact image, at the label's measured box."""
+    """A coil's contact image, at the label's measured box."""
     no, nc = contact_image(model, label)
     step = profile.text_height
     pad = profile.marker_padding
@@ -86,7 +86,7 @@ def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: La
 
 
 def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
-    """One label as a `<text>` element: position, class and escaped text (D7, D10)."""
+    """One label as a `<text>` element: position, class and escaped text."""
     if label.slot in CONTACT_SLOTS:
         return _contact_image(model, sheet, profile, label)
     top_mm = grid_to_mm(sheet.content_y_mm, label.y, sheet.module_mm)
@@ -102,7 +102,7 @@ def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: La
 
 
 def labels_group(model: Model, page: Page) -> str:
-    """Every label on `page` as one `<text>` each, D11 order, `not-installed` class per D10."""
+    """Every label on `page` as one `<text>` each, in id order, `not-installed` if uninstalled."""
     sheet = sheet_format_of(model, page.sheet_format)
     profile = profile_of(model)
     return "".join(

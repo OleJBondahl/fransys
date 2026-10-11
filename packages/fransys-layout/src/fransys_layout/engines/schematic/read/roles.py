@@ -46,7 +46,7 @@ def port_role(model: Model, indexes: Indexes, port_id: Id[Port]) -> Role:
     net_ids = indexes.nets_by_port.get(port_id, ())
     if not net_ids:
         return Role.CONTROL
-    # C15(ii): a pe net class never sets a role: PE is protective, not a power path
+    # A pe net class never sets a role: PE is protective, not a power path
     roles = {
         NET_CLASS_TO_ROLE[nets(model)[net_id].net_class]
         for net_id in net_ids

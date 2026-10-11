@@ -1,4 +1,4 @@
-"""The orders of the conventions: the chain tie rules (T4) and the band lookup (T5).
+"""The orders of the conventions: the chain tie rules and the band lookup.
 
 `CHAIN_TIES` is a rank-key order over the two directions of a direction-free chain: the first
 criterion that separates them decides, and a full tie keeps the walk's direction. `BANDS` is a

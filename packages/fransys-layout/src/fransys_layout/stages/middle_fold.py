@@ -35,13 +35,11 @@ class GroupShape:
     outline: Box
     title: Box
     boxes: tuple[PlacedConnectorBox, ...]
-    bottom: int = 0  # TALL-PAGE T1: how far down the folded group reaches
+    bottom: int = 0  # How far down the folded group reaches
     held: bool = False  # replicas on both edges: no cut works, the group is never cut
-    below: bool = (
-        False  # TALL-PAGE A1: replicas in the upper band, so the cut is at the bottom edge
-    )
+    below: bool = False  # Replicas in the upper band, so the cut is at the bottom edge
     frame_dx: int = (
-        0  # TALL-PAGE: the outline's left edge from the lower columns' (the cut's value)
+        0  # layout-0167: the outline's left edge from the lower columns' (the cut's value)
     )
 
     def moved(self, dx: int, dy: int) -> GroupShape:
@@ -118,7 +116,7 @@ def folded_page(
     inputs: PageInputs,
     found: tuple[Finding, ...],
 ) -> tuple[tuple[PlacedFunction, ...], tuple[GroupShape, ...], tuple[Finding, ...]]:
-    """The page folded (layout-0153) with its `PAGE_OVERFULL` widened by the fold's reach (T6)."""
+    """The page folded (layout-0153) with its `PAGE_OVERFULL` widened by the fold's reach."""
     height = inputs.sheet.content_height
     folded, shapes = fold_page(placed, plan, inputs.middle, inputs.profile)
     return folded, shapes, fold_overfull(folded, shapes, height, found)
@@ -131,8 +129,8 @@ def _here(
 ) -> list[MiddleGroup]:
     """The groups with a column on the page, in the page's column order, each once.
 
-    A cut group (TALL-PAGE T2) is on the page of its lower band only, where its outline stands;
-    one cut below (A1) is on the page of its upper band, where its outline stands.
+    A cut group is on the page of its lower band only, where its outline stands;
+    one cut below is on the page of its upper band, where its outline stands.
     """
     columns = {one.column for one in placed}
     keys = [one.column for one in plan.columns if one.column in columns]
@@ -252,7 +250,7 @@ def _fold_group(
 def _frame_left(group: MiddleGroup, edges: tuple[int, int, int], wide: int) -> tuple[int, int]:
     """The outline's left edge, centred on the bands, and the span from `cursor` it ends.
 
-    A group cut at its top edge (TALL-PAGE) has no upper band on its page: the outline stands
+    A group cut at its top edge (layout-0167) has no upper band on its page: the outline stands
     where the uncut fold put it (`frame_dx`, measured by the first pass).
     """
     cursor, up_right, low_right = edges
@@ -338,7 +336,7 @@ def _edge_tall(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], 
 def _plug_room(edge: Sequence[MiddleInterface], reps: Sequence[PlacedFunction], height: int) -> int:
     """The band gap (layout-0153): the plug box, the line's fan-out room and one grid.
 
-    An edge of replicas also gets a track for each, the most wires that can need one at once (RR2).
+    An edge of replicas also gets a track for each, the most wires that can need one at once.
     """
     line = _tallest(edge, height, plug=True) + FAN + WIRING_GRID
     return snap_up(max(line, len(reps) * WIRING_GRID))

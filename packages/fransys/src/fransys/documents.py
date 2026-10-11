@@ -42,7 +42,7 @@ def _subject_ids(
     """`(location, item, unit, unit_name)`, at most one set, from a subject value.
 
     `Document.__post_init__` checks exactly one of the four (system: none); not re-checked here.
-    `None` is the system's. A `str` stays authored text; `derive.document_unit` resolves it (UN2).
+    `None` is the system's. A `str` stays authored text; `derive.document_unit` resolves it.
     """
     subject = engine_subject(subject)
     if subject is None:
@@ -68,7 +68,7 @@ def _subject_ids(
     raise TypeError(msg)
 
 
-def document(  # noqa: PLR0913 -- the new `logo` argument, page-frame R11
+def document(  # noqa: PLR0913 -- the new `logo` argument
     preset: DocumentPreset,
     subject: object,
     *,

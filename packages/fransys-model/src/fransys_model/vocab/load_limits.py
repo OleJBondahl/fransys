@@ -1,4 +1,4 @@
-"""The limit that bounds each load's draw (RATINGS-3 R4, R14, R15, R17).
+"""The limit that bounds each load's draw.
 
 A load is added to the current graph alone, as one edge (or a star), so no other load makes a
 loop that avoids a fuse. The graph `chain_blocks` reads is not changed: load edges live here only.
@@ -103,7 +103,7 @@ def _positioned(
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def load_limits(model: Model) -> tuple[LoadLimit, ...]:
-    """The draw of each load edge and the limit that bounds it, per current kind (RATINGS-3 R4).
+    """The draw of each load edge and the limit that bounds it, per current kind.
 
     A load with no stated draw, no current kind or fewer than two conductive ports has no entry.
     One load at a time is added to the graph, so the loads never bound each other.

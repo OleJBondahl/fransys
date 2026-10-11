@@ -1,4 +1,4 @@
-"""Validator: a function's rated current against its branch's bound (RATINGS-2 C4, model-0088).
+"""Validator: a function's rated current against its branch's bound (model-0088).
 
 Codes: `RATING_CURRENT_BELOW_BRANCH`, `LOAD_ABOVE_LIMIT`, `LOADS_ABOVE_LIMIT`.
 """
@@ -158,7 +158,7 @@ def _together(model: Model, entries: list[tuple[LoadLimit, CurrentBound]]) -> li
 
 
 def check_load_draw(model: Model) -> tuple[Finding, ...]:
-    """Check each load's stated draw against the limit that bounds it (RATINGS-3 R16).
+    """Check each load's stated draw against the limit that bounds it.
 
     `LOAD_ABOVE_LIMIT` (`ERROR`) for a draw above its limit; `LOADS_ABOVE_LIMIT` (`WARNING`) when
     the loads of one limit sum above it and none is above it alone.

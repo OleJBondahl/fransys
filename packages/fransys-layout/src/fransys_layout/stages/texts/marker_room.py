@@ -1,4 +1,4 @@
-"""What a marker row is measured against (S20): the wiring that sets its lanes, sheet and costs."""
+"""What a marker row is measured against: the wiring that sets its lanes, sheet and costs."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING

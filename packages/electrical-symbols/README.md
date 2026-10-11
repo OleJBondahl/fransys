@@ -15,9 +15,9 @@ Status: alpha, under construction, a package of the Fransys workspace
 - `library.toml`: the library's settings.
 - `src/electrical_symbols/`: a thin Python package exposing `LIBRARY`, loaded from the bundled
   `bundle.json`; `generic_box(port_names)` and `GENERIC_BOX_KEY`, the labelled-box placeholder
-  layout draws for a function with no symbol (D41); and `library_version()` /
+  layout draws for a function with no symbol; and `library_version()` /
   `LIBRARY_VERSION`, the one home of the version string placements record and
-  `fransys_render.check` compares (D40).
+  `fransys_render.check` compares.
 - `build/` and `src/electrical_symbols/bundle.json`: the generated output, tracked in git so a
   symbol change shows up as a reviewable diff.
 
@@ -99,5 +99,5 @@ just build-electrical-symbols   # regenerate the tracked output
 ## Rules moved from docstrings
 
 - `library_version`: `fransys_layout.geometry.symbols` re-uses it and keeps no copy. `fransys_render.check` compares it with `SymbolPlacement.library_version`.
-- `generic_box` module: layout's `resolve` stage calls it (layout-0042, D41). The placeholder is a real toolkit symbol, converted through the ordinary D6 recipe, not a private struct.
+- `generic_box` module: layout's `resolve` stage calls it (layout-0042). The placeholder is a real toolkit symbol, converted through the ordinary recipe, not a private struct.
 - `_pitch`: a marking shows the model port name, the part after the last `"."` (an item view names a port `<function>.<port>`). Width is about 0.65 M per character at the house text height. Add the 0.25 M wire offset and a gap, then round up to whole M so ports stay on the grid.

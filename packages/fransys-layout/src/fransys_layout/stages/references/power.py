@@ -1,7 +1,7 @@
-"""D5, step 6: which decided ends take a power symbol, not a reference.
+"""Step 6: which decided ends take a power symbol, not a reference.
 
 One end that would be a reference (a severed pair's end, a star's, a split's) on a port of a
-power net takes the symbol of that net (R5). An off stub keeps its stub label (LD7), and so does
+power net takes the symbol of that net. An off stub keeps its stub label, and so does
 a reference merged with one. A joined run has one end decided (its first), so it gets one symbol.
 """
 

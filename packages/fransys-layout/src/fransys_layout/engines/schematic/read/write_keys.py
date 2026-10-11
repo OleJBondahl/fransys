@@ -1,4 +1,4 @@
-"""Reading the model for the writer: the key table `WriteKeys` (docs/design/engine.md 7)."""
+"""Reading the model for the writer: the key table `WriteKeys`."""
 
 from typing import TYPE_CHECKING, Any
 

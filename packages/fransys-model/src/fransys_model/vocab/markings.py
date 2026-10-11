@@ -1,4 +1,4 @@
-"""Pole order and line side from a part's pin markings (ELECTRICAL-FACTS F4, decision model-0128).
+"""Pole order and line side from a part's pin markings (decision model-0128).
 
 One function gives the order of a function's poles and each pole's line side, so layout, the
 contact entries and every output read the same answer. A pole is a declared `InternalLink`.
@@ -69,7 +69,7 @@ _POLE_KINDS = frozenset({LinkKind.SWITCHED, LinkKind.PROTECTIVE})
 
 
 def is_pole_link(function: FunctionKind, link: LinkKind) -> bool:
-    """A pole is a switched or protective link, or a protection function's conductive link (F1)."""
+    """A pole is a switched or protective link, or a protection function's conductive link."""
     return link in _POLE_KINDS or (
         function is FunctionKind.PROTECTION and link is LinkKind.CONDUCTIVE
     )

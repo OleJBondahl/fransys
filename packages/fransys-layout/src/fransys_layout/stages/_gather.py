@@ -1,7 +1,7 @@
 """Layout-0153: each unit group's columns gathered into one packing unit, as wide as it folds.
 
 Private to `stages.partition`. One pass over the units: a band column leaves its unit for its
-group's, which stands at its first member's place (layout-0153, extending layout-0103 S10).
+group's, which stands at its first member's place (layout-0153, extending layout-0103).
 """
 
 from dataclasses import dataclass, field, replace
@@ -22,9 +22,9 @@ class Band:
     upper: frozenset[AuthoringKey]
     lower: frozenset[AuthoringKey]
     outline: int
-    # TALL-PAGE T2: the upper band and the outline with the lower band are two units
+    # The upper band and the outline with the lower band are two units
     cut: bool = False
-    # TALL-PAGE: the cut is at the outline's bottom edge: the outline stays with the upper band
+    # The cut is at the outline's bottom edge: the outline stays with the upper band
     below: bool = False
 
 
@@ -100,8 +100,8 @@ def _group(
 ) -> tuple[Unit, ...]:
     """One root's unit: its members' band columns in order, as wide as its bands fold.
 
-    TALL-PAGE T2: a cut group is two: the upper band, then the outline with the lower band,
-    which starts a page. Cut below (A1), the outline stays with the upper band instead.
+    A cut group is two: the upper band, then the outline with the lower band,
+    which starts a page. Cut below, the outline stays with the upper band instead.
     """
     keys = tuple(
         key

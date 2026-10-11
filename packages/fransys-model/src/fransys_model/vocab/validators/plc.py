@@ -1,4 +1,4 @@
-"""Validators: PLC bindings match the requested signal and the wiring (facets.md, ROADMAP WP13).
+"""Validators: PLC bindings match the requested signal and the wiring (facets.md).
 
 The file holds both PLC checks: `check_plc` (signal type) and `check_plc_wiring` (decision
 model-0068, the wiring is the truth).

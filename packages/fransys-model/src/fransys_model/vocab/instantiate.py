@@ -114,7 +114,7 @@ def _port(function: Function, template: PortTemplate) -> Port:
         template=template.id,
         name=template.name,
         role=template.role,
-        # model-0053 (F2): the part's pin marking travels with the port
+        # model-0053: the part's pin marking travels with the port
         marking=template.marking,
     )
 

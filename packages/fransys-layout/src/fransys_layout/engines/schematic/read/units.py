@@ -1,4 +1,4 @@
-"""Reads of the model's units for the stages (D6): each unit's boundary and the unused ones."""
+"""Reads of the model's units for the stages: each unit's boundary and the unused ones."""
 
 from functools import partial
 from typing import TYPE_CHECKING, Any
@@ -26,7 +26,7 @@ def function_unit(model: Model, function: Id[Any]) -> Id[Any] | None:
 
 
 def boundary_edges(model: Model) -> frozenset[Id[Any]]:
-    """D10: the boundary functions of every unit of `model`."""
+    """The boundary functions of every unit of `model`."""
     return frozenset(f for unit in units_table(model) for f in boundary(model, unit))
 
 
@@ -108,7 +108,7 @@ def boundary_edge_set(model: Model) -> frozenset[Id[Any]]:
 
 
 def shared_boundaries(model: Model) -> frozenset[Id[Any]]:
-    """P6: the functions on the boundary of two or more units (read once)."""
+    """The functions on the boundary of two or more units (read once)."""
     held: dict[Id[Any], int] = {}
     for unit in units(model):
         for function in boundary(model, unit):
@@ -117,7 +117,7 @@ def shared_boundaries(model: Model) -> frozenset[Id[Any]]:
 
 
 def hidden_sets(model: Model, unit: Id[Any], function: Id[Any]) -> frozenset[Id[Any] | None]:
-    """P6: the sets (by unit, `None` the top) where `unit` does not draw a function it shares.
+    """The sets (by unit, `None` the top) where `unit` does not draw a function it shares.
 
     A set draws it in the `derive.black_box_unit` of its item's unit, never in the set's own unit.
     """
@@ -143,5 +143,5 @@ def black_boxes(model: Model) -> dict[tuple[Id[Any], Id[Any] | None], Id[Any]]:
 
 
 def unit_order(model: Model, unit: Id[Any]) -> OrderKey:
-    """O7: the natural key of a unit's instance designation (`-U2` before `-U10`), a value."""
+    """The natural key of a unit's instance designation (`-U2` before `-U10`), a value."""
     return natural_key(instance_name(instance_tags(model, unit, None)))

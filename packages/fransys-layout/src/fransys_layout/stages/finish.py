@@ -1,6 +1,6 @@
 """The second half of a page, over every page: `finish_page` for each plan, handed its own slices.
 
-`finish_pages` cuts what finishing reads of the run into pages once (D10, `slices`) and runs
+`finish_pages` cuts what finishing reads of the run into pages once (`slices`) and runs
 `pagerun.finish_page` on each. `ink_keepouts` cuts each keep-out to the ink (layout-0125).
 """
 
@@ -64,7 +64,7 @@ def finish_pages(
     pages: Sequence[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]],
     run: FinishRun,
 ) -> tuple[list[Route], list[PlacedLabel], list[Finding]]:
-    """`finish_page` over every plan, each handed its own slices of the run (D10, `slices`)."""
+    """`finish_page` over every plan, each handed its own slices of the run (`slices`)."""
     count, inputs = len(plans), run.inputs
     on_page = pages_of(page_columns(plans, run.columns))
     drawn_at = by_page(run.drawn, FUNCTION, on_page, count)

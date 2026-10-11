@@ -155,7 +155,7 @@ def test_a_unit_group_wider_than_the_page_splits_with_unit_group_split() -> None
 
 
 def test_a_cut_group_is_two_units_and_its_lower_band_starts_the_next_page() -> None:
-    """TALL-PAGE T2: b over d stays on page 1 as the upper band; d with its outline starts page 2.
+    """layout-0167: b over d stays on page 1 as the upper band; d with its outline starts page 2.
 
     UNDO: `_gather._group` returns the whole group for a cut band.
     """
@@ -167,7 +167,7 @@ def test_a_cut_group_is_two_units_and_its_lower_band_starts_the_next_page() -> N
 
 
 def test_a_group_cut_below_keeps_its_outline_with_the_upper_band() -> None:
-    """TALL-PAGE A1: b with the outline stays on page 1; d alone starts page 2.
+    """layout-0167: b with the outline stays on page 1; d alone starts page 2.
 
     The outline (500) is wider than b (200), so b's unit is as wide as the outline.
     UNDO: `_group` ignores `below` and cuts at the top edge.

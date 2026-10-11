@@ -1,4 +1,4 @@
-"""Contact images, V10: who owns a contact, and each contact's reference to its home."""
+"""Contact images: who owns a contact, and each contact's reference to its home."""
 
 from typing import TYPE_CHECKING
 
@@ -25,7 +25,7 @@ def unplaced_coil_owners(
     owners: Mapping[Handle, Handle] | None,
     home: Mapping[Handle, PlacedFunction],
 ) -> set[Handle]:
-    """The owners whose coils are all unplaced: their contacts get no reference (V10)."""
+    """The owners whose coils are all unplaced: their contacts get no reference."""
     coils = {
         o: [s for s in g if s.roles.contacts_apart] for o, g in by_owner(specs, owners).items()
     }
@@ -38,7 +38,7 @@ def home_references(
     home: Mapping[Handle, PlacedFunction],
     where: Callable[[PlacedFunction, PlacedFunction], str],
 ) -> list[LabelRequest]:
-    """C19, V10: each contact's reference to `main` (its coil, else the device's main symbol)."""
+    """Each contact's reference to `main` (its coil, else the device's main symbol)."""
     at = home[main.function]
     partner = RequestPartner(
         port=main.ports[0].port, drawing_set=at.drawing_set, page=at.page, x=at.at.x

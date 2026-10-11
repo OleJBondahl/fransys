@@ -1,4 +1,4 @@
-"""The one refusal of a release version or revision below 1 (FD4, decision model-0087)."""
+"""The one refusal of a release version or revision below 1 (decision model-0087)."""
 
 from typing import Any
 

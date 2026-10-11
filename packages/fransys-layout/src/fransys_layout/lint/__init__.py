@@ -1,4 +1,4 @@
-"""Lint layer: the QA gate, geometric checks and connectivity coherence apart (lint.md 6.8)."""
+"""Lint layer: the QA gate, geometric checks and connectivity coherence apart."""
 
 from ._harness import HarnessInk
 from .chains import lint_chains

@@ -1,8 +1,6 @@
 """Stages 3 to 5 over every page, then the work of one page: place, label, route.
 
-Refs: foundations.md 3, labels.md 6.7, engine.md 7.
-
-`plan_pages` partitions the columns into pages (S10). `place_pages` has `references` decide on
+`plan_pages` partitions the columns into pages. `place_pages` has `references` decide on
 those planned pages as `place` stacks them, then runs `_place_page` over each page and settles
 what the placed pages change: the box sides, and the column widths the engine re-plans on.
 `finish_page` is the second half of a page, after
@@ -106,7 +104,7 @@ class PageInputs:
 
 @dataclass(frozen=True)
 class PageState:
-    """One page as `finish_page` finds it; placed, labels, markers are `occupied` (S18)."""
+    """One page as `finish_page` finds it; placed, labels, markers are `occupied`."""
 
     placed: tuple[PlacedFunction, ...]
     labels: tuple[PlacedLabel, ...]
@@ -122,15 +120,15 @@ class PageRun:
     rank_of: dict[Handle, int]
     pin_requests: tuple[LabelRequest, ...]
     reserves: dict[tuple[AuthoringKey, Handle], Any]
-    # S4: each drawing set's location path, read from the planned pages (known before `place`)
+    # Each drawing set's location path, read from the planned pages (known before `place`)
     paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, LocationPath]]
-    # D5, V1: the power kinds and the item-box sides, by port (`boxes.power_maps`)
+    # The power kinds and the item-box sides, by port (`boxes.power_maps`)
     power: tuple[dict[Handle, str], dict[Handle, str]] = ({}, {})
 
 
 @dataclass(frozen=True)
 class Planned:
-    """The pages planned (S10): `plans`, their `columns` (dropped replicas out), `findings`."""
+    """The pages planned: `plans`, their `columns` (dropped replicas out), `findings`."""
 
     plans: tuple[PagePlan, ...]
     columns: tuple[Column, ...]
@@ -139,7 +137,7 @@ class Planned:
 
 @dataclass(frozen=True)
 class Placement:
-    """The pages placed: each plan's `(placed, first call)` (S20), reservations taken off."""
+    """The pages placed: each plan's `(placed, first call)`, reservations taken off."""
 
     plans: tuple[PagePlan, ...]
     columns: tuple[Column, ...]
@@ -149,7 +147,7 @@ class Placement:
     findings: tuple[Finding, ...]
 
 
-# S10: `references` over one attempt's planned and stacked pages, with its findings
+# `references` over one attempt's planned and stacked pages, with its findings
 type Decide = Callable[[Seating], tuple[References, tuple[Finding, ...]]]
 
 
@@ -159,7 +157,7 @@ def plan_pages(
     columns: tuple[Column, ...],
     widths: tuple[ColumnWidth, ...],
 ) -> Planned:
-    """Stage 3 (S10): partition `columns` into pages at `widths`, then drop unneeded replicas."""
+    """Stage 3: partition `columns` into pages at `widths`, then drop unneeded replicas."""
     inputs = run.inputs
     plans, findings = partition(
         columns,
@@ -180,7 +178,7 @@ def plan_pages(
 
 
 def _seated(plans: tuple[PagePlan, ...], columns: tuple[Column, ...]) -> tuple[Seat, ...]:
-    """S10: every planned column's cells on its page, in plan order then handle, before `place`."""
+    """Every planned column's cells on its page, in plan order then handle, before `place`."""
     by_key = {column.key: column for column in columns}
     found: list[Seat] = []
     for plan in plans:
@@ -204,7 +202,7 @@ def place_pages(
     widths: tuple[ColumnWidth, ...],
     decide: Decide,
 ) -> tuple[Placement, tuple[ColumnWidth, ...], tuple[References, tuple[Finding, ...]]]:
-    """Stages 4, 5: decide references (S10, S12), place, settle box sides (R7 C5), widths (C21)."""
+    """Stages 4, 5: decide references, place, settle box sides, widths."""
     inputs = run.inputs
     for attempt in range(2):
         pages, page_found, page_rooms, decided = _place_each(
@@ -234,7 +232,7 @@ def _place_each(
     drawn: tuple[DrawnFunction, ...],
     decide: Decide,
 ) -> tuple[list[Any], list[Any], dict[Any, Any], tuple[References, tuple[Finding, ...]]]:
-    """Each plan's `_place_page`: placed, findings, rooms (D7), decisions; slices (D10, S12)."""
+    """Each plan's `_place_page`: placed, findings, rooms, decisions; slices."""
     pages, found = [], []
     page_rooms = rooms(run.reserves, drawn, plans, run.inputs)
     own = page_columns(plans, columns)
@@ -251,7 +249,7 @@ def _place_each(
         run.inputs.connections, connection_ends, on_page, count=len(plans), every=True
     )
     rooms_at = rooms_by_page(page_rooms, plans)
-    # S4, layout-0135: each set's box width, from the digits known before `place` (not `refs`)
+    # layout-0135: each set's box width, from the digits known before `place` (not `refs`)
     sized = {one.drawing_set: one.digits for one in set_digits((), plans, run.paths_of(plans))}
     work = [
         PageSlices(
@@ -266,11 +264,11 @@ def _place_each(
             plans, own, drawn_at, rooms_at, specs_at, requests_at, connections_at, strict=True
         )
     ]
-    # S10, S12: `references` decides on each page as `place` stacks it, before any is placed
+    # `references` decides on each page as `place` stacks it, before any is placed
     stacks = {(one.plan.drawing_set, one.plan.number): _page_stack(one) for one in work}
     seats = _seated(plans, columns)
     decided = decide(Seating(plans, columns, drawn, seats, stacks))
-    # S16: Room's N or S call reads each page's texts as decided, and the wiring on the page
+    # Room's N or S call reads each page's texts as decided, and the wiring on the page
     _, _, wired = page_wiring(decided[0].connections, columns, seats, decided[0].net_groups)
     texts = page_texts(
         decided[0].markers,
@@ -290,7 +288,7 @@ def _place_each(
 
 @dataclass(frozen=True)
 class FirstCall:
-    """S20: a page's first slot call (tags, markings), run by `_first_labels` after markers."""
+    """A page's first slot call (tags, markings), run by `_first_labels` after markers."""
 
     requests: tuple[LabelRequest, ...]
     placed: tuple[PlacedFunction, ...]
@@ -302,14 +300,14 @@ class FirstCall:
 
 @dataclass(frozen=True)
 class PageSlices:
-    """What `place` and `page_stack` read of one page (S12): its plan, own slices and inputs."""
+    """What `place` and `page_stack` read of one page: its plan, own slices and inputs."""
 
     plan: PagePlan
     columns: tuple[Column, ...]
     drawn: tuple[DrawnFunction, ...]
     requests: tuple[LabelRequest, ...]
     inputs: PageInputs
-    digits: Digits = FLOOR  # S4: its set's digits, `refs` at the floor (known only after `place`)
+    digits: Digits = FLOOR  # Its set's digits, `refs` at the floor (known only after `place`)
 
 
 def _place_page(
@@ -318,7 +316,7 @@ def _place_page(
     joins: tuple[JoinedRun, ...] = (),
     texts: PageTexts | None = None,
 ) -> tuple[tuple[PlacedFunction, ...], FirstCall, tuple[Finding, ...]]:
-    """Place `page.plan`'s columns; S20: the first slot call is returned, run after the markers."""
+    """Place `page.plan`'s columns; the first slot call is returned, run after the markers."""
     inputs, drawn = page.inputs, page.drawn
     placed, place_findings = place(page.plan, page.columns, drawn, _stacking(page, texts), joins)
     placed, shapes, place_findings = folded_page(placed, page.plan, inputs, place_findings)
@@ -334,7 +332,7 @@ def _place_page(
 
 
 def _page_stack(page: PageSlices) -> PageStack:
-    """S12: the page as `_place_page`'s `place` stacks it, on the very inputs it hands `place`."""
+    """The page as `_place_page`'s `place` stacks it, on the very inputs it hands `place`."""
     return page_stack(page.plan, page.columns, page.drawn, _stacking(page))
 
 
@@ -354,7 +352,7 @@ def _stacking(page: PageSlices, texts: PageTexts | None = None) -> PageStacking:
 
 
 def _page_boxes(page: PageSlices, texts: PageTexts | None) -> dict[Handle, list[tuple[str, Box]]]:
-    """The boxes `place` grows the page's keep-outs over: the labels', Room's (S11), supplies'."""
+    """The boxes `place` grows the page's keep-outs over: the labels', Room's, supplies'."""
     inputs, drawn = page.inputs, page.drawn
     sides = side_reference_rooms(
         page.columns,
@@ -374,7 +372,7 @@ def finish_page(
     *,
     references: tuple[LabelRequest, ...],
 ) -> tuple[tuple[Route, ...], tuple[PlacedLabel, ...], tuple[Finding, ...]]:
-    """Place cross-reference labels, then route the page (S18, layout-0038, D10)."""
+    """Place cross-reference labels, then route the page (layout-0038)."""
     placed, labels, markers = page.placed, page.labels, page.markers
     second, second_findings = place_slot_labels(
         references,

@@ -1,4 +1,4 @@
-"""What a terminal strip checks before it declares a named run (EA9)."""
+"""What a terminal strip checks before it declares a named run."""
 
 from typing import Any
 

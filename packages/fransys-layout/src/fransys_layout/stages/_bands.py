@@ -1,4 +1,4 @@
-"""Band keys (T5): where a cell stands in its column, and the band key that follows."""
+"""Band keys: where a cell stands in its column, and the band key that follows."""
 
 from fransys_layout.conventions import FACTS, fact, first_match, validate
 from fransys_layout.conventions.order import BANDS

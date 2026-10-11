@@ -1,4 +1,4 @@
-"""A chain of states, each the step of the one before, cut at a repeat (cleanup step 2, F6)."""
+"""A chain of states, each the step of the one before, cut at a repeat."""
 
 from typing import TYPE_CHECKING
 

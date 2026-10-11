@@ -1,4 +1,4 @@
-"""The facts V1's side order reads: a function's energy direction and its current kind."""
+"""The facts the side order reads: a function's energy direction and its current kind."""
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -11,11 +11,11 @@ if TYPE_CHECKING:
 
 
 class Subject(NamedTuple):
-    """A function of a model: what V1's facts are asked about."""
+    """A function of a model: what the side order's facts are asked about."""
 
     model: Model
     function: Id[Any]
-    currents: tuple[str | None, ...] = ()  # the V11 current of each port of the function
+    currents: tuple[str | None, ...] = ()  # the current of each port of the function
 
 
 @fact("takes_energy", kind="electrical", source="passive sign convention (IEC 60375)")
@@ -42,7 +42,7 @@ def power_function(subject: Subject) -> bool:
     source="alternating current (IEC 60050-131); the V11 rail current of the function's ports",
 )
 def is_ac(subject: Subject) -> bool:
-    """Whether a port of the function carries AC and none carries DC (V11 `PortSpec.current`)."""
+    """Whether a port of the function carries AC and none carries DC (`PortSpec.current`)."""
     return "ac" in subject.currents and "dc" not in subject.currents
 
 

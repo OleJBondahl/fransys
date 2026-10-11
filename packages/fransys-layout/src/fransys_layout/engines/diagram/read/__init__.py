@@ -1,4 +1,4 @@
-"""Diagram engine, reading: the model's block-diagram facts to facts and findings (BD3).
+"""Diagram engine, reading: the model's block-diagram facts to facts and findings.
 
 The only place, with `write/`, where the diagram engine meets the model vocabulary.
 """

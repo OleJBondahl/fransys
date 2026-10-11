@@ -1,4 +1,4 @@
-"""Band alignment inputs (R7 B7, A9, layout-0061): who takes part in a band, its shared top."""
+"""Band alignment inputs (layout-0061): who takes part in a band, its shared top."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def _participants(page: Sequence[Any]) -> dict[tuple[str, object, int], list[tuple[int, int]]]:
-    """The topmost row of each band per column, keyed by (band, role, poles) (C13(b))."""
+    """The topmost row of each band per column, keyed by (band, role, poles)."""
     found: dict[tuple[str, object, int], list[tuple[int, int]]] = {}
     for column, rows in enumerate(page):
         seen: set[str] = set()
@@ -18,7 +18,7 @@ def _participants(page: Sequence[Any]) -> dict[tuple[str, object, int], list[tup
             if band is None or band in seen:
                 continue
             seen.add(band)
-            # C13(b): the role, and the circuit width (poles across the row's lanes): a
+            # The role, and the circuit width (poles across the row's lanes): a
             # 3-pole power row never aligns a single control contact
             poles = sum(cell.geometry.poles for cell in row if not cell.side)
             found.setdefault((band, row[0].role, poles), []).append((column, index))

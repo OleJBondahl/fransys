@@ -1,7 +1,7 @@
-"""D5 ruled 2026-10-02: a power symbol never touches another symbol, a box or a text.
+"""Ruled 2026-10-02: a power symbol never touches another symbol, a box or a text.
 
-A symbol that would touch one takes a longer lead, the fewest whole grids that clear it, as M7's
-branch does. The symbol still faces its pin (A5); only the lead's length changes.
+A symbol that would touch one takes a longer lead, the fewest whole grids that clear it, as a
+branch does. The symbol still faces its pin; only the lead's length changes.
 """
 
 from dataclasses import replace

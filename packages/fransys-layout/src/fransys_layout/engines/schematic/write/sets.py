@@ -1,7 +1,5 @@
 """Private to `write/`: the `DrawingSet` and `Page` builders.
 
-Refs: engine.md 7, model layout-namespace.md.
-
 Every key is `("layout", "schematic", <kind>)` plus the key of the record the new record is
 about plus its discriminator, and never holds a page number or a position, so ids survive
 repagination. Each builder returns records only; `write/__init__.py` puts them in one `evolve` call.

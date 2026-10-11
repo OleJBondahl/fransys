@@ -15,7 +15,7 @@ _HEADERS = ("Designation", "MPN", "Description", "Cores", "Gauge", "Length mm", 
 
 
 def contents_page(model: Model, record: Document, pages: tuple[PageKind, ...]) -> str:
-    """The CONTENTS table (P8; rows `ContentsRow`, model-0106, pdf-0016); `""` if no cable."""
+    """The CONTENTS table (rows `ContentsRow`, model-0106, pdf-0016); `""` if no cable."""
     cables = harness_cables_for(model, record, pages)
     if not cables:
         return ""

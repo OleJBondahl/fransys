@@ -1,4 +1,4 @@
-"""Header joins: a header port that is a function port of its own part (HA4, connectivity.md).
+"""Header joins: a header port that is a function port of its own part (connectivity.md).
 
 A join is a part fact stored once on the header port's template. It carries no conductor, so every
 reader that asks whether a port is connected reads `port_joins` as well.

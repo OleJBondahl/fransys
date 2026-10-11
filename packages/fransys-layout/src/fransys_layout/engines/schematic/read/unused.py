@@ -1,9 +1,9 @@
-"""V1: the pins and functions with no conductor, and the contacts that are never drawn.
+"""The pins and functions with no conductor, and the contacts that are never drawn.
 
 An unwired contact is never drawn (layout-0112): it is a spare, listed in its coil's table. With
 `hide_unused_pins`, any other spare function (`derive.function_is_unused`) is left off too, and a
 box-drawn function drops its unused ports (`derive.port_is_unused`). IEC symbols keep their fixed
-pins, and connector pin views keep their own R7 B5 rule. A unit's boundary function is never
+pins, and connector pin views keep their own rule. A unit's boundary function is never
 a spare (layout-0139): its replica column needs its spec.
 """
 
@@ -28,7 +28,7 @@ def without_unused(
     *,
     hide: bool,
 ) -> tuple[tuple[FunctionSpec, ...], tuple[FunctionSpec, ...]]:
-    """V1: (the specs still drawn, the spares); an unwired contact is a spare, `hide` or not."""
+    """(the specs still drawn, the spares); an unwired contact is a spare, `hide` or not."""
     table = {(rule.kind, rule.category, rule.gender): rule for rule in DEFAULT_RULES}
     index = choice_index(choices)
     boundaries = boundary_edge_set(model)

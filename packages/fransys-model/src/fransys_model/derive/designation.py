@@ -114,7 +114,7 @@ def item_label(model: Model, item: Item) -> str:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _items_with_a_function_at_or_below(model: Model) -> frozenset[Id[Item]]:
-    """Every item with a function anywhere in its own subtree, itself included (model-0103 B10).
+    """Every item with a function anywhere in its own subtree, itself included (model-0103).
 
     Built once per `model.digest`: the items that carry a function, and (through
     `accessory_blocks.items_with_a_function_below`) every ancestor of one.
@@ -222,8 +222,8 @@ def _render_item_designation(
     if tagged := instance_designation(
         model, item, relative_to=relative_to, unit=unit, own=_render_item_designation
     ):
-        return tagged  # UT2: the instance tags in front
-    if unit is not None and relative_to is None:  # L4: printed in `unit`'s own document
+        return tagged  # the instance tags in front
+    if unit is not None and relative_to is None:  # printed in `unit`'s own document
         relative_to = unit_root(model, item, unit)
     ancestors = designating_ancestors(model, item := printing_item(model, item))  # model-0148
     # `enclosing_boards` does not tolerate an unknown item (unlike `designating_ancestors`);
@@ -423,8 +423,8 @@ def connector_designation(
     """Render the connector `function` as a list names it: `-J1`, or `-U2-X1` behind a device's tag.
 
     Decision model-0071. `printed_designation` of its item plus `connector_segment`. On the
-    unit's own set a root item's connector drops the root's tag (`-X1`, as UNIT-ID I4 drops it
-    for a child item): `is_own_unit_root` asks. A function that adds no segment prints its item
+    unit's own set a root item's connector drops the root's tag (`-X1`, as for a child item):
+    `is_own_unit_root` asks. A function that adds no segment prints its item
     as `printed_designation` does, root included.
 
     Raises:

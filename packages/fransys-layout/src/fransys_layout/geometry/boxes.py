@@ -1,4 +1,4 @@
-"""Axis-aligned boxes in grid units (docs/design/geometry.md 5)."""
+"""Axis-aligned boxes in grid units."""
 
 from typing import TYPE_CHECKING
 

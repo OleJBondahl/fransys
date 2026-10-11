@@ -11,7 +11,7 @@ from fransys_model.vocab.tables import mates as mates_table
 lazy from fransys_model.vocab.core import Function, Item, Port
 
 from .designation import connector_designation, port_designation
-from .harness import harness_cables, top_level_cables, unit_cables
+from .harness import harness_cables, reading_cables
 from .lookups import cable_end_owner, item_of_port, require
 from .order import natural_key
 from .rows import HarnessLineEnd
@@ -42,7 +42,7 @@ def _cables_of(model: Model, subject: Id[Item]) -> tuple[HarnessCable, ...]:
     if is_harness(model, subject):
         return harness_cables(model, subject)
     unit = items(model)[subject].unit
-    reading = top_level_cables(model) if unit is None else unit_cables(model, unit)
+    reading = reading_cables(model, unit)
     found = tuple(cable for cable in reading if cable.cable == subject)
     if not found:
         message = f"{subject}: neither a harness nor a cable"

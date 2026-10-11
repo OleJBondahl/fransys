@@ -1,4 +1,4 @@
-"""V3: a pin wired to a rail takes the rail's power symbol, though no wire or reference leads there.
+"""A pin wired to a rail takes the rail's power symbol, though no wire or reference leads there.
 
 A rail wire is not drawn, so its pin has no marker to flag. One marker per pin and page stands in
 for it; `power.with_power_ends` then gives it the symbol. A pin that already has one gets no second.

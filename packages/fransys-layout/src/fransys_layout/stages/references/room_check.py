@@ -1,4 +1,4 @@
-"""S4, layout-0143: a reference box drawn wider than the room its pass reserved is reported.
+"""layout-0143: a reference box drawn wider than the room its pass reserved is reported.
 
 The band is sized at the floor `#n` digits (`refs` is known only after `place`), and the column
 widths come from the pass before, at its `p<sheet>` digits. A set whose final decisions need more
@@ -25,7 +25,7 @@ REFERENCE_BOX_EXCEEDS_ROOM = "REFERENCE_BOX_EXCEEDS_ROOM"
 def box_room_findings(
     decided: tuple[References, tuple[Finding, ...]], first_plans: Iterable[PagePlan]
 ) -> tuple[References, tuple[Finding, ...]]:
-    """`decided` with one `REFERENCE_BOX_EXCEEDS_ROOM` per set whose box outgrew its room (S4).
+    """`decided` with one `REFERENCE_BOX_EXCEEDS_ROOM` per set whose box outgrew its room.
 
     `first_plans` are the pages of the pass that sized the columns: its `p<sheet>` digits are
     the room; the band's `#n` room is the floor's.

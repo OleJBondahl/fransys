@@ -1,4 +1,4 @@
-"""Where two extents meet: one closed or open test for spans, boxes and points (cleanup step 2, F1).
+"""Where two extents meet: one closed or open test for spans, boxes and points.
 
 Closed means an edge or a corner is enough (`<=`), open means shared interior (`<`). There is no
 emptiness guard here: `boxes_meet` of a zero-size box answers by the comparisons alone, and a site

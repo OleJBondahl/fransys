@@ -69,7 +69,7 @@ def outlined(
     laid: Laid,
     placed_box: tuple[PlacedConnectorBox, ...],
 ) -> tuple[list[Any], tuple[PlacedOutline, ...], tuple[PlacedConnectorBox, ...]]:
-    """I2a: the pages, outlines and boxes with each black box's dash-dot outline and its title."""
+    """The pages, outlines and boxes with each black box's dash-dot outline and its title."""
     moved = frozenset((one.unit, one.drawing_set, one.page) for one in laid.shapes)
     titled = OutlineInputs(
         inputs.functions,
@@ -91,7 +91,7 @@ def cross_references(
     echoes: References,
     contact_refs: tuple[LabelRequest, ...],
 ) -> tuple[LabelRequest, ...]:
-    """C19 and the echoes: the cross-reference requests, an echo holding its (subject, slot)."""
+    """The echoes: the cross-reference requests, an echo holding its (subject, slot)."""
     held = echo_requests(
         echoes.echoes,
         placement.placed_all,

@@ -1,4 +1,4 @@
-"""Layout errors: structural problems, raised and never silenced (docs/design/geometry.md 5.4).
+"""Layout errors: structural problems, raised and never silenced.
 
 Layout problems of a half-finished design are not here: a stage returns a kernel
 `Finding` instead of raising.

@@ -254,7 +254,7 @@ def _net_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNet, ...]:
 
 
 def _listing_unit(model: Model, unit: Id[Unit] | None) -> BaselineUnit:
-    """The `unit` key: a real unit's own release, or, for `unit=None`, the `Project`'s (L2)."""
+    """The `unit` key: a real unit's own release, or, for `unit=None`, the `Project`'s."""
     if unit is None:
         project = next(iter(projects(model).values()))
         return BaselineUnit(

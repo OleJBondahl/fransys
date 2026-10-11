@@ -175,7 +175,7 @@ def stub_ends(
     sets: Mapping[int, DrawingSet],
     stamp: str,
 ) -> list[StubEnd]:
-    """One `StubEnd` per far end of each stub, in the stub's list order (P1)."""
+    """One `StubEnd` per far end of each stub, in the stub's list order."""
     records = []
     for stub, tail in _tails(stubs, sets):
         marker = make_id(LinkMarker, _stub_key(keys, "link_marker", stub, tail))

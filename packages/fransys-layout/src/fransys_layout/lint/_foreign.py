@@ -1,4 +1,4 @@
-"""A link marker's stub or box on another item's symbol or port (S20 tally 8a, layout-0076).
+"""A link marker's stub or box on another item's symbol or port (layout-0076).
 
 A stub, or a box, that runs through or stands on a symbol or a port that is not the marker's own
 reads as a connection to it. The marker's own function is the one with a port at `marker.at`;

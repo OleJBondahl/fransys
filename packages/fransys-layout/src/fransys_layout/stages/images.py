@@ -5,13 +5,14 @@ from functools import partial
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID, Box, Facing, port_page_at, push_clear, text_width
+from fransys_layout.geometry import WIRING_GRID, Box, push_clear, text_width
 from fransys_model.derive.drawing_text import (
     frame_column,
     frame_row,
     partner_position_text,
 )
 
+from ._image_foot import table_x
 from ._image_stack import foot_down, headed_width, settled_tables
 from ._image_widest import widest_places
 from .boxes import first_placed
@@ -53,8 +54,8 @@ class ImageInputs:
     profile: Profile
     marks: dict[Handle, tuple[list[str], list[str]]]
     owners: Mapping[Handle, Handle] | None = None  # contact function -> the item owning it
-    spares: tuple[FunctionSpec, ...] = ()  # V1: contacts on no page, listed "<mark> <no_place>"
-    row_order: Mapping[Handle, tuple[Any, ...]] = field(default_factory=dict)  # O7, model-0138
+    spares: tuple[FunctionSpec, ...] = ()  # Contacts on no page, listed "<mark> <no_place>"
+    row_order: Mapping[Handle, tuple[Any, ...]] = field(default_factory=dict)  # Order, model-0138
     no_place: str = field(kw_only=True)  # layout-0112: the model's text for "not drawn"
     heads: Mapping[Handle, str] = field(default_factory=dict)  # coil -> its table's heading (0170)
 
@@ -62,7 +63,7 @@ class ImageInputs:
 def _image_marks(
     contacts: Sequence[FunctionSpec], marks: Mapping[Handle, tuple[list[str], list[str]]]
 ) -> tuple[list[str], list[str]]:
-    """C19: the terminal pairs of `contacts`, as (NO marks, NC marks), each in `contacts` order."""
+    """The terminal pairs of `contacts`, as (NO marks, NC marks), each in `contacts` order."""
     no: list[str] = []
     nc: list[str] = []
     for s in contacts:
@@ -82,7 +83,7 @@ def _where(
     target: PlacedFunction,
     reader: PlacedFunction,
 ) -> str:
-    """V10, RW9: `target`'s place exactly as render prints it for `reader` (derive's one text)."""
+    """`target`'s place exactly as render prints it for `reader` (derive's one text)."""
     column = frame_column(sheet.content_width, sheet.frame_columns, target.at.x)
     row = frame_row(sheet.content_height, sheet.frame_rows, target.at.y)
     return partner_position_text(_seat(reader, paths), _seat(target, paths), column, row)
@@ -121,7 +122,7 @@ class _Reserve:
 
 
 def _image_width(entries: Sequence[str], profile: Profile, heading: str = "") -> int:
-    """C19, D13: a contact image's width, two columns of widest text plus padding.
+    """A contact image's width, two columns of widest text plus padding.
 
     A stacked table's `heading` (layout-0170) is measured too: the table is no narrower than it.
     """
@@ -130,7 +131,7 @@ def _image_width(entries: Sequence[str], profile: Profile, heading: str = "") ->
 
 
 def table_height(rows: int, profile: Profile) -> int:
-    """C19: a contact table's height: its head and `rows` rows of text, padded (R8's one size)."""
+    """A contact table's height: its head and `rows` rows of text, padded (one shared size)."""
     return (1 + rows) * profile.text_height + 3 * profile.marker_padding
 
 
@@ -141,7 +142,7 @@ def image_reserves(
     marks: Mapping[Handle, tuple[list[str], list[str]]],
     owners: Mapping[Handle, Handle] | None = None,
 ) -> dict[tuple[AuthoringKey, Handle], _Reserve]:
-    """I4 Q1, D7: (column key, function) -> `_Reserve`; a flipped cell keeps nothing."""
+    """(column key, function) -> `_Reserve`; a flipped cell keeps nothing."""
     by_item = by_owner([s for s in specs if s.roles.contact], owners)
     spec_of = {spec.function: spec for spec in specs}
     found: dict[tuple[AuthoringKey, Handle], _Reserve] = {}
@@ -166,7 +167,7 @@ def image_reserves(
             cross = any(
                 c.drawing_set_key != spec.drawing_set_key for c in by_item.get(spec.item, [])
             )
-            image = (cell.function, (*no, *nc), cross)  # RW9: a contact in another set
+            image = (cell.function, (*no, *nc), cross)  # A contact in another set
             lane = [c for c in under if c.lane == cell.lane]
             wide = (cell, *(() if cell.side else lane))
             for one in dict.fromkeys((*wide, last)):
@@ -185,7 +186,7 @@ def with_flipped_below(
     columns: tuple[Column, ...],
     heights: Mapping[Handle, int],
 ) -> dict[tuple[AuthoringKey, Handle], _Reserve]:
-    """R8: a flipped cell keeps no room (place rebuilds its geometry), so the cell above holds it.
+    """A flipped cell keeps no room (place rebuilds its geometry), so the cell above holds it.
 
     Each reserve that holds a table's room grows by the keep-out heights of the cells below it.
     """
@@ -211,7 +212,7 @@ def rooms(
     plans: tuple[PagePlan, ...],
     inputs: PageInputs,
 ) -> dict[tuple[AuthoringKey, Handle], tuple[int, int]]:
-    """I4 Q1, D7: (column key, function) -> (down, right) room, from the widest place text."""
+    """(column key, function) -> (down, right) room, from the widest place text."""
     widest = widest_places(plans, inputs)
     by_function = {one.function: one for one in drawn}
     found = {}
@@ -234,7 +235,7 @@ def rooms(
 def reserved(
     drawn: tuple[DrawnFunction, ...], rooms: Mapping[tuple[AuthoringKey, Handle], tuple[int, int]]
 ) -> tuple[DrawnFunction, ...]:
-    """I4 Q1, D7: `drawn` with each function that has a room in `rooms` grown (no filter)."""
+    """`drawn` with each function that has a room in `rooms` grown (no filter)."""
     grow = {function: room for (_, function), room in rooms.items()}
     if not grow:
         return drawn
@@ -255,7 +256,7 @@ def unreserve(
     placed: tuple[PlacedFunction, ...],
     rooms: Mapping[tuple[AuthoringKey, Handle], tuple[int, int]],
 ) -> tuple[PlacedFunction, ...]:
-    """I4 Q1: the reserved room taken off again after placing (lint and router see the symbol)."""
+    """The reserved room taken off again after placing (lint and router see the symbol)."""
     found = []
     for one in placed:
         room = rooms.get((one.column, one.function))
@@ -268,16 +269,10 @@ def unreserve(
     return tuple(found)
 
 
-def _anchor_x(at: PlacedFunction) -> int:
-    """layout-0123 F1: the page x of the item's rightmost bottom port (a coil has one)."""
-    ports = [p for p in at.geometry.ports if p.facing is Facing.S] or list(at.geometry.ports)
-    return max(port_page_at(at.at, p).x for p in ports)
-
-
 def _image_top(
     at: PlacedFunction, placed_page: tuple[PlacedFunction, ...], profile: Profile
 ) -> int:
-    """I4 Q1: the y a coil's image starts: below its side elements, or at the column foot."""
+    """The y a coil's image starts: below its side elements, or at the column foot."""
     same = [one for one in placed_page if one.column == at.column]
     if any(one.at.y > at.at.y for one in same):
         foot = max(one.at.y + one.geometry.keepout.y + one.geometry.keepout.height for one in same)
@@ -316,7 +311,7 @@ def contact_images(
 ) -> tuple[
     list[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]], tuple[LabelRequest, ...]
 ]:
-    """C19: a NO | NC contact table under each coil; order is by function id, not input order."""
+    """A NO | NC contact table under each coil; order is by function id, not input order."""
     sheet, profile = inputs.sheet, inputs.profile
     home = first_placed(one for placed, _ in pages for one in placed)
     by_item = by_owner([s for s in inputs.functions if s.function in home], inputs.owners)
@@ -339,7 +334,7 @@ def contact_images(
             continue
         if coil is None and owner in coil_unplaced:
             continue
-        if coil is None:  # V10: no coil, so the main symbol; one reference path, no table
+        if coil is None:  # No coil, so the main symbol; one reference path, no table
             requests.extend(home_references(contacts, main, home, where))
             continue
         at = home[coil.function]
@@ -356,9 +351,9 @@ def contact_images(
         nc.extend(_entry_text(mark, inputs.no_place) for mark in spare_nc)
         width = _image_width([*no, *nc], profile)
         height = table_height(max(len(no), len(nc)), profile)
-        x = _anchor_x(at) + WIRING_GRID // 2
+        x = table_x(at.at, at.geometry)
         y = _image_top(at, holding[at.function, at.drawing_set, at.page], profile)
-        # I4, layout-0123: nor on a marker, a stub or a power symbol (a star marker under A2)
+        # layout-0123: nor on a marker, a stub or a power symbol (a star marker)
         here = marker_boxes.get((at.drawing_set, at.page), ())
         box = push_clear(
             Box(x=x, y=y, width=width, height=height), here, gap=profile.marker_padding, axis="y"
@@ -379,7 +374,7 @@ def contact_images(
         requests.extend(home_references(contacts, coil, home, where))
     tables = settled_tables(
         tables, home, marker_boxes, profile, inputs.heads
-    )  # I4 baseline, layout-0170 stack
+    )  # Baseline, layout-0170 stack
     found = []
     for plan, (placed, first) in zip(plans, pages, strict=True):
         found.append((placed, (*first, *tables.get((plan.drawing_set, plan.number), ()))))
@@ -387,5 +382,5 @@ def contact_images(
 
 
 def _hosted(cell: Cell) -> bool:
-    """A cell attached to a host keeps no image reserve; a moved one (V5) is a home cell."""
+    """A cell attached to a host keeps no image reserve; a moved one is a home cell."""
     return cell.host is not None and cell.home is not Home.MOVED

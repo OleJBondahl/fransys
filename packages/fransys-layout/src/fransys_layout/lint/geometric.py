@@ -1,4 +1,4 @@
-"""Stage 9, geometric lint: how a laid-out page looks (docs/design/lint.md 6.8).
+"""Stage 9, geometric lint: how a laid-out page looks.
 
 A report, never an optimiser objective, and never evidence that the wiring is right:
 that is `coherence`.
@@ -89,7 +89,7 @@ def lint_geometry(
 ) -> tuple[Finding, ...]:
     """Report geometric defects of `layout` and its harness `ink`, sorted by `(code, subjects)`.
 
-    design/lint.md 6.8; harness lines, stubs and connector boxes from layout-0158.
+    Harness lines, stubs and connector boxes follow layout-0158.
     """
     content = content_box(sheet)
     placed_on = by_key(layout.placed, page_of)

@@ -1,4 +1,4 @@
-"""The diagram placer's cuts (BD5): a line crossing a sheet break is a stub and a marker per sheet.
+"""The diagram placer's cuts: a line crossing a sheet break is a stub and a marker per sheet.
 
 Each half starts at its box and ends at the marker, on the grid inside the cut's zone.
 """

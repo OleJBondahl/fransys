@@ -1,4 +1,4 @@
-"""The fixed order of a wire's two ends (V8): one home for the wire label and the wire row."""
+"""The fixed order of a wire's two ends: one home for the wire label and the wire row."""
 
 from typing import TYPE_CHECKING
 

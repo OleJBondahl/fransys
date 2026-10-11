@@ -1,4 +1,4 @@
-"""Devices: `d.device("Q1", part)` and the checked references on what it returns (EA4)."""
+"""Devices: `d.device("Q1", part)` and the checked references on what it returns."""
 
 from typing import TYPE_CHECKING, Any, Literal, overload
 lazy from collections.abc import Mapping
@@ -253,8 +253,8 @@ class Devices:
         installed: bool = True,
         external: bool = False,
         contacts: str | Mapping[str, str] | None = None,
-    ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design (EA4)
-    def device(  # noqa: PLR0913 -- the call's own spec signature (EA4)
+    ) -> Any: ...  # noqa: ANN401 -- the string-MPN path is untyped by design
+    def device(  # noqa: PLR0913 -- the call's own spec signature
         self: "Design",
         tag: str | None,
         part: str | type[Device] | None,

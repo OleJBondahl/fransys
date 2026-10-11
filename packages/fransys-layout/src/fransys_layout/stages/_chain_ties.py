@@ -1,4 +1,4 @@
-"""Chain direction ties (T4): the facts of one direction of a chain, and the order that picks."""
+"""Chain direction ties: the facts of one direction of a chain, and the order that picks."""
 
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -36,7 +36,7 @@ def _strip_of(pole: _Pole, specs: Mapping[Handle, FunctionSpec]) -> str:
 
 @fact("strip_entry_outvoted", kind="physical", source="IEC 60947-7 terminal block strip entry")
 def _strip_entry_outvoted(way: _Direction) -> bool:
-    """The strip entries outvote this direction; a tie keeps the walked one (B9)."""
+    """The strip entries outvote this direction; a tie keeps the walked one."""
     rd = way.rd
     votes = [
         rd.port_side.get(e) == rd.strip_entry[_strip_of(rd.poles[p], rd.specs)]
@@ -49,14 +49,14 @@ def _strip_entry_outvoted(way: _Direction) -> bool:
 
 @fact("potential_below_top", kind="electrical", source="across quantity: Rail.max_v and phase")
 def _potential_below_top(way: _Direction) -> bool:
-    """This direction starts at the lower potential, when the two ends differ (C20, A10)."""
+    """This direction starts at the lower potential, when the two ends differ."""
     first, last = (way.rd.rank_of.get(end) for end in way.ends())
     return first is not None and last is not None and last < first
 
 
 @fact("designation_after", kind="physical", source="IEC 81346 reference designation")
 def _designation_after(way: _Direction) -> bool:
-    """This direction starts at the later designation, then the terminal sort key (A6, D1)."""
+    """This direction starts at the later designation, then the terminal sort key."""
     rd = way.rd
     first, last = (rd.port_function[end] for end in way.ends())
     return (rd.specs[first].designation, rd.tie_key.get(first, ())) > (

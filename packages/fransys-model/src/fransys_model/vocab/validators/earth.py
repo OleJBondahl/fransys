@@ -29,7 +29,7 @@ def _on_pe(model: Model, earth: frozenset[Id[Port]], port: Id[Port]) -> bool:
 
 
 def _core_colours(model: Model) -> dict[Id[Conductor], str]:
-    """The colour of each core: its carrier's product `core_colours[index - 1]` (SC4)."""
+    """The colour of each core: its carrier's product `core_colours[index - 1]`."""
     by_part = {facet.subject: facet for facet in facets_of(model, CableProductFacet).values()}
     found: dict[Id[Conductor], str] = {}
     for core in facets_of(model, CoreFacet).values():

@@ -1,7 +1,4 @@
-"""One page model of space (layout-0083): D2's three edge predicates over a page's shapes.
-
-Why each predicate stands as it does, and the exemption table by kind: docs/design/pages.md 6.9.
-"""
+"""One page model of space (layout-0083): the three edge predicates over a page's shapes."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -49,7 +46,7 @@ class Run:
 
 @dataclass(frozen=True, slots=True)
 class Lane:
-    """A port's exit (D2): the port's end, and the extent of the wire that leaves through a box."""
+    """A port's exit: the port's end, and the extent of the wire that leaves through a box."""
 
     end: End
     extent: Box
@@ -84,13 +81,13 @@ def unowned(boxes: Iterable[Box]) -> tuple[Shape, ...]:
 
 @value
 class Space:
-    """A page's placed shapes, frozen (D2), and the content box a text is placed inside (S18)."""
+    """A page's placed shapes, frozen, and the content box a text is placed inside."""
 
     shapes: tuple[Shape, ...]
     content: Box | None = None
 
     def holds(self, box: Box) -> bool:
-        """P3's containment: `box` lies inside `content`, closed (flush is inside), or none."""
+        """Containment: `box` lies inside `content`, closed (flush is inside), or none."""
         return self.content is None or contains(self.content, box)
 
     def obstacles(
@@ -166,7 +163,7 @@ def obstacle_index(obstacles: Iterable[Obstacle]) -> CellIndex[Obstacle]:
 def step_admitted(
     first: Cell, second: Cell, obstacles: CellIndex[Obstacle], ends: frozenset[Cell]
 ) -> bool:
-    """P1, a route step admitted closed: no obstacle touches it, but at an end cell or on a lane."""
+    """A route step admitted closed: no obstacle touches it, but at an end cell or on a lane."""
     for obstacle in obstacles.meeting(first[0], first[1], second[0], second[1]):
         if _touches(obstacle.box, first, second, ends) and not _in_a_lane(obstacle, first, second):
             return False
@@ -176,7 +173,7 @@ def step_admitted(
 def run_admitted(
     first: Cell, second: Cell, obstacles: Iterable[Obstacle], ends: frozenset[Cell]
 ) -> bool:
-    """P1 for a straight run: true iff `step_admitted` holds for every grid step of it."""
+    """For a straight run: true iff `step_admitted` holds for every grid step of it."""
     index = obstacle_index(obstacles)
     dx = (second[0] > first[0]) - (second[0] < first[0])
     dy = (second[1] > first[1]) - (second[1] < first[1])
@@ -192,19 +189,19 @@ def run_admitted(
 
 
 def crosses(box: Box, run: Run) -> bool:
-    """P2, an interior crossing: `run` passes through the interior of `box`, both axes strict."""
+    """An interior crossing: `run` passes through the interior of `box`, both axes strict."""
     return meets((run.x, run.to_x), (box.x, box.x + box.width), closed=False) and meets(
         (run.y, run.to_y), (box.y, box.y + box.height), closed=False
     )
 
 
 def crosses_unless_leaving(box: Box, run: Run, lanes: Iterable[Lane]) -> bool:
-    """P2 with D2's row "a route may leave along its own port": `crosses`, but not for a leaver."""
+    """With the row "a route may leave along its own port": `crosses`, but not for a leaver."""
     return crosses(box, run) and not any(_on_lane(one, run) for one in lanes)
 
 
 def covers(box: Box, run: Run) -> bool:
-    """P3, a closed cover: `run` meets the closed `box`, an edge or a corner is enough."""
+    """A closed cover: `run` meets the closed `box`, an edge or a corner is enough."""
     return meets((run.x, run.to_x), (box.x, box.x + box.width)) and meets(
         (run.y, run.to_y), (box.y, box.y + box.height)
     )

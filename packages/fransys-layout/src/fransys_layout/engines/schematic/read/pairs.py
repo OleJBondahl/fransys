@@ -1,7 +1,7 @@
-"""layout-0107: which item box stands over the pin group it feeds, read from V1's sides.
+"""layout-0107: which item box stands over the pin group it feeds, read from the item sides.
 
 The model says which functions are wired pin to pin (`derive.box_pairs`, model-0130), counting the
-ports the specs draw (layout-0128); V1's side split (`item_sides`, via `pin_sides`) says which end
+ports the specs draw (layout-0128); the side split (`item_sides`, via `pin_sides`) says which end
 is fed: its group on top, the feeder's below.
 """
 

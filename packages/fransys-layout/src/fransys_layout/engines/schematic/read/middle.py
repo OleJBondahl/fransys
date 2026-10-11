@@ -81,7 +81,7 @@ def _unit(
 
 
 def _hidden(model: Model, found: MiddleUnit, shared: frozenset[Id[Function]]) -> MiddleUnit:
-    """`found` with the sets it does not draw in, on each interface another unit also holds (P6)."""
+    """`found` with the sets it does not draw in, on each interface another unit also holds."""
     return replace(
         found,
         interfaces=tuple(

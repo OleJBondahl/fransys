@@ -1,4 +1,4 @@
-"""The widest place text a contact image can carry: room for what render prints (RW9)."""
+"""The widest place text a contact image can carry: room for what render prints."""
 
 from typing import TYPE_CHECKING
 
@@ -32,7 +32,7 @@ def _partner_seats(pages: int, cross: Cross | None) -> list[tuple[int, int, Loca
 def widest_where(
     pages: int, sheet: SheetFormat, profile: Profile, cross: Cross | None = None
 ) -> str:
-    """D7, LD5, RW9: the widest place text over pages 1 to `pages` and every cell of the sheet.
+    """The widest place text over pages 1 to `pages` and every cell of the sheet.
 
     `cross` is (the highest set number, the longest location path) of a model with several
     sets. Every text is `partner_position_text`'s, so a form it gains is measured here.
@@ -70,7 +70,7 @@ def cross_form(plans: Sequence[PagePlan], paths: Mapping[int, LocationPath]) -> 
 
 
 def widest_places(plans: tuple[PagePlan, ...], inputs: PageInputs) -> tuple[str, str]:
-    """D7, RW9: the widest place text of a run for an image of one set, and of several."""
+    """The widest place text of a run for an image of one set, and of several."""
     cross = cross_form(plans, set_paths(plans, inputs.locations))
     pages = max((plan.number for plan in plans), default=1)
     return (

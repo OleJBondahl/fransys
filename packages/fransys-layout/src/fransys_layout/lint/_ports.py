@@ -1,7 +1,5 @@
 """Where the ports a connection names are drawn, private to the coherence check.
 
-Refs: package-layout.md 4, lint.md 6.8.
-
 A port's position is its placed function's origin plus the position of the symbol port its
 `DrawnPort` names. Its function is the `PortRef` that names it, so nothing is found by geometry.
 """
@@ -33,7 +31,7 @@ class Ports:
 
     net: dict[Handle, Handle]
     at: dict[tuple[Handle, Page], Point]
-    # R7 B5: where an end with `PortRef.symbol_port` lands: another port of its node
+    # Where an end with `PortRef.symbol_port` lands: another port of its node
     also: dict[tuple[Handle, Page], frozenset[Point]]
     pages: dict[Handle, tuple[Page, ...]]
 
@@ -91,7 +89,7 @@ def _at(
 def _also(
     connections: tuple[Connection, ...], where: Mapping[Handle, Mapping[Page, PlacedFunction]]
 ) -> dict[tuple[Handle, Page], set[Point]]:
-    """Where each end with a `symbol_port` lands, per page (R7 B5)."""
+    """Where each end with a `symbol_port` lands, per page."""
     also: dict[tuple[Handle, Page], set[Point]] = defaultdict(set)
     for ref in (ref for one in connections for ref in (one.a, one.b) if ref.symbol_port):
         for page, placement in where.get(ref.function, {}).items():

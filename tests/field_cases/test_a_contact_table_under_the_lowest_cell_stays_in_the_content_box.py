@@ -6,7 +6,7 @@ on a lead housing), and two more harnesses leave the other headers on the board'
 contactors' main poles are drawn on another page. Each coil gets a contact table of two rows
 (A1-A2, T1-T2) under it.
 
-The bug: the group's height (T1 of TALL-PAGE) counted the outline, its boxes and the lower columns,
+The bug: the group's height (layout-0167) counted the outline, its boxes and the lower columns,
 not the tables hung under the contactors, so a group whose columns ended within one table height of
 the content box was not cut and the tables ran across the title block (OUT_OF_CONTENT_BOX).
 The fix (decision layout-0167, R8): the column reserve that holds the table's room sits on the

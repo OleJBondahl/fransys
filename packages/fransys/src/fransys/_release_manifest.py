@@ -140,7 +140,7 @@ def _warning_entries(
 
 
 def _package_versions() -> list[JsonValue]:
-    """The installed version of every Fransys workspace package (manifest L3)."""
+    """The installed version of every Fransys workspace package."""
     return [
         {"name": name, "version": importlib.metadata.version(name)}
         for name in sorted(_WORKSPACE_PACKAGES)
@@ -150,7 +150,7 @@ def _package_versions() -> list[JsonValue]:
 def _part_library_versions(model: Model, unit: Id[ModelUnit] | None) -> list[JsonValue]:
     """The distinct `(name, version)` of every part library behind `unit`'s items.
 
-    `None` is every item. A unit uses the whole subtree (`unit_items`), broader than L2's listing.
+    `None` is every item. A unit uses the whole subtree (`unit_items`), broader than the listing.
     """
     item_ids = items(model).keys() if unit is None else unit_items(model, unit)
     all_items = items(model)
@@ -170,7 +170,7 @@ def _part_library_versions(model: Model, unit: Id[ModelUnit] | None) -> list[Jso
 
 
 def _tool_versions() -> dict[str, JsonValue]:
-    """`typst`'s own version; no release spawns Graphviz or `wireviz` any more (CT1)."""
+    """`typst`'s own version; no release spawns Graphviz or `wireviz` any more."""
     return {"typst": importlib.metadata.version("typst")}
 
 
@@ -201,7 +201,7 @@ def _nested_entries(model: Model, unit: Id[ModelUnit] | None) -> list[JsonValue]
 def _unit_manifest_fields(
     model: Model, unit: Id[ModelUnit] | None
 ) -> tuple[dict[str, JsonValue], dict[str, JsonValue] | None]:
-    """`(unit, history)` of the manifest (L3): the release's or the project's own facts."""
+    """`(unit, history)` of the manifest: the release's or the project's own facts."""
     if unit is not None:
         release_record = unit_release(model, unit)
         unit_dict: dict[str, JsonValue] = {

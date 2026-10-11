@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 def _in_marking_order(specs: Iterable[PortSpec]) -> tuple[PortSpec, ...]:
-    """`specs` with `order` set to the rank of each name's `marking_key` (O7: `10` after `2`)."""
+    """`specs` with `order` set to the rank of each name's `marking_key` (`10` after `2`)."""
     ranked = sorted(specs, key=lambda spec: (marking_key(spec.name), spec.name))
     return tuple(dataclasses.replace(spec, order=i) for i, spec in enumerate(ranked))
 
@@ -106,13 +106,13 @@ def _terminal_texts(model: Model, function: Function) -> tuple[str, str]:
 
 
 def _gender(model: Model, template: Id[Any] | None) -> str | None:
-    """The connector facet's gender of a function template, `None` without one (J2)."""
+    """The connector facet's gender of a function template, `None` without one."""
     shape = None if template is None else connector_facets(model).get(template)
     return None if shape is None or shape.gender is None else shape.gender.value
 
 
 def _designation(model: Model, item: Id[Any]) -> str:
-    """The item's reference designation, or "" before the numbering pass (R5)."""
+    """The item's reference designation, or "" before the numbering pass."""
     try:
         return reference_designation(model, item)
     except SchemaError:

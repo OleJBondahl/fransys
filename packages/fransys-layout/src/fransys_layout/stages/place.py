@@ -1,4 +1,4 @@
-"""Stage 4, place: a grid position for every drawn function on one page (design/place.md 6.4)."""
+"""Stage 4, place: a grid position for every drawn function on one page."""
 
 import dataclasses
 from dataclasses import dataclass, field
@@ -61,12 +61,12 @@ class _Cell:
     low: bool = False
     carrier: Handle | None = None
     boxy: bool = False
-    role: object = None  # C13(b): the column's role; a band aligns one role only
+    role: object = None  # The column's role; a band aligns one role only
     span_port: str = ""
     host: Handle | None = None
     port: str = ""
     face: bool = False
-    dx: int = 0  # the cell's axis, right of the column axis (R4 rows)
+    dx: int = 0  # the cell's axis, right of the column axis
     # `field(default=...)` is not redundant: ruff RUF009 refuses a bare call as a default.
     origin: Point = field(default=Point(x=0, y=0))
 
@@ -110,10 +110,10 @@ def place(
     stacking: PageStacking,
     joins: tuple[JoinedRun, ...] = (),
 ) -> tuple[tuple[PlacedFunction, ...], tuple[Finding, ...]]:
-    """Place the columns of `plan` left to right, cells top to bottom (WP7, layout-0035)."""
+    """Place the columns of `plan` left to right, cells top to bottom (layout-0035)."""
     drawn_of = lookups.drawn_of(drawn, "place")
     page, _, floor, gaps_of = _stacked(plan, columns, drawn_of, stacking, joins)
-    # R7 B7, D3: each row's top at minimum pitch with the spacing kept (blocks `row_spacing`
+    # Each row's top at minimum pitch with the spacing kept (blocks `row_spacing`
     # apart, `row_gap` inside a block and in a column of only boxes): how high it can go
     stacked = {
         (c, i): min(cell.top for cell in row)
@@ -148,7 +148,7 @@ def page_stack(
     drawn: tuple[DrawnFunction, ...],
     stacking: PageStacking,
 ) -> PageStack:
-    """S12: the page as `place` stacks it before its bands, but with no `texts` (4b6c, 4b6d)."""
+    """The page as `place` stacks it before its bands, but with no `texts`."""
     drawn_of = lookups.drawn_of(drawn, "place")
     page, top, floor, _ = _stacked(plan, columns, drawn_of, stacking)
     ports: dict[tuple[AuthoringKey, Handle], StackedPort] = {}
@@ -190,7 +190,7 @@ def _align_joins(
     top: int,
     gaps_of: _GapsOf,
 ) -> None:
-    """S12: each joined run's ports on one y at its deepest port, before the bands (D1)."""
+    """Each joined run's ports on one y at its deepest port, before the bands."""
     by_key = {rows[0][0].column: rows for rows in page}
     for run in joins:
         ends = [
@@ -213,7 +213,7 @@ def _stacked(
     stacking: PageStacking,
     joins: tuple[JoinedRun, ...] = (),
 ) -> tuple[list[list[list[_Cell]]], int, int, _GapsOf]:
-    """`place`'s steps before its bands, M11 passes included: cells stacked, top, floor, gaps."""
+    """`place`'s steps before its bands, passes included: cells stacked, top, floor, gaps."""
     narrowed: dict[AuthoringKey, int] = {}
     while True:
         gaps_of = _gaps_of(stacking.profile, narrowed)
@@ -246,7 +246,7 @@ def _narrowed(
     profile: Profile,
     runs: Sequence[frozenset[AuthoringKey]],
 ) -> dict[AuthoringKey, int]:
-    """M11: `narrowed` with each overfull column's spacing cut by its overhang over its gaps."""
+    """`narrowed` with each overfull column's spacing cut by its overhang over its gaps."""
     over = {
         rows[0][0].column: max(cell.bottom for row in rows for cell in row) - floor for rows in page
     }
@@ -281,32 +281,32 @@ def _stack_page(
         for column in _in_plan_order(plan, columns)
     ]
     _spread(page, profile.column_gap)
-    # C14: the first rows leave room above for their texts (tags, point texts, markers on N
+    # The first rows leave room above for their texts (tags, point texts, markers on N
     # ports) and the last rows below, inside the content box
     lift, sink = _text_room(page, profile, drawn_of, texts)
     # layout-0154 (layout-0158): and room for a leaving line and its stub beyond a line's pins
     up, down = line_room(page, drawn_of, stacking.line_ends, profile)
-    # M4: every page keeps it, a reference or none
+    # Every page keeps it, a reference or none
     band = _reference_band(sheet, profile, stacking.digits)
     lift, sink = max(lift, band, up), max(sink, band, down)
-    # M9: two ports stacked along a stub stand as far apart as the texts at them reach out
+    # Two ports stacked along a stub stand as far apart as the texts at them reach out
     make_room(page, drawn_of, texts, gaps_of=gaps_of, profile=profile)
     top = stacking.headroom_lanes * WIRING_GRID + lift
     for rows in page:
         _stack(rows, profile.row_gap, top=top)
     floor = sheet.content_height - stacking.bottom_headroom_lanes * WIRING_GRID - sink
-    _align_faces(page)  # R13: a mated pair touches before the spacing measures it
+    _align_faces(page)  # A mated pair touches before the spacing measures it
     _space(page, profile.row_spacing, narrowed)
     return page, top, floor
 
 
 def _reference_band(sheet: SheetFormat, profile: Profile, digits: Digits = FLOOR) -> int:
-    """M4: the top and bottom band height, a turned reference plus stub clearance, on every page."""
+    """The top and bottom band height, a turned reference plus stub clearance, on every page."""
     return snap_up(WIRING_GRID + reference_box_width(sheet, profile, digits=digits))
 
 
 def _in_plan_order(plan: PagePlan, columns: tuple[Column, ...]) -> list[Column]:
-    """The page's columns, left to right, matched to `plan.columns` by key (columns.md 6.2)."""
+    """The page's columns, left to right, matched to `plan.columns` by key."""
     by_key: dict[AuthoringKey, Column] = {}
     for column in columns:
         if column.key in by_key:
@@ -326,7 +326,7 @@ def _in_plan_order(plan: PagePlan, columns: tuple[Column, ...]) -> list[Column]:
 def _cells(
     column: Column, drawn_of: Mapping[Handle, DrawnFunction], profile: Profile, label_boxes: FnBoxes
 ) -> list[list[_Cell]]:
-    """The rows of one column (cells sharing an index are one row, R4), left to right by lane."""
+    """The rows of one column (cells sharing an index are one row), left to right by lane."""
     if not column.cells:
         msg = "a column has no cells, so it has nothing to place"
         raise LayoutError(msg)
@@ -361,7 +361,7 @@ def _cells(
                     port=cell.port,
                     face=cell.face,
                     span_port=cell.span_port,
-                    # R6 D4, R7 B6a: generic boxes, connectors and terminals are not stretched
+                    # Generic boxes, connectors and terminals are not stretched
                     boxy=function.geometry.generic_box or function.roles.boxy,
                 )
             )
@@ -374,7 +374,7 @@ def _turned_function(function: DrawnFunction, cell: Cell) -> DrawnFunction:
     """`function`, its symbol turned when `cell` is a flipped one (`references.joins` reads it)."""
     if not cell.flip or function.geometry.generic_box:
         return function
-    # R5 rule 3: the side element's other port on top. D1: a turned directed pole
+    # The side element's other port on top. A turned directed pole
     # is mirrored as well (MR180), so top and bottom swap and its poles, markings
     # and tag keep their left-to-right places; every other flip is R180
     flipped = symbol_geometry(
@@ -390,15 +390,15 @@ def _fit_row(
 ) -> None:
     """Trim the tag slots of a packed row and grow every keep-out over its labels."""
     lanes = [cell for cell in row if not cell.side]
-    # R5.2: lanes of one item (followers show no tag) or of terminals and pins (their
-    # texts are narrow) pack tag-less; C1 (iii): lanes of different items keep their tag
+    # Lanes of one item (followers show no tag) or of terminals and pins (their
+    # texts are narrow) pack tag-less; lanes of different items keep their tag
     items = {drawn_of[cell.function].item for cell in lanes}
     narrow = all(drawn_of[cell.function].roles.narrow for cell in lanes)
     tagless = len(lanes) > 1 and (len(items) == 1 or narrow)
     if tagless:
         for cell in lanes:
             cell.geometry = _without_tag(cell.geometry)
-    # C8(b): the keep-out grows over the labels' measured boxes (a tag-less lane's tag
+    # The keep-out grows over the labels' measured boxes (a tag-less lane's tag
     # stays out); a tag's keep-out is its measured text, not the fixed slot
     for cell in row:
         boxes = [
@@ -419,7 +419,7 @@ def _text_room(
     drawn_of: Mapping[Handle, DrawnFunction],
     texts: PageTexts | None,
 ) -> tuple[int, int]:
-    """C14, S16: how far the first rows' texts reach above their keep-outs, the last rows' below."""
+    """How far the first rows' texts reach above their keep-outs, the last rows' below."""
     marker = WIRING_GRID + profile.text_height + 2 * profile.marker_padding
     lift = sink = 0
     for rows in page:
@@ -457,14 +457,14 @@ def _owned(
     facing: Facing,
     profile: Profile,
 ) -> list[Box]:
-    """S16: the boxes of the texts `cell`'s function owns at a `facing` port; none with no texts."""
+    """The boxes of the texts `cell`'s function owns at a `facing` port; none with no texts."""
     if texts is None:
         return []
     return end_boxes(cell.geometry, drawn_of[cell.function], texts, facing, profile)
 
 
 def _without_tag(geometry: SymbolGeometry) -> SymbolGeometry:
-    """The geometry with a keep-out box that leaves out the tag slot (R5 rule 2)."""
+    """The geometry with a keep-out box that leaves out the tag slot."""
     full = hull([geometry.body, *(slot.box for slot in geometry.slots)])
     trimmed = hull([geometry.body, *(s.box for s in geometry.slots if s.slot != "tag")])
     k = geometry.keepout
@@ -481,7 +481,7 @@ def _without_tag(geometry: SymbolGeometry) -> SymbolGeometry:
 
 
 def axis_offset(function: DrawnFunction) -> int:
-    """The x inside the symbol that goes on the column axis (place.md 6.4, geometry.md 5.2)."""
+    """The x inside the symbol that goes on the column axis."""
     for name in (function.primary_in, function.primary_out):
         if name is None:
             continue
@@ -516,12 +516,12 @@ def _lane_offsets(rows: Sequence[list[_Cell]]) -> None:
     for row in rows:
         if all(cell.host is not None for cell in row):
             continue
-        if pitch and not row[0].side:  # C1 (iii): a row's first cell may sit in a later lane
+        if pitch and not row[0].side:  # A row's first cell may sit in a later lane
             row[0].dx = row[0].lane * pitch
         for previous, cell in pairwise(row):
             packed = _next_slot(previous, cell)
-            # R5 rule 2: pole lanes sit exactly at the pole pitch, never inside the cell before
-            # (a multi-pole cell's keep-out spans several lanes, D2); a lane after a multi-pole
+            # Pole lanes sit exactly at the pole pitch, never inside the cell before
+            # (a multi-pole cell's keep-out spans several lanes); a lane after a multi-pole
             # cell gives up the exact pole pitch to avoid that overlap
             cell.dx = max(cell.lane * pitch, packed) if pitch and not cell.side else packed
     _span_offsets(rows, pitch)
@@ -538,7 +538,7 @@ def _keep_gap(rows: Sequence[list[_Cell]]) -> None:
 
 
 def _span_offsets(rows: Sequence[list[_Cell]], pitch: int | None) -> None:
-    """C12: a function spanning lanes has its reached port under its lane."""
+    """A function spanning lanes has its reached port under its lane."""
     for row in rows:
         for cell in row:
             if cell.span_port and cell.host is None:
@@ -547,7 +547,7 @@ def _span_offsets(rows: Sequence[list[_Cell]], pitch: int | None) -> None:
 
 
 def _widest_step(rows: Sequence[list[_Cell]]) -> int | None:
-    """R7 A6: with no pole pitch, one pitch for every pole-lane row: the widest packed step."""
+    """With no pole pitch, one pitch for every pole-lane row: the widest packed step."""
     steps = [
         _next_slot(previous, cell, 0)
         for row in rows
@@ -590,7 +590,7 @@ def _stack(rows: Sequence[list[_Cell]], row_gap: int, *, top: int) -> None:
 def _space(
     page: Sequence[list[list[_Cell]]], spacing: int, narrowed: Mapping[AuthoringKey, int]
 ) -> None:
-    """R13: a column's rows stack from the top at `spacing` (or its `narrowed` one, M11)."""
+    """A column's rows stack from the top at `spacing` (or its `narrowed` one)."""
     for column in page:
         if all(cell.boxy for row in column for cell in row):
             continue
@@ -606,7 +606,7 @@ def _space(
 
 
 def _align_sides(page: Sequence[list[list[_Cell]]]) -> None:
-    """Put each side element's port on its host's port y (R5 rule 3)."""
+    """Put each side element's port on its host's port y."""
     for rows in page:
         for row in rows:
             hosts = [cell for cell in row if not cell.side]
@@ -624,7 +624,7 @@ def _align_sides(page: Sequence[list[list[_Cell]]]) -> None:
 
 
 def _align_faces(page: Sequence[list[list[_Cell]]]) -> None:
-    """R7 A: a lower pin's mating face on its upper pin's, touching (mated-pair J1, J3, D8)."""
+    """A lower pin's mating face on its upper pin's, touching."""
     for rows in page:
         by_function = {cell.function: cell for row in rows for cell in row}
         row_of = {cell.function: at for at, row in enumerate(rows) for cell in row}
@@ -657,7 +657,7 @@ def _align_bands(
     floor: int,
     stacked: Mapping[tuple[int, int], int],
 ) -> None:
-    """Align each band's participants, top band first, after spacing (R7 B7, A9, layout-0061)."""
+    """Align each band's participants, top band first, after spacing (layout-0061)."""
     found = _participants(page)
     aligned: dict[int, set[int]] = {}
     blocks = partial(_blocks, page, gaps_of, aligned)
@@ -711,7 +711,7 @@ def _settle_band(
         blockers = [m for m in members if blocks(m, top)]
         if not blockers and all(fits(m, top) for m in members):
             break
-        # the participant that can rise least leaves the band (A9)
+        # the participant that can rise least leaves the band
         members.remove(max(blockers or members, key=lambda m: (stacked[m], m)))
     return top, members
 
@@ -732,7 +732,7 @@ def _moves_an_aligned_row(
     gaps: Sequence[int],
     aligned: AbstractSet[int],
 ) -> bool:
-    """Whether bringing `rows[index]` to `top` would move a row of `aligned` (D3, layout-0061)."""
+    """Whether bringing `rows[index]` to `top` would move a row of `aligned` (layout-0061)."""
     current = min(cell.top for cell in rows[index])
     if current > top:
         moves = _raise_plan(rows, index, top, gaps)
@@ -753,7 +753,7 @@ def _raise(rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int
 def _raise_plan(
     rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]
 ) -> list[tuple[int, int]]:
-    """The moves of `_raise` as (row index, shift up), the start row first (D3)."""
+    """The moves of `_raise` as (row index, shift up), the start row first."""
     shift = min(cell.top for cell in rows[start]) - top
     moves = [(start, shift)]
     below = min(cell.top_at(cell.top - shift) for cell in rows[start])
@@ -774,7 +774,7 @@ def _cascade(rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[i
 def _cascade_plan(
     rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]
 ) -> list[tuple[int, int]]:
-    """The moves of `_cascade` as (row index, new top), the start row first (D3)."""
+    """The moves of `_cascade` as (row index, new top), the start row first."""
     moves = flow(
         rows[start:],
         floor=top,

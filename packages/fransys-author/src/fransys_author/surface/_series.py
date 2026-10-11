@@ -1,4 +1,4 @@
-"""Surface mixin for `series` and `parallel` (EA5); supplies and cables are its two bases."""
+"""Surface mixin for `series` and `parallel`; supplies and cables are its two bases."""
 
 from functools import cached_property
 from typing import TYPE_CHECKING

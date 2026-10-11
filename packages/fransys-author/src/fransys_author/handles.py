@@ -336,7 +336,7 @@ class Strip:
         """One terminal on this strip.
 
         Args:
-            mpn: The part's MPN, `(manufacturer, mpn)` if ambiguous, or `None` for no part (E2).
+            mpn: The part's MPN, `(manufacturer, mpn)` if ambiguous, or `None` for no part.
             group_text: This terminal's group text; terminals that share one count up together.
             index: 1-based position within `group_text` (in the key); counts up unless given.
             group: A `=` node this terminal is placed at.

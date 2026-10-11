@@ -37,13 +37,15 @@ def _only_record(draft) -> ModelDocument:
 
 
 # The pump1 unit=write's exact expected file set (the table of this fixture's real
-# strips/boards/racks): its own cabinet document, the four whole-model-shaped CSVs (each
-# correctly scoped to pump1 alone), and pump1's own strip's terminal list. No overview.html
-# (a system view), no connectors-* (the board's connector belongs to the nested board unit,
-# not the cabinet), no board.pdf or system.pdf (neither document names pump1 as its subject).
+# strips/boards/racks): its own cabinet document, the five whole-model-shaped CSVs (each
+# correctly scoped to pump1 alone, cables.csv included), and pump1's own strip's terminal list.
+# No overview.html (a system view), no connectors-* (the board's connector belongs to the
+# nested board unit, not the cabinet), no board.pdf or system.pdf (neither document names
+# pump1 as its subject).
 _PUMP1_WRITE_FILES = frozenset(
     {
         "demo-pump-cabinet-v1.2-bom.csv",
+        "demo-pump-cabinet-v1.2-cables.csv",
         "demo-pump-cabinet-v1.2.pdf",
         "demo-pump-cabinet-v1.2-designations.csv",
         "demo-pump-cabinet-v1.2-plc.csv",
@@ -53,16 +55,16 @@ _PUMP1_WRITE_FILES = frozenset(
 )
 
 # The pump1 io-board unit's own write (the table): its own PCB_SCHEMATIC
-# document, the four whole-model-shaped CSVs (scoped to the board alone), and the board
+# document, the five whole-model-shaped CSVs (scoped to the board alone), and the board
 # item's own connector list (`_subjects.boards`'s predicate -- a PLC-module parent -- the
-# board unit's `x1` connector, not a strip: no terminals-* file). No overview.html or
-# cables.csv (both system views), no cabinet.pdf or system.pdf (neither document names the
-# board as its subject). Confirmed by running `fr.write(result, tmp_path, unit=pump1_board)`,
-# not guessed.
+# board unit's `x1` connector, not a strip: no terminals-* file). No overview.html (a system
+# view), no cabinet.pdf or system.pdf (neither document names the board as its subject).
+# Confirmed by running `fr.write(result, tmp_path, unit=pump1_board)`, not guessed.
 _PUMP1_BOARD_WRITE_FILES = frozenset(
     {
         "demo-io-board-v1.3.pdf",
         "demo-io-board-v1.3-bom.csv",
+        "demo-io-board-v1.3-cables.csv",
         "demo-io-board-v1.3-connectors.csv",
         "demo-io-board-v1.3-designations.csv",
         "demo-io-board-v1.3-plc.csv",

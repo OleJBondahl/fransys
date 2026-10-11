@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Function, Port
 
 
-# -- unit_designation (L2) -------------------------------------------------------------------
+# -- unit_designation -------------------------------------------------------------------
 
 
 def _own_location_leaves(model: Model, unit: Id[Unit]) -> set[Id[AspectNode]]:
@@ -94,7 +94,7 @@ def unit_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str
 
     `reference_designation`'s rule, except the `+` (location) segment drops `unit`'s own common
     location (`_common_location`); the `=` (group) segment is never truncated, as a group move
-    changes the release. The product part is `printed_designation(unit=unit)` (UNIT-ID I4 R2).
+    changes the release. The product part is `printed_designation(unit=unit)`.
 
     Args:
         model: The frozen model to read.
@@ -126,7 +126,7 @@ def _instance_prefix(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit]) 
     """`"<instance name>/"` for the unit `owner_unit`, an instance nested somewhere in `unit`.
 
     The instance name is the smallest, in sort order, of its own root items' `unit_designation`
-    in `unit`; a tagged instance is named by its tags instead (UT2).
+    in `unit`; a tagged instance is named by its tags instead.
     """
     if tags := instance_tags(model, owner_unit, unit):
         return f"{instance_name(tags)}/"
@@ -157,7 +157,7 @@ def _cross_port_text(model: Model, unit: Id[Unit] | None, port_id: Id[Port]) -> 
     owner = items(model)[fn.item]
     if owner.unit == unit:
         return _plain_port_text(model, unit, port_id)
-    # `_conductor_unit`'s U6 rule (or, for `unit=None`, the `owner.unit == unit` branch above)
+    # `_conductor_unit`'s rule (or, for `unit=None`, the `owner.unit == unit` branch above)
     # guarantees `owner.unit` is a real unit here.
     owner_unit = cast("Id[Unit]", owner.unit)
     prefix = _instance_prefix(model, unit, owner_unit)

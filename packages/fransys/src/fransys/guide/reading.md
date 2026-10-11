@@ -121,6 +121,8 @@ its `cable` facet, which records only the as-installed length. Every cable-selec
 on this page (`harness_cables`, `top_level_cables`, `unit_cables`, `cable_list_rows`) reads
 through one of these two, so none can disagree about what a cable is. `unit_cable_page_key` is gone: the block key is internal.
 
+`fransys.derive.reading_cables(model, unit)` returns `unit`'s cables, or the top-level ones.
+
 `fransys.derive.is_plc_module(model, item)` returns whether `item`'s part has category
 `PLC_MODULE`. A rack is an item with at least one such child, and `plc_rack_modules` lists them.
 
@@ -143,10 +145,9 @@ the overview sort by it, and `fn.pins` follows it. Sort pins through it, so no s
 
 `fransys.derive.harness_wires(model, harness)` returns the `WireRow`s of the wires on the harness's plugs.
 
-`fransys.derive.cable_list_rows(model)` returns one `CableListRow` per top-level cable
-(every cable item, `is_cable`, with `unit=None`, harness cables included), with its product
-facts. `from_label` is the first end's designation. `to_label` lists every other end's, in the
-cable's end order, joined by `, `.
+`fransys.derive.cable_list_rows(model, unit=None)` returns one `CableListRow` per top-level cable,
+or per cable of `unit`, with its product facts. `from_label` is the first end's designation; `to_label` lists the others,
+in end order, joined by `, `.
 
 `fransys.derive.contents_rows(cables)` reshapes a tuple of `HarnessCable`s (from
 `harness_cables`, `top_level_cables` or `unit_cables`) into one `ContentsRow` per cable, its

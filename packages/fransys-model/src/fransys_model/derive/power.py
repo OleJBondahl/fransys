@@ -10,11 +10,11 @@ from .indexes import build_indexes
 from .lookups import item_of_port, terminal_items
 from .order import NaturalKey, natural_key
 
-_WIRE_PORTS = 2  # a physical net of this many ports is one wire, not a rail (V3)
+_WIRE_PORTS = 2  # a physical net of this many ports is one wire, not a rail
 
 
 def _potential_kind(model: Model, potential: str) -> PowerKind:
-    """A DC rail's kind by `max_v`: 0 V ground, else supply (A6); an AC or unsupplied one `NONE`."""
+    """A DC rail's kind by `max_v`: 0 V ground, else supply; an AC or unsupplied one `NONE`."""
     supply = supply_of_potential(model, potential)
     if supply is None or supply.current is not Current.DC:
         return PowerKind.NONE
@@ -23,7 +23,7 @@ def _potential_kind(model: Model, potential: str) -> PowerKind:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _kinds(model: Model) -> frozendict[Id[Port], PowerKind]:
-    """Each net's kind by first port: `PE`, else its potential's, none for two ports (V3)."""
+    """Each net's kind by first port: `PE`, else its potential's, none for two ports."""
     earth = pe_firsts(model)
     kinds: dict[Id[Port], PowerKind] = {}
     for physical in physical_nets(model):

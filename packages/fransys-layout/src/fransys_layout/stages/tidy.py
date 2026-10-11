@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def turned(marker: LinkMarker, side: int = 1) -> LinkMarker:
-    """S20 M7 (amends layout-0053): `marker` moved off its port's wire."""
+    """Amends layout-0053: `marker` moved off its port's wire."""
     box, at = marker.box, marker.at
     width, height = (box.width, box.height) if marker.vertical else (box.height, box.width)
     north = box.y + box.height <= at.y
@@ -43,7 +43,7 @@ def clear_of_stubs(
     markers: tuple[LinkMarker, ...],
     sheet: SheetFormat,
 ) -> list[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]]:
-    """R2: a tag a marker's stub runs through moves to its symbol's mirror side."""
+    """A tag a marker's stub runs through moves to its symbol's mirror side."""
     content = content_box(sheet)
     found = []
     for (placed, labels), mine in zip(pages, by_plan(markers, page_of, plans), strict=True):
@@ -102,7 +102,7 @@ def shift_pages(
     tuple[Any, ...],
     tuple[LinkMarker, ...],
 ]:
-    """C22b: each page's placements and labels moved inside the content box (D14 M2, D17)."""
+    """Each page's placements and labels moved inside the content box."""
 
     def up(value: int) -> int:
         return -(-value // WIRING_GRID) * WIRING_GRID

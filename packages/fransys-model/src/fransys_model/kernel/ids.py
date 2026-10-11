@@ -20,7 +20,7 @@ _SEPARATOR = "\x1f"
 # Fixed for good: changing this string changes every id in every model.
 _NAMESPACE = uuid.uuid5(
     uuid.NAMESPACE_URL, "schematika-model:id"
-)  # predates the rename: seed, never changed (FR2)
+)  # predates the rename: seed, never changed
 
 
 @total_ordering

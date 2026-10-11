@@ -1,4 +1,4 @@
-"""The facts the default-symbol table reads (T2): kind, rest, protection type, category, gender.
+"""The facts the default-symbol table reads: kind, rest, protection type, category, gender.
 
 Each reads a field of the `FunctionSpec` the reader built from the model: `rest` is
 `function_rest`'s answer (`derive.link_state`), `protection_type` and `gender` are the template's

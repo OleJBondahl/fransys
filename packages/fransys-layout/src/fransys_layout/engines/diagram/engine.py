@@ -1,4 +1,4 @@
-"""The diagram engine: one pass from a model to its block diagram records (BD5)."""
+"""The diagram engine: one pass from a model to its block diagram records."""
 
 from fransys_layout.engines.diagram.place import place_diagram
 from fransys_layout.engines.diagram.read import read_diagrams, read_findings
@@ -11,7 +11,7 @@ lazy from fransys_model.kernel import Finding, Model
 def lay_out_diagrams(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     """Return `model` with the records of every reading's diagram, and the lint and read findings.
 
-    Pure. A reading that cannot be placed gets no records; the lint findings are ERRORs (BD8).
+    Pure. A reading that cannot be placed gets no records; the lint findings are ERRORs.
     """
     facts = read_diagrams(model)
     placed = [(f, place_diagram(f)) for f in facts]

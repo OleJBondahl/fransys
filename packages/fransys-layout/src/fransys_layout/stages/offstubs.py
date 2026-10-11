@@ -1,7 +1,7 @@
-"""C21, D10: which conductors end in stubs, and the stub of a mate across a location.
+"""Which conductors end in stubs, and the stub of a mate across a location.
 
 The rules only: `crosses_location`, `_ends_in_stubs` and `by_location` decide which connections
-end in a stub at each end, `groups_by_location` splits a net group the same way (D4), and
+end in a stub at each end, `groups_by_location` splits a net group the same way, and
 `mate_stub` gives a boundary pin whose mate is stubbed the bridge to a stand-in port and the stub
 text of the conductor at the mate. What they read of the model (the top-level units' boundary
 functions, a unit's top-level unit, the text of a conductor's end and a port's designation)
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 @value
 class PortText:
-    """C21: the `StubText` of one off stub's near port."""
+    """The `StubText` of one off stub's near port."""
 
     port: Id[Any]
     text: StubText
@@ -41,7 +41,7 @@ class PortText:
 
 @value
 class OffEnd:
-    """C21: one end of a conductor between two locations; `carrier` and `far` feed `LinkMarker`."""
+    """One end of a conductor between two locations; `carrier` and `far` feed `LinkMarker`."""
 
     port: Id[Any]
     text: StubText
@@ -56,7 +56,7 @@ class OffReads:
     edges: frozenset[Id[Any]]
     top_unit: Callable[[Id[Any] | None], Id[Any] | None]
     end_text: Callable[[Connection, Id[Any], Id[Any]], tuple[PortText, OffEnd]]
-    designation: Callable[[Id[Any]], OrderKey]  # a port's natural designation key (O7)
+    designation: Callable[[Id[Any]], OrderKey]  # a port's natural designation key
 
 
 def off_ends(off_ends: Iterable[OffEnd], off_texts: Iterable[PortText]) -> tuple[OffEnd, ...]:
@@ -71,7 +71,7 @@ def off_ends(off_ends: Iterable[OffEnd], off_texts: Iterable[PortText]) -> tuple
 
 
 def crosses_location(a: FunctionSpec | None, b: FunctionSpec | None) -> bool:
-    """C21: whether `a` and `b` stand in different top-level drawing sets (layout-0081, LD7)."""
+    """Whether `a` and `b` stand in different top-level drawing sets (layout-0081)."""
     if a is None or b is None or not a.location_path or not b.location_path:
         return False
     return a.location_path[0] != b.location_path[0] and a.drawing_set_key != b.drawing_set_key
@@ -83,7 +83,7 @@ def _ends_in_stubs(
     edges: Collection[Id[Any]],
     top_unit: Callable[[Id[Any] | None], Id[Any] | None],
 ) -> bool:
-    """C21, D10, layout-0080: whether a conductor crosses a location or leaves a unit, so stubs."""
+    """Layout-0080: whether a conductor crosses a location or leaves a unit, so stubs."""
     if crosses_location(a, b):
         return True
     if a is None or b is None:
@@ -98,7 +98,7 @@ def _ends_in_stubs(
 def by_location(
     specs: Iterable[FunctionSpec], connections: Iterable[Connection], reads: OffReads
 ) -> tuple[tuple[Connection, ...], tuple[Connection, ...]]:
-    """C21, layout-0080: the connections drawn in full, and those that end in stubs."""
+    """Layout-0080: the connections drawn in full, and those that end in stubs."""
     spec_of = {spec.function: spec for spec in specs}
     within: list[Connection] = []
     crossing: list[Connection] = []
@@ -113,7 +113,7 @@ def by_location(
 def groups_by_location(
     specs: Iterable[FunctionSpec], net_groups: Iterable[NetGroup], reads: OffReads
 ) -> tuple[tuple[NetGroup, ...], tuple[Connection, ...]]:
-    """D4, S15: net groups drawn in full, and N - 1 stub joins between their N location parts."""
+    """Net groups drawn in full, and N - 1 stub joins between their N location parts."""
     spec_of = {spec.function: spec for spec in specs}
     within: list[NetGroup] = []
     joins: list[Connection] = []
@@ -155,7 +155,7 @@ def _location_parts(
 
 
 def bridge(c: Connection, near: Id[Any], far: Id[Any]) -> Connection:
-    """W3: `c` as one conductor from boundary pin `near` to a stand-in port named for `far`."""
+    """`c` as one conductor from boundary pin `near` to a stand-in port named for `far`."""
     stand_in = Id(kind=EDGE_KIND, value=f"{far.value}-off")
     return dataclasses.replace(
         c,
@@ -170,7 +170,7 @@ def mate_stub(
     ends: tuple[Id[Any], Id[Any]],
     reads: OffReads,
 ) -> tuple[Connection, PortText, OffEnd] | None:
-    """D10: the stub of a boundary pin whose mate is a stub, or `None`; first by designation."""
+    """The stub of a boundary pin whose mate is a stub, or `None`; first by designation."""
     near, far = ends
     pin = pair[0]
     if not _ends_in_stubs(*pair, reads.edges & {pin.pin_function, pin.function}, reads.top_unit):

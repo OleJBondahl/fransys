@@ -1,4 +1,4 @@
-"""layout-0107: a box's pins stand where its feeder's pins stand, pin under pin (V06 V1).
+"""layout-0107: a box's pins stand where its feeder's pins stand, pin under pin.
 
 Set at resolve, after the feeders: the fed group's pins copy the feeder's pin offsets, a slot per
 feeder as wide as its keep-out plus the column gap; the feeder's paired pins follow the fed order.

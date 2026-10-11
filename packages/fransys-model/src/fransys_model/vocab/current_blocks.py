@@ -1,4 +1,4 @@
-"""The biconnected blocks of a multigraph, as sets of edge indices (RATINGS-2 C3).
+"""The biconnected blocks of a multigraph, as sets of edge indices.
 
 Pure and iterative (no recursion, so a long string cannot overflow the stack). Edges are the
 positions of `current_chains` and the edges to the outside; a parallel pair of edges is a block

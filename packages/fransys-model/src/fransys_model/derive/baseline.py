@@ -1,4 +1,4 @@
-"""A unit's baseline listing (baseline spec `docs/specs/2026-09-23-baseline.md`, L2).
+"""A unit's baseline listing (baseline spec `docs/specs/2026-09-23-baseline.md`).
 
 Reached as `fransys_model.derive.baseline.<name>`, never re-exported from
 `derive/__init__.py` (that file is a parallel task's; this module's own file set stays

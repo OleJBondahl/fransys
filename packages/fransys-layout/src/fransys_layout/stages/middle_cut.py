@@ -1,8 +1,8 @@
-"""TALL-PAGE (layout-0167): what the fold does with a cut group, and how far down it reaches.
+"""layout-0167: what the fold does with a cut group, and how far down it reaches.
 
-Private to `middle_fold`. A cut group draws its outline only on the page of its lower band (T2,
-T3). T4 (the lower columns that pass the bottom standing beside the outline) is held out of 0.13.5
-(R3); the fallback's own order rebuilds it.
+Private to `middle_fold`. A cut group draws its outline only on the page of its lower band.
+The lower columns that pass the bottom standing beside the outline are held out of 0.13.5;
+the fallback's own order rebuilds it.
 """
 
 from dataclasses import replace
@@ -41,10 +41,10 @@ def measured(
     page: _Page,
     lower_moves: tuple[Sequence[AuthoringKey], Mapping[AuthoringKey, tuple[int, int]]],
 ) -> GroupShape:
-    """T1: `shape` with how far down the fold reaches, and whether the group is held.
+    """`shape` with how far down the fold reaches, and whether the group is held.
 
     The reach is the lowest of the outline, its boxes and the moved lower columns. Replicas in the
-    upper band send the cut below (A1); with bottom replicas too, the group is held.
+    upper band send the cut below; with bottom replicas too, the group is held.
     """
     lower, moves = lower_moves
     hulls = page.hulls
@@ -65,7 +65,7 @@ def fold_overfull(
     floor: int,
     found: tuple[Finding, ...],
 ) -> tuple[Finding, ...]:
-    """T6: a folded group still below the page adds its cells to the page's `PAGE_OVERFULL`.
+    """A folded group still below the page adds its cells to the page's `PAGE_OVERFULL`.
 
     `found` is what `place` reported before the fold; one finding names both sets of cells.
     """

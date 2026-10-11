@@ -1,4 +1,4 @@
-"""Facet: the mark that an item is a harness, whether or not a cable hangs under it (HA1)."""
+"""Facet: the mark that an item is a harness, whether or not a cable hangs under it."""
 
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 from fransys_model.vocab.core import Item

@@ -1,4 +1,4 @@
-"""The part catalogue read from `parts` once; A5's checks run in `find()`."""
+"""The part catalogue read from `parts` once; the checks run in `find()`."""
 
 import difflib
 from dataclasses import dataclass

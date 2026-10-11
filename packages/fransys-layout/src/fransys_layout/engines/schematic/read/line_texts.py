@@ -72,7 +72,7 @@ class LineTexts:
 def line_texts(model: Model, lines: LineReads) -> LineTexts:
     """Every line's designations and end ports (`derive.line_designation`, the ends row).
 
-    A plug's end names the connector it mates, as a stub names the device beyond (C21).
+    A plug's end names the connector it mates, as a stub names the device beyond.
     """
     of: dict[Id[Any], list[Id[Any]]] = {}
     for one in sorted(ports(model).values(), key=lambda one: one.id):
@@ -96,10 +96,10 @@ def line_texts(model: Model, lines: LineReads) -> LineTexts:
 def stub_box(
     texts: LineTexts, line: LineRead, stub: Stub, sheet: Sheet, profile: Profile
 ) -> LineStub:
-    """Layout-0154: the leaving line's one stub, its text `derive.line_stub_line` measured (C1).
+    """Layout-0154: the leaving line's one stub, its text `derive.line_stub_line` measured.
 
     `sheet` is the page, its drawing set's unit (the carrier prints relative to it) and every end
-    off the page: with none the stub names its `far` end alone (R6).
+    off the page: with none the stub names its `far` end alone.
     """
     page, _, absent = sheet
     near, far = texts.port[line.owner, stub.near], texts.port[line.owner, stub.far]

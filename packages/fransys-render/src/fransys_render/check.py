@@ -69,7 +69,7 @@ def _layout_missing_findings(model: Model) -> tuple[Finding, ...]:
 
 
 def check(model: Model) -> tuple[Finding, ...]:
-    """Check what `pages` cannot draw or drew against a stale library (D12).
+    """Check what `pages` cannot draw or drew against a stale library.
 
     Three checks: a placement's symbol key is not in the installed library
     (`UNKNOWN_SYMBOL_KEY`), a placement was laid out against a different library version

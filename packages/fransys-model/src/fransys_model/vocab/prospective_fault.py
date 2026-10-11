@@ -1,8 +1,8 @@
-"""The prospective fault current at each protective position (RATINGS-3 R7 to R10, R17).
+"""The prospective fault current at each protective position.
 
 Per protective position D and current kind it reaches, the fault graph (`fault_graph`) is solved
 per consistent item state of D's component (`current_states.assignments`) and per terminal
-(`fault_solve`). D's value is its larger terminal's, the highest over the states (Q8).
+(`fault_solve`). D's value is its larger terminal's, the highest over the states.
 """
 
 import dataclasses
@@ -127,7 +127,7 @@ def _component_shares(
 
 
 def _over_states(shares: Sequence[Share]) -> Share:
-    """The highest over the states (Q8); the time constant the largest of every state counting."""
+    """The highest over the states; the time constant the largest of every state counting."""
     if not shares:
         return NOTHING
     constants = [share.time_constant_ms for share in shares if share.counts()]

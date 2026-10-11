@@ -1,4 +1,4 @@
-"""Schematic engine, writing: stage outputs to derived `layout.*` records (design/engine.md 7)."""
+"""Schematic engine, writing: stage outputs to derived `layout.*` records."""
 
 from typing import TYPE_CHECKING
 

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def _ordered_pages(model: Model) -> tuple[Page, ...]:
-    """Every `layout.page` of `model`, ordered `(drawing_set.number, page.number)` (D4)."""
+    """Every `layout.page` of `model`, ordered `(drawing_set.number, page.number)`."""
     drawing_sets = layout_of(model, DrawingSet)
     pages_by_id = layout_of(model, Page)
     return tuple(
@@ -59,9 +59,9 @@ def _render_page(model: Model, page: Page) -> str:
 def pages(model: Model) -> frozendict[str, str]:
     """Render every schematic page of a laid-out model to SVG.
 
-    One page per `layout.page`, keyed by `render_id(page.id)` (D4), ordered by
-    `(drawing_set.number, page.number)`. Each page is a sheet-sized SVG (D5) with the groups
-    listed in the package README, and no frame, grid or title block (D9). Pure.
+    One page per `layout.page`, keyed by `render_id(page.id)`, ordered by
+    `(drawing_set.number, page.number)`. Each page is a sheet-sized SVG with the groups
+    listed in the package README, and no frame, grid or title block. Pure.
 
     Args:
         model: A laid-out model (its ``layout.*`` records are present).

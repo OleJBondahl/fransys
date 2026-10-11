@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 # gets one timestamp and KiCad keeps its footprint matched when the netlist is regenerated.
 _NAMESPACE = uuid.uuid5(
     uuid.NAMESPACE_DNS, "schematika_kicad"
-)  # predates the rename: seed, never changed (FR2)
+)  # predates the rename: seed, never changed
 
 _ESCAPES = str.maketrans({"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r"})
 

@@ -1,4 +1,4 @@
-"""`RELEASE_HISTORY_UNRELEASED` (WORKFLOW-BLOCKS W7): a history entry names an unreleased revision.
+"""`RELEASE_HISTORY_UNRELEASED`: a history entry names an unreleased revision.
 
 The cutoff is the first entry, in `derive.revision_history`'s order, that names a released
 revision. Entries before it are free text. Each later entry names a folder of its own version

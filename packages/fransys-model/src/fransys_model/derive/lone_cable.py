@@ -11,7 +11,7 @@ lazy from fransys_model.vocab.core import Item
 
 
 def lone_cable(model: Model, harness: Id[Item]) -> Id[Item] | None:
-    """The one cable `harness` prints as: no part, one cable child and no single wire (HA2)."""
+    """The one cable `harness` prints as: no part, one cable child and no single wire."""
     record = items(model).get(harness)
     if record is None or record.part is not None or harness in harnesses_with_wires(model):
         return None

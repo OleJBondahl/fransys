@@ -1,4 +1,4 @@
-"""T7: the case of a cut (links.md 6.6), read from its three facts by the `LINK_CASE` table."""
+"""The case of a cut, read from its three facts by the `LINK_CASE` table."""
 
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -35,7 +35,7 @@ def drawn_of(ref: PortRef, world: LinkWorld) -> DrawnFunction:
 
 @fact("crosses_unit", kind="physical", source="the unit as a mounting assembly (IEC 61346)")
 def _crosses_unit(read: CutRead) -> bool:
-    """The two drawing sets of the cut belong to different units (U2)."""
+    """The two drawing sets of the cut belong to different units."""
     return read.units.get(read.cut.ends[0].page[0]) != read.units.get(read.cut.ends[1].page[0])
 
 

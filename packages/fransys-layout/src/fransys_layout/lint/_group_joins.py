@@ -1,7 +1,4 @@
-"""What a net group's drawn edges and cuts leave undrawn or doubled, private to coherence.
-
-Refs: lint.md 6.8.
-"""
+"""What a net group's drawn edges and cuts leave undrawn or doubled, private to coherence."""
 
 from collections import Counter
 from typing import TYPE_CHECKING

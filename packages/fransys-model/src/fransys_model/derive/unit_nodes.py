@@ -1,6 +1,6 @@
 """The aspect nodes that are each unit's own, for every unit of a model in one pass (model-0067).
 
-`designation.own_nodes` reads this. The rule is I4 R2 and F9, stated there; here it is computed
+`designation.own_nodes` reads this. The rule is stated there; here it is computed
 once per model, cached by digest, instead of once per unit over every item.
 """
 
@@ -119,7 +119,7 @@ def _unit_nodes(model: Model) -> UnitNodes:
 
 
 def own_nodes_by_unit(model: Model) -> frozendict[Id[Unit], frozenset[Id[AspectNode]]]:
-    """Every unit's own aspect nodes, built once per model (I4 R2, F9; the rule is `own_nodes`').
+    """Every unit's own aspect nodes, built once per model (the rule is `own_nodes`').
 
     Cached on `model.digest`, holding the last few results: equal digests return the identical
     mapping. An unknown unit is not a key; ask through `own_nodes`, which refuses it.

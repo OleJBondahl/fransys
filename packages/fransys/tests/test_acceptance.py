@@ -887,18 +887,17 @@ def test_symbol_port_missing_falls_back_to_the_function_with_no_part_at_all():
     )
 
 
-# -- decision 0016: cables.csv, a system-only export -----------
+# -- decision 0016: cables.csv, per unit and for the system -----------
 
 
 def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
     """A one-item unit `U1` and one top-level (`unit=None`) cable `W1` with a single core.
 
-    `cable_list_rows` (and so `cables_csv`) only ever returns `unit=None` cables by
-    construction, so this fixture keeps the cable outside `unit`, the way the
-    "cable drawings" rule already treats a top-level cable -- there is no scoped-to-a-unit
-    cable to build here. The core gives WireViz's `top_level_drawings` something to draw
-    (a cable with zero cores raises inside `wireviz.Harness.add_cable`, not a shape this
-    fixture needs to exercise).
+    The cable is top-level, so the unit's own `cables.csv` is written but has no rows. The
+    fixture keeps the cable outside `unit`, the way the "cable drawings" rule already treats
+    a top-level cable -- there is no scoped-to-a-unit cable to build here. The core gives
+    WireViz's `top_level_drawings` something to draw (a cable with zero cores raises inside
+    `wireviz.Harness.add_cable`, not a shape this fixture needs to exercise).
 
     Returns:
         The draft, and `U1`'s own `Id[Unit]`.
@@ -1061,18 +1060,20 @@ def _model_with_a_unit_and_a_top_level_cable() -> tuple[Draft, Id]:
     return draft, unit.id
 
 
-def test_write_unit_none_includes_cables_csv_and_a_unit_write_excludes_it(tmp_path):
-    """`cables.csv` is a system view, same as `overview.html`.
+def test_write_includes_cables_csv_for_the_system_and_for_a_unit(tmp_path):
+    """`cables.csv` is written both whole-system and per unit; `overview.html` is system-only.
 
-    `unit=None` writes it; `unit=<a real unit>` does not, on the same model -- a top-level
-    cable and a unit-owned item both exist here, so the two cases are non-vacuous.
+    `unit=None` writes both files; `unit=<a real unit>` writes `cables.csv` but not
+    `overview.html`, on the same model -- a top-level cable and a unit-owned item both exist
+    here, so the two cases are non-vacuous.
     """
     draft, unit_id = _model_with_a_unit_and_a_top_level_cable()
     result = fr.build(draft)
 
     whole = fr.write(result, tmp_path / "whole", unit=None)
-    assert "cables.csv" in {p.name for p in whole}
+    assert any(p.name.endswith("cables.csv") for p in whole)
+    assert any(p.name.endswith("overview.html") for p in whole)
 
     scoped = fr.write(result, tmp_path / "scoped", unit=unit_id)
-    assert "cables.csv" not in {p.name for p in scoped}
-    assert "overview.html" not in {p.name for p in scoped}  # the same system-view rule
+    assert any(p.name.endswith("cables.csv") for p in scoped)
+    assert not any(p.name.endswith("overview.html") for p in scoped)  # the system-view rule

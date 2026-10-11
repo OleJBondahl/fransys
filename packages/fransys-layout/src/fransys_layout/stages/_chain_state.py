@@ -58,8 +58,8 @@ class _Poles:
     poles: dict[_PoleId, _Pole]
     pole_of_port: dict[Handle, _PoleId]
     port_function: dict[Handle, Handle]
-    split: dict[Handle, Handle]  # R7 B5: an in-line terminal's second wire -> its port
-    throw_pairs: list[tuple[Handle, Handle]]  # S13: a changeover's throw on, and off, its pole
+    split: dict[Handle, Handle]  # An in-line terminal's second wire -> its port
+    throw_pairs: list[tuple[Handle, Handle]]  # A changeover's throw on, and off, its pole
     edge_poles: set[_PoleId]
 
 
@@ -74,7 +74,7 @@ class _Nets:
 
 @dataclasses.dataclass(slots=True, kw_only=True, eq=False)
 class _Links:
-    """What the chain walk follows: the nets, the poles by port, and S13's detached throws."""
+    """What the chain walk follows: the nets, the poles by port, and the detached throws."""
 
     members: dict[Handle, list[Handle]]
     net_of: dict[Handle, Handle]
@@ -120,11 +120,11 @@ class _Walks:
         default_factory=dict
     )
     flipped: set[Handle] = dataclasses.field(default_factory=set)
-    # D8: edge poles entered from the edge
+    # Edge poles entered from the edge
     edge_top: set[_PoleId] = dataclasses.field(default_factory=set)
-    # D1: a directed pole against its chain
+    # A directed pole against its chain
     against: set[Handle] = dataclasses.field(default_factory=set)
-    # D1: a directed pole along its chain
+    # A directed pole along its chain
     along: set[Handle] = dataclasses.field(default_factory=set)
     upper_of: dict[_PoleId, Handle] = dataclasses.field(default_factory=dict)
     turned: set[Handle] = dataclasses.field(default_factory=set)
@@ -151,18 +151,18 @@ class _Reach:
     specs: Mapping[Handle, FunctionSpec]
     drawn_of: Mapping[Handle, DrawnFunction]
     in_poles: set[Handle]
-    # V1: the ports whose side V1 fixes (`ChainRecords.fixed`)
+    # The ports whose side is fixed (`ChainRecords.fixed`)
     fixed: frozenset[Handle] = frozenset()
     # group -> _Group, filled by the voting
     groups: dict[int, _Group] = dataclasses.field(default_factory=dict)
     votes: dict[Handle, dict[int, list[tuple[Handle, bool]]]] = dataclasses.field(
         default_factory=lambda: defaultdict(dict)
     )  # fn -> group -> hits
-    # (function, group) -> lane (C9)
+    # (function, group) -> lane
     lane_hit: dict[tuple[Handle, int], int] = dataclasses.field(default_factory=dict)
-    # (function, group) -> port (C12)
+    # (function, group) -> port
     span_hit: dict[tuple[Handle, int], Handle] = dataclasses.field(default_factory=dict)
-    # function -> symbol port (C12)
+    # function -> symbol port
     span_symbol: dict[Handle, str] = dataclasses.field(default_factory=dict)
     alias: dict[int, int] = dataclasses.field(default_factory=dict)  # a merged group -> its lead
     extra: dict[int, tuple[list[Handle], list[Handle]]] = dataclasses.field(

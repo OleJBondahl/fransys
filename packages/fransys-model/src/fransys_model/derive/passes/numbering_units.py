@@ -1,4 +1,4 @@
-"""UNIT-TAGS UT3: number each unit instance that has no tag, from its release's `class_code`."""
+"""Number each unit instance that has no tag, from its release's `class_code`."""
 
 import dataclasses
 from collections.abc import Callable
@@ -30,7 +30,7 @@ def _item_texts(model: Model, parent: Id[Unit] | None) -> set[str]:
 
 
 def instance_tags_in(model: Model, parent: Id[Unit] | None) -> set[str]:
-    """The tags, written or assigned, of the instances directly inside `parent` (UT3, UT4)."""
+    """The tags, written or assigned, of the instances directly inside `parent`."""
     siblings = (u.id for u in units_table(model).values() if u.parent == parent)
     return {tag for unit in siblings if (tag := unit_tag(model, unit)) is not None}
 
@@ -71,7 +71,7 @@ def _facets(model: Model, reserved: Reserved) -> list[AssignedUnitTagFacet]:
 
 
 def number_unit_tags(model: Model, reserved: Reserved) -> Model:
-    """`model` with a `facet.assigned_unit_tag` on each floating instance (`reserved` is FD5's)."""
+    """`model` with a `facet.assigned_unit_tag` on each floating instance."""
     # Runs after the items, so their assigned texts count as taken (model-0044).
     facets = _facets(model, reserved)
     if not facets:
@@ -83,7 +83,7 @@ def number_unit_tags(model: Model, reserved: Reserved) -> Model:
 
 
 def unit_tag_duplicates(model: Model, code: str) -> list[Finding]:
-    """One finding per instance whose tag another instance under the same parent also has (UD1)."""
+    """One finding per instance whose tag another instance under the same parent also has."""
     groups: dict[tuple[Id[Unit] | None, str], list[Unit]] = {}
     for unit in units_table(model).values():
         if (tag := unit_tag(model, unit.id)) is not None:

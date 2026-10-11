@@ -28,7 +28,7 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
             _K.CONNECTOR_LIST,
             _K.BOM,
         ),
-        # Only SYSTEM carries BLOCK_DIAGRAM; no unit document has it by default (BD-Q3 A),
+        # Only SYSTEM carries BLOCK_DIAGRAM; no unit document has it by default,
         # `add=` puts it on any.
         DocumentPreset.SYSTEM: (
             _K.COVER,

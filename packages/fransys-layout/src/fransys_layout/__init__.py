@@ -1,4 +1,4 @@
-"""Layout engines for Fransys: geometry <- stages <- lint <- engines (package-layout.md 4)."""
+"""Layout engines for Fransys: geometry <- stages <- lint <- engines."""
 
 from .engines.cable import lay_out_cables
 from .engines.diagram import lay_out_diagrams

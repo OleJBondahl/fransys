@@ -1,4 +1,4 @@
-"""Surface mixin for EA-UNITS: `@unit` and `d.add` (EA8)."""
+"""Surface mixin for `@unit` and `d.add`."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -34,7 +34,7 @@ class UnitDef[R: tuple[Any, ...]]:
     class_code: str
 
 
-def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields (EA8)
+def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     name: str,
     *,
     revision: int,

@@ -1,6 +1,6 @@
 """Designation numbering pass (design/derive.md).
 
-Treats a `facet.reserved_designation` text as taken too (FD1, FD5, fixed-designations spec).
+Treats a `facet.reserved_designation` text as taken too (fixed-designations spec).
 """
 
 import dataclasses
@@ -317,7 +317,7 @@ def _sibling_groups(
     model: Model, terminals: frozenset[Id[Item]]
 ) -> dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]]:
     # The group's second element is the item's nearest read-through ancestor (a board or
-    # harness), not its structural `parent` (C3b): still an item id or `None`.
+    # harness), not its structural `parent`: still an item id or `None`.
     by_group: dict[tuple[Id[Unit] | None, Id[Item] | None], list[Item]] = {}
     for item in items(model).values():
         if item.id not in terminals:

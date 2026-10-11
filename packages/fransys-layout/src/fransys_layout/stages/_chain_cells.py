@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def _add_edge(r: _Row, pid: _PoleId, pole: _Pole, ctx: _Cells) -> None:
-    """D8: an edge pole's boundary pin (a replica) stands outside the column."""
+    """An edge pole's boundary pin (a replica) stands outside the column."""
     # Above the parent-side pin at a top end, below it at a bottom end.
     upper, lower = pole.functions
     above = pid in ctx.edge_top
@@ -24,7 +24,7 @@ def _add_edge(r: _Row, pid: _PoleId, pole: _Pole, ctx: _Cells) -> None:
 
 
 def _add_mate(r: _Row, pid: _PoleId, pole: _Pole, ctx: _Cells) -> None:
-    """R7 A: the upper (plug) pin in this row, the lower pin face to face below it."""
+    """The upper (plug) pin in this row, the lower pin face to face below it."""
     upper, lower = pole.functions
     if ctx.upper_of.get(pid, upper) != upper:
         upper, lower = lower, upper
@@ -64,7 +64,7 @@ def _position_rows(
 def _lane_rows(
     functions: Sequence[Handle], b: object, lane_hit: Mapping[tuple[Handle, int], int], lanes: int
 ) -> list[tuple[list[Any], list[Handle]]]:
-    """C9: rows of end-reached functions, one per lane; a second one in a lane opens a row."""
+    """Rows of end-reached functions, one per lane; a second one in a lane opens a row."""
     rows: list[list[Handle | None]] = []
     for function in functions:
         lane = lane_hit.get((function, b), 0) if lanes > 1 else 0
@@ -82,7 +82,7 @@ def _lane_rows(
 def _candidate(
     b: object, group: _Group, ctx: _Cells
 ) -> tuple[AuthoringKey, list[tuple[list[Any], list[Handle]]]]:
-    """A bundle's sort key and rows: the lane-end rows (C9) around its chain positions' rows."""
+    """A bundle's sort key and rows: the lane-end rows around its chain positions' rows."""
     length = max(len(chain) for chain in group.chains)
     rows = [r for position in range(length) for r in _position_rows(group, position, length, ctx)]
     above, below = ctx.extra.get(b, ([], []))
@@ -155,7 +155,7 @@ def _side_cell(function: Handle, ctx: _Cells, home: Sequence[Cell]) -> Cell:
             low=low,
             carrier=carrier,
         )
-    # D2: its carrier was drawn in an earlier column; it stands beside the carrier's cell
+    # Its carrier was drawn in an earlier column; it stands beside the carrier's cell
     # there, never in a row of this column that lacks the carrier
     row_at = next(c for c in home if c.function == carrier)
     return Cell(

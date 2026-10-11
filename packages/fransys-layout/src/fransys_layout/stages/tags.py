@@ -44,7 +44,7 @@ class TagTexts:
 def _device_terminal_tags(
     texts: TagTexts, specs: tuple[FunctionSpec, ...], requests: tuple[LabelRequest, ...]
 ) -> tuple[LabelRequest, ...]:
-    """L2, F2: a device's own terminal is labelled like a port, item tag W, marking E, level."""
+    """A device's own terminal is labelled like a port, item tag W, marking E, level."""
     devices = {
         spec.function
         for spec in specs
@@ -67,14 +67,14 @@ def _terminal_row_tags(
     specs: tuple[FunctionSpec, ...],
     requests: tuple[LabelRequest, ...],
 ) -> tuple[LabelRequest, ...]:
-    """R6 D1: a row of two or more terminals of one strip shows one strip tag, a point text each."""
+    """A row of two or more terminals of one strip shows one strip tag, a point text each."""
     spec_of = {spec.function: spec for spec in specs}
     swapped: dict[Id[Any], list[LabelRequest]] = {}
     for column in columns:
         rows = by_key((c for c in column.cells if not c.side), lambda c: c.index)
         for cells in rows.values():
             lanes = [spec_of[cell.function] for cell in sorted(cells, key=lambda c: c.lane)]
-            # the strip text is the item designation only (D12): two strips of one designation
+            # the strip text is the item designation only: two strips of one designation
             # print one text, so a run is the terminals of one strip item
             strips = {(spec.strip_text, spec.item_parent or spec.item) for spec in lanes}
             if (
@@ -111,7 +111,7 @@ def _terminal_row_tags(
 def _pin_rows(
     columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]
 ) -> tuple[frozenset[Id[Any]], frozenset[Id[Any]]]:
-    """R7 A5: pins sharing a row with another pin of their connector; and each run's lane 0."""
+    """Pins sharing a row with another pin of their connector; and each run's lane 0."""
     spec_of = {spec.function: spec for spec in specs}
     leads, rowed = set(), set()
     for column in columns:
@@ -137,7 +137,7 @@ def pin_labels(
     columns: tuple[Column, ...],
     specs: tuple[FunctionSpec, ...],
 ) -> tuple[LabelRequest, ...]:
-    """R7 A / A5: a pin alone in its row shows its pin tag (-X5:2) and no marking."""
+    """A pin alone in its row shows its pin tag (-X5:2) and no marking."""
     pins = {spec.function: spec for spec in specs if spec.pin_function is not None}
     leads, rowed = _pin_rows(columns, specs)
     return tuple(
@@ -164,7 +164,7 @@ def one_item_tag(
     specs: tuple[FunctionSpec, ...],
     requests: tuple[LabelRequest, ...],
 ) -> tuple[LabelRequest, ...]:
-    """R4: an item's own tag prints once per page, on its main view; contact, pin keep theirs."""
+    """An item's own tag prints once per page, on its main view; contact, pin keep theirs."""
     spec_of = {spec.function: spec for spec in specs}
     views = {
         cell.function
@@ -191,7 +191,7 @@ def one_module_tag(
     placed: tuple[PlacedFunction, ...],
     drawn: tuple[DrawnFunction, ...],
 ) -> tuple[LabelRequest, ...]:
-    """C6: PLC channels of one module at one y show the module tag once, on the leftmost."""
+    """PLC channels of one module at one y show the module tag once, on the leftmost."""
     item_of = {one.function: one.item for one in drawn if one.roles.plc_channel}
     lead: dict[tuple[Id[Any], int], Id[Any]] = {}
     for one in sorted(placed, key=lambda p: p.at.x):
@@ -211,7 +211,7 @@ def _item_row_tags(
     specs: tuple[FunctionSpec, ...],
     requests: tuple[LabelRequest, ...],
 ) -> tuple[Any, ...]:
-    """C13(a): a row of one item's mixed-kind lanes shows the item's tag once, on lane 0."""
+    """A row of one item's mixed-kind lanes shows the item's tag once, on lane 0."""
     spec_of = {spec.function: spec for spec in specs}
     lead, quiet, points = set(), set(), []
     for column in columns:
@@ -232,7 +232,7 @@ def _item_row_tags(
                             subject=one.function,
                             slot="tag.point",
                             text=one.point_text,
-                            level=True,  # F2: a device's own terminal
+                            level=True,  # A device's own terminal
                         )
                     )
     return (*_item_lead_tags(texts, requests, spec_of, lead, quiet), *points)
@@ -261,7 +261,7 @@ def _item_lead_tags(
 def _row_followers(
     columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]
 ) -> frozenset[Id[Any]]:
-    """Lanes 1..n of a row whose (item, kind) is lane 0's: they draw no tag (R5 rule 2)."""
+    """Lanes 1..n of a row whose (item, kind) is lane 0's: they draw no tag."""
     spec_of = {spec.function: spec for spec in specs}
     found = set()
     for column in columns:
@@ -284,8 +284,8 @@ def row_labels(
     columns: tuple[Column, ...],
     requests: tuple[LabelRequest, ...],
 ) -> tuple[tuple[LabelRequest, ...], tuple[Any, ...]]:
-    """`requests` rewritten per row of `columns`: sizing labels and pin base (R7 A, A5)."""
-    followers = _row_followers(columns, functions)  # R5 rule 2: one item's row shows lane 0's tag
+    """`requests` rewritten per row of `columns`: sizing labels and pin base."""
+    followers = _row_followers(columns, functions)  # One item's row shows lane 0's tag
     per_row = tuple(r for r in requests if not (r.kind is LabelKind.TAG and r.subject in followers))
     per_row = _terminal_row_tags(columns, functions, per_row)
     per_row = _device_terminal_tags(texts, functions, per_row)
@@ -299,7 +299,7 @@ def unit_texts(
     requests: tuple[LabelRequest, ...],
     specs: tuple[FunctionSpec, ...],
 ) -> tuple[LabelRequest, ...]:
-    """I4 R2: on a page of a unit's own set, a TAG of that unit's function carries its own text.
+    """On a page of a unit's own set, a TAG of that unit's function carries its own text.
 
     That is the text printed there: only the unit's own aspects, below its sole root
     (`unit_tag_text`).

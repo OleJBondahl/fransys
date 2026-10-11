@@ -1,9 +1,9 @@
-"""C21: the off stubs of the conductors that cross between two locations.
+"""The off stubs of the conductors that cross between two locations.
 
 A stub stands at the home seat of each crossing end and reads "<cable> <arrow> <far end>".
-Stubs of one cable to one far end on one row share a box (a run, S14); an end on a port that
-already carries a star reference merges into that reference (D9, F7). This module decides
-them; `texts.markers` builds their markers from the placed page (S9).
+Stubs of one cable to one far end on one row share a box (a run); an end on a port that
+already carries a star reference merges into that reference. This module decides
+them; `texts.markers` builds their markers from the placed page.
 """
 
 from collections import Counter, defaultdict
@@ -46,7 +46,7 @@ def black_box_sets(
     set_unit: Mapping[int, Any],
     reads: BlackBoxReads,
 ) -> dict[Id[Any], frozenset[int]]:
-    """D10: per function of a nested unit, the drawing sets where it stands as a black box."""
+    """Per function of a nested unit, the drawing sets where it stands as a black box."""
     nested, edges = reads.nested, reads.edges
     top_of = {
         spec.function: reads.top(spec.unit)
@@ -70,7 +70,7 @@ def with_off_markers(
     seating: Seating,
     inputs: OffInputs,
 ) -> tuple[MarkerDecision, ...]:
-    """`markers` and the off stubs of the conductors that cross to another location (S14)."""
+    """`markers` and the off stubs of the conductors that cross to another location."""
     columns, drawn = seating.columns, seating.drawn
     offs = _off_markers(
         MarkerScene(seating.seats, drawn, inputs.sheet, inputs.profile),
@@ -94,7 +94,7 @@ def with_off_markers(
             },
         ),
     )
-    # D9 (F7): an off stub on a reference's port comes back as that reference, one text
+    # An off stub on a reference's port comes back as that reference, one text
     merged = {(m.port, m.drawing_set, m.page): m for m in offs if m.star == "ref"}
     return (
         *(
@@ -106,7 +106,7 @@ def with_off_markers(
 
 
 def _port_stands(seating: Seating) -> dict[tuple[Id[Any], Page], StackedPort]:
-    """Each seated port's `StackedPort` on its page, as `place` stacks the page (S14)."""
+    """Each seated port's `StackedPort` on its page, as `place` stacks the page."""
     ports = {one.function: one.ports for one in seating.drawn}
     found = {}
     for one in seating.seats:
@@ -131,7 +131,7 @@ class _Tiers:
 
 
 def _off_markers(scene: MarkerScene, off: OffStubs) -> tuple[MarkerDecision, ...]:
-    """C21, S14, D9, D10: a stub at each end of a conductor between two locations."""
+    """A stub at each end of a conductor between two locations."""
     world = link_world(scene)
     tiers = _Tiers(
         scene.profile,
@@ -180,12 +180,12 @@ def _row_markers(
     off: OffStubs,
     tiers: _Tiers,
 ) -> list[MarkerDecision]:
-    """Each row's ends cut into runs, and each run's stubs decided (R1, M8)."""
+    """Each row's ends cut into runs, and each run's stubs decided."""
     found: list[MarkerDecision] = []
     for (page, offset, facing, cable, far), row_ends in rows.items():
-        # R1: a row cut where another column stands between two ends: each run its own box,
+        # A row cut where another column stands between two ends: each run its own box,
         # so a box never names a column far from the rest (X1:N standing in F01's column)
-        # M8: and where a pin of another destination stands between two ends: only neighbouring
+        # Where a pin of another destination stands between two ends: only neighbouring
         # pins of one destination share a box, so alternating destinations get one box per pin
         strangers = [at for at, goes in pins[page, offset, facing] if goes != (cable, far)]
         in_order = sorted(row_ends, key=lambda one: one[0])
@@ -197,16 +197,16 @@ def _row_markers(
 def _run_markers(
     ends: Sequence[Any], head: tuple[str, str, Facing], tiers: _Tiers
 ) -> list[MarkerDecision]:
-    """One run's stubs: the text, the box they share and the tier it stands out at (C21, S14)."""
+    """One run's stubs: the text, the box they share and the tier it stands out at ."""
     cable, far, facing = head
     ports = [port for _, _, _, port, text in ends if not text.line]
     text = off_stub_line(cable, north=facing is Facing.N, far=far, ports=ports)
     size = stub_size(text, tiers.profile)
     lift = tiers.step if ends[0][2].ref.function in tiers.terminals else 0
     keys = {(end.ref.port, *end.page) for _, _, end, _, _ in ends}
-    # C21: the n-th thing on a port (its texts, then its stubs) stands n boxes out
-    run = next(tiers.runs) if len(ends) > 1 else None  # C21: one box across the run's stubs (S14)
-    # a turned box (M1) is its text's width tall along the wire: that is the tier step
+    # The n-th thing on a port (its texts, then its stubs) stands n boxes out
+    run = next(tiers.runs) if len(ends) > 1 else None  # One box across the run's stubs
+    # A turned box is its text's width tall along the wire: that is the tier step
     step_out = size[0] if reads_along(run, facing) else size[1]
     out = lift + max(tiers.busy[key] for key in keys) * step_out
     tiers.busy.update(keys)
@@ -249,7 +249,7 @@ def _stub_ends(
 
 @dataclass(frozen=True, slots=True)
 class StubBox:
-    """The box a run's stubs share (S14): its measured size, its tier out, its run number."""
+    """The box a run's stubs share: its measured size, its tier out, its run number."""
 
     size: tuple[int, int]
     out: int
@@ -259,7 +259,7 @@ class StubBox:
 def _off_stub(
     handle: Id[Any], end: PortEnd, text: str, end_text: StubText, box: StubBox
 ) -> MarkerDecision:
-    """A pure off stub's own text, end and size: `stub_size`, never `reference_size` (D4)."""
+    """A pure off stub's own text, end and size: `stub_size`, never `reference_size`."""
     return MarkerDecision(
         connection=handle,
         function=end.ref.function,
@@ -284,7 +284,7 @@ def _cuts(
     columns: int,
     strangers: Sequence[tuple[int, int]],
 ) -> list[tuple[int, ...]]:
-    """R1, M8: cut points: `(column,)` for a column without an end, `(column, x)` for a stranger."""
+    """Cut points: `(column,)` for a column without an end, `(column, x)` for a stranger."""
     own = {end[0][0] for end in ends}
     return sorted([(index,) for index in range(columns) if index not in own] + list(strangers))
 
@@ -293,5 +293,5 @@ def _runs(
     ends: Sequence[tuple[tuple[int, int], Id[Any], PortEnd, str, StubText]],
     cuts: Sequence[tuple[int, ...]],
 ) -> list[list[tuple[tuple[int, int], Id[Any], PortEnd, str, StubText]]]:
-    """R1, S14, M8: `ends` (one page, in column order) cut into runs wherever a cut lies between."""
+    """`ends` (one page, in column order) cut into runs wherever a cut lies between."""
     return cut_runs(ends, lambda end: end[0], cuts)

@@ -1,4 +1,4 @@
-"""The default symbol of a switch, generic or protection function (decision layout-0105, T2).
+"""The default symbol of a switch, generic or protection function (decision layout-0105).
 
 The rows that read a rest state or a protection type of `SYMBOL_DEFAULTS` are the hook
 `resolve` calls first; the rows of kind, category and gender reach it as `DEFAULT_RULES`.
@@ -40,5 +40,5 @@ def resolve_with_defaults(
     rules: tuple[SymbolRule, ...],
     choices: tuple[SymbolChoice, ...],
 ) -> tuple[tuple[DrawnFunction, ...], tuple[Finding, ...]]:
-    """`stages.resolve` with the state rows as its default-symbol step (decision layout-0105 T5)."""
+    """`stages.resolve` with the state rows as its default-symbol step (decision layout-0105)."""
     return resolve(functions, rules=rules, choices=choices, default_symbol=default_symbol)

@@ -1,4 +1,4 @@
-"""Validator: declared nets vs the physical closure (design/connectivity.md, ROADMAP WP12)."""
+"""Validator: declared nets vs the physical closure (design/connectivity.md)."""
 
 from typing import TYPE_CHECKING, Any, Final
 

@@ -1,4 +1,4 @@
-"""Whether an item is a cable: its part carries a `cable_product` facet (RW4, decision model-0108).
+"""Whether an item is a cable: its part carries a `cable_product` facet (decision model-0108).
 
 The one predicate every reader in this codebase eventually switches to. It reads exactly one
 fact: whether `item`'s `Item.part` carries a `CableProductFacet`. It reads nothing else -- not

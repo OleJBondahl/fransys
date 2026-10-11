@@ -1,4 +1,4 @@
-"""The lines and cut markers of a diagram sheet (BD5, BD7): records drawn, texts from derive."""
+"""The lines and cut markers of a diagram sheet: records drawn, texts from derive."""
 
 from typing import TYPE_CHECKING
 

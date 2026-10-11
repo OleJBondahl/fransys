@@ -1,11 +1,9 @@
 """The cuts `links` should have decided and their markers, private to `coherence`.
 
-Refs: package-layout.md 4, lint.md 6.8.
-
 A conductor is cut only when its ends share no page, on the pages `cut_pages` names: that rule is
 shared code from `stages`, called by `links` and here alike (decision layout-0078). The net-group
 rule is restated on purpose, so the check does not trust the stage it checks: a net group is cut
-between each consecutive pair of its pages, at its lowest-handle port on each (design/links.md 6.6).
+between each consecutive pair of its pages, at its lowest-handle port on each.
 """
 
 from collections import Counter

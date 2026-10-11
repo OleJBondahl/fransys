@@ -1,4 +1,4 @@
-"""The scene a block diagram is linted on (BD8): boxes, tabs, texts, lines and cut-line markers.
+"""The scene a block diagram is linted on : boxes, tabs, texts, lines and cut-line markers.
 
 Its own values, not the engine's: lint may not import `engines`, and the checks need only geometry.
 """
@@ -45,7 +45,7 @@ class SceneLine:
 
 @value
 class Scene:
-    """Everything BD8 checks on one sheet; `markers` are the anchor points of cut-line markers."""
+    """Everything the lint checks on one sheet; `markers` are cut-line anchor points."""
 
     boxes: tuple[SceneBox, ...]
     texts: tuple[SceneText, ...]

@@ -55,7 +55,7 @@ def _box(
     edge = (min if down else max)(pin.y for pin in pin_of.values())
     wide = max(width, room.width)
     top = edge if down else edge - height
-    # centred over the views, but never past the content box's side (R3)
+    # centred over the views, but never past the content box's side
     x = min(max(room.x + (room.width - wide) // 2, content.x), content.x + content.width - wide)
     box = Box(x=x, y=top, width=wide, height=height)
     row = box.y if down else box.y + box.height - CELL_ROWS * WIRING_GRID

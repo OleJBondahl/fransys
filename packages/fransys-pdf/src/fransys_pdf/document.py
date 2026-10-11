@@ -1,4 +1,4 @@
-"""Document assembly to Typst source (page-frame R1-R6)."""
+"""Document assembly to Typst source."""
 
 from typing import TYPE_CHECKING
 
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from fransys_model.layout import SheetFormat
     from fransys_model.vocab import Document
 
-# The page kind's own heading, its title-block `page_title` (page-frame R3). SCHEMATIC and
+# The page kind's own heading, its title-block `page_title`. SCHEMATIC and
 # HARNESS_DRAWING are not here: each of their own pages carries its own title and scope
 # instead of one shared per kind (`schematic_source`, `harness_drawing_source`).
 _HEADING_WORDS: dict[PageKind, str] = {
@@ -56,7 +56,7 @@ _SELF_FRAMED = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC, PageKind.HARNESS_DRA
 
 
 def section_fields(model: Model, record: Document, kind: PageKind) -> TitleBlockFields:
-    """The title block shared by every page of `kind` but `SCHEMATIC` (R3, R4)."""
+    """The title block shared by every page of `kind` but `SCHEMATIC`."""
     return TitleBlockFields(
         *document_facts(model, record),
         page_title=_HEADING_WORDS[kind],
@@ -68,7 +68,7 @@ def section_fields(model: Model, record: Document, kind: PageKind) -> TitleBlock
 
 
 def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: PageKind) -> str:
-    """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC` (R3, R4)."""
+    """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC`."""
     fields = section_fields(model, record, kind)
     return f"#set page(margin: {text_margin(sheet)}, background: {background(sheet, fields)})"
 
@@ -91,11 +91,11 @@ def _text_page(kind: PageKind, model: Model, record: Document, pages: tuple[Page
     if kind is PageKind.CONTENTS:
         return contents_page(model, record, pages)
     if kind is PageKind.CABLE_LIST:
-        return cable_list_page(model)
+        return cable_list_page(model, record)
     return _LIST_PAGES[kind](model, record)
 
 
-def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` for the page-frame background
+def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` for the page background
     kind: PageKind,
     model: Model,
     record: Document,
@@ -103,7 +103,7 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
     pages: tuple[PageKind, ...],
     sheet: SheetFormat,
 ) -> str:
-    """The Typst source of one page kind; the two drawing kinds set their own frame (R3, R4)."""
+    """The Typst source of one page kind; the two drawing kinds set their own frame."""
     if kind is PageKind.SCHEMATIC:
         return schematic_source(model, record, sheet, schematic_pages(model, record, pages), svgs)
     if kind is PageKind.HARNESS_DRAWING:
@@ -126,7 +126,7 @@ def source(model: Model, document: Id[Document], svgs: Mapping[str, str]) -> str
 
     Returns:
         The Typst source, pure in `model` and `svgs`. Every page carries frame, grid and title
-        block as its Typst background (page-frame R1). An empty section body is skipped, not
+        block as its Typst background. An empty section body is skipped, not
         joined as a bare `#pagebreak()`.
     """
     record = documents(model)[document]

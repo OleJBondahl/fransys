@@ -1,7 +1,4 @@
-"""Private to `write/`: the `Label` and `Outline` builders.
-
-Refs: engine.md 7, model layout-namespace.md.
-"""
+"""Private to `write/`: the `Label` and `Outline` builders."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -27,7 +24,7 @@ def outlines(
     discriminator: Mapping[tuple[Id[Any], int, int], AuthoringKey],
     stamp: str,
 ) -> list[Outline]:
-    """I2a: one `Outline` per black box on a page, keyed by its unit and its lead member."""
+    """model-0059: one `Outline` per black box on a page, keyed by its unit and its lead member."""
     records = []
     for one in layout.outlines:
         real, pin = real_function(keys, one.lead)
@@ -73,7 +70,7 @@ def labels(
             extra = _extra(discriminator, page_of, (label.subject, label.drawing_set, label.page))
         written_slot = label.slot
         if not marking and pin is not None and label.slot == "tag.pin":
-            written_slot = f"tag.pin.{pin}"  # R7 A: the pin view's pin, for render
+            written_slot = f"tag.pin.{pin}"  # The pin view's pin, for render
         slot = (written_slot,) if written_slot else ()
         key = (*PREFIX, "label", *tail, kind.value, *slot, *extra)
         partners = tuple(
@@ -94,7 +91,7 @@ def labels(
                 slot=written_slot,
                 x=label.box.x,
                 y=label.box.y,
-                # D13: the reserved box, measured once by the stage; render draws from it
+                # The reserved box, measured once by the stage; render draws from it
                 width=label.box.width,
                 height=label.box.height,
                 produced_by=stamp,

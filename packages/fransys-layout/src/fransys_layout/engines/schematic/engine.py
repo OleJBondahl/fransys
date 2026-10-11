@@ -1,7 +1,4 @@
-"""Schematic engine: multi-page ladder-style circuit diagrams, as a pass.
-
-Refs: foundations.md 3, engine.md 7.
-"""
+"""Schematic engine: multi-page ladder-style circuit diagrams, as a pass."""
 
 from dataclasses import replace
 from functools import partial
@@ -90,7 +87,7 @@ class StageResults:
 def run_stages(
     model: Model, inputs: StageInputs
 ) -> tuple[Layout, tuple[DrawnFunction, ...], tuple[Finding, ...]]:
-    """Run stages 1 to 9 over `inputs` (WP13)."""
+    """Run stages 1 to 9 over `inputs`."""
     results, findings = stage_results(model, inputs)
     return results.layout, results.drawn, findings
 
@@ -129,7 +126,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     )
     # layout-0080: the ports at a unit's boundary that draw nothing, in the markers and the check
     nesting = unit_nesting(model, {spec.unit for spec in inputs.functions})
-    # S10: `references` decides on the planned pages, before each placing (`decide`)
+    # `references` decides on the planned pages, before each placing (`decide`)
     placement, (decided, reference_findings) = _placed(
         run, drawn, columns, widths, partial(decide, model, inputs, nesting)
     )
@@ -148,7 +145,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     )
     findings.extend(reference_findings)
     inputs = replace(inputs, connections=decided.connections, net_groups=decided.net_groups)
-    # S9: `texts` builds every marker from its decision, on the placed pages
+    # `texts` builds every marker from its decision, on the placed pages
     at_home, routed_on, wired = page_wiring(
         inputs.connections, columns, placement.placed_all, inputs.net_groups
     )
@@ -159,8 +156,8 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         sheet=inputs.sheet,
         profile=inputs.profile,
     )
-    # S20: the markers go through D3's placer first, then each page's tags and markings with
-    # every marker's box and stub standing; R2 and C22b's shift after them
+    # The markers go through the placer first, then each page's tags and markings with
+    # every marker's box and stub standing; the shift comes after them
     markers, marker_findings = place_markers(
         built,
         placement.placed_all,
@@ -172,14 +169,14 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     )
     findings.extend((*without_power_findings(marker_findings, markers), *first))
     pages = clear_of_stubs(plans, pages, markers, inputs.sheet)
-    # C22b: a page whose labels or keep-outs poke past the content box moves inward by whole
+    # A page whose labels or keep-outs poke past the content box moves inward by whole
     # grids when its far side has the room (a strip tag left of the first column); its markers
-    # move with it, but a marker box never causes the shift (D14 M2, layout-0068), and a box
+    # move with it, but a marker box never causes the shift (layout-0068), and a box
     # the shift pushes out of the content box is reported by OUT_OF_CONTENT_BOX
     pages, placed_all, markers = shift_pages(plans, pages, markers, inputs.sheet)
-    # C19: the contact image under each coil, and each contact's reference to its coil
+    # The contact image under each coil, and each contact's reference to its coil
     pages, contact_refs = contact_images(plans, pages, img, markers, location_paths(model, plans))
-    # I2a: each black box's dash-dot outline and its title, before routing
+    # model-0059: each black box's dash-dot outline and its title, before routing
     placed_box = boxed(inputs, placed_all, boxes, lines)
     laid = Laid(
         plans,
@@ -247,9 +244,9 @@ def _placed(
     widths: tuple[ColumnWidth, ...],
     decide: Decide,
 ) -> tuple[Placement, tuple[References, tuple[Finding, ...]]]:
-    """S10: `plan_pages`, `references`, `place`; again on grown widths (C21); room check (0143).
+    """`plan_pages`, `references`, `place`; again on grown widths; room check (0143).
 
-    TALL-PAGE T5: the second pass also cuts the groups the first placing folded below the page.
+    The second pass also cuts the groups the first placing folded below the page.
     """
     planned = plan_pages(run, drawn, columns, widths)
     first = planned.plans
@@ -282,9 +279,9 @@ def _page_inputs(inputs: StageInputs, heads: Mapping[Id[Any], str]) -> PageInput
 
 
 def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]:
-    """Lay out every drawn function of `model` and return the laid-out model (WP13).
+    """Lay out every drawn function of `model` and return the laid-out model.
 
-    Read, `stage_results` in foundations.md 3 order, then `write_layout`. Pure and deterministic:
+    Read, `stage_results` in stage order, then `write_layout`. Pure and deterministic:
     the same model digest gives the same `digests["layout"]`, whatever order the records were
     authored in, and `digests["core"]`/`digests["facet"]` are unchanged. A model that
     already holds derived layout records has them replaced. Findings are sorted by

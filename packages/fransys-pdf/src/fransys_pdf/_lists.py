@@ -161,7 +161,7 @@ def wire_rows_for(model: Model, record: Document) -> tuple[WireRow, ...]:
 
 
 def wire_label_list_page(model: Model, record: Document) -> str:
-    """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit (P9, U6)."""
+    """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit."""
     return _table(
         WIRE_COLUMNS,
         column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
@@ -170,7 +170,7 @@ def wire_label_list_page(model: Model, record: Document) -> str:
 
 
 def designation_list_page(model: Model, record: Document) -> str:
-    """The DESIGNATION_LIST table: every item's designation, scoped to the unit (P9, U6)."""
+    """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
     return _table(
         DESIGNATION_COLUMNS,
         column_rows(
@@ -180,11 +180,11 @@ def designation_list_page(model: Model, record: Document) -> str:
     )
 
 
-def cable_list_page(model: Model) -> str:
-    """The CABLE_LIST table: one row per top-level cable, model-wide."""
+def cable_list_page(model: Model, record: Document) -> str:
+    """The CABLE_LIST table: one row per cable of the document's unit; top-level for the system."""
     return _table(
         CABLE_LIST_COLUMNS,
-        column_rows(cable_list_rows(model), CABLE_LIST_COLUMNS),
+        column_rows(cable_list_rows(model, unit=document_unit(model, record)), CABLE_LIST_COLUMNS),
         ("description", "from_label", "to_label"),
     )
 
@@ -192,7 +192,7 @@ def cable_list_page(model: Model) -> str:
 def _bom_scope(
     model: Model, record: Document
 ) -> Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None:
-    """The BOM scope (U5): the unit, else `TOP_LEVEL` for `SYSTEM`, else location or item."""
+    """The BOM scope: the unit, else `TOP_LEVEL` for `SYSTEM`, else location or item."""
     unit = document_unit(model, record)
     if unit is not None:
         return unit
@@ -211,7 +211,7 @@ def bom_page(model: Model, record: Document) -> str:
 
 
 def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
-    """The TERMINAL_LIST strips: a unit's own, never a nested unit's (U6), else the location's."""
+    """The TERMINAL_LIST strips: a unit's own, never a nested unit's, else the location's."""
     if (unit := document_unit(model, record)) is not None:
         return unit_strips(model, unit)
     if record.location is None:
@@ -221,14 +221,14 @@ def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]
 
 
 def _list_heading(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
-    """A section's level-2 heading, unit-relative; `""` for a unit's own root (UNIT-ID I4)."""
+    """A section's level-2 heading, unit-relative; `""` for a unit's own root (model-0061)."""
     if is_own_unit_root(model, item, unit):
         return ""
     return f"#heading(level: 2, text({literal(printed_designation(model, item, unit=unit))}))\n"
 
 
 def terminal_list_page(model: Model, record: Document) -> str:
-    """The TERMINAL_LIST section: a headed table per strip (P9); unit-relative (pdf-0012)."""
+    """The TERMINAL_LIST section: a headed table per strip; unit-relative (pdf-0012)."""
     sections = [
         _list_heading(model, strip, document_unit(model, record))
         + description_par(items(model)[strip].description)  # author-0013
@@ -278,7 +278,7 @@ _BRIDGE_STROKE = "0.5pt"
 
 @dataclass(frozen=True, slots=True)
 class _BridgeMark:
-    """One row's mark in one lane (T2): half-lines `top`/`bottom` (both: through), `tick`."""
+    """One row's mark in one lane: half-lines `top`/`bottom` (both: through), `tick`."""
 
     top: bool
     bottom: bool
@@ -298,7 +298,7 @@ def _bridge_spans(groups: tuple[int | None, ...]) -> dict[int, tuple[int, int]]:
 
 
 def _bridge_lanes(spans: dict[int, tuple[int, int]]) -> dict[int, int]:
-    """Each group's lane in group-number order; overlapping row spans never share one (T2)."""
+    """Each group's lane in group-number order; overlapping row spans never share one."""
     lane_ends: list[int] = []  # lane_ends[lane] is the last row index that lane is used through
     lanes: dict[int, int] = {}
     for group in sorted(spans):
@@ -314,7 +314,7 @@ def _bridge_lanes(spans: dict[int, tuple[int, int]]) -> dict[int, int]:
 
 
 def _bridge_geometry(groups: tuple[int | None, ...]) -> tuple[tuple[_BridgeMark | None, ...], ...]:
-    """One entry per row, a mark (or `None`) per lane (T2); an empty tuple with no group."""
+    """One entry per row, a mark (or `None`) per lane; an empty tuple with no group."""
     spans = _bridge_spans(groups)
     lanes = _bridge_lanes(spans)
     lane_count = len(set(lanes.values()))  # distinct lanes used, not `len(lanes)` (one per group)
@@ -329,7 +329,7 @@ def _bridge_geometry(groups: tuple[int | None, ...]) -> tuple[tuple[_BridgeMark 
 
 
 def _bridge_lane_x_mm(lane_count: int) -> tuple[float, ...]:
-    """Each lane's x offset (mm): centred in the Bridge column, `_BRIDGE_LANE_GAP_MM` apart (T2)."""
+    """Each lane's x offset (mm): centred in the Bridge column, `_BRIDGE_LANE_GAP_MM` apart."""
     centre = _BRIDGE_COLUMN_WIDTH_MM / 2
     offset = (lane_count - 1) / 2
     return tuple(centre + (index - offset) * _BRIDGE_LANE_GAP_MM for index in range(lane_count))
@@ -341,7 +341,7 @@ def _mm(value: float) -> str:
 
 
 def _bridge_mark_typst(mark: _BridgeMark | None, x_mm: float) -> str:
-    """One lane's marks for one row as `#place(...)` lines (T2); `y` is % of the cell."""
+    """One lane's marks for one row as `#place(...)` lines; `y` is % of the cell."""
     if mark is None:
         return ""
     x = _mm(x_mm)
@@ -380,7 +380,7 @@ def _bridge_cell_typst(
 def _ends_without_jumpers(
     model: Model, row: TerminalRow
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """`row`'s (internal, external) ends without jumper partners, which the Bridge shows (T2)."""
+    """`row`'s (internal, external) ends without jumper partners, which the Bridge shows."""
     all_conductors = conductors(model)
 
     def kept(ids: tuple[Id[Conductor], ...], ends: tuple[str, ...]) -> tuple[str, ...]:
@@ -433,7 +433,7 @@ def _terminal_table(
 
 
 def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
-    """The CONNECTOR_LIST boards: the item, else a unit's own (U6), else the location's."""
+    """The CONNECTOR_LIST boards: the item, else a unit's own, else the location's."""
     if record.item is not None:
         return (record.item,) if record.item in boards(model) else ()
     if (unit := document_unit(model, record)) is not None:
@@ -446,7 +446,7 @@ def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
 
 
 def connector_list_page(model: Model, record: Document) -> str:
-    """The CONNECTOR_LIST section: a headed table per board (P9); unit-relative (pdf-0012)."""
+    """The CONNECTOR_LIST section: a headed table per board; unit-relative (pdf-0012)."""
     unit = document_unit(model, record)
     sections = [
         _list_heading(model, board, unit)

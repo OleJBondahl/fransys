@@ -1,4 +1,4 @@
-"""The bounded grid search behind `route` and `harness_route` (package-layout.md 4, route.md 6.5).
+"""The bounded grid search behind `route` and `harness_route`.
 
 Cells are wiring-grid points, a state is `(cell, heading)`, and the cost is in grid
 units. Nothing here knows a handle or a record: `route` hands it boxes, cells and
@@ -45,7 +45,7 @@ class Field:
     busy: frozenset[Cell]
     turn_penalty: int
     crossing_penalty: int
-    # C22 (deep dive): per foreign-net cell, the axes ("h", "v") its wires pass it along; a
+    # Per foreign-net cell, the axes ("h", "v") its wires pass it along; a
     # step may enter such a cell only across a straight foreign wire, and not turn in it
     axes: dict[Cell, frozenset[str]] = dataclasses.field(default_factory=dict)
 
@@ -174,7 +174,7 @@ def _dijkstra(search: _Search) -> tuple[Point, ...] | None:
 
 
 def _crosses_cleanly(here: Cell, came: Facing, heading: Facing, cell: Cell, field: Field) -> bool:
-    """C22: no turn inside a foreign wire's cell, and entering one only across its wire."""
+    """No turn inside a foreign wire's cell, and entering one only across its wire."""
     if here in field.axes and heading is not came:
         return False
     other = field.axes.get(cell)
@@ -184,12 +184,12 @@ def _crosses_cleanly(here: Cell, came: Facing, heading: Facing, cell: Cell, fiel
 
 
 def clean_crossing(mine: frozenset[str], other: frozenset[str]) -> bool:
-    """C22: two nets meet at a cell only across each other's straight wire, one `h`, one `v`."""
+    """Two nets meet at a cell only across each other's straight wire, one `h`, one `v`."""
     return len(mine) == 1 and len(other) == 1 and mine != other
 
 
 def axes_of(points: tuple[Point, ...]) -> dict[Cell, frozenset[str]]:
-    """C22: every cell a polyline covers, with its axes (a corner or an end has both)."""
+    """Every cell a polyline covers, with its axes (a corner or an end has both)."""
     found: dict[Cell, set[str]] = {}
     for first, second in pairwise(points):
         axis = "v" if first.x == second.x else "h"

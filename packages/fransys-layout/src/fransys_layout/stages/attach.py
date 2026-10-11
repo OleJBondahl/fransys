@@ -1,7 +1,7 @@
-"""Replica attachment and the hub order, the steps after replication (D6).
+"""Replica attachment and the hub order, the steps after replication.
 
 `replicate.py` adds the replica columns; here a replica terminal is attached to its host's
-column (R7 B8) and a hub column is keyed between its branches (C11).
+column and a hub column is keyed between its branches.
 """
 
 from dataclasses import replace
@@ -36,7 +36,7 @@ def attach_replicas(
     connections: tuple[Connection, ...],
     fits: Callable[[Column], bool],
 ) -> tuple[Column, ...]:
-    """R7 B8, L9: a replica terminal with one wire in its group to an N or S port is attached."""
+    """A replica terminal with one wire in its group to an N or S port is attached."""
     home_keys = {column.key for column in homes}
     drawn_of = {one.function: one for one in drawn}
     home_of = {
@@ -133,7 +133,7 @@ def _replica_host(
     drawn_of: Mapping[Handle, DrawnFunction],
     touching: Mapping[Handle, tuple[Connection, ...]],
 ) -> tuple[AuthoringKey, tuple[Handle, str, int, Handle, str, bool]] | None:
-    """R7 B8, V4: a replica terminal's host column key and attachment entry, `None` with no host."""
+    """A replica terminal's host column key and attachment entry, `None` with no host."""
     terminal = column.cells[0].function
     hosts = [
         (other, own)
@@ -157,7 +157,7 @@ def _wire_ends(terminal: Handle, wires: Sequence[Connection]) -> list[tuple[Port
 def _first_pin(
     ends: Sequence[tuple[PortRef, PortRef]], column_of: Callable[[Handle], Column]
 ) -> tuple[PortRef, PortRef]:
-    """V4: the far end in the lowest-keyed column, where a terminal is drawn once per page."""
+    """The far end in the lowest-keyed column, where a terminal is drawn once per page."""
     return min(ends, key=lambda pair: column_of(pair[0].function).key)
 
 
@@ -187,7 +187,7 @@ def _with_attached(
     home: Home = Home.ELSEWHERE,
     chains: Mapping[Handle, tuple[Cell, ...]] | None = None,
 ) -> Column:
-    """R7 B8: `column` with each attached replica above its N host or below its S host (L9).
+    """`column` with each attached replica above its N host or below its S host.
 
     layout-0122: a feeder's `chains` rows stand above its row, bottom-aligned.
     """
@@ -233,7 +233,7 @@ def hub_order(
     specs: tuple[FunctionSpec, ...],
     connections: tuple[Connection, ...],
 ) -> tuple[Column, ...]:
-    """C11: a hub column is keyed right after its lowest-keyed branch."""
+    """A hub column is keyed right after its lowest-keyed branch."""
     spec_of = {spec.function: spec for spec in specs}
     home = {
         cell.function: column
@@ -262,7 +262,7 @@ def hub_order(
                     and spec_of[f].kind == kind
                 }
             )
-            # F1: a rack module's column keeps its slot: the authored order wins
+            # A rack module's column keeps its slot: the authored order wins
             if len(branches) >= 2 and column.key not in rekey and not is_rack_key(column.key):  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
                 # the column key is appended: two hubs of a ring share a lowest branch
                 rekey[column.key] = (*branches[0], "hub", *column.key)

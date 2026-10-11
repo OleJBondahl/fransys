@@ -1,10 +1,10 @@
-"""S11 (layout-0090): Room's first call for a reference beside an E or W port, from `columns`.
+"""layout-0090: Room's first call for a reference beside an E or W port, from `columns`.
 
 Such a port's end is a wire only to an adjacent cell of its column or as a side element's join
-to its carrier (D1's first two wire cases), both known from `columns`; an LD9 join stands at a
+to its carrier (the first two wire cases), both known from `columns`; a join stands at a
 column's end, facing N or S. Every other conductor of the port ends in a reference, so the cell
-owns that text before any page exists. Its box is the reference's first-ranked candidate (S2)
-at the port's stub, sized one line high at the floor digits (S4: the lines and the set's digits
+owns that text before any page exists. Its box is the reference's first-ranked candidate
+at the port's stub, sized one line high at the floor digits (the lines and the set's digits
 are not known yet), in the symbol's own coordinates. `sizing.with_rooms` grows the keep-out
 over it for `column_widths`, and `place` does the same through `_fit_row` for its page.
 """
@@ -49,7 +49,7 @@ class Wiring:
 
     connections: tuple[Connection, ...]
     net_groups: tuple[NetGroup, ...]
-    digits: Digits = FLOOR  # S4: the set's reference box is drawn at these digits
+    digits: Digits = FLOOR  # The set's reference box is drawn at these digits
 
 
 def side_reference_rooms(
@@ -132,6 +132,6 @@ def _wired_beside(
     rows: Mapping[Id[Any], set[int]],
     carriers: AbstractSet[tuple[Id[Any], Id[Any] | None]],
 ) -> bool:
-    """D1: `cell`'s function and `other` are an adjacent-cell or a side-element wire."""
+    """`cell`'s function and `other` are an adjacent-cell or a side-element wire."""
     adjacent = any(abs(index - cell.index) == 1 for index in rows.get(other, ()))
     return adjacent or not carriers.isdisjoint({(cell.function, other), (other, cell.function)})

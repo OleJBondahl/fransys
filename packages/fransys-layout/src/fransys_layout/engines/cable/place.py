@@ -1,4 +1,4 @@
-"""The cable engine's placer: a block's facts to its geometry, in G from its corner (CD8)."""
+"""The cable engine's placer: a block's facts to its geometry, in G from its corner."""
 
 lazy from collections.abc import Sequence
 
@@ -47,11 +47,11 @@ from fransys_layout.stages.space import Obstacle
 
 G = WIRING_GRID
 ROW = 2 * G  # label room, end-box height and the band between an end box and the cable box
-STUB = G  # the stub of a blank end (CD11)
+STUB = G  # the stub of a blank end
 
 
 def block_pitch(widest: int) -> int:
-    """The pitch rule: `widest` plus one grid unit, rounded up to whole pin pitches (CD8)."""
+    """The pitch rule: `widest` plus one grid unit, rounded up to whole pin pitches."""
     return snap_up(widest + G, grid=PORT_PITCH_G)
 
 
@@ -73,7 +73,7 @@ def _spans(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> Spans:
 
 
 def _pitch(facts: BlockFacts) -> int:
-    """The block pitch; a harness grows it by whole pin pitches until each heading fits (Q2)."""
+    """The block pitch; a harness grows it by whole pin pitches until each heading fits."""
     pitch = block_pitch(_widest(facts))
     while facts.harness_width is not None and not boxes_fit(
         facts, _spans(facts, _place_rows(facts, 0, pitch, 2 * G)[0]), pitch
@@ -99,7 +99,7 @@ def _top_y(end: EndFacts, rise_by: int) -> tuple[int, int]:
 
 
 def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> PlacedEnd:
-    """One end box with its left edge at `x0`; a pin cell is one pitch wide per core (P1)."""
+    """One end box with its left edge at `x0`; a pin cell is one pitch wide per core."""
     cells = []
     left = x0
     for pin in end.pins:
@@ -146,8 +146,8 @@ def _place_rows(
 ) -> tuple[tuple[PlacedEnd, ...], int, int]:
     """The placed ends, the cable box's y and the block's height.
 
-    `drop` is the height between the box and a drawn bottom row: its tracks (CT5-3). The upper
-    band grows for the top row's links (CD8 at L1).
+    `drop` is the height between the box and a drawn bottom row: its tracks. The upper
+    band grows for the top row's links.
     """
     end_y = _top_y(facts.top[0], 0)[0] if facts.top else 0
     top = _place_row(facts.top, x0, pitch, end_y, top=True)
@@ -205,7 +205,7 @@ def _band(facts: BlockFacts, ends: tuple[PlacedEnd, ...], boxes: tuple[Box, ...]
 def _wires(
     facts: BlockFacts, ends: tuple[PlacedEnd, ...], box_y: int, plan: Plan, band: Band
 ) -> tuple[PlacedWire, ...] | None:
-    """Each core's two runs: a straight drop in the upper band, the routed lower run (CD8).
+    """Each core's two runs: a straight drop in the upper band, the routed lower run.
 
     A row link keeps its row (`place_links`); a bottom-row link is routed with the lower cores.
     """
@@ -359,7 +359,7 @@ def place_tracks(facts: BlockFacts, tracks: int) -> PlacedBlock | None:
 def place_block(facts: BlockFacts) -> PlacedBlock | None:
     """Return the geometry of one block, or None when its cores cannot be routed.
 
-    The lower band holds as many tracks as the channel needs, at least one (CT5-3 P2 ruling).
+    The lower band holds as many tracks as the channel needs, at least one.
     """
     pitch = _pitch(facts)
     plan = _plan(facts, pitch, _origin(facts, pitch))

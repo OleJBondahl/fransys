@@ -17,7 +17,7 @@ def boundary_replica(
     parent_key: AuthoringKey | None,
     home_column: Column,
 ) -> Column:
-    """The black-box column of `spec` in the unit's parent, in the home column's group (U1)."""
+    """The black-box column of `spec` in the unit's parent, in the home column's group."""
     return Column(
         key=boundary_key(spec.key, parent_key),
         cells=(Cell(function=spec.function, index=0, home=Home.ELSEWHERE),),
@@ -35,7 +35,7 @@ def unit_specs(
 ) -> list[FunctionSpec]:
     """The specs a unit's boundary draws, each once (model-0188).
 
-    A function with pin views (a connector's, or a landed port of any function, R7 A) is drawn as
+    A function with pin views (a connector's, or a landed port of any function) is drawn as
     those pin cells; an idle port has no cell. One with a spec and no pin view is its own cell.
     """
     found: dict[Handle, FunctionSpec] = {}

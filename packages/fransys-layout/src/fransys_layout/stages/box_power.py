@@ -1,4 +1,4 @@
-"""Generic boxes: which side a power pin takes (D5)."""
+"""Generic boxes: which side a power pin takes."""
 
 from dataclasses import replace
 from typing import TYPE_CHECKING
@@ -16,11 +16,11 @@ def power_stand(symbol: str, text: str | None) -> int:
 
 
 def _forced_sides(ports: tuple[DrawnPort, ...], kind_of: Mapping[Handle, str]) -> dict[str, str]:
-    """D5: supply N and ground S for a box with a DC pin; with an AC pin too, AC N, all DC S."""
+    """Supply N and ground S for a box with a DC pin; with an AC pin too, AC N, all DC S."""
     dc = {p.symbol_port: kind_of[p.port] for p in ports if p.port in kind_of}
     if not dc:
         return {}
-    ac = {p.symbol_port for p in ports if p.ac and p.port not in kind_of}  # V11: AC by current
+    ac = {p.symbol_port for p in ports if p.ac and p.port not in kind_of}  # AC by current
     sides = {name: _side(kind, has_ac=bool(ac)) for name, kind in dc.items()}
     return {**sides, **dict.fromkeys(ac, "n")}
 
@@ -32,7 +32,7 @@ def _side(kind: str, *, has_ac: bool) -> str:
 
 
 def _supply_sides(ports: tuple[DrawnPort, ...], rank_of: Mapping[Handle, int]) -> dict[str, str]:
-    """C20: a box on two or more declared potentials has them all on top, else empty."""
+    """A box on two or more declared potentials has them all on top, else empty."""
     ranked = {p.symbol_port: rank_of[p.port] for p in ports if p.port in rank_of}
     return dict.fromkeys(ranked, "n") if len(set(ranked.values())) >= 2 else {}  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
 
@@ -40,12 +40,12 @@ def _supply_sides(ports: tuple[DrawnPort, ...], rank_of: Mapping[Handle, int]) -
 def pinned_sides(
     ports: tuple[DrawnPort, ...], rank_of: Mapping[Handle, int], kind_of: Mapping[Handle, str]
 ) -> dict[str, str]:
-    """The ports whose side a box's power decides: D5 when it has a DC pin, else C20."""
+    """The ports whose side a box's power decides: supply with a DC pin, else potential rank."""
     return _forced_sides(ports, kind_of) or _supply_sides(ports, rank_of)
 
 
 def item_pins(ports: tuple[DrawnPort, ...], sides: Mapping[Handle, str]) -> dict[str, str]:
-    """V1: an item box's pins on their function's side, which D5 and C20 do not override."""
+    """An item box's pins keep their function's side; supply and potential rules skip them."""
     return {p.symbol_port: sides[p.port] for p in ports if p.port in sides}
 
 
@@ -55,11 +55,11 @@ def power_geometry(
     kind_of: Mapping[Handle, str],
     sides: Mapping[Handle, str],
 ) -> DrawnFunction:
-    """C20, C22, D5 and V1: generic box `one` redrawn with its fixed pins on their sides, ranked."""
+    """Generic box `one` redrawn with its fixed pins on their sides, ranked."""
     pinned = item_pins(one.ports, sides) or pinned_sides(one.ports, rank_of, kind_of)
     if not pinned:
         return one
-    # V1: a pin group is whole, then C22's rank order inside it
+    # A pin group is whole, then the rank order inside it
     rank = {p.symbol_port: (p.group, rank_of.get(p.port, 0)) for p in one.ports}
     facing = {g.name: g.facing.value for g in one.geometry.ports}
     rest = "" if _forced_sides(one.ports, kind_of) else "s"

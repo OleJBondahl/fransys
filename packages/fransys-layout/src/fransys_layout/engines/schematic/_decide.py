@@ -1,4 +1,4 @@
-"""D1 step 4 (S10): `references` on one placing attempt's planned and stacked pages."""
+"""Step 4: `references` on one placing attempt's planned and stacked pages."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -23,7 +23,7 @@ def decide(
     nesting: UnitNesting,
     seating: Seating,
 ) -> tuple[References, tuple[Finding, ...]]:
-    """D1 step 4 (S10): `references` on one placing attempt's planned and stacked pages."""
+    """Step 4: `references` on one placing attempt's planned and stacked pages."""
     exempt = boundary_exempt(
         ExemptInputs(
             inputs.connections, inputs.net_groups, inputs.functions, seating.plans, seating.seats
@@ -49,7 +49,7 @@ def _reference_inputs(
     exempt: frozenset[tuple[Id[Any], int]],
     nested: frozenset[Id[Any] | None],
 ) -> ReferenceInputs:
-    """D1 step 4's `ReferenceInputs`: `inputs`, the planned pages and what it reads of `model`."""
+    """Step 4's `ReferenceInputs`: `inputs`, the planned pages and what it reads of `model`."""
     unit_of, set_unit = _unit_maps(inputs, seating)
     outward = black_box_sets(
         inputs.functions, seating.seats, unit_of, set_unit, black_box_reads(model, nested)

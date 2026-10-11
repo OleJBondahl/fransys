@@ -140,12 +140,12 @@ class HarnessFanOut:
 
 @record(kind="layout.stub_end")
 class StubEnd:
-    """One far end of a leaving harness-line stub: where that end is drawn (STUB-POSITIONS P1).
+    """One far end of a leaving harness-line stub: where that end is drawn.
 
     `marker` is the stub, `index` the end's place in its list (the line's end order), `port` the
     far end's port. `page` is the page that end is placed on in the stub's drawing set and `x`,
     `y` its drawn position there (grid units), as `CrossReferencePartner` has them; `page` is
-    `None`, `x` and `y` 0, when it is drawn in no page of that set (P2).
+    `None`, `x` and `y` 0, when it is drawn in no page of that set.
     """
 
     id: Id[StubEnd]

@@ -1,8 +1,8 @@
-"""TALL-PAGE (layout-0167): which groups the engine cuts, and what a folded page reports.
+"""layout-0167: which groups the engine cuts, and what a folded page reports.
 
 `tall_groups` names the units to cut from the first placing and `recut` flags them for the second
-planning pass (C21), where partition makes two packing units of each. `folded_page` is the page's
-fold and its `PAGE_OVERFULL` after it (T6).
+planning pass, where partition makes two packing units of each. `folded_page` is the page's
+fold and its `PAGE_OVERFULL` after it.
 """
 
 from collections import Counter
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 class Cut(NamedTuple):
-    """How a tall group cuts: the outline's left edge from the lower columns', and the edge (A1)."""
+    """How a tall group cuts: the outline's left edge from the lower columns', and the edge."""
 
     frame_dx: int
     below: bool
@@ -31,10 +31,10 @@ def tall_groups(
     content_height: int,
     middle: Mapping[AuthoringKey, tuple[MiddleGroup, ...]],
 ) -> dict[Id[Any], Cut]:
-    """T1: the units whose one folded shape reaches below the page and may be cut.
+    """The units whose one folded shape reaches below the page and may be cut.
 
     Each maps to its shape's `frame_dx`, the value the cut page repeats, and its edge. A held
-    shape, a unit split over pages (T7) and a group `recut` holds (`_cuttable`) stay as they are.
+    shape, a unit split over pages and a group `recut` holds (`_cuttable`) stay as they are.
     """
     cuttable = _cuttable(middle)
     shapes: list[GroupShape] = [shape for _, call in pages for shape in call.shapes]
@@ -50,7 +50,7 @@ def tall_groups(
 
 
 def recut(run: PageRun, tall: Mapping[Id[Any], Cut]) -> PageRun:
-    """T2: `run` with each tall group flagged `cut`, unless it shares a column with another."""
+    """`run` with each tall group flagged `cut`, unless it shares a column with another."""
     if not tall:
         return run
     middle = run.inputs.middle

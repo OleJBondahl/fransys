@@ -1,4 +1,4 @@
-"""The diagram placer's labels (BD5): a line's text sits above the middle of its longest run."""
+"""The diagram placer's labels: a line's text sits above the middle of its longest run."""
 
 from itertools import pairwise
 

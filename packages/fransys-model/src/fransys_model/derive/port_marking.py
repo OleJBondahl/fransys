@@ -1,4 +1,4 @@
-"""What a port's MARKING label prints: the part's pin marking, or a power symbol's text (D5)."""
+"""What a port's MARKING label prints: the part's pin marking, or a power symbol's text."""
 
 from fransys_model.derive.power import port_power_text
 from fransys_model.layout import POWER_SLOT
@@ -8,7 +8,7 @@ lazy from fransys_model.vocab import Port
 
 
 def port_marking(model: Model, port: Id[Port]) -> str:
-    """model-0053 (F2): what a port's MARKING label prints.
+    """model-0053: what a port's MARKING label prints.
 
     The part's pin marking (`Port.marking`), else the port's name; "" when the part prints
     none.

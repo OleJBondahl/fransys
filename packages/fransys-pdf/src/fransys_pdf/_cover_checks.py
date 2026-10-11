@@ -2,9 +2,9 @@
 
 The cover text and the revision-history table can be estimated to overlap.
 
-A NEW module, not `checks.py` (P3's own); `checks.py` registers it with one added import and
+A NEW module, not `checks.py`; `checks.py` registers it with one added import and
 one added call in its per-document loop (named in the hand-back). `_pages.cover_page` never
-moves the table out of the way of an oversized cover (R11.6's "the table keeps its place"),
+moves the table out of the way of an oversized cover ("the table keeps its place"),
 so this is the only signal an engineer gets that the two would collide.
 
 The estimate is a character-count heuristic, not a Typst compile: this package never compiles
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Document, PageKind, Revision
 
-# R4's inner padding, the same value `_pages._PADDING_MM` and `_frame.py`'s own private
+# The inner padding, the same value `_pages._PADDING_MM` and `_frame.py`'s own private
 # constant independently apply: the flowed cover text and the table both lose this much of
 # the content box's own height on every side (spec-fixed, not tunable).
 _PADDING_MM = 5
@@ -77,7 +77,7 @@ def _cover_text_height_mm(model: Model, record: Document, *, width_mm: float) ->
 
 
 def _table_height_mm(entries: tuple[Revision, ...]) -> float:
-    """The revision table's estimated height (R11.6): header plus rows wrapped at 120 mm."""
+    """The revision table's estimated height: header plus rows wrapped at 120 mm."""
     if not entries:
         return 0.0
     rows = sum(
@@ -90,7 +90,7 @@ def _table_height_mm(entries: tuple[Revision, ...]) -> float:
 def cover_overflow_findings(
     model: Model, subject: Id[Document], record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
-    """`COVER_OVERFLOW` (`WARNING`): cover plus revision table exceed the box (R11.6)."""
+    """`COVER_OVERFLOW` (`WARNING`): cover plus revision table exceed the box."""
     sheet = resolve_sheet_format(model, record, pages)
     width_mm = sheet.content_width_mm - 2 * _PADDING_MM
     text_height = _cover_text_height_mm(model, record, width_mm=width_mm)

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 _PHYSICAL_LINKS: Final = frozenset({LinkKind.CONDUCTIVE})
 _RAIL_LINKS: Final = frozenset({LinkKind.CONDUCTIVE, LinkKind.SWITCHED, LinkKind.PROTECTIVE})
 
-# What a rail needs to reach a port: the state each item on its way must be in (CS4). An empty
+# What a rail needs to reach a port: the state each item on its way must be in. An empty
 # condition needs nothing. A condition that names one item in two states can never hold.
 type Condition = frozenset[tuple[Id[Item], Literal["rest", "operated"]]]
 # The cast: an empty set, whose elements ty infers Unknown.

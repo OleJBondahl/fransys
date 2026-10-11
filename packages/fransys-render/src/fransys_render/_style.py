@@ -1,4 +1,4 @@
-"""The page `<style>` block: D11's fixed classes, black on white, deterministic."""
+"""The page `<style>` block: the fixed classes, black on white, deterministic."""
 
 from decimal import Decimal
 
@@ -8,7 +8,7 @@ from ._constants import OUTLINE_DASH_GAP_MM, OUTLINE_DASH_LONG_MM, STROKE_WIDTH_
 from ._numbers import format_decimal
 
 _STROKE_WIDTH_MM = format_decimal(STROKE_WIDTH_MM)
-_FONT_FAMILY = 'Liberation Serif, "Times New Roman", serif'  # D7
+_FONT_FAMILY = 'Liberation Serif, "Times New Roman", serif'
 _OUTLINE_DASH_ARRAY = (
     f"{format_decimal(OUTLINE_DASH_LONG_MM)},{format_decimal(OUTLINE_DASH_GAP_MM)},"
     f"{_STROKE_WIDTH_MM},{format_decimal(OUTLINE_DASH_GAP_MM)}"
@@ -21,7 +21,7 @@ def _harness_width(module_mm: Decimal) -> str:
 
 
 def style_block(module_mm: Decimal) -> str:
-    """The one `<style>` element every page carries (D11); the rules are in the README."""
+    """The one `<style>` element every page carries; the rules are in the README."""
     descendant_dash = format_decimal(STROKE_WIDTH_MM / module_mm)
     return (
         "<style>"

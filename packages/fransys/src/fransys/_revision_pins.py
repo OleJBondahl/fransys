@@ -1,4 +1,4 @@
-"""FD5, FD6, UT4: what a pin source says about a unit's items and its direct instances.
+"""What a pin source says about a unit's items and its direct instances.
 
 An instance is a row of `items` told apart by its key's last segment (`numbering_pins`).
 `pipeline` reads the pin source from disk; this module joins it to the model, reading nothing.
@@ -74,7 +74,7 @@ def _subjects(model: Model, unit: Id[Unit]) -> dict[AuthoringKey, Id[Any]]:
 
 
 def moved(model: Model, unit: Id[Unit], path: Path, source: NumberingPins) -> list[Finding]:
-    """`DESIGNATION_MOVED` (FD6): a pinned item or instance now prints a different own text."""
+    """`DESIGNATION_MOVED`: a pinned item or instance now prints a different own text."""
     moves = _designation_pins.designation_moves(source, numbering_pins.pins(model, unit))
     subjects = _subjects(model, unit)
     where = path / "baseline" / "numbering.json"
@@ -93,7 +93,7 @@ def moved(model: Model, unit: Id[Unit], path: Path, source: NumberingPins) -> li
 
 
 def new_in_revision(model: Model, unit: Id[Unit], source: NumberingPins) -> list[Finding]:
-    """`DESIGNATION_NEW_IN_REVISION` (UT4): a floating item or instance no pin matches, numbered."""
+    """`DESIGNATION_NEW_IN_REVISION`: a floating item or instance no pin matches, numbered."""
     known = {(row.key, row.scope, row.code) for row in source.items}
     subjects = _subjects(model, unit)
     return [
@@ -116,12 +116,12 @@ def new_findings(model: Model, sources: Mapping[Id[Unit], NumberingPins]) -> lis
 def pin_findings(
     model: Model, unit: Id[Unit], source: tuple[Path, NumberingPins] | None
 ) -> list[Finding]:
-    """The release's own pin findings (FD6, UT4), none without a pin source."""
+    """The release's own pin findings, none without a pin source."""
     if source is None:
         return []
     return [*moved(model, unit, *source), *new_in_revision(model, unit, source[1])]
 
 
 def with_warnings(raw: tuple[Finding, ...], l4: tuple[Finding, ...]) -> tuple[Finding, ...]:
-    """`raw` plus the release checks' WARNINGs it lacks: the manifest lists them (UT4)."""
+    """`raw` plus the release checks' WARNINGs it lacks: the manifest lists them."""
     return (*raw, *(f for f in l4 if f.severity is Severity.WARNING and f not in raw))

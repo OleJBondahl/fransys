@@ -1,4 +1,4 @@
-"""Which ports and functions `hide_unused_pins` leaves off the page (V1, model-0120).
+"""Which ports and functions `hide_unused_pins` leaves off the page (model-0120).
 
 Layout and the contact table both call these, so a drawn contact is never listed as a spare.
 """

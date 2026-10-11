@@ -1,8 +1,8 @@
-"""D3, the text placer: every text of a page in one key order, each at its first free candidate.
+"""The text placer: every text of a page in one key order, each at its first free candidate.
 
 One function, `place_texts`, for every kind. It ranks nothing itself: each text's list comes
-from `candidates.ranked_candidates`, the ranking `place` reserves from (S2). The placer is
-greedy and never moves a text it has placed (D1, Room: nothing is shifted after `texts`).
+from `candidates.ranked_candidates`, the ranking `place` reserves from. The placer is
+greedy and never moves a text it has placed (Room: nothing is shifted after `texts`).
 """
 
 from typing import TYPE_CHECKING, Any
@@ -37,7 +37,7 @@ _UNPLACED_SLOT = "no free place beside the slot"
 
 @value
 class Place:
-    """S20: one place a link marker may take: its box and its stub's boxes (WIRE-X56)."""
+    """One place a link marker may take: its box and its stub's boxes."""
 
     box: Box
     stub: tuple[Box, ...] = ()
@@ -46,7 +46,7 @@ class Place:
 
 @value
 class Anchor:
-    """One placed thing a text may stand beside, in page coordinates (docs/design/labels.md 6.7)."""
+    """One placed thing a text may stand beside, in page coordinates."""
 
     box: Box
     facing: Facing | None = None
@@ -55,7 +55,7 @@ class Anchor:
 
 @value
 class TextToPlace:
-    """One text of a page, not yet placed: what its ranked list and key need (D2, D3, S20)."""
+    """One text of a page, not yet placed: what its ranked list and key need."""
 
     kind: TextKind
     handle: Id[Any]
@@ -89,7 +89,7 @@ def place_texts(
     lanes: tuple[Shape, ...] = (),
     runs: tuple[Run, ...] = (),
 ) -> tuple[tuple[PlacedText, ...], tuple[Finding, ...]]:
-    """D3: every text of one page, in key order, each at its first free candidate (greedy)."""
+    """Every text of one page, in key order, each at its first free candidate (greedy)."""
     placed: list[PlacedText] = []
     stubs: list[tuple[Handle, Box]] = []
     findings: list[Finding] = []
@@ -172,7 +172,7 @@ def _options(text: TextToPlace, table: CandidateTable) -> list[tuple[Place, bool
 
 
 def _key(text: TextToPlace) -> tuple[int, int, int, int, Handle, str]:
-    """D3's key order: priority, the call's rank (S20), position, handle, then the slot."""
+    """Key order: priority, the call's rank, position, handle, then the slot."""
     return (
         PRIORITY[text.kind],
         text.rank,

@@ -1,4 +1,4 @@
-"""Cable engine, row links: their tracks, runs and text (CT5-LINK, CD5 and CD8 at L1, layout-0148).
+"""Cable engine, row links: their tracks, runs and text (layout-0148).
 
 A link joins two pins of one row. One run leaves each pin toward the cable box, to a track of the
 band beside that row, and a straight run joins the two corners. The record keeps it in the two
@@ -75,7 +75,7 @@ def _line(link: Link, y: int) -> Line:
 
 
 def upper_lines(facts: BlockFacts, links: Sequence[Link]) -> dict[int, Line]:
-    """Each top-row link's polyline, pin to pin, by core key: tracks one room apart (CD8 at L1)."""
+    """Each top-row link's polyline, pin to pin, by core key: tracks one room apart."""
     top = [link for link in links if link.top]
     return {
         link.core.key: _line(link, link.y + G + (level - 1) * room(facts))

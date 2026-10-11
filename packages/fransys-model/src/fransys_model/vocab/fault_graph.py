@@ -1,4 +1,4 @@
-"""The fault graph (RATINGS-3 R7, Q4): the current graph with the loads out and every source in.
+"""The fault graph: the current graph with the loads out and every source in.
 
 Built once per model from `raw_of`: the wires as they are, the positions minus the loads, a
 two-port source that is no position yet as an edge of its own, and one vertex per supply name
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
     from .current_graph import Raw, Wire
 
-_EDGE_PORTS: Final = 2  # a source with exactly two conductive ports is one edge (R13, Q11)
+_EDGE_PORTS: Final = 2  # a source with exactly two conductive ports is one edge
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -75,7 +75,7 @@ def supply_vertex(name: str) -> Id[Port]:
 
 
 def _positions(model: Model, raw: Raw) -> list[tuple[Edge, int | None]]:
-    """The positions that are no load (Q5), each with its index in `raw`."""
+    """The positions that are no load, each with its index in `raw`."""
     return [
         (edge, edge.at)
         for edge in raw.edges
@@ -84,7 +84,7 @@ def _positions(model: Model, raw: Raw) -> list[tuple[Edge, int | None]]:
 
 
 def _sources(model: Model, raw: Raw) -> list[tuple[Edge, int | None]]:
-    """A two-port source that is no position yet, as an edge of its own (Q4)."""
+    """A two-port source that is no position yet, as an edge of its own."""
     held = {function for edge in raw.edges for function in edge.tie.functions}
     found: list[tuple[Edge, int | None]] = []
     for function in sorted(functions(model)):
@@ -138,7 +138,7 @@ def _supply_feed(name: str, declared: Sequence[SupplySystem]) -> Feed | None:
 
 
 def _supplies(model: Model) -> list[tuple[Edge, Feed]]:
-    """One source edge from each supply vertex to each of its pins (R7)."""
+    """One source edge from each supply vertex to each of its pins."""
     declared = source_declarations(model)
     tie = Tie((), (), source=True)
     found: list[tuple[Edge, Feed]] = []

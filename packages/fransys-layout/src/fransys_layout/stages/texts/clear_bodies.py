@@ -1,4 +1,4 @@
-"""M9 (layout-0093): a page's markers placed clear of foreign symbols, box and stub."""
+"""layout-0093: a page's markers placed clear of foreign symbols, box and stub."""
 
 from dataclasses import replace
 from typing import TYPE_CHECKING
@@ -49,7 +49,7 @@ def place_clear_of_bodies(
     decided: Sequence[Box],
     content: Box,
 ) -> tuple[tuple[PlacedText, ...], tuple[Finding, ...]]:
-    """M9: the page's texts clear of foreign symbols, never stranding a marker."""
+    """The page's texts clear of foreign symbols, never stranding a marker."""
     # the lint's `_foreign` counts a port on the body's side edge as the body: grown by one in x
     bodies = tuple(
         Shape(

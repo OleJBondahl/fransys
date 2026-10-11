@@ -1,4 +1,4 @@
-"""Header joins (parts-0017, HA4): a header port's `joins = "<function>.<port>"` and its lints.
+"""Header joins (parts-0017): a header port's `joins = "<function>.<port>"` and its lints.
 
 The part file spells a join `<function>.<port>` of the same part; the model stores the target
 port template's id on the header port's template.

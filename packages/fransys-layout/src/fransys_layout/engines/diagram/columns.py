@@ -1,4 +1,4 @@
-"""The diagram engine's stage columns (BD5): a box's column is its line distance from the first box.
+"""The diagram engine's stage columns: a box's column is its line distance from the first box.
 
 The first box has the most lines (a line counts at both ends), ties by text rank. A box not joined
 to it starts a new component: its first box follows the same rule, at the last column so far + 1.

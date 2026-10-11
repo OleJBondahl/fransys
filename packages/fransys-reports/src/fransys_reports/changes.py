@@ -1,4 +1,4 @@
-"""Model diff report: a `ListingDiff` as CSV or Markdown (MODEL-DIFF work order, M2)."""
+"""Model diff report: a `ListingDiff` as CSV or Markdown."""
 
 from fransys_model.derive import natural_key, revision_text
 from fransys_model.derive.baseline import CHANGE_COLUMNS, Change, ListingDiff, change_identity
@@ -82,7 +82,7 @@ def _sections(changes: tuple[Change, ...]) -> list[tuple[str, list[list[Change]]
 
 
 def changes_markdown(diff: ListingDiff) -> str:
-    """Write a listing diff as a Markdown change note (M2).
+    """Write a listing diff as a Markdown change note.
 
     A `#` heading, an `Interface X to Y.` line when the interface changed, then one `##`
     section per non-`unit` section with a `Change` row, one bullet per subject; no such

@@ -42,7 +42,7 @@ def _absolute(placement: SymbolPlacement, local_x: float, local_y: float) -> tup
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _page_ends(model: Model) -> dict[Id[Page], _Ends]:
-    """Per page: each route end (D8) and leg pin end (layout-0154), and each marker's `(x, y)`."""
+    """Per page: each route end and leg pin end (layout-0154), and each marker's `(x, y)`."""
     out: dict[Id[Page], _Ends] = {}
     for page in layout_of(model, PageRecord).values():
         ends = frozenset(
@@ -63,7 +63,7 @@ def _ends_of(model: Model, page: Page) -> _Ends:
 
 
 def _route_ends(model: Model, page: Page) -> frozenset[_Grid]:
-    """Every route end (D8) and leg pin end (layout-0154) on `page`, in grid units."""
+    """Every route end and leg pin end (layout-0154) on `page`, in grid units."""
     return _ends_of(model, page)[0]
 
 
@@ -84,7 +84,7 @@ def _page_marked(model: Model) -> dict[tuple[Id[Page], Id[Function]], frozenset[
 def wired_local_ports(
     model: Model, page: Page, placement: SymbolPlacement, symbol: Symbol
 ) -> frozenset[str]:
-    """`symbol`'s local port ids that have something on them on `page` (TL3)."""
+    """`symbol`'s local port ids that have something on them on `page`."""
     ends = _route_ends(model, page)
     markers = _ends_of(model, page)[1]
     marked = _page_marked(model).get((page.id, placement.function), frozenset())
@@ -98,7 +98,7 @@ def wired_local_ports(
 
 
 def visible_symbol(model: Model, page: Page, placement: SymbolPlacement, symbol: Symbol) -> Symbol:
-    """`symbol` with a bound lead left out unless its port is wired (TL3)."""
+    """`symbol` with a bound lead left out unless its port is wired."""
     wired = wired_local_ports(model, page, placement, symbol)
 
     def _dropped(element: object) -> bool:

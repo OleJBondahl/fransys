@@ -42,11 +42,11 @@ def discovered_columns(
 ) -> tuple[Column, ...]:
     """The columns discovery finds over every function no chain claims, cut at locations."""
     # Discovery runs first, over every function no chain claims, so a hinted chain always wins
-    # (columns.md 6.2/pages.md 6.3): a chain never gets a function discovery already placed.
+    # A chain never gets a function discovery already placed.
     chain_claimed = {entry.function for chain in inputs.chains for entry in chain.entries}
     undiscovered = tuple(spec for spec in inputs.functions if spec.function not in chain_claimed)
-    # Deep-dive R4: chains are discovered from connectivity alone.
-    # A chain never spans two units: discovery sees same-unit connectivity only (units U1).
+    # Chains are discovered from connectivity alone.
+    # A chain never spans two units: discovery sees same-unit connectivity only.
     same = same_unit_connectivity(
         inputs.functions, inputs.connections, inputs.net_groups, inputs.mates
     )
@@ -60,7 +60,7 @@ def discovered_columns(
     discovered = discover_chains(
         pin_keyed(records), rank_of=rank_of, tie_key=tie_key, key_order=key_orders(inputs.functions)
     )
-    # C21: a column never spans locations; the conductors between two are stubs
+    # A column never spans locations; the conductors between two are stubs
     return cut_locations(discovered, inputs.functions)
 
 
@@ -68,7 +68,7 @@ def chained_columns(
     inputs: StageInputs, drawn: tuple[DrawnFunction, ...], discovered: tuple[Column, ...]
 ) -> tuple[tuple[Column, ...], tuple[Finding, ...]]:
     """The hinted chains' columns, over the functions discovery left, and their findings."""
-    # I4: an edge pin's face replica is not its home; its home column still comes below
+    # An edge pin's face replica is not its home; its home column still comes below
     placed_by_discovery = {
         cell.function
         for column in discovered

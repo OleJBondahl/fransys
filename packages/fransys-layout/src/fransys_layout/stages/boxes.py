@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 def port_ranks(functions: tuple[FunctionSpec, ...]) -> dict[Id[Any], int]:
-    """C20, V11: each drawn port's potential rank, shipped by the model; unranked ports are out."""
+    """Each drawn port's potential rank, shipped by the model; unranked ports are out."""
     return {p.port: p.rank for spec in functions for p in spec.ports if p.rank is not None}
 
 
@@ -37,8 +37,8 @@ def potential_sides(
     sides: Mapping[Id[Any], str] | None = None,
     pairing: tuple[Sequence[BoxFeed], Profile] | None = None,
 ) -> tuple[DrawnFunction, ...]:
-    """C20 (A10), C22: potential ports go N, highest leftmost (24V before 0V), the rest S (D5)."""
-    # V1: an item box takes its side in `sides`; layout-0107: `pairing` (feeds, profile) pairs boxes
+    """Potential ports go N, highest leftmost (24V before 0V), the rest S."""
+    # An item box takes its side in `sides`; layout-0107: `pairing` (feeds, profile) pairs boxes
     kind_of, sides = kind_of or {}, sides or {}
     boxes = tuple(
         power_geometry(one, rank_of, kind_of, sides) if one.geometry.generic_box else one
@@ -50,7 +50,7 @@ def potential_sides(
 def power_maps(
     power: tuple[PowerEnd, ...], north: tuple[Id[Any], ...], south: tuple[Id[Any], ...]
 ) -> tuple[dict[Id[Any], str], dict[Id[Any], str]]:
-    """D5's power kind and V1's item-box side ("n" or "s"), each by port."""
+    """The power kind and item-box side ("n" or "s"), each by port."""
     kinds = {end.port: end.kind for end in power}
     return kinds, dict.fromkeys(north, "n") | dict.fromkeys(south, "s")
 
@@ -69,8 +69,8 @@ def box_sides(
     connections: tuple[Connection, ...],
     power: tuple[Mapping[Id[Any], int], Mapping[Id[Any], str], Mapping[Id[Any], str]],
 ) -> tuple[DrawnFunction, ...]:
-    """R7 C5: each generic box drawn with every port on the side facing its placed partners."""
-    # `power`: the potential ranks, the power kinds and V1's item-box sides, by port
+    """Each generic box drawn with every port on the side facing its placed partners."""
+    # `power`: the potential ranks, the power kinds and the item-box sides, by port
     drawn_by = {one.function: one for one in drawn}
     where: dict[Id[Any], dict[tuple[int, int], tuple[int, int]]] = {}
     for one in placed:
@@ -106,7 +106,7 @@ def _turned_box(
     partners: Mapping[Id[Any], list[Id[Any]]],
     power: tuple[Mapping[Id[Any], int], Mapping[Id[Any], str], Mapping[Id[Any], str]],
 ) -> DrawnFunction:
-    """R7 C5: one generic box `one`, placed as `box`, drawn with each port on its partners' side."""
+    """One generic box `one`, placed as `box`, drawn with each port on its partners' side."""
     page = (box.drawing_set, box.page)
     centre = box.at.y + one.geometry.body.y + one.geometry.body.height // 2
     symbol_of = {port.symbol_port: port.port for port in one.ports}
@@ -122,7 +122,7 @@ def _turned_box(
         ranked = rank_of.get(port, 0) if side and (not v1 or port in rank_of) else None
         slot = _slot(side, g.facing.value, ranked, ends, centre)
         placed_at.append((*slot, (read_order.get(g.name, 0), i), g.name, group_of.get(g.name, 0)))
-    # V1, C22: each side's pin groups whole; inside a group the ranked pins first, then the
+    # Each side's pin groups whole; inside a group the ranked pins first, then the
     # partners' x order; ports with no partner keep theirs
     ordered = sorted(placed_at, key=lambda p: (p[4], p[1] is None, p[1] or 0, p[2]))
     geometry = generic_box_geometry(
@@ -136,11 +136,11 @@ def _slot(
 ) -> tuple[str, float | None]:
     """One box port's side (`side`, else partners' turn, else `facing`) and key: rank, x or none."""
     if ranked is not None:
-        # C22, D5: a box's power pins keep their side, highest potential leftmost
+        # A box's power pins keep their side, highest potential leftmost
         return side or facing, -1000 + ranked
     if ends:
-        # V1 keeps an item box's pin on its side; C5 turns any other toward its partners
+        # An item box's pin keeps its side; any other turns toward its partners
         y = sum(e[1] for e in ends) / len(ends)
         return side or ("n" if y < centre else "s"), sum(e[0] for e in ends) / len(ends)
-    # C22: a port with no placed partner keeps its side (C20's supply-on-top rule)
+    # A port with no placed partner keeps its side (the supply-on-top rule)
     return side or facing, None

@@ -1,4 +1,4 @@
-"""Facts: `project`, `revision`, `rating` and `operating` (EA-COVERAGE P2)."""
+"""Facts: `project`, `revision`, `rating` and `operating`."""
 
 from typing import TYPE_CHECKING
 

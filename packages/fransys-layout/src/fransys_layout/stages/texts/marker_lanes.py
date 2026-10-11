@@ -1,4 +1,4 @@
-"""WIRE-X56: a port's lane on a page and its plain-int reach, what marker rows test against."""
+"""A port's lane on a page and its plain-int reach, what marker rows test against."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -37,7 +37,7 @@ class Lane:
 
 
 def lanes_of(here: Sequence[PlacedFunction], model_port: Mapping[Any, Any]) -> tuple[Lane, ...]:
-    """WIRE-X56: the lane of every N or S port of the page, from the port outward (S20 8b)."""
+    """The lane of every N or S port of the page, from the port outward."""
     bodies = [
         (one.function, translate(one.geometry.body, dx=one.at.x, dy=one.at.y)) for one in here
     ]
@@ -76,6 +76,6 @@ def meets_lane(box: Box, lane: Reach) -> bool:
 
 
 def on_lane(box: Box, lane: Reach, *, clear: bool) -> bool:
-    """WIRE-X56: `box` on the lane: covering it closed, or within one grid of it when `clear`."""
+    """`box` on the lane: covering it closed, or within one grid of it when `clear`."""
     near = (box.x - WIRING_GRID * clear, box.x + box.width + WIRING_GRID * clear)
     return meets(near, (lane[0], lane[0]), closed=not clear) and meets_lane(box, lane)

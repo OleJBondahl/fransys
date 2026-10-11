@@ -21,7 +21,7 @@ def _taken_texts(model: Model, siblings: list[Item], reserved: frozenset[str]) -
         text for item in siblings if (text := own_designation_or_none(model, item)) is not None
     } | reserved
     if siblings and not designating_ancestors(model, siblings[0].id):
-        taken |= instance_tags_in(model, siblings[0].unit)  # UT3: one count with the instances
+        taken |= instance_tags_in(model, siblings[0].unit)  # One count with the instances
     return taken
 
 

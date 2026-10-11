@@ -41,8 +41,8 @@ def default_sheet_format() -> SheetFormat:
     `sheet_format` is drawn on it (design/layout-namespace.md), so the layout engine and an output
     module that draws the page frame read the same numbers and no pass has to write an authored
     kind. Its id is fixed and is never put into a model. The content box sits at (5, 5), not
-    (10, 10): the owner's second appearance pass (spec page-frame R11.1, decision
-    model-0051) halves the margin to 5 mm on every side, cutting in half the R10 default
+    (10, 10): the owner's second appearance pass (decision
+    model-0051) halves the margin to 5 mm on every side, cutting in half the default margin
     without narrowing the title-block band, which stays 20 mm between the bottom of the
     content box (`5 + 267 = 272`) and the frame's bottom edge (`297 - 5 = 292`).
     A page kind's sheet is `sheet_for` (layout/tables.py).
@@ -94,7 +94,7 @@ class Profile:
     marker_padding: int = 2
     route_turn_penalty: int = 4
     route_crossing_penalty: int = 16
-    # V1, CONVENTIONS-V06: on, a box-drawn pin with no conductor and a function with none are
+    # On, a box-drawn pin with no conductor and a function with none are
     # not drawn; the lists keep every pin.
     hide_unused_pins: bool = False
     # Bands run top to bottom: supply and first terminal, protection, switching, overload

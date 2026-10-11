@@ -1,4 +1,4 @@
-"""Links: `earth`, `net`, `busbar`, `rail_bond`, `mate` and `harness` through the engine (EA7)."""
+"""Links: `earth`, `net`, `busbar`, `rail_bond`, `mate` and `harness` through the engine."""
 
 from typing import TYPE_CHECKING
 lazy from types import EllipsisType

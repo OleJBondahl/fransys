@@ -1,4 +1,4 @@
-"""The diagram engine's row order in each column (BD5): one pass down, one pass up, then stop.
+"""The diagram engine's row order in each column: one pass down, one pass up, then stop.
 
 Down: columns 1..last, by the mean row of neighbours in the previous column, as already reordered.
 Up: columns last-1..0, the same with neighbours in the next column only, never both sides.

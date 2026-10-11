@@ -46,7 +46,7 @@ class Grid:
     region: Box
     obstacles: tuple[Obstacle, ...]
     turn_penalty: int
-    busy: frozenset[Cell] = frozenset()  # TALL-PAGE R7: the cells the page's placed lines cover
+    busy: frozenset[Cell] = frozenset()  # The cells the page's placed lines cover
     busy_penalty: int = 0  # what each such cell costs: a line crosses, but never runs along
 
 

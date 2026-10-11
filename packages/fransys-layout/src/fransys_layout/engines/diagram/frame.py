@@ -1,4 +1,4 @@
-"""The diagram placer's frame (BD5): boxes, line ends, channels, sheets and cuts from the facts.
+"""The diagram placer's frame: boxes, line ends, channels, sheets and cuts from the facts.
 
 `build_frame` is pure and deterministic; None means the diagram cannot be placed on its sheet.
 """

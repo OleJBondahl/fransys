@@ -1,4 +1,4 @@
-"""A link marker's stub as runs, and which other functions it runs through (layout-0093 M9).
+"""A link marker's stub as runs, and which other functions it runs through (layout-0093).
 
 The one home of "a stub runs through a foreign symbol": placement refuses a place by it and the
 lint reports it. A foreign symbol is a function with no port at the marker's point; the stub
@@ -22,7 +22,7 @@ def stub_runs(marker: LinkMarker) -> tuple[Run, ...]:
     """The marker's stub as one run, port to box or `turn` to box; a box beyond a lane has two."""
     start = marker.at if marker.turn is None else marker.turn
     box = marker.box
-    if marker.turn is not None:  # M7: the branch, then the stub up to the box
+    if marker.turn is not None:  # The branch, then the stub up to the box
         end = Point(x=box.x + box.width // 2, y=start.y)
         near = Point(x=end.x, y=box.y + box.height if box.y < start.y else box.y)
         return (run_of(start, end), run_of(end, near))

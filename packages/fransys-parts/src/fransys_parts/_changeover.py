@@ -1,4 +1,4 @@
-"""The changeover lints of one `contact_co` function: its roles, links and symbol ports (CS3)."""
+"""The changeover lints of one `contact_co` function: its roles, links and symbol ports."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def _check_changeover_roles(entry: _toml.Table, path: str, line: int) -> list[Fi
 
 
 def _check_changeover_symbol_port(entry: _toml.Table, path: str, line: int) -> list[Finding]:
-    """`CHANGEOVER_SYMBOL_PORT`: a `symbol_port` on a `contact_co` port (CS3, parts-0007).
+    """`CHANGEOVER_SYMBOL_PORT`: a `symbol_port` on a `contact_co` port (parts-0007).
 
     The drawing binds a changeover by its throw roles; a `symbol_port` would be a second fact.
     """

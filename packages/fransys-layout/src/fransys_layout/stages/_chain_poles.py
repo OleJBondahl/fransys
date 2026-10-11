@@ -49,7 +49,7 @@ def build_poles(
 def _changeover_pairs(
     spec: FunctionSpec, d: DrawnFunction, through: ThroughPath
 ) -> tuple[list[tuple[int, str, str]], tuple[Handle, Handle] | None]:
-    """I4: a changeover's pole pairs (its through path, NO to COM), and its throw pair if any."""
+    """A changeover's pole pairs (its through path, NO to COM), and its throw pair if any."""
     # the NC port stays off the chain
     name_of = {dp.symbol_port: p.name for p in spec.ports for dp in d.ports if dp.port == p.port}
     if through.start not in name_of or through.end not in name_of:
@@ -109,7 +109,7 @@ def _inline_terminal_poles(
     drawn_of: Mapping[Handle, DrawnFunction],
     connections: tuple[Connection, ...],
 ) -> None:
-    """R7 B5: a one-port terminal with exactly two wires on its port is an in-line pole."""
+    """A one-port terminal with exactly two wires on its port is an in-line pole."""
     # the second wire (by conductor handle) enters it at a stand-in port, the conductor's own Id
     by_port: dict[Handle, list[Handle]] = defaultdict(list)
     for c in connections:
@@ -197,7 +197,7 @@ def _edge_mate_poles(
 def _off_stub_poles(
     state: _Poles, specs: Mapping[Handle, FunctionSpec], connections: tuple[Connection, ...]
 ) -> None:
-    """W3: a one-port pin whose conductor leaves at the edge is a pole from its port to the edge."""
+    """A one-port pin whose conductor leaves at the edge is a pole from its port to the edge."""
     # (a unit's boundary pin carrying its outside mate's off-stub)
     for c in connections:
         for end, other in ((c.a, c.b), (c.b, c.a)):

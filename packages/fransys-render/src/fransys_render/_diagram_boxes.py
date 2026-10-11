@@ -1,4 +1,4 @@
-"""The boxes and tabs of a diagram sheet (BD4, BD7): drawn from the records, texts from derive."""
+"""The boxes and tabs of a diagram sheet: drawn from the records, texts from derive."""
 
 from typing import TYPE_CHECKING, cast
 

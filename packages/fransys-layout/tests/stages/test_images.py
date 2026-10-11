@@ -19,10 +19,10 @@ from fransys_layout.stages import (
     Role,
     images,
 )
+from fransys_layout.stages._image_foot import table_x
 from fransys_layout.stages._image_stack import stack_tables
 from fransys_layout.stages.images import (
     ImageInputs,
-    _anchor_x,
     _image_marks,
     _image_width,
     _page_marker_boxes,
@@ -367,7 +367,7 @@ def test_a_contact_in_another_drawing_set_marks_the_image_cross_set() -> None:
 
 def test_the_image_starts_at_the_rightmost_bottom_port() -> None:
     """layout-0123 F1: a box's image hangs from its rightmost S port; a port on top is no anchor."""
-    # UNDO: stages/images.py:_anchor_x, `max(...)` -> the first port, `ports[0]`
+    # UNDO: stages/_image_foot.py:table_x, `max(...)` -> the first port, `ports[0]`
     one = placed(1, x=96, y=48)
     ports = (
         PortGeometry(name="a", at=Point(x=0, y=16), facing=Facing.S),
@@ -375,8 +375,8 @@ def test_the_image_starts_at_the_rightmost_bottom_port() -> None:
         PortGeometry(name="c", at=Point(x=96, y=-16), facing=Facing.N),
     )
     box = replace(one, geometry=replace(one.geometry, ports=ports))
-    assert _anchor_x(box) == 144
-    assert _anchor_x(one) == 96, "a coil's one bottom port is its anchor"
+    assert table_x(box.at, box.geometry) == 144 + WIRING_GRID // 2
+    assert table_x(one.at, one.geometry) == 96 + WIRING_GRID // 2, "a coil's one bottom port"
 
 
 # --- drawn-clear (layout-0134): a table clears only what the page draws ------------------------

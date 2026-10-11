@@ -1,4 +1,4 @@
-"""Single wires in the cable placer (HA-H1 A1): no cable box, the key text beside the line.
+"""Single wires in the cable placer: no cable box, the key text beside the line.
 
 A wire crosses between the rows as a core does, but its line runs straight through the box band
 and its text stands one pad beside the line. The harness frame also encloses the wires' columns.

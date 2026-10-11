@@ -1,7 +1,5 @@
 """Stage 9, connectivity coherence: the drawing says what the model says.
 
-Refs: foundations.md 2.4, lint.md 6.8.
-
 Separate from geometric lint on purpose: a good-looking page can be wrong. Everything is
 identified by handle and compared by position; nothing is looked up by designation, tag or label.
 """
@@ -76,7 +74,7 @@ def check_coherence(
     *,
     function_units: Mapping[Handle, Handle | None],
 ) -> tuple[Finding, ...]:
-    """Compare drawn routes and markers with the connections they claim (design/lint.md 6.8)."""
+    """Compare drawn routes and markers with the connections they claim."""
     ports = locate(connections, net_groups, layout.placed, drawn)
     if any(len(route.points) < _MIN_POINTS for route in layout.routes):
         msg = "a route has fewer than two points"
@@ -110,7 +108,7 @@ def check_coherence(
 
 
 def _by_net(net_groups: tuple[NetGroup, ...]) -> dict[Handle, NetGroup]:
-    """Each net's group: the location parts of one net (D4, S15) as one group of all their ports."""
+    """Each net's group: the location parts of one net as one group of all their ports."""
     found: dict[Handle, NetGroup] = {}
     for one in net_groups:
         known = found.get(one.net)
@@ -139,7 +137,7 @@ def _error(code: str, subjects: tuple[Handle, ...], message: str) -> Finding:
 
 
 def _lands(world: _World, port: Handle, page: Page, point: Point) -> bool:
-    """A route end is at its port, or at the other node port its end lands on (R7 B5)."""
+    """A route end is at its port, or at the other node port its end lands on."""
     return world.ports.at.get((port, page)) == point or point in world.ports.also.get(
         (port, page), frozenset()
     )
@@ -308,7 +306,7 @@ def _markers(world: _World) -> list[Finding]:
     ]
     for group in world.net_groups:
         cuts.extend(group_cuts(group, world.ports))
-    # T7.1: a cut between two units' drawing sets is cross-unit and has no markers, though a net
+    # A cut between two units' drawing sets is cross-unit and has no markers, though a net
     # group drawn in two sets shares its identity with its severed cuts (layout-0127)
     cuts = [
         cut

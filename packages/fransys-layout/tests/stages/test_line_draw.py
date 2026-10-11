@@ -191,7 +191,7 @@ _TRUNK = (Facing.S, (40, 16))
 
 
 def test_a_line_with_its_root_off_the_page_leaves_its_bar_south_by_the_middle() -> None:
-    """TALL-PAGE R1: root 3 is elsewhere; the trunk (keyed 3) runs from the bar's middle.
+    """layout-0167: root 3 is elsewhere; the trunk (keyed 3) runs from the bar's middle.
 
     UNDO: `line_pieces` ignores `trunk`, or `_branches` keeps one polyline: branch 2 has no path.
     """

@@ -1,4 +1,4 @@
-"""S4: two independent digit counts per drawing set, `#n`'s and `p<sheet>`'s, each two at least.
+"""Two independent digit counts per drawing set, `#n`'s and `p<sheet>`'s, each two at least.
 
 `#n`'s digits come from the set's reference groups, counted from `references`' own decisions by
 derive's `heads_group`; `p<sheet>`'s from its sheets. A run of several sets also sizes for the
@@ -40,7 +40,7 @@ class Grouped(Protocol):
 
 
 class Digits(NamedTuple):
-    """What one set's reference box is sized for: its digits and a place in another set (S4).
+    """What one set's reference box is sized for: its digits and a place in another set.
 
     `other_sets` is a set number's digits and `prefix` the `+<location>` labels (layout-0132).
     """
@@ -51,12 +51,12 @@ class Digits(NamedTuple):
     prefix: tuple[str, ...] = ()
 
 
-FLOOR = Digits()  # S4: `#n` and `p<sheet>` are sized for two digits at least
+FLOOR = Digits()  # `#n` and `p<sheet>` are sized for two digits at least
 
 
 @value
 class SetDigits:
-    """One drawing set's two digit counts (S4): `refs` for its `#n`, `sheets` for `p<sheet>`."""
+    """One drawing set's two digit counts: `refs` for its `#n`, `sheets` for `p<sheet>`."""
 
     drawing_set: int
     refs: int
@@ -71,12 +71,12 @@ class SetDigits:
 
 
 def _digit_widths(group_count: int, sheet_count: int) -> tuple[int, int]:
-    """S4: the digits of a set's highest `#n` and highest sheet, each two at least."""
+    """The digits of a set's highest `#n` and highest sheet, each two at least."""
     return max(FLOOR[0], len(str(group_count))), max(FLOOR[1], len(str(sheet_count)))
 
 
 def _reference_groups(markers: Iterable[Grouped]) -> Counter[int]:
-    """S4: each set's reference groups, by derive's `heads_group`; an off stub heads none (D4)."""
+    """Each set's reference groups, by derive's `heads_group`; an off stub heads none."""
     # Derive passes `named=` (a hub of branches). A stage "off" is a pure stub: branches name only
     # a "ref" end, which heads its group here whatever its text, so `named` is False for every
     # "off"; test_no_branch_names_a_pure_off_stub proves it.
@@ -84,7 +84,7 @@ def _reference_groups(markers: Iterable[Grouped]) -> Counter[int]:
 
 
 def _widest_prefix(location_paths: Mapping[int, LocationPath]) -> tuple[str, ...]:
-    """The longest `+<location>` labels a place prints (U7): a whole path, so never too narrow."""
+    """The longest `+<location>` labels a place prints: a whole path, so never too narrow."""
     paths = (tuple(label for _, label in path) for path in location_paths.values())
     return max(paths, key=lambda labels: text_width("".join(labels), height=8), default=())
 
@@ -94,7 +94,7 @@ def set_digits(
     plans: Iterable[PagePlan],
     location_paths: Mapping[int, LocationPath],
 ) -> tuple[SetDigits, ...]:
-    """S4: every drawing set's `SetDigits`, from its reference groups and its sheets, by set."""
+    """Every drawing set's `SetDigits`, from its reference groups and its sheets, by set."""
     sheets = Counter(plan.drawing_set for plan in plans)
     groups = _reference_groups(markers)
     other = len(str(max(sheets))) if len(sheets) > 1 else 0

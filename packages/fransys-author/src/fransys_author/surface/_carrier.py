@@ -1,4 +1,4 @@
-"""The one function of k poles on a carrier, else the error that names which (EA5, EA7)."""
+"""The one function of k poles on a carrier, else the error that names which."""
 
 from typing import TYPE_CHECKING
 lazy from collections.abc import Callable

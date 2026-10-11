@@ -1,4 +1,4 @@
-"""V1 (CONVENTIONS-V06): the side of each pin of an item box, by its function's rank."""
+"""The side of each pin of an item box, by its function's rank."""
 
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Set as AbstractSet
@@ -13,22 +13,22 @@ if TYPE_CHECKING:
 
 
 def side_rank(model: Model, spec: FunctionSpec) -> tuple[int, ...]:
-    """V1's side order, lowest first: power above signal, energy in above out, AC above DC."""
-    # energy in is the part's fact (`takes_energy`, model-0131); A1 puts it before AC or DC
+    """The side order, lowest first: power above signal, energy in above out, AC above DC."""
+    # energy in is the part's fact (`takes_energy`, model-0131); the rule puts it before AC or DC
     return rank_key(
         V1, Subject(model, spec.function, tuple(port.current for port in spec.ports)), FACTS
     )
 
 
 def function_groups(model: Model, group: tuple[FunctionSpec, ...]) -> dict[Id[Any], int]:
-    """V1: each function's index in the item box's side order; equal ranks share an index."""
+    """Each function's index in the item box's side order; equal ranks share an index."""
     rank = {spec.function: side_rank(model, spec) for spec in group}
     order = sorted(set(rank.values()))
     return {function: order.index(one) for function, one in rank.items()}
 
 
 def item_sides(model: Model, group: tuple[FunctionSpec, ...]) -> dict[Id[Any], str]:
-    """V1: each port of an item box N when its function ranks first, else S; `{}` on a tie."""
+    """Each port of an item box N when its function ranks first, else S; `{}` on a tie."""
     rank = {spec.function: side_rank(model, spec) for spec in group}
     if len(set(rank.values())) < 2:  # noqa: PLR2004 -- two ranks are the least a side order needs
         return {}
@@ -43,7 +43,7 @@ def item_sides(model: Model, group: tuple[FunctionSpec, ...]) -> dict[Id[Any], s
 def pin_sides(
     model: Model, specs: tuple[FunctionSpec, ...], views: AbstractSet[Id[Any]]
 ) -> tuple[tuple[Id[Any], ...], tuple[Id[Any], ...]]:
-    """V1: the ports of the item boxes `views` on top, then those below, from their `specs`."""
+    """The ports of the item boxes `views` on top, then those below, from their `specs`."""
     by_item: dict[Id[Any], list[FunctionSpec]] = {}
     for spec in specs:
         if spec.item in views:

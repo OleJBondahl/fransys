@@ -229,7 +229,7 @@ class Scope(LinkScope, SupplyScope):
         child._held = self._held
         return child
 
-    def unit(  # noqa: PLR0913 -- the release's own five fields (SC2) plus the name
+    def unit(  # noqa: PLR0913 -- the release's own five fields plus the name
         self,
         name: str,
         *,
@@ -244,12 +244,11 @@ class Scope(LinkScope, SupplyScope):
         """Write a `UnitRelease` and a `Unit` of it, and return a scope whose unit is the `Unit`.
 
         The release (`name`, `version`, `revision`, `interface`, `title`, `number`) is the product:
-        every instance of one release writes an identical record, which the draft keeps once (SC2,
-        FD4). `title` and `number` are the unit's own title and document number (UNIT-ID I1),
-        default `""`; `tag` is the instance's tag (UT1); `class_code` numbers its floating
-        instances (UT3). Every item created through the returned
-        scope, or one nested in it, gets `unit=` the new `Unit`, whose `parent` is the unit of
-        `self`, or `None`.
+        every instance of one release writes an identical record, which the draft keeps once.
+        `title` and `number` are the unit's own title and document number, default `""`;
+        `tag` is the instance's tag; `class_code` numbers its floating instances.
+        Every item created through the returned scope, or one nested in it, gets `unit=`
+        the new `Unit`, whose `parent` is the unit of `self`, or `None`.
 
         Raises:
             AuthorError: this prefix already has a unit (`s.unit()` called twice).
@@ -345,7 +344,7 @@ class Scope(LinkScope, SupplyScope):
             approved=approved,
         )
         # Not `_add`: its name-clash AuthorError words a `name=` fix; two instances of one
-        # release writing different entry text are the draft's own `MergeConflict` (SC2).
+        # release writing different entry text are the draft's own `MergeConflict`.
         self._design._draft.add(record, origin=caller_origin())
 
     @property

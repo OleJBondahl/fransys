@@ -54,7 +54,7 @@ def _end(
 def _cables(
     model: Model, subject: Id[Any], unit: Id[Any] | None, height: int, keys: Iterator[int]
 ) -> tuple[CableFacts, ...]:
-    """The block's cables in print order; core keys run on over the whole block (CD5)."""
+    """The block's cables in print order; core keys run on over the whole block."""
     links = set(row_links(model, subject, unit))
     return tuple(
         CableFacts(

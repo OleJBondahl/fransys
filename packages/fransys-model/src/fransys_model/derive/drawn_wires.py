@@ -1,4 +1,4 @@
-"""A harness block's single wires as drawn cores (HA-H1 A1): the facts `cable_drawing` counts.
+"""A harness block's single wires as drawn cores: the facts `cable_drawing` counts.
 
 Private to `cable_drawing`, which re-exports the three public names (model-0159). A wire is a
 core of the block, with no cable box: it lands on the same pin cells and end boxes as a cable core.

@@ -48,7 +48,7 @@ class Wiring:
         gauge: str | Decimal | None = None,
         label: str | None = None,
     ) -> None:
-        """One wire between `a` and `b`, keyed by its ports; a parallel one needs `n=2` (A6)."""
+        """One wire between `a` and `b`, keyed by its ports; a parallel one needs `n=2`."""
         a, b = as_port(a), as_port(b)
         ends = sorted_pair(a.key, b.key)
         key = scoped(self._prefix, "wire", spliced(ends[0]), spliced(ends[1]))
@@ -155,7 +155,7 @@ class LinkScope:
         *,
         external: bool,
     ) -> Item:
-        """The part-less item of `Scope.harness`, with its `facet.harness` mark (HA1)."""
+        """The part-less item of `Scope.harness`, with its `facet.harness` mark."""
         item = self.item(None, name=name, tag=tag, at=at, group=group, external=external)
         key = scoped(item.key, "harness_facet")
         facet = HarnessFacet(id=make_id(HarnessFacet, key), key=key, subject=item.id)

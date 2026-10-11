@@ -1,7 +1,7 @@
 """Model records to stage values, one kind of stage input per function.
 
 Kept separate so `read/__init__.py` stays a short orchestration of one call per `StageInputs`
-field (docs/design/stages.md 6, "Modules stay small and single-purpose"). `functions.py` builds one
+field. `functions.py` builds one
 `FunctionSpec`; `roles.py` holds the physical-net and `Role` machinery both this module and
 `functions.py` need.
 """
@@ -86,12 +86,12 @@ def drawn_functions(model: Model, indexes: Indexes) -> tuple[FunctionSpec, ...]:
 
 
 def terminal_sort_keys(model: Model, specs: tuple[FunctionSpec, ...]) -> dict[Id[Any], Any]:
-    """Each function's item's terminal-list sort key (`bom_sort_key`, strip-qualified, D1)."""
+    """Each function's item's terminal-list sort key (`bom_sort_key`, strip-qualified)."""
     return {spec.function: _sort_key(model, spec) for spec in specs}
 
 
 def _sort_key(model: Model, spec: FunctionSpec) -> tuple[int, Any, str, int]:
-    """`bom_sort_key` of the spec's item; before numbering an empty designation's key (R5)."""
+    """`bom_sort_key` of the spec's item; before numbering an empty designation's key."""
     try:
         return bom_sort_key(model, spec.item)
     except SchemaError:
@@ -142,7 +142,7 @@ def net_groups(model: Model) -> tuple[NetGroup, ...]:
 
 
 def rails(model: Model) -> tuple[Rail, ...]:
-    """Every declared `Net` with a potential, sorted by net (WP16, layout-0034 Finding 1)."""
+    """Every declared `Net` with a potential, sorted by net (layout-0034 Finding 1)."""
     return tuple(
         sorted(
             (
@@ -212,12 +212,12 @@ def symbol_choices(model: Model) -> tuple[SymbolChoice, ...]:
 
 
 def _places(keys: Iterable[Any]) -> dict[Any, int]:
-    """O4: each distinct natural key's place in order, a value the stages sort by."""
+    """Each distinct natural key's place in order, a value the stages sort by."""
     return {key: place for place, key in enumerate(sorted(set(keys)))}
 
 
 def _key_text(key: tuple[Any, ...]) -> tuple[Any, ...]:
-    """An authoring key's parts in natural order, part by part (G1: `F2` before `F10`)."""
+    """An authoring key's parts in natural order, part by part (`F2` before `F10`)."""
     return tuple(natural_key(str(part)) for part in key)
 
 

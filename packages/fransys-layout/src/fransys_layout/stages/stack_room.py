@@ -1,8 +1,8 @@
-"""S20 M9 (the owner's "C2"): room for a vertical box between two ports stacked along a stub.
+"""Room for a vertical box between two ports stacked along a stub.
 
 Where the next symbol's port stands straight out along an N or S port's direction and one of
 the two carries a reference or stub text, place spaces the two cells as far apart as the texts
-at them reach out (`stand.reach_at`): for a reference the band's length (M4: a box's length and
+at them reach out (`stand.reach_at`): for a reference the band's length (a box's length and
 one grid, `place._reference_band`), so the box stands between them; a text at each of the two
 takes its own reach, as both boxes stand between them. Room's one primitive does it
 (`grow_keepout`): the upper cell's keep-out grows downward until the two ports are that far
@@ -50,7 +50,7 @@ def make_room(
     gaps_of: Callable[[list[list[Any]]], list[int]],
     profile: Profile,
 ) -> None:
-    """Grow each upper keep-out so two stacked ports leave room for their texts (M9, M11)."""
+    """Grow each upper keep-out so two stacked ports leave room for their texts."""
     if texts is None:
         return
     for rows in page:

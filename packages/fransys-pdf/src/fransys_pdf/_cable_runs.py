@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from fransys_model.layout import SheetFormat
 
 NO_PART = "No part number"
-_PADDING_MM = 5  # `_frame`'s R4 padding on each side of the content box
+_PADDING_MM = 5  # `_frame`'s padding on each side of the content box
 _HEADER_MM = 11  # extra top margin: the part line and a 4 mm gap below it (pdf-0021)
 
 

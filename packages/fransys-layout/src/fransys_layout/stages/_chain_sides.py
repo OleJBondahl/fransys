@@ -1,4 +1,4 @@
-"""Chain discovery, nets phase: the nets over the ports, and the side elements on them (D1)."""
+"""Chain discovery, nets phase: the nets over the ports, and the side elements on them."""
 
 from collections import Counter, defaultdict
 from typing import TYPE_CHECKING
@@ -24,7 +24,7 @@ def _joins(
     """The port pairs the conductors and the declared nets join."""
     joins: list[tuple[Handle, Handle]] = []
     for c in connections:
-        if c.handle in state.split:  # R7 B5: the split terminal's second wire ends at its stand-in
+        if c.handle in state.split:  # The split terminal's second wire ends at its stand-in
             end = c.b.port if c.a.port == state.split[c.handle] else c.a.port
             joins.append((end, c.handle))
             continue
@@ -56,7 +56,7 @@ def _wired(
     net_of: Mapping[Handle, Handle],
     net_size: Mapping[Handle, int],
 ) -> bool:
-    """D1: a pole on `ports` is wired when a port outside `group` shares the nets of its ports."""
+    """A pole on `ports` is wired when a port outside `group` shares the nets of its ports."""
     # `group` is the pole's two ports and the ports of its side poles (the ports they hid).
     return any(
         net_size[net_of[port]] - sum(1 for q in group if net_of[q] == net_of[port]) > 0
@@ -84,7 +84,7 @@ def _side_nowhere(
     net_of: Mapping[Handle, Handle],
     net_size: Mapping[Handle, int],
 ) -> set[Handle]:
-    """D1: the functions that are a side element nowhere, read from every pick at once."""
+    """The functions that are a side element nowhere, read from every pick at once."""
     # `picks` is each group's `(carrier pole, side poles)`. A function that carries another
     # function's pole, or that is a side element of more than one carrier function, or that has a
     # wired pole (`_wired`) that is no side pole, is one; a side pole of the carrier's own function
@@ -111,7 +111,7 @@ def _pole_rank(
     specs: Mapping[Handle, FunctionSpec],
     tie_key: Mapping[Handle, tuple[str, ...]],
 ) -> tuple[bool, bool, str, tuple[str, ...], AuthoringKey, str]:
-    """Carrier order of one group (lowest carries); D9: a coil before an element across it."""
+    """Carrier order of one group (lowest carries); a coil before an element across it."""
     function = poles[pid].function
     child = any(
         specs[function].item_parent == specs[poles[o].function].item for o in group if o != pid
@@ -215,7 +215,7 @@ def _terminal_sides(
     for spec in sorted(specs.values(), key=lambda s: s.key):
         if not spec.roles.terminal or len(spec.ports) != 1 or spec.function not in drawn_of:
             continue
-        if (spec.function, 0) in state.poles:  # R7 B5: an in-line pole, not a side element
+        if (spec.function, 0) in state.poles:  # An in-line pole, not a side element
             continue
         port = spec.ports[0].port
         sides.hidden.add(port)
@@ -236,7 +236,7 @@ def find_sides(
     drawn_of: Mapping[Handle, DrawnFunction],
 ) -> _Sides:
     """The side elements, hidden ports and carriers; `nets.members` loses the hidden ports."""
-    # D1 (layout-0060): any two non-terminal poles on the same two nets, of one function or of
+    # Per layout-0060, any two non-terminal poles on the same two nets, of one function or of
     # two, are one pole and its side elements. The carrier is the child-item rule's pick (a
     # suppressor's item is a child of its coil's), else the lower item designation (the
     # terminal list's key breaks a tie), then the function key and the pole index. A side pole

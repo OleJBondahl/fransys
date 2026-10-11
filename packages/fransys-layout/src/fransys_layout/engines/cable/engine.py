@@ -1,4 +1,4 @@
-"""The cable engine: one pass from a model to its cable drawing blocks (CT5 CD2)."""
+"""The cable engine: one pass from a model to its cable drawing blocks."""
 
 from typing import TYPE_CHECKING
 

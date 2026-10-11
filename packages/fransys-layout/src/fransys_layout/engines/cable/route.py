@@ -1,4 +1,4 @@
-"""Cable engine, routing: the lower band's cores through the shared grid search (CT5-3, CD8).
+"""Cable engine, routing: the lower band's cores through the shared grid search.
 
 Geometry only. A core is two runs and the cable box is closed, so the upper run is a straight
 drop and every bend falls in the lower band. `channel` assigns each bending core, or each half
@@ -25,7 +25,7 @@ class Band:
     obstacles: tuple[Obstacle, ...]
     turn_penalty: int
     crossing_penalty: int
-    head: int = 0  # the room a link track has above it for its text (CD8 at L1)
+    head: int = 0  # the room a link track has above it for its text
 
 
 type Pair = tuple[Point, Point]
@@ -88,7 +88,7 @@ def route_lower(
 ) -> tuple[tuple[Point, ...], ...] | None:
     """The lower run of each core (`keys` one per pair), or None if one is stuck.
 
-    Straight cores drop; the others follow `plan`, each track piece drawn by `grid_path` (C22).
+    Straight cores drop; the others follow `plan`, each track piece drawn by `grid_path`.
     """
     planned = [
         _planned(pair, _nets_of(plan, key), band, plan)

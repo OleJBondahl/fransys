@@ -5,7 +5,7 @@ from fransys_author.errors import AuthorError
 from fransys_model.kernel import AuthoringKey, Id, Record, make_id
 from fransys_model.vocab import Function, FunctionKind, Item, Port, PortRole
 
-# The port name of the demo terminal part; layout's T2.21 port map holds the name too.
+# The port name of the demo terminal part; layout's terminal port map holds the name too.
 TERMINAL_OUTER = "external"
 NEEDS_TAG = "an item with no part needs a tag: no part file gives its letter"
 

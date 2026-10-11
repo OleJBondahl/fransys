@@ -16,6 +16,7 @@ from .harness import (
     cable_title,
     contents_rows,
     harness_cables,
+    reading_cables,
     top_level_cables,
     unit_cables,
 )
@@ -100,6 +101,7 @@ __all__ = [
     "overview_graph",
     "plc_channel_rows",
     "plc_rack_modules",
+    "reading_cables",
     "release_order",
     "revision_history",
     "revision_text",

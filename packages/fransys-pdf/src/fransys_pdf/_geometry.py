@@ -40,7 +40,7 @@ _PRESET_WORDS: dict[DocumentPreset, str] = {
 
 
 def _matched_drawing_sets(model: Model, record: Document) -> tuple[DrawingSet, ...]:
-    """`record`'s drawing sets by `number`: a location's top-level set, a unit's sets (U1, U3)."""
+    """`record`'s drawing sets by `number`: a location's top-level set, a unit's sets."""
     all_sets = layout_of(model, DrawingSet).values()
     if record.location is not None:
         matching = [
@@ -87,7 +87,7 @@ def _is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
 def _drawing_set_pages(
     model: Model, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[Page, ...]:
-    """The subject's drawing-set pages in `number` order, replica-only sets skipped (P4, P7)."""
+    """The subject's drawing-set pages in `number` order, replica-only sets skipped."""
     if PageKind.SCHEMATIC not in pages:
         return ()
     matched = _matched_drawing_sets(model, record)
@@ -120,7 +120,7 @@ def undrawn_replica_only_sets(
 def resolve_sheet_format(
     model: Model, record: Document, pages: tuple[PageKind, ...]
 ) -> SheetFormat:
-    """The paper of every page: the first drawing-set page's format, else the house sheet (P4)."""
+    """The paper of every page: the first drawing-set page's format, else the house sheet."""
     set_pages = _drawing_set_pages(model, record, pages)
     return sheet_format_of(model, set_pages[0].sheet_format if set_pages else None)
 
@@ -128,7 +128,7 @@ def resolve_sheet_format(
 def mixed_sheet_formats(
     model: Model, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[tuple[SheetFormat, tuple[Page, ...]], ...]:
-    """Each sheet format the pages name, with its pages; empty unless more than one (P4)."""
+    """Each sheet format the pages name, with its pages; empty unless more than one."""
     set_pages = _drawing_set_pages(model, record, pages)
     grouped: dict[Id[SheetFormat] | None, list[Page]] = {}
     for page in set_pages:
@@ -139,7 +139,7 @@ def mixed_sheet_formats(
 
 
 def document_metadata(model: Model, record: Document) -> str:
-    """`#set document(...)` from `document_facts`; the date is never `auto` (P3, UNIT-ID I2)."""
+    """`#set document(...)` from `document_facts`; the date is never `auto`."""
     title, _number, _customer, _revision, revision_date, author = document_facts(model, record)
     if not revision_date:
         date = "none"
@@ -167,7 +167,7 @@ def project_facts(model: Model) -> tuple[str, str, str, str, str, str]:
 
 
 def project_notice(model: Model) -> str:
-    """The project-wide IP-notice text (spec page-frame R11.4), `""` with no `Project`."""
+    """The project-wide IP-notice text (pdf-0010), `""` with no `Project`."""
     table = projects(model)
     if not table:
         return ""
@@ -183,7 +183,7 @@ def document_release(model: Model, record: Document) -> Id[UnitRelease] | None:
 
 
 def document_facts(model: Model, record: Document) -> tuple[str, str, str, str, str, str]:
-    """`project_facts`, or for a unit document the unit release's own, customer empty (U3, I2)."""
+    """`project_facts`, or for a unit document the unit release's own, customer empty."""
     unit = document_unit(model, record)
     if unit is None:
         return project_facts(model)
@@ -202,7 +202,7 @@ def document_facts(model: Model, record: Document) -> tuple[str, str, str, str, 
 
 
 def subject_label(model: Model, record: Document) -> str:
-    """The heading's subject: location, unit or item label (P5, U3, model-0066); "" for SYSTEM."""
+    """The heading's subject: location, unit or item label (model-0066); "" for SYSTEM."""
     if record.location is not None:
         node = aspect_nodes(model)[record.location]
         return f"{node.label} {node.description}"
@@ -222,7 +222,7 @@ def location_label(model: Model, location: Id[AspectNode]) -> str:
 
 
 def document_heading(model: Model, record: Document) -> str:
-    """`<preset words> — <subject label>`, the words alone when the label is empty (P5, U3)."""
+    """`<preset words> — <subject label>`, the words alone when the label is empty."""
     words = _PRESET_WORDS[record.preset]
     subject = subject_label(model, record)
     if not subject:
@@ -231,7 +231,7 @@ def document_heading(model: Model, record: Document) -> str:
 
 
 def preamble(sheet: SheetFormat) -> str:
-    """Text, page size and type sizes, once; margin and background are per page kind (P4, R4)."""
+    """Text, page size and type sizes, once; margin and background are per page kind."""
     return "\n".join(
         [
             '#set text(font: "Liberation Serif", size: 10pt)',

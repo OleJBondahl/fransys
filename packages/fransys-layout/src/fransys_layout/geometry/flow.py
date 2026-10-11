@@ -1,4 +1,4 @@
-"""Items laid one after another along an axis (cleanup step 2, F4)."""
+"""Items laid one after another along an axis."""
 
 from typing import TYPE_CHECKING
 

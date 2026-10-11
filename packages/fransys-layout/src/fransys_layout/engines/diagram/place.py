@@ -1,4 +1,4 @@
-"""The diagram placer (BD5): a reading's facts to its placed sheets, boxes, tabs, lines, markers."""
+"""The diagram placer: a reading's facts to its placed sheets, boxes, tabs, lines, markers."""
 
 lazy from collections.abc import Sequence
 

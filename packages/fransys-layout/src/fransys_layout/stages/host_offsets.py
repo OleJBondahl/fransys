@@ -1,4 +1,4 @@
-"""R7.1 attachment x: an attachment sits at its host port's x (layout-0122: a host first)."""
+"""Attachment x: an attachment sits at its host port's x (layout-0122: a host first)."""
 
 from typing import TYPE_CHECKING
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def attachment_offsets(rows: Sequence[list[_Cell]]) -> None:
-    """R7.1: an attachment sits at its host port's x, after its host's own attachment."""
+    """An attachment sits at its host port's x, after its host's own attachment."""
     by_function = {cell.function: cell for row in rows for cell in row}
     for row in rows:
         previous = None

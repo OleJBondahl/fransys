@@ -1,4 +1,4 @@
-"""The cause of a stale container (WORKFLOW-BLOCKS W8): which direct children moved release.
+"""The cause of a stale container: which direct children moved release.
 
 Read off the `units` rows of the change list `derive.baseline.diff` already gives; no second walk.
 """

@@ -1,7 +1,5 @@
 """The model's house sheet and profile as stage values.
 
-Refs: foundations.md 2.9, stages.md 6.1, engine.md 7.
-
 Used when a model authors no `layout.profile` or `layout.sheet_format`. It reads the model's
 layout defaults, so it lives in `read/`, the one place that may import `fransys_model.layout`.
 """

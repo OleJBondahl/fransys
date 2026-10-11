@@ -1,4 +1,4 @@
-"""Reads of the model's texts for the unit outlines (D6): a unit's title."""
+"""Reads of the model's texts for the unit outlines: a unit's title."""
 
 from functools import partial
 from typing import TYPE_CHECKING, Any

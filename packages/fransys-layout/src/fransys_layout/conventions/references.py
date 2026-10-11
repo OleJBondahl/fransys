@@ -1,4 +1,4 @@
-"""The tables of the reference markers: the link case (T7) and the marker ends (T6).
+"""The tables of the reference markers: the link case and the marker ends.
 
 Both are first-match tables. `LINK_CASE` names the case of a cut; its last row always holds, so a
 cut that no earlier row takes is severed. `MARKER_ENDS` gives, per decision site, which end of a

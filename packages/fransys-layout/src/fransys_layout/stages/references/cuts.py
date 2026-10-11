@@ -1,7 +1,7 @@
-"""Links: connections cut by a page boundary (docs/design/links.md 6.6).
+"""Links: connections cut by a page boundary.
 
 The four cases are decided from the pages each function is seated on and what the engine read
-from the model, never from geometry: a decision holds no coordinate (S9).
+from the model, never from geometry: a decision holds no coordinate.
 """
 
 from collections import defaultdict
@@ -61,7 +61,7 @@ def links(
     tuple[Cut, ...],
     tuple[Finding, ...],
 ]:
-    """Decide every cut: decisions, marker decisions, tag-echo cuts, findings (links.md 6.6)."""
+    """Decide every cut: decisions, marker decisions, tag-echo cuts, findings."""
     units = locations.units
     world = link_world(scene)
     terminals = _terminals(connections, net_groups, world)
@@ -196,7 +196,7 @@ def _cuts(
 def _markers(
     cut: Cut, sheet: SheetFormat, profile: Profile, digits: Mapping[int, Digits]
 ) -> list[MarkerDecision]:
-    """The owner marker at the end on the earlier page and the user marker at the other (D4)."""
+    """The owner marker at the end on the earlier page and the user marker at the other."""
     owner, user = sorted(cut.ends, key=lambda end: end.page)
     ends = ((owner, user, EndRead("cut", earlier=True)), (user, owner, EndRead("cut")))
     return [

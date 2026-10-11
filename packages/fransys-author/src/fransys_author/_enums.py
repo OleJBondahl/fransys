@@ -1,4 +1,4 @@
-"""Enum-valued arguments (`cls=`, `FunctionKind`, `SignalType`): an unknown one errors (Q5)."""
+"""Enum-valued arguments (`cls=`, `FunctionKind`, `SignalType`): an unknown one errors."""
 
 from enum import Enum
 

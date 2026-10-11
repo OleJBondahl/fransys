@@ -1,8 +1,8 @@
-"""links.md 6.6, S9: a tag echo's `CROSS_REFERENCE` label requests, one per function of the item.
+"""A tag echo's `CROSS_REFERENCE` label requests, one per function of the item.
 
 `references` decides which cuts are tag echoes (`References.echoes`); each request's text names
 its partners' placed frame cells, so `texts` writes it once every page is placed. A naming
-collision only with LD3's reference marker (D4): this is the tag echo's own label, still built
+collision only with the reference marker: this is the tag echo's own label, still built
 and measured here because `labels.py` sizes that label's box from real text, unlike a
 reference's fixed box (`references.marker_boxes.reference_box_width`).
 """
@@ -41,7 +41,7 @@ def echo_requests(
     sheet: SheetFormat,
     location_paths: Mapping[int, LocationPath],
 ) -> tuple[LabelRequest, ...]:
-    """One `CROSS_REFERENCE` request per function of a tag echo, naming its partners (U7)."""
+    """One `CROSS_REFERENCE` request per function of a tag echo, naming its partners ."""
     world = placed_world(placed, drawn)
     texts: dict[Handle, set[tuple[int, int, int, str]]] = defaultdict(set)
     partners: dict[Handle, set[tuple[int, int, int, Handle, int]]] = defaultdict(set)
@@ -82,7 +82,7 @@ def _tag_echo_text(
     location_paths: Mapping[int, LocationPath],
     world: PlacedWorld,
 ) -> str:
-    """What `end`'s tag-echo `CROSS_REFERENCE` says about `partner` (links.md 6.6, layout-0089)."""
+    """What `end`'s tag-echo `CROSS_REFERENCE` says about `partner` (layout-0089)."""
     column = frame_column(sheet.content_width, sheet.frame_columns, partner.at.x)
     placement_y = world.where[partner.ref.function][partner.page].at.y
     row = frame_row(sheet.content_height, sheet.frame_rows, placement_y)
@@ -90,4 +90,4 @@ def _tag_echo_text(
         (end.page[0], end.page[1], location_paths.get(end.page[0], ())),
         (partner.page[0], partner.page[1], location_paths.get(partner.page[0], ())),
     )
-    return partner_position_text(*seats, column, row)  # RW9: the text render prints
+    return partner_position_text(*seats, column, row)  # The text render prints

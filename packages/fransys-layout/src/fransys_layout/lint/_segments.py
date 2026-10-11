@@ -1,4 +1,4 @@
-"""Runs of a route and the port ends they leave along, private to the geometric lint (lint.md 6.8).
+"""Runs of a route and the port ends they leave along, private to the geometric lint.
 
 The closed test the router uses (6.5), which `REDUNDANT_JOG` asks, is `stages.space.run_admitted`,
 given the chain's own ends as `own_ends_at` finds them. The interior test `WIRE_THROUGH_SYMBOL`

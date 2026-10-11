@@ -1,4 +1,4 @@
-"""`TEXT_CROSSED_BY_ROUTE` and `TEXT_OVERLAP`, private to the geometric lint (F7, layout-0047).
+"""`TEXT_CROSSED_BY_ROUTE` and `TEXT_OVERLAP`, private to the geometric lint (layout-0047).
 
 The review metric `text_crossed_by_route` is the union of two codes, one defect
 each, never both:

@@ -1,4 +1,4 @@
-"""The diagram frame's channels (BD5): the room between two adjacent columns, tracks and cuts.
+"""The diagram frame's channels: the room between two adjacent columns, tracks and cuts.
 
 A pair is column `c` and `c + 1` (None after the last). Its channel is drawn when both share a
 sheet; when a sheet ends between them it is a cut, and the pair's `trail` and `lead` zones apply.

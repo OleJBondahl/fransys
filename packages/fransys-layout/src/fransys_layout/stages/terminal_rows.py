@@ -1,4 +1,4 @@
-"""S20 M12 (ADDENDUM 19 fix 3): the terminals of one strip wired to each other stand in one row.
+"""The terminals of one strip wired to each other stand in one row.
 
 A chain is the terminals of one strip (one group) whose ports on one side are wired to each
 other, connected through those conductors: a run of jumpered terminals. It stands in one row of
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @value
 class TerminalChains:
-    """The chains of one run, derived once before the columns are joined (ADDENDUM 20 Q3)."""
+    """The chains of one run, derived once before the columns are joined."""
 
     sets: tuple[tuple[Id[Any], ...], ...] = ()
     links: tuple[Id[Any], ...] = ()

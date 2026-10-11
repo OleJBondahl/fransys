@@ -1,4 +1,4 @@
-"""T6: which end of a signal a reference text stands at and where it leaves, by `MARKER_ENDS`."""
+"""Which end of a signal a reference text stands at and where it leaves, by `MARKER_ENDS`."""
 
 from functools import cache
 from typing import NamedTuple, cast

@@ -1,4 +1,4 @@
-"""Terminal strips: `d.terminal_strip("X1", part)` and `X1[3]`, terminal 3 by number (EA9)."""
+"""Terminal strips: `d.terminal_strip("X1", part)` and `X1[3]`, terminal 3 by number."""
 
 from typing import TYPE_CHECKING, override
 lazy from collections.abc import Callable

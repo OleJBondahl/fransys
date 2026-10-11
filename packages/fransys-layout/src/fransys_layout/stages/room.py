@@ -1,6 +1,6 @@
-"""Room (S11, layout-0090): the one primitive every keep-out reservation grows through.
+"""Room (layout-0090): the one primitive every keep-out reservation grows through.
 
-`grow_keepout` is D13's, D7's and place's shared mechanism: it grows a cell's keep-out by
+`grow_keepout` is the shared mechanism of place and the other growers: it grows a cell's keep-out by
 candidate boxes. `room_offset` reads the same growth as a margin instead of a grown geometry,
 for a caller that needs how far a box would push an edge, not the box itself.
 """
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def grow_keepout(geometry: SymbolGeometry, boxes: Sequence[Box]) -> SymbolGeometry:
-    """C8(b): the geometry with its keep-out the hull of itself and `boxes`."""
+    """The geometry with its keep-out the hull of itself and `boxes`."""
     if not boxes:
         return geometry
     return dataclasses.replace(geometry, keepout=hull([geometry.keepout, *boxes]))

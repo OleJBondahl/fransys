@@ -1,4 +1,4 @@
-"""A polyline as straight legs: repeats dropped, collinear legs joined (step 2, F2)."""
+"""A polyline as straight legs: repeats dropped, collinear legs joined."""
 
 from itertools import pairwise
 from typing import TYPE_CHECKING, Literal

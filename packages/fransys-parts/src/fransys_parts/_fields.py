@@ -84,12 +84,12 @@ PORT_FIELDS = {
     "name": _Field(str),
     "role": _Field(str, enum=PortRole),
     "symbol_port": _Field(str, required=False),
-    # I4 R1 (deep dive): the pin marking printed on the part; "" when it has none
+    # The pin marking printed on the part; "" when it has none
     "marking": _Field(str, required=False),
-    # parts-0010 (F9): stated pole side and IEC 60445 conductor; PE is a role, so "PE" is refused
+    # parts-0010: stated pole side and IEC 60445 conductor; PE is a role, so "PE" is refused
     "side": _Field(str, required=False, enum=PoleSide),
     "conductor": _Field(str, required=False, enum=ConductorMark),
-    # parts-0017 (HA4): a header pin's function port, "<function>.<port>" of the same part
+    # parts-0017: a header pin's function port, "<function>.<port>" of the same part
     "joins": _Field(str, required=False),
 }
 LINK_FIELDS = {

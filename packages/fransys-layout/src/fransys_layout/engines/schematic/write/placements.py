@@ -1,4 +1,4 @@
-"""Private to `write/`: the `SymbolPlacement` builder (engine.md 7, model layout-namespace.md)."""
+"""Private to `write/`: the `SymbolPlacement` builder."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -76,7 +76,7 @@ def placements(
                 symbol=placed.geometry.key,
                 library_version=symbol_library_version(),
                 produced_by=stamp,
-                # R7 B2: an item view: render draws the box with all the item's ports
+                # An item view: render draws the box with all the item's ports
                 view=view,
                 ports=port_names,
                 sides=port_sides,
@@ -90,11 +90,11 @@ def _placement_fields(
     placed: PlacedFunction,
     view: PlacementView,
 ) -> tuple[tuple[str, ...], tuple[Side, ...], tuple[int, ...]]:
-    """R7 C5 a generic box's names and sides, model-0129 its pin x when wide."""
+    """A generic box's names and sides, model-0129 its pin x when wide."""
     geometry = placed.geometry
     if not geometry.generic_box:
         return (), (), ()
-    # C2/C5: the box's own port list, in drawing order (left to right, N before S at one
+    # The box's own port list, in drawing order (left to right, N before S at one
     # x), and each port's side: render rebuilds exactly this box
     drawn = sorted(geometry.ports, key=lambda port: draw_order(port.at.x, port.facing.value))
     names: list[str] = [port.name for port in drawn]

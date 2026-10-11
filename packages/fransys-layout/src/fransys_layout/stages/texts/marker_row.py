@@ -1,28 +1,28 @@
-"""S20 (layout-0090): each page's link markers placed by D3's placer, the page's first texts.
+"""layout-0090: each page's link markers placed by the placer, the page's first texts.
 
-settle's four marker moves are the row's places and the placer's rules (S20, ruled after Part
+settle's four marker moves are the row's places and the placer's rules (ruled after Part
 4b's stop):
 
-- `further` (I4 Q1): a star marker at a port a side element joins starts one tier out, one box
-  height (S14's n-th-out candidate).
+- `further`: a star marker at a port a side element joins starts one tier out, one box
+  height.
 - `turned` (layout-0053): a star reference where a wire ends on its point has one place, the
   turned box (`tidy.turned`): every place over the wired point is not free.
-- the stagger (R7 B4): the greedy walk to the next free place, tier by tier.
-- WIRE-X56: no place covers a port's lane (`_lanes`): a sibling's that runs the box's way, or
+- the stagger: the greedy walk to the next free place, tier by tier.
+- Lane rule: no place covers a port's lane (`_lanes`): a sibling's that runs the box's way, or
   any port's that faces the box from beyond it, the marker's own port exempt, not its
   function's other ports; a moved place stays one grid clear of it.
 
 A row, tier by tier (every place of tier n before tier n+1), a tier one box height out: the home
 over the stub, then sideways steps with the stub still over the box (half a grid of margin,
-layout-0054), among them the box against a content edge, growing away from it (D14 M2,
-layout-0068). A place beyond a lane with a lead (layout-0054) comes after the last tier. A row
+layout-0054), among them the box against a content edge, growing away from it
+(layout-0068). A place beyond a lane with a lead (layout-0054) comes after the last tier. A row
 holds only places a record can draw: a moved box is `shared_box` and `lead` (a plain rectangle
-where it stands), an arrow box is centred on its port, and a turned marker, a C21 run's box and
+where it stands), an arrow box is centred on its port, and a turned marker, a run's box and
 a box beside an E or W port have one place each.
 
-The call is bounded by the unshifted content box along x, as settle's clamp was (C22b's shift
-never measures a marker, D14 M2). The tiers end where the box leaves the content box or meets
-another function's body: the room (S14, S16), not a constant.
+The call is bounded by the unshifted content box along x, as settle's clamp was (a shift
+never measures a marker. The tiers end where the box leaves the content box or meets
+another function's body: the room, not a constant.
 """
 
 from collections import defaultdict
@@ -72,7 +72,7 @@ def place_markers(
     drawn: tuple[DrawnFunction, ...],
     around: MarkerRoom,
 ) -> tuple[tuple[LinkMarker, ...], tuple[Finding, ...]]:
-    """S20: every marker of `markers` at the first free place of its row, page by page (M3)."""
+    """Every marker of `markers` at the first free place of its row, page by page."""
     model_port = {(one.function, p.symbol_port): p.port for one in drawn for p in one.ports}
     base = _Page(
         lanes=(),
@@ -113,7 +113,7 @@ def _place_page(
 ) -> tuple[dict[int, LinkMarker], tuple[Finding, ...]]:
     """One page's markers placed by the placer: the records that moved and the findings."""
     runs = _runs(markers, indices)
-    # C21: a run's first member stands for all of them; M3: markers at one pin are one text
+    # A run's first member stands for all of them; markers at one pin are one text
     standing = [i for i in indices if not markers[i].shared_box or runs[markers[i].box][0] == i]
     mates = _pin_mates(markers, standing, room)
     stand = _stand(markers, mates, room.profile)
@@ -131,13 +131,13 @@ def _decided(
     around: MarkerRoom,
     page: tuple[int, int],
 ) -> tuple[Box, ...]:
-    """S20: the decided runs no text stands on (a C23 corridor, a joined run's wire)."""
+    """The decided runs no text stands on (a corridor, a joined run's wire)."""
     joins = tuple(run for run in around.joins if (run.drawing_set, run.page) == page)
     return decided_runs(here, drawn, around.connections, joins)
 
 
 def _runs(markers: tuple[LinkMarker, ...], indices: Sequence[int]) -> dict[Box, list[int]]:
-    """C21: a run's members share one box, its one place."""
+    """A run's members share one box, its one place."""
     runs: dict[Box, list[int]] = defaultdict(list)
     for index in indices:
         if markers[index].shared_box:
@@ -191,7 +191,7 @@ def _texts(
             anchors=(),
             own=(owner[stand[index].port],) if stand[index].port in owner else (),
             places=tuple(place for _, place in rows[index]),
-            rank=0 if len(rows[index]) == 1 or rows[index][0][0].turn is not None else 1,  # S20
+            rank=0 if len(rows[index]) == 1 or rows[index][0][0].turn is not None else 1,
         )
         for index in standing
     )
@@ -223,7 +223,7 @@ def _written(
 def _pin_mates(
     markers: tuple[LinkMarker, ...], indices: Sequence[int], room: _Page
 ) -> dict[int, list[int]]:
-    """M3, S20 M7: each multi-marker pin's first marker, a turned reference first, others share."""
+    """Each multi-marker pin's first marker, a turned reference first, others share."""
     at_pin: dict[Point, list[int]] = defaultdict(list)
     for index in indices:
         if not markers[index].shared_box:
@@ -233,7 +233,7 @@ def _pin_mates(
 
 
 def _turns(marker: LinkMarker, room: _Page) -> bool:
-    """layout-0053: a star reference or off stub where a wire ends on its point is turned (M7)."""
+    """layout-0053: a star reference or off stub where a wire ends on its point is turned."""
     at = marker.at
     # a terminal's off stub stands at its free symbol port, which `wired_at` (by model port) holds
     kind = star_turns(marker.star, terminal=room.owner.get(marker.port) in room.terminals)
@@ -243,7 +243,7 @@ def _turns(marker: LinkMarker, room: _Page) -> bool:
 def stub_boxes(marker: LinkMarker) -> tuple[Box, ...]:
     """The boxes a marker's stub takes: port to box, or via a junction; lead: layout-0054."""
     at, box = marker.at, marker.box
-    if marker.turn is not None:  # M7: port to the junction, the branch, the stub up to the box
+    if marker.turn is not None:  # Port to the junction, the branch, the stub up to the box
         via, end = marker.turn, Point(x=box.x + box.width // 2, y=marker.turn.y)
         near = box.y + box.height if box.y < via.y else box.y
         return (corridor(at, via), corridor(via, end), corridor(end, Point(x=end.x, y=near)))
@@ -267,11 +267,11 @@ def corridor(a: Point, b: Point) -> Box:
 
 
 def _row(marker: LinkMarker, room: _Page) -> list[tuple[LinkMarker, Place]]:
-    """The marker's places in order, each with the record it writes there (S20's row)."""
+    """The marker's places in order, each with the record it writes there ."""
     at, box = marker.at, marker.box
     south, north = box.y >= at.y, box.y + box.height <= at.y
     if _turns(marker, room):
-        # a lane on the pin's own x is its own wire's, whichever port stands there (M7)
+        # a lane on the pin's own x is its own wire's, whichever port stands there
         lanes = tuple(lane for lane in _lanes_beside(marker, room, south=south) if lane.x != at.x)
         return [_place(turned(marker, side), reach_of(lanes)) for side in (1, -1)]
     if marker.shared_box or not (south or north) or not box.x <= at.x <= box.x + box.width:
@@ -325,7 +325,7 @@ def _lanes_beside(marker: LinkMarker, room: _Page, *, south: bool) -> tuple[Lane
 
 
 def _within_lane(box: Box, lane: Lane | None) -> bool:
-    """S20 8b: a tier's box stays on its own port's lane, short of the next symbol on its line."""
+    """A tier's box stays on its own port's lane, short of the next symbol on its line."""
     if lane is None:
         return True
     if lane.facing is Facing.S:
@@ -334,7 +334,7 @@ def _within_lane(box: Box, lane: Lane | None) -> bool:
 
 
 def _in_room(marker: LinkMarker, room: _Page) -> bool:
-    """Whether a tier's box stays inside the content box, top to bottom (S14, S16)."""
+    """Whether a tier's box stays inside the content box, top to bottom."""
     return marker.box.y >= 0 and marker.box.y + marker.box.height <= room.height
 
 

@@ -1,11 +1,11 @@
-"""S20 M12: a conductor that would enter a pin from the far side is a reference pair.
+"""A conductor that would enter a pin from the far side is a reference pair.
 
 A device stands so that what connects to its top pins is above it and what connects to its
 bottom pins is below it (owner, 2026-10-01). A wire from an N pin to a pin below the device's
 bottom edge, or from an S pin to a pin above its top edge, leaves the pin outward and comes back
 past the device: a 180 degree turn. Such a conductor is drawn as a reference at each end
 instead (`nets.wires_star`: the star of its ports), decided from `place`'s own stacking like the
-joins (S12). A link of a terminal chain (`terminal_rows`) never turns: its row
+joins. A link of a terminal chain (`terminal_rows`) never turns: its row
 holds them level, and where the row cannot fit it stays a wire all the same.
 """
 
@@ -36,7 +36,7 @@ def turned_stars(
     chains: TerminalChains,
     off_ports: frozenset[Id[Any]] = frozenset(),
 ) -> tuple[Star, ...]:
-    """The stars of the conductors of `connections` that turn back round a device (S20 M12)."""
+    """The stars of the conductors of `connections` that turn back round a device."""
     spots = port_spots(seating.columns, seating.plans, seating.drawn, seating.stacks)
     side = side_functions(seating.columns)
     turned = [one for one in connections if _turns(one, spots, side, chains)]

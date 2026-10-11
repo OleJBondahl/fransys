@@ -312,6 +312,14 @@ def unit_cables(model: Model, unit: Id[Unit]) -> tuple[HarnessCable, ...]:
     return _sorted_cables(model, _cable_ids_of_unit(model, unit), unit)
 
 
+def reading_cables(model: Model, unit: Id[Unit] | None) -> tuple[HarnessCable, ...]:
+    """The cables one reading draws: `unit`'s own, or the top-level ones when `unit` is None.
+
+    The one home of that choice, so no output or layout step repeats it.
+    """
+    return top_level_cables(model) if unit is None else unit_cables(model, unit)
+
+
 def all_cables(model: Model) -> tuple[HarnessCable, ...]:
     """Every cable item whose ends can all be rendered, whatever its harness or unit.
 
@@ -362,25 +370,25 @@ def _readable_cables(
     return tuple(sorted(found, key=lambda cable: (natural_key(cable.designation), cable.cable)))
 
 
-def cable_list_rows(model: Model) -> tuple[CableListRow, ...]:
-    """One `CableListRow` per top-level cable: every cable item (`is_cable`) with `unit=None`.
+def cable_list_rows(model: Model, *, unit: Id[Unit] | None = None) -> tuple[CableListRow, ...]:
+    """One `CableListRow` per cable of one reading: `unit`'s own, or the top-level ones.
 
-    A cable inside a harness is included, one belonging to a unit is not.
-    `from_label` is the `designation` of the first `HarnessEnd`; `to_label` lists every other
-    end's, in `cable_end_rank` order (a unit member first), joined by ", ".
+    `unit=None`: every cable item (`is_cable`) with no unit, harness cables included. A unit: the
+    cables whose own `Item.unit` is `unit`, read with its facts. Rows sort by `(designation, id)`.
+    `from_label` is the first end's `designation`; `to_label` the others', joined by ", ".
 
     Args:
         model: The frozen model to read.
-
-    Returns:
-        One `CableListRow` per top-level cable, sorted by `(designation, id)`.
+        unit: The unit whose own cables to list; `None` is the top-level ones.
 
     Raises:
-        SchemaError: a cable, or an item one of its cores lands on, has no designation.
+        SchemaError: `unit` is no unit, or an item has no designation.
     """
-    facts = _facts_of(model)
+    if unit is not None:
+        require(units_table(model).get(unit), "unit", unit)
+    facts = _facts_of(model, unit)
     found = []
-    for cable in _top_level_cable_ids(model):
+    for cable in _cable_ids_of_unit(model, unit):
         cable_facts = _cable_facts(model, cable, facts)
         kept = cable_facts.ends
         found.append(

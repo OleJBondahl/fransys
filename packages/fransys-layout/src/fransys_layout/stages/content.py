@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def content_box(sheet: SheetFormat) -> Box:
-    """`sheet`'s content box in page coordinates, whose edge no text may cross (S18)."""
+    """`sheet`'s content box in page coordinates, whose edge no text may cross."""
     return Box(x=0, y=0, width=sheet.content_width, height=sheet.content_height)
 
 

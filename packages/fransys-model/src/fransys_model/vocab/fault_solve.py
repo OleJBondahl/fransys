@@ -1,4 +1,4 @@
-"""The fault at one terminal of a protective position D, in one item state (RATINGS-3 R8, R10).
+"""The fault at one terminal of a protective position D, in one item state.
 
 The fault vertex F joins D's terminal `a` to every node carrying another rail of D's supplies.
 With D removed, the blocks every F-b path crosses are in series: the largest counts. In a block
@@ -99,7 +99,7 @@ def _rank(share: Share) -> tuple[bool, Decimal]:
 
 
 def _summed(shares: Sequence[Share]) -> Share:
-    """The runs of one block added (R8): unknown when one is."""
+    """The runs of one block added: unknown when one is."""
     values = [share.current_a for share in shares]
     known = [value for value in values if value is not None]
     return Share(
@@ -179,7 +179,7 @@ def _runs(
 def _block_share(
     block: frozenset[int], feeds: Sequence[Feed | None], runs: UnionFind[int], kind: Current
 ) -> Share:
-    """A block's runs added (R8); a block with no source of `kind` gives nothing."""
+    """A block's runs added; a block with no source of `kind` gives nothing."""
     grouped: dict[int, list[Feed]] = {}
     for at in sorted(block):
         feed = feeds[at]

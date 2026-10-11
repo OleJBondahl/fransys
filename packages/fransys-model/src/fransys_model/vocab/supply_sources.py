@@ -1,4 +1,4 @@
-"""Source declarations of a supply name, and the pins they put it on (RATINGS-3 R6, ruling Q3 ii).
+"""Source declarations of a supply name, and the pins they put it on.
 
 A name may be declared by a container and again by a unit inside it; only the outermost
 declarations are the source. The one reader of that rule.

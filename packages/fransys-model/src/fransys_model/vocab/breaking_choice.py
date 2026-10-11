@@ -1,4 +1,4 @@
-"""Which breaking point a protective device is checked at (RATINGS-3 R10, R11)."""
+"""Which breaking point a protective device is checked at."""
 
 from typing import TYPE_CHECKING, Literal
 

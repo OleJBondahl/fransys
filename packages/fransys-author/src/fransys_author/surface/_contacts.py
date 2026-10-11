@@ -1,4 +1,4 @@
-"""`d.device(..., contacts=)`: the crimp contacts fitted in a connector device (HA8)."""
+"""`d.device(..., contacts=)`: the crimp contacts fitted in a connector device."""
 
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping

@@ -173,33 +173,33 @@ document.
 
 ## Export file names
 
-Export names follow rules EN1 to EN5. One function builds every
+Export names follow the rules below. One function builds every
 name, so a script never constructs its own. The `v` prefix is used only in file names, never in a
 title block or history table. The names are a built-in default with no option or template.
 
-- **EN1, the set prefix.** Every file belongs to one set: the unit written (`unit=U`) or the
+- **The set prefix.** Every file belongs to one set: the unit written (`unit=U`) or the
   system (`unit=None`). The prefix is `<set name>-v<V>.<R>`, the set's name plus its version and
   revision in `derive.revision_text`'s print form. A unit's name is its release name
   (`demo-io-board-v1.1`); the system's is the project's number (`EX-1-v1.1`). A system write of
   a model with no project record has no prefix, and the system's own files keep their bare names
   (plain `bom.csv`), which is what the examples above wrote because this guide's design authors
   no project. A unit's document still takes its unit's prefix there.
-- **EN2, prefix, kind, fragment.** A name is `<prefix>[-<kind>][-<fragment>].<ext>`:
+- **Prefix, kind, fragment.** A name is `<prefix>[-<kind>][-<fragment>].<ext>`:
   `demo-io-board-v1.1-bom.csv`, per item `demo-io-board-v1.1-terminals-X1.csv`, and for the
   unit's own root the bare kind `demo-io-board-v1.1-terminals.csv`.
-- **EN3, a PDF is named by its subject, not its cover file.** A document of the set itself is
+- **A PDF is named by its subject, not its cover file.** A document of the set itself is
   `<prefix>.pdf`; a `harness_drawing` adds `-harness`; a document of an item or location inside
   the set adds that subject's fragment. A document whose subject is a unit takes that unit's
   name in every write, a system write included, so `out/all/` holds `EX-1-v1.1.pdf` beside
   `cabinet-v2.1.pdf`. Two instances of one release with a document each come to one name and
   raise a name-clash error; keep one document per release.
-- **EN4, stale exports.** `write` runs `_clean_stale_exports` before writing. It deletes the
+- **Stale exports.** `write` runs `_clean_stale_exports` before writing. It deletes the
   files that start with the set's name and `-v` for any version, so a work folder reused across
   revisions keeps only the current ones. A system write also deletes the files that start with
   each unit release's name in the model and `-v`, for the unit documents. The old bare-name
   patterns are still cleaned for one more release. Known limit: a unit that leaves the model
   leaves its last PDF behind in `out/all/`.
-- **EN5, releases.** `fr.release` writes the same names, and its manifest lists them.
+- **Releases.** `fr.release` writes the same names, and its manifest lists them.
 
 Every file `write` writes is UTF-8 without a byte order mark, with `\n` line ends, on every OS.
 

@@ -1,4 +1,4 @@
-"""Surface mixin for supplies and rails: `ac_supply`, `dc_supply` and their rail handles (EA6)."""
+"""Surface mixin for supplies and rails: `ac_supply`, `dc_supply` and their rail handles."""
 
 from dataclasses import dataclass
 from decimal import Decimal
@@ -99,7 +99,7 @@ class DcSupply(_Rails):
     mid: SupplyRail
 
 
-def _declare(  # noqa: PLR0913, PLR0917 -- the supply's own fields plus the two fault values (RATINGS-3 R3)
+def _declare(  # noqa: PLR0913, PLR0917 -- the supply's own fields plus the two fault values
     design: Design,
     name: str,
     current: str,
@@ -259,7 +259,7 @@ def _forbid_fault(name: str, source: object, fault: tuple[_Number | None, _Numbe
 class Supplies:
     """The supply calls of `Design`: `ac_supply` and `dc_supply`."""
 
-    def ac_supply(  # noqa: PLR0913 -- the call's own spec signature plus fault_current_a (R3)
+    def ac_supply(  # noqa: PLR0913 -- the call's own spec signature plus fault_current_a
         self: "Design",
         name: str,
         voltage: str | int | Decimal,
@@ -285,7 +285,7 @@ class Supplies:
         _declare(self, name, "ac", rails, earthing, (fault_current_a, None))
         return AcSupply(name, (rail for rail, _ in rails))
 
-    def dc_supply(  # noqa: PLR0913 -- the call's own spec signature (EA6, EA15)
+    def dc_supply(  # noqa: PLR0913 -- the call's own spec signature
         self: "Design",
         name: str,
         source: Device | Fn | None = None,

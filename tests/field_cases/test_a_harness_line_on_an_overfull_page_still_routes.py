@@ -12,7 +12,7 @@ kept the page inside the box and built.
 The first fix (decision layout-0166): a line that no path in the content box can draw is searched
 over the box grown to hold its ends, so the build succeeds. The page then reported
 OUT_OF_CONTENT_BOX (not PAGE_OVERFULL: that check misses a fold-made overflow, layout-0166 D2).
-The second fix (decision layout-0167, TALL-PAGE): the unit group cuts at its outline's top edge, so
+The second fix (decision layout-0167): the unit group cuts at its outline's top edge, so
 no page overflows and neither reports a finding. Longer lower columns (T-b) are held (R3: the
 fallback is its own order); a group with no lower
 band (T-c) is held too (R4). Both

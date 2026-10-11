@@ -1,4 +1,4 @@
-"""Drawing pages, shared by `document.py` and `checks.py` so they agree on "no drawings" (P11)."""
+"""Drawing pages, shared by `document.py` and `checks.py` so they agree on "no drawings"."""
 
 from collections import Counter
 from typing import TYPE_CHECKING
@@ -7,8 +7,7 @@ from fransys_model.derive import (
     document_unit,
     harness_cables,
     item_designation,
-    top_level_cables,
-    unit_cables,
+    reading_cables,
 )
 from fransys_model.derive.cable_drawing import (
     cable_block_key,
@@ -44,7 +43,7 @@ NO_DRAWINGS = '#par(text("No drawings."))'
 
 
 def _page_title_labels(model: Model, page: Page) -> str:
-    """The page's `=` group labels, `page_title`'s fallback, same filter (R11.7, model-0097)."""
+    """The page's `=` group labels, `page_title`'s fallback, same filter (model-0097)."""
     nodes = aspect_nodes(model)
     return " ".join(f"={nodes[group.group].label}" for group in page_title_groups(model, page))
 
@@ -52,7 +51,7 @@ def _page_title_labels(model: Model, page: Page) -> str:
 def schematic_pages(
     model: Model, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[Page, ...]:
-    """The subject's drawing-set pages (P7, U3); empty for an item subject (no `pcb_review` yet)."""
+    """The subject's drawing-set pages; empty for an item subject (no `pcb_review` yet)."""
     if record.location is None and record.unit is None and record.unit_name is None:
         return ()
     return _drawing_set_pages(model, record, pages)
@@ -77,7 +76,7 @@ def schematic_missing_keys(
 def schematic_fields(
     model: Model, record: Document, pages_found: tuple[Page, ...]
 ) -> tuple[TitleBlockFields, ...]:
-    """The title block of each `pages_found` page, `n / N` counted per drawing set (R3, U3)."""
+    """The title block of each `pages_found` page, `n / N` counted per drawing set."""
     assert (  # noqa: S101 -- `pages_found` is non-empty only when one of these three is
         record.location is not None or record.unit is not None or record.unit_name is not None
     )
@@ -108,7 +107,7 @@ def schematic_source(
     pages_found: tuple[Page, ...],
     svgs: Mapping[str, str],
 ) -> str:
-    """The SCHEMATIC section: full-bleed pages (R1-R4), `n / N` counted per drawing set (R3, U3)."""
+    """The SCHEMATIC section: full-bleed pages, `n / N` counted per drawing set."""
     if not pages_found or schematic_missing_keys(pages_found, svgs):
         fields = TitleBlockFields(
             *document_facts(model, record),
@@ -140,13 +139,13 @@ def requests_harness_pages(pages: tuple[PageKind, ...]) -> bool:
 def harness_cables_for(
     model: Model, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[HarnessCable, ...]:
-    """The subject's cables: SYSTEM all top-level, a unit its own only (P8, U3, pdf-0015)."""
+    """The subject's cables: SYSTEM all top-level, a unit its own only (pdf-0015)."""
     if not requests_harness_pages(pages):
         return ()
     if record.preset is DocumentPreset.SYSTEM:
-        return top_level_cables(model)
+        return reading_cables(model, None)
     if (unit := document_unit(model, record)) is not None:
-        return unit_cables(model, unit)
+        return reading_cables(model, unit)
     if record.item is None:
         return ()
     return harness_cables(model, record.item)
@@ -173,7 +172,7 @@ def _join_part_line(*texts: str | None) -> str:
 
 
 def _harness_block(model: Model, subject: Id[Item], key: str) -> Block:
-    """A harness block: in the run of the harness's own part, or of none (CD9, Q8)."""
+    """A harness block: in the run of the harness's own part, or of none."""
     part_id = items(model)[subject].part
     if part_id is None:
         return Block(key, "", "")
@@ -184,7 +183,7 @@ def _harness_block(model: Model, subject: Id[Item], key: str) -> Block:
 def wire_subjects(
     model: Model, record: Document, cables: tuple[HarnessCable, ...]
 ) -> tuple[Id[Item], ...]:
-    """The harnesses with single wires the document draws, by `block_drawn` (HA-H1 A1, pdf-0024).
+    """The harnesses with single wires the document draws, by `block_drawn` (pdf-0024).
 
     A SYSTEM document has none. A unit document has its unit's; a harness document has its own
     item when it has no cable. The CONTENTS table stays cable-only: no row for a wire.
@@ -205,7 +204,7 @@ def wire_subjects(
 def cable_blocks(
     model: Model, record: Document, cables: tuple[HarnessCable, ...]
 ) -> tuple[Block, ...]:
-    """The document's blocks, one per `cable_subject`, each at its first cable's place (CD12).
+    """The document's blocks, one per `cable_subject`, each at its first cable's place.
 
     A document reads absolutely unless it is a unit document, whose reading is its unit. A
     harness with wires gets its one block too (`wire_subjects`), after the cable blocks.

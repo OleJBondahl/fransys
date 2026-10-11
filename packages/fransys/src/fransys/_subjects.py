@@ -76,7 +76,7 @@ def ref(model: Model, item: Id[Item]) -> str:
 
 
 def export_ref(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
-    """The name fragment of `item`'s per-item export in the folder of `unit` (UNIT-ID I5).
+    """The name fragment of `item`'s per-item export in the folder of `unit`.
 
     Unit-relative `printed_designation` through `fragment` (`-X2` gives `X2`): no parent path.
     The unit's own root gives "" (bare `connectors.csv`): its own tag is never printed in its set.

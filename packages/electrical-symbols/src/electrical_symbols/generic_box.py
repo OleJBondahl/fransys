@@ -1,6 +1,6 @@
 """The labelled-box placeholder for a function with no matching symbol rule or choice.
 
-A real toolkit symbol, not a consumer's private struct (decision layout-0042, D41).
+A real toolkit symbol, not a consumer's private struct (decision layout-0042).
 """
 
 import math
@@ -24,14 +24,14 @@ _MIN_BODY_WIDTH = 4.0
 _TAG_WIDTH = 6.0
 _TAG_HEIGHT = 1.0
 _TAG_GAP = 0.5
-# R7 B3 (deep dive): a marking per port, E of its wire, just inside the body edge
+# A marking per port, E of its wire, just inside the body edge
 _MARK_OFFSET_X = 0.25
 _MARK_OFFSET_Y = 0.75
 _MARK_WIDTH = 1.5
 
 
 def box_pitch(marking_widths: tuple[int, ...], stand: int = 0) -> float:
-    """R7 B3: the port pitch in whole M: wide enough for the longest marking and for `stand`.
+    """The port pitch in whole M: wide enough for the longest marking and for `stand`.
 
     `marking_widths` are the widths in G of each port's marking (`box_port_marking`: the name
     after the last "."), measured by the caller at the house text height (1 M). `stand` is the
@@ -106,7 +106,7 @@ def generic_box(
 
     Args:
         port_names: Port names in drawing order (the caller sorts; this factory does not).
-        sides: "n" or "s" per port, overriding the alternating rule (R7 C5); empty alternates.
+        sides: "n" or "s" per port, overriding the alternating rule; empty alternates.
         offsets: each port's x in M, one per name; empty runs each side at the pitch. The body
             then ends one pitch past the last offset (model-0129).
         stand: the width in G of a power symbol or text standing at a port (layout-0132): the
@@ -122,7 +122,7 @@ def generic_box(
         raise ValueError(msg)
     plain = box_pitch(marking_widths)
     pitch = box_pitch(marking_widths, stand)
-    # R7 C5 (deep dive): `sides` overrides the alternating rule; each side's ports then run
+    # `sides` overrides the alternating rule; each side's ports then run
     # left to right at the pitch
     sides = sides or default_sides(len(port_names))
     pairs = max(sides.count(NORTH), len(sides) - sides.count(NORTH))

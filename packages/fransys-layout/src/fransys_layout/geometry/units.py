@@ -1,4 +1,4 @@
-"""Layout units: the integer grid every stage, engine and record works in (design/geometry.md 5.1).
+"""Layout units: the integer grid every stage, engine and record works in.
 
 The symbol libraries draw in module units (M = 2.5 mm) on a 0.125 M drawing grid. The
 layout unit is the grid unit `G = M/8`, so every library coordinate is an exact integer.

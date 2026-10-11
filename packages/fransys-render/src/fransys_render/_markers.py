@@ -1,4 +1,4 @@
-"""Link markers (D8, layout-0038): stub, arrow box and text; size read from the record."""
+"""Link markers (layout-0038): stub, arrow box and text; size read from the record."""
 
 import dataclasses
 from itertools import pairwise
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 
 def markers_on_page(model: Model, page: Page) -> tuple[LinkMarker, ...]:
-    """Every `layout.link_marker` on `page`, ordered by `id` (D11)."""
+    """Every `layout.link_marker` on `page`, ordered by `id`."""
     return page_slice(model, LinkMarker, page)
 
 
@@ -66,11 +66,11 @@ def _owning_placement(model: Model, marker: LinkMarker) -> SymbolPlacement:
     function = ports(model)[marker.port].function
     item = functions(model)[function].item
     by_function, by_item = _placement_index(model)
-    # R7 B2: an item view owns the ports of all its item's functions
+    # An item view owns the ports of all its item's functions
     found = dict(by_function.get((marker.page, function), ()))
     found.update(by_item.get((marker.page, item), ()))
     placements = [found[position] for position in sorted(found)]
-    if len(placements) > 1:  # R7 A: a function drawn per pin: the one whose port is here
+    if len(placements) > 1:  # A function drawn per pin: the one whose port is here
         placements = [p for p in placements if _port_here(model, p, marker)]
     if len(placements) != 1:
         msg = f"marker {marker.id!r} has {len(placements)} owning placements, expected exactly 1"
@@ -119,7 +119,7 @@ def box_origin(marker: LinkMarker, facing: Direction) -> tuple[int, int]:
     x, y = _base_origin(marker, facing, w, h)
     stub = marker.stub_extra
     x, y = x + facing.dx * stub, y + facing.dy * stub
-    if marker.box_x is not None:  # R6 D2: one box shared across a bundle row
+    if marker.box_x is not None:  # One box shared across a bundle row
         x = marker.box_x
     return x, y
 
@@ -145,7 +145,7 @@ def stub_end(marker: LinkMarker, facing: Direction) -> tuple[int, int]:
 
 
 def arrow_polygon(marker: LinkMarker, facing: Direction) -> tuple[tuple[int, int], ...]:
-    """The box's outline as an arrow: 5 vertices, tip first (D8), the tip at `stub_end`."""
+    """The box's outline as an arrow: 5 vertices, tip first, the tip at `stub_end`."""
     box_x, box_y = box_origin(marker, facing)
     w, h, depth = marker.width, marker.height, MARKER_ARROW_DEPTH_G
     tip = stub_end(marker, facing)
@@ -187,7 +187,7 @@ def arrow_polygon(marker: LinkMarker, facing: Direction) -> tuple[tuple[int, int
 
 
 def _point_mm(sheet: SheetFormat, x: int, y: int) -> str:
-    """One point converted to an `"x,y"` mm pair (D5), mirroring `_routes._point_mm`."""
+    """One point converted to an `"x,y"` mm pair, mirroring `_routes._point_mm`."""
     x_mm = grid_to_mm(sheet.content_x_mm, x, sheet.module_mm)
     y_mm = grid_to_mm(sheet.content_y_mm, y, sheet.module_mm)
     return f"{format_decimal(x_mm)},{format_decimal(y_mm)}"
@@ -215,7 +215,7 @@ def _box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> str
 
 
 def _shared_box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> str:
-    """A shared marker box: a closed rectangle across the bundle row (R6 D2, layout-0054)."""
+    """A shared marker box: a closed rectangle across the bundle row (layout-0054)."""
     x, y = box_origin(marker, facing)
     w, h = marker.width, marker.height
     ring = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
@@ -254,7 +254,7 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
     """The marker's own text, centred in the box; a `vertical` one is turned (render-0005)."""
     drawn = marker if at is None else at
     box_x, box_y = box_origin(drawn, facing)
-    lines = marker_text(model, marker).split("\n")  # R7 B4: a star reference wraps
+    lines = marker_text(model, marker).split("\n")  # A star reference wraps
     if drawn.vertical:
         font_mm = grid_to_mm(0, profile.text_height, sheet.module_mm)
         pad_x = (marker.width - len(lines) * profile.text_height) // 2
@@ -287,7 +287,7 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
 def _turned_glyphs(
     sheet: SheetFormat, profile: Profile, model: Model, marker: LinkMarker, via: tuple[int, int]
 ) -> str:
-    """M7: a branch from the record's `via` on the wire, E or W, then a vertical marker."""
+    """A branch from the record's `via` on the wire, E or W, then a vertical marker."""
     centre = marker.box_x + marker.width // 2 if marker.box_x is not None else via[0]
     side = Direction.E if centre > via[0] else Direction.W
     up = Direction.N if via[1] < marker.y else Direction.S
@@ -321,7 +321,7 @@ def _turned_glyphs(
 def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
     """Whether `marker` is the stub a harness line ends in: its carrier's line runs on it.
 
-    A per-core stub of a line's carrier (C21) stands at its port, off the line, and keeps its stub.
+    A per-core stub of a line's carrier stands at its port, off the line, and keeps its stub.
     """
     if marker.carrier is None or not draws_as_line(model, marker.carrier):
         return False
@@ -335,13 +335,13 @@ def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
 
 
 def markers_group(model: Model, page: Page) -> str:
-    """Every marker on `page` as one stub + arrow-box + text, D11 id order."""
+    """Every marker on `page` as one stub + arrow-box + text, in id order."""
     sheet = sheet_format_of(model, page.sheet_format)
     profile = profile_of(model)
     parts = []
     stubs: set[tuple[int, int, int]] = set()  # a mate's stub is the lead's line: drawn once
     for marker in markers_on_page(model, page):
-        if marker.via_x is not None and marker.via_y is not None:  # I4: leaves its port sideways
+        if marker.via_x is not None and marker.via_y is not None:  # Leaves its port sideways
             if marker.lead:  # a mate of a shared box draws nothing of its own
                 parts.append(
                     _turned_glyphs(sheet, profile, model, marker, (marker.via_x, marker.via_y))
@@ -354,7 +354,7 @@ def markers_group(model: Model, page: Page) -> str:
             stubs.add(stub)
             parts.append(_stub_glyph(sheet, marker, facing))
         if marker.box_x is not None or line_stub:
-            # R6 D2: the lead of a shared box draws it, as a plain rectangle, and the text;
+            # The lead of a shared box draws it, as a plain rectangle, and the text;
             # a line's stub is one such box, its line meeting its edge's middle (layout-0158)
             if marker.lead:
                 parts.append(_shared_box_glyph(sheet, marker, facing))

@@ -268,7 +268,7 @@ def cut_index() -> dict:
 
 
 def test_a_cut_group_has_no_outline_on_the_page_of_its_upper_band() -> None:
-    """TALL-PAGE T2: the page holding only column a (J1's band) folds nothing.
+    """layout-0167: the page holding only column a folds nothing.
 
     UNDO: `_here` lists a cut group on every page that holds one of its columns.
     """
@@ -300,7 +300,7 @@ def test_the_folded_bottom_is_how_far_the_group_reaches() -> None:
 
 
 def test_a_cut_group_s_outline_stands_from_its_lower_columns_as_the_uncut_fold_has_it() -> None:
-    """TALL-PAGE R2: the cut page repeats the uncut fold's frame offset, so no line crosses a box.
+    """layout-0167: the cut page repeats the uncut fold's frame offset, so no line crosses a box.
 
     UNDO: `_frame_left` centres a cut group on its own span and ignores `frame_dx`.
     """
@@ -372,7 +372,7 @@ def test_recut_flags_the_tall_groups_only() -> None:
 
 
 def test_fold_overfull_widens_places_finding_with_the_folded_cells_below_the_page() -> None:
-    """TALL-PAGE T6: one PAGE_OVERFULL, naming place's cells and the fold's.
+    """layout-0167: one PAGE_OVERFULL, naming place's cells and the fold's.
 
     UNDO: `fold_overfull` returns `found` unchanged.
     """
@@ -409,7 +409,7 @@ def replica_page(*, bottom: bool) -> tuple[GroupShape, GroupShape]:
 
 
 def test_a_group_with_replicas_in_its_upper_band_is_cut_below() -> None:
-    """TALL-PAGE A1: the top cut is held for such a group; its shape asks for the bottom cut.
+    """layout-0167: the top cut is held for such a group; its shape asks for the bottom cut.
 
     UNDO: `measured` sets `below` False, and the group is not cut at its bottom edge.
     """
@@ -424,7 +424,7 @@ def test_a_group_with_replicas_in_its_upper_band_is_cut_below() -> None:
 
 
 def test_a_group_with_replicas_on_both_edges_is_held() -> None:
-    """TALL-PAGE A1: no cut works when the bottom edge holds a replica too (layout-0167).
+    """layout-0167: no cut works when the bottom edge holds a replica too.
 
     UNDO: `measured` leaves `held` False, and the group is cut below with its bottom replica.
     """
@@ -434,7 +434,7 @@ def test_a_group_with_replicas_on_both_edges_is_held() -> None:
 
 
 def test_a_group_cut_below_has_its_outline_on_the_page_of_its_upper_band() -> None:
-    """TALL-PAGE A1: the page of the upper band folds the group; the page of the lower band none.
+    """layout-0167: the page of the upper band folds the group; the page of the lower band none.
 
     UNDO: `_here` lists a group cut below on the page of its lower band, as a top cut is.
     """

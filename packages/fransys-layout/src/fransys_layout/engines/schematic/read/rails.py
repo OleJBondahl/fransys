@@ -1,4 +1,4 @@
-"""V3 (layout-0099): rail terminals are not drawn; a pin wired to a rail draws its power symbol.
+"""layout-0099: rail terminals are not drawn; a pin wired to a rail draws its power symbol.
 
 A rail terminal and the links bonding it leave the page. A conductor between a rail terminal and a
 drawn pin, or between two drawn pins on power ports, is a rail wire: not drawn, and each drawn pin
@@ -39,7 +39,7 @@ def rail_terminal_functions(model: Model, specs: tuple[FunctionSpec, ...]) -> fr
 def mark_boundary_rails(
     model: Model, specs: tuple[FunctionSpec, ...], undrawn: Collection[Id[Any]]
 ) -> tuple[FunctionSpec, ...]:
-    """RB2: `specs`, each rail terminal on a unit boundary marked `rail`: its parent draws it."""
+    """`specs`, each rail terminal on a unit boundary marked `rail`: its parent draws it."""
     boundary = boundary_edge_set(model)
     return tuple(
         dataclasses.replace(spec, home=Home.ELSEWHERE)
@@ -89,7 +89,7 @@ def rail_wires(
 def _enters_unit(
     model: Model, pair: tuple[PortRef, PortRef], boundary: Collection[Id[Any]]
 ) -> bool:
-    """RB2: a conductor from outside a unit to its boundary rail terminal is the parent's wire."""
+    """A conductor from outside a unit to its boundary rail terminal is the parent's wire."""
     if not any(ref.function in boundary for ref in pair):
         return False
     one, other = (functions_table(model)[ref.function].item for ref in pair)

@@ -1,4 +1,4 @@
-"""Cable engine, writing: placed blocks to derived `layout.cable_*` records (CT5 CD2)."""
+"""Cable engine, writing: placed blocks to derived `layout.cable_*` records."""
 
 from typing import TYPE_CHECKING
 

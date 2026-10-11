@@ -10,7 +10,7 @@ import pytest
 from plant import Plant
 from query_builders import make_core, make_pin
 
-from fransys_model.derive import top_level_cables, unit_cables
+from fransys_model.derive import reading_cables, top_level_cables, unit_cables
 from fransys_model.kernel import SchemaError, make_id
 from fransys_model.vocab.core import Unit
 from fransys_model.vocab.enums import PartCategory
@@ -162,3 +162,25 @@ def test_an_unknown_unit_is_refused() -> None:
     _cable(plant, "w1", "W1")
     with pytest.raises(SchemaError):
         unit_cables(plant.model(), make_id(Unit, ("nowhere",)))
+
+
+def test_reading_cables_none_is_the_top_level_cables() -> None:
+    """`reading_cables(model, None)` is `top_level_cables`: the system's own cables only."""
+    plant = Plant()
+    unit = _unit(plant, "harness-unit")
+    _cable(plant, "w1", "W1", unit=unit)
+    top = _cable(plant, "t1", "T1")
+    model = plant.model()
+    assert reading_cables(model, None) == top_level_cables(model)
+    assert tuple(row.cable for row in reading_cables(model, None)) == (top,)
+
+
+def test_reading_cables_unit_is_the_unit_cables() -> None:
+    """`reading_cables(model, unit)` is `unit_cables`: the unit's own cables only."""
+    plant = Plant()
+    unit = _unit(plant, "harness-unit")
+    own = _cable(plant, "w1", "W1", unit=unit)
+    _cable(plant, "t1", "T1")
+    model = plant.model()
+    assert reading_cables(model, unit) == unit_cables(model, unit)
+    assert tuple(row.cable for row in reading_cables(model, unit)) == (own,)

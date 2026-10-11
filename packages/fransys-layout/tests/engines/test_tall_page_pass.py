@@ -1,4 +1,4 @@
-"""TALL-PAGE T5 (layout-0167): the height decision reuses the width re-plan pass (C21).
+"""layout-0167: the height decision reuses the width re-plan pass.
 
 A page set with no tall group plans pages exactly as many times as before; a tall group adds
 no pass of its own when the widths grew, and one when only it asks. All data invented.

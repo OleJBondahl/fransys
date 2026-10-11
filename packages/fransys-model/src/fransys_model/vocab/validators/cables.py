@@ -1,4 +1,4 @@
-"""Validator: cable cores conform to their cable product (design/facets.md, ROADMAP WP13)."""
+"""Validator: cable cores conform to their cable product (design/facets.md)."""
 
 from typing import TYPE_CHECKING, Final
 

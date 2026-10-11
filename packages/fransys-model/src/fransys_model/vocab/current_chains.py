@@ -1,4 +1,4 @@
-"""Current chains: which rated current paths share a loop, and what bounds each (RATINGS-2 C3).
+"""Current chains: which rated current paths share a loop, and what bounds each.
 
 Lives in `vocab` because `validators/ratings_current.py` reads it; `derive.current_chains`
 re-exports it (decision model-0088, as `derive.closure` does for the closure).
@@ -49,7 +49,7 @@ bridge) has no bound, so real strings end at external items or at a standalone u
 boundary; a device with no conductive port on the path has no position; a device whose paths
 cross its own functions (a link between ports of two functions) is a wire for chains: the
 link adds no position, and the device's own per-path ratings are not checked. An item whose
-contacts move independently is read as one actuator (CS1). At most
+contacts move independently is read as one actuator. At most
 `current_states.MAX_ENUMERATED_ITEMS` items with links in both states are enumerated in one
 component (the smallest item ids first); the rest are held at rest, so a finding may be
 missed but none invented.
@@ -153,5 +153,5 @@ def chain_blocks(model: Model) -> tuple[tuple[CurrentChain, tuple[PositionEnds, 
 
 
 def chains_unordered(model: Model) -> tuple[CurrentChain, ...]:
-    """The rated current paths grouped by loop (RATINGS-2 C3), positions by function."""
+    """The rated current paths grouped by loop, positions by function."""
     return tuple(chain for chain, _ in chain_blocks(model))

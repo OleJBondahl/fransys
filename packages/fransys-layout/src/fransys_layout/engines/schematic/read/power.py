@@ -1,4 +1,4 @@
-"""D5, step 6: each port on a power net and the symbol and text it is drawn with.
+"""Step 6 (layout-0094): each port on a power net and the symbol and text it is drawn with.
 
 The model decides what a net is (`derive.power_kind`) and what it prints (`derive.power_text`);
 this reads the answer for every port of the physical net of each declared power net, so a load
@@ -16,7 +16,7 @@ from fransys_model.vocab.tables import nets
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
 
-# Owner 2026-10-02: A4 supply-only text, A5 "no 180 bending", A6 confirmed; kinds map to keys here
+# Owner 2026-10-02: supply-only text, "no 180 bending", confirmed; kinds map to keys here
 _SYMBOLS = frozendict(
     {
         PowerKind.SUPPLY: "power-supply",

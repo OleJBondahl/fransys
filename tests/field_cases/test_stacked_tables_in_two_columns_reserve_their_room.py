@@ -28,6 +28,7 @@ from fransys_model.layout import Label, LabelKind, Route, layout_of, sheet_for
 from fransys_model.vocab import PageKind
 
 Box = tuple[int, int, int, int]  # x, y, width, height
+PADDING = 2  # the profile's marker padding: the reserve may exceed a stack by one of it
 
 
 def _chain(d: Any, first: int, live: Any, rail: Any, lamps: Any) -> None:
@@ -47,7 +48,8 @@ class _Built:
 
     def __init__(self) -> None:
         self.cells: list[Box] = []
-        self.reserve_bottom = 0
+        self.reserve_bottom: dict[Any, int] = {}  # column -> bottom of the room reserved in it
+        self.spans: dict[Any, list[tuple[int, int]]] = {}  # column -> x spans of its cells
         self.tables: list[Label] = []
         self.model: Any = None
         self.findings: Any = ()
@@ -57,18 +59,26 @@ class _Built:
 def got() -> _Built:
     """Build the two-chain circuit once, keeping the cells' boxes and the reserved room's bottom."""
     with pytest.MonkeyPatch.context() as monkeypatch:
-        return _built(monkeypatch)
+        return _built(monkeypatch, chains=2)
 
 
-def _built(monkeypatch: pytest.MonkeyPatch) -> _Built:
+@pytest.fixture(scope="module")
+def one_column() -> _Built:
+    """The control: one chain, so one column holding one stack of two tables."""
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        return _built(monkeypatch, chains=1)
+
+
+def _built(monkeypatch: pytest.MonkeyPatch, chains: int) -> _Built:
     got = _Built()
     unreserve = pagerun.unreserve
 
     def keep(placed: Any, rooms: Any) -> Any:
-        got.reserve_bottom = max(
-            got.reserve_bottom,
-            *(placed_keepout(one).y + placed_keepout(one).height for one in placed),
-        )
+        for one in placed:
+            bottom = placed_keepout(one).y + placed_keepout(one).height
+            got.reserve_bottom[one.column] = max(got.reserve_bottom.get(one.column, 0), bottom)
+            k = placed_keepout(one)
+            got.spans.setdefault(one.column, []).append((k.x, k.x + k.width))
         done = unreserve(placed, rooms)
         got.cells = [(b.x, b.y, b.width, b.height) for b in (placed_keepout(one) for one in done)]
         return done
@@ -81,7 +91,8 @@ def _built(monkeypatch: pytest.MonkeyPatch) -> _Built:
         rail = d.terminal_strip("X2", "DEMO-TB-2.5", 8).run("R", 8, bridged=True)
         d.dc_supply("S", plus=live[1], minus=rail[1], voltage=24)
         _chain(d, 1, live[1], rail[2].outer, (rail[4].outer, rail[5].outer))
-        _chain(d, 3, live[2], rail[3].outer, (rail[6].outer, rail[7].outer))
+        if chains == 2:
+            _chain(d, 3, live[2], rail[3].outer, (rail[6].outer, rail[7].outer))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     result = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
@@ -134,14 +145,29 @@ def test_four_tables_in_two_stacks_stand_in_the_sheet_and_clear_of_everything(
         assert not [b for b in clear if _share(_box(t), b)]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the reserve counts each table's size, not the push below the A2 marker: 36 short",
-)
-def test_the_room_reserved_below_the_row_holds_the_tallest_stack(got: _Built) -> None:
-    """Each column's last coil keeps `foot_down` of its tables (80); the stack ends 36 below that.
+def _spare_room(got: _Built) -> list[int]:
+    """Per stack column: the reserved room's bottom less its tallest stack's bottom (>= 0 holds)."""
+    stacks: dict[Any, int] = {}
+    for t in got.tables:
+        (column,) = {c for c, spans in got.spans.items() if any(a <= t.x < b for a, b in spans)}
+        stacks[column] = max(stacks.get(column, 0), t.y + t.height)
+    return [got.reserve_bottom[column] - bottom for column, bottom in stacks.items()]
 
-    `contact_images` pushes the first table below the A2 star marker (images.py `push_clear`),
-    and `image_reserves` knows nothing of that push.
+
+def test_the_room_reserved_below_the_row_holds_the_tallest_stack(got: _Built) -> None:
+    """Each column's reserve holds its stack, the first table pushed below the A2 marker (0171).
+
+    `contact_images` pushes the first table below the ground symbol under the foot coil's A2;
+    the reserve counts that push (it was 36 short, 472 against 508), and no more than the stack.
     """
-    assert got.reserve_bottom >= max(t.y + t.height for t in got.tables)
+    spare = _spare_room(got)
+    assert len(spare) == 2
+    assert all(0 <= one <= PADDING for one in spare)
+
+
+def test_one_column_reserves_the_room_of_its_stack_too(one_column: _Built) -> None:
+    """The control: one column holding one stack of two tables reserves its room too."""
+    assert len(one_column.tables) == 2
+    spare = _spare_room(one_column)
+    assert len(spare) == 1
+    assert all(0 <= one <= PADDING for one in spare)

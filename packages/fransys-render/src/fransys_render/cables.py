@@ -1,4 +1,4 @@
-"""Laid-out cable blocks to SVG, one per `layout.cable_block` (CT5, CD7 to CD11)."""
+"""Laid-out cable blocks to SVG, one per `layout.cable_block`."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -106,9 +106,9 @@ def _end(model: Model, pen: Pen, block: CableBlock, end: EndBox) -> str:
 
 
 def _wire(pen: Pen, wire: CoreWire, text: str, *, link: bool) -> str:
-    """One core or single wire: its two runs and its text, from layout's points (HA-H1 A1).
+    """One core or single wire: its two runs and its text, from layout's points.
 
-    The text reads upward along the wire; a row link's reads level, centred on the point (L1).
+    The text reads upward along the wire; a row link's reads level, centred on the point.
     """
     runs = "".join(
         pen.polyline("core", tuple((point.x, point.y) for point in run))
@@ -121,7 +121,7 @@ def _wire(pen: Pen, wire: CoreWire, text: str, *, link: bool) -> str:
 
 
 def _render_block(model: Model, block: CableBlock) -> str:
-    """One block's SVG, sized to the block in mm on its sheet's module (Q5)."""
+    """One block's SVG, sized to the block in mm on its sheet's module."""
     sheet = sheet_format_of(model, block.sheet_format)
     profile = profile_of(model)
     pen = Pen(sheet.module_mm, profile.text_height, profile.marker_padding)

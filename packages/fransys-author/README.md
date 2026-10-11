@@ -35,7 +35,7 @@ Surface status:
   - `X3.run("valve supply", 8, bridged=True)` declares a named run. A series may name a run in
     place of its strip.
 - SWAP (decision 0103, author-0017): `fransys` re-exports the surface; `fransys.author` is
-  gone. EA15's gaps are built: `wire=(colour, mm²)` is the one wire form, so `Wire` left the
+  gone. The gaps are built: `wire=(colour, mm²)` is the one wire form, so `Wire` left the
   surface.
 
 Engine status: WP done (decisions

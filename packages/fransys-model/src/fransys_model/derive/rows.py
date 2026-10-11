@@ -584,7 +584,7 @@ class Listing:
 
 @value
 class Change:
-    """One difference between two listings of the same unit (`derive.baseline.diff`, M1).
+    """One difference between two listings of the same unit (`derive.baseline.diff`).
 
     `subject` is the CSV-ready identity text (`Change`'s own `field`/`before`/`after` are
     always plain `str`, never a bare int or bool — the value already rendered). `parts` is the
@@ -609,7 +609,7 @@ class Change:
 
 @value
 class ListingDiff:
-    """The change list from listing `a` to listing `b` (`derive.baseline.diff`, M1)."""
+    """The change list from listing `a` to listing `b` (`derive.baseline.diff`)."""
 
     a: BaselineUnit
     b: BaselineUnit
@@ -624,15 +624,15 @@ CHANGE_COLUMNS = ("section", "change", "subject", "field", "before", "after")
 
 @value
 class NumberingItem:
-    """One `items` entry of a unit's numbering pins (FD3): an item that prints a designation.
+    """One `items` entry of a unit's numbering pins: an item that prints a designation.
 
-    `key` is `derive.unit_relative_key`'s (FD2). `scope` is the relative key of the board or
+    `key` is `derive.unit_relative_key`'s. `scope` is the relative key of the board or
     harness the item's designation reads through, `None` for none. `code` is the item's
     part's `class_code`, or `None` for a part-less item -- one record, one spelling of
     absence, matching `scope`'s own `None` (ruling 2026-09-27); `code` never gates
-    reuse, a reserved text is taken by its `text` alone in its group (FD5). `text` is the
+    reuse, a reserved text is taken by its `text` alone in its group. `text` is the
     item's OWN label (`derive.designation.own_designation_or_none`), never the full
-    `item_designation` chain -- the release check (FD6) compares on this field, not the
+    `item_designation` chain -- the release check compares on this field, not the
     chain. `authored` says whether the engineer wrote it (a tag) or the pass assigned it.
     """
 
@@ -645,7 +645,7 @@ class NumberingItem:
 
 @value
 class NumberingRetired:
-    """One `retired` entry (FD3, FD5): a designation given out earlier in this version.
+    """One `retired` entry: a designation given out earlier in this version.
 
     Its item is gone, or has moved to a different group or class code. `code` is `None` for
     a part-less item, the same spelling `NumberingItem.code` uses.
@@ -658,7 +658,7 @@ class NumberingRetired:
 
 @value
 class NumberingPins:
-    """A unit's numbering pins at release (FD3): `baseline/numbering.json`'s own shape."""
+    """A unit's numbering pins at release: `baseline/numbering.json`'s own shape."""
 
     items: tuple[NumberingItem, ...]
     retired: tuple[NumberingRetired, ...]

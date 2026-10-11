@@ -247,7 +247,7 @@ def _product_colours(model: Model, cable: Id[Item]) -> tuple[str, ...]:
 
 
 def _colour_at(colours: tuple[str, ...], index: int, conductor: Conductor) -> str:
-    """`colours[index - 1]`; an index outside the product is a `SchemaError` (SC4)."""
+    """`colours[index - 1]`; an index outside the product is a `SchemaError`."""
     if not 1 <= index <= len(colours):
         msg = (
             f"core {index} is outside its cable product's {len(colours)} core colour(s), "

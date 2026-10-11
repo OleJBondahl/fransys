@@ -1,4 +1,4 @@
-"""A coil's contact image entries (C19): what each contact lists, their order, the bare ones.
+"""A coil's contact image entries: what each contact lists, their order, the bare ones.
 
 `derive.drawing_text` builds the image and `contact_marks` from these.
 """
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function, Item, Port
 
-# What a contact image prints where a contact is drawn nowhere (V1)
+# What a contact image prints where a contact is drawn nowhere
 NO_PLACE = "N/A"
 
 # A contact image entry `(main, key, mark)` (`image_order`)
@@ -31,7 +31,7 @@ def contact_entries(model: Model, function: Function) -> tuple[list[Entry], list
     if function.kind not in CONTACT_KINDS:  # a spares-only table's lone partner is its coil
         return no, nc
     if function.kind is FunctionKind.CONTACT_CO:
-        # a changeover in both columns, by the part's throw roles (CS5): the common with each
+        # a changeover in both columns, by the part's throw roles: the common with each
         # make port (NO) and with each break port (NC), the names as the part prints them
         for throws in changeover_throws(model, function.id):
             common = printed_name(model, throws.common)
@@ -56,7 +56,7 @@ def _key(name: str) -> int | str:
 
 
 def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
-    """A contact's printed `(line, load)` pole names (F4); with no pole link, marking order."""
+    """A contact's printed `(line, load)` pole names; with no pole link, marking order."""
     own = {p.template: p for p in ports(model).values() if p.function == function.id}
     templates = {t: port_templates(model)[t] for t in own if t is not None}
     links = [
@@ -97,7 +97,7 @@ def image_order(entry: Entry) -> tuple[bool, tuple[tuple[int, int, str], ...], s
 def spare_entries(
     model: Model, item: Id[Item], shown: Collection[Id[Function]]
 ) -> tuple[list[Entry], list[Entry]]:
-    """V1: the entries, `<mark> NO_PLACE`, of the bare contacts `item` owns not in `shown`."""
+    """The entries, `<mark> NO_PLACE`, of the bare contacts `item` owns not in `shown`."""
     no, nc = list[Entry](), list[Entry]()
     for function in (functions(model)[f] for f in owned_contacts(model, item) if f not in shown):
         if function_is_unused(model, function.id):

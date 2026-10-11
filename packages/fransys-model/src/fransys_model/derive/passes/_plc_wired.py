@@ -1,8 +1,8 @@
-"""PW1, PW2 and PW4 of `allocate_plc`: a wired request takes its wired channel (model-0083).
+"""`allocate_plc`: a wired request takes its wired channel (model-0083).
 
 The wiring walk is `vocab.plc_wiring`, the one `check_plc_wiring` reads. This module only decides,
-from what it reports, which request binds to which channel by wiring (PW1, PW2) and whether an
-unservable request is really open at the boundary of a standalone unit (PW4).
+from what it reports, which request binds to which channel by wiring and whether an
+unservable request is really open at the boundary of a standalone unit.
 """
 
 from typing import TYPE_CHECKING

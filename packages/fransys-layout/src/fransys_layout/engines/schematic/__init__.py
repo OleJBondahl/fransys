@@ -1,4 +1,4 @@
-"""The schematic engine (docs/design/engine.md 7)."""
+"""The schematic engine."""
 
 from .engine import lay_out_schematic, run_stages
 

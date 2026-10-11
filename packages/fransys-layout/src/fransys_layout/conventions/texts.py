@@ -2,13 +2,13 @@
 
 One table, keyed lookup on the fact `text_kind` (registered in `stages.texts.candidates`): a row
 is `(priority, sides)`, a side is `(facing, steps, mirror)`. A facing is `"n"`, `"e"`, `"s"`,
-`"w"` or None, the owner's own facing. A lower priority is placed first (S15).
+`"w"` or None, the owner's own facing. A lower priority is placed first (layout-0090).
 """
 
 from .rows import Row, Table
 
 # Nearest step first, down (right) before up (left); a cross-reference starts one text height
-# below the tag; a tag's last resort goes on past a vertical marker box beside the port (S20 F3).
+# below the tag; a tag's last resort goes on past a vertical marker box beside the port.
 _ALONG = (0, 1, -1, 2, -2)
 _BELOW_TAG = (1, 2, 0, 3, -1)
 _PAST_BOX = (3, -3, 4, -4)

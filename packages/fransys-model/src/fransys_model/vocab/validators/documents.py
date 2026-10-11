@@ -1,4 +1,4 @@
-"""Validator: a document's `unit_name` resolves to one unit (spec unit-subject-by-name UN3)."""
+"""Validator: a document's `unit_name` resolves to one unit (spec unit-subject-by-name)."""
 
 from typing import TYPE_CHECKING, Any, Final
 

@@ -51,7 +51,7 @@ class OutlineInputs:
     boxes: tuple[
         PlacedConnectorBox, ...
     ] = ()  # layout-0155: a member pin's connector box is inside
-    # layout-0153, condition 3: a middle unit's page draws its middle outline and no D11 frame
+    # layout-0153, condition 3: a middle unit's page draws its middle outline and no frame
     middle: frozenset[tuple[Handle, int, int]] = frozenset()
     # layout-0160: a unit's black box in a set above it, `derive.black_box_unit`, read once
     black_box: Mapping[tuple[Handle, Handle | None], Handle] = field(default_factory=dict)
@@ -62,7 +62,7 @@ def _column_ends(
     faces: Mapping[tuple[Handle, AuthoringKey], bool],
     cells: Mapping[AuthoringKey, tuple[Cell, ...]],
 ) -> dict[AuthoringKey, Any]:
-    """Each column's set of ends: its faces' ends, else the pin's, None when free (D11)."""
+    """Each column's set of ends: its faces' ends, else the pin's, None when free."""
     ends: dict[AuthoringKey, Any] = {}  # each value a set[bool] or None; ty cannot narrow it
     for one in members:
         end = faces.get((one.function, one.column))
@@ -92,7 +92,7 @@ def _by_end(
     cells: Mapping[AuthoringKey, tuple[Cell, ...]],
     placed: tuple[PlacedFunction, ...],
 ) -> tuple[list[PlacedFunction], list[PlacedFunction]]:
-    """One unit's black-box placements split into the top-end and bottom-end sets (D8, D11)."""
+    """One unit's black-box placements split into the top-end and bottom-end sets."""
     ends = _column_ends(members, faces, cells)
     resolved = {column: end for column, end in ends.items() if end is not None}
     for stretch in _column_stretches(members, placed):
@@ -162,12 +162,12 @@ def _frame(
     *,
     top_end: bool,
 ) -> tuple[Box, bool]:
-    """One run's outline rectangle and whether it is a top-end box; a plug stays out (D11, M10)."""
+    """One run's outline rectangle and whether it is a top-end box; a plug stays out."""
     margin = WIRING_GRID // 2
     bodies = [translate(m.geometry.body, dx=m.at.x, dy=m.at.y) for m in members]
     mating = [b for m, b in zip(members, bodies, strict=True) if (m.function, m.column) in faces]
     boxes = [*bodies, *texts]
-    # R3: never left of the content box, so neither the frame nor its title leaves it
+    # Never left of the content box, so neither the frame nor its title leaves it
     whole = hull(boxes)
     left = max(whole.x - margin, 0)
     right = whole.x + whole.width + margin
@@ -253,11 +253,11 @@ def _run_frame(
     *,
     top_end: bool,
 ) -> tuple[Box, bool]:
-    """One run's frame, holding its members' labels and link markers (M10)."""
+    """One run's frame, holding its members' labels and link markers."""
     names = {m.function for m in members}
     names |= {p.port for m in members for p in run.spec_of[m.function].ports}
     texts = [label.box for label in first if label.subject in names]
-    # M10: a member port's link marker, stub included, stands inside the frame
+    # A member port's link marker, stub included, stands inside the frame
     texts += [_marker_reach(marker) for marker in page_markers if marker.port in names]
     if run.boxes:  # layout-0155: a member pin's connector box stands inside too
         owners = {(m.drawing_set, m.page, run.spec_of[m.function].pin_function) for m in members}
@@ -266,14 +266,14 @@ def _run_frame(
 
 
 def _title_box(box: Box, text: str, taken: Sequence[Box], *, drawn_top: bool, height: int) -> Box:
-    """Where a unit's title goes: above or below its frame, whichever is free (D4, layout-0104)."""
+    """Where a unit's title goes: above or below its frame, whichever is free (layout-0104)."""
     margin = WIRING_GRID // 2
     width = text_width(text, height=height)
     # layout-0104: a title left of the content box's text gap moves right to it
     at_x = max(box.x, TEXT_GAP)
     above = Box(x=at_x, y=box.y - margin - height, width=width, height=height)
     below = Box(x=at_x, y=box.y + box.height + margin, width=width, height=height)
-    # drawn_top, the mirror: below-left when free, else above-left (D4's top room holds it)
+    # drawn_top, the mirror: below-left when free, else above-left (the top room holds it)
     order = (below, above) if drawn_top else (above, below)
     return (
         first_clear(
@@ -342,7 +342,7 @@ def unit_outlines(
     markers: tuple[LinkMarker, ...],
     inputs: OutlineInputs,
 ) -> tuple[list[Any], tuple[PlacedOutline, ...]]:
-    """I2a, U1: per page, one dash-dot outline and title per run of a unit's black box (D8, D11)."""
+    """Per page, one dash-dot outline and title per run of a unit's black box."""
     run = _Run(
         spec_of={spec.function: spec for spec in inputs.functions},
         faces=_end_faces(inputs),

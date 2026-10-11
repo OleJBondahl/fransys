@@ -1,7 +1,7 @@
 """Layout-0154: one line's pieces on one page, from its ends drawn there.
 
 An end is a plug's box edge on the line's side, or a fan-out's split. A line some of whose ends
-are elsewhere leaves: it runs `LEAVE` straight out and ends in one stub (layout-0154, owner C1).
+are elsewhere leaves: it runs `LEAVE` straight out and ends in one stub (layout-0154).
 """
 
 from dataclasses import dataclass
@@ -95,7 +95,7 @@ def line_pieces(
     """Layout-0154: the line among its joint ends; each leaving end and a lone end leave.
 
     `absent` is the first end's branch off this page; `margin` keeps a fan-out's split inside
-    (layout-0158); `trunk` is set when the root is off the page (TALL-PAGE R1, `line_trunk`).
+    (layout-0158); `trunk` is set when the root is off the page (`line_trunk`).
     """
     drawn = [_drawn(one, _within(grid.region, margin)) for one in ends]
     others = [end.branch for _, end, _ in drawn]
@@ -134,7 +134,7 @@ def _trunk(
     grid: Grid,
     trunk: tuple[Facing, tuple[int, int]] | None,
 ) -> tuple[list[tuple[int, tuple[Point, ...]]], Stub] | None:
-    """R1: the bar of the ends here and the trunk out of it to its stub; `None` leaves as before."""
+    """The bar of the ends here and the trunk out of it to its stub; `None` leaves as before."""
     if trunk is None or absent is None or not joint[1:]:
         return None
     bar = line_paths(joint, grid)

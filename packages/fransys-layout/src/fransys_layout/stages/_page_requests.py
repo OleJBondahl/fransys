@@ -1,4 +1,4 @@
-"""One page's tag rules over its own slices (S10)."""
+"""One page's tag rules over its own slices."""
 
 from typing import TYPE_CHECKING
 

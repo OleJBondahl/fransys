@@ -29,7 +29,7 @@ def _lone_end(
     specs: Mapping[Handle, FunctionSpec],
     connections: tuple[Connection, ...],
 ) -> bool:
-    """S13: `port`'s net holds one other port, of a terminal with no other wire."""
+    """`port`'s net holds one other port, of a terminal with no other wire."""
     net = nets.members[nets.net_of[port]]
     if len(net) != _LINK_PORTS:
         return False
@@ -46,7 +46,7 @@ def find_links(
     connections: tuple[Connection, ...],
 ) -> _Links:
     """The links the chains follow."""
-    # S13: a changeover whose two throws each end at a lone terminal hangs both under its pole
+    # A changeover whose two throws each end at a lone terminal hangs both under its pole
     # (`_attach`), so its chain no longer continues into the terminal at its throw on the pole
     detached = {
         on
@@ -104,13 +104,13 @@ def _walk_forward(
 def _vote_direction(
     seq: Sequence[tuple[_PoleId, Handle, Handle]], poles: Mapping[_PoleId, _Pole]
 ) -> tuple[Sequence[tuple[_PoleId, Handle, Handle]], bool]:
-    """C4: only non-terminal poles vote on the direction; `seq` runs with the majority."""
+    """Only non-terminal poles vote on the direction; `seq` runs with the majority."""
     voters = [(p, e) for p, e, _ in seq if poles[p].inn is not None and not poles[p].terminal]
     forward = sum(1 for p, e in voters if poles[p].inn == e)
     backward = len(voters) - forward
     if backward > forward:
         seq = _turn_around(seq)
-    return seq, forward != backward  # D1: a tie is decided as a direction-free chain
+    return seq, forward != backward  # A tie is decided as a direction-free chain
 
 
 def _walk_all(
@@ -132,9 +132,9 @@ def _walk_all(
 def _strip_entries(
     walks: Sequence[tuple[Sequence[tuple[_PoleId, Handle, Handle]], bool]], rd: _Reading
 ) -> dict[str, str | None]:
-    """B9: a strip a directed chain passes through is entered by one terminal side (`PortRole`)."""
+    """A strip a directed chain passes through is entered by one terminal side (`PortRole`)."""
     # A chain that no pole votes on is entered by the same side; only with no such strip
-    # does A6 decide.
+    # does the designation order decide.
     strip_entry: dict[str, str | None] = {}
     for seq, directed in walks:
         if directed:
@@ -147,8 +147,8 @@ def _strip_entries(
 def _note_turns(
     seq: Sequence[tuple[_PoleId, Handle, Handle]], poles: Mapping[_PoleId, _Pole], out: _Walks
 ) -> None:
-    """R6 D3: a terminal's entry port faces N; drawn at R180 when it is the S-facing one."""
-    # D1: so is a non-terminal function whose directed poles all point against their chains
+    """A terminal's entry port faces N; drawn at R180 when it is the S-facing one."""
+    # So is a non-terminal function whose directed poles all point against their chains
     # (a mate pole has no `inn`); the turn is per function, so a pole that points with its
     # chain vetoes it
     for p, e, _ in seq:
@@ -165,7 +165,7 @@ def _note_turns(
 
 
 def _note_edges(seq: Sequence[tuple[_PoleId, Handle, Handle]], rd: _Reading, out: _Walks) -> None:
-    """D8: the direction is final here; a cross-unit mate stands at an end of its column."""
+    """The direction is final here; a cross-unit mate stands at an end of its column."""
     # The chain enters its edge pole at the stand-in port (from the unit edge) at a top end,
     # and the parent-side pin is drawn turned (R180) so its wire port faces S into the column
     for p, e, _ in seq:
@@ -177,8 +177,8 @@ def _note_edges(seq: Sequence[tuple[_PoleId, Handle, Handle]], rd: _Reading, out
 def _note_upper(
     seq: Sequence[tuple[_PoleId, Handle, Handle]], poles: Mapping[_PoleId, _Pole], out: _Walks
 ) -> None:
-    """R7 A (amends J3 inside a chain): the pin the chain enters first is on top."""
-    # A pair in no chain keeps the J3 order
+    """Inside a chain, the pin the chain enters first is on top."""
+    # A pair in no chain keeps the default order
     if len(seq) > 1:
         for p, e, _ in seq:
             if poles[p].kind is _Synthetic.MATE:
@@ -191,10 +191,10 @@ def _split_at_groups(
     specs: Mapping[Handle, FunctionSpec],
     wires_of: Callable[[_Pole], int],
 ) -> list[Sequence[tuple[_PoleId, Handle, Handle]]]:
-    """C7: `seq` cut where the group of one pole's function differs from the next one's."""
+    """`seq` cut where the group of one pole's function differs from the next one's."""
     # A chain splits when the upstream side holds a function before the change (a terminal
     # heading a chain has no upstream part); a terminal at the change ends the upstream piece,
-    # and its replica heads the downstream one (replicate_terminals, B8)
+    # and its replica heads the downstream one (replicate_terminals)
     pieces, start = [], 0
     for i in range(len(seq) - 1):
         here, there = (group_of(specs[poles[seq[j][0]].function]) for j in (i, i + 1))
@@ -258,14 +258,14 @@ def walk_chains(
     rank_of: Mapping[Handle, int],
     tie_key: Mapping[Handle, tuple[str, ...]],
 ) -> _Walks:
-    """Walk every chain, settle its direction, and record the turns D1 and D3 ask for."""
+    """Walk every chain, settle its direction, and record the turns the direction rules ask for."""
     walks = _walk_all(state.poles, links, specs)
     rd = _reading(state, specs, rank_of, tie_key)
     rd.strip_entry.update(_strip_entries(walks, rd))
     out = _Walks()
     for walk in walks:
         _settle_walk(walk, rd, links, out)
-    out.turned = out.against - out.along  # D1: only these are drawn MR180
+    out.turned = out.against - out.along  # Only these are drawn MR180
     out.flipped |= out.turned
     return out
 
@@ -290,13 +290,13 @@ def _spare(
 
 
 def drop_unwired_poles(walks: _Walks, state: _Poles, nets: _Nets, found: _Sides) -> None:
-    """D2: drop the one-pole chains of a function's unwired poles from `walks.chains`."""
+    """Drop the one-pole chains of a function's unwired poles from `walks.chains`."""
     # Only a function with another pole in a longer chain, or one that is a side element of a
-    # pole (`found.side_info`, D1 layout-0060), loses them. A contactor with only pole 1 wired
+    # pole (`found.side_info`, layout-0060), loses them. A contactor with only pole 1 wired
     # stands in that pole's column; its unwired poles open no column of their own, which would
     # claim the function away from the wired chain. A pole is unwired when no port outside its
     # group shares its nets: the group is the pole's two ports and the ports of its side poles
-    # (`found.side_ports`, the ports they hid, D1), so a strap to a side pole does not wire it,
+    # (`found.side_ports`, the ports they hid), so a strap to a side pole does not wire it,
     # but a wire to a terminal, or to a function that is a side element nowhere, does.
     chains = walks.chains
     longer = {state.poles[p].function for ch in chains if len(ch) > 1 for p in ch}
@@ -319,7 +319,7 @@ def _signature(
         else (poles[p].item, poles[p].kind)
         for p in chain
     )
-    # S13: a chain bundles as it did while its detached throw's terminal stood at its end
+    # A chain bundles as it did while its detached throw's terminal stood at its end
     entry, exit_port = ends_of[tuple(chain)]
     head = ((),) if entry in detached else ()
     return head + own + (((),) if exit_port in detached else ())

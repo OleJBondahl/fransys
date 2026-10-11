@@ -1,4 +1,4 @@
-"""Validator: a protective device's breaking point against the prospective fault (RATINGS-3 R12).
+"""Validator: a protective device's breaking point against the prospective fault.
 
 Codes: `RATING_BREAKING_BELOW_FAULT`, `RATING_BREAKING_NO_DATA`.
 """
@@ -107,14 +107,14 @@ def check_breaking(model: Model) -> tuple[Finding, ...]:
     found: dict[tuple[Id[Function], Current, str], Finding] = {}
     for fault in prospective_fault(model):
         if fault.current_a is None or not (fault.functions or fault.supplies):
-            continue  # unknown, or no source counted (0 A): R12 is silent, R9's matter
+            continue  # unknown, or no source counted (0 A): silent here, the other rule's matter
         for function in fault.position.functions:
             if table[function].kind is not FunctionKind.PROTECTION:
                 continue
             stand = voltage_across(
                 reach_of(model, function, lookup, ports_of), ac=fault.kind is Current.AC
             )
-            if stand is None:  # no rail of this kind: R11 has no voltage to choose a point by
+            if stand is None:  # no rail of this kind: no voltage to choose a point by
                 continue
             finding = _finding(model, function, fault, fault.current_a, stand.volt)
             if finding is not None:

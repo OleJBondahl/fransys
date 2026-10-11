@@ -1,4 +1,4 @@
-"""A port's exit: its wire leaves one wiring grid along the port's facing (route.md, rule table)."""
+"""A port's exit: its wire leaves one wiring grid along the port's facing."""
 
 from .symbols import Facing
 from .units import WIRING_GRID, Point

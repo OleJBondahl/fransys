@@ -1,4 +1,4 @@
-"""Private to `write/`: the `PowerSymbol` builder (D5, model-0117).
+"""Private to `write/`: the `PowerSymbol` builder (layout-0094, model-0117).
 
 A marker the stages flagged as a power end is written as a `PowerSymbol`, never a `LinkMarker`;
 its text is an ordinary `MARKING` label of its port (`labels.labels`).

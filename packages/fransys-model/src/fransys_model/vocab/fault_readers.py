@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 def breaking_points(
     model: Model, function: Id[Function], kind: Current
 ) -> tuple[BreakingPoint, ...]:
-    """The points `function` breaks at for `kind` of current (RATINGS-3 R5).
+    """The points `function` breaks at for `kind` of current.
 
     A fitted link's points replace the holder's whole, even when the link states none.
     """
@@ -39,24 +39,24 @@ def _largest(
 
 
 def fault_current(model: Model, function: Id[Function], kind: Current) -> Decimal | None:
-    """The largest fault current `function` states for `kind` of current (RATINGS-3 R2)."""
+    """The largest fault current `function` states for `kind` of current."""
     if kind is Current.AC:
         return _largest(model, function, lambda o: o.fault_current_ac_a)
     return _largest(model, function, lambda o: o.fault_current_dc_a)
 
 
 def fault_time_constant(model: Model, function: Id[Function]) -> Decimal | None:
-    """The largest DC fault time constant, in ms, `function` states (RATINGS-3 R2)."""
+    """The largest DC fault time constant, in ms, `function` states."""
     return _largest(model, function, lambda o: o.fault_time_constant_ms)
 
 
 def draw(model: Model, function: Id[Function]) -> Decimal | None:
-    """The largest nominal current `function` states, what a load draws (RATINGS-3 R4)."""
+    """The largest nominal current `function` states, what a load draws."""
     return _largest(model, function, lambda o: o.nominal_current_a)
 
 
 def conductive_ports(model: Model, function: Id[Function]) -> tuple[Id[Port], ...]:
-    """The ports of `function` that carry current, in id order: all but its PE ports (R14)."""
+    """The ports of `function` that carry current, in id order: all but its PE ports."""
     found = (
         port.id
         for port in ports(model).values()

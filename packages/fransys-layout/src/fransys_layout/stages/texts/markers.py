@@ -1,10 +1,10 @@
-"""S9, D1 step 5: `texts` builds every reference and stub marker from its decision and the page.
+"""`texts` builds every reference and stub marker from its decision and the page.
 
 `references` decides each text (`MarkerDecision`, no coordinate). Here it gets its geometry
 from the placed cells: the port it stands at as placed (its `Leave`, `stand.leave_port`), its
 box at its first candidate beside that port (`stand.candidate_box`, `out` further along an N or
-S stub: S14's `further`), a merged stub's line (S5,
-`stand.merged`), and a C21 run's one box across its placed ends (S14). Nothing before `texts`
+S stub), a merged stub's line,
+`stand.merged`), and a run's one box across its placed ends. Nothing before `texts`
 builds a `LinkMarker`.
 """
 
@@ -85,7 +85,7 @@ def link_markers(
     sheet: SheetFormat,
     profile: Profile,
 ) -> tuple[LinkMarker, ...]:
-    """S9: the marker of every decision, in order, on the placed page (C21, C22, layout-0053)."""
+    """The marker of every decision, in order, on the placed page (layout-0053)."""
     on_page = wired_by_page(wired)
     built = []
     for one in decisions:
@@ -145,7 +145,7 @@ def _symbol_port(ref: PortRef, placement: PlacedFunction, world: PlacedWorld) ->
 
 
 def _with_off(ref: LinkMarker, end_text: StubText, profile: Profile) -> LinkMarker:
-    """D9 (F7), S5: the reference marker `ref` with one more line, the off stub of `end_text`."""
+    """The reference marker `ref` with one more line, the off stub of `end_text`."""
     box, text = merged(ref.box, ref.at, end_text, profile, vertical=ref.vertical)
     return replace(ref, box=box, text=text)
 
@@ -156,7 +156,7 @@ def _with_runs(
     sheet: SheetFormat,
     profile: Profile,
 ) -> tuple[LinkMarker, ...]:
-    """S14: each C21 run's one box across its placed stubs (`stand.run_box`, S20 M8)."""
+    """Each run's one box across its placed stubs (`stand.run_box`)."""
     members: dict[int, list[int]] = defaultdict(list)
     for index, one in enumerate(decisions):
         if one.run is not None:

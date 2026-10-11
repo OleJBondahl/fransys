@@ -14,4 +14,4 @@ Status: implemented. Each name in `__all__` is one report, and `just api fransys
 - `terminal_csv`: with `context`, an end inside the location prints short (`-B12:2/T1`) and one outside prints its location path first (`+EXT-M1:U1`). `None` prints every located end with its full path.
 - `plc_csv`, `connectors_csv`: `context` works as in `terminal_csv`. For `connectors_csv` it applies to mate pins.
 - `bom_csv`: `scope` restricts as `bom_lines` does. An item counts itself and its descendants. A location node counts the items at or below it. A unit counts its own items plus one line per unit instance directly nested in it. `derive.TOP_LEVEL` does the same at the top level.
-- `cables_csv`: a harness cable is included the same as a loose one (`cable_list_rows`'s rule). It has no `unit=`, since a cable scoped to a unit would always be empty.
+- `cables_csv`: a harness cable is included the same as a loose one (`cable_list_rows`'s rule). `unit=` lists that unit's own cables; `None` lists the top-level ones.

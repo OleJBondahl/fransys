@@ -102,7 +102,7 @@ if TYPE_CHECKING:
 _SEVERITY_RANK = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
 
 # Top-level `out_dir` export names `write` owns: everything else is left alone. The
-# three bare names are a unit's own root's exports (UNIT-ID I5), beside the `<kind>-*` globs.
+# three bare names are a unit's own root's exports, beside the `<kind>-*` globs.
 _STALE_EXPORT_PATTERNS = (
     "*.pdf",
     "bom.csv",
@@ -291,7 +291,7 @@ def _seed_reserved_for_release(
 
 
 def _unit_sources(model: Model, releases: Path) -> dict[Id[ModelUnit], NumberingPins]:
-    """Each unit instance's FD5 pin source (`_pin_source`), for those that have one."""
+    """Each unit instance's pin source (`_pin_source`), for those that have one."""
     found: dict[Id[ModelUnit], NumberingPins] = {}
     for unit in sorted(units(model)):
         record = unit_release(model, unit)
@@ -393,7 +393,7 @@ def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...
 def _draw_svgs(model: Model) -> dict[str, str]:
     """Page key to SVG text of `fransys_render`'s pages and cable blocks; only with a document.
 
-    A cable block is keyed by `cable_block_key`, a schematic page by its page id (CT5 CD12).
+    A cable block is keyed by `cable_block_key`, a schematic page by its page id.
     Built once per write/check, reused by `_check`, `_write_intermediates`, `_exports`.
     """
     pages: dict[str, str] = (
@@ -565,10 +565,10 @@ def _add_system_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit]
         "plc": ("csv", partial(plc_csv, model, unit=unit)),
         "wires": ("csv", partial(wires_csv, model, unit=unit)),
         "designations": ("csv", partial(designations_csv, model, unit=unit)),
+        "cables": ("csv", partial(cables_csv, model, unit=unit)),
     }
     if unit is None:
         made["overview"] = ("html", partial(overview_html, model))
-        made["cables"] = ("csv", partial(cables_csv, model))
     for kind, (extension, produce) in made.items():
         ledger.add(kind, _export_name(model, unit, extension, kind=kind), None, produce)
 
@@ -653,7 +653,7 @@ def _ledger(
 def _exports(
     model: Model, svgs: dict[str, str], *, unit: Id[ModelUnit] | None = None
 ) -> dict[str, bytes]:
-    """Every export of `model` by name (F6, U6): `unit` restricts them to that unit; no netlist."""
+    """Every export of `model` by name: `unit` restricts them to that unit; no netlist."""
     return _ledger(model, svgs, unit).exports
 
 
@@ -708,7 +708,7 @@ def write(
     """Write a built model's exports into `out_dir` and return their paths, sorted.
 
     Writes CSV reports, WAGO XML, overview HTML and one PDF per document; `unit=` restricts them to
-    that unit's own set (no `overview.html` or `cables.csv`). Intermediates (SVGs, netlists, `.typ`
+    that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
     sources) go only to `intermediates`, if given. Any `ERROR` in `check(result)` raises
     `BuildErrors` and leaves `out_dir` without an export, whole-model, with no escape hatch.
     Also raises `ExportNameClash`, `TypeError` or `ValueError` for a bad `unit`.
@@ -817,7 +817,7 @@ def _baseline_differs_finding(
 
 
 def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> list[Finding]:
-    """`RELEASE_NESTED_UNRELEASED` and `BASELINE_DIFFERS` (L4): the whole subtree, any depth."""
+    """`RELEASE_NESTED_UNRELEASED` and `BASELINE_DIFFERS`: the whole subtree, any depth."""
     nested_ids: tuple[Id[ModelUnit], ...] = (
         tuple(sorted(units(model)))
         if unit is None
@@ -929,7 +929,7 @@ def _interface_not_bumped_findings(
 def _release_no_history_finding(
     model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget
 ) -> Finding | None:
-    """`RELEASE_NO_HISTORY` (L4): the revision being released has no `Revision` entry."""
+    """`RELEASE_NO_HISTORY`: the revision being released has no `Revision` entry."""
     release_id = unit_release(model, unit).id if unit is not None else None
     if current_revision(model, release=release_id) is not None:
         return None
@@ -956,7 +956,7 @@ def _unit_l4_findings(
 
 
 def _l4_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> tuple[Finding, ...]:
-    """L4's release checks, reading only `<into>` and the model.
+    """The release checks, reading only `<into>` and the model.
 
     Subject is `unit` or the nested unit; the system has `subjects=()` and skips the unit-only
     checks. Nested checks walk the whole subtree.
@@ -986,9 +986,10 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
 
     Writes `<into>/<name>/<version>.<revision>/`: the unit's exports as `write` makes them,
     `baseline/` (listing, model, manifest) and, after a first release, `changes.md` and
-    `changes.csv`. Runs the same gate as `write` plus L4's checks: any `ERROR` raises `BuildErrors`
-    and writes nothing. An identical stored listing text returns the existing path untouched.
-    Files are built in a temporary sibling and renamed, so a failure leaves nothing behind.
+    `changes.csv`. Runs the same gate as `write` plus the release checks: any `ERROR`
+    raises `BuildErrors` and writes nothing. An identical stored listing text returns the
+    existing path untouched. Files are built in a temporary sibling and renamed, so a failure
+    leaves nothing behind.
 
     Does not release when `check` finds an ERROR; does not overwrite an identical release.
     """

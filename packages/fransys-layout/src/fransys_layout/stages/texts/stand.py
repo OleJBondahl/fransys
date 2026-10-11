@@ -1,13 +1,13 @@
-"""S9, S2, S16: where a reference or stub text stands beside its port, in its symbol's frame.
+"""Where a reference or stub text stands beside its port, in its symbol's frame.
 
 One home for both readers of a `MarkerDecision`'s place: `texts` builds the marker there on the
 placed page (`markers.link_markers`), and `place` reserves room for it before, as the page's
-margin above a first row or below a last one (Room's N or S call, `page_texts` and `end_boxes`,
-S16). `symbol_port` finds the symbol port a model port is drawn at, `leave_port` says which of
+margin above a first row or below a last one (Room's N or S call, `page_texts` and `end_boxes`.
+`symbol_port` finds the symbol port a model port is drawn at, `leave_port` says which of
 its symbol's ports the text stands at (`Leave`), `candidate_box` gives its box at its
-first-ranked candidate beside that port, and `merged` adds a merged stub's line (S5);
-`_text_box` is the two together, the whole box the text takes. A C21 run's one box is
-`run_box`, which `texts` builds on the placed page as the run's marker box (S17, S20).
+first-ranked candidate beside that port, and `merged` adds a merged stub's line;
+`_text_box` is the two together, the whole box the text takes. A run's one box is
+`run_box`, which `texts` builds on the placed page as the run's marker box.
 """
 
 import dataclasses
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class PageTexts:
-    """S16: one page's reference and stub texts as Room reserves them, by owner, and its wiring."""
+    """One page's reference and stub texts as Room reserves them, by owner, and its wiring."""
 
     owned: Mapping[Id[Any], tuple[MarkerDecision, ...]]
     wired: frozenset[Id[Any]]
@@ -59,7 +59,7 @@ def page_texts(
     profile: Profile,
     joined: frozenset[Id[Any]] = frozenset(),
 ) -> dict[Page, PageTexts]:
-    """Each page's `PageTexts`, by `(drawing set, page)`, from the decisions and wiring (S16)."""
+    """Each page's `PageTexts`, by `(drawing set, page)`, from the decisions and wiring."""
     line = reference_size(sheet, profile, lines=1)[1]
     owned: dict[Page, dict[Id[Any], list[MarkerDecision]]] = {}
     for one in markers:
@@ -93,7 +93,7 @@ def end_boxes(
     facing: Facing,
     profile: Profile,
 ) -> list[Box]:
-    """S16, Room's N or S call: the box of each of `drawn`'s texts at a `facing` port."""
+    """Room's N or S call: the box of each of `drawn`'s texts at a `facing` port."""
     found = []
     for one in texts.owned.get(drawn.function, ()):
         own = symbol_port(drawn, one.port, geometry)
@@ -116,7 +116,7 @@ def reach_at(
     port: PortGeometry,
     profile: Profile,
 ) -> int:
-    """S20 M9: how far the texts standing at `port` reach out along its facing, 0 for none."""
+    """How far the texts standing at `port` reach out along its facing, 0 for none."""
     far = 0
     for one in texts.owned.get(drawn.function, ()):
         own = symbol_port(drawn, one.port, geometry)
@@ -146,7 +146,7 @@ def leave_port(
     drawn: DrawnFunction | None,
     wired: frozenset[Id[Any]],
 ) -> PortGeometry:
-    """The symbol port a text stands at: `own` moved as `leave` says (C22, R7 B4, layout-0053)."""
+    """The symbol port a text stands at: `own` moved as `leave` says (layout-0053)."""
     match leave:
         case Leave.PORT:
             return own
@@ -172,7 +172,7 @@ def _facing(own: PortGeometry, ports: tuple[PortGeometry, ...], facing: Facing) 
 def _free(
     ports: tuple[PortGeometry, ...], drawn: DrawnFunction | None, wired: frozenset[Id[Any]]
 ) -> tuple[Facing, ...]:
-    """C22: a terminal's N and S facings whose model port has no wire drawn; none for another."""
+    """A terminal's N and S facings whose model port has no wire drawn; none for another."""
     if drawn is None or not drawn.roles.terminal:
         return ()
     by_symbol = {port.symbol_port: port.port for port in drawn.ports}
@@ -186,12 +186,12 @@ def along(one: MarkerDecision, facing: Facing) -> int:
 
 
 def vertical(one: MarkerDecision, facing: Facing) -> bool:
-    """S20 M1 (model-0114): `one`'s text reads along its wire, turned, at an N or S port."""
+    """model-0114: `one`'s text reads along its wire, turned, at an N or S port."""
     return reads_along(one.run, facing)
 
 
 def candidate_box(one: MarkerDecision, at: Point, facing: Facing) -> Box:
-    """S2: `one`'s box at its first-ranked candidate beside its port at `at`, facing `facing`."""
+    """`one`'s box at its first-ranked candidate beside its port at `at`, facing `facing`."""
     kind = TextKind.STUB if one.star == "off" else TextKind.REFERENCE
     width, height = one.size
     size = (height, width) if vertical(one, facing) else one.size
@@ -208,7 +208,7 @@ RUN_PIN_GAP = 3 * WIRING_GRID
 def run_box(
     first: Box, ends: tuple[Point, Point], content_width: int, text: str, profile: Profile
 ) -> tuple[Box, int | None]:
-    """S20 M8, S14: a C21 run's one box over its pins, and where its text breaks (D14 M2)."""
+    """A run's one box over its pins, and where its text breaks."""
     pad, height = 2 * profile.marker_padding, profile.text_height
     stubs = (ends[0].x, ends[1].x)
     north = first.y + first.height <= ends[0].y
@@ -237,7 +237,7 @@ def run_box(
 
 
 def _text_box(one: MarkerDecision, at: Point, facing: Facing, profile: Profile) -> Box:
-    """`candidate_box` with a merged stub's line (S5): the whole box the text takes."""
+    """`candidate_box` with a merged stub's line : the whole box the text takes."""
     box = candidate_box(one, at, facing)
     if one.merge is None:
         return box
@@ -267,7 +267,7 @@ def tier_offset(tier: int, height: int, *, south: bool) -> int:
 def _reserved_box(
     one: MarkerDecision, at: Point, facing: Facing, profile: Profile, *, tier: int
 ) -> Box:
-    """S20 I4 Q1, M4: the box Room reserves for `one` at `at`, `start_tier` boxes out."""
+    """The box Room reserves for `one` at `at`, `start_tier` boxes out."""
     box = _text_box(one, at, facing, profile)
     return dataclasses.replace(
         box, y=box.y + tier_offset(tier, box.height, south=facing is Facing.S)
@@ -277,7 +277,7 @@ def _reserved_box(
 def joined_ports(
     connections: tuple[Connection, ...], columns: tuple[Column, ...]
 ) -> frozenset[Id[Any]]:
-    """The model ports whose connection runs to a side element's cell (S20 I4 Q1)."""
+    """The model ports whose connection runs to a side element's cell."""
     sides = {cell.function for column in columns for cell in column.cells if cell.side}
     return frozenset(
         end.port
@@ -288,7 +288,7 @@ def joined_ports(
 
 
 def joined_box(boxes: tuple[Box, ...], at: Point, profile: Profile, *, vertical: bool) -> Box:
-    """S20 M3: the one box of the markers at one pin, from `boxes` (each its own text's box)."""
+    """The one box of the markers at one pin, from `boxes` (each its own text's box)."""
     first, trim = boxes[0], 2 * profile.marker_padding * (len(boxes) - 1)
     if vertical:
         width, length = sum(b.width for b in boxes) - trim, max(b.height for b in boxes)
@@ -303,7 +303,7 @@ def joined_box(boxes: tuple[Box, ...], at: Point, profile: Profile, *, vertical:
 def merged(
     box: Box, at: Point, end_text: StubText, profile: Profile, *, vertical: bool = False
 ) -> tuple[Box, str]:
-    """D9 (F7), S5: a reference's `box` at port `at` with one more line, the stub of `end_text`."""
+    """A reference's `box` at port `at` with one more line, the stub of `end_text`."""
     north = box.y + box.height <= at.y
     text = off_stub_line(
         end_text.cable,

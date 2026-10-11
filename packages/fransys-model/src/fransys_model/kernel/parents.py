@@ -1,4 +1,4 @@
-"""The one leaf-to-root walk over a parent relation (REVIEW-M M6); every parent chain asks it."""
+"""The one leaf-to-root walk over a parent relation; every parent chain asks it."""
 
 lazy from collections.abc import Callable, Iterator
 

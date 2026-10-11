@@ -1,4 +1,4 @@
-"""The inputs of one page's stacking, the rule `place` and `page_stack` stack by (S12)."""
+"""The inputs of one page's stacking, the rule `place` and `page_stack` stack by."""
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class PageStacking:
-    """What `place` and `page_stack` both stack a page by, so each port's offset agrees (S12)."""
+    """What `place` and `page_stack` both stack a page by, so each port's offset agrees."""
 
     profile: Profile
     sheet: SheetFormat
@@ -25,7 +25,7 @@ class PageStacking:
     bottom_headroom_lanes: int = 0
     label_boxes: Mapping[Handle, list[tuple[str, Box]]] = field(default_factory=frozendict)
     texts: PageTexts | None = None
-    # S4: the page's set's digits, so the band `place` reserves is as wide as the box it holds
+    # The page's set's digits, so the band `place` reserves is as wide as the box it holds
     digits: Digits = FLOOR
     # layout-0154 (layout-0158): each (function, port) a line's conductor lands on
     line_ends: frozenset[tuple[Handle, Handle]] = frozenset()

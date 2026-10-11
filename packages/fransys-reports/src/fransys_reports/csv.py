@@ -134,7 +134,7 @@ def bom_csv(
 def wires_csv(
     model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
 ) -> str:
-    """Write the wire list as CSV (V8).
+    """Write the wire list as CSV.
 
     Formats ``fransys_model.derive.wire_rows``, one row per wire: `from`, `to`, `colour`,
     `cross_section_mm2` and the `label` printed at both ends. `unit` and `context` pass
@@ -196,16 +196,17 @@ def connectors_csv(
     )
 
 
-def cables_csv(model: Model) -> str:
-    """Write the top-level cable list as CSV (root decision 0016).
+def cables_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
+    """Write the cable list as CSV (root decision 0016).
 
-    Formats ``fransys_model.derive.queries.cable_list_rows``, one row per `unit=None` cable.
-    It takes no `unit=`: those cables are top-level by construction, so a unit scope is empty.
+    Formats ``fransys_model.derive.queries.cable_list_rows``, one row per cable of `unit`
+    (top-level cables for `unit=None`). Pure.
 
     Args:
         model: A frozen, numbered model.
+        unit: The unit whose cables to list, or None for the system.
 
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(cable_list_rows(model), CABLE_LIST_COLUMNS)
+    return _csv(cable_list_rows(model, unit=unit), CABLE_LIST_COLUMNS)

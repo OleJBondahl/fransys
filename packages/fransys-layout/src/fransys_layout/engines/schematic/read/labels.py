@@ -65,7 +65,7 @@ def label_requests(
             )
         for port in function.ports:
             slot = f"marking.{port.symbol_port}"
-            # I4 R1: a port whose part prints no marking gets no marking label
+            # A port whose part prints no marking gets no marking label
             if slot in slots and text_of[LabelKind.MARKING, port.port]:
                 requests.append(
                     LabelRequest(

@@ -1,7 +1,7 @@
-"""Stage 5, labels: tags, markings, values, cross-references (labels.md 6.7).
+"""Stage 5, labels: tags, markings, values, cross-references.
 
 Labels are obstacles for routes placed after them, so an engine calls `place_slot_labels`
-(stage 5, D3's placer, S18) before `links` and `route`. Overlap rules ignore the keep-out box
+(stage 5, the placer) before `links` and `route`. Overlap rules ignore the keep-out box
 of the label's own symbol, which contains its slots by definition.
 """
 
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from .stacking import JoinedRun
     from .types import Connection, DrawnFunction, Handle, LabelRequest, PlacedFunction
 
-# S18: the slot labels' kinds in D3's table
+# The slot labels' kinds in the placer's table
 _TEXT_KIND = frozendict(
     {
         LabelKind.TAG: TextKind.TAG,
@@ -44,7 +44,7 @@ _TEXT_KIND = frozendict(
 
 @value
 class SlotFrame:
-    """What bounds a slot label (S18): text sizes and content box (None at first)."""
+    """What bounds a slot label: text sizes and content box (None at first)."""
 
     content: Box | None
     profile: Profile
@@ -58,7 +58,7 @@ def place_slot_labels(
     occupied: tuple[Box, ...] = (),
     frame: SlotFrame,
 ) -> tuple[tuple[PlacedLabel, ...], tuple[Finding, ...]]:
-    """S18: every slot label of one page, placed by D3's placer before routing (D3)."""
+    """Every slot label of one page, placed by the placer before routing."""
     placed_of = _placed_of(placed)
     owner_of = _owner_of(placed_of, drawn)
     space = Space(
@@ -113,7 +113,7 @@ def place_slot_labels(
 
 
 def _slot_anchor(where: Home, kind: TextKind) -> Anchor:
-    """The span between a slot label's home box and its mirror, where D3's W and E sides stand."""
+    """The span between a slot label's home box and its mirror, where W and E sides stand."""
     if not where.vertical:
         msg = "a slot label on an N or S side has no span for the table's W and E rows"
         raise LayoutError(msg)
@@ -161,7 +161,7 @@ def decided_runs(
     connections: tuple[Connection, ...],
     joins: tuple[JoinedRun, ...],
 ) -> tuple[Box, ...]:
-    """S20: the wires known before `place`, as boxes no text stands on (C23 corridors, joins)."""
+    """The wires known before `place`, as boxes no text stands on (corridors, joins)."""
     at = _port_points(placed, drawn)
     half = WIRING_GRID // 2
     found = list(_corridors(placed, drawn, connections))
@@ -180,7 +180,7 @@ def _corridors(
     drawn: tuple[DrawnFunction, ...],
     connections: tuple[Connection, ...],
 ) -> tuple[Box, ...]:
-    """C23: a box on each vertical connection's straight wire between its ports, kept label-free."""
+    """A box on each vertical connection's straight wire between its ports, kept label-free."""
     at = _port_points(placed, drawn)
     found = []
     half = WIRING_GRID // 2

@@ -1,8 +1,8 @@
-"""Lint a part library without building a model (rulings P4-P8).
+"""Lint a part library without building a model.
 
 Every check is `ERROR` unless the call site passes `severity=Severity.WARNING`. Codes are
 listed next to the check that raises them, and every finding's message carries its file
-and line (`_toml.finding`, P6): `lint()` hands back bare findings with no model to resolve
+and line (`_toml.finding`): `lint()` hands back bare findings with no model to resolve
 an id's origin through, so the location lives in the text instead.
 """
 

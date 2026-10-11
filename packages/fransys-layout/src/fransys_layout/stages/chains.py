@@ -1,4 +1,4 @@
-"""Stage 2, chain discovery: current paths from connectivity alone (deep-dive prototype, R4).
+"""Stage 2, chain discovery: current paths from connectivity alone.
 
 Every function no authored chain claims takes part.
 
@@ -7,7 +7,7 @@ Every function no authored chain claims takes part.
    symbol port, `out` its S-facing one. A terminal pole has no direction. A mated pin pair
    (equal-named ports of two mated functions) is a direction-free pole too.
 2. Nets: conductors (`Connection`) and declared nets (`NetGroup`), never internal links.
-3. Side elements (D1, layout-0060). A pole whose two ends sit on the same two nets as another
+3. Side elements (layout-0060). A pole whose two ends sit on the same two nets as another
    pole is that pole's side element, of one function or of two: a suppressor beside a coil,
    K2's pole 1 strapped to K1's. The carrier is the child item's coil, else the pole whose
    item designation sorts first, then its port; a side pole of the carrier's own function is
@@ -22,7 +22,7 @@ Every function no authored chain claims takes part.
    whose function stands in a longer chain or is a side element, it is dropped with them
    (`_drop_unwired_poles`).
 4. Chains: a net of exactly two pole ports links them; any other net ends the chain. A chain
-   runs top to bottom in the direction most of its non-terminal poles give. S13 (layout-0090):
+   runs top to bottom in the direction most of its non-terminal poles give. Changeovers:
    a changeover whose two throws each end at a terminal with no other wire links neither
    terminal: its chain stops at the pole, both terminals hang under it (`_attach`), the throw
    on its through path in the second row, and the chain bundles as if that terminal stood in it.
@@ -69,32 +69,32 @@ if TYPE_CHECKING:
     )
 
 # A terminal attached to a host's port (`_attach`): its row on that side of the host (0 the
-# nearest, 1 the second, S13), the port's x, the terminal's function key and handle, the host's
+# nearest, 1 the second), the port's x, the terminal's function key and handle, the host's
 # symbol port, and whether the terminal is drawn flipped.
 type _Attachment = tuple[int, int, AuthoringKey, Handle, str, bool]
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ChainRecords:
-    """Chain discovery reads connectivity alone: these records and nothing else (stage 2, R4)."""
+    """Chain discovery reads connectivity alone: these records and nothing else (stage 2)."""
 
     functions: tuple[FunctionSpec, ...]
     drawn: tuple[DrawnFunction, ...]
     connections: tuple[Connection, ...]
     net_groups: tuple[NetGroup, ...]
     mates: tuple[MatedFunctions, ...]
-    # units U1, I2a: a pin mated across a unit boundary, `a` in the parent's set, `b` the child
+    # A pin mated across a unit boundary, `a` in the parent's set, `b` the child
     # unit's boundary pin. The pair is a mate pole whose `b` end is a stand-in port on no net, so
     # the chain stops at the unit edge; `b` is drawn face to face under `a` as a replica cell,
     # its black box, while its home stays in the child's chain.
     edge_mates: tuple[MatedFunctions, ...] = ()
-    # V1: the item-box ports whose side V1 fixes; the part they reach stands on that side
+    # The item-box ports whose side is fixed; the part they reach stands on that side
     fixed: frozenset[Handle] = frozenset()
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class _AttachReads:
-    """What `_attach` reads of a terminal's wire; `second` holds ports attached in row two (S13)."""
+    """What `_attach` reads of a terminal's wire; `second` holds ports attached in row two."""
 
     specs: Mapping[Handle, FunctionSpec]
     drawn_of: Mapping[Handle, DrawnFunction]
@@ -112,7 +112,7 @@ def discover_chains(
     tie_key: Mapping[Handle, tuple[str, ...]] | None = None,
     key_order: Mapping[Handle, tuple[Any, ...]],
 ) -> tuple[Column, ...]:
-    """Find the chains and bundles, one column each; `tie_key` breaks end ties (D1, model-0052)."""
+    """Find the chains and bundles, one column each; `tie_key` breaks end ties (model-0052)."""
     functions, connections = records.functions, records.connections
     rank_of, tie_key = rank_of or {}, tie_key or {}
     specs = {spec.function: spec for spec in functions}
@@ -142,12 +142,12 @@ def _finish_columns(
     columns = []
     for cells in built:
         # keyed by its first placed non-attachment function: unique, a function is placed
-        # once; R5 rule 4: within a group, columns run by the top function's designation
+        # once; within a group, columns run by the top function's designation
         top = specs[
             next(c for c in cells if c.host is None and c.home is not Home.ELSEWHERE).function
         ]
         first_key = ("chain", top.designation, *top.key)
-        # C11: a column's group and location are its own cells', not its attachments' (nor
+        # A column's group and location are its own cells', not its attachments' (nor
         # an edge pin's, a replica whose home is in its own unit)
         own_specs = [
             specs[c.function] for c in cells if c.host is None and c.home is not Home.ELSEWHERE
@@ -164,7 +164,7 @@ def _leaves_its_set(terminal: FunctionSpec, host: FunctionSpec) -> bool:
 
 
 def _attach(built: Sequence[list[Cell]], reads: _AttachReads) -> list[list[Cell]]:
-    """R7.1: a one-terminal column wired to one N or S port becomes a cell of its host (S13)."""
+    """A one-terminal column wired to one N or S port becomes a cell of its host."""
     specs, drawn_of, members = reads.specs, reads.drawn_of, reads.members
     net_of, second = reads.net_of, reads.second
     connections, port_function = reads.connections, reads.port_function
@@ -176,7 +176,7 @@ def _attach(built: Sequence[list[Cell]], reads: _AttachReads) -> list[list[Cell]
             continue
         terminal = cells[0].function
         own = [p.port for p in specs[terminal].ports]
-        # C10: a terminal's own conductors decide, else (net group only) its net
+        # A terminal's own conductors decide, else (net group only) its net
         direct = [
             (c.b.port if c.a.port == q else c.a.port)
             for q in own
@@ -219,7 +219,7 @@ def _attach(built: Sequence[list[Cell]], reads: _AttachReads) -> list[list[Cell]
 def _attached_rows(
     row: Sequence[Cell], found: Mapping[tuple[Handle, str], list[_Attachment]], facing: str
 ) -> list[list[Cell]]:
-    """R7.1: the attachment rows on the `facing` side of `row`, nearest first (S13)."""
+    """The attachment rows on the `facing` side of `row`, nearest first."""
     entries = [(c.function, a) for c in row for a in sorted(found.get((c.function, facing), ()))]
     return [
         [
@@ -233,7 +233,7 @@ def _attached_rows(
 def _stack_attachments(
     cells: Sequence[Cell], found: Mapping[tuple[Handle, str], list[_Attachment]]
 ) -> list[Cell]:
-    """R7.1: one column's `cells` with its attachment rows above and below each row with any."""
+    """One column's `cells` with its attachment rows above and below each row with any."""
     rows = by_key(cells, lambda cell: cell.index)
     out: list[Sequence[Cell]] = []
     for index in sorted(rows):

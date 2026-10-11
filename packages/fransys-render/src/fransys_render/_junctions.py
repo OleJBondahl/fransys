@@ -1,4 +1,4 @@
-"""Junction dots (D8, render-0004): three or more directions of one net's wire leave a point."""
+"""Junction dots (render-0004): three or more directions of one net's wire leave a point."""
 
 import itertools
 from typing import TYPE_CHECKING
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from fransys_model.layout import LinkMarker, Page
     from fransys_model.vocab import Port
 
-# A junction needs three or more directions of wire leaving one point (D8).
+# A junction needs three or more directions of wire leaving one point.
 _JUNCTION_THRESHOLD = 3
 
 type _Point = tuple[int, int]
@@ -24,7 +24,7 @@ type _Segment = tuple[_Point, _Point]
 
 
 def _marker_stub(model: Model, marker: LinkMarker) -> _Segment:
-    """`marker`'s drawn stub: out along its facing, or from `via` along the wire (I4, M7)."""
+    """`marker`'s drawn stub: out along its facing, or from `via` along the wire."""
     if marker.via_x is not None and marker.via_y is not None:  # both or neither
         via = (marker.via_x, marker.via_y)
         centre = marker.box_x + marker.width // 2 if marker.box_x is not None else via[0]
@@ -51,7 +51,7 @@ def _directions(point: _Point, segments: list[_Segment]) -> set[_Point]:
 
 
 def junction_locations(model: Model, page: Page) -> tuple[_Point, ...]:
-    """Every junction dot location on `page`, ordered by `(x, y)` grid units (D11).
+    """Every junction dot location on `page`, ordered by `(x, y)` grid units.
 
     Only routes and markers are read: fan-out legs and harness lines are never counted, by kind.
     """
@@ -77,7 +77,7 @@ def junction_locations(model: Model, page: Page) -> tuple[_Point, ...]:
 
 
 def junctions_group(model: Model, page: Page) -> str:
-    """Every junction dot on `page` as one `<circle>` each, ordered by position (D8, D11)."""
+    """Every junction dot on `page` as one `<circle>` each, ordered by position."""
     sheet = sheet_format_of(model, page.sheet_format)
     radius_mm = format_decimal(JUNCTION_DOT_DIAMETER_MM / 2)
     circles = []

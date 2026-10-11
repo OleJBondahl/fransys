@@ -1,4 +1,4 @@
-"""The layout records of one page, per kind, grouped once per model (RW2, decision model-0141)."""
+"""The layout records of one page, per kind, grouped once per model (decision model-0141)."""
 
 from typing import Any, cast
 

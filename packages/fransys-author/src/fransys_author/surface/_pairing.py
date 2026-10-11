@@ -1,4 +1,4 @@
-"""The pole rule and the pairing of series ends, pure functions over the part's facts (EA5)."""
+"""The pole rule and the pairing of series ends, pure functions over the part's facts."""
 
 from typing import TYPE_CHECKING, NamedTuple, Protocol, cast, runtime_checkable
 

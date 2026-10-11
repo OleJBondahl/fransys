@@ -26,8 +26,8 @@ def start_reach(
     side_info: Mapping[Handle, tuple[bool, bool]],
 ) -> _Reach:
     """The reach state: the functions already in a pole."""
-    # C1 (owner): a column continues through a non-series function its end nets reach;
-    # C1b claim by most ports; C1c no flip above two ports; (iii) single chains ending on one
+    # A column continues through a non-series function its end nets reach;
+    # Claim by most ports; no flip above two ports; single chains ending on one
     # multi-port function are adjacent lanes with it spanning under them; same location only
     in_poles = {
         f
@@ -65,7 +65,7 @@ def _reach_of(r: _Reach, port: Handle) -> tuple[Handle, Handle] | None:
 def _lone_terminal(
     r: _Reach, bundle: Sequence[list[_PoleId]], connections: tuple[Connection, ...]
 ) -> bool:
-    """C9: a bundle of one terminal pole with one wire attaches by L9, beside neighbours."""
+    """A bundle of one terminal pole with one wire attaches beside its neighbours."""
     pole = r.state.poles[bundle[0][0]]
     if len(bundle) != 1 or len(bundle[0]) != 1 or not pole.terminal:  # cost gate, not the rule
         return False
@@ -83,7 +83,7 @@ def _vote_lane(
         hit = _reach_of(r, port)
         if hit is None or r.specs[hit[0]].location_path != top.location_path:
             continue
-        # V1: a pin whose side is fixed has its part on that side: below an N pin, above an S
+        # A pin whose side is fixed has its part on that side: below an N pin, above an S
         below = _facing(r.drawn_of[hit[0]], hit[1]) == "n" if hit[1] in r.fixed else at_exit
         r.votes[hit[0]].setdefault(b, []).append((hit[1], below))
         r.lane_hit.setdefault((hit[0], b), lane_of)
@@ -149,10 +149,10 @@ def _merge_singles(
     drawn = r.drawn_of[function]
     symbol = _symbol_of(drawn)
     port_x = {g.name: g.at.x for g in drawn.geometry.ports}
-    # V1: on an item box whose pins V1 fixes, those that all end above merge too, on top
+    # On an item box whose pins are fixed, those that all end above merge too, on top
     below = not any(p in r.fixed and not down for found in hits.values() for p, down in found)
     singles = _singles(r, hits, below=below)
-    if len(drawn.geometry.ports) > 2 and len(singles) > 1:  # noqa: PLR2004 -- (iii)
+    if len(drawn.geometry.ports) > 2 and len(singles) > 1:  # noqa: PLR2004 -- the chain count is the rule's own size, not a tunable
         singles.sort(key=lambda b: min(port_x.get(symbol.get(p), 0) for p, _ in hits[b]))
         return _fold(r, hits, singles, below=below)
     return dict(hits)
@@ -161,7 +161,7 @@ def _merge_singles(
 def _score(
     r: _Reach, hits: Mapping[int, list[tuple[Handle, bool]]], b: int
 ) -> tuple[int, str, AuthoringKey]:
-    """C1b: the group with most ports wins, then the first by designation."""
+    """The group with most ports wins, then the first by designation."""
     top = r.specs[r.state.poles[r.groups[b].chains[0][0]].function]
     return (-len(hits[b]), top.designation, top.key)
 
@@ -169,7 +169,7 @@ def _score(
 def _turn(
     r: _Reach, function: Handle, found: Sequence[tuple[Handle, bool]], *, below: bool
 ) -> bool:
-    """C1c: whether a function of two ports turns: its port faces away from the column."""
+    """Whether a function of two ports turns: its port faces away from the column."""
     port = next(p for p, down in found if down == below)
     return _facing(r.drawn_of[function], port) == ("s" if below else "n")
 
@@ -184,12 +184,12 @@ def _claim(r: _Reach, function: Handle) -> bool:
     reached = r.span_hit.get((function, winner))
     bound = _symbol_of(r.drawn_of[function])
     if reached in bound:
-        r.span_symbol[function] = bound[reached]  # C12
+        r.span_symbol[function] = bound[reached]
     below = sum(1 for _, down in hits[winner] if down) >= sum(
         1 for _, down in hits[winner] if not down
     )
     r.extra[winner][1 if below else 0].append(function)
-    return len(r.drawn_of[function].geometry.ports) <= 2 and _turn(  # noqa: PLR2004 -- C1c
+    return len(r.drawn_of[function].geometry.ports) <= 2 and _turn(  # noqa: PLR2004 -- a two-port function's turn
         r, function, hits[winner], below=below
     )
 
@@ -243,7 +243,7 @@ def vote_columns(r: _Reach, walks: _Walks, connections: tuple[Connection, ...]) 
     for function in sorted(r.votes, key=lambda f: r.specs[f].key):
         if _claim(r, function):
             walks.flipped.add(function)
-    # I4 Q2: a pin whose only net is a star (three or more ports) joins the column
+    # A pin whose only net is a star (three or more ports) joins the column
     # of the star's first member by designation, below it when that member's port faces S,
     # above it when N; that end is then a wire, the other members keep their markers
     lane_of_pole = {

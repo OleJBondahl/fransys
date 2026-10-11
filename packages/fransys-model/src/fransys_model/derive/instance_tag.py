@@ -1,4 +1,4 @@
-"""UNIT-TAGS UT1, UT2: a unit instance's tag, and what a container prints for an item inside it.
+"""A unit instance's tag, and what a container prints for an item inside it.
 
 Reached as `fransys_model.derive.instance_tag.<name>`, not re-exported from `derive/__init__.py`.
 """
@@ -38,7 +38,7 @@ def tag_chain(parts: Iterable[str]) -> str:
 
 
 def instance_name(tags: Iterable[str]) -> str:
-    """How a listing names an instance: `-U3`, nested `-U1-U3` (UT2)."""
+    """How a listing names an instance: `-U3`, nested `-U1-U3`."""
     return "-" + tag_chain(tags)
 
 
@@ -54,7 +54,7 @@ def instance_tags(model: Model, item_unit: Id[Unit], view: Id[Unit] | None) -> t
 
 
 def _stands_for_instance(model: Model, item: Id[Item]) -> bool:
-    """Whether `item` is the sole board root of its unit: the instance tag names it (UT2)."""
+    """Whether `item` is the sole board root of its unit: the instance tag names it."""
     return is_sole_unit_root(model, item) and item in enclosing_boards(model, item)
 
 
@@ -79,7 +79,7 @@ def instance_designation(
 
 
 def unit_root(model: Model, item: Id[Item], unit: Id[Unit]) -> Id[Item] | None:
-    """L4 (R2): `unit`'s sole root when `item` is below it, else `None` (its document drops it)."""
+    """`unit`'s sole root when `item` is below it, else `None` (its document drops it)."""
     if item not in unit_items(model, unit):
         return None
     roots = unit_own_roots(model, unit)

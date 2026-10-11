@@ -1,13 +1,13 @@
-"""D1 step 4, `references` (layout-0090, S1): which net ends are wires, references or stubs.
+"""Step 4, `references` (layout-0090): which net ends are wires, references or stubs.
 
-`references` is the package's one entry point (S12), called before `place` on the planned pages
-(S10): it decides the joins (`joins.joined_runs`, on `place`'s own stacking), the star nets
+`references` is the package's one entry point, called before `place` on the planned pages.
+It decides the joins (`joins.joined_runs`, on `place`'s own stacking), the star nets
 (`nets`), the cuts across pages (`cuts`), a wired conductor's ends apart in another drawing set
-(`apart`, S21), the reference and stub texts they give (`markers`,
+(`apart`), the reference and stub texts they give (`markers`,
 `off_stubs`, sized by `marker_boxes` for each set's `digits`), and returns them as one
-`References` of decisions only (S9): `texts` builds every marker from them on the placed page.
+`References` of decisions only: `texts` builds every marker from them on the placed page.
 Room's first call for a reference beside an E or W port reads `columns` alone
-(`side_reference_rooms`, S11).
+(`side_reference_rooms`).
 """
 
 from dataclasses import replace
@@ -65,7 +65,7 @@ __all__ = (
 
 
 def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]]:
-    """D1 step 4, before `place` (S10): every net end's decision in one `References`."""
+    """Step 4, before `place`: every net end's decision in one `References`."""
     seating = inputs.seating
     joins = joined_runs(
         inputs.connections,
@@ -75,7 +75,7 @@ def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]
         power=frozenset(inputs.power),
     )
     decided, findings = _decided(inputs, joins, MappingProxyType({}))
-    # S4: a power end prints no `#n`, so it is no reference group
+    # A power end prints no `#n`, so it is no reference group
     digits = set_digits(
         (one for one in decided.markers if not one.symbol), seating.plans, inputs.location_paths
     )
@@ -88,7 +88,7 @@ def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]
 def _with_rail_ends(
     markers: tuple[MarkerDecision, ...], inputs: ReferenceInputs, scene: MarkerScene, off: OffInputs
 ) -> tuple[MarkerDecision, ...]:
-    """The power-flagged markers, and a symbol at each rail end that has none (V3)."""
+    """The power-flagged markers, and a symbol at each rail end that has none."""
     flagged = with_power_ends(with_off_markers(markers, inputs.seating, off), inputs.power)
     taken = {(one.port, one.drawing_set, one.page) for one in flagged if one.symbol}
     rails = rail_markers(inputs.rail_ends, scene, inputs.exempt, inputs.outward, taken)
@@ -101,13 +101,13 @@ def _decided(
     """`references` on `joins`, with each set's texts sized for its `digits` (`digits` empty)."""
     plans, columns = inputs.seating.plans, inputs.seating.columns
     drawn, placed = inputs.seating.drawn, inputs.seating.seats
-    # R7 B4: a net of three or more ports is drawn as markers: its conductors are not routed
+    # A net of three or more ports is drawn as markers: its conductors are not routed
     stars = with_orphans(
         star_nets(inputs.connections, inputs.functions, columns, joins.beside),
         inputs.net_groups,
         side_functions(columns),
     )
-    # S20 M12: a wire that would turn back round a device is a reference pair
+    # A wire that would turn back round a device is a reference pair
     starred = {handle for star in stars for handle in star.wires}
     stars = (
         *stars,

@@ -1,4 +1,4 @@
-"""The diagram placer's frame (BD5): boxes, line ends, channels and cuts per sheet, all in G.
+"""The diagram placer's frame: boxes, line ends, channels and cuts per sheet, all in G.
 
 Coordinates are from a sheet's content corner (0, 0) and multiples of `WIRING_GRID`. Lines are
 indexes into `DiagramFacts.lines`; columns are numbered from 0 over the whole diagram.

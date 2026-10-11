@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages._image_foot import marker_feet, with_marker_push
 from fransys_layout.stages.box_reach import sized_columns
 from fransys_layout.stages.images import image_reserves, with_flipped_below
 from fransys_layout.stages.references import Wiring, side_reference_rooms
@@ -25,7 +26,7 @@ def sized(
     own_set: tuple[LabelRequest, ...],
 ) -> tuple[tuple[DrawnFunction, ...], tuple[ColumnWidth, ...], ImageInputs, dict[Any, Any]]:
     """The sized `drawn` functions and column widths, and each contact image's reserve."""
-    # C8(b), S11: columns are sized with the keep-outs grown by the measured labels (`own_set`)
+    # Columns are sized with the keep-outs grown by the measured labels (`own_set`)
     # and by Room's first call for a reference beside an E or W port
     sides = side_reference_rooms(
         columns,
@@ -34,11 +35,13 @@ def sized(
         sheet=inputs.sheet,
         profile=inputs.profile,
     )
-    # V5: a box's pins stand a contact's width apart, from the keep-outs grown by the labels
+    # A box's pins stand a contact's width apart, from the keep-outs grown by the labels
     drawn, widths = sized_columns(columns, drawn, own_set, sides, inputs.profile)
-    # I4 Q1: room for each contact image under its coil's lane, kept while placing
+    # Room for each contact image under its coil's lane, kept while placing
     img = image_inputs(model, inputs)
     every = (*inputs.functions, *inputs.spares)
     heights = {one.function: one.geometry.keepout.height for one in drawn}
+    feet = marker_feet(drawn, inputs.power, inputs.profile)  # layout-0171
     reserves = image_reserves(columns, every, inputs.profile, img.marks, img.owners)
+    reserves = with_marker_push(reserves, feet, inputs.profile)
     return drawn, widths, img, with_flipped_below(reserves, columns, heights)

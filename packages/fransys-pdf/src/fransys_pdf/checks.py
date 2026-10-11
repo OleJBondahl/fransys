@@ -1,12 +1,12 @@
 """What `fransys_pdf.source` cannot draw.
 
-`MARKDOWN_UNSUPPORTED` (P6), `DOCUMENT_MIXED_SHEET_FORMATS` (P4), `DOCUMENT_NO_DRAWINGS` (P7, P8),
-`DOCUMENT_EMPTY_LIST` (P9), `TITLE_BLOCK_NO_ROOM`, `DRAWING_SET_REPLICA_ONLY`,
+`MARKDOWN_UNSUPPORTED`, `DOCUMENT_MIXED_SHEET_FORMATS`, `DOCUMENT_NO_DRAWINGS`,
+`DOCUMENT_EMPTY_LIST`, `TITLE_BLOCK_NO_ROOM`, `DRAWING_SET_REPLICA_ONLY`,
 `DOCUMENT_NO_TOP_LEVEL_CABLES` (decision pdf-0006), `TITLE_BLOCK_NOTICE_OVERFLOW` and
 `TITLE_BLOCK_TEXT_OVERFLOW` and `TITLE_BLOCK_UNIT_IDENTITY_MISSING` (a unit document whose unit has
 an empty `title` or `number`, one WARNING per document).
 
-`TITLE_BLOCK_TEXT_OVERFLOW` covers all nine one-line fields (R11.7: "every field except the
+`TITLE_BLOCK_TEXT_OVERFLOW` covers all nine one-line fields ("every field except the
 notice"): the six document-level ones (`title`, `number`, `customer`, `revision`,
 `revision_date`, `author`, from `_geometry.document_facts`, the same reader `_title_block`
 itself cuts) and the three page-level ones (`page_title`, `scope`, `sheet_counter`), read from
@@ -149,7 +149,7 @@ class _FieldTarget:
 def _one_line_overflow_finding(
     target: _FieldTarget, field: str, text: str, *, where: str, fallback: str | None
 ) -> Finding | None:
-    """One `TITLE_BLOCK_TEXT_OVERFLOW` finding if `text` and `fallback` both miss (R11.7)."""
+    """One `TITLE_BLOCK_TEXT_OVERFLOW` finding if `text` and `fallback` both miss."""
     shown, ok, _printed = field_cell(target.sheet, field, text, fallback=fallback)
     if ok:
         return None
@@ -164,7 +164,7 @@ def _one_line_overflow_finding(
 def _document_level_overflow_findings(
     model: Model, subject: _DocId, record: Document, sheet: SheetFormat
 ) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` for the six document-level fields (R11.7)."""
+    """`TITLE_BLOCK_TEXT_OVERFLOW` for the six document-level fields."""
     title, number, customer, revision, revision_date, author = document_facts(model, record)
     values = {
         "title": title,
@@ -188,7 +188,7 @@ def _document_level_overflow_findings(
 def _page_fields_overflow_findings(
     target: _FieldTarget, pages: tuple[tuple[TitleBlockFields, str], ...], *, kind: str
 ) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` for the scope and each page's `(fields, where)` (R11.7).
+    """`TITLE_BLOCK_TEXT_OVERFLOW` for the scope and each page's `(fields, where)`.
 
     The fields are the very ones the page source prints, from `schematic_fields`,
     `harness_run_fields` and `section_fields`, so this can never disagree with the page.
@@ -243,7 +243,7 @@ def _text_overflow_findings(
     pages: tuple[PageKind, ...],
     svgs: Mapping[str, str],
 ) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` (R11.7) for every one-line field but the notice."""
+    """`TITLE_BLOCK_TEXT_OVERFLOW` for every one-line field but the notice."""
     sheet = resolve_sheet_format(model, record, pages)
     if not title_block_fits(sheet):
         return ()
@@ -254,7 +254,7 @@ def _text_overflow_findings(
 
 
 def _notice_overflow_findings(model: Model) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_NOTICE_OVERFLOW` (R11.4): one finding if `Project.notice` misses any cell."""
+    """`TITLE_BLOCK_NOTICE_OVERFLOW`: one finding if `Project.notice` misses any cell."""
     project = next(iter(projects(model).values()), None)
     if project is None or not project.notice:
         return ()
@@ -277,7 +277,7 @@ def _notice_overflow_findings(model: Model) -> tuple[Finding, ...]:
 
 
 def _unit_identity_findings(model: Model, subject: _DocId, record: Document) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_UNIT_IDENTITY_MISSING` (UNIT-ID I3): the unit has no `title` or `number`."""
+    """`TITLE_BLOCK_UNIT_IDENTITY_MISSING` : the unit has no `title` or `number`."""
     unit = document_unit(model, record)
     if unit is None:
         return ()
@@ -384,7 +384,7 @@ def _replica_only_findings(
 def _no_top_level_cables_findings(
     model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
-    """`DOCUMENT_NO_TOP_LEVEL_CABLES` INFO, not an ERROR, for the `SYSTEM` preset (U3)."""
+    """`DOCUMENT_NO_TOP_LEVEL_CABLES` INFO, not an ERROR, for the `SYSTEM` preset."""
     if PageKind.HARNESS_DRAWING not in pages:
         return ()
     cables_found = harness_cables_for(model, record, pages)
@@ -414,7 +414,7 @@ _LIST_KINDS = (
 def _list_rows(  # noqa: PLR0911 -- one branch per list `PageKind`, as `document._page_source`
     model: Model, record: Document, kind: PageKind
 ) -> tuple[object, ...]:
-    """The rows `kind`'s list page renders for `record`, for `DOCUMENT_EMPTY_LIST` (P9, P11)."""
+    """The rows `kind`'s list page renders for `record`, for `DOCUMENT_EMPTY_LIST`."""
     if kind is PageKind.PLC_LIST:
         return plc_channel_rows_for(model, record)
     if kind is PageKind.TERMINAL_LIST:
@@ -434,7 +434,7 @@ def _list_rows(  # noqa: PLR0911 -- one branch per list `PageKind`, as `document
     if kind is PageKind.DESIGNATION_LIST:
         return tuple(designation_list(model, unit=document_unit(model, record)))
     if kind is PageKind.CABLE_LIST:
-        return tuple(cable_list_rows(model))
+        return tuple(cable_list_rows(model, unit=document_unit(model, record)))
     return tuple(
         bom_lines(model, scope=_bom_scope(model, record))
     )  # kind is PageKind.BOM: the last one
@@ -461,7 +461,7 @@ def check(model: Model, svgs: Mapping[str, str]) -> tuple[Finding, ...]:
     Args:
         model: A laid-out model.
         svgs: Page key to SVG text, the same mapping `source` takes: `check` needs it to
-            tell a missing drawing-set page or cable key from one that is present (P7, P8).
+            tell a missing drawing-set page or cable key from one that is present.
 
     Returns:
         Findings sorted by `(code, subjects, message)`. Pure, never raises.

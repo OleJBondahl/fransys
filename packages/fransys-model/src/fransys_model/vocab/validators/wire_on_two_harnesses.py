@@ -1,4 +1,4 @@
-"""Validator: a wire's two ends must not sit under plugs of two harnesses (HA2, model-0171)."""
+"""Validator: a wire's two ends must not sit under plugs of two harnesses (model-0171)."""
 
 from typing import TYPE_CHECKING, Final
 

@@ -1,4 +1,4 @@
-"""The one path that writes a boundary's stated values: `Fn.limits` and `Terminal.limits` (TL1)."""
+"""The one path that writes a boundary's stated values: `Fn.limits` and `Terminal.limits`."""
 
 from typing import TYPE_CHECKING, Any
 

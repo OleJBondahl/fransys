@@ -1,4 +1,4 @@
-"""Stage 1, resolve: choose the symbol each function is drawn with (docs/design/stages.md 6.1)."""
+"""Stage 1, resolve: choose the symbol each function is drawn with."""
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 lazy from collections.abc import Set as AbstractSet
@@ -28,8 +28,8 @@ if TYPE_CHECKING:
 SYMBOL_DEFAULTED = "SYMBOL_DEFAULTED"
 PIN_MAP_INCOMPLETE = "PIN_MAP_INCOMPLETE"
 _POLE_PAIR_SIZE = 2
-# The `change-over-contact` symbol's port for each throw (a test pins the three names,
-# CONTACT-STATES CS3). `PortSpec.throw` holds the model's `PortRole` value as a string
+# The `change-over-contact` symbol's port for each throw (a test pins the three names).
+# `PortSpec.throw` holds the model's `PortRole` value as a string
 # (`engines.schematic.read.roles`); the stage sees only strings, and finds a changeover by
 # `KindRoles.contact_changeover`, never by kind.
 THROW_SYMBOL_PORTS: Mapping[str, str] = frozendict({"common": "com", "break": "nc", "make": "no"})
@@ -205,7 +205,7 @@ def _named_port(
     if port.name in symbol_ports:
         return port.name
     if len(spec.ports) == 1 and len(symbol_ports) == 1:
-        return next(iter(symbol_ports))  # C6: one port on one port (a PLC channel)
+        return next(iter(symbol_ports))  # One port on one port (a PLC channel)
     return through_ports.get(port.name)
 
 

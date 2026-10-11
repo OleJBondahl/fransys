@@ -1,10 +1,10 @@
-"""The `UnitRelease` record `Scope.unit` writes (SC2)."""
+"""The `UnitRelease` record `Scope.unit` writes."""
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab import UnitRelease
 
 
-def unit_release(  # noqa: PLR0913 -- the release's own fields (SC2)
+def unit_release(  # noqa: PLR0913 -- the release's own fields
     name: str,
     version: int,
     revision: int,

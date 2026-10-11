@@ -1,8 +1,8 @@
-"""C21, D10: reads of the model for the off stub rules of `stages/offstubs.py` (layout-0085).
+"""Reads of the model for the off stub rules of `stages/offstubs.py` (layout-0085).
 
 `_stub_end` is the one place that builds an off stub's `PortText` and `OffEnd` (the plug/socket
 transparency and the far end's product designation); `end_text` calls it for an end of a
-conductor (with its outermost carrier) and `_join_text` for an end of a net's join (D4, no
+conductor (with its outermost carrier) and `_join_text` for an end of a net's join (no
 carrier). `read_inputs` reads both through `off_texts`, and `off_reads` hands `end_text` to the
 rules for a top-level unit's boundary pin whose mate ends in a stub. Nothing else is computed
 up front: the rules call what `off_reads` binds to the model when they need it.
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 def off_texts(
     model: Model, maps: FarMaps, crossing: tuple[Connection, ...], joins: tuple[Connection, ...]
 ) -> tuple[tuple[PortText, ...], tuple[OffEnd, ...]]:
-    """C21, D4: per end of a crossing conductor, then of a net's join, its stub text and end."""
+    """Per end of a crossing conductor, then of a net's join, its stub text and end."""
     pairs = [end_text(model, maps, c, near) for c in crossing for near in (c.a.port, c.b.port)]
     pairs.extend(_join_text(model, maps, c, near) for c in joins for near in (c.a.port, c.b.port))
     return tuple(text for text, _ in pairs), tuple(end for _, end in pairs)
@@ -47,7 +47,7 @@ def boundary_offs(
     mates: tuple[MatedFunctions, ...],
     split: tuple[tuple[Connection, ...], tuple[Connection, ...]],
 ) -> tuple[tuple[Connection, ...], tuple[PortText, ...], tuple[OffEnd, ...]]:
-    """W3: a unit's boundary pin mated outside its unit carries its mate's off-stub."""
+    """A unit's boundary pin mated outside its unit carries its mate's off-stub."""
     within, crossing = split
     spec_of = {spec.function: spec for spec in specs}
     edges = boundary_edges(model)
@@ -74,7 +74,7 @@ def _mate_offs(
     specs: tuple[FunctionSpec, FunctionSpec],
     ports_: tuple[Id[Any], Id[Any]],
 ) -> tuple[list[Connection], list[PortText], list[OffEnd]]:
-    """W3: the off-stub reads of one boundary pin `near` mated to `far` outside its unit."""
+    """The off-stub reads of one boundary pin `near` mated to `far` outside its unit."""
     near, far = ports_
     leaving = [c for c in crossing if far in (c.a.port, c.b.port)]
     found = [bridge(c, near, far) for c in leaving]
@@ -89,14 +89,14 @@ def _mate_offs(
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class FarMaps:
-    """C21: the two lookups `end_text` reads, built once per read of a model by `far_maps`."""
+    """The two lookups `end_text` reads, built once per read of a model by `far_maps`."""
 
     partner: dict[Id[Any], Id[Any]]
     by_name: dict[tuple[Id[Any], str], Id[Any]]
 
 
 def far_maps(model: Model) -> FarMaps:
-    """C21: the `FarMaps` of `model`, one pass over its mates and one over its ports."""
+    """The `FarMaps` of `model`, one pass over its mates and one over its ports."""
     partner = {}
     for mate in mates(model).values():
         partner[mate.a], partner[mate.b] = mate.b, mate.a
@@ -109,7 +109,7 @@ def far_maps(model: Model) -> FarMaps:
 def end_text(
     model: Model, maps: FarMaps, c: Connection, near: Id[Any], at: Id[Any] | None = None
 ) -> tuple[PortText, OffEnd]:
-    """C21: the off stub text and `OffEnd` of `near`, one end of `c`, printed at port `at`."""
+    """The off stub text and `OffEnd` of `near`, one end of `c`, printed at port `at`."""
     record = conductors(model)[c.handle]
     all_items = items(model)
     chain = tuple(parent_chain(lambda node: all_items[node].parent, record.carrier))
@@ -122,14 +122,14 @@ def end_text(
 def _join_text(
     model: Model, maps: FarMaps, c: Connection, near: Id[Any]
 ) -> tuple[PortText, OffEnd]:
-    """D4: the off stub text and `OffEnd` of `near`, one end of a net's join `c`."""
+    """The off stub text and `OffEnd` of `near`, one end of a net's join `c`."""
     return _stub_end(model, maps, near, c.b.port if near == c.a.port else c.a.port, None)
 
 
 def _stub_end(
     model: Model, maps: FarMaps, near: Id[Any], far: Id[Any], carrier: Id[Any] | None
 ) -> tuple[PortText, OffEnd]:
-    """C21: the one build of an off stub's `PortText` and `OffEnd`, at `near` naming `far`."""
+    """The one build of an off stub's `PortText` and `OffEnd`, at `near` naming `far`."""
     function = ports(model)[far].function
     far = maps.by_name.get((maps.partner.get(function), ports(model)[far].name), far)
     unit = function_unit(model, ports(model)[near].function)
@@ -142,7 +142,7 @@ def _stub_end(
 
 
 def _port_order(model: Model, port: Id[Any]) -> OrderKey:
-    """O4: the natural key of a port's designation, the stage's tie-break (O7)."""
+    """The natural key of a port's designation, the stage's tie-break."""
     return natural_key(port_designation(model, port))
 
 

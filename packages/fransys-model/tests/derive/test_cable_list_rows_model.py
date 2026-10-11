@@ -117,6 +117,17 @@ def test_a_cable_belonging_to_a_unit_is_excluded() -> None:
     assert "-W3" not in {row.designation for row in rows}
 
 
+def test_a_cable_belonging_to_a_unit_is_listed_under_its_unit() -> None:
+    """`cable_list_rows(unit=...)` lists the unit's own cable and not a loose one."""
+    plant = Plant()
+    _cable(plant, "w1", "W1")
+    unit = plant.unit("cab", name="pump-cabinet", revision=1)
+    plant.revision(unit)
+    _cable(plant, "w3", "W3", unit=unit)
+    rows = cable_list_rows(plant.model(), unit=unit)
+    assert [row.designation for row in rows] == ["-W3"]
+
+
 def test_three_ends_list_every_other_end_in_rank_order() -> None:
     """A cable with three unlocated ends: the lowest product-designation end is `from_label`,
     `to_label` lists the others in rank order, joined by ", " (model-0048, model-0155).

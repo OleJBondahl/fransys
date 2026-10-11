@@ -1,4 +1,4 @@
-"""House conventions of the schematic engine (foundations.md 2.9, stages.md 6.1, engine.md 7).
+"""House conventions of the schematic engine.
 
 Used when a model authors no `layout.symbol_choice`. The symbol table is
 `conventions.symbols.SYMBOL_DEFAULTS`; `DEFAULT_RULES` is the stage's view of it. `KIND_ROLES`
@@ -15,14 +15,14 @@ STAGE_FACTS = frozenset({"function_kind", "part_category", "connector_gender"})
 
 ENGINE_NAME = "schematic"
 # The package's `pyproject.toml` version: a test keeps the two equal (decision layout-0029).
-ENGINE_VERSION = "0.13.7"
+ENGINE_VERSION = "0.13.8"
 
 # Whole routing lanes (`WIRING_GRID` each) `place` leaves between the content-box top and
 # row 0, so a north-facing port of row 0 routes inside the content box (decision layout-0031).
 # Not a profile field: no project tunes it. Three (layout-0048): one lane for the turn, one for
 # the wire label that sits flush above the turning segment (layout-0031), and one for the far
-# tier of a first-row reference (D4): with `place`'s 24 G lift (one 20 G marker) the first row's
-# N port stands 40 G down, and the near tier (C15 push 16 G, box 12 G) plus the far tier (12 G)
+# tier of a first-row reference: with `place`'s 24 G lift (one 20 G marker) the first row's
+# N port stands 40 G down, and the near tier (push 16 G, box 12 G) plus the far tier (12 G)
 # reach 8 + 16 + 12 + 12 = 48 G above it, so one lane (8 G) more.
 TOP_HEADROOM_LANES = 3
 
@@ -60,11 +60,11 @@ def stage_rules(table: Table) -> tuple[SymbolRule, ...]:
     return tuple(rules)
 
 
-# A rule may carry a `port_map`; only T2.21 does (open-questions.md 7). The model
+# A rule may carry a `port_map`; only the terminal rule does. The model
 # cannot tell a fuse from a breaker: a fuse is a `layout.symbol_choice` on its part.
 DEFAULT_RULES: tuple[SymbolRule, ...] = stage_rules(SYMBOL_DEFAULTS)
 
-# The kinds the stages treat specially (foundations.md 2.8): stamped into `FunctionSpec.roles` and
+# The kinds the stages treat specially: stamped into `FunctionSpec.roles` and
 # `DrawnFunction.roles`, so a stage reads `roles` and never names a kind. A kind not listed
 # has the plain `KindRoles()`.
 KIND_ROLES: frozendict[str, KindRoles] = frozendict(

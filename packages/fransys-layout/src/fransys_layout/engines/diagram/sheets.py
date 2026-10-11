@@ -1,4 +1,4 @@
-"""The diagram frame's sheets (BD5): columns placed left to right, a new sheet when needed.
+"""The diagram frame's sheets: columns placed left to right, a new sheet when needed.
 
 A sheet ends after column `c` when column `c + 1` plus its trailing room would pass the right pad.
 The next sheet starts at the cut's leading zone. A column that fits no sheet alone cannot be placed.

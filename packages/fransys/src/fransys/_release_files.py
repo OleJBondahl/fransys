@@ -1,4 +1,4 @@
-"""Released files never change (WORKFLOW-BLOCKS W5, W6): `verify` re-hashes every release folder."""
+"""Released files never change: `verify` re-hashes every release folder."""
 
 import hashlib
 from pathlib import Path
@@ -14,7 +14,7 @@ from ._release_reader import (
     release_folders,
 )
 
-# Text exports only: a Windows git checkout may turn their LF into CRLF (W6); a PDF never is.
+# Text exports only: a Windows git checkout may turn their LF into CRLF; a PDF never is.
 _TEXT_SUFFIXES = frozenset({".csv", ".json", ".md", ".xml", ".html", ".txt"})
 
 

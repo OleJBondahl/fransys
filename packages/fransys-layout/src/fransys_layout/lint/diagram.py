@@ -1,4 +1,4 @@
-"""BD8's four ERROR checks on a block diagram's own scene (block-diagrams spec)."""
+"""The four ERROR checks on a block diagram's own scene (block-diagrams spec)."""
 
 from itertools import combinations, pairwise
 
@@ -86,7 +86,7 @@ def check_line_off_box(scene: Scene) -> tuple[Finding, ...]:
 
 
 def lint_diagram(scene: Scene) -> tuple[Finding, ...]:
-    """All four BD8 checks, sorted by code and subjects."""
+    """All four checks, sorted by code and subjects."""
     found = (
         *check_box_overlap(scene),
         *check_line_through_box(scene),

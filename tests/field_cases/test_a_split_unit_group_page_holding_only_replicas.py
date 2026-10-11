@@ -14,7 +14,7 @@ REPLICA-ROUTE (decision layout-0165): on that replica-only page the J4 replicas 
 pins ran 1, 10, 2 ... (string order), and two wires ran inside the outline. The three tests at the
 end of the module hold both.
 
-TALL-PAGE (R8): contact tables now count in a group's height, so the original input, a contactor
+layout-0167: contact tables now count in a group's height, so the original input, a contactor
 on a lead housing at the line's far end, is cut and builds with no replica-only page. Its test is
 `test_the_original_input_with_a_contactor_is_cut_and_builds`. The replica-only page is still held
 by the same input with the contactor swapped for a plain 4-pin header end; the other tests use it.

@@ -1,4 +1,4 @@
-"""TALL-PAGE R1 (layout-0167): where a line whose root is on another page leaves its bar.
+"""Layout-0167: where a line whose root is on another page leaves its bar.
 
 The trunk runs `LEAVE_GRIDS` straight out of a free point of the bar near its middle, the way the
 line enters the root's box, and ends in its stub. The stub's box is measured from `size`.

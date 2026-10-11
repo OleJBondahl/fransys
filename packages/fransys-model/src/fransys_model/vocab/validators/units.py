@@ -114,13 +114,13 @@ class _Plant:
         return self.items[item].unit
 
     def crosses(self, subtree: frozenset[Id[Unit]], item: Id[Item], other: Id[Item]) -> bool:
-        """Whether an end on `item` crosses out of the unit whose subtree is `subtree` (U4)."""
+        """Whether an end on `item` crosses out of the unit whose subtree is `subtree`."""
         return self.item_unit(item) in subtree and self.item_unit(other) not in subtree
 
     def crosses_out_of(self, unit: Id[Unit], function: Id[Function]) -> bool:
-        """Whether at least one conductor or mate end on `function` crosses out of `unit` (U4).
+        """Whether at least one conductor or mate end on `function` crosses out of `unit`.
 
-        Declared `Net`s do not count (U4): `self.ends` is built from conductors and mates only.
+        Declared `Net`s do not count: `self.ends` is built from conductors and mates only.
         """
         subtree = self.subtree_of[unit]
         return any(

@@ -1,4 +1,4 @@
-"""Reads of the model for the item and pin views `read_inputs` draws (R7).
+"""Reads of the model for the item and pin views `read_inputs` draws.
 
 A connector is drawn as one view per pin (`pin_views`), an item of two or more defaulted
 functions as one box (`item_views`); the `*_text` and `re*` helpers carry the views' tags and
@@ -68,7 +68,7 @@ def item_views(
     choices: tuple[SymbolChoice, ...],
     wired: AbstractSet[Id[Any]],
 ) -> tuple[tuple[FunctionSpec, ...], dict[Id[Any], Id[Any]], tuple[SymbolChoice, ...]]:
-    """R7 B2: every item of two or more drawn functions, all symbol-defaulted, becomes one view."""
+    """Every item of two or more drawn functions, all symbol-defaulted, becomes one view."""
     table = {(rule.kind, rule.category, rule.gender): rule for rule in DEFAULT_RULES}
     index = choice_index(choices)
     first_choice = {function: found[0] for function, found in index.by_function.items()}
@@ -95,8 +95,8 @@ def item_views(
             named = len(mapped) == len(set(mapped))
         defaulted = all(
             box_drawn(spec, table, index) for spec in group
-        )  # C6: an unwired PLC channel stays a port of its module's box
-        # D6 overrides D5's threshold: the lone unwired channel of a half-wired module is a
+        )  # An unwired PLC channel stays a port of its module's box
+        # The lone unwired channel of a half-wired module is a
         # generic box of its own (an item view would stand on the item's min-id function, which
         # may be a wired channel's)
         lone = group[0]
@@ -121,7 +121,7 @@ def item_views(
         )
         view_of.update((port.port, item) for port in view_ports)
         first = min(group, key=lambda spec: spec.key)
-        # C3 (a): the view takes the kind (so the band) its wired functions share, else "item"
+        # The view takes the kind (so the band) its wired functions share, else "item"
         view_kind = _view_kind(group, wired)
         found.append(
             dataclasses.replace(
@@ -192,7 +192,7 @@ def without_idle_pins(
     pin_of: Mapping[Id[Any], Id[Any]],
     used: AbstractSet[Id[Any]],
 ) -> tuple[tuple[FunctionSpec, ...], dict[Id[Any], Id[Any]]]:
-    """R7 B5: every pin view kept that is wired, or whose mated pin is wired (D5 for pins)."""
+    """Every pin view kept that is wired, or whose mated pin is wired."""
     mate_of = mate_map(pin_mates(model, pin_of))
     kept = {port for port in pin_of if port in used or mate_of.get(port) in used}
     live = {pin_of[port] for port in kept}
@@ -225,7 +225,7 @@ def without_idle_terminals(
 def pin_views(
     specs: tuple[FunctionSpec, ...],
 ) -> tuple[tuple[FunctionSpec, ...], dict[Id[Any], Id[Any]]]:
-    """R7 A: every connector function becomes one view per pin; a view's handle is the port."""
+    """Every connector function becomes one view per pin; a view's handle is the port."""
     found: list[FunctionSpec] = []
     pin_of: dict[Id[Any], Id[Any]] = {}
     for spec in specs:
@@ -254,7 +254,7 @@ def repin(ref: PortRef, pin_of: Mapping[Id[Any], Id[Any]]) -> PortRef:
 
 
 def pin_mates(model: Model, pin_of: Mapping[Id[Any], Id[Any]]) -> tuple[MatedFunctions, ...]:
-    """R7 A: each mate's equal-named pins, upper (plug) side first."""
+    """Each mate's equal-named pins, upper (plug) side first."""
     pins: dict[Id[Any], dict[str, Id[Any]]] = defaultdict(dict)
     for port, function in pin_of.items():
         pins[function][ports_table(model)[port].name] = port
@@ -275,7 +275,7 @@ def pin_mates(model: Model, pin_of: Mapping[Id[Any], Id[Any]]) -> tuple[MatedFun
 def _lower_rank(
     model: Model, cable_like: frozenset[Id[Item]], function: Id[Any]
 ) -> tuple[bool, bool, AuthoringKey]:
-    """J3: on or under a board first, then not on a cable or harness, then the later key."""
+    """On or under a board first, then not on a cable or harness, then the later key."""
     record = functions_table(model)[function]
     return (
         bool(enclosing_boards(model, record.item)),

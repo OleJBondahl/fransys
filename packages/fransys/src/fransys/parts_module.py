@@ -1,4 +1,4 @@
-"""The typed parts module: one class per part, generated from the loaded libraries (EA4)."""
+"""The typed parts module: one class per part, generated from the loaded libraries."""
 
 import re
 from collections import defaultdict

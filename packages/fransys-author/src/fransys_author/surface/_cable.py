@@ -1,4 +1,4 @@
-"""Surface mixin for cables: `cable` and the `Cable` handle with its cores (EA5, EA7)."""
+"""Surface mixin for cables: `cable` and the `Cable` handle with its cores ."""
 
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
@@ -138,7 +138,7 @@ class Cable:
 class Cables:
     """The `cable` call of `Design`."""
 
-    def cable(  # noqa: PLR0913 -- the call's own spec signature (EA5), keyword-only facts
+    def cable(  # noqa: PLR0913 -- the call's own spec signature, keyword-only facts
         self: "Design",
         tag: str | None,
         part: str | type[Device],

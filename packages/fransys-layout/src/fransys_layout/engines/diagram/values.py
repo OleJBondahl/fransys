@@ -1,4 +1,4 @@
-"""The diagram engine's values: the reader's facts of a reading and the placer's geometry (BD5)."""
+"""The diagram engine's values: the reader's facts of a reading and the placer's geometry."""
 
 from typing import Any
 

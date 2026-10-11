@@ -1,4 +1,4 @@
-"""The cell moves V5 and the own-group V4 case share: attach a home cell, compact what left."""
+"""The cell moves and the own-group case share: attach a home cell, compact what left."""
 
 from dataclasses import replace
 from operator import itemgetter

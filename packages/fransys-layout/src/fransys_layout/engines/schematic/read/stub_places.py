@@ -1,4 +1,4 @@
-"""Where a line end is drawn, as a stub names it (STUB-POSITIONS P1): plain values per page."""
+"""Where a line end is drawn, as a stub names it: plain values per page."""
 
 from typing import TYPE_CHECKING, Any, Protocol
 

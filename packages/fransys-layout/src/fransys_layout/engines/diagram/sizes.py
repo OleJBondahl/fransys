@@ -1,4 +1,4 @@
-"""Every size, gap and pitch of the diagram engine, in G, each a named constant (BD5).
+"""Every size, gap and pitch of the diagram engine, in G, each a named constant.
 
 All are multiples of `WIRING_GRID` so boxes, tabs and tracks sit on the grid `grid_path` steps on.
 """

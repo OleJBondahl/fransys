@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def _point_mm(sheet: SheetFormat, x: int, y: int) -> str:
-    """One point converted to an `"x,y"` mm pair (D5), mirroring `_markers._point_mm`."""
+    """One point converted to an `"x,y"` mm pair, mirroring `_markers._point_mm`."""
     x_mm = grid_to_mm(sheet.content_x_mm, x, sheet.module_mm)
     y_mm = grid_to_mm(sheet.content_y_mm, y, sheet.module_mm)
     return f"{format_decimal(x_mm)},{format_decimal(y_mm)}"

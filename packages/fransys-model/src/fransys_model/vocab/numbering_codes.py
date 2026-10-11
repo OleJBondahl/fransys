@@ -1,4 +1,4 @@
-"""The class code an item numbers from: its part's, or a part-less strip's terminal part's (UT3).
+"""The class code an item numbers from: its part's, or a part-less strip's terminal part's.
 
 Lives in `vocab`, not `derive`: the numbering pass and the `STRIP_WITHOUT_TAG` validator both
 ask it, and `vocab` may not import `derive` (FLOATING-STRIP-ERROR, one home for the rule).

@@ -1,4 +1,4 @@
-"""The pen of a cable block: grid to mm, and the SVG elements a block is made of (CD8)."""
+"""The pen of a cable block: grid to mm, and the SVG elements a block is made of."""
 
 from dataclasses import dataclass
 from decimal import Decimal

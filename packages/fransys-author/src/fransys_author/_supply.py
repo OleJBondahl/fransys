@@ -1,4 +1,4 @@
-"""A `SupplySystem` from `s.supply(...)` (spec model-review Q2); phase rules run here first.
+"""A `SupplySystem` from `s.supply(...)`; phase rules run here first.
 
 A DC rail has no phase and an AC `max_v` is not negative: authoring's own checks.
 """
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 _RAIL_FIELDS = 2  # a rail is (max_v, phase)
 
 
-def build_supply_system(  # noqa: PLR0913, PLR0917 -- the supply's own fields, the fault values (R3), its unit and pins (R6)
+def build_supply_system(  # noqa: PLR0913, PLR0917 -- the supply's own fields, the fault values, its unit and pins
     key: AuthoringKey,
     name: str,
     current: str,
@@ -147,7 +147,7 @@ class SupplyScope:
 
     __slots__ = ()
 
-    def supply(  # noqa: PLR0913 -- the supply's own fields, the fault values (R3) and its pins (R6)
+    def supply(  # noqa: PLR0913 -- the supply's own fields, the fault values and its pins
         self: _Declaring,
         name: str,
         *,
@@ -158,9 +158,9 @@ class SupplyScope:
         fault_time_constant_ms: str | int | Decimal | None = None,
         pins: Sequence[Port] = (),
     ) -> None:
-        """Declare a supply system and its rails (spec model-review Q2).
+        """Declare a supply system and its rails.
 
-        `rails` maps potential to `(max_v, phase)`; `pins` are the ports they stand on (R6).
+        `rails` maps potential to `(max_v, phase)`; `pins` are the ports they stand on.
         Raises `AuthorError` on a bad value, or on `name` declared twice here with other content.
         """
         key = scoped(self._prefix, "supply", name)

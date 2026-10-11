@@ -1,24 +1,24 @@
-"""D3's candidate table and its one ranking (layout-0090 S2): where a text may stand, best first.
+"""The candidate table and its one ranking (layout-0090): where a text may stand, best first.
 
 A text stands beside its owner: a port's stub, a function's slot, a route's segment. Its
 candidates are owner-relative (`Candidate`): a side of the owner, an offset along that side,
 and whether it stands in a row above or below. Nothing is absolute until `box_of` puts one
 candidate beside the owner's placed anchor, so `place` can rank before any position exists.
 
-`ranked_candidates` is the one ranking. `place` reserves its first candidate (Room, S11) and
-`texts` walks the whole list (D3); neither ranks on its own (S2).
+`ranked_candidates` is the one ranking. `place` reserves its first candidate (Room) and
+`texts` walks the whole list; neither ranks on its own.
 
 The table is data in `conventions/texts.py`, one row per kind: the sides in
 try-order, and along each side its steps in try-order. Its defaults follow
-today's anchoring (D13, D14): a tag, a marking and a cross-reference on their slot's own side first,
+today's anchoring: a tag, a marking and a cross-reference on their slot's own side first,
 then its mirror across the body
-(S18, owner-relative), a reference or a stub at its stub. Along a side the nearest step comes
+(owner-relative), a reference or a stub at its stub. Along a side the nearest step comes
 first, down (or right) before up (or left). A row's steps are the whole bound of its moves:
-the placer adds only the content box, never the owner's keep-out (S18, amended after 2b-6). No
+the placer adds only the content box, never the owner's keep-out. No
 kind stands above or below its function by default, since no slot label does today; a row is
 a data change there.
-The owner judges the defaults after order step 7 (D3), and every change is a change to that
-file. `PRIORITY` is the kind's part of the placer's key (S15).
+The owner judges the defaults, and every change is a change to that
+file. `PRIORITY` is the kind's part of the placer's key.
 """
 
 from enum import Enum
@@ -32,7 +32,7 @@ from fransys_model.kernel import register_enum, value
 
 @register_enum
 class TextKind(Enum):
-    """What a text is, for D3's table and key order (not `LabelKind`, which `write` maps)."""
+    """What a text is, for the table and key order (not `LabelKind`, which `write` maps)."""
 
     REFERENCE = "reference"
     STUB = "stub"
@@ -46,7 +46,7 @@ class TextKind(Enum):
 
 @value
 class Candidate:
-    """One owner-relative place a text may stand (S2), made absolute only by `box_of`."""
+    """One owner-relative place a text may stand, made absolute only by `box_of`."""
 
     side: Facing
     offset: int
@@ -56,7 +56,7 @@ class Candidate:
 
 @value
 class Side:
-    """One side of a table row: where the text stands, and its steps along it (D14)."""
+    """One side of a table row: where the text stands, and its steps along it ."""
 
     facing: Facing | None
     steps: tuple[int, ...]
@@ -69,7 +69,7 @@ type CandidateTable = frozendict[TextKind, tuple[Side, ...]]
 
 @fact("text_kind", kind="drawing", values=tuple(k.value for k in TextKind))
 def _text_kind(text: TextKind) -> str:
-    """The kind of a text, for D3's table."""
+    """The kind of a text, for the table."""
     return text.value
 
 
@@ -86,7 +86,7 @@ DEFAULT_TABLE: CandidateTable = frozendict(
     {kind: tuple(_side(one) for one in _ROWS[kind.value][1]) for kind in TextKind}
 )
 
-# S15: a reference and a stub first, a tag and a marking next, then a contact image. A lower
+# A reference and a stub first, a tag and a marking next, then a contact image. A lower
 # number is placed first.
 PRIORITY: frozendict[TextKind, int] = frozendict({kind: _ROWS[kind.value][0] for kind in TextKind})
 
@@ -94,7 +94,7 @@ PRIORITY: frozendict[TextKind, int] = frozendict({kind: _ROWS[kind.value][0] for
 def ranked_candidates(
     kind: TextKind, owner_facing: Facing | None, size: tuple[int, int], table: CandidateTable
 ) -> tuple[Candidate, ...]:
-    """The text's candidates, best first, from `table`'s row for `kind` (D3's key order)."""
+    """The text's candidates, best first, from `table`'s row for `kind`."""
     found = []
     for side in table[kind]:
         facing = owner_facing if side.facing is None else side.facing

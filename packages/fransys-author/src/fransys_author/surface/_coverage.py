@@ -1,4 +1,4 @@
-"""Surface mixin for EA-COVERAGE: every other spelling of today's author API (EA11).
+"""Surface mixin: every other spelling of today's author API.
 
 It joins the mixins of `_links`, `_facts` and `_layout`; `Design` lists it among its bases.
 """

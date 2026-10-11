@@ -82,7 +82,7 @@ def _instance_designations(model: Model, unit: Id[Unit]) -> list[str]:
     The roots are `vocab.membership.unit_own_roots`, external items left out.
     """
     if (tag := unit_tag(model, unit)) is not None:
-        return [instance_name((tag,))]  # UT2: the instance is named by its tag
+        return [instance_name((tag,))]  # The instance is named by its tag
     roots = unit_own_roots(model, unit)
     if len(roots) == 1:
         return [printed_designation(model, roots[0])]
@@ -213,7 +213,7 @@ def bom_lines(
     idx = build_indexes(model)
     all_parts = parts(model)
     unit_children: tuple[Unit, ...] = ()
-    own_unit = None  # L4 (R2): a unit's own BOM names its items as its own drawing does
+    own_unit = None  # A unit's own BOM names its items as its own drawing does
     if isinstance(scope, TopLevelScope):
         covered, unit_children = _unit_scope(model, None)
     elif scope is not None and scope.kind == "unit":

@@ -1,4 +1,4 @@
-"""One message join for the validators: texts in natural order, `-X2` before `-X10` (O8)."""
+"""One message join for the validators: texts in natural order, `-X2` before `-X10`."""
 
 from typing import TYPE_CHECKING
 

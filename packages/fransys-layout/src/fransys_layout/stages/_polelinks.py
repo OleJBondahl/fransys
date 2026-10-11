@@ -1,4 +1,4 @@
-"""The column pairs a D1 pole link joins, for `partition`'s group split (deep-dive D4).
+"""The column pairs a pole link joins, for `partition`'s group split.
 
 A pole link is the connection `lint.chains` calls `CHAIN_BROKEN` when a marker pair cuts it: both
 ends are pole ports (a function's symbol through path) on a net of exactly two ports. This is
@@ -29,7 +29,7 @@ def pole_links(
     connections: tuple[Connection, ...],
     net_groups: tuple[NetGroup, ...],
 ) -> tuple[tuple[AuthoringKey, AuthoringKey], ...]:
-    """The sorted, unique pairs of distinct column keys a D1 pole link joins (no replica homes)."""
+    """The sorted, unique pairs of distinct column keys a pole link joins (no replica homes)."""
     poles = {one.function: pole_ports(one) for one in drawn}
     sizes = net_sizes(connections, net_groups)
     homes: defaultdict[Handle, list[AuthoringKey]] = defaultdict(list)
@@ -54,7 +54,7 @@ def pole_links(
 
 
 def pole_ports(function: DrawnFunction) -> frozenset[Handle]:
-    """The model ports on `function`'s symbol through path: D1's pole, empty without one."""
+    """The model ports on `function`'s symbol through path: the pole, empty without one."""
     through = function.geometry.through
     if through is None:
         return frozenset()

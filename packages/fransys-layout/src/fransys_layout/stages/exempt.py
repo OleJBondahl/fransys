@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class ExemptInputs:
-    """What `boundary_exempt` reads of the run; `seats` are planned (S10) or placed positions."""
+    """What `boundary_exempt` reads of the run; `seats` are planned or placed positions."""
 
     connections: tuple[Connection, ...]
     net_groups: tuple[NetGroup, ...]
@@ -62,14 +62,14 @@ def _neighbours(
 
 
 def open_ends(functions: tuple[FunctionSpec, ...], edges: frozenset[Id[Any]]) -> frozenset[Id[Any]]:
-    """The drawn functions (pin views included) of boundary `edges`, whose outside is open (U2)."""
+    """The drawn functions (pin views included) of boundary `edges`, whose outside is open."""
     return frozenset(
         spec.function for spec in functions if (spec.pin_function or spec.function) in edges
     )
 
 
 def boundary_exempt(inputs: ExemptInputs, nesting: UnitNesting) -> frozenset[tuple[Id[Any], int]]:
-    """`(port, drawing_set)` of each placed port with no marker and no cover (D9, I2a)."""
+    """`(port, drawing_set)` of each placed port with no marker and no cover."""
     inside = nesting.inside
     owner, mates, net = _neighbours(inputs.connections, inputs.net_groups)
     unit_of = {spec.function: spec.unit for spec in inputs.functions}

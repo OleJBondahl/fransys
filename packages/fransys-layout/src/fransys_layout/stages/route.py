@@ -1,4 +1,4 @@
-"""Stage 7, route: one orthogonal polyline per connection on a page (docs/design/route.md 6.5)."""
+"""Stage 7, route: one orthogonal polyline per connection on a page."""
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -77,7 +77,7 @@ def route(
     drawn: tuple[DrawnFunction, ...],
     room: PageRoom,
 ) -> tuple[tuple[Route, ...], tuple[Finding, ...]]:
-    """Route one page's functions: edges in drawn order (docs/design/route.md 6.5, D2, D15)."""
+    """Route one page's functions: edges in drawn order."""
     if not placed:
         return (), ()
     placed_of = lookups.placed_of(placed, "route")
@@ -101,7 +101,7 @@ def route(
         profile=room.profile,
     )
     used: dict[Cell, frozenset[Handle]] = {}
-    # C22: each net's axes per cell; seeded with every port's first step (EF-D part 3, layout-0064)
+    # Each net's axes per cell; seeded with every port's first step (layout-0064)
     port_exits = reserve_exits(
         (edge.physical_net, ends[located(ref)]) for edge in edges for ref in (edge.a, edge.b)
     )
@@ -239,7 +239,7 @@ def port_end(
 def _tree(
     on_page: Sequence[PortRef], ends: Ends, placed_of: Mapping[Handle, PlacedFunction]
 ) -> list[tuple[PortRef, PortRef]]:
-    """The net's spanning tree over this page's ports: joins first, then shortest (D2, D15)."""
+    """The net's spanning tree over this page's ports: joins first, then shortest."""
     pairs = [(one, other) for index, one in enumerate(on_page) for other in on_page[index + 1 :]]
     trees: UnionFind[Handle] = UnionFind(ref.port for ref in on_page)
     chosen = []
@@ -252,7 +252,7 @@ def _tree(
 def _order(
     pair: tuple[PortRef, PortRef], ends: Ends, placed_of: Mapping[Handle, PlacedFunction]
 ) -> tuple[int, int, tuple[int, int], tuple[int, int], Handle, Handle]:
-    """What orders a candidate edge of a spanning tree (D2, D15)."""
+    """What orders a candidate edge of a spanning tree."""
     one, other = pair
     group, upper, lower = drawn_key(one, other, ends, placed_of)
     distance = abs(ends[located(one)].at.x - ends[located(other)].at.x) + abs(
@@ -264,7 +264,7 @@ def _order(
 def _polyline(
     edge: Edge, aim: tuple[Edge, Join | None, Join | None], page: _Page, taken: _Taken
 ) -> tuple[Point, ...] | None:
-    """One edge's polyline: to the carrier's port along its join when it can (D2), else direct."""
+    """One edge's polyline: to the carrier's port along its join when it can, else direct."""
     aimed, first, second = aim
     if first is not None or second is not None:
         mid = _draw(aimed, page, taken.used, taken.along, taken.port_exits)
@@ -280,7 +280,7 @@ def _draw(
     along: Mapping[Cell, dict[Handle, frozenset[str]]] | None = None,
     port_exits: Mapping[Cell, dict[Handle, frozenset[str]]] | None = None,
 ) -> tuple[Point, ...] | None:
-    """One edge's polyline: padded box, then one widening (design/route.md 6.5, layout-0088)."""
+    """One edge's polyline: padded box, then one widening."""
     start, goal = page.ends[located(edge.a)], page.ends[located(edge.b)]
     if start.at == goal.at:
         return (start.at, goal.at)

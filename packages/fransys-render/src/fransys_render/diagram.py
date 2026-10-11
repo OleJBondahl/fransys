@@ -1,4 +1,4 @@
-"""Laid-out block diagrams to SVG, one full sheet per `layout.diagram_sheet` (BD7, render-0009)."""
+"""Laid-out block diagrams to SVG, one full sheet per `layout.diagram_sheet` (render-0009)."""
 
 from collections import defaultdict
 from typing import TYPE_CHECKING, NamedTuple
@@ -67,7 +67,7 @@ def _sheet_body(model: Model, pen: Pen, sheet: DiagramSheet, found: _Found) -> s
 
 
 def _render_sheet(model: Model, sheet: DiagramSheet, found: _Found) -> str:
-    """One sheet's SVG at full sheet size (BD7); the diagram sits at the content box offset."""
+    """One sheet's SVG at full sheet size; the diagram sits at the content box offset."""
     page = sheet_for(model, PageKind.BLOCK_DIAGRAM)
     pen = Pen(page.module_mm, profile_of(model).text_height, DIAGRAM_TEXT_PAD_G)
     offset = f"{page.content_x_mm} {page.content_y_mm}"

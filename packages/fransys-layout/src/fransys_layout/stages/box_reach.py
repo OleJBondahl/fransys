@@ -1,4 +1,4 @@
-"""V5: a generic box's pins stand far enough apart for their attached contacts (model-0129)."""
+"""A generic box's pins stand far enough apart for their attached contacts (model-0129)."""
 
 from dataclasses import replace
 from typing import TYPE_CHECKING
@@ -27,7 +27,7 @@ def sized_columns(
     rooms: Mapping[Handle, list[tuple[str, Box]]],
     profile: Profile,
 ) -> tuple[tuple[DrawnFunction, ...], tuple[ColumnWidth, ...]]:
-    """C8(b), S11, V5: the boxes widened for their contacts, and the columns' widths over them."""
+    """The boxes widened for their contacts, and the columns' widths over them."""
     boxes = with_rooms(label_boxes(drawn, own_set, profile), rooms)
     drawn = _with_reach(drawn, columns, boxes)
     boxed = {one.function for one in drawn if one.reach}

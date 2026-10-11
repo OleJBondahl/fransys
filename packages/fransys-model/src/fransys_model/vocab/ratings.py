@@ -39,7 +39,7 @@ class Rating:
     breaking_ac: tuple[BreakingPoint, ...] = ()
     breaking_dc: tuple[BreakingPoint, ...] = ()
     # `breaking_ac` and `breaking_dc` are the points a protective device breaks, each a voltage
-    # and a breaking current (RATINGS-3 R1).
+    # and a breaking current.
     # `min_breaking_current_a` (decision model-0088) is set on a partial-range fuse only: the
     # lowest current it breaks. Its presence alone marks the protective device partial-range,
     # which bounds no continuous current.
@@ -63,7 +63,7 @@ class Operating:
     `resistance_ohm`, `nominal_power_w` and `nominal_current_a` are each stated at
     `nominal_voltage_v`; only `nominal_current_a`, a load's draw, is read. `fault_current_ac_a`
     and `fault_current_dc_a` are a source's prospective current into a bolted fault,
-    `fault_time_constant_ms` the DC time constant (RATINGS-3 R2).
+    `fault_time_constant_ms` the DC time constant.
     """
 
     voltage_ac_v: Decimal | None = None

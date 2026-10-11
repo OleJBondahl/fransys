@@ -1,4 +1,4 @@
-"""Matching a unit instance by its release's name (spec unit-subject-by-name UN2, UN3).
+"""Matching a unit instance by its release's name (spec unit-subject-by-name).
 
 Lives in `vocab`, not `derive`, because `vocab.validators.documents` names a document's
 unresolved `unit_name` in its messages and `vocab` never imports `derive`
@@ -32,7 +32,7 @@ def units_named(model: Model, name: str) -> tuple[Id[Unit], ...]:
 
 
 def unit_name_unresolved(model: Model, name: str) -> str:
-    """The one sentence for a `unit_name` that does not resolve to exactly one unit (UN3).
+    """The one sentence for a `unit_name` that does not resolve to exactly one unit.
 
     Called only when `units_named(model, name)` is not exactly one match. Three cases, each
     ending with the same advice: no release has `name` (says so and names the release names

@@ -1,4 +1,4 @@
-"""Replication of terminals and boundary functions, and the replica drops (layout-0021, D6).
+"""Replication of terminals and boundary functions, and the replica drops (layout-0021).
 
 Terminal replication runs between `columns` and `column_widths`; the replica drops run after
 `partition`. Attaching a replica to its host's column and the hub order are in `attach.py`.
@@ -39,7 +39,7 @@ def replicate_terminals(
     functions: tuple[FunctionSpec, ...],
     connections: tuple[Connection, ...],
 ) -> tuple[Column, ...]:
-    """One replica column per terminal and group a connection needs (U2, layout-0076, 0081)."""
+    """One replica column per terminal and group a connection needs (layout-0076, 0081)."""
     specs = {spec.function: spec for spec in functions}
     home = {cell.function: column for column in columns for cell in column.cells}
     askers: defaultdict[tuple[Handle, Handle | None], dict[Handle, Column]] = defaultdict(dict)
@@ -48,7 +48,7 @@ def replicate_terminals(
         a_is_terminal = specs[a.function].roles.terminal
         b_is_terminal = specs[b.function].roles.terminal
         if a_is_terminal and b_is_terminal:
-            # C7: a terminal ending its column (a group split) heads the next group's column
+            # A terminal ending its column (a group split) heads the next group's column
             # as a replica, when the other terminal heads that column
             split = _split_pair(a, b, home) or _split_pair(b, a, home)
             if split is None:
@@ -104,7 +104,7 @@ def _split_pair(
     tail = next((c for c in mine.cells if c.function == one.function), None)
     at_end = tail is not None and not any(
         c.lane == tail.lane and c.index > tail.index and c.host is None for c in mine.cells
-    )  # the end of its lane (C15(i): a strip row's later lane)
+    )  # the end of its lane (a strip row's later lane)
     head = next((c for c in theirs.cells if c.function == other.function), None)
     at_head = (
         head is not None
@@ -114,8 +114,8 @@ def _split_pair(
         and any(
             c.index > head.index and c.host is None and c.lane == head.lane for c in theirs.cells
         )
-    )  # the head of its lane (C1 (iii) lanes start at different rows) with a chain below it
-    # in that lane (C21: X1:PE heading the feed row has none, Q1 below is other lanes')
+    )  # the head of its lane (lanes start at different rows) with a chain below it
+    # in that lane (X1:PE heading the feed row has none, Q1 below is other lanes')
     return (one, other) if at_end and at_head else None
 
 
@@ -125,7 +125,7 @@ def replicate_boundaries(
     functions: tuple[FunctionSpec, ...],
     homes: tuple[Column, ...],
 ) -> tuple[Column, ...]:
-    """Every column, plus one black-box replica per boundary function of every unit (U1).
+    """Every column, plus one black-box replica per boundary function of every unit.
 
     A function with pin views is its pin cells' replicas, else its own spec's (model-0188).
     """
@@ -140,7 +140,7 @@ def replicate_boundaries(
         for cell in column.cells
         if cell.home is not Home.ELSEWHERE
     }
-    # I2a: a boundary pin already drawn face to face under its mate in the parent's set
+    # A boundary pin already drawn face to face under its mate in the parent's set
     faced = {
         (cell.function, column.unit)
         for column in columns
@@ -168,7 +168,7 @@ def replicate_boundaries(
 def _without_rail_homes(
     columns: tuple[Column, ...], functions: tuple[FunctionSpec, ...]
 ) -> tuple[Column, ...]:
-    """RB2: columns without the home cells of boundary rail terminals (the parent draws them)."""
+    """Columns without the home cells of boundary rail terminals (the parent draws them)."""
     rails = {spec.function for spec in functions if spec.home is Home.ELSEWHERE}
     kept = (
         replace(
@@ -211,7 +211,7 @@ def drop_replicas(plans: tuple[PagePlan, ...], columns: tuple[Column, ...]) -> t
 def drop_attached_replicas(
     plans: tuple[PagePlan, ...], columns: tuple[Column, ...]
 ) -> tuple[Column, ...]:
-    """R7 B8: an attached replica on a page that already holds its terminal is dropped."""
+    """An attached replica on a page that already holds its terminal is dropped."""
     page_of = {
         planned.column: plan_index
         for plan_index, plan in enumerate(plans)

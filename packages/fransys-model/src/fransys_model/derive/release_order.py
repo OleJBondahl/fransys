@@ -1,4 +1,4 @@
-"""The one order of unit releases and of history entries (FD4, SC2)."""
+"""The one order of unit releases and of history entries."""
 
 type ReleaseOrder = tuple[int, int]
 

@@ -1,4 +1,4 @@
-"""Each drawing set's location path (U7), read from the planned pages."""
+"""Each drawing set's location path, read from the planned pages."""
 
 from typing import TYPE_CHECKING, Any
 

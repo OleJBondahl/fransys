@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 def label_boxes(
     drawn: tuple[DrawnFunction, ...], requests: tuple[LabelRequest, ...], profile: Profile
 ) -> dict[Handle, list[tuple[str, Box]]]:
-    """C8(b): per function, its TAG and MARKING labels' preferred boxes, as (slot, box)."""
+    """Per function, its TAG and MARKING labels' preferred boxes, as (slot, box)."""
     owner = owner_of(drawn)
     geometry = {one.function: one.geometry for one in drawn}
     found: dict[Any, list[tuple[str, Box]]] = {}
@@ -47,7 +47,7 @@ def label_boxes(
 def with_rooms(
     boxes: Mapping[Handle, list[tuple[str, Box]]], rooms: Mapping[Handle, list[tuple[str, Box]]]
 ) -> dict[Handle, list[tuple[str, Box]]]:
-    """S11: per function, `label_boxes`' boxes plus Room's other boxes (`rooms`)."""
+    """Per function, `label_boxes`' boxes plus Room's other boxes (`rooms`)."""
     return {f: [*boxes.get(f, ()), *rooms.get(f, ())] for f in boxes.keys() | rooms.keys()}
 
 
@@ -58,7 +58,7 @@ def grown(
     *,
     rooms: Mapping[Handle, list[tuple[str, Box]]] | None = None,
 ) -> tuple[DrawnFunction, ...]:
-    """C8(b), S11: the drawn functions with keep-outs grown over their labels' measured boxes."""
+    """The drawn functions with keep-outs grown over their labels' measured boxes."""
     boxes = with_rooms(label_boxes(drawn, requests, profile), rooms or {})
     return tuple(
         replace(
@@ -71,7 +71,7 @@ def grown(
 def placed_widths(
     widths: tuple[ColumnWidth, ...], placed: tuple[PlacedFunction, ...], gap: int
 ) -> tuple[ColumnWidth, ...]:
-    """C21: each column's width, the larger of its estimate and its placed extent plus the gap."""
+    """Each column's width, the larger of its estimate and its placed extent plus the gap."""
     held: dict[tuple[AuthoringKey, int, int], list[Box]] = {}
     for one in placed:
         held.setdefault((one.column, one.drawing_set, one.page), []).append(placed_keepout(one))

@@ -1,4 +1,4 @@
-"""The key table the writer reads instead of the model: a plain value (docs/design/engine.md 7).
+"""The key table the writer reads instead of the model: a plain value.
 
 `read/write_keys.py` builds it from the model's tables; the modules of `write/` import no
 vocabulary and look up only here. The key prefix, the page id type and the real-function lookup
@@ -44,8 +44,8 @@ def view_of(keys: WriteKeys, handle: Id[Any]) -> PlacementView:
 
 
 def real_function(keys: WriteKeys, handle: Id[Any]) -> tuple[Id[Any], str | None]:
-    """A stage handle's real function, and its pin name when the handle is a pin view (R7 A)."""
-    if handle in keys.item_function:  # R7 B2: an item view stands on the item's first function
+    """A stage handle's real function, and its pin name when the handle is a pin view."""
+    if handle in keys.item_function:  # An item view stands on the item's first function
         return keys.item_function[handle], None
     function = keys.port_function.get(handle)
     if function is None:

@@ -1,4 +1,4 @@
-"""Pure `Decimal` number formatting and grid-to-mm conversion (D5): no `float` anywhere."""
+"""Pure `Decimal` number formatting and grid-to-mm conversion: no `float` anywhere."""
 
 from decimal import Decimal
 
@@ -17,5 +17,5 @@ def format_decimal(value: Decimal) -> str:
 
 
 def grid_to_mm(origin_mm: int, g: int | Decimal, module_mm: Decimal) -> Decimal:
-    """One grid coordinate `g` (0.125 M each) converted to an absolute mm position (D5)."""
+    """One grid coordinate `g` (0.125 M each) converted to an absolute mm position."""
     return Decimal(origin_mm) + Decimal(g) * module_mm / G_PER_MODULE

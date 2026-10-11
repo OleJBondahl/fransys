@@ -1,4 +1,4 @@
-"""The cable engine's values: the reader's facts of a block and the placer's geometry (CT5 CD2)."""
+"""The cable engine's values: the reader's facts of a block and the placer's geometry."""
 
 from typing import Any
 
@@ -10,7 +10,7 @@ from fransys_model.kernel import Id, value
 class CoreFacts:
     """One core: its key (core number), conductor, its two ports (`end_a` first), text width.
 
-    `link` is a row link (CD5 at L1): both ends in one row, drawn at the row, never in the box.
+    `link` is a row link: both ends in one row, drawn at the row, never in the box.
     """
 
     key: int
@@ -35,7 +35,7 @@ class CableFacts:
 class PinFacts:
     """One drawn pin of an end, in drawing order: its port, landed or free, its marking's width.
 
-    `cores` are the conductors landing on it in core-key order, one place each (CD6, P1).
+    `cores` are the conductors landing on it in core-key order, one place each.
     """
 
     port: Id[Any]
@@ -51,7 +51,7 @@ class PinFacts:
 
 @value
 class EndFacts:
-    """One end item: dashed (by others), blank (CD11), its label's width and its drawn pins."""
+    """One end item: dashed (by others), blank, its label's width and its drawn pins."""
 
     item: Id[Any]
     dashed: bool
@@ -69,8 +69,8 @@ class EndFacts:
 class BlockFacts:
     """What the reader hands the placer for one drawable block.
 
-    `cables` run by designation, then `wires` (HA-H1 A1); `cores` is both, cables' first.
-    `harness_width` is None when the subject is a cable (no dashed box, CD9).
+    `cables` run by designation, then `wires`; `cores` is both, cables' first.
+    `harness_width` is None when the subject is a cable (no dashed box).
     """
 
     subject: Id[Any]
@@ -104,7 +104,7 @@ class CorePlace:
 class PlacedCell:
     """One pin cell: its port, its centre x, whether a core lands and where each core lands.
 
-    A cell is one pitch wide per core (P1); `landings` pairs each core with the centre x of its
+    A cell is one pitch wide per core; `landings` pairs each core with the centre x of its
     place, in core-key order. `x` is the centre of the whole cell.
     """
 

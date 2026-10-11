@@ -1,4 +1,4 @@
-"""Private to `engine.py`: a connection is drawn on exactly one page (route.md 6.5, layout-0030).
+"""Private to `engine.py`: a connection is drawn on exactly one page (layout-0030).
 
 Both ends of a connection may be placed on several pages, as two replicated terminals wired to
 each other are. The engine routes it once, on the common page that holds most of its ends at home
@@ -26,7 +26,7 @@ def _homes(
     placed: tuple[Seated, ...],
     away: frozenset[tuple[Handle, AuthoringKey]],
 ) -> Homes:
-    """R7 B8: whether each `(function, page)` is at home: its cell is not drawn away from it."""
+    """Whether each `(function, page)` is at home: its cell is not drawn away from it."""
     return {
         (one.function, (one.drawing_set, one.page)): (one.function, one.column) not in away
         for one in placed
@@ -74,9 +74,9 @@ def page_wiring(
     seats: tuple[Seated, ...],
     net_groups: tuple[NetGroup, ...] = (),
 ) -> tuple[Homes, dict[Handle, Page], frozenset[tuple[Any, int, int]]]:
-    """The one definition of "wired on this page": homes, conductor pages, wired ends (S10)."""
-    # I4 (A): a star reference on a port a drawn wire also reaches leaves
-    # the wire sideways, so the wire never crosses it (D9: a hub pin or a member's port alike)
+    """The one definition of "wired on this page": homes, conductor pages, wired ends."""
+    # A star reference on a port a drawn wire also reaches leaves
+    # the wire sideways, so the wire never crosses it (a hub pin or a member's port alike)
     away = frozenset(
         (cell.function, column.key)
         for column in columns
@@ -90,7 +90,7 @@ def page_wiring(
 
 
 def _net_wired(net_groups: tuple[NetGroup, ...], at_home: Homes) -> frozenset[tuple[Any, int, int]]:
-    """`(port, set, page)` of each net-group port with a mate on its page: wired (S20 M7)."""
+    """`(port, set, page)` of each net-group port with a mate on its page: wired."""
     pages_of: dict[Handle, list[Page]] = defaultdict(list)
     for function, page in at_home:
         pages_of[function].append(page)

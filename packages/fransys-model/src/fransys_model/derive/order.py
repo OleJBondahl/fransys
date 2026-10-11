@@ -85,7 +85,7 @@ def _printed(model: Model, subject: Id[Any]) -> str | None:
 def finding_order_key(model: Model, finding: Finding) -> tuple[int, NaturalKey | tuple[()]]:
     """Sort key of one finding within its code: natural order of its first subject's designation.
 
-    A finding whose first subject prints no designation sorts after those that do (O8).
+    A finding whose first subject prints no designation sorts after those that do.
     """
     text = _printed(model, finding.subjects[0]) if finding.subjects else None
     return (1, ()) if text is None else (0, natural_key(text))

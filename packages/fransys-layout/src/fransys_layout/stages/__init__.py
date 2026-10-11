@@ -1,7 +1,4 @@
-"""Stages layer: pure, engine-agnostic steps over small frozen values.
-
-Refs: foundations.md 3, stages.md 6.
-"""
+"""Stages layer: pure, engine-agnostic steps over small frozen values."""
 
 from .columns import boundary_key, columns_from_chains, replica_key
 from .cutpages import cut_pages

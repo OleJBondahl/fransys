@@ -1,4 +1,4 @@
-"""A home terminal wired only inside its own group stands at its first pin outside its column (V4).
+"""A home terminal wired only inside its own group stands at its first pin outside its column.
 
 The terminal's pins are all in one group and drawing set, one of them in its own column. It moves
 to the lowest-keyed other column, over an N pin or under an S pin; the other pins keep their wire.
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     type _Home = Mapping[Handle, tuple[Column, Cell]]
     type _Pair = tuple[Column, Cell, PortRef, PortRef]  # the far end's column and cell, it, mine
 
-_MIN_WIRES = 3  # two wires are a chain link: they move seven tests, V4 keeps them home
+_MIN_WIRES = 3  # two wires are a chain link: they move seven tests, the rule keeps them home
 
 
 def own_group_homes(
@@ -36,7 +36,7 @@ def own_group_homes(
     touching: Mapping[Handle, tuple[Connection, ...]],
     fits: Callable[[Column], bool],
 ) -> tuple[Column, ...]:
-    """V4: move each own-group home terminal to its first far pin, unless `fits` says no."""
+    """Move each own-group home terminal to its first far pin, unless `fits` says no."""
     home = {
         c.function: (col, c) for col in columns for c in col.cells if c.home is not Home.ELSEWHERE
     }
@@ -61,7 +61,7 @@ def _stars(
     drawn_of: Mapping[Handle, DrawnFunction],
     touching: Mapping[Handle, tuple[Connection, ...]],
 ) -> Iterator[tuple[Column, Handle, Column, _Entry]]:
-    """Each home terminal cell's column, handle, host column and entry, where V4 applies."""
+    """Each home terminal cell's column, handle, host column and entry, where the move applies."""
     for column in columns:
         for cell in column.cells:
             if cell.home is not Home.HERE or cell.host is not None:

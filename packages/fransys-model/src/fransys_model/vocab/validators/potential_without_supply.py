@@ -1,4 +1,4 @@
-"""Validator: a net potential that no supply declares gives no rank and no power symbol (V11)."""
+"""Validator: a net potential that no supply declares gives no rank and no power symbol."""
 
 from typing import TYPE_CHECKING, Final
 

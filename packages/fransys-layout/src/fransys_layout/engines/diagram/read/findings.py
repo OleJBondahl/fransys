@@ -1,4 +1,4 @@
-"""The diagram facts of a reading as kernel `Finding`s, with the one severity map (BD3)."""
+"""The diagram facts of a reading as kernel `Finding`s, with the one severity map."""
 
 from typing import Any
 

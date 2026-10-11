@@ -1,4 +1,4 @@
-"""`REDUNDANT_JOG`: joining the routes of one net end to end and finding its U-turns (lint.md 6.8).
+"""`REDUNDANT_JOG`: joining the routes of one net end to end and finding its U-turns.
 
 Private to the geometric lint. Every input here is already one page and one physical net.
 """

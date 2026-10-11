@@ -1,4 +1,4 @@
-"""The block diagram's facts: the box a cable end reaches, its lines and its findings (BD1 to BD3).
+"""The block diagram's facts: the box a cable end reaches, its lines and its findings.
 
 Reached as `fransys_model.derive.block_diagram.<name>`, never re-exported from `derive/__init__.py`
 (model-0167, as `cable_drawing` in model-0159): layout, render and pdf read it, a consumer never
@@ -26,7 +26,7 @@ from .drawing_text import (
     partner_position_text,
     product_location,
 )
-from .harness import top_level_cables, unit_cables
+from .harness import reading_cables
 from .indexes import build_indexes
 from .instance_tag import instance_name, instance_tags
 from .lookups import cable_end_owner, item_of_port, unit_chain
@@ -66,7 +66,7 @@ class BoxEnd:
 
     `box` is a unit instance (`Id.kind` says so) or a root item. `landed` is the end's strip, or
     the item it lands on, after a plug has crossed its mate. `anchored` is true when that item is a
-    terminal strip or a connector item, the only landings a tab names (BD4).
+    terminal strip or a connector item, the only landings a tab names.
     """
 
     box: Id[Any]
@@ -79,7 +79,7 @@ class DiagramLine:
     """One line of a diagram: a cable between two boxes, `a` before `b` in box order.
 
     `designation` is the cable's, as the cable list prints it in that reading. A tab is the text at
-    the line's end on that box, or `None` for none (BD4).
+    the line's end on that box, or `None` for none.
     """
 
     cable: Id[Item]
@@ -186,8 +186,8 @@ def _cable_ends(
 
 
 def _reading_cables(model: Model, unit: Id[Unit] | None) -> tuple[HarnessCable, ...]:
-    """BD1's lines: the reading's own cables, `Item.unit == unit`, harness cables included."""
-    return top_level_cables(model) if unit is None else unit_cables(model, unit)
+    """The lines: the reading's own cables, `Item.unit == unit`, harness cables included."""
+    return reading_cables(model, unit)
 
 
 def _tab(model: Model, box: Id[Any], ends: list[BoxEnd], unit: Id[Unit] | None) -> str | None:
@@ -204,7 +204,7 @@ def _tab(model: Model, box: Id[Any], ends: list[BoxEnd], unit: Id[Unit] | None) 
 
 
 def diagram_lines(model: Model, unit: Id[Unit] | None) -> tuple[DiagramLine, ...]:
-    """The lines of `unit`'s diagram, sorted; none means the reading gets no page (BD3).
+    """The lines of `unit`'s diagram, sorted; none means the reading gets no page.
 
     A cable reaching two boxes is one line. One box, or none: no line. Three or more: one line
     from the first box in text order to each other box.
@@ -238,7 +238,7 @@ def diagram_lines(model: Model, unit: Id[Unit] | None) -> tuple[DiagramLine, ...
 
 
 def box_lines(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[str, ...]:
-    """The text of a box in `unit`'s reading (BD4).
+    """The text of a box in `unit`'s reading.
 
     A unit instance: line 1, the location its items print then its tag (`-U1`), left out when both
     are empty; line 2, `outline_title`. An item: its `end_label`, one line.
@@ -255,7 +255,7 @@ def box_lines(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[str, ..
 
 
 def box_dashed(model: Model, box: BoxKey, unit: Id[Unit] | None) -> bool:
-    """Whether the box is drawn dashed: an item whose end is by others (CT5 G2)."""
+    """Whether the box is drawn dashed: an item whose end is by others."""
     return box.kind != "unit" and end_by_others(model, cast("Id[Item]", box), unit)
 
 
@@ -284,7 +284,7 @@ def _loose_wires(model: Model) -> tuple[DiagramFact, ...]:
 
 
 def diagram_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...]:
-    """The findings of `unit`'s diagram as facts, sorted by code and subject (BD3).
+    """The findings of `unit`'s diagram as facts, sorted by code and subject.
 
     `DIAGRAM_CABLE_ONE_BOX` and `DIAGRAM_CABLE_FANOUT` for a cable of the reading;
     `DIAGRAM_LOOSE_WIRE` in the system reading only: a unit's schematic draws every wire it has.

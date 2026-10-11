@@ -186,7 +186,7 @@ def cable_children(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
 def is_harness(model: Model, item: Id[Item]) -> bool:
     """Whether `item` is a harness: it carries `facet.harness`, or a child is a cable (`is_cable`).
 
-    A harness is a plain `Item`, marked by the author (HA1, model-0171) or by the cable under it.
+    A harness is a plain `Item`, marked by the author (model-0171) or by the cable under it.
     A container with neither reads flat, whatever else it holds (a rack, a strip).
     """
     return item in marked_harnesses(model) or bool(cable_children(model, item))
@@ -194,15 +194,15 @@ def is_harness(model: Model, item: Id[Item]) -> bool:
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def marked_harnesses(model: Model) -> frozenset[Id[Item]]:
-    """The items that carry `facet.harness`: the one read of the mark (HA1)."""
+    """The items that carry `facet.harness`: the one read of the mark."""
     return frozenset(facet.subject for facet in facets_of(model, HarnessFacet).values())
 
 
 def designating_ancestors(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
     """Every enclosing board, harness or leads-parent of `item`, outermost first; never `item`.
 
-    Cycle-safe: `enclosing_boards`, `is_harness`, or the parent of an item `fitted_on_leads`
-    (HA6); never a rack or strip. An unknown `item` gives `()`.
+    Cycle-safe: `enclosing_boards`, `is_harness`, or the parent of an item `fitted_on_leads`;
+    never a rack or strip. An unknown `item` gives `()`.
     """
     if items(model).get(item) is None:
         return ()
@@ -224,7 +224,7 @@ def in_reading(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
     """Whether `item` lies inside a reading's subject (model-0157): `unit=None` is any unit.
 
     A given `unit` reads its subtree (`in_unit_subtree`); an item in no unit is never inside.
-    The one rule behind CD4's end order and CD5's rows.
+    The one rule behind a cable's end order and rows.
     """
     if unit is None:
         return items(model)[item].unit is not None

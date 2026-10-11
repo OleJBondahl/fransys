@@ -1,6 +1,6 @@
 """The label boxes, private to `labels` and `sizing`: where a slot label sits.
 
-Everything here is geometry in page coordinates (design/labels.md). `labels` owns the request
+Everything here is geometry in page coordinates. `labels` owns the request
 order, the obstacles and the findings.
 """
 
@@ -33,7 +33,7 @@ class Home:
 
 def home(request: LabelRequest, placement: PlacedFunction, profile: Profile) -> Home:
     """The preferred box of one request, and its mirror body; an undefined slot is `LayoutError`."""
-    # R6 D1: the terminal-row pseudo-slots are drawn at the symbol's tag slot
+    # The terminal-row pseudo-slots are drawn at the symbol's tag slot
     pseudo = ("tag.strip", "tag.point", "tag.pin", "tag.conn", "tag.item")
     wanted = "tag" if request.slot in pseudo else request.slot
     slot = next((one for one in placement.geometry.slots if one.slot == wanted), None)
@@ -46,17 +46,17 @@ def home(request: LabelRequest, placement: PlacedFunction, profile: Profile) -> 
         and placement.geometry.orientation is Orientation.R180
         and slot.side in (Facing.E, Facing.W)
     ):
-        # R7 A5b: a marking keeps its page side after a flip, beside its own wire
+        # A marking keeps its page side after a flip, beside its own wire
         port_x = next(
             p.at.x for p in placement.geometry.ports if p.name == wanted.removeprefix("marking.")
         )
         box = Box(x=2 * port_x - box.x - box.width, y=box.y, width=box.width, height=box.height)
     if request.slot in pseudo:
-        # R6 D1: a terminal-row text is as wide as its text, not the slot, so it fits the pitch
+        # A terminal-row text is as wide as its text, not the slot, so it fits the pitch
         width = text_width(request.text, height=profile.text_height)
         x = box.x + box.width - width if slot.side is Facing.W else box.x
         box = Box(x=x, y=box.y, width=width, height=box.height)
-    if request.level:  # F2: beside the body, level with its centre, as far out as the slot
+    if request.level:  # Beside the body, level with its centre, as far out as the slot
         body = placement.geometry.body
         gap = abs(slot.at.x - (body.x + body.width // 2))
         x = body.x + body.width + gap if slot.side is Facing.E else body.x - gap - box.width

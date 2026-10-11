@@ -1,7 +1,5 @@
 """Which pages a severed conductor's cut uses: one rule, read by `links` and the check.
 
-Refs: links.md 6.6.
-
 A cut belongs to the unit whose drawing draws the wire. A boundary function stands twice: at
 home, in its own unit's drawing set, and as a black box in its parent's; the black
 box draws the unit's interface, not its insides. So the earliest page of a function is not always

@@ -1,4 +1,4 @@
-"""Stage 3, partition: drawing sets and pages, packed by width and never by count (pages.md 6.3).
+"""Stage 3, partition: drawing sets and pages, packed by width and never by count.
 
 The two halves of the work are private modules of their own: `_ordering` decides the
 drawing set, the role and the order of a column (steps 1 and 2), `_packing` fills the pages
@@ -44,7 +44,7 @@ ORDER_HINT_UNMET = "ORDER_HINT_UNMET"
 def column_widths(
     columns: tuple[Column, ...], drawn: tuple[DrawnFunction, ...], *, profile: Profile
 ) -> tuple[ColumnWidth, ...]:
-    """Estimate each column as its widest keep-out box plus one gap, deliberately generous (WP6)."""
+    """Estimate each column as its widest keep-out box plus one gap, deliberately generous."""
     drawn_by = {one.function: one for one in drawn}
     keepouts = {function.function: function.geometry.keepout.width for function in drawn}
     widths: dict[AuthoringKey, int] = {}
@@ -55,7 +55,7 @@ def column_widths(
         if not column.cells:
             msg = "a column has no cells, so it has no width"
             raise LayoutError(msg)
-        # L1 (deep dive): a row `place` packs tag-less (R5.2: lanes of one item, or of
+        # A row `place` packs tag-less (lanes of one item, or of
         # terminals and pins) is estimated tag-less too, or an 8-pin row counts 8 tags
         by_row = by_key(
             (c for c in column.cells if not c.side and c.function in drawn_by),
@@ -76,7 +76,7 @@ def column_widths(
                 raise LayoutError(msg)
             if cell.index in tagless and not cell.side:
                 keepout = _without_tag(drawn_by[cell.function].geometry).keepout.width
-            # R4 rows: a row's cells sit side by side, a wiring-grid step apart (an estimate)
+            # A row's cells sit side by side, a wiring-grid step apart (an estimate)
             gap = WIRING_GRID if cell.index in rows else 0
             rows[cell.index] = rows.get(cell.index, 0) + gap + keepout
         widths[column.key] = max(rows.values()) + profile.column_gap
@@ -106,7 +106,7 @@ def partition(
     profile: Profile,
     sheet: SheetFormat,
 ) -> tuple[tuple[PagePlan, ...], tuple[Finding, ...]]:
-    """Plan drawing sets and pages (WP6, pages.md 6.3 step 3; layout-0049, layout-0081, D4)."""
+    """Plan drawing sets and pages (layout-0049, layout-0081)."""
     tables = Tables(
         info_of={info.group: info for info in given.groups},
         label_of={info.location: info.label for info in given.locations},

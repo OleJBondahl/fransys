@@ -1,4 +1,4 @@
-"""Every finding code this repo emits, in one list (docs/design/geometry.md 5.4).
+"""Every finding code this repo emits, in one list.
 
 A stage code is defined in the stage that emits it, because `stages` may not import
 `lint`; it is re-exported here so this module is the complete list. Codes are stable.

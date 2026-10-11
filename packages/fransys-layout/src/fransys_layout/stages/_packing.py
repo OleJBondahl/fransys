@@ -1,6 +1,6 @@
 """How `partition` fills its pages: the packing unit, the runs that fit one page, and the fill.
 
-Private to `stages.partition` (design/pages.md 6.3 step 4). Everything here takes plain values and
+Private to `stages.partition`. Everything here takes plain values and
 returns plain values; the findings and the page plans are built by `partition`.
 """
 
@@ -39,7 +39,7 @@ class Placement:
 def merge(
     units: Sequence[Unit], keep_together: tuple[GroupSet, ...], content_width: int
 ) -> tuple[list[Unit], set[int]]:
-    """Merge each keep-together set that fits one page at its first member's place (D4)."""
+    """Merge each keep-together set that fits one page at its first member's place."""
     met: set[int] = set()
     current: list[Unit] = list(units)
     for index, together in enumerate(keep_together):
@@ -99,7 +99,7 @@ def _chunks(
     content_width: int,
     pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...],
 ) -> tuple[tuple[AuthoringKey, ...], ...]:
-    """The unit whole, or its columns page by page, ending at a boundary no pole link spans (D4)."""
+    """The unit whole, or its columns page by page, ending at a boundary no pole link spans."""
     if unit.width <= content_width:
         return (unit.columns,)
     columns = unit.columns

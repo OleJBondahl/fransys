@@ -1,10 +1,10 @@
-"""S21: a wired conductor whose two ends stand apart in another drawing set.
+"""A wired conductor whose two ends stand apart in another drawing set.
 
 `links` cuts a conductor only when its ends share no page anywhere; one whose ends share a page
 is wired there, once (`onepage`). A drawing set that seats both ends too, but on no common page,
 then shows no wire at either, and the member check (layout-0071) wants each end drawn in every
-set it stands in. There the pair is a `#n` reference (D4): one text at each end naming the
-other, in the persisted shape of a C17 split (`"branch"` kind, mutual partners, no hub), so no
+set it stands in. There the pair is a `#n` reference: one text at each end naming the
+other, in the persisted shape of a split (`"branch"` kind, mutual partners, no hub), so no
 cut decision answers it and the wire stays the conductor's one drawing.
 """
 
@@ -32,7 +32,7 @@ def apart_markers(
     exempt: frozenset[tuple[Id[Any], int]],
     stars: tuple[Star, ...],
 ) -> tuple[MarkerDecision, ...]:
-    """S21: each wired conductor's `#n` reference in every set that seats its ends apart."""
+    """Each wired conductor's `#n` reference in every set that seats its ends apart."""
     world = link_world(scene)
     starred = {handle for star in stars for handle in star.wires}
     found = []

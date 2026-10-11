@@ -1,4 +1,4 @@
-"""Private to `write/`: the `Route` builder (docs/design/engine.md 7, model layout-namespace.md)."""
+"""Private to `write/`: the `Route` builder."""
 
 from typing import TYPE_CHECKING
 

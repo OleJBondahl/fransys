@@ -1,4 +1,4 @@
-"""The tag rules of `d.add` (UT1, UT3, UT5) and the class code of `@unit`."""
+"""The tag rules of `d.add` and the class code of `@unit`."""
 
 import re
 

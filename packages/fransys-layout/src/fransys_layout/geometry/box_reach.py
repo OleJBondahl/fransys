@@ -1,4 +1,4 @@
-"""A generic box's pin x: a fixed channel pitch, widened by the texts of each pin's contact (V5)."""
+"""A generic box's pin x: a fixed channel pitch, widened by the texts of each pin's contact."""
 
 from typing import TYPE_CHECKING
 
@@ -60,7 +60,7 @@ def spread(
 
 
 def extent(pins: Mapping[str, int], reach: tuple[Reach, ...]) -> tuple[int, int]:
-    """V5: the x span of a box's pins and the rows hung under them; keep-out and fit read it."""
+    """The x span of a box's pins and the rows hung under them; keep-out and fit read it."""
     low = min(pins.values())
     high = max(pins.values())
     for one in reach:

@@ -1,4 +1,4 @@
-"""The cable placer's row packing: each row's end boxes left to right (CT5-3, Q5)."""
+"""The cable placer's row packing: each row's end boxes left to right."""
 
 from typing import Any
 
@@ -29,7 +29,7 @@ def row_xs(ends: tuple[EndFacts, ...], x0: int, pitch: int) -> tuple[int, ...]:
     """Each end's left edge: the first at `x0`, the next one pitch past the last box's edge.
 
     A gap is wider when the two labels, each centred on its box, would come nearer than one
-    grid unit (CD8, no two labels overlap). Rows are packed alone; bends fall out of the gaps.
+    grid unit (no two labels overlap). Rows are packed alone; bends fall out of the gaps.
     """
     xs: list[int] = []
     for i, end in enumerate(ends):

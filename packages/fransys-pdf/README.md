@@ -37,7 +37,7 @@ larger than the page body, as `DOCUMENT_NO_DRAWINGS`. A block's SVG is keyed `ca
 harness that is a unit's appears twice: absolute in its item document, unit-relative in the
 unit's. `CONTENTS` is left out when the document's subject has no cable (pdf-0019).
 
-Rules moved from docstrings (docstring sweep, LC3). Page frame: margin strips take their depth
+Rules moved from docstrings. Page frame: margin strips take their depth
 from `content_x_mm` and `content_y_mm`, a `1fr` row or column fills it so labels centre, and
 only interior ticks are drawn (pdf-0004; the 5 mm margin is model-0051). The title block is one `grid()`: Title spans c1 to c3,
 Notice and Logo span both rows (pdf-0010). The notice wraps and is clipped at its box, never cut
@@ -59,13 +59,13 @@ labels of the unit's own groups (pdf-0010, model-0097).
 Text pages: SCHEMATIC with no drawing set, or any page missing from `svgs`, gives one `No
 drawings.` page with its own title block, never a partial set. A harness document naming a
 cable-less harness does the same (title `Harness drawing`). A SYSTEM document with no top-level
-cable gives no page and the `DOCUMENT_NO_TOP_LEVEL_CABLES` INFO (U3). A cable page has the scope
+cable gives no page and the `DOCUMENT_NO_TOP_LEVEL_CABLES` INFO. A cable page has the scope
 cell of the item's designation, else `subject_label`. Its per-core table has the columns Core,
-From, To and Label, with no colour or screening (CT2, CT3). The SYSTEM "by others" line lists the
+From, To and Label, with no colour or screening. The SYSTEM "by others" line lists the
 cable if external, then its external ends in `cable_end_rank` order, never a blank end
 (model-0048, wireviz-0010).
 
-Block diagram pages (BD7, pdf-0023): `BLOCK_DIAGRAM` follows NOTES and CONTENTS and precedes SCHEMATIC. Each `DiagramSheet` of the document's reading is one page on the house A2 sheet (`sheet_for`, 594 x 420 mm). The size is set per page, so every other page keeps the profile's sheet. The SVG comes from `svgs[render_id(sheet.id)]`. Pdf draws the frame, grid and title block from the sheet's numbers. Only SYSTEM carries the kind by default; `add=` puts it on any document. A reading with no sheet gives no page. A reading with lines but no sheet is `DOCUMENT_NO_DRAWINGS`.
+Block diagram pages (pdf-0023): `BLOCK_DIAGRAM` follows NOTES and CONTENTS and precedes SCHEMATIC. Each `DiagramSheet` of the document's reading is one page on the house A2 sheet (`sheet_for`, 594 x 420 mm). The size is set per page, so every other page keeps the profile's sheet. The SVG comes from `svgs[render_id(sheet.id)]`. Pdf draws the frame, grid and title block from the sheet's numbers. Only SYSTEM carries the kind by default; `add=` puts it on any document. A reading with no sheet gives no page. A reading with lines but no sheet is `DOCUMENT_NO_DRAWINGS`.
 
 Terminal and list tables: each Bridge mark is a `place(...)` call and takes no flow space. The
 Bridge cell is `breakable: false` because a breakable `auto` row resolves `%` against the page;
@@ -78,5 +78,5 @@ path first (model-0054).
 
 Status: done. Work package `pdf` (decisions pdf-0001, pdf-0002): the pure package, list and BOM
 pages, harness pages (drawn cable blocks since pdf-0022), and the schematic pages from `fransys_render`, compiled by the
-facade. Work package `page frame` (pdf-0003 to pdf-0005, R11 in pdf-0010): the frame, grid and
+facade. Work package `page frame` (pdf-0003 to pdf-0005, pdf-0010): the frame, grid and
 title block on every page, drawn as the Typst page background.

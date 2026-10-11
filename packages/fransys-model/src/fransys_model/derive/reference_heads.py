@@ -1,4 +1,4 @@
-"""RR-O5 (layout-0132): the one rule for which marker heads a reference group.
+"""The one rule (layout-0132) for which marker heads a reference group.
 
 A reference group is a net's markers that share one `#n`. Layout counts the groups of a set to
 size `#n`'s digits; derive numbers them. Both ask this, on plain values.

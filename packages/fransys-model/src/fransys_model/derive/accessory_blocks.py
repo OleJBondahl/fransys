@@ -2,7 +2,7 @@
 
 An add-on contact block is a child item whose functions are all contacts and that has no
 function below it. `takes_parents_designation` lets such a block print its parent's
-designation (V10); `contacts.owned_contacts` gives its contacts to the parent.
+designation; `contacts.owned_contacts` gives its contacts to the parent.
 """
 
 from itertools import islice
@@ -25,7 +25,7 @@ CONTACT_KINDS = frozenset(
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def items_with_a_function_below(model: Model) -> frozenset[Id[Item]]:
-    """Every item with a function in a proper descendant by `Item.parent` (model-0103 B10)."""
+    """Every item with a function in a proper descendant by `Item.parent` (model-0103)."""
     marked: set[Id[Item]] = set()
     for seed in build_indexes(model).functions_by_item:
         for node in islice(item_chain(model, seed), 1, None):

@@ -1,4 +1,4 @@
-"""Exact voltage arithmetic of the rating check (decision model-0079, model review Q4).
+"""Exact voltage arithmetic of the rating check (decision model-0079).
 
 Every quantity is a `Fraction` built from a `Decimal`, so no comparison rounds, whatever the
 digits of a rating (a `Decimal` operation rounds to the context precision, 28 digits by default).

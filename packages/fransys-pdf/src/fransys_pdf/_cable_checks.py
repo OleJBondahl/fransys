@@ -1,4 +1,4 @@
-"""What `check` says of a document's cable blocks (CD12, pdf-0022): a missing SVG, a block too big.
+"""What `check` says of a document's cable blocks (pdf-0022): a missing SVG, a block too big.
 
 Both are `DOCUMENT_NO_DRAWINGS` messages, as a missing schematic page key is. A block is measured
 in grid units, so no mm conversion lives here: `content_extent` turns the page body into the
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 def _too_big_messages(
     model: Model, record: Document, pages: tuple[PageKind, ...], blocks: tuple[Block, ...]
 ) -> list[str]:
-    """One message per block wider or taller than the document's page body (Q7).
+    """One message per block wider or taller than the document's page body.
 
     The block is scaled by its own sheet; the body is the document's sheet minus the run's frame.
     """

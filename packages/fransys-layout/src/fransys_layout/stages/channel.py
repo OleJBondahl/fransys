@@ -1,4 +1,4 @@
-"""Cable engine, the lower band as a channel: tracks for the bending cores (CT5-3 P2 ruling).
+"""Cable engine, the lower band as a channel: tracks for the bending cores.
 
 Integers only. Top terminals are the cores' box columns, bottom terminals their pins. Where a
 column meets another core's pin the column's core runs above it; a cycle of such demands is
@@ -23,7 +23,7 @@ class Net:
     top: int
     bottom: int
     part: int = 0
-    link: bool = False  # a row link (CD5 at L1): `top` and `bottom` are its two pins, both below
+    link: bool = False  # a row link: `top` and `bottom` are its two pins, both below
 
     @property
     def pins(self) -> tuple[int, ...]:
@@ -161,7 +161,7 @@ def plan_channel(
 def rise(plan: Plan, level: int, head: int) -> int:
     """The height from the band top to track `level`: a grid unit a track, `head` more a link track.
 
-    A link track has `head` more room above it, for the link's text (CD8 at L1).
+    A link track has `head` more room above it, for the link's text.
     """
     linked = {t for net, t in zip(plan.nets, plan.tracks, strict=True) if net.link}
     return G * level + head * sum(1 for t in linked if t <= level)

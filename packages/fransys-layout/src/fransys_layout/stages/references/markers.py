@@ -1,8 +1,8 @@
-"""R7 B4 (deep dive): the star and split texts' decisions, and the one decider they share.
+"""The star and split texts' decisions, and the one decider they share.
 
 A star net is drawn as one marker per port (`nets.py` finds the nets); this module decides those
-texts and the C17 split texts: the port and page each stands at, which of its function's ports
-it leaves by, what it names and its box's size. `texts.markers` builds each marker (S9).
+texts and the split texts: the port and page each stands at, which of its function's ports
+it leaves by, what it names and its box's size. `texts.markers` builds each marker.
 """
 
 from collections import defaultdict
@@ -28,12 +28,12 @@ if TYPE_CHECKING:
 
 
 def terminal_lift(profile: Profile) -> int:
-    """How far a terminal's marker stands out, clear of a packed strip row's point texts (C15)."""
+    """How far a terminal's marker stands out, clear of a packed strip row's point texts."""
     return 2 * profile.text_height
 
 
 def star_markers(stars: tuple[Star, ...], scene: MarkerScene) -> tuple[MarkerDecision, ...]:
-    """One text per seated counted port and one at each reference seat (C22, 0070, LD3 d, C15)."""
+    """One text per seated counted port and one at each reference seat."""
     world = link_world(scene)
     plans = [plan for star in stars if (plan := _star_plan(star, world)) is not None]
     found = [m for plan in plans for m in _page_markers(plan, scene)]
@@ -69,7 +69,7 @@ def _star_plan(
         if ref.port == star.ref.port:
             continue
         pages = sorted(shown(world, ref, star.exempt))
-        # C3 per set: one text per wired cluster, none in the reference's cluster
+        # Per set, one text per wired cluster, none in the reference's cluster
         for page in branch_pages(pages, ref.port, star.ref.port, star.set_cluster):
             end = (PortEnd(ref=ref, page=page), marker_end(EndRead("star_branch"))[1])
             own_set = [r for p, r in refs.items() if p[0] == page[0]]
@@ -86,7 +86,7 @@ def _page_markers(
     ],
     scene: MarkerScene,
 ) -> list[MarkerDecision]:
-    """Pass 2 of `star_markers`: every text of one star's page-groups (LD3 (d), symmetric)."""
+    """Pass 2 of `star_markers`: every text of one star's page-groups, symmetric."""
     connection, refs, naming = plan
     found = []
     branch_side = marker_end(EndRead("star_branch"))[0]
@@ -95,7 +95,7 @@ def _page_markers(
         branches = naming[page]
         if not branches:
             continue
-        lines = marker_lines(len(branches))  # LD3 (d), C2: one count for all, one past two
+        lines = marker_lines(len(branches))  # One count for all, one past two
         for end in branches:
             spec = MarkerSpec(connection, end, ref_end, lines, kind="branch", side=branch_side)
             found.append(decided(spec, scene))
@@ -107,7 +107,7 @@ def _page_markers(
 def split_markers(
     columns: tuple[Column, ...], scene: MarkerScene, connections: tuple[Connection, ...]
 ) -> tuple[MarkerDecision, ...]:
-    """C17: a C7 split says where it continues."""
+    """A split says where it continues."""
     world = link_world(scene)
     terminal = {one.function for one in scene.drawn if one.roles.terminal}
     found = []
@@ -147,7 +147,7 @@ def _split_pair(
 
 
 def decided(spec: MarkerSpec, scene: MarkerScene) -> MarkerDecision:
-    """A star or split text; LD3 (c): a fixed-width box, `spec.lines` lines tall."""
+    """A star or split text; a fixed-width box, `spec.lines` lines tall."""
     (end, leave), (partner, partner_leave) = spec.end, spec.partner
     digits = scene.digits.get(end.page[0], FLOOR)
     return MarkerDecision(

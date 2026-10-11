@@ -1,4 +1,4 @@
-"""Stage 2, columns: the series chains that are placed top to bottom (design/columns.md 6.2)."""
+"""Stage 2, columns: the series chains that are placed top to bottom."""
 
 import itertools
 from typing import TYPE_CHECKING, TypeGuard
@@ -30,18 +30,18 @@ _TERMINAL_PORTS = 2  # a strip terminal has an inner and an outer port
 
 
 def replica_key(served: AuthoringKey, terminal: AuthoringKey) -> AuthoringKey:
-    """The key of the replica column showing `terminal`, right after `served` (columns.md 6.2)."""
+    """The key of the replica column showing `terminal`, right after `served`."""
     return (*served, "terminal", *terminal)  # vocab-ok: a key component, not a kind test
 
 
 def boundary_key(function_key: AuthoringKey, parent_unit_key: AuthoringKey | None) -> AuthoringKey:
-    """The key of a unit boundary function's black-box replica, keyed by its parent (U1)."""
+    """The key of a unit boundary function's black-box replica, keyed by its parent."""
     parent = parent_unit_key if parent_unit_key is not None else ("top",)
     return (*function_key, "boundary", *parent)
 
 
 def is_rack_key(key: AuthoringKey | None) -> TypeGuard[AuthoringKey]:
-    """F1: whether a column key stands in a rack, `("rack", <rack>, <position>, ...)`."""
+    """Whether a column key stands in a rack, `("rack", <rack>, <position>, ...)`."""
     return key is not None and len(key) > 0 and key[0] == "rack"
 
 
@@ -52,7 +52,7 @@ def columns_from_chains(
     drawn: tuple[DrawnFunction, ...] = (),
     connections: tuple[Connection, ...] = (),
 ) -> tuple[tuple[Column, ...], tuple[Finding, ...]]:
-    """Turn every chain into one column and every other function into its own (WP5, columns 6.2)."""
+    """Turn every chain into one column and every other function into its own."""
     specs = {spec.function: spec for spec in functions}
     drawn_by = {one.function: one for one in drawn}
     claimed: set[Handle] = set()
@@ -159,7 +159,7 @@ def _entered_from_south(
     drawn_of: Mapping[Handle, DrawnFunction],
     connections: tuple[Connection, ...],
 ) -> set[Handle]:
-    """The terminals of a chain entered by their S-facing port (D1); an ambiguous one stays."""
+    """The terminals of a chain entered by their S-facing port; an ambiguous one stays."""
     joined = _joined_ports(connections)
     flipped: set[Handle] = set()
     for at, (_, spec) in enumerate(steps):
@@ -174,7 +174,7 @@ def _entered_from_south(
 
 def _group_devices(members: Sequence[FunctionSpec]) -> Sequence[FunctionSpec]:
     """The members whose group the column takes, narrowed by three rules."""
-    # C21 (deep dive): a column's group is its devices' group; a terminal at its end is a
+    # A column's group is its devices' group; a terminal at its end is a
     # boundary of another group (X01 of =SUP heading =P1's chain), not a member
     # (nor a PLC channel end: F12 97/98 -> DI1 is P1's feedback column, ruling)
     devices = [

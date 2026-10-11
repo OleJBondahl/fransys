@@ -1,4 +1,4 @@
-"""Route polylines: one `<polyline>` per `layout.route` on a page (D8), ordered by `id` (D11)."""
+"""Route polylines: one `<polyline>` per `layout.route` on a page, ordered by `id`."""
 
 from typing import TYPE_CHECKING
 
@@ -12,19 +12,19 @@ if TYPE_CHECKING:
 
 
 def routes_on_page(model: Model, page: Page) -> tuple[Route, ...]:
-    """Every `layout.route` drawn on `page`, ordered by `id` (D11)."""
+    """Every `layout.route` drawn on `page`, ordered by `id`."""
     return page_slice(model, Route, page)
 
 
 def _point_mm(sheet: SheetFormat, x: int, y: int) -> str:
-    """One route point converted to an `"x,y"` mm pair (D5), each coordinate formatted."""
+    """One route point converted to an `"x,y"` mm pair, each coordinate formatted."""
     x_mm = grid_to_mm(sheet.content_x_mm, x, sheet.module_mm)
     y_mm = grid_to_mm(sheet.content_y_mm, y, sheet.module_mm)
     return f"{format_decimal(x_mm)},{format_decimal(y_mm)}"
 
 
 def routes_group(model: Model, page: Page) -> str:
-    """Every route on `page` as one `<polyline>` each, in `id` order (D8, D11)."""
+    """Every route on `page` as one `<polyline>` each, in `id` order."""
     sheet = sheet_format_of(model, page.sheet_format)
     return "".join(
         '<polyline class="wire" points="'

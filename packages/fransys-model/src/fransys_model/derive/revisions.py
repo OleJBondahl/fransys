@@ -1,4 +1,4 @@
-"""The revision history query: a unit release's or the project's own entries (U4, SC2)."""
+"""The revision history query: a unit release's or the project's own entries."""
 
 from typing import TYPE_CHECKING
 

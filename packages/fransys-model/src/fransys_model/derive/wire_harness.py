@@ -1,4 +1,4 @@
-"""The harness a WIRE conductor belongs to (HA2, model-0171).
+"""The harness a WIRE conductor belongs to (model-0171).
 
 Reached as `fransys_model.derive.wire_harness.<name>`, not re-exported from `derive/__init__.py`.
 `Conductor.carrier` stays `None` for a wire; the plugs' harness is the one fact.

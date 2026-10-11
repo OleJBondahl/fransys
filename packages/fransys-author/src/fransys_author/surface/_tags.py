@@ -1,4 +1,4 @@
-"""The bare-tag rule (EA2): a call gives the aspect's prefix, the author never writes it."""
+"""The bare-tag rule: a call gives the aspect's prefix, the author never writes it."""
 
 from fransys_author.errors import AuthorError
 
@@ -23,7 +23,7 @@ def bare(tag: str, call: str) -> str:
 
 
 def floating_name(tag: str | None, name: str | None, call: str) -> str | None:
-    """`name`, after `tag` passes `bare`; a call with neither a tag nor `name=` raises (UT3)."""
+    """`name`, after `tag` passes `bare`; a call with neither a tag nor `name=` raises."""
     if tag is not None:
         bare(tag, call)
     elif name is None:

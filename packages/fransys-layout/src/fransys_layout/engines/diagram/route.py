@@ -1,4 +1,4 @@
-"""The diagram placer's routes (BD5): a line's points from its first end to its second, in G.
+"""The diagram placer's routes: a line's points from its first end to its second, in G.
 
 A line between adjacent columns follows its planned tracks. A same-column line leaves the east
 edges to track count+1+k of the channel right of its column (k its index in `same`), or to the

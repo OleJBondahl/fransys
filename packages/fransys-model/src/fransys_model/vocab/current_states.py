@@ -1,4 +1,4 @@
-"""The law per consistent item state (RATINGS-2 "Switch states", CONTACT-STATES CS1).
+"""The law per consistent item state (RATINGS-2 "Switch states").
 
 Counting every switched link closed adds false loops: a changeover's two throws would be closed
 at once. So the law of `current_bounds` is evaluated for each consistent state of the items, and
@@ -82,7 +82,7 @@ def _closed(part: Edge | Wire, chosen: Mapping[Id[Item], LinkState], capped: set
 def assignments(parts: Sequence[Edge | Wire]) -> Iterator[tuple[_States, list[Edge | Wire]]]:
     """Each consistent item assignment of one component, with the parts of `parts` it closes.
 
-    The one enumeration both the branch law and the fault graph (RATINGS-3 R7) walk.
+    The one enumeration both the branch law and the fault graph walk.
     """
     enumerated, capped = _stateful_items(parts)
     for combo in itertools.product(_THROWS, repeat=len(enumerated)):

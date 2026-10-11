@@ -1,4 +1,4 @@
-"""Reads of the model's tag texts for the tag rules (D6, layout-0085).
+"""Reads of the model's tag texts for the tag rules (layout-0085).
 
 The rules of `stages/tags.py` ask for a text per function, and some of those texts raise the
 model's `SchemaError` before numbering, so nothing is computed here up front: `tag_texts` binds

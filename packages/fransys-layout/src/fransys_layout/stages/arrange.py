@@ -1,4 +1,4 @@
-"""Column arrangement before replication, and the in-line exits (D6).
+"""Column arrangement before replication, and the in-line exits.
 
 The steps between chain discovery and `replicate.py`: the same-unit connectivity
 discovery follows, the edge mates, the cut at a location change, the joined strip rows, the
@@ -42,11 +42,11 @@ def same_unit_connectivity(
     net_groups: tuple[NetGroup, ...],
     mates: tuple[MatedFunctions, ...],
 ) -> tuple[tuple[Connection, ...], tuple[NetGroup, ...], tuple[MatedFunctions, ...]]:
-    """Same-unit connectivity for discovery; L5: a boundary wire is two stand-in halves (U1, U2)."""
+    """Same-unit connectivity for discovery; a boundary wire is two stand-in halves."""
     unit_of = {spec.function: spec.unit for spec in functions}
     kept = []
     for c in connections:
-        edge = EDGE_KIND in (c.a.function.kind, c.b.function.kind)  # W3: already ends at the edge
+        edge = EDGE_KIND in (c.a.function.kind, c.b.function.kind)  # Already ends at the edge
         if edge or unit_of.get(c.a.function) == unit_of.get(c.b.function):
             kept.append(c)
             continue
@@ -67,7 +67,7 @@ def edge_mates(
     functions: tuple[FunctionSpec, ...],
     mates: tuple[MatedFunctions, ...],
 ) -> tuple[MatedFunctions, ...]:
-    """I2a: each pin mated across a unit boundary, as (pin, boundary pin) face to face (U1)."""
+    """Each pin mated across a unit boundary, as (pin, boundary pin) face to face."""
     spec_of = {spec.function: spec for spec in functions}
     found = []
     for mate in mates:
@@ -88,7 +88,7 @@ def edge_mates(
 def _location_runs(
     column: Column, spec_of: Mapping[Id[Any], FunctionSpec]
 ) -> tuple[dict[int, tuple[Cell, ...]], list[tuple[Id[Any] | None, list[int]]]]:
-    """A column's rows by index, and its runs of rows sharing one top-level location (C21)."""
+    """A column's rows by index, and its runs of rows sharing one top-level location."""
 
     def top(function: Id[Any]) -> Id[Any] | None:
         path = spec_of[function].location_path
@@ -115,7 +115,7 @@ def _location_runs(
 def cut_locations(
     columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]
 ) -> tuple[Column, ...]:
-    """C21: each column cut where its rows' top-level location changes; attachments follow hosts."""
+    """Each column cut where its rows' top-level location changes; attachments follow hosts."""
     spec_of = {spec.function: spec for spec in specs}
     found = []
     for column in columns:
@@ -161,7 +161,7 @@ def _strip_moves(
     dropped = set()
     for column in columns:
         cells = [c for c in column.cells if c.host is None]
-        # C21: a column carrying attachments keeps them, so it is not joined away
+        # A column carrying attachments keeps them, so it is not joined away
         if (
             not cells
             or len(cells) != len(column.cells)
@@ -188,7 +188,7 @@ def _with_joined(
     cells = list(column.cells)
     for index, cell in joined:
         lane = 1 + max(c.lane for c in cells if c.index == index)
-        # C21: one strip row, one orientation: the joiner takes the row's flip
+        # One strip row, one orientation: the joiner takes the row's flip
         strip = spec_of[cell.function].strip_text
         flip = next(
             (c.flip for c in cells if c.index == index and spec_of[c.function].strip_text == strip),
@@ -201,7 +201,7 @@ def _with_joined(
 def join_strip_rows(
     columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]
 ) -> tuple[Column, ...]:
-    """C15(i): a terminals-only column joins another's rows as the next lane (X3:PE by X3 U V W)."""
+    """A terminals-only column joins another's rows as the next lane (X3:PE by X3 U V W)."""
     spec_of = {spec.function: spec for spec in specs}
     moves, dropped = _strip_moves(columns, spec_of, _strip_rows(columns, spec_of))
     result = []
@@ -216,7 +216,7 @@ def join_strip_rows(
 
 
 def rack_order(columns: tuple[Column, ...], specs: tuple[FunctionSpec, ...]) -> tuple[Column, ...]:
-    """F1: a rack's modules run in authored order, keyed by the lowest slot (layout-0077)."""
+    """A rack's modules run in authored order, keyed by the lowest slot (layout-0077)."""
     spec_of = {spec.function: spec for spec in specs}
 
     def slot(column: Column) -> tuple[str, str] | None:
@@ -285,7 +285,7 @@ def inline_exits(
     specs: tuple[FunctionSpec, ...],
     drawn: tuple[DrawnFunction, ...],
 ) -> tuple[Connection, ...]:
-    """R7 B5: an in-line one-port terminal's lower wire lands on the port opposite the bound one."""
+    """An in-line one-port terminal's lower wire lands on the port opposite the bound one."""
     spec_of = {spec.function: spec for spec in specs}
     drawn_by = {one.function: one for one in drawn}
     index = {

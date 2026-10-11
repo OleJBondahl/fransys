@@ -242,7 +242,7 @@ def channel_devices(model: Model) -> dict[Id[Function], Id[Function]]:
 def no_conductor_at(model: Model, port: Id[Port]) -> bool:
     """Whether no conductor (wire, jumper, cable core or link) ends at `port`.
 
-    Unlike `unconnected_ports`, a mate or a declared net does not count (V1's unused pins).
+    Unlike `unconnected_ports`, a mate or a declared net does not count.
     """
     return not build_indexes(model).conductors_by_port.get(port)
 

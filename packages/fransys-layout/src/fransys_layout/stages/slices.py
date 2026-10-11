@@ -1,4 +1,4 @@
-"""Page slices (D10): which functions a page draws, and the items of a run that belong to it.
+"""Page slices: which functions a page draws, and the items of a run that belong to it.
 
 A page's data is taken from the plan's own columns, never by asking each item for "its" page: a
 function drawn on two pages (a replica) is in both slices. Every slice is built once, in one pass
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 def page_columns(
     plans: tuple[PagePlan, ...], columns: tuple[Column, ...]
 ) -> tuple[tuple[Column, ...], ...]:
-    """Per plan, the columns its `plan.columns` name, in the plan's order (I4 D2)."""
+    """Per plan, the columns its `plan.columns` name, in the plan's order."""
     by_key = {column.key: column for column in columns}
     return tuple(
         tuple(by_key[one.column] for one in plan.columns if one.column in by_key) for plan in plans

@@ -2,15 +2,15 @@
 
 from decimal import Decimal
 
-# A typical EE-schematic line weight. Render's own choice: D11 pins units (mm) but not a
+# A typical EE-schematic line weight. Render's own choice: the spec pins units (mm) but not a
 # value, so nothing in the spec derives this number.
 STROKE_WIDTH_MM = Decimal("0.25")
 
 # A junction dot a little larger than the line it sits on. Render's own choice, unpinned by
-# the spec (D8: "the dot's diameter is a render constant"), the same way STROKE_WIDTH_MM is.
+# the spec ("the dot's diameter is a render constant"), the same way STROKE_WIDTH_MM is.
 JUNCTION_DOT_DIAMETER_MM = Decimal(1)
 
-# The Liberation Serif Regular 2.1.5 typographic ascent ratio (D7): OS/2.sTypoAscender / unitsPerEm
+# The Liberation Serif Regular 2.1.5 typographic ascent ratio: OS/2.sTypoAscender / unitsPerEm
 # = 1420 / 2048, read with fontTools 4.65.0 from the same font file fransys_model's
 # derive/_text_widths.py table was built from (sha256
 # 058ea80864aef09a23f45cbec2bb5400bc3dfbdea01c3f10538a21fcb497fb74, cited there). Exact
@@ -38,7 +38,7 @@ DIAGRAM_TEXT_LEAD_G = 4
 DIAGRAM_TAB_PAD_G = 4
 
 # A cut marker's arrow: its depth behind the line end, its half height, and the gap from the
-# arrow tip to the text. Render's own choice; the layout reserves 24 G past the tip (BD5).
+# arrow tip to the text. Render's own choice; the layout reserves 24 G past the tip.
 DIAGRAM_MARKER_DEPTH_G = 4
 DIAGRAM_MARKER_HALF_G = 2
 DIAGRAM_MARKER_GAP_G = 2

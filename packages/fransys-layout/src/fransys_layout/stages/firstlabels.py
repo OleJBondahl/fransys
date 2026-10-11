@@ -1,4 +1,4 @@
-"""S20: each page's first slot call, run once its link markers stand, and its power symbols (D5)."""
+"""Each page's first slot call, run once its link markers stand, and its power symbols."""
 
 from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 def _first_labels(
     call: FirstCall, markers: tuple[Box, ...]
 ) -> tuple[tuple[PlacedLabel, ...], tuple[Finding, ...]]:
-    """S20: the page's first slot call, every marker's box and stub standing; no content box."""
+    """The page's first slot call, every marker's box and stub standing; no content box."""
     return place_slot_labels(
         call.requests,
         call.placed,
@@ -32,7 +32,7 @@ def _first_labels(
 
 
 def _held(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
-    """The first call's keep-out: each ordinary end as drawn, each power end as reserved (D5)."""
+    """The first call's keep-out: each ordinary end as drawn, each power end as reserved."""
     ordinary = tuple(one for one in markers if not one.symbol)
     return (*(one.box for one in drawn_shapes(ordinary)), *power_reserved(markers))
 
@@ -48,7 +48,7 @@ def labelled_pages(
     tuple[LinkMarker, ...],
     tuple[Finding, ...],
 ]:
-    """S20: each page's `(placed, labels)`, the markers with power leads set (D5), the findings."""
+    """Each page's `(placed, labels)`, the markers with power leads set, the findings."""
     found: list[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]] = []
     findings: list[Finding] = []
     led: dict[int, LinkMarker] = {}

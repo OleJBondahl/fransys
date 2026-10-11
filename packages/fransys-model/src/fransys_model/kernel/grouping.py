@@ -1,4 +1,4 @@
-"""The one group-by over `(key id, member id)` pairs (REVIEW-M M6); every id index asks it."""
+"""The one group-by over `(key id, member id)` pairs; every id index asks it."""
 
 from typing import Any
 lazy from collections.abc import Iterable

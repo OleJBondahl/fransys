@@ -72,7 +72,7 @@ class PageRole(Enum):
     """The drawing role of a `Page`; roles may share a page.
 
     A `POWER` group and a `CONTROL` group can be drawn on one page; the page's `role` is its
-    first group's (deep-dive D4, decision layout-0048). Coarser than `NetClass` on purpose:
+    first group's (decision layout-0048). Coarser than `NetClass` on purpose:
     an engine draws power and PE nets on `POWER` pages, control and generic nets on
     `CONTROL` pages, signal nets on `SIGNAL` pages.
     The member names are a contract: `fransys-layout` converts its stage-side role
@@ -116,7 +116,7 @@ class BoxKind(Enum):
 
 @register_enum
 class EndStyle(Enum):
-    """How an `EndBox` is drawn: solid, dashed (an end by others, CD10) or blank (CD11)."""
+    """How an `EndBox` is drawn: solid, dashed (an end by others) or blank."""
 
     SOLID = "solid"
     DASHED = "dashed"

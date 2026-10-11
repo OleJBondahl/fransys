@@ -1,4 +1,4 @@
-"""The diagram engine's lint feed (BD8): a placed sheet to the scene `lint_diagram` checks."""
+"""The diagram engine's lint feed: a placed sheet to the scene `lint_diagram` checks."""
 
 from fransys_layout.engines.diagram.sizes import (
     TAB_PAD,

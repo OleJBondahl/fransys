@@ -1,4 +1,4 @@
-"""The `POWER_LOSS_TWICE` lint: a part states its power loss for the part or per function (F8)."""
+"""The `POWER_LOSS_TWICE` lint: a part states its power loss for the part or per function."""
 
 from __future__ import annotations
 

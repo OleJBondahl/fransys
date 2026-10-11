@@ -1,4 +1,4 @@
-"""Geometry layer: units, boxes, the symbol-library adapter and text metrics (geometry.md 5)."""
+"""Geometry layer: units, boxes, the symbol-library adapter and text metrics."""
 
 from .boxes import Box, contains, hull, overlaps, pad, translate, union
 from .clear import first_clear, is_clear, push_clear

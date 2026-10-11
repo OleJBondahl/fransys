@@ -1,4 +1,4 @@
-"""Stage inputs and outputs: small frozen values, free of the model vocabulary (design/stages.md 6).
+"""Stage inputs and outputs: small frozen values, free of the model vocabulary.
 
 Only `engines/` knows records. It turns them into these values (`read/`) and turns
 stage outputs back into derived `layout.*` records (`write/`). Engineering enums
@@ -29,7 +29,7 @@ type FnBoxes = Mapping[Handle, list[tuple[str, Box]]]
 
 # A function's body box, keyed by the function.
 type BodyBox = tuple[Handle, Box]
-type OrderKey = tuple[tuple[tuple[int, int, str], ...], str]  # O4: `natural_key`'s shape, a value
+type OrderKey = tuple[tuple[tuple[int, int, str], ...], str]  # `natural_key`'s shape, a value
 
 # The `Id.kind` the engine gives a unit-boundary stand-in handle (a port or function on no
 # net, where a chain stops at the unit edge). A stage-side convention, not vocabulary.
@@ -44,7 +44,7 @@ def _sort(obj: object, **keys: Callable[[Any], Any]) -> None:
 
 @register_enum
 class Role(Enum):
-    """What kind of circuit a column is, declared strongest first (D4, docs/design/pages.md 6.3)."""
+    """What kind of circuit a column is, declared strongest first."""
 
     POWER = "power"
     CONTROL = "control"
@@ -69,7 +69,7 @@ ROLE_ORDER: tuple[Role, ...] = (Role.POWER, Role.CONTROL, Role.SIGNAL)
 
 @register_enum
 class LinkCase(Enum):
-    """How a cut connection is drawn (design/links.md 6.6); `CROSS_UNIT` is never a marker (U2)."""
+    """How a cut connection is drawn; `CROSS_UNIT` is never a marker."""
 
     TERMINAL_ECHO = "terminal_echo"
     TAG_ECHO = "tag_echo"
@@ -100,7 +100,7 @@ class LabelKind(Enum):
 
 @value
 class SheetFormat:
-    """The drawable area of a sheet, already in grid units, and its frame grid (links.md 6.6)."""
+    """The drawable area of a sheet, already in grid units, and its frame grid."""
 
     name: str
     content_width: int
@@ -111,11 +111,11 @@ class SheetFormat:
 
 @value
 class Profile:
-    """Every tunable of the stages, in grid units (foundations.md 2.9, engine.md 7)."""
+    """Every tunable of the stages, in grid units."""
 
     column_gap: int
     row_gap: int
-    row_spacing: int  # R13: the keep-out gap between consecutive rows of a column
+    row_spacing: int  # The keep-out gap between consecutive rows of a column
     text_height: int
     marker_padding: int
     band_ranks: frozendict[str, int]
@@ -123,7 +123,7 @@ class Profile:
     route_turn_penalty: int
     route_crossing_penalty: int
     route_margin: int
-    hide_unused_pins: bool = False  # V1: leave out the pins and functions with no conductor
+    hide_unused_pins: bool = False  # Leave out the pins and functions with no conductor
 
 
 @value
@@ -134,7 +134,7 @@ class SymbolRule:
     category: str | None
     symbol: str
     port_map: frozendict[str, str] = frozendict()
-    gender: str | None = None  # mated-pair J2: read only for kind connector
+    gender: str | None = None  # Read only for kind connector
 
 
 @value
@@ -154,7 +154,7 @@ class SymbolChoice:
 
 @value
 class PortSpec:
-    """One model port to be drawn: `throw` its changeover role, `rank`/`current` its V11 facts."""
+    """One model port to be drawn: `throw` its changeover role, `rank`/`current` its facts."""
 
     port: Id[Any]
     name: str
@@ -164,10 +164,10 @@ class PortSpec:
     rank: int | None = None
     current: str | None = None
     strip_side: str | None = None  # a terminal port's `PortRole` value, internal or external
-    group: int = 0  # V1: the side order of the port's function in its item box, 0 outside one
-    channel: bool = False  # V5: a PLC channel's pin, of a box that also holds other functions
+    group: int = 0  # The side order of the port's function in its item box, 0 outside one
+    channel: bool = False  # A PLC channel's pin, of a box that also holds other functions
     stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
-    order: int = 0  # O7: rank of the name in natural order among the function's ports, a value
+    order: int = 0  # Rank of the name in natural order among the function's ports, a value
 
 
 @value
@@ -179,7 +179,6 @@ class PolePair:
     second: str
 
 
-# docs/design/foundations.md 2.8
 @value
 class KindRoles:
     """What the stages treat specially about one function kind; the engine fills it."""
@@ -218,15 +217,15 @@ class FunctionSpec:
     group_path: tuple[Id[Any], ...]
     location_path: tuple[Id[Any], ...]
     group_hint: Id[Any] | None
-    designation: str = ""  # R5: the item's reference designation, "" unnumbered
-    designation_order: int = 0  # O4: rank of the designation in natural order, a value
-    strip_text: str = ""  # R6 D1: a terminal's strip tag, "" for any other function
-    point_text: str = ""  # R6 D1: a terminal's own point text, in full ("-X2:U:1", D12)
-    # R7 A: a pin view's real connector function; the view's handle is the pin's port
+    designation: str = ""  # The item's reference designation, "" unnumbered
+    designation_order: int = 0  # Rank of the designation in natural order, a value
+    strip_text: str = ""  # A terminal's strip tag, "" for any other function
+    point_text: str = ""  # A terminal's own point text, in full ("-X2:U:1")
+    # A pin view's real connector function; the view's handle is the pin's port
     pin_function: Id[Any] | None = None
-    gender: str | None = None  # mated-pair J2: the connector facet's gender
+    gender: str | None = None  # The connector facet's gender
     unit: Id[Any] | None = None
-    # F1: a positioned child's parent designation and position: a rack module's slot
+    # A positioned child's parent designation and position: a rack module's slot
     rack: str = ""
     rack_position: int | None = None
     roles: KindRoles = KindRoles()
@@ -251,11 +250,11 @@ class DrawnPort:
 
     port: Id[Any]
     symbol_port: str
-    ac: bool = False  # V11: the pin's supply current is AC
-    group: int = 0  # V1: its function's side order in an item box, kept whole on a box side
-    channel: bool = False  # V5: a PLC channel's pin
+    ac: bool = False  # The pin's supply current is AC
+    group: int = 0  # Its function's side order in an item box, kept whole on a box side
+    channel: bool = False  # A PLC channel's pin
     stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
-    order: int = 0  # O7: its `PortSpec.order`, the tie-break of a box port nobody placed
+    order: int = 0  # Its `PortSpec.order`, the tie-break of a box port nobody placed
 
 
 @value
@@ -288,7 +287,7 @@ class DrawnFunction:
     primary_in: str | None
     primary_out: str | None
     roles: KindRoles = KindRoles()
-    reach: tuple[Reach, ...] = ()  # V5: the room each box pin's attached contact needs
+    reach: tuple[Reach, ...] = ()  # The room each box pin's attached contact needs
     fed_by: tuple[BoxFeed, ...] = ()  # layout-0107: the feeders whose pins stand over this box's
     feeds: Id[Any] | None = None  # layout-0107: the box this one stands over, pin over pin
 
@@ -307,7 +306,7 @@ class DrawnFunction:
 
 @value
 class PortRef:
-    """One end of a connection: a port and its function; R7 B5 `symbol_port` overrides."""
+    """One end of a connection: a port and its function; `symbol_port` overrides."""
 
     function: Id[Any]
     port: Id[Any]
@@ -351,7 +350,7 @@ class NetGroup:
 
 @value
 class PowerEnd:
-    """D5: how `port` on a power net is drawn: its `PowerKind` value, `symbol` key and `text`."""
+    """How `port` on a power net is drawn: its `PowerKind` value, `symbol` key and `text`."""
 
     port: Id[Any]
     kind: str
@@ -361,7 +360,7 @@ class PowerEnd:
 
 @value
 class RailEnd:
-    """V3: a drawn pin end of a conductor the engine does not draw, and that conductor's handle."""
+    """A drawn pin end of a conductor the engine does not draw, and that conductor's handle."""
 
     ref: PortRef
     connection: Id[Any]
@@ -369,7 +368,7 @@ class RailEnd:
 
 @value
 class Rail:
-    """A declared rail: a `Net` with a potential, its raw ports sorted (WP16, layout-0034)."""
+    """A declared rail: a `Net` with a potential, its raw ports sorted (layout-0034)."""
 
     net: Id[Any]
     potential: str
@@ -403,26 +402,26 @@ class Chain:
 
 @value
 class Cell:
-    """One function in a column at its explicit position; cells of one `index` are a row (R4)."""
+    """One function in a column at its explicit position; cells of one `index` are a row."""
 
     function: Id[Any]
     index: int
     lane: int = 0
     side: bool = False
-    flip: bool = False  # R5: a side element drawn at R180, its other port on top
-    mirror: bool = False  # D1: a turned directed pole is flipped top to bottom (MR180)
-    low: bool = False  # R5: a one-port side element on its host's bottom port
-    carrier: Id[Any] | None = None  # D2: the function whose cell a side element stands beside
-    host: Id[Any] | None = None  # R7.1: an attachment's host function in this column
-    port: str = ""  # R7.1: the host's symbol port the attachment sits at
-    face: bool = False  # R7 A: the lower pin of a mated pair, face to face with host
-    home: Home = Home.HERE  # layout-0129: ELSEWHERE a replica (R7 B8), MOVED a V5 home at its pin
-    span_port: str = ""  # C12: the symbol port that sits under this cell's lane
+    flip: bool = False  # A side element drawn at R180, its other port on top
+    mirror: bool = False  # A turned directed pole is flipped top to bottom (MR180)
+    low: bool = False  # A one-port side element on its host's bottom port
+    carrier: Id[Any] | None = None  # The function whose cell a side element stands beside
+    host: Id[Any] | None = None  # An attachment's host function in this column
+    port: str = ""  # The host's symbol port the attachment sits at
+    face: bool = False  # The lower pin of a mated pair, face to face with host
+    home: Home = Home.HERE  # layout-0129: ELSEWHERE a replica, MOVED a home at its pin
+    span_port: str = ""  # The symbol port that sits under this cell's lane
 
 
 @value
 class MatedFunctions:
-    """Two drawn functions plugged together (a model `Mate`), for chain discovery (R4)."""
+    """Two drawn functions plugged together (a model `Mate`), for chain discovery."""
 
     a: Id[Any]
     b: Id[Any]
@@ -454,7 +453,7 @@ class Column:
 
     @property
     def drawing_set_key(self) -> tuple[Id[Any] | None, Id[Any] | None]:
-        """The `(unit, location)` that `partition` step 1 files the column under (pages.md 6.3)."""
+        """The `(unit, location)` that `partition` step 1 files the column under."""
         return drawing_set_of(self.unit, self.location)
 
 
@@ -478,7 +477,7 @@ class GroupInfo:
     key: AuthoringKey
     label: str
     description: str
-    order: int = 0  # O4, O6: rank of the label in natural order, passed in by the read layer
+    order: int = 0  # Rank of the label in natural order, passed in by the read layer
 
 
 @value
@@ -487,8 +486,8 @@ class LocationInfo:
 
     location: Id[Any]
     label: str
-    path: tuple[Id[Any], ...] = ()  # RW9: root-to-leaf node ids; the labels are in `locations`
-    order: int = 0  # O4, O7: rank of the label in natural order, passed in by the read layer
+    path: tuple[Id[Any], ...] = ()  # Root-to-leaf node ids; the labels are in `locations`
+    order: int = 0  # Rank of the label in natural order, passed in by the read layer
 
 
 @value
@@ -497,7 +496,7 @@ class UnitInfo:
 
     unit: Id[Any]
     location: Id[Any] | None = None
-    order: int = 0  # O4, O7: rank of the unit designation in natural order, passed in
+    order: int = 0  # Rank of the unit designation in natural order, passed in
 
 
 @value
@@ -521,7 +520,7 @@ class GroupSet:
 
 @value
 class PageHints:
-    """Page hints (pages.md 6.3): `keep_together` by groups, `break_before` by handle, `order`."""
+    """Page hints: `keep_together` by groups, `break_before` by handle, `order`."""
 
     keep_together: tuple[GroupSet, ...]
     break_before: tuple[Id[Any], ...]
@@ -638,7 +637,7 @@ class LinkDecision:
 
 @value
 class StubText:
-    """C21: what an off stub names of its end: the cable, the far device and the far port.
+    """What an off stub names of its end: the cable, the far device and the far port.
 
     `cable` is the outermost carrier's `-designation`, `far`/`port` the far end's head and tail
     (`stub_far_end`); `line`: the carrier draws as a line, so the stub prints no port (layout-0154).
@@ -652,7 +651,7 @@ class StubText:
 
 @value
 class LinkMarker:
-    """One end of a severed signal. `partner_*` locate the other end (links.md 6.6, layout-0043)."""
+    """One end of a severed signal. `partner_*` locate the other end (layout-0043)."""
 
     connection: Id[Any]
     port: Id[Any]
@@ -662,32 +661,32 @@ class LinkMarker:
     at: Point
     box: Box
     partner_page: int
-    # R6 D2: a bundle row's markers share one box (the lead draws box and text),
+    # A bundle row's markers share one box (the lead draws box and text),
     # or a marker is pushed `stub_extra` further out so it clears its neighbour
     shared_box: bool = False
     lead: bool = True
     stub_extra: int = 0
-    # R7 B4: a net drawn as one marker per port: "ref" (lists the others) or "branch"
+    # A net drawn as one marker per port: "ref" (lists the others) or "branch"
     # (names the reference); `star_partner` is the port the text is about
     star: str = ""
     star_partner: Id[Any] | None = None
     star_partner_set: int = 0
-    # C21: an "off" stub's own text (no partner to derive it from); D9 (F7): on a "ref" it is
+    # An "off" stub's own text (no partner to derive it from); on a "ref" it is
     # the text of the off stub on the same port, merged into the reference's marker
     text: str = ""
     # EF-C: an "off" stub's own end; one conductor end's text, so two stubs on one port tell
     # apart and `write/markers.py` finds the end's far port; `None` otherwise
     end_text: StubText | None = None
-    # I4: a star reference on a wired port leaves the wire here, E, one grid out along it
+    # A star reference on a wired port leaves the wire here, E, one grid out along it
     turn: Point | None = None
-    # S20 M1 (model-0114): an N or S marker's text reads along its wire; `box` is the turned box
+    # (model-0114): an N or S marker's text reads along its wire; `box` is the turned box
     vertical: bool = False
-    # S20 M8 (model-0115): a C21 run's text breaks after this many words; `None` for one line
+    # (model-0115): an off-stub run's text breaks after this many words; `None` for one line
     wrap_at: int | None = None
-    # D5 (step 6): a power end, drawn as this symbol key with this text; `""` for a reference
+    # A power end, drawn as this symbol key with this text; `""` for a reference
     symbol: str = ""
     symbol_text: str = ""
-    # D5 ruled 2026-10-02: the symbol's lead in whole grids, longer when a nearer one would collide
+    # The symbol's lead in whole grids, longer when a nearer one would collide
     symbol_grids: int = 1
 
 
@@ -734,7 +733,7 @@ class PlacedLabel:
 
 @value
 class PlacedOutline:
-    """I2a (units U1): the dash-dot boundary of one unit instance's black box on one page."""
+    """The dash-dot boundary of one unit instance's black box on one page."""
 
     unit: Id[Any]
     lead: Id[Any]

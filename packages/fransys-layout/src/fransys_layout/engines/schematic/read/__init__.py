@@ -1,4 +1,4 @@
-"""Schematic engine, reading: model records to stage inputs (docs/design/engine.md 7).
+"""Schematic engine, reading: model records to stage inputs.
 
 The only place, with `write/`, where the model vocabulary meets the stages. The work of
 reading each `StageInputs` field is in `reading.py`, `labels.py`, `views.py`, `connections.py`
@@ -63,23 +63,23 @@ class StageInputs:
     unused_sheet_formats: tuple[Id[Any], ...] = ()
     read_findings: tuple[Finding, ...] = ()
     mates: tuple[MatedFunctions, ...] = ()
-    # C21: conductors between two locations (not laid out), D4: the joins of a net group's
+    # Conductors between two locations (not laid out), the joins of a net group's
     # location parts, and, per near port, the stub's `StubText`
     crossing: tuple[Connection, ...] = ()
     off_texts: tuple[PortText, ...] = ()
     off_ends: tuple[OffEnd, ...] = ()
-    # M12: the terminal chains, derived once by the engine before the columns are joined
+    # The terminal chains, derived once by the engine before the columns are joined
     terminal_chains: TerminalChains = NO_CHAINS
-    # D5: each port on a power net with its symbol and text, by port (`power.power_ends`)
+    # layout-0094: each port on a power net with its symbol and text, by port (`power.power_ends`)
     power: tuple[PowerEnd, ...] = ()
-    # D5: the slot of a power symbol's label, the model's one spelling (a stage may not import it)
+    # The slot of a power symbol's label, the model's one spelling (a stage may not import it)
     power_slot: str = ""
-    # V3: each drawn pin end of a rail wire (not drawn); the pin takes the rail's power symbol
+    # Each drawn pin end of a rail wire (not drawn); the pin takes the rail's power symbol
     rail_ends: tuple[RailEnd, ...] = ()
-    # V1: the ports of item boxes that V1's side order puts on top, and those it puts below
+    # layout-0099: the ports of item boxes that the side order puts on top, and those it puts below
     item_north: tuple[Id[Any], ...] = ()
     item_south: tuple[Id[Any], ...] = ()
-    # V1: the functions the switch leaves off every page (the contact table lists them, later)
+    # The functions the switch leaves off every page (the contact table lists them, later)
     spares: tuple[FunctionSpec, ...] = ()
     # layout-0107: the item boxes that stand over the pin group they feed
     feeds: tuple[BoxFeed, ...] = ()
@@ -88,13 +88,13 @@ class StageInputs:
 
 
 def read_inputs(model: Model) -> StageInputs:
-    """Read the drawn functions, their connections and every authored hint (WP13)."""
+    """Read the drawn functions, their connections and every authored hint."""
     indexes = build_indexes(model)
     specs, undrawn, wires, rail_ends = steps.rail_reads(model, indexes)
     profile, sheet, sheet_format = reading.profile_and_sheet(model)
     unused_sheets = reading.unused_sheet_formats(model, sheet_format)
     refs, rails, findings, wired = steps.split_reads(model, specs, undrawn, wires, rail_ends)
-    # R6 D5: a terminal on no connection, net group or mate is not drawn (terminal list only)
+    # A terminal on no connection, net group or mate is not drawn (terminal list only)
     specs = without_idle_terminals(model, specs, wired)
     drawn = {spec.function for spec in specs}
     specs, pin_of, refs, landings = steps.pin_reads(model, specs, wired, refs)

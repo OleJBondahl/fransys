@@ -78,7 +78,7 @@ def _add_ports(
                 function=function_id,
                 name=port["name"],
                 role=PortRole(port["role"]),
-                # model-0053 (F2): the part's own pin marking, when it differs from the name
+                # model-0053: the part's own pin marking, when it differs from the name
                 marking=port.get("marking"),
                 pole_side=pole_side,
                 conductor_mark=conductor_mark,

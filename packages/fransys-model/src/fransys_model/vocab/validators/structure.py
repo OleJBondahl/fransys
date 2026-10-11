@@ -1,4 +1,4 @@
-"""Validator: aspect trees and physical containment (design/vocabulary.md 6, ROADMAP WP13)."""
+"""Validator: aspect trees and physical containment (design/vocabulary.md 6)."""
 
 from typing import TYPE_CHECKING, Any, Final
 

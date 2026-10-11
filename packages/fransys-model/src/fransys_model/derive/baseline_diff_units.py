@@ -85,7 +85,7 @@ def _unit_changes(a: BaselineUnit, b: BaselineUnit) -> list[Change]:
 
 
 def unit_subject_text(unit: BaselineUnit) -> str:
-    """The subject of a Change on a `""` row: `<name> <V>.<R>` (model-0132; L2 leaves it blank)."""
+    """The subject of a Change on a `""` row: `<name> <V>.<R>` (model-0132; left blank)."""
     return f"{unit.name} {revision_text(unit.version, unit.revision)}"
 
 
@@ -292,7 +292,7 @@ def _boundary_changes(
 def _rating_changes(
     designation: str, prefix: str, a: Rating | Operating | None, b: Rating | Operating | None
 ) -> list[Change]:
-    """One `changed` row per key of `a`/`b` (M1) that differs, field `<prefix>.<key>`."""
+    """One `changed` row per key of `a`/`b` that differs, field `<prefix>.<key>`."""
     a_dict, b_dict = _decimal_dict(a) or {}, _decimal_dict(b) or {}
     return [
         Change(

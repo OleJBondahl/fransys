@@ -1,4 +1,4 @@
-"""Symbol adapter: the only module that touches the symbol libraries (docs/design/geometry.md 5.2).
+"""Symbol adapter: the only module that touches the symbol libraries.
 
 It calls `LIBRARY.get`, `repeat` and `orient`, then converts the libraries' `float`
 module units to integer grid units once. Nothing above this module sees a `float`.
@@ -181,7 +181,7 @@ def generic_box_geometry(
 
 @cache
 def channel_pitch() -> int:
-    """V5: a box channel's pitch, 1.5 times the pole pitch (a 3-pole symbol's phase distance)."""
+    """A box channel's pitch, 1.5 times the pole pitch (a 3-pole symbol's phase distance)."""
     ports = {p.name: p.at.x for p in symbol_geometry("circuit-breaker", poles=3).ports}
     return (ports["2.in"] - ports["1.in"]) * 3 // 2
 

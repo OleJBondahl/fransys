@@ -1,4 +1,4 @@
-"""The values the `references` package decides with (layout-0090, S1): no rule lives here."""
+"""The values the `references` package decides with (layout-0090): no rule lives here."""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -67,7 +67,7 @@ class Seated(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class PortEnd:
-    """One end of a cut or of a text: a port on a page (S9: a decision holds no coordinate)."""
+    """One end of a cut or of a text: a port on a page. A decision holds no coordinate."""
 
     ref: PortRef
     page: Page
@@ -91,7 +91,7 @@ class LinkWorld:
 
 
 class Leave(Enum):
-    """S9: which of its function's ports a text stands at (C22 `FREE`, C17 `NORTH`/`SOUTH`)."""
+    """Which of its function's ports a text stands at (`FREE`, `NORTH`/`SOUTH`)."""
 
     PORT = "port"
     FREE = "free"
@@ -102,7 +102,7 @@ class Leave(Enum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MarkerDecision:
-    """S9: one reference or stub text as `references` decides it; `texts` builds its marker."""
+    """One reference or stub text as `references` decides it; `texts` builds its marker."""
 
     connection: Id[Any]
     function: Id[Any]
@@ -123,14 +123,14 @@ class MarkerDecision:
     end_text: StubText | None = None
     merge: StubText | None = None
     run: int | None = None
-    # D5: a power end's symbol key and printed text, `""` for an ordinary end; it keeps its cut
+    # A power end's symbol key and printed text, `""` for an ordinary end; it keeps its cut
     symbol: str = ""
     symbol_text: str = ""
 
 
 @dataclass(frozen=True, slots=True)
 class Beside:
-    """S12, layout-0070: where two ports are wired beside each other, per drawing set."""
+    """layout-0070: where two ports are wired beside each other, per drawing set."""
 
     pairs: Mapping[tuple[Id[Any], Id[Any]], frozenset[int]]
     sets: Mapping[Id[Any], frozenset[int]]
@@ -138,7 +138,7 @@ class Beside:
 
 @dataclass(frozen=True, slots=True)
 class Joins:
-    """S12: the joins decided on `place`'s own stacking (`joins.joined_runs`), before `place`."""
+    """The joins decided on `place`'s own stacking (`joins.joined_runs`), before `place`."""
 
     beside: Beside
     runs: tuple[JoinedRun, ...]
@@ -153,7 +153,7 @@ class Star:
     ref: PortRef
     conductors: frozenset[Id[Any]]
     by_designation: bool
-    # C3: port -> the first port of its cluster (ports joined by a kept neighbour wire in any set)
+    # Port -> the first port of its cluster (ports joined by a kept neighbour wire in any set)
     cluster: tuple[tuple[Id[Any], Id[Any]], ...] = ()
     # layout-0070: the same per drawing set, `(set, port, first)` for a port that is not its
     # cluster's first there; a port missing from a set is the first of a cluster of its own
@@ -209,7 +209,7 @@ class OffInputs:
 
 @dataclass(frozen=True, slots=True)
 class OffStubs:
-    """What `_off_markers` draws stubs for, and what its ports already carry (S14, D10)."""
+    """What `_off_markers` draws stubs for, and what its ports already carry ."""
 
     crossing: tuple[Connection, ...]
     off_texts: Mapping[Id[Any], Sequence[StubText]]
@@ -231,7 +231,7 @@ class OffStubs:
 
 @dataclass(frozen=True, slots=True)
 class Seat:
-    """S10: a function in a planned column on a planned page, before `place` gives it a place."""
+    """A function in a planned column on a planned page, before `place` gives it a place."""
 
     function: Id[Any]
     drawing_set: int
@@ -241,7 +241,7 @@ class Seat:
 
 @dataclass(frozen=True, slots=True)
 class Seating:
-    """S10: the pages as `plan_pages` planned them and `place` stacks them, before any is placed."""
+    """The pages as `plan_pages` planned them and `place` stacks them, before any is placed."""
 
     plans: tuple[PagePlan, ...]
     columns: tuple[Column, ...]
@@ -267,15 +267,15 @@ class ReferenceInputs:
     off_ends: tuple[OffEnd, ...]
     outward: Mapping[Id[Any], frozenset[int]]
     chains: TerminalChains
-    # D5: each port on a power net, read; an end there takes the symbol, not a reference
+    # Each port on a power net, read; an end there takes the symbol, not a reference
     power: Mapping[Id[Any], PowerEnd] = MappingProxyType({})
-    # V3: each drawn pin end of a rail wire (not drawn); the pin takes a symbol marker
+    # Each drawn pin end of a rail wire (not drawn); the pin takes a symbol marker
     rail_ends: tuple[RailEnd, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class References:
-    """S9: every decision of D1's step 4, one frozen value; `place` and `texts` take it whole."""
+    """Every reference decision, one frozen value; `place` and `texts` take it whole."""
 
     joins: tuple[JoinedRun, ...]
     decisions: tuple[LinkDecision, ...]

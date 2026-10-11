@@ -1,4 +1,4 @@
-"""D2 and D15 (layout deep dive): the order wires are drawn in, and the carrier's-lane target.
+"""The order wires are drawn in, and the carrier's-lane target.
 
 A side element stands beside its carrier function and is joined to it by short wires, the
 joins. Every other wire of that net must reach the carrier's port and run down the carrier's
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from .space import End
     from .types import Handle, PlacedFunction, PortRef
 
-# Every located end, by where `located` puts it: the port, and the node port it lands on (R7 B5).
+# Every located end, by where `located` puts it: the port, and the node port it lands on.
 type Ends = dict[tuple[Handle, str], End]
 
 
@@ -47,14 +47,14 @@ class Join:
 
 
 def located(ref: PortRef) -> tuple[Handle, str]:
-    """Where an end is located: its port, and the node port it lands on when not its own (R7 B5)."""
+    """Where an end is located: its port, and the node port it lands on when not its own."""
     return ref.port, ref.symbol_port
 
 
 def drawn_order(
     edges: Iterable[Edge], ends: Ends, placed_of: Mapping[Handle, PlacedFunction]
 ) -> list[Edge]:
-    """D15: the edges in drawn order (`drawn_key`, then the handle triple), never handle order."""
+    """The edges in drawn order (`drawn_key`, then the handle triple), never handle order."""
     return sorted(
         edges,
         key=lambda edge: (
@@ -69,7 +69,7 @@ def drawn_order(
 def drawn_key(
     a: PortRef, b: PortRef, ends: Ends, placed_of: Mapping[Handle, PlacedFunction]
 ) -> tuple[int, tuple[int, int], tuple[int, int]]:
-    """D15: a wire's drawn-order key (join first, upper end, lower end), top-down, left to right."""
+    """A wire's drawn-order key (join first, upper end, lower end), top-down, left to right."""
     upper, lower = sorted((_place(ends, a), _place(ends, b)))
     return (0 if _joins(a, b, placed_of) else 1), upper, lower
 
@@ -100,7 +100,7 @@ def joins_of(
 def retarget(
     edge: Edge, joins: Iterable[Join], ends: Ends, placed_of: Mapping[Handle, PlacedFunction]
 ) -> tuple[Edge, Join | None, Join | None]:
-    """D2: `edge` aimed at carrier ports; of several joins the first placed, then lowest handle."""
+    """`edge` aimed at carrier ports; of several joins the first placed, then lowest handle."""
     if _is_join(edge, placed_of):
         return edge, None, None
     joins = tuple(joins)

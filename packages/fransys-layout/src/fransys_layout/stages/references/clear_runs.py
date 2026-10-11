@@ -1,8 +1,8 @@
-"""D5, step 6: a join on a power net stays a wire only while its straight wire is free.
+"""Step 6: a join on a power net stays a wire only while its straight wire is free.
 
 A run with a power port that `join_y` can align is still drawn as symbols when another port of
 its page stands on the wire's line between its ends, as a power symbol's lead would cross the
-wire. The run gives `JOIN_UNALIGNED` (`WARNING`), D1's fallback, and each end takes its symbol.
+wire. The run gives `JOIN_UNALIGNED` (`WARNING`), the fallback, and each end takes its symbol.
 """
 
 from collections import defaultdict
@@ -23,14 +23,14 @@ if TYPE_CHECKING:
 
 
 class Clear(Protocol):
-    """Whether a run's wire is free, given the run's case (`at_ends`, D5); `_decided` asks it."""
+    """Whether a run's wire is free, given the run's case (`at_ends`); `_decided` asks it."""
 
     def __call__(self, page: Page, run: tuple[Spot, ...], *, at_ends: bool) -> bool: ...
 
 
 @dataclass(frozen=True, slots=True)
 class PowerClearance:
-    """What a power run's free wire is judged by: page spots, port x, power ports (D5)."""
+    """What a power run's free wire is judged by: page spots, port x, power ports."""
 
     by_page: Mapping[Page, tuple[Spot, ...]]
     x_of: Mapping[Id[Any], int]

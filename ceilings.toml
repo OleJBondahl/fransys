@@ -187,7 +187,7 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"packages/fransys-layout/docs/rules/step-5-place.md" = 5118
+"packages/fransys-layout/docs/rules/step-5-place.md" = 5204
 "packages/fransys/src/fransys/guide/findings.md" = 6624
 
 [md_long_sentences]

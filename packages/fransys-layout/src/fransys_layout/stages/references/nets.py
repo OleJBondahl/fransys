@@ -1,4 +1,4 @@
-"""R7 B4 (deep dive): a net of three or more ports is drawn as one marker per port, no wire tree.
+"""A net of three or more ports is drawn as one marker per port, no wire tree.
 
 Owner ruling: no horizontal distribution wires. A net is the conductor graph (connections
 joined at shared ports). Side-element ports do not count and keep their wires to the host.
@@ -40,7 +40,7 @@ def star_nets(
     connections: tuple[Connection, ...],
     specs: tuple[FunctionSpec, ...],
     columns: tuple[Column, ...],
-    adjacent: Beside | None = None,  # S12, C3: where ports are wired beside, per set
+    adjacent: Beside | None = None,  # Where ports are wired beside, per set
 ) -> tuple[Star, ...]:
     """Every net of three or more counted ports that is not branched by terminal points."""
     spec = {one.function: one for one in specs}
@@ -54,7 +54,7 @@ def star_nets(
 
 
 def wires_star(wires: Sequence[Connection], specs: tuple[FunctionSpec, ...]) -> Star | None:
-    """S20 M12: the star of the ports of `wires`, none of which is drawn, a reference at each."""
+    """The star of the ports of `wires`, none of which is drawn, a reference at each."""
     owner = {ref.port: ref.function for one in wires for ref in (one.a, one.b)}
     return _net_star(sorted(owner), owner, {one.function: one for one in specs}, wires, None)
 
@@ -64,7 +64,7 @@ def star_wires(
     specs: tuple[FunctionSpec, ...],
     columns: tuple[Column, ...],
 ) -> tuple[Connection, ...]:
-    """S12: every conductor between two counted ports of a net of three or more counted ports."""
+    """Every conductor between two counted ports of a net of three or more counted ports."""
     _, nets = _counted_nets(connections, specs, columns)
     return tuple(c for _, wires in nets for c in wires)
 
@@ -103,7 +103,7 @@ def _net_star(
 ) -> Star | None:
     """The star of one net's `counted` ports, or None when no drawing set has it in two clusters."""
     points = [port for port in counted if spec[owner[port]].roles.terminal]
-    # C15(iii): B4's exemption was for branching by BRIDGED points (jumpers, which are no
+    # The old exemption was for branching by BRIDGED points (jumpers, which are no
     # connections here); terminal points joined by wires never qualify
     ref = reference(counted, points, wires, spec, owner)
     pairs = adjacent.pairs if adjacent is not None else {}
@@ -133,7 +133,7 @@ def with_orphans(
     net_groups: tuple[NetGroup, ...],
     side: frozenset[Id[Any]],
 ) -> tuple[Star, ...]:
-    """D9: a port of a declared net that the router leaves with no wire joins the net's markers."""
+    """A port of a declared net that the router leaves with no wire joins the net's markers."""
     found = list(stars)
     in_star = {ref.port for star in found for ref in star.ports}
     for group in net_groups:
@@ -168,7 +168,7 @@ def without_starred(
     in_star = {ref.port for star in stars for ref in star.ports}
     return (
         tuple(c for c in connections if c.handle not in dropped),
-        # C15, ROUTE-FAN: a star port is drawn by the star's markers, so a declared net keeps
+        # A star port is drawn by the star's markers, so a declared net keeps
         # only its other, wire-drawn ports, and no group is left with fewer than two
         tuple(
             replace(g, ports=wired)
@@ -181,7 +181,7 @@ def without_starred(
 def _terminal_splits(
     connections: tuple[Connection, ...], specs: tuple[FunctionSpec, ...]
 ) -> dict[Id[Any], Id[Any]]:
-    """R7 B5: an in-line one-port terminal splits its net by its second wire, handle to port."""
+    """An in-line one-port terminal splits its net by its second wire, handle to port."""
     split: dict[Id[Any], Id[Any]] = {}
     by_port: dict[Id[Any], list[Id[Any]]] = defaultdict(list)
     for c in connections:
@@ -224,7 +224,7 @@ def reference(
     spec: Mapping[Id[Any], FunctionSpec],
     owner: Mapping[Id[Any], Id[Any]],
 ) -> Id[Any]:
-    """C16, D9: reference port: terminal point, hub, a coil's, else lowest designation."""
+    """Reference port: terminal point, hub, a coil's, else lowest designation."""
     if len(points) == 1:
         return points[0]
     degree = {port: sum(port in (c.a.port, c.b.port) for c in wires) for port in counted}
@@ -242,7 +242,7 @@ def reference(
 def _port_clusters(
     counted: Sequence[Id[Any]], kept: Sequence[Connection]
 ) -> dict[Id[Any], Id[Any]]:
-    """C3: each counted port to the first port of its cluster, ports joined by a `kept` wire."""
+    """Each counted port to the first port of its cluster, ports joined by a `kept` wire."""
     joined: UnionFind[Id[Any]] = UnionFind(counted)
     for c in kept:
         joined.union(c.a.port, c.b.port)
@@ -272,7 +272,7 @@ def _is_star(
     kept: Sequence[tuple[Connection, frozenset[int]]],
     sets_of: Mapping[Id[Any], frozenset[int]] | None,
 ) -> bool:
-    """layout-0070 (D9 per set): whether the net's ports form two or more clusters in some set."""
+    """layout-0070: whether the net's ports form two or more clusters in some set."""
     if sets_of is None:
         return len(set(_port_clusters(counted, [c for c, _ in kept]).values())) >= _STAR_CLUSTERS
     stands = {port: sets_of.get(port, frozenset()) for port in counted}

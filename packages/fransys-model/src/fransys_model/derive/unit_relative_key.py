@@ -1,4 +1,4 @@
-"""FD2: an item's designation identity is its key with its unit's own prefix dropped.
+"""An item's designation identity is its key with its unit's own prefix dropped.
 
 Reached as `fransys_model.derive.unit_relative_key.unit_relative_key`, never re-exported
 from `derive/__init__.py` -- `derive.baseline`'s own precedent: no new top-level
@@ -14,7 +14,7 @@ from .lookups import require
 
 
 def unit_relative_key(model: Model, item: Id[Item]) -> AuthoringKey:
-    """`item`'s key, relative to its own unit (FD2): the identity every build of it shares.
+    """`item`'s key, relative to its own unit: the identity every build of it shares.
 
     Two instances of one release, and a standalone build, all give the same key -- "key for
     key". An item of no unit (`item.unit is None`) keeps its whole key. An

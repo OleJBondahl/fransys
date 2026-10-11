@@ -61,7 +61,7 @@ def lint_findings(scene: LintScene) -> list[Finding]:
             open_ends=open_ends,
         )
     )
-    # R7 B4: star markers answer no cut decision
+    # Star markers answer no cut decision
     paired = replace(layout, markers=tuple(m for m in layout.markers if not m.star))
     function_units = {spec.function: spec.unit for spec in inputs.functions}
     findings.extend(

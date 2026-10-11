@@ -1,4 +1,4 @@
-"""D6: the placement's real symbol body, drawn by the toolkit; a placeholder for an unknown key."""
+"""The placement's real symbol body, drawn by the toolkit; a placeholder for an unknown key."""
 
 from typing import TYPE_CHECKING
 
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Model
     from fransys_model.layout import Page, Profile, SheetFormat
 
-# The placeholder rectangle is 8x8 G, centred on the placement's origin (D6 last
+# The placeholder rectangle is 8x8 G, centred on the placement's origin (last
 # paragraph): from (x-4, y-4) to (x+4, y+4). This mirrors how a real symbol's ports sit
 # symmetrically around its own origin (e.g. `make-contact.toml`'s ports at y=-2/y=2
 # around a centred body) -- centred, not top-left-anchored, so the placeholder reads the
@@ -34,7 +34,7 @@ _HALF_SIZE_G = 4
 
 
 def symbols_on_page(model: Model, page: Page) -> tuple[SymbolPlacement, ...]:
-    """Every `layout.symbol_placement` on `page`, ordered by `id` (D11's placement-id order)."""
+    """Every `layout.symbol_placement` on `page`, ordered by `id` (placement-id order)."""
     return page_slice(model, SymbolPlacement, page)
 
 
@@ -60,7 +60,7 @@ def _text_glyph(sheet: SheetFormat, profile: Profile, placement: SymbolPlacement
 
 
 def _not_installed(model: Model, placement: SymbolPlacement) -> bool:
-    """D10: `placement`'s function's item has `installed=False`."""
+    """Whether `placement`'s function's item has `installed=False`."""
     function = functions(model)[placement.function]
     return not items(model)[function.item].installed
 

@@ -29,7 +29,7 @@ def _current_missing(model: Model) -> list[Finding]:
         (entry.release, entry.version, entry.revision) for entry in revisions(model).values()
     }
     found = []
-    # One finding per unit release record (SC2, SC5): its instances share it and its history.
+    # One finding per unit release record: its instances share it and its history.
     # Subject: the release's id.
     for release in unit_releases(model).values():
         if (release.id, release.version, release.revision) in current:

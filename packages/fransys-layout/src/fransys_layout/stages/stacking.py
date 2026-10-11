@@ -1,7 +1,7 @@
-"""D3, R7.1, S12: a column's stacking rule, one home for `place` and `references.joins`.
+"""A column's stacking rule, one home for `place` and `references.joins`.
 
 `place` stacks a column's rows at the row gap, glues an attachment row to its host's row
-(`blocks`), and stands each block `row_spacing` below the one before (`gaps_below`). S12's
+(`blocks`), and stands each block `row_spacing` below the one before (`gaps_below`). The
 join rule reads a port's offset from that same stacking: `place.page_stack` runs `place`'s own
 steps up to its bands on `place`'s own inputs and gives the page as a `PageStack`, which
 `references.joins` reads, and `join_y` says where a run's ports meet. So a run `references`
@@ -29,21 +29,21 @@ class Stacked(Protocol):
 
     @property
     def host(self) -> Id[Any] | None:
-        """R7.1: the function the cell is attached to, `None` for a cell of its own."""
+        """The function the cell is attached to, `None` for a cell of its own."""
         ...
 
 
 class Boxy(Stacked, Protocol):
-    """A cell with whether it is a generic box, a connector or a terminal (R6 D4)."""
+    """A cell with whether it is a generic box, a connector or a terminal."""
 
     @property
     def boxy(self) -> bool:
-        """Whether the cell is drawn compact (R6 D4)."""
+        """Whether the cell is drawn compact."""
         ...
 
 
 def blocks[T: Stacked](rows: Sequence[list[T]]) -> list[list[list[T]]]:
-    """Rows grouped so an attachment row stays glued to its host's row (R7.1, S13)."""
+    """Rows grouped so an attachment row stays glued to its host's row."""
     grouped: list[list[list[T]]] = []
     pending: list[list[T]] = []
     for row in rows:
@@ -62,7 +62,7 @@ def blocks[T: Stacked](rows: Sequence[list[T]]) -> list[list[list[T]]]:
 
 
 def gaps_below[T: Boxy](rows: Sequence[list[T]], row_gap: int, spacing: int) -> list[int]:
-    """The gap each row keeps from the row below it (F5-A, R7.1, R6 D4)."""
+    """The gap each row keeps from the row below it."""
     if all(cell.boxy for row in rows for cell in row):
         return [row_gap] * len(rows)
     gaps: list[int] = []
@@ -73,7 +73,7 @@ def gaps_below[T: Boxy](rows: Sequence[list[T]], row_gap: int, spacing: int) -> 
 
 @value
 class JoinEnd:
-    """One port of a would-be joined run, as `place` stacks its column (S12)."""
+    """One port of a would-be joined run, as `place` stacks its column."""
 
     port: Id[Any]
     row: int
@@ -82,7 +82,7 @@ class JoinEnd:
 
 
 def join_y(ends: tuple[JoinEnd, ...], room: int) -> int | None:
-    """S12 (LD9): the offset at which `place` puts every end of a run on one y, else `None`."""
+    """The offset at which `place` puts every end of a run on one y, else `None`."""
     if len({end.row for end in ends}) != 1:
         return None
     y = join_offset(end.offset for end in ends)
@@ -92,13 +92,13 @@ def join_y(ends: tuple[JoinEnd, ...], room: int) -> int | None:
 
 
 def join_offset(offsets: Iterable[int]) -> int:
-    """S12: where a run's ports meet: its deepest port's offset, since `place` only lowers."""
+    """Where a run's ports meet: its deepest port's offset, since `place` only lowers."""
     return max(offsets)
 
 
 @value
 class StackedPort:
-    """One port as `place` stacks its page before the bands (S12)."""
+    """One port as `place` stacks its page before the bands."""
 
     row: int
     offset: int
@@ -108,7 +108,7 @@ class StackedPort:
 
 @dataclass(frozen=True, slots=True)
 class PageStack:
-    """A page as `place` stacks it before its bands, which S12's join rule reads (`page_stack`)."""
+    """A page as `place` stacks it before its bands, which the join rule reads (`page_stack`)."""
 
     ports: frozendict[tuple[AuthoringKey, Id[Any]], StackedPort]
     heights: frozendict[AuthoringKey, int]
@@ -126,7 +126,7 @@ class JoinedEnd:
 
 @value
 class JoinedRun:
-    """S12: one run `references` joined, which `place` puts on one y."""
+    """One run `references` joined, which `place` puts on one y."""
 
     drawing_set: int
     page: int

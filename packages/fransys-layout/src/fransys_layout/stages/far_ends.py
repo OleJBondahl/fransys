@@ -1,4 +1,4 @@
-"""Far ends drawn at the pin they serve (drawing conventions V5), the step after `attach_replicas`.
+"""Far ends drawn at the pin they serve, the step after `attach_replicas`.
 
 A contact, or a coil on a PLC output channel, whose one wire reaches a single pin in another
 group's column moves its home there, above an N pin or below an S pin, if the column still fits.
@@ -48,7 +48,7 @@ class _Facts(NamedTuple):
 
 
 class FarInputs(NamedTuple):
-    """What V5 reads besides the columns: the drawn run, its wires, each function's group."""
+    """What far ends read besides the columns: the drawn run, its wires, each function's group."""
 
     drawn: tuple[DrawnFunction, ...]
     connections: tuple[Connection, ...]
@@ -66,7 +66,7 @@ def move_far_ends(
     far: FarInputs,
     fits: Callable[[Column], bool],
 ) -> tuple[Column, ...]:
-    """V5: move a lone contact or output coil's home to its far pin, unless `fits` says no."""
+    """Move a lone contact or output coil's home to its far pin, unless `fits` says no."""
     home_keys = {column.key for column in homes}
     home_of = {
         cell.function: column
@@ -98,7 +98,7 @@ def move_far_ends(
 def _far_host(
     terminal: Handle, column: Column, home_of: Mapping[Handle, Column], facts: _Facts
 ) -> tuple[Column, _Entry] | None:
-    """V5: the host column and entry of a lone far end, `None` unless every rule holds."""
+    """The host column and entry of a lone far end, `None` unless every rule holds."""
     drawn_of, touching, groups = facts
     wires = touching.get(terminal, ())
     if len(wires) != 1:
@@ -165,7 +165,7 @@ def _fits(
 
 
 def _span(drawn_of: Mapping[Handle, DrawnFunction], column: Column) -> int:
-    """V5: the width of a generic box with its contacts under all pins (the keep-out's own span)."""
+    """The width of a generic box with its contacts under all pins (the keep-out's own span)."""
     box = next((drawn_of[c.function] for c in column.cells if c.host is None), None)
     if box is None or not box.geometry.generic_box:
         return 0

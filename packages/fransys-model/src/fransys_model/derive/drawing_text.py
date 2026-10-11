@@ -810,7 +810,7 @@ def _tag_label_text(model: Model, label: Label) -> str:
     if label.function is None:
         msg = "a TAG label has no function"
         raise SchemaError(msg, kind="layout.label", record_id=label.id)
-    if label.slot == "outline_title":  # I2a: a black box's title, from its item's unit
+    if label.slot == "outline_title":  # A black box's title, from its item's unit
         return outline_title(model, _black_box_unit(model, label))
     unit = _own_unit(model, label)
     if unit is not None:

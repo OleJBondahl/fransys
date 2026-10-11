@@ -1,4 +1,4 @@
-"""A pin's potential rank and current, read from the supply's declared facts (V11, model-0121)."""
+"""A pin's potential rank and current, read from the supply's declared facts (model-0121)."""
 
 from decimal import Decimal
 

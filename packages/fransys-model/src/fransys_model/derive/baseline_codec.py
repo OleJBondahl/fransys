@@ -288,7 +288,7 @@ def loads(text: str) -> Listing:
 
 
 def differing_sections(a: Listing, b: Listing) -> tuple[str, ...]:
-    """The names of `a`'s and `b`'s top-level fields that differ, in field order (L2).
+    """The names of `a`'s and `b`'s top-level fields that differ, in field order.
 
     Args:
         a: One listing.

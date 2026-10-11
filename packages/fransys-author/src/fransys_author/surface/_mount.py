@@ -1,4 +1,4 @@
-"""`mounted_on=`: the mount links of a device that sits on another, from the part facts (EA7)."""
+"""`mounted_on=`: the mount links of a device that sits on another, from the part facts."""
 
 from typing import TYPE_CHECKING
 

@@ -1,4 +1,4 @@
-"""The diagram frame's boxes (BD5): lines oriented, boxes sized and stacked, ends ordered.
+"""The diagram frame's boxes: lines oriented, boxes sized and stacked, ends ordered.
 
 A line leaves the left box's east edge and enters the right box's west edge; a same-column line
 leaves both east edges. Ends sit `attach_pitch` apart, ordered by the far box's top then line.

@@ -1,4 +1,4 @@
-"""Layout hints: `d.layout.chain`, `order`, `symbol` and more, through the engine (EA11)."""
+"""Layout hints: `d.layout.chain`, `order`, `symbol` and more, through the engine."""
 
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping

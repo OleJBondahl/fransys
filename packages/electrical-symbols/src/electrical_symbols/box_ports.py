@@ -1,4 +1,4 @@
-"""A generic box's ports: their names, order and sides, and the grid they stand on (D47).
+"""A generic box's ports: their names, order and sides, and the grid they stand on.
 
 Layout and render both draw the box from these, so a name, a side or a pitch has one spelling.
 """
@@ -45,8 +45,8 @@ def draw_order(x: float, side: str) -> tuple[float, bool]:
 
 
 def default_order(names: Iterable[str], key: Callable[[str], Any] = str) -> tuple[str, ...]:
-    """The drawing order of box ports nobody ordered: by `key` of the name, then the name (R7 B2).
+    """The drawing order of box ports nobody ordered: by `key` of the name, then the name.
 
-    The caller passes the natural key (`marking_key`), so `A2` stands before `A10` (O4, O7).
+    The caller passes the natural key (`marking_key`), so `A2` stands before `A10`.
     """
     return tuple(sorted(names, key=lambda name: (key(name), name)))

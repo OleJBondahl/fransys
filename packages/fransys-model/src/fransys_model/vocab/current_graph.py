@@ -1,6 +1,6 @@
 """The current graph of one set of closed links: its raw parts, and the law solved on it.
 
-Split from `current_chains` (RATINGS-2 C3). `raw_of` reads a model once: the `Wire`s that join
+Split from `current_chains`. `raw_of` reads a model once: the `Wire`s that join
 ports (conductors, and every link or mate that is no position), the `Edge`s that are the
 positions, and the open ends. `solve` and `group` take any subset of them, the links closed in one
 item state (`current_states`), and build the multigraph on it: a union-find over the wires gives
@@ -78,7 +78,7 @@ def raw_of(model: Model) -> Raw:
     """
     stated = {function: states_current(model, function) for function in functions(model)}
     links, mated = pairs(model)
-    # a header join ties its two ports with no conductor between: a plain wire (HA4)
+    # a header join ties its two ports with no conductor between: a plain wire
     wires = [
         Wire(*ends)
         for ends in (*((c.a, c.b) for c in conductors(model).values()), *port_joins(model))

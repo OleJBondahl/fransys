@@ -1,4 +1,4 @@
-"""The one reader of release folders (WORKFLOW-BLOCKS W2): no other facade code opens a file in one.
+"""The one reader of release folders : no other facade code opens a file in one.
 
 A release folder is `<root>/<name>/<version>.<revision>/`. Reads here are text for the stored
 listing and numbering (universal newlines, so a CRLF checkout reads like LF) and bytes for hashes.

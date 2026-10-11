@@ -1,4 +1,4 @@
-"""The D6 recipe: `LIBRARY.get` -> `repeat` -> `orient`, for one placement's symbol."""
+"""The recipe: `LIBRARY.get` -> `repeat` -> `orient`, for one placement's symbol."""
 
 from typing import TYPE_CHECKING
 
@@ -35,7 +35,7 @@ def to_grid(module_units: float) -> int:
 
 
 def _generic_box_port_names(model: Model, placement: SymbolPlacement) -> tuple[str, ...]:
-    """The placement's function's model port names, sorted (R7 B2)."""
+    """The placement's function's model port names, sorted."""
     indexes = build_indexes(model)
     if placement.ports:  # the item view's own list, as layout drew it
         return placement.ports
@@ -57,7 +57,7 @@ def _generic_box_port_names(model: Model, placement: SymbolPlacement) -> tuple[s
 def oriented_symbol(model: Model, placement: SymbolPlacement) -> Symbol | None:
     """`placement`'s symbol, repeated and oriented as layout drew it; `None` for an unknown key."""
     if is_generic_box(placement.symbol):
-        # R7 C5: the port sides layout turned the box to, else the alternating ones
+        # The port sides layout turned the box to, else the alternating ones
         names = _generic_box_port_names(model, placement)
         base = generic_box(
             names,

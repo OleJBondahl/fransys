@@ -1,4 +1,4 @@
-"""The connector items fitted on their parent's own leads (HA6, model-0172).
+"""The connector items fitted on their parent's own leads (model-0172).
 
 Lives in `vocab` so `derive.designation` reads one fact: a LEAD conductor joins a pin of the item
 to a port of the item's parent device.
@@ -35,7 +35,7 @@ def _fitted_items(model: Model) -> frozenset[Id[Item]]:
 
 
 def fitted_on_leads(model: Model, item: Id[Item]) -> bool:
-    """Whether `item` is a connector fitted on its parent's leads (HA5).
+    """Whether `item` is a connector fitted on its parent's leads.
 
     True when a LEAD conductor ends in a port of `item` and its other end is a port of
     `item`'s `parent`. Unknown `item`: `False`.

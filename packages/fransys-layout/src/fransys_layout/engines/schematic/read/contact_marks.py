@@ -1,4 +1,4 @@
-"""Read of the terminal pairs a contact image lists (C19), by the rule render prints them by."""
+"""Read of the terminal pairs a contact image lists, by the rule render prints them by."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -27,8 +27,8 @@ def image_marks_of(
 
 
 def image_inputs(model: Model, inputs: StageInputs) -> ImageInputs:
-    """C19: the run's `ImageInputs`: the marks, and each contact function's owner item (V10)."""
-    every = (*inputs.functions, *inputs.spares)  # V1: a spare contact is listed, not drawn
+    """The run's `ImageInputs`: the marks, and each contact function's owner item."""
+    every = (*inputs.functions, *inputs.spares)  # A spare contact is listed, not drawn
     owners = {
         contact: item
         for item in {spec.item for spec in every}
@@ -54,6 +54,6 @@ def image_inputs(model: Model, inputs: StageInputs) -> ImageInputs:
 
 
 def _row_order(model: Model, function: Id[Any]) -> tuple[Any, ...]:
-    """O7, model-0138: a contact's first entry by `image_order`, the key of its table row."""
+    """model-0138: a contact's first entry by `image_order`, the key of its table row."""
     no, nc = contact_entries(model, functions_table(model)[function])
     return min(map(image_order, (*no, *nc)), default=())

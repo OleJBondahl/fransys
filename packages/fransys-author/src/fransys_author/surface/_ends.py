@@ -1,4 +1,4 @@
-"""What each kind of series element offers: its ends, its width, and the `Parallel` handle (EA5)."""
+"""What each kind of series element offers: its ends, its width, and the `Parallel` handle."""
 
 from typing import TYPE_CHECKING, Any, Protocol, TypeGuard, cast
 

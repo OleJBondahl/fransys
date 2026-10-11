@@ -1,9 +1,9 @@
-"""FD3: the numbering pins stored at release (`baseline/numbering.json`), and their codec.
+"""The numbering pins stored at release (`baseline/numbering.json`), and their codec.
 
 `pins(model, unit)` builds `items` only -- `retired` is always `()` here, since computing it
 needs a pin SOURCE, a release-time fact (which on-disk release is the source) `derive` cannot
 read at all (`fransys_model` reads no file, root CLAUDE.md invariant 6); that is
-`fransys`'s own job (FD5), which fills `retired` in with `dataclasses.replace` before
+`fransys`'s own job, which fills `retired` in with `dataclasses.replace` before
 `dumps`. Follows `derive/baseline.py`'s own codec shape: canonical JSON,
 `kernel.encode.write_json`/`kernel.jsonread.read_json`, `SchemaVersionError` on any other
 `numbering_version`.
@@ -35,7 +35,7 @@ _NUMBERING_VERSION = 1
 def item_position(
     model: Model, item: Id[Item]
 ) -> tuple[AuthoringKey, AuthoringKey | None, str | None]:
-    """`item`'s own `(key, scope, code)` (FD2, FD3), for ANY item, printed or not.
+    """`item`'s own `(key, scope, code)`, for ANY item, printed or not.
 
     `key` is `unit_relative_key`. `scope` is `unit_relative_key` of `item`'s nearest
     designating ancestor (`designating_ancestors`'s last element), `None` when it has none.
@@ -52,7 +52,7 @@ def item_position(
 
 
 def unit_position(model: Model, unit: Id[Unit]) -> tuple[AuthoringKey, None, str | None]:
-    """A unit instance's own `(key, scope, code)` (UT4), the instance twin of `item_position`.
+    """A unit instance's own `(key, scope, code)`, the instance twin of `item_position`.
 
     `key` is the instance's key without its parent's prefix, so it ends in `"unit"`; `scope`
     is `None` (an instance sits in its parent's top group); `code` is its release's
@@ -65,7 +65,7 @@ def unit_position(model: Model, unit: Id[Unit]) -> tuple[AuthoringKey, None, str
 
 
 def _unit_rows(model: Model, unit: Id[Unit]) -> list[NumberingItem]:
-    """One row per tagged instance directly inside `unit` (UT4), in `items`' own shape."""
+    """One row per tagged instance directly inside `unit`, in `items`' own shape."""
     rows = []
     for child in units_table(model).values():
         if child.parent != unit or (text := unit_tag(model, child.id)) is None:
@@ -80,13 +80,13 @@ def _unit_rows(model: Model, unit: Id[Unit]) -> list[NumberingItem]:
 
 
 def pins(model: Model, unit: Id[Unit]) -> NumberingPins:
-    """`unit`'s own numbering pins (FD3): every own item that prints a designation.
+    """`unit`'s own numbering pins: every own item that prints a designation.
 
     The candidate set is `passes.numbering.number`'s own: an item of `unit` itself, not a
     `terminal`, whose `own_designation_or_none` is not `None`. `key`, `scope` and `code` come
     from `item_position`; `text` is the item's OWN label, never the `item_designation` chain
-    (FD5 seeds this bare text); `authored` is whether it carries a tag. Each tagged instance
-    directly inside `unit` adds a row from `unit_position` (UT4), its key ending in `"unit"`.
+    (a reserved text seeds it); `authored` is whether it carries a tag. Each tagged instance
+    directly inside `unit` adds a row from `unit_position`, its key ending in `"unit"`.
     `retired` is always `()`: `fransys.release` fills it in.
     """
     terminals = terminal_items(model)
@@ -125,7 +125,7 @@ def _retired_dict(row: NumberingRetired) -> dict[str, JsonValue]:
 
 
 def dumps(pins: NumberingPins) -> str:
-    """`pins` as canonical JSON (FD3): UTF-8, sorted keys, one trailing newline."""
+    """`pins` as canonical JSON: UTF-8, sorted keys, one trailing newline."""
     data: dict[str, JsonValue] = {
         "numbering_version": _NUMBERING_VERSION,
         "items": [_item_dict(row) for row in pins.items],

@@ -1,4 +1,4 @@
-"""The harnesses a WIRE conductor's ends sit under (HA2, model-0171).
+"""The harnesses a WIRE conductor's ends sit under (model-0171).
 
 Lives in `vocab` so `validators` and `derive.wire_harness` read one fact; a wire's end port
 belongs to the nearest harness among its item and that item's ancestors.

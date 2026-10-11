@@ -10,7 +10,7 @@ lazy from fransys_model.kernel import Id, Model
 
 
 def _sheet_key(model: Model, unit: Id[Any]) -> tuple[tuple[Any, ...], str]:
-    """A unit sheet's place: its natural designation (O7), then `render_id` for a tie."""
+    """A unit sheet's place: its natural designation, then `render_id` for a tie."""
     return unit_order(model, unit), render_id(unit)
 
 

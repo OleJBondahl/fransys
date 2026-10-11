@@ -1,4 +1,4 @@
-"""Cable engine, reading: the model's cable blocks to the placer's facts (CT5 CD2, CD5 to CD11).
+"""Cable engine, reading: the model's cable blocks to the placer's facts.
 
 The only place, with `write/`, where the cable engine meets the model vocabulary. `drawable`
 is the one test of what the engine draws; `facts.py` reads the widths and flags.

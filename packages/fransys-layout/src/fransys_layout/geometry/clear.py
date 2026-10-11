@@ -1,4 +1,4 @@
-"""Finding or making a free place for a box (cleanup step 2, F3)."""
+"""Finding or making a free place for a box."""
 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Literal

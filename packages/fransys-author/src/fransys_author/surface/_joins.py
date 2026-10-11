@@ -1,4 +1,4 @@
-"""`joins=`: a connector item fitted on its parent device's own leads (HA5, model-0172)."""
+"""`joins=`: a connector item fitted on its parent device's own leads (model-0172)."""
 
 from typing import TYPE_CHECKING, cast
 lazy from collections.abc import Mapping

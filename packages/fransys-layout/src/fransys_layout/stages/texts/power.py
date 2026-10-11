@@ -1,13 +1,13 @@
-"""D5, step 6: where a power end's symbol stands and where its text goes (R7, A5).
+"""Where a power end's symbol stands and where its text goes.
 
 A power end (`LinkMarker.symbol`) is placed as a reference marker is: the same row, box and
 stub. The symbol's port point lies one wiring grid out from the pin along the pin's facing, the
-reference stub's length (R7), and the symbol is turned so its own port faces back at the pin, so
-render's straight lead from that port to the pin never bends (A5). Its text, where it has some,
+reference stub's length, and the symbol is turned so its own port faces back at the pin, so
+render's straight lead from that port to the pin never bends. Its text, where it has some,
 is one `POWER` text through `place_texts` with the port as its subject.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import (
@@ -82,7 +82,7 @@ def _pin_facing(marker: LinkMarker) -> Facing:
 
 
 def turned(symbol: str, pin: Facing) -> SymbolGeometry:
-    """A5: `symbol`, quarter-turned so its one port faces back at a pin that faces `pin`."""
+    """`symbol`, quarter-turned so its one port faces back at a pin that faces `pin`."""
     wanted = OPPOSITE[pin]
     return next(
         one
@@ -92,24 +92,36 @@ def turned(symbol: str, pin: Facing) -> SymbolGeometry:
 
 
 def power_place(marker: LinkMarker) -> PowerPlace:
-    """R7: the symbol of `marker`, its port point `symbol_grids` wiring grids from the pin."""
+    """The symbol of `marker`, its port point `symbol_grids` wiring grids from the pin."""
     return place_of(marker, pin=marker.at, facing=_pin_facing(marker), grids=marker.symbol_grids)
 
 
 def place_of(
     end: LinkMarker | MarkerDecision, *, pin: Point, facing: Facing, grids: int
 ) -> PowerPlace:
-    """The symbol of power `end` at `pin`, `grids` wiring grids out along `facing` (R7)."""
-    geometry = turned(end.symbol, facing)
+    """The symbol of power `end` at `pin`, `grids` wiring grids out along `facing`."""
+    return replace(
+        symbol_place(
+            end.symbol, (end.port, end.drawing_set, end.page), pin=pin, facing=facing, grids=grids
+        ),
+        text=end.symbol_text,
+    )
+
+
+def symbol_place(
+    symbol: str, on: tuple[Id[Any], int, int], *, pin: Point, facing: Facing, grids: int
+) -> PowerPlace:
+    """The `symbol` of the port `on[0]` (set `on[1]`, page `on[2]`) at `pin`: R7's one stand."""
+    geometry = turned(symbol, facing)
     port = geometry.ports[0]
     stem = port_exit(pin, facing, grids)
     at = Point(x=stem.x - port.at.x, y=stem.y - port.at.y)
     return PowerPlace(
-        port=end.port,
-        drawing_set=end.drawing_set,
-        page=end.page,
-        symbol=end.symbol,
-        text=end.symbol_text,
+        port=on[0],
+        drawing_set=on[1],
+        page=on[2],
+        symbol=symbol,
+        text="",
         pin=pin,
         facing=facing,
         at=at,
@@ -162,7 +174,7 @@ def page_shapes(
 
 
 def power_reserved(markers: tuple[LinkMarker, ...]) -> tuple[Box, ...]:
-    """What a power end holds before its lead is set (D5): its marker box and stub, not its symbol.
+    """What a power end holds before its lead is set: its marker box and stub, not its symbol.
 
     The lead is set from the first labels, so the symbol's place is not known to them (layout-0142).
     """
@@ -185,7 +197,7 @@ def with_power_labels(
     frame: SlotFrame,
     slot: str,
 ) -> tuple[tuple[PlacedLabel, ...], tuple[Finding, ...]]:
-    """D3: `labels` plus a `MARKING` label in `slot` per symbol with a text, in `frame.content`."""
+    """`labels` plus a `MARKING` label in `slot` per symbol with a text, in `frame.content`."""
     places = power_places(markers)
     owners = {port_page_at(one.at, g): one.function for one in placed for g in one.geometry.ports}
     texts = tuple(
@@ -213,7 +225,7 @@ def with_power_labels(
 
 
 def _text(one: PowerPlace, owner: Id[Any] | None, profile: Profile, slot: str) -> TextToPlace:
-    """`one`'s text as D3 places it: past its bar, away from the pin, centred on the lead."""
+    """`one`'s text, placed: past its bar, away from the pin, centred on the lead."""
     return TextToPlace(
         kind=TextKind.POWER,
         handle=one.port,

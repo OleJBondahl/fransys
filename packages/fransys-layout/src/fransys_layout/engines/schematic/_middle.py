@@ -59,7 +59,7 @@ def moved_shapes(
     before: Sequence[PlacedFunction],
     after: Sequence[PlacedFunction],
 ) -> tuple[GroupShape, ...]:
-    """Each folded shape moved as `shift_pages` moved its page (C22b), by a placement's move."""
+    """Each folded shape moved as `shift_pages` moved its page, by a placement's move."""
     was = {(one.drawing_set, one.page): one.at for one in before}
     now = {(one.drawing_set, one.page): one.at for one in after}
     found = []

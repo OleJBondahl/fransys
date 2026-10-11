@@ -1,4 +1,4 @@
-"""The cable drawing's facts and texts: its block, rows, pins and printed words (CT5, CD3 to CD10).
+"""The cable drawing's facts and texts: its block, rows, pins and printed words.
 
 Reached as `fransys_model.derive.cable_drawing.<name>`, never re-exported from `derive/__init__.py`
 (model-0159): render, pdf and layout read it, a consumer never does. A block is one subject's
@@ -47,7 +47,7 @@ __all__ = [
 class DrawnPin:
     """One cell of an end box: a port, its marking, and the cores of the block that land on it.
 
-    `cores` runs in core-key order and gives the cell one place each (CD6, P1, model-0168); a
+    `cores` runs in core-key order and gives the cell one place each (model-0168); a
     free pin has none and one place. A drawing value, not a row shape (model-0159).
     """
 
@@ -82,7 +82,7 @@ def cable_block_key(unit: Id[Unit] | None, subject: Id[Item]) -> str:
 def block_cables(
     model: Model, subject: Id[Item], unit: Id[Unit] | None
 ) -> tuple[HarnessCable, ...]:
-    """The subject's cables in the reading's own cable list, in its printed order (CT5-1B-FIX).
+    """The subject's cables in the reading's own cable list, in its printed order.
 
     The absolute reading is `all_cables`; a unit's is `all_unit_cables`, the cables whose own
     unit it is. The list is grouped by `cable_subject`; a cable with no designation is not in it.
@@ -143,7 +143,7 @@ def _keyed_cores(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> _Key
     """The block's cores in core-key order: cable place then core index, the wires after the cables.
 
     A wire's place is the number of cables; its key then runs by the natural order of its printed
-    from-end, then to-end (model-0185, SORT-ORDER O5), its index breaking a tie.
+    from-end, then to-end (model-0185), its index breaking a tie.
     """
     cables = block_cables(model, subject, unit)
     keyed: _Keyed = [
@@ -198,7 +198,7 @@ def _joined(groups: _Groups, one: Id[Item], two: Id[Item]) -> bool:
 
 
 def _top_row(groups: _Groups, seeds: list[Id[Item]]) -> set[Id[Item]]:
-    """The ends on the side of their group's first seed: that end stands on top (CD5)."""
+    """The ends on the side of their group's first seed: that end stands on top."""
     first: dict[int, int] = {}
     for seed in seeds:
         first.setdefault(id(groups[seed]), groups[seed][seed])
@@ -208,10 +208,10 @@ def _top_row(groups: _Groups, seeds: list[Id[Item]]) -> set[Id[Item]]:
 def _colouring(
     model: Model, subject: Id[Item], unit: Id[Unit] | None
 ) -> tuple[list[Id[Item]], set[Id[Item]], tuple[Id[Conductor], ...]]:
-    """The block's end items in row order, its top row and its row links (CD5 at L1, model-0166).
+    """The block's end items in row order, its top row and its row links (model-0166).
 
     The cores, in core-key order, join groups of ends each with a side. After the last core each
-    group's first seed (CD5's rule) stands on top; flipping a group never changes a link.
+    group's first seed stands on top; flipping a group never changes a link.
     """
     keyed = _keyed_cores(model, subject, unit)
     keys = {i: min(p.values()) for i, p in _landed_by_end(model, keyed).items()}
@@ -231,7 +231,7 @@ def _colouring(
 def end_rows(
     model: Model, subject: Id[Item], unit: Id[Unit] | None
 ) -> tuple[tuple[Id[Item], ...], tuple[Id[Item], ...]]:
-    """The block's end items, top row then bottom row, each left to right (CD5, model-0166).
+    """The block's end items, top row then bottom row, each left to right (model-0166).
 
     The ends are coloured in core-key order (`_colouring`). A row runs by lowest core key, rank
     breaking ties. One end box per item, however many cables land on it.
@@ -241,7 +241,7 @@ def end_rows(
 
 
 def row_links(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[Id[Conductor], ...]:
-    """The block's row links in core-key order: cores whose two ends stand in one row (CD5, L1).
+    """The block's row links in core-key order: cores whose two ends stand in one row.
 
     A two-colourable block has none. In an odd ring the highest-keyed core is the one link.
     """
@@ -251,10 +251,10 @@ def row_links(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> tuple[I
 def drawn_pins(
     model: Model, subject: Id[Item], item: Id[Item], unit: Id[Unit] | None
 ) -> tuple[DrawnPin, ...]:
-    """The pins of the end box of `item` in the block of `unit`'s reading, drawing order (CD6, Q9).
+    """The pins of the end box of `item` in the block of `unit`'s reading, drawing order.
 
     A port any core of the block lands on is landed, at the place of its lowest core key, and
-    holds one place per core landing on it (P1). A connector end then shows its other pins in
+    holds one place per core landing on it. A connector end then shows its other pins in
     `pin_order`; any other end shows landed pins only.
     """
     keyed = _keyed_cores(model, subject, unit)
@@ -292,17 +292,17 @@ def _connector_ports(
 
 
 def core_text(core: HarnessCore) -> str:
-    """A core's text: its index, then its colour when it has one, then its label when set (CD7)."""
+    """A core's text: its index, then its colour when it has one, then its label when set."""
     return " ".join(part for part in (str(core.index), core.colour, core.label) if part)
 
 
 def end_by_others(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
-    """Whether an end of `item` is marked "by others": external, in the absolute reading (CD10)."""
+    """Whether an end of `item` is marked "by others": external, in the absolute reading."""
     return unit is None and external(model, item)
 
 
 def end_label(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
-    """The end's designation in `unit`'s reading, plus " (by others)" (CD10); a blank end is ""."""
+    """The end's designation in `unit`'s reading, plus " (by others)"; a blank end is ""."""
     label = _end_designation(model, item, _facts_of(model, unit))
     if end_by_others(model, item, unit):
         return f"{label} ({external_note()})"
@@ -310,7 +310,7 @@ def end_label(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
 
 
 def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> str:
-    """The cable's heading: designation, "shielded", length, then "by others" (CD7, CD10, CD-H1).
+    """The cable's heading: designation, "shielded", length, then "by others".
 
     Example: `-W3, shielded, 3000 mm`. A cable inside an external harness is external too.
     """

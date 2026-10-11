@@ -1,4 +1,4 @@
-"""Decimal coercion, shared by wiring and facet helpers (A11: never a float)."""
+"""Decimal coercion, shared by wiring and facet helpers (never a float)."""
 
 from decimal import Decimal
 

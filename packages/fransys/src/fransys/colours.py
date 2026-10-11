@@ -1,4 +1,4 @@
-"""IEC 60757 colour codes as importable names: `from fransys.colours import BU` (EA1)."""
+"""IEC 60757 colour codes as importable names: `from fransys.colours import BU`."""
 
 from fransys_author.surface.colours import (
     BK,

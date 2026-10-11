@@ -1,6 +1,6 @@
 """Where a column goes before it is packed: its drawing set, its role and its place in the order.
 
-Private to `stages.partition` (pages.md 6.3 steps 1 and 2). Everything here takes plain values
+Private to `stages.partition`. Everything here takes plain values
 and returns plain values; `partition` builds the tables and reports the findings.
 """
 
@@ -157,7 +157,7 @@ def base_order(
     break_before: tuple[Handle, ...],
     pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...] = (),
 ) -> list[Unit]:
-    """The units of a bucket: role first, then its groups, then loose columns (D4)."""
+    """The units of a bucket: role first, then its groups, then loose columns."""
     by_group: dict[tuple[Role, Handle], list[Column]] = {}
     found: list[
         tuple[tuple[int | AuthoringKey, ...], tuple[Handle | None, ...], list[Column], Role]
@@ -191,7 +191,7 @@ def base_order(
 def _group_key(
     info: GroupInfo, group_ranks: frozendict[str, int]
 ) -> tuple[int | AuthoringKey, ...]:
-    """The label's profile rank; unranked groups last, by natural label (O6), then by key."""
+    """The label's profile rank; unranked groups last, by natural label, then by key."""
     rank = group_ranks.get(info.label)
     return (1, 0, info.order, info.key) if rank is None else (0, rank, 0, info.key)
 
@@ -232,7 +232,7 @@ def _unblocked_order(units: Sequence[Unit], blockers: Mapping[int, set[int]]) ->
 
 
 def reorder(units: Sequence[Unit], order_hints: tuple[OrderHint, ...]) -> list[Unit]:
-    """Move groups an order hint names, a stable pass (D4); a cycle raises `HintError`."""
+    """Move groups an order hint names, a stable pass; a cycle raises `HintError`."""
     blockers = _blockers(units, order_hints)
     if blockers is None:
         return list(units)

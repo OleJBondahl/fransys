@@ -100,6 +100,7 @@ def test_public_names_are_exactly_the_ones_the_spec_lists():
         "Strip",
         "Terminal",
         "Wiring",
+        "caller_origin",
     }
 
 

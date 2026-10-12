@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
+from fransys_model.derive import text_size_mm
 from fransys_model.derive.drawing_text import (
     CONTACT_SLOTS,
     contact_heading,
@@ -91,7 +92,7 @@ def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: La
     if label.slot in CONTACT_SLOTS:
         return _contact_image(model, sheet, profile, label)
     top_mm = grid_to_mm(sheet.content_y_mm, label.y, sheet.module_mm)
-    font_size_mm = grid_to_mm(0, profile.text_height, sheet.module_mm)
+    font_size_mm = text_size_mm(profile.text_height, sheet.module_mm)
     baseline_mm = top_mm + font_size_mm * ASCENT_RATIO
     x_mm = grid_to_mm(sheet.content_x_mm, label.x, sheet.module_mm)
     css_class = "label not-installed" if _not_installed(model, label) else "label"

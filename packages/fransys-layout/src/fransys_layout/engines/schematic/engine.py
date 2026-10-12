@@ -32,6 +32,7 @@ from fransys_layout.stages.texts.marker_row import place_markers
 from fransys_layout.stages.texts.markers import link_markers, placed_world
 from fransys_layout.stages.texts.power import without_power_findings
 from fransys_layout.stages.tidy import clear_of_stubs, shift_pages
+from fransys_layout.stages.wide_columns import cut_wide
 from fransys_model.kernel import Finding, Id, value
 
 from ._arrange_columns import (
@@ -42,11 +43,12 @@ from ._finish import Laid, boxed, cross_references, outlined_cells
 from ._lines import DrawnPieces, LineScene, draw_lines, harness_ink, strip_lines
 from ._lint import LintScene, Members, lint_findings
 from ._middle import middle_inputs, moved_shapes, strip_middle
-from ._sizing import sized
+from ._sizing import recut_inputs, sized
 from ._wire_spans import route_spans
 from .defaults import BOTTOM_HEADROOM_LANES, DEFAULT_RULES, TOP_HEADROOM_LANES
 from .profiles import lay_out
 from .read import read_inputs
+from .read.finding_names import named_findings
 from .read.harness_lines import box_specs
 from .read.labels import label_requests
 from .read.line_texts import marker_keepouts
@@ -99,6 +101,14 @@ def run_stages(
 
 def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tuple[Finding, ...]]:
     """The engine loop: everything `write/` needs, and the findings of every stage."""
+    results, _, findings = stage_scene(model, inputs)
+    return results, findings
+
+
+def stage_scene(
+    model: Model, inputs: StageInputs
+) -> tuple[StageResults, LintScene, tuple[Finding, ...]]:
+    """`stage_results` and the scene its lint read, which the readability report measures."""
     drawn, resolve_findings = resolve_with_defaults(inputs.functions, DEFAULT_RULES, inputs.choices)
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
@@ -117,8 +127,8 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     inputs, columns, middle, reach = strip_middle(model, inputs, columns)
     inputs, lines = strip_lines(model, inputs)
     texts = tag_texts(model)
-    slot_requests, pin_requests = row_labels(texts, inputs.functions, all_columns, slot_requests)
-    own_set = own_set_texts(texts, boundary_edge_set(model), slot_requests, inputs.functions)
+    rowed, pin_requests = row_labels(texts, inputs.functions, all_columns, slot_requests)
+    own_set = own_set_texts(texts, boundary_edge_set(model), rowed, inputs.functions)
     drawn, widths, img, reserves = sized(model, inputs, drawn, columns, own_set)
     run = PageRun(
         texts,
@@ -128,6 +138,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
         reserves,
         partial(location_paths, model),
         partial(unit_paths, model),
+        partial(recut_inputs, (inputs, drawn, img), (texts, all_columns, slot_requests)),
         power,
     )
     # layout-0080: the ports at a unit's boundary that draw nothing, in the markers and the check
@@ -179,7 +190,7 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     # grids when its far side has the room (a strip tag left of the first column); its markers
     # move with it, but a marker box never causes the shift (layout-0068), and a box
     # the shift pushes out of the content box is reported by OUT_OF_CONTENT_BOX
-    pages, placed_all, markers = shift_pages(plans, pages, markers, inputs.sheet)
+    pages, placed_all, markers = shift_pages(plans, pages, markers, inputs.sheet, placement.rooms)
     # The contact image under each coil, and each contact's reference to its coil
     pages, contact_refs = contact_images(plans, pages, img, markers, location_paths(model, plans))
     # model-0059: each black box's dash-dot outline and its title, before routing
@@ -238,20 +249,27 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
     # layout-0158: the lint reads the lines, the boxes, and the boxed pin views that draw nothing
     ink = harness_ink(drawn_lines, placed_box, drawn_hidden(placed_all, hidden, markers))
     edges = open_ends(inputs.functions, boundary_edge_set(model))
-    lint = lint_findings(LintScene(layout, columns, drawn, inputs, members, edges, ink))
-    findings.extend((*drawn_lines.findings, *lint))
+    scene = LintScene(layout, columns, drawn, inputs, members, edges, ink)
+    lint = lint_findings(scene)
+    findings = named_findings(
+        model, inputs.functions, layout, ink, [*findings, *drawn_lines.findings, *lint]
+    )
     planned = {planned.column for plan in plans for planned in plan.columns}
-    return StageResults(
-        layout=layout,
-        drawn=drawn,
-        columns=tuple(column for column in columns if column.key in planned),
-        sheet_format=inputs.sheet_format,
-        off_ends=decided.off_ends,
-        joins=decided.joins,
-        boxes=placed_box,
-        hidden=tuple(sorted(hidden)),
-        lines=drawn_lines,
-    ), tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message)))
+    return (
+        StageResults(
+            layout=layout,
+            drawn=drawn,
+            columns=tuple(column for column in columns if column.key in planned),
+            sheet_format=inputs.sheet_format,
+            off_ends=decided.off_ends,
+            joins=decided.joins,
+            boxes=placed_box,
+            hidden=tuple(sorted(hidden)),
+            lines=drawn_lines,
+        ),
+        scene,
+        tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message))),
+    )
 
 
 def _placed(
@@ -263,7 +281,8 @@ def _placed(
 ) -> tuple[Placement, tuple[References, tuple[Finding, ...]]]:
     """`plan_pages`, `references`, `place`; again on grown widths, at most `_REPLANS` times (0175).
 
-    Each placing is checked again: a group folded below the page is cut, a grown width re-plans.
+    Each placing is checked again: a group folded below the page is cut, a grown width re-plans,
+    a column wider than the page is cut between its lanes (layout-0182).
     """
     planned = plan_pages(run, drawn, columns, widths)
     first = planned.plans
@@ -271,8 +290,11 @@ def _placed(
     planned_with = widths
     for _ in range(_REPLANS):
         tall = tall_groups(placement.pages, run.inputs.sheet.content_height, run.inputs.middle)
-        if grown == planned_with and not tall:
+        # layout-0182: a column wider than the page is cut between its lanes
+        cut = cut_wide(run, placement, columns, grown, decided[0])
+        if grown == planned_with and not tall and cut is None:
             break
+        run, columns, grown = cut or (run, columns, grown)
         run = recut(run, tall)
         planned = plan_pages(run, placement.drawn, columns, grown)
         planned_with = grown

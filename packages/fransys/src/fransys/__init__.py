@@ -30,7 +30,7 @@ from fransys_author.surface import (
 )
 from fransys_parts import PartLibraryError
 
-from fransys_model import derive
+from fransys import derive
 from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflict, Model, Severity
 from fransys_model.vocab import DocumentPreset, PageKind
 
@@ -51,6 +51,7 @@ from .pipeline import (
     verify,
     write,
 )
+from .readability import readability
 
 __all__ = [
     "ABOVE",
@@ -98,6 +99,7 @@ __all__ = [
     "lint",
     "parts",
     "parts_module",
+    "readability",
     "release",
     "releases",
     "unit",

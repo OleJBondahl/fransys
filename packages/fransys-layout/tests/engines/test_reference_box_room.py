@@ -96,6 +96,7 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
     # CAN-FAIL: engines/schematic/engine.py `_placed`: `box_room_findings(decided, first)` ->
     #     `(decided, planned.plans)` (the room is the final plans' own) fails here
     passes = iter((_plans(99), _plans(100)))
+    monkeypatch.setattr(engine, "cut_wide", lambda *_: None)  # no column is over-wide
     monkeypatch.setattr(
         engine, "plan_pages", lambda *_: SimpleNamespace(plans=next(passes), columns=())
     )
@@ -116,6 +117,7 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
 def _replans(monkeypatch: pytest.MonkeyPatch, measured: Any) -> int:
     """How many plans `_placed` makes when each placing measures `measured(n)` for the n-th."""
     plans: list[int] = []
+    monkeypatch.setattr(engine, "cut_wide", lambda *_: None)  # no column is over-wide
     monkeypatch.setattr(
         engine,
         "plan_pages",
@@ -142,9 +144,10 @@ def test_the_engine_plans_again_while_the_widths_still_grow_up_to_the_bound(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """layout-0175: a placing measuring wider than planned plans again, three times at most."""
-    # CAN-FAIL: engines/schematic/engine.py `_placed`: `if again == grown: break` -> `pass`
-    #     (always the bound) fails the settled case; `_REPLANS = 3` -> `1` (the old single
-    #     re-plan, the second placing's growth discarded) fails the growing case
+    # CAN-FAIL: engines/schematic/engine.py `_placed`:
+    #     `if grown == planned_with and not tall and cut is None: break` -> `pass` (always the
+    #     bound) fails the settled case; `_REPLANS = 3` -> `1` (the old single re-plan, the
+    #     second placing's growth discarded) fails the growing case
     assert _replans(monkeypatch, lambda n: ("w", n)) == 1 + engine._REPLANS
     assert _replans(monkeypatch, lambda n: ("w", min(n, 2))) == 3
     assert _replans(monkeypatch, lambda _: ()) == 1

@@ -17,6 +17,7 @@ Worked example::
 
 from fransys_model.vocab import Operating, Rating
 
+from ._origin import caller_origin
 from .design import Design, Scope
 from .errors import AuthorError
 from .handles import Cable, Fn, Group, Item, Location, Port, Strip, Terminal
@@ -37,4 +38,5 @@ __all__ = [
     "Strip",
     "Terminal",
     "Wiring",
+    "caller_origin",
 ]

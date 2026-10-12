@@ -342,7 +342,9 @@ def test_t_c_a_line_end_below_the_box_of_a_page_no_cut_helps_still_routes() -> N
     assert {"OUT_OF_CONTENT_BOX", "PAGE_OVERFULL"} <= {f.code for f in built.findings}
     out = [f.message for f in built.findings if f.code == "OUT_OF_CONTENT_BOX"]
     assert any("harness line's ink" in m for m in out), out
-    assert all(re.search(r" at p\d+(\.\d+)?:\d+[A-Z]$", m, re.MULTILINE) for m in out), out
+    assert all(re.search(r" at \d+[A-Z] \((\+\w+)?p\d+(\.\d+)?\b", m, re.MULTILINE) for m in out), (
+        out
+    )
 
 
 def _crossings(built: fr.BuildResult, page: Any) -> list[tuple[Any, Any]]:

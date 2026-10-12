@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from fransys_layout.stages.types import MarkerSide, PagePlan
 
-    from .types import LocationPath, UnitPath
+    from .types import LocationPath, MarkerDecision, UnitPath
 
 
 class Grouped(Protocol):
@@ -50,9 +50,11 @@ class Digits(NamedTuple):
     sheets: int = 2
     other_sets: int = 0  # 0 for a run of one set: no place is in another
     prefix: tuple[str, ...] = ()
+    more: int = 0  # digits of the largest ` +k` the set prints, 0 when none does
 
 
 FLOOR = Digits()  # `#n` and `p<sheet>` are sized for two digits at least
+MORE_FLOOR = 2  # a set that prints a ` +k` sizes it for two digits at least, as `#n` and `p<sheet>`
 
 
 @value
@@ -64,11 +66,12 @@ class SetDigits:
     sheets: int
     other_sets: int = 0
     prefix: tuple[str, ...] = ()
+    more: int = 0
 
     @property
     def digits(self) -> Digits:
         """The sizing `reference_size` reads."""
-        return Digits(self.refs, self.sheets, self.other_sets, self.prefix)
+        return Digits(self.refs, self.sheets, self.other_sets, self.prefix, self.more)
 
 
 def _digit_widths(group_count: int, sheet_count: int) -> tuple[int, int]:
@@ -82,6 +85,16 @@ def _reference_groups(markers: Iterable[Grouped]) -> Counter[int]:
     # a "ref" end, which heads its group here whatever its text, so `named` is False for every
     # "off"; test_no_branch_names_a_pure_off_stub proves it.
     return Counter(one.drawing_set for one in markers if heads_group(one.star, one.side.value))
+
+
+def more_digits(markers: Iterable[MarkerDecision]) -> dict[int, int]:
+    """Each set's digit count for its largest ` +k`, from its markers' `others`; 0 prints none."""
+    widest: Counter[int] = Counter()
+    for one in markers:
+        widest[one.drawing_set] = max(widest[one.drawing_set], one.others)
+    return {
+        number: max(MORE_FLOOR, len(str(most))) if most else 0 for number, most in widest.items()
+    }
 
 
 def _widest_prefix(location_paths: Mapping[int, LocationPath]) -> tuple[str, ...]:
@@ -104,6 +117,7 @@ def set_digits(
     plans: Iterable[PagePlan],
     location_paths: Mapping[int, LocationPath],
     unit_paths: Mapping[int, UnitPath] = MappingProxyType({}),
+    more: Mapping[int, int] = MappingProxyType({}),
 ) -> tuple[SetDigits, ...]:
     """Every drawing set's `SetDigits`, from its reference groups and its sheets, by set.
 
@@ -124,7 +138,14 @@ def set_digits(
         other, prefix = sized[paths[one]]
         refs, pages = _digit_widths(groups[one], sheets[one])
         found.append(
-            SetDigits(drawing_set=one, refs=refs, sheets=pages, other_sets=other, prefix=prefix)
+            SetDigits(
+                drawing_set=one,
+                refs=refs,
+                sheets=pages,
+                other_sets=other,
+                prefix=prefix,
+                more=more.get(one, 0),
+            )
         )
     return tuple(found)
 

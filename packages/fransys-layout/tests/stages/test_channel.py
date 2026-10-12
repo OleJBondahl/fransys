@@ -107,3 +107,30 @@ def test_plan_links_fills_tracks_by_left_edge():
     assert plan_links([(1, 16, 48), (2, 48, 80)]) == (1, 2)
     assert plan_links([(1, 96, 120), (2, 16, 80)]) == (1, 1)
     assert plan_links([]) == ()
+
+
+def _tracks(cores, *, spans=False):
+    plan = plan_channel(cores, spans=spans)
+    assert plan is not None
+    return plan.tracks
+
+
+def test_spans_put_the_net_that_starts_inside_another_above_it():
+    """Two nets run down; the one starting inside the other's span bends first, `spans` only.
+
+    Probe: `_spanned` returning no demands.
+    """
+    cores = [(1, 16, 48), (2, 32, 96)]
+    assert _tracks(cores) == (1, 2)
+    assert _tracks(cores, spans=True) == (2, 1)
+
+
+def test_spans_leave_a_pair_that_must_cross_to_the_plain_plan():
+    """Net 1 runs down and net 2 up across it: they cross on any tracks, so `spans` leaves them as
+    the plain plan has them, and still orders the independent pair 3 and 4.
+
+    Probe: `_spanned` keeping the two asks of such a pair.
+    """
+    cores = [(1, 32, 96), (2, 64, 16), (3, 112, 144), (4, 128, 208)]
+    assert _tracks(cores) == (2, 1, 1, 2)
+    assert _tracks(cores, spans=True) == (2, 1, 2, 1)

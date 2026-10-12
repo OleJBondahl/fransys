@@ -115,6 +115,7 @@ class MarkerDecision:
     page: int
     star: str = ""
     lines: int = 1
+    others: int = 0  # most other ends a ` +k` names, 0 for none
     size: tuple[int, int]
     partner: Id[Any]
     partner_set: int
@@ -189,6 +190,7 @@ class MarkerSpec:
     lines: int
     kind: str
     side: MarkerSide
+    others: int = 0
 
 
 @dataclass(frozen=True, slots=True)

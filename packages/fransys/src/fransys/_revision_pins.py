@@ -99,7 +99,7 @@ def new_in_revision(model: Model, unit: Id[Unit], source: NumberingPins) -> list
     return [
         Finding(
             code=NEW_IN_REVISION,
-            severity=Severity.WARNING,
+            severity=Severity.INFO,
             subjects=(subjects[row.key],),
             message=f"{'/'.join(row.key)} is new in this revision and takes {row.text!r}",
         )

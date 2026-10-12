@@ -464,10 +464,14 @@ def test_adding_one_relay_moves_only_its_own_group(*, regenerate: bool) -> None:
     it (`=SUP` after the relay, on `=P2`'s page) may shift along that page. The number of
     changed placements is part of the golden, so a regression in stability shows up as a diff
     even while it stays on `=P2`'s pages.
+
+    Both runs carry `fan_net`, a net of four ends outside `=P2` (model-0196): a set's first
+    `+k` widens its boxes once, so the base must already print one for K9 to be the one
+    added end.
     """
-    before, after = _laid_out(), _laid_out(extra_relay=True)
+    before, after = _laid_out(fan_net=True), _laid_out(fan_net=True, extra_relay=True)
     changed = _changed_placements(before, after)
-    # 15 since the tag keep-out trim: narrower columns put more of =P2 on shared
+    # 8 with the fan_net base (model-0196): narrower columns put more of =P2 on shared
     # pages, so more of its own placements shift; the locality checks below are unchanged
     stored = _golden("cabinet_stability.txt", f"{len(changed)}\n", regenerate=regenerate)
     assert len(changed) == int(stored.split()[0])

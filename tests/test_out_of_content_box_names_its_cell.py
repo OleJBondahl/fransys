@@ -14,7 +14,7 @@ from typing import Any, NamedTuple
 import fransys as fr
 
 _CHAIN = 20  # one column of twenty switches stands taller than the content box
-_AT = re.compile(r" at p(?:\d+\.)?(?P<page>\d+):(?P<column>\d+)(?P<row>[A-Z])$", re.MULTILINE)
+_AT = re.compile(r" at (?P<column>\d+)(?P<row>[A-Z]) \((?:\+\w+)*p(?:\d+\.)?\d+", re.MULTILINE)
 
 
 class _Strips(NamedTuple):

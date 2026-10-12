@@ -43,7 +43,9 @@ def discovered_columns(
     """The columns discovery finds over every function no chain claims, cut at locations."""
     # Discovery runs first, over every function no chain claims, so a hinted chain always wins
     # A chain never gets a function discovery already placed.
-    chain_claimed = {entry.function for chain in inputs.chains for entry in chain.entries}
+    chain_claimed = {
+        entry.function for chain in inputs.chains for entry in chain.entries if not entry.box
+    }
     undiscovered = tuple(spec for spec in inputs.functions if spec.function not in chain_claimed)
     # Chains are discovered from connectivity alone.
     # A chain never spans two units: discovery sees same-unit connectivity only.
@@ -80,6 +82,7 @@ def chained_columns(
         tuple(spec for spec in inputs.functions if spec.function not in placed_by_discovery),
         drawn=drawn,
         connections=inputs.connections,
+        boxes={spec.function: spec for spec in inputs.functions if spec.roles.item_view},
     )
 
 

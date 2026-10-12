@@ -1,6 +1,7 @@
 """model-0192: a profile belongs to one unit, and `profile_of` reads exactly that one."""
 
 import dataclasses
+from decimal import Decimal
 
 from layout_examples import sheet_format
 
@@ -66,3 +67,12 @@ def test_a_unit_without_a_profile_gets_the_house_profile_not_the_tops() -> None:
     model = _freeze(sheet_format(), release, unit, top)
     assert profile_of(model, unit.id) == default_profile()
     assert profile_of(model).column_gap == 3
+
+
+def test_min_text_mm_defaults_to_the_house_size_and_an_authored_one_survives_profile_of() -> None:
+    """model-0195: `min_text_mm` is 2.5 mm by default; an authored value is read back whole."""
+    assert default_profile().min_text_mm == Decimal("2.5")
+    release, unit = _board_unit()
+    authored = dataclasses.replace(_profile("a"), min_text_mm=Decimal("1.8"))
+    model = _freeze(sheet_format(), release, unit, authored)
+    assert profile_of(model).min_text_mm == Decimal("1.8")

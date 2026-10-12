@@ -40,29 +40,17 @@ the used pins, and its designations are the housings, so one more wire adds one 
 
 ## Read a harness line's texts
 
-`fransys.derive.draws_as_line(model, item)` says whether a cable or harness draws as a harness line.
-It does when its line carries two or more conductors, cores and single wires together. A cable on a
-harness answers for its harness. `line_conductors(model)` maps each line's owner to those conductors.
+A cable or harness draws as a harness line when its line carries two or more conductors, cores and single wires together. A cable on a
+harness answers for its harness. Read the conductors from `fr.derive.conductors`.
 
 `fransys.derive.harness_line_ends(model, subject)` returns one `HarnessLineEnd` per end of a harness or
 cable line. It holds `branch` (the n of `-W13.n`), `plug` or `ports`, and the function `plug` mates.
 Cable ends and single-wire ends merge into one order, plugs first by designation. Read the branch
 number from it; never number ends yourself.
 
-`line_designation(model, harness, branch)` prints `-W13` between two ends and `-W13.n` on a branch of
-three or more. `line_stub_line(line, north=, far=)` prints a leaving line's one stub. `far` lists each far
-device with where it is drawn in the same drawing set, as `(device, place)` pairs; `""` is no place. With
-`far=[("+EXT-M1", "p2:4A")]` it prints `-W3 → +EXT-M1 p2:4A`, and with no place at all just `-W3 → +EXT-M1`.
-An off stub prints that form when its cable draws as a line; a one-conductor cable keeps the per-core form.
-`connector_box_lines(model, function, unit=)` returns a connector box's lines: its designation, the
-part's MPN when every function of its item is a connector function, and the interface name when it
-differs from the designation.
+`fr.derive.line_designation(model, harness, branch)` prints `-W13` between two ends and `-W13.n` on a branch of
+three or more. A leaving line prints one stub, `-W3 → +EXT-M1 p2:4A`: the line designation, then each far device with where it is drawn in the same drawing set. A one-conductor cable keeps the per-core form.
 A schematic page prints no wire label but a harness line's designation (`-W13`), with one leg per wire
-where no plug stands. `line_designation` and `connector_box_lines` take the `unit` of the document that
-prints them: on a unit's own document no text names that unit's tag.
+where no plug stands. `line_designation` takes the `unit` of the document that
+prints it: on a unit's own document no text names that unit's tag.
 
-`connector_at_line_end(model, function)` says whether a connector stands at a harness line's end: a
-plug, the function a plug mates, or a fan-out pin's function, on a line that `draws_as_line` holds.
-`supply_share(model, function)` returns the share, as a `Fraction`, of an interface's connected pins
-on a supply potential (a rail, 24 V or GND). It is a rank, not a direction.
-`check_side_hints(model)` returns the WARNING for each side hint whose interface is not at a line end.

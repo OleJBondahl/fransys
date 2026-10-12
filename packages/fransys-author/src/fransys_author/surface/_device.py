@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal, overload
 lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
-from fransys_author.errors import AuthorError
+from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._box import check_box, with_box
 from fransys_author.surface._handles import Fn, Pin, pick
 from fransys_author.surface._tags import bare
@@ -16,6 +16,7 @@ lazy from fransys_author.surface._mount import mount
 lazy from fransys_author.surface._parent import parent_item
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Item as ModelItem
+lazy from fransys_model.vocab import function_identifier
 
 if TYPE_CHECKING:
     from fransys_author.surface._strip import TerminalStrip
@@ -55,18 +56,18 @@ class Device:
         def __getattr__(self, name: str) -> Fn | Pin:
             """The function `name` (`Q1.coil`), else the one pin of that name (`Q1.A1`).
 
-            Does not guess: an unknown name raises and lists the functions.
+            Does not guess: an unknown name raises an `AttributeError` that lists the functions.
             """
             if name.startswith("_"):
                 raise AttributeError(name)
             for function in self._item.functions:
-                if function.name == name:
+                if name in (function.name, function_identifier(function.name)):
                     return Fn(self._label, function, self._scope)
             if any(pin.name == name for _, pin in self._pins()):
                 return pick(self._label, name, self._pins())
             names = ", ".join(sorted(f.name for f in self._item.functions))
             msg = f"{self._label} has no function or pin {name!r}; functions: {names}"
-            raise AuthorError(msg)
+            raise AuthorAttributeError(msg)
 
 
 class TypedFn(Fn):

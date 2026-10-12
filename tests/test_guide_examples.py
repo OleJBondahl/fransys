@@ -31,11 +31,21 @@ GUIDE_PAGES = (
     "build",
     "documents",
     "reading",
+    "layout-numbers",
+    "reading-rows",
+    "reading-records",
+    "keywords",
+    "moving-to-0.14",
     "findings",
+    "findings-validators",
+    "findings-render",
+    "findings-pdf",
+    "findings-kicad",
     "examples",
     "moving-to-0.6",
     "kicad",
     "moving-to-fransys",
+    "drawing",
 )
 
 # Same shape as `packages/fransys/tests/test_api.py`'s own `_FIRST_PARTY_NOT_FRANSYS`/
@@ -132,6 +142,7 @@ def test_a_block_creating_a_package_in_the_cached_tick_still_imports_it(tmp_path
 
 def test_run_blocks_restores_sys_path_and_modules(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    importlib.invalidate_caches()  # run_blocks drops stale finder entries; compare like with like
     before = list(sys.path), set(sys.modules), set(sys.path_importer_cache)
     block = (
         "import sys\nsys.path.insert(0, '.')\nopen('gone_mod.py', 'w').write('')\nimport gone_mod\n"

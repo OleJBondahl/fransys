@@ -9,6 +9,7 @@ Fixtures: `test_units_worked_example._build_system` (two pump cabinets and two b
 in one shared top-level group) and the layout package's `layout_cabinet` (two crossings).
 """
 
+import collections
 import functools
 import importlib.util
 import itertools
@@ -460,6 +461,36 @@ def test_the_full_form_in_a_three_phase_row_overlaps_no_text_and_still_collides(
     assert "-X01:L2:1" in {label_text(built.model, lb) for lb in _terminal_tags(built.model)}
     assert "TEXT_OVERLAP" not in codes
     assert {"LABEL_UNPLACED", "WIRE_OVER_LABEL"} <= codes
+
+
+def test_the_readability_report_counts_the_wire_over_label_findings_of_each_page(
+    monkeypatch,
+) -> None:
+    """Readability A6 on a page where a wire strikes a text: each row equals its page's findings.
+
+    The same build as the test above. The count must be positive somewhere, or equality of zeros
+    would prove nothing.
+    """
+    monkeypatch.setattr(
+        drawing_text,
+        "run_point_text",
+        lambda model, function: terminal_designation(model, functions(model)[function].item),
+    )
+    built = _three_phase("X01")
+    sets, pages = layout_of(built.model, DrawingSet), layout_of(built.model, Page)
+    routes = layout_of(built.model, Route).values()
+    expected = collections.Counter(
+        (sets[pages[route.page].drawing_set].number, pages[route.page].number)
+        for found in built.findings
+        if found.code == "WIRE_OVER_LABEL"
+        for route in routes
+        if found.subjects[0] in (route.conductor, route.net)
+    )
+    rows = fr.readability(built).pages
+    assert sum(expected.values()) > 0
+    assert {(row.drawing_set, row.number): row.struck_labels for row in rows} == {
+        (row.drawing_set, row.number): expected[row.drawing_set, row.number] for row in rows
+    }
 
 
 _COLLISIONS = {

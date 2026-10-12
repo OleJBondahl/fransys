@@ -117,7 +117,7 @@ def test_a_new_untagged_instance_is_listed_by_its_listing_text(released: Path) -
     target = fr.release(result, released, unit=cab)
     manifest = json.loads((target / "baseline" / "manifest.json").read_text(encoding="utf-8"))
     listed = [w["subjects"] for w in manifest["warnings"] if w["code"] == _NEW]
-    assert listed == [["-U3"]]
+    assert listed == []  # an INFO since WARNINGS-ACTIONABLE W7: the manifest lists WARNINGs only
 
 
 # -- A sibling unit's item warning is not listed --------------------------------

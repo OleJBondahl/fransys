@@ -133,6 +133,19 @@ def test_an_unknown_function_raises_and_lists_the_functions(parts: Draft) -> Non
     assert str(err.value) == "K1 has no function or pin 'coli'; functions: co_2, coil, no_1"
 
 
+def test_a_miss_is_an_attribute_error_so_hasattr_and_a_default_read_it_as_absent(
+    parts: Draft,
+) -> None:
+    _, k1 = _relay(parts)
+    assert not hasattr(k1, "nope")
+    assert getattr(k1, "nope", None) is None
+    assert not hasattr(k1.coil, "A3")
+    with pytest.raises(AuthorError, match=r"co_2, coil, no_1"):
+        _ = k1.nope
+    with pytest.raises(AuthorError):
+        _ = k1.coil["A3"]  # `[ ]` keeps the plain error
+
+
 def test_an_unknown_pin_raises_and_lists_the_pins(parts: Draft) -> None:
     _, k1 = _relay(parts)
     with pytest.raises(AuthorError, match=r"K1 has no pin '9'; pins: 13, 14, 21, 22, 24, A1, A2"):

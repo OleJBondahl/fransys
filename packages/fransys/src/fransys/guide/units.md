@@ -37,7 +37,7 @@ names some, and the others stay inside the unit.
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,
 so the build does not ask for it to be wired. `unused=True` on a device that is not an
 interface marks it as one too. The tuple the function returns names the devices a
-container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector, strip, run or terminal becomes this unit's interface too, one level at a time, and prints its full path. `fr.derive.black_box_unit(model, unit, set_unit)` returns the unit directly in `set_unit` that holds `unit`: the black box a page draws for it. A field that holds a strip, a run or a terminal is
+container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector, strip, run or terminal becomes this unit's interface too, one level at a time, and prints its full path. The black box a page draws for a nested unit is the unit directly in the page's unit that holds it. A field that holds a strip, a run or a terminal is
 typed `fr.TerminalStrip`, `fr.Run` or `fr.Terminal`.
 `d.series` and `d.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
 
@@ -68,34 +68,44 @@ def supply_strip(d):
 ```
 
 ```python
+import subprocess
+import sys
 from typing import NamedTuple
 
 import fransys as fr
 
+subprocess.run(
+    [sys.executable, "-m", "fransys", "parts-module", "demo_parts", "demo_typed.py"], check=True
+)
+sys.path.insert(0, ".")
+import demo_typed as P
+
 
 class Io(NamedTuple):
-    X1: fr.Device
+    X1: P.DEMO_CONN_2P
 
 
 @fr.unit("demo-supply-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
-def box(d):
-    x1 = d.device("X1", "DEMO-CONN-2P", interface=True)
+def box(d: fr.Design) -> Io:
+    x1 = d.device("X1", P.DEMO_CONN_2P, interface=True)
     x1.x1.limits(rating=d.rating("DEMO-PSU-24", "input"))
     return Io(x1)
 ```
 
-A unit may hand back a value beside its devices. Annotate the field with its `fr.derive` type, for
-example `fr.derive.Operating`.
+Annotate each device field with the generated part class it was built from, as `P.DEMO_CONN_2P`
+above. A bare `fr.Device` hides the part's functions from the type checker. A unit may also hand
+back a value beside its devices. Annotate that field with its `fr.derive` type, for example
+`fr.derive.Operating`, with `| None` where a read may find nothing.
 
 ```python
 class Supply(NamedTuple):
-    X1: fr.Device
-    rated: fr.derive.Operating
+    X1: P.DEMO_CONN_2P
+    rated: fr.derive.Operating | None
 
 
 @fr.unit("demo-supply-box", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
-def supply_box(d):
-    x1 = d.device("X1", "DEMO-CONN-2P", interface=True)
+def supply_box(d: fr.Design) -> Supply:
+    x1 = d.device("X1", P.DEMO_CONN_2P, interface=True)
     operating = d.operating("DEMO-STRING-864V", "string")
     x1.x1.limits(operating=operating)
     return Supply(x1, operating)

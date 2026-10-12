@@ -1,4 +1,4 @@
-"""The six list/BOM pages: tables over model-wide or per-subject derive rows.
+"""The seven list/BOM pages: tables over model-wide or per-subject derive rows.
 
 The header tuples, the terminal ends labels and the cell text are `fransys_model.derive`'s
 own (`derive.rows`), the same objects `fransys_reports.csv` prints from: a root test pins
@@ -36,6 +36,7 @@ from fransys_model.derive import (
     list_context,
     pin_lines,
     plc_channel_rows,
+    plc_tables,
     printed_designation,
     terminal_items,
     terminal_rows,
@@ -53,6 +54,7 @@ from fransys_model.vocab import (
     ports,
 )
 
+from ._flow import flow_columns
 from ._typst import description_par, literal
 
 if TYPE_CHECKING:
@@ -67,6 +69,10 @@ if TYPE_CHECKING:
     )
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import AspectNode, Conductor, Document, Item, Unit
+
+
+_SHARE_PCT = 40  # a list's column, of the content width (pdf-0026, L1)
+_GUTTER_PCT = 20
 
 
 def _humanise(field: str) -> str:
@@ -128,12 +134,14 @@ def plc_channel_rows_for(model: Model, record: Document) -> tuple[PlcChannelRow,
 
 
 def plc_list_page(model: Model, record: Document) -> str:
-    """The PLC_LIST table: every PLC channel, scoped to the document's unit."""
-    return _table(
-        PLC_COLUMNS,
-        column_rows(plc_channel_rows_for(model, record), PLC_COLUMNS),
-        ("wired_to", "signal_name"),
-    )
+    """The PLC_LIST: a headed table per `plc_tables` entry in two columns, scoped to the unit."""
+    unit = document_unit(model, record)
+    sections = [
+        _list_heading(model, table.item, unit, table.designation)
+        + _table(PLC_COLUMNS, column_rows(table.rows, PLC_COLUMNS), ("wired_to", "signal_name"))
+        for table in plc_tables(model, unit=unit, context=record.location)
+    ]
+    return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
 def _list_context(model: Model, record: Document, subject: Id[Item]) -> Id[AspectNode] | None:
@@ -162,22 +170,24 @@ def wire_rows_for(model: Model, record: Document) -> tuple[WireRow, ...]:
 
 def wire_label_list_page(model: Model, record: Document) -> str:
     """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit."""
-    return _table(
+    table = _table(
         WIRE_COLUMNS,
         column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
         ("label",),
     )
+    return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
 def designation_list_page(model: Model, record: Document) -> str:
     """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
-    return _table(
+    table = _table(
         DESIGNATION_COLUMNS,
         column_rows(
             designation_list(model, unit=document_unit(model, record)), DESIGNATION_COLUMNS
         ),
         ("description",),
     )
+    return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
 def cable_list_page(model: Model, record: Document) -> str:
@@ -203,11 +213,9 @@ def _bom_scope(
 
 def bom_page(model: Model, record: Document) -> str:
     """The BOM table, scoped by `_bom_scope`."""
-    return _table(
-        BOM_COLUMNS,
-        column_rows(bom_lines(model, scope=_bom_scope(model, record)), BOM_COLUMNS),
-        ("description", "designations"),
-    )
+    rows = column_rows(bom_lines(model, scope=_bom_scope(model, record)), BOM_COLUMNS)
+    table = _table(BOM_COLUMNS, rows, ("description", "designations"))
+    return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
 def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
@@ -220,11 +228,17 @@ def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]
     return tuple(strip for strip in terminal_strips(model) if strip in at_location)
 
 
-def _list_heading(model: Model, item: Id[Item], unit: Id[Unit] | None) -> str:
-    """A section's level-2 heading, unit-relative; `""` for a unit's own root (model-0061)."""
+def _list_heading(
+    model: Model, item: Id[Item], unit: Id[Unit] | None, designation: str | None = None
+) -> str:
+    """A section's level-2 heading, unit-relative; `""` for a unit's own root (model-0061).
+
+    `designation` is the printed one when the caller has it (`PlcTable.designation`).
+    """
     if is_own_unit_root(model, item, unit):
         return ""
-    return f"#heading(level: 2, text({literal(printed_designation(model, item, unit=unit))}))\n"
+    text = printed_designation(model, item, unit=unit) if designation is None else designation
+    return f"#heading(level: 2, text({literal(text)}))\n"
 
 
 def terminal_list_page(model: Model, record: Document) -> str:
@@ -236,7 +250,7 @@ def terminal_list_page(model: Model, record: Document) -> str:
         for strip in _terminal_strips_for(model, record)
         if (rows := terminal_rows_for(model, record, strip))  # a strip with no rows has no page
     ]
-    return "\n#pagebreak()\n".join(sections)
+    return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
 def _side_headings(model: Model, strip: Id[Item]) -> tuple[str, str]:
@@ -454,4 +468,4 @@ def connector_list_page(model: Model, record: Document) -> str:
         for board in _boards_for(model, record)
         if (lines := pin_lines(connector_rows_for(model, record, board)))  # no rows, no page
     ]
-    return "\n#pagebreak()\n".join(sections)
+    return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)

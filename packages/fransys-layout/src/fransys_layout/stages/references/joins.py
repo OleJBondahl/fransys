@@ -7,14 +7,16 @@ columns of one page at any distance, facing the same way, that leave their pins 
 turn test, `turns_back`) and that the
 one offset function `join_y` puts on one y -- a run at the columns' ends (N at their first
 rows, S at their last), which `place` aligns, or neighbours anywhere in their columns already
-on one y with no column moved (ruling 2026-09-27). A run it cannot align keeps its
+on one y with no column moved (ruling 2026-09-27); a lone pair of ends facing opposite ways that
+do not turn back is one plain wire, with nothing to align (layout-0180).
+A run it cannot align keeps its
 references and gives `JOIN_UNALIGNED` (`WARNING`), and so does a wire from an end of a joined run to
 a neighbour its turn test skipped, or a turned wire with an end under an
 attached part. A port's row, offset and facing are `place`'s
 own (`place.page_stack`, amended 2026-09-27): no second rule for a port's y lives here.
 """
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Sequence
@@ -156,8 +158,8 @@ def _wired_beside(
     at_ends: list[tuple[Connection, Spot, Spot]] = []
     level: list[tuple[Connection, Spot, Spot]] = []
     turned: list[tuple[Connection, Spot, Spot]] = []
-    for c, x, y in _same_page(wires, spots):
-        if x.column == y.column and abs(x.cell - y.cell) == 1:
+    for c, x, y, alone in _with_alone(_same_page(wires, spots)):
+        if _plain_wire(x, y, alone=alone):
             beside[c.a.port, c.b.port].add(x.page[0])
         elif _chain_link(c, x, y, chains):
             level.append((c, x, y))
@@ -255,6 +257,24 @@ def _neighbours(x: Spot, y: Spot) -> bool:
 def _turned_away(x: Spot, y: Spot) -> bool:
     """Two ends of different columns, facing one way, where one turns back past its device."""
     return x.column != y.column and x.facing is y.facing and (turns_back(x, y) or turns_back(y, x))
+
+
+def _with_alone(
+    pairs: Sequence[tuple[Connection, Spot, Spot]],
+) -> list[tuple[Connection, Spot, Spot, bool]]:
+    """Each pair with whether neither end has another wire to a port of its page (a lone pair)."""
+    seen = Counter(key for _, x, y in pairs for key in ((x.page, x.end.port), (y.page, y.end.port)))
+    return [
+        (c, x, y, seen[x.page, x.end.port] == 1 and seen[y.page, y.end.port] == 1)
+        for c, x, y in pairs
+    ]
+
+
+def _plain_wire(x: Spot, y: Spot, *, alone: bool) -> bool:
+    """Ends needing no alignment: column neighbours, or a lone pair facing apart (no turn back)."""
+    if x.column == y.column:
+        return abs(x.cell - y.cell) == 1
+    return alone and x.facing is not y.facing and not (turns_back(x, y) or turns_back(y, x))
 
 
 def turned_findings(

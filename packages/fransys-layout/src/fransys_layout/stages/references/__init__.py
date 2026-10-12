@@ -18,7 +18,7 @@ from fransys_layout.stages.offstubs import off_ends
 
 from .apart import apart_markers
 from .cuts import LINK_FANOUT, LINK_PARTNER_UNLOCATED, CutLocations, links
-from .digits import FLOOR, Digits, set_digits
+from .digits import FLOOR, Digits, more_digits, set_digits
 from .joins import JOIN_UNALIGNED, joined_runs
 from .markers import split_markers, star_markers
 from .nets import side_functions, star_nets, with_orphans, without_starred
@@ -76,11 +76,13 @@ def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]
     )
     decided, findings = _decided(inputs, joins, MappingProxyType({}))
     # A power end prints no `#n`, so it is no reference group
+    ordinary = tuple(one for one in decided.markers if not one.symbol)
     digits = set_digits(
-        (one for one in decided.markers if not one.symbol),
+        ordinary,
         seating.plans,
         inputs.location_paths,
         inputs.unit_paths,
+        more_digits(ordinary),
     )
     wider = {one.drawing_set: one.digits for one in digits}
     if any(counts != FLOOR for counts in wider.values()):

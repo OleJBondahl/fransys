@@ -146,7 +146,7 @@ def partition(
         for page in pack(runs, sheet.content_width):
             pages.append(_page(bucket, number, page, tables))
             number += 1
-        findings.extend(_split_findings(split, pages, given.bands, tables))
+        findings.extend(_split_findings(split, given.bands, tables))
     findings.extend(_keep_together_findings(hints, met))
     findings.sort(key=lambda finding: (finding.code, finding.subjects))
     return tuple(pages), tuple(findings)
@@ -229,9 +229,13 @@ def _keep_together_findings(hints: PageHints, met: AbstractSet[int]) -> Iterator
         )
 
 
-def _split_findings(
-    split: Sequence[Unit], pages: Sequence[PagePlan], bands: Bands, tables: Tables
-) -> Iterator[Finding]:
+def _group_names(groups: Sequence[Handle], tables: Tables) -> str:
+    """The groups' descriptions, an unnamed group by its designation, none by "loose columns"."""
+    infos = (tables.info_of[group] for group in groups)
+    return ", ".join(info.description or info.designation for info in infos) or "loose columns"
+
+
+def _split_findings(split: Sequence[Unit], bands: Bands, tables: Tables) -> Iterator[Finding]:
     """One finding per unit the packing had to cut; a unit group has its own code (layout-0153)."""
     for unit in split:
         subjects = tuple(group for group in unit.groups if group is not None)
@@ -243,19 +247,13 @@ def _split_findings(
                 message="group is wider than a page: split between its columns",
             )
             continue
-        named = ", ".join(tables.info_of[group].description for group in subjects)
-        keys = set(unit.columns)
-        spans = ", ".join(
-            str(page.number)
-            for page in pages
-            if any(planned.column in keys for planned in page.columns)
-        )
+        named = _group_names(subjects, tables)
         yield Finding(
             code=UNIT_GROUP_SPLIT,
             severity=Severity.WARNING,
             subjects=subjects,
             message=(
-                f"unit group ({named}) is wider than a page: split over pages {spans}. "
+                f"unit group ({named}) is wider than a page: split over several pages. "
                 "Side hints (d.layout.side, HL14) to even the edges, or fewer harness "
                 "interfaces on the unit, keep it on one page."
             ),

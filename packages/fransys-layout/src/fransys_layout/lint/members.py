@@ -69,9 +69,7 @@ def check_members(
     for one in connections:
         at_port[one.a.port].append(one)
         at_port[one.b.port].append(one)
-    return tuple(
-        _finding(port, drawing_set, at_port.get(port, ())) for port, drawing_set in sorted(bare)
-    )
+    return tuple(_finding(port, at_port.get(port, ())) for port, _ in sorted(bare))
 
 
 def _named_by(
@@ -88,14 +86,14 @@ def _named_by(
     return named
 
 
-def _finding(port: Handle, drawing_set: int, conductors: Sequence[Connection]) -> Finding:
-    """The finding for `port` in `drawing_set`, naming the conductors that end at it."""
+def _finding(port: Handle, conductors: Sequence[Connection]) -> Finding:
+    """The finding for `port`, naming the conductors that end at it."""
     what = "the conductor at this port" if conductors else "a connection"
     return Finding(
         code=CONNECTION_NOT_DRAWN,
         severity=Severity.ERROR,
         subjects=(port, *(one.handle for one in conductors)),
-        message=f"{what} is neither drawn nor cut in drawing set {drawing_set}",
+        message=f"{what} is neither drawn nor cut",
     )
 
 

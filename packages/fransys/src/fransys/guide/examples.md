@@ -135,8 +135,8 @@ with d.function("SENS", "Sensors"):
 ## The whole shape of a build script
 
 The examples above build small pieces of a design. For a real build script end to end, see
-`pump-station/build.py` in the `fransys-examples` repository, at the tag you pinned. It is a
-separate repository with its own parts library (`example_parts`), so it cannot run as a block on
+`examples/pump-station/build.py` in the public `fransys` repository, at the tag you pinned. It has its
+own parts library (`example_parts`), so it cannot run as a block on
 this page. It shows:
 
 - The project and its revision history, set up once at the top.

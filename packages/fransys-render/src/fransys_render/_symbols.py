@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from symdef import to_fragment
 
+from fransys_model.derive import text_size_mm
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.layout import (
     PowerSymbol,
@@ -53,7 +54,7 @@ def _rect_glyph(sheet: SheetFormat, placement: SymbolPlacement) -> str:
 def _text_glyph(sheet: SheetFormat, profile: Profile, placement: SymbolPlacement) -> str:
     """The placement's `symbol` key, centred in the rectangle: baseline mirrors `_markers.py`."""
     top_mm = grid_to_mm(sheet.content_y_mm, placement.y - _HALF_SIZE_G, sheet.module_mm)
-    font_size_mm = grid_to_mm(0, profile.text_height, sheet.module_mm)
+    font_size_mm = text_size_mm(profile.text_height, sheet.module_mm)
     baseline_mm = top_mm + font_size_mm * ASCENT_RATIO
     x_mm = grid_to_mm(sheet.content_x_mm, placement.x, sheet.module_mm)
     return text_glyph(placement.symbol, x_mm, baseline_mm, font_size_mm)

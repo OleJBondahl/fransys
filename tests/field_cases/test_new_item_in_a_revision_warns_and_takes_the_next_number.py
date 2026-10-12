@@ -8,7 +8,8 @@ could not take a number without a written tag. The unit's container is the test,
 system: system pins are deferred, so a system-level case would pass without proving anything.
 
 The rule: within a version a released number never moves and is never given again.
-A new item with no tag takes the next free number and gives the WARNING
+A new item with no tag takes the next free number and gives the INFO (a WARNING before
+WARNINGS-ACTIONABLE W7)
 `DESIGNATION_NEW_IN_REVISION`, naming its key and its number, where the pins are read and at
 `fr.release`. A new item with a written tag gives none. Retagging a released item is
 `DESIGNATION_MOVED`, an ERROR.
@@ -141,7 +142,7 @@ def test_a_new_floating_relay_warns_and_takes_the_next_free_number(released: Pat
     # revision 1.2 retires `k_b` (K2) and adds `k_c`: K3, never K2 again
     second = _build(2, relays=("k_a", "k_c"), modules=("m1", "m2"), releases=released)
     (warning,) = _warnings(second)
-    assert warning.severity is fr.Severity.WARNING
+    assert warning.severity is fr.Severity.INFO
     assert "k_c" in warning.message
     assert "K3" in warning.message
     assert _numbers(second) == {"k_a": "-K1", "k_c": "-K3", "m1": "-U1-J1", "m2": "-U2-J1"}
@@ -185,10 +186,12 @@ def test_retagging_a_released_item_is_designation_moved_at_release(own_releases:
     assert "DESIGNATION_MOVED" in {f.code for f in raised.value.findings}
 
 
-def test_releasing_the_revision_reports_the_warning_in_the_manifest(own_releases: Path) -> None:
+def test_releasing_the_revision_leaves_the_info_out_of_the_manifest_warnings(
+    own_releases: Path,
+) -> None:
     """`fr.release` returns only a path: the warning is read back from `baseline/manifest.json`."""
     second = _build(2, relays=("k_a", "k_b", "k_c"), modules=("m1", "m2"), releases=own_releases)
     target = fr.release(second, own_releases, unit="demo-cab")
     manifest = json.loads((target / "baseline" / "manifest.json").read_text(encoding="utf-8"))
     codes = [w["code"] for w in manifest["warnings"]]
-    assert _CODE in codes
+    assert _CODE not in codes

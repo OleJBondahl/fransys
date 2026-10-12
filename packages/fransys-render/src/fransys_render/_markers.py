@@ -8,7 +8,7 @@ from xml.sax.saxutils import escape
 from symdef import Direction
 
 from electrical_symbols import WIRING_GRID
-from fransys_model.derive import draws_as_line
+from fransys_model.derive import draws_as_line, text_size_mm
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
@@ -257,7 +257,7 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
     box_x, box_y = box_origin(drawn, facing)
     lines = marker_text(model, marker).split("\n")  # A star reference wraps
     if drawn.vertical:
-        font_mm = grid_to_mm(0, profile.text_height, sheet.module_mm)
+        font_mm = text_size_mm(profile.text_height, sheet.module_mm)
         pad_x = (marker.width - len(lines) * profile.text_height) // 2
         y_mm = grid_to_mm(sheet.content_y_mm, box_y + marker.height // 2, sheet.module_mm)
         return "".join(
@@ -275,7 +275,7 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
         )
     center_x = box_x + marker.width // 2
     pad_g = (marker.height - len(lines) * profile.text_height) // 2
-    font_size_mm = grid_to_mm(0, profile.text_height, sheet.module_mm)
+    font_size_mm = text_size_mm(profile.text_height, sheet.module_mm)
     x_mm = grid_to_mm(sheet.content_x_mm, center_x, sheet.module_mm)
     glyphs = []
     for index, line in enumerate(lines):

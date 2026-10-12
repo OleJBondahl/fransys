@@ -59,8 +59,6 @@ a function that takes or gives energy above a signal function.
 `fransys.derive.no_conductor_at(model, port)` is `True` when no conductor (wire, jumper, cable core
 or link) ends at `port`. Unlike `unconnected_ports`, a mate or a declared net does not count.
 
-`fransys.derive.box_pairs(model, drawn=None)` maps each function wired pin to pin to one function of another
-item, to a `BoxPair` (`function`, `partner`, `port_pairs`). Every port needs a two-port net to the partner, one to one. With `drawn`, a collection of ports, only those ports count on either side. Layout passes the ports `port_is_unused` leaves when a profile hides unused pins, so pass that same set rather than a count of your own.
 
 `fransys.derive.port_is_unused(model, port)` is `True` when no conductor ends at `port` and no declared
 net has it. A mate does not count. `fransys.derive.function_is_unused(model, function)` is `True` when
@@ -126,6 +124,8 @@ through one of these two, so none can disagree about what a cable is. `unit_cabl
 `fransys.derive.is_plc_module(model, item)` returns whether `item`'s part has category
 `PLC_MODULE`. A rack is an item with at least one such child, and `plc_rack_modules` lists them.
 
+`fransys.derive.plc_tables(model, unit=None)` returns the PLC list as one `PlcTable` per controller or module, in the row order of `plc_channel_rows`.
+
 `fransys.derive.unit_strips(model, unit)` and `fransys.derive.unit_boards(model, unit)`
 return the terminal strips and the boards that `unit` owns directly, sorted by id, never those of
 a unit nested in it.
@@ -175,14 +175,11 @@ to render for that unit's own document); their docstrings cover the exact rules.
 `fransys.derive.item_label(model, item)` is `item_designation`'s no-raise twin: an item's own
 text, or its authoring key joined by `/` when it has none yet.
 
-`fransys.derive.location_node_designation(model, node)` renders a location node's own signed
-path, root to leaf (`+C1`, nested `+ER+C1`) -- the same segment `reference_designation` prints
-for an item placed there. Caution: not for a title block's scope cell, which deliberately keeps
+`fransys.derive.node_designation(model, node)` renders a node's signed
+designation by aspect: `+C1` for a location, `=G1` for a group. It is the segment
+`reference_designation` prints for an item there. Caution: not for a title block's scope cell, which deliberately keeps
 the bare label.
 
-`fransys.derive.owned_contacts(model, device)` returns the contact functions `device` owns,
-sorted by id: its own and those of its add-on contact blocks. A block is a child item whose
-functions are all contacts; it carries no designation and prints `device`'s (decision model-0119).
 
 `fransys.derive.item_of_port(model, port)` returns the item whose function owns `port`, the
 lookup `port_designation` itself reads through.
@@ -213,7 +210,6 @@ its boundaries. `None` when the unit states none.
 `fransys.derive.boundary_operating(model, boundary)` returns the operating envelope a unit
 states on one of its boundaries. `None` when the unit states none.
 
-`fransys.derive.profile_of(model, unit=None)` returns the layout profile that `unit` authors (`None`: the top design), else the house one; never a parent's.
 
 ## Checking a branch's current
 
@@ -227,6 +223,7 @@ Here a 160 A fuse protects a branch of a 186 A source, and the contactor pole is
 
 ```python
 import fransys as fr
+from fransys.colours import BK
 
 d = fr.design("demo_parts")
 g1 = d.device("G1", "DEMO-STRING-864V")
@@ -235,10 +232,10 @@ k1 = d.device("K1", "DEMO-CONTACTOR-DC")
 x1 = d.device("X1", "DEMO-TB-2.5", external=True)
 x2 = d.device("X2", "DEMO-TB-2.5", external=True)
 dc = d.dc_supply("HV", g1.string)
-d.wire(dc.plus.pin, f1[1], wire=("BK", 1.5))
-d.wire(f1[2], k1[1], wire=("BK", 1.5))
-d.wire(k1[2], x1["internal"], wire=("BK", 1.5))
-d.wire(dc.minus.pin, x2["internal"], wire=("BK", 1.5))
+d.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
+d.wire(f1[2], k1[1], wire=(BK, 1.5))
+d.wire(k1[2], x1["internal"], wire=(BK, 1.5))
+d.wire(dc.minus.pin, x2["internal"], wire=(BK, 1.5))
 
 result = fr.build(d)
 (finding,) = [f for f in fr.check(result) if f.code == "RATING_CURRENT_BELOW_BRANCH"]
@@ -280,14 +277,15 @@ check stays silent.
 
 ```python
 import fransys as fr
+from fransys.colours import BK
 
 d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
 f1 = d.device("F1", "DEMO-FUSE-DC-160")
 dc = d.dc_supply("HV", plus=x1[1], minus=x1[2], voltage=24, fault_current_a=6000)
-d.wire(dc.plus.pin, f1[1], wire=("BK", 1.5))
-d.wire(f1[2], x1[3], wire=("BK", 1.5))
-d.wire(dc.minus.pin, x1[4], wire=("BK", 1.5))
+d.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
+d.wire(f1[2], x1[3], wire=(BK, 1.5))
+d.wire(dc.minus.pin, x1[4], wire=(BK, 1.5))
 
 (fault,) = fr.derive.prospective_fault(fr.build(d).model)
 assert fault.current_a == 6000

@@ -54,7 +54,7 @@ def _single_pin(nets: tuple[_Net, ...]) -> list[Finding]:
     return [
         _finding(
             NET_SINGLE_PIN,
-            Severity.WARNING,
+            Severity.INFO,
             (net.pins[0].port,),
             f"net {net.name} has one pin, {net.pins[0].label}",
         )

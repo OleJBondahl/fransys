@@ -11,12 +11,15 @@ from typing import TYPE_CHECKING
 from fransys_layout.geometry import Box, hull
 
 from .labels import request_boxes
+from .lookups import placed_keepout
 from .onepage import page_wiring
 from .texts.markers import link_markers, placed_world
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
     from typing import Any
+
+    from fransys_model.kernel import AuthoringKey
 
     from .pagerun import PageInputs
     from .references.types import MarkerDecision, References
@@ -36,6 +39,35 @@ type Extras = dict[tuple[int, int, Handle], list[Box]]
 def column_extent(boxes: Iterable[Box]) -> Box:
     """The smallest box over everything one column draws."""
     return hull(boxes)
+
+
+def room_boxes(
+    placed: Iterable[PlacedFunction],
+    rooms: Mapping[tuple[AuthoringKey, Handle], tuple[int, int]],
+) -> dict[tuple[AuthoringKey, Handle], list[Box]]:
+    """Each placed function's reserved image room as boxes: below and beside its keep-out."""
+    found: dict[tuple[AuthoringKey, Handle], list[Box]] = {}
+    for one in placed:
+        room = rooms.get((one.column, one.function))
+        if room is None:
+            continue
+        (down, right), k = room, placed_keepout(one)
+        boxes = []
+        if down:
+            boxes.append(Box(x=k.x, y=k.y + k.height, width=k.width, height=down))
+        if right:
+            boxes.append(Box(x=k.x + k.width, y=k.y, width=right, height=k.height))
+        found[one.column, one.function] = boxes
+    return found
+
+
+def page_ink(
+    placed: Sequence[PlacedFunction],
+    rooms: Mapping[tuple[AuthoringKey, Handle], tuple[int, int]],
+) -> list[Box]:
+    """A page's keep-outs and the image rooms reserved beside and below them."""
+    found = room_boxes(placed, rooms)
+    return [*map(placed_keepout, placed), *(box for boxes in found.values() for box in boxes)]
 
 
 def drawn_boxes(

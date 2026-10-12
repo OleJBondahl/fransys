@@ -88,7 +88,6 @@ class _Page:
     hidden: frozenset[tuple[Handle, int, int]]
     sheet: SheetFormat
     here: tuple[int, int]
-    several_sets: bool
 
 
 def lint_geometry(
@@ -98,14 +97,24 @@ def lint_geometry(
 
     Harness lines, stubs and connector boxes follow layout-0158.
     """
+    found = geometry_by_page(layout, sheet=sheet, ink=ink)
+    return tuple(sorted((finding for _, finding in found), key=lambda f: (f.code, f.subjects)))
+
+
+def geometry_by_page(
+    layout: Layout, *, sheet: SheetFormat, ink: HarnessInk = NO_INK
+) -> tuple[tuple[tuple[int, int], Finding], ...]:
+    """Each geometric finding of `layout` with the `(drawing set, page)` it is on.
+
+    The report counts these by page (readability R11); `lint_geometry` is the same list.
+    """
     placed_on = by_key(layout.placed, page_of)
     routes_on = by_key(layout.routes, page_of)
     labels_on = by_key(layout.labels, page_of)
     markers_on = by_key(layout.markers, page_of)
     outlines_on, inks = by_key(layout.outlines, page_of), inks_by_page(ink)
     pages = sorted({*placed_on, *routes_on, *labels_on, *markers_on, *inks})
-    several_sets = len({one[0] for one in pages}) > 1
-    findings: list[Finding] = []
+    findings: list[tuple[tuple[int, int], Finding]] = []
     for here in pages:
         placed = tuple(sorted(placed_on.get(here, ()), key=lambda one: one.function))
         if any(one.function == other.function for one, other in pairwise(placed)):
@@ -130,17 +139,19 @@ def lint_geometry(
             hidden=ink.hidden,
             sheet=sheet,
             here=here,
-            several_sets=several_sets,
         )
-        findings.extend(_wires(page))
-        findings.extend(_jogs(page))
-        findings.extend(_symbols(page))
-        findings.extend(_content(page))
-        findings.extend(text_crossings(page.labels, page.markers))
-        findings.extend(_harness(page))
-        findings.extend(stub_through_symbols(page.markers, page.placed, page.bodies))
-        findings.extend(box_on_symbols(page.markers, page.placed, page.bodies))
-    return tuple(sorted(findings, key=lambda finding: (finding.code, finding.subjects)))
+        found = (
+            *_wires(page),
+            *_jogs(page),
+            *_symbols(page),
+            *_content(page),
+            *text_crossings(page.labels, page.markers),
+            *_harness(page),
+            *stub_through_symbols(page.markers, page.placed, page.bodies),
+            *box_on_symbols(page.markers, page.placed, page.bodies),
+        )
+        findings.extend((here, one) for one in found)
+    return tuple(findings)
 
 
 def _identity(route: Route) -> tuple[Handle, Handle, Handle]:
@@ -267,7 +278,7 @@ def _symbols(page: _Page) -> list[Finding]:
 
 def _at(page: _Page, x: int, y: int) -> str:
     """The page and frame cell of the point `x`, `y`: derive's one position text."""
-    return where(page.sheet, page.here, x, y, several_sets=page.several_sets)
+    return where(page.sheet, page.here, x, y)
 
 
 def _corner(box: Box) -> tuple[int, int]:

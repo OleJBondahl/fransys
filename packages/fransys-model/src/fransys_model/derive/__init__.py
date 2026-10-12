@@ -102,6 +102,7 @@ from .pairing import BoxPair, box_pairs
 from .part_functions import part_function_rows
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
+from .plc_tables import plc_tables
 from .potential import port_potential_current, port_potential_rank
 from .power import is_rail_terminal, port_power_kind, port_power_text, power_kind, power_text
 from .queries import (
@@ -159,6 +160,7 @@ from .queries import (
     unused_terminals,
     wire_rows,
 )
+from .readability import readability_units
 from .rows import (
     BoardNetlist,
     BomLine,
@@ -188,11 +190,16 @@ from .rows import (
     PlcChannelRow,
     PlcRackChannel,
     PlcRackModule,
+    PlcTable,
+    ReadabilityPage,
+    ReadabilityReport,
+    ReadabilityUnit,
     TerminalRow,
     WireRow,
 )
 from .side_hint_findings import check_side_hints
 from .supply_share import supply_share
+from .text_size import text_size_mm, text_under_floor
 from .unused import function_is_unused, port_is_unused
 
 __all__ = [
@@ -259,11 +266,15 @@ __all__ = [
     "PlcChannelRow",
     "PlcRackChannel",
     "PlcRackModule",
+    "PlcTable",
     "Port",
     "PortRole",
     "PowerKind",
     "ProspectiveFault",
     "Rating",
+    "ReadabilityPage",
+    "ReadabilityReport",
+    "ReadabilityUnit",
     "SupplySystem",
     "TerminalRow",
     "Throws",
@@ -362,6 +373,7 @@ __all__ = [
     "placements",
     "plc_channel_rows",
     "plc_rack_modules",
+    "plc_tables",
     "port_designation",
     "port_is_unused",
     "port_potential_current",
@@ -376,6 +388,7 @@ __all__ = [
     "profile_of",
     "prospective_fault",
     "rail_pairs",
+    "readability_units",
     "reading_cables",
     "reference_designation",
     "release_order",
@@ -392,6 +405,8 @@ __all__ = [
     "terminal_items",
     "terminal_rows",
     "terminal_strips",
+    "text_size_mm",
+    "text_under_floor",
     "top_level_cables",
     "unconnected_ports",
     "unit_boards",

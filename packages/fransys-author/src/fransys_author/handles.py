@@ -240,8 +240,18 @@ class Item:
         if len(self.functions) != 1:
             count = len(self.functions)
             msg = f"an item stands in for a function only with exactly one; this has {count}"
+            if count:
+                msg += f": name one of {self._handles()}"
             raise AuthorError(msg)
         return self.functions[0]
+
+    def _handles(self) -> str:
+        """This item's function handles as the API spells them: `k1.coil`, the tag in lower case."""
+        tag = self.key[-1].rsplit("/", 1)[-1].lower() if self.key else ""
+        owner = tag if tag.isidentifier() else "<device>"
+        return ", ".join(
+            f"{owner}.{function.name}" for function in sorted(self.functions, key=lambda f: f.name)
+        )
 
 
 @dataclass(frozen=True, slots=True)

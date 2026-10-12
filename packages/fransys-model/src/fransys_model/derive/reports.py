@@ -8,6 +8,7 @@ is not a terminal) raises `SchemaError`: run `numbering` first. A query leaves o
 cannot render instead of defaulting it (decision 0021).
 """
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
@@ -43,7 +44,7 @@ from .lookups import (
     require,
     unit_chain,
 )
-from .order import bom_sort_key, natural_key
+from .order import bom_sort_key, natural_key, plc_channel_key, plc_racks
 from .rows import CableRow, DesignationRow, PlcChannelRow, WireRow
 from .structure import boards
 from .wire_ends import ordered_wire_ends
@@ -168,59 +169,85 @@ def _wired_to(
     return CELL_SEPARATOR.join(text for text, _ in ordered)
 
 
+@dataclass(frozen=True, slots=True)
+class _PlcScope:
+    """What every row of one `plc_channel_pairs` call reads, looked up once."""
+
+    model: Model
+    idx: Indexes
+    context: Id[AspectNode] | None
+    unit: Id[Unit] | None
+    devices: dict[Id[Function], Id[Function]]
+    requests: dict[Id[Function], PlcRequestFacet]
+
+
+def _plc_channel_row(scope: _PlcScope, function: Function, facet: PlcChannelFacet) -> PlcChannelRow:
+    """The `PlcChannelRow` of one channel `function` (`facet` is its template's channel facet)."""
+    model, unit = scope.model, scope.unit
+    device = scope.devices.get(function.id)
+    device_item = None if device is None else functions(model)[device].item
+    request = None if device is None else scope.requests.get(device)
+    return PlcChannelRow(
+        channel=function.id,
+        channel_designation=(
+            f"{printed_designation(model, function.item, unit=unit)}:{facet.channel}"
+        ),
+        signal=facet.signal,
+        wired_to=_wired_to(model, scope.idx, function.id, scope.context, unit),
+        field_device=device,
+        field_device_designation=(
+            None
+            if device_item is None or end_outside_nested_unit(model, device_item, unit)
+            else printed_designation(model, device_item, unit=unit)
+        ),
+        signal_name=None if request is None else request.signal_name,
+    )
+
+
+def plc_channel_pairs(
+    model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
+) -> tuple[tuple[Id[Item], PlcChannelRow], ...]:
+    """Each PLC channel's carrying item and row, in the list order (`plc_channel_key`, L4).
+
+    `plc_channel_rows` and `plc_tables` both read this, so the CSV and the PDF share one order.
+    """
+    _require_unit(model, unit)
+    context = unit_list_context(model, unit, context)
+    scope = _PlcScope(
+        model,
+        build_indexes(model),
+        context,
+        unit,
+        channel_devices(model),
+        {one.subject: one for one in facets_of(model, PlcRequestFacet).values()},
+    )
+    channel_of = {facet.subject: facet for facet in facets_of(model, PlcChannelFacet).values()}
+    racks = plc_racks(model)
+    keyed = []
+    for function in functions(model).values():
+        facet = channel_of.get(function.template)
+        if facet is None or (unit is not None and not _item_belongs(model, function.item, unit)):
+            continue
+        key = plc_channel_key(model, racks, function.item, facet.channel, function.id)
+        row = _plc_channel_row(scope, function, facet)
+        keyed.append((key, function.item, row))
+    return tuple((item, row) for _, item, row in sorted(keyed, key=lambda one: one[0]))
+
+
 def plc_channel_rows(
     model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
 ) -> tuple[PlcChannelRow, ...]:
-    """One `PlcChannelRow` per PLC channel `Function`, sorted by `(channel_designation, id)`.
+    """One `PlcChannelRow` per PLC channel `Function`, in the table order of the PLC list.
 
-    `wired_to` is the far end of every conductor at the channel's ports.
-
-    Args:
-        model: The frozen model to read.
-        unit: Keep only channels of this unit; `None` keeps all.
-        context: The location node the list is printed for; ignored once `unit` has one.
-
-    Returns:
-        One `PlcChannelRow` per PLC channel function, sorted.
+    The order is `plc_channel_key`: controllers by designation, each one's own channels
+    then its modules in rack order, last the channels on items in no rack. `wired_to` is the far
+    end of every conductor at the channel's ports. `unit` keeps only channels of that unit;
+    `context` is the location node the list is printed for, ignored once `unit` has one.
 
     Raises:
         SchemaError: a module or device has no designation, or `unit` is no unit of `model`.
     """
-    _require_unit(model, unit)
-    context = unit_list_context(model, unit, context)
-    idx = build_indexes(model)
-    channel_of = {facet.subject: facet for facet in facets_of(model, PlcChannelFacet).values()}
-    requests = {facet.subject: facet for facet in facets_of(model, PlcRequestFacet).values()}
-    devices = channel_devices(model)
-    all_functions = functions(model)
-    rows = []
-    for function in all_functions.values():
-        facet = channel_of.get(function.template)
-        if facet is None:
-            continue
-        if unit is not None and not _item_belongs(model, function.item, unit):
-            continue
-        device = devices.get(function.id)
-        device_item = None if device is None else all_functions[device].item
-        request = None if device is None else requests.get(device)
-        rows.append(
-            PlcChannelRow(
-                channel=function.id,
-                channel_designation=(
-                    f"{printed_designation(model, function.item, unit=unit)}:{facet.channel}"
-                ),
-                signal=facet.signal,
-                wired_to=_wired_to(model, idx, function.id, context, unit),
-                field_device=device,
-                field_device_designation=(
-                    None
-                    if device_item is None or end_outside_nested_unit(model, device_item, unit)
-                    else printed_designation(model, device_item, unit=unit)
-                ),
-                signal_name=None if request is None else request.signal_name,
-            )
-        )
-    return tuple(sorted(rows, key=lambda row: (natural_key(row.channel_designation), row.channel)))
+    return tuple(row for _, row in plc_channel_pairs(model, unit=unit, context=context))
 
 
 def _oriented_ends(model: Model, a: Id[Port], b: Id[Port]) -> tuple[Id[Port], Id[Port]]:

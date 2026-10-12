@@ -73,7 +73,8 @@ def _tracks(
 ) -> tuple[tuple[FrameTrack, ...], int] | None:
     """The plan of the lines between two columns as tracks and their count, or None."""
     plan = plan_channel(
-        [(j.line, line_y[j.line, j.left], line_y[j.line, j.right]) for j in between]
+        [(j.line, line_y[j.line, j.left], line_y[j.line, j.right]) for j in between],
+        spans=True,
     )
     if plan is None:
         return None

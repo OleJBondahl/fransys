@@ -76,8 +76,9 @@ class Profile:
     to the rank of its horizontal band, top first; `"terminal.first"` and `"terminal.last"`
     sit beside `"terminal"`. `group_ranks` maps the label of a `=` aspect node to its rank;
     an unranked group sorts last. `hide_unused_pins` hides, on drawings only, a box-drawn
-    pin with no conductor. Every field defaults to its house value; a set field replaces it
-    whole, a rank map is never merged. `unit` is the unit whose own drawings the profile
+    pin with no conductor. `min_text_mm` is the smallest font size in mm that `text_height` may
+    print at before `TEXT_TOO_SMALL` fires. Every field defaults to its house value; a set field
+    replaces it whole, a rank map is never merged. `unit` is the unit whose own drawings the profile
     governs, `None` for the top design's; `profile_of(model, unit)` returns the authored
     profile of exactly that unit, else `default_profile()`, never a containing unit's.
     """
@@ -94,6 +95,8 @@ class Profile:
     row_spacing: int = 88
     route_margin: int = 64
     text_height: int = 8
+    # A font size in mm, not a cap height: render sizes text by font size (model-0195).
+    min_text_mm: Decimal = Decimal("2.5")
     marker_padding: int = 2
     route_turn_penalty: int = 4
     route_crossing_penalty: int = 16

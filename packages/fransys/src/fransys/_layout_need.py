@@ -3,9 +3,10 @@
 from typing import TYPE_CHECKING, cast
 
 import fransys_pdf
+from fransys_author import AuthorError
 
-from fransys_layout import SymbolPortError, lay_out_diagrams, lay_out_schematic
-from fransys_model.kernel import Finding, Severity
+from fransys_layout import HintError, SymbolPortError, lay_out_diagrams, lay_out_schematic
+from fransys_model.kernel import Finding, Severity, describe
 from fransys_model.vocab import PageKind, documents, functions, items, port_templates
 from fransys_model.vocab import parts as model_parts
 
@@ -33,11 +34,18 @@ def needs_diagram_layout(model: Model) -> bool:
     return PageKind.BLOCK_DIAGRAM in kept_page_kinds(model)
 
 
+def hint_error_to_author_error(model: Model, error: HintError) -> AuthorError:
+    """The `AuthorError` for a layout hint error, its subjects shown as `file:line (key)` (0184)."""
+    return AuthorError(describe(error, model))
+
+
 def _schematic_if_needed(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     if not needs_schematic_layout(model):
         return model, ()
     try:
         return lay_out_schematic(model)
+    except HintError as error:
+        raise hint_error_to_author_error(model, error) from error
     except SymbolPortError as error:
         return model, (symbol_port_missing_finding(model, error),)
 
@@ -50,7 +58,10 @@ def lay_out_if_needed(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     model, findings = _schematic_if_needed(model)
     if not needs_diagram_layout(model):
         return model, findings
-    model, diagram_findings = lay_out_diagrams(model)
+    try:
+        model, diagram_findings = lay_out_diagrams(model)
+    except HintError as error:
+        raise hint_error_to_author_error(model, error) from error
     return model, (*findings, *diagram_findings)
 
 

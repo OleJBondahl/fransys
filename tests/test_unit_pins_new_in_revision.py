@@ -80,7 +80,7 @@ def test_a_new_floating_relay_warns_and_takes_the_next_number_after_a_retired_on
 ) -> None:
     result, cab, _ = _cabinet(2, relays=("k_a", "k_c"), releases=released)
     (warning,) = _warnings(result)
-    assert warning.severity is fr.Severity.WARNING
+    assert warning.severity is fr.Severity.INFO
     assert "k_c" in warning.message
     assert "K3" in warning.message
     assert _texts(fr.release(result, released, unit=cab)) == {
@@ -126,19 +126,18 @@ def test_a_build_with_no_releases_gives_no_warning() -> None:
 
 
 def test_the_release_warns_when_the_build_did_not_read_the_pins(released: Path) -> None:
-    """Built free, k_c is K2 and `k_b`'s K2 is gone: no move, a new item, and a manifest warning."""
+    """Built free, k_c is K2 and `k_b`'s K2 is gone: no move, a new item; the INFO is no warning."""
     result, cab, _ = _cabinet(2, relays=("k_a", "k_c"))
     target = fr.release(result, released, unit=cab)
     manifest = json.loads((target / "baseline" / "manifest.json").read_text(encoding="utf-8"))
-    (entry,) = [w for w in manifest["warnings"] if w["code"] == _CODE]
-    assert "k_c" in entry["message"]
+    assert [w for w in manifest["warnings"] if w["code"] == _CODE] == []
 
 
-def test_the_release_after_a_pinned_build_lists_the_warning_once(released: Path) -> None:
+def test_the_release_after_a_pinned_build_lists_no_manifest_warning(released: Path) -> None:
     result, cab, _ = _cabinet(2, relays=("k_a", "k_b", "k_c"), releases=released)
     target = fr.release(result, released, unit=cab)
     manifest = json.loads((target / "baseline" / "manifest.json").read_text(encoding="utf-8"))
-    assert [w["code"] for w in manifest["warnings"]].count(_CODE) == 1
+    assert [w["code"] for w in manifest["warnings"]].count(_CODE) == 0
 
 
 def test_a_floating_number_that_moved_without_the_pins_is_designation_moved(

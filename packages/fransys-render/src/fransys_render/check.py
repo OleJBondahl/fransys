@@ -3,9 +3,10 @@
 from typing import TYPE_CHECKING
 
 from electrical_symbols import library_version
-from fransys_model.derive import schematic_functions
-from fransys_model.kernel import Finding, Severity
-from fransys_model.layout import Page, SymbolPlacement, layout_of
+from fransys_model.derive import function_designation, schematic_functions
+from fransys_model.derive.drawing_text import location_path, position_text
+from fransys_model.kernel import Finding, SchemaError, Severity
+from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
 
 from ._symbol_geometry import oriented_symbol
 
@@ -17,6 +18,20 @@ LIBRARY_VERSION_MISMATCH = "LIBRARY_VERSION_MISMATCH"
 LAYOUT_MISSING = "LAYOUT_MISSING"
 
 
+def _about(model: Model, placement: SymbolPlacement) -> str:
+    """` (p3: H1:lamp)`: the placement's page as a reference prints it, then its function."""
+    page = layout_of(model, Page)[placement.page]
+    drawing_set = layout_of(model, DrawingSet)[page.drawing_set]
+    path = () if drawing_set.location is None else location_path(model, drawing_set.location)
+    where = position_text(
+        page.number, None, None, tuple(label for _, label in path), drawing_set.number
+    )
+    try:
+        return f" ({where}: {function_designation(model, placement.function)})"
+    except SchemaError:
+        return f" ({where})"
+
+
 def _unknown_symbol_key_findings(
     model: Model, placements: tuple[SymbolPlacement, ...]
 ) -> tuple[Finding, ...]:
@@ -26,7 +41,7 @@ def _unknown_symbol_key_findings(
             code=UNKNOWN_SYMBOL_KEY,
             severity=Severity.ERROR,
             subjects=(placement.function,),
-            message=f"symbol {placement.symbol!r} is not in the library",
+            message=f"symbol {placement.symbol!r} is not in the library{_about(model, placement)}",
         )
         for placement in placements
         if oriented_symbol(model, placement) is None
@@ -45,7 +60,7 @@ def _library_version_mismatch_findings(
             subjects=(placement.function,),
             message=(
                 f"placement laid out with library version {placement.library_version!r}, "
-                f"installed is {installed!r}"
+                f"installed is {installed!r}{_about(model, placement)}"
             ),
         )
         for placement in placements

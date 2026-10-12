@@ -381,10 +381,14 @@ class Rail:
 
 @value
 class ChainEntry:
-    """One function of an authored chain, at its explicit position."""
+    """One function of an authored chain, at its explicit position.
+
+    `box` marks a function drawn in its item's box: `function` is then the box's item view.
+    """
 
     function: Id[Any]
     index: int
+    box: bool = False
 
 
 @value
@@ -480,6 +484,7 @@ class GroupInfo:
     label: str
     description: str
     order: int = 0  # Rank of the label in natural order, passed in by the read layer
+    designation: str = ""  # The signed path (`=G1`), what names a group with no description
 
 
 @value

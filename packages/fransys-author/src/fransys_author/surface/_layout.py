@@ -1,6 +1,6 @@
 """Layout hints: `d.layout.chain`, `order`, `symbol` and more, through the engine."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Mapping
 lazy from decimal import Decimal
 
@@ -114,6 +114,7 @@ class Layout:
         row_spacing: int | None = None,
         route_margin: int | None = None,
         text_height: int | None = None,
+        min_text_mm: Decimal | None = None,
         marker_padding: int | None = None,
         route_turn_penalty: int | None = None,
         route_crossing_penalty: int | None = None,
@@ -125,12 +126,13 @@ class Layout:
 
         Does not draw anything; a keyword left out keeps its house value, a rank map replaces whole.
         """
-        given = {
+        given: dict[str, Any] = {
             "column_gap": column_gap,
             "row_gap": row_gap,
             "row_spacing": row_spacing,
             "route_margin": route_margin,
             "text_height": text_height,
+            "min_text_mm": min_text_mm,
             "marker_padding": marker_padding,
             "route_turn_penalty": route_turn_penalty,
             "route_crossing_penalty": route_crossing_penalty,

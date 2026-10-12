@@ -54,9 +54,12 @@ DIAGRAM_LINE_OFF_BOX = "DIAGRAM_LINE_OFF_BOX"
 DIAGRAM_LINE_THROUGH_BOX = "DIAGRAM_LINE_THROUGH_BOX"
 DIAGRAM_TEXT_OVERLAP = "DIAGRAM_TEXT_OVERLAP"
 
-# engines/schematic/read/ (`__init__.py`, `sheets.py`), both WARNING. Defined here, imported there,
-# because `lint` may not import `engines`.
+# engines/schematic/read/ (`__init__.py`, `sheets.py`): SHEET_FORMAT_UNUSED and TEXT_TOO_SMALL, both
+# WARNING. Defined here, imported there, because `lint` may not import `engines`.
 SHEET_FORMAT_UNUSED = "SHEET_FORMAT_UNUSED"
+TEXT_TOO_SMALL = "TEXT_TOO_SMALL"
+# lint/fill.py, INFO.
+PAGE_UNDERFILLED = "PAGE_UNDERFILLED"
 CONNECTION_TO_UNDRAWN = "CONNECTION_TO_UNDRAWN"
 
 ALL_CODES: tuple[str, ...] = (
@@ -81,6 +84,7 @@ ALL_CODES: tuple[str, ...] = (
     ORDER_HINT_UNMET,
     OUT_OF_CONTENT_BOX,
     PAGE_OVERFULL,
+    PAGE_UNDERFILLED,
     PIN_MAP_INCOMPLETE,
     POWER_SYMBOL_UNPLACED,
     REDUNDANT_JOG,
@@ -93,6 +97,7 @@ ALL_CODES: tuple[str, ...] = (
     SYMBOL_OVERLAP,
     TEXT_CROSSED_BY_ROUTE,
     TEXT_OVERLAP,
+    TEXT_TOO_SMALL,
     UNIT_GROUP_SPLIT,
     WIRE_NOT_ORTHOGONAL,
     WIRE_OVER_LABEL,

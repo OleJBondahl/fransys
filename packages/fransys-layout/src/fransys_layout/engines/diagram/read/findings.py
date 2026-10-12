@@ -25,7 +25,7 @@ def _fanout(subject: Id[Any]) -> Finding:
     message = (
         "The cable reaches three or more boxes, drawn as one line from the first to each other."
     )
-    return _make(DIAGRAM_CABLE_FANOUT, Severity.WARNING, message, subject)
+    return _make(DIAGRAM_CABLE_FANOUT, Severity.INFO, message, subject)
 
 
 def _loose_wire(subject: Id[Any]) -> Finding:

@@ -2,19 +2,21 @@
 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
-lazy from collections.abc import Callable, Sequence
+lazy from collections.abc import Callable, Mapping, Sequence
 
 from fransys_layout.geometry import WIRING_GRID, Box, Point, contains, is_clear, translate
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.stages.space import Run, crosses
 
 from .content import content_box
-from .lookups import placed_keepout
+from .extent import column_extent, page_ink
 from .slices import by_plan, page_of
 from .types import LabelKind
 
 if TYPE_CHECKING:
-    from .types import LinkMarker, PagePlan, PlacedFunction, PlacedLabel, SheetFormat
+    from fransys_model.kernel import AuthoringKey
+
+    from .types import Handle, LinkMarker, PagePlan, PlacedFunction, PlacedLabel, SheetFormat
 
 
 def turned(marker: LinkMarker, side: int = 1) -> LinkMarker:
@@ -73,7 +75,7 @@ def clear_of_stubs(
 
 
 def _need(
-    placed: Sequence[PlacedFunction],
+    boxes: Sequence[Box],
     first: Sequence[PlacedLabel],
     axis: str,
     extent: int,
@@ -81,15 +83,14 @@ def _need(
 ) -> int:
     """The shift on one axis keeping boxes in the box; on x, texts TEXT_GAP from its left edge."""
     size = "width" if axis == "x" else "height"
-    cells = [placed_keepout(one) for one in placed]
+    cells = list(boxes)
     lows = [(getattr(b, axis), 0) for b in cells] + [
         (getattr(b.box, axis), TEXT_GAP) for b in first
     ]
-    highs = [getattr(b, axis) + getattr(b, size) for b in cells]
-    highs += [getattr(b.box, axis) + getattr(b.box, size) for b in first]
     need = max((g - low for low, g in lows if low < g), default=0)
     shift = up(need) if need > 0 else 0
-    return shift if shift and max(highs) + shift <= extent else 0
+    ink = column_extent([*cells, *(b.box for b in first)])
+    return shift if shift and getattr(ink, axis) + getattr(ink, size) + shift <= extent else 0
 
 
 def shift_pages(
@@ -97,12 +98,16 @@ def shift_pages(
     pages: Sequence[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]],
     markers: tuple[LinkMarker, ...],
     sheet: SheetFormat,
+    rooms: Mapping[tuple[AuthoringKey, Handle], tuple[int, int]] | None = None,
 ) -> tuple[
     list[Any],
     tuple[Any, ...],
     tuple[LinkMarker, ...],
 ]:
-    """Each page's placements and labels moved inside the content box."""
+    """Each page's placements and labels moved inside the content box.
+
+    An image's reserved room counts as ink (layout-0182), so a shift never pushes it out.
+    """
 
     def up(value: int) -> int:
         return -(-value // WIRING_GRID) * WIRING_GRID
@@ -114,8 +119,8 @@ def shift_pages(
         if not placed and not first:
             moved_pages.append((placed, first))
             continue
-        dx = _need(placed, first, "x", sheet.content_width, up)
-        dy = _need(placed, first, "y", sheet.content_height, up)
+        dx = _need(ink := page_ink(placed, rooms or {}), first, "x", sheet.content_width, up)
+        dy = _need(ink, first, "y", sheet.content_height, up)
         if not dx and not dy:
             moved_pages.append((placed, first))
             continue

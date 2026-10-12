@@ -52,7 +52,7 @@ def _finding(one: SetDigits, markers: Iterable[MarkerDecision]) -> Finding:
         severity=Severity.WARNING,
         subjects=ports,
         message=(
-            f"drawing set {one.drawing_set}: a reference box is drawn for {one.refs}-digit #n and "
+            f"a reference box is drawn for {one.refs}-digit #n and "
             f"{one.sheets}-digit p<sheet>, wider than the room its pass reserved"
         ),
     )

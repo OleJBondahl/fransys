@@ -67,3 +67,17 @@ def _shifted_tag_x(x: int) -> int:
     pages = [((placed(1, x=64, y=160),), (_tag(1, 1, Box(x=x, y=150, width=48, height=8)),))]
     moved, _, _ = shift_pages(plans, pages, (), SHEET)
     return moved[0][1][0].box.x
+
+
+def test_a_shift_never_pushes_an_image_room_off_the_page() -> None:
+    """A label 20 left of the content needs a 32 shift; the coil's room ends at x 1260."""
+    # UNDO: stages/tidy.py:_need, drop the image room boxes from the extent
+    plans = (page_plan(("a",)),)
+    coil = placed(1, x=64, y=160)
+    pages = [((coil,), (_tag(1, 1, Box(x=-20, y=150, width=48, height=8)),))]
+    rooms = {(coil.column, coil.function): (0, 1148)}
+
+    held, _, _ = shift_pages(plans, pages, (), SHEET, rooms)
+    assert held == pages
+    moved, _, _ = shift_pages(plans, pages, (), SHEET)
+    assert moved[0][0][0].at.x == 64 + 32

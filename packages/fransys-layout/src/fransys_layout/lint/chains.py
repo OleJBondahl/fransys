@@ -117,23 +117,22 @@ def _split_by_pages(
     )
 
 
-def lint_chains(
-    layout: Layout,
-    records: StageRecords,
-    *,
-    open_ends: frozenset[Handle] = frozenset(),
-) -> tuple[Finding, ...]:
-    """Report `LONE_CELL` and `CHAIN_BROKEN` warnings, sorted by `(code, subjects)`."""
-    facts = _facts(layout, records)
+def lone_cells(
+    layout: Layout, records: StageRecords, *, open_ends: frozenset[Handle] = frozenset()
+) -> tuple[tuple[tuple[int, int], Finding], ...]:
+    """Each `LONE_CELL` with the `(drawing set, page)` it is on; a function on two pages twice."""
+    return _lone_cells(layout, _facts(layout, records), open_ends)
+
+
+def _lone_cells(
+    layout: Layout, facts: _Facts, open_ends: frozenset[Handle]
+) -> tuple[tuple[tuple[int, int], Finding], ...]:
+    """Pass 1 of `lint_chains`: the lone cells by page, a column's cells in set order."""
     placed: defaultdict[tuple[int, int, tuple[str, ...]], set[Handle]] = defaultdict(set)
     for one in layout.placed:
         placed[(one.drawing_set, one.page, one.column)].add(one.function)
-    pages: defaultdict[Handle, set[tuple[int, int]]] = defaultdict(set)
-    for one in layout.placed:
-        pages[one.function].add((one.drawing_set, one.page))
-    findings = []
-    seen: set[tuple[Handle, str]] = set()
-    for (_, _, column), functions in placed.items():
+    found = []
+    for (drawing_set, page, column), functions in placed.items():
         cut = len(functions) == 1 and not facts.cells[column] <= functions
         for function in functions:
             if cut:
@@ -142,17 +141,30 @@ def lint_chains(
                 message = "a symbol has no drawn conductor at all"
             else:
                 continue
-            if (function, message) in seen:
-                continue
-            seen.add((function, message))
-            findings.append(
-                Finding(
-                    code=LONE_CELL,
-                    severity=Severity.WARNING,
-                    subjects=(function,),
-                    message=message,
-                )
+            finding = Finding(
+                code=LONE_CELL, severity=Severity.WARNING, subjects=(function,), message=message
             )
+            found.append(((drawing_set, page), finding))
+    return tuple(found)
+
+
+def lint_chains(
+    layout: Layout,
+    records: StageRecords,
+    *,
+    open_ends: frozenset[Handle] = frozenset(),
+) -> tuple[Finding, ...]:
+    """Report `LONE_CELL` and `CHAIN_BROKEN` warnings, sorted by `(code, subjects)`."""
+    facts = _facts(layout, records)
+    pages: defaultdict[Handle, set[tuple[int, int]]] = defaultdict(set)
+    for one in layout.placed:
+        pages[one.function].add((one.drawing_set, one.page))
+    seen: set[tuple[Handle, str]] = set()
+    findings = []
+    for _, finding in _lone_cells(layout, facts, open_ends):
+        if (finding.subjects[0], finding.message) not in seen:
+            seen.add((finding.subjects[0], finding.message))
+            findings.append(finding)
     findings.extend(
         Finding(
             code=CHAIN_BROKEN,

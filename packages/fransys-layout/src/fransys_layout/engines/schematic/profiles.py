@@ -23,16 +23,26 @@ if TYPE_CHECKING:
 type Run = tuple[Model, tuple[Finding, ...]]
 
 
+def run_profiles[T](
+    model: Model, run_once: Callable[[Model, Id[Any] | None], tuple[Model, T]]
+) -> tuple[tuple[Model, T], tuple[tuple[frozenset[Id[Any]], tuple[Model, T]], ...]]:
+    """The top design's run, and the run of each other profile in use with the units it draws.
+
+    A run is the laid model and what `run_once` returns beside it: the findings for `lay_out`.
+    """
+    base = run_once(model, None)
+    classes = profile_classes(model, drawn_units(base[0]))
+    return base, tuple((frozenset(members), run_once(model, members[0])) for members in classes)
+
+
 def lay_out(model: Model, run_once: Callable[[Model, Id[Any] | None], Run]) -> Run:
     """Lay out `model`: one `run_once` per profile in use, spliced by drawing set."""
-    base, findings = run_once(model, None)
-    classes = profile_classes(model, drawn_units(base))
-    if not classes:
+    (base, findings), runs = run_profiles(model, run_once)
+    if not runs:
         return base, findings
-    runs = [(frozenset(members), *run_once(model, members[0])) for members in classes]
-    every = frozenset().union(*(units for units, _, _ in runs))
+    every = frozenset().union(*(units for units, _ in runs))
     kept = [f for f in findings if finding_unit(model, f) not in every]
-    for units, _, run_findings in runs:
+    for units, (_, run_findings) in runs:
         kept += [f for f in run_findings if finding_unit(model, f) in units]
-    merged = spliced(base, tuple((units, laid) for units, laid, _ in runs), unit_ranks(model))
+    merged = spliced(base, tuple((units, laid) for units, (laid, _) in runs), unit_ranks(model))
     return merged, tuple(sorted(kept, key=lambda f: (f.code, f.subjects, f.message)))

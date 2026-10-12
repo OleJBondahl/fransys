@@ -27,7 +27,8 @@ Every function no authored chain claims takes part.
    terminal: its chain stops at the pole, both terminals hang under it (`_attach`), the throw
    on its through path in the second row, and the chain bundles as if that terminal stood in it.
 5. Bundles: chains with one sequence of `(item, kind)` (every terminal alike), passing an
-   `(item, kind)` with more than one pole. A bundle is one column; its rows are the chain
+   `(item, kind)` with more than one pole. A bundle is one column (a re-plan cuts one wider than
+   the page between its lanes, layout-0182); its rows are the chain
    positions, and a row holds the distinct functions at that position in pole order, side
    elements after them.
 

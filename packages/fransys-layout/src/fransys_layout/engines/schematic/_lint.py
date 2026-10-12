@@ -9,6 +9,7 @@ from fransys_layout.lint import (
     check_members,
     check_nowhere,
     lint_chains,
+    lint_fill,
     lint_geometry,
 )
 from fransys_layout.lint.chains import StageRecords
@@ -42,25 +43,21 @@ class LintScene:
     ink: HarnessInk
 
 
+def chain_records(scene: LintScene) -> StageRecords:
+    """What the chain lint reads beside the layout; a pin a line carries a conductor to is wired."""
+    inputs = scene.inputs  # layout-0154
+    connections = (*inputs.connections, *inputs.carried)
+    return StageRecords(scene.columns, scene.drawn, connections, inputs.net_groups, inputs.mates)
+
+
 def lint_findings(scene: LintScene) -> list[Finding]:
     """Stage 9: the geometry, chain, coherence and member findings of `scene.layout`."""
-    layout, columns, drawn, inputs = scene.layout, scene.columns, scene.drawn, scene.inputs
+    layout, drawn, inputs = scene.layout, scene.drawn, scene.inputs
     members, open_ends = scene.members, scene.open_ends
     findings = list(lint_geometry(layout, sheet=inputs.sheet, ink=scene.ink))
-    findings.extend(
-        lint_chains(
-            layout,
-            # layout-0154: a pin a line carries a conductor to is wired
-            StageRecords(
-                columns,
-                drawn,
-                (*inputs.connections, *inputs.carried),
-                inputs.net_groups,
-                inputs.mates,
-            ),
-            open_ends=open_ends,
-        )
-    )
+    pin_functions = {s.function: s.pin_function for s in inputs.functions if s.pin_function}
+    findings.extend(lint_fill(layout, sheet=inputs.sheet, pin_functions=pin_functions))
+    findings.extend(lint_chains(layout, chain_records(scene), open_ends=open_ends))
     # Star markers answer no cut decision
     paired = replace(layout, markers=tuple(m for m in layout.markers if not m.star))
     function_units = {spec.function: spec.unit for spec in inputs.functions}

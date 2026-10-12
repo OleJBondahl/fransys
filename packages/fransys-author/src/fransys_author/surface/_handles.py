@@ -5,7 +5,7 @@ lazy from collections.abc import Sequence
 lazy from decimal import Decimal
 
 from fransys_author._limits import state_limits
-from fransys_author.errors import AuthorError
+from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.handles import Port
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
@@ -17,8 +17,13 @@ lazy from fransys_model.vocab import Operating, Rating, SignalType
 Pin = Port
 
 
-def pick(owner: str, name: str, found: Sequence[tuple[str, Pin]]) -> Pin:
-    """The one pin named `name` among `found` (function name, pin); none or two raise."""
+def pick(
+    owner: str,
+    name: str,
+    found: Sequence[tuple[str, Pin]],
+    error: type[AuthorError] = AuthorError,
+) -> Pin:
+    """The one pin named `name` among `found` (function name, pin); none or two raise `error`."""
     hits = [(function, pin) for function, pin in found if pin.name == name]
     if len(hits) == 1:
         return hits[0][1]
@@ -28,7 +33,7 @@ def pick(owner: str, name: str, found: Sequence[tuple[str, Pin]]) -> Pin:
     else:
         names = ", ".join(sorted({pin.name for _, pin in found})) or "none"
         msg = f"{owner} has no pin {name!r}; pins: {names}"
-    raise AuthorError(msg)
+    raise error(msg)
 
 
 class Fn:
@@ -72,11 +77,11 @@ class Fn:
         def __getattr__(self, name: str) -> Pin:
             """The pin named `name` when it is an identifier (`K1.coil.A1`).
 
-            Does not guess: an unknown name raises and lists the pins.
+            Does not guess: an unknown name raises an `AttributeError` that lists the pins.
             """
             if name.startswith("_"):
                 raise AttributeError(name)
-            return pick(f"{self._label}.{self._fn.name}", name, self._pins())
+            return pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:
         """Request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.

@@ -59,6 +59,7 @@ from .facets import (
 from .instantiate import PartBundle, instantiate
 from .markings import (
     Pole,
+    function_identifier,
     function_poles,
     is_pole_link,
     marking_key,
@@ -202,6 +203,7 @@ __all__ = [
     "effective_rating",
     "facet_subject",
     "facets_of",
+    "function_identifier",
     "function_operating",
     "function_poles",
     "function_rating",

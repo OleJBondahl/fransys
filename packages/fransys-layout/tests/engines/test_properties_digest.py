@@ -42,10 +42,16 @@ def _run(
     reverse: bool = False,
     extra_relay: bool = False,
     second_location: bool = False,
+    fan_net: bool = False,
     width_mm: int | None = None,
 ) -> tuple[Model, Model, tuple[Finding, ...]]:
     """The frozen cabinet, its laid-out model and the findings."""
-    draft = build_cabinet(reverse=reverse, extra_relay=extra_relay, second_location=second_location)
+    draft = build_cabinet(
+        reverse=reverse,
+        extra_relay=extra_relay,
+        second_location=second_location,
+        fan_net=fan_net,
+    )
     if width_mm is not None:
         sheet = SheetFormat(
             id=make_id(SheetFormat, ("test", "sheet")),
@@ -145,9 +151,13 @@ def test_laying_out_a_laid_out_model_replaces_and_never_stacks(flags: dict) -> N
 def test_a_relay_in_one_group_changes_records_only_on_the_pages_of_that_group(
     width_mm: int | None,
 ) -> None:
-    """K9 joins `=P2`: every changed or new placement, route and label is on a page holding it."""
-    _, plain, _ = _run(width_mm=width_mm)
-    _, extra, _ = _run(extra_relay=True, width_mm=width_mm)
+    """K9 joins `=P2`: every changed or new placement, route and label is on a page holding it.
+
+    Both runs carry `fan_net`, a net of four ends outside `=P2`: a set's first `+k` widens its
+    boxes once (model-0196), so the base prints one and K9 is the one added end.
+    """
+    _, plain, _ = _run(fan_net=True, width_mm=width_mm)
+    _, extra, _ = _run(fan_net=True, extra_relay=True, width_mm=width_mm)
     p2_pages = _pages_holding_p2(extra)
     for kind in ("symbol_placement", "route", "label"):
         before = _table(plain, kind)

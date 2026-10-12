@@ -7,6 +7,8 @@ The bug: the connector list, the harness and the overview listed `A10` before `A
 sorted by number only when it was all digits), while the drawing listed `A2` first. The
 pin order was four keys that disagreed.
 
+The overview's half of the check is in packages/fransys-overview/tests/test_pin_marking_order.py.
+
 Fixing decision: model-0153 (`marking_key` is the one marking order; amends model-0149).
 """
 
@@ -38,12 +40,6 @@ def test_the_harness_lists_a2_first(built) -> None:
     result, _, harness = built
     (cable,) = fr.derive.harness_cables(result.model, harness.id)
     assert [pin.marking for end in cable.ends for pin in end.pins] == _PIN_ORDER * 2
-
-
-def test_the_overview_lists_a2_first(built) -> None:
-    result, _, _ = built
-    signals = fr.derive.overview_graph(result.model).signals
-    assert [signal.ports[0].marking for signal in signals] == _PIN_ORDER
 
 
 def test_the_pin_handles_the_drawing_is_authored_from_list_a2_first(built) -> None:

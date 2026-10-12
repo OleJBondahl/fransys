@@ -309,10 +309,23 @@ def _findings_table_rows(markdown: str) -> list[list[str]]:
     return [[cell.strip() for cell in line.strip("|").split("|")] for line in table_lines[2:]]
 
 
+FINDINGS_PAGES = ("findings-validators", "findings-render", "findings-pdf", "findings-kicad")
+
+
+def _all_rows() -> list[list[str]]:
+    """The data rows of every findings page."""
+    return [
+        row
+        for page in FINDINGS_PAGES
+        for row in _findings_table_rows(
+            files("fransys").joinpath("guide", f"{page}.md").read_text(encoding="utf-8")
+        )
+    ]
+
+
 def findings_md_codes() -> frozenset[str]:
-    """The set of finding codes with a row in `findings.md` (each data row's first cell)."""
-    text = files("fransys").joinpath("guide", "findings.md").read_text(encoding="utf-8")
-    return frozenset(row[0] for row in _findings_table_rows(text) if row and row[0])
+    """The set of finding codes with a row in a findings page (each data row's first cell)."""
+    return frozenset(row[0] for row in _all_rows() if row and row[0])
 
 
 def test_findings_codes_match_scanned_codes(scanned_codes: frozenset[str]) -> None:
@@ -320,8 +333,7 @@ def test_findings_codes_match_scanned_codes(scanned_codes: frozenset[str]) -> No
 
 
 def test_no_todo_placeholder_remains() -> None:
-    """No cell of `findings.md`'s table is still the literal placeholder string `TODO`."""
-    text = files("fransys").joinpath("guide", "findings.md").read_text(encoding="utf-8")
-    rows = _findings_table_rows(text)
+    """No cell of a findings page's table is still the literal placeholder string `TODO`."""
+    rows = _all_rows()
     stale = [row[0] for row in rows if row and "TODO" in row]
     assert not stale, f"still has a TODO cell: {stale}"

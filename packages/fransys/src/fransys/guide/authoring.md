@@ -36,7 +36,7 @@ An accessory takes its holder's designation and uses up no number.
 
 `external=True` marks an item supplied by others. Every call that makes an item takes it: `d.device`,
 `d.terminal_strip`, `d.cable` and `d.harness`. The item has no BOM line. A strip's terminals are external
-with it; a cable's conductors carry no flag.
+with it; a cable's conductors carry no flag. The system's block diagram and cable drawings draw it dashed, with "(by others)". A unit's own drawings do not mark it.
 
 An external device or strip may take `None` for its part, when only its terminal names are known. It needs a tag and has no BOM line. A part-less device names its pins with `pins=` and draws as a box. A part-less strip's terminals offer only `.outer`.
 
@@ -95,6 +95,9 @@ with d.function("RUN", "Pump run"):
         d.wire(getattr(k1, function)[pin], lamp[1], wire=(BU, 0.75))
 ```
 
+`getattr(dev, f"DI{n}")` is the one spelling for a computed name. A name the device lacks raises an
+error that `hasattr` reads as absent, so `getattr(dev, "nope", None)` is `None`.
+
 A device with one function and a marked pin is read the short way: `h1[1]`.
 
 ### A place inside a place
@@ -141,6 +144,9 @@ pin before the script runs.
 ```bash
 uv run python -m fransys parts-module demo_parts parts_demo.py
 ```
+
+A function named `24V+` is the attribute `dev.P_24V_plus`; `-` gives `_minus`. `getattr(dev, "24V+")`
+reaches the raw name. Two names that map to one attribute fail generation.
 
 Pass the module to `fr.design(P)`. A module whose library has since changed raises at
 `fr.design` and tells you to regenerate it. Both spellings build the same model. The rest of this page
@@ -310,6 +316,27 @@ A colour is an IEC 60757 code imported from `fransys.colours`: `BK`, `BN`, `RD`,
 `BU`, `VT`, `GY`, `WH`, `PK`, `GD`, `SR`, `TQ`, and the two-colour `GNYE`. Write `wire=(BU, 0.75)` for
 a blue 0.75 mm2 wire.
 
+A wire spec shared by many wires is a module constant: `CTRL = (BU, 0.75)`, with `BU` imported. Pass it
+as `wire=CTRL` to `d.wire`, and to `d.series` for a whole path. `wire=` stays required on both calls;
+there is no default.
+
+```python
+import fransys as fr
+from fransys.colours import BU
+
+CTRL = (BU, 0.75)  # the control wire spec, written once
+
+d = fr.design("demo_parts")
+psu = d.device("G1", "DEMO-PSU-24")
+dc = d.dc_supply("24VDC", psu.output)
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
+feed = x1.run("coil supply", 3, bridged=True)
+k1 = d.device("K1", "DEMO-CTR-3P-24")
+k2 = d.device("K2", "DEMO-CTR-3P-24")
+d.series(dc.plus, feed, k1.coil, dc.minus, wire=CTRL)
+d.series(dc.plus, feed, k2.coil, dc.minus, wire=CTRL)
+```
+
 ## Earth pins
 
 `d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A wired pin draws the PE
@@ -410,6 +437,26 @@ request to a channel later; you never pick the channel.
 `d.project(title=, number=, customer=, ...)` fills the title block and `d.revision(1, date=, text=)`
 adds a history line. Both are optional and appear on the drawings and in the reports.
 
+## Point a finding past a helper
+
+A finding names the file and line of the call that authored the thing. A helper that builds a repeated
+circuit would make every finding name the helper's own line. Set `__tracebackhide__ = True` in the helper,
+as a local or as a module global, and the finding names the line that called the helper instead. It is
+pytest's own convention.
+
+```python
+import fransys as fr
+
+
+def lamp_pair(d, first, second):
+    __tracebackhide__ = True
+    return d.device(first, "DEMO-LAMP-24"), d.device(second, "DEMO-LAMP-24")
+
+
+d = fr.design("demo_parts")
+h1, h2 = lamp_pair(d, "H1", "H2")
+```
+
 ## An accessory in its holder
 
 A part with no function, put in another device with `parent=`, is an accessory of it. A fuse link in its
@@ -466,7 +513,7 @@ lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
 unit's interface above its outline, and `fr.BELOW` below it. It takes a field of the tuple `d.add`
 returns. An interface with no harness line ignores it. `d.layout.profile(hide_unused_pins=True)` hides
 every box-drawn pin with no conductor, and a function with none, on the drawings. Every list keeps
-every pin. The house value is off.
+every pin. The house value is off. `min_text_mm` sets the text floor ([Drawing well](drawing.md)).
 The design's profile governs the design's own pages only. A unit sets its own in its body. A unit with none uses the house values, never its parent's.
 
 `d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)` draws the chain in a column next to the element `k1.main`, joined by short horizontals with no marker. Wire the chain and the element first: the chain's two end nets must be two nets of that element, or `AuthorError` names them.

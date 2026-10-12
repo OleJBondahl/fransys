@@ -193,8 +193,8 @@ title block or history table. The names are a built-in default with no option or
   name in every write, a system write included, so `out/all/` holds `EX-1-v1.1.pdf` beside
   `cabinet-v2.1.pdf`. Two instances of one release with a document each come to one name and
   raise a name-clash error; keep one document per release.
-- **Stale exports.** `write` runs `_clean_stale_exports` before writing. It deletes the
-  files that start with the set's name and `-v` for any version, so a work folder reused across
+- **Stale exports.** `write` first deletes the files that start with the set's name and `-v` for any version, so a
+  work folder reused across
   revisions keeps only the current ones. A system write also deletes the files that start with
   each unit release's name in the model and `-v`, for the unit documents. The old bare-name
   patterns are still cleaned for one more release. Known limit: a unit that leaves the model
@@ -263,7 +263,7 @@ assert same_target == target
 
 An unchanged release is a no-op: nothing is rebuilt, no file's timestamp changes. A released
 revision is frozen: releasing a unit again with different content raises `BuildErrors` naming
-`REVISION_ALREADY_RELEASED` instead of overwriting it (see `findings.md`). The files are the
+`REVISION_ALREADY_RELEASED` instead of overwriting it (see `findings-validators.md`). The files are the
 consumer's -- commit them in your own repo, alongside the design script that produced them.
 
 A container rebuilt against an old child release uses the child's old source from git. Fransys loads no frozen child.
@@ -373,5 +373,5 @@ releases root, `build` reads each unit's own previously released numbering befor
 new tags: an item still in the same group keeps the number it was released with, and a number
 freed by a removed or moved item is never handed to a different item within that unit's
 version. A tag the engineer authors may still equal a pinned or reserved number by mistake;
-that is `DESIGNATION_DUPLICATE` (see `findings.md`), not silently allowed. Releasing without
+that is `DESIGNATION_DUPLICATE` (see `findings-validators.md`), not silently allowed. Releasing without
 `releases=` still catches a moved number, as `DESIGNATION_MOVED`.

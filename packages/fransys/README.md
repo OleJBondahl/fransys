@@ -3,8 +3,9 @@ Fransys facade: pipeline, findings policy, file writing.
 Facade contract: the only package that merges drafts, freezes, runs passes, applies the findings policy and writes files.
 
 Public surface: `fransys.__all__`. It holds the engineer surface (decision 0103), the
-pipeline (`parts`, `document`, `build`, `check`, `write`, `release`, ...) and `derive`, the
-model's `derive` module re-exported whole. `just api fransys` lists every name with its
+pipeline (`parts`, `document`, `build`, `check`, `write`, `release`, ...) and `derive`, a
+facade module of the curated consumer list (decision 0181). The guide's `index.md` states the
+whole public surface in one paragraph. `just api fransys` lists every name with its
 signature and docstring (decision 0053).
 
 The consumer guide in `src/fransys/guide/` documents this surface with tested examples. It

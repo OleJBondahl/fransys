@@ -456,6 +456,17 @@ def test_boundary_of_an_ambiguous_target_is_refused(parts):
         u.boundary(k1)
 
 
+def test_an_item_with_several_functions_names_them_as_candidates(parts):
+    d = Design(parts)
+    u = d.scope("u1").unit("demo-unit", revision=1, interface="1")
+    k1 = u.item("TEST-RLY-2CO", tag="K1")
+    with pytest.raises(AuthorError) as caught:
+        k1.as_function()
+    handles = str(caught.value).split("name one of ")[1]
+    assert handles == ", ".join(f"k1.{name}" for name in sorted(f.name for f in k1.functions))
+    assert len(k1.functions) == 3
+
+
 def test_boundary_of_an_unambiguous_target_is_not_an_error(parts):
     d = Design(parts)
     u = d.scope("u1").unit("demo-unit", revision=1, interface="1")

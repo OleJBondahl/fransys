@@ -1,4 +1,4 @@
-"""Where a geometric finding stands: the page and frame cell, in derive's one position text."""
+"""Where a geometric finding stands: the frame cell of its page; the last pass names the page."""
 
 from typing import TYPE_CHECKING
 
@@ -8,14 +8,11 @@ if TYPE_CHECKING:
     from fransys_layout.stages import SheetFormat
 
 
-def where(
-    sheet: SheetFormat, here: tuple[int, int], x: int, y: int, *, several_sets: bool = False
-) -> str:
-    """`p<page>:<cell>` of the point `x`, `y` on page `here` (drawing set, page number).
+def where(sheet: SheetFormat, here: tuple[int, int], x: int, y: int) -> str:
+    """The frame cell of the point `x`, `y` on page `here` (drawing set, page number): `3F`.
 
-    A design with more than one drawing set names the set too (`p<set>.<page>:<cell>`).
+    The page and its set come after the message, from derive's `position_text` in the last pass.
     """
-    drawing_set, page = here
     column = frame_column(sheet.content_width, sheet.frame_columns, x)
     row = frame_row(sheet.content_height, sheet.frame_rows, y)
-    return position_text(page, column, row, (), drawing_set if several_sets else None)
+    return position_text(here[1], column, row, (), own_page=here[1])

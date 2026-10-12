@@ -47,8 +47,8 @@ def _pdf_and_source() -> tuple[bytes, str]:
     return pdf.read_bytes(), typ.read_text(encoding="utf-8")
 
 
-def test_the_cabinet_with_no_plc_channel_has_five_pages_and_no_none_page() -> None:
-    """Cover, schematic, two strips and the BOM: five pages, and no "None." anywhere."""
+def test_the_cabinet_with_no_plc_channel_has_four_pages_and_no_none_page() -> None:
+    """Cover, schematic, the strips in one flowed page and the BOM: four pages, no "None."."""
     pdf, source = _pdf_and_source()
-    assert len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf)) == 5
+    assert len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf)) == 4
     assert "None." not in source

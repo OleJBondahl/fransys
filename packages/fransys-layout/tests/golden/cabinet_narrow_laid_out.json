@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 13,
+  "schema_version": 14,
   "tables": {
     "aspect_node": [
       {
@@ -5282,6 +5282,7 @@
           "profile"
         ],
         "marker_padding": 2,
+        "min_text_mm": "2.5",
         "route_crossing_penalty": 16,
         "route_margin": 64,
         "route_turn_penalty": 4,

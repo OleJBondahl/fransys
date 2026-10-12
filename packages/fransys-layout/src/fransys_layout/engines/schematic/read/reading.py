@@ -28,7 +28,12 @@ from fransys_layout.stages import (
     SymbolChoice,
     UnitInfo,
 )
-from fransys_model.derive import bom_sort_key, natural_key, schematic_functions
+from fransys_model.derive import (
+    bom_sort_key,
+    location_node_designation,
+    natural_key,
+    schematic_functions,
+)
 from fransys_model.derive.designation import unit_location
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.derive.drawing_text import location_path as model_location_path
@@ -58,7 +63,7 @@ from .rails import is_rail_link
 from .units import unit_order
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from fransys_model.derive.indexes import Indexes
     from fransys_model.kernel import Id, Model
@@ -156,8 +161,12 @@ def rails(model: Model) -> tuple[Rail, ...]:
     )
 
 
-def chains(model: Model) -> tuple[Chain, ...]:
-    """Every authored `layout.chain`, sorted by key, with its `beside` host."""
+def chains(model: Model, view_of: Mapping[Id[Any], Id[Any]]) -> tuple[Chain, ...]:
+    """Every authored `layout.chain`, sorted by key, with its `beside` host.
+
+    An entry whose function stands in an item box names the box's view (`box`).
+    """
+    box_of = {ports(model)[port].function: view for port, view in view_of.items()}
     return tuple(
         sorted(
             (
@@ -165,7 +174,11 @@ def chains(model: Model) -> tuple[Chain, ...]:
                     chain=chain.id,
                     key=chain.key,
                     entries=tuple(
-                        ChainEntry(function=entry.function, index=entry.index)
+                        ChainEntry(
+                            function=box_of.get(entry.function, entry.function),
+                            index=entry.index,
+                            box=entry.function in box_of,
+                        )
                         for entry in chain.entries
                     ),
                     beside=chain.beside,
@@ -236,6 +249,7 @@ def group_infos(model: Model) -> tuple[GroupInfo, ...]:
                     label=node.label,
                     description=node.description,
                     order=place[_key_text(node.key)],
+                    designation=location_node_designation(model, node.id),
                 )
                 for node in nodes
             ),

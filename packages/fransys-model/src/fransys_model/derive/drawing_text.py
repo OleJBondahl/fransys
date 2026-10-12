@@ -42,7 +42,7 @@ from fransys_model.derive.designation import (
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.line_fact import draws_as_line
 from fransys_model.derive.lookups import black_box_unit, effective_placement
-from fransys_model.derive.marker_targets import marker_lines, target_lines
+from fransys_model.derive.marker_targets import marker_lines, more_count, more_text, target_lines
 from fransys_model.derive.order import natural_key
 from fransys_model.derive.pole_ports import pole_prefix
 from fransys_model.derive.port_marking import marking_text, port_marking
@@ -130,8 +130,8 @@ def frame_row(content_height: int, frame_rows: int, y: int) -> str:
 
 def position_text(  # noqa: PLR0913 -- one form for every position; own_page is the keyword (model-0136)
     page_number: int,
-    column: int,
-    row: str,
+    column: int | None,
+    row: str | None,
     location_labels: tuple[str, ...],
     set_number: int | None = None,
     *,
@@ -141,16 +141,17 @@ def position_text(  # noqa: PLR0913 -- one form for every position; own_page is 
 
     The one form for every printed position; `row` is `frame_row`'s letter. A caller passes `()`
     for `location_labels` in the same set. `own_page` equal to `page_number` prints the cell.
+    With no `column` and `row` it names the page alone, `p3`: a finding about a whole page.
     """
-    if own_page == page_number and not location_labels and set_number is None:
-        return f"{column}{row}"
+    cell = "" if column is None else f":{column}{row}"
+    if own_page == page_number and cell and not location_labels and set_number is None:
+        return cell[1:]
     if not location_labels and set_number is not None:
         # A place in another drawing set with no location
         # prefix still names its set, "p3.2:1A" (set.page, then cell), so it is never ambiguous
-        return f"p{set_number}.{page_number}:{column}{row}"
-    where = f"p{page_number}:{column}{row}"
+        return f"p{set_number}.{page_number}{cell}"
     prefix = "".join(f"+{label}" for label in location_labels)
-    return f"{prefix}{where}"
+    return f"{prefix}p{page_number}{cell}"
 
 
 def location_prefix(own_path: LocationPath, partner_path: LocationPath) -> tuple[str, ...]:
@@ -990,6 +991,8 @@ __all__ = [
     "location_prefix",
     "marker_lines",
     "marker_text",
+    "more_count",
+    "more_text",
     "off_stub_line",
     "outline_title",
     "page_title",

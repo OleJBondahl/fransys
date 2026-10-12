@@ -58,6 +58,8 @@ DRAWING_TEXT_FORMATTERS = frozenset(
         "location_prefix",
         "off_stub_line",
         "marker_lines",
+        "more_count",
+        "more_text",
         "partner_position_text",
         "heads_group",
         "CONTACTS_HEADED",

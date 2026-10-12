@@ -683,15 +683,15 @@ def unit_list_context(
 
 
 def location_node_designation(model: Model, node: Id[AspectNode]) -> str:
-    """Render a location node's signed path, root to leaf (`+C1`, nested `+ER+C1`).
+    """Render an aspect node's signed path, root to leaf (`+C1`, nested `+ER+C1`, a group `=G1`).
 
-    The `+` sign repeats at every level, exactly the segment `location_designation` renders
-    for an item placed at `node`. Caution: not for a title block's scope cell, which
-    deliberately keeps the bare label; only
-    `location_designation` calls it there. `node` is not checked to be a location.
+    The node's own aspect gives the sign, repeated at every level: for a location, exactly the
+    segment `location_designation` renders for an item placed at `node`. Caution: not for a title
+    block's scope cell, which deliberately keeps the bare label; only `location_designation`
+    calls it there.
     """
     nodes = aspect_nodes(model)
-    return _segment(nodes, nodes[node], SIGNS[Aspect.LOCATION])
+    return _segment(nodes, nodes[node], SIGNS[nodes[node].aspect])
 
 
 def own_location_node(model: Model, item: Id[Item]) -> Id[AspectNode] | None:

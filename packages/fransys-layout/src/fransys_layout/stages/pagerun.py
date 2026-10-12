@@ -129,6 +129,8 @@ class PageRun:
     # Each drawing set's location path, read from the planned pages (known before `place`)
     paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, LocationPath]]
     unit_paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, UnitPath]]
+    # layout-0182: the reserves and the row labels again, for the parts of a cut column
+    recut_of: Callable[[tuple[Column, ...]], tuple[dict[Any, Any], tuple[LabelRequest, ...]]]
     # The power kinds and the item-box sides, by port (`boxes.power_maps`)
     power: tuple[dict[Handle, str], dict[Handle, str]] = ({}, {})
 
@@ -152,6 +154,8 @@ class Placement:
     pages: list[tuple[tuple[PlacedFunction, ...], FirstCall]]
     placed_all: tuple[PlacedFunction, ...]
     findings: tuple[Finding, ...]
+    # layout-0182: each cell's image room
+    rooms: Mapping[tuple[AuthoringKey, Handle], tuple[int, int]] = field(default_factory=dict)
 
 
 # `references` over one attempt's planned and stacked pages, with its findings
@@ -240,7 +244,9 @@ def place_pages(
     pages = [(unreserve(placed, page_rooms), first) for placed, first in pages]
     placed_all = unreserve(placed_all, page_rooms)
     findings = (*planned.findings, *page_found)
-    placement = Placement(planned.plans, planned.columns, drawn, pages, placed_all, findings)
+    placement = Placement(
+        planned.plans, planned.columns, drawn, pages, placed_all, findings, page_rooms
+    )
     return placement, grown, decided
 
 

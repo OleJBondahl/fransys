@@ -12,6 +12,7 @@ from derive_helpers import add_all
 
 from fransys_model.derive.drawing_text import (
     marker_text,
+    position_text,
 )
 from fransys_model.kernel import Draft, Id, Origin, freeze
 from fransys_model.layout import (
@@ -250,3 +251,10 @@ def test_marker_text_keeps_two_different_lines(origin: Origin) -> None:
 
 _NODE_IDS = _ids()
 _PATH_CAB: tuple[tuple[Id[Any], str], ...] = ((_NODE_IDS("aspect_node"), "C1"),)
+
+
+def test_a_position_without_a_cell_names_the_page_alone() -> None:
+    assert position_text(3, None, None, ()) == "p3"
+    assert position_text(3, None, None, ("C1",)) == "+C1p3"
+    assert position_text(3, None, None, (), 2) == "p2.3"
+    assert position_text(3, 1, "A", (), 2) == "p2.3:1A"

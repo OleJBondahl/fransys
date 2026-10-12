@@ -66,6 +66,29 @@ def _above(nets: Sequence[Net]) -> dict[int, set[int]]:
     return found
 
 
+def _inside(x: int, net: Net) -> bool:
+    """Whether column `x` lies strictly between the two ends of `net`."""
+    return net.left < x < net.right
+
+
+def _spanned(nets: Sequence[Net]) -> dict[int, set[int]]:
+    """Net index -> the nets that must run above it so no end run crosses a vertical run.
+
+    A net whose top lies inside another's span runs above it, one whose bottom does runs below it.
+    A pair that asks both ways must cross whatever the tracks, so it asks nothing.
+    """
+    pairs = [
+        (i, j) for i in range(len(nets)) for j in range(len(nets)) if nets[i].core != nets[j].core
+    ]
+    asks = {(i, j) for i, j in pairs if _inside(nets[i].top, nets[j])}
+    asks |= {(j, i) for i, j in pairs if _inside(nets[i].bottom, nets[j])}
+    found: dict[int, set[int]] = {i: set() for i in range(len(nets))}
+    for upper, lower in asks:
+        if (lower, upper) not in asks:
+            found[lower].add(upper)
+    return found
+
+
 def _unplaced(above: Mapping[int, AbstractSet[int]]) -> set[int]:
     """The nets left once every net with nothing above it is peeled off: the cycles and below."""
     left = set(above)
@@ -123,9 +146,11 @@ def _one_track(
     return taken
 
 
-def _fill(nets: Sequence[Net]) -> tuple[int, ...] | None:
+def _fill(nets: Sequence[Net], *, spans: bool = False) -> tuple[int, ...] | None:
     """Tracks from the top, each filled before the next; None if a track takes nothing."""
     above = _above(nets)
+    if spans:
+        above = {i: above[i] | extra for i, extra in _spanned(nets).items()}
     track: dict[int, int] = {}
     level = 0
     while len(track) < len(nets):
@@ -138,7 +163,10 @@ def _fill(nets: Sequence[Net]) -> tuple[int, ...] | None:
 
 
 def plan_channel(
-    columns: Sequence[tuple[int, int, int]], links: AbstractSet[int] = frozenset()
+    columns: Sequence[tuple[int, int, int]],
+    links: AbstractSet[int] = frozenset(),
+    *,
+    spans: bool = False,
 ) -> Plan | None:
     """The tracks of the bending cores among `columns` (each core's key, top x, bottom x), or None.
 
@@ -154,7 +182,7 @@ def plan_channel(
             return None
         nets = split[0]
         taken.add(split[1])
-    tracks = _fill(nets)
+    tracks = (spans and _fill(nets, spans=True)) or _fill(nets)
     return None if tracks is None else Plan(nets=nets, tracks=tracks)
 
 

@@ -7,7 +7,14 @@ from fransys_author import AuthorError
 from fransys_parts import load as parts_load
 
 from fransys_model.kernel import Model, freeze, merge
-from fransys_model.vocab import Part, function_templates, marking_key, parts, port_templates
+from fransys_model.vocab import (
+    Part,
+    function_identifier,
+    function_templates,
+    marking_key,
+    parts,
+    port_templates,
+)
 
 _TRIPLE = '"' * 3
 
@@ -43,7 +50,7 @@ def _getitem(names: list[str]) -> list[str]:
 
 
 def _function_class(cls: str, fn: str, pins: list[str]) -> list[str]:
-    lines = [f"class {cls}__{_ident(fn)}(TypedFn):"]
+    lines = [f"class {cls}__{function_identifier(fn)}(TypedFn):"]
     lines += [f"    {pin}: Pin" for pin in pins if pin.isidentifier()]
     return [*lines, *_getitem(pins), ""]
 
@@ -61,7 +68,8 @@ def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) ->
         f"class {cls}(TypedDevice[{names}, {cls!r}]):",
         f"    mpn: ClassVar[str] = {part.mpn!r}",
     ]
-    lines += [f"    {_ident(fn)}: {cls}__{_ident(fn)}" for fn, _ in functions]
+    idents = [function_identifier(fn) for fn, _ in functions]
+    lines += [f"    {ident}: {cls}__{ident}" for ident in idents]
     lines += [f"    {pin}: Pin" for pin in unique if pin.isidentifier() and pin not in fn_names]
     return [*lines, *(_getitem(unique) if unique else []), ""]
 
@@ -77,6 +85,17 @@ def _functions_of(model: Model) -> dict[object, list[tuple[str, list[str]]]]:
     for template in function_templates(model).values():
         by_part[template.part].append((template.name, pins_of[template.id]))
     return {part: sorted(fns, key=lambda fn: marking_key(fn[0])) for part, fns in by_part.items()}
+
+
+def _check_identifiers(mpn: str, functions: list[tuple[str, list[str]]]) -> None:
+    """Raise when two raw function names of one part share a Python identifier."""
+    seen: dict[str, str] = {}
+    for fn, _ in functions:
+        ident = function_identifier(fn)
+        if ident in seen:
+            msg = f"part {mpn!r}: functions {seen[ident]!r} and {fn!r} map to one name {ident}"
+            raise AuthorError(msg)
+        seen[ident] = fn
 
 
 def _named_parts(model: Model) -> list[tuple[str, Part]]:
@@ -122,6 +141,7 @@ def parts_module(*sources: str) -> str:
     body: list[str] = []
     for cls, part in _named_parts(model):
         fns = functions.get(part.id, [])
+        _check_identifiers(part.mpn, fns)
         for fn, pins in fns:
             body += _function_class(cls, fn, pins)
         body += [*_part_class(cls, part, fns), ""]

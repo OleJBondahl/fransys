@@ -13,7 +13,7 @@ editor's File > Import > Netlist. The import is a manual step.
 intermediates folder, named `netlist-<board>.net`. A netlist is not an export, so it never lands in `out_dir`.
 
 `fr.check(result)` reports the KiCad findings. Read them first. An `ERROR` (`REFERENCE_DUPLICATE`,
-`NET_NAME_DUPLICATE`, `PAD_ON_MULTIPLE_NETS`) means do not import yet. Each code is in findings.md.
+`NET_NAME_DUPLICATE`, `PAD_ON_MULTIPLE_NETS`) means do not import yet. Each code is in findings-kicad.md.
 
 ## Import settings
 

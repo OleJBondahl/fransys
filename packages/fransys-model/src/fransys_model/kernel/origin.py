@@ -73,7 +73,7 @@ def _lines(problem: ModelError | Finding, source: OriginSource) -> tuple[str, ..
         subjects = (f"  subject: {_render(s, source)}" for s in problem.subjects)
         return (f"{problem.code} ({problem.severity.value}): {problem.message}", *subjects)
     lines = str(problem).splitlines() or [""]
-    lines += _extra_lines(problem, source)
+    lines += _extra_lines(problem, source) or _subject_lines(problem, source)
     return tuple(lines)
 
 
@@ -130,3 +130,9 @@ def _render(target: Id[Any], source: OriginSource) -> str:
     if named is not None:
         return f"unknown origin ({named})"
     return f"unknown origin (kind {target.kind})"
+
+
+def _subject_lines(problem: ModelError, source: OriginSource) -> list[str]:
+    # An error of another package that carries `subjects` (a layout `HintError`).
+    subjects = getattr(problem, "subjects", ())
+    return [f"  subject: {_render(s, source)}" for s in subjects]

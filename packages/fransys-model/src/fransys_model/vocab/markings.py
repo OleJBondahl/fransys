@@ -36,6 +36,15 @@ def marking_key(marking: str) -> tuple[tuple[int, int, str], ...]:
     return tuple(_token(run) for run in _RUN.findall(marking))
 
 
+def function_identifier(name: str) -> str:
+    """The Python identifier of a part's function `name`: `24V+` is `P_24V_plus`.
+
+    `+` and `-` become `_plus` and `_minus`, other non-word characters `_`, a leading digit `P_`.
+    """
+    text = re.sub(r"\W", "_", name.replace("+", "_plus").replace("-", "_minus"))
+    return f"P_{text}" if text[:1].isdigit() else text
+
+
 def port_order_key(template: PortTemplate) -> tuple[tuple[tuple[int, int, str], ...], str]:
     """Order of one end: its marking (its name when none is printed), then its name."""
     marking = template.name if template.marking is None else template.marking

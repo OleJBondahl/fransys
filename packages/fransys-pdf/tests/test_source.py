@@ -1,9 +1,13 @@
 """`source`: page geometry, cover and notes."""
 
+import dataclasses
+
+import pytest
 from _build import (
     cable_facet,
     cable_product_facet,
     conductor,
+    connector,
     core_facet,
     document,
     drawing_set,
@@ -12,14 +16,18 @@ from _build import (
     location,
     model,
     part,
+    pcb_facet,
     pin,
     place,
+    plc_channel,
     project,
     revision_entry,
     sheet_format,
+    terminal,
     unit,
+    wire_facet,
 )
-from fransys_pdf import source
+from fransys_pdf import _lists, source
 from fransys_pdf._drawings import harness_cables_for, schematic_pages
 from fransys_pdf._geometry import (
     document_facts,
@@ -32,9 +40,10 @@ from fransys_pdf._pages import cover_page
 
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel.ids import render_id
-from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, documents
+from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, SignalType, documents
 
 K = PageKind
+_PRESET = DocumentPreset.CABINET_SCHEMATIC
 
 # Unit documents: named non-zero counts for the two-drawing-set fixtures below.
 _UNIT_DOCUMENT_PAGE_COUNT = 2
@@ -838,3 +847,92 @@ def test_harness_drawing_no_drawings_page_sets_its_own_title_block_after_a_notes
     assert text.count('#par(text("No drawings."))') == 1
     assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
     assert 'text(size: 8pt, "Page title"), text(size: 10pt, text("Harness drawing"))' in text
+
+
+def _list_pages_model():
+    """A cabinet with a strip of one terminal, a PLC module with one channel, a BOM line, a labelled
+    wire, a board with one connector and a cable: every list page has a row."""
+    c1 = location("C1", "Demo cabinet")
+    doc = document(
+        "d1",
+        preset=_PRESET,
+        subject=c1,
+        cover="# Cover",
+        notes=None,
+        remove=(K.SCHEMATIC,),
+    )
+    strip = item("x1", description="Strip one")
+    t1, t1_facet = terminal("t1", strip=strip.id, group="L", index=1)
+    module = item("mod1", description="PLC module")
+    module_part, template, fn, facet = plc_channel(
+        "ch1", module=module.id, name="ch1", signal=SignalType.DI, channel=1
+    )
+    module = dataclasses.replace(module, part=module_part.id)
+    a_item, a_fn, a_port = pin("a", "A1")
+    b_item, b_fn, b_port = pin("b", "B1")
+    wire = conductor("w1", a=a_port.id, b=b_port.id)
+    label = wire_facet("w1", subject=wire.id, label="W1")
+    board_part = part("board1", description="Invented board")
+    board = item("jb1", description="Board one", part=board_part.id)
+    conn = connector("j1", item=board.id, name="J1", markings=("1",))
+    cable_part = part("cab1", description="Invented 4-core cable")
+    cable = item("cb1", description="Cable one", part=cable_part.id)
+    cable_records = (cable_part, cable, cable_facet("cb1", subject=cable.id, length_mm=1500))
+    cable_records += (cable_product_facet("cb1", subject=cable_part.id),)
+    items = (strip, module, a_item, b_item, board)
+    placed = [place(f"p-{one.key[-1]}", item=one.id, node=c1.id) for one in items]
+    records = (c1, doc, strip, t1, t1_facet, module, module_part, template, fn, facet, *placed)
+    records += (a_item, a_fn, a_port, b_item, b_fn, b_port, wire, label, board_part, board)
+    records += (pcb_facet("board1", subject=board_part.id), *conn[:4], *conn[4], *cable_records)
+    return model(*records), doc
+
+
+_FLOWING = ("terminal_list_page", "plc_list_page", "bom_page", "wire_label_list_page")
+_FLOWING += ("designation_list_page", "connector_list_page")
+
+
+@pytest.mark.parametrize("page", _FLOWING)
+def test_a_list_page_declares_two_columns_of_forty_percent(page):
+    """A3 (pdf-0026): the source of each flowing list page is one 100 % block of two columns
+    with a 20 % gutter, so each column is 40 % of the content width."""
+    m, doc = _list_pages_model()
+    text = getattr(_lists, page)(m, documents(m)[doc.id])
+    assert text.startswith("#block(width: 100%)[#columns(2, gutter: 20%)[")
+    assert text.count("#columns(") == 1
+
+
+@pytest.mark.parametrize("page", _FLOWING)
+def test_every_flowing_list_page_has_content_inside_its_columns(page):
+    """A3 (pdf-0026, B1): the page has rows, so the columns block is not vacuously absent."""
+    m, doc = _list_pages_model()
+    text = getattr(_lists, page)(m, documents(m)[doc.id])
+    assert "#table(" in text
+
+
+def test_the_cable_list_page_stays_full_width():
+    """A3 (pdf-0026, L8): the cable list has a table and declares no columns."""
+    m, doc = _list_pages_model()
+    text = _lists.cable_list_page(m, documents(m)[doc.id])
+    assert "#table(" in text
+    assert "#columns(" not in text
+
+
+def test_each_board_of_the_connector_list_keeps_its_heading():
+    """B2-1 (pdf-0026): with two boards, each board's section keeps its level-2 heading."""
+    c1 = location("C1", "Demo cabinet")
+    doc = document(
+        "d1", preset=_PRESET, subject=c1, cover="# Cover", notes=None, remove=(K.SCHEMATIC,)
+    )
+    records = (c1, doc)
+    for key in ("jb1", "jb2"):
+        board_part = part(f"{key}-part", description=f"Invented board {key}")
+        board = item(key, description=f"Board {key}", part=board_part.id)
+        conn = connector(f"j-{key}", item=board.id, name="J1", markings=("1",))
+        pcb = pcb_facet(key, subject=board_part.id)
+        records += (board_part, board, pcb, place(f"p-{key}", item=board.id, node=c1.id))
+        records += (*conn[:4], *conn[4])
+    m = model(*records)
+    text = _lists.connector_list_page(m, documents(m)[doc.id])
+
+    assert '#heading(level: 2, text("-JB1"))' in text
+    assert '#heading(level: 2, text("-JB2"))' in text

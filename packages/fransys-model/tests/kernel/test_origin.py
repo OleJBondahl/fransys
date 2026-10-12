@@ -8,6 +8,7 @@ from fransys_model.kernel import (
     AuthoringKey,
     Id,
     MergeConflict,
+    ModelError,
     Origin,
     SchemaError,
     SchemaVersionError,
@@ -88,4 +89,16 @@ def test_describe_shows_the_record_that_holds_a_schema_or_value_error() -> None:
     assert describe(value, _holder_source()).splitlines()[1:] == [
         "  record: pumps.py:12 (aux/pumps/pump1)",
         "  path: ext.x",
+    ]
+
+
+def test_describe_shows_the_subjects_of_an_error_that_carries_them() -> None:
+    """A layout `HintError` is not known here: `describe` reads any `subjects` it carries."""
+
+    class _SubjectsError(ModelError):
+        subjects = (_HOLDER, _MISSING)
+
+    assert describe(_SubjectsError("bad hint"), _holder_source()).splitlines()[1:] == [
+        "  subject: pumps.py:12 (aux/pumps/pump1)",
+        f"  subject: unknown origin (kind {_MISSING.kind})",
     ]

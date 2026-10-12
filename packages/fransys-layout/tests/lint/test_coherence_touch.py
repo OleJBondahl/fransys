@@ -12,7 +12,15 @@ from coherence_helpers import NO_UNITS, layout_of, port, subjects, wire
 from samples import connection, drawn, hid, placed
 
 from fransys_layout.lint import check_coherence
+from fransys_layout.lint._harness import NO_INK
 from fransys_layout.lint.codes import ROUTE_SHORTS_NETS
+from fransys_layout.lint.naming import (
+    Where,
+    _groups_on,
+    _pages_of,
+    name_findings,
+)
+from fransys_model.derive.drawing_text import position_text
 
 FAR = tuple(placed(n, x=2000, y=2000 + 100 * n, name="b") for n in range(1, 7))
 FAR_DRAWN = tuple(drawn(n) for n in range(1, 7))
@@ -36,14 +44,18 @@ def _who(*numbers):
 
 
 def _at(x, y, *, page=1, drawing_set=1):
-    """The message of a touch at `(x, y)`."""
-    return f"two physical nets touch on page {page} of drawing set {drawing_set} at ({x}, {y})"
+    """The message of a touch at `(x, y)` on a page, in `position_text`'s form."""
+    where = position_text(page, None, None, (), drawing_set)
+    return f"two physical nets touch at ({x}, {y}) ({where})"
 
 
 def _all(routes, *, connections=CONNECTIONS, net_groups=()):
     layout = layout_of(routes=routes, functions=FAR)
     findings = check_coherence(layout, connections, net_groups, FAR_DRAWN, function_units=NO_UNITS)
-    return [one for one in findings if one.code == ROUTE_SHORTS_NETS]
+    touches = [one for one in findings if one.code == ROUTE_SHORTS_NETS]
+    # the page and drawing set come from the engine's last pass, as the user reads them
+    where = Where(pages=_pages_of(layout, (), NO_INK), groups=_groups_on(layout), labels={})
+    return list(name_findings({}, where, touches))
 
 
 def _touches(routes, **kwargs):

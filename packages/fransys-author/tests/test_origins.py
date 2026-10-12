@@ -261,3 +261,47 @@ def test_plc_and_scale_facet_origins_are_their_own_calling_lines(parts):
     k1.fn("coil").scale("m", raw=(0, 10), eng=("0", "1"))
     scaling = next(r for r in d.draft().records() if isinstance(r, ScalingFacet))
     assert _origin_of(d.draft(), scaling.id).line == scale_line
+
+
+def _hidden_local(d):
+    __tracebackhide__ = True
+    return d.group("G1")
+
+
+def _shown_local(d):
+    __tracebackhide__ = False
+    return d.group("G1")
+
+
+def test_a_helper_with_a_local_tracebackhide_gives_its_callers_line(parts):
+    d = Design(parts)
+    line = _here() + 1
+    g1 = _hidden_local(d)
+    origin = _origin_of(d.draft(), g1.id)
+    assert _same_file(origin.file, __file__)
+    assert origin.line == line
+
+
+def test_a_module_with_a_global_tracebackhide_gives_its_callers_line(parts):
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).with_name("tracebackhide_helper.py")
+    spec = importlib.util.spec_from_file_location("tracebackhide_helper", path)
+    assert spec is not None
+    assert spec.loader is not None
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    d = Design(parts)
+    line = _here() + 1
+    g1 = helper.build_group(d)
+    origin = _origin_of(d.draft(), g1.id)
+    assert _same_file(origin.file, __file__)
+    assert origin.line == line
+
+
+def test_a_falsy_tracebackhide_does_not_hide_the_frame(parts):
+    d = Design(parts)
+    g1 = _shown_local(d)
+    origin = _origin_of(d.draft(), g1.id)
+    assert origin.line == _shown_local.__code__.co_firstlineno + 2

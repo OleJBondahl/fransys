@@ -15,7 +15,11 @@ test sees `ROUTE_WRONG_PORT` and `CONNECTION_NOT_DRAWN`: one part hid the other'
 """
 
 from fransys_layout.engines import lay_out_schematic
-from fransys_layout.lint.codes import CONNECTION_NOT_DRAWN, FUNCTION_UNPLACED_IN_COLUMN
+from fransys_layout.lint.codes import (
+    CONNECTION_NOT_DRAWN,
+    FUNCTION_UNPLACED_IN_COLUMN,
+    PAGE_UNDERFILLED,
+)
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import LinkMarker, Route, StarKind, layout_of
 from fransys_model.vocab import (
@@ -123,7 +127,10 @@ def test_a_net_across_two_locations_ends_in_a_stub_at_each_port() -> None:
     assert sorted(m.port for m in markers) == sorted(port_of.values())
     assert all(m.star is StarKind.OFF for m in markers), [m.star for m in markers]
     assert {m.far for m in markers} == set(port_of.values())
-    assert [f.code for f in findings] == _LONE_CONNECTORS * len(port_of)
+    assert PAGE_UNDERFILLED in {f.code for f in findings}
+    assert [f.code for f in findings if f.code != PAGE_UNDERFILLED] == _LONE_CONNECTORS * len(
+        port_of
+    )
 
 
 def test_a_three_port_net_is_stubbed_only_between_the_lowest_ports_of_its_two_parts() -> None:
@@ -138,7 +145,10 @@ def test_a_three_port_net_is_stubbed_only_between_the_lowest_ports_of_its_two_pa
     routes = layout_of(written, Route).values()
     assert any({r.a, r.b} == {lower, higher} for r in routes)
     assert CONNECTION_NOT_DRAWN not in {f.code for f in findings}
-    assert [f.code for f in findings] == _LONE_CONNECTORS * len(port_of)
+    assert PAGE_UNDERFILLED in {f.code for f in findings}
+    assert [f.code for f in findings if f.code != PAGE_UNDERFILLED] == _LONE_CONNECTORS * len(
+        port_of
+    )
 
 
 def test_two_parts_of_two_ports_each_keep_one_net_and_each_draw_their_own_route() -> None:
@@ -153,4 +163,7 @@ def test_two_parts_of_two_ports_each_keep_one_net_and_each_draw_their_own_route(
     ends = [{r.a, r.b} for r in layout_of(written, Route).values()]
     assert set(er) in ends
     assert set(ar) in ends
-    assert [f.code for f in findings] == _LONE_CONNECTORS * len(port_of)
+    assert PAGE_UNDERFILLED in {f.code for f in findings}
+    assert [f.code for f in findings if f.code != PAGE_UNDERFILLED] == _LONE_CONNECTORS * len(
+        port_of
+    )

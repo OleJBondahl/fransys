@@ -9,7 +9,7 @@ from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import Box, text_width
 from fransys_layout.stages import LabelKind, LabelRequest
-from fransys_layout.stages.extent import column_extent, drawn_boxes, marker_boxes
+from fransys_layout.stages.extent import column_extent, drawn_boxes, marker_boxes, room_boxes
 from fransys_model.kernel import freeze
 
 FUNCTION = hid("function", 1)
@@ -63,3 +63,15 @@ def test_the_engine_packs_every_page_on_the_labels_and_markers_it_draws() -> Non
 
     assert seen
     assert all(extras for extras in seen)
+
+
+def test_room_boxes_stand_below_and_beside_the_keep_out() -> None:
+    """A room of (12, 20) is a box below and one beside the keep-out (96, 32) 56 by 32."""
+    # UNDO: stages/extent.py:room_boxes, drop the beside box
+    one = placed(1, x=104, y=48)
+    key = (one.column, one.function)
+
+    assert room_boxes([one], {key: (12, 20)}) == {
+        key: [Box(x=96, y=64, width=56, height=12), Box(x=152, y=32, width=20, height=32)]
+    }
+    assert room_boxes([one], {key: (0, 20)}) == {key: [Box(x=152, y=32, width=20, height=32)]}

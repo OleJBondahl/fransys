@@ -5,4 +5,8 @@ The builder never calls `freeze` and never re-implements a model rule.
 
 
 class AuthorError(Exception):
-    """A design mistake the builder catches at the call, with a message an author can act on."""
+    """A design mistake, caught at the call or, for a layout hint, at build."""
+
+
+class AuthorAttributeError(AuthorError, AttributeError):
+    """A name a device or function lacks, as an error `hasattr` and `getattr` defaults read."""

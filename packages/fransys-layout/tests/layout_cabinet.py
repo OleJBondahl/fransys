@@ -537,6 +537,21 @@ def _extra_relay(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> Non
     b.chain(("cabinet", "k9", "contact"), (relay, "no_1"), (output, "terminal"))
 
 
+def _fan_net(b: _Builder, parts: dict[str, PartBundle]) -> None:
+    """Terminals `X6:1..4` in `=SUP`, `=P1`, `=ES`, `=SUP`, the first wired to the other three.
+
+    One net of four ends, none in `=P2`: its markers print a ` +k` (model-0139), so the
+    set's boxes already carry the +k room before `extra_relay` adds an end (model-0196).
+    """
+    strip = b.strip("X6")
+    hub, *rest = (
+        b.terminal(parts["terminal"], strip, i, group)
+        for i, group in enumerate(("sup", "p1", "es", "sup"), 1)
+    )
+    for end in rest:
+        b.wire(hub.port("terminal", "external"), end.port("terminal", "internal"))
+
+
 def _discovery_extras(b: _Builder, parts: dict[str, PartBundle], cab: Cabinet) -> None:
     """With `discovery=True`: potentials on the rail nets, and the three invented circuits
     ladder discovery needs that no hinted chain in this fixture exercises (layout-0034,
@@ -631,6 +646,7 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     second_location: bool = False,
     discovery: bool = False,
     side_terminals: bool = False,
+    fan_net: bool = False,
 ) -> Draft:
     """Build the cabinet fixture: a `Draft`, not yet frozen.
 
@@ -689,7 +705,8 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     so `=P2` is drawn in another drawing set. The shared terminal `-X2:1` stays in `=SUP`
     at `+C1`, so the control chain of `=P2` then crosses locations. `side_terminals=True`
     draws every terminal's `internal` port at `w` and `external` at `e`: the
-    rail terminal `-X2:1` then carries a reference beside an E port.
+    rail terminal `-X2:1` then carries a reference beside an E port. `fan_net=True` adds one
+    net of four ends outside `=P2` (`_fan_net`), the base of the stability tests (model-0196).
 
     `discovery=True` leaves out every `layout.chain` above (`chain` becomes a no-op,
     the spike's own method) and authors a `layout.profile` with a wider sheet,
@@ -712,6 +729,8 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     _pump(b, parts, cab, 2)
     _estop_and_signal(b, parts, cab)
     _extras(b, parts, cab)
+    if fan_net:
+        _fan_net(b, parts)
     if extra_relay:
         _extra_relay(b, parts, cab)
     if broken_chain:

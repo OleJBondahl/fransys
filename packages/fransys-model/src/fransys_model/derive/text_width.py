@@ -13,9 +13,9 @@ from fransys_model.derive._text_widths import BOLD_PAIRS, REGULAR_PAIRS, UNITS_P
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-__all__ = ["UNITS_PER_EM", "marking_widths", "text_units", "text_width"]
+__all__ = ["G_PER_MODULE", "UNITS_PER_EM", "marking_widths", "text_units", "text_width"]
 
-_G_PER_MODULE = 8  # grid units in one module unit (DESIGN 6.1); a port marking is set one M high
+G_PER_MODULE = 8  # grid units in one module unit (DESIGN 6.1); a port marking is set one M high
 
 
 def _table(pairs: str) -> frozendict[str, int]:
@@ -41,4 +41,4 @@ def text_width(text: str, *, height: int, bold: bool = False) -> int:
 
 def marking_widths(markings: Iterable[str]) -> tuple[int, ...]:
     """Each port marking's width in grid units, set one module high, for a generic box."""
-    return tuple(text_width(marking, height=_G_PER_MODULE) for marking in markings)
+    return tuple(text_width(marking, height=G_PER_MODULE) for marking in markings)

@@ -19,6 +19,7 @@ import pytest
 from fransys.colours import BU
 from fransys_author import AuthorError
 
+from fransys_model.derive import terminal_strips
 from fransys_model.vocab import ConductorKind, tables
 
 _RATED = fr.derive.Rating(voltage_dc_v=Decimal(12))
@@ -64,7 +65,7 @@ def test_a_pair_bridges_its_terminals_only_and_fills_the_jumper_group() -> None:
         tuple(sorted(tables.ports(model)[end].key[3] for end in (c.a, c.b))) for c in jumpers
     )
     assert pairs == [("10", "9"), ("7", "8"), ("8", "9")]
-    (strip_id,) = fr.derive.terminal_strips(model)
+    (strip_id,) = terminal_strips(model)
     rows = fr.derive.terminal_rows(model, strip_id)
     groups = {row.index: row.jumper_group for row in rows}
     assert {n for n, g in groups.items() if g is not None} == {7, 8, 9, 10}
@@ -88,7 +89,7 @@ def _jumpers(model) -> list[tuple[str, ...]]:
 
 
 def _groups(model) -> dict[int, int | None]:
-    (strip_id,) = fr.derive.terminal_strips(model)
+    (strip_id,) = terminal_strips(model)
     return {row.index: row.jumper_group for row in fr.derive.terminal_rows(model, strip_id)}
 
 

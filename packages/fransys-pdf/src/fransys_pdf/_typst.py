@@ -8,5 +8,5 @@ def literal(text: str) -> str:
 
 
 def description_par(text: str) -> str:
-    """A paragraph line for `text`, `""` when it is empty (a strip's description, author-0013)."""
-    return f"#par(text({literal(text)}))\n" if text else ""
+    """A sticky paragraph for `text`, `""` when empty: it stays with its table (author-0013, L7)."""
+    return f"#block(sticky: true, par(text({literal(text)})))\n" if text else ""

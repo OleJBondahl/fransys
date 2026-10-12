@@ -94,6 +94,7 @@ def _passes(
     )
     widths = ("grown",) if grew else ()
     monkeypatch.setattr(engine, "plan_pages", plan)
+    monkeypatch.setattr(engine, "cut_wide", lambda *_: None)  # no column is over-wide
     monkeypatch.setattr(
         engine,
         "place_pages",

@@ -8,6 +8,7 @@ from fransys_layout.geometry import HintError, LayoutError
 from fransys_model.kernel import Finding, Severity
 
 from ._chain_beside import read_down
+from ._chain_ends import Ends, box_entry, resolve, split_ends
 from .lookups import turn_mirrors
 from .types import ROLE_ORDER, Cell, Column, Role
 
@@ -54,8 +55,12 @@ def columns_from_chains(
     *,
     drawn: tuple[DrawnFunction, ...] = (),
     connections: tuple[Connection, ...] = (),
+    boxes: Mapping[Handle, FunctionSpec] | None = None,
 ) -> tuple[tuple[Column, ...], tuple[Finding, ...]]:
-    """Turn every chain into one column and every other function into its own."""
+    """Turn every chain into one column and every other function into its own.
+
+    A chain's box-drawn head or tail (`boxes`, by item view) stays in its box and anchors the chain.
+    """
     specs = {spec.function: spec for spec in functions}
     drawn_by = {one.function: one for one in drawn}
     claimed: set[Handle] = set()
@@ -64,20 +69,19 @@ def columns_from_chains(
         if not chain.entries:
             msg = "a chain has no entries"
             raise HintError(msg, subjects=(chain.chain,))
-        steps = []
-        for entry in chain.entries:
-            spec = specs.get(entry.function)
-            if spec is None:
-                msg = "a chain names a function that is not drawn"
-                raise HintError(msg, subjects=(chain.chain, entry.function))
+        full = resolve(chain, specs, boxes or {})
+        steps, ends = split_ends(chain, full)
+        _check_series(chain, full)
+        for _, spec in steps:
             if spec.function in claimed:
                 msg = "a function is in two chains, or twice in one chain"
                 raise HintError(msg, subjects=(chain.chain, spec.function))
             claimed.add(spec.function)
-            steps.append((entry, spec))
-        _check_series(chain, steps)
-        steps = read_down(chain, steps, specs, drawn_by)
-        flipped = _entered_from_south(steps, drawn_by, connections)
+        read = read_down(chain, steps, specs, drawn_by)
+        if len(read) > 1 and read[0][1] is not steps[0][1]:
+            ends = ends.swapped()
+        steps = read
+        flipped = _entered_from_south(steps, drawn_by, connections, ends)
         cells = tuple(
             Cell(
                 function=entry.function,
@@ -144,12 +148,15 @@ def _entry_ports(
     steps: Sequence[tuple[ChainEntry, FunctionSpec]],
     at: int,
     joined: AbstractSet[tuple[Handle, Handle]],
+    ends: Ends,
 ) -> list[PortSpec]:
     """The ports of step `at` that face its chain neighbour; empty for a lone step."""
     spec = steps[at][1]
     if at > 0:
         neighbour = {port.port for port in steps[at - 1][1].ports}
         return [p for p in spec.ports if any((p.port, n) in joined for n in neighbour)]
+    if ends.head is not None or (len(steps) == 1 and ends.tail is not None):
+        return box_entry(spec, ends, joined)
     if len(steps) > 1:
         neighbour = {port.port for port in steps[1][1].ports}
         return [p for p in spec.ports if all((p.port, n) not in joined for n in neighbour)]
@@ -196,6 +203,7 @@ def _entered_from_south(
     steps: Sequence[tuple[ChainEntry, FunctionSpec]],
     drawn_of: Mapping[Handle, DrawnFunction],
     connections: tuple[Connection, ...],
+    ends: Ends,
 ) -> set[Handle]:
     """The functions of a chain entered by their S-facing port, against the pole's direction."""
     joined = _joined_ports(connections)
@@ -204,7 +212,7 @@ def _entered_from_south(
         drawing = _drawing_of(spec, drawn_of)
         if drawing is None:
             continue
-        entries = _entry_ports(steps, at, joined)
+        entries = _entry_ports(steps, at, joined, ends)
         if len(entries) == 1 and _enters_south(spec, entries[0], drawing):
             flipped.add(spec.function)
     return flipped

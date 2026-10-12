@@ -12,7 +12,7 @@ from fransys_layout.engines.schematic.read import reading, steps
 from fransys_layout.engines.schematic.read.labels import LabelText
 from fransys_layout.engines.schematic.read.pairs import box_feeds
 from fransys_layout.engines.schematic.read.power import power_ends
-from fransys_layout.engines.schematic.read.sheets import unused_sheet_findings
+from fransys_layout.engines.schematic.read.sheets import text_floor_findings, unused_sheet_findings
 from fransys_layout.engines.schematic.read.views import pin_mates, without_idle_terminals
 from fransys_layout.stages import (
     BoxFeed,
@@ -112,7 +112,7 @@ def read_inputs(model: Model, unit: Id[Any] | None = None) -> StageInputs:
         connections=connections,
         net_groups=net_groups,
         rails=rails,
-        chains=reading.chains(model),
+        chains=reading.chains(model, view_of),
         choices=(*reading.symbol_choices(model), *view_choices),
         groups=reading.group_infos(model),
         locations=reading.location_infos(model),
@@ -125,7 +125,11 @@ def read_inputs(model: Model, unit: Id[Any] | None = None) -> StageInputs:
         unused_sheet_formats=unused_sheets,
         read_findings=tuple(
             sorted(
-                (*findings, *unused_sheet_findings(sheet, sheet_format, unused_sheets)),
+                (
+                    *findings,
+                    *unused_sheet_findings(sheet, sheet_format, unused_sheets),
+                    *text_floor_findings(model, unit),
+                ),
                 key=lambda f: (f.code, f.subjects),
             )
         ),

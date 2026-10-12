@@ -81,7 +81,7 @@ def test_a_reading_with_no_line_gives_no_facts(model):
     ("model", "code", "severity"),
     [
         (one_box(), DIAGRAM_CABLE_ONE_BOX, Severity.INFO),
-        (fanout(), DIAGRAM_CABLE_FANOUT, Severity.WARNING),
+        (fanout(), DIAGRAM_CABLE_FANOUT, Severity.INFO),
         (loose(), DIAGRAM_LOOSE_WIRE, Severity.INFO),
     ],
 )

@@ -6,6 +6,10 @@ lists every consumer task with its one spelling, then the install and the shape 
 
 Fransys is in Beta: the API may change between minor versions until 1.0.0, and each release's guide says what changed.
 
+## The public surface
+
+The public surface has four parts: `fr.__all__`, `fr.derive.__all__`, `fransys.colours`, and every keyword of every public call and every `d.*` method, with the `d.layout.profile` keywords and the `d.layout.sheet` numbers. Nothing else is public, and every part has an entry in this guide.
+
 ## Tasks
 
 Each task has one spelling. `P` is a generated parts module or an MPN string; `BU` and `BN` come
@@ -117,9 +121,15 @@ fr.write(result, Path("out"))
 - `units.md`: a unit's boundary, its revisions, and nesting one unit inside another.
 - `build.md`: `build`, `check`, `write`, `release`, `verify`, and where each can fail.
 - `documents.md`: presets, covers, subjects, and one PDF per drawing.
+- `drawing.md`: what layout reads, a checklist for a readable cabinet, the size levers and the findings that mean missing structure.
 - `reading.md`: reading a built model back: tables, rows, designations and ratings.
-- `findings.md`: every finding code, what it means, and the usual fix.
+- `reading-rows.md`: the column constants, row types, row functions and printed texts of `fr.derive`.
+- `reading-records.md`: the record types, lookups and ratings of `fr.derive`.
+- `keywords.md`: the signal types, handles, `Severity` and the keywords of the record constructors.
+- `findings.md`: every finding code, what it means and the usual fix, on four pages by source: `findings-validators.md`, `findings-render.md`, `findings-pdf.md` and `findings-kicad.md`.
 - `kicad.md`: importing a board netlist into KiCad, with the settings to use.
+- `layout-numbers.md`: every `d.layout.profile` keyword and every `d.layout.sheet` number, with its house value and its effect.
 - `examples.md`: worked examples, and a pointer to a full build script.
+- `moving-to-0.14.md`: every `fr.derive` name 0.14 removes, and what to use instead.
 - `moving-to-0.6.md`: each break from 0.5, with the old spelling, the new one and why.
 - `moving-to-fransys.md`: the alias, the pin line, the parts-module command and the intermediates folder for a 0.6.1 consumer of the old name.

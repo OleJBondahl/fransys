@@ -53,8 +53,13 @@ _PROJECT: dict[str, Any] = {
 _FILLERS = 8  # lamps per branch group: one group fills a page, so each group is a page of its own
 
 
-def _star(*, third_branch: bool):
-    """Reference `H1` (group G1, first column of page 1); branches `H2`, `H3`, and `H4` if asked."""
+def _star(*, third_branch: bool, fan_net: bool = False):
+    """Reference `H1` (group G1, first column of page 1); branches `H2`, `H3`, and `H4` if asked.
+
+    `fan_net` adds one net of four lamp ends in G2 to G4, none on page 1 (model-0196): a set's first
+    ` +k` widens its reference boxes once, so the base must already print one for `H4` to be the
+    only added end, as in the cabinet's `build_cabinet(fan_net=True)`.
+    """
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -67,11 +72,13 @@ def _star(*, third_branch: bool):
         return d.item("DEMO-LAMP-24", tag=tag, at=cabinet, group=groups[group]).fn("lamp")["1"]
 
     hub, branches = lamp("H1", 0), [lamp("H2", 1), lamp("H3", 2), lamp("H4", 3)]
-    for group in (1, 2, 3):
-        for n in range(_FILLERS):
-            lamp(f"Y{group}{n}", group)
+    fillers = {group: [lamp(f"Y{group}{n}", group) for n in range(_FILLERS)] for group in (1, 2, 3)}
     for branch in branches[: 3 if third_branch else 2]:
         wire(hub, branch)
+    if fan_net:
+        fan_hub, *fan_ends = (fillers[1][0], fillers[2][0], fillers[2][1], fillers[3][0])
+        for end in fan_ends:
+            wire(fan_hub, end)
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 
@@ -97,18 +104,19 @@ def test_a_reference_list_that_grows_at_the_first_column_moves_nothing() -> None
     is its length, 42 G, and the third branch adds one line side by side, one
     `text_height` wider. Vertical, it no longer crosses the left edge (it stood at x=0 once the
     centred box did), so it stays centred on its stub inside the content box and the
-    page does not shift for it.
+    page does not shift for it. Both runs carry a `fan_net` (model-0196): the set's first ` +k`
+    is printed in the base already, so the third branch changes the box by one line only.
 
     # UNDO: `stand.vertical` returns False (the box is horizontal: `ref.vertical` fails, and the
     # third line grows its height, not its width)
     """
-    before, after = _star(third_branch=False), _star(third_branch=True)
+    before, after = _star(third_branch=False, fan_net=True), _star(third_branch=True, fan_net=True)
     (placed_before, ref_before), (placed_after, ref) = _page_one(before), _page_one(after)
     assert ref.vertical
     # Model-0139: the third branch makes four ends, so the box prints the first target and
     # a count, one line where two branches printed two: one `text_height` narrower, still no move
     assert ref_before.width - ref.width == PROFILE.text_height
-    assert ref.height == ref_before.height  # The fixed reference length
+    assert ref.height == ref_before.height  # The fixed reference length, the set's +k in both
     assert ref.box_x is None  # centred on its stub ...
     assert ref.x - ref.width // 2 >= 0  # ... and inside the content box
     assert placed_after == placed_before  # No placement of page 1 moved

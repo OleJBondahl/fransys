@@ -66,10 +66,10 @@ def test_the_finding_names_the_conductor_in_its_subjects_and_its_text() -> None:
     (found,) = _members(routes=(wire(1, GOOD),))
     assert hid("conductor", 2) in found.subjects
     assert port(31) in found.subjects
-    assert found.message == "the conductor at this port is neither drawn nor cut in drawing set 1"
+    assert found.message == "the conductor at this port is neither drawn nor cut"
     (in_group,) = _members(routes=(edge(7, 12, 21, GOOD),), connections=(), groups=(NET,))
     assert in_group.subjects == (port(31),)
-    assert in_group.message == "a connection is neither drawn nor cut in drawing set 1"
+    assert in_group.message == "a connection is neither drawn nor cut"
 
 
 # One net group of ports 12, 21 and 31 (a declared net, no conductors); the edge joins 12-21.

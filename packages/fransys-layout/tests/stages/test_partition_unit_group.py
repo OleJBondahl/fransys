@@ -4,10 +4,18 @@ import dataclasses
 
 from samples import NO_HINTS, PROFILE, SHEET, column, hid
 
+from fransys_layout.lint._harness import NO_INK
+from fransys_layout.lint.naming import (
+    Where,
+    _groups_on,
+    _pages_of,
+    name_findings,
+)
 from fransys_layout.stages import (
     ColumnWidth,
     GroupInfo,
     GroupSet,
+    Layout,
     LocationInfo,
     PageHints,
     Role,
@@ -15,7 +23,12 @@ from fransys_layout.stages import (
 )
 from fransys_layout.stages._gather import Band, banded, gather
 from fransys_layout.stages._packing import Unit
-from fransys_layout.stages.partition import GROUP_SPLIT, UNIT_GROUP_SPLIT, ColumnTables
+from fransys_layout.stages.partition import (
+    GROUP_SPLIT,
+    UNIT_GROUP_SPLIT,
+    ColumnTables,
+    _group_names,
+)
 lazy from fransys_model.kernel import AuthoringKey, Severity
 
 LOCATIONS = (LocationInfo(location=hid("aspect_node", 100), label="C1"),)
@@ -37,7 +50,9 @@ def _band(
     )
 
 
-def _plan(widths: dict[str, int], bands: list[Band], hints: PageHints = NO_HINTS):
+def _plan(
+    widths: dict[str, int], bands: list[Band], hints: PageHints = NO_HINTS, *, named: bool = True
+):
     """One column per name, each in its own group, in name order, packed with `bands`."""
     names = sorted(widths)
     columns = tuple(column(n, (i + 1,), group=i + 1) for i, n in enumerate(names))
@@ -46,7 +61,8 @@ def _plan(widths: dict[str, int], bands: list[Band], hints: PageHints = NO_HINTS
             group=hid("aspect_node", i + 1),
             key=("invented", f"group{i + 1}"),
             label=f"G{i + 1}",
-            description=f"Invented group {i + 1}",
+            description=f"Invented group {i + 1}" if named else "",
+            designation=f"=G{i + 1}",
         )
         for i in range(len(names))
     )
@@ -142,7 +158,31 @@ def test_a_unit_group_wider_than_the_page_splits_with_unit_group_split() -> None
     assert _shape(pages) == [["a", "b"], ["c"]]
     assert [(f.code, f.severity) for f in findings] == [(UNIT_GROUP_SPLIT, Severity.WARNING)]
     assert GROUP_SPLIT not in {f.code for f in findings}
-    assert "split over pages 1, 2" in findings[0].message
+    assert findings[0].message.startswith(
+        "unit group (Invented group 1, Invented group 2, Invented group 3) is wider than a page: "
+        "split over several pages. Side hints"
+    )
+
+
+def test_the_engine_pass_names_the_pages_a_split_unit_group_runs_over() -> None:
+    """The pages live in the last pass: group subjects locate through the planned groups."""
+    pages, findings = _plan(dict.fromkeys("abc", 600), [_band("", "abc")])
+    layout = Layout(pages=pages, placed=(), routes=(), decisions=(), markers=(), labels=())
+    where = Where(pages=_pages_of(layout, (), NO_INK), groups=_groups_on(layout), labels={})
+    (named,) = name_findings({}, where, findings)
+    assert named.message.endswith("keep it on one page. (p1.1, p1.2)")
+
+
+def test_an_unnamed_group_is_named_by_its_designation_in_the_split_message() -> None:
+    """V6a: an empty description printed `()`; the group's signed path names it instead."""
+    _, findings = _plan(dict.fromkeys("abc", 600), [_band("", "abc")], named=False)
+    (finding,) = findings
+    assert "()" not in finding.message
+    assert finding.message.startswith("unit group (=G1, =G2, =G3) is wider")
+
+
+def test_a_split_unit_with_no_group_prints_loose_columns() -> None:
+    assert _group_names((), None) == "loose columns"  # ty: ignore[invalid-argument-type] -- no group is read
 
 
 def test_a_cut_group_is_two_units_and_its_lower_band_starts_the_next_page() -> None:

@@ -55,7 +55,7 @@ def test_a_net_with_one_pin(demo_board):
     demo_board.design.net("lone", (demo_board.header.pin("4"),), name="LONE")
     findings = check(demo_board.freeze(), demo_board.board.item)
     finding = _only(findings, "NET_SINGLE_PIN")
-    assert finding.severity is Severity.WARNING
+    assert finding.severity is Severity.INFO
     assert finding.subjects == (demo_board.header.pin("4"),)
     assert "LONE" in finding.message
     assert "J1:4" in finding.message

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.types import Home
-from fransys_model.derive.drawing_text import marker_lines
+from fransys_model.derive.drawing_text import marker_lines, more_count
 
 from .cuts import link_world
 from .digits import FLOOR
@@ -96,10 +96,15 @@ def _page_markers(
         if not branches:
             continue
         lines = marker_lines(len(branches))  # One count for all, one past two
+        others = more_count(len(branches))
         for end in branches:
-            spec = MarkerSpec(connection, end, ref_end, lines, kind="branch", side=branch_side)
+            spec = MarkerSpec(
+                connection, end, ref_end, lines, kind="branch", side=branch_side, others=others
+            )
             found.append(decided(spec, scene))
-        spec = MarkerSpec(connection, ref_end, branches[0], lines, kind="ref", side=ref_side)
+        spec = MarkerSpec(
+            connection, ref_end, branches[0], lines, kind="ref", side=ref_side, others=others
+        )
         found.append(decided(spec, scene))
     return found
 
@@ -159,6 +164,7 @@ def decided(spec: MarkerSpec, scene: MarkerScene) -> MarkerDecision:
         page=end.page[1],
         star=spec.kind,
         lines=spec.lines,
+        others=spec.others,
         size=reference_size(scene.sheet, scene.profile, lines=spec.lines, digits=digits),
         partner=partner.ref.port,
         partner_set=partner.page[0],

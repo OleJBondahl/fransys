@@ -7,7 +7,7 @@ at its port through the text placer's one anchoring rule.
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Facing, text_width
-from fransys_model.derive.drawing_text import position_text, row_letter
+from fransys_model.derive.drawing_text import more_text, position_text, row_letter
 
 from .digits import FLOOR, Digits
 
@@ -16,7 +16,11 @@ if TYPE_CHECKING:
 
 
 def reference_texts(sheet: SheetFormat, digits: Digits) -> tuple[str, ...]:
-    """The widest `#n-<position>` of each form derive's `position_text` prints at `digits`."""
+    """The widest `#n-<position>` of each form derive's `position_text` prints at `digits`.
+
+    Each carries the widest ` +k` the set's many-target markers add, `digits.more` digits
+    (model-0139).
+    """
     column, row = sheet.frame_columns, row_letter(sheet.frame_rows - 1)
     page = int("9" * digits.sheets)
     forms = [position_text(page, column, row, (), own_page=1)]
@@ -24,7 +28,8 @@ def reference_texts(sheet: SheetFormat, digits: Digits) -> tuple[str, ...]:
         other = int("9" * digits.other_sets)
         forms.append(position_text(page, column, row, (), other))
         forms.append(position_text(page, column, row, digits.prefix, other))
-    return tuple(f"#{'9' * digits.refs}-{form}" for form in forms)
+    more = more_text(int("9" * digits.more)) if digits.more else ""
+    return tuple(f"#{'9' * digits.refs}-{form}{more}" for form in forms)
 
 
 def reference_box_width(sheet: SheetFormat, profile: Profile, *, digits: Digits = FLOOR) -> int:

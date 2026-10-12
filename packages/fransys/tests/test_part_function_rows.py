@@ -41,7 +41,7 @@ def test_a_function_less_part_has_one_row_with_the_parts_rating(rows) -> None:
 
 
 def test_profile_of_is_the_layout_reader() -> None:
-    """`fr.derive.profile_of` is `fransys_model.layout.profile_of`, the house profile here."""
+    """`fransys_model.layout.profile_of` gives the house profile here (not on `fr.derive`)."""
     model = fr.build(fr.parts("demo_parts")).model
-    assert fr.derive.profile_of is fransys_model.layout.profile_of
-    assert fr.derive.profile_of(model).key == ("house", "profile")
+    assert not hasattr(fr.derive, "profile_of")
+    assert fransys_model.layout.profile_of(model).key == ("house", "profile")

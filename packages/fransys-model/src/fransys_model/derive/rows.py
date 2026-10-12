@@ -19,8 +19,9 @@ from enum import Enum
 from typing import Any
 
 from fransys_model.kernel import AuthoringKey, Id, register_enum, value
+from fransys_model.layout import Page
 from fransys_model.vocab.connectivity import Conductor
-from fransys_model.vocab.core import Function, Item, Port
+from fransys_model.vocab.core import Function, Item, Port, Unit
 from fransys_model.vocab.enums import FunctionKind, Gender, SignalType
 from fransys_model.vocab.ratings import Operating, Rating
 from fransys_model.vocab.templates import FunctionTemplate, Part
@@ -93,6 +94,19 @@ class PlcChannelRow:
     field_device: Id[Function] | None
     field_device_designation: str | None
     signal_name: str | None
+
+
+@value
+class PlcTable:
+    """One table of the PLC list: the channels of one controller or module.
+
+    `item` carries the channels, `designation` is its printed designation, the table's heading;
+    `rows` are its `PlcChannelRow`s in list order, never empty.
+    """
+
+    item: Id[Item]
+    designation: str
+    rows: tuple[PlcChannelRow, ...]
 
 
 @value
@@ -694,3 +708,70 @@ class HarnessLineEnd:
     plug: Id[Function] | None
     ports: tuple[Id[Port], ...]
     mates: Id[Function] | None
+
+
+@value
+class ReadabilityPage:
+    """What `fr.readability` measures of one schematic page.
+
+    `drawing_set` and `number` are as printed. `text_mm` is the smallest printed text size and
+    `min_text_mm` the profile's floor for it. `fill_percent` is the share of the content box the
+    drawn content covers, in whole percent. The four counts are the lint findings' own:
+    `wire_crossings` (two wires of different conductors crossing), `struck_labels`
+    (`WIRE_OVER_LABEL`), `text_overlaps` (`TEXT_OVERLAP`) and `lone_cells` (`LONE_CELL`).
+    The references drawn on the page: contact images with the contacts they list, stars with the
+    branches they name, and page cuts, which name one other page each. `single_*` counts the
+    images with one contact and the stars with one branch.
+    """
+
+    page: Id[Page]
+    unit: Id[Unit] | None
+    drawing_set: int
+    number: int
+    text_mm: Decimal
+    min_text_mm: Decimal
+    fill_percent: int
+    wire_crossings: int
+    struck_labels: int
+    text_overlaps: int
+    lone_cells: int
+    contact_images: int
+    contact_image_targets: int
+    single_contact_images: int
+    stars: int
+    star_branches: int
+    single_branch_stars: int
+    page_cuts: int
+
+
+@value
+class ReadabilityUnit:
+    """One unit's pages together: counts add up, `text_mm` and `fill_percent` are the lowest.
+
+    `unit` is `None` for the design's own pages. `min_text_mm` is the highest floor of its pages.
+    """
+
+    unit: Id[Unit] | None
+    pages: int
+    text_mm: Decimal
+    min_text_mm: Decimal
+    fill_percent: int
+    wire_crossings: int
+    struck_labels: int
+    text_overlaps: int
+    lone_cells: int
+    contact_images: int
+    contact_image_targets: int
+    single_contact_images: int
+    stars: int
+    star_branches: int
+    single_branch_stars: int
+    page_cuts: int
+
+
+@value
+class ReadabilityReport:
+    """What `fr.readability` returns: a row for each schematic page, and for each unit."""
+
+    pages: tuple[ReadabilityPage, ...]
+    units: tuple[ReadabilityUnit, ...]

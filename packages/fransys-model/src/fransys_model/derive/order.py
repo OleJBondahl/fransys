@@ -13,11 +13,13 @@ from fransys_model.derive.designation import (
     port_designation,
     terminal_of,
 )
+from fransys_model.derive.lookups import position_rank
+from fransys_model.derive.plc_rack import is_plc_module
 from fransys_model.kernel import Finding, Id, Model, SchemaError
 from fransys_model.layout import DrawingSet, HarnessLine, Page, layout_of, page_slice
 from fransys_model.vocab import marking_key
 from fransys_model.vocab.tables import items
-lazy from fransys_model.vocab.core import Item, Unit
+lazy from fransys_model.vocab.core import Function, Item, Unit
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Sequence
@@ -33,6 +35,8 @@ __all__ = [
     "finding_order_key",
     "in_designation_order",
     "natural_key",
+    "plc_channel_key",
+    "plc_racks",
     "wire_run",
 ]
 
@@ -85,6 +89,34 @@ def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, in
     if record is not None and record.parent is not None and t is not None:
         return (0, designation_key(model, record.parent), t.group, t.index)
     return (1, designation_key(model, item), "", 0)
+
+
+def plc_racks(model: Model) -> frozenset[Id[Item]]:
+    """The racks: every item with a `PLC_MODULE` child (`is_plc_module`)."""
+    return frozenset(
+        one.parent
+        for one in items(model).values()
+        if one.parent is not None and is_plc_module(model, one)
+    )
+
+
+def plc_channel_key(
+    model: Model, racks: frozenset[Id[Item]], item: Id[Item], number: int, function: Id[Function]
+) -> tuple[int, NaturalKey, int, tuple[int, int], tuple[str, ...], int, Id[Function]]:
+    """Sort key of a PLC channel: the one order of the PLC list's tables and rows (model-0194).
+
+    Racks by designation; in a rack its own channels, then each module in `plc_rack_modules` order
+    (`position`, authoring key); channels by `(number, function id)`. Last come the channels on
+    an item in no rack, by item designation. `racks` is `plc_racks(model)`.
+    """
+    record = items(model)[item]
+    tail = (number, function)
+    if item in racks:
+        return (0, designation_key(model, item), 0, (0, 0), (), *tail)
+    if record.parent in racks and is_plc_module(model, record):
+        rack = record.parent
+        return (0, designation_key(model, rack), 1, position_rank(record), record.key, *tail)
+    return (1, designation_key(model, item), 0, (0, 0), (), *tail)
 
 
 def by_place[T: _Placed](

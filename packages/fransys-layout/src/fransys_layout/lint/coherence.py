@@ -216,7 +216,7 @@ def _touches(world: _World) -> list[Finding]:
             _error(
                 ROUTE_SHORTS_NETS,
                 (*one, *other),
-                f"two physical nets touch on page {page[1]} of drawing set {page[0]} at {cell}",
+                f"two physical nets touch at {cell}",
             )
             for (one, other), cell in sorted(first.items())
         )

@@ -59,6 +59,7 @@ _EXPECTED_ALL = [
     "lint",
     "parts",
     "parts_module",
+    "readability",
     "release",
     "releases",
     "unit",
@@ -146,7 +147,7 @@ def test_colours_import_from_the_facade():
 
 
 def test_derive_is_the_models_derive_module():
-    assert fransys.derive is model_derive
+    assert fransys.derive is not model_derive
     assert fransys.derive.top_level_cables is model_derive.top_level_cables
 
 

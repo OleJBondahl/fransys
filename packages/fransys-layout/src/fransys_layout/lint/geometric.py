@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Box, LayoutError, Point, contains, overlaps, translate
 from fransys_layout.stages.content import content_box
+from fransys_layout.stages.extent import column_extent
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.slices import by_key, page_of
 from fransys_layout.stages.space import (
@@ -286,8 +287,41 @@ def _outside(page: _Page, route: Route) -> RoutePoint | None:
     )
 
 
+def _extent(page: _Page) -> Box | None:
+    """The page's columns' one extent (`column_extent`) over what they draw, `None` when empty."""
+    boxes = [
+        *(
+            box
+            for one, box in page.boxes
+            if (one.function, one.drawing_set, one.page) not in page.hidden
+        ),
+        *(label.box for label in page.labels),
+        *(marker.box for marker in page.markers),
+    ]
+    return column_extent(boxes) if boxes else None
+
+
 def _content(page: _Page) -> list[Finding]:
-    """`OUT_OF_CONTENT_BOX`: a keep-out box, a label or marker box or a route vertex outside it."""
+    """`OUT_OF_CONTENT_BOX`: a keep-out box, a label or marker box or a route vertex outside it.
+
+    The boxes are looked at one by one only when the columns' extent leaves the content box.
+    """
+    extent = _extent(page)
+    findings = [] if extent is None or contains(page.content, extent) else _boxes_outside(page)
+    findings.extend(
+        _warn(
+            OUT_OF_CONTENT_BOX,
+            _identity(route),
+            f"a route leaves the content box at {_at(page, outside.at.x, outside.at.y)}",
+        )
+        for route in page.routes
+        if (outside := _outside(page, route)) is not None
+    )
+    return findings
+
+
+def _boxes_outside(page: _Page) -> list[Finding]:
+    """The keep-out, label and marker boxes outside the content box, one finding each."""
     findings = [
         _warn(
             OUT_OF_CONTENT_BOX,
@@ -316,14 +350,5 @@ def _content(page: _Page) -> list[Finding]:
         )
         for marker in page.markers
         if not contains(page.content, marker.box)
-    )
-    findings.extend(
-        _warn(
-            OUT_OF_CONTENT_BOX,
-            _identity(route),
-            f"a route leaves the content box at {_at(page, outside.at.x, outside.at.y)}",
-        )
-        for route in page.routes
-        if (outside := _outside(page, route)) is not None
     )
     return findings

@@ -20,6 +20,7 @@ from ._page_requests import _page_requests
 from ._polelinks import pole_links
 from .boxes import box_sides
 from .content import content_box
+from .extent import page_extras
 from .images import reserved, rooms, unreserve
 from .labels import SlotFrame, decided_runs, place_slot_labels
 from .lookups import owner_of
@@ -230,7 +231,12 @@ def place_pages(
         if turned == drawn:
             break
         drawn = turned
-    grown = placed_widths(widths, placed_all, inputs.profile.column_gap)
+    grown = placed_widths(
+        widths,
+        placed_all,
+        inputs.profile.column_gap,
+        page_extras(inputs, planned.columns, drawn, pages, decided[0]),
+    )
     pages = [(unreserve(placed, page_rooms), first) for placed, first in pages]
     placed_all = unreserve(placed_all, page_rooms)
     findings = (*planned.findings, *page_found)

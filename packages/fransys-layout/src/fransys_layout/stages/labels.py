@@ -232,3 +232,19 @@ def _placement(
         msg = "a label request's subject is neither a placed function nor a port of one"
         raise LayoutError(msg)
     return placed_of[function]
+
+
+def request_boxes(
+    requests: tuple[LabelRequest, ...],
+    placed: tuple[PlacedFunction, ...],
+    drawn: tuple[DrawnFunction, ...],
+    profile: Profile,
+) -> list[tuple[Handle, Box]]:
+    """Each request's preferred box on the page, with the function that draws it (layout-0175)."""
+    placed_of = _placed_of(placed)
+    owner_of = _owner_of(placed_of, drawn)
+    return [
+        (placement.function, home(request, placement, profile).box)
+        for request in requests
+        for placement in (_placement(request, placed_of, owner_of),)
+    ]

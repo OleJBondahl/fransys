@@ -4,9 +4,8 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Mapping
 
-from fransys_layout.geometry import hull
-
 from ._labelling import slot_box
+from .extent import column_extent
 from .lookups import owner_of, placed_keepout
 from .room import grow_keepout
 from .types import ColumnWidth, DrawnFunction, LabelKind
@@ -69,23 +68,29 @@ def grown(
 
 
 def placed_widths(
-    widths: tuple[ColumnWidth, ...], placed: tuple[PlacedFunction, ...], gap: int
+    widths: tuple[ColumnWidth, ...],
+    placed: tuple[PlacedFunction, ...],
+    gap: int,
+    extras: Mapping[tuple[int, int, Handle], list[Box]] | None = None,
 ) -> tuple[ColumnWidth, ...]:
     """Each column's width, the larger of its estimate and its room on the page (layout-0175).
 
-    The room is the pitch to the next column's ink, or the last column's ink plus the gap; the
-    axes are snapped up to the grid, so the pitch can exceed the keep-out width plus the gap.
+    The room is the pitch to the next column's extent, or the last extent plus the gap; `extras`
+    are the label and marker boxes `column_extent` counts with the keep-outs.
     """
+    extras = extras or {}
     held: dict[tuple[int, int], dict[AuthoringKey, list[Box]]] = {}
     for one in placed:
         page = held.setdefault((one.drawing_set, one.page), {})
-        page.setdefault(one.column, []).append(placed_keepout(one))
+        boxes = page.setdefault(one.column, [])
+        boxes.append(placed_keepout(one))
+        boxes.extend(extras.get((one.drawing_set, one.page, one.function), ()))
     actual: dict[AuthoringKey, int] = {}
     for page in held.values():
-        inks = sorted((hull(boxes) for boxes in page.values()), key=lambda ink: ink.x)
-        keys = sorted(page, key=lambda key: hull(page[key]).x)
+        inks = {key: column_extent(boxes) for key, boxes in page.items()}
+        keys = sorted(inks, key=lambda key: inks[key].x)
         for index, key in enumerate(keys):
-            ink = hull(page[key])
-            right = inks[index + 1].x if index + 1 < len(keys) else ink.x + ink.width + gap
+            ink = inks[key]
+            right = inks[keys[index + 1]].x if index + 1 < len(keys) else ink.x + ink.width + gap
             actual[key] = max(actual.get(key, 0), right - ink.x)
     return tuple(replace(one, width=max(one.width, actual.get(one.column, 0))) for one in widths)

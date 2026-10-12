@@ -79,3 +79,22 @@ def test_a_column_counts_its_pitch_to_the_next_ink_and_the_last_counts_ink_plus_
         ColumnWidth(column=("invented", "a"), width=200),
         ColumnWidth(column=("invented", "b"), width=104),
     )
+
+
+def test_a_label_or_marker_box_past_the_keep_outs_widens_the_column_extent() -> None:
+    """Column `a` stands alone: its keep-out is 56 wide at x 96; a box 100 further right counts.
+
+    The same `column_extent` the lint reads, so packing and the lint measure one column.
+    """
+    # UNDO: stages/sizing.py:placed_widths, `boxes.extend(extras.get(...))` -> `pass`
+    #     (the extras never reach the extent)
+    column = ColumnWidth(column=("invented", "a"), width=10)
+    one = placed(1, x=104, y=0, name="a")
+    out = Box(x=250, y=0, width=6, height=12)  # right edge 256, past the keep-out's 152
+
+    bare = placed_widths((column,), (one,), 48)
+    wide = placed_widths((column,), (one,), 48, {(1, 1, one.function): [out]})
+
+    assert bare == (ColumnWidth(column=("invented", "a"), width=104),)
+    # extent from 96 to 256 is 160, plus the gap 48
+    assert wide == (ColumnWidth(column=("invented", "a"), width=208),)

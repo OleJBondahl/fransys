@@ -443,3 +443,35 @@ def test_a_column_of_only_boxes_pushed_by_a_band_keeps_the_row_gap() -> None:
     step = _KEEPOUT_HEIGHT + PROFILE.row_gap
     assert by[hid("function", 2)].at.y == by[hid("function", 1)].at.y + step
     assert by[hid("function", 3)].at.y == by[hid("function", 2)].at.y + step
+
+
+def _lane_pitch_of(far_lane: int) -> int:
+    """Row 1's lane 0-1 gap, under a row 0 of a 200-wide cell and a cell at `far_lane`."""
+    wide = dataclasses.replace(
+        drawn(1),
+        geometry=dataclasses.replace(
+            through_geometry(), keepout=Box(x=-8, y=-16, width=200, height=32)
+        ),
+    )
+    rows = ((1, 0, 0), (2, far_lane, 0), (3, 0, 1), (4, 1, 1))
+    cells = tuple(Cell(function=hid("function", n), index=i, lane=lane) for n, lane, i in rows)
+    lanes = dataclasses.replace(column("a", (1,)), cells=cells)
+    placed, _ = place(
+        page_plan(("a",)),
+        (lanes,),
+        (wide, drawn(2), drawn(3), drawn(4)),
+        profile=PROFILE,
+        sheet=SHEET,
+    )
+    by = _by_function(placed)
+    return by[hid("function", 4)].at.x - by[hid("function", 3)].at.x
+
+
+def test_a_lane_pitch_divides_each_step_by_the_lanes_it_spans() -> None:
+    """layout-0178: a 200-wide cell and a cell 4 lanes on need a quarter of the step per lane."""
+    # UNDO: place.py `_widest_step`: drop `// max(1, cell.lane - previous.lane)`
+    # The step from the wide cell to the next is 208 (its 200 and a wiring grid of 8); row 1's own
+    # step is 64 (a keep-out of 56 and a grid)
+    assert _lane_pitch_of(1) == 208  # k = 1: the whole step is the pitch
+    assert _lane_pitch_of(2) == 104  # k = 2: half of it
+    assert _lane_pitch_of(4) == 64  # k = 4: 52, under row 1's own step

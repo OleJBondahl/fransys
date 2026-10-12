@@ -552,9 +552,9 @@ def _span_offsets(rows: Sequence[list[_Cell]], pitch: int | None) -> None:
 
 
 def _widest_step(rows: Sequence[list[_Cell]]) -> int | None:
-    """With no pole pitch, one pitch for every pole-lane row: the widest packed step."""
+    """With no pole pitch, one pitch for every pole-lane row: the widest step per lane it spans."""
     steps = [
-        _next_slot(previous, cell, 0)
+        snap_up(-(-_next_slot(previous, cell, 0) // max(1, cell.lane - previous.lane)))
         for row in rows
         if not all(cell.host is not None for cell in row)
         for previous, cell in pairwise(row)

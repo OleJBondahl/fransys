@@ -5,12 +5,12 @@ from xml.sax.saxutils import escape
 
 from fransys_model.derive import connector_box_lines, line_designation
 from fransys_model.derive.drawing_text import port_marking
+from fransys_model.derive.order import drawn_lines_on_page, drawn_on_page
 from fransys_model.layout import (
     ConnectorBox,
     DrawingSet,
     HarnessLine,
     layout_of,
-    page_slice,
     profile_of_page,
     sheet_format_of,
 )
@@ -58,13 +58,12 @@ def _line_element(
 
 
 def harness_lines_group(model: Model, page: Page) -> str:
-    """Every harness line on `page` as one `<polyline>` each, in `id` order, with its text."""
+    """Every harness line on `page` as one `<polyline>` each, in `wire_run` order, with its text."""
     sheet = sheet_format_of(model, page.sheet_format)
     step = profile_of_page(model, page).text_height
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return "".join(
-        _line_element(model, sheet, step, line, unit)
-        for line in page_slice(model, HarnessLine, page)
+        _line_element(model, sheet, step, line, unit) for line in drawn_lines_on_page(model, page)
     )
 
 
@@ -108,10 +107,11 @@ def _box_element(
 
 
 def connector_boxes_group(model: Model, page: Page) -> str:
-    """Every connector box on `page`: its rectangle, text lines and pin cells, in `id` order."""
+    """Every connector box on `page`: its rectangle, text lines and pin cells, by place."""
     sheet = sheet_format_of(model, page.sheet_format)
     step = profile_of_page(model, page).text_height
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return "".join(
-        _box_element(model, sheet, step, box, unit) for box in page_slice(model, ConnectorBox, page)
+        _box_element(model, sheet, step, box, unit)
+        for box in drawn_on_page(model, ConnectorBox, page)
     )

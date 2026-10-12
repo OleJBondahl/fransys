@@ -1,7 +1,8 @@
-"""Route polylines: one `<polyline>` per `layout.route` on a page, ordered by `id`."""
+"""Route polylines: one `<polyline>` per `layout.route` on a page, drawn in `wire_run` order."""
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.order import wire_run
 from fransys_model.layout import Route, page_slice, sheet_format_of
 
 from ._numbers import format_decimal, grid_to_mm
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def routes_on_page(model: Model, page: Page) -> tuple[Route, ...]:
-    """Every `layout.route` drawn on `page`, ordered by `id`."""
+    """Every `layout.route` drawn on `page`, in `id` order (the drawn order is `wire_run`)."""
     return page_slice(model, Route, page)
 
 
@@ -24,11 +25,13 @@ def _point_mm(sheet: SheetFormat, x: int, y: int) -> str:
 
 
 def routes_group(model: Model, page: Page) -> str:
-    """Every route on `page` as one `<polyline>` each, in `id` order."""
+    """Every route on `page` as one `<polyline>` each, upper end first, in `wire_run` order."""
     sheet = sheet_format_of(model, page.sheet_format)
-    return "".join(
-        '<polyline class="wire" points="'
-        + " ".join(_point_mm(sheet, point.x, point.y) for point in route.points)
-        + '"/>'
+    runs = sorted(
+        wire_run([(point.x, point.y) for point in route.points])
         for route in routes_on_page(model, page)
+    )
+    return "".join(
+        '<polyline class="wire" points="' + " ".join(_point_mm(sheet, x, y) for x, y in run) + '"/>'
+        for run in runs
     )

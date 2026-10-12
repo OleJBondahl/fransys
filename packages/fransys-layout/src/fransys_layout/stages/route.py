@@ -20,8 +20,9 @@ from . import lookups
 from ._sides import Edge, drawn_key, drawn_order, joined, joins_of, located, retarget
 from .content import content_box
 from .grid_path import Field, axes_of, cells_of, grid_path, reserve_exits
-from .space import Blocks, End, Obstacle, Shape, Space, span
+from .space import Blocks, End, Obstacle, Shape, Space, span, unowned
 from .types import Route, RoutePoint
+from .wrap import wrap_strips
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -52,6 +53,7 @@ class _Page:
     content: Box
     profile: Profile
     bare: Space | None = None  # `space` without the soft shapes, for an edge they shut in (HL19)
+    wrap_gap: int | None = None  # see `PageRoom.wrap_gap`
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +66,7 @@ class PageRoom:
     markers: tuple[LinkMarker, ...] = ()
     aside: frozenset[Handle] = frozenset()  # conductors of a beside column (layout-0174)
     blocks: Blocks = field(default_factory=Blocks)  # the shapes of the boxes over moved pin views
+    wrap_gap: int | None = None  # how near a run is to a side to count as along it; None = off
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +98,7 @@ def route(
         space=_space(placed, room, owner_of, soft=True),
         content=content_box(room.sheet),
         profile=room.profile,
+        wrap_gap=room.wrap_gap,
         bare=_space(placed, room, owner_of, soft=False) if room.blocks.soft else None,
     )
     used: dict[Cell, frozenset[Handle]] = {}
@@ -325,7 +329,15 @@ def _draw(
     found = _search(edge, page, used, along, port_exits)
     if found is None and page.bare is not None:
         found = _search(edge, replace(page, space=page.bare), used, along, port_exits)
-    return found
+    if found is None:
+        return None
+    ends = [page.ends[located(one)].at for one in (edge.a, edge.b)]
+    own = {edge.a.function, edge.a.port, edge.b.function, edge.b.port}
+    strips = wrap_strips(found, page.space.shapes, own, ends, (page.content, page.wrap_gap))
+    if not strips:
+        return found
+    closed = replace(page, space=replace(page.space, shapes=(*page.space.shapes, *unowned(strips))))
+    return _search(edge, closed, used, along, port_exits) or found
 
 
 def _search(

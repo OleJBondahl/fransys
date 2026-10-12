@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.layout import Outline, page_slice, sheet_format_of
+from fransys_model.derive.order import drawn_on_page
+from fransys_model.layout import Outline, sheet_format_of
 
 from ._numbers import format_decimal, grid_to_mm
 
@@ -29,6 +30,8 @@ def _outline_glyph(sheet: SheetFormat, outline: Outline) -> str:
 
 
 def outlines_group(model: Model, page: Page) -> str:
-    """Every `layout.outline` of `page`, in id order, as a dash-dot outline."""
+    """Every `layout.outline` of `page`, by place, as a dash-dot outline."""
     sheet = sheet_format_of(model, page.sheet_format)
-    return "".join(_outline_glyph(sheet, outline) for outline in page_slice(model, Outline, page))
+    return "".join(
+        _outline_glyph(sheet, outline) for outline in drawn_on_page(model, Outline, page)
+    )

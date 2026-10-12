@@ -71,6 +71,9 @@ if TYPE_CHECKING:
     from .read import StageInputs
 
 
+_REPLANS = 3  # plans after the first; the widths only grow, so a settled run ends sooner
+
+
 @value
 class StageResults:
     """What the stages produced: the `Layout`, the drawn functions and every column planned."""
@@ -258,18 +261,22 @@ def _placed(
     widths: tuple[ColumnWidth, ...],
     decide: Decide,
 ) -> tuple[Placement, tuple[References, tuple[Finding, ...]]]:
-    """`plan_pages`, `references`, `place`; again on grown widths; room check (0143).
+    """`plan_pages`, `references`, `place`; again on grown widths, at most `_REPLANS` times (0175).
 
-    The second pass also cuts the groups the first placing folded below the page.
+    Each placing is checked again: a group folded below the page is cut, a grown width re-plans.
     """
     planned = plan_pages(run, drawn, columns, widths)
     first = planned.plans
     placement, grown, decided = place_pages(run, drawn, planned, widths, decide)
-    tall = tall_groups(placement.pages, run.inputs.sheet.content_height, run.inputs.middle)
-    if grown != widths or tall:
+    planned_with = widths
+    for _ in range(_REPLANS):
+        tall = tall_groups(placement.pages, run.inputs.sheet.content_height, run.inputs.middle)
+        if grown == planned_with and not tall:
+            break
         run = recut(run, tall)
         planned = plan_pages(run, placement.drawn, columns, grown)
-        placement, _, decided = place_pages(run, placement.drawn, planned, grown, decide)
+        planned_with = grown
+        placement, grown, decided = place_pages(run, placement.drawn, planned, grown, decide)
     return placement, box_room_findings(decided, first)
 
 

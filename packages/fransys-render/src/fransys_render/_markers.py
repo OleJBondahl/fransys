@@ -10,6 +10,7 @@ from symdef import Direction
 from electrical_symbols import WIRING_GRID
 from fransys_model.derive import draws_as_line
 from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.order import drawn_on_page
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.layout import (
     HarnessLine,
@@ -37,8 +38,8 @@ if TYPE_CHECKING:
 
 
 def markers_on_page(model: Model, page: Page) -> tuple[LinkMarker, ...]:
-    """Every `layout.link_marker` on `page`, ordered by `id`."""
-    return page_slice(model, LinkMarker, page)
+    """Every `layout.link_marker` on `page`, top-down, left to right (`by_place`)."""
+    return drawn_on_page(model, LinkMarker, page)
 
 
 type _Indexed = list[tuple[int, SymbolPlacement]]

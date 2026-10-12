@@ -1,4 +1,4 @@
-"""Label text: one `<text>` per `layout.label` on a page, ordered by `id`."""
+"""Label text: one `<text>` per `layout.label` on a page, top-down, left to right (`by_place`)."""
 
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
@@ -9,7 +9,8 @@ from fransys_model.derive.drawing_text import (
     contact_image,
     label_text,
 )
-from fransys_model.layout import Label, page_slice, profile_of_page, sheet_format_of
+from fransys_model.derive.order import drawn_on_page
+from fransys_model.layout import Label, profile_of_page, sheet_format_of
 from fransys_model.vocab import functions, items, ports
 
 from ._constants import ASCENT_RATIO
@@ -22,8 +23,8 @@ if TYPE_CHECKING:
 
 
 def labels_on_page(model: Model, page: Page) -> tuple[Label, ...]:
-    """Every `layout.label` on `page`, ordered by `id`."""
-    return page_slice(model, Label, page)
+    """Every `layout.label` on `page`, top-down, left to right (`by_place`)."""
+    return drawn_on_page(model, Label, page)
 
 
 def _item_installed(model: Model, item: Id[Item]) -> bool:

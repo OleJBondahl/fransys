@@ -82,7 +82,12 @@ def _passes(
         seen.append(run.inputs.middle)
         return SimpleNamespace(plans=(), columns=())
 
-    page = (None, SimpleNamespace(shapes=[_shape(bottom, held=held)]))
+    # the cut group no longer folds below the page on the next placing, as a real recut leaves it
+    pages = iter([bottom] + [FLOOR] * 9)
+
+    def placings() -> list[Any]:
+        return [(None, SimpleNamespace(shapes=[_shape(next(pages), held=held)]))]
+
     decided = (
         SimpleNamespace(digits=(SetDigits(drawing_set=1, refs=2, sheets=2),), markers=()),
         (),
@@ -90,7 +95,9 @@ def _passes(
     widths = ("grown",) if grew else ()
     monkeypatch.setattr(engine, "plan_pages", plan)
     monkeypatch.setattr(
-        engine, "place_pages", lambda *_: (SimpleNamespace(drawn=(), pages=[page]), widths, decided)
+        engine,
+        "place_pages",
+        lambda *_: (SimpleNamespace(drawn=(), pages=placings()), widths, decided),
     )
     run: Any = _Run(_Inputs(_middle(lower=lower), SimpleNamespace(content_height=FLOOR)))
     nothing: Any = None  # the stubs read none of the drawn or the decide

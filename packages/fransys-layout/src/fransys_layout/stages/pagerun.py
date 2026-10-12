@@ -48,6 +48,7 @@ from .tags import TagTexts, one_module_tag
 from .texts.power import drawn_shapes, with_power_rooms
 from .texts.stand import joined_ports, page_texts
 from .types import LabelKind
+from .wrap import WRAP_GAP
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -409,6 +410,7 @@ def finish_page(
             sheet=inputs.sheet,
             markers=markers,
             blocks=page.blocks,
+            wrap_gap=WRAP_GAP,
             aside=frozenset(
                 c.handle for c in inputs.connections if (c.a.port, c.b.port) in inputs.aside
             ),

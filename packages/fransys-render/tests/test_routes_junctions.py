@@ -6,6 +6,7 @@ from fransys_render import pages
 from fransys_render._numbers import format_decimal, grid_to_mm
 from fransys_render._routes import _point_mm, routes_group, routes_on_page
 
+from fransys_model.derive.order import wire_run
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -368,7 +369,12 @@ def test_a_wire_joining_one_grid_out_from_a_port_gets_the_dot_at_the_t():
 # --- 6. Ordering: routes by id, junctions by position ------------------------------------
 
 
-def test_routes_and_junctions_are_ordered_by_id_and_position():
+def _run(route):
+    """The route's points as `wire_run` reads them: from the upper end."""
+    return wire_run([(point.x, point.y) for point in route.points])
+
+
+def test_routes_and_junctions_are_ordered_by_wire_run_and_position():
     drawing_set = _drawing_set("t6")
     page = _page("t6", drawing_set=drawing_set)
 
@@ -407,15 +413,18 @@ def test_routes_and_junctions_are_ordered_by_id_and_position():
     sheet = sheet_format_of(model, page.sheet_format)
     svg = _one_svg(model)
 
-    routes = sorted(layout_of(model, Route).values(), key=lambda route: route.id)
+    routes = sorted(
+        layout_of(model, Route).values(),
+        key=lambda route: wire_run([(point.x, point.y) for point in route.points]),
+    )
     expected_route_count = 6
     assert len(routes) == expected_route_count
 
     def _polyline_marker(route):
         pts = " ".join(
-            f"{format_decimal(grid_to_mm(sheet.content_x_mm, point.x, sheet.module_mm))},"
-            f"{format_decimal(grid_to_mm(sheet.content_y_mm, point.y, sheet.module_mm))}"
-            for point in route.points
+            f"{format_decimal(grid_to_mm(sheet.content_x_mm, x, sheet.module_mm))},"
+            f"{format_decimal(grid_to_mm(sheet.content_y_mm, y, sheet.module_mm))}"
+            for x, y in _run(route)
         )
         return f'<polyline class="wire" points="{pts}"/>'
 
@@ -446,10 +455,10 @@ def test_routes_group_concatenates_polylines_with_no_separator():
     sheet = sheet_format_of(model, page.sheet_format)
 
     def _polyline(route):
-        points = " ".join(_point_mm(sheet, point.x, point.y) for point in route.points)
+        points = " ".join(_point_mm(sheet, x, y) for x, y in _run(route))
         return f'<polyline class="wire" points="{points}"/>'
 
-    ordered = routes_on_page(model, page)
+    ordered = sorted(routes_on_page(model, page), key=_run)
     expected_route_count = 2
     assert len(ordered) == expected_route_count
     expected = "".join(_polyline(route) for route in ordered)

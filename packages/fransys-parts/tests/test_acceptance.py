@@ -147,14 +147,15 @@ def test_demo_library_record_counts_and_keys():
     adds `relay-mod-2.toml` (5 functions/12 ports/4 symbol choices, 6 header joins),
     adds `contactor-leads.toml` (2 functions/4 ports/2 symbol choices, 1 link),
     adds `switch-8p.toml` (9 functions/10 ports, no link or symbol choice),
-    so 54 parts, 117 templates, 271 ports, 46 links, 48 symbol choices)."""
+    adds `ctrl-20p.toml` (21 functions/22 ports, no link or symbol choice),
+    so 55 parts, 138 templates, 293 ports, 46 links, 48 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 54
-    assert len(function_templates(model)) == 117
-    assert len(port_templates(model)) == 271
+    assert len(parts(model)) == 55
+    assert len(function_templates(model)) == 138
+    assert len(port_templates(model)) == 293
     assert len(internal_links(model)) == 46
     assert len(model.tables["layout.symbol_choice"]) == 48
 

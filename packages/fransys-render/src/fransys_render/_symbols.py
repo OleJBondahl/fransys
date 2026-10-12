@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 from symdef import to_fragment
 
+from fransys_model.derive.order import drawn_on_page
 from fransys_model.layout import (
     PowerSymbol,
     SymbolPlacement,
-    page_slice,
     profile_of_page,
     sheet_format_of,
 )
@@ -34,8 +34,8 @@ _HALF_SIZE_G = 4
 
 
 def symbols_on_page(model: Model, page: Page) -> tuple[SymbolPlacement, ...]:
-    """Every `layout.symbol_placement` on `page`, ordered by `id` (placement-id order)."""
-    return page_slice(model, SymbolPlacement, page)
+    """Every `layout.symbol_placement` on `page`, top-down, left to right."""
+    return drawn_on_page(model, SymbolPlacement, page)
 
 
 def _rect_glyph(sheet: SheetFormat, placement: SymbolPlacement) -> str:
@@ -66,8 +66,8 @@ def _not_installed(model: Model, placement: SymbolPlacement) -> bool:
 
 
 def power_symbols_on_page(model: Model, page: Page) -> tuple[PowerSymbol, ...]:
-    """Every `layout.power_symbol` on `page`, ordered by `id`."""
-    return page_slice(model, PowerSymbol, page)
+    """Every `layout.power_symbol` on `page`, top-down, left to right (`by_place`)."""
+    return drawn_on_page(model, PowerSymbol, page)
 
 
 def power_lead_ends(power: PowerSymbol, symbol: Symbol) -> tuple[tuple[int, int], tuple[int, int]]:

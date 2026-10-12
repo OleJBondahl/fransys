@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.layout import HarnessFanOut, page_slice, sheet_format_of
+from fransys_model.derive.order import drawn_on_page
+from fransys_model.layout import HarnessFanOut, sheet_format_of
 
 from ._routes import _point_mm
 
@@ -12,12 +13,12 @@ if TYPE_CHECKING:
 
 
 def fan_outs_group(model: Model, page: Page) -> str:
-    """Every fan-out leg on `page` as one wire `<polyline>`, fan-outs by `id`, legs by `index`."""
+    """Every fan-out leg on `page` as one wire `<polyline>`, fan-outs by place, legs by `index`."""
     sheet = sheet_format_of(model, page.sheet_format)
     return "".join(
         '<polyline class="wire" points="'
         + " ".join(_point_mm(sheet, point.x, point.y) for point in leg.points)
         + '"/>'
-        for fan_out in page_slice(model, HarnessFanOut, page)
+        for fan_out in drawn_on_page(model, HarnessFanOut, page)
         for leg in fan_out.legs
     )

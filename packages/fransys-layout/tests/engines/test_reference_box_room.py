@@ -99,7 +99,7 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
     monkeypatch.setattr(
         engine, "plan_pages", lambda *_: SimpleNamespace(plans=next(passes), columns=())
     )
-    calls = iter((("grown",), ()))
+    calls = iter((("grown",), ("grown",)))  # the second placing measures what it was planned with
     final = _decided(SetDigits(drawing_set=1, refs=2, sheets=3))
     monkeypatch.setattr(
         engine,
@@ -111,3 +111,52 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
     run: Any = SimpleNamespace(inputs=SimpleNamespace(sheet=sheet, middle={}))
     _, (_, found) = engine._placed(run, (), (), (), nothing)
     assert [one.code for one in found] == [REFERENCE_BOX_EXCEEDS_ROOM]
+
+
+def _replans(monkeypatch: pytest.MonkeyPatch, measured: Any) -> int:
+    """How many plans `_placed` makes when each placing measures `measured(n)` for the n-th."""
+    plans: list[int] = []
+    monkeypatch.setattr(
+        engine,
+        "plan_pages",
+        lambda *_: plans.append(len(plans)) or SimpleNamespace(plans=(), columns=()),
+    )
+    placings = iter(range(1, 99))
+    monkeypatch.setattr(
+        engine,
+        "place_pages",
+        lambda *_: (
+            SimpleNamespace(drawn=(), pages=[]),
+            measured(next(placings)),
+            _decided(SetDigits(drawing_set=1, refs=2, sheets=3)),
+        ),
+    )
+    nothing: Any = None
+    sheet = SimpleNamespace(content_height=854)
+    run: Any = SimpleNamespace(inputs=SimpleNamespace(sheet=sheet, middle={}))
+    engine._placed(run, (), (), (), nothing)
+    return len(plans)
+
+
+def test_the_engine_plans_again_while_the_widths_still_grow_up_to_the_bound(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """layout-0175: a placing measuring wider than planned plans again, three times at most."""
+    # CAN-FAIL: engines/schematic/engine.py `_placed`: `if again == grown: break` -> `pass`
+    #     (always the bound) fails the settled case; `_REPLANS = 3` -> `1` (the old single
+    #     re-plan, the second placing's growth discarded) fails the growing case
+    assert _replans(monkeypatch, lambda n: ("w", n)) == 1 + engine._REPLANS
+    assert _replans(monkeypatch, lambda n: ("w", min(n, 2))) == 3
+    assert _replans(monkeypatch, lambda _: ()) == 1
+
+
+def test_a_group_tall_only_after_a_later_placing_is_recut(monkeypatch: pytest.MonkeyPatch) -> None:
+    """layout-0175: `tall` is read after every placing; a group folding low late is cut."""
+    # CAN-FAIL: engines/schematic/engine.py `_placed`: reading `tall` once, before the loop, never
+    #     cuts the group the second placing folds low
+    found = iter(({}, {"unit": "cut"}, {}))
+    cut: list[Any] = []
+    monkeypatch.setattr(engine, "tall_groups", lambda *_: next(found))
+    monkeypatch.setattr(engine, "recut", lambda run, tall: cut.append(tall) or run)
+    assert _replans(monkeypatch, lambda _: ("w",)) == 3
+    assert cut == [{}, {"unit": "cut"}]

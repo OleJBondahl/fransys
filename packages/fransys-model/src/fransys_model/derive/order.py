@@ -5,30 +5,47 @@ Reached as `fransys_model.derive.order.<name>`; `derive/__init__.py` re-exports 
 above `vocab`, whose `marking_key` stays the text primitive.
 """
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 from fransys_model.derive.designation import (
+    function_designation,
     item_designation,
     port_designation,
     terminal_of,
 )
 from fransys_model.kernel import Finding, Id, Model, SchemaError
+from fransys_model.layout import DrawingSet, HarnessLine, Page, layout_of, page_slice
 from fransys_model.vocab import marking_key
 from fransys_model.vocab.tables import items
-lazy from fransys_model.vocab.core import Item
+lazy from fransys_model.vocab.core import Item, Unit
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable, Sequence
 
 
 __all__ = [
     "NaturalKey",
     "bom_sort_key",
+    "by_place",
     "designation_key",
+    "drawn_lines_on_page",
+    "drawn_on_page",
     "finding_order_key",
     "in_designation_order",
     "natural_key",
+    "wire_run",
 ]
+
+
+class _Placed(Protocol):
+    """A record with a place on a page."""
+
+    @property
+    def x(self) -> int: ...
+
+    @property
+    def y(self) -> int: ...
+
 
 type NaturalKey = tuple[tuple[tuple[int, int, str], ...], str]
 
@@ -68,6 +85,70 @@ def bom_sort_key(model: Model, item: Id[Item]) -> tuple[int, NaturalKey, str, in
     if record is not None and record.parent is not None and t is not None:
         return (0, designation_key(model, record.parent), t.group, t.index)
     return (1, designation_key(model, item), "", 0)
+
+
+def by_place[T: _Placed](
+    drawn: Iterable[T], local: Callable[[T], NaturalKey] | None = None
+) -> tuple[T, ...]:
+    """`drawn` top-down, left to right; a tie breaks on `local`, then on the order it came in.
+
+    A page draws its symbols, labels and markers in this order, so no id (which follows the
+    instance path) decides which is drawn first. `local` is the thing's designation as printed
+    within its unit (`_local_designation`), never the instance tag.
+    """
+    if local is None:
+        return tuple(sorted(drawn, key=lambda one: (one.y, one.x)))
+    return tuple(sorted(drawn, key=lambda one: (one.y, one.x, local(one))))
+
+
+def _local_designation(model: Model, record: object, unit: Id[Unit] | None) -> NaturalKey:
+    """`natural_key` of the designation `record` prints in `unit`'s own document, else of `""`.
+
+    A record names a `port`, a `function` or a `harness`; one that names none, or an item that
+    prints none, keys as the empty text.
+    """
+    try:
+        if (port := getattr(record, "port", None)) is not None:
+            return natural_key(port_designation(model, port, unit=unit))
+        if (function := getattr(record, "function", None)) is not None:
+            return natural_key(function_designation(model, function, unit=unit))
+        if (harness := getattr(record, "harness", None)) is not None:
+            return natural_key(item_designation(model, harness, unit=unit))
+    except SchemaError:  # an item that prints no designation: the numbering finding names it
+        pass
+    return natural_key("")
+
+
+def drawn_on_page[R: _Placed](model: Model, record_type: type[R], page: Page) -> tuple[R, ...]:
+    """The page's `record_type` records in drawn order: `by_place`, then the local designation."""
+    unit = layout_of(model, DrawingSet)[page.drawing_set].unit
+    return by_place(
+        page_slice(model, record_type, page), lambda one: _local_designation(model, one, unit)
+    )
+
+
+def drawn_lines_on_page(model: Model, page: Page) -> tuple[HarnessLine, ...]:
+    """The page's harness lines by `wire_run` of their points, then the harness designation."""
+    unit = layout_of(model, DrawingSet)[page.drawing_set].unit
+    return tuple(
+        sorted(
+            page_slice(model, HarnessLine, page),
+            key=lambda line: (
+                wire_run([(point.x, point.y) for point in line.points]),
+                _local_designation(model, line, unit),
+            ),
+        )
+    )
+
+
+def wire_run(points: Sequence[tuple[int, int]]) -> tuple[tuple[int, int], ...]:
+    """A drawn wire's `(x, y)` points read from its upper end, then its left one.
+
+    The run is also the wire's order key: wires draw top-down, left to right, from their own
+    ends, so a name above the unit (an id) never picks the end or the place.
+    """
+    run = tuple(points)
+    return min(run, run[::-1], key=lambda way: (way[0][1], way[0][0], way[-1][1], way[-1][0]))
 
 
 def _printed(model: Model, subject: Id[Any]) -> str | None:

@@ -1,0 +1,279 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CTRL-20P"
+manufacturer = "Demo"
+description = "Controller module, 24 V DC supply and twenty one-pin signal connectors with long pin names"
+category = "generic"
+class_code = "U"
+
+[[function]]
+name = "supply"
+kind = "load"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+
+[[function]]
+name = "s1"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_01", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S1"
+
+[[function]]
+name = "s2"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_02", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S2"
+
+[[function]]
+name = "s3"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_03", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S3"
+
+[[function]]
+name = "s4"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_04", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S4"
+
+[[function]]
+name = "s5"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_05", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S5"
+
+[[function]]
+name = "s6"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_06", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S6"
+
+[[function]]
+name = "s7"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_07", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S7"
+
+[[function]]
+name = "s8"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_08", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S8"
+
+[[function]]
+name = "s9"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_09", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S9"
+
+[[function]]
+name = "s10"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_10", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S10"
+
+[[function]]
+name = "s11"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_11", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S11"
+
+[[function]]
+name = "s12"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_12", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S12"
+
+[[function]]
+name = "s13"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_13", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S13"
+
+[[function]]
+name = "s14"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_14", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S14"
+
+[[function]]
+name = "s15"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_15", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S15"
+
+[[function]]
+name = "s16"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_16", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S16"
+
+[[function]]
+name = "s17"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_17", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S17"
+
+[[function]]
+name = "s18"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_18", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S18"
+
+[[function]]
+name = "s19"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_19", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S19"
+
+[[function]]
+name = "s20"
+kind = "connector"
+ports = [
+    { name = "SIGNAL_CHANNEL_20", role = "generic" },
+]
+
+[function.connector]
+style = "port-1p"
+pincount = 1
+gender = "male"
+marking = "S20"

@@ -1,4 +1,4 @@
-"""Board netlist check (spec E9): the relay board's KiCad netlist intermediate.
+"""Board netlist check: the relay board's KiCad netlist intermediate.
 
 `fr.write`'s intermediates naming writes one `netlist-{ref}.net` per board, `ref` being the
 board item's product designation with its group and tag (`PLC-U1-U2` in this design: the

@@ -8,12 +8,12 @@ schema = 1
 # labelled "24 V AC/DC" -- the two markings this file's ports carry. Confirmed against the actual
 # PDF. The designation letter P is the diagram's own.
 #
-# The order number is 3SU1102-..., not the spec E4's "3SU1106-6AA40-1AA0, verify": Siemens' own
+# The order number is 3SU1102-..., not the earlier draft's "3SU1106-6AA40-1AA0, verify": Siemens' own
 # datasheet for 3SU1106-6AA40-1AA0 (same URL form, page 1) reads "... with integrated LED 230 V AC,
 # screw terminal", a mains lamp that cannot stand on the 24 V DC `-X2` strip. 3SU1102-6AA40-1AA0 is
 # the same lamp for 24 V AC/DC: same holder (3SU1001-6AA40-0AA0), same plastic, green, smooth lens;
-# only the LED module differs (3SU1500-0AA10-0AA0). Designer's ruling 2026-09-24: this article
-# replaces the spec's. The metal-bezel 24 V AC/DC alternative is 3SU1152-6AA40-1AA0.
+# only the LED module differs (3SU1500-0AA10-0AA0). Ruling 2026-09-24: this article
+# replaces the draft's. The metal-bezel 24 V AC/DC alternative is 3SU1152-6AA40-1AA0.
 #
 # The lamp is one two-terminal load: X1 is the diagram's upper terminal, X2 the lower one. Being
 # AC/DC, the LED has no polarity the datasheet states.

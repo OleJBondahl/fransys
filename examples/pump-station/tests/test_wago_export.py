@@ -1,12 +1,12 @@
-"""WAGO export check (spec E9): `wago-U1.xml` lists 4 DI and 4 DO channels.
+"""WAGO export check: `wago-U1.xml` lists 4 DI and 4 DO channels.
 
 Names read from the currently-committed `out/cabinet/wago-U1.xml` before writing
 this test, per the brief: `Name=` is `{field_device}_{signal_name}` for a wired DI channel
 (`B12_P1_OVERLOAD`, `Q11_P1_RUNNING`, ...), `{field_device_with_underscore}_{signal_name}` for
 a wired DO channel (`U2_K1_P1_RUN`, `U2_K2_P2_RUN`), and `{module}_{Nr}` (WAGO's own zero-based
 channel number, not the one-based `plc.csv` channel index) for a spare DO channel: `DO1_2` and
-`DO1_3` are WAGO `Nr` 2 and 3, i.e. `plc.csv`'s `DO1:3` and `DO1:4` -- see the STEP 4 report
-for this off-by-one between the two exports. The DI field device is the overload contact
+`DO1_3` are WAGO `Nr` 2 and 3, i.e. `plc.csv`'s `DO1:3` and `DO1:4` -- an off-by-one
+between the two exports. The DI field device is the overload contact
 (`-Bn2`) or the contactor aux contact (`-Qn1`), not the DI channel itself (reviewfix PART 1).
 """
 

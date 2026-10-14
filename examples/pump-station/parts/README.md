@@ -57,9 +57,9 @@ existing 3NW7033 holder. The choice of aM over gG is flagged for the owner's loo
 
 ## Markings not confirmed / judgement calls
 
-- **`-U2-K1`, `-U2-K2` (Omron G2RL-1-E DC24) replaced (E4, STEP 2c).** Its own datasheet never
-  states, by pin number, which throw is NO or NC (STEP 2b re-check, three passes, all
-  inconclusive — see git history on this file for that research). The designer replaced it with
+- **`-U2-K1`, `-U2-K2` (Omron G2RL-1-E DC24) replaced (E4).** Its own datasheet never
+  states, by pin number, which throw is NO or NC (three re-check passes, all
+  inconclusive — see git history on this file for that research). It was replaced with
   **Finder 40.61.9.024.1000**: its terminals are marked `11`/`12`/`14` per the EN 50005 standard
   (`.1` = common, `.2` = NC, `.4` = NO -- confirmed from Finder's own "General technical
   information", https://cdn.findernet.com/app/uploads/TecEN.pdf, "Terminal marking" section), so
@@ -81,7 +81,7 @@ existing 3NW7033 holder. The choice of aM over gG is flagged for the owner's loo
   legible front-panel diagram was found to confirm the exact printed digit format (product page
   403s, no port-numbering figure in the manual). The one port E3 mates `-W3` to is modelled as
   `"1"`, carried over from that documented convention, not read off a diagram.
-- **`-K1` (Phoenix FL SWITCH 1005N) `port_1` pin count fixed from 1 to 8 (orchestrator ruling).**
+- **`-K1` (Phoenix FL SWITCH 1005N) `port_1` pin count fixed from 1 to 8 (ruling).**
   Was modelled with a single port `"1"` despite `[function.connector].pincount = 8`, mismatching
   the RJ45 plug part's 8-pin model and raising a `MATE_PORT_MISMATCH` finding. Checked whether
   fewer than 8 contacts are actually wired: web search (RS Online's listing) confirms the

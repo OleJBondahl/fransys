@@ -1,4 +1,4 @@
-"""Cable drawing checks (spec step 3b, E3, E6).
+"""Cable drawing checks.
 
 It reads the rows the WireViz cable drawings are drawn from, `fr.derive.top_level_cables`, and
 checks -W11 and -W21 against E3: four cores from the `-X3` strip to the motor, each core joining

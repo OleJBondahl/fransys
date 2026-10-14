@@ -1,6 +1,6 @@
 schema = 1
 
-# Lapp EPIC DATA RJ45, Cat.6A, T568B. The spec's order number to verify, 21700616, is rated for
+# Lapp EPIC DATA RJ45, Cat.6A, T568B. The briefed order number to verify, 21700616, is rated for
 # stranded 27-24 AWG / solid 26-24 AWG conductors (Lapp Tannehill catalogue p.258): too fine for
 # the ETHERLINE Cat.6A cable's solid AWG22/1 conductor. The closest current Lapp order number in
 # the same EPIC DATA RJ45 Cat.6A family rated for solid 24-22 AWG is 21700601, used here instead

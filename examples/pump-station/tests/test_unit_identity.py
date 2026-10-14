@@ -59,7 +59,9 @@ CABINET_ROW = (
 
 def cell_values(typ_text: str, label: str) -> set[str]:
     """The values of every title-block cell labelled `label`: `Title` is the big bold cell."""
-    pattern = rf'text\(size: 8pt, "{label}"\), text\(size: \d+pt, (?:strong\()?text\("([^"]*)"\)'
+    pattern = (
+        rf'text\(size: [\d.]+mm, "{label}"\), text\(size: [\d.]+mm, (?:strong\()?text\("([^"]*)"\)'
+    )
     return set(re.findall(pattern, typ_text))
 
 
@@ -95,7 +97,7 @@ def test_every_title_block_carries_the_unit_identity(built: Built, name: str) ->
 def test_title_block_check_fails_on_one_stray_number_cell(built: Built, name: str) -> None:
     """Can-fail proof: one title block with another Number makes the check raise."""
     real = read_typ(built[2], name)
-    cell = f'text(size: 8pt, "Number"), text(size: 10pt, text("{DOCUMENTS[name]["Number"]}"))'
+    cell = f'text(size: 2.46912mm, "Number"), text(size: 3.42934mm, text("{DOCUMENTS[name]["Number"]}"))'
     assert cell in real
     with pytest.raises(AssertionError):
         assert_title_blocks(
@@ -225,8 +227,9 @@ def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built
 # The 0.6 layout draws a power symbol on a pin and keeps it clear of its neighbours; the two
 # auxiliary-contact pins of each pump's 24 V rail cannot be cleared (three warnings at v0.11.0). v0.6.1 placed
 # the ground symbol at -J1:3 (layout-0117, GAPS.md G29). Exactly these
-# remain, counted by code. They are layout notes, not wiring faults.
-LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 3, "SYMBOL_OVERLAP": 0}
+# remain, counted by code. They are layout notes, not wiring faults. Fransys v0.15.0 adds one
+# JOIN_UNALIGNED at the first PE terminal of -X1 (a Fransys render note, not a wiring fault).
+LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 3, "SYMBOL_OVERLAP": 0, "JOIN_UNALIGNED": 1}
 
 
 def assert_no_error_or_warning(findings: tuple[fr.Finding, ...]) -> None:

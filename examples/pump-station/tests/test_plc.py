@@ -1,5 +1,4 @@
-"""PLC export check (spec E9, E3's PLC I/O list; columns per
-`2026-09-25-release-read-fixes.md` W1/W2).
+"""PLC export check: the PLC I/O list.
 
 The PLC list is a wiring list (owner ruling): `PLC_COLUMNS` is `channel_designation, signal,
 wired_to, signal_name`. The field device, its terminal and its location label are gone --
@@ -7,8 +6,8 @@ they described the signal, not the wire. `wired_to` is the far end of every cond
 channel's ports, distinct ends sorted by `bom_sort_key` and joined with `"; "`; an unwired
 channel gives an empty cell.
 
-The can-fail proof for this check (spec step 4: swap DO1/DO2, confirm this test fails, revert)
-is a manual verification done once with `Edit`, not a permanent test -- see the STEP 4 report.
+The can-fail proof for this check (swap DO1/DO2, confirm this test fails, revert)
+is a manual verification done once with `Edit`, not a permanent test.
 """
 
 import csv

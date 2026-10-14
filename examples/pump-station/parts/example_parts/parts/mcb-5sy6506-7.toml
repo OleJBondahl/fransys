@@ -8,7 +8,7 @@ schema = 1
 # datasheet does not state whether the neutral link trips with the phase pole or is a fixed
 # link, so it is modelled here as a plain conductive link. The neutral pair "3 N" / "N 4" is
 # now ports of the one `pole` function: two conductive links make it a two-pole function, so
-# the symbol ports carry the pole prefix (part-file spec P3): the breaker is one device.
+# the symbol ports carry the pole prefix (part-file contract): the breaker is one device.
 [part]
 mpn = "5SY6506-7"
 manufacturer = "Siemens"

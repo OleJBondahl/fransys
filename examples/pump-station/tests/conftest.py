@@ -1,4 +1,4 @@
-"""Shared "rebuild fresh" fixtures for the checks in spec E9 (STEP 4).
+"""Shared "rebuild fresh" fixtures for the export checks.
 
 `build.py` is a script, not a package: it is loaded by path with
 `importlib.util`, and `fr.build` and the three `fr.write` calls are made here (the script
@@ -55,7 +55,7 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[fr.BuildResult, Pat
     """One rebuild per test module, shared by every read-only assertion test in it.
 
     Module-scoped: since `build.py` is re-exec'd fresh on every call to
-    `_rebuild`, a whole new `pytest` run (as the can-fail probes in the STEP 4 report use,
+    `_rebuild`, a whole new `pytest` run (as a can-fail probe uses,
     run manually after an `Edit`-based mutation) always picks up the current file on disk --
     no test in this suite needs its own function-scoped rebuild.
     """

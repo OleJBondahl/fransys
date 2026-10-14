@@ -11,7 +11,7 @@ schema = 1
 # is carried over from that documented LED/port-number convention, not read off a diagram --
 # flagged in the hand-back as not fully confirmed. No symbol: G5 (no symbol for RJ45).
 #
-# port_1 port count (orchestrator ruling, fixing a MATE_PORT_MISMATCH bug): originally modelled
+# port_1 port count (fixing a MATE_PORT_MISMATCH bug): originally modelled
 # with a single port "1", even though [function.connector] already declared pincount = 8 -- this
 # mismatched the RJ45 plug part (rj45-plug-epic-data-21700601.toml), which correctly models all
 # 8 pins of the universal RJ45 8P8C pinout, and produced a MATE_PORT_MISMATCH finding at

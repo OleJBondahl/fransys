@@ -20,7 +20,7 @@ import fransys as fr
 import pytest
 
 STUB_TEXT = "-W3 ← +EXT-K1"
-STUB_TITLE = 'text(size: 10pt, text("WAGO PLC"))'
+STUB_TITLE = 'text(size: 3.42934mm, text("WAGO PLC"))'
 PAGE_BREAK = "#pagebreak()"
 
 
@@ -64,7 +64,7 @@ def test_stub_check_fails_when_the_stub_is_not_on_the_wago_plc_page(
     real_text = (intermediates / "cabinet.typ").read_text(encoding="utf-8")
     assert STUB_TITLE in real_text
     with pytest.raises(AssertionError):
-        assert_stub_present(real_text.replace(STUB_TITLE, 'text(size: 10pt, text("OTHER"))'))
+        assert_stub_present(real_text.replace(STUB_TITLE, 'text(size: 3.42934mm, text("OTHER"))'))
 
 
 def test_stub_is_absent_from_the_board_document(built: tuple[fr.BuildResult, Path, Path]) -> None:

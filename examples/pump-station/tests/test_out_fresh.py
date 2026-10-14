@@ -1,9 +1,9 @@
-"""`out/` freshness check (spec E9): the committed exports equal a fresh build, byte for byte.
+"""`out/` freshness check: the committed exports equal a fresh build, byte for byte.
 
 Its own module, not folded into another test file: it runs the full build (slow-ish), which
-`test_smoke.py` and the other STEP 4 test modules don't need. The can-fail proof for this test
-(spec step 4: flip a byte in a committed export, confirm this test fails, revert) is a manual
-verification done once with `Edit`, not a permanent test -- see the STEP 4 report.
+`test_smoke.py` and the other test modules don't need. The can-fail proof for this test
+(flip a byte in a committed export, confirm this test fails, revert) is a manual
+verification done once with `Edit`, not a permanent test.
 """
 
 from pathlib import Path

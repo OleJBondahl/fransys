@@ -72,8 +72,8 @@ designation,reference,description
 -U1-X3:W:1,=P1-U1-X3:W:1,"TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V"
 -U1-X3:W:2,=P2-U1-X3:W:2,"TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V"
 -W1,=SUP+EXT-W1,"OELFLEX CLASSIC 110, 5G2.5"
--W3,=PLC+EXT-W3,"ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP"
 -W3,=PLC+EXT-W3,
+-W3,=PLC+EXT-W3,"ETHERLINE Cat.6A P, industrial Ethernet cable, S/FTP"
 -W3-J1,=PLC+EXT-W3-J1,"EPIC DATA RJ45, Cat.6A, T568B, field-installable plug"
 -W3-J2,=PLC+EXT-W3-J2,"EPIC DATA RJ45, Cat.6A, T568B, field-installable plug"
 -W11,=P1+EXT-W11,"OELFLEX CLASSIC 110, 4G1.5"

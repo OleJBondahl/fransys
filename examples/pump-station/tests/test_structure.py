@@ -27,11 +27,12 @@ units = fr.derive.units
 
 # Items placed directly at +EXT: the upstream strip, both motors, the Ethernet switch, and
 # every cable that runs from the cabinet to something outside it: `-W1`, `-W11`, `-W21` and the
-# `-W3` harness with its two plugs and its cable, which prints as `-W3` (designer ruling 2026-09-24, R129).
+# `-W3` harness with its two plugs and its cable, which prints as `-W3` (ruling 2026-09-24, R129).
 EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3", "W3-J1", "W3-J2"}
 
 CABINET_FILES = {
     "pump-cabinet-v1.6-bom.csv",
+    "pump-cabinet-v1.6-cables.csv",
     "pump-cabinet-v1.6.pdf",
     "pump-cabinet-v1.6-designations.csv",
     "pump-cabinet-v1.6-plc.csv",
@@ -44,6 +45,7 @@ CABINET_FILES = {
 }
 BOARD_FILES = {
     "relay-interface-board-v1.3-bom.csv",
+    "relay-interface-board-v1.3-cables.csv",
     "relay-interface-board-v1.3-connectors.csv",
     "relay-interface-board-v1.3-designations.csv",
     "relay-interface-board-v1.3-plc.csv",

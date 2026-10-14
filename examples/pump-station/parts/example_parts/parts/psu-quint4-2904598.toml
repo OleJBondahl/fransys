@@ -1,7 +1,7 @@
 schema = 1
 
 # Phoenix Contact QUINT4-PS/1AC/24DC/2.5/SC, order no. 2904598 (1-phase in, 24 V DC / 2.5 A / 60 W
-# out, screw connection) -- the closest current QUINT4 order number to the spec's "~60 W/2.5 A"
+# out, screw connection) -- the closest current QUINT4 order number to the brief's "~60 W/2.5 A"
 # target. Datasheet 107721_en_00: input terminals printed "L/+" and "N/-" (dual AC/DC rating, no
 # separate PE screw -- PE is via DIN rail/housing); output terminals printed "SIG", "+", "-", "-"
 # (the "-" marking repeats on two physical screws, the same output rail -- only one is modelled,

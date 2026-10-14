@@ -1,4 +1,4 @@
-"""Reference-designation check (spec `2026-09-25-release-read-fixes.md`, acceptance 1).
+"""Reference-designation check (release read fixes).
 
 R1: a reference ends with the designation the row prints (`derive.designation.
 reference_designation`, folded with its `unit=` form). At Schematika v0.3.1 a terminal's

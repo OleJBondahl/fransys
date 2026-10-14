@@ -1,5 +1,7 @@
 """The diagram frame: box sizes, ends, channels, sheets and cuts on hand facts."""
 
+import dataclasses
+import itertools
 from functools import cache
 
 from diagram_models import station
@@ -234,3 +236,20 @@ def test_the_station_frame_is_five_boxes_in_two_columns_all_on_the_grid():
 def test_the_same_facts_give_the_same_frame():
     (facts,) = read_diagrams(station())
     assert _build(facts) == _build(facts)
+
+
+def test_a_flat_column_box_grows_to_hold_its_ends_a_text_apart() -> None:
+    """Text 11 G high, five ends on one edge: the flat 27 G row grows, ends sit 11 G apart."""
+    boxes = [_box("a")] + [_box(f"b{k}") for k in range(5)]
+    lines = [_line("a", f"b{k}") for k in range(5)]
+    facts = dataclasses.replace(
+        _facts(boxes, lines),
+        text_height=11,
+        column=tuple(_id(n) for n in ("a", *(f"b{k}" for k in range(5)))),
+        row_height=snap_up(11 + 2 * WIRING_GRID),
+    )
+    frame = _build(facts)
+    box = _boxes(frame)[_id("a")]
+    ys = sorted(e.y for e in box.ends if e.side == Facing.E)
+    assert box.height >= (5 + 1) * 16  # snap_up(11) is 16 on the 8 G grid
+    assert {b - a for a, b in itertools.pairwise(ys)} == {16}

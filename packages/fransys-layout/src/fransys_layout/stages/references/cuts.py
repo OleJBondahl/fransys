@@ -13,7 +13,7 @@ lazy from collections.abc import Sequence
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages.cutpages import cut_pages
 from fransys_layout.stages.types import LinkCase, LinkDecision
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import Finding, Severity, UnionFind
 
 from .digits import FLOOR
 from .ends import EndRead, marker_end
@@ -126,19 +126,30 @@ def _pages(ref: PortRef, world: LinkWorld) -> dict[Page, AuthoringKey]:
 def _terminals(
     connections: tuple[Connection, ...], net_groups: tuple[NetGroup, ...], world: LinkWorld
 ) -> dict[Handle, frozenset[Handle]]:
-    """The terminal functions on each physical net: those at an end of one of its wires."""
+    """The terminal functions each wire reaches, by connection handle (a net group's is its net).
+
+    Only its own chain of conductors and net groups counts: a bridge is no wire (L1).
+    """
+    chains: UnionFind[Handle] = UnionFind()
+    for conductor in connections:
+        chains.union(conductor.a.port, conductor.b.port)
+    for group in net_groups:
+        for first, second in pairwise(group.ports):
+            chains.union(first.port, second.port)
     found: dict[Handle, set[Handle]] = defaultdict(set)
     for conductor in connections:
-        found[conductor.physical_net].update(
+        found[chains.find(conductor.a.port)].update(
             ref.function
             for ref in (conductor.a, conductor.b)
             if drawn_of(ref, world).roles.terminal
         )
     for group in net_groups:
-        found[group.physical_net].update(
+        found[chains.find(group.ports[0].port)].update(
             ref.function for ref in group.ports if drawn_of(ref, world).roles.terminal
         )
-    return {net: frozenset(functions) for net, functions in found.items()}
+    by_wire = {one.handle: chains.find(one.a.port) for one in connections}
+    by_wire.update((group.net, chains.find(group.ports[0].port)) for group in net_groups)
+    return {wire: frozenset(found[root]) for wire, root in by_wire.items()}
 
 
 def _cuts(

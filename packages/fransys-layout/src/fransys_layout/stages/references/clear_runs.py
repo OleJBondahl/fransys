@@ -2,7 +2,8 @@
 
 A run with a power port that `join_y` can align is still drawn as symbols when another port of
 its page stands on the wire's line between its ends, as a power symbol's lead would cross the
-wire. The run gives `JOIN_UNALIGNED` (`WARNING`), the fallback, and each end takes its symbol.
+wire. The run is no join and gives no finding (layout-0190): each end takes its symbol, the usual
+drawing of a power end, so there is nothing for the user to fix.
 """
 
 from collections import defaultdict

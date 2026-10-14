@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class CutRead(NamedTuple):
-    """A cut with what its case is read from: the net's terminals, the seats and the units."""
+    """A cut with what its case is read from: its wire's terminals, the seats and the units."""
 
     cut: Cut
     terminals: Mapping[Handle, frozenset[Handle]]
@@ -45,7 +45,7 @@ def _terminal_on_both_pages(read: CutRead) -> bool:
     pages = {end.page for end in read.cut.ends}
     return any(
         pages.issubset(read.world.where[function])
-        for function in read.terminals[read.cut.physical_net]
+        for function in read.terminals[read.cut.connection]
     )
 
 

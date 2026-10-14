@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.lint.naming import name_findings, where_drawn
+from fransys_model.derive import natural_key
 from fransys_model.derive.designation import (
     function_designation,
     port_designation,
@@ -27,7 +28,11 @@ _NAMERS = (
 
 
 def subject_names(model: Model, findings: Iterable[Finding]) -> dict[Id[Any], str]:
-    """Each port, function or item subject of `findings` with its printed designation."""
+    """Each port, function or item subject of `findings` with its printed designation.
+
+    The mapping lists its subjects by `natural_key` of that designation, never by `Id`: the
+    naming pass lists a finding's members in this order.
+    """
     found: dict[Id[Any], str] = {}
     for finding in findings:
         for subject in finding.subjects:
@@ -37,7 +42,7 @@ def subject_names(model: Model, findings: Iterable[Finding]) -> dict[Id[Any], st
                         found[subject] = namer(model, subject)
                     except SchemaError:
                         found[subject] = ""
-    return found
+    return dict(sorted(found.items(), key=lambda one: natural_key(one[1])))
 
 
 def named_findings(

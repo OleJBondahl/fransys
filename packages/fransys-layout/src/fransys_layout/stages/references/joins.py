@@ -10,9 +10,10 @@ rows, S at their last), which `place` aligns, or neighbours anywhere in their co
 on one y with no column moved (ruling 2026-09-27); a lone pair of ends facing opposite ways that
 do not turn back is one plain wire, with nothing to align (layout-0180).
 A run it cannot align keeps its
-references and gives `JOIN_UNALIGNED` (`WARNING`), and so does a wire from an end of a joined run to
-a neighbour its turn test skipped, or a turned wire with an end under an
-attached part. A port's row, offset and facing are `place`'s
+references and gives `JOIN_UNALIGNED` (`WARNING`), and so does a wire from an end of a joined run
+to a neighbour its turn test skipped, or a turned wire with an end under an
+attached part. A power run whose straight wire is not free keeps its symbols and gives no
+finding (layout-0190). A port's row, offset and facing are `place`'s
 own (`place.page_stack`, amended 2026-09-27): no second rule for a port's y lives here.
 """
 
@@ -188,16 +189,15 @@ def _decided(
     *,
     at_ends: bool,
 ) -> list[tuple[Page, tuple[Spot, ...], list[tuple[Connection, int]], Finding | None]]:
-    """Each run with its wires, and `JOIN_UNALIGNED` if `join_y` or `clear` refuses it."""
+    """Each run with its wires, and `JOIN_UNALIGNED` if `join_y` refuses it; `clear` drops it."""
     out = []
     for page, run, members in _runs(candidates):
         ends = tuple(spot.end for spot in run)
         y = join_y(ends, rooms[page])
         aligned = y is not None if at_ends else {end.offset for end in ends} == {y}
-        if not aligned and not at_ends:
-            continue
-        refused = not aligned or not clear(page, run, at_ends=at_ends)
-        out.append((page, run, members, _unaligned(ends) if refused else None))
+        if (not aligned and not at_ends) or (aligned and not clear(page, run, at_ends=at_ends)):
+            continue  # a blocked power wire is no join: its ends take their symbols, nothing to fix
+        out.append((page, run, members, None if aligned else _unaligned(ends)))
     return out
 
 

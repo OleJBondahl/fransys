@@ -182,6 +182,27 @@ def test_a_run_whose_columns_have_unequal_row_heights_gives_join_unaligned() -> 
     assert joins.beside.pairs == {}
 
 
+def _top_run(clear=None):
+    """The top ports 11, 21 and 31 of three columns, one run at the columns' ends."""
+    wires = (_wire(1, (1, 1), (2, 1)), _wire(2, (2, 1), (3, 1)))
+    spots = _spots(("a", (1,)), ("b", (2,)), ("c", (3,)))
+    if clear is None:
+        return _wired_beside(wires, spots, _ROOMS, NO_CHAINS)
+    return _wired_beside(wires, spots, _ROOMS, NO_CHAINS, clear)
+
+
+def test_a_run_whose_wire_is_not_free_is_no_join_and_gives_no_finding() -> None:
+    """layout-0190: `clear` refuses a run `join_y` aligns (a power wire a pin stands on): the run
+    is dropped, its ends keep their symbols, and the user has nothing to fix, so no finding."""
+    # UNDO: stages/references/joins.py `_decided`: drop `or (aligned and not clear(...))` (the
+    #     run is a join, so `clear` is not asked, and the three ports are wired)
+    assert len(_top_run().runs) == 1
+    refused = _top_run(lambda *_run, **_case: False)
+    assert refused.findings == ()
+    assert refused.runs == ()
+    assert refused.beside.pairs == {}
+
+
 def _shifted_member(*, joined_first: bool, attached: bool = True):
     """Ports 11 and 21 face N at the top of columns a and b; port 31 is the second row of column c
     (a row above it is taken, by an attachment hosted by 3 when `attached`), so its pin stands

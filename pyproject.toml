@@ -155,6 +155,7 @@ extra-paths = [
     "packages/fransys-model/tests/derive",
     "packages/fransys-model/tests/vocab",
     "packages/fransys-layout/tests",
+    "tests",
 ]
 
 [tool.ty.rules]

@@ -4,11 +4,12 @@ import dataclasses
 from typing import Any
 
 import pytest
-from samples import drawn, hid
+from samples import connection, drawn, hid
 
 from fransys_layout.conventions import FACTS, first_match
 from fransys_layout.conventions.references import LINK_CASE, MARKER_ENDS
 from fransys_layout.stages import LinkCase, MarkerSide, PortRef
+from fransys_layout.stages.references.cuts import _terminals
 from fransys_layout.stages.references.ends import EndRead, marker_end
 from fransys_layout.stages.references.link_case import CutRead, link_case
 from fransys_layout.stages.references.types import Cut, Leave, LinkWorld, PortEnd
@@ -35,7 +36,7 @@ def _read(
     net = hid("net", 1)
     return CutRead(
         Cut(connection=hid("conductor", 1), physical_net=net, ends=(ends[0], ends[1])),
-        {net: frozenset({terminal})},
+        {hid("conductor", 1): frozenset({terminal})},
         LinkWorld(where=where, drawn_of={first.function: first, second.function: second}),
         {1: units[0], 2: units[1]},
     )
@@ -104,3 +105,16 @@ def test_a_star_reference_by_designation_needs_the_first_row() -> None:
     hit = first_match(swapped, EndRead("star_ref", by_designation=True), FACTS)
     assert hit is not None
     assert hit.then == ("owner", "free")
+
+
+def test_a_terminal_across_a_bridge_is_not_a_terminal_of_the_wire() -> None:
+    """Can fail: keyed by physical net, wire 1 would also reach terminal 3 and echo it (L1)."""
+    net = hid("net", 1)
+    first = dataclasses.replace(connection(1, 1, 2), physical_net=net)
+    second = dataclasses.replace(connection(2, 3, 4), physical_net=net)
+    kinds = {1: "contact_no", 2: "terminal", 3: "terminal", 4: "contact_no"}
+    world = LinkWorld(
+        where={}, drawn_of={hid("function", n): drawn(n, kind=kind) for n, kind in kinds.items()}
+    )
+    found = _terminals((first, second), (), world)
+    assert found == {first.handle: {hid("function", 2)}, second.handle: {hid("function", 3)}}

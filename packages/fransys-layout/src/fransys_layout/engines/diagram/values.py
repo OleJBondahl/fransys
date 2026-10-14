@@ -34,7 +34,7 @@ class DiagramFacts:
     """One reading's diagram to place: boxes in text order, lines in line order, the sheet in G.
 
     `column` stands in one column, `left` lists its left neighbours; `row_height` above 0 is
-    each column box's height; `share_tracks` lets disjoint same-column lines share a track.
+    each column box's least height; `share_tracks` lets disjoint same-column lines share a track.
     """
 
     unit: Ident | None

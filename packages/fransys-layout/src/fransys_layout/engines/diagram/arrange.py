@@ -78,16 +78,23 @@ def box_height(box: BoxFacts, ends: int, text_height: int) -> int:
     return snap_up(max(text, (ends + 1) * attach_pitch(text_height)))
 
 
+def end_floor(text_height: int) -> int:
+    """The least distance between two ends of a box edge: a tab text high, on the grid."""
+    return max(G, snap_up(text_height))
+
+
 def heights(facts: DiagramFacts, ends: tuple[RawEnd, ...]) -> dict[Ident, int]:
-    """Each box's height from the busier of its two sides."""
+    """Each box's height from the busier of its two sides; a flat column box grows to fit them."""
     count = Counter((e.box, e.side) for e in ends)
-    flat = facts.row_height
-    return {
-        b.box: flat
-        if flat and b.box in facts.column
-        else box_height(b, max(count[b.box, Facing.E], count[b.box, Facing.W]), facts.text_height)
-        for b in facts.boxes
-    }
+    floor = end_floor(facts.text_height)
+    out = {}
+    for b in facts.boxes:
+        busier = max(count[b.box, Facing.E], count[b.box, Facing.W])
+        if facts.row_height and b.box in facts.column:
+            out[b.box] = max(facts.row_height, snap_up((busier + 1) * floor))
+        else:
+            out[b.box] = box_height(b, busier, facts.text_height)
+    return out
 
 
 def stack(
@@ -107,9 +114,12 @@ def stack(
     return y
 
 
-def step(box_high: int, count: int, pitch: int) -> int:
-    """The distance between a side's `count` ends: `pitch`, or less to fit inside `box_high`."""
-    return min(pitch, max(G, box_high // (count + 1) // G * G))
+def step(box_high: int, count: int, pitch: int, floor: int) -> int:
+    """The distance between a side's `count` ends: `pitch`, or less to fit in `box_high`.
+
+    Never under `floor`.
+    """
+    return min(pitch, max(floor, box_high // (count + 1) // G * G))
 
 
 def place_ends(
@@ -117,18 +127,19 @@ def place_ends(
 ) -> dict[tuple[Ident, Facing], tuple[FrameEnd, ...]]:
     """The ends of each box side, ordered by the far box's top then line, with their y.
 
-    A box too low for its ends at `attach_pitch` spaces them evenly, on the grid, inside it.
+    A box too low for its ends at `attach_pitch` spaces them evenly, on the grid, inside it,
+    but never closer than a text height.
     """
     groups: dict[tuple[Ident, Facing], list[RawEnd]] = {}
     for e in ends:
         groups.setdefault((e.box, e.side), []).append(e)
-    pitch = attach_pitch(text_height)
+    pitch, floor = attach_pitch(text_height), end_floor(text_height)
     return {
         (box, side): tuple(
             FrameEnd(
                 line=e.line,
                 side=side,
-                y=y[box] + step(height[box], len(group), pitch) * (k + 1),
+                y=y[box] + step(height[box], len(group), pitch, floor) * (k + 1),
                 tab=e.tab,
             )
             for k, e in enumerate(sorted(group, key=lambda e: (y[e.far], e.line)))

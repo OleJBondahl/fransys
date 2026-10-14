@@ -88,14 +88,19 @@ def _groups_on(layout: Layout) -> dict[Id[Any], set[Page]]:
 def name_findings(
     names: Mapping[Id[Any], str], where: Where, findings: Iterable[Finding]
 ) -> tuple[Finding, ...]:
-    """`findings` with each message ending in the pages and designations of its subjects."""
+    """`findings` with each message ending in the pages and designations of its subjects.
+
+    The designations list in the order `names` holds its subjects (reader order, never `Id`).
+    """
     named = []
+    rank = {subject: place for place, subject in enumerate(names)}
     for finding in findings:
         # A unit group's split is about the pages it runs over (group subjects locate only here)
         table = where.groups if finding.code == UNIT_GROUP_SPLIT else where.pages
         on = sorted({page for subject in finding.subjects for page in table.get(subject, ())})
         positions = tuple(position_text(p, None, None, where.labels.get(s, ()), s) for s, p in on)
-        who = tuple(dict.fromkeys(filter(None, (names.get(s, "") for s in finding.subjects))))
+        members = sorted((s for s in finding.subjects if names.get(s)), key=rank.__getitem__)
+        who = tuple(dict.fromkeys(names[s] for s in members))
         named.append(replace(finding, message=finding.message + _suffix(positions, who)))
     return tuple(named)
 

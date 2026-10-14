@@ -163,8 +163,9 @@ With `count`, the strip makes all its terminals at once, so spares exist and cou
 terminal joins the function block where it is first taken, and a spare joins the strip's own group.
 There is no `group=` keyword. `d.wire(x1[1], lamp[1], ...)` lands on the inner side. `x1[1].outer` is
 the field side, and `W1.core(...)` lands there.
-`interface=True` and `unused=True` on `d.terminal_strip` mark every terminal a unit boundary, as on
-`d.device` (see `units.md`).
+`interface=` and `unused=` on `d.terminal_strip` mark terminals a unit boundary: `True` marks every
+terminal, and a tuple of numbers, `interface=(1, 2)`, only those; the others stay inside the unit. On
+a run they take `True` only: `x1.run("24V", 4, bridged=True, interface=True)` (see `units.md`).
 
 ```python
 import fransys as fr
@@ -187,6 +188,10 @@ none: each terminal joins the block it is first wired in.
 
 `bridged=(first, last)` bridges terminals `first` to `last` only, one jumper between each
 consecutive pair. A pair outside 1 to `n`, or with `first >= last`, raises and names the range.
+
+A strip with a `count` bridges plain terminals with no run and no label:
+`d.terminal_strip("X4", part, 6, bridged=(2, 6))` jumpers terminals 2 to 6, `bridged=((2, 3), (5, 6))`
+makes two bridges, and `bridged=True` bridges them all. A bad range raises and names the fix.
 
 `X1.run(label, bridged=True)` takes no size. The run grows as connections take its terminals, and
 each new one is bridged to the one before. `feed[n]` names a terminal already taken; a higher `n`

@@ -140,6 +140,8 @@ class Profile:
     row_spacing: int  # The keep-out gap between consecutive rows of a column
     text_height: int
     marker_padding: int
+    table_base: int  # A contact table with no rows; each row adds `text_height` (contact_rows)
+    heading_room: int  # The heading line a stacked contact table carries above its columns
     band_ranks: frozendict[str, int]
     group_ranks: frozendict[str, int]
     route_turn_penalty: int

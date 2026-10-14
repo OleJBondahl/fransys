@@ -9,6 +9,7 @@ lazy from decimal import Decimal
 from fransys_layout.geometry import PAGE_PAD
 from fransys_layout.stages import Profile, SheetFormat
 from fransys_model.derive import text_room_g
+from fransys_model.derive.contact_rows import heading_room, table_geometry
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.layout import Profile as ModelProfile
 from fransys_model.layout import default_profile, default_sheet_format
@@ -32,12 +33,15 @@ DEFAULT_SHEET = SheetFormat(
 
 def to_stage_profile(profile: ModelProfile, module_mm: Decimal) -> Profile:
     """The stage `Profile` for a model `layout.profile` record, authored or the house default."""
+    step = text_room_g(profile.text_height_mm, module_mm)
     return Profile(
         column_gap=profile.column_gap,
         row_gap=profile.row_gap,
         row_spacing=profile.row_spacing,
-        text_height=text_room_g(profile.text_height_mm, module_mm),
+        text_height=step,
         marker_padding=profile.marker_padding,
+        table_base=table_geometry(0, step, profile.marker_padding, headed=False).height,
+        heading_room=heading_room(step, headed=True),
         band_ranks=profile.band_ranks,
         group_ranks=profile.group_ranks,
         route_turn_penalty=profile.route_turn_penalty,

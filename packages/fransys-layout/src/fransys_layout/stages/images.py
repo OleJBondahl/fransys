@@ -134,7 +134,7 @@ def _image_width(entries: Sequence[str], profile: Profile, heading: str = "") ->
 
 def table_height(rows: int, profile: Profile) -> int:
     """A contact table's height: its head and `rows` rows of text, padded (one shared size)."""
-    return (1 + rows) * profile.text_height + 3 * profile.marker_padding
+    return profile.table_base + rows * profile.text_height
 
 
 def image_reserves(

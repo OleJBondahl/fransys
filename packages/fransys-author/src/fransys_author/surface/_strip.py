@@ -1,5 +1,6 @@
 """Terminal strips: `d.terminal_strip("X1", part)` and `X1[3]`, terminal 3 by number."""
 
+from functools import partial
 from typing import TYPE_CHECKING, override
 lazy from collections.abc import Callable
 lazy from types import EllipsisType
@@ -8,6 +9,14 @@ from fransys_author._partless import check_partless
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device, _mark_boundary, _one_maker, part_mpn
 from fransys_author.surface._runs import check_run
+from fransys_author.surface._strip_marks import (
+    Bridged,
+    Marks,
+    bridge_ranges,
+    check_marks,
+    check_run_marks,
+    marked,
+)
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take
 lazy from fransys_author._origin import caller_origin
@@ -46,13 +55,19 @@ class TerminalStrip:
         *,
         bridge: Callable[..., None] | None = None,
         group: Callable[[], Group | None] = lambda: None,
-        boundary: Callable[[Terminal], None] | None = None,
+        boundary: Callable[[Marks, Marks], Callable[[Terminal, int], None] | None] | None = None,
+        interface: Marks = False,
+        unused: Marks = False,
+        bridged: Bridged = False,
         scope: Scope | None = None,
     ) -> None:
         """Wrap the engine `strip` of `tag`; `group` reads the open block, `boundary` marks."""
+        check_marks(tag, count, interface=interface, unused=unused)
         self._tag, self._strip, self._mpn, self._count = tag, strip, mpn, count
         self._pe_mpn, self._bridge = pe_mpn, bridge
-        self._now, self._boundary, self._scope = group, boundary, scope
+        self._now, self._scope = group, scope
+        self._spec, self._boundary_for = (interface, unused), boundary
+        self._boundary = None if boundary is None else boundary(interface, unused)
         self._runs: set[str] = set()
         self._outside: set[int] = set()  # numbers a container took through `d.series` or `d.wire`
         self._pe_run: Run | None = None
@@ -61,6 +76,7 @@ class TerminalStrip:
         self._placed: set[int] = set()
         for number in range(1, (count or 0) + 1):
             self._terminal(number)
+        bridge_ranges(self, bridged)
 
     _grows = False  # a run with no size: its terminals come in order, each bridged to the last
     _group = ""  # the engine group text its terminals count up in; a run sets its label
@@ -71,7 +87,7 @@ class TerminalStrip:
             made = self._strip.terminal(mpn or self._mpn, self._group, index=number)
             object.__setattr__(made, "_scope", self._scope)  # frozen, init=False field
             if self._boundary is not None:
-                self._boundary(made)
+                self._boundary(made, number)
             self._made[number] = made
             if self._grows and number > 1 and self._bridge is not None:
                 self._bridge(self._made[number - 1], made)
@@ -143,19 +159,26 @@ class TerminalStrip:
         return terminal
 
     def run(
-        self, label: str, count: int | None = None, *, bridged: bool | tuple[int, int] = False
+        self,
+        label: str,
+        count: int | None = None,
+        *,
+        bridged: bool | tuple[int, int] = False,
+        interface: bool = False,
+        unused: bool = False,
     ) -> Run:
         """A named run of `count` terminals that counts inside `label`, bridged when asked.
 
         `bridged=True` jumpers the whole run; `bridged=(first, last)` terminals `first` to `last`.
         With no `count` the run is `bridged=True` and grows, each new terminal bridged to the last.
         Does not shift, or get shifted by, the strip's own numbering or another run.
+        `interface=True` or `unused=True` marks the run's terminals boundary, as on the strip.
         A run labelled exactly "PE" takes the strip's `pe=` part and raises without one.
         """
         if label == PE_LABEL:
             _need_pe(self)
         check_run(self, label, count, bridged)
-        run = Run(self, label, count, bridged=bridged)
+        run = Run(self, label, count, bridged=bridged, interface=interface, unused=unused)
         if label == PE_LABEL:
             self._pe_run = run
         return run
@@ -180,18 +203,22 @@ class Run(TerminalStrip):
     Does not share numbering with the strip or another run; a series may name it as a strip.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 -- the run's facts, keyword-only as the strip's
         self,
         strip: TerminalStrip,
         label: str,
         count: int | None,
         *,
         bridged: bool | tuple[int, int],
+        interface: bool = False,
+        unused: bool = False,
     ) -> None:
         """Declare the run `label` on `strip`; `X3.run` makes these."""
         self._group = label
         self._grows = count is None
         tag = f"{strip._tag}.run({label!r})"
+        check_run_marks(tag, strip._spec, interface=interface, unused=unused)
+        spec = (interface, unused) if interface or unused else tuple(s is True for s in strip._spec)
         super().__init__(
             tag,
             strip._strip,
@@ -200,7 +227,9 @@ class Run(TerminalStrip):
             strip._pe_mpn,
             bridge=strip._bridge,
             group=strip._now,
-            boundary=strip._boundary,
+            boundary=strip._boundary_for,
+            interface=spec[0],
+            unused=spec[1],
             scope=strip._scope,
         )
         if bridged and count is not None and strip._bridge is not None:
@@ -218,17 +247,14 @@ class Run(TerminalStrip):
         raise AuthorError(msg)
 
 
-def _boundary_marker(
-    design: Design, *, interface: bool, unused: bool
-) -> Callable[[Terminal], None] | None:
-    """The call that marks a terminal a boundary as `device` does, or `None` when neither is set."""
+def _make_marker(
+    design: Design, interface: Marks, unused: Marks
+) -> Callable[[Terminal, int], None] | None:
+    """The call that marks terminal `number` boundary as `device` does, or `None` for no mark."""
     if not (interface or unused):
         return None
-    return lambda terminal: _mark_boundary(
-        design,
-        terminal,
-        interface=interface,
-        unused=unused,
+    return lambda terminal, number: _mark_boundary(
+        design, terminal, interface=marked(interface, number), unused=marked(unused, number)
     )
 
 
@@ -245,8 +271,9 @@ class Strips:
         description: str = "",
         place: str | EllipsisType | None = ...,
         pe: str | type[Device] | None = None,
-        interface: bool = False,
-        unused: bool = False,
+        interface: Marks = False,
+        unused: Marks = False,
+        bridged: Bridged = False,
         external: bool = False,
     ) -> TerminalStrip:
         """Add terminal strip `tag` (printed `-tag`) of terminal `part`, `count` terminals if given.
@@ -276,6 +303,9 @@ class Strips:
             pe_mpn,
             bridge=self._engine.bridge,
             group=lambda: self._group,
-            boundary=_boundary_marker(self, interface=interface, unused=unused),
+            boundary=partial(_make_marker, self),
+            interface=interface,
+            unused=unused,
+            bridged=bridged,
             scope=self._engine,
         )

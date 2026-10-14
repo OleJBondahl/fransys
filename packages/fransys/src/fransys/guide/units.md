@@ -34,6 +34,10 @@ a PLC channel, a coil or a supply output. A cable landing straight on a channel,
 between, is the use. `interface=True` marks every function of the device; `interface=("coil",)`
 names some, and the others stay inside the unit.
 
+On a terminal strip `interface=(1, 2)` names terminals by number and `unused=` works the same;
+`True` marks every terminal. A run takes `interface=True` or `unused=True` for the whole run. A
+container reaches only the boundary terminals, and `d.add(..., unused=("X1",))` covers only those.
+
 `d.device(tag, part, unused=True)` declares an interface device left unconnected on purpose,
 so the build does not ask for it to be wired. `unused=True` on a device that is not an
 interface marks it as one too. The tuple the function returns names the devices a

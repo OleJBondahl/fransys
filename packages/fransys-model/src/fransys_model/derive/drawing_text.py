@@ -898,20 +898,41 @@ def contact_image(model: Model, label: Label) -> tuple[list[str], list[str]]:
     the names as printed, named commons after numbered ones. A contact no conductor reaches
     is listed too, its pair and `NO_PLACE`, whatever `hide_unused_pins` says.
     """
+    no, nc = image_entries(model, label)
+    return [text for text, _ in no], [text for text, _ in nc]
+
+
+def image_entries(
+    model: Model, label: Label
+) -> tuple[list[tuple[str, Id[Port] | None]], list[tuple[str, Id[Port] | None]]]:
+    """`contact_image`'s entries, each with the partner port whose contact it names (model-0216).
+
+    A spare contact's entry has no partner (`None`). This is the one build of the image: the text
+    lists of `contact_image` and the rows of `derive.contact_rows` are both read from it.
+    """
     pages = layout_of(model, Page)
     own_page = pages[label.page]
-    no, nc = list[Entry](), list[Entry]()
+    no, nc = list[tuple[Entry, Id[Port] | None]](), list[tuple[Entry, Id[Port] | None]]()
     for partner in label.partners:
         function = functions(model)[ports(model)[partner.port].function]
         where = _partner_place(model, pages, own_page, partner)
         no_marks, nc_marks = contact_entries(model, function)
-        no.extend((main, key, f"{mark} {where}") for main, key, mark in no_marks)
-        nc.extend((main, key, f"{mark} {where}") for main, key, mark in nc_marks)
+        no.extend(((main, key, f"{mark} {where}"), partner.port) for main, key, mark in no_marks)
+        nc.extend(((main, key, f"{mark} {where}"), partner.port) for main, key, mark in nc_marks)
     shown = {ports(model)[partner.port].function for partner in label.partners}
     spare_no, spare_nc = spare_entries(
         model, functions(model)[cast("Id[Function]", label.function)].item, shown
     )
-    return _in_image_order(no + spare_no), _in_image_order(nc + spare_nc)
+    no.extend((entry, None) for entry in spare_no)
+    nc.extend((entry, None) for entry in spare_nc)
+    return _in_order_with_ports(no), _in_order_with_ports(nc)
+
+
+def _in_order_with_ports(
+    entries: list[tuple[Entry, Id[Port] | None]],
+) -> list[tuple[str, Id[Port] | None]]:
+    """The text and partner port of each contact entry, in image order."""
+    return [(entry[2], port) for entry, port in sorted(entries, key=lambda e: image_order(e[0]))]
 
 
 def contact_heading(model: Model, label: Label) -> str:
@@ -967,6 +988,7 @@ __all__ = [
     "frame_column",
     "frame_row",
     "heads_group",
+    "image_entries",
     "is_device_terminal",
     "item_tag_text",
     "label_text",

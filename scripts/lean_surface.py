@@ -47,6 +47,7 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive.numbering_pins",
     "fransys_model.derive.cable_drawing",
     "fransys_model.derive.block_diagram",
+    "fransys_model.derive.contact_rows",
     "fransys_model.derive.order",
     "fransys_model.derive.print_sizes",
     "fransys_model.derive.text_width",

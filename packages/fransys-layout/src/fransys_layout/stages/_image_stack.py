@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 def foot_down(heights: Sequence[int], profile: Profile) -> int:
     """Room under a column for the tables of its foot: each padded, each headed when two or more."""
-    head = profile.text_height if len(heights) > 1 else 0
+    head = profile.heading_room if len(heights) > 1 else 0
     return sum(h + head + profile.marker_padding for h in heights)
 
 
@@ -47,7 +47,7 @@ def _stack(
         grown = replace(
             label.box,
             width=headed_width(label.box.width, heads.get(label.subject, ""), profile),
-            height=label.box.height + profile.text_height,
+            height=label.box.height + profile.heading_room,
         )
         box = push_clear(
             grown,

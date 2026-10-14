@@ -285,3 +285,5 @@ _.room  # OTHER fransys-layout/src/fransys_layout/engines/cable/read/facts.py:15
 _.at_designation  # TESTS fransys-model/tests/derive/test_cable_open_core_texts.py:76
 _.shorter  # OTHER fransys-pdf/src/fransys_pdf/_sheet_index.py:36
 _.SHEET_INDEX  # OTHER fransys-pdf/src/fransys_pdf/document.py:46
+_.heading  # OTHER fransys-render/src/fransys_render/_labels.py:79
+_.titles  # OTHER fransys-render/src/fransys_render/_labels.py:80

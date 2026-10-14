@@ -1,13 +1,19 @@
 """Label text: one `<text>` per `layout.label` on a page, top-down, left to right (`by_place`)."""
 
+from collections import Counter
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
 from fransys_model.derive import text_room_g
+from fransys_model.derive.contact_rows import (
+    column_split,
+    column_x,
+    contact_rows,
+    table_geometry,
+)
 from fransys_model.derive.drawing_text import (
     CONTACT_SLOTS,
     contact_heading,
-    contact_image,
     label_text,
 )
 from fransys_model.derive.grid_mm import grid_to_mm
@@ -45,10 +51,8 @@ def _not_installed(model: Model, label: Label) -> bool:
 
 def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
     """A coil's contact image, at the label's measured box."""
-    no, nc = contact_image(model, label)
     step = text_room_g(profile.text_height_mm, sheet.module_mm)
     pad = profile.marker_padding
-    half = label.width // 2
     font_mm = printed_font_mm(profile.text_height_mm)
     css_class = "label not-installed" if _not_installed(model, label) else "label"
 
@@ -66,25 +70,25 @@ def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: La
         )
 
     heading = contact_heading(model, label)  # layout-0170: a table sharing its foot names its coil
-    x0, y0 = label.x, label.y + (step if heading else 0)
-    rule = y0 + pad + step
+    rows = contact_rows(model, label)
+    tallest = max(Counter(row.column for row in rows).values(), default=0)
+    geo = table_geometry(tallest, step, pad, headed=bool(heading))
+    x0, y0, split_x = label.x, label.y, label.x + column_split(label.width)
+    no_x, nc_x = column_x(label.width, pad)
     parts = [
-        *([text(x0 + pad, label.y, heading)] if heading else []),
-        text(x0 + pad, y0 + pad, "NO"),
-        text(x0 + half + pad, y0 + pad, "NC"),
+        *([text(x0 + no_x, y0 + geo.heading, heading)] if heading else []),
+        text(x0 + no_x, y0 + geo.titles, "NO"),
+        text(x0 + nc_x, y0 + geo.titles, "NC"),
         (
-            f'<line class="marker" x1="{mm_x(x0)}" y1="{mm_y(rule)}" x2="{mm_x(x0 + label.width)}" '
-            f'y2="{mm_y(rule)}"/>'
+            f'<line class="marker" x1="{mm_x(x0)}" y1="{mm_y(y0 + geo.rule)}" '
+            f'x2="{mm_x(x0 + label.width)}" y2="{mm_y(y0 + geo.rule)}"/>'
         ),
         (
-            f'<line class="marker" x1="{mm_x(x0 + half)}" y1="{mm_y(y0)}" '
-            f'x2="{mm_x(x0 + half)}" y2="{mm_y(label.y + label.height)}"/>'
+            f'<line class="marker" x1="{mm_x(split_x)}" y1="{mm_y(y0 + geo.columns)}" '
+            f'x2="{mm_x(split_x)}" y2="{mm_y(y0 + label.height)}"/>'
         ),
     ]
-    for row, entry in enumerate(no):
-        parts.append(text(x0 + pad, rule + pad + row * step, entry))
-    for row, entry in enumerate(nc):
-        parts.append(text(x0 + half + pad, rule + pad + row * step, entry))
+    parts.extend(text(row.x, row.y, row.text) for row in rows)
     return "".join(parts)
 
 

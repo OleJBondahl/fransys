@@ -13,6 +13,7 @@ from fransys_model.vocab import functions
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Item
 
+from .contact_rows import contact_rows
 from .drawing_text import CONTACT_SLOTS, cross_reference_text, label_text
 from .kinds import item_kind
 from .marker_box import marker_box
@@ -35,7 +36,8 @@ def reference_links(
     """The links on `page`: its link markers' boxes, and one box per partner of each label (NV2).
 
     A marker links to the page of its partner marker; a shared box links from its lead only.
-    A contact-image table holds several partners in rows only render places: it gets none.
+    A contact table links each row to the page of its contact (CR4, `_row_links`); a spare row and
+    a row whose contact is on `page` get none.
 
     A label prints its partners left to right, each text once, joined by a space; a partner's
     box is that text's width (`text_width` at the label's height) from the label's own left edge.
@@ -43,8 +45,10 @@ def reference_links(
     """
     links = list(_marker_links(model, page, known))
     for label in drawn_on_page(model, Label, page):
-        if label.kind is LabelKind.CROSS_REFERENCE and label.slot not in CONTACT_SLOTS:
-            links.extend(_label_links(model, label, known))
+        if label.kind is not LabelKind.CROSS_REFERENCE:
+            continue
+        found = _row_links if label.slot in CONTACT_SLOTS else _label_links
+        links.extend(found(model, label, known))
     return tuple(links)
 
 
@@ -83,6 +87,23 @@ def _label_links(
             width=text_width(text, height=label.height),
             height=label.height,
             target=page_destination(model, layout_of(model, Page)[partner.page]),
+        )
+
+
+def _row_links(model: Model, label: Label, known: Collection[Id[Page]]) -> Iterable[ReferenceLink]:
+    """One link per row of a contact table whose contact is drawn on another page of the PDF."""
+    pages = layout_of(model, Page)
+    on = {partner.port: partner.page for partner in label.partners}
+    for row in contact_rows(model, label):
+        target = None if row.partner is None else on[row.partner]
+        if target is None or target == label.page or target not in known:
+            continue
+        yield ReferenceLink(
+            x=row.x,
+            y=row.y,
+            width=row.width,
+            height=row.height,
+            target=page_destination(model, pages[target]),
         )
 
 

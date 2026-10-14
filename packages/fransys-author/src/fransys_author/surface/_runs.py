@@ -30,6 +30,11 @@ def _check_count(named: str, count: object, bridged: object) -> None:
         _check_bridged(named, count, bridged)
 
 
+def is_range(first: int, last: int, count: int) -> bool:
+    """Whether `(first, last)` is a bridged range of a `count`-terminal strip."""
+    return 1 <= first < last <= count
+
+
 def _check_bridged(named: str, count: int, bridged: object) -> None:
     """Raise `AuthorError` unless `bridged` is a bool or a `(first, last)` inside 1 to `count`."""
     if isinstance(bridged, bool):
@@ -42,7 +47,7 @@ def _check_bridged(named: str, count: int, bridged: object) -> None:
         msg = f"{named}: bridged is True, False or a (first, last) pair, got {bridged!r}"
         raise AuthorError(msg)
     first, last = bridged
-    if not 1 <= first < last <= count:
+    if not is_range(first, last, count):
         msg = f"{named}: bridged=({first}, {last}) needs 1 <= first < last <= {count}"
         raise AuthorError(msg)
 

@@ -57,4 +57,5 @@ def diagram_reading(model: Model, unit: Id[Any] | None) -> DiagramFacts | None:
         crossing_penalty=profile.route_crossing_penalty,
         width=content_extent(sheet.content_width_mm, sheet.module_mm),
         height=content_extent(sheet.content_height_mm, sheet.module_mm),
+        nest_same=True,
     )

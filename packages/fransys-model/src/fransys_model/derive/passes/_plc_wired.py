@@ -14,9 +14,9 @@ from fransys_model.vocab.membership import boundary, standalone
 from fransys_model.vocab.plc_wiring import (
     direct_neighbours,
     owner_of_port,
-    ports_by_function,
     wired_functions,
 )
+from fransys_model.vocab.rail_reach import ports_by_function
 from fransys_model.vocab.tables import items
 
 if TYPE_CHECKING:

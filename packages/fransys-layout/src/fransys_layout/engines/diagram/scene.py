@@ -1,5 +1,6 @@
 """The diagram engine's lint feed: a placed sheet to the scene `lint_diagram` checks."""
 
+from fransys_layout.engines.diagram.labels import label_box
 from fransys_layout.engines.diagram.sizes import (
     TAB_PAD,
     TEXT_LEAD,
@@ -62,12 +63,7 @@ def _label_text(line: PlacedLine, facts: DiagramFacts) -> SceneText:
         for ln in facts.lines
         if (ln.cable, ln.a, ln.b) == (line.cable, line.a, line.b)
     )
-    rect = Box(
-        x=line.text_x - width // 2,
-        y=line.text_y - facts.text_height // 2,
-        width=width,
-        height=facts.text_height,
-    )
+    rect = label_box(line.text_x, line.text_y, width, facts.text_height)
     return SceneText(owner=line.cable, rect=rect)
 
 
@@ -100,10 +96,11 @@ def scene_of(facts: DiagramFacts, sheet: PlacedSheet) -> Scene:
     texts = [
         t for b in sheet.boxes for t in (*_box_texts(b, widths[b.box], th), *_tab_texts(b, th))
     ]
-    texts += [_label_text(line, facts) for line in sheet.lines]
+    labels = tuple(_label_text(line, facts) for line in sheet.lines)
+    texts += labels
     texts += [
         SceneText(owner=t.owner, rect=Box(x=t.x, y=t.y, width=t.width, height=t.height))
         for t in sheet.texts
     ]
     lines = tuple(_scene_line(line, boxes, markers) for line in sheet.lines)
-    return Scene(boxes=boxes, texts=tuple(texts), lines=lines, markers=markers)
+    return Scene(boxes=boxes, texts=tuple(texts), lines=lines, markers=markers, labels=labels)

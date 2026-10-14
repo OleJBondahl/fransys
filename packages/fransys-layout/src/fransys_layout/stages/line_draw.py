@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, Point, pad, port_exit
 from fransys_layout.geometry.meet import contains_point
 
+from ._row_join import _joined
 from .harness_route import LineEnd, line_paths, root
 from .line_shapes import DrawnLeg
 from .line_side import (
     across_by_room,
     aim,
-    aside,
     crosses_keepout,
     faced,
     run_on,
@@ -338,32 +338,6 @@ def _through_rows(
     for fan in (one for one in fans if one.rows):
         found = [(b, _joined(points, fan, grid)) for b, points in found]
     return Pieces(tuple(found), fans, tuple(stubs))
-
-
-def _joined(points: tuple[Point, ...], fan: Fan, grid: Grid) -> tuple[Point, ...]:
-    """`points` run on from whichever of its ends stands at `fan.at`, through `fan.rows`.
-
-    The run may go back along the line's last run: drawn twice, it reads as the line's branch.
-    """
-    if points[-1] == fan.at:
-        return (*points, *_row_run(fan, grid)[1:])
-    if points[0] == fan.at:
-        return (*reversed(_row_run(fan, grid)), *points[1:])
-    return points
-
-
-def _row_run(fan: Fan, grid: Grid) -> tuple[Point, ...]:
-    """The run from `fan.at` through each further row's split, entered from outside.
-
-    It leaves each split along its row, toward the next.
-    """
-    run: list[Point] = [fan.at]
-    facing = fan.facing
-    for end in fan.rows:
-        start = End(run[-1], aside(run[-1], end.at, facing))
-        run.extend(line_paths((LineEnd(0, start), LineEnd(0, end)), grid)[0][1:])
-        facing = end.facing
-    return tuple(run)
 
 
 def _box_end(box: Box, mate: Box | None, toward: tuple[int, int] | None = None) -> End:

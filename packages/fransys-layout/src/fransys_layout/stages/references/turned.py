@@ -55,6 +55,25 @@ def _at_stub(star: Star, off_ports: frozenset[Id[Any]]) -> Star:
     return replace(star, ref=at[0]) if at else star
 
 
+def lone_pair(
+    conductor: Connection,
+    spots: Mapping[Id[Any], tuple[Spot, ...]],
+    side: frozenset[Id[Any]],
+    chains: TerminalChains,
+) -> tuple[Spot, Spot] | None:
+    """The one pair of `Spot`s of a conductor between two counted functions on one page."""
+    ends = {conductor.a.function, conductor.b.function}
+    if len(ends) == 1 or ends & side or conductor.handle in chains.links:
+        return None
+    pairs = [
+        (x, y)
+        for x in spots.get(conductor.a.port, ())
+        for y in spots.get(conductor.b.port, ())
+        if x.page == y.page
+    ]
+    return pairs[0] if len(pairs) == 1 else None
+
+
 def _turns(
     conductor: Connection,
     spots: Mapping[Id[Any], tuple[Spot, ...]],
@@ -62,13 +81,5 @@ def _turns(
     chains: TerminalChains,
 ) -> bool:
     """Whether `conductor` leaves a pin outward and comes back past its device."""
-    ends = {conductor.a.function, conductor.b.function}
-    if len(ends) == 1 or ends & side or conductor.handle in chains.links:
-        return False
-    pairs = [
-        (x, y)
-        for x in spots.get(conductor.a.port, ())
-        for y in spots.get(conductor.b.port, ())
-        if x.page == y.page
-    ]
-    return len(pairs) == 1 and (turns_back(*pairs[0]) or turns_back(pairs[0][1], pairs[0][0]))
+    pair = lone_pair(conductor, spots, side, chains)
+    return pair is not None and (turns_back(*pair) or turns_back(pair[1], pair[0]))

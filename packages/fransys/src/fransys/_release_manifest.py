@@ -43,18 +43,6 @@ _WORKSPACE_PACKAGES = (
 )
 
 
-def _instance_tag(model: Model, child: Id[ModelUnit]) -> str | None:
-    """The instance's tag: the written one, else the numbering pass's (`numbering_pins` row)."""
-    record = units(model)[child]
-    if record.tag is not None:
-        return record.tag
-    if record.parent is None:
-        return None
-    key = numbering_pins.unit_position(model, child)[0]
-    rows = numbering_pins.pins(model, record.parent).items
-    return next((row.text for row in rows if row.key == key), None)
-
-
 def _relative_key(model: Model, unit: Id[ModelUnit] | None, subject: Id[ModelUnit]) -> str:
     """`subject`'s key below `unit` (below its own parent when it is `unit` or `unit` is `None`)."""
     key = units(model)[subject].key
@@ -70,11 +58,11 @@ def _instance_text(model: Model, unit: Id[ModelUnit] | None, subject: Id[ModelUn
     while current is not None and current != unit:
         chain.append(current)
         current = units(model)[current].parent
-    tags = [_instance_tag(model, link) for link in reversed(chain)]
+    tags = [numbering_pins.unit_tag(model, link) for link in reversed(chain)]
     texts = [tag for tag in tags if tag is not None]
     if not tags or len(texts) < len(tags):
         return _relative_key(model, unit, subject)
-    return "-" + "-".join(texts)
+    return numbering_pins.instance_name(texts)
 
 
 def _subject_text(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) -> str:

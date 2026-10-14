@@ -16,7 +16,7 @@ from fransys_model.kernel import AuthoringKey, Finding, Severity
 from ._gather import Bands, gather
 from ._hint_refusal import refusal_message
 from ._ordering import Tables, base_order, buckets, column_order, membership, reorder
-from ._packing import merge, pack, placements
+from ._packing import merge, pack, placements, undone_orders
 from .place import _without_tag
 from .slices import by_key
 from .types import (
@@ -38,7 +38,9 @@ if TYPE_CHECKING:
         Column,
         DrawnFunction,
         FunctionSpec,
+        GroupSet,
         Handle,
+        OrderHint,
         PageHints,
         Profile,
         SheetFormat,
@@ -48,6 +50,7 @@ GROUP_SPLIT = "GROUP_SPLIT"
 UNIT_GROUP_SPLIT = "UNIT_GROUP_SPLIT"
 KEEP_TOGETHER_UNMET = "KEEP_TOGETHER_UNMET"
 ORDER_HINT_UNMET = "ORDER_HINT_UNMET"
+ORDER_HINT_UNDONE = "ORDER_HINT_UNDONE"
 
 
 def column_widths(
@@ -145,21 +148,40 @@ def partition(
             break_before=hints.break_before,
             pole_links=given.pole_links,
         )
-        packed, bucket_met = merge(
-            # layout-0153: each unit group one unit, before keep-together sets take it whole
-            gather(reorder(ranked, hints.order), given.bands, tables.width_of),
-            hints.keep_together,
-            sheet.inner_width,
-        )
+        packed, bucket_met, undone = _merged(ranked, hints, sheet.inner_width, given, tables)
         met |= bucket_met
         runs, split = placements(packed, tables.width_of, sheet.inner_width, given.pole_links)
         for page in pack(runs, sheet.inner_width):
             pages.append(_page(bucket, number, page, tables))
             number += 1
-        findings.extend(_split_findings(split, given.bands, tables))
+        findings.extend((*undone, *_split_findings(split, given.bands, tables)))
     findings.extend(_keep_together_findings(hints, met))
     findings.sort(key=lambda finding: (finding.code, finding.subjects))
     return tuple(pages), tuple(findings)
+
+
+def _merged(
+    ranked: Sequence[Unit], hints: PageHints, inner_width: int, given: ColumnTables, tables: Tables
+) -> tuple[list[Unit], set[int], list[Finding]]:
+    """Merge the bucket's keep-together sets; name each order hint a merged set then reversed."""
+    # layout-0153: each unit group one unit, before keep-together sets take it whole
+    ordered = gather(reorder(ranked, hints.order), given.bands, tables.width_of)
+    packed, met = merge(ordered, hints.keep_together, inner_width)
+    undone = undone_orders(ordered, packed, hints.order, hints.keep_together, met)
+    return packed, met, [_undone_finding(hint, together) for hint, together in undone]
+
+
+def _undone_finding(hint: OrderHint, together: GroupSet) -> Finding:
+    """The WARNING for an order hint that a `keep_together` set reverses (layout-0231)."""
+    return Finding(
+        code=ORDER_HINT_UNDONE,
+        severity=Severity.WARNING,
+        subjects=tuple(dict.fromkeys((hint.before, hint.after, *together.groups))),
+        message=(
+            "a keep_together set pulled a group across an order hint: the order is not kept;"
+            " drop one of the two hints"
+        ),
+    )
 
 
 def _check_inputs(columns: tuple[Column, ...], given: ColumnTables, tables: Tables) -> None:

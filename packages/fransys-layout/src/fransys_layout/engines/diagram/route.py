@@ -67,7 +67,8 @@ def _same_x(frame: Frame, sheet: FrameSheet, box: FrameBox, line: int) -> int:
     column = next(c for c in sheet.columns if c.x == box.x)
     for ch in sheet.channels:
         if ch.left == column.index and line in ch.same:
-            return ch.track_x(ch.count + ch.same_tracks[ch.same.index(line)])
+            own = ch.same_tracks[ch.same.index(line)]
+            return ch.track_x(own if ch.same_first else ch.count + own)
     cut = next(c for c in frame.cuts if c.left == column.index and line in c.same)
     room = cut.tab_l + cut.label + cut.same_tracks[cut.same.index(line)] * TRACK_PITCH
     return column.x + column.width + room

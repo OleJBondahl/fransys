@@ -34,7 +34,7 @@ def chain_views(
 def _view(model: Model, item: Id[Any], group: tuple[FunctionSpec, ...]) -> FunctionSpec:
     """One device's box: every port its functions keep, named as an item box names them.
 
-    An unwired port is kept or left off by the profile's switch, as on any item box (model-0120).
+    Every port is kept here; `stages/chain_boxes.py` draws only those on a hop (owner 2026-10-13).
     """
     ordered = sorted(group, key=lambda spec: spec.key)
     ports = tuple(

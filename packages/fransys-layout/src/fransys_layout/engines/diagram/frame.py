@@ -57,7 +57,7 @@ def _stacked(facts: DiagramFacts) -> Stacked | None:
     y = stack(columns, height, facts.height)
     if y is None:
         return None
-    ends = place_ends(raw, y, height, facts.text_height)
+    ends = place_ends(raw, y, height, facts.text_height, nest=facts.nest_same)
     return Stacked(columns=columns, joints=joints, height=height, y=y, ends=ends)
 
 

@@ -10,10 +10,10 @@ from fransys_model.vocab.tables import conductors, functions, items, ports
 from fransys_model.vocab.tables import mates as mates_table
 lazy from fransys_model.vocab.core import Function, Item, Port
 
-from .designation import connector_designation, port_designation
+from .designation import connector_designation
 from .harness import harness_cables, reading_cables
 from .lookups import cable_end_owner, item_of_port, require
-from .order import natural_key
+from .order import natural_key, port_designation_key
 from .rows import HarnessLineEnd
 from .wire_harness import harness_of_wire
 
@@ -91,7 +91,7 @@ def _plug(model: Model, end: _End, parents: set[Id[Item]]) -> Id[Function] | Non
 def _sort_key(model: Model, end: _End, plug: Id[Function] | None) -> tuple[object, ...]:
     if plug is not None:
         return (0, natural_key(connector_designation(model, plug)), end.item)
-    return (1, natural_key(port_designation(model, end.ports[0])), end.item)
+    return (1, port_designation_key(model, end.ports[0]), end.item)
 
 
 def harness_line_ends(model: Model, subject: Id[Item]) -> tuple[HarnessLineEnd, ...]:

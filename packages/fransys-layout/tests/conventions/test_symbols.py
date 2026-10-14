@@ -77,6 +77,22 @@ def test_an_operator_on_another_kind_or_an_open_mushroom_falls_through() -> None
     )
 
 
+# layout-0237: row id -> (operated_by, rest, symbol) of a grouped switch that is not the lead
+_APART: dict[str, tuple[str, str, str]] = {
+    "T2.29": ("mushroom", "rest", "break-contact-positive-opening"),
+    "T2.30": ("push", "operated", "make-contact"),
+    "T2.31": ("position", "rest", "break-contact"),
+}
+
+
+@pytest.mark.parametrize("row_id", list(_APART))
+def test_each_apart_row_is_hit_alone(row_id: str) -> None:
+    """A switch that does not draw its actuator draws its contact alone, ahead of the operators."""
+    operated, rest, symbol = _APART[row_id]
+    subject = SymbolSubject("switch", rest, None, None, None, operated, actuator=False)
+    assert _hit(subject) == (row_id, symbol)
+
+
 def test_the_row_order_is_the_contract() -> None:
     """Swapping the connector's plain row ahead of its female row changes the symbol."""
     rows = list(SYMBOL_DEFAULTS.rows)

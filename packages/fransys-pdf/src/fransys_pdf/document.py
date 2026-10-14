@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import document_facts
 from fransys_model.vocab import PageKind, documents
 
 from ._contents import contents_page
@@ -9,7 +10,6 @@ from ._diagrams import diagram_source
 from ._drawings import harness_cables_for, harness_drawing_source, schematic_pages, schematic_source
 from ._frame import TitleBlockFields, background, text_margin
 from ._geometry import (
-    document_facts,
     document_metadata,
     preamble,
     resolve_sheet_format,

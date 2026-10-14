@@ -3,8 +3,8 @@
 from decimal import Decimal
 
 from fransys_render import pages
-from fransys_render._numbers import format_decimal
-from fransys_render._routes import _point_mm, routes_group, routes_on_page
+from fransys_render._numbers import format_decimal, point_mm
+from fransys_render._routes import routes_group, routes_on_page
 
 from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import wire_run
@@ -444,7 +444,7 @@ def test_routes_and_junctions_are_ordered_by_wire_run_and_position():
 
 def test_routes_group_concatenates_polylines_with_no_separator():
     """Two routes on one page: the exact returned string is the two polylines, in `.id`
-    order (`routes_on_page`), with nothing between them -- built from `_point_mm`, the same
+    order (`routes_on_page`), with nothing between them -- built from `point_mm`, the same
     helper `routes_group` itself calls, never a hand-typed literal.
     """
     drawing_set = _drawing_set("t8")
@@ -456,7 +456,7 @@ def test_routes_group_concatenates_polylines_with_no_separator():
     sheet = sheet_format_of(model, page.sheet_format)
 
     def _polyline(route):
-        points = " ".join(_point_mm(sheet, x, y) for x, y in _run(route))
+        points = " ".join(point_mm(sheet, x, y) for x, y in _run(route))
         return f'<polyline class="wire" points="{points}"/>'
 
     ordered = sorted(routes_on_page(model, page), key=_run)

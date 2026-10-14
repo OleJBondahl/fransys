@@ -8,6 +8,7 @@ from dataclasses import replace
 lazy from collections.abc import Sequence
 
 from fransys_layout.engines.diagram.columns import pieces
+from fransys_layout.engines.diagram.labels import label_lines
 from fransys_layout.engines.diagram.pack import pack_rows
 from fransys_layout.engines.diagram.place import place_diagram
 from fransys_layout.engines.diagram.values import PlacedDiagram, PlacedSheet
@@ -88,6 +89,15 @@ def _merged(moved: Sequence[PlacedSheet], indexes: Sequence[Sequence[int]]) -> P
     )
 
 
+def _wrapped(sheet: PlacedSheet, part: DiagramFacts, width: int) -> PlacedSheet:
+    """`sheet` wrapped to `width`; a wrapped sheet's labels are placed again, clear of the folds."""
+    made = wrapped(sheet, width, part.text_height)
+    if made is sheet:
+        return sheet
+    here = [(ln, placed.points) for ln, placed in zip(part.lines, made.lines, strict=True)]
+    return replace(made, lines=label_lines(here, made.boxes, part.text_height))
+
+
 def place_packed(facts: DiagramFacts, shape: tuple[int, int]) -> PlacedDiagram | None:
     """The placed diagram of `facts` with its pieces packed in rows to `shape`.
 
@@ -99,7 +109,11 @@ def place_packed(facts: DiagramFacts, shape: tuple[int, int]) -> PlacedDiagram |
     if any(p is None or len(p.sheets) != 1 for p in placed):
         return None
     width = shape[0] - 2 * PAGE_PAD
-    sheets = [wrapped(p.sheets[0], width, facts.text_height) for p in placed if p is not None]
+    sheets = [
+        _wrapped(p.sheets[0], part, width)
+        for (part, _), p in zip(parts, placed, strict=True)
+        if p is not None
+    ]
     if len(parts) == 1:
         return PlacedDiagram(unit=facts.unit, sheets=(sheets[0],))
     moved = [_moved(s, dx, dy) for s, (dx, dy) in zip(sheets, _slots(sheets, shape), strict=True)]

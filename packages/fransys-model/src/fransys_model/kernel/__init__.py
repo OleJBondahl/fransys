@@ -21,17 +21,22 @@ from .freeze import freeze
 from .grouping import index_ids
 from .ids import AuthoringKey, Id, make_id, render_id
 from .merge import merge
-from .model import SCHEMA_VERSION, Model
+from .model import Model
 from .origin import Origin, OriginSource, describe, require_origin
 from .parents import parent_chain
 from .record import FieldSpec, Record, field_specs, key_text, record, value
-from .registry import lookup_kind, namespace_of, register_kind, register_namespaces
+from .registry import (
+    lookup_kind,
+    namespace_of,
+    register_kind,
+    register_namespaces,
+    register_schema_version,
+)
 from .unionfind import UnionFind
 from .values import Value, check_value, register_enum
 
 __all__ = [
     "DIGEST_CACHE_SIZE",
-    "SCHEMA_VERSION",
     "WHO_ACTS",
     "AuthoringKey",
     "ByDigest",
@@ -77,6 +82,7 @@ __all__ = [
     "register_enum",
     "register_kind",
     "register_namespaces",
+    "register_schema_version",
     "render_id",
     "require_origin",
     "to_data",

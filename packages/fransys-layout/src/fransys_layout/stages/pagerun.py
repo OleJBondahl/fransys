@@ -13,28 +13,24 @@ from dataclasses import dataclass, field, replace
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-lazy from fransys_layout.geometry import Box
-
 from ._chain_beside import beside_cells, beside_links
+from ._page_place import FirstCall, PageSlices, _page_stack, _place_page
 from ._page_requests import _page_requests
 from ._polelinks import pole_links
 from .boxes import box_sides
 from .content import content_box
 from .extent import page_extras
 from .images import reserved, rooms, unreserve
-from .labels import SlotFrame, decided_runs, place_slot_labels
+from .labels import SlotFrame, place_slot_labels
 from .lookups import owner_of
-from .middle_fold import folded_page, middle_bands, shape_boxes
+from .middle_fold import middle_bands
 from .onepage import page_wiring
-from .page_stacking import PageStacking
 from .partition import ColumnTables, partition
-from .place import page_stack, place
-from .references import Wiring, side_reference_rooms
-from .references.digits import FLOOR, Digits, digits_by_set
+from .references.digits import FLOOR, digits_by_set
 from .references.types import Seat, Seating
 from .replicate import planned_columns
 from .route import PageRoom, route
-from .sizing import label_boxes, placed_widths, with_rooms
+from .sizing import placed_widths
 from .slices import (
     FUNCTION,
     by_ends,
@@ -45,11 +41,11 @@ from .slices import (
     rooms_by_page,
 )
 from .space import Blocks
-from .tags import TagTexts, one_module_tag
-from .texts.power import drawn_shapes, with_power_rooms
+from .texts.power import drawn_shapes
 from .texts.stand import joined_ports, page_texts
 from .types import LabelKind
 from .wrap import WRAP_GAP
+lazy from .tags import TagTexts
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -57,10 +53,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import AuthoringKey, Finding
 
     from .middle import MiddleGroup
-    from .middle_fold import GroupShape
     from .references.types import LocationPath, References, UnitPath
-    from .stacking import JoinedRun, PageStack
-    from .texts.stand import PageTexts
     from .types import (
         Column,
         ColumnWidth,
@@ -103,7 +96,7 @@ class PageInputs:
     middle: Mapping[AuthoringKey, tuple[MiddleGroup, ...]] = field(default_factory=dict)
     # layout-0154 (layout-0158): each (function, port) a line's conductor lands on
     line_ends: frozenset[tuple[Handle, Handle]] = frozenset()
-    heads: Mapping[Handle, str] = field(default_factory=dict)  # layout-0170: coil -> table heading
+    heads: Mapping[tuple[Handle, Handle | None], str] = field(default_factory=dict)  # 0170, 0238
     aside: frozenset[tuple[Handle, Handle]] = frozenset()  # layout-0174: a beside wire's ports
     whole: frozenset[Handle] = frozenset()  # layout-0214: terminals that keep every copy
 
@@ -316,85 +309,6 @@ def _place_each(
         pages.append((placed, first))
         found.extend(page_findings)
     return pages, found, page_rooms, decided
-
-
-@dataclass(frozen=True)
-class FirstCall:
-    """A page's first slot call (tags, markings), run by `_first_labels` after markers."""
-
-    requests: tuple[LabelRequest, ...]
-    placed: tuple[PlacedFunction, ...]
-    drawn: tuple[DrawnFunction, ...]
-    occupied: tuple[Box, ...]
-    profile: Profile
-    shapes: tuple[GroupShape, ...] = ()  # layout-0153: the middle outlines folded on the page
-
-
-@dataclass(frozen=True)
-class PageSlices:
-    """What `place` and `page_stack` read of one page: its plan, own slices and inputs."""
-
-    plan: PagePlan
-    columns: tuple[Column, ...]
-    drawn: tuple[DrawnFunction, ...]
-    requests: tuple[LabelRequest, ...]
-    inputs: PageInputs
-    digits: Digits = FLOOR  # Its set's digits, `refs` at the floor (known only after `place`)
-
-
-def _place_page(
-    page: PageSlices,
-    *,
-    joins: tuple[JoinedRun, ...] = (),
-    texts: PageTexts | None = None,
-) -> tuple[tuple[PlacedFunction, ...], FirstCall, tuple[Finding, ...]]:
-    """Place `page.plan`'s columns; the first slot call is returned, run after the markers."""
-    inputs, drawn = page.inputs, page.drawn
-    placed, place_findings = place(page.plan, page.columns, drawn, _stacking(page, texts), joins)
-    placed, shapes, place_findings = folded_page(placed, page.plan, inputs, place_findings)
-    call = FirstCall(
-        requests=one_module_tag(page.requests, placed, drawn),
-        placed=placed,
-        drawn=drawn,
-        occupied=(*decided_runs(placed, drawn, inputs.connections, joins), *shape_boxes(shapes)),
-        profile=inputs.profile,
-        shapes=shapes,
-    )
-    return placed, call, place_findings
-
-
-def _page_stack(page: PageSlices) -> PageStack:
-    """The page as `_place_page`'s `place` stacks it, on the very inputs it hands `place`."""
-    return page_stack(page.plan, page.columns, page.drawn, _stacking(page))
-
-
-def _stacking(page: PageSlices, texts: PageTexts | None = None) -> PageStacking:
-    """What `place` and `page_stack` stack `page` by: one value, so both read the same."""
-    inputs = page.inputs
-    return PageStacking(
-        profile=inputs.profile,
-        sheet=inputs.sheet,
-        headroom_lanes=inputs.top_headroom_lanes,
-        bottom_headroom_lanes=inputs.bottom_headroom_lanes,
-        label_boxes=_page_boxes(page, texts),
-        texts=texts,
-        digits=page.digits,
-        line_ends=inputs.line_ends,
-    )
-
-
-def _page_boxes(page: PageSlices, texts: PageTexts | None) -> dict[Handle, list[tuple[str, Box]]]:
-    """The boxes `place` grows the page's keep-outs over: the labels', Room's, supplies'."""
-    inputs, drawn = page.inputs, page.drawn
-    sides = side_reference_rooms(
-        page.columns,
-        drawn,
-        Wiring(inputs.connections, inputs.net_groups, page.digits),
-        sheet=inputs.sheet,
-        profile=inputs.profile,
-    )
-    labelled = with_rooms(label_boxes(drawn, page.requests, inputs.profile), sides)
-    return with_power_rooms(labelled, texts, drawn, inputs.profile)
 
 
 def finish_page(

@@ -139,6 +139,7 @@ class Beside:
     pairs: Mapping[tuple[Id[Any], Id[Any]], frozenset[int]]
     sets: Mapping[Id[Any], frozenset[int]]
     aside: frozenset[tuple[Id[Any], Id[Any]]] = frozenset()  # Wires of a beside column (0174)
+    hung: frozenset[tuple[Id[Any], Id[Any]]] = frozenset()  # Wires of a hung column (0224)
 
 
 @dataclass(frozen=True, slots=True)

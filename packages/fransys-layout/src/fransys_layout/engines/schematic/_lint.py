@@ -59,7 +59,9 @@ def lint_findings(scene: LintScene, printed: frozenset[int] | None = None) -> li
     findings = list(lint_geometry(layout, sheet=inputs.sheet, ink=scene.ink, printed=printed))
     pin_functions = {s.function: s.pin_function for s in inputs.functions if s.pin_function}
     findings.extend(
-        lint_fill(layout, sheet=inputs.sheet, pin_functions=pin_functions, printed=printed)
+        lint_fill(
+            layout, sheet=inputs.sheet, ink=scene.ink, pin_functions=pin_functions, printed=printed
+        )
     )
     findings.extend(lint_chains(layout, chain_records(scene), printed=printed))
     # Star markers answer no cut decision

@@ -182,8 +182,17 @@ def test_each_contact_cross_reference_line_carries_its_coils_position() -> None:
     """The contact's own line under its tag names the coil's page and column."""
     # UNDO: stages/images.py `contact_images`: `RequestPartner(... x=home[s.function]
     # .at.x)` instead of `at.at.x` (label_text reads the partner x, not the request `text=`).
+    model = _cabinet()
+    main = _placement(model, "K1", "main")
+    assert not [
+        label
+        for label in layout_of(model, Label).values()
+        if label.function == main.function
+        and label.slot == "tag"
+        and label.kind is LabelKind.CROSS_REFERENCE
+    ]
     for model, tag, functions_of in (
-        (_cabinet(), "K1", ("main", "aux")),
+        (_cabinet(), "K1", ("aux",)),  # main shares its row with aux: no line (one_per_row)
         (_relays(), "K2", ("co_1", "co_2")),
     ):
         coil = _placement(model, tag, "coil")
@@ -218,7 +227,7 @@ def test_a_contacts_partner_text_names_the_cell_of_the_coils_drawn_body_centre()
     # cabinet K1 and the relays K1, K2.
     checked = 0
     for model, tag, functions_of in (
-        (_cabinet(), "K1", ("main", "aux")),
+        (_cabinet(), "K1", ("aux",)),  # main shares its row with aux: no line (one_per_row)
         (_relays(), "K1", ("co_1", "co_2")),
         (_relays(), "K2", ("co_1", "co_2")),
     ):
@@ -234,7 +243,7 @@ def test_a_contacts_partner_text_names_the_cell_of_the_coils_drawn_body_centre()
             )
             assert label_text(model, line) == _centre_cell(model, coil, contact)
             checked += 1
-    assert checked == 6
+    assert checked == 5
 
 
 # ---- Where the image stands ---------------------------------------------------------------

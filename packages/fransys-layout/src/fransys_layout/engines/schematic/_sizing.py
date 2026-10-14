@@ -32,7 +32,7 @@ def sized(
 ) -> tuple[tuple[DrawnFunction, ...], tuple[ColumnWidth, ...], ImageInputs, dict[Any, Any]]:
     """The sized `drawn` functions and column widths, and each contact image's reserve."""
     drawn = narrowed(
-        drawn, box_specs(model, inputs.functions), inputs.profile.text_height
+        drawn, box_specs(model, inputs.functions), inputs.profile.text_height, columns
     )  # layout-0206
     # Columns are sized with the keep-outs grown by the measured labels (`own_set`)
     # and by Room's first call for a reference beside an E or W port

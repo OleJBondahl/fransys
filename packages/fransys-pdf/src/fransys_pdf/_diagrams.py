@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
     diagram_sheets,
+    document_facts,
     document_unit,
     page_destination,
     sheet_counter_text,
@@ -16,7 +17,7 @@ from fransys_model.layout import sheet_for
 from fransys_model.vocab import DocumentPreset, PageKind
 
 from ._frame import TitleBlockFields, background
-from ._geometry import document_facts, subject_label
+from ._geometry import subject_label
 from ._labels import sheet_label
 from ._marks import sheet_mark
 from ._sizes import sizes_of

@@ -11,15 +11,12 @@ render draws and the layout does not store, through a text box is `TEXT_CROSSED_
 or one over a symbol body it does not belong to.
 """
 
-from dataclasses import dataclass
 from functools import partial
 from itertools import combinations, pairwise
 from typing import TYPE_CHECKING
 
-from fransys_layout.geometry import Box, LayoutError, Point, contains, overlaps, translate
-from fransys_layout.stages.content import content_box
+from fransys_layout.geometry import Box, Point, contains, overlaps
 from fransys_layout.stages.extent import column_extent
-from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.slices import by_key, page_of
 from fransys_layout.stages.space import (
     Shape,
@@ -28,7 +25,7 @@ from fransys_layout.stages.space import (
     crosses_unless_leaving,
     span,
 )
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import Finding
 
 from ._foreign import box_on_symbols, stub_through_symbols
 from ._harness import (
@@ -43,6 +40,7 @@ from ._harness import (
     through,
 )
 from ._jogs import routes_with_a_jog
+from ._page import _ByPage, _make_page, _Page
 from ._segments import own_ends_at, runs_of
 from ._texts import text_crossings, text_overlaps
 from ._where import where
@@ -53,6 +51,7 @@ from .codes import (
     WIRE_NOT_ORTHOGONAL,
     WIRE_OVER_LABEL,
     WIRE_THROUGH_SYMBOL,
+    severity_of,
 )
 from .printed import LOOK_GEOMETRY, on_printed
 
@@ -60,35 +59,10 @@ if TYPE_CHECKING:
     from fransys_layout.stages import (
         Handle,
         Layout,
-        LinkMarker,
-        PlacedFunction,
-        PlacedLabel,
         Route,
         RoutePoint,
         SheetFormat,
     )
-    from fransys_layout.stages.types import PlacedOutline
-
-
-_MIN_POINTS = 2  # a route is at least its two ends, even `[p, p]`
-
-
-@dataclass(frozen=True, slots=True)
-class _Page:
-    """Everything of one `(drawing_set, page)`; `placed` is in handle order."""
-
-    placed: tuple[PlacedFunction, ...]
-    boxes: tuple[tuple[PlacedFunction, Box], ...]
-    bodies: tuple[tuple[PlacedFunction, Box], ...]
-    routes: tuple[Route, ...]
-    labels: tuple[PlacedLabel, ...]
-    markers: tuple[LinkMarker, ...]
-    content: Box
-    outlines: tuple[PlacedOutline, ...]
-    ink: PageInk
-    hidden: frozenset[tuple[Handle, int, int]]
-    sheet: SheetFormat
-    here: tuple[int, int]
 
 
 def lint_geometry(
@@ -119,50 +93,34 @@ def geometry_by_page(
 
     The report counts these by page (readability R11); `lint_geometry` is the same list.
     """
-    placed_on = by_key(layout.placed, page_of)
-    routes_on = by_key(layout.routes, page_of)
-    labels_on = by_key(layout.labels, page_of)
-    markers_on = by_key(layout.markers, page_of)
-    outlines_on, inks = by_key(layout.outlines, page_of), inks_by_page(ink)
-    pages = sorted({*placed_on, *routes_on, *labels_on, *markers_on, *inks})
+    on = _ByPage(
+        by_key(layout.placed, page_of),
+        by_key(layout.routes, page_of),
+        by_key(layout.labels, page_of),
+        by_key(layout.markers, page_of),
+        by_key(layout.outlines, page_of),
+    )
+    inks = inks_by_page(ink)
+    pages = sorted({*on.placed, *on.routes, *on.labels, *on.markers, *inks})
     findings: list[tuple[tuple[int, int], Finding]] = []
     for here in pages:
-        placed = tuple(sorted(placed_on.get(here, ()), key=lambda one: one.function))
-        if any(one.function == other.function for one, other in pairwise(placed)):
-            msg = "one function is placed twice on one page"
-            raise LayoutError(msg)
-        routes = tuple(routes_on.get(here, ()))
-        if any(len(route.points) < _MIN_POINTS for route in routes):
-            msg = "a route has fewer than two points"
-            raise LayoutError(msg)
-        page = _Page(
-            placed=placed,
-            boxes=tuple((one, placed_keepout(one)) for one in placed),
-            bodies=tuple(
-                (one, translate(one.geometry.body, dx=one.at.x, dy=one.at.y)) for one in placed
-            ),
-            routes=routes,
-            labels=tuple(labels_on.get(here, ())),
-            markers=tuple(markers_on.get(here, ())),
-            content=content_box(sheet),
-            outlines=outlines_on.get(here, ()),
-            ink=inks.get(here, PageInk()),
-            hidden=ink.hidden,
-            sheet=sheet,
-            here=here,
-        )
-        found = (
-            *_wires(page),
-            *_jogs(page),
-            *_symbols(page),
-            *_content(page),
-            *text_crossings(page.labels, page.markers),
-            *_harness(page),
-            *stub_through_symbols(page.markers, page.placed, page.bodies),
-            *box_on_symbols(page.markers, page.placed, page.bodies),
-        )
-        findings.extend((here, one) for one in found)
+        page = _make_page(here, on, (sheet, ink, inks.get(here, PageInk())))
+        findings.extend((here, one) for one in _page_findings(page))
     return tuple(findings)
+
+
+def _page_findings(page: _Page) -> tuple[Finding, ...]:
+    """Every geometric finding of one page, in the order the checks run."""
+    return (
+        *_wires(page),
+        *_jogs(page),
+        *_symbols(page),
+        *_content(page),
+        *text_crossings(page.labels, page.markers),
+        *_harness(page),
+        *stub_through_symbols(page.markers, page.placed, page.bodies),
+        *box_on_symbols(page.markers, page.placed, page.bodies),
+    )
 
 
 def _identity(route: Route) -> tuple[Handle, Handle, Handle]:
@@ -171,7 +129,7 @@ def _identity(route: Route) -> tuple[Handle, Handle, Handle]:
 
 
 def _warn(code: str, subjects: tuple[Handle, ...], message: str) -> Finding:
-    return Finding(code=code, severity=Severity.WARNING, subjects=subjects, message=message)
+    return Finding(code=code, severity=severity_of(code), subjects=subjects, message=message)
 
 
 def _space(page: _Page) -> Space:

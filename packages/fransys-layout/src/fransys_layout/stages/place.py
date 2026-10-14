@@ -2,8 +2,6 @@
 
 import dataclasses
 from dataclasses import dataclass, field
-from functools import partial
-from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
@@ -13,18 +11,16 @@ from fransys_layout.geometry import (
     LayoutError,
     Orientation,
     Point,
-    flow,
     hull,
     on_wiring_grid,
     snap_up,
-    symbol_geometry,
 )
 from fransys_model.kernel import Finding, Severity
 
 from . import lookups
-from ._band_align import _band_top, _cascade_bottom, _participants
+from ._band_settle import _align_bands, _cascade
 from ._bands import band_of
-from .host_offsets import _next_slot, attachment_offsets
+from ._row_align import _align_faces, _align_sides, _space, _spread, _stack
 from .line_room import line_room
 from .references.marker_boxes import FLOOR, Digits, reference_box_width
 from .room import grow_keepout, room_offset
@@ -32,11 +28,11 @@ from .row_parts import share_spacing
 from .stack_room import make_room
 from .stacking import JoinedRun, PageStack, StackedPort, blocks, gaps_below
 from .texts.stand import end_boxes
+from .turned import _turned_function
 from .types import PlacedFunction
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
-    from collections.abc import Set as AbstractSet
 
     from fransys_layout.geometry import SymbolGeometry
     from fransys_model.kernel import AuthoringKey
@@ -376,21 +372,6 @@ def _cells(
     return rows
 
 
-def _turned_function(function: DrawnFunction, cell: Cell) -> DrawnFunction:
-    """`function`, its symbol turned when `cell` is a flipped one (`references.joins` reads it)."""
-    if not cell.flip or function.geometry.generic_box:
-        return function
-    # The side element's other port on top. A turned directed pole
-    # is mirrored as well (MR180), so top and bottom swap and its poles, markings
-    # and tag keep their left-to-right places; every other flip is R180
-    flipped = symbol_geometry(
-        function.geometry.key,
-        poles=function.geometry.poles,
-        orientation=Orientation.MR180 if cell.mirror else Orientation.R180,
-    )
-    return dataclasses.replace(function, geometry=flipped)
-
-
 def _fit_row(
     row: Sequence[_Cell], drawn_of: Mapping[Handle, DrawnFunction], label_boxes: FnBoxes
 ) -> None:
@@ -501,293 +482,6 @@ def axis_offset(function: DrawnFunction) -> int:
         return port.at.x
     body = function.geometry.body
     return snap_up(body.x + body.width // 2)
-
-
-def _pole_pitch(rows: Sequence[list[_Cell]]) -> int | None:
-    """The x distance between pole 1 and pole 2 of the column's first multi-pole symbol."""
-    for row in rows:
-        for cell in row:
-            if cell.geometry.poles < 2 or cell.geometry.through is None:  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
-                continue
-            name = cell.geometry.through.start
-            at = {port.name: port.at.x for port in cell.geometry.ports}
-            if f"1.{name}" in at and f"2.{name}" in at:
-                return at[f"2.{name}"] - at[f"1.{name}"]
-    return None
-
-
-def _lane_offsets(rows: Sequence[list[_Cell]]) -> None:
-    """Each cell's axis right of the column axis: pole lanes at the pole pitch, sides packed."""
-    pitch = _pole_pitch(rows) or _widest_step(rows)
-    for row in rows:
-        if all(cell.host is not None for cell in row):
-            continue
-        if pitch and not row[0].side:  # A row's first cell may sit in a later lane
-            row[0].dx = row[0].lane * pitch
-        for previous, cell in pairwise(row):
-            packed = _next_slot(previous, cell)
-            # Pole lanes sit exactly at the pole pitch, never inside the cell before
-            # (a multi-pole cell's keep-out spans several lanes); a lane after a multi-pole
-            # cell gives up the exact pole pitch to avoid that overlap
-            cell.dx = max(cell.lane * pitch, packed) if pitch and not cell.side else packed
-    _span_offsets(rows, pitch)
-    _keep_gap(rows)
-    attachment_offsets(rows)
-
-
-def _keep_gap(rows: Sequence[list[_Cell]]) -> None:
-    """Two neighbours never touch: a cell the span offsets left too close moves right."""
-    for row in rows:
-        free = [cell for cell in row if cell.host is None]
-        for previous, cell in pairwise(free):
-            cell.dx = max(cell.dx, _next_slot(previous, cell))
-
-
-def _span_offsets(rows: Sequence[list[_Cell]], pitch: int | None) -> None:
-    """A function spanning lanes has its reached port under its lane."""
-    for row in rows:
-        for cell in row:
-            if cell.span_port and cell.host is None:
-                port_x = next(p.at.x for p in cell.geometry.ports if p.name == cell.span_port)
-                cell.dx = (cell.lane * pitch if pitch else 0) + cell.axis_offset - port_x
-
-
-def _widest_step(rows: Sequence[list[_Cell]]) -> int | None:
-    """With no pole pitch, one pitch for every pole-lane row: the widest step per lane it spans."""
-    steps = [
-        snap_up(-(-_next_slot(previous, cell, 0) // max(1, cell.lane - previous.lane)))
-        for row in rows
-        if not all(cell.host is not None for cell in row)
-        for previous, cell in pairwise(row)
-        if not cell.side and not previous.side
-    ]
-    return max(steps, default=None)
-
-
-def _spread(page: Sequence[list[list[_Cell]]], column_gap: int, left: int = 0) -> None:
-    """Give every column its axis, left to right, keep-out edges a column gap apart."""
-    for rows in page:
-        _lane_offsets(rows)
-        cells = [cell for row in rows for cell in row]
-        axis = snap_up(left - min(cell.dx + cell.left_of_axis for cell in cells))
-        for cell in cells:
-            cell.at_axis(axis + cell.dx)
-        left = max(cell.right for cell in cells) + column_gap
-
-
-def _row_bottom(row: Sequence[_Cell], floor: int) -> int:
-    """The keep-out bottom of `row` once its top is at `floor`, snapped as `at_top` snaps."""
-    return max(cell.top_at(floor) + cell.geometry.keepout.height for cell in row)
-
-
-def _apply(rows: Sequence[list[_Cell]], moves: Sequence[tuple[int, int]]) -> None:
-    """Put each moved row's top at its new top."""
-    for index, top in moves:
-        for cell in rows[index]:
-            cell.at_top(top)
-
-
-def _stack(rows: Sequence[list[_Cell]], row_gap: int, *, top: int) -> None:
-    """The longest-path pass down one column: the first row's top is `top`, the headroom."""
-    _apply(rows, flow(rows, floor=top, gaps=[row_gap] * len(rows), far_edge=_row_bottom))
-
-
-def _space(
-    page: Sequence[list[list[_Cell]]], spacing: int, narrowed: Mapping[AuthoringKey, int]
-) -> None:
-    """A column's rows stack from the top at `spacing` (or its `narrowed` one)."""
-    for column in page:
-        if all(cell.boxy for row in column for cell in row):
-            continue
-        apart = narrowed.get(column[0][0].column, spacing)
-        floor = None
-        for block in blocks(column):
-            cells = [cell for row in block for cell in row]
-            if floor is not None:
-                shift = floor - min(cell.top for cell in cells)
-                for cell in cells:
-                    cell.at_top(cell.top + shift)
-            floor = max(cell.bottom for cell in cells) + apart
-
-
-def _align_sides(page: Sequence[list[list[_Cell]]]) -> None:
-    """Put each side element's port on its host's port y."""
-    for rows in page:
-        for row in rows:
-            hosts = [cell for cell in row if not cell.side]
-            if not hosts:
-                continue
-            host = hosts[-1]
-            host_top = host.origin.y + _port_y(host.geometry, Facing.N, top=True)
-            host_bottom = host.origin.y + _port_y(host.geometry, Facing.S, top=False)
-            for cell in row:
-                if not cell.side:
-                    continue
-                target = host_bottom if cell.low else host_top
-                own = _port_y(cell.geometry, Facing.N, top=True)
-                cell.origin = Point(x=cell.origin.x, y=target - own)
-
-
-def _align_faces(page: Sequence[list[list[_Cell]]]) -> None:
-    """A lower pin's mating face on its upper pin's, touching."""
-    for rows in page:
-        by_function = {cell.function: cell for row in rows for cell in row}
-        row_of = {cell.function: at for at, row in enumerate(rows) for cell in row}
-        for row in rows:
-            for cell in row:
-                if not cell.face or cell.host is None:
-                    continue
-                host = by_function[cell.host]
-                if row_of[cell.function] < row_of[cell.host]:
-                    target = host.origin.y + host.geometry.body.y
-                    body = cell.geometry.body
-                    cell.origin = Point(x=cell.origin.x, y=target - body.y - body.height)
-                    continue
-                target = host.origin.y + host.geometry.body.y + host.geometry.body.height
-                cell.origin = Point(x=cell.origin.x, y=target - cell.geometry.body.y)
-
-
-def _port_y(geometry: SymbolGeometry, facing: Facing, *, top: bool) -> int:
-    """The y of the topmost port facing `facing` (or the bottommost), else of any port."""
-    ys = [port.at.y for port in geometry.ports if port.facing is facing]
-    ys = ys or [port.at.y for port in geometry.ports]
-    return min(ys) if top else max(ys)
-
-
-def _align_bands(
-    page: Sequence[list[list[_Cell]]],
-    ranks: frozendict[str, int],
-    gaps_of: _GapsOf,
-    *,
-    floor: int,
-    stacked: Mapping[tuple[int, int], int],
-) -> None:
-    """Align each band's participants, top band first, after spacing (layout-0061)."""
-    found = _participants(page)
-    aligned: dict[int, set[int]] = {}
-    blocks = partial(_blocks, page, gaps_of, aligned)
-    fits = partial(_fits, page, gaps_of, floor)
-    for band in sorted(found, key=lambda key: (ranks[key[0]], key[0], str(key[1]))):
-        if band[0].endswith(".last"):
-            continue
-        top, members = _settle_band(page, found[band], stacked, blocks, fits)
-        if len(members) < 2:  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
-            continue
-        for column, index in members:
-            _bring_to(page[column], index, top, gaps_of(page[column]))
-            aligned.setdefault(column, set()).add(index)
-
-
-_Member = tuple[int, int]
-
-
-def _blocks(
-    page: Sequence[list[list[_Cell]]],
-    gaps_of: _GapsOf,
-    aligned: Mapping[int, set[int]],
-    member: _Member,
-    top: int,
-) -> bool:
-    """Whether bringing `member` to `top` would move a row some band already aligned."""
-    rows = page[member[0]]
-    return _moves_an_aligned_row(rows, member[1], top, gaps_of(rows), aligned.get(member[0], set()))
-
-
-def _fits(
-    page: Sequence[list[list[_Cell]]], gaps_of: _GapsOf, floor: int, member: _Member, top: int
-) -> bool:
-    """Whether lowering `member` to `top` keeps its column above `floor`."""
-    rows = page[member[0]]
-    return _cascade_bottom(rows, member[1], top, gaps_of(rows)) <= floor
-
-
-def _settle_band(
-    page: Sequence[list[list[_Cell]]],
-    members: Sequence[_Member],
-    stacked: Mapping[_Member, int],
-    blocks: Callable[[_Member, int], bool],
-    fits: Callable[[_Member, int], bool],
-) -> tuple[int, list[_Member]]:
-    """Drop participants until the rest share one top; return that top and who stays."""
-    top = 0
-    members = list(members)
-    while len(members) > 1:
-        top = _band_top(page, members, stacked)
-        blockers = [m for m in members if blocks(m, top)]
-        if not blockers and all(fits(m, top) for m in members):
-            break
-        # the participant that can rise least leaves the band
-        members.remove(max(blockers or members, key=lambda m: (stacked[m], m)))
-    return top, members
-
-
-def _bring_to(rows: Sequence[list[_Cell]], index: int, top: int, gaps: Sequence[int]) -> None:
-    """Move `rows[index]` to `top`: raise it from below, cascade it from above."""
-    current = min(cell.top for cell in rows[index])
-    if current > top:
-        _raise(rows, index, top, gaps)
-    elif current < top:
-        _cascade(rows, index, top, gaps)
-
-
-def _moves_an_aligned_row(
-    rows: Sequence[list[_Cell]],
-    index: int,
-    top: int,
-    gaps: Sequence[int],
-    aligned: AbstractSet[int],
-) -> bool:
-    """Whether bringing `rows[index]` to `top` would move a row of `aligned` (layout-0061)."""
-    current = min(cell.top for cell in rows[index])
-    if current > top:
-        moves = _raise_plan(rows, index, top, gaps)
-    elif current < top:
-        moves = _cascade_plan(rows, index, top, gaps)
-    else:
-        return False
-    return any(row in aligned for row, _ in moves)
-
-
-def _raise(rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]) -> None:
-    """Raise `rows[start]` to `top`; the rows above it move up only as far as they must."""
-    for index, shift in _raise_plan(rows, start, top, gaps):
-        for cell in rows[index]:
-            cell.at_top(cell.top - shift)
-
-
-def _raise_plan(
-    rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]
-) -> list[tuple[int, int]]:
-    """The moves of `_raise` as (row index, shift up), the start row first."""
-    shift = min(cell.top for cell in rows[start]) - top
-    moves = [(start, shift)]
-    below = min(cell.top_at(cell.top - shift) for cell in rows[start])
-    for index in range(start - 1, -1, -1):
-        excess = max(cell.bottom for cell in rows[index]) - (below - gaps[index])
-        if excess <= 0:
-            break
-        moves.append((index, excess))
-        below = min(cell.top_at(cell.top - excess) for cell in rows[index])
-    return moves
-
-
-def _cascade(rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]) -> None:
-    """Lower `rows[start]` to `top` and push the rows below just far enough to follow."""
-    _apply(rows, _cascade_plan(rows, start, top, gaps))
-
-
-def _cascade_plan(
-    rows: Sequence[list[_Cell]], start: int, top: int, gaps: Sequence[int]
-) -> list[tuple[int, int]]:
-    """The moves of `_cascade` as (row index, new top), the start row first."""
-    moves = flow(
-        rows[start:],
-        floor=top,
-        gaps=gaps[start:],
-        far_edge=_row_bottom,
-        near_edge=lambda row: min(cell.top for cell in row),
-    )
-    return [(start + index, new_top) for index, new_top in moves]
 
 
 def _overfull(cells: Sequence[_Cell], content_height: int) -> tuple[Finding, ...]:

@@ -2,7 +2,8 @@
 
 Decision 0101: the one named shape for a golden regeneration, so an order names a recipe and not an
 ad-hoc command chain. It refuses on `main`: agents cannot discard tracked changes there. PKG is
-`model`, `layout` or empty for both. Layout runs only the test files that read the option.
+`model`, `layout`, `listing` or empty for all three. Layout runs only the test files that read
+the option.
 Run via `uv run python scripts/regen_goldens.py [PKG]`.
 """
 
@@ -30,6 +31,7 @@ RUNS = {
         ["uv", "run", "pytest", *LAYOUT_GOLDEN_TESTS, "--regenerate-golden", "-q"],
         "packages/fransys-layout/tests/golden",
     ),
+    "listing": (["uv", "run", "python", "tests/listing_golden_cases.py"], "tests/golden/listing"),
 }
 
 

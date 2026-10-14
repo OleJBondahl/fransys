@@ -92,8 +92,8 @@ def make_plan(facts: ViewFacts) -> Plan:
     lane = {b.box: facts.lanes[n] for n, b in enumerate(facts.boxes)}
     stubs = {b.box for b in facts.boxes if b.key.at is not None}
     west = {b.box for b, w in zip(facts.boxes, facts.west, strict=True) if w}
-    stage = _stages(facts, [b.box for b in _reader_order(facts) if b.box not in stubs], west)
     order = _reader_order(facts)
+    stage = _stages(facts, [b.box for b in order if b.box not in stubs], west)
     join = {b.box: j if j >= 0 else math.inf for b, j in zip(facts.boxes, facts.join, strict=True)}
     cells = stack([b.box for b in order], {b: (lane[b], stage[b]) for b in lane}, join)
     inner = frozenset(i for i, ln in enumerate(facts.lines) if not {ln.a, ln.b} & stubs)

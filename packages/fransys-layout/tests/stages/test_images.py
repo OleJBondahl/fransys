@@ -403,7 +403,7 @@ def test_a_heading_wider_than_the_table_widens_it_and_a_shorter_one_does_not() -
 
 def test_stacked_tables_are_each_no_narrower_than_their_heading() -> None:
     """The stack widens a table to its coil's heading; a lone table keeps its own width."""
-    heads = {hid("function", 1): "-K" + "W" * 20, hid("function", 2): "-K2"}
+    heads = {(hid("function", 1), 1): "-K" + "W" * 20, (hid("function", 2), 1): "-K2"}
     home = {hid("function", n): placed(n, x=0, y=16 * n) for n in (1, 2)}
     labels = [
         PlacedLabel(
@@ -417,7 +417,7 @@ def test_stacked_tables_are_each_no_narrower_than_their_heading() -> None:
         for n in (1, 2)
     ]
     stacked = stack_tables({(1, 1): labels}, home, {}, PROFILE, heads)[(1, 1)]
-    wide = text_width(heads[hid("function", 1)], height=PROFILE.text_height)
+    wide = text_width(heads[hid("function", 1), 1], height=PROFILE.text_height)
     assert [one.box.width for one in stacked] == [wide + 2 * PROFILE.marker_padding, 24]
 
 
@@ -431,10 +431,29 @@ def test_a_stacked_coils_room_to_the_right_includes_its_measured_heading(monkeyp
 
     def right(tables: tuple[int, ...], heading: str = heading) -> int:
         reserve = images._Reserve(down=0, images=((coil, ("13-14",), False),), tables=tables)
-        inputs: Any = SimpleNamespace(profile=PROFILE, heads={coil: heading})
+        inputs: Any = SimpleNamespace(profile=PROFILE, heads={(coil, None): heading})
         return images.rooms({(key, coil): reserve}, (drawn(1),), (), inputs)[key, coil][1]
 
     assert right((24, 24)) > right((24,))
     longer = heading + "W"
     grown = text_width(longer, height=PROFILE.text_height) - text_width(heading, height=8)
     assert right((24, 24), longer) - right((24, 24)) == grown > 0
+
+
+def test_the_reserve_measures_the_heading_of_the_set_it_is_drawn_in(monkeypatch) -> None:
+    """A set of an outer unit prints the longer tag, so its reserve is as wide as that heading."""
+    # UNDO: stages/images.py:rooms, `unit_of.get(key[0])` -> `None` (the heading of no unit)
+    monkeypatch.setattr(images, "widest_places", lambda _plans, _inputs: ("", ""))
+    coil = hid("function", 1)
+    plan = replace(page_plan(("a",)), unit=hid("unit", 7))
+    key = column("a", (1,)).key
+    short, long = "-K1", "-OUTER-K1" + "W" * 20
+    reserve = images._Reserve(down=0, images=((coil, ("13-14",), False),), tables=(24, 24))
+    inputs: Any = SimpleNamespace(
+        profile=PROFILE, heads={(coil, None): short, (coil, hid("unit", 7)): long}
+    )
+
+    def right(unit_plan: Any) -> int:
+        return images.rooms({(key, coil): reserve}, (drawn(1),), (unit_plan,), inputs)[key, coil][1]
+
+    assert right(plan) > right(replace(plan, unit=None))

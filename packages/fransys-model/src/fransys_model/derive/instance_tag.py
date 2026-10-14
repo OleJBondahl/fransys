@@ -32,6 +32,11 @@ def unit_tag(model: Model, unit: Id[Unit]) -> str | None:
     return None
 
 
+def dashed(text: str) -> str:
+    """The printed form of a designation: its text behind the dash (`-U3`, `-Q11`)."""
+    return f"-{text}"
+
+
 def tag_chain(parts: Iterable[str]) -> str:
     """The one join of instance tags and own text: `U3-J1` (the printed form adds the dash)."""
     return "-".join(parts)
@@ -39,7 +44,7 @@ def tag_chain(parts: Iterable[str]) -> str:
 
 def instance_name(tags: Iterable[str]) -> str:
     """How a listing names an instance: `-U3`, nested `-U1-U3`."""
-    return "-" + tag_chain(tags)
+    return dashed(tag_chain(tags))
 
 
 def instance_tags(model: Model, item_unit: Id[Unit], view: Id[Unit] | None) -> tuple[str, ...]:

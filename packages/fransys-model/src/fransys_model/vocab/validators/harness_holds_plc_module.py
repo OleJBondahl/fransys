@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.enums import PartCategory
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.membership import marked_harnesses
-from fransys_model.vocab.tables import items, parts
+from fransys_model.vocab.plc_module import is_plc_module
+from fransys_model.vocab.tables import items
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -31,8 +31,6 @@ def check_harness_holds_plc_module(model: Model) -> tuple[Finding, ...]:
             ),
         )
         for item in items(model).values()
-        if item.parent in marked
-        and item.part is not None
-        and parts(model)[item.part].category is PartCategory.PLC_MODULE
+        if item.parent in marked and is_plc_module(model, item)
     ]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

@@ -113,29 +113,50 @@ def port_spots(
         if column.key not in at:
             continue
         page, index = at[column.key]
-        stack = stacks[page]
         where = (page, index, column.key)
-        height, last = stack.heights[column.key], stack.last[column.key]
         for cell in column.cells:
-            own = [
-                (port, stacked)
-                for port in drawn_of[cell.function].ports
-                if (stacked := stack.ports.get((column.key, port.port))) is not None
-            ]
-            if not own:
-                continue
-            body = (min(s.offset for _, s in own), max(s.offset for _, s in own))
-            shifted = _under_attachment(column, cell)
-            boxed = drawn_of[cell.function].geometry.generic_box
-            for port, stacked in own:
-                end = JoinEnd(port=port.port, row=stacked.row, offset=stacked.offset, height=height)
-                crowded = _crowded(own, port.port, stacked)
-                found[port.port].append(
-                    Spot(
-                        *where, cell.index, last, stacked.facing, end, body, shifted, crowded, boxed
-                    )
-                )
+            for port, spot in _cell_spots(
+                stacks[page], column, cell, drawn_of[cell.function], where
+            ):
+                found[port].append(spot)
     return {port: tuple(spots) for port, spots in found.items()}
+
+
+def _cell_spots(
+    stack: PageStack,
+    column: Column,
+    cell: Cell,
+    one: DrawnFunction,
+    where: tuple[Page, int, Any],
+) -> list[tuple[Id[Any], Spot]]:
+    """The `Spot` of each stacked port of one cell, with the port's id."""
+    own = [
+        (port, stacked)
+        for port in one.ports
+        if (stacked := stack.ports.get((column.key, port.port))) is not None
+    ]
+    if not own:
+        return []
+    body = (min(s.offset for _, s in own), max(s.offset for _, s in own))
+    shifted = _under_attachment(column, cell)
+    height, last = stack.heights[column.key], stack.last[column.key]
+    return [
+        (
+            port.port,
+            Spot(
+                *where,
+                cell.index,
+                last,
+                stacked.facing,
+                JoinEnd(port=port.port, row=stacked.row, offset=stacked.offset, height=height),
+                body,
+                shifted,
+                _crowded(own, port.port, stacked),
+                one.geometry.generic_box,
+            ),
+        )
+        for port, stacked in own
+    ]
 
 
 def _crowded(own: Sequence[tuple[Any, StackedPort]], port: Id[Any], one: StackedPort) -> bool:
@@ -325,7 +346,7 @@ def _unaligned(run: tuple[JoinEnd, ...]) -> Finding:
     """One run `place` cannot align, drawn as references instead."""
     return Finding(
         code=JOIN_UNALIGNED,
-        severity=Severity.WARNING,
+        severity=Severity.INFO,
         subjects=tuple(end.port for end in run),
         message="a horizontal join's row could not be aligned; drawn as references instead",
     )

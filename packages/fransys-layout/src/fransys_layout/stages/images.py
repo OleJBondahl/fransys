@@ -13,9 +13,17 @@ from fransys_model.derive.drawing_text import (
 )
 
 from ._image_foot import table_x
-from ._image_stack import foot_down, headed_width, settled_tables
+from ._image_stack import foot_down, headed_width, heads_by_set, settled_tables
 from ._image_widest import widest_places
-from .image_refs import by_owner, home_placements, home_references, unplaced_coil_owners
+from .image_refs import (
+    by_owner,
+    holds_list,
+    home_placements,
+    home_references,
+    listed,
+    one_per_row,
+    unplaced_coil_owners,
+)
 from .lookups import placed_keepout
 from .place import axis_offset
 from .room import grow_keepout
@@ -54,12 +62,14 @@ class ImageInputs:
     marks: dict[Handle, tuple[list[str], list[str]]]
     owners: Mapping[Handle, Handle] | None = None  # contact function -> the item owning it
     spares: tuple[FunctionSpec, ...] = ()  # Contacts on no page, listed "<mark> <no_place>"
-    row_order: Mapping[Handle, tuple[Any, ...]] = field(default_factory=dict)  # Order, model-0138
+    row_order: Mapping[Handle, tuple[Any, ...]] = field(default_factory=dict)  # model-0138, 0237
     replicas: Mapping[tuple[AuthoringKey, Handle], Handle | None] = field(
         default_factory=dict
     )  # layout-0184: each replica cell -> its column's unit
     no_place: str = field(kw_only=True)  # layout-0112: the model's text for "not drawn"
-    heads: Mapping[Handle, str] = field(default_factory=dict)  # coil -> its table's heading (0170)
+    heads: Mapping[tuple[Handle, Handle | None], str] = field(default_factory=dict)
+    # (coil, the unit of the set drawn) -> its table's heading (0170, model-0238)
+    linked: frozenset[Handle] = frozenset()  # functions at an end of a pole link (layout-0235)
 
 
 def _image_marks(
@@ -145,20 +155,16 @@ def image_reserves(
     owners: Mapping[Handle, Handle] | None = None,
 ) -> dict[tuple[AuthoringKey, Handle], _Reserve]:
     """(column key, function) -> `_Reserve`; a flipped cell keeps nothing."""
-    by_item = by_owner([s for s in specs if s.roles.contact], owners)
+    by_item = by_owner([s for s in specs if listed(s)], owners)
     spec_of = {spec.function: spec for spec in specs}
     found: dict[tuple[AuthoringKey, Handle], _Reserve] = {}
     for column in columns:
         for cell in column.cells:
             spec = spec_of.get(cell.function)
-            if (
-                cell.home is Home.ELSEWHERE
-                or spec is None
-                or not spec.roles.contacts_apart
-                or _hosted(cell)
-            ):
+            if cell.home is Home.ELSEWHERE or spec is None or not holds_list(spec) or _hosted(cell):
                 continue
-            no, nc = _image_marks(by_item.get(spec.item, []), marks)
+            group = by_item.get((owners or {}).get(spec.function, spec.item), [])
+            no, nc = _image_marks(group, marks)
             if not (no or nc):
                 continue
             height = table_height(max(len(no), len(nc)), profile)
@@ -166,12 +172,9 @@ def image_reserves(
                 c for c in column.cells if c.index > cell.index and c.host is None and not c.side
             ]
             last = max(under, key=lambda c: c.index) if under else cell
-            cross = any(
-                c.drawing_set_key != spec.drawing_set_key for c in by_item.get(spec.item, [])
-            )
+            cross = any(c.drawing_set_key != spec.drawing_set_key for c in group)
             image = (cell.function, (*no, *nc), cross)  # A contact in another set
-            lane = [c for c in under if c.lane == cell.lane]
-            wide = (cell, *(() if cell.side else lane))
+            wide = (cell, *(() if cell.side else (c for c in under if c.lane == cell.lane)))
             for one in dict.fromkeys((*wide, last)):
                 if one.flip:
                     continue
@@ -216,6 +219,7 @@ def rooms(
 ) -> dict[tuple[AuthoringKey, Handle], tuple[int, int]]:
     """(column key, function) -> (down, right) room, from the widest place text."""
     widest = widest_places(plans, inputs)
+    unit_of = {column.column: plan.unit for plan in plans for column in plan.columns}
     by_function = {one.function: one for one in drawn}
     found = {}
     for key, reserve in reserves.items():
@@ -225,7 +229,9 @@ def rooms(
         for coil, marks, cross in reserve.images:
             first = by_function[coil]
             start = axis_offset(one) + first.geometry.ports[0].at.x - axis_offset(first)
-            head = inputs.heads.get(coil, "") if len(reserve.tables) > 1 else ""
+            head = (
+                inputs.heads.get((coil, unit_of.get(key[0])), "") if len(reserve.tables) > 1 else ""
+            )
             width = _image_width(
                 [_entry_text(mark, widest[cross]) for mark in marks], inputs.profile, head
             )
@@ -326,10 +332,10 @@ def contact_images(
     tables: dict[tuple[int, int], list[PlacedLabel]] = {}
     requests = []
     for owner, group in sorted(by_item.items(), key=lambda e: min(s.function for s in e[1])):
-        coil = next((s for s in group if s.roles.contacts_apart), None)
-        contacts = sorted((s for s in group if s.roles.contact), key=attrgetter("function"))
+        coil = next((s for s in group if holds_list(s)), None)
+        contacts = sorted((s for s in group if listed(s)), key=attrgetter("function"))
         main = coil or next(
-            (s for s in sorted(group, key=attrgetter("function")) if not s.roles.contact), None
+            (s for s in sorted(group, key=attrgetter("function")) if not listed(s)), None
         )
         spare_no, spare_nc = _image_marks(spare_of.get(owner, []) if coil else [], inputs.marks)
         if main is None or not (contacts or spare_no or spare_nc):
@@ -337,13 +343,14 @@ def contact_images(
         if coil is None and owner in coil_unplaced:
             continue
         if coil is None:  # No coil, so the main symbol; one reference path, no table
-            requests.extend(home_references(contacts, main, home, where))
+            requests.extend(
+                home_references(
+                    one_per_row(contacts, home, inputs.linked, sheet), main, home, where
+                )
+            )
             continue
         at = home[coil.function]
-        order = sorted(
-            contacts,
-            key=lambda s: (len(s.ports) <= 2, inputs.row_order.get(s.function, ())),  # noqa: PLR2004 -- the count is the rule's own size (a pair or triple), not a tunable
-        )
+        order = sorted(contacts, key=lambda s: inputs.row_order.get(s.function, ()))
         no, nc = [], []
         for s in order:
             s_no, s_nc = inputs.marks[s.function]
@@ -373,9 +380,18 @@ def contact_images(
                 partners=partners,
             )
         )
-        requests.extend(home_references(contacts, coil, home, where))
+        # layout-0237: a lead switch lists itself and takes no reference to itself
+        requests.extend(
+            home_references(
+                one_per_row([s for s in contacts if s is not coil], home, inputs.linked, sheet),
+                coil,
+                home,
+                where,
+            )
+        )
+    set_heads = heads_by_set(inputs.heads, {plan.drawing_set: plan.unit for plan in plans})
     tables = settled_tables(
-        tables, home, marker_boxes, profile, inputs.heads
+        tables, home, marker_boxes, profile, set_heads
     )  # Baseline, layout-0170 stack
     found = []
     for plan, (placed, first) in zip(plans, pages, strict=True):

@@ -3,13 +3,12 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    current_revision,
     document_drawing_sets,
+    document_facts,
     document_unit,
     is_replica_only_undrawn,
     item_description,
     item_designation,
-    revision_text,
     unit_release,
 )
 from fransys_model.derive.drawing_text import unit_label
@@ -20,7 +19,7 @@ from fransys_model.layout import (
     layout_of,
     sheet_format_of,
 )
-from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes, projects
+from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes
 
 from ._labels import ROMAN
 from ._sizes import Sizes, font_mm
@@ -103,50 +102,12 @@ def document_metadata(model: Model, record: Document) -> str:
     return f"#set document(title: {literal(title)}, author: {literal(author)}, date: {date})"
 
 
-def project_facts(model: Model) -> tuple[str, str, str, str, str, str]:
-    """(title, number, customer, revision, revision_date, author); all empty with no `Project`."""
-    table = projects(model)
-    if not table:
-        return ("", "", "", "", "", "")
-    record = next(iter(table.values()))
-    current = current_revision(model)
-    return (
-        record.title,
-        record.number,
-        record.customer,
-        revision_text(record.version, record.revision),
-        "" if current is None else current.date,
-        record.author,
-    )
-
-
 def document_release(model: Model, record: Document) -> Id[UnitRelease] | None:
     """The release whose revision history `record` shows: its unit's, `None` for the project's."""
     unit = document_unit(model, record)
     if unit is None:
         return None
     return unit_release(model, unit).id
-
-
-def document_facts(model: Model, record: Document) -> tuple[str, str, str, str, str, str]:
-    """`project_facts`, or for a unit document the unit release's own, customer empty.
-
-    A unit document's author is the `created` of the unit's current revision (pdf-0036 D5).
-    """
-    unit = document_unit(model, record)
-    if unit is None:
-        return project_facts(model)
-    release = unit_release(model, unit)
-    matching = current_revision(model, release.id)
-    revision_date, author = ("", "") if matching is None else (matching.date, matching.created)
-    return (
-        release.title,
-        release.number,
-        "",
-        revision_text(release.version, release.revision),
-        revision_date,
-        author,
-    )
 
 
 def subject_label(model: Model, record: Document) -> str:

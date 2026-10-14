@@ -6,7 +6,7 @@ leaves both east edges. Ends sit `attach_pitch` apart, ordered by the far box's 
 
 from collections import Counter
 from dataclasses import dataclass
-lazy from collections.abc import Mapping
+lazy from collections.abc import Callable, Mapping
 
 from fransys_layout.engines.diagram.frame_values import FrameEnd
 from fransys_layout.engines.diagram.sizes import (
@@ -41,6 +41,7 @@ class RawEnd:
     far: Ident
     side: Facing
     tab: int | None
+    same: bool = False
 
 
 def orient(facts: DiagramFacts, column_of: Mapping[Ident, int]) -> tuple[Joint, ...]:
@@ -60,8 +61,8 @@ def raw_ends(joints: tuple[Joint, ...]) -> tuple[RawEnd, ...]:
     ends = []
     for j in joints:
         right_side = Facing.E if j.same else Facing.W
-        ends.append(RawEnd(line=j.line, box=j.left, far=j.right, side=Facing.E, tab=j.left_tab))
-        ends.append(RawEnd(line=j.line, box=j.right, far=j.left, side=right_side, tab=j.right_tab))
+        ends.append(RawEnd(j.line, j.left, j.right, Facing.E, j.left_tab, j.same))
+        ends.append(RawEnd(j.line, j.right, j.left, right_side, j.right_tab, j.same))
     return tuple(ends)
 
 
@@ -121,13 +122,35 @@ def step(box_high: int, count: int, pitch: int, floor: int) -> int:
     return min(pitch, max(floor, box_high // (count + 1) // G * G))
 
 
+def _nested_key(e: RawEnd, own: int, y: Mapping[Ident, int]) -> tuple[int, int, int]:
+    """Order for `nest`: same-column lines to boxes above, other lines, same-column lines below.
+
+    Same-column lines go nearest-first above and farthest-first below, so spans nest.
+    """
+    if not e.same:
+        return (1, y[e.far], e.line)
+    return (0, -y[e.far], e.line) if y[e.far] < own else (2, -y[e.far], e.line)
+
+
+def _key(y: Mapping[Ident, int], box: Ident, *, nest: bool) -> Callable[[RawEnd], tuple[int, ...]]:
+    """The sort key of a side's ends: the far box's top then line, or `_nested_key`."""
+    if nest:
+        return lambda e: _nested_key(e, y[box], y)
+    return lambda e: (y[e.far], e.line)
+
+
 def place_ends(
-    ends: tuple[RawEnd, ...], y: Mapping[Ident, int], height: Mapping[Ident, int], text_height: int
+    ends: tuple[RawEnd, ...],
+    y: Mapping[Ident, int],
+    height: Mapping[Ident, int],
+    text_height: int,
+    *,
+    nest: bool = False,
 ) -> dict[tuple[Ident, Facing], tuple[FrameEnd, ...]]:
     """The ends of each box side, ordered by the far box's top then line, with their y.
 
     A box too low for its ends at `attach_pitch` spaces them evenly, on the grid, inside it,
-    but never closer than a text height.
+    never closer than a text height. `nest` orders same-column ends by `_nested_key`.
     """
     groups: dict[tuple[Ident, Facing], list[RawEnd]] = {}
     for e in ends:
@@ -141,7 +164,7 @@ def place_ends(
                 y=y[box] + step(height[box], len(group), pitch, floor) * (k + 1),
                 tab=e.tab,
             )
-            for k, e in enumerate(sorted(group, key=lambda e: (y[e.far], e.line)))
+            for k, e in enumerate(sorted(group, key=_key(y, box, nest=nest)))
         )
         for (box, side), group in groups.items()
     }

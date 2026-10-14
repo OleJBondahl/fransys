@@ -4,6 +4,7 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
+    document_facts,
     document_unit,
     harness_cables,
     item_designation,
@@ -26,7 +27,6 @@ from ._cable_runs import Block, part_groups, run_page
 from ._frame import TitleBlockFields, background, text_margin
 from ._geometry import (
     _drawing_set_pages,
-    document_facts,
     location_label,
     subject_label,
     undrawn_replica_only_sets,

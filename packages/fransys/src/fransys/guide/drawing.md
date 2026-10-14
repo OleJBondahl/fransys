@@ -14,6 +14,7 @@ Layout draws the structure you author and invents none. This page says what layo
 - **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals and references. An undeclared rail is a plain net: wires and link markers.
 - **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal drawn on both pages needs none.
 - **Nothing connected, nothing drawn.** A symbol with nothing connected is not drawn; its list holds it.
+- **One actuator per device.** With `actuator_each_contact=False`, a manually operated device draws its actuator once, at its lead contact: the first contact its contact list prints. Its other contacts draw plain, with the device's designation and a reference to the actuator, and a contact list sits under the actuator.
 - **Flat designs.** A design of devices joined by point-to-point `d.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series.
 
 The two blocks below build the same twelve relays on one 24 V supply. Only the second declares the supply.
@@ -242,7 +243,7 @@ The profile sets the numbers and the page order, and the hints then act on that 
 - **A profile reaches only its own unit.** The top design's profile does not reach a unit, and a unit with no profile of its own uses the house numbers. A unit or the top design has at most one profile, and a second one with other numbers raises `AuthorError`.
 - **A keyword left out keeps its house value.** A rank map you give replaces the house one whole.
 - **`order` beats `group_ranks`.** The ranks sort the blocks first, then each `order` hint moves blocks from that order.
-- **`keep_together` beats `order`.** It runs after the order hints, pulls its groups next to the first, and reports nothing when that breaks an `order` hint.
+- **`keep_together` beats `order`.** It runs after the order hints, pulls its groups next to the first, and reports `ORDER_HINT_UNDONE` when that reverses an `order` hint.
 - **`break_before` on a later group of a `keep_together` set** leaves the set unkept and reports `KEEP_TOGETHER_UNMET`. On the set's first group it changes nothing.
 - **Order hints that form a cycle** make the build raise `fr.AuthorError` naming the cycle.
 - **A chain names a box-drawn function only at its head or its tail.** A PLC channel or a supply output stands there and anchors the path at its pin. In the middle the build raises `fr.AuthorError` that says where box-drawn functions may stand.
@@ -329,7 +330,7 @@ else:
 - **`LABEL_UNPLACED`.** A tag, marking or cross-reference found no free place. A `text_height_mm` above the house value is one cause. Put it back to 1.8.
 - **`CHAIN_BROKEN`.** A path was cut by a page break between two blocks. Keep the circuit in one block.
 - **`PAGE_OVERFULL` and `OUT_OF_CONTENT_BOX`.** A circuit is too big for its page. Declare its supply, wire it as paths, or split it into blocks. Else send the smallest model. `PAGE_PAD` frames the ink.
-- **Readability.** Five findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_height_mm`. `PAGE_UNDERFILLED` says a page's content covers under half of its content box. `TEXT_OVERLAP`, `WIRE_OVER_LABEL` and `LABEL_UNPLACED` say text collides with text or a wire, or has no place. To print text larger, raise `text_height_mm` on the profile.
+- **Readability.** Five findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_height_mm`. `PAGE_UNDERFILLED` says a page's content covers under half of its content box. `TEXT_OVERLAP`, `WIRE_OVER_LABEL` and `LABEL_UNPLACED` say text collides with text or a wire, or has no place. Those two are INFO: Fransys defects, report with the smallest model.
 
 The next block counts the first two. Lamps wired across the rails stand alone, lamps after a contact do not, and a text height of 24 leaves tags without a place.
 
@@ -363,13 +364,16 @@ assert "LABEL_UNPLACED" in big_text
 - **`text_height_mm` and `min_text_height_mm`.** The smallest printed capital height in mm and its floor. Change nothing when `text_height_mm` is at or over the floor. When under, raise `text_height_mm` on the profile.
 - **`fill_percent`.** The share of the page's content box the drawing covers, in whole percent. A low number is a mostly empty page with small text. Merge its group into the page before it, or drop a `break_before`.
 - **`wire_crossings`.** How often a wire runs across a wire of another net. A high number means a tangled page. Order the groups with `order`, or put the crossing nets on separate pages.
-- **`struck_labels`.** Texts a wire runs through (`WIRE_OVER_LABEL`). Give the text room: a shorter tag, or a wider column gap.
-- **`text_overlaps`.** Texts that overlap each other or a symbol they do not belong to (`TEXT_OVERLAP`). The same two changes.
+- **`struck_labels`.** Texts a wire runs through (`WIRE_OVER_LABEL`). It is INFO: report it with the smallest model.
+- **`text_overlaps`.** Texts that overlap each other or a symbol they do not belong to (`TEXT_OVERLAP`).
 - **`lone_cells`.** Symbols standing alone on a page (`LONE_CELL`). Keep the circuit in one block, or wire the symbol.
 - **`contact_images`, `contact_image_targets` and `single_contact_images`.** The coil images on the page, the contacts they list and the images that list one. Many single images mean a relay used for one contact: a plain wire may read better.
 - **`single_contact_images_other_page`.** The single images whose one contact is on another page, a part of `single_contact_images`. Such an image points off the page, so it reads less well than one beside its contact.
-- **`stars`, `star_branches` and `single_branch_stars`.** The net references on the page, the branches they name on other pages and the references that name one. Many mean the net is cut across pages: declare the supply so it is drawn once, or keep the net's ends together.
+- **`stars`, `star_branches` and `single_branch_stars`.** The net references on the page, the branches they name on other pages and the references that name one. Many on several pages mean the net is cut across pages. Declare the supply so it is drawn once, or keep the net's ends together.
+  A star can also stand on one page, and then it is no cut. A pin with two or more wires takes a reference for each end. One breaker pin feeding two coils gives each of the three ports a marker naming the other two. A wire that would turn back round its own device is a marker pair too. A contact above a box, with both pins wired to the box's top pins, is one. For the first, distribute through a terminal strip with a named, bridged run (checklist item 4). A bridged three-terminal run took one page from 2 stars to 1.
 - **`page_cuts`.** The wires of two ports cut at a page break, each naming one other page. Keep the two ends in one block, or add a terminal where the circuit changes page.
+
+A reference text reads `p<n>:<cell>` for sheet n of the reference's own drawing set. It reads `p<set>.<page>:<cell>` for a sheet of another set. A net reference adds the net's number, `#<n>`, then its first target. That target is a terminal of the net when it has one, else the first other end in reading order. A marker with more than two other ends prints that target and `+k` for the k others. A contact no conductor reaches prints `N/A` in place of a position. Pole-linked contacts of one item in one row print one back reference to the coil. The coil's table lists every contact.
 
 A unit row adds up the counts of its pages and takes the smallest `text_height_mm` and `fill_percent` and the highest `min_text_height_mm`. Its `pages` is the page count.
 

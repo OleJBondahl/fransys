@@ -11,9 +11,15 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import Box, Point, contains, port_page_at, through
 from fransys_layout.stages.slices import by_key
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import Finding
 
-from .codes import LINE_ON_OUTLINE, OUT_OF_CONTENT_BOX, WIRE_OVER_LABEL, WIRE_THROUGH_SYMBOL
+from .codes import (
+    LINE_ON_OUTLINE,
+    OUT_OF_CONTENT_BOX,
+    WIRE_OVER_LABEL,
+    WIRE_THROUGH_SYMBOL,
+    severity_of,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -85,7 +91,7 @@ def _leg_runs(fan: DrawnFanOut) -> list[Segment]:
 
 
 def _warn(code: str, subjects: tuple[Id[Any], ...], message: str) -> Finding:
-    return Finding(code=code, severity=Severity.WARNING, subjects=subjects, message=message)
+    return Finding(code=code, severity=severity_of(code), subjects=subjects, message=message)
 
 
 def runs_over_texts(ink: PageInk, texts: tuple[tuple[Id[Any], Box], ...]) -> list[Finding]:

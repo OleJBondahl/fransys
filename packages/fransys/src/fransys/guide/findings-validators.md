@@ -22,7 +22,7 @@ Codes the model checks, the build, `release` and `verify` and the library load e
 | FILE_UNREADABLE | ERROR | library load | consumer | A part-file could not be read (missing file, permission error, or bad encoding). | Fix the path, permissions or encoding (UTF-8). |
 | FLOAT_FORBIDDEN | ERROR | library load | consumer | A part-file has a bare TOML float, which the contract forbids (quote values as strings). | Quote the numeric value as a string. |
 | FUNCTION_HALF_CONNECTED | WARNING | validators | consumer | A two-port coil, load, contact, switch, protection or actuator is connected at one port and open at the other. | Wire the open port, or remove the half-wired function. |
-| GNYE_NOT_PE | ERROR | validators | consumer | A green-yellow conductor is on a net that is not PE. Silent on a net no declared net lists. | Recolour it, or connect it to the PE net. |
+| GNYE_NOT_PE | ERROR or WARNING | validators | consumer | A green-yellow conductor is on a net that is not PE: an ERROR on a net a declared net lists, a WARNING on a net none lists (IEC 60445 keeps green-yellow for PE). | Recolour it, or connect it to the PE net and declare it with `d.earth`. |
 | HARNESS_END_AMBIGUOUS | ERROR | build | consumer | Two or more ends of one cable print the same text in its drawing. | Place the colliding unit instances at distinct locations, or tag the strips apart. |
 | HARNESS_HOLDS_PLC_MODULE | ERROR | validators | consumer | A PLC module sits under an item made with `d.harness`. | Build the rack with `d.rack`, so its modules print flat. |
 | HARNESS_WITHOUT_TAG | ERROR | validators | consumer | A harness (marked, or with a cable child) has no tag or assigned designation, so it has no label. | Give it a tag: `d.harness(tag=...)`, or `tag=` on the item. |

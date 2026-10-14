@@ -20,9 +20,10 @@ from fransys_layout.engines.schematic.read.units import (
 )
 from fransys_layout.stages.offstubs import OffEnd, OffReads, PortText, bridge, mate_stub
 from fransys_layout.stages.types import StubText
-from fransys_model.derive import draws_as_line, natural_key
-from fransys_model.derive.designation import port_designation, printed_designation
+from fransys_model.derive import draws_as_line
+from fransys_model.derive.designation import printed_designation
 from fransys_model.derive.drawing_text import stub_far_end
+from fransys_model.derive.order import port_designation_key
 from fransys_model.kernel import parent_chain
 from fransys_model.vocab.tables import conductors, items, mates, ports
 
@@ -143,7 +144,7 @@ def _stub_end(
 
 def _port_order(model: Model, port: Id[Any]) -> OrderKey:
     """The natural key of a port's designation, the stage's tie-break."""
-    return natural_key(port_designation(model, port))
+    return port_designation_key(model, port)
 
 
 def off_reads(model: Model, maps: FarMaps) -> OffReads:

@@ -166,8 +166,10 @@ _ELEMENT = re.compile(r"<text [^>]*>[^<]*</text>|<line [^>]*/>")
 # derive (CR3): a shifted row, heading or rule changes it. A render change elsewhere moves it too.
 PINS = {
     # Re-pinned for layout-0218: the canary's box B1 gained a lamp P1 across two pins, since a
-    # box with nothing connected is no longer drawn.
-    "canary": "3abdc7d7a39c75c53a87da072f54fcd4e2c6dd8a336c98868ac08481b9a6a31c",
+    # box with nothing connected is no longer drawn. Re-pinned for model-0235 and layout-0235:
+    # three duplicate back references (p3:2B..4B, p3:2C..4C) go, and four star markers name a
+    # terminal on page 4 first.
+    "canary": "d66e3384791d34e89ae86bee0321b689301e11509d738619cd9ea520078239e2",
     "spare": "6e51043910e2acb84ffd4fa8714fb70bde83870de9a5aa36c3dd20bb1a5e348a",
 }
 

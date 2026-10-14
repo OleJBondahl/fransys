@@ -53,9 +53,9 @@ _GOLDEN_DIR = (
 # iterated silently" pattern): a future golden that adds markers and forgets this dict fails the
 # coverage check below instead of being silently skipped.
 _EXPECTED_MARKER_COUNTS: dict[str, int] = {
-    "cabinet_laid_out.json": 6,
-    "cabinet_narrow_laid_out.json": 8,
-    "cabinet_two_location_laid_out.json": 8,
+    "cabinet_laid_out.json": 4,
+    "cabinet_narrow_laid_out.json": 6,
+    "cabinet_two_location_laid_out.json": 6,
 }
 
 

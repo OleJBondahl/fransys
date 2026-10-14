@@ -691,8 +691,9 @@ def test_the_cycle_check_catches_a_cycle_through_a_package_init(tmp_path: Path):
 
 
 def test_the_model_copy_of_g_per_module_matches_its_home():
-    """`fransys_model` copies `G_PER_MODULE` (invariant 2 bars the import); the copy must agree."""
+    """`fransys_model` keeps one copy, `text_width.G_PER_MODULE`; it must agree with its home."""
     import electrical_symbols
-    from fransys_model.derive import drawing_text
+    from fransys_model.derive import drawing_text, text_width
 
-    assert drawing_text._G_PER_MODULE == electrical_symbols.G_PER_MODULE
+    assert text_width.G_PER_MODULE == electrical_symbols.G_PER_MODULE
+    assert drawing_text.G_PER_MODULE is text_width.G_PER_MODULE

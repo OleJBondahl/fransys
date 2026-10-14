@@ -3,9 +3,9 @@
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID
+from fransys_layout.geometry import WIRING_GRID, snap_up
 
-from .connector_boxes import CELL_ROWS, cell_width
+from .connector_boxes import CELL_ROWS, box_size, cell_width
 from .middle import compact
 
 if TYPE_CHECKING:
@@ -61,18 +61,36 @@ def _trimmed(column: Column, owner: Mapping[Id[Any], BoxSpec], wired: frozenset[
 
 
 def narrowed(
-    drawn: Sequence[DrawnFunction], specs: Sequence[BoxSpec], text_height: int
+    drawn: Sequence[DrawnFunction],
+    specs: Sequence[BoxSpec],
+    text_height: int,
+    columns: Sequence[Column],
 ) -> tuple[DrawnFunction, ...]:
     """`drawn` with each boxed pin view's keep-out as wide as its cell, centred on its pin.
 
-    The view draws nothing, so the columns hold the box's width and not a symbol's.
+    The view draws nothing, so the columns hold the box's width and not a symbol's. A cell-less
+    box's kept views share its width, so the boxes of neighbouring columns clear one another.
     """
+    kept = {cell.function for column in columns for cell in column.cells}
     wide = {port: CELL_ROWS * WIRING_GRID for spec in specs for port in spec.ports}
+    bare: set[Id[Any]] = set()
+    for spec in specs:
+        if not spec.cells:
+            shown = [port for port in spec.ports if port in kept]
+            box = box_size(spec.lines, [], text_height=text_height)[0]
+            share = max(CELL_ROWS * WIRING_GRID, snap_up(-(-box // max(len(shown), 1))))
+            wide.update(dict.fromkeys(shown, share))
+            bare.update(spec.ports)
     wide.update({port: cell_width(mark, text_height) for s in specs for port, mark in s.cells})
-    return tuple(_narrow(one, wide[one.function]) if one.function in wide else one for one in drawn)
+    return tuple(
+        _narrow(one, wide[one.function], boxed=one.function in bare)
+        if one.function in wide
+        else one
+        for one in drawn
+    )
 
 
-def _narrow(one: DrawnFunction, width: int) -> DrawnFunction:
+def _narrow(one: DrawnFunction, width: int, *, boxed: bool) -> DrawnFunction:
     geometry = one.geometry
     body = replace(geometry.body, x=geometry.ports[0].at.x - width // 2, width=width)
-    return replace(one, geometry=replace(geometry, body=body, keepout=body, slots=()))
+    return replace(one, boxed=boxed, geometry=replace(geometry, body=body, keepout=body, slots=()))

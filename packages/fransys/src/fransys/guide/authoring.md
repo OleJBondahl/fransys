@@ -472,8 +472,9 @@ d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 
 
 ## Earth pins
 
-`d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. Every pin joined by
-`d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row.
+`d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A unit has one `PE` net: each further `d.earth` call in it adds its pins to that net.
+Call d.earth before draft(); a later call raises.
+Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row.
 
 ```python
 import fransys as fr

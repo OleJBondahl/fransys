@@ -14,7 +14,7 @@ from .texts.power_lead import with_power_leads
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding
 
-    from .pagerun import FirstCall
+    from ._page_place import FirstCall
     from .types import LinkMarker, PagePlan, PlacedFunction, PlacedLabel, SheetFormat
 
 

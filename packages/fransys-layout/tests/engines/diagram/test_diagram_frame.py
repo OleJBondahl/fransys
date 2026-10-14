@@ -6,7 +6,9 @@ from functools import cache
 
 from diagram_models import station
 
+from fransys_layout.engines.diagram.channels import _apart
 from fransys_layout.engines.diagram.frame import build_frame
+from fransys_layout.engines.diagram.frame_values import FrameTrack
 from fransys_layout.engines.diagram.read import read_diagrams
 from fransys_layout.engines.diagram.sizes import (
     MARKER_W,
@@ -252,3 +254,25 @@ def test_a_flat_column_box_grows_to_hold_its_ends_a_text_apart() -> None:
     ys = sorted(e.y for e in box.ends if e.side == Facing.E)
     assert box.height >= (5 + 1) * 16  # snap_up(11) is 16 on the 8 G grid
     assert {b - a for a, b in itertools.pairwise(ys)} == {16}
+
+
+def _run(line: int, left_y: int, right_y: int, track: int) -> FrameTrack:
+    return FrameTrack(line=line, part=0, left_y=left_y, right_y=right_y, track=track)
+
+
+def test_a_run_a_left_stretch_lies_along_moves_beyond_it() -> None:
+    """Line 0 runs out at y 160 to track 2; line 1 comes in at 160 from track 1."""
+    runs = (_run(0, 160, 136, 2), _run(1, 232, 160, 1))
+    moved = _apart(runs, frozenset(), 5)
+    assert [t.track for t in moved] == [2, 5]
+
+
+def test_a_run_ending_at_a_same_column_stub_y_moves_beyond_the_stubs() -> None:
+    runs = (_run(0, 232, 136, 1), _run(1, 104, 64, 2))
+    moved = _apart(runs, frozenset({136}), 5)
+    assert [t.track for t in moved] == [5, 2]
+
+
+def test_runs_that_meet_only_where_they_cross_stay_on_their_tracks() -> None:
+    runs = (_run(0, 160, 136, 1), _run(1, 232, 104, 2))
+    assert _apart(runs, frozenset(), 5) == runs

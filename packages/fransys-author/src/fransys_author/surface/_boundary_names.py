@@ -28,7 +28,7 @@ def _field_functions(value: object, field: str) -> list[Any]:
 
 def _nested_boundaries(scope: Scope) -> dict[Any, Function]:
     """The functions that are a boundary of a unit nested directly in `scope`'s unit, by id."""
-    records = scope._design.draft().records()
+    records = scope._design._draft.records()
     nested = {r.id for r in records if isinstance(r, Unit) and r.parent == scope._unit}
     offered = {r.function for r in records if isinstance(r, Boundary) and r.unit in nested}
     return {r.id: r for r in records if isinstance(r, Function) and r.id in offered}

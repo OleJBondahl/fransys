@@ -18,8 +18,8 @@ from .checks import (
 from .errors import FreezeError, ModelError, SchemaError, ValueTypeError
 from .hashes import _record_hash, model_digest, namespace_digests
 from .ids import Id
-from .model import SCHEMA_VERSION, Model
-from .registry import is_value_class
+from .model import Model
+from .registry import is_value_class, registered_schema_version
 from .schema import fields_of
 lazy from .draft import Draft
 
@@ -72,9 +72,10 @@ def _freeze(draft: Draft) -> Model:
     # nested `@value` type used by many records is resolved once, not once per record.
     specs: dict[type, FieldInfo] = {}
     hashes = frozendict({record.id: _record_hash(record, specs) for record in records})
-    digests = namespace_digests(hashes, SCHEMA_VERSION)
+    version = registered_schema_version()
+    digests = namespace_digests(hashes, version)
     return Model(
-        schema_version=SCHEMA_VERSION,
+        schema_version=version,
         tables=frozendict({kind: frozendict({r.id: r for r in group}) for kind, group in groups}),
         aliases=aliases,
         origins=draft.origins(),

@@ -426,7 +426,7 @@ def _title_block_cells(sheet):
     """The title block's cells, `(left, bottom, right, top)` mm with y up, as `_title_block` sets
     them: row 1 is a three-column title then four columns, row 2 six columns, the notice and the
     logo each span both rows."""
-    cols = title_columns(sheet)
+    cols = title_columns(sheet, notice=True)  # this test's documents all carry a notice
     edge = [sheet.content_x_mm + sum(cols[:i]) for i in range(len(cols) + 1)]
     low, mid = sheet.content_y_mm, sheet.content_y_mm + band_height_mm(sheet) / 2
     high = sheet.content_y_mm + band_height_mm(sheet)

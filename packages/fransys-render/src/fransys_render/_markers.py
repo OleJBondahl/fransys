@@ -30,7 +30,7 @@ from fransys_model.layout import Page as PageRecord
 from fransys_model.vocab import functions, ports
 
 from ._constants import MARKER_ARROW_DEPTH_G
-from ._numbers import format_decimal, printed_font_mm
+from ._numbers import format_decimal, point_mm, printed_font_mm
 from ._symbol_geometry import oriented_symbol, to_grid
 
 if TYPE_CHECKING:
@@ -171,13 +171,6 @@ def arrow_polygon(marker: LinkMarker, facing: Direction) -> tuple[tuple[int, int
     raise AssertionError(msg)
 
 
-def _point_mm(sheet: SheetFormat, x: int, y: int) -> str:
-    """One point converted to an `"x,y"` mm pair, mirroring `_routes._point_mm`."""
-    x_mm = grid_to_mm(sheet.content_x_mm, x, sheet.module_mm)
-    y_mm = grid_to_mm(sheet.content_y_mm, y, sheet.module_mm)
-    return f"{format_decimal(x_mm)},{format_decimal(y_mm)}"
-
-
 def _stub_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> str:
     """The marker's stub: one `<line>` from the port to the box's near edge."""
     end_x, end_y = stub_end(marker, facing)
@@ -195,7 +188,7 @@ def _box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> str
     """The marker's box outline: one closed `<polyline>`, the arrow shape of `arrow_polygon`."""
     vertices = arrow_polygon(marker, facing)
     closed = (*vertices, vertices[0])
-    points = " ".join(_point_mm(sheet, x, y) for x, y in closed)
+    points = " ".join(point_mm(sheet, x, y) for x, y in closed)
     return f'<polyline class="marker" points="{points}"/>'
 
 
@@ -210,7 +203,7 @@ def _shared_box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction)
         corners = [(end_x, end_y), *ring[start:], *ring[:start], ring[start]]
     else:
         corners = [*ring, ring[0]]
-    points = " ".join(_point_mm(sheet, cx, cy) for cx, cy in corners)
+    points = " ".join(point_mm(sheet, cx, cy) for cx, cy in corners)
     return f'<polyline class="marker" points="{points}"/>'
 
 

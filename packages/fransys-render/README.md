@@ -65,7 +65,7 @@ Link markers (layout-0038, model-0037, layout-0043, render-0005):
 - A harness line's stub (layout-0154, layout-0158) draws no stub. Its line runs on to the middle of the box's near edge. The box is a plain rectangle, as a shared box.
 - A shared box (layout-0054) is a closed rectangle across the bundle row. A box beside its stub draws its lead in the same polyline, from the stub end along the near edge. A bundle's box and a packed row's have no stub. E and W markers have none either.
 - Marker text uses `class="label"`, since `.marker`'s stroke-only rule would leave it invisible. It sets `text-anchor="middle"` inline, as a marker's text centres in its own box (labels do not).
-- Text is centred in the box width. Its top inset is `(marker.height - profile.text_height) / 2`, read from the record and not from `marker_padding`.
+- Text is centred in the box width. Its top inset is `(marker.height - lines * room) // 2` in grid units, with `room = text_room_g(profile.text_height_mm, module_mm)`, read from the record and not from `marker_padding`.
 - Centred in the box width means the text clears both edges once the box is `text_width + 2 * marker_padding` wide (layout-0043). `font_size_mm` is a bare number, since the viewBox makes one user unit one mm.
 - A `vertical` marker (render-0005) is rotated -90 degrees about each line's anchor, lines side by side along x. A turned marker branches from `via`, E or W, to the stub under the box centre, then draws as a vertical one facing the way `via` lies from the port.
 - A vertical marker's lines are centred on the record's width and on the box's length. A turned marker's text runs along the stub, and the junction dot at `via` comes from `_junctions`.

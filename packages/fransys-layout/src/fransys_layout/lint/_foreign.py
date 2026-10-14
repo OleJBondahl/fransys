@@ -16,9 +16,9 @@ lazy from collections.abc import Mapping
 
 from fransys_layout.geometry import contains_point, overlaps, port_page_at
 from fransys_layout.stages.stub_runs import functions_through, solids
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import Finding
 
-from .codes import TEXT_OVERLAP, WIRE_THROUGH_SYMBOL
+from .codes import TEXT_OVERLAP, WIRE_THROUGH_SYMBOL, severity_of
 
 if TYPE_CHECKING:
     from fransys_layout.geometry import Box, Point
@@ -41,7 +41,7 @@ def stub_through_symbols(
                 subjects,
                 Finding(
                     code=WIRE_THROUGH_SYMBOL,
-                    severity=Severity.WARNING,
+                    severity=severity_of(WIRE_THROUGH_SYMBOL),
                     subjects=subjects,
                     message="a link marker's stub runs through a symbol that is not its own",
                 ),
@@ -68,7 +68,7 @@ def box_on_symbols(
                     subjects,
                     Finding(
                         code=TEXT_OVERLAP,
-                        severity=Severity.WARNING,
+                        severity=severity_of(TEXT_OVERLAP),
                         subjects=subjects,
                         message="a link marker's box stands on a symbol that is not its own",
                     ),

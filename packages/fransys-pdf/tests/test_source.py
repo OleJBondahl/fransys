@@ -30,14 +30,13 @@ from _build import (
 from fransys_pdf import _lists, source
 from fransys_pdf._drawings import harness_cables_for, schematic_pages
 from fransys_pdf._geometry import (
-    document_facts,
     document_heading,
-    project_facts,
     resolve_sheet_format,
     subject_label,
 )
 from fransys_pdf._pages import cover_page
 
+from fransys_model.derive import document_facts, project_facts
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel.ids import render_id
 from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, SignalType, documents

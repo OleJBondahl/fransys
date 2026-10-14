@@ -6,7 +6,8 @@ from typing import Any
 lazy from collections.abc import Sequence
 
 from fransys_layout.geometry import Box
-from fransys_layout.stages.place import _cascade_plan, _Cell, _raise_plan
+from fransys_layout.stages._band_settle import _cascade_plan, _raise_plan
+from fransys_layout.stages.place import _Cell
 
 _CASES = 600
 

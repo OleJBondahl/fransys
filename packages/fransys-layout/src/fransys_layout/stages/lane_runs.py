@@ -1,6 +1,7 @@
 """Cut a row of lanes into runs no wider than a room.
 
 Fill first, never parting lanes that overlap or are linked (decision layout-0182).
+`fill_runs` is the same fill for column widths (layout-0230).
 """
 
 from typing import TYPE_CHECKING
@@ -9,7 +10,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
 
-def _held(links: Iterable[tuple[int, int]]) -> set[int]:
+def held_boundaries(links: Iterable[tuple[int, int]]) -> set[int]:
     """The boundaries (the index of the lane after) that a link crosses."""
     return {i for a, b in links for i in range(min(a, b) + 1, max(a, b) + 1)}
 
@@ -18,7 +19,7 @@ def _blocks(
     extents: Sequence[tuple[int, int]], links: Iterable[tuple[int, int]]
 ) -> list[tuple[int, int]]:
     """Maximal lane runs between open boundaries: no reach back over an earlier lane, no link."""
-    held = _held(links)
+    held = held_boundaries(links)
     blocks: list[tuple[int, int]] = []
     start, reach = 0, extents[0][1]
     for i in range(1, len(extents)):
@@ -51,4 +52,25 @@ def lane_runs(
                 runs.append((start, first))
                 start = first
     runs.append((start, len(extents)))
+    return tuple(runs)
+
+
+def fill_runs(
+    sizes: Sequence[int], links: Iterable[tuple[int, int]], room: int
+) -> tuple[tuple[int, int], ...]:
+    """Half-open ranges of `sizes`, each filled to `room` and ending at a boundary no link spans.
+
+    A run keeps at least its first size; with no free boundary in reach it ends where it is full.
+    """
+    held = held_boundaries(links)
+    runs: list[tuple[int, int]] = []
+    start = 0
+    while start < len(sizes):
+        fits, used = start + 1, sizes[start]
+        while fits < len(sizes) and used + sizes[fits] <= room:
+            used += sizes[fits]
+            fits += 1
+        end = next((e for e in range(fits, start, -1) if e not in held), fits)
+        runs.append((start, end))
+        start = end
     return tuple(runs)

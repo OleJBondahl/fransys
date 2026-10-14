@@ -44,7 +44,7 @@ def _results(case: str) -> StageResults:
 
 
 def _port_ys(results: StageResults) -> list[set[int]]:
-    """Each joined run's placed port ys."""
+    """Each joined run's placed port ys, each plus its end's drop (a hung run's host)."""
     at = {(p.function, p.drawing_set, p.page, p.column): p for p in results.layout.placed}
     symbol = {
         port.port: (one.function, port.symbol_port) for one in results.drawn for port in one.ports
@@ -55,7 +55,7 @@ def _port_ys(results: StageResults) -> list[set[int]]:
         for end in run.ends:
             function, name = symbol[end.port]
             one = at[function, run.drawing_set, run.page, end.column]
-            ys.add(one.at.y + next(g.at.y for g in one.geometry.ports if g.name == name))
+            ys.add(one.at.y + next(g.at.y for g in one.geometry.ports if g.name == name) + end.drop)
         found.append(ys)
     return found
 

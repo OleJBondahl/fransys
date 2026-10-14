@@ -26,7 +26,8 @@ from fransys_layout.stages import (
     PortRef,
     Role,
 )
-from fransys_layout.stages.pagerun import PageInputs, PageSlices, _place_page
+from fransys_layout.stages._page_place import PageSlices, _place_page
+from fransys_layout.stages.pagerun import PageInputs
 from fransys_layout.stages.partition import column_widths
 from fransys_layout.stages.references import Wiring, side_reference_rooms
 from fransys_layout.stages.references.side_rooms import REFERENCE_SLOT

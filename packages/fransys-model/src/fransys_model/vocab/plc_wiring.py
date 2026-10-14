@@ -17,14 +17,6 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Function, Port
 
 
-def ports_by_function(model: Model) -> dict[Id[Function], list[Id[Port]]]:
-    """Every port of `model`, grouped by the function that owns it."""
-    by_function: dict[Id[Function], list[Id[Port]]] = {}
-    for port in ports(model).values():
-        by_function.setdefault(port.function, []).append(port.id)
-    return by_function
-
-
 def owner_of_port(
     by_function: Mapping[Id[Function], list[Id[Port]]], owners: Collection[Id[Function]]
 ) -> dict[Id[Port], Id[Function]]:

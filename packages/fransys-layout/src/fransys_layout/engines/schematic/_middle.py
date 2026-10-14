@@ -14,10 +14,11 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from fransys_layout.stages import Column, ColumnWidth
+    from fransys_layout.stages._page_place import FirstCall
     from fransys_layout.stages.connector_boxes import PlacedConnectorBox
     from fransys_layout.stages.middle import MiddleUnit
     from fransys_layout.stages.middle_fold import GroupShape
-    from fransys_layout.stages.pagerun import FirstCall, PageInputs
+    from fransys_layout.stages.pagerun import PageInputs
     from fransys_layout.stages.types import PagePlan, PlacedFunction
     from fransys_model.kernel import AuthoringKey, Id, Model
 

@@ -27,7 +27,7 @@ def _unit_name(strip: TerminalStrip) -> str:
 
 def _boundary_reading(design: Design) -> tuple[set[Id[Port]], set[Id[Port]], set[Id[Function]]]:
     """Ports wired inside the unit, ports wired outside it, and the functions declared unused."""
-    records = design._engine._design.draft().records()
+    records = design._engine._design._draft.records()
     units = {r.id: r.unit for r in records if isinstance(r, Item)}
     owner = {r.id: units[r.item] for r in records if isinstance(r, Function) and r.item in units}
     unit_of = {r.id: owner.get(r.function) for r in records if isinstance(r, Port)}

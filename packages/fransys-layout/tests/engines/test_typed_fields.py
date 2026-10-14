@@ -229,14 +229,17 @@ def test_a_pair_marker_writes_the_marker_fields_and_carries_no_ext() -> None:
 def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
     _, results, out = _laid_out(second_location=True)
     written = list(dict(out.tables["layout.link_marker"]).values())
-    # The reference on the stub's port is that one marker, an off stub; a reference of
-    # a turned pair stands alone on a port with no stub
-    assert {m.star for m in written} == {StarKind.OFF, StarKind.BRANCH, StarKind.REF}
-    stub_ports = {m.port for m in written if m.star is StarKind.OFF}
-    assert not [m for m in written if m.star is StarKind.REF and m.port in stub_ports]
-    assert not any(m.ext for m in written)
     stubs = [m for m in written if m.star is StarKind.OFF]
     assert stubs
+    # A reference never stands on the port of a stage off stub (`_at_stub` moves it there and the
+    # writer merges them); this cabinet has a stage stub, so the check can fail
+    stage_stub_ports = {end.port for end in results.off_ends}
+    assert stage_stub_ports
+    assert not [m for m in written if m.star is StarKind.REF and m.port in stage_stub_ports]
+    # The reference on the stub's port is that one marker, an off stub; the turned pair
+    # that gave this cabinet its REF star is a wire since layout-0224 (REF maps below)
+    assert {m.star for m in written} == {StarKind.OFF, StarKind.BRANCH}
+    assert not any(m.ext for m in written)
     assert not any(m.ext for m in stubs)
     assert all(m.far is not None and m.facing is not None for m in stubs)
     assert not any(m.far or m.carrier for m in written if m.star is not StarKind.OFF)
@@ -254,4 +257,8 @@ def test_a_cabinet_with_only_reference_and_branch_stars_carries_no_marker_ext() 
     assert len(stubs) == len(results.lines.stubs) > 0
     assert {m.star for m in stubs} == {StarKind.OFF}
     assert {m.star for m in written if not _line_stub(m)} == {StarKind.REF, StarKind.BRANCH}
+    # A reference never stands on the port of a stage off stub (`_at_stub` moves it there and the
+    # writer merges them); a leaving line's stub is no stage stub, W1's may share its port
+    stage_stub_ports = {m.port for m in written if m.star is StarKind.OFF and not _line_stub(m)}
+    assert not [m for m in written if m.star is StarKind.REF and m.port in stage_stub_ports]
     assert not any(m.ext for m in written)

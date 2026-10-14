@@ -8,7 +8,12 @@ from dataclasses import replace
 
 from samples import column
 
-from fransys_layout.stages.row_parts import base_of, row_part_key, row_parts, share_spacing
+from fransys_layout.stages.row_parts import (
+    base_of,
+    row_part_key,
+    row_parts,
+    share_spacing,
+)
 
 KEY = ("invented", "tall")
 

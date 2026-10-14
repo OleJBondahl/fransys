@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 def _boundary_names(design: Design, unit: Any) -> dict[Any, str]:  # noqa: ANN401 -- an `Id[Unit]`
     """The boundary functions of `unit` by id, each named `tag.function`."""
-    records = {r.id: r for r in design._engine._design.draft().records()}
+    records = {r.id: r for r in design._engine._design._draft.records()}
     found = {}
     for record in records.values():
         if isinstance(record, Boundary) and record.unit == unit:

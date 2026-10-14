@@ -18,9 +18,8 @@ from .encode import ID_TAG, MAP_TAG, decimal_text
 from .errors import FreezeError, ModelError, SchemaError, SchemaVersionError
 from .freeze import freeze
 from .ids import parse_id
-from .model import SCHEMA_VERSION
 from .origin import Origin
-from .registry import is_value_class, lookup_kind
+from .registry import is_value_class, lookup_kind, registered_schema_version
 from .schema import annotations_of, fields_of, id_type, key_and_value_aliases
 from .values import MAX_EXPONENT
 lazy from .model import Model
@@ -47,13 +46,7 @@ def from_data(data: object) -> Model:
         FreezeError: one or more records could not be built or did not validate.
     """
     envelope = _mapping(data, "the data")
-    version = envelope.get(_SCHEMA_VERSION_KEY)
-    if type(version) is not int:
-        msg = f"`{_SCHEMA_VERSION_KEY}` is missing or not an int"
-        raise SchemaError(msg, kind=_KIND)
-    if version != SCHEMA_VERSION:
-        msg = f"this build reads schema version {SCHEMA_VERSION}, not {version}"
-        raise SchemaVersionError(msg, expected=SCHEMA_VERSION, actual=version)
+    _check_version(envelope.get(_SCHEMA_VERSION_KEY))
     if set(envelope) != {"aliases", _SCHEMA_VERSION_KEY, "tables"}:
         msg = (
             f"the data must have exactly aliases, schema_version and tables, not {sorted(envelope)}"
@@ -66,6 +59,17 @@ def from_data(data: object) -> Model:
     except RecursionError as exc:
         msg = "the data is nested too deeply"
         raise SchemaError(msg, kind=_KIND) from exc
+
+
+def _check_version(version: object) -> None:
+    """Refuse a stored version that is not an int, or not the one the domain registered."""
+    if type(version) is not int:
+        msg = f"`{_SCHEMA_VERSION_KEY}` is missing or not an int"
+        raise SchemaError(msg, kind=_KIND)
+    expected = registered_schema_version()
+    if version != expected:
+        msg = f"this build reads schema version {expected}, not {version}"
+        raise SchemaVersionError(msg, expected=expected, actual=version)
 
 
 def _build(

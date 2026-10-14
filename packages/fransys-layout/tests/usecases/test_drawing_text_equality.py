@@ -125,29 +125,28 @@ def regenerate(request: pytest.FixtureRequest) -> bool:
 #   X3:1, X3:2, X4:1 x2, X4:2 = 10).
 _EXPECTED_TAG_MARKING_COUNT = 66
 
-# The wide golden's markers and CROSS_REFERENCE labels. Six markers: one line stub and five star
+# The wide golden's markers and CROSS_REFERENCE labels. Four markers: one line stub and three star
 # markers. `W1` (rails to the lamp `-H1`) is drawn as a line, which leaves page 1 in its one stub
 # The 24 V net keeps four ports (`X2:1` external and the three stop-button ports 11): two
-# branches (S0's pin has `X2:1` over it) and the reference on page 1; and a
-# turned pair (`references.turned`): K1's aux port 13 faces N and its link to `S0:nc_2:22`
-# runs to a device below K1's bottom edge, so it is a reference pair, `S0:nc_2:22` the
-# reference and K1:aux:13 the branch. Eight CROSS_REFERENCE labels: a line under each of
-# the five contacts (K1 main and aux, K2 main and aux, K8 no_1) and a contact image under each
-# of the three coils.
-_EXPECTED_WIDE_MARKER_COUNT = 6
-_EXPECTED_WIDE_REF_MARKER_COUNT = 2
-_EXPECTED_WIDE_CROSS_REFERENCE_COUNT = 8
+# branches (S0's pin has `X2:1` over it) and the reference on page 1. K1's aux port 13 faces N
+# and its link to `S0:nc_2:22` runs to a device below K1's bottom edge: since layout-0224 that
+# hop is a wire (S0 hangs below K1's pin), no longer a reference pair. Six CROSS_REFERENCE
+# labels: a contact image under each of the three coils and a line under three of the five
+# contacts (K1 aux, K2 main, K8 no_1). The wire puts K1's and K2's aux contacts in the frame row
+# of their main contacts; pole-linked contacts of one row print the leftmost reference only
+# (`one_per_row`, main commit 4e30fd96a), so K1 main and K2 aux print none.
+_EXPECTED_WIDE_MARKER_COUNT = 4
+_EXPECTED_WIDE_REF_MARKER_COUNT = 1
+_EXPECTED_WIDE_CROSS_REFERENCE_COUNT = 6
 
 # The narrow golden's (158 mm) marker counts, checked explicitly for the same reason (spec
 # X5's "never iterated silently"): two severed markers (one cut, K1:14 to K2:13, a marker at
 # either end) and two D9 star markers (the branch `S1`, `S0` has `X2:1` over its pin, and
 # the reference on page 1; the lamp `H1` comes off the star, `W1` is a line whose two leaving
-# ends are two line stubs), and two more star markers, the turned
-# pair of the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux stands on page 1 (layout-0049)
-# above S0's contact, so the link from K1's N pin runs to a device below it and is a
-# reference pair (`references.turned`), not a wire and not a cut.
+# ends are two line stubs). The K1:aux:13 <-> S0:nc_2:22 wire (wire 17) is a wire: K1's aux
+# stands on page 1 (layout-0049) above S0's contact, and S0 hangs below it (layout-0224).
 _EXPECTED_NARROW_SEVERED_MARKER_COUNT = 2
-_EXPECTED_NARROW_MARKER_COUNT = 6
+_EXPECTED_NARROW_MARKER_COUNT = 4
 _EXPECTED_NARROW_LINE_STUB_COUNT = 2
 # ... and the same eight CROSS_REFERENCE labels as the wide golden.
 _EXPECTED_NARROW_CROSS_REFERENCE_COUNT = 8
@@ -156,6 +155,9 @@ _EXPECTED_NARROW_CROSS_REFERENCE_COUNT = 8
 # contacts first), each with the pin pairs of its terminals ("1-2" is ports 1 and 2). Read
 # from the fixture's parts: the contactor's `main` has ports 1-6, its `aux` 13-14; the relay's
 # `no_1` 13-14; every contact is normally open, so the images have no NC entry.
+# The wide golden's contacts that print no line: pole-linked, in the frame row of the contact
+# to their left (`one_per_row`), which keeps the reference. The narrow golden prints all five.
+_SAME_ROW_CONTACTS = frozenset({("k1", "main"), ("k2", "aux")})
 _COIL_CONTACTS = {
     "k1": (("main", ("1-2", "3-4", "5-6")), ("aux", ("13-14",))),
     "k2": (("main", ("1-2", "3-4", "5-6")), ("aux", ("13-14",))),
@@ -220,7 +222,12 @@ def _placed_position(model: Model, inputs: StageInputs, function: Id[Any], reade
     return position_text(page.number, column, row, (), own_page=pages[reading.page].number)
 
 
-def _check_contact_references(model: Model, inputs: StageInputs, layout: Layout) -> None:
+def _check_contact_references(
+    model: Model,
+    inputs: StageInputs,
+    layout: Layout,
+    no_line: frozenset[tuple[str, str]] = frozenset(),
+) -> None:
     """On the persisted labels: each contact's line and each coil's contact image.
 
     The reader's text of a contact's `tag` CROSS_REFERENCE label is its coil's position, and
@@ -242,7 +249,10 @@ def _check_contact_references(model: Model, inputs: StageInputs, layout: Layout)
         rows = []
         for name, pin_pairs in contacts:
             contact = function_of[f"cabinet/{item}/fn/{name}"]
-            assert text_of[contact, "tag"] == _placed_position(model, inputs, coil, contact)
+            if (item, name) in no_line:
+                assert (contact, "tag") not in text_of
+            else:
+                assert text_of[contact, "tag"] == _placed_position(model, inputs, coil, contact)
             here = _placed_position(model, inputs, contact, coil)
             rows.extend(f"{pins} {here} | " for pins in pin_pairs)
         image = "\n".join(["NO | NC", *rows])
@@ -317,7 +327,7 @@ def test_tag_and_marking_label_text_matches_what_the_stage_measured() -> None:
     assert checked == _EXPECTED_TAG_MARKING_COUNT
     assert cross_references == _EXPECTED_WIDE_CROSS_REFERENCE_COUNT
     layout, _drawn, _findings = run_stages(model, inputs)
-    _check_contact_references(model, inputs, layout)
+    _check_contact_references(model, inputs, layout, _SAME_ROW_CONTACTS)
 
 
 def _narrow_layout(

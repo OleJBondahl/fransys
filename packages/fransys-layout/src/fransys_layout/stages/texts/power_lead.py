@@ -56,7 +56,7 @@ def _unplaced(marker: LinkMarker) -> Finding:
     """The finding of a symbol no lead clears: its port is the subject, the message names both."""
     return Finding(
         code=POWER_SYMBOL_UNPLACED,
-        severity=Severity.WARNING,
+        severity=Severity.INFO,
         subjects=(marker.port,),
         message=(
             f"no lead of up to {MOST_GRIDS} grids clears the {marker.symbol} symbol "

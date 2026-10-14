@@ -3,7 +3,7 @@ INFO FUNCTION_UNPLACED_IN_COLUMN cabinet/h1/fn/lamp function is in no chain: pla
 WARNING GROUP_SPLIT sup group is wider than a page: split between its columns
 WARNING GROUP_SPLIT p2 group is wider than a page: split between its columns
 WARNING GROUP_SPLIT p1 group is wider than a page: split between its columns
-INFO PAGE_UNDERFILLED cabinet/f1/fn/element,cabinet/x4/1/fn/terminal,cabinet/h1/fn/lamp,cabinet/x1/1/fn/terminal,cabinet/x2/1/fn/terminal drawn content covers 14 % of the content box (+C1p1, +C1p3, +C1p5: 1:terminal, F1:element, H1:lamp)
+INFO PAGE_UNDERFILLED cabinet/f1/fn/element,cabinet/x4/1/fn/terminal,cabinet/h1/fn/lamp,cabinet/x1/1/fn/terminal,cabinet/x2/1/fn/terminal drawn content covers 16 % of the content box (+C1p1, +C1p3, +C1p5: 1:terminal, F1:element, H1:lamp)
 INFO PAGE_UNDERFILLED cabinet/q2/fn/element,cabinet/x4/2/fn/terminal,cabinet/x1/3/fn/terminal,cabinet/x3/2/fn/terminal,cabinet/k2/fn/coil,cabinet/k2/fn/main,cabinet/x2/1/fn/terminal,cabinet/s2/fn/nc_1 drawn content covers 33 % of the content box (+C1p1, +C1p3, +C1p5: 1:terminal, 2:terminal, 3:terminal, K2:coil, and 3 more)
 INFO PAGE_UNDERFILLED cabinet/s1/fn/nc_1,cabinet/k1/fn/aux,cabinet/x4/1/fn/terminal,cabinet/s0/fn/nc_2,cabinet/x2/1/fn/terminal,cabinet/s0/fn/nc_1,cabinet/k1/fn/coil drawn content covers 34 % of the content box (+C1p1, +C1p3, +C1p5: 1:terminal, K1:aux, K1:coil, S0:nc_1, and 2 more)
 INFO PAGE_UNDERFILLED cabinet/x3/1/fn/terminal,cabinet/q1/fn/element,cabinet/k1/fn/main,cabinet/x1/2/fn/terminal drawn content covers 11 % of the content box (+C1p2: 1:terminal, 2:terminal, K1:main, Q1:element)

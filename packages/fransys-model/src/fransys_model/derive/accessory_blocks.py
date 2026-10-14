@@ -38,13 +38,26 @@ def _stated(model: Model, item: Id[Item]) -> OperatedBy | None:
     return None if part is None else parts(model)[part].operated_by
 
 
-def _holders_operator(model: Model, item: Id[Item]) -> OperatedBy | None:
-    """The `operated_by` of the nearest holder above `item` (by `Item.parent`) that states one."""
-    for holder in islice(item_chain(model, item), 1, None):
-        stated = _stated(model, holder)
-        if stated is not None:
-            return stated
-    return None
+def _holder_stating(model: Model, item: Id[Item]) -> Id[Item] | None:
+    """The nearest holder above `item` (by `Item.parent`) whose own part states an `operated_by`."""
+    return next(
+        (h for h in islice(item_chain(model, item), 1, None) if _stated(model, h) is not None),
+        None,
+    )
+
+
+def operating_item(model: Model, function: Id[Function]) -> Id[Item] | None:
+    """The item whose part states what operates a `switch` function.
+
+    Its own item when its part states one, else the nearest holder that does; None for any other
+    kind, or when none states one.
+    """
+    record = functions(model)[function]
+    if record.kind is not FunctionKind.SWITCH:
+        return None
+    if _stated(model, record.item) is not None:
+        return record.item
+    return _holder_stating(model, record.item)
 
 
 def operated_by(model: Model, function: Id[Function]) -> OperatedBy | None:
@@ -52,11 +65,8 @@ def operated_by(model: Model, function: Id[Function]) -> OperatedBy | None:
 
     None for any other kind, or when no part on the way up states one.
     """
-    record = functions(model)[function]
-    if record.kind is not FunctionKind.SWITCH:
-        return None
-    own = _stated(model, record.item)
-    return own if own is not None else _holders_operator(model, record.item)
+    item = operating_item(model, function)
+    return None if item is None else _stated(model, item)
 
 
 def is_contact_block(model: Model, item: Id[Item]) -> bool:
@@ -70,5 +80,5 @@ def is_contact_block(model: Model, item: Id[Item]) -> bool:
     return (
         kinds == {FunctionKind.SWITCH}
         and _stated(model, item) is None
-        and _holders_operator(model, item) is not None
+        and _holder_stating(model, item) is not None
     )

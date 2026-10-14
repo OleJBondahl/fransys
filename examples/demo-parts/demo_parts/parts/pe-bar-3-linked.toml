@@ -1,0 +1,22 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PEBAR-3-LINKED"
+manufacturer = "Demo"
+description = "PE bar, 3 screws, one piece with internal links (invented)"
+category = "terminal"
+class_code = "X"
+
+# The bar is one piece: screw 1 is linked to each of the others.
+[[function]]
+name = "pe"
+kind = "bar"
+ports = [
+    { name = "1", role = "pe" },
+    { name = "2", role = "pe" },
+    { name = "3", role = "pe" },
+]
+links = [
+    { a = "1", b = "2", kind = "conductive" },
+    { a = "1", b = "3", kind = "conductive" },
+]

@@ -149,6 +149,21 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="ORDER_HINT_UNDONE",
+        severities=(Severity.WARNING,),
+        stage="render",
+        who="consumer",
+        cause=(
+            "An authored `keep_together` set pulled a group across an authored `order` hint, so "
+            "the page order is not the one the `order` hint asked for."
+        ),
+        fix=(
+            "Drop the `keep_together` hint or the `order` hint, or order both hints to agree; "
+            "`keep_together` wins when you keep both."
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="ORDER_HINT_UNMET",
         severities=(Severity.WARNING,),
         stage="render",

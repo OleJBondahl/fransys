@@ -20,7 +20,7 @@ from _model_build_cover import layout_trigger_document
 from fransys_el import OPTIONS
 from samples import SHEET
 
-from fransys_layout.engines.schematic import engine, run_stages
+from fransys_layout.engines.schematic import _inputs, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint import lint_geometry
 from fransys_layout.lint.codes import OUT_OF_CONTENT_BOX
@@ -90,7 +90,7 @@ def test_the_top_room_holds_a_first_row_reference_with_no_headroom_lane(
     # UNDO: stages/place.py `_text_room`, first rows: drop `boxes += _owned(...)` (Room no longer
     #     holds the reference: with no lane the first row stands at the band alone, and the box
     #     top is y = -10, above the content box)
-    monkeypatch.setattr(engine, "TOP_HEADROOM_LANES", 0)
+    monkeypatch.setattr(_inputs, "TOP_HEADROOM_LANES", 0)
     reference = _first_row_reference()
     assert reference.stub_extra == 16  # premise: the reference stands one push out
     assert reference.box.width < reference.box.height  # a vertical box at an N port

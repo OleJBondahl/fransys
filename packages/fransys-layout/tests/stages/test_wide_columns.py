@@ -110,3 +110,13 @@ def test_pole_linked_lanes_are_never_cut_apart() -> None:
     linked = _lane_parts(_bank(5), _ink(), [(1, 2)], 190)
     assert [lanes for lanes, _ in free] == [(0, 1), (2, 3), (4,)]
     assert [lanes for lanes, _ in linked] == [(0,), (1, 2), (3, 4)]
+
+
+def test_a_copy_hosted_on_a_hosted_cell_takes_the_lane_up_its_host_chain() -> None:
+    """A copy on a moved pin on a box (layout-0232) raised `KeyError`; it takes the box lane."""
+    # UNDO: stages/wide_columns.py:lane_of, resolve one host step only
+    pin = Cell(function=hid("pin", 0), index=1, lane=3, host=hid("box", 1))
+    copy = Cell(function=hid("copy", 0), index=0, lane=0, host=pin.function)
+    box = Cell(function=hid("box", 1), index=2, lane=0)
+    column = Column(key=KEY, cells=(copy, pin, box), group=None, role=Role.CONTROL, location=None)
+    assert lane_of(column) == {box.function: 0, pin.function: 0, copy.function: 0}

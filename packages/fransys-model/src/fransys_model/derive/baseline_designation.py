@@ -136,6 +136,11 @@ def _instance_prefix(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit]) 
     return f"{name}/"
 
 
+def function_text(model: Model, unit: Id[Unit] | None, function: Function) -> str:
+    """A function's baseline text in `unit`'s listing: its item's designation, `:`, its name."""
+    return f"{unit_designation(model, unit, function.item)}:{function.name}"
+
+
 def _plain_port_text(model: Model, render_unit: Id[Unit] | None, port_id: Id[Port]) -> str:
     """`port_id` rendered relative to `render_unit`: a plain port, or a terminal's bare text."""
     record = ports(model)[port_id]
@@ -172,11 +177,11 @@ def _cross_function_text(model: Model, unit: Id[Unit] | None, function_id: Id[Fu
     fn = functions(model)[function_id]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return f"{unit_designation(model, unit, owner.id)}:{fn.name}"
+        return function_text(model, unit, fn)
     # `_lowest_common_unit` (or, for `unit=None`, the branch above) guarantees a real unit.
     owner_unit = cast("Id[Unit]", owner.unit)
     prefix = _instance_prefix(model, unit, owner_unit)
-    return f"{prefix}{unit_designation(model, owner_unit, owner.id)}:{fn.name}"
+    return f"{prefix}{function_text(model, owner_unit, fn)}"
 
 
 def _net_port_text(

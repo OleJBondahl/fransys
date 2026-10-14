@@ -21,6 +21,7 @@ from fransys_layout.stages import (
 from fransys_layout.stages.partition import (
     GROUP_SPLIT,
     KEEP_TOGETHER_UNMET,
+    ORDER_HINT_UNDONE,
     ORDER_HINT_UNMET,
     ColumnTables,
 )
@@ -238,6 +239,33 @@ def test_keep_together_naming_a_group_with_no_column_raises() -> None:
     """The same rule for a keep-together set."""
     with pytest.raises(HintError):
         _plan((_col("a", 1),), (_width("a", 100),), (_group(1),), _together(1, 9))
+
+
+def _three_blocks(hints):
+    columns = (_col("a", 1), _col("b", 2, group=2), _col("c", 3, group=3))
+    widths = (_width("a", 100), _width("b", 100), _width("c", 100))
+    return _plan(columns, widths, (_group(1), _group(2), _group(3)), hints)
+
+
+def _with_set(order, together):
+    return PageHints(keep_together=together.keep_together, break_before=(), order=order.order)
+
+
+def test_a_keep_together_reversing_an_order_hint_is_reported() -> None:
+    """Order 2 before 3, together 1 and 3: the set pulls 3 ahead of 2 (layout-0231)."""
+    pages, findings = _three_blocks(_with_set(_order(2, 3), _together(1, 3)))
+    assert _shape(pages) == [["a", "c", "b"]]
+    one, two, three = (hid("aspect_node", n) for n in (1, 2, 3))
+    [found] = findings
+    assert (found.code, found.severity.value) == (ORDER_HINT_UNDONE, "warning")
+    assert set(found.subjects) == {one, two, three}
+
+
+def test_a_keep_together_keeping_the_order_reports_nothing() -> None:
+    """Order 1 before 3, together 1 and 3: the set agrees with the hint."""
+    pages, findings = _three_blocks(_with_set(_order(1, 3), _together(1, 3)))
+    assert _shape(pages) == [["a", "c", "b"]]
+    assert findings == ()
 
 
 def test_every_partition_finding_is_a_warning() -> None:

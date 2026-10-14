@@ -43,6 +43,10 @@ class _Pole:
     terminal: bool
     enter: Any = None  # the port the pole's direction vote enters, `inn` unless a fact turns it
 
+    def __post_init__(self) -> None:
+        if self.enter is None:  # an unset entry is `inn`; a test of truth would read an id's value
+            self.enter = self.inn
+
 
 @dataclasses.dataclass(slots=True, eq=False)
 class _Group:

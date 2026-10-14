@@ -9,7 +9,7 @@ box with its channels as pins; the shape needs only column ends.)
 The bug: the two members lost their join with no wire reference and no finding, because no run
 had joined either end (V6 only named a turned wire with an end a run joined).
 The rule (decision layout-0099): a pin with an attached part above it
-either aligns with its run or gives `JOIN_UNALIGNED`, a WARNING.
+either aligns with its run or gives `JOIN_UNALIGNED`, an INFO (layout-0252).
 """
 
 import tempfile
@@ -46,9 +46,9 @@ def test_the_unshifted_pair_gives_no_finding() -> None:
 
 
 def test_a_member_under_an_attached_terminal_gives_join_unaligned() -> None:
-    """The shifted pair is a WARNING naming the two ports, never silence."""
+    """The shifted pair is an INFO naming the two ports, never silence."""
     found = _unaligned(_build(attached=True))
     assert len(found) == 1
-    assert found[0].severity is fr.Severity.WARNING
+    assert found[0].severity is fr.Severity.INFO
     assert "P1/fn/lamp/port/1" in found[0].message
     assert "P2/fn/lamp/port/1" in found[0].message

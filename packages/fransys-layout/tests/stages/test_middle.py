@@ -359,6 +359,55 @@ def test_tall_groups_leaves_out_a_group_recut_would_hold() -> None:
     assert tall_groups(pages_of(shape), low, {key("a"): (group, sharing)}) == {}
 
 
+def no_lower_group(*upper: str) -> MiddleGroup:
+    return replace(fold_group(), upper=frozenset(key(name) for name in upper), lower=frozenset())
+
+
+def test_a_group_with_no_lower_band_hands_its_shortest_upper_column_down() -> None:
+    """layout-0234: the carried column stands below the outline on the next page.
+
+    UNDO: `_carry` returns the first column it meets, or `_cuttable` drops the second upper column.
+    """
+    group = no_lower_group("a", "c")
+    index = {key("a"): (group,), key("c"): (group,)}
+    tall = (*three_columns(), placed(4, x=96, y=200, name="a"))  # column a is two cells tall
+    _, (shape,) = fold_page(tall, page_plan(("a", "b", "c")), index, PROFILE)
+    pages = [(tall, SimpleNamespace(shapes=[shape]))]
+    assert tall_groups(pages, shape.bottom - 1, index) == {
+        shape.unit: Cut(shape.frame_dx, below=False, carry=frozenset({key("c")}))
+    }
+
+
+def test_a_group_with_no_lower_band_and_one_upper_column_stays_held() -> None:
+    """UNDO: `_cuttable` admits a group with no lower band and one upper column."""
+    group = no_lower_group("a")
+    index = {key("a"): (group,)}
+    _, (shape,) = fold_page(three_columns(), page_plan(("a", "b", "c")), index, PROFILE)
+    pages = [(three_columns(), SimpleNamespace(shapes=[shape]))]
+    assert tall_groups(pages, shape.bottom - 1, index) == {}
+
+
+def test_a_group_with_no_lower_band_cut_below_stays_held() -> None:
+    """The outline stays with the upper band when cut below: no handed-down column carries it.
+
+    UNDO: `tall_groups` drops its `shape.below` test for a group with no lower band.
+    """
+    group = no_lower_group("a", "c")
+    index = {key("a"): (group,), key("c"): (group,)}
+    _, (shape,) = fold_page(three_columns(), page_plan(("a", "b", "c")), index, PROFILE)
+    pages = [(three_columns(), SimpleNamespace(shapes=[replace(shape, below=True)]))]
+    assert tall_groups(pages, shape.bottom - 1, index) == {}
+
+
+def test_recut_moves_the_carried_column_from_the_upper_band_to_the_lower() -> None:
+    """UNDO: `_flagged` keeps the bands as they were."""
+    group = no_lower_group("a", "c")
+    run: Any = FakeRun(FakeInputs({key("a"): (group,)}))
+    tall = {MIDDLE: Cut(0, below=False, carry=frozenset({key("c")}))}
+    (flagged,) = recut(run, tall).inputs.middle[key("a")]
+    assert (flagged.upper, flagged.lower) == (frozenset({key("a")}), frozenset({key("c")}))
+
+
 def cut_of(*groups: MiddleGroup, tall: dict) -> list[bool]:
     index = {key("a"): groups}
     run: Any = FakeRun(FakeInputs(index))  # `recut` reads and replaces only `inputs.middle`

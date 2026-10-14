@@ -1,9 +1,9 @@
 """Dashed outlines of items by others, and their "by others" note (OUTLINES BO1, BO2, BO6)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.geometry import WIRING_GRID, text_width
+from fransys_layout.geometry import WIRING_GRID, push_clear, text_width
 
 from .outlines import marker_reach, page_taken, title_box
 from .runs import body_box, member_runs, run_box
@@ -98,6 +98,58 @@ def _page_externals(
     return notes, outlines
 
 
+def _is_table(label: PlacedLabel) -> bool:
+    """Whether `label` is a contact table, headed or lone (`images` names the slots)."""
+    return label.kind is LabelKind.CROSS_REFERENCE and label.slot.startswith("contacts")
+
+
+def _bands(tables: Sequence[PlacedLabel]) -> list[list[PlacedLabel]]:
+    """`tables` in reader order, grouped into bands: tables whose rows overlap in y share one."""
+    bands: list[list[PlacedLabel]] = []
+    reach = 0
+    for table in sorted(tables, key=lambda t: (t.box.y, t.box.x)):
+        if bands and table.box.y < reach:
+            bands[-1].append(table)
+            reach = max(reach, table.box.y + table.box.height)
+        else:
+            bands.append([table])
+            reach = table.box.y + table.box.height
+    return bands
+
+
+def _band_drop(band: Sequence[PlacedLabel], held: Sequence[Any], gap: int) -> int:
+    """The one distance `band` moves down: the largest any table needs to clear `held`."""
+    drop = 0
+    while True:
+        need = max(
+            push_clear(replace(t.box, y=t.box.y + drop), held, gap=gap, axis="y").y
+            - (t.box.y + drop)
+            for t in band
+        )
+        if need <= 0:
+            return drop
+        drop += need
+
+
+def _tables_below(labels: Sequence[PlacedLabel], held: Sequence[Any]) -> list[PlacedLabel]:
+    """layout-0238: `labels` with each band of contact tables moved down, whole, to clear `held`.
+
+    A band keeps its stagger (owner 2026-10-06 G1, 2026-10-11): every table in it moves by the
+    largest push any of them needs. Bands settle in reader order and clear the ones before them.
+    """
+    gap = WIRING_GRID // 2
+    moved: dict[int, PlacedLabel] = {}
+    settled: list[Any] = []
+    for band in _bands([one for one in labels if _is_table(one)]):
+        drop = _band_drop(band, [*held, *settled], gap)
+        for table in band:
+            box = replace(table.box, y=table.box.y + drop)
+            settled.append(box)
+            if drop:
+                moved[id(table)] = replace(table, box=box)
+    return [moved.get(id(one), one) for one in labels]
+
+
 def external_outlines(
     plans: tuple[Any, ...],
     pages: Sequence[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]],
@@ -113,7 +165,9 @@ def external_outlines(
     outlines: list[PlacedExternalOutline] = []
     for plan, (placed, labels) in zip(plans, pages, strict=True):
         where = (plan.drawing_set, plan.number)
-        notes, boxes = _page_externals(placed, labels, on_page.get(where, ()), inputs, where)
-        found.append((placed, (*labels, *notes)))
+        rest = tuple(one for one in labels if not _is_table(one))
+        notes, boxes = _page_externals(placed, rest, on_page.get(where, ()), inputs, where)
+        held = [*(one.box for one in boxes), *(note.box for note in notes)]
+        found.append((placed, (*_tables_below(labels, held), *notes)))
         outlines.extend(boxes)
     return found, tuple(outlines)

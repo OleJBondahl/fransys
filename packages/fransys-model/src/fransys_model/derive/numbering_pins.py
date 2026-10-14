@@ -24,7 +24,7 @@ lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import designating_ancestors, own_designation_or_none
 from .finding_names import name_findings, name_of
-from .instance_tag import unit_tag
+from .instance_tag import instance_name, unit_tag
 from .lookups import terminal_items
 from .rows import NumberingItem, NumberingPins, NumberingRetired
 from .unit_relative_key import unit_relative_key
@@ -216,6 +216,7 @@ __all__ = [
     "NumberingPins",
     "NumberingRetired",
     "dumps",
+    "instance_name",
     "item_position",
     "loads",
     "name_findings",
@@ -223,4 +224,5 @@ __all__ = [
     "pins",
     "unit_position",
     "unit_relative_key",
+    "unit_tag",
 ]

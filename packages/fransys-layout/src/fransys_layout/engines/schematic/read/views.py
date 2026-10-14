@@ -15,8 +15,9 @@ lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES, kind_roles
 from fransys_layout.engines.schematic.read.box_split import split_box
-from fransys_layout.engines.schematic.read.item_sides import function_groups
+from fransys_layout.engines.schematic.read.item_sides import function_groups, view_port_order
 from fransys_layout.engines.schematic.read.reading import symbol_choices
+from fransys_layout.engines.schematic.read.text_or_empty import text_or_empty
 from fransys_layout.geometry import box_port_name
 from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
@@ -31,7 +32,7 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import item_tag_text
-from fransys_model.kernel import SchemaError, parent_chain
+from fransys_model.kernel import parent_chain
 from fransys_model.vocab import cable_items
 from fransys_model.vocab.membership import boundary
 from fransys_model.vocab.membership import units as unit_ids
@@ -121,11 +122,12 @@ def item_views(
             found.extend(group)
             continue
         name = {spec.function: functions_table(model)[spec.function].name for spec in group}
-        order = function_groups(model, tuple(group))
+        order, rank = function_groups(model, tuple(group)), view_port_order(tuple(group))
         view_ports = tuple(
             dataclasses.replace(
                 port,
                 name=box_port_name(name[spec.function], port.name),
+                order=rank[port.port],
                 group=order[spec.function],
                 channel=spec.roles.plc_channel,
             )
@@ -185,18 +187,12 @@ def reitem(ref: PortRef, view_of: Mapping[Id[Any], Id[Any]]) -> PortRef:
 
 def item_text(model: Model, item: Id[Any]) -> str:
     """An item view's tag, its item designation; empty before numbering."""
-    try:
-        return item_tag_text(model, item)
-    except SchemaError:
-        return ""
+    return text_or_empty(item_tag_text, model, item)
 
 
 def pin_text(model: Model, port: Id[Any]) -> str:
     """A pin view's tag, "X5:2"; empty before numbering."""
-    try:
-        return port_designation(model, port)
-    except SchemaError:
-        return ""
+    return text_or_empty(port_designation, model, port)
 
 
 def without_idle_pins(

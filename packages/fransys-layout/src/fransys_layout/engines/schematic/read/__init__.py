@@ -13,6 +13,7 @@ from fransys_layout.engines.schematic.read import reading, steps
 from fransys_layout.engines.schematic.read.labels import LabelText
 from fransys_layout.engines.schematic.read.pairs import box_feeds
 from fransys_layout.engines.schematic.read.power import power_ends
+from fransys_layout.engines.schematic.read.rails import kept_rail_ends
 from fransys_layout.engines.schematic.read.sheets import text_floor_findings, unused_sheet_findings
 from fransys_layout.engines.schematic.read.views import pin_mates, without_idle_terminals
 from fransys_layout.stages import (
@@ -114,7 +115,7 @@ def read_inputs(
     specs, pin_of, refs, landings = steps.pin_reads(model, specs, wired, refs, boxed)
     specs, spares, drawn = steps.unused_reads(model, specs, drawn, profile)
     specs, view_of, view_choices, (north, south), refs = steps.item_reads(
-        model, specs, wired, refs, (landings, chains)
+        model, specs, wired, (*refs[:2], kept_rail_ends(refs[2], specs)), (landings, chains)
     )
     refs, crossing, off_texts, off_ends = steps.off_reads_of(model, specs, refs, pin_of)
     connections, net_groups, rail_ends = refs

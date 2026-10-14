@@ -63,3 +63,8 @@ def test_the_grid_constants_agree_with_the_box_it_draws():
 
 def test_default_order_sorts_the_names():
     assert default_order(["b", "K1.A2", "a", "K1.A1"]) == ("K1.A1", "K1.A2", "a", "b")
+
+
+def test_default_order_keys_the_printed_marking_not_the_function():
+    names = ["b.S11", "a.S21", "b.S12", "a.S22"]
+    assert default_order(names) == ("b.S11", "b.S12", "a.S21", "a.S22")

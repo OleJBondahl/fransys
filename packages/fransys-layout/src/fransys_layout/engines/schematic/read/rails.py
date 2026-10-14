@@ -154,3 +154,15 @@ def earth_ends(
         if port.port not in taken and port_power_kind(model, port.port) is PowerKind.PE
     ]
     return (*ends, *stand_ins)
+
+
+def kept_rail_ends(
+    ends: tuple[RailEnd, ...], specs: tuple[FunctionSpec, ...]
+) -> tuple[RailEnd, ...]:
+    """`ends` without those at a port the cut of its drawn function no longer keeps (layout-0236).
+
+    `hide_unused_pins` drops a box's unused ports, and a linked screw is a PE pin that earth_ends
+    gave a stand-in before the cut: nothing is drawn there to take its symbol.
+    """
+    kept = {spec.function: {ref.port for ref in spec.ports} for spec in specs}
+    return tuple(end for end in ends if end.ref.port in kept.get(end.ref.function, {end.ref.port}))

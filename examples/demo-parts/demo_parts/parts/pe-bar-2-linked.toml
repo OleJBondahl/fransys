@@ -1,0 +1,19 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PEBAR-2-LINKED"
+manufacturer = "Demo"
+description = "PE bar, 2 screws, one piece with one internal link (invented)"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "pe"
+kind = "bar"
+ports = [
+    { name = "1", role = "pe" },
+    { name = "2", role = "pe" },
+]
+links = [
+    { a = "1", b = "2", kind = "conductive" },
+]

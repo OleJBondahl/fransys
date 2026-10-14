@@ -14,9 +14,9 @@ over the box grown to hold its ends, so the build succeeds. The page then report
 OUT_OF_CONTENT_BOX (not PAGE_OVERFULL: that check misses a fold-made overflow, layout-0166 D2).
 The second fix (decision layout-0167): the unit group cuts at its outline's top edge, so
 no page overflows and neither reports a finding. Longer lower columns (T-b) are held (R3: the
-fallback is its own order); a group with no lower
-band (T-c) is held too (R4). Both
-overflow and keep the grown-box search.
+fallback is its own order). A group with no lower band (T-c) hands its shortest upper column
+down to carry the outline (decision layout-0234); one whose upper band alone is taller than
+the page stays held (T4). Held shapes overflow and keep the grown-box search.
 """
 
 import re
@@ -326,18 +326,19 @@ def test_t_b_lower_ends_that_pass_the_bottom_stand_beside_the_outline() -> None:
 
 
 def test_t_c_a_page_that_still_overflows_reports_page_overfull_and_builds() -> None:
-    built = _built(2, 0, 2, looms=False)
+    built = _built(2, 0, 6, looms=False)
     assert _errors(built) == []
     assert "PAGE_OVERFULL" in {f.code for f in built.findings}
 
 
 def test_t_c_a_line_end_below_the_box_of_a_page_no_cut_helps_still_routes() -> None:
-    """layout-0166's extent, moved here by layout-0167: a group with no lower band is not cut.
+    """layout-0166's extent, moved here by layout-0167: an upper band taller than a page.
 
-    Its upper band is so tall that the outline and the plug box stand below the content box,
-    and the line is searched over the box grown to hold its ends, so the build still succeeds.
+    The outline leaves for the next page (layout-0234), but the column of six coils or more
+    stays past the bottom with its tables and the plug box's line ink, and the line is searched
+    over the box grown to hold its ends, so the build still succeeds.
     """
-    built = _built(2, 0, 6, looms=False)
+    built = _built(2, 0, 8, looms=False)
     assert _errors(built) == []
     assert {"OUT_OF_CONTENT_BOX", "PAGE_OVERFULL"} <= {f.code for f in built.findings}
     out = [f.message for f in built.findings if f.code == "OUT_OF_CONTENT_BOX"]

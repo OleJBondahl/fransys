@@ -43,19 +43,13 @@ def beside_runs(
     joined: list[_Wire] = []
     runs: list[JoinedRun] = []
     refused: list[tuple[JoinEnd, JoinEnd]] = []
-    for c, branch, host in ((w[0], w[1], w[2]) for w in found):
-        # The host stays where it stands: the branch lowers to its pin, or, standing deeper
-        # already, joins by an L (layout-0174)
-        y = host.end.offset + _drop(host)
-        level = branch.end.offset + shift[branch.page, branch.column] + _drop(branch) <= y
-        if level and not _fits(branch, y, rooms, last):
+    for wire in found:
+        _, branch, host = wire
+        if _lowers(branch, host, rooms, (shift, last)):
+            joined.append(wire)
+            runs.append(_run(branch, host))
+        else:
             refused.append((branch.end, host.end))
-            continue
-        if level:
-            shift[branch.page, branch.column] = y - branch.end.offset - _drop(branch)
-            last[branch.page, branch.column] = branch.end.row
-        joined.append((c, branch, host))
-        runs.append(_run(branch, host))
     return joined, runs, refused
 
 
@@ -83,6 +77,26 @@ def beside_pairs(
             if x.page == y.page
         )
     )
+
+
+def _lowers(
+    branch: Spot,
+    host: Spot,
+    rooms: Mapping[Page, int],
+    state: tuple[dict[tuple[Page, AuthoringKey], int], dict[tuple[Page, AuthoringKey], int]],
+) -> bool:
+    """Whether the branch joins; a level branch records its lowering in `state` (shift, last)."""
+    shift, last = state
+    # The host stays where it stands: the branch lowers to its pin, or, standing deeper
+    # already, joins by an L (layout-0174)
+    y = host.end.offset + _drop(host)
+    level = branch.end.offset + shift[branch.page, branch.column] + _drop(branch) <= y
+    if level and not _fits(branch, y, rooms, last):
+        return False
+    if level:
+        shift[branch.page, branch.column] = y - branch.end.offset - _drop(branch)
+        last[branch.page, branch.column] = branch.end.row
+    return True
 
 
 def _fits(

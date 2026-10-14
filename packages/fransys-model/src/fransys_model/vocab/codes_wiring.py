@@ -33,14 +33,14 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="GNYE_NOT_PE",
-        severities=(Severity.ERROR,),
+        severities=(Severity.ERROR, Severity.WARNING),
         stage="validators",
         who="consumer",
         cause=(
-            "A green-yellow conductor is on a net that is not PE. Silent on a net no declared "
-            "net lists."
+            "A green-yellow conductor is on a net that is not PE: an ERROR on a net a declared "
+            "net lists, a WARNING on a net none lists (IEC 60445 keeps green-yellow for PE)."
         ),
-        fix="Recolour it, or connect it to the PE net.",
+        fix="Recolour it, or connect it to the PE net and declare it with `d.earth`.",
         page="findings-validators",
     ),
     CodeInfo(

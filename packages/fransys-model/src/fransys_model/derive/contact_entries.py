@@ -6,28 +6,41 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.accessory_blocks import CONTACT_KINDS
-from fransys_model.derive.contacts import changeover_throws, owned_contacts
+from fransys_model.derive.contacts import changeover_throws, link_state, owned_contacts
+from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.unused import function_is_unused
 from fransys_model.vocab import function_poles, marking_key, unlinked_poles
-from fransys_model.vocab.enums import FunctionKind
+from fransys_model.vocab.enums import FunctionKind, LinkKind
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.core import Function, Item, Port
 
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Item, Port
+    from fransys_model.vocab.templates import PortTemplate
 
 # What a contact image prints where a contact is drawn nowhere
 NO_PLACE = "N/A"
 
+# A contact with up to this many ports is a pair (or one pole), listed after a larger one
+PAIR = 2
+
 # A contact image entry `(main, key, mark)` (`image_order`)
 type Entry = tuple[bool, int | str, str]
+
+# An entry's `image_order` key
+type EntryOrder = tuple[bool, tuple[tuple[int, int, str], ...], str]
+
+# `contact_list_key`'s value: three poles or more first, then the first entry's order
+type ListKey = tuple[bool, EntryOrder | tuple[()]]
 
 
 def contact_entries(model: Model, function: Function) -> tuple[list[Entry], list[Entry]]:
     """One contact function's NO and NC entries as `(main, key, mark)`, see `image_order`."""
     no, nc = list[Entry](), list[Entry]()
+    if function.kind is FunctionKind.SWITCH:
+        return _switch_entries(model, function)
     if function.kind not in CONTACT_KINDS:  # a spares-only table's lone partner is its coil
         return no, nc
     if function.kind is FunctionKind.CONTACT_CO:
@@ -45,6 +58,26 @@ def contact_entries(model: Model, function: Function) -> tuple[list[Entry], list
     return no, nc
 
 
+def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list[Entry]]:
+    """A switch's entries: a pole closed at rest lists under NC, any other under NO (model-0237)."""
+    no, nc = list[Entry](), list[Entry]()
+    own = _own_templates(model, function)
+    templates = {t: port_templates(model)[t] for t in own if t is not None}
+    for link in internal_links(model).values():
+        if link.a not in templates or link.b not in templates or link.kind is not LinkKind.SWITCHED:
+            continue
+        (pole,) = function_poles(function.kind, [link], templates)
+        a, b = (printed_name(model, own[end.id].id) for end in pole.ends)
+        closed = link_state(model, function.id, link.id) == "rest"
+        (nc if closed else no).append((_is_main(a, b), _key(a), f"{a}-{b}"))
+    return no, nc
+
+
+def _own_templates(model: Model, function: Function) -> dict[Id[PortTemplate] | None, Port]:
+    """The function's ports by their port template."""
+    return {p.template: p for p in ports(model).values() if p.function == function.id}
+
+
 def _is_main(line: str, load: str) -> bool:
     """A pole is main when both pins are single-digit numbers (IEC 60947-1), else auxiliary."""
     return len(line) == 1 and len(load) == 1 and line.isdigit() and load.isdigit()
@@ -57,7 +90,7 @@ def _key(name: str) -> int | str:
 
 def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
     """A contact's printed `(line, load)` pole names; with no pole link, marking order."""
-    own = {p.template: p for p in ports(model).values() if p.function == function.id}
+    own = _own_templates(model, function)
     templates = {t: port_templates(model)[t] for t in own if t is not None}
     links = [
         link
@@ -86,7 +119,7 @@ def printed_name(model: Model, port: Id[Port]) -> str:
     return ports(model)[port].name.split("/")[0]
 
 
-def image_order(entry: Entry) -> tuple[bool, tuple[tuple[int, int, str], ...], str]:
+def image_order(entry: Entry) -> EntryOrder:
     """A contact image entry's order: main first, then numbered terminals, then named commons."""
     # an entry is `(main, key, text)`; `key` is the terminal number, or the common's name when it
     # is no number: named commons sort after every numbered one, by name, then by text
@@ -105,3 +138,13 @@ def spare_entries(
             no.extend((main, key, f"{mark} {NO_PLACE}") for main, key, mark in spare_no)
             nc.extend((main, key, f"{mark} {NO_PLACE}") for main, key, mark in spare_nc)
     return no, nc
+
+
+def contact_list_key(model: Model, function: Id[Function]) -> ListKey:
+    """The key a contact list sorts its contacts by: a 3-pole-plus first, then the first entry.
+
+    The caller breaks a tie by the function id.
+    """
+    no, nc = contact_entries(model, functions(model)[function])
+    first = min(map(image_order, (*no, *nc)), default=())
+    return (len(build_indexes(model).ports_by_function.get(function, ())) <= PAIR, first)

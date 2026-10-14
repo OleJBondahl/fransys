@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 import pytest
 from fransys_el import OPTIONS
 
-from fransys_layout.engines.schematic import engine, run_stages
+from fransys_layout.engines.schematic import _inputs, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import WIRING_GRID
 from fransys_layout.lint.codes import OUT_OF_CONTENT_BOX, WIRE_OVER_LABEL
@@ -70,10 +70,10 @@ def _run(
 ) -> tuple[Layout, set[str]]:
     """The layout and finding codes of `model`, with `lanes` headroom lanes (None: as shipped).
 
-    `engine` imports the constant by name, so the patch goes on `engine`, not on `defaults`.
+    `_inputs` imports the constant by name, so the patch goes on `_inputs`, not on `defaults`.
     """
     if lanes is not None:
-        monkeypatch.setattr(engine, "TOP_HEADROOM_LANES", lanes)
+        monkeypatch.setattr(_inputs, "TOP_HEADROOM_LANES", lanes)
     layout, _, findings = run_stages(model, read_inputs(model, options=OPTIONS))
     return layout, {finding.code for finding in findings}
 
@@ -125,7 +125,7 @@ def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
     # widest digits of this run (layout-0135)
     inputs = read_inputs(model_of(), options=OPTIONS)
     band = real(inputs.sheet, inputs.profile, max(seen)[1])
-    assert top <= engine.TOP_HEADROOM_LANES * WIRING_GRID + band - _REACH_ABOVE_ROW
+    assert top <= _inputs.TOP_HEADROOM_LANES * WIRING_GRID + band - _REACH_ABOVE_ROW
 
 
 def test_without_headroom_the_unit_outlines_stay_below_the_top_reference_band(

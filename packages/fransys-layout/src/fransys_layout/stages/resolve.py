@@ -1,6 +1,6 @@
 """Stage 1, resolve: choose the symbol each function is drawn with."""
 
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, Protocol
 lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.geometry import (
@@ -19,7 +19,7 @@ from .slices import by_key
 from .types import DrawnFunction, DrawnPort, PolePair
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Mapping
+    from collections.abc import Iterable, Mapping
 
     from fransys_model.kernel import Id
 
@@ -35,9 +35,18 @@ _POLE_PAIR_SIZE = 2
 THROW_SYMBOL_PORTS: Mapping[str, str] = frozendict({"common": "com", "break": "nc", "make": "no"})
 
 
-# layout-0105, layout-0220: `(kind, rest, protection_type, operated_by)` to a symbol key or
-# `None`; the engine passes it
-type DefaultSymbol = Callable[[str, str | None, str | None, str | None], str | None]
+class DefaultSymbol(Protocol):
+    """layout-0105, 0220, 0237: a function's facts to a symbol key or None; the engine passes it."""
+
+    def __call__(
+        self,
+        kind: str,
+        rest: str | None,
+        protection_type: str | None,
+        operated_by: str | None,
+        *,
+        actuator: bool,
+    ) -> str | None: ...
 
 
 def resolve(
@@ -147,7 +156,9 @@ def _symbol_for(
     named = (
         None
         if default_symbol is None
-        else default_symbol(spec.kind, spec.rest, spec.protection_type, spec.operated_by)
+        else default_symbol(
+            spec.kind, spec.rest, spec.protection_type, spec.operated_by, actuator=spec.actuator
+        )
     )
     if named is not None:
         return named, frozendict(dict[str, str]())

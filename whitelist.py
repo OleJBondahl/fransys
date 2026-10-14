@@ -56,8 +56,6 @@ _.nets_by_port  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read
 _.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/steps.py:129
 _.see  # OTHER fransys/src/fransys/_report.py:50
 _.beside  # OTHER fransys-layout/src/fransys_layout/stages/columns.py:80
-_.internal_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
-_.external_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
 _.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:576
 _.MOUNT  # OTHER fransys-author/src/fransys_author/wiring.py:95
 _.LINE  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:22
@@ -91,11 +89,11 @@ _.content_y_mm  # OTHER fransys-render/src/fransys_render/_symbols.py:65
 _.column_gap  # OTHER fransys-layout/src/fransys_layout/stages/place.py:146
 _.row_gap  # OTHER fransys-layout/src/fransys_layout/stages/place.py:151
 _.row_spacing  # OTHER fransys-layout/src/fransys_layout/stages/place.py:154
-_.route_margin  # OTHER fransys-layout/src/fransys_layout/stages/route.py:386
+_.route_margin  # OTHER fransys-layout/src/fransys_layout/stages/_edge_paths.py:127
 _.text_height  # OTHER fransys-layout/src/fransys_layout/stages/images.py:72
 _.marker_padding  # OTHER fransys-layout/src/fransys_layout/stages/images.py:73
-_.route_turn_penalty  # OTHER fransys-layout/src/fransys_layout/stages/route.py:414
-_.route_crossing_penalty  # OTHER fransys-layout/src/fransys_layout/stages/route.py:415
+_.route_turn_penalty  # OTHER fransys-layout/src/fransys_layout/stages/_edge_paths.py:155
+_.route_crossing_penalty  # OTHER fransys-layout/src/fransys_layout/stages/_edge_paths.py:156
 _.band_ranks  # OTHER fransys-layout/src/fransys_layout/stages/place.py:164
 _.group_ranks  # OTHER fransys-layout/src/fransys_layout/stages/partition.py:175
 _.symbol  # OTHER fransys-render/src/fransys_render/_symbol_geometry.py:74
@@ -108,7 +106,7 @@ _.cover  # OTHER fransys-pdf/src/fransys_pdf/_cover_checks.py:78
 _.logo  # OTHER fransys-pdf/src/fransys_pdf/document.py:62
 _.supplier  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.supplier_part_number  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
-_.customer  # OTHER fransys-pdf/src/fransys_pdf/_geometry.py:218
+_.customer  # OTHER fransys-model/src/fransys_model/derive/title_block.py:27
 _.author  # OTHER fransys-pdf/src/fransys_pdf/_geometry.py:221
 _.notice  # OTHER fransys-pdf/src/fransys_pdf/checks.py:361
 _.nominal_voltage_v  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37

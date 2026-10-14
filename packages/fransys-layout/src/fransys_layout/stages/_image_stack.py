@@ -23,6 +23,16 @@ def headed_width(width: int, heading: str, profile: Profile) -> int:
     return max(width, text_width(heading, height=profile.text_height) + 2 * profile.marker_padding)
 
 
+def heads_by_set(
+    heads: Mapping[tuple[Handle, Handle | None], str], units: Mapping[int, Handle | None]
+) -> dict[tuple[Handle, int], str]:
+    """Each coil's heading in each drawing set: the text of the set's own unit (model-0238)."""
+    sets: dict[Handle | None, list[int]] = {}
+    for one, unit in units.items():
+        sets.setdefault(unit, []).append(one)
+    return {(coil, one): text for (coil, unit), text in heads.items() for one in sets.get(unit, ())}
+
+
 def _groups(labels: Sequence[PlacedLabel]) -> list[list[PlacedLabel]]:
     """`labels` (already in reader order) split into runs whose boxes overlap one another."""
     found: list[list[PlacedLabel]] = []
@@ -38,7 +48,7 @@ def _groups(labels: Sequence[PlacedLabel]) -> list[list[PlacedLabel]]:
 def _stack(
     group: Sequence[PlacedLabel],
     blockers: Sequence[Box],
-    heads: Mapping[Handle, str],
+    heads: Mapping[tuple[Handle, int], str],
     profile: Profile,
 ) -> list[PlacedLabel]:
     """One foot's tables, top coil first, each a heading line taller and pushed below the last."""
@@ -46,7 +56,9 @@ def _stack(
     for label in group:
         grown = replace(
             label.box,
-            width=headed_width(label.box.width, heads.get(label.subject, ""), profile),
+            width=headed_width(
+                label.box.width, heads.get((label.subject, label.drawing_set), ""), profile
+            ),
             height=label.box.height + profile.heading_room,
         )
         box = push_clear(
@@ -64,7 +76,7 @@ def stack_tables(
     home: Mapping[Handle, PlacedFunction],
     markers: Mapping[tuple[int, int], tuple[Box, ...]],
     profile: Profile,
-    heads: Mapping[Handle, str],
+    heads: Mapping[tuple[Handle, int], str],
 ) -> dict[tuple[int, int], list[PlacedLabel]]:
     """Tables whose boxes meet stack downwards in reader order (coil y, then x), headed (0170)."""
     found = {}
@@ -102,7 +114,7 @@ def settled_tables(
     home: Mapping[Handle, PlacedFunction],
     markers: Mapping[tuple[int, int], tuple[Box, ...]],
     profile: Profile,
-    heads: Mapping[Handle, str],
+    heads: Mapping[tuple[Handle, int], str],
 ) -> dict[tuple[int, int], list[PlacedLabel]]:
     """I4: each page row on one baseline, then the tables that share a foot stacked (0170)."""
     return stack_tables(_on_one_baseline(tables, home), home, markers, profile, heads)

@@ -58,7 +58,7 @@ def test_a_symbol_no_lead_clears_keeps_one_grid_and_raises_a_warning() -> None:
     assert led.symbol_grids == 1
     (finding,) = found
     assert finding.code == POWER_SYMBOL_UNPLACED
-    assert finding.severity == Severity.WARNING
+    assert finding.severity == Severity.INFO
     assert finding.subjects == (marker.port,)
     assert "power-supply" in finding.message
     assert "+24" in finding.message

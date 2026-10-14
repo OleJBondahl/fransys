@@ -52,6 +52,7 @@ from ._beside import check_beside
 from ._boundary_values import build_boundary_values
 from ._catalogue import build_catalogue
 from ._decimal import ProfileNumber, as_decimal
+from ._earth import Earths
 from ._enums import member
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
@@ -641,6 +642,8 @@ class Scope(LinkScope, SupplyScope):
     ) -> None:
         """A declared `Net`."""
         net_class = member(NetClass, cls, field="net class")
+        if name == "PE":
+            self._design._earths.refuse_net(self._prefix)
         key = scoped(self._prefix, "net", name)
         record = Net(
             id=make_id(Net, key),
@@ -651,6 +654,11 @@ class Scope(LinkScope, SupplyScope):
             potential=potential,
         )
         self._design._add(record, caller_origin())
+
+    def earth(self, *ports: Port) -> None:
+        """Collect `ports` for the scope's one `PE` net, which the draft gets when it is read."""
+        ids = tuple(p.id for p in ports)
+        self._design._earths.collect(self._prefix, ids, caller_origin(), self._design._draft)
 
     def mate(self, a: Fn | Item, b: Fn | Item) -> None:
         """Two CONNECTOR or TERMINAL functions plugged together; others are refused."""
@@ -878,11 +886,12 @@ class Scope(LinkScope, SupplyScope):
 class Design(Scope):
     """The builder: holds the draft being written and the part catalogue."""
 
-    __slots__ = ("_assumed_version", "_catalogue", "_draft", "_project_version")
+    __slots__ = ("_assumed_version", "_catalogue", "_draft", "_earths", "_project_version")
 
     def __init__(self, parts: Draft) -> None:
         """Read `parts` once into a private index by `(manufacturer, mpn)` and by `mpn`."""
         self._draft = Draft()
+        self._earths = Earths()
         self._catalogue = build_catalogue(parts)
         self._project_version: int | None = None
         self._assumed_version = False
@@ -965,7 +974,12 @@ class Design(Scope):
         )
 
     def draft(self) -> Draft:
-        """The `Draft` written so far; `fr.build` merges it with the part catalogue's own."""
+        """The `Draft` written so far; `fr.build` merges it with the part catalogue's own.
+
+        Each scope's `d.earth` ports become its one `PE` net here, and a later `d.earth` raises.
+        """
+        for net, origin in self._earths.nets():
+            self._add(net, origin)
         return self._draft
 
     def _add(self, record: Record, origin: Origin) -> None:

@@ -35,6 +35,13 @@ instance is of. It is the one reader of a unit's release facts.
 `fransys.derive.unit_location(model, unit)` returns the location node `unit` is placed at:
 its root items' own location, or their nearest common ancestor; `None` when no root is placed.
 
+`fransys.derive.project_facts(model)` returns the title block's six facts of the project, as
+`(title, number, customer, revision, revision_date, author)`; all are empty with no `Project`.
+
+`fransys.derive.document_facts(model, document)` returns the same six facts for one `Document`:
+a unit document's are its unit release's own, with `customer` empty and `author` the `created`
+of the unit's current revision. Any other document's are the project's.
+
 ## Rails, boundaries and function kinds
 
 `fransys.derive.port_rails(model, port)` returns the rails a port carries, as a

@@ -4,9 +4,9 @@ Registration is global, one-way and never undone: nothing is unregistered, so a 
 kind is always an error and a test-local kind needs a name no other test uses. These
 module-level containers are, with `register_enum`'s set and `Draft`, the kernel's only
 mutable state: the kinds, the records by class name, the `@value` classes, the namespace
-order, and the three slots for `Id`, `AuthoringKey` and `Value`. Those slots are filled once,
-at import, by `ids` and `values`, because `schema` must recognise them and cannot import
-either (`ids` imports `record`, which imports `schema`).
+order, the domain's schema version, and the three slots for `Id`, `AuthoringKey` and `Value`.
+Those slots are filled once, at import, by `ids` and `values`, because `schema` must recognise
+them and cannot import either (`ids` imports `record`, which imports `schema`).
 """
 
 import re
@@ -22,6 +22,7 @@ _kinds: dict[str, type] = {}
 _records_by_name: dict[str, list[type]] = {}
 _value_classes: set[type] = set()
 _namespaces_after_core: tuple[str, ...] = ()
+_schema_version: int | None = None
 _id_class: type | None = None
 _authoring_key_alias: TypeAliasType | None = None
 _value_alias: TypeAliasType | None = None
@@ -131,6 +132,33 @@ def register_namespaces(*order: str) -> None:
         msg = f"namespaces are already registered as {_namespaces_after_core}, not {order}"
         raise SchemaError(msg, kind=order[0] if order else "core")
     _namespaces_after_core = order
+
+
+def register_schema_version(version: int) -> None:
+    """Declare the schema version the domain's records carry; `vocab` calls this once.
+
+    `freeze` stamps it into every digest and `from_data` refuses any other. Registering the
+    same number again is a no-op.
+
+    Raises:
+        SchemaError: `version` is not an int of 1 or more, or a different one is registered.
+    """
+    global _schema_version  # noqa: PLW0603 -- the registry is filled once at import
+    if type(version) is not int or version < 1:
+        msg = f"the schema version must be an int of 1 or more, not {version!r}"
+        raise SchemaError(msg, kind="schema_version")
+    if _schema_version is not None and _schema_version != version:
+        msg = f"the schema version is already registered as {_schema_version}, not {version}"
+        raise SchemaError(msg, kind="schema_version")
+    _schema_version = version
+
+
+def registered_schema_version() -> int:
+    """Return the registered schema version, or raise `SchemaError` if no domain registered one."""
+    if _schema_version is None:
+        msg = "no schema version is registered; the domain's vocabulary must be imported"
+        raise SchemaError(msg, kind="schema_version")
+    return _schema_version
 
 
 def namespace_of(kind: str) -> str:

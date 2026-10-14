@@ -3,14 +3,19 @@
 The invented sheet is 1280 x 886 G. A symbol's keep-out is 56 x 32 G around its origin.
 """
 
+from dataclasses import replace
+
 import pytest
 from samples import SHEET, hid, page_plan, placed
 
-from fransys_layout.lint import lint_fill
-from fransys_layout.lint._harness import NO_INK
+from fransys_layout.geometry import Box, Point
+from fransys_layout.lint import fill_shares, lint_fill
+from fransys_layout.lint._harness import NO_INK, HarnessInk
 from fransys_layout.lint.codes import ALL_CODES, PAGE_UNDERFILLED
 from fransys_layout.lint.naming import append_pages_and_designations, where_drawn
 from fransys_layout.stages import Layout
+from fransys_layout.stages.line_shapes import DrawnLine
+from fransys_layout.stages.types import PlacedOutline
 from fransys_model.kernel import Severity
 
 
@@ -81,3 +86,39 @@ def test_a_page_of_a_set_nobody_prints_gets_no_finding(
 ) -> None:
     layout = _layout(placed(1, x=104, y=96), placed(2, x=104, y=304))
     assert len(lint_fill(layout, sheet=SHEET, printed=printed)) == count
+
+
+def _line(*points: Point) -> DrawnLine:
+    return DrawnLine(
+        harness=hid("harness", 1),
+        branch=1,
+        drawing_set=1,
+        page=1,
+        points=points,
+        text=points[0],
+        label=Box(x=0, y=0, width=0, height=0),
+    )
+
+
+def test_a_harness_line_widens_the_share() -> None:
+    layout = _layout(placed(1, x=104, y=96))
+    base = fill_shares(layout, sheet=SHEET)[1, 1]
+    ink = HarnessInk(lines=(_line(Point(x=104, y=96), Point(x=1000, y=700)),))
+    assert fill_shares(layout, sheet=SHEET, ink=ink)[1, 1] > base
+
+
+def test_an_outline_and_a_connector_box_widen_the_share() -> None:
+    layout = replace(
+        _layout(placed(1, x=104, y=96)),
+        outlines=(
+            PlacedOutline(
+                unit=hid("unit", 1),
+                lead=hid("function", 1),
+                drawing_set=1,
+                page=1,
+                box=Box(x=104, y=96, width=800, height=600),
+            ),
+        ),
+    )
+    base = fill_shares(_layout(placed(1, x=104, y=96)), sheet=SHEET)[1, 1]
+    assert fill_shares(layout, sheet=SHEET)[1, 1] > base

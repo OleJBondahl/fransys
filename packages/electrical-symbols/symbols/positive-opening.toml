@@ -1,0 +1,12 @@
+schema = 1
+name = "Positive opening operation"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "positive-opening" }
+
+# An arrow in a circle, centred on the origin; a break contact places it right of its blade (D50).
+elements = [
+  { circle = [0, 0], r = 0.75, fill = "none" },
+  { line = [[-0.5, 0], [0.5, 0]] },
+  { polyline = [[0.25, -0.25], [0.5, 0], [0.25, 0.25]] },
+]

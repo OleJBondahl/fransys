@@ -6,6 +6,7 @@ lazy from collections.abc import Set as AbstractSet
 from fransys_layout.conventions import FACTS, rank_key
 from fransys_layout.conventions.sides import V1
 from fransys_layout.engines.schematic.read.side_facts import Subject
+from fransys_model.vocab import marking_key
 
 if TYPE_CHECKING:
     from fransys_layout.stages import FunctionSpec
@@ -55,3 +56,17 @@ def pin_sides(
     }
     north = tuple(sorted(port for port, side in sides.items() if side == "n"))
     return north, tuple(sorted(port for port, side in sides.items() if side == "s"))
+
+
+def view_port_order(group: tuple[FunctionSpec, ...]) -> dict[Id[Any], int]:
+    """Each port's rank in an item box: a function's ports together, functions by first marking."""
+    first = {
+        spec.function: min((marking_key(p.name) for p in spec.ports), default=()) for spec in group
+    }
+    ranked = sorted(group, key=lambda spec: (first[spec.function], spec.function))
+    return {
+        port.port: index
+        for index, port in enumerate(
+            port for spec in ranked for port in sorted(spec.ports, key=lambda p: p.order)
+        )
+    }

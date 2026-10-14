@@ -43,9 +43,11 @@ class Bucket:
     columns: tuple[Column, ...]
 
 
-def column_order(column: Column) -> tuple[AuthoringKey, tuple[Handle, ...]]:
-    """Sort key of a column: its authoring key, then its cells, so two keys still order."""
-    return (column.key, tuple(cell.function for cell in column.cells))
+def column_order(
+    column: Column,
+) -> tuple[tuple[int, ...], AuthoringKey, tuple[Handle, ...]]:
+    """Sort key of a column: its natural `order`, then its key and cells."""
+    return (column.order, column.key, tuple(cell.function for cell in column.cells))
 
 
 def buckets(columns: tuple[Column, ...], tables: Tables) -> tuple[Bucket, ...]:

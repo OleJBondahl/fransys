@@ -27,6 +27,7 @@ from .baseline_designation import (
     _cross_function_text,
     _cross_port_text,
     _net_port_text,
+    function_text,
     unit_designation,
 )
 from .lone_cable import lone_cable
@@ -141,7 +142,7 @@ def _boundary_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineBoundar
         if record.unit != unit:
             continue
         fn = functions(model)[record.function]
-        designation = f"{unit_designation(model, unit, fn.item)}:{fn.name}"
+        designation = function_text(model, unit, fn)
         port_names = tuple(
             sorted(p.name for p in ports(model).values() if p.function == record.function)
         )

@@ -85,7 +85,7 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
     ) -> Location:
         """A repeat call for `name`: it may add its text once, and never moves the place."""
         node, had = known
-        records = self._engine._design.draft()._records  # A place a device made first
+        records = self._engine._design._draft._records  # A place a device made first
         old = records[node.id]
         if outer is not None and old.parent != outer.id:  # ty: ignore[unresolved-attribute] -- the record of a place is an AspectNode
             msg = f"place {name!r} already exists elsewhere; give within= when it is first made"

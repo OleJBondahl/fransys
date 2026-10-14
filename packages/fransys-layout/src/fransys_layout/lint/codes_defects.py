@@ -2,6 +2,8 @@
 
 from fransys_model.kernel import CodeInfo, Severity
 
+COULD_NOT_DRAW = "Fransys could not draw this cleanly; please report it with the smallest model"
+
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="DIAGRAM_BOX_OVERLAP",
@@ -9,6 +11,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="render",
         who="Fransys",
         cause="Two boxes of a block diagram or of an overview view, or a tab and a box, overlap.",
+        fix="A Fransys defect: send the smallest model that shows it.",
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="DIAGRAM_LABEL_STRUCK",
+        severities=(Severity.ERROR,),
+        stage="render",
+        who="Fransys",
+        cause="A line of a block diagram or an overview view passes through a line label.",
         fix="A Fransys defect: send the smallest model that shows it.",
         page="findings-render",
     ),
@@ -34,6 +45,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="DIAGRAM_LINES_SHARE_TRACK",
+        severities=(Severity.ERROR,),
+        stage="render",
+        who="Fransys",
+        cause="Two cables of a block diagram or an overview view run along one track.",
+        fix="A Fransys defect: send the smallest model that shows it.",
+        page="findings-render",
+    ),
+    CodeInfo(
         code="DIAGRAM_TEXT_OVERLAP",
         severities=(Severity.ERROR,),
         stage="render",
@@ -44,23 +64,23 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="JOIN_UNALIGNED",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause=(
             "Same-net, same-facing ports at one end of neighbouring columns could not be "
             "aligned onto one row, so layout drew references."
         ),
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="LINE_ON_OUTLINE",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="A harness line runs along a unit outline's edge, so the two read as one stroke.",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
@@ -108,25 +128,25 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="POWER_SYMBOL_UNPLACED",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause=(
             "No lead of up to 12 grids kept a power symbol clear of its neighbours, so it "
             "keeps one grid and may touch."
         ),
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="REDUNDANT_JOG",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause=(
             "A drawn route leaves a straight line and returns to it where a straight run was free."
         ),
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
@@ -154,6 +174,19 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="STUBS_NOT_STACKED",
+        severities=(Severity.INFO,),
+        stage="render",
+        who="note",
+        cause=(
+            "Leaving-line stubs of one page whose texts meet found no free staircase "
+            "(layout-0256): the room, a shape or another line was in the way. They stay as drawn "
+            "and their texts overlap. The message names the page."
+        ),
+        fix="Move a unit or cable so the lines leave apart, or send the smallest model showing it.",
+        page="findings-render",
+    ),
+    CodeInfo(
         code="SYMBOL_DEFAULTED",
         severities=(Severity.INFO,),
         stage="render",
@@ -169,58 +202,58 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="SYMBOL_OVERLAP",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="The keep-out boxes of two symbols on one page overlap.",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="TEXT_CROSSED_BY_ROUTE",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="A link marker's stub runs through a text box (a label or another marker's box).",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="TEXT_OVERLAP",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause=(
             "Two texts on a page overlap, or a text overlaps a symbol body it does not belong to."
         ),
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="WIRE_NOT_ORTHOGONAL",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="A drawn route has a non-orthogonal segment (not purely horizontal or vertical).",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="WIRE_OVER_LABEL",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="A drawn route runs through a label's (or link marker's) box.",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
         code="WIRE_THROUGH_SYMBOL",
-        severities=(Severity.WARNING,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="A drawn route runs through the keep-out box of a symbol it does not end at.",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
 )

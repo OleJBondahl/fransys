@@ -15,10 +15,11 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .designation import location_node_designation, own_nodes
+from .designation import own_nodes
 from .lookups import effective_placement
 from .order import natural_key
 from .overview_levels import level_box
+from .overview_names import node_lines
 from .rows import ItemKind, OverviewBox
 from .rows_overview import FoldBox
 from .unit_nodes import chain_up
@@ -29,7 +30,6 @@ __all__ = [
     "fold_box",
     "fold_key",
     "group_box",
-    "group_text",
     "strips_box",
 ]
 
@@ -88,19 +88,13 @@ def fold_box(box: OverviewBox) -> FoldBox:
     )
 
 
-def group_text(model: Model, node: Id[AspectNode]) -> tuple[str, ...]:
-    """The printed lines of a function group: its designation, then its name; none when empty."""
-    text = (location_node_designation(model, node), aspect_nodes(model)[node].description)
-    return tuple(line for line in text if line)
-
-
 def group_box(
     model: Model, node: Id[AspectNode], members: list[OverviewBox], inner_lines: int
 ) -> FoldBox:
     """A function group as one box: its designation and name, its counts of what it holds."""
     return FoldBox(
         key=OverviewRef(kind=OverviewRefKind.GROUP, node=node),
-        lines=group_text(model, node),
+        lines=node_lines(model, node),
         tabs=(),
         dashed=False,
         item_kind=None,

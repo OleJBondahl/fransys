@@ -82,6 +82,7 @@ class FrameChannel:
     tracks: tuple[FrameTrack, ...]
     count: int
     width: int
+    same_first: bool = False  # the `same` lines hold tracks 1.., `tracks` count after them
 
     def track_x(self, track: int) -> int:
         """The x of track `track` (1 first), left of the right column's tabs."""

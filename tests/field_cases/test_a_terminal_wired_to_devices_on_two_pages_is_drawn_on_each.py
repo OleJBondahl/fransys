@@ -3,7 +3,7 @@
 The engineering shape: one unit holds a run of relays in one function, so many that, on a
 coarse sheet module, the function spans several pages. Interface strip terminal X1:1 feeds every
 coil, so its conductors end on different pages; X1:2 feeds the other coil pin
-of K3 from one side and of K8 from the other, two nets of two ports each.
+of K3 from one side and of K12 from the other, two nets of two ports each.
 A second build chains the relays' other coil pins in a row, so a device-to-device conductor
 crosses a page break.
 
@@ -63,7 +63,7 @@ def _bank(*, chained: bool):
             u.wire(terminal, relay.coil["A1"], wire=("WH", 0.75))
         if not chained:  # two two-port nets, one per side of X1:2
             u.wire(feed[2], relays[2].coil["A2"], wire=("WH", 0.75))
-            u.wire(feed[2].outer, relays[-5].coil["A2"], wire=("WH", 0.75))
+            u.wire(feed[2].outer, relays[-1].coil["A2"], wire=("WH", 0.75))
         if chained:
             for a, b in itertools.pairwise(relays):
                 u.wire(a.coil["A2"], b.coil["A2"], wire=("BU", 0.75))
@@ -167,7 +167,7 @@ def test_a_device_to_device_conductor_across_pages_keeps_its_marker_pair() -> No
 
 
 def test_a_terminal_wired_to_one_device_on_another_page_is_drawn_and_routed_there() -> None:
-    """X1:2's two nets end at K3 and K8, on two pages: the terminal stands on both, and each
+    """X1:2's two nets end at K3 and K12, on two pages: the terminal stands on both, and each
     wire is a route on its relay's page with no marker at either end."""
     model = _model()
     terminal = {
@@ -176,8 +176,8 @@ def test_a_terminal_wired_to_one_device_on_another_page_is_drawn_and_routed_ther
     stood = {p.page for p in layout_of(model, SymbolPlacement).values() if p.function in terminal}
     routed = {(r.conductor, r.page) for r in layout_of(model, Route).values()}
     marked = {m.port for m in layout_of(model, LinkMarker).values()}
-    assert _coil_page(model, 3) != _coil_page(model, 8)
-    for n in (3, 8):
+    assert _coil_page(model, 3) != _coil_page(model, 12)
+    for n in (3, 12):
         pin = _coil(model, n, "A2")
         (conductor,) = (c for c in conductors(model).values() if pin in (c.a, c.b))
         assert _coil_page(model, n) in stood

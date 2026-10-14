@@ -2,11 +2,12 @@
 
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.image_refs import holds_list, listed
 from fransys_layout.stages.images import ImageInputs
-from fransys_model.derive import NO_PLACE, owned_contacts
-from fransys_model.derive.contact_entries import contact_entries, image_order
+from fransys_model.derive import NO_PLACE, contact_list_key, owned_contacts
 from fransys_model.derive.drawing_text import coil_heading, contact_marks
-from fransys_model.vocab.tables import functions as functions_table
+
+from .units import containing_units
 
 if TYPE_CHECKING:
     from fransys_layout.stages import FunctionSpec
@@ -20,9 +21,7 @@ def image_marks_of(
 ) -> dict[Id[Any], tuple[list[str], list[str]]]:
     """Each contact function of `functions` -> the marks it lists under NO and under NC."""
     return {
-        spec.function: contact_marks(model, spec.function)
-        for spec in functions
-        if spec.roles.contact
+        spec.function: contact_marks(model, spec.function) for spec in functions if listed(spec)
     }
 
 
@@ -34,8 +33,9 @@ def image_inputs(model: Model, inputs: StageInputs) -> ImageInputs:
         for item in {spec.item for spec in every}
         for contact in owned_contacts(model, item)
     }
+    owners.update({s.function: s.switch_group for s in every if s.switch_group is not None})
     marks = image_marks_of(model, every)
-    row_order = {function: _row_order(model, function) for function in marks}
+    row_order = {function: contact_list_key(model, function) for function in marks}
     return ImageInputs(
         inputs.functions,
         inputs.sheet,
@@ -46,14 +46,9 @@ def image_inputs(model: Model, inputs: StageInputs) -> ImageInputs:
         row_order=row_order,
         no_place=NO_PLACE,
         heads={
-            s.function: coil_heading(model, s.item)
+            (s.function, one): coil_heading(model, s.item, unit=one)
             for s in inputs.functions
-            if s.roles.contacts_apart
+            if holds_list(s)
+            for one in (None, *containing_units(model, s.unit))
         },
     )
-
-
-def _row_order(model: Model, function: Id[Any]) -> tuple[Any, ...]:
-    """model-0138: a contact's first entry by `image_order`, the key of its table row."""
-    no, nc = contact_entries(model, functions_table(model)[function])
-    return min(map(image_order, (*no, *nc)), default=())

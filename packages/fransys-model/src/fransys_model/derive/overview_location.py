@@ -13,10 +13,11 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item
 
-from .designation import location_node_designation, unit_location
+from .designation import unit_location
 from .lookups import effective_placement
 from .order import natural_key
 from .overview_levels import overview_level
+from .overview_names import node_lines
 from .rows_overview import LocationBox, LocationFold, LocationLine
 lazy from .rows import OverviewLevel
 
@@ -56,25 +57,19 @@ def _box_place(model: Model, box: Id[Any]) -> Id[AspectNode] | None:
     return _top(model, effective_placement(model, box, Aspect.LOCATION))
 
 
-def _place_lines(model: Model, place: Id[AspectNode]) -> tuple[str, ...]:
-    """A place's printed lines: its designation, then its description when it has one."""
-    text = (location_node_designation(model, place), aspect_nodes(model)[place].description)
-    return tuple(t for t in text if t)
-
-
 def location_place_title(model: Model, place: Id[AspectNode]) -> str:
     """A place's printed title, its designation then its text on one line (`+ER Engine room`).
 
     The box prints these as two lines; the overview's panel prints the title. One spelling.
     """
-    return " ".join(_place_lines(model, place))
+    return " ".join(node_lines(model, place))
 
 
 def _place_box(model: Model, place: Id[AspectNode] | None, members: list[Id[Any]]) -> LocationBox:
     """One place as a box: its designation and description, or "No location"."""
     if place is None:
         return LocationBox(place=None, lines=("No location",), boxes=tuple(members))
-    return LocationBox(place=place, lines=_place_lines(model, place), boxes=tuple(members))
+    return LocationBox(place=place, lines=node_lines(model, place), boxes=tuple(members))
 
 
 def _lines(

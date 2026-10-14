@@ -35,10 +35,10 @@ _ORIGIN = Origin(
 # Step 5 (layout-0093): a wire that turns back round its device is a reference pair, so the
 # wide golden holds 8 markers and the narrow one 9.
 # A contact moves under its far pin (layout-0103), so one more wire
-# is drawn whole: 7 and 8.
+# is drawn whole: 7 and 8. A series hop from a pin hangs as a wire (layout-0224): 4 and 6.
 _EXPECTED_MARKER_COUNTS = {
-    "cabinet_laid_out": 6,
-    "cabinet_narrow_laid_out": 8,
+    "cabinet_laid_out": 4,
+    "cabinet_narrow_laid_out": 6,
 }
 # A harness line (layout-0154) leaves its page by an OFF line stub at the end of a
 # 48 G leaving line, not at a port, so these markers are counted but match no port.

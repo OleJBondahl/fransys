@@ -52,9 +52,8 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.wiring": surface("Design.wire"),
     "Wiring.__call__": surface("Design.wire(n=)"),
     "Wiring.run": surface("Design.wire"),
-    "Scope.net": surface("Design.earth")
-    + surface("Design.net(kind=)")
-    + dropped(f"net(potential=): {_RAILS}"),
+    "Scope.earth": surface("Design.earth"),
+    "Scope.net": surface("Design.net(kind=)") + dropped(f"net(potential=): {_RAILS}"),
     "LinkScope.link": (
         surface("Design.device(mounted_on=)")
         + surface("Design.device(joins=)")

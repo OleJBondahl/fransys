@@ -13,6 +13,7 @@ _SWITCH = ("function_kind", "switch")
 _GENERIC = ("function_kind", "generic")
 _PROTECTION = ("function_kind", "protection")
 _CONNECTOR = ("function_kind", "connector")
+_APART = ("actuator_drawn", "no")
 
 
 def _by_type(row: str, value: str, symbol: str) -> Row:
@@ -39,6 +40,15 @@ SYMBOL_DEFAULTS = Table(
     "symbol defaults",
     "first match",
     (
+        # layout-0237: a grouped switch other than its lead draws its contact alone, with the
+        # marks that belong to the contact (an e-stop's positive opening)
+        Row(
+            "T2.29",
+            all_(_SWITCH, _APART, ("operated_by", "mushroom"), ("rest_state", "rest")),
+            "break-contact-positive-opening",
+        ),
+        Row("T2.30", all_(_SWITCH, _APART, ("rest_state", "operated")), "make-contact"),
+        Row("T2.31", all_(_SWITCH, _APART, ("rest_state", "rest")), "break-contact"),
         _operated("T2.22", "push", "operated", "push-button"),
         _operated("T2.23", "push", "rest", "push-button-break"),
         _operated("T2.24", "mushroom", "rest", "emergency-stop"),

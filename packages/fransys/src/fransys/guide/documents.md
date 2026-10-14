@@ -15,7 +15,7 @@ stem plus `.notes.md`, is read automatically when present and becomes the docume
 page; there is no separate `notes` parameter, and a missing notes file is not an error, it just
 means no notes page. `logo` is an optional path to an SVG for the title block's logo cell, read the same way; leaving it out (the
 default) leaves that cell empty. `notice` is the text of the title block's IP notice cell, printed
-on every page of that document; `""` (the default) leaves the cell empty. A unit released alone
+on every page of that document; `""` (the default) leaves the cell empty. On A3 the cell is about 92 mm wide and holds about 370 characters at the label size. A longer notice gives `TITLE_BLOCK_NOTICE_OVERFLOW`. Customer and Author are narrower than with no notice. A unit released alone
 needs no `d.project` for either; its Author cell prints `created` of the unit's current revision, a project document's the project's `author`. `d.project(notice=...)` raises: the notice moved here.
 
 Every preset also takes `PageKind.SHEET_INDEX`, a "Sheets" page after the notes that lists each
@@ -157,6 +157,8 @@ assert any(p.suffix == ".pdf" for p in fr.write(result, Path("out")))
 pdfs = {key: name for key, name in fr.export_names(result).items() if key[0] == "pdf"}
 assert list(pdfs.values()) == ["cable-cabinet-v1.1.pdf"]  # the key is ("pdf", <document id>)
 ```
+
+A `TERMINAL_LIST` page lists the terminal strips of each unit and location. A document whose design has no unit and no location lists nothing, so declare a unit or a location to get the page.
 
 ## Block diagrams
 

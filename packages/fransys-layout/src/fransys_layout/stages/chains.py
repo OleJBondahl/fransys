@@ -59,6 +59,7 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import AuthoringKey
 
+    from ._chain_state import _Nets, _Poles, _Reach, _Sides, _Walks
     from .types import (
         Column,
         Connection,
@@ -126,15 +127,27 @@ def discover_chains(
     drop_unwired_poles(walks, state, nets, found)
     settle_turns(walks, state, nets, found)
     bundle_chains(walks, state, links, specs, key_order)
-    reach = start_reach(state, nets, specs, drawn_of, found.side_info)
-    reach.fixed = records.fixed
-    vote_columns(reach, walks, connections)
+    reach = _voted_reach(records, (state, nets, found, walks), specs, drawn_of)
     built = build_cells(state, walks, found, reach, specs)
     reads = _AttachReads(
         specs, drawn_of, nets.members, nets.net_of, state.port_function, connections, links.detached
     )
     built = _attach(built, reads)
     return _finish_columns(built, specs)
+
+
+def _voted_reach(
+    records: ChainRecords,
+    seen: tuple[_Poles, _Nets, _Sides, _Walks],
+    specs: Mapping[Handle, FunctionSpec],
+    drawn_of: Mapping[Handle, DrawnFunction],
+) -> _Reach:
+    """The reach state with the item-box ports' fixed sides, after the column vote."""
+    state, nets, found, walks = seen
+    reach = start_reach(state, nets, specs, drawn_of, found.side_info)
+    reach.fixed = records.fixed
+    vote_columns(reach, walks, records.connections)
+    return reach
 
 
 def _finish_columns(

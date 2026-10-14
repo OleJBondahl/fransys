@@ -1,5 +1,7 @@
 """Selector blocks, a limit switch and a push button draw by what operates them (layout-0220).
 
+A device's actuator is drawn once, at its lead contact (layout-0237, ACTUATOR-ONCE).
+
 OPERATED-BY A3 and A4: one invented cabinet built once through the public API; the drawn symbols
 are layout records, read through `fransys_model.layout`.
 """
@@ -20,6 +22,7 @@ def drawn() -> dict[str, str]:
     d.project(title="Operators", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-14", text="First issue", created="XX")
     cabinet = d.location("CAB", "Cabinet")
+    d.layout.profile(actuator_each_contact=False)  # one actuator per device (the default is True)
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     head = d.device("S1", "DEMO-HEAD-SEL")
     devices = {
@@ -43,12 +46,14 @@ def drawn() -> dict[str, str]:
     return found
 
 
-def test_a_selector_heads_blocks_draw_the_selector(drawn: dict[str, str]) -> None:
-    assert (drawn["sel-no.no"], drawn["sel-nc.nc"]) == ("selector-make", "selector-break")
+def test_a_selector_heads_blocks_draw_the_selector_once(drawn: dict[str, str]) -> None:
+    """layout-0237: the lead (11-12 lists first) draws the selector, the other block plain."""
+    assert (drawn["sel-no.no"], drawn["sel-nc.nc"]) == ("make-contact", "selector-break")
 
 
-def test_a_limit_switch_draws_the_position_switch(drawn: dict[str, str]) -> None:
-    assert (drawn["ls.no"], drawn["ls.nc"]) == ("position-switch-make", "position-switch-break")
+def test_a_limit_switch_draws_the_position_switch_once(drawn: dict[str, str]) -> None:
+    """layout-0237: the lead (13-14 lists first) draws the roller, the break contact plain."""
+    assert (drawn["ls.no"], drawn["ls.nc"]) == ("position-switch-make", "break-contact")
 
 
 def test_the_demo_push_button_draws_the_push_button_break(drawn: dict[str, str]) -> None:

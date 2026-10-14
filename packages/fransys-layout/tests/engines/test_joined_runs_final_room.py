@@ -3,7 +3,7 @@
 `references` decides a page's joined runs on the page as `place` stacks it before any text
 exists (`place.page_stack`). `place` then stacks the page with its reference and stub texts
 (`texts`), whose room at a column's end is the page's margin (Room's N or S call). Each
-case's build records every `place` call of the engine (`pagerun.place`, every attempt), with the
+case's build records every `place` call of the engine (`_page_place.place`, every attempt), with the
 page as `references` read it and as `place` stacks it with the texts. Two claims: the texts
 change `room` alone, never a port's row or offset, a column's height or its last row; and every
 joined run fits the final room (`join_y`), since `place` never refuses a run and a run
@@ -35,7 +35,7 @@ from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
-from fransys_layout.stages import pagerun
+from fransys_layout.stages import _page_place
 from fransys_layout.stages.place import page_stack, place
 from fransys_layout.stages.stacking import JoinedRun, JoinEnd, PageStack, join_y
 from fransys_model.kernel import Model, freeze
@@ -98,7 +98,7 @@ def _pages(case: str) -> tuple[_Page, ...]:
         )
         return place(plan, columns, drawn, stacking, joins)
 
-    with mock.patch.object(pagerun, "place", recording):
+    with mock.patch.object(_page_place, "place", recording):
         _CASES[case]()
     return tuple(pages)
 
@@ -109,11 +109,20 @@ def _ends(run: JoinedRun, stack: PageStack) -> tuple[JoinEnd, ...]:
         JoinEnd(
             port=end.port,
             row=stack.ports[end.column, end.port].row,
-            offset=stack.ports[end.column, end.port].offset,
+            offset=stack.ports[end.column, end.port].offset + end.drop,
             height=stack.heights[end.column],
         )
         for end in run.ends
     )
+
+
+def _fits(run: JoinedRun, final: PageStack) -> bool:
+    """Whether `run` fits `final`: `join_y` for a level run, the anchor's y for a hung one."""
+    ends = _ends(run, final)
+    anchors = [end.offset for end, joined in zip(ends, run.ends, strict=True) if joined.anchor]
+    if not anchors:
+        return join_y(ends, final.room) is not None
+    return all(end.height + anchors[0] - end.offset <= final.room for end in ends)
 
 
 @pytest.mark.parametrize("case", sorted(_CASES))
@@ -146,6 +155,6 @@ def test_every_joined_run_fits_the_final_room(case: str) -> None:
     #     to the sink when `texts` is given (margin added after the decision): the runs on
     #     pages with texts (the feed fanning's, the coil hub's) no longer fit
     runs = [(run, page.final) for page in _pages(case) for run in page.joins]
-    assert [run for run, final in runs if join_y(_ends(run, final), final.room) is None] == []
+    assert [run for run, final in runs if not _fits(run, final)] == []
     if case in _JOINING:
         assert runs

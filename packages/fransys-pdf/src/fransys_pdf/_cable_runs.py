@@ -9,7 +9,7 @@ A block taller than the page body never reaches the flow: `check` stops it first
 from collections import defaultdict
 from typing import TYPE_CHECKING, NamedTuple
 
-from ._frame import text_margin
+from ._frame import PADDING_MM, text_margin
 from ._labels import RESTART
 from ._typst import literal
 
@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from fransys_model.layout import SheetFormat
 
 NO_PART = "No part number"
-_PADDING_MM = 5  # `_frame`'s padding on each side of the content box
 _HEADER_MM = 11  # extra top margin: the part line and a 4 mm gap below it (pdf-0021)
 
 
@@ -34,8 +33,8 @@ class Block(NamedTuple):
 def body_size_mm(sheet: SheetFormat) -> tuple[int, int]:
     """The width and height in mm that a run's blocks may fill on `sheet`'s page body."""
     return (
-        sheet.content_width_mm - 2 * _PADDING_MM,
-        sheet.content_height_mm - 2 * _PADDING_MM - _HEADER_MM,
+        sheet.content_width_mm - 2 * PADDING_MM,
+        sheet.content_height_mm - 2 * PADDING_MM - _HEADER_MM,
     )
 
 
@@ -93,7 +92,7 @@ def _flow(bodies: list[str], width_mm: float, height_mm: float) -> str:
     return _FLOW % {
         "w": f"{width_mm:g}mm",
         "h": f"{height_mm:g}mm",
-        "gap": f"{_PADDING_MM}mm",
+        "gap": f"{PADDING_MM}mm",
         "items": items,
     }
 

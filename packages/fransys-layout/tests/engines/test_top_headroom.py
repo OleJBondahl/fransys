@@ -16,7 +16,7 @@ from dd_chain_fixtures import build, design
 from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
-from fransys_layout.engines.schematic import engine, run_stages
+from fransys_layout.engines.schematic import _inputs, run_stages
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import PAGE_PAD
@@ -35,7 +35,7 @@ def _set_room(monkeypatch: pytest.MonkeyPatch, *, lanes: int, text_room: bool) -
     a text lift and sink of zero and a band of zero. (`fransys_layout.stages.place`
     names the re-exported function, so the module comes from `importlib`.)
     """
-    monkeypatch.setattr(engine, "TOP_HEADROOM_LANES", lanes)
+    monkeypatch.setattr(_inputs, "TOP_HEADROOM_LANES", lanes)
     if not text_room:
         module = importlib.import_module("fransys_layout.stages.place")
         monkeypatch.setattr(module, "_text_room", lambda *_: (0, 0))

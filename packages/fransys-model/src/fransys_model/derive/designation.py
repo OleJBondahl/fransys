@@ -13,7 +13,7 @@ lazy from collections.abc import Iterable
 
 from fransys_model.derive.accessory_blocks import is_contact_block, items_with_a_function_below
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.derive.instance_tag import instance_designation, unit_root
+from fransys_model.derive.instance_tag import dashed, instance_designation, unit_root
 from fransys_model.derive.lone_cable import printing_item
 from fransys_model.derive.lookups import effective_placement, printed_port_name, require, strip_set
 from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
@@ -327,8 +327,8 @@ def terminal_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None 
         raise SchemaError(msg, kind="item", record_id=item)
     if record.parent is not None and terminal_of(model, item) is not None:
         strip = item_designation(model, record.parent, unit=unit)
-        return f"-{strip}:{_own_designation(model, item)}"
-    return f"-{item_designation(model, item, unit=unit)}"
+        return dashed(f"{strip}:{_own_designation(model, item)}")
+    return dashed(item_designation(model, item, unit=unit))
 
 
 def connector_label(marking: str | None, name: str) -> str | None:
@@ -398,7 +398,7 @@ def connector_segments(labels: Iterable[str | None]) -> tuple[str, ...]:
     given = tuple(labels)
     if sum(1 for label in given if label) <= 1:
         return ("",) * len(given)
-    return tuple(f"-{label}" if label else "" for label in given)
+    return tuple(dashed(label) if label else "" for label in given)
 
 
 def connector_segment(model: Model, function: Id[Function]) -> str:
@@ -620,7 +620,7 @@ def printed_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None =
     record = items(model).get(item)
     if record is not None and record.parent is not None and terminal_of(model, item) is not None:
         return terminal_designation(model, item, unit=unit)
-    return f"-{item_designation(model, item, unit=unit)}"
+    return dashed(item_designation(model, item, unit=unit))
 
 
 def end_outside_nested_unit(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
@@ -731,5 +731,5 @@ def product_designation(model: Model, item: Id[Item]) -> str:
     own = item_designation(model, item)
     location = location_designation(model, item)
     if location is None:
-        return f"-{own}"
+        return dashed(own)
     return f"{location}-{own}"

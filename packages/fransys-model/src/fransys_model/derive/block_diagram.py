@@ -204,11 +204,16 @@ def _tab(model: Model, box: Id[Any], ends: list[BoxEnd], unit: Id[Unit] | None) 
     return printed_designation(model, landed.pop(), unit=reading)
 
 
+def _branch_text(designation: str, branch: int, count: int) -> str:
+    """`-W1` for the cable's one line, `-W1.n` on each line of a fan-out (as a harness line)."""
+    return designation if count == 1 else f"{designation}.{branch}"
+
+
 def diagram_lines(model: Model, unit: Id[Unit] | None) -> tuple[DiagramLine, ...]:
     """The lines of `unit`'s diagram, sorted; none means the reading gets no page.
 
     A cable reaching two boxes is one line. One box, or none: no line. Three or more: one line
-    from the first box in text order to each other box.
+    from the first box in text order to each other box, each designated `-W1.n` for n from 1.
     """
     lines = []
     for cable in _reading_cables(model, unit):
@@ -219,11 +224,11 @@ def diagram_lines(model: Model, unit: Id[Unit] | None) -> tuple[DiagramLine, ...
                 cable=cable.cable,
                 a=boxes[0],
                 b=other,
-                designation=cable.designation,
+                designation=_branch_text(cable.designation, n, len(boxes) - 1),
                 tab_a=_tab(model, boxes[0], ends[boxes[0]], unit),
                 tab_b=_tab(model, other, ends[other], unit),
             )
-            for other in boxes[1:]
+            for n, other in enumerate(boxes[1:], start=1)
         )
     return tuple(
         sorted(

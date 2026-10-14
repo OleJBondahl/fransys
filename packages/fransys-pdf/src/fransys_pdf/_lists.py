@@ -5,7 +5,6 @@ own (`derive.rows`), the same objects `fransys_reports.csv` prints from: a root 
 that neither package keeps a copy of its own.
 """
 
-from itertools import product
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
@@ -22,7 +21,6 @@ from fransys_model.derive import (
     WIRE_COLUMNS,
     boards,
     bom_lines,
-    build_indexes,
     cable_list_rows,
     cell_parts,
     cell_text,
@@ -33,6 +31,7 @@ from fransys_model.derive import (
     cores_text,
     designation_list,
     document_unit,
+    ends_without_jumpers,
     is_own_unit_root,
     items_at,
     list_context,
@@ -40,7 +39,7 @@ from fransys_model.derive import (
     plc_list_rows,
     plc_tables,
     printed_designation,
-    terminal_items,
+    strip_side_headings,
     terminal_rows,
     terminal_strips,
     unit_connector_items,
@@ -48,17 +47,13 @@ from fransys_model.derive import (
     wire_rows,
 )
 from fransys_model.vocab import (
-    ConductorKind,
     DocumentPreset,
-    PortRole,
-    conductors,
     functions,
     items,
-    ports,
 )
 
 from ._bridge import BRIDGE_COLUMN_WIDTH_MM, bridge_cell_typst, bridge_geometry, bridge_lane_x_mm
-from ._flow import flow_columns
+from ._flow import GUTTER_PCT, SHARE_PCT, flow_columns
 from ._marks import LIST_HEADING
 from ._tables import table_source
 from ._typst import description_par, literal
@@ -74,11 +69,7 @@ if TYPE_CHECKING:
         WireRow,
     )
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode, Conductor, Document, Item, Unit
-
-
-_SHARE_PCT = 40  # a list's column, of the content width (pdf-0026, L1)
-_GUTTER_PCT = 20
+    from fransys_model.vocab import AspectNode, Document, Item, Unit
 
 
 def _humanise(field: str) -> str:
@@ -161,7 +152,7 @@ def plc_list_page(model: Model, record: Document) -> str:
                 PLC_COLUMNS, rows, ("wired_to", "signal_name"), title=title, label=f"plc{number}"
             )
         )
-    return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
+    return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
 def _list_context(model: Model, record: Document, subject: Id[Item]) -> Id[AspectNode] | None:
@@ -195,7 +186,7 @@ def wire_label_list_page(model: Model, record: Document) -> str:
         column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
         ("from_", "to", "label"),  # every free-text column: `auto` ones starve a `1fr` (pdf-0027)
     )
-    return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
+    return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
 def designation_list_page(model: Model, record: Document) -> str:
@@ -207,7 +198,7 @@ def designation_list_page(model: Model, record: Document) -> str:
         ),
         ("description",),
     )
-    return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
+    return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
 def cable_list_page(model: Model, record: Document) -> str:
@@ -280,60 +271,16 @@ def terminal_list_page(model: Model, record: Document) -> str:
             _list_heading(title)
             + description_par(items(model)[strip].description)  # author-0013
             + _terminal_table(
-                model, rows, _side_headings(model, strip), title=title, label=f"term{number}"
+                model, rows, strip_side_headings(model, strip), title=title, label=f"term{number}"
             )
         )
-    return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
-
-
-def _side_headings(model: Model, strip: Id[Item]) -> tuple[str, str]:
-    """Ends headings: the strip's shared non-empty markings, else `TERMINAL_LABELS` (pdf-0012)."""
-    idx = build_indexes(model)
-    terminals = terminal_items(model)
-    pairs: set[tuple[str | None, str | None]] = set()
-    for child in idx.children_by_item.get(strip, ()):
-        if child not in terminals:
-            continue
-        markings: dict[PortRole, set[str | None]] = {
-            PortRole.INTERNAL: set(),
-            PortRole.EXTERNAL: set(),
-        }
-        for function in idx.functions_by_item.get(child, ()):
-            for port in idx.ports_by_function.get(function, ()):
-                record = ports(model)[port]
-                if record.role in markings:
-                    markings[record.role].add(record.marking)
-        pairs.update(
-            product(markings[PortRole.INTERNAL] or {None}, markings[PortRole.EXTERNAL] or {None})
-        )
-    if len(pairs) == 1:
-        internal, external = next(iter(pairs))
-        if internal and external:
-            return internal, external
-    return TERMINAL_LABELS["internal_ends"], TERMINAL_LABELS["external_ends"]
+    return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
 # -- the Bridge column (pdf-0007) --------------------------------------------------
 
 _TERMINAL_DATA = TERMINAL_COLUMNS[:-1]  # designation, group, index, internal_ends, external_ends
 _TERMINAL_SIDES = ("internal_ends", "external_ends")  # both unbounded text: `1fr` each (pdf-0008)
-
-
-def _ends_without_jumpers(
-    model: Model, row: TerminalRow
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """`row`'s (internal, external) ends without jumper partners, which the Bridge shows."""
-    all_conductors = conductors(model)
-
-    def kept(ids: tuple[Id[Conductor], ...], ends: tuple[str, ...]) -> tuple[str, ...]:
-        wired = tuple(
-            end
-            for conductor, end in zip(ids, ends, strict=False)
-            if all_conductors[conductor].kind is not ConductorKind.JUMPER
-        )
-        return (*wired, *ends[len(ids) :])  # the open cores come after the conductors' ends
-
-    return kept(row.internal, row.internal_ends), kept(row.external, row.external_ends)
 
 
 def _terminal_table(
@@ -355,7 +302,7 @@ def _terminal_table(
     values = []
     for row in rows:
         ends = dict(
-            zip(("internal_ends", "external_ends"), _ends_without_jumpers(model, row), strict=True)
+            zip(("internal_ends", "external_ends"), ends_without_jumpers(model, row), strict=True)
         )
         values.append(tuple(ends.get(name, getattr(row, name)) for name in _TERMINAL_DATA))
     kept = _kept_columns(values, len(_TERMINAL_DATA))  # empty columns are not drawn (pdf-0011)
@@ -412,4 +359,4 @@ def connector_list_page(model: Model, record: Document) -> str:
                 labels=CONNECTOR_LABELS,
             )
         )
-    return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
+    return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)

@@ -6,8 +6,8 @@ runs to three two-pin headers, two wires to each.
 The bug: the three header boxes are placed one box-width apart or less, so they stand
 over each other on the page, their texts overprint and the fan-out's branch labels sit on one
 another. TEXT_OVERLAP reports two of the pairs; the boxes themselves are never compared.
-CLEANUP-ROUND-2 CL8 holds the row (the round 1 rows 4 and 6 and the fan-out of the tall
-page); no decision has fixed it.
+CLEANUP-ROUND-2 CL8 held the row (the round 1 rows 4 and 6 and the fan-out of the tall
+page). Fixed by layout-0233: a boxed pin view holds its box's width in its column, flipped or not.
 """
 
 import sys
@@ -18,7 +18,6 @@ from typing import Any
 
 import fransys as fr
 import fransys_parts
-import pytest
 
 sys.path.insert(
     0, str(Path(__file__).parent)
@@ -79,7 +78,6 @@ def _overlaps(a: Any, b: Any) -> bool:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="CL8: adjacent two-pin header boxes overlap")
 def test_no_two_far_header_boxes_overlap() -> None:
     boxes = _far_boxes()
     assert len(boxes) == 3
@@ -88,7 +86,6 @@ def test_no_two_far_header_boxes_overlap() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="CL8: adjacent two-pin header boxes overlap")
 def test_the_page_reports_no_text_overlap() -> None:
     assert len(_far_boxes()) == 3
     assert "TEXT_OVERLAP" not in {f.code for f in _built().findings}

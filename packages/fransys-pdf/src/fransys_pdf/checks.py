@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
+    document_facts,
     document_unit,
     location_node_designation,
     unit_release,
@@ -39,15 +40,16 @@ from ._drawings import (
     system_has_no_top_level_cables,
 )
 from ._frame import (
+    CellContext,
     TitleBlockFields,
     band_height_mm,
     field_cell,
     notice_cell_size_mm,
     notice_fits,
+    notice_room_chars,
     title_block_fits,
 )
 from ._geometry import (
-    document_facts,
     mixed_sheet_formats,
     resolve_sheet_format,
 )
@@ -135,6 +137,7 @@ class _FieldTarget:
     subject: _DocId
     sheet: SheetFormat
     sizes: Sizes
+    notice: bool = False
 
 
 def _one_line_overflow_finding(
@@ -144,7 +147,9 @@ def _one_line_overflow_finding(
 
     A page title's message names `d.layout.page_title`, the way to set a title that fits (PT1).
     """
-    shown, ok, _printed = field_cell(target.sheet, target.sizes, field, text, shorter=shorter)
+    shown, ok, _printed = field_cell(
+        CellContext(target.sheet, target.sizes, target.notice), field, text, shorter=shorter
+    )
     if ok:
         return None
     remedy = "; set a shorter title with d.layout.page_title" if field == "page_title" else ""
@@ -171,7 +176,9 @@ def _document_level_overflow_findings(
         "revision_date": revision_date,
         "author": author,
     }
-    target = _FieldTarget(subject=subject, sheet=sheet, sizes=sizes_of(model, record))
+    target = _FieldTarget(
+        subject=subject, sheet=sheet, sizes=sizes_of(model, record), notice=bool(record.notice)
+    )
     findings = []
     for field in _DOCUMENT_LEVEL_ONE_LINE_FIELDS:
         finding = _one_line_overflow_finding(
@@ -244,7 +251,9 @@ def _text_overflow_findings(
     sheet = resolve_sheet_format(model, record, pages)
     if not title_block_fits(sheet):
         return ()
-    target = _FieldTarget(subject=subject, sheet=sheet, sizes=sizes_of(model, record))
+    target = _FieldTarget(
+        subject=subject, sheet=sheet, sizes=sizes_of(model, record), notice=bool(record.notice)
+    )
     return _document_level_overflow_findings(model, subject, record, sheet) + (
         _page_overflow_findings(model, target, record, pages, svgs)
     )
@@ -269,6 +278,7 @@ def _notice_overflow_findings(model: Model) -> tuple[Finding, ...]:
                     subjects=(record.id,),
                     message=(
                         "the notice does not fit the title block's notice cell, cut; "
+                        f"the cell holds about {notice_room_chars(sheet, sizes)} characters; "
                         "shorten fr.document(notice=...)"
                     ),
                 ),

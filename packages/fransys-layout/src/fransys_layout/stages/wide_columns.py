@@ -12,6 +12,7 @@ from ._polelinks import pole_links
 from .extent import page_extras, room_boxes
 from .lane_runs import lane_runs
 from .lookups import placed_keepout
+from .part_keys import base_and_first, part_key_of
 from .types import ColumnWidth
 
 if TYPE_CHECKING:
@@ -30,24 +31,32 @@ _LANE = "lane"
 
 
 def lane_of(column: Column) -> dict[Handle, int]:
-    """Each cell's lane: its own, a side cell its carrier's, a hosted cell its host's."""
+    """Each cell's lane: its own, a side cell its carrier's, a hosted cell its host's.
+
+    A host may itself be hosted (a copy on a moved pin): the chain ends at a cell with a lane.
+    """
     found = {c.function: c.lane for c in column.cells if c.host is None and not c.side}
-    found |= {c.function: found[c.carrier] for c in column.cells if c.side and c.carrier}
-    found |= {c.function: found[c.host] for c in column.cells if c.host is not None}
+    leaning = {
+        c.function: up
+        for c in column.cells
+        if c.function not in found and (up := c.host or c.carrier)
+    }
+    for function in leaning:
+        at = function
+        while at not in found:
+            at = leaning[at]
+        found[function] = found[at]
     return found
 
 
 def _bundle_of(key: AuthoringKey) -> tuple[AuthoringKey, int]:
     """The key of the column a part was cut from, and the part's first lane there."""
-    if len(key) > 1 and key[-2] == _LANE and key[-1].isdigit():
-        return key[:-2], int(key[-1])
-    return key, 0
+    return base_and_first(key, _LANE)
 
 
 def part_key(key: AuthoringKey, first: int) -> AuthoringKey:
     """The key of the part starting at lane `first`; a part cut again counts from its bundle."""
-    base, at = _bundle_of(key)
-    return (*base, _LANE, f"{at + first:04d}")
+    return part_key_of(key, _LANE, first)
 
 
 def with_parts(every: tuple[Column, ...], columns: tuple[Column, ...]) -> tuple[Column, ...]:

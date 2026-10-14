@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.stages import (
     Column,
     DrawnFunction,
-    LabelKind,
     Layout,
     onepage,
 )
+from fransys_layout.stages._polelinks import pole_linked
 from fransys_layout.stages.box_leave import box_columns
-from fransys_layout.stages.box_views import drawn_hidden, hidden_views
+from fransys_layout.stages.box_views import drawn_hidden
 from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
 from fransys_layout.stages.chain_boxes import chain_boxes
 from fransys_layout.stages.connector_boxes import PlacedConnectorBox
@@ -24,7 +24,7 @@ from fransys_layout.stages.images import contact_images
 from fransys_layout.stages.middle_tall import recut, tall_groups
 from fransys_layout.stages.offstubs import OffEnd
 from fransys_layout.stages.onepage import page_wiring
-from fransys_layout.stages.pagerun import PageInputs, PageRun, Placement, place_pages, plan_pages
+from fransys_layout.stages.pagerun import PageRun, Placement, place_pages, plan_pages
 from fransys_layout.stages.references import (
     box_room_findings,
 )
@@ -39,20 +39,19 @@ from fransys_layout.stages.tidy import clear_of_stubs, shift_pages
 from fransys_layout.stages.wide_columns import cut_wide
 from fransys_model.kernel import Finding, Id, value
 
-from ._arrange_columns import arranged, kept_terminals
+from ._arrange_columns import arranged
 from ._decide import decide
 from ._finish import Laid, boxed, cross_references, outlined_cells
+from ._inputs import _boxed_views, _page_inputs
 from ._lines import DrawnPieces, LineScene, draw_lines, harness_ink, strip_lines
 from ._lint import LintScene, Members, lint_findings
 from ._middle import middle_inputs, moved_shapes, strip_middle
 from ._sizing import recut_inputs, sized
 from ._wire_spans import route_spans
-from .defaults import BOTTOM_HEADROOM_LANES, DEFAULT_RULES, TOP_HEADROOM_LANES
+from .defaults import DEFAULT_RULES
 from .profiles import lay_out
 from .read import read_inputs
 from .read.finding_names import named_findings
-from .read.harness_lines import box_specs
-from .read.labels import label_requests
 from .read.line_texts import marker_keepouts
 from .read.location_paths import location_paths, unit_paths
 from .read.loose import without_loose
@@ -67,8 +66,6 @@ from .symbol_defaults import resolve_with_defaults
 from .write import write_layout
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-
     from fransys_layout.options import LayoutOptions
     from fransys_layout.stages import ColumnWidth
     from fransys_layout.stages.pagerun import Decide
@@ -139,14 +136,7 @@ def stage_layout(
         potential_sides(drawn, rank_of, *power, (inputs.feeds, inputs.profile)),
         inputs.device_chains,
     )
-    # a boxed connector's pin views draw no symbol and no label; its box stands over them
-    boxes = box_specs(model, inputs.functions)
-    hidden = hidden_views(boxes)
-    slot_requests = tuple(
-        request
-        for request in label_requests(inputs.label_texts, drawn)
-        if request.kind in (LabelKind.TAG, LabelKind.MARKING) and request.subject not in hidden
-    )
+    boxes, hidden, slot_requests = _boxed_views(model, inputs, drawn)
 
     inputs, all_columns, columns, column_findings = arranged(model, inputs, drawn, rank_of)
     # a middle unit's line views leave their columns; its lines' conductors are no routes
@@ -190,6 +180,8 @@ def stage_layout(
         ),
     )
     findings.extend(reference_findings)
+    linked = pole_linked(drawn, inputs.connections, inputs.net_groups)
+    # read before `decide` turns the link wires into markers: after that the set is empty
     inputs = replace(inputs, connections=decided.connections, net_groups=decided.net_groups)
     # `texts` builds every marker from its decision, on the placed pages
     at_home, routed_on, wired = page_wiring(
@@ -224,7 +216,11 @@ def stage_layout(
     pages, contact_refs = contact_images(
         plans,
         pages,
-        replace(img, replicas=replica_cells(columns)),
+        replace(
+            img,
+            replicas=replica_cells(columns),
+            linked=linked,
+        ),
         markers,
         location_paths(model, plans),
     )
@@ -335,35 +331,6 @@ def _placed(
         planned_with = grown
         placement, grown, decided = place_pages(run, placement.drawn, planned, grown, decide)
     return placement, box_room_findings(decided, first)
-
-
-def _pair(run: JoinedRun) -> tuple[Id[Any], Id[Any]]:
-    """The two ports of a beside run, in port order as a `Connection` keeps them."""
-    first, second = sorted(end.port for end in run.ends)
-    return first, second
-
-
-def _page_inputs(
-    inputs: StageInputs, heads: Mapping[Id[Any], str], joins: tuple[JoinedRun, ...] = ()
-) -> PageInputs:
-    """The fields of `inputs` the page steps read, with the house headroom (`defaults`)."""
-    return PageInputs(
-        functions=inputs.functions,
-        connections=inputs.connections,
-        net_groups=inputs.net_groups,
-        groups=inputs.groups,
-        locations=inputs.locations,
-        units=inputs.units,
-        hints=inputs.hints,
-        profile=inputs.profile,
-        sheet=inputs.sheet,
-        top_headroom_lanes=TOP_HEADROOM_LANES,
-        bottom_headroom_lanes=BOTTOM_HEADROOM_LANES,
-        line_ends=frozenset((end.function, end.port) for c in inputs.carried for end in (c.a, c.b)),
-        heads=heads,
-        aside=frozenset(_pair(run) for run in joins if run.aside),
-        whole=kept_terminals(inputs),
-    )
 
 
 def lay_out_schematic(model: Model, options: LayoutOptions) -> tuple[Model, tuple[Finding, ...]]:

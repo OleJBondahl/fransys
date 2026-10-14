@@ -11,7 +11,7 @@ from fransys_model.vocab.tables import boundaries, conductors, functions, items,
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
 
-from .baseline_designation import _cross_port_text, unit_designation
+from .baseline_designation import _cross_port_text, function_text, unit_designation
 from .baseline_diff_units import unit_subject_text
 from .baseline_listing import _listing_unit
 from .lone_cable import lone_cable
@@ -48,7 +48,7 @@ def _wire_subjects(model: Model, unit: Id[Unit] | None) -> Subjects:
     for record in boundaries(model).values():
         if record.unit == unit:
             fn = functions(model)[record.function]
-            text = f"{unit_designation(model, unit, fn.item)}:{fn.name}"
+            text = function_text(model, unit, fn)
             found.setdefault(("boundary", text), fn.id)
     for conductor in conductors(model).values():
         if _conductor_unit(model, conductor) == unit:

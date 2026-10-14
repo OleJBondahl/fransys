@@ -36,6 +36,7 @@ def _design() -> tuple[fr.Design, object, fr.Device, fr.Device]:
     d.project(title="E-stop", number="P-1", customer="Example Co", revision=1, author="OJB")
     d.revision(1, date="2026-10-14", text="First issue", created="XX")
     cabinet = d.location("CAB", "Cabinet")
+    d.layout.profile(actuator_each_contact=False)  # one actuator per device (the default is True)
     strip = d.terminal_strip("X1", "DEMO-TB-2.5")
     head = d.device("S1", "DEMO-HEAD-ESTOP")
     with d.function("G1", "Stop circuit 1"):
@@ -50,7 +51,8 @@ def _design() -> tuple[fr.Design, object, fr.Device, fr.Device]:
     return d, cabinet, first, second
 
 
-def test_each_block_draws_the_emergency_stop() -> None:
+def test_the_lead_block_draws_the_emergency_stop_and_the_other_its_contact() -> None:
+    """ACTUATOR-ONCE (layout-0237): one mushroom, at 11-12; 21-22 keeps its positive opening."""
     d, cabinet, first, second = _design()
     model = fr.build(d, cabinet_document(cabinet)).model
     blocks = {first.id, second.id}
@@ -59,7 +61,7 @@ def test_each_block_draws_the_emergency_stop() -> None:
         for p in layout_of(model, SymbolPlacement).values()
         if p.function and functions(model)[p.function].item in blocks
     ]
-    assert drawn == ["emergency-stop", "emergency-stop"]
+    assert drawn == ["emergency-stop", "break-contact-positive-opening"]
 
 
 def test_the_wire_list_prints_the_heads_designation_on_both_blocks(tmp_path: Path) -> None:

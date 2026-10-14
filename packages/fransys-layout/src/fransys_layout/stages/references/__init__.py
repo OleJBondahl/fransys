@@ -19,6 +19,7 @@ from fransys_layout.stages.offstubs import off_ends
 from .apart import apart_markers
 from .cuts import LINK_FANOUT, LINK_PARTNER_UNLOCATED, CutLocations, links
 from .digits import FLOOR, Digits, more_digits, set_digits
+from .hung import hung_joins
 from .joins import JOIN_UNALIGNED, joined_runs
 from .markers import clear_of_runs, split_markers, star_markers
 from .nets import side_functions, star_nets, with_orphans, without_starred
@@ -74,6 +75,7 @@ def references(inputs: ReferenceInputs) -> tuple[References, tuple[Finding, ...]
         chains=inputs.chains,
         power=frozenset(inputs.power),
     )
+    joins = hung_joins(joins, inputs.connections, inputs.functions, seating, inputs.chains)
     decided, findings = _decided(inputs, joins, MappingProxyType({}))
     # A power end prints no `#n`, so it is no reference group
     ordinary = tuple(one for one in decided.markers if not one.symbol)
@@ -120,7 +122,9 @@ def _decided(
             tuple(
                 c
                 for c in inputs.connections
-                if c.handle not in starred and (c.a.port, c.b.port) not in joins.beside.aside
+                if c.handle not in starred
+                and (c.a.port, c.b.port) not in joins.beside.aside
+                and (c.a.port, c.b.port) not in joins.beside.hung
             ),
             inputs.functions,
             inputs.seating,

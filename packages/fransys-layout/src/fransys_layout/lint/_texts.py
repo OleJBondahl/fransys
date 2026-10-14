@@ -23,9 +23,9 @@ from typing import TYPE_CHECKING
 from fransys_layout.geometry import overlaps
 from fransys_layout.stages.space import crosses
 from fransys_layout.stages.stub_runs import stub_runs
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import Finding
 
-from .codes import TEXT_CROSSED_BY_ROUTE, TEXT_OVERLAP
+from .codes import TEXT_CROSSED_BY_ROUTE, TEXT_OVERLAP, severity_of
 
 if TYPE_CHECKING:
     from fransys_layout.geometry import Box
@@ -47,7 +47,7 @@ def text_crossings(
             if any(crosses(box, run) for run in runs):
                 finding = Finding(
                     code=TEXT_CROSSED_BY_ROUTE,
-                    severity=Severity.WARNING,
+                    severity=severity_of(TEXT_CROSSED_BY_ROUTE),
                     subjects=(marker.connection, marker.port, subject),
                     message="a link marker's stub runs through a text box",
                 )
@@ -78,7 +78,10 @@ def text_overlaps(
         found.setdefault(
             subjects,
             Finding(
-                code=TEXT_OVERLAP, severity=Severity.WARNING, subjects=subjects, message=message
+                code=TEXT_OVERLAP,
+                severity=severity_of(TEXT_OVERLAP),
+                subjects=subjects,
+                message=message,
             ),
         )
 

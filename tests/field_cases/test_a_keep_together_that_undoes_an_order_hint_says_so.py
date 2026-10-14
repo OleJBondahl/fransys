@@ -1,12 +1,12 @@
-"""Field case: a `keep_together` set that undoes an `order` hint reports nothing.
+"""Field case: a `keep_together` set that undoes an `order` hint says so.
 
 The engineering shape: three relay blocks F1, F2, F3 on one sheet. The author orders F2 before
 F3, then asks that F1 and F3 stand together.
 
 The bug: `keep_together` runs after the order hints and pulls F3 next to F1, so the drawing reads
-F1, F3, F2 and the order hint is undone. No finding says so; the author's hint is lost without
-a trace. The guide documents the silence as current behaviour; CLEANUP-ROUND-2 CL8 holds it as a
-drawing row. The correct drawing keeps the order or reports that it did not.
+F1, F3, F2 and the order hint is undone. No finding said so; the author's hint was lost without
+a trace. Fixed by layout-0231 (CL8 note 3): a WARNING, `ORDER_HINT_UNDONE`, names both hints'
+groups; `keep_together` still wins, and the fix is to drop one of the two hints.
 """
 
 from typing import Any, NamedTuple
@@ -66,10 +66,11 @@ def test_the_three_blocks_are_drawn(built_and_handles: Any) -> None:
     assert sorted(_order(built, handles)) == ["F1", "F2", "F3"]
 
 
-@pytest.mark.xfail(strict=True, reason="CL8: keep_together undoes an order hint with no finding")
-def test_an_order_hint_undone_by_keep_together_is_kept_or_reported(built_and_handles: Any) -> None:
+def test_an_order_hint_undone_by_keep_together_is_reported(built_and_handles: Any) -> None:
     built, handles = built_and_handles
-    order = _order(built, handles)
-    kept = order.index("F2") < order.index("F3")
-    reported = any(f.severity.name != "INFO" for f in built.findings)
-    assert kept or reported, order
+    undone = [f for f in built.findings if f.code == "ORDER_HINT_UNDONE"]
+    assert [f.severity.name for f in undone] == ["WARNING"]
+    assert set(undone[0].subjects) >= {handles[n].id for n in ("F1", "F2", "F3")}
+    assert len(undone[0].subjects) == len(set(undone[0].subjects))
+    assert "drop one of the two hints" in undone[0].message
+    assert _order(built, handles) == ["F1", "F3", "F2"]

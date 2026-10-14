@@ -24,7 +24,7 @@ from .core_pairs import (
     pair_form,
     screened_pairs,
 )
-from .designation import connector_segment, port_designation
+from .designation import connector_segment
 from .drawing_text import external_note
 from .drawn_marks import DrawnBracket, PairRoom, pair_room
 from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_harness_subjects
@@ -34,7 +34,7 @@ from .lone_cable import lone_cable_harness
 from .lookups import cable_end_owner, item_of_port, pin_order
 from .open_core_ends import open_core_text
 from .open_drawn import DrawnOpen, drawn_open_cores
-from .order import designation_key, natural_key
+from .order import designation_key, port_designation_key
 lazy from .rows import HarnessCable, HarnessCore
 
 __all__ = [
@@ -175,9 +175,7 @@ def _keyed_cores(model: Model, subject: Id[Item], unit: Id[Unit] | None) -> _Key
         ((place, (core.index,)), core) for place, c in enumerate(cables) for core in c.cores
     ]
     for core in wire_cores(model, subject, unit):
-        ends = [
-            natural_key(port_designation(model, p, unit=unit)) for p in (core.end_a, core.end_b)
-        ]
+        ends = [port_designation_key(model, p, unit=unit) for p in (core.end_a, core.end_b)]
         keyed.append(((len(cables), (*ends, core.index)), core))
     return sorted(keyed, key=lambda pair: pair[0])
 

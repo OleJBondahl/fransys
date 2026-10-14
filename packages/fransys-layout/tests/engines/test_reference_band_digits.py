@@ -74,7 +74,7 @@ def test_the_page_side_rooms_carry_the_sets_digits_the_early_call_keeps_the_floo
     CAN-FAIL: pagerun `_page_boxes`: build `Wiring` without `page.digits`, and no per-page call
     carries a width past the floor.
     """
-    pagerun = import_module("fransys_layout.stages.pagerun")
+    page_place = import_module("fransys_layout.stages._page_place")
     engine = import_module("fransys_layout.engines.schematic._sizing")
     model = freeze(build_cabinet(second_location=True))
     calls: dict[str, list[Any]] = {"engine": [], "page": []}
@@ -88,7 +88,7 @@ def test_the_page_side_rooms_carry_the_sets_digits_the_early_call_keeps_the_floo
 
         return patch.object(module, "side_reference_rooms", spy)
 
-    with watch("engine", engine), watch("page", pagerun):
+    with watch("engine", engine), watch("page", page_place):
         stage_results(model, read_inputs(model, options=OPTIONS))
     assert calls["engine"]
     assert set(calls["engine"]) == {FLOOR}

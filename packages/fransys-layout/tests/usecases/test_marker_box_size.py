@@ -44,14 +44,14 @@ _NARROW_GOLDEN = _GOLDEN_DIR / "cabinet_narrow_laid_out.json"
 # `-X2:1` lists the branches first) plus 5 branch and 2 reference markers: layout-0093's turn
 # test makes a wire that turns back round its device a reference pair (4 more than before
 # the turn change, when it was 7); no owner/user pair remains.
-_EXPECTED_TWO_LOCATION_MARKER_COUNT = 8
+_EXPECTED_TWO_LOCATION_MARKER_COUNT = 6
 _EXPECTED_LOCATION_CROSSING_MARKER_COUNT = 4
 # 7 star markers (3 references and 4 branches, whose lists make them wider; two more than
 # before the turned-back wires) plus the 2 ends of the one conductor cut by a page
 # break. Not 11: the removed pair is the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux now
 # stands on page 1 (layout-0049: the aux stands second in =P1), so the wire is drawn on page
 # 1 and is no longer cut.
-_EXPECTED_NARROW_MARKER_COUNT = 8  # was 9: -S0 has -X2:1 over its pin
+_EXPECTED_NARROW_MARKER_COUNT = 6  # was 8: the K1:13 - S0:22 turned pair is a wire (layout-0224)
 _EXPECTED_NARROW_PAIR_MARKER_COUNT = 2
 _EXPECTED_NARROW_LOCATION_CROSSING_COUNT = 0
 # The fixed reference box width for the house sheet format (`links.reference_box_width`,

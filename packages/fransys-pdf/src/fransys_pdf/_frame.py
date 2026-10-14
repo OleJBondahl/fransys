@@ -25,12 +25,13 @@ if TYPE_CHECKING:
 
 _BORDER_STROKE = THICK_STROKE
 _GRID_STROKE = THIN_STROKE
-_PADDING_MM = 5  # non-drawing pages' inner padding inside the content box
+PADDING_MM = 5  # non-drawing pages' inner padding inside the content box
 _BAND_MIN_MM = 20  # a band under this gives no title block, and TITLE_BLOCK_NO_ROOM
 _CELL_INSET_MM = 2  # clearance (both sides) a one-line field's text is cut to fit inside
 _NOTICE_INSET_MM = 1  # clearance (all sides) the notice cell's wrapped text is padded by
-_LINE_HEIGHT_EM = 1.2  # a standard typographic leading, close to Typst's own default paragraph
-# spacing at this size -- documented approximation, same status as `_wrap_lines`' own.
+_LINE_HEIGHT_EM = 1.2  # the notice's line pitch in em: `notice_fits` counts it, `_notice_cell` sets
+# it in Typst (top/bottom edges and zero leading), so the check and the drawing agree (pdf-0038).
+_NOTICE_ASCENT_SHARE = 0.8  # the part of the pitch above the baseline
 
 PAGE_COUNTER_LABEL = "fransys-page-counter"
 """The label on the title block's document-counter cell, for `typst query`."""
@@ -48,6 +49,8 @@ _PAGE_COUNTER = f'context (str({physical_page()}) + " of " + str({_LAST}))'
 # width once the 20 mm square logo column is set aside): the defaults for the
 # owner's look, "not the numbers". `title_columns` scales them to any other sheet.
 _TITLE_COL_WEIGHTS = (60, 60, 100, 55, 35, 35, 45)
+# With a notice, c7 takes 49 from Customer and Author (c1 + c2 stay 71, pdf-0038).
+_TITLE_COL_WEIGHTS_NOTICE = (45, 26, 100, 55, 35, 35, 94)
 
 # One-line field name -> which title-block column(s) it lives in, `title_columns`' own index
 # order (c1..c7); `"title"` alone spans three (colspan 3). Used by both
@@ -99,7 +102,7 @@ def title_block_fits(sheet: SheetFormat) -> bool:
 
 def text_margin(sheet: SheetFormat) -> str:
     """A `#set page(margin: ...)`: content box plus 5 mm padding; harness too (pdf-0009)."""
-    return _margin(sheet, padding=_PADDING_MM)
+    return _margin(sheet, padding=PADDING_MM)
 
 
 def _mm(value: float) -> str:
@@ -222,49 +225,56 @@ def one_line_field(
 
 
 def title_columns(
-    sheet: SheetFormat,
+    sheet: SheetFormat, *, notice: bool = False
 ) -> tuple[float, float, float, float, float, float, float, float]:
-    """The 8 column widths (mm): c1..c7 by `_TITLE_COL_WEIGHTS`, then a square logo."""
+    """The 8 column widths (mm): c1..c7 by the weights, then a square logo.
+
+    `notice` takes the weights of a document that has a notice (a wide c7).
+    """
+    weights = _TITLE_COL_WEIGHTS_NOTICE if notice else _TITLE_COL_WEIGHTS
     frame_width = sheet.width_mm - 2 * sheet.content_x_mm
     logo = float(band_height_mm(sheet))
     remaining = frame_width - logo
-    total_weight = sum(_TITLE_COL_WEIGHTS)
-    c1, c2, c3, c4, c5, c6, c7 = (remaining * w / total_weight for w in _TITLE_COL_WEIGHTS)  # ty: ignore[division-by-zero] weights sum to 390; ty types a tuple sum as int | 0
+    total_weight = sum(weights)
+    c1, c2, c3, c4, c5, c6, c7 = (remaining * w / total_weight for w in weights)  # ty: ignore[division-by-zero] weights sum to 390; ty types a tuple sum as int | 0
     return (c1, c2, c3, c4, c5, c6, c7, logo)
 
 
-def title_block_field_width_mm(sheet: SheetFormat, field: str) -> float:
+def title_block_field_width_mm(sheet: SheetFormat, field: str, *, notice: bool = False) -> float:
     """A one-line field's cell width (mm), shared with `TITLE_BLOCK_TEXT_OVERFLOW`."""
-    cols = title_columns(sheet)
+    cols = title_columns(sheet, notice=notice)
     span = sum(cols[i] for i in _FIELD_COLUMNS[field])
     return span - _CELL_INSET_MM
 
 
+@dataclass(frozen=True)
+class CellContext:
+    """The sheet format, sizes and notice flag a title-block field's cell is measured in."""
+
+    sheet: SheetFormat
+    sizes: Sizes
+    notice: bool = False
+
+
 def field_cell(
-    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, shorter: tuple[str, ...] = ()
+    ctx: CellContext, field: str, text: str, *, shorter: tuple[str, ...] = ()
 ) -> tuple[str, bool, str]:
     """`(base, fits, printed)` of a title-block field's one-line cell.
 
     `one_line_field` at the field's own cell; `printed` is the base, cut if it misses.
     """
     metrics = {
-        "size_mm": sizes.body,
+        "size_mm": ctx.sizes.body,
         "bold": field == "title",
-        "width_mm": title_block_field_width_mm(sheet, field),
+        "width_mm": title_block_field_width_mm(ctx.sheet, field, notice=ctx.notice),
     }
     base, ok = one_line_field(text, shorter=shorter, **metrics)
     return base, ok, base if ok else cut_to_width(base, **metrics)[0]
 
 
-def _one_line(
-    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, shorter: tuple[str, ...] = ()
-) -> str:
-    return field_cell(sheet, sizes, field, text, shorter=shorter)[2]
-
-
-def notice_cell_size_mm(sheet: SheetFormat) -> tuple[float, float]:
+def notice_cell_size_mm(sheet: SheetFormat, *, notice: bool = True) -> tuple[float, float]:
     """The notice cell's inner (width, height) mm, shared with `notice_fits`."""
-    c7 = title_columns(sheet)[6]
+    c7 = title_columns(sheet, notice=notice)[6]
     band = float(band_height_mm(sheet))
     return (c7 - 2 * _NOTICE_INSET_MM, band - 2 * _NOTICE_INSET_MM)
 
@@ -299,6 +309,15 @@ def notice_fits(text: str, sizes: Sizes, *, width_mm: float, height_mm: float) -
     return len(lines) <= max_lines
 
 
+def notice_room_chars(sheet: SheetFormat, sizes: Sizes) -> int:
+    """About how many characters of running text the notice cell holds, to the nearest ten below."""
+    width_mm, height_mm = notice_cell_size_mm(sheet)
+    sample = "the quick brown fox jumps over the lazy dog"
+    per_line = width_mm * len(sample) / text_width_mm(sample, size_mm=sizes.label)
+    lines = int(height_mm // (sizes.label * _LINE_HEIGHT_EM))
+    return int(per_line * lines) // 10 * 10
+
+
 def _cell(
     label: str,
     value: str,
@@ -328,6 +347,13 @@ def _value(text: str) -> str:
 def _notice_cell(notice: str, sizes: Sizes, *, width_mm: float, height_mm: float) -> str:
     """The IP-notice cell: label size, wrapped, clipped (not ellipsised) to its inner box."""
     body = f"text(size: {font_mm(sizes.label)}, {literal(notice)})"
+    if notice:  # no notice keeps the cell's bytes (NC2)
+        pitch = sizes.label * _LINE_HEIGHT_EM
+        rules = (
+            f"set par(leading: 0mm); set text(top-edge: {_mm(pitch * _NOTICE_ASCENT_SHARE)}mm, "
+            f"bottom-edge: -{_mm(pitch * (1 - _NOTICE_ASCENT_SHARE))}mm)"
+        )
+        body = f"{{ {rules}; {body} }}"
     return (
         f"pad(x: {_NOTICE_INSET_MM}mm, y: {_NOTICE_INSET_MM}mm, "
         f"block(width: {_mm(width_mm)}mm, height: {_mm(height_mm)}mm, clip: true, {body}))"
@@ -360,18 +386,16 @@ _LABELS = {
 }
 
 
-def _field_cell(
-    sheet: SheetFormat, sizes: Sizes, name: str, value: str, *, shorter: tuple[str, ...] = ()
-) -> str:
-    shown = _value(_one_line(sheet, sizes, name, value, shorter=shorter))
-    return _cell(_LABELS[name], shown, sizes, bold=name == "title")
+def _field_cell(ctx: CellContext, name: str, value: str, *, shorter: tuple[str, ...] = ()) -> str:
+    shown = _value(field_cell(ctx, name, value, shorter=shorter)[2])
+    return _cell(_LABELS[name], shown, ctx.sizes, bold=name == "title")
 
 
 def _title_rows(
     sheet: SheetFormat, fields: TitleBlockFields, sizes: Sizes, extra: tuple[str, str]
 ) -> list[str]:
     """The two grid rows' cells; `extra` is the notice and logo cells, spanning both rows."""
-    text = partial(_field_cell, sheet, sizes)
+    text = partial(_field_cell, CellContext(sheet, sizes, bool(fields.notice)))
     return [
         f"grid.cell(colspan: 3, {text('title', fields.title)})",
         text("number", fields.number),
@@ -394,8 +418,9 @@ def _title_block(sheet: SheetFormat, fields: TitleBlockFields, sizes: Sizes) -> 
     width = sheet.width_mm - 2 * x0
     band_top = sheet.content_y_mm + sheet.content_height_mm
     row_height = band_height_mm(sheet) / 2
-    widths = title_columns(sheet)
-    notice_w, notice_h = notice_cell_size_mm(sheet)
+    has_notice = bool(fields.notice)
+    widths = title_columns(sheet, notice=has_notice)
+    notice_w, notice_h = notice_cell_size_mm(sheet, notice=has_notice)
     notice_cell = _notice_cell(fields.notice, sizes, width_mm=notice_w, height_mm=notice_h)
     logo_cell = _logo_cell(fields.logo, size_mm=widths[7])
     children = ", ".join(_title_rows(sheet, fields, sizes, (notice_cell, logo_cell)))

@@ -31,7 +31,7 @@ def _run() -> tuple[StageResults, dict[str, Any]]:
     model = freeze(build_cabinet(second_location=True, side_terminals=True))
     sizing = import_module("fransys_layout.engines.schematic._sizing")
     engine = import_module("fransys_layout.engines.schematic.engine")
-    pagerun = import_module("fransys_layout.stages.pagerun")
+    page_place = import_module("fransys_layout.stages._page_place")
 
     def watch(where: str, module: Any) -> Any:
         real = module.side_reference_rooms
@@ -52,7 +52,7 @@ def _run() -> tuple[StageResults, dict[str, Any]]:
 
     with (
         watch("early", sizing),
-        watch("page", pagerun),
+        watch("page", page_place),
         patch.object(engine, "place_pages", passes),
     ):
         results, _ = stage_results(model, read_inputs(model, options=OPTIONS))

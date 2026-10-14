@@ -21,6 +21,8 @@ from fransys_model.layout import DiagramLine, DiagramSheet, layout_of  # noqa: E
 
 _GEOMETRY = {
     "DIAGRAM_BOX_OVERLAP",
+    "DIAGRAM_LABEL_STRUCK",
+    "DIAGRAM_LINES_SHARE_TRACK",
     "DIAGRAM_LINE_OFF_BOX",
     "DIAGRAM_LINE_THROUGH_BOX",
     "DIAGRAM_TEXT_OVERLAP",

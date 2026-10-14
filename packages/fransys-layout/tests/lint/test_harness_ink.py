@@ -23,6 +23,7 @@ from fransys_layout.stages import (
 from fransys_layout.stages.connector_boxes import PlacedConnectorBox
 from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLeg, DrawnLine, LineStub
 from fransys_layout.stages.types import PlacedOutline
+from fransys_model.kernel import Severity
 
 HARNESS = hid("item", 7)
 BOX = hid("function", 9)
@@ -150,3 +151,21 @@ def test_a_line_along_an_outline_edge_is_line_on_outline() -> None:
 
 
 # --- the crossing test ---------------------------------------------------------------------
+
+
+def test_a_harness_line_defect_is_info() -> None:
+    """layout-0252: both harness codes draw as INFO."""
+    outline = PlacedOutline(
+        unit=UNIT,
+        lead=hid("function", 1),
+        drawing_set=1,
+        page=1,
+        box=Box(x=312, y=296, width=296, height=128),
+    )
+    line = _line((Point(x=344, y=472), Point(x=344, y=424), Point(x=32, y=424)))
+    found = lint_geometry(_layout(outlines=(outline,)), sheet=SHEET, ink=HarnessInk(lines=(line,)))
+    assert {f.code: f.severity for f in found} == {LINE_ON_OUTLINE: Severity.INFO}
+    box = _box(Box(x=100, y=100, width=72, height=32))
+    short = _line((Point(x=0, y=40), Point(x=0, y=80)), Box(x=110, y=110, width=24, height=8))
+    found = lint_geometry(_layout(), sheet=SHEET, ink=HarnessInk(boxes=(box,), lines=(short,)))
+    assert {f.code: f.severity for f in found} == {TEXT_OVERLAP: Severity.INFO}

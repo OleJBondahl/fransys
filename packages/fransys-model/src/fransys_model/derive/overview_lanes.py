@@ -14,8 +14,9 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Unit
 
 from .overview import links_of
-from .overview_groups import box_groups, group_text
+from .overview_groups import box_groups
 from .overview_levels import level_box, open_strips, overview_level, strip_view, stub_far_root
+from .overview_names import node_lines
 from .overview_view_plain import ref_of
 from .potential import port_potential_current
 from .rows import ItemKind
@@ -64,7 +65,7 @@ def overview_power_lines(model: Model, unit: Id[Unit]) -> frozenset[tuple[BoxKey
 
 def lane_head(model: Model, node: Id[AspectNode]) -> str:
     """The text a lane prints: its group's folded-box text, on one line."""
-    return " ".join(group_text(model, node))
+    return " ".join(node_lines(model, node))
 
 
 def overview_strip_joins(model: Model, unit: Id[Unit]) -> dict[BoxKey, int]:

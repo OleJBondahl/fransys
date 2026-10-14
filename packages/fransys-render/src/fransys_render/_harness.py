@@ -17,8 +17,7 @@ from fransys_model.layout import (
     sheet_format_of,
 )
 
-from ._numbers import format_decimal, printed_font_mm
-from ._routes import _point_mm
+from ._numbers import format_decimal, point_mm, printed_font_mm
 
 if TYPE_CHECKING:
     from decimal import Decimal
@@ -48,7 +47,7 @@ def _text(
 def _line_element(
     model: Model, sheet: SheetFormat, font_mm: Decimal, line: HarnessLine, unit: Id[Any] | None
 ) -> str:
-    points = " ".join(_point_mm(sheet, point.x, point.y) for point in line.points)
+    points = " ".join(point_mm(sheet, point.x, point.y) for point in line.points)
     element = f'<polyline class="harness-line" points="{points}"/>'
     designation = line_designation(model, line.harness, line.branch, unit=unit)
     if not designation:

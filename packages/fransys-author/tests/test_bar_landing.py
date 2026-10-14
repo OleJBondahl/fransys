@@ -110,3 +110,45 @@ def test_a_non_bar_function_or_a_net_of_a_bar_raises(demo):
         d.net("SIG", m1.motor["PE"], pe1.pe)
     d.wire(m1.motor["PE"], pe1.pe, wire=WIRE)  # the same bar lands through d.wire
     assert len(_records(d, Net)) == 1
+
+
+def _earthed(d):
+    """Two motors' PE pins, for the `d.earth` tests."""
+    m1 = d.device("M1", "DEMO-MOTOR-4KW")
+    m2 = d.device("M2", "DEMO-MOTOR-4KW")
+    return m1.motor["PE"], m2.motor["PE"]
+
+
+def test_two_earth_calls_collect_into_the_one_pe_net(demo):
+    d = design(demo, place="C1")
+    a, b = _earthed(d)
+    d.earth(a)
+    d.earth(b, a)
+    nets = [n for n in _records(d, Net) if n.net_class is NetClass.PE]
+    assert [sorted(n.ports, key=str) for n in nets] == [sorted([a.id, b.id], key=str)]
+
+
+def test_an_earth_call_after_the_draft_was_read_raises(demo):
+    """The ordering trap: a net frozen early would silently lose the later call."""
+    d = design(demo, place="C1")
+    a, b = _earthed(d)
+    d.earth(a)
+    d.draft()
+    with pytest.raises(AuthorError, match=r"d\.earth came after the draft was read"):
+        d.earth(b)
+
+
+def test_a_pe_net_after_earth_raises_naming_earth(demo):
+    d = design(demo, place="C1")
+    a, b = _earthed(d)
+    d.earth(a)
+    with pytest.raises(AuthorError, match=r"d\.earth"):
+        d.net("PE", b)
+
+
+def test_earth_after_a_pe_net_raises_naming_earth(demo):
+    d = design(demo, place="C1")
+    a, b = _earthed(d)
+    d.net("PE", b)
+    with pytest.raises(AuthorError, match=r"d\.earth"):
+        d.earth(a)

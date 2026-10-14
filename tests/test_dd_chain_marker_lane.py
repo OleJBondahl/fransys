@@ -118,5 +118,10 @@ def test_a_chain_too_long_for_one_row_stays_drawn_where_its_links_share_a_page()
     assert len({p.page for p in placed.values()}) > 1
     same_page = sum(placed[str(k)].page == placed[str(k + 1)].page for k in range(1, 12))
     assert same_page > 0
-    assert len(layout_of(result.model, Route)) == same_page
+    # In natural order (layout-0193) a page holds terminals 1, 2 and 3 as a stack of two beside
+    # one: the join aligner cannot level link 2-3 and reports JOIN_UNALIGNED (drawn as references).
+    unaligned = sum(f.code == "JOIN_UNALIGNED" for f in result.findings)
+    assert len(layout_of(result.model, Route)) + unaligned == same_page
+    # Natural order leaves 2 same-page links as references; a join aligner is a FUTURE row.
+    assert unaligned <= 2
     assert [f.code for f in result.findings if f.severity is Severity.ERROR] == []

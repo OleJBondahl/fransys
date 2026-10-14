@@ -7,10 +7,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.vocab.enums import PartCategory
 from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.membership import external
+from fransys_model.vocab.plc_module import is_plc_module
 from fransys_model.vocab.tables import facets_of, functions, items, parts, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Port, Unit
@@ -35,14 +35,6 @@ class _Facts:
     requests: frozendict[Id[Function], PlcRequestFacet]
     scalings: frozendict[Id[Function], ScalingFacet]
     devices: frozendict[Id[Function], Id[Function]]
-
-
-def is_plc_module(model: Model, item: Item) -> bool:
-    """Whether `item`'s part has category `PLC_MODULE`: the one test of what a rack holds.
-
-    A rack is an item with at least one such child; `plc_rack_modules` lists them.
-    """
-    return item.part is not None and parts(model)[item.part].category is PartCategory.PLC_MODULE
 
 
 def _modules(model: Model, idx: Indexes, rack: Id[Item]) -> list[tuple[Item, Part]]:

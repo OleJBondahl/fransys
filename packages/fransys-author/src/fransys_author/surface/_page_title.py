@@ -39,7 +39,7 @@ def hint_page_title(engine: EngineDesign, target: object, text: str) -> None:
         msg = "d.layout.page_title: the title text is empty"
         raise AuthorError(msg)
     field, handle = _thing(target)
-    for record in engine._design.draft().records():
+    for record in engine._design._draft.records():
         if isinstance(record, PageTitle) and getattr(record, field) == handle.id:
             msg = "d.layout.page_title: this thing already has a title; a thing takes one"
             raise AuthorError(msg)

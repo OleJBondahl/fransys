@@ -19,13 +19,12 @@ from pathlib import Path
 import pytest
 from fransys.pipeline import _exports
 from fransys_pdf._lists import (
-    _ends_without_jumpers,
     connector_rows_for,
     terminal_rows_for,
     wire_rows_for,
 )
 
-from fransys_model.derive import cell_text, pin_lines
+from fransys_model.derive import cell_text, ends_without_jumpers, pin_lines
 from fransys_model.kernel import make_id
 from fransys_model.vocab import DocumentPreset, Mate
 
@@ -127,7 +126,7 @@ def _pdf_terminal_cells(built):
     m, _unit_id, doc, strip, _board = built
     cells = []
     for row in terminal_rows_for(m, doc, strip):
-        side_a, side_b = _ends_without_jumpers(m, row)
+        side_a, side_b = ends_without_jumpers(m, row)
         cells.append((row.designation, cell_text(side_a), cell_text(side_b)))
     return cells
 

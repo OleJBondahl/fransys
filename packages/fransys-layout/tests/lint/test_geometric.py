@@ -34,6 +34,8 @@ from fransys_layout.stages import (
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
 
+from fransys_model.kernel import Severity
+
 
 def _wire(
     points: tuple[tuple[int, int], ...], *, number: int = 1, net: int | None = None, page: int = 1
@@ -292,3 +294,9 @@ def test_a_look_finding_skips_a_set_nobody_prints_but_a_geometry_finding_stays(
 ) -> None:
     found = lint_geometry(_struck_and_outside(), sheet=SHEET, printed=printed)
     assert [f.code for f in found] == expected
+
+
+def test_an_unclearable_defect_is_info_and_a_clearable_one_stays_warning() -> None:
+    """layout-0252: the stuck route is INFO; the label past the content box is a WARNING."""
+    found = {f.code: f.severity for f in lint_geometry(_struck_and_outside(), sheet=SHEET)}
+    assert found == {"OUT_OF_CONTENT_BOX": Severity.WARNING, "WIRE_OVER_LABEL": Severity.INFO}

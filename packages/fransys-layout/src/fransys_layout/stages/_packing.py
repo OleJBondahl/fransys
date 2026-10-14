@@ -7,12 +7,15 @@ returns plain values; the findings and the page plans are built by `partition`.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .lane_runs import fill_runs
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
+    from collections.abc import Set as AbstractSet
 
     from fransys_model.kernel import AuthoringKey
 
-    from .types import GroupSet, Handle, Role
+    from .types import GroupSet, Handle, OrderHint, Role
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +70,36 @@ def merge(
     return current, met
 
 
+def undone_orders(
+    before: Sequence[Unit],
+    after: Sequence[Unit],
+    order: tuple[OrderHint, ...],
+    keep_together: tuple[GroupSet, ...],
+    met: AbstractSet[int],
+) -> list[tuple[OrderHint, GroupSet]]:
+    """Each order hint that held before `merge` and a merged set then reversed, with that set."""
+    was, now = _positions(before), _positions(after)
+    merged = [keep_together[index] for index in sorted(met)]
+    undone = []
+    for hint in order:
+        ends = {hint.before, hint.after}
+        if not ends <= was.keys() & now.keys():
+            continue
+        if was[hint.before] < was[hint.after] and now[hint.before] > now[hint.after]:
+            causes = [together for together in merged if ends & set(together.groups)]
+            undone.extend((hint, together) for together in causes[:1])
+    return undone
+
+
+def _positions(units: Sequence[Unit]) -> dict[Handle, int]:
+    """The place of each group's first mention, counting groups in unit order."""
+    at: dict[Handle, int] = {}
+    for group in (group for unit in units for group in unit.groups):
+        if group is not None:
+            at.setdefault(group, len(at))
+    return at
+
+
 def placements(
     units: Sequence[Unit],
     width_of: Mapping[AuthoringKey, int],
@@ -104,25 +137,9 @@ def _chunks(
         return (unit.columns,)
     columns = unit.columns
     at = {key: index for index, key in enumerate(columns)}
-    spans = [sorted((at[x], at[y])) for x, y in pole_links if x in at and y in at]
-    chunks = []
-    start = 0
-    while start < len(columns):
-        fits, used = start + 1, width_of[columns[start]]
-        while fits < len(columns) and used + width_of[columns[fits]] <= content_width:
-            used += width_of[columns[fits]]
-            fits += 1
-        end = next(
-            (
-                e
-                for e in range(fits, start, -1)
-                if e == len(columns) or not any(low < e <= high for low, high in spans)
-            ),
-            fits,
-        )
-        chunks.append(columns[start:end])
-        start = end
-    return tuple(chunks)
+    links = [(at[x], at[y]) for x, y in pole_links if x in at and y in at]
+    runs = fill_runs([width_of[key] for key in columns], links, content_width)
+    return tuple(columns[start:end] for start, end in runs)
 
 
 def pack(runs: Sequence[Placement], content_width: int) -> list[list[Placement]]:

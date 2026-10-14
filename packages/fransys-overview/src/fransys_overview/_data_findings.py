@@ -17,7 +17,7 @@ from fransys_model.derive import (
     item_kind,
     item_of_port,
 )
-from fransys_model.derive.order import finding_order_key
+from fransys_model.derive.order import findings_in_order
 from fransys_model.kernel import Severity, parent_chain
 from fransys_model.vocab import Aspect, conductors, functions, items, units
 
@@ -163,8 +163,7 @@ def _flat(model: Model, tally: Tally, findings: tuple[Finding, ...]) -> list[lis
 
 def _messages(model: Model, found: list[Finding]) -> list[str]:
     """The messages of one code's findings in finding order."""
-    ordered = sorted(found, key=lambda f: (finding_order_key(model, f), f.message))
-    return [f.message for f in ordered]
+    return [f.message for f in findings_in_order(model, found)]
 
 
 def findings_data(

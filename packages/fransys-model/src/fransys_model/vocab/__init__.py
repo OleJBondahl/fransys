@@ -1,6 +1,6 @@
 """Domain layer: record kinds, facets, validators, built on kernel."""
 
-from fransys_model.kernel import register_namespaces
+from fransys_model.kernel import register_namespaces, register_schema_version
 
 from .aspects import AspectNode, Placement
 from .cables import cable_items, is_cable
@@ -83,6 +83,7 @@ from .rating_readers import (
 )
 from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
+from .schema_version import SCHEMA_VERSION
 from .supply_system import Rail, SupplySystem, rail_phase_problem
 from .tables import (
     Boundary,
@@ -119,6 +120,9 @@ from .validators import ALL_VALIDATORS
 # The kernel knows only `core`; the layers above name the rest, once, in this order. A
 # reference may point at the same namespace or an earlier one (decision 0009).
 register_namespaces("facet", "layout")
+# The schema version is the electrical schema's: it moves with a vocab or layout kind, and the
+# kernel stamps and checks the number registered here (model-0251).
+register_schema_version(SCHEMA_VERSION)
 
 __all__ = [
     "ALL_VALIDATORS",
@@ -126,6 +130,7 @@ __all__ = [
     "COLOUR_GRAMMAR",
     "FINDING_CODES",
     "RESERVED_COLOURS",
+    "SCHEMA_VERSION",
     "Aspect",
     "AspectNode",
     "AssignedDesignationFacet",

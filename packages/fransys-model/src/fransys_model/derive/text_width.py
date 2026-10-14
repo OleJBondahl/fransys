@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 
 __all__ = ["G_PER_MODULE", "UNITS_PER_EM", "marking_widths", "text_units", "text_width"]
 
-G_PER_MODULE = 8  # grid units in one module unit (DESIGN 6.1); a port marking is set one M high
+# Grid units in one module unit (DESIGN 6.1); a port marking is set one M high. The model's one
+# copy of the grid fact `electrical_symbols.box_ports.G_PER_MODULE` (that package imports nothing
+# here and this one imports nothing at all); `tests/test_boundaries.py` pins the two equal.
+G_PER_MODULE = 8
 
 
 def _table(pairs: str) -> frozendict[str, int]:

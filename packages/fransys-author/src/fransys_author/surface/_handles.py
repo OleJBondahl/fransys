@@ -7,13 +7,14 @@ lazy from decimal import Decimal
 from fransys_author._limits import state_limits
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.handles import Port
+from fransys_author.surface._bar_pe import join_pe
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
 lazy from fransys_author.surface import _throws
 lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Function as ModelFunction
-lazy from fransys_model.vocab import Operating, Rating, SignalType
+lazy from fransys_model.vocab import FunctionKind, Operating, Rating, SignalType
 
 Pin = Port
 
@@ -66,6 +67,12 @@ class Fn:
     def _pins(self) -> list[tuple[str, Pin]]:
         return [(self._fn.name, pin) for pin in self._fn.ports]
 
+    def _screw(self, pin: Pin) -> Pin:
+        """`pin`, joined to the PE net when this function is a bar: a named screw is PE too."""
+        if self._fn.kind is FunctionKind.BAR:
+            join_pe(self._fn, pin)
+        return pin
+
     if not TYPE_CHECKING:  # a typed part declares its pins; ty must see no catch-all
 
         def __getitem__(self, marking: str | int) -> Pin:
@@ -73,7 +80,7 @@ class Fn:
 
             Does not guess: an unknown marking raises and lists the pins.
             """
-            return pick(f"{self._label}.{self._fn.name}", str(marking), self._pins())
+            return self._screw(pick(f"{self._label}.{self._fn.name}", str(marking), self._pins()))
 
         def __getattr__(self, name: str) -> Pin | _throws.Throw:
             """The pin named `name` (`K1.coil.A1`); a changeover's throw `no` or `nc`.
@@ -84,7 +91,8 @@ class Fn:
                 raise AttributeError(name)
             if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
                 return _throws.throw(self._label, self._fn, name)
-            return pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
+            pin = pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
+            return self._screw(pin)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:
         """Request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.

@@ -19,7 +19,7 @@ from fransys_model.kernel import Finding, Id, Model, SchemaError
 from fransys_model.layout import DrawingSet, HarnessLine, Page, layout_of, page_slice
 from fransys_model.vocab import marking_key
 from fransys_model.vocab.tables import items
-lazy from fransys_model.vocab.core import Function, Item, Unit
+lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Sequence
@@ -33,10 +33,12 @@ __all__ = [
     "drawn_lines_on_page",
     "drawn_on_page",
     "finding_order_key",
+    "findings_in_order",
     "in_designation_order",
     "natural_key",
     "plc_channel_key",
     "plc_racks",
+    "port_designation_key",
     "wire_run",
 ]
 
@@ -65,6 +67,13 @@ def natural_key(text: str) -> NaturalKey:
 def designation_key(model: Model, item: Id[Item]) -> NaturalKey:
     """`natural_key` of `item`'s printed designation: the one spelling of "by designation"."""
     return natural_key(item_designation(model, item))
+
+
+def port_designation_key(
+    model: Model, port: Id[Port], *, unit: Id[Unit] | None = None
+) -> NaturalKey:
+    """`natural_key` of `port`'s printed designation: the one spelling of "ports by designation"."""
+    return natural_key(port_designation(model, port, unit=unit))
 
 
 def in_designation_order(model: Model, listed: Iterable[Id[Item]]) -> tuple[Id[Item], ...]:
@@ -141,7 +150,7 @@ def _local_designation(model: Model, record: object, unit: Id[Unit] | None) -> N
     """
     try:
         if (port := getattr(record, "port", None)) is not None:
-            return natural_key(port_designation(model, port, unit=unit))
+            return port_designation_key(model, port, unit=unit)
         if (function := getattr(record, "function", None)) is not None:
             return natural_key(function_designation(model, function, unit=unit))
         if (harness := getattr(record, "harness", None)) is not None:
@@ -204,3 +213,8 @@ def finding_order_key(model: Model, finding: Finding) -> tuple[int, NaturalKey |
     """
     text = next((one for s in finding.subjects if (one := _printed(model, s)) is not None), None)
     return (1, ()) if text is None else (0, natural_key(text))
+
+
+def findings_in_order(model: Model, findings: Iterable[Finding]) -> list[Finding]:
+    """`findings` in print order: `finding_order_key`, then the message."""
+    return sorted(findings, key=lambda f: (finding_order_key(model, f), f.message))

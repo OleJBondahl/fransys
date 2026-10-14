@@ -30,6 +30,7 @@ class SymbolSubject(NamedTuple):
     category: str | None
     gender: str | None
     operated_by: str | None = None
+    actuator: bool = True
 
 
 Subject = FunctionSpec | SymbolSubject
@@ -102,3 +103,14 @@ def connector_gender(subject: Subject) -> str:
 def operated_by(subject: Subject) -> str:
     """What operates a switch: its part's or its nearest holder's; none when no part states it."""
     return subject.operated_by or _NONE
+
+
+@fact(
+    "actuator_drawn",
+    kind="physical",
+    source="IEC 60617 mechanical link: one actuator per device (ACTUATOR-ONCE, layout-0237)",
+    values=("yes", "no"),
+)
+def actuator_drawn(subject: Subject) -> str:
+    """Whether this switch draws its device's actuator: no for a grouped switch but its lead."""
+    return "yes" if subject.actuator else "no"

@@ -1,16 +1,18 @@
-"""The four ERROR checks on a block diagram's own scene (block-diagrams spec)."""
+"""The six ERROR checks on a block diagram's own scene (block-diagrams spec, LEGACY-B3 L12)."""
 
 from itertools import combinations, pairwise
 
 from fransys_layout.geometry import Box, Point, contains_point, overlaps
-from fransys_layout.stages.space import crosses, run_of
+from fransys_layout.stages.space import Run, crosses, run_of
 from fransys_model.kernel import Finding, Severity
 
 from ._diagram_scene import Ident, Scene, SceneBox, SceneLine, shapes
 from .codes import (
     DIAGRAM_BOX_OVERLAP,
+    DIAGRAM_LABEL_STRUCK,
     DIAGRAM_LINE_OFF_BOX,
     DIAGRAM_LINE_THROUGH_BOX,
+    DIAGRAM_LINES_SHARE_TRACK,
     DIAGRAM_TEXT_OVERLAP,
 )
 
@@ -85,9 +87,43 @@ def check_line_off_box(scene: Scene) -> tuple[Finding, ...]:
     )
 
 
+def _runs(line: SceneLine) -> list[Run]:
+    return [run_of(a, b) for a, b in pairwise(line.points)]
+
+
+def check_label_struck(scene: Scene) -> tuple[Finding, ...]:
+    """A line passes through the interior of a line label: a label never lies under a line."""
+    return tuple(
+        _error(DIAGRAM_LABEL_STRUCK, (label.owner, line.cable), "A line strikes a label.")
+        for label in scene.labels
+        for line in scene.lines
+        if any(crosses(label.rect, run) for run in _runs(line))
+    )
+
+
+def _shared(one: Run, other: Run) -> bool:
+    """Whether two runs lie on one track and overlap by more than a point."""
+    if one.x == one.to_x and other.x == other.to_x:
+        return one.x == other.x and min(one.to_y, other.to_y) > max(one.y, other.y)
+    if one.y == one.to_y and other.y == other.to_y:
+        return one.y == other.y and min(one.to_x, other.to_x) > max(one.x, other.x)
+    return False
+
+
+def check_collinear_overlap(scene: Scene) -> tuple[Finding, ...]:
+    """Two lines of different cables share a track segment of positive length."""
+    return tuple(
+        _error(DIAGRAM_LINES_SHARE_TRACK, (one.cable, other.cable), "Two cables share a track.")
+        for one, other in combinations(scene.lines, 2)
+        if one.cable != other.cable and any(_shared(r, s) for r in _runs(one) for s in _runs(other))
+    )
+
+
 def lint_diagram(scene: Scene) -> tuple[Finding, ...]:
-    """All four checks, sorted by code and subjects."""
+    """All six checks, sorted by code and subjects."""
     found = (
+        *check_label_struck(scene),
+        *check_collinear_overlap(scene),
         *check_box_overlap(scene),
         *check_line_through_box(scene),
         *check_text_overlap(scene),

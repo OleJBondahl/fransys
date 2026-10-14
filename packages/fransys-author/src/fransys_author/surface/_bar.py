@@ -6,9 +6,10 @@ from fransys_author._keys import scoped
 from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port
+from fransys_author.surface._bar_pe import join_pe
 from fransys_author.surface._handles import Fn
 from fransys_model.kernel import make_id
-from fransys_model.vocab import FunctionKind, Net, NetClass, PortRole
+from fransys_model.vocab import FunctionKind, PortRole
 from fransys_model.vocab import Port as PortRecord
 
 if TYPE_CHECKING:
@@ -65,19 +66,5 @@ def take_screw(design: Design | None, fn: Fn) -> Port:
     else:
         screw = _new_screw(fn, str(taken + 1))
     design._screws[fn.id] = taken + 1
-    _join_pe(fn, screw)
+    join_pe(fn._fn, screw)
     return screw
-
-
-def _join_pe(fn: Fn, screw: Port) -> None:
-    """A one-port `PE` net per screw: one net of a name per scope would conflict on the next."""
-    key = scoped(screw.key, "pe")
-    net = Net(
-        id=make_id(Net, key),
-        key=key,
-        name="PE",
-        net_class=NetClass.PE,
-        ports=(screw.id,),
-        potential=None,
-    )
-    fn._fn._recorder._add(net, caller_origin())

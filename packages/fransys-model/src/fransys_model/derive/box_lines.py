@@ -39,13 +39,13 @@ def connector_box_lines(
 
     The designation is `connector_designation` in `unit`'s context. The part line is the MPN, only
     when every function of the item is a connector function. A unit boundary then prints the
-    `port_designation` of each pin a conductor lands on; any other connector prints none.
+    `port_designation` of each pin a conductor lands on; any other connector prints none. A line
+    prints once however many ports or conductors reach it.
     """
     designation = connector_designation(model, function, unit=unit)
     part = _part_line(model, function)
-    return tuple(line for line in (designation, part) if line is not None) + _pin_lines(
-        model, function, unit
-    )
+    lines = tuple(line for line in (designation, part) if line is not None)
+    return tuple(dict.fromkeys(lines + _pin_lines(model, function, unit)))
 
 
 __all__ = ["connector_box_lines"]

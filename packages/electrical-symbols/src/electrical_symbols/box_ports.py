@@ -45,8 +45,9 @@ def draw_order(x: float, side: str) -> tuple[float, bool]:
 
 
 def default_order(names: Iterable[str], key: Callable[[str], Any] = str) -> tuple[str, ...]:
-    """The drawing order of box ports nobody ordered: by `key` of the name, then the name.
+    """The drawing order of box ports nobody ordered: by `key` of the printed marking.
 
-    The caller passes the natural key (`marking_key`), so `A2` stands before `A10`.
+    The caller passes the natural key (`marking_key`), so `A2` stands before `A10`; the function
+    in an item view's `<function>.<port>` name never counts (layout-0250).
     """
-    return tuple(sorted(names, key=lambda name: (key(name), name)))
+    return tuple(sorted(names, key=lambda name: (key(box_port_marking(name)), name)))

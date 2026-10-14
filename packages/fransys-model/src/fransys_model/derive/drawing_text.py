@@ -40,15 +40,23 @@ from fransys_model.derive.designation import (
     terminal_of,
 )
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.instance_tag import dashed
 from fransys_model.derive.line_fact import draws_as_line
 from fransys_model.derive.lookups import black_box_unit, effective_placement
-from fransys_model.derive.marker_targets import marker_lines, more_count, more_text, target_lines
-from fransys_model.derive.order import natural_key
+from fransys_model.derive.marker_targets import (
+    marker_lines,
+    more_count,
+    more_text,
+    target_lines,
+    target_order,
+)
+from fransys_model.derive.order import port_designation_key
 from fransys_model.derive.pole_ports import pole_prefix
 from fransys_model.derive.port_marking import marking_text, port_marking
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.revision_text import revision_text
 from fransys_model.derive.sheet_forms import set_page_text
+from fransys_model.derive.text_width import G_PER_MODULE
 from fransys_model.derive.unit_nodes import chain_up, end_context, stub_place
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.derive.view_placements import placements_by_function_page
@@ -90,13 +98,6 @@ type _PinKey = tuple[Id[Page], int, int, int, int, int, bool]
 type _ReadingKey = tuple[int, int, str, Id[Port]]
 CONTACTS_HEADED = "contacts.headed"  # a contact table sharing its column foot: heading line (0170)
 CONTACT_SLOTS = ("contacts", CONTACTS_HEADED)
-
-
-# Grid units per symbol module (`G = M/8`). The home is `electrical_symbols.G_PER_MODULE`; this is
-# a copy, not an import (this package imports nothing, root CLAUDE.md invariant 2), guarded by
-# `tests/test_boundaries.py::test_the_model_copy_of_g_per_module_matches_its_home`.
-# Only `content_extent` uses it.
-_G_PER_MODULE = 8
 
 
 def frame_column(content_width: int, frame_columns: int, x: int) -> int:
@@ -178,7 +179,7 @@ def content_extent(millimetres: int, module_mm: Decimal) -> int:
     millimetres and this is the one place they become grid units. Decimal `//` truncates toward
     zero, which is the floor for the positive size of a sheet.
     """
-    return int(millimetres * _G_PER_MODULE // module_mm)
+    return int(millimetres * G_PER_MODULE // module_mm)
 
 
 def cell(model: Model, page: Page, x: int, y: int) -> tuple[int, str]:
@@ -408,7 +409,7 @@ def _own_text(model: Model, marker: LinkMarker) -> str:
     if group is None:
         return off_stub_text(model, marker)
     ends = sorted(group, key=lambda one: _reading_key(model, layout_of(model, Page), one))
-    positions = [_marker_position(model, marker, one) for one in ends if one.id != marker.id]
+    positions = [_marker_position(model, marker, one) for one in target_order(model, marker, ends)]
     lines = target_lines(reference_number(model, marker), positions)
     # the merged stub's own text, last, unprefixed
     return "\n".join(
@@ -470,9 +471,7 @@ def _boxmates_of(model: Model) -> Mapping[Id[LinkMarker], tuple[LinkMarker, ...]
         leads = [one for one in ones if one.lead]
         if len(leads) == 1 and len(ones) > 1:
             found[leads[0].id] = tuple(
-                sorted(
-                    ones, key=lambda one: (natural_key(port_designation(model, one.port)), one.id)
-                )
+                sorted(ones, key=lambda one: (port_designation_key(model, one.port), one.id))
             )
     return found
 
@@ -621,7 +620,7 @@ def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None)
     own set (`unit`, unit-relative) and at top level alike. The one
     function every component and strip tag on a drawing is built from.
     """
-    return f"-{item_designation(model, item, unit=unit)}"
+    return dashed(item_designation(model, item, unit=unit))
 
 
 def tag_text(model: Model, function: Id[Function]) -> str:
@@ -955,12 +954,17 @@ def contact_heading(model: Model, label: Label) -> str:
     """
     if label.slot != CONTACTS_HEADED:
         return ""
-    return coil_heading(model, functions(model)[cast("Id[Function]", label.function)].item)
+    coil = functions(model)[cast("Id[Function]", label.function)].item
+    unit = layout_of(model, DrawingSet)[layout_of(model, Page)[label.page].drawing_set].unit
+    return coil_heading(model, coil, unit=unit)
 
 
-def coil_heading(model: Model, coil: Id[Item]) -> str:
-    """The text `contact_heading` prints for the table of item `coil`: layout measures it first."""
-    return item_tag_text(model, coil)
+def coil_heading(model: Model, coil: Id[Item], *, unit: Id[Unit] | None = None) -> str:
+    """The text `contact_heading` prints for the table of item `coil`: layout measures it first.
+
+    It is the coil's own tag in the set drawn (`unit`), so heading and coil read the same.
+    """
+    return item_tag_text(model, coil, unit=unit)
 
 
 def contact_marks(model: Model, function: Id[Function]) -> tuple[list[str], list[str]]:

@@ -45,12 +45,16 @@ class SceneLine:
 
 @value
 class Scene:
-    """Everything the lint checks on one sheet; `markers` are cut-line anchor points."""
+    """Everything the lint checks on one sheet; `markers` are cut-line anchor points.
+
+    `labels` are the line labels, which `texts` lists too.
+    """
 
     boxes: tuple[SceneBox, ...]
     texts: tuple[SceneText, ...]
     lines: tuple[SceneLine, ...]
     markers: tuple[Point, ...]
+    labels: tuple[SceneText, ...] = ()
 
 
 def shapes(one: SceneBox) -> tuple[Box, ...]:

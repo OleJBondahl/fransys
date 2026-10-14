@@ -20,13 +20,13 @@ _HANDLES = (Device, Fn, Terminal, TerminalStrip)
 
 def _boundary_functions(engine: EngineDesign) -> set[Any]:
     """The ids of every function that is a boundary of some unit."""
-    records = engine._design.draft().records()
+    records = engine._design._draft.records()
     return {r.function for r in records if isinstance(r, Boundary)}
 
 
 def _hinted(engine: EngineDesign) -> set[Any]:
     """The ids of the functions that already carry a side hint."""
-    return {r.function for r in engine._design.draft().records() if isinstance(r, SideHint)}
+    return {r.function for r in engine._design._draft.records() if isinstance(r, SideHint)}
 
 
 def _interface(engine: EngineDesign, target: object) -> list[Any]:

@@ -247,3 +247,16 @@ def test_an_untagged_middle_link_prints_the_key_below_the_unit_never_a_partial_c
 def test_an_untagged_instance_prints_its_key_below_the_unit() -> None:
     model, outer, mid, _inner = _nested(outer_tag=None, inner_tag=None)
     assert _text(model, outer, mid) == "mid/unit"
+
+
+# -- A root instance numbered by the pass prints its assigned tag (model-0239) ------------
+
+
+def test_a_root_instance_numbered_by_the_pass_prints_its_assigned_tag() -> None:
+    """A floating root instance gets `U1` from the numbering pass; the system manifest names it.
+
+    The manifest read the tag from the parent's `numbering_pins` rows, and a root has no parent,
+    so it printed the key (`cab/unit`) where every listing prints `-U1`.
+    """
+    result, cab, _board = _cabinet(1, ("m1",))
+    assert _text(result.model, None, cab.unit_id) == "-U1"

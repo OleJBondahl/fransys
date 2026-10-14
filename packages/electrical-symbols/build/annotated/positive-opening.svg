@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="8.75mm" height="8.75mm" viewBox="-1.75 -1.75 3.5 3.5">
+<title>Positive opening operation</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<circle cx="0" cy="0" r="0.75" stroke-width="0.1"/>
+<line x1="-0.5" y1="0" x2="0.5" y2="0" stroke-width="0.1"/>
+<polyline points="0.25,-0.25 0.5,0 0.25,0.25" stroke-width="0.1"/>
+</g>
+<g class="annotation">
+<circle class="grid" cx="-1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<rect class="body-box" x="-0.75" y="-0.75" width="1.5" height="1.5" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
+<rect class="keepout-box" x="-0.75" y="-0.75" width="1.5" height="1.5" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+</g>
+</svg>

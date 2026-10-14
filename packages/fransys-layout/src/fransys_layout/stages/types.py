@@ -262,6 +262,9 @@ class FunctionSpec:
     rest: str | None = None  # layout-0105: `link_state` of the first switched link
     protection_type: str | None = None  # layout-0105: a protection's type value
     operated_by: str | None = None  # layout-0220: `derive.operated_by`'s value
+    # layout-0237: a switch group of two or more (`derive.actuated_group`), its operating item
+    switch_group: Id[Any] | None = None
+    actuator: bool = True  # layout-0237: False for a grouped switch other than its lead
     home: Home = Home.HERE  # layout-0120: ELSEWHERE for a unit-boundary rail terminal (replicas)
 
     def __post_init__(self) -> None:
@@ -333,6 +336,9 @@ class DrawnFunction:
     fed_by: tuple[BoxFeed, ...] = ()  # layout-0107: the feeders whose pins stand over this box's
     feeds: Id[Any] | None = None  # layout-0107: the box this one stands over, pin over pin
     chained: bool = False  # layout-0215: a device chain's box, its pins set by its hops
+    boxed: bool = (
+        False  # layout-0206: a boxed pin view, drawing nothing; its keep-out is the box's width
+    )
 
     @property
     def stand(self) -> int:
@@ -480,8 +486,7 @@ class MatedFunctions:
 class Column:
     """The unit of placement: cells sorted by `(index, lane)`, drawn top to bottom.
 
-    `key` orders columns (the chain key, or the first cell's function key). `unit` is `None`
-    for a model with no units.
+    `key` orders columns after `order`, the natural place of each key part (read layer).
     """
 
     key: AuthoringKey
@@ -491,6 +496,7 @@ class Column:
     location: Id[Any] | None
     unit: Id[Any] | None = None
     beside: Id[Any] | None = None  # layout-0174: the host function this column stands beside
+    order: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         """Sort `cells` by row, then lane."""

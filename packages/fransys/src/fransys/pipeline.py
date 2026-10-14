@@ -62,7 +62,7 @@ from fransys_model.derive import (
     units,
 )
 from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins, name_findings
-from fransys_model.derive.order import finding_order_key
+from fransys_model.derive.order import finding_order_key, findings_in_order
 from fransys_model.kernel import (
     Finding,
     Id,
@@ -371,9 +371,7 @@ def _by_code_in_reader_order(findings: tuple[Finding, ...], model: Model) -> tup
     for finding in findings:
         by_code.setdefault(finding.code, []).append(finding)
     return tuple(
-        finding
-        for group in by_code.values()
-        for finding in sorted(group, key=lambda f: (finding_order_key(model, f), f.message))
+        finding for group in by_code.values() for finding in findings_in_order(model, group)
     )
 
 

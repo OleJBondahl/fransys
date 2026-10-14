@@ -5,12 +5,11 @@ from itertools import accumulate
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
-from fransys_layout.engines.diagram.labels import label_at
+from fransys_layout.engines.diagram.labels import label_lines
 from fransys_layout.engines.diagram.route import tidy
 from fransys_layout.engines.diagram.sizes import TRACK_PITCH, tab_reach
 from fransys_layout.engines.diagram.values import (
     PlacedBox,
-    PlacedLine,
     PlacedSheet,
     PlacedTab,
     PlacedText,
@@ -122,7 +121,7 @@ def sheet(
         for b in facts.diagram.boxes
         for r in (rect[b.box],)
     )
-    lines = []
+    routed = []
     for i, ln in enumerate(facts.diagram.lines):
         low, high = sorted((ln.a, ln.b), key=lambda b: (plan.stage[b], b != ln.a))
         pts = line_points(
@@ -133,8 +132,8 @@ def sheet(
             room,
         )
         pts = pts if low == ln.a else pts[::-1]
-        x, y = label_at(pts, facts.diagram.text_height)
-        lines.append(PlacedLine(cable=ln.cable, a=ln.a, b=ln.b, points=pts, text_x=x, text_y=y))
+        routed.append((ln, pts))
+    lines = label_lines(routed, boxes, facts.diagram.text_height)
     heads = tuple(
         PlacedText(
             owner=h.owner, x=PAGE_PAD, y=head_y[n], width=h.width, height=facts.diagram.text_height

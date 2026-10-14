@@ -2,7 +2,7 @@
 
 from itertools import pairwise
 
-from fransys_layout.stages.lane_runs import lane_runs
+from fransys_layout.stages.lane_runs import fill_runs, held_boundaries, lane_runs
 
 FIVE = [(0, 90), (100, 190), (200, 290), (300, 390), (400, 490)]
 
@@ -61,3 +61,23 @@ def test_runs_cover_every_lane_once_in_order() -> None:
         assert runs[0][0] == 0
         assert runs[-1][1] == len(extents)
         assert all(a[1] == b[0] for a, b in pairwise(runs))
+
+
+def test_fill_runs_fill_first_by_size() -> None:
+    """Sizes 5 5 5 5 5 in a room of 10 run two, two, one; a link across 1|2 moves the cut back."""
+    # UNDO: stages/lane_runs.py:fill_runs, `used + sizes[fits] <= room` -> `< room`
+    assert fill_runs([5] * 5, [], 10) == ((0, 2), (2, 4), (4, 5))
+    assert fill_runs([5] * 5, [(1, 2)], 10) == ((0, 1), (1, 3), (3, 5))
+
+
+def test_a_run_with_no_free_boundary_ends_where_it_is_full() -> None:
+    """Every boundary held: the run ends at the fill, and a size over the room stands alone."""
+    # UNDO: stages/lane_runs.py:fill_runs, `next((...), fits)` default `fits` -> `start + 1`
+    assert fill_runs([5, 5, 5], [(0, 2)], 10) == ((0, 2), (2, 3))
+    assert fill_runs([30, 5], [], 10) == ((0, 1), (1, 2))
+
+
+def test_held_boundaries_are_the_indexes_a_link_crosses() -> None:
+    """A link from 1 to 3 holds the boundaries 2 and 3, in either order."""
+    # UNDO: stages/lane_runs.py:held_boundaries, `min(a, b) + 1` -> `min(a, b)`
+    assert held_boundaries([(3, 1)]) == {2, 3}

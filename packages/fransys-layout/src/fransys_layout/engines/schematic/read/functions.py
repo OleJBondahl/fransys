@@ -16,7 +16,14 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.engines.schematic.defaults import kind_roles
 from fransys_layout.stages import FunctionSpec
 from fransys_layout.stages.resolve import poles_and_pairs
-from fransys_model.derive import effective_placement, operated_by
+from fransys_model.derive import (
+    actuated_group,
+    actuator_each_contact,
+    effective_placement,
+    lead_switch,
+    operated_by,
+    operating_item,
+)
 from fransys_model.derive.designation import reference_designation
 from fransys_model.derive.drawing_text import point_text, strip_tag_text
 from fransys_model.derive.lookups import connector_facets
@@ -34,6 +41,7 @@ from fransys_model.vocab.tables import (
 
 from . import roles
 from .rest import function_rest, protection_type
+from .text_or_empty import text_or_empty
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -43,7 +51,7 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Pole
     from fransys_model.vocab.aspects import AspectNode
-    from fransys_model.vocab.core import Function, Item
+    from fransys_model.vocab.core import Function, Item, Unit
 
 
 def _in_marking_order(specs: Iterable[PortSpec]) -> tuple[PortSpec, ...]:
@@ -72,6 +80,7 @@ def function_spec(
     strip, point = _terminal_texts(model, function)
     group_leaf = _placement_leaf(model, item.id, Aspect.FUNCTION)
     location_leaf = _placement_leaf(model, item.id, Aspect.LOCATION)
+    switch_group, actuator = _switch_group(model, function, item.unit)
     return FunctionSpec(
         function=function.id,
         item=item.id,
@@ -97,6 +106,8 @@ def function_spec(
         rest=function_rest(model, function),
         protection_type=protection_type(model, function.template),
         operated_by=_operated_by(model, function),
+        switch_group=switch_group,
+        actuator=actuator,
     )
 
 
@@ -132,10 +143,7 @@ def _gender(model: Model, template: Id[Any] | None) -> str | None:
 
 def _designation(model: Model, item: Id[Any]) -> str:
     """The item's reference designation, or "" before the numbering pass."""
-    try:
-        return reference_designation(model, item)
-    except SchemaError:
-        return ""
+    return text_or_empty(reference_designation, model, item)
 
 
 def _vocab_poles(model: Model, function: Function) -> tuple[Pole, ...]:
@@ -166,3 +174,17 @@ def _operated_by(model: Model, function: Function) -> str | None:
     """`derive.operated_by`'s value as a string, None when no part states one (layout-0220)."""
     found = operated_by(model, function.id)
     return None if found is None else found.value
+
+
+def _switch_group(
+    model: Model, function: Function, unit: Id[Unit] | None
+) -> tuple[Id[Item] | None, bool]:
+    """layout-0237: a grouped switch's operating item, and whether it is the lead (the actuator).
+
+    layout-0254: with the unit's `actuator_each_contact` profile on (default), no switch is grouped.
+    """
+    if actuator_each_contact(model, unit):
+        return None, True
+    if len(actuated_group(model, function.id)) < 2:  # noqa: PLR2004 -- a group of one draws as today (AO6)
+        return None, True
+    return operating_item(model, function.id), lead_switch(model, function.id) == function.id

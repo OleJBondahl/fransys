@@ -11,6 +11,7 @@ from fransys_layout.stages.columns import (
 from fransys_layout.stages.partition import (
     GROUP_SPLIT,
     KEEP_TOGETHER_UNMET,
+    ORDER_HINT_UNDONE,
     ORDER_HINT_UNMET,
     UNIT_GROUP_SPLIT,
 )
@@ -23,8 +24,10 @@ from fransys_layout.stages.references import (
 )
 from fransys_layout.stages.resolve import PIN_MAP_INCOMPLETE, SYMBOL_DEFAULTED
 from fransys_layout.stages.route import ROUTE_FAILED
+from fransys_layout.stages.stub_stack import STUBS_NOT_STACKED
 from fransys_layout.stages.texts.place_texts import LABEL_UNPLACED
 from fransys_layout.stages.texts.power_lead import POWER_SYMBOL_UNPLACED
+from fransys_model.kernel import Severity
 
 # lint/geometric.py (TEXT_CROSSED_BY_ROUTE and TEXT_OVERLAP in its private _texts.py), all WARNING
 WIRE_NOT_ORTHOGONAL = "WIRE_NOT_ORTHOGONAL"
@@ -51,6 +54,8 @@ MARKER_UNPAIRED = "MARKER_UNPAIRED"
 
 # lint/diagram.py, all ERROR
 DIAGRAM_BOX_OVERLAP = "DIAGRAM_BOX_OVERLAP"
+DIAGRAM_LABEL_STRUCK = "DIAGRAM_LABEL_STRUCK"
+DIAGRAM_LINES_SHARE_TRACK = "DIAGRAM_LINES_SHARE_TRACK"
 DIAGRAM_LINE_OFF_BOX = "DIAGRAM_LINE_OFF_BOX"
 DIAGRAM_LINE_THROUGH_BOX = "DIAGRAM_LINE_THROUGH_BOX"
 DIAGRAM_TEXT_OVERLAP = "DIAGRAM_TEXT_OVERLAP"
@@ -72,8 +77,10 @@ ALL_CODES: tuple[str, ...] = (
     CONNECTION_NOT_DRAWN,
     CONNECTION_TO_UNDRAWN,
     DIAGRAM_BOX_OVERLAP,
+    DIAGRAM_LABEL_STRUCK,
     DIAGRAM_LINE_OFF_BOX,
     DIAGRAM_LINE_THROUGH_BOX,
+    DIAGRAM_LINES_SHARE_TRACK,
     DIAGRAM_TEXT_OVERLAP,
     FUNCTION_UNPLACED_IN_COLUMN,
     GROUP_SPLIT,
@@ -85,6 +92,7 @@ ALL_CODES: tuple[str, ...] = (
     LINK_PARTNER_UNLOCATED,
     LONE_CELL,
     MARKER_UNPAIRED,
+    ORDER_HINT_UNDONE,
     ORDER_HINT_UNMET,
     OUT_OF_CONTENT_BOX,
     PAGE_OVERFULL,
@@ -97,6 +105,7 @@ ALL_CODES: tuple[str, ...] = (
     ROUTE_SHORTS_NETS,
     ROUTE_WRONG_PORT,
     SHEET_FORMAT_UNUSED,
+    STUBS_NOT_STACKED,
     SYMBOL_DEFAULTED,
     SYMBOL_OVERLAP,
     TEXT_CROSSED_BY_ROUTE,
@@ -107,5 +116,27 @@ ALL_CODES: tuple[str, ...] = (
     WIRE_OVER_LABEL,
     WIRE_THROUGH_SYMBOL,
 )
+
+# Drawing defects no consumer action clears: INFO with `codes_defects.COULD_NOT_DRAW` (layout-0252)
+UNCLEARABLE: frozenset[str] = frozenset(
+    {
+        JOIN_UNALIGNED,
+        LINE_ON_OUTLINE,
+        POWER_SYMBOL_UNPLACED,
+        REDUNDANT_JOG,
+        SYMBOL_OVERLAP,
+        TEXT_CROSSED_BY_ROUTE,
+        TEXT_OVERLAP,
+        WIRE_NOT_ORTHOGONAL,
+        WIRE_OVER_LABEL,
+        WIRE_THROUGH_SYMBOL,
+    }
+)
+
+
+def severity_of(code: str) -> Severity:
+    """INFO for a drawing defect the consumer cannot clear, WARNING for the rest of a drawn lint."""
+    return Severity.INFO if code in UNCLEARABLE else Severity.WARNING
+
 
 FINDING_CODES = (*codes_defects.FINDING_CODES, *codes_design.FINDING_CODES)

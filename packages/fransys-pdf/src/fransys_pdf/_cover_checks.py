@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import revision_history
 from fransys_model.kernel import Finding, Severity
 
-from ._frame import text_width_mm
+from ._frame import PADDING_MM, text_width_mm
 from ._geometry import document_heading, document_release, resolve_sheet_format
 from ._markdown import BulletList, Heading, NumberedList, Paragraph, Unsupported, parse
 from ._pages import DESCRIPTION_WIDTH_MM, TABLE_INSET_MM
@@ -34,7 +34,6 @@ if TYPE_CHECKING:
 # The inner padding, the same value `_frame.py`'s own private constant applies independently:
 # the flowed cover text and the table both lose this much of
 # the content box's own height on every side (spec-fixed, not tunable).
-_PADDING_MM = 5
 _LINE_HEIGHT_EM = 1.3
 
 
@@ -86,11 +85,11 @@ def cover_overflow_findings(
 ) -> tuple[Finding, ...]:
     """`COVER_OVERFLOW` (`WARNING`): cover plus revision table exceed the box."""
     sheet = resolve_sheet_format(model, record, pages)
-    width_mm = sheet.content_width_mm - 2 * _PADDING_MM
+    width_mm = sheet.content_width_mm - 2 * PADDING_MM
     text_height = _cover_text_height_mm(model, record, width_mm=width_mm)
     entries = revision_history(model, document_release(model, record))
     table_height = _table_height_mm(entries, sizes_of(model, record).label)
-    available = sheet.content_height_mm - 2 * _PADDING_MM
+    available = sheet.content_height_mm - 2 * PADDING_MM
     if text_height + table_height <= available:
         return ()
     return (

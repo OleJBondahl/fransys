@@ -146,7 +146,7 @@ class Series(Supplies, Cables):
     @cached_property
     def _pairing_facts(self: "Design") -> PartFacts:
         """The part facts of this design, indexed once (poles, sides, conductor marks)."""
-        return PartFacts(self.library, self._engine._design.draft())
+        return PartFacts(self.library, self._engine._design._draft)
 
     def series(self: "Design", *elements: object, wire: WireArg = None) -> None:
         """Wire the elements end to end: each one's load to the next one's line, one wire per pole.

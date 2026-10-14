@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.drawing_text import frame_row
+
 from .types import Home, LabelKind, LabelRequest, RequestPartner
 
 if TYPE_CHECKING:
@@ -9,7 +11,17 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import AuthoringKey
 
-    from .types import Column, FunctionSpec, Handle, PlacedFunction
+    from .types import Column, FunctionSpec, Handle, PlacedFunction, SheetFormat
+
+
+def listed(spec: FunctionSpec) -> bool:
+    """A function a contact list names: a contact, or a switch of a group (layout-0237)."""
+    return spec.roles.contact or spec.switch_group is not None
+
+
+def holds_list(spec: FunctionSpec) -> bool:
+    """A function a contact list stands under: a coil or a box, or a group's lead switch."""
+    return spec.roles.contacts_apart or (spec.switch_group is not None and spec.actuator)
 
 
 def by_owner(
@@ -28,10 +40,35 @@ def unplaced_coil_owners(
     home: Mapping[Handle, PlacedFunction],
 ) -> set[Handle]:
     """The owners whose coils are all unplaced: their contacts get no reference."""
-    coils = {
-        o: [s for s in g if s.roles.contacts_apart] for o, g in by_owner(specs, owners).items()
-    }
+    coils = {o: [s for s in g if holds_list(s)] for o, g in by_owner(specs, owners).items()}
     return {o for o, c in coils.items() if c and not any(s.function in home for s in c)}
+
+
+def one_per_row(
+    contacts: Sequence[FunctionSpec],
+    home: Mapping[Handle, PlacedFunction],
+    linked: frozenset[Handle],
+    sheet: SheetFormat,
+) -> list[FunctionSpec]:
+    """`contacts` less the pole-linked ones that stand in one row after the leftmost (layout-0235).
+
+    A repeat would print the same reference beside the same tag; the leftmost one keeps it.
+    """
+    dropped: set[Handle] = set()
+    seen: set[tuple[int, int, str]] = set()
+    for spec in sorted(contacts, key=lambda s: (home[s.function].at.x, s.function)):
+        if spec.function not in linked:
+            continue
+        one = home[spec.function]
+        place = (
+            one.drawing_set,
+            one.page,
+            frame_row(sheet.content_height, sheet.frame_rows, one.at.y),
+        )
+        if place in seen:
+            dropped.add(spec.function)
+        seen.add(place)
+    return [s for s in contacts if s.function not in dropped]
 
 
 def home_references(

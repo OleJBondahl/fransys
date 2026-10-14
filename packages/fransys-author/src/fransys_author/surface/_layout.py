@@ -128,6 +128,7 @@ class Layout:
         route_turn_penalty: int | None = None,
         route_crossing_penalty: int | None = None,
         hide_unused_pins: bool | None = None,
+        actuator_each_contact: bool | None = None,
         band_ranks: Mapping[str, int] | None = None,
         group_ranks: Mapping[str, int] | None = None,
     ) -> None:
@@ -146,6 +147,7 @@ class Layout:
             "route_turn_penalty": route_turn_penalty,
             "route_crossing_penalty": route_crossing_penalty,
             "hide_unused_pins": hide_unused_pins,
+            "actuator_each_contact": actuator_each_contact,
             "band_ranks": None if band_ranks is None else frozendict(band_ranks),
             "group_ranks": None if group_ranks is None else frozendict(group_ranks),
         }

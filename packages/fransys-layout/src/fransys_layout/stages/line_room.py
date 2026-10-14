@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
     from .types import DrawnFunction, Handle, Profile
 
+MAX_TIERS = 2  # layout-0257: uncapped, the room broke tests/test_harness_fix.py[study]
+
 
 class Cell(Protocol):
     """A cell on its way to a place, as `place` stacks it: its function and its geometry."""
@@ -40,12 +42,18 @@ def line_room(
     """
     stub = WIRING_GRID + profile.text_height + 2 * profile.marker_padding
     reach = (FAN_GRIDS + LEAVE_GRIDS) * WIRING_GRID + stub
-    lift = sink = 0
-    for rows in page:
-        if rows:
-            lift = max(lift, _beyond(rows[0], drawn_of, line_ends, (Facing.N, reach)))
-            sink = max(sink, _beyond(rows[-1], drawn_of, line_ends, (Facing.S, reach)))
-    return snap_up(lift), snap_up(sink)
+    # layout-0257: a cluster of stubs stands in a staircase, one tier each past the first
+    tier = snap_up(stub)
+    tops = [_beyond(rows[0], drawn_of, line_ends, (Facing.N, reach)) for rows in page if rows]
+    bottoms = [_beyond(rows[-1], drawn_of, line_ends, (Facing.S, reach)) for rows in page if rows]
+    return _with_tiers(tops, tier), _with_tiers(bottoms, tier)
+
+
+def _with_tiers(reaches: Sequence[tuple[int, int]], tier: int) -> int:
+    """The farthest of a page's `(reach, cells)`, a tier more for each cell with an end past one."""
+    ends = sum(n for _, n in reaches)
+    far = max((r for r, _ in reaches), default=0)
+    return snap_up(far + min(ends - 1, MAX_TIERS) * tier if ends else far)
 
 
 def _beyond(
@@ -53,11 +61,12 @@ def _beyond(
     drawn_of: Mapping[Handle, DrawnFunction],
     line_ends: AbstractSet[tuple[Handle, Handle]],
     toward: tuple[Facing, int],
-) -> int:
-    """How far past its keep-out a line end of `row` facing `toward[0]` reaches."""
+) -> tuple[int, int]:
+    """How far a line end of `row` facing `toward[0]` reaches, and in how many cells."""
     facing, reach = toward
-    found = 0
+    found = ends = 0
     for cell in row:
+        had = ends
         function, geometry = cell.function, cell.geometry
         drawn = drawn_of.get(function)
         names = (
@@ -68,8 +77,9 @@ def _beyond(
         keepout = geometry.keepout
         for port in geometry.ports:
             if port.name in names and port.facing is facing:
+                ends = had + 1
                 if facing is Facing.N:
                     found = max(found, keepout.y - (port.at.y - reach))
                 else:
                     found = max(found, port.at.y + reach - keepout.y - keepout.height)
-    return found
+    return found, ends

@@ -30,27 +30,48 @@ def pole_links(
     net_groups: tuple[NetGroup, ...],
 ) -> tuple[tuple[AuthoringKey, AuthoringKey], ...]:
     """The sorted, unique pairs of distinct column keys a pole link joins (no replica homes)."""
-    poles = {one.function: pole_ports(one) for one in drawn}
-    sizes = net_sizes(connections, net_groups)
     homes: defaultdict[Handle, list[AuthoringKey]] = defaultdict(list)
     for column in columns:
         for cell in column.cells:
             if cell.home is not Home.ELSEWHERE:
                 homes[cell.function].append(column.key)
     links: set[tuple[AuthoringKey, AuthoringKey]] = set()
-    for one in connections:
-        if (
-            one.a.port in poles.get(one.a.function, frozenset())
-            and one.b.port in poles.get(one.b.function, frozenset())
-            and sizes[one.a.port] == _NET_OF_TWO
-        ):
-            links.update(
-                (min(x, y), max(x, y))
-                for x in homes.get(one.a.function, ())
-                for y in homes.get(one.b.function, ())
-                if x != y
-            )
+    for first, second in linked_functions(drawn, connections, net_groups):
+        links.update(
+            (min(x, y), max(x, y))
+            for x in homes.get(first, ())
+            for y in homes.get(second, ())
+            if x != y
+        )
     return tuple(sorted(links))
+
+
+def linked_functions(
+    drawn: tuple[DrawnFunction, ...],
+    connections: tuple[Connection, ...],
+    net_groups: tuple[NetGroup, ...],
+) -> tuple[tuple[Handle, Handle], ...]:
+    """The function pair of each pole link: two pole ports alone on their net (layout-0049)."""
+    poles = {one.function: pole_ports(one) for one in drawn}
+    sizes = net_sizes(connections, net_groups)
+    return tuple(
+        (one.a.function, one.b.function)
+        for one in connections
+        if one.a.port in poles.get(one.a.function, frozenset())
+        and one.b.port in poles.get(one.b.function, frozenset())
+        and sizes[one.a.port] == _NET_OF_TWO
+    )
+
+
+def pole_linked(
+    drawn: tuple[DrawnFunction, ...],
+    connections: tuple[Connection, ...],
+    net_groups: tuple[NetGroup, ...],
+) -> frozenset[Handle]:
+    """The functions at an end of a pole link."""
+    return frozenset(
+        function for pair in linked_functions(drawn, connections, net_groups) for function in pair
+    )
 
 
 def pole_ports(function: DrawnFunction) -> frozenset[Handle]:

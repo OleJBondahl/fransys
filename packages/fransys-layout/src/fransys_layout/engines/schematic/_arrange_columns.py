@@ -36,6 +36,7 @@ from fransys_layout.stages.wired_copies import (
 
 from ._stub_seats import far_set_seats, stub_seats
 from .defaults import HEADROOM_LANES
+from .read.column_places import in_key_order
 from .read.reading import key_orders, terminal_sort_keys
 from .read.units import boundary_parents, unit_boundaries
 
@@ -217,6 +218,7 @@ def arranged(
         terminal_chains=chains,
     )
     columns = replicated_columns(model, inputs, drawn, all_columns)
+    all_columns, columns = in_key_order(all_columns, columns)
     # layout-0214: a hint on a group whose every copy went names nothing left to draw
     gone = emptied_groups(all_columns, columns) | loose_groups(inputs.loose, columns)
     inputs = replace(inputs, hints=without_groups(inputs.hints, gone))

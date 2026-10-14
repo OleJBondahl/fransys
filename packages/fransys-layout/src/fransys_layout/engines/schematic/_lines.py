@@ -6,27 +6,27 @@ outlines and the routes, from the boxes and pins standing on each page.
 
 from collections import defaultdict
 from dataclasses import dataclass, replace
-from itertools import pairwise
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, pad
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.lint import HarnessInk
-from fransys_layout.stages.content import content_box, drawn_extent
+from fransys_layout.stages.content import content_box
 from fransys_layout.stages.fan_tags import tags_out_of_fans
 from fransys_layout.stages.grid_path import cells_of
-from fransys_layout.stages.harness_route import Grid, line_text, text_centre
+from fransys_layout.stages.harness_route import Grid
 from fransys_layout.stages.line_draw import EndOnPage, PinAt, drawn_end, line_pieces
-from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub, slant_boxes
-from fransys_layout.stages.line_trunk import LEAVE_GRIDS
+from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine, LineStub
+from fransys_layout.stages.line_trunk import grown_region
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.route import port_end
-from fransys_layout.stages.space import Shape, Space, span
-from fransys_layout.stages.texts.place_texts import place_texts
+from fransys_layout.stages.space import Shape, Space
+from fransys_layout.stages.stub_stack import stack_stubs
 from fransys_layout.stages.types import PlacedLabel
 from fransys_model.kernel import Finding, value
 
+from ._line_drawn import _drawn_fans, _drawn_lines, _label_boxes
 from .read.harness_lines import drawn_on, line_owners, line_reads
 from .read.line_box_end import boxed_end, rows_of
 from .read.line_texts import LineTexts, line_texts, stub_box, widest_stub
@@ -311,7 +311,7 @@ def _grid(grid: Grid, page: _Page, world: _World) -> Grid:
     A line starts on a box's edge or a split outside its pins, and leaves them outward.
     """
     shapes = tuple(world.shapes.get(page, ()))
-    region = drawn_extent(grid.region, (one.box for one in shapes), LEAVE_GRIDS * WIRING_GRID)
+    region = grown_region(grid.region, (one.box for one in shapes))
     return replace(grid, region=region, obstacles=Space(shapes=shapes).obstacles({}, region))
 
 
@@ -336,64 +336,19 @@ def _page_pieces(
         for line, one in pieces
         for stub in one.stubs
     )
+    # layout-0256: stubs whose boxes meet stand in a staircase, their lines run on
+    stubs, paths, unstacked = stack_stubs(
+        stubs, paths, [one.box for one in world.shapes.get(page, [])], content_box(scene.sheet)
+    )
     # layout-0206: a label keeps the house text gap off every stub box
     stub_boxes = (Shape(owner=None, box=pad(stub.box, TEXT_GAP)) for stub in stubs)
     shapes = [*world.shapes.get(page, []), *stub_boxes]
     centres, unplaced = _label_boxes(paths, legs, texts, shapes, scene)
-    lines = tuple(
-        DrawnLine(
-            harness=owner,
-            branch=branch,
-            drawing_set=page[0],
-            page=page[1],
-            points=points,
-            text=text_centre(centres[owner, branch]),
-            label=centres[owner, branch].box,
-        )
-        for owner, branch, points in paths
-    )
-    fans = tuple(
-        DrawnFanOut(
-            harness=line.owner,
-            branch=fan.branch,
-            drawing_set=page[0],
-            page=page[1],
-            at=fan.at,
-            legs=fan.legs,
-        )
-        for line, one in pieces
-        for fan in one.fans
-    )
+    lines = _drawn_lines(paths, centres, page)
+    fans = _drawn_fans(pieces, page)
     return DrawnPieces(
         lines=(*found.lines, *lines),
         fan_outs=(*found.fan_outs, *fans),
         stubs=(*found.stubs, *stubs),
-        findings=(*found.findings, *unplaced),
+        findings=(*found.findings, *unstacked, *unplaced),
     )
-
-
-def _label_boxes(
-    paths: Sequence[tuple[Id[Any], int, tuple[Any, ...]]],
-    legs: Sequence[tuple[Any, ...]],
-    texts: LineTexts,
-    shapes: Sequence[Shape],
-    scene: LineScene,
-) -> tuple[dict[tuple[Id[Any], int], Any], tuple[Finding, ...]]:
-    """Each path's designation at the first free candidate along its longest run.
-
-    Every run keeps every label the house text gap off (layout-0158); a fan-out leg is kept clear
-    along its slant, sampled every `WIRING_GRID // 2`.
-    """
-    runs = [
-        Shape(owner=None, box=pad(span(first, second), TEXT_GAP))
-        for _, _, points in paths
-        for first, second in pairwise(points)
-    ]
-    runs += [Shape(owner=None, box=box) for leg in legs for box in slant_boxes(leg)]
-    to_place = tuple(
-        line_text(owner, branch, points, texts.size(owner, branch, scene.profile))
-        for owner, branch, points in paths
-    )
-    space = Space(shapes=(*shapes, *runs), content=content_box(scene.sheet))
-    placed, unplaced = place_texts(to_place, space, scene.profile.texts)
-    return {(one.handle, int(one.slot)): one for one in placed}, unplaced

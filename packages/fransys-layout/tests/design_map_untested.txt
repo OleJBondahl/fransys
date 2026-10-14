@@ -7,7 +7,6 @@ _sides.located
 # step 4
 onepage.keep_chosen_edges
 references.references
-references.clear_runs.run_clearance
 references.marker_boxes.stub_size
 references.markers.split_markers
 # step 5
@@ -47,6 +46,7 @@ _ordering.reorder
 _packing.merge
 _packing.placements
 _packing.pack
+_packing.undone_orders
 # step 4
 references.cuts.link_placements
 references.joins.joined_runs

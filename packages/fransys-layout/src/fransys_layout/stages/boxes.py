@@ -63,6 +63,30 @@ def first_placed(placed: Iterable[PlacedFunction]) -> dict[Id[Any], PlacedFuncti
     return home
 
 
+def _port_where(
+    placed: tuple[PlacedFunction, ...], drawn_by: Mapping[Id[Any], DrawnFunction]
+) -> dict[Id[Any], dict[tuple[int, int], tuple[int, int]]]:
+    """Each port's page-space spot, by (drawing set, page)."""
+    where: dict[Id[Any], dict[tuple[int, int], tuple[int, int]]] = {}
+    for one in placed:
+        geometry = {g.name: g for g in one.geometry.ports}
+        for port in drawn_by[one.function].ports:
+            g = geometry.get(port.symbol_port)
+            if g is not None:
+                here = port_page_at(one.at, g)
+                where.setdefault(port.port, {})[one.drawing_set, one.page] = (here.x, here.y)
+    return where
+
+
+def _partners(connections: tuple[Connection, ...]) -> dict[Id[Any], list[Id[Any]]]:
+    """Each port with the ports it connects to."""
+    partners: dict[Id[Any], list[Id[Any]]] = {}
+    for c in connections:
+        partners.setdefault(c.a.port, []).append(c.b.port)
+        partners.setdefault(c.b.port, []).append(c.a.port)
+    return partners
+
+
 def box_sides(
     placed: tuple[PlacedFunction, ...],
     drawn: tuple[DrawnFunction, ...],
@@ -76,19 +100,8 @@ def box_sides(
     from the host down, and the wire to a box-drawn end is a reference.
     """
     # `power`: the potential ranks, the power kinds and the item-box sides, by port
-    drawn_by = {one.function: one for one in drawn}
-    where: dict[Id[Any], dict[tuple[int, int], tuple[int, int]]] = {}
-    for one in placed:
-        geometry = {g.name: g for g in one.geometry.ports}
-        for port in drawn_by[one.function].ports:
-            g = geometry.get(port.symbol_port)
-            if g is not None:
-                here = port_page_at(one.at, g)
-                where.setdefault(port.port, {})[one.drawing_set, one.page] = (here.x, here.y)
-    partners: dict[Id[Any], list[Id[Any]]] = {}
-    for c in connections:
-        partners.setdefault(c.a.port, []).append(c.b.port)
-        partners.setdefault(c.b.port, []).append(c.a.port)
+    where = _port_where(placed, {one.function: one for one in drawn})
+    partners = _partners(connections)
     home = first_placed(placed)
     found = []
     for one in drawn:

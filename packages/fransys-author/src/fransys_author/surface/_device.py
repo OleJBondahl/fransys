@@ -5,6 +5,7 @@ lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
+from fransys_author.surface._bar_pe import join_pe
 from fransys_author.surface._box import check_box, with_box
 from fransys_author.surface._handles import Fn, Pin, pick
 from fransys_author.surface._tags import bare
@@ -15,8 +16,8 @@ lazy from fransys_author.surface._joins import fit_leads
 lazy from fransys_author.surface._mount import mount
 lazy from fransys_author.surface._parent import parent_item
 lazy from fransys_model.kernel import Id
+lazy from fransys_model.vocab import FunctionKind, function_identifier
 lazy from fransys_model.vocab import Item as ModelItem
-lazy from fransys_model.vocab import function_identifier
 
 if TYPE_CHECKING:
     from fransys_author.surface._strip import TerminalStrip
@@ -44,6 +45,13 @@ class Device:
     def _pins(self) -> list[tuple[str, Pin]]:
         return [(f.name, pin) for f in self._item.functions for pin in f.ports]
 
+    def _screw(self, pin: Pin) -> Pin:
+        """`pin`, joined to the PE net when its function is a bar: a named screw is PE too."""
+        for function in self._item.functions:
+            if function.kind is FunctionKind.BAR and pin in function.ports:
+                join_pe(function, pin)
+        return pin
+
     if not TYPE_CHECKING:  # a typed part declares its functions and pins; ty must see no catch-all
 
         def __getitem__(self, marking: str | int) -> Pin:
@@ -51,7 +59,7 @@ class Device:
 
             Does not guess: an unknown or doubled marking raises and names the candidates.
             """
-            return pick(self._label, str(marking), self._pins())
+            return self._screw(pick(self._label, str(marking), self._pins()))
 
         def __getattr__(self, name: str) -> Fn | Pin:
             """The function `name` (`Q1.coil`), else the one pin of that name (`Q1.A1`).
@@ -64,7 +72,7 @@ class Device:
                 if name in (function.name, function_identifier(function.name)):
                     return Fn(self._label, function, self._scope)
             if any(pin.name == name for _, pin in self._pins()):
-                return pick(self._label, name, self._pins())
+                return self._screw(pick(self._label, name, self._pins()))
             names = ", ".join(sorted(f.name for f in self._item.functions))
             msg = f"{self._label} has no function or pin {name!r}; functions: {names}"
             raise AuthorAttributeError(msg)

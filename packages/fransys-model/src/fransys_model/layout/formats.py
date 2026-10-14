@@ -103,6 +103,9 @@ class Profile:
     # On, a box-drawn pin with no conductor and a function with none are
     # not drawn; the lists keep every pin.
     hide_unused_pins: bool = False
+    # On (the house value), every contact of a manually operated device draws its own actuator;
+    # off, one per device (layout-0254).
+    actuator_each_contact: bool = True
     # Bands run top to bottom: supply and first terminal, protection, switching, overload
     # and measurement, load, last terminal. A terminal takes its band from its place in
     # the column (DESIGN 6.4).

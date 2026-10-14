@@ -4,18 +4,17 @@ lazy from collections.abc import Sequence
 
 from fransys_layout.engines.diagram.cutting import stubs
 from fransys_layout.engines.diagram.frame import build_frame
-from fransys_layout.engines.diagram.labels import label_at
+from fransys_layout.engines.diagram.labels import label_lines
 from fransys_layout.engines.diagram.route import Half, route
 from fransys_layout.engines.diagram.values import (
     PlacedBox,
     PlacedDiagram,
-    PlacedLine,
     PlacedMarker,
     PlacedSheet,
     PlacedTab,
 )
 lazy from fransys_layout.engines.diagram.frame_values import Frame, FrameBox
-lazy from fransys_layout.engines.diagram.values import DiagramFacts, LineFacts
+lazy from fransys_layout.engines.diagram.values import DiagramFacts
 
 
 def _halves(frame: Frame, facts: DiagramFacts, i: int) -> tuple[Half, ...]:
@@ -47,18 +46,13 @@ def _box(box: FrameBox, facts: DiagramFacts) -> PlacedBox:
     )
 
 
-def _line(ln: LineFacts, half: Half, text_height: int) -> PlacedLine:
-    x, y = label_at(half.points, text_height)
-    return PlacedLine(cable=ln.cable, a=ln.a, b=ln.b, points=half.points, text_x=x, text_y=y)
-
-
 def _sheet(
     number: int, frame: Frame, facts: DiagramFacts, halves: Sequence[tuple[Half, ...]]
 ) -> PlacedSheet:
     """Sheet `number` with its boxes and the lines and markers of the halves lying on it."""
     boxes = tuple(_box(b, facts) for c in frame.sheets[number - 1].columns for b in c.boxes)
     here = [(facts.lines[i], h) for i, hs in enumerate(halves) for h in hs if h.sheet == number]
-    lines = tuple(_line(ln, h, facts.text_height) for ln, h in here)
+    lines = label_lines([(ln, h.points) for ln, h in here], boxes, facts.text_height)
     markers = tuple(
         PlacedMarker(
             cable=ln.cable, a=ln.a, b=ln.b, at_sheet=h.other, x=h.points[-1].x, y=h.points[-1].y

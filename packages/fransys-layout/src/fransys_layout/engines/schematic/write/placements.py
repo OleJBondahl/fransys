@@ -23,8 +23,10 @@ _UNGROUPED = ("ungrouped",)
 
 
 def _at(keys: WriteKeys, host: Id[Any] | None) -> AuthoringKey:
-    """layout-0216: a copy drawn at its wire is keyed by the function it stands at."""
-    return () if host is None else ("at", *keys.function[host])
+    """layout-0216: a copy drawn at its wire is keyed by the function or item it stands at."""
+    if host is None:
+        return ()
+    return ("at", *(keys.function[host] if host in keys.function else keys.item[host]))
 
 
 def placements(

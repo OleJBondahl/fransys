@@ -35,10 +35,15 @@ def tip(end: End) -> End:
     return End(at=port_exit(end.at, end.facing, LEAVE_GRIDS), facing=end.facing)
 
 
+def stub_edge(at: Point, facing: Facing) -> Point:
+    """Where a line meets the stub box of the tip `at`: its near edge's middle."""
+    found = box_of(Candidate(side=facing, offset=0), stub_anchor(at), (0, 0))
+    return Point(x=found.x, y=found.y)
+
+
 def edge(end: End) -> Point:
     """Where a leaving line meets its stub's box: its near edge's middle, as `stub_box` has it."""
-    found = box_of(Candidate(side=end.facing, offset=0), stub_anchor(tip(end).at), (0, 0))
-    return Point(x=found.x, y=found.y)
+    return stub_edge(tip(end).at, end.facing)
 
 
 def trunk_end(
@@ -124,7 +129,12 @@ def _clean(points: Sequence[Point]) -> tuple[Point, ...]:
     return tuple(p for n, p in enumerate(points) if n == 0 or p != points[n - 1])
 
 
+def grown_region(region: Box, boxes: Iterable[Box]) -> Box:
+    """`region` grown to hold `boxes` and the room a leaving line runs past them (layout-0230)."""
+    return drawn_extent(region, boxes, LEAVE_GRIDS * WIRING_GRID)
+
+
 def holding_ends(grid: Grid, joint: Sequence[LineEnd]) -> Grid:
     """`grid` with its region grown to hold every end of the joint (layout-0187)."""
     spots = [Box(x=one.end.at.x, y=one.end.at.y, width=0, height=0) for one in joint]
-    return replace(grid, region=drawn_extent(grid.region, spots, LEAVE_GRIDS * WIRING_GRID))
+    return replace(grid, region=grown_region(grid.region, spots))

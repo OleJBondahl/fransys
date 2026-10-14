@@ -52,12 +52,13 @@ class Links:
     def earth(self: "Design", *pins: Port | Terminal) -> None:
         """Join the pins to protective earth, one `PE` net.
 
-        Does not take a name or a net kind; a terminal lands on its inner side.
+        Does not take a name or a net kind; a terminal lands on its inner side. A later call in
+        the same scope adds its pins to that scope's one `PE` net.
         """
         if not pins:
             msg = "d.earth joins at least one pin, got none"
             raise AuthorError(msg)
-        self._engine.net("PE", *[_port(self, pin) for pin in pins], cls="pe")
+        self._engine.earth(*[_port(self, pin) for pin in pins])
 
     def net(self: "Design", name: str, *pins: Port | Terminal, kind: NetClass = CONTROL) -> None:
         """Declare the signal net `name` over the pins, of the `NetClass` `kind`.

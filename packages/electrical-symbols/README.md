@@ -44,6 +44,7 @@ copied from the standard.
 | `actuator-push` | Actuator (operated by pushing) | qualifier |
 | `actuator-turn` | Actuator (operated by turning) | qualifier |
 | `break-contact` | Break contact | symbol |
+| `break-contact-positive-opening` | Break contact with positive opening operation | symbol |
 | `capacitor` | Capacitor, general symbol | symbol |
 | `change-over-contact` | Change-over break before make contact | symbol |
 | `circuit-breaker-function` | Circuit breaker function | qualifier |
@@ -71,6 +72,7 @@ copied from the standard.
 | `plc-channel` | PLC channel (column end) | symbol |
 | `position-switch-break` | Position switch, break contact | symbol |
 | `position-switch-make` | Position switch, make contact | symbol |
+| `positive-opening` | Positive opening operation | qualifier |
 | `power-supply` | Power supply, rail symbol | symbol |
 | `protective-earth` | Protective earth | symbol |
 | `psu` | Power supply unit (a.c./d.c. in, d.c. out) | symbol |

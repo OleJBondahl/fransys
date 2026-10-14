@@ -7,7 +7,7 @@ This page covers `fr.derive`, the facade's read-only layer. It holds the column 
 Each constant is a tuple or a dict of field names. The list outputs read them in order, so a column appears where its name appears here.
 
 - `BOM_COLUMNS` is `('mpn', 'revision', 'manufacturer', 'description', 'count', 'designations')`. It orders the columns of the bill of materials list.
-- `CABLE_LIST_COLUMNS` is `('designation', 'mpn', 'description', 'core_count', 'gauge_mm2', 'length_mm', 'from_label', 'to_label')`. It orders the columns of the cable list. The two `*_label` columns are the far-end texts of the cable.
+- `CABLE_LIST_COLUMNS` is `('designation', 'mpn', 'description', 'core_count', 'gauge_mm2', 'length_mm', 'from_label', 'to_label', 'pairs')`. It orders the columns of the cable list. The two `*_label` columns are the far-end texts of the cable.
 - `CORE_LIST_COLUMNS` is `('cable', 'core', 'colour', 'pair', 'end_a', 'end_b', 'note')`. It orders the columns of the core list. `pair` is the core's pair word, `note` is `spare` for a spare core.
 - `DESIGNATION_COLUMNS` is `('designation', 'reference', 'description')`. It orders the columns of the designation list: the printed designation, the full reference and the description.
 - `CONNECTOR_COLUMNS` is `('designation', 'style', 'pincount', 'gender', 'mate_designation')`. It orders the connector part of the connector list. Each pin line repeats these fields.

@@ -160,7 +160,8 @@ whole set of problems at once instead of fixing them one exception at a time.
 A push button, an emergency stop, a selector or a limit switch states what operates its
 contacts in `[part]`: `operated_by = "push"`, `"mushroom"`, `"turn"` or `"position"`. Its
 contacts are `switch` functions, and the drawing picks the symbol from the operator and the
-rest state: a push button closed at rest draws `push-button-break`.
+rest state: a push button closed at rest draws `push-button-break`. A part that wants one
+actuator over several contacts states one `switch` function per contact.
 
 A complete device, such as a limit switch, states it on itself. A head sold apart from its
 contact blocks states it and has no function. Each block holds one `switch` and joins the head
@@ -172,7 +173,10 @@ first = d.device(None, "DEMO-BLOCK-1NC", name="nc-1", parent=s1)
 second = d.device(None, "DEMO-BLOCK-1NC-21", name="nc-2", parent=s1)
 ```
 
-Both blocks print `-S1`, and each draws the full emergency-stop symbol in its own circuit.
+Both blocks print `-S1`, and each draws the emergency-stop symbol.
+`d.layout.profile(actuator_each_contact=False)` draws one actuator per device: the first block,
+11-12, draws the symbol and the list of both contacts; the second draws its break contact with a
+reference to the first.
 
 ## Ratings from a datasheet
 

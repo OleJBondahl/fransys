@@ -49,6 +49,7 @@ class DiagramFacts:
     left: tuple[Ident, ...] = ()
     row_height: int = 0
     share_tracks: bool = False
+    nest_same: bool = False  # same-column ends and tracks nest (layout-0201)
 
 
 @value

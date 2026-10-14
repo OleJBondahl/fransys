@@ -7,6 +7,8 @@ wire across the cut turns back up the page, so `references.turned` draws it as a
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .part_keys import base_and_first, part_key_of
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
@@ -19,15 +21,12 @@ _ROW = "row"
 
 def base_of(key: AuthoringKey) -> tuple[AuthoringKey, int]:
     """The key of the column a part was cut from, and the part's first row there."""
-    if len(key) > 1 and key[-2] == _ROW and key[-1].isdigit():
-        return key[:-2], int(key[-1])
-    return key, 0
+    return base_and_first(key, _ROW)
 
 
 def row_part_key(key: AuthoringKey, first: int) -> AuthoringKey:
     """The key of the part starting at row `first`; a part cut again counts from its column."""
-    base, at = base_of(key)
-    return (*base, _ROW, f"{at + first:04d}")
+    return part_key_of(key, _ROW, first)
 
 
 def row_parts(column: Column, rows: Sequence[Sequence[int]]) -> tuple[Column, ...]:

@@ -15,7 +15,6 @@ from canon_probes import (
 )
 
 from fransys_model.kernel import (
-    SCHEMA_VERSION,
     FreezeError,
     Origin,
     SchemaError,
@@ -25,6 +24,7 @@ from fransys_model.kernel import (
     loads,
 )
 from fransys_model.kernel.encode import to_data
+from fransys_model.vocab import SCHEMA_VERSION
 
 _ORIGIN = Origin(file="decode.py", line=1, note="")
 

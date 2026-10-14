@@ -34,7 +34,8 @@ from .designation import (
     takes_parents_designation,
     unit_list_context,
 )
-from .drawing_text import port_designation_in, wire_text
+from .drawing_text import wire_text
+from .far_ends import end_text
 from .indexes import Indexes, build_indexes
 from .list_cells import CELL_SEPARATOR
 from .lookups import (
@@ -143,14 +144,14 @@ def _wired_to(
 ) -> str | None:
     """Where the builder wires `port`: its far ends as printed, `None` for none.
 
-    The far end of every conductor at `port`, via `_end_text` (blank: left out).
+    The far end of every conductor at `port`, via `end_text` (blank: left out).
     Distinct ends print once each, sorted by `bom_sort_key` on the end's item, joined.
     """
     texts: dict[str, Id[Item]] = {}
     for conductor_id in idx.conductors_by_port.get(port, ()):
         conductor = conductors(model)[conductor_id]
         far = conductor.b if conductor.a == port else conductor.a
-        if text := _end_text(model, far, context, unit):
+        if text := end_text(model, far, context, unit):
             texts.setdefault(text, item_of_port(model, far))
     if not texts:
         return None
@@ -316,10 +317,10 @@ def cable_rows(
     _require_unit(model, unit)
     context = unit_list_context(model, unit, None)
 
-    def end_text(port: Id[Port]) -> str:
+    def cable_end(port: Id[Port]) -> str:
         if unit is None:
             return port_designation(model, port)
-        return _end_text(model, port, context, unit)
+        return end_text(model, port, context, unit)
 
     colours = _product_colours(model, cable)
     rows = []
@@ -333,21 +334,12 @@ def cable_rows(
                 colour=_colour_at(colours, facet.index, conductor),
                 conductor=conductor.id,
                 end_a=end_a,
-                end_a_designation=end_text(end_a),
+                end_a_designation=cable_end(end_a),
                 end_b=end_b,
-                end_b_designation=end_text(end_b),
+                end_b_designation=cable_end(end_b),
             )
         )
     return tuple(sorted(rows, key=lambda row: (row.index, row.conductor)))
-
-
-def _end_text(
-    model: Model, port: Id[Port], context: Id[AspectNode] | None, unit: Id[Unit] | None
-) -> str:
-    """One wire-label end as printed: `""` outside a nested `unit`, else `port_designation_in`."""
-    if end_outside_nested_unit(model, item_of_port(model, port), unit):
-        return ""
-    return port_designation_in(model, port, context, unit=unit)
 
 
 def _wire_row(
@@ -360,8 +352,8 @@ def _wire_row(
     end_from, end_to = ordered_wire_ends(model, conductor.a, conductor.b)
     return WireRow(
         conductor=conductor.id,
-        from_=_end_text(model, end_from, context, unit),
-        to=_end_text(model, end_to, context, unit),
+        from_=end_text(model, end_from, context, unit),
+        to=end_text(model, end_to, context, unit),
         colour=facet.colour,
         cross_section_mm2=facet.gauge_mm2,
         label=wire_text(model, conductor.id, unit=unit),

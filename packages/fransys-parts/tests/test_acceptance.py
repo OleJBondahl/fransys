@@ -161,16 +161,18 @@ def test_demo_library_record_counts_and_keys():
     (`block-1nc.toml`, `block-1nc-21.toml`, `block-1no.toml`, 1/2/1 each) and `ls-1no1nc.toml`
     (2/4/2), none with a symbol choice, and `pb-nc.toml` drops its symbol: 69 parts, 155
     templates, 348 ports, 68 links, 55 symbol choices; PE-BAR adds `pe-bar-20.toml` (1/20)
-    and `pe-bar-cut.toml` (1/0), so
-    71 parts, 157 templates, 368 ports, 68 links, 55 symbol choices)."""
+    and `pe-bar-cut.toml` (1/0); BAR-LANDING-STAND adds `pe-bar-3-linked.toml` and
+    `pe-bar-2-linked.toml` (1/3 and 1/2, 3 and 1 links); ACTUATOR-ONCE adds
+    `block-1nc-31.toml` (1/2/1), so
+    74 parts, 160 templates, 375 ports, 72 links, 55 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 71
-    assert len(function_templates(model)) == 157
-    assert len(port_templates(model)) == 368
-    assert len(internal_links(model)) == 68
+    assert len(parts(model)) == 74
+    assert len(function_templates(model)) == 160
+    assert len(port_templates(model)) == 375
+    assert len(internal_links(model)) == 72
     assert len(model.tables["layout.symbol_choice"]) == 55
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
@@ -614,8 +616,8 @@ def test_demo_redundancy_module_takes_class_code_r():
 
 def test_demo_housings_name_the_parts_they_mate_with():
     """parts-0016: `mates` is data on the connector facet; schema version 10."""
-    from fransys_model.kernel import SCHEMA_VERSION, freeze
-    from fransys_model.vocab import function_templates, parts
+    from fransys_model.kernel import freeze
+    from fransys_model.vocab import SCHEMA_VERSION, function_templates, parts
     from fransys_model.vocab.facets.connector import ConnectorFacet
     from fransys_model.vocab.tables import facets_of
 

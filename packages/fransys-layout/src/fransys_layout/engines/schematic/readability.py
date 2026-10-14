@@ -43,7 +43,7 @@ def _measures(
 ) -> Measures:
     """The unit and the row counts of every page of one run in a printed set, by its `Page` id."""
     layout, sheet = scene.layout, scene.inputs.sheet
-    fill = fill_shares(layout, sheet=sheet)
+    fill = fill_shares(layout, sheet=sheet, ink=scene.ink)
     found = Counter(
         (here, f.code) for here, f in geometry_by_page(layout, sheet=sheet, ink=scene.ink)
     )

@@ -106,7 +106,7 @@ def _vote_direction(
 ) -> tuple[Sequence[tuple[_PoleId, Handle, Handle]], bool]:
     """Only non-terminal poles vote on the direction; `seq` runs with the majority."""
     voters = [(p, e) for p, e, _ in seq if poles[p].inn is not None and not poles[p].terminal]
-    forward = sum(1 for p, e in voters if (poles[p].enter or poles[p].inn) == e)
+    forward = sum(1 for p, e in voters if poles[p].enter == e)
     backward = len(voters) - forward
     if backward > forward:
         seq = _turn_around(seq)

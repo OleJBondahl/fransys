@@ -47,7 +47,8 @@ from fransys_model.vocab.tables import (
     units,
 )
 
-from .accessory_blocks import operated_by
+from .accessory_blocks import operated_by, operating_item
+from .actuated import actuated_group, actuator_each_contact, lead_switch
 from .bom import TopLevelScope
 from .box_lines import connector_box_lines
 from .closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
@@ -66,7 +67,7 @@ from .columns import (
     WIRE_COLUMNS,
     WIRE_LABELS,
 )
-from .contact_entries import NO_PLACE
+from .contact_entries import NO_PLACE, contact_list_key
 from .contacts import LinkState, Throws, changeover_throws, link_state, owned_contacts
 from .core_list import core_list_rows
 from .core_pairs import cores_text
@@ -294,7 +295,9 @@ from .sheets import diagram_sheets, sheets
 from .side_hint_findings import check_side_hints
 from .supply_share import supply_share
 from .text_size import text_room_g, text_under_floor
+from .title_block import document_facts, project_facts
 from .unused import function_is_reached, function_is_unused, port_is_reached, port_is_unused
+from .wiring_ends import ends_without_jumpers, strip_side_headings
 
 __all__ = [
     "BOM_COLUMNS",
@@ -417,6 +420,8 @@ __all__ = [
     "ViewMember",
     "ViewRows",
     "WireRow",
+    "actuated_group",
+    "actuator_each_contact",
     "allocate_plc",
     "aspect_nodes",
     "bar_items",
@@ -452,6 +457,7 @@ __all__ = [
     "connector_rows",
     "connector_rows_of",
     "connector_segments",
+    "contact_list_key",
     "contents_rows",
     "core_colour",
     "core_list_rows",
@@ -464,11 +470,13 @@ __all__ = [
     "diff_marks",
     "document_drawing_sets",
     "document_export_name",
+    "document_facts",
     "document_unit",
     "drawing_set_is_replica_only",
     "draws_as_line",
     "effective_placement",
     "enclosing_boards",
+    "ends_without_jumpers",
     "export_fragment",
     "export_name",
     "export_prefix",
@@ -509,6 +517,7 @@ __all__ = [
     "items",
     "items_at",
     "lane_head",
+    "lead_switch",
     "line_conductors",
     "line_designation",
     "line_stub_line",
@@ -528,6 +537,7 @@ __all__ = [
     "open_core_rows",
     "open_strips",
     "operated_by",
+    "operating_item",
     "overview_end_text",
     "overview_field_join_text",
     "overview_fold_line_text",
@@ -577,6 +587,7 @@ __all__ = [
     "printed_designation",
     "printed_drawing_sets",
     "profile_of",
+    "project_facts",
     "prospective_fault",
     "rail_pairs",
     "readability_units",
@@ -599,6 +610,7 @@ __all__ = [
     "signal_lens",
     "signal_word",
     "standalone",
+    "strip_side_headings",
     "strip_stubs",
     "strip_view",
     "stub_ends",

@@ -3,6 +3,7 @@
 from samples import hid
 
 from fransys_layout.geometry import (
+    WIRING_GRID,
     Box,
     Facing,
     Orientation,
@@ -12,7 +13,7 @@ from fransys_layout.geometry import (
 )
 from fransys_layout.stages.box_leave import box_columns, narrowed, wired_ends
 from fransys_layout.stages.box_views import BoxSpec
-from fransys_layout.stages.connector_boxes import cell_width
+from fransys_layout.stages.connector_boxes import box_size, cell_width
 from fransys_layout.stages.types import (
     Cell,
     Column,
@@ -97,7 +98,8 @@ def test_wired_ends_hold_the_ends_of_connections_and_net_groups() -> None:
     assert wired_ends([wire], [group]) == {a.function, b.function, c.function}
 
 
-def test_narrowed_makes_a_boxed_views_keepout_as_wide_as_its_cell() -> None:
+def _view(function) -> DrawnFunction:
+    """A pin view drawn as a wide symbol, as `narrowed` finds it before it narrows it."""
     body = Box(x=-66, y=-16, width=80, height=32)
     geometry = SymbolGeometry(
         key="contact-female",
@@ -109,8 +111,8 @@ def test_narrowed_makes_a_boxed_views_keepout_as_wide_as_its_cell() -> None:
         ports=(PortGeometry(name="1", at=Point(x=0, y=-16), facing=Facing.N),),
         slots=(),
     )
-    boxed = DrawnFunction(
-        function=PORTS[0],
+    return DrawnFunction(
+        function=function,
         item=hid("item", 1),
         key=("k",),
         kind="x",
@@ -119,17 +121,21 @@ def test_narrowed_makes_a_boxed_views_keepout_as_wide_as_its_cell() -> None:
         primary_in=None,
         primary_out=None,
     )
-    other = DrawnFunction(
-        function=hid("port", 9),
-        item=hid("item", 1),
-        key=("k",),
-        kind="x",
-        geometry=geometry,
-        ports=(),
-        primary_in=None,
-        primary_out=None,
-    )
-    mine, theirs = narrowed([boxed, other], [_spec(cells=True)], TH)
+
+
+def test_narrowed_makes_a_boxed_views_keepout_as_wide_as_its_cell() -> None:
+    boxed, other = _view(PORTS[0]), _view(hid("port", 9))
+    mine, theirs = narrowed([boxed, other], [_spec(cells=True)], TH, [])
     width = cell_width("1", TH)
     assert mine.geometry.keepout == Box(x=-(width // 2), y=-16, width=width, height=32)
-    assert theirs.geometry.keepout == body
+    assert theirs.geometry.keepout == other.geometry.keepout
+
+
+def test_narrowed_gives_a_cell_less_boxs_one_kept_view_the_whole_box_width() -> None:
+    spec = BoxSpec(hid("function", 1), ("-P1-A-LONG-NAME", "FLD-PLG"), (), PORTS[:2])
+    kept = _column(Cell(function=PORTS[0], index=0))
+    (mine,) = narrowed([_view(PORTS[0])], [spec], TH, [kept])
+    wide = box_size(spec.lines, [], text_height=TH)[0]
+    assert wide > 2 * WIRING_GRID
+    assert mine.geometry.keepout.width == wide
+    assert mine.boxed

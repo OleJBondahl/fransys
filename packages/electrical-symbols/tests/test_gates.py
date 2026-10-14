@@ -148,3 +148,13 @@ def test_emergency_stop_is_the_full_symbol():
     wedge_xs = [pt.x for pt in vees[0].points]
     assert arcs[0].center.x < min(wedge_xs)
     assert max(wedge_xs) < midpoint
+
+
+def test_the_positive_opening_break_contact_is_a_break_contact_with_the_mark():
+    """D50: `in`/`out` and a through path, and the mark's one circle right of the through path."""
+    symbol = LIBRARY.get("break-contact-positive-opening")
+    assert {p.id for p in symbol.ports} == {"in", "out"}
+    assert any(path.through for path in symbol.paths)
+    circles = [e for e in symbol.elements if isinstance(e, Circle)]
+    assert len(circles) == 1
+    assert circles[0].center.x - circles[0].radius > 0

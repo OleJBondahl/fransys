@@ -8,7 +8,7 @@ from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 
 from .enums import FunctionKind
 from .tables import functions, ports
-lazy from .core import Item, Port
+lazy from .core import Function, Item, Port
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -20,3 +20,8 @@ def bar_items(model: Model) -> frozenset[Id[Item]]:
 def is_bar_port(model: Model, port: Id[Port]) -> bool:
     """Whether `port` belongs to a function of kind `BAR`: the one rule a bar's port follows."""
     return functions(model)[ports(model)[port].function].kind is FunctionKind.BAR
+
+
+def screws_made_by_landing(function: Function, declared_ports: int) -> bool:
+    """Whether a function of kind `BAR` declares no port: landings make its screws (model-0234)."""
+    return function.kind is FunctionKind.BAR and declared_ports == 0

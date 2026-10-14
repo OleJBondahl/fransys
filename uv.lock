@@ -89,12 +89,12 @@ wheels = [
 
 [[package]]
 name = "demo-parts"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "examples/demo-parts" }
 
 [[package]]
 name = "electrical-symbols"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/electrical-symbols" }
 dependencies = [
     { name = "symdef" },
@@ -139,7 +139,7 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys" }
 dependencies = [
     { name = "fransys-author" },
@@ -174,7 +174,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-author"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-author" }
 dependencies = [
     { name = "fransys-model" },
@@ -185,7 +185,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-el"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-el" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -202,7 +202,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-kicad"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-kicad" }
 dependencies = [
     { name = "fransys-model" },
@@ -213,7 +213,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-layout"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-layout" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -230,12 +230,12 @@ requires-dist = [
 
 [[package]]
 name = "fransys-model"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-overview"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-overview" }
 dependencies = [
     { name = "fransys-model" },
@@ -246,7 +246,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-parts"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-parts" }
 dependencies = [
     { name = "fransys-model" },
@@ -257,7 +257,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-pdf"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-pdf" }
 dependencies = [
     { name = "fransys-model" },
@@ -268,7 +268,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-render"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-render" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -285,7 +285,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-reports"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-reports" }
 dependencies = [
     { name = "fransys-model" },
@@ -296,7 +296,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-wago"
-version = "0.18.4"
+version = "0.18.5"
 source = { editable = "packages/fransys-wago" }
 dependencies = [
     { name = "fransys-model" },

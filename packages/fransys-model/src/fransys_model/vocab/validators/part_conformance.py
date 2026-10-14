@@ -5,6 +5,7 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.bars import screws_made_by_landing
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (
     function_templates,
@@ -87,8 +88,11 @@ def _differing(*facts: tuple[str, object, object]) -> str:
 def _port_findings(
     item: Item, function: Function, template: FunctionTemplate, index: _Index
 ) -> list[Finding]:
+    pins = index.pins_of.get(template.id, ())
+    if screws_made_by_landing(function, len(pins)):
+        return []
     where = f"function {function.name!r} of item {ref(item)}"
-    pairing = _pair_up(index.ports_of.get(function.id, ()), index.pins_of.get(template.id, ()))
+    pairing = _pair_up(index.ports_of.get(function.id, ()), pins)
     found = [
         _mismatch(f"{where} has no port for template {pin.name!r}", item.id, function.id, pin.id)
         for pin in pairing.missing

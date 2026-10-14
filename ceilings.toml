@@ -190,7 +190,7 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"docs/DESIGN.md" = 5063
+"docs/DESIGN.md" = 5086
 "docs/contracts/part-file.md" = 5025
 "packages/fransys-layout/docs/design/columns.md" = 5053
 "packages/fransys-layout/docs/design/lint.md" = 5323

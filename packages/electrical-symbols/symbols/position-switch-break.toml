@@ -1,0 +1,23 @@
+schema = 1
+name = "Position switch, break contact"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "position-switch-break" }
+pole_pitch = 8
+
+parts = [
+  { as = "contact",  use = "break-contact" },
+  { as = "actuator", use = "actuator-position", at = [-2.5, 0] },
+]
+
+ports = { in = "contact.in", out = "contact.out" }
+
+# The link is drawn here because break-contact's link anchor faces E (D48).
+elements = [
+  { line = [[0.5, 0], [-2.5, 0]], style = "dashed" },
+]
+
+[slots]
+tag           = { at = [-4, 0], side = "W", box = [6, 1] }
+"marking.in"  = "contact.marking.in"
+"marking.out" = "contact.marking.out"

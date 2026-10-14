@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16.875mm" height="15mm" viewBox="-4.5 -3 6.75 6">
+<title>Position switch, break contact</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="-2" x2="0" y2="-1" stroke-width="0.1"/>
+<line x1="0" y1="-1" x2="1.25" y2="-1" stroke-width="0.1"/>
+<line x1="0" y1="2" x2="0" y2="1" stroke-width="0.1"/>
+<line x1="0" y1="1" x2="1.125" y2="-1.25" stroke-width="0.1"/>
+<circle cx="-3" cy="0" r="0.5" stroke-width="0.1"/>
+<line x1="0.5" y1="0" x2="-2.5" y2="0" stroke-width="0.1" stroke-dasharray="0.5 0.25"/>
+</g>
+</svg>

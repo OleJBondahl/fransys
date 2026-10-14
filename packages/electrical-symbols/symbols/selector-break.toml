@@ -1,0 +1,25 @@
+schema = 1
+name = "Switch, manually operated, turning, with stay-put, break contact"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "selector-break" }
+pole_pitch = 8
+
+parts = [
+  { as = "contact",  use = "break-contact" },
+  { as = "actuator", use = "actuator-turn", at = [-2.5, 0] },
+]
+
+ports = { in = "contact.in", out = "contact.out" }
+
+# The link is drawn here because break-contact's link anchor faces E; the detent is the stay-put mark (D48).
+elements = [
+  { line = [[-2, -1.5], [-2, 0]], style = "dashed" },
+  { polyline = [[-2.625, -2], [-2.625, -1.5], [-1.375, -1.5], [-1.375, -1]] },
+  { line = [[0.5, 0], [-2.5, 0]], style = "dashed" },
+]
+
+[slots]
+tag           = { at = [-4, 0], side = "W", box = [6, 1] }
+"marking.in"  = "contact.marking.in"
+"marking.out" = "contact.marking.out"

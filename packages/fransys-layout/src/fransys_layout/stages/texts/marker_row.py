@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from .marker_room import MarkerRoom
 
 _MARGIN = WIRING_GRID // 2  # layout-0054: a stub stands half a grid inside its box
+CORRIDOR_PAD = 1  # a corridor reaches one grid unit past each end and side of its run
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,11 +264,11 @@ def stub_boxes(marker: LinkMarker) -> tuple[Box, ...]:
     return tuple(found)
 
 
-def corridor(a: Point, b: Point) -> Box:
-    """A two-wide box around the axis-aligned run from `a` to `b`, ends included."""
+def corridor(a: Point, b: Point, pad: int = CORRIDOR_PAD) -> Box:
+    """A box around the axis-aligned run from `a` to `b`, `CORRIDOR_PAD` past its ends and sides."""
     x0, x1 = sorted((a.x, b.x))
     y0, y1 = sorted((a.y, b.y))
-    return Box(x=x0 - 1, y=y0 - 1, width=x1 - x0 + 2, height=y1 - y0 + 2)
+    return Box(x=x0 - pad, y=y0 - pad, width=x1 - x0 + 2 * pad, height=y1 - y0 + 2 * pad)
 
 
 def _row(marker: LinkMarker, room: _Page) -> list[tuple[LinkMarker, Place]]:

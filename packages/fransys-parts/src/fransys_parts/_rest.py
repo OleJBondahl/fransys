@@ -18,7 +18,17 @@ if TYPE_CHECKING:
 _IMPLIED = {"contact_no": "open", "contact_nc": "closed"}
 _DECLARES = frozenset({"switch", "generic"})
 _CONTACTS = frozenset({"contact_no", "contact_nc", "contact_co", "switch"})
-_SYMBOL_REST = {"make-contact": "open", "break-contact": "closed", "emergency-stop": "closed"}
+_SYMBOL_REST = {
+    "make-contact": "open",
+    "break-contact": "closed",
+    "emergency-stop": "closed",
+    "push-button": "open",
+    "push-button-break": "closed",
+    "selector-make": "open",
+    "selector-break": "closed",
+    "position-switch-make": "open",
+    "position-switch-break": "closed",
+}
 
 
 def _switched(entry: _toml.Table) -> list[dict[str, object]]:

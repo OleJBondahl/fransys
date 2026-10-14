@@ -40,7 +40,9 @@ copied from the standard.
 | Slug | Name | Kind |
 |---|---|---|
 | `actuator-mushroom` | Actuator (mushroom head, operated by pushing) | qualifier |
+| `actuator-position` | Actuator (position switch, operated by a moving part) | qualifier |
 | `actuator-push` | Actuator (operated by pushing) | qualifier |
+| `actuator-turn` | Actuator (operated by turning) | qualifier |
 | `break-contact` | Break contact | symbol |
 | `capacitor` | Capacitor, general symbol | symbol |
 | `change-over-contact` | Change-over break before make contact | symbol |
@@ -67,15 +69,20 @@ copied from the standard.
 | `motor-3ph` | Induction motor, three-phase, squirrel cage | symbol |
 | `operating-device` | Operating device, general symbol; relay coil, general symbol | symbol |
 | `plc-channel` | PLC channel (column end) | symbol |
+| `position-switch-break` | Position switch, break contact | symbol |
+| `position-switch-make` | Position switch, make contact | symbol |
 | `power-supply` | Power supply, rail symbol | symbol |
 | `protective-earth` | Protective earth | symbol |
 | `psu` | Power supply unit (a.c./d.c. in, d.c. out) | symbol |
+| `push-button-break` | Switch, manually operated, push-button, automatic return, break contact | symbol |
 | `push-button` | Switch, manually operated, push-button, automatic return | symbol |
 | `rcd` | Residual current operated circuit breaker | symbol |
 | `rectifier-pe` | Rectifier, with protective earth terminal | symbol |
 | `rectifier` | Rectifier | symbol |
 | `residual-current-core` | Residual current sensing core | qualifier |
 | `resistor` | Resistor, general symbol | symbol |
+| `selector-break` | Switch, manually operated, turning, with stay-put, break contact | symbol |
+| `selector-make` | Switch, manually operated, turning, with stay-put, make contact | symbol |
 | `terminal` | Terminal | symbol |
 | `thermal-overload` | Thermal overload relay, thermally operated release | symbol |
 | `transformer` | Transformer with two windings, general symbol | symbol |

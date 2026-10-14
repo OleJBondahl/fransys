@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.engines.schematic.defaults import kind_roles
 from fransys_layout.stages import FunctionSpec
 from fransys_layout.stages.resolve import poles_and_pairs
-from fransys_model.derive import effective_placement
+from fransys_model.derive import effective_placement, operated_by
 from fransys_model.derive.designation import reference_designation
 from fransys_model.derive.drawing_text import point_text, strip_tag_text
 from fransys_model.derive.lookups import connector_facets
@@ -29,6 +29,7 @@ from fransys_model.vocab.tables import (
     items,
     parts,
     port_templates,
+    ports,
 )
 
 from . import roles
@@ -37,9 +38,10 @@ from .rest import function_rest, protection_type
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-    from fransys_layout.stages import PolePair, PortSpec
+    from fransys_layout.stages import PortSpec
     from fransys_model.derive.indexes import Indexes
     from fransys_model.kernel import Id, Model
+    from fransys_model.vocab import Pole
     from fransys_model.vocab.aspects import AspectNode
     from fransys_model.vocab.core import Function, Item
 
@@ -59,11 +61,13 @@ def function_spec(
     """One `FunctionSpec` read from `function`; `unit` is the item's own `unit`."""
     item = items(model)[function.item]
     category = parts(model)[item.part].category.value if item.part is not None else None
-    poles, pole_pairs = _poles_and_pairs(model, function)
+    found = _vocab_poles(model, function)
+    poles, pole_pairs = poles_and_pairs((pole.ends[0].name, pole.ends[1].name) for pole in found)
     port_ids = indexes.ports_by_function.get(function.id, ())
-    throw_of = roles.changeover_throw_of(model, function)
+    thrown = _throws(model, function, found)
     port_specs = _in_marking_order(
-        roles.port_spec(model, indexes, port_id, throw_of.get(port_id)) for port_id in port_ids
+        roles.port_spec(model, indexes, port_id, *thrown.get(port_id, (None, 0)))
+        for port_id in port_ids
     )
     strip, point = _terminal_texts(model, function)
     group_leaf = _placement_leaf(model, item.id, Aspect.FUNCTION)
@@ -92,7 +96,22 @@ def function_spec(
         item_parent=item.parent,
         rest=function_rest(model, function),
         protection_type=protection_type(model, function.template),
+        operated_by=_operated_by(model, function),
     )
+
+
+def _throws(
+    model: Model, function: Function, found: tuple[Pole, ...]
+) -> dict[Id[Any], tuple[str, int]]:
+    """Each changeover port's throw and pole: its common's place in the vocab pole order."""
+    thrown = roles.changeover_throw_of(model, function)
+    first: dict[str, int] = {}
+    for index, pole in enumerate(found):
+        for end in pole.ends:
+            first.setdefault(end.name, index)
+    names = ports(model)
+    commons = sorted({c for _, c in thrown.values()}, key=lambda c: first[names[c].name])
+    return {port: (throw, commons.index(common)) for port, (throw, common) in thrown.items()}
 
 
 def _terminal_texts(model: Model, function: Function) -> tuple[str, str]:
@@ -119,15 +138,14 @@ def _designation(model: Model, item: Id[Any]) -> str:
         return ""
 
 
-def _poles_and_pairs(model: Model, function: Function) -> tuple[int, tuple[PolePair, ...]]:
-    """Pole count and pairs in the vocab pole order; with no pole link, the linked ports pair."""
+def _vocab_poles(model: Model, function: Function) -> tuple[Pole, ...]:
+    """The poles in the vocab pole order; with no pole link, the linked ports pair."""
     template = function.template
     if template is None:
-        return 1, ()
+        return ()
     own = {t.id: t for t in port_templates(model).values() if t.function == template}
     links = [k for k in internal_links(model).values() if k.a in own and k.b in own]
-    found = function_poles(function.kind, links, own) or pole_order(links, own)
-    return poles_and_pairs((pole.ends[0].name, pole.ends[1].name) for pole in found)
+    return function_poles(function.kind, links, own) or pole_order(links, own)
 
 
 def _placement_leaf(model: Model, item_id: Id[Item], aspect: Aspect) -> AspectNode | None:
@@ -142,3 +160,9 @@ def _path_root_to_leaf(model: Model, leaf: AspectNode | None) -> tuple[Id[Aspect
         return ()
     nodes = aspect_nodes(model)
     return tuple(reversed(list(parent_chain(lambda node: nodes[node].parent, leaf.id))))
+
+
+def _operated_by(model: Model, function: Function) -> str | None:
+    """`derive.operated_by`'s value as a string, None when no part states one (layout-0220)."""
+    found = operated_by(model, function.id)
+    return None if found is None else found.value

@@ -17,11 +17,13 @@ from fransys_layout.engines.schematic.read.boundary_pins import (
     pin_ports,
     pin_specs,
 )
+from fransys_layout.engines.schematic.read.chain_views import chain_views
 from fransys_layout.engines.schematic.read.connections import (
     split_connections,
     split_net_groups,
     split_rails,
 )
+from fransys_layout.engines.schematic.read.device_chains import chain_sides, device_chains
 from fransys_layout.engines.schematic.read.item_sides import pin_sides
 from fransys_layout.engines.schematic.read.labels import LabelText
 from fransys_layout.engines.schematic.read.offstubs import far_maps, off_reads
@@ -33,6 +35,7 @@ from fransys_layout.engines.schematic.read.rails import (
 )
 from fransys_layout.engines.schematic.read.unused import without_unused
 from fransys_layout.engines.schematic.read.views import (
+    box_functions,
     item_text,
     item_views,
     pin_mates,
@@ -56,8 +59,12 @@ from fransys_layout.stages.offstubs import OffEnd, PortText, by_location, groups
 from fransys_layout.stages.types import Home
 from fransys_model.derive import channel_pins
 from fransys_model.kernel import Finding, Id
+from fransys_model.vocab.membership import boundary
+from fransys_model.vocab.membership import units as unit_ids
+from fransys_model.vocab.tables import mates as mates_table
 
 if TYPE_CHECKING:
+    from fransys_layout.stages.types import DeviceChain
     from fransys_model.derive.indexes import Indexes
     from fransys_model.kernel import Model
 
@@ -121,13 +128,30 @@ def _remap(fn: Callable[[Any], Any], refs: Refs) -> Refs:
     )
 
 
+def chain_reads(
+    model: Model, specs: Specs, refs: Refs, wired: AbstractSet[Id[Any]]
+) -> tuple[DeviceChain, ...]:
+    """LC2: the device chains over the function-level specs, before pin views and item boxes.
+
+    A mated function, or a unit's boundary function, keeps its device out of every chain.
+    """
+    apart = {f for mate in mates_table(model).values() for f in (mate.a, mate.b)}
+    apart |= {f for unit in unit_ids(model) for f in boundary(model, unit)}
+    return device_chains(specs, refs[0], refs[1], (box_functions(model, specs), wired, apart))
+
+
 def pin_reads(
-    model: Model, specs: Specs, wired: AbstractSet[Id[Any]], refs: Refs
+    model: Model,
+    specs: Specs,
+    wired: AbstractSet[Id[Any]],
+    refs: Refs,
+    boxed: AbstractSet[Id[Any]] = frozenset(),
 ) -> tuple[Specs, Views, Refs, Landings]:
     """The specs with pin views, the pin-view map, the refs named by pin view, and the landings."""
-    # Connectors are drawn per pin; connections and nets name the pin views
+    # Connectors are drawn per pin, but in a device chain's box (`boxed`, LC2); connections and
+    # nets name the pin views
     landings = pin_landings(model, specs, refs[0])
-    specs, pin_of = pin_views(specs)
+    specs, pin_of = pin_views(specs, boxed)
     refs = _remap(lambda ref: repin(ref, pin_of), refs)
     # A pin with no conductor or net, whose mated pin has none either, is not drawn
     specs, pin_of = without_idle_pins(model, specs, pin_of, wired)
@@ -151,16 +175,28 @@ def unused_reads(
 
 
 def item_reads(
-    model: Model, specs: Specs, wired: AbstractSet[Id[Any]], refs: Refs, landings: Landings
+    model: Model,
+    specs: Specs,
+    wired: AbstractSet[Id[Any]],
+    refs: Refs,
+    links: tuple[Landings, tuple[DeviceChain, ...]],
 ) -> tuple[Specs, Views, tuple[SymbolChoice, ...], tuple[tuple[Id[Any], ...], ...], Refs]:
     """The specs with item boxes, the item map and choices, the box sides, and the refs by item."""
-    # An item whose every drawn function is symbol-defaulted is one box
+    landings, chains = links
+    # LC2: a device chain's member is one box; an item whose every drawn function is
+    # symbol-defaulted is one box
     drawn_specs = specs
+    specs, chained, chain_of = chain_views(model, specs, chains)
     specs, view_of, view_choices = item_views(model, specs, reading.symbol_choices(model), wired)
-    specs = flag_channels(model, specs)
+    specs = flag_channels(model, tuple(sorted((*specs, *chained), key=lambda s: s.function)))
     # Each item box's pins on the side of their function's rank; the functions that stand
-    # apart from the box (a contact, a connector's pin views) are no part of it
+    # apart from the box (a contact, a connector's pin views) are no part of it; a chain
+    # member's pins face their neighbours
     sides = pin_sides(model, boxed(drawn_specs, view_of), set(view_of.values()))
+    sides = tuple(
+        tuple(sorted((*v1, *faced))) for v1, faced in zip(sides, chain_sides(chains), strict=True)
+    )
+    view_of |= chain_of
     refs = _remap(lambda ref: reitem(ref, view_of), refs)
     return specs, view_of, view_choices, sides, (land_on_pins(refs[0], landings), *refs[1:])
 

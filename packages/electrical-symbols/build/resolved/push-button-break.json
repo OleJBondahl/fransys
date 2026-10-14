@@ -1,0 +1,217 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3.5,
+      -2
+    ],
+    [
+      1.25,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -2
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          -1
+        ],
+        [
+          1.25,
+          -1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          1
+        ],
+        [
+          1.125,
+          -1.25
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -2.5,
+          0
+        ],
+        [
+          -3.5,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": false,
+      "fill": "none",
+      "polyline": [
+        [
+          -3,
+          -0.5
+        ],
+        [
+          -3.5,
+          -0.5
+        ],
+        [
+          -3.5,
+          0.5
+        ],
+        [
+          -3,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0.5,
+          0
+        ],
+        [
+          -2.5,
+          0
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -10,
+      -2.75
+    ],
+    [
+      1.75,
+      2
+    ]
+  ],
+  "kind": "symbol",
+  "name": "Switch, manually operated, push-button, automatic return, break contact",
+  "nodes": [
+    {
+      "ports": [
+        "in"
+      ]
+    },
+    {
+      "ports": [
+        "out"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "in",
+      "kind": "switch_closed",
+      "through": true,
+      "to": "out"
+    }
+  ],
+  "pole_pitch": 8,
+  "ports": [
+    {
+      "at": [
+        0,
+        -2
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "in"
+    },
+    {
+      "at": [
+        0,
+        2
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "out"
+    }
+  ],
+  "reference": {
+    "number": "push-button-break",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.in": {
+      "at": [
+        0.25,
+        -2.25
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.out": {
+      "at": [
+        0.25,
+        1.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        -4,
+        0
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

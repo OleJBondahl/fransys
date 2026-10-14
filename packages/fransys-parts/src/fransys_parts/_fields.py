@@ -20,6 +20,7 @@ from fransys_model.vocab import (
     Gender,
     LinkKind,
     LinkRest,
+    OperatedBy,
     Operating,
     PartCategory,
     PoleSide,
@@ -71,6 +72,7 @@ PART_FIELDS = {
     "description": _Field(str),
     "category": _Field(str, enum=PartCategory),
     "class_code": _Field(str),
+    "operated_by": _Field(str, required=False, enum=OperatedBy),
 }
 FUNCTION_FIELDS = {
     "name": _Field(str),

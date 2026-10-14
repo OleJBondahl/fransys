@@ -15,6 +15,7 @@ from fransys_layout.stages.arrange import (
 from fransys_layout.stages.attach import attach_replicas, hub_order
 from fransys_layout.stages.boxes import port_ranks, power_maps, turning_ports
 from fransys_layout.stages.chains import ChainRecords, discover_chains
+from fransys_layout.stages.device_columns import device_columns
 from fransys_layout.stages.far_ends import (
     FarInputs,
     group_map,
@@ -55,8 +56,8 @@ def discovered_columns(
 ) -> tuple[Column, ...]:
     """The columns discovery finds over every function no chain claims, cut at locations."""
     # Discovery runs first, over every function no chain claims, so a hinted chain always wins
-    # A chain never gets a function discovery already placed.
-    chain_claimed = {
+    # A chain never gets a function discovery already placed, nor a device chain's member
+    chain_claimed = {m for chain in inputs.device_chains for m in chain.members} | {
         entry.function for chain in inputs.chains for entry in chain.entries if not entry.box
     }
     undiscovered = tuple(spec for spec in inputs.functions if spec.function not in chain_claimed)
@@ -83,7 +84,8 @@ def chained_columns(
     inputs: StageInputs, drawn: tuple[DrawnFunction, ...], discovered: tuple[Column, ...]
 ) -> tuple[tuple[Column, ...], tuple[Finding, ...]]:
     """The hinted chains' columns, over the functions discovery left, and their findings."""
-    # An edge pin's face replica is not its home; its home column still comes below
+    # An edge pin's face replica is not its home; its home column still comes below; a device
+    # chain's column is among `discovered`
     placed_by_discovery = {
         cell.function
         for column in discovered
@@ -170,6 +172,12 @@ def _terminal_wires(
     return terminals, pairs, frozenset(kept & terminals), frozenset(stubbed & terminals)
 
 
+def kept_terminals(inputs: StageInputs) -> frozenset[Handle]:
+    """layout-0214: the terminals that keep every copy, a stubbed one too."""
+    _, _, kept, stubbed = _terminal_wires(inputs)
+    return kept | stubbed
+
+
 def free_pins(inputs: StageInputs, drawn: tuple[DrawnFunction, ...]) -> frozenset[Handle]:
     """layout-0208: the channel pins whose box side `box_sides` turns toward their partners."""
     power = (
@@ -195,7 +203,9 @@ def arranged(
 ]:
     """Stage 2: the columns of the run."""
     tie_key = terminal_sort_keys(model, inputs.functions)
-    discovered = discovered_columns(model, inputs, drawn, rank_of, tie_key)
+    # layout-0215: a device chain is one column of its own, out of discovery
+    devices = device_columns(inputs.device_chains, inputs.functions)
+    discovered = (*discovered_columns(model, inputs, drawn, rank_of, tie_key), *devices)
     crossing = set(inputs.crossing)
     inputs = replace(inputs, connections=tuple(c for c in inputs.connections if c not in crossing))
     chained, column_findings = chained_columns(inputs, drawn, discovered)

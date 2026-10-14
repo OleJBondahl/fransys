@@ -98,6 +98,8 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
     #     `(decided, planned.plans)` (the room is the final plans' own) fails here
     passes = iter((_plans(99), _plans(100)))
     monkeypatch.setattr(engine, "cut_wide", lambda *_: None)  # no column is over-wide
+    monkeypatch.setattr(engine, "cut_tall", lambda *_: None)  # nor over-tall (layout-0215)
+    monkeypatch.setattr(engine, "page_floor", lambda _: 0)  # the fake run has no sheet
     monkeypatch.setattr(
         engine, "plan_pages", lambda *_: SimpleNamespace(plans=next(passes), columns=())
     )
@@ -119,6 +121,8 @@ def _replans(monkeypatch: pytest.MonkeyPatch, measured: Any) -> int:
     """How many plans `_placed` makes when each placing measures `measured(n)` for the n-th."""
     plans: list[int] = []
     monkeypatch.setattr(engine, "cut_wide", lambda *_: None)  # no column is over-wide
+    monkeypatch.setattr(engine, "cut_tall", lambda *_: None)  # nor over-tall (layout-0215)
+    monkeypatch.setattr(engine, "page_floor", lambda _: 0)  # the fake run has no sheet
     monkeypatch.setattr(
         engine,
         "plan_pages",

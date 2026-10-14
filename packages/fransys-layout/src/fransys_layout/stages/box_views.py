@@ -8,6 +8,7 @@ from fransys_layout.geometry import (
     Box,
     Facing,
     Point,
+    contains_point,
     port_page_at,
     snap_up,
     translate,
@@ -44,9 +45,17 @@ class BoxSpec:
 
 
 def placed_boxes(
-    placed: Sequence[PlacedFunction], specs: Sequence[BoxSpec], text_height: int, content: Box
+    placed: Sequence[PlacedFunction],
+    specs: Sequence[BoxSpec],
+    text_height: int,
+    content: Box,
+    reach: Mapping[ViewKey, tuple[Point, ...]] = frozendict(),
 ) -> tuple[PlacedConnectorBox, ...]:
-    """Each boxed connector's box on each page its pin views stand on (a view is its port)."""
+    """Each boxed connector's box on each page its pin views stand on (a view is its port).
+
+    `reach` holds, per pin view on its page, the points its cell's leads run to: the cells face
+    them (layout-0211). A box with none keeps its cells on its pins' edge.
+    """
     views: dict[Id[Any], list[PlacedFunction]] = {}
     for one in placed:
         views.setdefault(one.function, []).append(one)
@@ -56,18 +65,31 @@ def placed_boxes(
         for port in spec.ports:
             for one in views.get(port, ()):
                 on_page.setdefault((one.drawing_set, one.page), []).append(one)
-        boxes.extend(_box(spec, views, text_height, content) for views in on_page.values())
+        boxes.extend(
+            _box(
+                spec,
+                group,
+                (text_height, content),
+                [p for v in group for p in reach.get(_key(v), ())],
+            )
+            for group in on_page.values()
+        )
     return tuple(sorted(boxes, key=lambda box: (box.drawing_set, box.page, box.function)))
 
 
+def _key(one: PlacedFunction) -> ViewKey:
+    return (one.function, one.drawing_set, one.page)
+
+
 def _box(
-    spec: BoxSpec, views: Sequence[PlacedFunction], text_height: int, content: Box
+    spec: BoxSpec, views: Sequence[PlacedFunction], room: tuple[int, Box], far: Sequence[Point]
 ) -> PlacedConnectorBox:
     """HL19: a box as wide as its cells and text, over the column of its first pin view.
 
     Each pin of it has a slot on its edge: its cell, or two grids on a cell-less box. The pin's
     view moves under its slot (`cell_views`), so the lead to its symbol is an ordinary wire.
     """
+    text_height, content = room
     pin_of = {v.function: port_page_at(v.at, v.geometry.ports[0]) for v in views}
     width, height, shown, ported = _sizes(spec, pin_of, text_height)
     lead = (width - sum(w for _, w in shown)) // (2 * WIRING_GRID) * WIRING_GRID if ported else 0
@@ -77,8 +99,9 @@ def _box(
     down = views[0].geometry.ports[0].facing is Facing.N
     edge = (min if down else max)(pin.y for pin in pin_of.values())
     box = Box(x=x, y=edge if down else edge - height, width=width, height=height)
-    slots, cells = _slots(shown, box, edge, x + lead, down=down)
-    first = box.y + HALF + (CELL_ROWS * WIRING_GRID if down and spec.cells else 0)
+    top = down if ported else cells_on_top(box, far, pins_edge=down)
+    slots, cells = _slots(shown, box, x + lead, top=top)
+    first = box.y + HALF + (CELL_ROWS * WIRING_GRID if top and spec.cells else 0)
     texts = tuple(
         Point(x=box.x + HALF, y=first + index * (text_height + WIRING_GRID))
         for index in range(len(spec.lines))
@@ -107,12 +130,30 @@ def _sizes(
     return max(width, snap_up(sum(w for _, w in shown))), height, shown, True
 
 
+NEAR = (CELL_ROWS + 1) * WIRING_GRID  # a cell row and two wiring lanes: a point closer cannot route
+
+
+def cells_on_top(box: Box, far: Sequence[Point], *, pins_edge: bool) -> bool:
+    """Layout-0211: the cells take the edge more of `far` lie beyond, by count.
+
+    A tie, no point, or a point on, in or within `NEAR` of the box (a slot there would meet
+    its port, or leave no lane) keeps them on the pins' edge (`pins_edge`: the top one).
+    """
+    middle = box.y + box.height // 2
+    above = sum(point.y < middle for point in far)
+    below = sum(point.y > middle for point in far)
+    near = replace(box, y=box.y - NEAR, height=box.height + 2 * NEAR)
+    if above == below or any(contains_point(near, p.x, p.y) for p in far):
+        return pins_edge
+    return above > below
+
+
 def _slots(
-    shown: Sequence[tuple[Id[Any], int]], box: Box, edge: int, left: int, *, down: bool
+    shown: Sequence[tuple[Id[Any], int]], box: Box, left: int, *, top: bool
 ) -> tuple[tuple[BoxSlot, ...], tuple[BoxCell, ...]]:
-    """The slot and the cell of each shown pin, side by side from `left` on the box's pin edge."""
-    row = box.y if down else box.y + box.height - CELL_ROWS * WIRING_GRID
-    facing = Facing.N if down else Facing.S
+    """The slot and the cell of each shown pin, side by side from `left` on its cells' edge."""
+    row = box.y if top else box.y + box.height - CELL_ROWS * WIRING_GRID
+    edge, facing = (box.y, Facing.N) if top else (box.y + box.height, Facing.S)
     slots: list[BoxSlot] = []
     cells: list[BoxCell] = []
     for port, wide in shown:
@@ -127,7 +168,7 @@ def _cell(left: int, row: int, width: int) -> Box:
 
 
 type ViewKey = tuple[Id[Any], int, int]
-type Move = tuple[int, int, Facing]
+type Move = tuple[int, int, Facing, Point]
 
 
 def _port(one: PlacedFunction, facing: Facing) -> PortGeometry:
@@ -152,7 +193,8 @@ def cell_views(
             one = at.get(key := (slot.port, box.drawing_set, box.page))
             if one is not None:
                 pin = _port(one, slot.facing).at
-                moves[key] = (slot.x - pin.x - one.at.x, slot.y - pin.y - one.at.y, slot.facing)
+                dx, dy = slot.x - pin.x - one.at.x, slot.y - pin.y - one.at.y
+                moves[key] = (dx, dy, slot.facing, Point(x=slot.x, y=slot.y))
     return moves
 
 
@@ -189,12 +231,11 @@ def moved_markers(
 
 
 def _carried(marker: LinkMarker, move: Move) -> LinkMarker:
-    """The marker moved by `move`; its box mirrored onto the side its pin faces."""
-    at = Point(x=marker.at.x + move[0], y=marker.at.y + move[1])
-    box = translate(marker.box, dx=move[0], dy=move[1])
-    turn = (
-        None if marker.turn is None else Point(x=marker.turn.x + move[0], y=marker.turn.y + move[1])
-    )
+    """The marker on its slot (its turned pin's point); its box mirrored to the side it faces."""
+    at = move[3]
+    dx, dy = at.x - marker.at.x, at.y - marker.at.y
+    box = translate(marker.box, dx=dx, dy=dy)
+    turn = None if marker.turn is None else Point(x=marker.turn.x + dx, y=marker.turn.y + dy)
     below = box.y >= at.y
     if marker.vertical and below is (move[2] is Facing.N):
         box = replace(box, y=2 * at.y - box.y - box.height)
@@ -250,8 +291,7 @@ def face_plugs(
 ) -> tuple[PlacedConnectorBox, ...]:
     """A plug's box touches its mate's box with cells, on the side away from them.
 
-    The cells stand on the pins' edge, toward the component's symbols; the line comes from the
-    other side, so the symbols stand on the far side of the box from it.
+    The cells face the component's symbols (layout-0211); the line comes from the other side.
     """
     by_page = {(one.function, one.drawing_set, one.page): one for one in boxes}
     found = []
@@ -262,12 +302,16 @@ def face_plugs(
 
 
 def _faced(plug: PlacedConnectorBox, mate: PlacedConnectorBox) -> PlacedConnectorBox:
-    """`plug` centred on `mate`, touching the edge of it its cells are not on."""
+    """`plug` centred on `mate`, touching the edge of it its cells are not on.
+
+    Its slots stand on its outer edge, facing out, whichever edge its own pins gave them.
+    """
     box, at = plug.box, mate.box
-    cells_on_top = mate.cells[0].box.y == at.y
-    y = at.y + at.height if cells_on_top else at.y - box.height
+    below = mate.cells[0].box.y == at.y
+    y = at.y + at.height if below else at.y - box.height
     x = at.x + (at.width - box.width) // 2
     dx, dy = x - box.x, y - box.y
+    outer, facing = (y + box.height, Facing.S) if below else (y, Facing.N)
     return PlacedConnectorBox(
         function=plug.function,
         drawing_set=plug.drawing_set,
@@ -276,7 +320,6 @@ def _faced(plug: PlacedConnectorBox, mate: PlacedConnectorBox) -> PlacedConnecto
         texts=tuple(Point(x=p.x + dx, y=p.y + dy) for p in plug.texts),
         cells=plug.cells,
         slots=tuple(
-            BoxSlot(port=one.port, x=one.x + dx, y=one.y + dy, facing=one.facing)
-            for one in plug.slots
+            BoxSlot(port=one.port, x=one.x + dx, y=outer, facing=facing) for one in plug.slots
         ),
     )

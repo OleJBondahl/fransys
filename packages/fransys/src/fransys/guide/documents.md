@@ -6,15 +6,17 @@ the model does the rest at layout and write time.
 
 ## Presets, cover and notes text
 
-`fr.document(preset, subject, cover=..., add=(), remove=(), logo=None)` takes a
+`fr.document(preset, subject, cover=..., add=(), remove=(), logo=None, notice="")` takes a
 `fr.DocumentPreset` (`CABINET_SCHEMATIC`, `HARNESS_DRAWING`, `PCB_SCHEMATIC`, `SYSTEM`), which
 fixes the deliverable's default page kinds; `add` and `remove` adjust that set for one document.
 `cover` is a required path to a Markdown file, read verbatim and stored on the model. A
 missing `cover` is a `FileNotFoundError` naming the path. A file beside it, named the cover's
 stem plus `.notes.md`, is read automatically when present and becomes the document's notes
 page; there is no separate `notes` parameter, and a missing notes file is not an error, it just
-means no notes page. `logo` is an optional path to an SVG for the title block's logo cell,
-read the same way; leaving it out (the default) leaves that cell empty.
+means no notes page. `logo` is an optional path to an SVG for the title block's logo cell, read the same way; leaving it out (the
+default) leaves that cell empty. `notice` is the text of the title block's IP notice cell, printed
+on every page of that document; `""` (the default) leaves the cell empty. A unit released alone
+needs no `d.project` for either; its Author cell prints `created` of the unit's current revision, a project document's the project's `author`. `d.project(notice=...)` raises: the notice moved here.
 
 Every preset also takes `PageKind.SHEET_INDEX`, a "Sheets" page after the notes that lists each
 sheet (`3`, `2.3`, block diagram sheets `B1`, `B2`) with its title and PDF page. It prints from two

@@ -8,10 +8,18 @@ import importlib.metadata
 from fransys_author import AuthorError
 from fransys_author.surface import (
     ABOVE,
+    AC_CONTROL,
+    AC_L1,
+    AC_L2,
+    AC_L3,
+    AC_N,
     AI,
     AO,
     BELOW,
     CONTROL,
+    DC_CONTROL,
+    DC_GROUND,
+    DC_SUPPLY,
     DI,
     DO,
     EARTHED,
@@ -37,6 +45,7 @@ from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflict, Mod
 from fransys_model.vocab import DocumentPreset, PageKind
 
 from ._release_reader import Release, ReleasePin, releases
+from ._report import report
 from .design import design
 from .documents import document
 from .parts_module import parts_module
@@ -59,10 +68,18 @@ __version__ = importlib.metadata.version("fransys")
 
 __all__ = [
     "ABOVE",
+    "AC_CONTROL",
+    "AC_L1",
+    "AC_L2",
+    "AC_L3",
+    "AC_N",
     "AI",
     "AO",
     "BELOW",
     "CONTROL",
+    "DC_CONTROL",
+    "DC_GROUND",
+    "DC_SUPPLY",
     "DI",
     "DO",
     "EARTHED",
@@ -106,6 +123,7 @@ __all__ = [
     "readability",
     "release",
     "releases",
+    "report",
     "unit",
     "verify",
     "write",

@@ -55,4 +55,4 @@ _ROWS: tuple[tuple[str, TextKind, TextPlacement], ...] = (
 
 TEXT_ROW_IDS = tuple(row_id for row_id, _, _ in _ROWS)
 TEXTS = frozendict({kind.value: placement for _, kind, placement in _ROWS})
-OPTIONS = LayoutOptions(texts=TEXTS)
+OPTIONS = LayoutOptions(texts=TEXTS, chain_boxes=True)

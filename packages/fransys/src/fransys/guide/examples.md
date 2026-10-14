@@ -8,8 +8,9 @@ a full build script outside this repository. All parts are from `demo_parts`.
 S1 and S2 are two contact blocks: S1's break contact (`nc`) stops, S2's make contact (`no`) starts.
 The power circuit runs from the three-phase supply through a breaker, the contactor's make
 contacts (`main`) and an overload relay to a terminal strip. A cable carries it to the motor. The
-control circuit runs from the 24 V rail through the stop contact, a latch and the overload's break
-contact to the contactor coil. The latch is the start contact in parallel with the contactor's own
+power supply G1 takes its mains from L1 and N of the same supply. The control circuit runs from the 24 V rail through
+the stop contact, a latch and the overload's break contact to the contactor coil. The latch is the
+start contact in parallel with the contactor's own
 auxiliary make contact.
 
 `d.series(a, b, ...)` is the one spelling for a chain of connections, and `d.parallel(...)` puts
@@ -22,7 +23,7 @@ from fransys.colours import BK, BU
 
 d = fr.design("demo_parts")
 x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
-ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3])
+ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
 g1 = d.device("G1", "DEMO-PSU-24")
 dc = d.dc_supply("24VDC", g1)
 q0 = d.device("Q0", "DEMO-MCB-3P")
@@ -34,6 +35,7 @@ x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
 w1 = d.cable("W1", "DEMO-CBL-4G1.5")
 m1 = d.device("M1", "DEMO-MOTOR-4KW")
 d.series(ac, q0.element, q1.main, f1.main, x1, w1, m1, wire=(BK, 2.5))
+d.series(ac.L1, g1.input, ac.N, wire=(BK, 2.5))
 d.series(dc.plus, s1.nc, d.parallel(s2.no, q1.aux), f1.aux, q1.coil, dc.minus, wire=(BU, 0.75))
 ```
 
@@ -56,13 +58,14 @@ PARTS = {
 
 d = fr.design("demo_parts")
 x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
-ac = d.ac_supply("400V", "230", *(x0[n] for n in (1, 2, 3)))
+ac = d.ac_supply("400V", "230", *(x0[n] for n in (1, 2, 3)), n=x0[4])
 i = {tag: d.device(tag, mpn) for tag, mpn in PARTS.items()}
 dc = d.dc_supply("24VDC", i["G1"])
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
 w1 = d.cable("W1", "DEMO-CBL-4G1.5")
 m1 = d.device("M1", "DEMO-MOTOR-4KW")
 d.series(ac, i["Q0"].element, i["Q1"].main, i["F1"].main, x1, w1, m1, wire=(BK, 2.5))
+d.series(ac.L1, i["G1"].input, ac.N, wire=(BK, 2.5))
 latch = d.parallel(i["S2"].no, i["Q1"].aux)
 d.series(dc.plus, i["S1"].nc, latch, i["F1"].aux, i["Q1"].coil, dc.minus, wire=(BU, 0.75))
 ```

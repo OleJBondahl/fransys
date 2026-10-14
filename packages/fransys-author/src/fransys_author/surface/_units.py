@@ -10,6 +10,7 @@ from fransys_author.errors import AuthorError
 from ._boundary_names import write_boundaries
 from ._unit_tags import check_add, class_code_of
 from ._unused import mark_unused
+lazy from ._rows import RowValue, WiringRow
 
 if TYPE_CHECKING:
     from fransys_author.surface.design import Design
@@ -32,6 +33,7 @@ class UnitDef[R: tuple[Any, ...]]:
     number: str
     history: tuple[Mapping[str, Any], ...]
     class_code: str
+    wiring: Mapping[WiringRow, RowValue] | None
 
 
 def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
@@ -47,6 +49,7 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     number: str = "",
     history: Sequence[Mapping[str, str | int]] = (),
     class_code: str | None = None,
+    wiring: Mapping[WiringRow, RowValue] | None = None,
 ) -> Callable[[Callable[..., R]], UnitDef[R]]:
     """Make a function the unit release `name`; it takes a child design, returns its interface.
 
@@ -54,6 +57,7 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
 
     Does not build anything: `d.add(fn, "U1")` does. `history` entries take `d.revision`'s keywords.
     `class_code` (1-3 uppercase letters) is the letter floating instances number from.
+    `wiring` replaces IEC rows in the unit's body; a unit never takes its parent's rows.
     """
     code = class_code_of(class_code)
     entry = {"revision": revision, "date": date, "text": text, "created": by}
@@ -68,6 +72,7 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
         number,
         tuple(history),
         code,
+        wiring,
     )
 
 
@@ -105,7 +110,7 @@ class Units:
         for entry in (*definition.history, definition.entry):
             scope.revision(**entry)
         scope._held = []
-        result = definition.build(type(self)(self.library, scope=scope))
+        result = definition.build(type(self)(self.library, scope=scope, wiring=definition.wiring))
         if not (isinstance(result, tuple) and hasattr(result, "_fields")):
             msg = (
                 f"unit {definition.name!r} must return an instance of a typing.NamedTuple class, "

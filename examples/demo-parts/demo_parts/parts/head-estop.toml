@@ -1,0 +1,9 @@
+schema = 1
+
+[part]
+mpn = "DEMO-HEAD-ESTOP"
+manufacturer = "Demo"
+description = "Emergency stop head, mushroom, latching; contact blocks sold apart"
+category = "electromechanical"
+class_code = "S"
+operated_by = "mushroom"

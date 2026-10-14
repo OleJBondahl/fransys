@@ -4,9 +4,13 @@ from typing import Any
 
 from plant import Plant
 
-from fransys_model.kernel import Finding, make_id
-from fransys_model.vocab.core import Item
+from fransys_model.kernel import Finding, Id, Severity, make_id
+from fransys_model.vocab.core import Item, Port
+from fransys_model.vocab.enums import FunctionKind
+from fransys_model.vocab.finding_ref import ref
+from fransys_model.vocab.tables import ports
 from fransys_model.vocab.validators.connectivity import (
+    FUNCTION_HALF_CONNECTED,
     NET_SHORTED,
     check_connectivity,
 )
@@ -30,7 +34,53 @@ def _rails(plant: Plant) -> tuple[Any, ...]:
     return tuple(ports)
 
 
-# ---- PORT_UNCONNECTED ---------------------------------------------------------------------
+# ---- FUNCTION_HALF_CONNECTED --------------------------------------------------------------
+
+
+def _two_port(plant: Plant, key: str, kind: FunctionKind) -> tuple[Id[Port], Id[Port]]:
+    function = plant.function(plant.item(key), "f", kind=kind)
+    return plant.port(function, "A1"), plant.port(function, "A2")
+
+
+def _half_wired(kind: FunctionKind) -> list[Finding]:
+    plant = Plant()
+    a1, _ = _two_port(plant, "x", kind)
+    plant.wire(a1, plant.pin("other", "f", "1"), key="w")
+    return _of(plant, FUNCTION_HALF_CONNECTED)
+
+
+def test_a_coil_wired_at_one_port_names_the_open_port() -> None:
+    plant = Plant()
+    a1, a2 = _two_port(plant, "k1", FunctionKind.COIL)
+    plant.wire(a1, plant.pin("other", "f", "1"), key="w")
+    (finding,) = _of(plant, FUNCTION_HALF_CONNECTED)
+    assert finding.severity is Severity.WARNING
+    assert finding.subjects == (a2,)
+    assert finding.message.endswith(f"open at {ref(ports(plant.model())[a2])}")
+
+
+def test_a_terminal_wired_at_one_port_gives_no_finding() -> None:
+    # MUTATION: `_half_connected` drops the `_THROUGH_KINDS` test
+    assert _half_wired(FunctionKind.TERMINAL) == []
+    assert _half_wired(FunctionKind.PLC_CHANNEL) == []
+    assert _half_wired(FunctionKind.CONNECTOR) == []
+
+
+def test_a_function_wired_at_both_ports_or_neither_gives_no_finding() -> None:
+    plant = Plant()
+    a1, a2 = _two_port(plant, "k1", FunctionKind.COIL)
+    _two_port(plant, "k2", FunctionKind.LOAD)
+    other = plant.pin("other", "f", "1")
+    plant.wire(a1, other, key="w1")
+    plant.wire(a2, other, key="w2")
+    assert _of(plant, FUNCTION_HALF_CONNECTED) == []
+
+
+def test_a_declared_net_counts_as_a_connection() -> None:
+    plant = Plant()
+    a1, _ = _two_port(plant, "k1", FunctionKind.SWITCH)
+    plant.net("n", (a1, plant.pin("other", "f", "1")))
+    assert len(_of(plant, FUNCTION_HALF_CONNECTED)) == 1
 
 
 # ---- CONDUCTOR_ON_UNINSTALLED -------------------------------------------------------------

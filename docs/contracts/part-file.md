@@ -59,6 +59,7 @@ One per file. Maps to the model's `Part`.
 | `description` | string | |
 | `category` | string | A `PartCategory` value: `"electromechanical"`, `"protection"`, `"terminal"`, `"cable"`, `"connector"`, `"plc_module"`, `"board"`, `"generic"` |
 | `class_code` | string | 1 to 3 uppercase letters, IEC 81346-2:2019, seeding numbering, e.g. `"K"`, `"Q"`, `"QA"`, `"X"`, `"W"`. The first letter is one of `B C E F G H J K M N P Q R S T U W X`; A, I and O are forbidden and D, L, V, Y and Z reserved (parts lint) |
+| `operated_by` | string | Optional. An `OperatedBy` value, what operates the part's contacts as sold: `"push"`, `"mushroom"`, `"turn"`, `"position"` (parts-0020). A head sold apart from its blocks states it and has no function; its blocks join it with `parent=` |
 
 ### `[[function]]`
 
@@ -151,13 +152,18 @@ At most one per file. Maps to the model's `cable_product` facet (subject: `Part`
 A `protection` function names its device in `type`: `"fuse"`, `"mcb"`, `"motor_breaker"`,
 `"overload"` or `"rcd"`. The loader writes it to `FunctionTemplate.protection_type`, null when absent.
 Lint: `PROTECTION_WITHOUT_TYPE` (`WARNING`), `PROTECTION_TYPE_ON_NON_PROTECTION`
-(`ERROR`), `PROTECTION_LINK_KIND` (`ERROR`, a
-`switched` link) and `SYMBOL_TYPE_MISMATCH` (`ERROR`, a symbol of another type).
+(`ERROR`), `PROTECTION_LINK_KIND` (`ERROR`, a `switched` link or a kind that does not fit the type)
+and `SYMBOL_TYPE_MISMATCH` (`ERROR`, a symbol of another type).
+A through link is `protective` for fuse, mcb, motor_breaker and rcd, and `conductive` for overload.
 
 Default symbols (layout-0105). A `symbol` on the part or a layout choice always wins.
 
 | Function | Symbol |
 |---|---|
+| switch operated by push, open / closed at rest | `push-button` / `push-button-break` |
+| switch operated by mushroom, closed at rest | `emergency-stop` |
+| switch operated by turn, open / closed at rest | `selector-make` / `selector-break` |
+| switch operated by position, open / closed at rest | `position-switch-make` / `position-switch-break` |
 | switch, open at rest | `make-contact` |
 | switch, closed at rest | `break-contact` |
 | `fuse` | `fuse` |
@@ -166,7 +172,7 @@ Default symbols (layout-0105). A `symbol` on the part or a layout choice always 
 | `rcd` | `rcd` |
 | protection with no type | `circuit-breaker` |
 
-An emergency stop has no default: name `emergency-stop` in `symbol`.
+A switch is operated by its own part's `operated_by`, else by the nearest holder's (layout-0220, model-0222). An emergency stop states `operated_by = "mushroom"`.
 
 Poles (F4, model-0128). A pole is a switched or protective link, or a protection function's
 conductive link. Poles run in natural marking order, line side on top; no side fact keeps marking order.

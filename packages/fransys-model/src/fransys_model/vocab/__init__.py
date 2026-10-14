@@ -5,9 +5,10 @@ from fransys_model.kernel import register_namespaces
 from .aspects import AspectNode, Placement
 from .cables import cable_items, is_cable
 from .closure import rail_pairs
+from .codes import FINDING_CODES
 from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_COLOURS, split_colour
 from .connectivity import Conductor, Mate, Net
-from .contacts import LinkState, Throws, changeover_throws, link_state
+from .contacts import LinkState, Throws, changeover_throws, link_state, link_throw
 from .core import Function, Item, Port, Unit, UnitRelease
 from .document import Document
 from .enums import (
@@ -23,6 +24,7 @@ from .enums import (
     LinkKind,
     LinkRest,
     NetClass,
+    OperatedBy,
     PageKind,
     PartCategory,
     PoleSide,
@@ -122,6 +124,7 @@ __all__ = [
     "ALL_VALIDATORS",
     "BASE_COLOURS",
     "COLOUR_GRAMMAR",
+    "FINDING_CODES",
     "RESERVED_COLOURS",
     "Aspect",
     "AspectNode",
@@ -160,6 +163,7 @@ __all__ = [
     "Net",
     "NetClass",
     "OpenCoreFacet",
+    "OperatedBy",
     "Operating",
     "OperatingFacet",
     "PageKind",
@@ -220,6 +224,7 @@ __all__ = [
     "is_pole_link",
     "items",
     "link_state",
+    "link_throw",
     "marking_key",
     "mates",
     "nets",

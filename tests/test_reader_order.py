@@ -363,7 +363,7 @@ def _designation(model: fr.Model, subject) -> str:
     return fr.derive.item_designation(model, subject)
 
 
-@pytest.mark.parametrize("code", ["PORT_UNCONNECTED", "ITEM_WITHOUT_PART"])
+@pytest.mark.parametrize("code", ["FUNCTION_HALF_CONNECTED", "ITEM_WITHOUT_PART"])
 def test_findings_of_one_code_list_by_natural_designation(first: _Run, code: str) -> None:
     found = [f for f in first.result.findings if f.code == code]
     printed = [_designation(first.result.model, f.subjects[0]) for f in found]

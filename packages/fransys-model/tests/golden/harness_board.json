@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 18,
+  "schema_version": 19,
   "tables": {
     "aspect_node": [
       {
@@ -681,7 +681,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-CONN-HOUSING-4P"
+        "mpn": "SIM-CONN-HOUSING-4P",
+        "operated_by": null
       },
       {
         "category": "cable",
@@ -694,7 +695,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-CABLE-4X0.5"
+        "mpn": "SIM-CABLE-4X0.5",
+        "operated_by": null
       },
       {
         "category": "protection",
@@ -707,7 +709,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-FUSE-1A-SMD"
+        "mpn": "SIM-FUSE-1A-SMD",
+        "operated_by": null
       },
       {
         "category": "board",
@@ -720,7 +723,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-BOARD-IOEXP"
+        "mpn": "SIM-BOARD-IOEXP",
+        "operated_by": null
       },
       {
         "category": "electromechanical",
@@ -733,7 +737,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-RELAY-SMD-5V"
+        "mpn": "SIM-RELAY-SMD-5V",
+        "operated_by": null
       }
     ],
     "part_library": [

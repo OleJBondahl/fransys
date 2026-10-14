@@ -190,3 +190,13 @@ def test_two_documents_with_one_stem_and_different_content_clash(tmp_path):
     second = fr.document(DocumentPreset.CABINET_SCHEMATIC, Id(kind="item", value="b"), cover=cover)
     with pytest.raises(MergeConflict):
         merge(first, second)
+
+
+def test_notice_defaults_to_empty_and_is_stored(tmp_path):
+    cover = _cover(tmp_path)
+    subject = Id(kind="item", value="demo")
+    plain = _only_record(fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover))
+    noted = _only_record(
+        fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, notice="(c) Demo AS")
+    )
+    assert (plain.notice, noted.notice) == ("", "(c) Demo AS")

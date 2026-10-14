@@ -302,3 +302,16 @@ class ConductorMark(Enum):
     L_PLUS = "L+"
     L_MINUS = "L-"
     M = "M"
+
+
+@register_enum
+class OperatedBy(Enum):
+    """What operates a part's contacts, as sold (IEC 60617's "operated by"; parts-0020).
+
+    Example: an e-stop head is `MUSHROOM`; a limit switch is `POSITION`.
+    """
+
+    PUSH = "push"
+    MUSHROOM = "mushroom"
+    TURN = "turn"
+    POSITION = "position"

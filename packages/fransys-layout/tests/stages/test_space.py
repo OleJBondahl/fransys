@@ -295,6 +295,27 @@ def test_a_run_on_an_edge_is_covered_far_edges_included_and_one_unit_off_is_not(
     assert covers(_BOX, run) is expected
 
 
+@pytest.mark.parametrize(
+    ("run", "expected"),
+    [
+        (Run(x=16, y=8, to_x=16, to_y=40), True),
+        (Run(x=16, y=32, to_x=16, to_y=40), False),
+        (Run(x=16, y=8, to_x=16, to_y=16), False),
+        (Run(x=8, y=32, to_x=48, to_y=32), True),
+        (Run(x=8, y=24, to_x=48, to_y=24), False),
+        (Run(x=8, y=8, to_x=48, to_y=8), False),
+    ],
+)
+def test_a_run_lies_along_a_box_only_on_a_side_for_a_positive_length(
+    run: Run, *, expected: bool
+) -> None:
+    """A side shared for a positive length counts; a touch at a corner or a crossing does not.
+
+    # UNDO: in `runs_along`, `min(run.to_y, bottom) > max(run.y, box.y)` becomes `>=`
+    """
+    assert runs_along(_BOX, run) is expected
+
+
 _CONTENT = Box(x=16, y=16, width=24, height=24)
 
 

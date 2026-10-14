@@ -32,7 +32,7 @@ cases only.
 
 | low-level call | only for |
 |---|---|
-| `d.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.wire(a, b, c)`; a hop whose wire differs from the rest of its path |
+| `d.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.wire(a, b, c)`; a hop whose printed wire differs from its row |
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
 | `d.net(name, *pins)` | a named net that no wire joins, such as a bus shown by its label |
@@ -65,6 +65,8 @@ from `fransys.colours`.
 | wire two named pins off a path | `d.wire(a, b, wire=(BU, 0.75))` | authoring.md, Wiring and cables |
 | add a cable, wire a core | `d.cable("W1", P.X, length_m=)`, `W1.core(BN, a, b)` | authoring.md, Wiring and cables |
 | name a wire colour | `from fransys.colours import BU`, then `wire=(BU, 0.75)` | authoring.md, Wire colours |
+| colour wires by what they carry | `fr.design(..., wiring=)`, `@fr.unit(wiring=)` or `wire={row: ...}` | authoring.md, Wire colours |
+| a changeover throw in a series | `k1.co_1.no`, `.nc` | authoring.md, A changeover in a series |
 | earth pins | `d.earth(*pins)` | authoring.md, earth pins |
 | a named signal net | `d.net(name, *pins, kind=)` | authoring.md, a named signal net |
 | a busbar, a rail bond | `d.busbar(a, b)`, `d.rail_bond(a, b)` | authoring.md, a busbar, a rail bond |
@@ -88,6 +90,7 @@ from `fransys.colours`.
 | build the model | `fr.build(d, *documents)` | build.md |
 | add a document | `fr.document(preset, subject, cover=)` | documents.md |
 | all findings of a build | `fr.check(result)` | build.md, `fr.check` sees more |
+| a readable report of them | `fr.report(result)` | build.md, `fr.report` |
 | write exports | `fr.write(result, out_dir)` | build.md |
 | the name of each export | `fr.export_names(result, unit=None)` | build.md, Export file names |
 | release a baseline | `fr.release(result, into)` | build.md, Releasing |
@@ -142,10 +145,13 @@ d = fr.design("demo_parts")
 d.add(cabinet, "U1")
 
 result = fr.build(d)  # no document: no layout
+print(fr.report(result))  # the summary, each error and warning with its fix, then the notes
 findings = fr.check(result)
 assert not [f for f in findings if f.severity is fr.Severity.ERROR]
 fr.write(result, Path("out"))
 ```
+
+`fr.report(result)` prints what the build found, so a script shows its warnings on every run.
 
 ## The rest of this guide
 
@@ -161,7 +167,7 @@ fr.write(result, Path("out"))
 - `reading-rows.md`: the column constants, row types, row functions and printed texts of `fr.derive`.
 - `reading-records.md`: the record types, lookups and ratings of `fr.derive`.
 - `keywords.md`: the signal types, handles, `Severity` and the keywords of the record constructors.
-- `findings.md`: every finding code, what it means and the usual fix, on four pages by source: `findings-validators.md`, `findings-render.md`, `findings-pdf.md` and `findings-kicad.md`.
+- `findings.md`: every finding code, what it means and the usual fix, on five pages by source: `findings-validators.md`, `findings-render.md`, `findings-pdf.md`, `findings-kicad.md` and `findings-parts.md`.
 - `kicad.md`: importing a board netlist into KiCad, with the settings to use.
 - `layout-numbers.md`: every `d.layout.profile` keyword and every `d.layout.sheet` number, with its house value and its effect.
 - `examples.md`: worked examples, and a pointer to a full build script.

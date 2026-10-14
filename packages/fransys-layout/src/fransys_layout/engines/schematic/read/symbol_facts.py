@@ -1,4 +1,4 @@
-"""The facts the default-symbol table reads: kind, rest, protection type, category, gender.
+"""The facts the default-symbol table reads: kind, rest, protection, category, gender, operator.
 
 Each reads a field of the `FunctionSpec` the reader built from the model: `rest` is
 `function_rest`'s answer (`derive.link_state`), `protection_type` and `gender` are the template's
@@ -10,7 +10,13 @@ from typing import NamedTuple, get_args
 from fransys_layout.conventions import fact
 from fransys_layout.stages import FunctionSpec
 from fransys_model.derive import LinkState
-from fransys_model.vocab.enums import FunctionKind, Gender, PartCategory, ProtectionType
+from fransys_model.vocab.enums import (
+    FunctionKind,
+    Gender,
+    OperatedBy,
+    PartCategory,
+    ProtectionType,
+)
 
 _NONE = "none"
 
@@ -23,6 +29,7 @@ class SymbolSubject(NamedTuple):
     protection_type: str | None
     category: str | None
     gender: str | None
+    operated_by: str | None = None
 
 
 Subject = FunctionSpec | SymbolSubject
@@ -84,3 +91,14 @@ def part_category(subject: Subject) -> str:
 def connector_gender(subject: Subject) -> str:
     """The connector facet's mating gender; none without one."""
     return subject.gender or _NONE
+
+
+@fact(
+    "operated_by",
+    kind="physical",
+    source="IEC 60617 operated by pushing, turning, ... (the part's operated_by, model-0222)",
+    values=(*(o.value for o in OperatedBy), _NONE),
+)
+def operated_by(subject: Subject) -> str:
+    """What operates a switch: its part's or its nearest holder's; none when no part states it."""
+    return subject.operated_by or _NONE

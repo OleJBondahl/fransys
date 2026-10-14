@@ -143,6 +143,11 @@ def test_the_longest_run_is_the_longest_segment_not_the_first() -> None:
     assert longest_run(_LINE) == (Point(x=0, y=16), Point(x=80, y=16))
 
 
+def test_a_one_point_leg_runs_at_its_point() -> None:
+    """A leg whose split stands on its end is one point (layout-0211's facing plugs)."""
+    assert longest_run((Point(x=8, y=8),)) == (Point(x=8, y=8), Point(x=8, y=8))
+
+
 def test_the_label_takes_the_first_candidate_above_the_longest_run() -> None:
     """The text stands centred over the longest run, horizontal, `TEXT_GAP` off it."""
     placed, findings = place_texts(

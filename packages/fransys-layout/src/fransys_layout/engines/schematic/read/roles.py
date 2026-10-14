@@ -11,8 +11,8 @@ from fransys_layout.geometry import LayoutError
 from fransys_layout.stages import ROLE_ORDER, PortSpec, Role
 from fransys_model.derive import changeover_throws, port_potential_current, port_potential_rank
 from fransys_model.derive.closure import net_of
-from fransys_model.vocab.enums import FunctionKind, NetClass, PortRole
-from fransys_model.vocab.tables import nets, ports
+from fransys_model.vocab.enums import FunctionKind, NetClass, PoleSide, PortRole
+from fransys_model.vocab.tables import nets, port_templates, ports
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -61,18 +61,21 @@ def strongest(roles: Iterable[Role]) -> Role:
 
 
 def port_spec(
-    model: Model, indexes: Indexes, port_id: Id[Port], throw: str | None = None
+    model: Model, indexes: Indexes, port_id: Id[Port], throw: str | None = None, pole: int = 0
 ) -> PortSpec:
     """One model port of a drawn function, as `resolve` and the engine loop need it."""
     current = port_potential_current(model, port_id)
     port = ports(model)[port_id]
     sided = port.role in (PortRole.INTERNAL, PortRole.EXTERNAL)
+    template = None if port.template is None else port_templates(model)[port.template]
     return PortSpec(
         port=port_id,
         name=port.name,
         physical_net=physical_net(model, port_id),
         role=port_role(model, indexes, port_id),
         throw=throw,
+        pole=pole,
+        line=template is not None and template.pole_side is PoleSide.LINE,
         rank=port_potential_rank(model, port_id),
         current=None if current is None else current.value,
         strip_side=port.role.value if sided else None,
@@ -80,13 +83,13 @@ def port_spec(
     )
 
 
-def changeover_throw_of(model: Model, function: Function) -> dict[Id[Port], str]:
-    """The throw of each port of a changeover `function` that has one, from its model throws."""
+def changeover_throw_of(model: Model, function: Function) -> dict[Id[Port], tuple[str, Id[Port]]]:
+    """The throw of each port of a changeover `function` that has one, and its pole's common."""
     if function.kind is not FunctionKind.CONTACT_CO:
         return {}
-    found: dict[Id[Port], str] = {}
+    found: dict[Id[Port], tuple[str, Id[Port]]] = {}
     for pole in changeover_throws(model, function.id):
-        found[pole.common] = PortRole.COMMON.value
-        found.update((port, PortRole.BREAK.value) for port in pole.breaks)
-        found.update((port, PortRole.MAKE.value) for port in pole.makes)
+        found[pole.common] = (PortRole.COMMON.value, pole.common)
+        found.update((port, (PortRole.BREAK.value, pole.common)) for port in pole.breaks)
+        found.update((port, (PortRole.MAKE.value, pole.common)) for port in pole.makes)
     return found

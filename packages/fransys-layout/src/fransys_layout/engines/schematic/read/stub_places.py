@@ -44,9 +44,12 @@ def end_spots(
     for function in functions:
         for page, one in where.get(function, {}).items():
             found[page] = min(found.get(page, (one.at.x, one.at.y)), (one.at.x, one.at.y))
+    shown = set(found)
     for function in functions:  # layout-0206: a boxed connector whose pin views are not drawn
         for page, box in boxes.get(function, {}).items():
-            found.setdefault(page, (box.box.x, box.box.y))
+            if page not in shown:  # layout-0221: the least corner, never the first set-order hit
+                corner = (box.box.x, box.box.y)
+                found[page] = min(found.get(page, corner), corner)
     return found
 
 

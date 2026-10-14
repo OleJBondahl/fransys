@@ -101,11 +101,11 @@ def test_the_wire_is_a_colour_and_mm2_tuple(lib: Draft) -> None:
     assert _wires(d)
 
 
-def test_a_missing_wire_raises(lib: Draft) -> None:
+def test_a_missing_wire_on_a_series_that_reaches_no_supply_raises(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(TypeError, match="wire"):
-        d.series(q1.main, k1)  # ty: ignore[missing-argument] -- the test plants the omission
+    with pytest.raises(AuthorError, match=r"reaches no supply: give wire=\(colour, size\)"):
+        d.series(q1.main, k1)
     assert not _wires(d)
 
 

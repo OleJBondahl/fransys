@@ -46,6 +46,7 @@ from fransys_model.vocab.tables import (
     units,
 )
 
+from .accessory_blocks import operated_by
 from .bom import TopLevelScope
 from .box_lines import connector_box_lines
 from .closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
@@ -521,6 +522,7 @@ __all__ = [
     "number",
     "open_core_rows",
     "open_strips",
+    "operated_by",
     "overview_end_text",
     "overview_field_join_text",
     "overview_fold_line_text",

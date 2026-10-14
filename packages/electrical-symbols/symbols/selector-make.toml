@@ -1,0 +1,24 @@
+schema = 1
+name = "Switch, manually operated, turning, with stay-put, make contact"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "selector-make" }
+pole_pitch = 8
+
+parts = [
+  { as = "contact",  use = "make-contact" },
+  { as = "actuator", use = "actuator-turn", attach = "link", to = "contact.link", length = 2, via = "mechanical_link" },
+]
+
+ports = { in = "contact.in", out = "contact.out" }
+
+# The stay-put (latching) mark: a stepped detent on the link, joined by a dashed riser (D48).
+elements = [
+  { line = [[-2, -1.5], [-2, 0]], style = "dashed" },
+  { polyline = [[-2.625, -2], [-2.625, -1.5], [-1.375, -1.5], [-1.375, -1]] },
+]
+
+[slots]
+tag           = { at = [-4, 0], side = "W", box = [6, 1] }
+"marking.in"  = "contact.marking.in"
+"marking.out" = "contact.marking.out"

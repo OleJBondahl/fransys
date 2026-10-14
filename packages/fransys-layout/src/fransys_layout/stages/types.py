@@ -188,6 +188,8 @@ class PortSpec:
     physical_net: Id[Any]
     role: Role
     throw: str | None = None
+    pole: int = 0  # a changeover port's pole: its common's place in the pole order
+    line: bool = False  # the part states this port on its pole's line side
     rank: int | None = None
     current: str | None = None
     strip_side: str | None = None  # a terminal port's `PortRole` value, internal or external
@@ -259,6 +261,7 @@ class FunctionSpec:
     item_parent: Id[Any] | None = None
     rest: str | None = None  # layout-0105: `link_state` of the first switched link
     protection_type: str | None = None  # layout-0105: a protection's type value
+    operated_by: str | None = None  # layout-0220: `derive.operated_by`'s value
     home: Home = Home.HERE  # layout-0120: ELSEWHERE for a unit-boundary rail terminal (replicas)
 
     def __post_init__(self) -> None:
@@ -302,6 +305,18 @@ class BoxFeed:
 
 
 @value
+class DeviceChain:
+    """LC2: devices of one block wired hop to hop, `members` top to bottom (layout-0215).
+
+    Each hop is a `BoxFeed`, the upper device its feeder; a ring's `closing` hop draws as markers.
+    """
+
+    members: tuple[Id[Any], ...]
+    hops: tuple[BoxFeed, ...]
+    closing: BoxFeed | None = None
+
+
+@value
 class DrawnFunction:
     """A function with its symbol chosen (output of `resolve`). `ports` is sorted by `port`."""
 
@@ -317,6 +332,7 @@ class DrawnFunction:
     reach: tuple[Reach, ...] = ()  # The room each box pin's attached contact needs
     fed_by: tuple[BoxFeed, ...] = ()  # layout-0107: the feeders whose pins stand over this box's
     feeds: Id[Any] | None = None  # layout-0107: the box this one stands over, pin over pin
+    chained: bool = False  # layout-0215: a device chain's box, its pins set by its hops
 
     @property
     def stand(self) -> int:
@@ -449,6 +465,7 @@ class Cell:
     face: bool = False  # The lower pin of a mated pair, face to face with host
     home: Home = Home.HERE  # layout-0129: ELSEWHERE a replica, MOVED a home at its pin
     span_port: str = ""  # The symbol port that sits under this cell's lane
+    at_wire: bool = False  # layout-0216: a copy drawn at its wire's far pin, keyed by its host
 
 
 @value

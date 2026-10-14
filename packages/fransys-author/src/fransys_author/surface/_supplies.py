@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import End, Ends
+from fransys_author.surface._rows import WiringRow, rail_row
 from fransys_author.surface._wire import _port
 from fransys_model.vocab import ConductorMark, Earthing
 lazy from fransys_author.handles import Port, Terminal
@@ -39,9 +40,13 @@ class SupplyRail:
     potential: str
     mark: ConductorMark
     phase: int | None
+    row: WiringRow
 
     def _series_width(self) -> int | None:
         return 1
+
+    def _conductor_rows(self) -> tuple[WiringRow, ...]:
+        return (self.row,)
 
     def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
         end = (End(self.pin, self.mark),)
@@ -54,6 +59,20 @@ class _Rails:
     def __init__(self, name: str, rails: Iterable[SupplyRail]) -> None:
         self._name, self._rails = name, tuple(rails)
         self.__dict__.update({rail.name: rail for rail in self._rails})
+
+    _whole_supply = True  # a series that starts on a whole supply is a power path (S3)
+
+    def _series_width(self) -> int | None:
+        return len(self._rails)
+
+    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
+        """The first `width` rails: a path with no N pole leaves N, the last rail, unwired."""
+        # `ac_supply` appends N after the phases, so N is always the last rail.
+        ends = tuple(End(rail.pin, rail.mark) for rail in self._rails[:width])
+        return Ends(ends, ends)
+
+    def _conductor_rows(self) -> tuple[WiringRow, ...]:
+        return tuple(rail.row for rail in self._rails)
 
     if not TYPE_CHECKING:  # the subclass declares its rails; ty must see no catch-all
 
@@ -80,18 +99,11 @@ class AcSupply(_Rails):
     L3: SupplyRail
     N: SupplyRail
 
-    def _series_width(self) -> int | None:
-        return len(self._rails)
-
-    def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
-        ends = tuple(End(rail.pin, rail.mark) for rail in self._rails)
-        return Ends(ends, ends)
-
 
 class DcSupply(_Rails):
     """A DC supply: `plus`, `minus` and `mid` when the source has an M conductor.
 
-    Does not stand in a series itself: each of its rails does.
+    Stands in a series whole, as a power path's poles, or by one rail, as a control path's.
     """
 
     plus: SupplyRail
@@ -217,12 +229,21 @@ def _dc_rails(
     plus, minus, middle = pins
     label = f"{format(volts.normalize(), 'f')}V"
     up, down, *rest = names or ((label, "0V") if middle is None else (label, f"-{label}"))
+    mid = middle is not None
     rails: list[tuple[SupplyRail, str | Decimal]] = [
-        (SupplyRail("plus", plus, up, PLUS, None), volts),
-        (SupplyRail("minus", minus, down, MINUS, None), "0" if middle is None else -volts),
+        (SupplyRail("plus", plus, up, PLUS, None, rail_row(PLUS, has_mid=mid)), volts),
+        (
+            SupplyRail("minus", minus, down, MINUS, None, rail_row(MINUS, has_mid=mid)),
+            "0" if middle is None else -volts,
+        ),
     ]
     if middle is not None:
-        rails.append((SupplyRail("mid", middle, (*rest, "0V")[0], MID, None), "0"))
+        rails.append(
+            (
+                SupplyRail("mid", middle, (*rest, "0V")[0], MID, None, rail_row(MID, has_mid=mid)),
+                "0",
+            )
+        )
     return rails
 
 
@@ -277,11 +298,14 @@ class Supplies:
         pins = _phases(self, name, phases)
         printed = _ac_names(len(pins), names, has_n=n is not None)
         rails = [
-            (SupplyRail(mark.value, pin, printed[i], mark, phase), str(voltage))
+            (SupplyRail(mark.value, pin, printed[i], mark, phase, rail_row(mark)), str(voltage))
             for i, ((mark, phase), pin) in enumerate(zip(_AC, pins, strict=False))
         ]
         if n is not None:
-            rails.append((SupplyRail("N", _port(self, n), printed[-1], ConductorMark.N, None), "0"))
+            rail = SupplyRail(
+                "N", _port(self, n), printed[-1], ConductorMark.N, None, rail_row(ConductorMark.N)
+            )
+            rails.append((rail, "0"))
         _declare(self, name, "ac", rails, earthing, (fault_current_a, None))
         return AcSupply(name, (rail for rail, _ in rails))
 

@@ -189,3 +189,36 @@ def test_cable_pair_screen_named_twice(tmp_path):
     # MUTATION: drop the `_repeated(screens)` report, so SH core 5 named by two pairs passes
     pairs = "[{ cores = [1, 2], screen = 5 }, { cores = [3, 4], screen = 5 }]"
     assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, pairs)
+
+
+_OPERATED_HEAD = _PART_HEAD.replace(
+    'class_code = "X"\n', 'class_code = "X"\noperated_by = "mushroom"\n'
+)
+
+
+def test_operated_by_head_without_function_lints_clean(tmp_path):
+    """A head sold apart from its blocks states `operated_by` and has no `[[function]]`."""
+    from fransys_model.kernel import freeze
+    from fransys_model.vocab import OperatedBy, parts
+
+    root = _root(tmp_path, parts={"p.toml": _OPERATED_HEAD})
+    assert "ENUM_VALUE" not in _codes(root)
+    assert not _findings(root)
+    (part,) = parts(freeze(fransys_parts.load_path(root))).values()
+    assert part.operated_by is OperatedBy.MUSHROOM
+
+
+def test_operated_by_unknown_value_is_an_enum_error(tmp_path):
+    """`pull` is not an `OperatedBy` value: the enum check reports it as an error."""
+    root = _root(tmp_path, parts={"p.toml": _OPERATED_HEAD.replace('"mushroom"', '"pull"')})
+    assert "ENUM_VALUE" in _codes(root)
+    assert Severity.ERROR in {f.severity for f in _findings(root) if f.code == "ENUM_VALUE"}
+
+
+def test_part_without_operated_by_loads_none(tmp_path):
+    """A part that does not state `operated_by` loads with `None`: not stated."""
+    from fransys_model.kernel import freeze
+    from fransys_model.vocab import parts
+
+    (part,) = parts(freeze(fransys_parts.load_path(_root(tmp_path)))).values()
+    assert part.operated_by is None

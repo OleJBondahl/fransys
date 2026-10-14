@@ -28,6 +28,7 @@ from .host_offsets import _next_slot, attachment_offsets
 from .line_room import line_room
 from .references.marker_boxes import FLOOR, Digits, reference_box_width
 from .room import grow_keepout, room_offset
+from .row_parts import share_spacing
 from .stack_room import make_room
 from .stacking import JoinedRun, PageStack, StackedPort, blocks, gaps_below
 from .texts.stand import end_boxes
@@ -268,7 +269,7 @@ def _narrowed(
             if all(cell.boxy for row in rows for cell in row):
                 continue
             again[key] = max(profile.row_gap, spacing - -(-excess // between))
-    return again
+    return share_spacing(again, [rows[0][0].column for rows in page], profile.row_spacing)
 
 
 def _stack_page(

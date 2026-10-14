@@ -6,7 +6,7 @@ One rule for `references.black_box_sets` (on seats) and layout-0214's stub seats
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Collection, Iterable
     from collections.abc import Set as AbstractSet
 
     from fransys_layout.stages.references.types import BlackBoxReads
@@ -33,3 +33,8 @@ def is_black_box(
 ) -> bool:
     """Whether a function of `unit` drawn in a set of `set_unit` is a black box there."""
     return unit in nested and unit != set_unit and own_top in (None, set_unit)
+
+
+def stub_places[T](black_boxes: Collection[T], homes: Collection[T]) -> Collection[T]:
+    """Where a function's stub stands (layout-0217): its black boxes, else its home places."""
+    return black_boxes or homes

@@ -1,22 +1,19 @@
-"""Which items have a function below them, and which are add-on contact blocks (model-0119).
+"""Which items have a function below them, which are add-on blocks, what operates a switch.
 
-An add-on contact block is a child item whose functions are all contacts and that has no
-function below it. `takes_parents_designation` lets such a block print its parent's
-designation; `contacts.owned_contacts` gives its contacts to the parent.
+An add-on contact block is a child item that has no function below it and whose functions are
+all contacts (model-0119), or all switches under a holder that states `operated_by`
+(model-0222). `takes_parents_designation` lets such a block print its parent's designation;
+`contacts.owned_contacts` gives a contact block's contacts to the parent.
 """
 
 from itertools import islice
-from typing import TYPE_CHECKING
 
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.vocab.enums import FunctionKind
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
+from fransys_model.vocab.enums import FunctionKind, OperatedBy
 from fransys_model.vocab.membership import item_chain
-from fransys_model.vocab.tables import functions
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Item
+from fransys_model.vocab.tables import functions, items, parts
+lazy from fransys_model.vocab.core import Function, Item
 
 CONTACT_KINDS = frozenset(
     {FunctionKind.CONTACT_NO, FunctionKind.CONTACT_NC, FunctionKind.CONTACT_CO}
@@ -35,12 +32,43 @@ def items_with_a_function_below(model: Model) -> frozenset[Id[Item]]:
     return frozenset(marked)
 
 
+def _stated(model: Model, item: Id[Item]) -> OperatedBy | None:
+    """The `operated_by` that `item`'s own part states; None with no part or none stated."""
+    part = items(model)[item].part
+    return None if part is None else parts(model)[part].operated_by
+
+
+def _holders_operator(model: Model, item: Id[Item]) -> OperatedBy | None:
+    """The `operated_by` of the nearest holder above `item` (by `Item.parent`) that states one."""
+    for holder in islice(item_chain(model, item), 1, None):
+        stated = _stated(model, holder)
+        if stated is not None:
+            return stated
+    return None
+
+
+def operated_by(model: Model, function: Id[Function]) -> OperatedBy | None:
+    """What operates a `switch` function: its own part's `operated_by`, else its nearest holder's.
+
+    None for any other kind, or when no part on the way up states one.
+    """
+    record = functions(model)[function]
+    if record.kind is not FunctionKind.SWITCH:
+        return None
+    own = _stated(model, record.item)
+    return own if own is not None else _holders_operator(model, record.item)
+
+
 def is_contact_block(model: Model, item: Id[Item]) -> bool:
-    """Whether every function of `item` is a contact, it has one, and none lies below it."""
+    """Whether `item` is a block: no function below it, and only contacts or held switches."""
     own = build_indexes(model).functions_by_item.get(item, ())
-    known = functions(model)
+    if not own or item in items_with_a_function_below(model):
+        return False
+    kinds = {functions(model)[f].kind for f in own}
+    if kinds <= CONTACT_KINDS:
+        return True
     return (
-        bool(own)
-        and all(known[f].kind in CONTACT_KINDS for f in own)
-        and item not in items_with_a_function_below(model)
+        kinds == {FunctionKind.SWITCH}
+        and _stated(model, item) is None
+        and _holders_operator(model, item) is not None
     )

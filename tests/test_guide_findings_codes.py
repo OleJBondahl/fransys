@@ -1,4 +1,4 @@
-"""The consumer guide's `findings.md` lists exactly the finding codes the workspace emits.
+"""Every emitted finding code has one `CodeInfo` (A1), and the guide lists it.
 
 `Finding(code=...)` is constructed three ways, all resolved here with `ast` (no import, no
 execution): a literal kwarg (`Finding(code="COVER_OVERFLOW", ...)`); a module-level string
@@ -6,6 +6,8 @@ constant used as the kwarg's value, defined either in the same file or imported 
 one (e.g. `fransys_layout.lint.codes`); and a per-module helper (`_finding`, `_error`,
 `_warn`, `fransys_parts._toml.finding`) that takes `code` as its own parameter and passes it
 through, the literal then living at the helper's own call sites, positional or keyword.
+A helper is also called as a module attribute (`_toml.finding(...)`), and `_joins.py`
+passes a `(CODE, text)` pair's head on (`refused[0]`).
 
 This builds once in spirit: the scan walks every `.py` file under `packages/*/src` once per
 test module, in `scanned_finding_codes()`, called from the module-scoped `scanned_codes` fixture
@@ -20,8 +22,20 @@ import re
 from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+import fransys_kicad
+import fransys_parts
+import fransys_pdf
+import fransys_render
 import pytest
+from fransys import _codes as fransys_codes
+
+import fransys_layout
+from fransys_model import vocab
+
+if TYPE_CHECKING:
+    from fransys_model.kernel import CodeInfo
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = WORKSPACE_ROOT / "packages"
@@ -234,8 +248,15 @@ def _direct_codes(
 def _helper_target(
     node: ast.Call, info: _FileInfo, helpers: dict[tuple[str, str], _Helper]
 ) -> tuple[str, str] | None:
-    """Which known helper (if any) `node` calls: by name in `info`'s own module, or by an
-    import `info` resolved that name to."""
+    """Which known helper (if any) `node` calls: by name in `info`'s own module, by an
+    import `info` resolved that name to, or as an attribute of an imported module
+    (`_toml.finding(...)` after `from . import _toml`)."""
+    if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+        imported = info.imports.get(node.func.value.id)
+        if imported is None:
+            return None
+        key = (f"{imported[0]}.{imported[1]}", node.func.attr)
+        return key if key in helpers else None
     if not isinstance(node.func, ast.Name):
         return None
     name = node.func.id
@@ -273,10 +294,24 @@ def _helper_call_codes(
                 continue
             helper = helpers[target_key]
             where = f"{info.path}:{node.lineno}"
-            codes.add(
-                _resolve_or_raise(_helper_call_arg(node, helper), info, files_by_module, where)
-            )
+            arg = _helper_call_arg(node, helper)
+            if isinstance(arg, ast.Subscript):
+                codes.update(_tuple_head_codes(info))
+                continue
+            codes.add(_resolve_or_raise(arg, info, files_by_module, where))
     return codes
+
+
+def _tuple_head_codes(info: _FileInfo) -> set[str]:
+    """Codes a file builds as `(CODE, text)` pairs and passes on as `pair[0]` (`_joins.py`)."""
+    return {
+        head
+        for node in ast.walk(info.tree)
+        if isinstance(node, ast.Tuple)
+        and node.elts
+        and (head := _literal_str(node.elts[0])) is not None
+        and _CODE_SHAPE.match(head)
+    }
 
 
 def scanned_finding_codes() -> frozenset[str]:
@@ -309,7 +344,13 @@ def _findings_table_rows(markdown: str) -> list[list[str]]:
     return [[cell.strip() for cell in line.strip("|").split("|")] for line in table_lines[2:]]
 
 
-FINDINGS_PAGES = ("findings-validators", "findings-render", "findings-pdf", "findings-kicad")
+FINDINGS_PAGES = (
+    "findings-validators",
+    "findings-render",
+    "findings-pdf",
+    "findings-kicad",
+    "findings-parts",
+)
 
 
 def _all_rows() -> list[list[str]]:
@@ -328,8 +369,51 @@ def findings_md_codes() -> frozenset[str]:
     return frozenset(row[0] for row in _all_rows() if row and row[0])
 
 
-def test_findings_codes_match_scanned_codes(scanned_codes: frozenset[str]) -> None:
-    assert findings_md_codes() == scanned_codes
+def _registry() -> tuple[CodeInfo, ...]:
+    """Every package's `CodeInfo` values, as the facade merges them (duplicates kept)."""
+    return (
+        *fransys_codes._OWN,
+        *vocab.FINDING_CODES,
+        *fransys_layout.FINDING_CODES,
+        *fransys_render.FINDING_CODES,
+        *fransys_pdf.FINDING_CODES,
+        *fransys_kicad.FINDING_CODES,
+        *fransys_parts.FINDING_CODES,
+    )
+
+
+def a1_violations(scanned: frozenset[str], registry: tuple[CodeInfo, ...]) -> dict[str, list[str]]:
+    """Emitted codes with no `CodeInfo`, `CodeInfo`s nothing emits, and codes listed twice."""
+    listed = [info.code for info in registry]
+    return {
+        "unlisted": sorted(scanned - set(listed)),
+        "never emitted": sorted(set(listed) - scanned),
+        "listed twice": sorted({code for code in listed if listed.count(code) > 1}),
+    }
+
+
+def test_every_emitted_code_has_one_code_info(scanned_codes: frozenset[str]) -> None:
+    """A1 (BUILD-MESSAGES M1): one `CodeInfo` per emitted code, in the facade's merge too."""
+    assert a1_violations(scanned_codes, _registry()) == {
+        "unlisted": [],
+        "never emitted": [],
+        "listed twice": [],
+    }
+    assert set(fransys_codes.BY_CODE) == scanned_codes
+
+
+def test_a1_fails_on_a_deleted_entry(scanned_codes: frozenset[str]) -> None:
+    """Probe P1 in-process: the registry without one entry leaves that code unlisted."""
+    registry = _registry()
+    assert a1_violations(scanned_codes, registry[1:])["unlisted"] == [registry[0].code]
+    assert a1_violations(scanned_codes, (*registry, registry[0]))["listed twice"] == [
+        registry[0].code
+    ]
+
+
+def test_findings_codes_match_the_registry() -> None:
+    """Every registry code has its row on a findings page, and no page lists another code."""
+    assert findings_md_codes() == {info.code for info in fransys_codes.BY_CODE.values()}
 
 
 def test_no_todo_placeholder_remains() -> None:

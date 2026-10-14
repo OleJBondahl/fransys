@@ -8,9 +8,10 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Sequence
 
-from fransys_layout.geometry import Box, boxes_meet, overlaps, port_page_at
+from fransys_layout.geometry import Box, Facing, boxes_meet, overlaps, port_page_at
 from fransys_model.kernel import Finding, Severity
 
+from .marker_row import CORRIDOR_PAD
 from .power import PowerPlace, page_shapes, power_place
 
 if TYPE_CHECKING:
@@ -88,7 +89,22 @@ def _clear(
     others = [one.box for one in blocks if one.owner not in own]
     if any(_touches(place.body, box) for box in (*others, *taken)):
         return False
-    return not any(_crosses(place.lead, box) for box in others)
+    lead = _past_pin(place)
+    return not any(_crosses(lead, box) for box in others)
+
+
+def _past_pin(place: PowerPlace) -> Box:
+    """The lead without its `CORRIDOR_PAD` behind the pin, where a box flush with the pin lies."""
+    lead = place.lead
+    match place.facing:
+        case Facing.N:
+            return replace(lead, height=lead.height - CORRIDOR_PAD)
+        case Facing.S:
+            return replace(lead, y=lead.y + CORRIDOR_PAD, height=lead.height - CORRIDOR_PAD)
+        case Facing.E:
+            return replace(lead, x=lead.x + CORRIDOR_PAD, width=lead.width - CORRIDOR_PAD)
+        case _:
+            return replace(lead, width=lead.width - CORRIDOR_PAD)
 
 
 def _touches(a: Box, b: Box) -> bool:

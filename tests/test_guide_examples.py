@@ -43,6 +43,7 @@ GUIDE_PAGES = (
     "findings-render",
     "findings-pdf",
     "findings-kicad",
+    "findings-parts",
     "examples",
     "moving-to-0.6",
     "kicad",

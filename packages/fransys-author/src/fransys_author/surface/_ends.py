@@ -8,6 +8,8 @@ from fransys_author.surface._carrier import carrier_function
 from fransys_author.surface._device import Device
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import Ends, SeriesElement, ends_of, poles
+from fransys_author.surface._throws import whole_changeover
+from fransys_model.vocab import FunctionKind
 
 if TYPE_CHECKING:
     from .design import Design
@@ -51,6 +53,8 @@ class Parallel:
 
 
 def _fn_ends(design: Design, fn: Fn) -> Ends:
+    if fn._fn.kind is FunctionKind.CONTACT_CO:
+        raise whole_changeover(fn._label, fn._fn)
     ends = ends_of(design._pairing_facts, fn._fn)
     if not ends.line:
         msg = f"{fn._label}.{fn._fn.name} has no poles: name its pins"

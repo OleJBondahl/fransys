@@ -21,6 +21,7 @@ from ._origin import caller_origin
 from .design import Design, Scope
 from .errors import AuthorError
 from .handles import Cable, Fn, Group, Item, Location, Port, Strip, Terminal
+from .surface._rows import RowValue, WiringRow
 from .wiring import Wiring
 
 __all__ = [
@@ -34,9 +35,11 @@ __all__ = [
     "Operating",
     "Port",
     "Rating",
+    "RowValue",
     "Scope",
     "Strip",
     "Terminal",
     "Wiring",
+    "WiringRow",
     "caller_origin",
 ]

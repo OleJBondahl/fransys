@@ -67,7 +67,7 @@ _DESIGNED: dict[type, tuple[str, ...]] = {
     Mate: ("a", "b"),
     AspectNode: ("aspect", "parent", "label", "description"),
     Placement: ("item", "node"),
-    Project: ("title", "number", "customer", "revision", "author", "notice", "version"),
+    Project: ("title", "number", "customer", "revision", "author", "version"),
 }
 
 # Every reference in the vocabulary: (kind, field) -> the kind it names.

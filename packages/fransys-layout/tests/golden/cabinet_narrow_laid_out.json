@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 18,
+  "schema_version": 19,
   "tables": {
     "aspect_node": [
       {
@@ -6722,7 +6722,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-RELAY-1NO"
+        "mpn": "EX-RELAY-1NO",
+        "operated_by": null
       },
       {
         "category": "protection",
@@ -6735,7 +6736,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-BREAKER-1P-10A"
+        "mpn": "EX-BREAKER-1P-10A",
+        "operated_by": null
       },
       {
         "category": "terminal",
@@ -6748,7 +6750,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-TERMINAL-2.5"
+        "mpn": "EX-TERMINAL-2.5",
+        "operated_by": null
       },
       {
         "category": "cable",
@@ -6761,7 +6764,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-CABLE-2X0.75"
+        "mpn": "EX-CABLE-2X0.75",
+        "operated_by": null
       },
       {
         "category": "protection",
@@ -6774,7 +6778,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-FUSE-2A"
+        "mpn": "EX-FUSE-2A",
+        "operated_by": null
       },
       {
         "category": "board",
@@ -6787,7 +6792,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-BOARD-A"
+        "mpn": "EX-BOARD-A",
+        "operated_by": null
       },
       {
         "category": "electromechanical",
@@ -6800,7 +6806,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-CONTACTOR-3P"
+        "mpn": "EX-CONTACTOR-3P",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -6813,7 +6820,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-PUSHBUTTON-NC"
+        "mpn": "EX-PUSHBUTTON-NC",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -6826,7 +6834,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-ESTOP-2NC"
+        "mpn": "EX-ESTOP-2NC",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -6839,7 +6848,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "EX-LAMP-24V"
+        "mpn": "EX-LAMP-24V",
+        "operated_by": null
       }
     ],
     "part_library": [

@@ -155,6 +155,25 @@ there, with Python's own one-line traceback. Catching it instead gets you `e.fin
 finding the failed load collected, not only the one that raised, so you can report the library's
 whole set of problems at once instead of fixing them one exception at a time.
 
+## A contact a person or a machine operates
+
+A push button, an emergency stop, a selector or a limit switch states what operates its
+contacts in `[part]`: `operated_by = "push"`, `"mushroom"`, `"turn"` or `"position"`. Its
+contacts are `switch` functions, and the drawing picks the symbol from the operator and the
+rest state: a push button closed at rest draws `push-button-break`.
+
+A complete device, such as a limit switch, states it on itself. A head sold apart from its
+contact blocks states it and has no function. Each block holds one `switch` and joins the head
+with `parent=`:
+
+```python
+s1 = d.device("S1", "DEMO-HEAD-ESTOP")
+first = d.device(None, "DEMO-BLOCK-1NC", name="nc-1", parent=s1)
+second = d.device(None, "DEMO-BLOCK-1NC-21", name="nc-2", parent=s1)
+```
+
+Both blocks print `-S1`, and each draws the full emergency-stop symbol in its own circuit.
+
 ## Ratings from a datasheet
 
 A part's rating fields are read straight off its datasheet, but a battery or cell datasheet

@@ -96,6 +96,8 @@ def _passes(
     widths = ("grown",) if grew else ()
     monkeypatch.setattr(engine, "plan_pages", plan)
     monkeypatch.setattr(engine, "cut_wide", lambda *_: None)  # no column is over-wide
+    monkeypatch.setattr(engine, "cut_tall", lambda *_: None)  # nor over-tall (layout-0215)
+    monkeypatch.setattr(engine, "page_floor", lambda _: 0)  # the fake run has no sheet
     monkeypatch.setattr(
         engine,
         "place_pages",

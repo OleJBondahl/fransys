@@ -896,16 +896,13 @@ class Design(Scope):
         customer: str,
         revision: int,
         author: str,
-        notice: str = "",
         version: int = 1,
     ) -> None:
         """The title-block facts every document shows; at most one per model.
 
         `revision` is an int from 1 (the record refuses less) and names the current history
-        entry; its date is that entry's (`revision(..., date=...)`). `notice` is the title
-        block's IP notice cell text; the default `""` fills an empty
-        cell. `version` is the project's release version; `revision(...)` without `version=`
-        writes entries of it.
+        entry; its date is that entry's (`revision(..., date=...)`). `version` is the project's
+        release version; `revision(...)` without `version=` writes entries of it.
 
         Raises:
             AuthorError: `version` is not 1 and an unversioned `d.revision(...)` was already
@@ -927,7 +924,6 @@ class Design(Scope):
             customer=customer,
             revision=revision,
             author=author,
-            notice=notice,
             version=version,
         )
         self._add(record, caller_origin())

@@ -41,6 +41,7 @@ class _Pole:
     item: Any
     kind: Any
     terminal: bool
+    enter: Any = None  # the port the pole's direction vote enters, `inn` unless a fact turns it
 
 
 @dataclasses.dataclass(slots=True, eq=False)

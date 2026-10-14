@@ -1,13 +1,14 @@
-"""`CABLE_CORE_COUNT` counts open cores; `PORT_UNCONNECTED` treats a parked spare's pin as wired."""
+"""`CABLE_CORE_COUNT` counts open cores; `FUNCTION_HALF_CONNECTED` treats a spare's pin as wired."""
 
 from decimal import Decimal
+from typing import Any
 
 from plant import Plant
 from query_builders import make_part, make_pin
 
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import PartCategory
+from fransys_model.vocab.enums import FunctionKind, PartCategory
 from fransys_model.vocab.facets.cable import (
     CableFacet,
     CableProductFacet,
@@ -16,7 +17,7 @@ from fransys_model.vocab.facets.cable import (
     OpenCoreFacet,
 )
 from fransys_model.vocab.validators.cables import CABLE_CORE_COUNT, check_cables
-from fransys_model.vocab.validators.connectivity import PORT_UNCONNECTED, check_connectivity
+from fransys_model.vocab.validators.connectivity import FUNCTION_HALF_CONNECTED, check_connectivity
 
 
 def _plant(pairs: tuple[CorePair, ...] = ()) -> tuple[Plant, Id[Port]]:
@@ -77,10 +78,16 @@ def test_one_core_too_many_stays_an_error() -> None:
 
 
 def test_a_pin_a_spare_lands_on_is_connected() -> None:
-    # MUTATION: `_unconnected` leaves `OpenCoreFacet.at` out of the wired set
-    plant, park = _plant()
-    before = {f.subjects for f in check_connectivity(plant.model()) if f.code == PORT_UNCONNECTED}
-    assert (park,) in before
-    _open(plant, 2, park)
-    after = {f.subjects for f in check_connectivity(plant.model()) if f.code == PORT_UNCONNECTED}
-    assert (park,) not in after
+    # MUTATION: `_half_connected` leaves `OpenCoreFacet.at` out of the wired set
+    plant, _ = _plant()
+    coil = plant.function(plant.item("k1"), "coil", kind=FunctionKind.COIL)
+    a1, a2 = plant.port(coil, "A1"), plant.port(coil, "A2")
+    plant.wire(a1, make_pin(plant, "peer", "P"), key="w")
+
+    def open_ports() -> set[tuple[Id[Any], ...]]:
+        found = check_connectivity(plant.model())
+        return {f.subjects for f in found if f.code == FUNCTION_HALF_CONNECTED}
+
+    assert open_ports() == {(a2,)}
+    _open(plant, 2, a2)
+    assert open_ports() == set()

@@ -56,7 +56,9 @@ def _switch(kind="switch", rest=None, symbol=None, links=None):
     return f'[[function]]\nname = "k"\nkind = "{kind}"\n{symbol_text}{_PORTS}\n{body}'
 
 
-def _protection(type_=None, symbol=None, link_kind="protective"):
+def _protection(type_=None, symbol=None, link_kind=None):
+    if link_kind is None:
+        link_kind = "conductive" if type_ == "overload" else "protective"
     symbol_text = "" if symbol is None else f'symbol = "{symbol}"\n'
     table = "" if type_ is None else f'\n[function.protection]\ntype = "{type_}"\n'
     links = f'links = [{{ a = "1", b = "2", kind = "{link_kind}" }}]\n'
@@ -256,3 +258,37 @@ def test_an_energy_on_another_kind_is_refused(tmp_path):
 
 def test_an_energy_that_is_not_in_or_out_is_an_enum_error(tmp_path):
     assert "ENUM_VALUE" in _codes(tmp_path, _supply("sideways"))
+
+
+_RIGHT = {
+    "fuse": "protective",
+    "mcb": "protective",
+    "motor_breaker": "protective",
+    "rcd": "protective",
+    "overload": "conductive",
+}
+
+
+def _link_findings(tmp_path, type_, link_kind):
+    found = _lint(tmp_path, _protection(type_, link_kind=link_kind))
+    return [f for f in found if f.code == "PROTECTION_LINK_KIND"]
+
+
+@pytest.mark.parametrize(("type_", "right"), sorted(_RIGHT.items()))
+def test_link_kind_follows_the_protection_type(tmp_path, type_, right):
+    wrong = "conductive" if right == "protective" else "protective"
+    assert _link_findings(tmp_path, type_, right) == []
+    (finding,) = _link_findings(tmp_path, type_, wrong)
+    assert type_.replace("_", " ") in finding.message
+    assert f'kind = "{right}"' in finding.message
+    assert f"is {wrong}" in finding.message
+
+
+@pytest.mark.parametrize("type_", sorted(_RIGHT))
+def test_a_switched_link_is_refused_for_every_type(tmp_path, type_):
+    assert len(_link_findings(tmp_path, type_, "switched")) == 1
+
+
+@pytest.mark.parametrize("link_kind", ["protective", "conductive"])
+def test_a_typeless_protection_accepts_both_kinds(tmp_path, link_kind):
+    assert _link_findings(tmp_path, None, link_kind) == []

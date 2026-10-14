@@ -17,8 +17,8 @@ resolves a page list from a preset.
 
 Unit documents (decisions pdf-0012, pdf-0014, model-0061). A document whose `unit` is set names
 the unit, not the project: its title block prints `Unit.title` and `Unit.number` with an empty
-customer, the revision and date of the unit's own revision, and the author and notice from
-`Project`; the PDF metadata title and date come from the same `document_facts`. A system
+customer, the revision and date of the unit's own revision, the author (`created` of that revision)
+and the notice from the document; the PDF metadata title and date come from the same `document_facts`. A system
 document (`unit=None`) is unchanged. `check` gives one `TITLE_BLOCK_UNIT_IDENTITY_MISSING`
 (`WARNING`) per unit document whose unit has an empty title or number, naming the empty field or
 fields; the cell prints empty, with no fallback text. The terminal and connector lists print no

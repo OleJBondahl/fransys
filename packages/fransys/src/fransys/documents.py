@@ -76,12 +76,14 @@ def document(  # noqa: PLR0913 -- the new `logo` argument
     add: tuple[PageKind, ...] = (),
     remove: tuple[PageKind, ...] = (),
     logo: Path | None = None,
+    notice: str = "",
 ) -> Draft:
     """Author a document record from a preset, a subject, and a cover file; returns a `Draft`.
 
     Reads `cover` (a missing file raises `FileNotFoundError`) and the optional `<stem>.notes.md`
     beside it (absent: no notes page); `logo` is an optional SVG for the title block (missing
-    raises). Texts are stored in the record. `subject` is what `d.location(...)` returns, a
+    raises); `notice` is the title block's IP notice
+    text. Texts are stored in the record. `subject` is what `d.location(...)` returns, a
     `Device`, a unit release name (`str`) or `None` (the `system` preset only);
     any other value raises `TypeError`. Key: `("document", <cover stem>)`: one stem is one record.
 
@@ -106,6 +108,7 @@ def document(  # noqa: PLR0913 -- the new `logo` argument
         cover=cover_text,
         notes=notes_text,
         logo=logo_text,
+        notice=notice,
     )
     draft = Draft()
     draft.add(record, origin=caller_origin())

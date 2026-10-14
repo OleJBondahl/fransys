@@ -370,16 +370,14 @@ def test_a_multi_unit_set_prints_only_the_line_widths_and_the_one_face(units_pdf
 
 # A3, amended on the owner's answer A1: a profile's `text_height_mm` of 2.5 floors every page kind.
 _PROFILE_MM = 2.5
+_NOTICE = "Property of Demo Co. Do not copy."
 
 
 def _profile_design():
-    """One invented design at `text_height_mm` 2.5: a notice, a schematic page, a motor cable."""
+    """One invented design at `text_height_mm` 2.5: a schematic page, a motor cable."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
-    notice = "Property of Demo Co. Do not copy."
-    d.project(
-        title="Invented", number="X-1", customer="Demo", revision=1, author="d", notice=notice
-    )
+    d.project(title="Invented", number="X-1", customer="Demo", revision=1, author="d")
     d.revision(1, date="2026-10-13", text="First issue", created="XX")
     d.profile(text_height_mm=Decimal(str(_PROFILE_MM)))
     c1 = d.location("C1", "Demo cabinet")
@@ -404,8 +402,10 @@ def profile_pdfs(tmp_path_factory) -> list[tuple[bytes, object]]:
     result = fr.build(
         parts,
         draft,
-        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=folder / "cabinet.md"),
-        fr.document(fr.DocumentPreset.SYSTEM, None, cover=folder / "system.md"),
+        fr.document(
+            fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=folder / "cabinet.md", notice=_NOTICE
+        ),
+        fr.document(fr.DocumentPreset.SYSTEM, None, cover=folder / "system.md", notice=_NOTICE),
     )
     written = fr.write(result, tmp_path_factory.mktemp("out"))
     return [(path.read_bytes(), result.model) for path in written if path.suffix == ".pdf"]

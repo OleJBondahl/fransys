@@ -5,6 +5,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, TypeGuard
 
 from fransys_layout.geometry import HintError, LayoutError
+from fransys_model.derive.drawing_text import pole_prefix
 from fransys_model.kernel import Finding, Severity
 
 from ._chain_beside import read_down
@@ -179,10 +180,11 @@ def _across(
     if other is not None:
         return symbol_port.get(other.port)
     through = drawing.geometry.through
+    prefix = "" if entry.throw is None else pole_prefix(entry.pole, spec.poles)  # a changeover pole
     here = symbol_port.get(entry.port)
-    if through is None or here not in (through.start, through.end):
+    if through is None or here not in (prefix + through.start, prefix + through.end):
         return None
-    return through.end if here == through.start else through.start
+    return prefix + (through.end if here == prefix + through.start else through.start)
 
 
 def _enters_south(spec: FunctionSpec, entry: PortSpec, drawing: DrawnFunction) -> bool:

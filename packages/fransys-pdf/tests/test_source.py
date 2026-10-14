@@ -357,7 +357,8 @@ def test_document_facts_for_a_location_document_matches_project_facts():
 
 def test_document_facts_for_a_unit_document_uses_the_units_own_current_revision_and_date():
     """Title/number are the unit's own (empty here, the
-    fixture sets none), customer is empty, author stays `Project`'s; revision and revision
+    fixture sets none), customer is empty, author is the unit revision's `created` (pdf-0036 D5, not
+    `Project`'s); revision and revision
     date come from the unit's release's own history entry whose `revision` matches
     `UnitRelease.revision` -- not merely its latest entry (`UnitRelease.revision=1` here,
     with a later revision 2 entry present and a distinct date, so a "last entry" bug would read
@@ -367,13 +368,16 @@ def test_document_facts_for_a_unit_document_uses_the_units_own_current_revision_
     p = project(revision=9)
     rp = revision_entry("rp", unit=None, revision=9, date="2020-01-01")
     u = unit("u1", name="pump-cabinet", revision=1)
-    r1 = revision_entry("r1", unit=u, revision=1, date="2026-09-01", text="First release")
-    r2 = revision_entry("r2", unit=u, revision=2, date="2026-09-23", text="Later")
+    r1 = revision_entry(
+        "r1", unit=u, revision=1, date="2026-09-01", text="First release", created="AB"
+    )
+    r2 = revision_entry("r2", unit=u, revision=2, date="2026-09-23", text="Later", created="CD")
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(c1, p, rp, u, r1, r2, doc)
     record = documents(m)[doc.id]
     title, number, customer, revision, revision_date, author = document_facts(m, record)
-    assert (title, number, customer, author) == ("", "", "", p.author)
+    assert (title, number, customer, author) == ("", "", "", "AB")
+    assert p.author != "AB"
     assert (revision, revision_date) == ("1.1", "2026-09-01")
 
 

@@ -6,10 +6,12 @@ from .engines.diagram import lay_out_diagrams
 from .engines.overview import lay_out_overview
 from .engines.schematic import lay_out_schematic
 from .geometry import Facing, HintError, SymbolPortError
+from .lint.codes import FINDING_CODES
 from .options import LayoutOptions
 from .stages.texts.candidates import Side, TextKind, TextPlacement
 
 __all__ = (
+    "FINDING_CODES",
     "Facing",
     "HintError",
     "LayoutOptions",

@@ -15,6 +15,14 @@ _REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "examples"
 
 _EXPECTED_ALL = [
     "ABOVE",
+    "AC_CONTROL",
+    "AC_L1",
+    "AC_L2",
+    "AC_L3",
+    "AC_N",
+    "DC_CONTROL",
+    "DC_GROUND",
+    "DC_SUPPLY",
     "AI",
     "AO",
     "BELOW",
@@ -62,6 +70,7 @@ _EXPECTED_ALL = [
     "readability",
     "release",
     "releases",
+    "report",
     "unit",
     "verify",
     "write",

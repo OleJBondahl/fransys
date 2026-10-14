@@ -75,10 +75,15 @@ def test_a_one_record_change_shows_in_the_canonical_json_and_the_digest() -> Non
 
 @pytest.mark.parametrize("name", ["cabinet", "harness_board", "merged"])
 def test_no_validator_reports_a_warning_or_an_error(name: str) -> None:
-    """Only `INFO` findings remain: spare pins, part-less containers, unused channels."""
+    """Only `INFO` findings remain, but `K1`'s contact `14`, left open beside the wired `13`."""
     model = _design(name)
     findings = [f for check in ALL_VALIDATORS for f in check(model)]
-    assert [f for f in findings if f.severity is not Severity.INFO] == []
+    loud = [f for f in findings if f.severity is not Severity.INFO]
+    if name == "harness_board":
+        assert loud == []
+        return
+    open_14 = _port(model, "k1", "fn", "no_1", "port", "14")
+    assert [(f.code, f.subjects) for f in loud] == [("FUNCTION_HALF_CONNECTED", (open_14,))]
     assert findings, "the designs keep some INFO findings, so an empty list means a broken check"
 
 

@@ -3,9 +3,11 @@
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages.box_leads import lead_ends
 from fransys_layout.stages.box_views import (
     cell_views,
     face_plugs,
+    hidden_views,
     moved_markers,
     moved_views,
     placed_boxes,
@@ -33,6 +35,7 @@ if TYPE_CHECKING:
     from fransys_layout.stages.pagerun import Placement
     from fransys_layout.stages.references import References
     from fransys_layout.stages.types import (
+        DrawnFunction,
         LabelRequest,
         LinkMarker,
         PagePlan,
@@ -62,13 +65,18 @@ class Laid:
 
 def boxed(
     inputs: StageInputs,
-    placed_all: Sequence[PlacedFunction],
+    placed: tuple[Sequence[PlacedFunction], Sequence[DrawnFunction]],
     specs: tuple[BoxSpec, ...],
     lines: LineReads,
 ) -> tuple[PlacedConnectorBox, ...]:
-    """Each connector box placed over its pin views, facing the plug it mates."""
+    """Each connector box over its pin views, its cells facing their leads (layout-0211).
+
+    The plug it mates touches it on the other edge, where the line leaves.
+    """
+    placed_all, drawn = placed
     content = content_box(inputs.sheet)
-    placed_box = placed_boxes(placed_all, specs, inputs.profile.text_height, content)
+    reach = lead_ends(inputs.connections, placed_all, drawn, hidden_views(specs))
+    placed_box = placed_boxes(placed_all, specs, inputs.profile.text_height, content, reach)
     return face_plugs(placed_box, plug_mates(lines))
 
 

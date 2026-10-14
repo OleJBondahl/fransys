@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from fransys_layout.conventions import FACTS
+from fransys_model.derive.drawing_text import pole_prefix
 from fransys_model.kernel import Id
 
 from ._chain_state import _LINK_PORTS, _Pole, _Poles, _Synthetic
@@ -48,18 +49,22 @@ def build_poles(
 
 def _changeover_pairs(
     spec: FunctionSpec, d: DrawnFunction, through: ThroughPath
-) -> tuple[list[tuple[int, str, str]], tuple[Handle, Handle] | None]:
-    """A changeover's pole pairs (its through path, NO to COM), and its throw pair if any."""
+) -> tuple[list[tuple[int, str, str]], list[tuple[Handle, Handle]]]:
+    """A changeover's pole pairs (each pole's through path, NO to COM), and its throw pairs."""
     # the NC port stays off the chain
     name_of = {dp.symbol_port: p.name for p in spec.ports for dp in d.ports if dp.port == p.port}
-    if through.start not in name_of or through.end not in name_of:
-        return [], None
-    on = {through.start, through.end}
-    throws = [p for p in spec.ports if p.throw in ("break", "make")]
-    chained = [p.port for p in throws if throw_port(spec, p) in on]
-    off = [p.port for p in throws if throw_port(spec, p) not in on]
-    throw = (chained[0], off[0]) if len(chained) == len(off) == 1 else None
-    return [(0, name_of[through.start], name_of[through.end])], throw
+    pairs, throw_pairs = [], []
+    for index in range(max(spec.poles, 1)):
+        prefix = pole_prefix(index, spec.poles)
+        start, end = prefix + through.start, prefix + through.end
+        if start not in name_of or end not in name_of:
+            return [], []  # all or nothing: one pole with no through path pairs none
+        throws = [p for p in spec.ports if p.throw in ("break", "make") and p.pole == index]
+        chained = [p.port for p in throws if throw_port(spec, p) in {start, end}]
+        off = [p.port for p in throws if throw_port(spec, p) not in {start, end}]
+        pairs.append((index, name_of[start], name_of[end]))
+        throw_pairs += [(chained[0], off[0])] if len(chained) == len(off) == 1 else []
+    return pairs, throw_pairs
 
 
 def _pole_pairs(state: _Poles, spec: FunctionSpec, d: DrawnFunction) -> list[tuple[int, str, str]]:
@@ -70,9 +75,8 @@ def _pole_pairs(state: _Poles, spec: FunctionSpec, d: DrawnFunction) -> list[tup
     if len(spec.ports) == _LINK_PORTS:
         first, second = (p.name for p in spec.ports)
         return [(0, first, second)]
-    pairs, throw = _changeover_pairs(spec, d, d.geometry.through)
-    if throw is not None:
-        state.throw_pairs.append(throw)
+    pairs, throws = _changeover_pairs(spec, d, d.geometry.through)
+    state.throw_pairs.extend(throws)
     return pairs
 
 
@@ -81,6 +85,7 @@ def _add_function_poles(
 ) -> None:
     """One pole per pair of a drawn function, `inn` its N-facing port when the other faces S."""
     by_name = {p.name: p.port for p in spec.ports}
+    lines = {p.port for p in spec.ports if p.line and spec.roles.contact_changeover}
     symbol_port = {dp.port: dp.symbol_port for dp in d.ports}
     facing = {g.name: g.facing.value for g in d.geometry.ports}
     for index, first, second in pairs:
@@ -95,6 +100,7 @@ def _add_function_poles(
             index=index,
             ports=ends,
             inn=inn,
+            enter=next((p for p in ends if p in lines), inn),  # a selector enters at its throws
             item=spec.item,
             kind=d.kind,
             terminal=d.roles.terminal,

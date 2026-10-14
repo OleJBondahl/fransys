@@ -10,10 +10,13 @@ over several columns and sheets, the modules stand out of chain order, most hops
 whose two ends share no sheet, and the fuse series runs one row wider than the page
 (OUT_OF_CONTENT_BOX).
 
-Fixed by: LONG-CHAIN, pending. The parts are `demo_parts`' invented ones.
+The asserts follow the spec's A1-A3 and its new assert (at most two sheets).
+
+Fixed by: decision layout-0215 (LONG-CHAIN). The parts are `demo_parts`' invented ones.
 """
 
 import pathlib
+import re
 import tempfile
 from itertools import pairwise
 from typing import Any, NamedTuple
@@ -23,7 +26,7 @@ import pytest
 from fransys.colours import BK, RD
 
 _N = 18
-_PENDING = pytest.mark.xfail(strict=True, reason="LONG-CHAIN pending")
+_MODULE = re.compile(r"^D(\d+)$")
 
 
 class _Cab(NamedTuple):
@@ -74,15 +77,29 @@ def _series_result(n: int) -> fr.BuildResult:
 
 
 @pytest.fixture(scope="module")
-def placed() -> list[tuple[int, int, int, str]]:
-    """Every placed module function as (sheet, x, module number, function name)."""
-    tables: Any = _chain_result().model.tables
+def chain() -> fr.BuildResult:
+    return _chain_result()
+
+
+def _module_of(key: tuple[str, ...]) -> int | None:
+    """The module number from a placement key, today's per-function or the item's own."""
+    for segment in key:
+        match = _MODULE.match(segment.split("/")[-1])
+        if match:
+            return int(match[1])
+    return None
+
+
+@pytest.fixture(scope="module")
+def placed(chain) -> list[tuple[int, int, int, int, str]]:
+    """Every placed module as (sheet, x, y, module number, function id)."""
+    tables: Any = chain.model.tables
     number = {pid: p.number for pid, p in tables["layout.page"].items()}
     rows = []
     for sp in tables["layout.symbol_placement"].values():
-        module = sp.key[4].split("/")[-1]
-        if module.startswith("D"):
-            rows.append((number[sp.page], sp.x, int(module[1:]), sp.key[6]))
+        module = _module_of(sp.key)
+        if module is not None:
+            rows.append((number[sp.page], sp.x, sp.y, module, sp.function.value))
     return rows
 
 
@@ -91,20 +108,18 @@ def series_codes(request: pytest.FixtureRequest) -> list[str]:
     return [f.code for f in fr.check(_series_result(request.param))]
 
 
-def _sheets_of(placed: list[tuple[int, int, int, str]], module: int) -> set[int]:
-    return {sheet for sheet, _, m, _ in placed if m == module}
+def _sheets_of(placed: list[tuple[int, int, int, int, str]], module: int) -> set[int]:
+    return {sheet for sheet, _, _, m, _ in placed if m == module}
 
 
-@_PENDING
 def test_the_modules_appear_in_chain_order_sheet_by_sheet(placed) -> None:
-    first: dict[int, tuple[int, int]] = {}
-    for sheet, x, module, _ in sorted(placed, key=lambda r: (r[0], r[1])):
-        first.setdefault(module, (sheet, x))
+    first: dict[int, tuple[int, int, int]] = {}
+    for sheet, x, y, module, _ in sorted(placed, key=lambda r: (r[0], r[1], r[2])):
+        first.setdefault(module, (sheet, x, y))
     order = sorted(first, key=lambda m: first[m])
     assert order == list(range(1, _N + 1))
 
 
-@_PENDING
 def test_consecutive_modules_share_a_sheet_or_sit_on_adjacent_sheets(placed) -> None:
     gaps = {
         m: max(abs(a - b) for a in _sheets_of(placed, m) for b in _sheets_of(placed, m + 1))
@@ -113,12 +128,65 @@ def test_consecutive_modules_share_a_sheet_or_sit_on_adjacent_sheets(placed) -> 
     assert {m: g for m, g in gaps.items() if g > 1} == {}
 
 
-@_PENDING
-def test_each_modules_functions_stand_on_one_sheet(placed) -> None:
+def test_each_module_stands_on_one_sheet_in_one_box(placed) -> None:
     spread = {m: sorted(_sheets_of(placed, m)) for m in range(1, _N + 1)}
     assert {m: s for m, s in spread.items() if len(s) > 1} == {}
+    boxes = {m: sum(1 for r in placed if r[3] == m) for m in range(1, _N + 1)}
+    assert {m: n for m, n in boxes.items() if n != 1} == {}
 
 
-@_PENDING
+def test_each_module_box_holds_the_pins_of_all_its_functions(chain) -> None:
+    """A3's one box: its pins name the power function and the connectors it wires (P2 bites here).
+
+    The first module wires no IN and the last no OUT: an unwired pin is not drawn (2026-10-13).
+    """
+    tables: Any = chain.model.tables
+    held = {
+        _module_of(sp.key): {pin.split(".")[0] for pin in sp.ports}
+        for sp in tables["layout.symbol_placement"].values()
+        if _module_of(sp.key) is not None
+    }
+    every = {m: {"pwr", "IN", "OUT"} for m in range(1, _N + 1)}
+    assert held == {**every, 1: {"pwr", "OUT"}, _N: {"pwr", "IN"}}
+
+
+def test_the_chain_draws_on_at_most_two_sheets_and_a_hop_down_a_column_is_a_wire(
+    chain, placed
+) -> None:
+    tables: Any = chain.model.tables
+    assert len({r[0] for r in placed}) <= 2
+    tag = {
+        pid: tables["item"][tables["function"][p.function].item].tag
+        for pid, p in tables["port"].items()
+    }
+    spot = {m: (s, x) for s, x, _, m, _ in placed}
+    routed = {r.conductor for r in tables["layout.route"].values()}
+    marked = {lm.port for lm in tables["layout.link_marker"].values()}
+    bad, checked = [], 0
+    hops = [m for m in range(1, _N) if spot[m] == spot[m + 1]]
+    for m in hops:
+        ends = {f"D{m}", f"D{m + 1}"}
+        for cid, c in tables["conductor"].items():
+            if {tag[c.a], tag[c.b]} == ends:
+                checked += 1
+                if cid not in routed or {c.a, c.b} & marked:
+                    bad.append((m, cid))
+    assert bad == []
+    assert hops  # the chain stands in columns, so some hops run down one
+    assert checked == 5 * len(hops)  # plus to minus and the four comms pins of each hop
+
+
 def test_a_series_of_fuses_stays_in_the_content_box(series_codes) -> None:
     assert "OUT_OF_CONTENT_BOX" not in series_codes
+
+
+def test_every_column_of_the_cut_series_keeps_one_row_pitch() -> None:
+    """The fuses of all three columns of 18 stand one pitch apart (fixed column spacing)."""
+    tables: Any = _series_result(18).model.tables
+    columns: dict[int, list[int]] = {}
+    for sp in tables["layout.symbol_placement"].values():
+        if "B1/G" in "".join(sp.key):
+            columns.setdefault(sp.x, []).append(sp.y)
+    pitches = {b - a for ys in columns.values() for a, b in pairwise(sorted(ys))}
+    assert len(columns) == 3
+    assert len(pitches) == 1, pitches

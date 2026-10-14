@@ -31,6 +31,8 @@ class Document:
     authored and `remove` wins when pages resolve. `cover` is required; `notes` is `None` when
     dropped. The facade stores the Markdown text, so the PDF is a function of the model. `logo`
     is `None` or SVG text for the title block's logo cell, read like `cover` by `fr.document`.
+    `notice` is the title block's IP notice cell text; `""` fills an empty cell (decision
+    model-0225).
     """
 
     id: Id[Document]
@@ -45,6 +47,7 @@ class Document:
     unit: Id[Unit] | None = None
     unit_name: str | None = None
     logo: str | None = None
+    notice: str = ""
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:

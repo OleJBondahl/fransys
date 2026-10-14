@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from fransys_model.vocab import Port
 
-_PORT_UNCONNECTED = "PORT_UNCONNECTED"
+_HALF_CONNECTED = "FUNCTION_HALF_CONNECTED"
 _ONE_HEADER = """schema = 1
 
 [part]
@@ -98,27 +98,27 @@ def test_a_header_pin_not_mated_still_joins_the_relay_port() -> None:
     assert _net_designations(model, "-M1-J2:2") == {"-M1-J2:2", "-M1:M"}
 
 
-def _unconnected(result: fr.BuildResult, model: Model) -> set[str]:
+def _half_open(result: fr.BuildResult, model: Model) -> set[str]:
     return {
-        port_designation(model, f.subjects[0])
-        for f in result.findings
-        if f.code == _PORT_UNCONNECTED
+        port_designation(model, f.subjects[0]) for f in result.findings if f.code == _HALF_CONNECTED
     }
 
 
 def test_a_joined_relay_port_is_connected_and_an_unjoined_one_is_not() -> None:
-    """The join counts as a connection for PORT_UNCONNECTED; a plain relay coil still reports."""
+    """The join counts as a connection for FUNCTION_HALF_CONNECTED; a plain relay coil reports."""
     d = fr.design("demo_parts", place="C1")
     d.location("C1", "Cabinet")
-    d.device("M1", "DEMO-RELAY-MOD-2")
-    d.device("K1", "DEMO-RLY-2CO-24")
+    m1 = d.device("M1", "DEMO-RELAY-MOD-2")
+    k1 = d.device("K1", "DEMO-RLY-2CO-24")
+    k2 = d.device("K2", "DEMO-RLY-2CO-24")
+    d.wire(k1.coil["A1"], k2.coil["A1"], wire=("BK", 1.0))
+    d.wire(m1.k1["A1"], k1.coil["A1"], wire=("BK", 1.0))  # M1:A2 is open but joined to J1:2
     result = fr.build(d)
     model = result.model
-    unconnected = _unconnected(result, model)
-    # MUTATION: connectivity `_unconnected` ignores joins (-M1:A1 then reports)
-    assert "-M1:A1" not in unconnected
-    assert "-M1:L+" not in unconnected
-    assert {"-K1:A1", "-K1:A2"} <= unconnected
+    half_open = _half_open(result, model)
+    # MUTATION: connectivity `_half_connected` ignores joins (-M1:A1 then reports)
+    assert not {p for p in half_open if p.startswith("-M1")}
+    assert half_open == {"-K1:A2", "-K2:A2"}
 
 
 def test_a_joined_relay_port_is_in_use_and_an_unjoined_one_is_unused() -> None:

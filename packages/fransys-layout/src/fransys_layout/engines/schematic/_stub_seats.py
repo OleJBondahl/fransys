@@ -1,12 +1,12 @@
 """layout-0214: the copies a crossing end draws at.
 
-Its stub stands as `off_stubs._stub_ends` seats it: a nested unit's function at its black boxes
-(`stages.black_box`), any other at its home. A copy in a set its far end stands in stays too.
+Its stub stands where `stages.black_box.stub_places` seats it (layout-0217): a nested unit's
+function at its black boxes, any other at its home. A copy in a set its far end stands in stays too.
 """
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.stages.black_box import black_box_tops, is_black_box
+from fransys_layout.stages.black_box import black_box_tops, is_black_box, stub_places
 from fransys_layout.stages.types import Home
 
 from .read.units import black_box_reads, unit_nesting
@@ -41,7 +41,9 @@ def stub_seats(
                 boxes.setdefault(f, set()).add(i)
             elif cell.home is not Home.ELSEWHERE:
                 homes.setdefault(f, set()).add(i)
-    return frozenset((f, i) for f in stubbed for i in boxes.get(f) or homes.get(f, ()))
+    return frozenset(
+        (f, i) for f in stubbed for i in stub_places(boxes.get(f, ()), homes.get(f, ()))
+    )
 
 
 def far_set_seats(

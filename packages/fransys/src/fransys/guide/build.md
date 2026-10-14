@@ -113,11 +113,10 @@ cabinet_cover.write_text("# Cabinet\n")
 doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, x1, cover=cabinet_cover)
 
 result = fr.build(d, doc)
-assert len(fr.check(result)) == 6
+assert len(fr.check(result)) == 4
 ```
 
-`fr.check(result)` holds two `PORT_UNCONNECTED` `INFO` findings from the validators, three
-`DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, one `ERROR`, `LAYOUT_MISSING`,
+`fr.check(result)` holds three `DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, one `ERROR`, `LAYOUT_MISSING`,
 that only the drawing and PDF checks find. The schematic page has nothing to draw and is left out;
 the BOM page stands. A script that asserted the design clean would have shipped it.
 
@@ -137,6 +136,23 @@ else:
 left with nothing written for this build. No bad export, ever. There is no `allow_errors`,
 `force` or `draft` parameter on `write`, and none will be added.
 
+## `fr.report(result)` prints them for a person or an agent
+
+`fr.report(result)` returns one text of `fr.check(result)`. Its first line counts the errors,
+warnings and notes. Each `ERROR` and `WARNING` follows with its message, one `at:` line per
+subject (the authoring call's `file:line`), its fix, and its guide anchor. The notes come last,
+counted per code on one line.
+
+```python
+text = fr.report(result)
+assert text.startswith("build: 1 error, 0 warnings, 3 notes\n")
+assert "  see: findings-render#layout_missing\n" in text
+assert text.endswith("notes: DOCUMENT_EMPTY_LIST 3\n")
+```
+
+The fix and the anchor come from the code's row in [`findings.md`](findings.md). Print the
+report on every build: a warning nobody reads is never fixed.
+
 ## No document, no layout
 
 Layout exists only to draw documents. A build with no `Document` draft skips layout entirely.
@@ -145,7 +161,7 @@ There is no flag, and no other function to call.
 ```python
 result = fr.build(d)  # no document this time
 codes = sorted(f.code for f in fr.check(result))
-assert codes == ["PORT_UNCONNECTED", "PORT_UNCONNECTED"]
+assert codes == []
 
 written = fr.write(result, Path("out"))
 assert sorted(p.name for p in written) == [

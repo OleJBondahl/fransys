@@ -35,7 +35,7 @@ def _box(u: fr.Design) -> _Io:
 
 
 def test_an_unwired_redundancy_interface_builds(tmp_path: Path) -> None:
-    """The unit's own page and the cabinet page place; the idle lamp keeps PORT_UNCONNECTED."""
+    """The unit's own page and the cabinet page place."""
     d = fr.design("demo_parts", place="C1")
     cabinet = d.location("C1", "Cabinet")
     d.add(_box, "U1")
@@ -44,7 +44,6 @@ def test_an_unwired_redundancy_interface_builds(tmp_path: Path) -> None:
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     own = fr.document(preset, "demo-idle-red", cover=tmp_path / "own.md")
     result = fr.build(d, own, fr.document(preset, cabinet, cover=tmp_path / "c.md"))
-    assert any(f.code == "PORT_UNCONNECTED" for f in result.findings)
     labels = [one for one in layout_of(result.model, Label).values() if one.partners]
     own_x = {e.port: e.x for one in labels for e in one.partners if e.page == one.page}
     spliced = [

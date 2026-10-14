@@ -26,7 +26,13 @@ SITE = "packages/fransys-layout/tests/layout_cabinet.py::build_cabinet"
 def fransys_codes() -> frozenset[str]:
     """Codes whose "Who acts" cell in a `findings-*.md` page is `Fransys`."""
     found: set[str] = set()
-    for page in ("findings-validators", "findings-render", "findings-pdf", "findings-kicad"):
+    for page in (
+        "findings-validators",
+        "findings-render",
+        "findings-pdf",
+        "findings-kicad",
+        "findings-parts",
+    ):
         text = files("fransys").joinpath("guide", f"{page}.md").read_text(encoding="utf-8")
         lines = [x.strip() for x in text.splitlines() if x.strip().startswith("|")]
         rows = [[c.strip() for c in line.strip("|").split("|")] for line in lines[2:]]

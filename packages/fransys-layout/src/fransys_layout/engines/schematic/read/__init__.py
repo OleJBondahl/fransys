@@ -34,7 +34,7 @@ from fransys_layout.stages import (
 )
 from fransys_layout.stages.offstubs import OffEnd, PortText
 from fransys_layout.stages.terminal_rows import NO_CHAINS, TerminalChains
-from fransys_layout.stages.types import MatedFunctions
+from fransys_layout.stages.types import DeviceChain, MatedFunctions
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import Finding, Id, value
 from fransys_model.layout import POWER_SLOT
@@ -87,6 +87,8 @@ class StageInputs:
     feeds: tuple[BoxFeed, ...] = ()
     # layout-0154: the conductors harness lines carry, out of `connections` and `crossing`
     carried: tuple[Connection, ...] = ()
+    # layout-0215: the device chains, each drawn as one column of boxes (LC2)
+    device_chains: tuple[DeviceChain, ...] = ()
 
 
 def read_inputs(
@@ -105,10 +107,12 @@ def read_inputs(
     # A terminal on no connection, net group or mate is not drawn (terminal list only)
     specs = without_idle_terminals(model, specs, wired)
     drawn = {spec.function for spec in specs}
-    specs, pin_of, refs, landings = steps.pin_reads(model, specs, wired, refs)
+    chains = steps.chain_reads(model, specs, refs, wired) if options.chain_boxes else ()
+    boxed = frozenset(member for chain in chains for member in chain.members)
+    specs, pin_of, refs, landings = steps.pin_reads(model, specs, wired, refs, boxed)
     specs, spares, drawn = steps.unused_reads(model, specs, drawn, profile)
     specs, view_of, view_choices, (north, south), refs = steps.item_reads(
-        model, specs, wired, refs, landings
+        model, specs, wired, refs, (landings, chains)
     )
     refs, crossing, off_texts, off_ends = steps.off_reads_of(model, specs, refs, pin_of)
     connections, net_groups, rail_ends = refs
@@ -148,5 +152,10 @@ def read_inputs(
         item_north=north,
         item_south=south,
         spares=spares,
-        feeds=box_feeds(model, specs, north, south),
+        feeds=tuple(
+            feed
+            for feed in box_feeds(model, specs, north, south)
+            if not {feed.fed, feed.feeder} & boxed
+        ),
+        device_chains=chains,
     )

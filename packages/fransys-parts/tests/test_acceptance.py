@@ -152,16 +152,24 @@ def test_demo_library_record_counts_and_keys():
     adds `plc-dio-1-1.toml` (2 functions/2 ports, no link or symbol choice),
     adds `terminal-fused-2_5.toml` (1 function/2 ports/1 symbol choice, a protective link),
     adds `module-2p-com4.toml` (3 functions/10 ports, 2 symbol choices),
-    so 59 parts, 144 templates, 307 ports, 47 links, 51 symbol choices)."""
+    SERIES-GAPS adds `switch-dc-2p.toml` (1/4/2/1), `heater-dc.toml` (1/2) and
+    `selector-3p.toml` (2/11/6/2),
+    makes `changeover-4p.toml` one four-pole `co` function (S9: 3 functions and 3 symbol
+    choices fewer) and adds `relay-4co-24vdc.toml`, the old four-function changeover as a
+    relay (5/14/8/5), so 63 parts, 150 templates, 338 ports, 63 links, 56 symbol choices;
+    OPERATED-BY adds two function-less heads (`head-estop.toml`, `head-sel.toml`), three blocks
+    (`block-1nc.toml`, `block-1nc-21.toml`, `block-1no.toml`, 1/2/1 each) and `ls-1no1nc.toml`
+    (2/4/2), none with a symbol choice, and `pb-nc.toml` drops its symbol: 69 parts, 155
+    templates, 348 ports, 68 links, 55 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 59
-    assert len(function_templates(model)) == 144
-    assert len(port_templates(model)) == 307
-    assert len(internal_links(model)) == 47
-    assert len(model.tables["layout.symbol_choice"]) == 51
+    assert len(parts(model)) == 69
+    assert len(function_templates(model)) == 155
+    assert len(port_templates(model)) == 348
+    assert len(internal_links(model)) == 68
+    assert len(model.tables["layout.symbol_choice"]) == 55
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")
@@ -621,4 +629,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 18
+    assert SCHEMA_VERSION == 19

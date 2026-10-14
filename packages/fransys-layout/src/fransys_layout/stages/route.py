@@ -51,7 +51,7 @@ class _Page:
     space: Space
     content: Box
     profile: Profile
-    bare: Space | None = None  # `space` without the soft shapes, for an edge they shut in (HL19)
+    soft: tuple[Shape, ...] = ()  # the boxed connectors' rectangles inside `space`
     wrap_gap: int | None = None  # see `PageRoom.wrap_gap`
 
 
@@ -94,11 +94,11 @@ def route(
     edges, ends = _edges(connections, net_groups, placed_of, drawn_of)
     page_inputs = _Page(
         ends=ends,
-        space=_space(placed, room, owner_of, soft=True),
+        space=_space(placed, room, owner_of),
         content=content_box(room.sheet),
         profile=room.profile,
         wrap_gap=room.wrap_gap,
-        bare=_space(placed, room, owner_of, soft=False) if room.blocks.soft else None,
+        soft=room.blocks.soft,
     )
     used: dict[Cell, frozenset[Handle]] = {}
     # Each net's axes per cell; seeded with every port's first step (layout-0064)
@@ -288,15 +288,13 @@ def _space(
     placed: tuple[PlacedFunction, ...],
     room: PageRoom,
     owner_of: Mapping[Handle, Handle],
-    *,
-    soft: bool,
 ) -> Space:
-    """The page's obstacles: keep-outs, labels, blocks and markers; the soft blocks if `soft`."""
+    """The page's obstacles: keep-outs, labels, blocks and markers."""
     return Space(
         shapes=tuple(Shape(owner=one.function, box=lookups.placed_keepout(one)) for one in placed)
         + tuple(Shape(owner=None, box=box) for box in room.reserved)
         + room.blocks.hard
-        + (room.blocks.soft if soft else ())
+        + room.blocks.soft
         + tuple(
             Shape(owner=_marker_owner(marker, owner_of), box=marker.box) for marker in room.markers
         ),
@@ -323,10 +321,10 @@ def _draw(
     along: Mapping[Cell, dict[Handle, frozenset[str]]] | None = None,
     port_exits: Mapping[Cell, dict[Handle, frozenset[str]]] | None = None,
 ) -> tuple[Point, ...] | None:
-    """One edge's polyline; where the soft blocks shut every path, through them (HL19)."""
+    """One edge's polyline: all rectangles blocked, then all opened."""
     found = _search(edge, page, used, along, port_exits)
-    if found is None and page.bare is not None:
-        found = _search(edge, replace(page, space=page.bare), used, along, port_exits)
+    if found is None and page.soft:
+        found = _search(edge, _all_rectangles_open(page), used, along, port_exits)
     if found is None:
         return None
     ends = [page.ends[located(one)].at for one in (edge.a, edge.b)]
@@ -336,6 +334,12 @@ def _draw(
         return found
     closed = replace(page, space=replace(page.space, shapes=(*page.space.shapes, *unowned(strips))))
     return _search(edge, closed, used, along, port_exits) or found
+
+
+def _all_rectangles_open(page: _Page) -> _Page:
+    """Last resort (trial): every boxed rectangle open."""
+    shapes = tuple(s for s in page.space.shapes if s not in page.soft)
+    return replace(page, space=replace(page.space, shapes=shapes))
 
 
 def _search(

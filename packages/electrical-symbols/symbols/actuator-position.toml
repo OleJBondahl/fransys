@@ -1,0 +1,14 @@
+schema = 1
+name = "Actuator (position switch, operated by a moving part)"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "actuator-position" }
+
+anchors = [
+  { id = "link", at = [0, 0], dir = "E" },
+]
+
+# The limit-switch actuator: a small open circle on the dashed linkage's end.
+elements = [
+  { circle = [-0.5, 0], r = 0.5, fill = "none" },
+]

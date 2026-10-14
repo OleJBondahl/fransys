@@ -1,0 +1,27 @@
+schema = 1
+
+[part]
+mpn = "DEMO-LS-1NO1NC"
+manufacturer = "Demo"
+description = "Limit switch, roller lever, one make and one break contact"
+category = "electromechanical"
+class_code = "B"
+operated_by = "position"
+
+[[function]]
+name = "no"
+kind = "switch"
+ports = [
+    { name = "13", role = "generic", side = "line" },
+    { name = "14", role = "generic", side = "load" },
+]
+links = [{ a = "13", b = "14", kind = "switched", rest = "open" }]
+
+[[function]]
+name = "nc"
+kind = "switch"
+ports = [
+    { name = "21", role = "generic", side = "line" },
+    { name = "22", role = "generic", side = "load" },
+]
+links = [{ a = "21", b = "22", kind = "switched", rest = "closed" }]

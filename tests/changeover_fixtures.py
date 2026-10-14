@@ -1,9 +1,10 @@
 """Fixture of `test_changeover_rail_pairs.py`: demo parts only.
 
 Two independent IT supplies, `MAIN` (`M_L1..M_L3` and `M_N`) and `EMERG` (`E_L1..E_L3`, no
-neutral), a four-pole changeover `q1` that puts MAIN on its make throws and EMERG on its break
-throws, a two-pole breaker `f1` in series with bus lines 1 and 4, and a power supply `t1` whose
-input is rated 264 V AC. Pole 4 takes `M_N` on its make throw and `E_L3` on its break throw.
+neutral), a relay `q1` with four changeover contacts that puts MAIN on its make throws and
+EMERG on its break throws, a two-pole breaker `f1` in series with bus lines 1 and 4, and a
+power supply `t1` whose input is rated 264 V AC. Pole 4 takes `M_N` on its make throw and
+`E_L3` on its break throw.
 
 EMERG is a 230 V line-to-line supply: its phases stand at 133 V, and 133 V * sqrt(3) is about 230 V.
 Without state-awareness a bus line carries one MAIN and one EMERG rail, and the check pairs them at
@@ -22,7 +23,7 @@ from fransys_model.vocab.tables import function_templates, parts, port_templates
 MAIN = {"M_L1": ("230", 0), "M_L2": ("230", 120), "M_L3": ("230", 240), "M_N": ("0", None)}
 EMERG = {"E_L1": ("133", 0), "E_L2": ("133", 120), "E_L3": ("133", 240)}
 _ORIGIN = Origin(file="tests/changeover_fixtures.py", line=1, note="")
-_MPN = "DEMO-CO-4P-24"
+_MPN = "DEMO-RLY-4CO-24"
 
 
 def _on(d: Design, potential: str, *ports) -> None:

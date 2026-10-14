@@ -1,0 +1,24 @@
+schema = 1
+name = "Switch, manually operated, push-button, automatic return, break contact"
+kind = "symbol"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "push-button-break" }
+pole_pitch = 8
+
+parts = [
+  { as = "contact",  use = "break-contact" },
+  { as = "actuator", use = "actuator-push", at = [-2.5, 0] },
+]
+
+ports = { in = "contact.in", out = "contact.out" }
+
+# break-contact's link anchor faces E, so the push actuator cannot attach on the left (D48):
+# the symbol places it with `at` and draws the dashed link itself, as emergency-stop does.
+elements = [
+  { line = [[0.5, 0], [-2.5, 0]], style = "dashed" },
+]
+
+[slots]
+tag           = { at = [-4, 0], side = "W", box = [6, 1] }
+"marking.in"  = "contact.marking.in"
+"marking.out" = "contact.marking.out"

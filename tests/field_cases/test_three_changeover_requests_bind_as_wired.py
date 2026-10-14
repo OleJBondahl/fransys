@@ -26,13 +26,13 @@ def test_each_contact_name_lands_on_the_channel_it_is_wired_to() -> None:
     d = fr.design("demo_parts")
     rack = d.rack("U1")
     di = d.device("A1", "DEMO-PLC-DI-4P", parent=rack)
-    k1 = d.device("K1", "DEMO-CO-4P-24")
+    k1 = d.device("K1", "DEMO-RLY-4CO-24")
     for fn, channel in WIRED.items():
         d.wire(
             getattr(k1, fn)[MAKE[fn]], getattr(di, f"di_{channel}")[str(channel)], wire=(BK, 1.0)
         )
     for n in (1, 2, 3):
-        tap = d.device(f"K{n + 1}", "DEMO-CO-4P-24")
+        tap = d.device(f"K{n + 1}", "DEMO-RLY-4CO-24")
         d.wire(tap.coil["A2"], getattr(di, f"di_{n}")[str(n)], wire=(BK, 1.0))
         tap.coil.plc(fr.DO, f"K{n + 1} coil")
     for fn in WIRED:

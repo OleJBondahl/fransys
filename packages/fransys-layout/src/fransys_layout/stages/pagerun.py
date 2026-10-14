@@ -32,7 +32,7 @@ from .place import page_stack, place
 from .references import Wiring, side_reference_rooms
 from .references.digits import FLOOR, Digits, digits_by_set
 from .references.types import Seat, Seating
-from .replicate import drop_attached_replicas, drop_replicas
+from .replicate import planned_columns
 from .route import PageRoom, route
 from .sizing import label_boxes, placed_widths, with_rooms
 from .slices import (
@@ -105,6 +105,7 @@ class PageInputs:
     line_ends: frozenset[tuple[Handle, Handle]] = frozenset()
     heads: Mapping[Handle, str] = field(default_factory=dict)  # layout-0170: coil -> table heading
     aside: frozenset[tuple[Handle, Handle]] = frozenset()  # layout-0174: a beside wire's ports
+    whole: frozenset[Handle] = frozenset()  # layout-0214: terminals that keep every copy
 
 
 @dataclass(frozen=True)
@@ -192,8 +193,7 @@ def plan_pages(
         profile=inputs.profile,
         sheet=inputs.sheet,
     )
-    plans = drop_replicas(plans, columns)
-    return Planned(plans, drop_attached_replicas(plans, columns), findings)
+    return Planned(*planned_columns(plans, columns, drawn, inputs), findings)
 
 
 def _seated(plans: tuple[PagePlan, ...], columns: tuple[Column, ...]) -> tuple[Seat, ...]:

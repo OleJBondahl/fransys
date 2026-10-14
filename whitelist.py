@@ -54,6 +54,7 @@ _ = _Whitelist()
 # fransys-model/src itself.
 _.nets_by_port  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/roles.py:48
 _.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/steps.py:129
+_.see  # OTHER fransys/src/fransys/_report.py:50
 _.beside  # OTHER fransys-layout/src/fransys_layout/stages/columns.py:80
 _.internal_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
 _.external_ends  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:538
@@ -250,6 +251,14 @@ _.MCB  # TESTS fransys-parts/tests/test_lint_rest_protection.py:212
 _.MOTOR_BREAKER  # TESTS fransys-parts/tests/test_lint_rest_protection.py:226
 _.OVERLOAD  # TESTS fransys-parts/tests/test_lint_rest_protection.py:227
 _.RCD  # TESTS fransys-parts/tests/test_lint_rest_protection.py:228
+
+# --- fransys-model: OperatedBy members (parts-0020) ------------------------------------------
+
+# vocab/enums.py: what operates a part's contacts; the loader builds them by value.
+_.PUSH  # TESTS fransys-model/tests/derive/test_operated_by_model.py:86
+_.MUSHROOM  # TESTS fransys-model/tests/derive/test_operated_by_model.py:43
+_.TURN  # TESTS fransys-model/tests/derive/test_operated_by_model.py:50
+_.POSITION  # TESTS fransys-model/tests/derive/test_operated_by_model.py:58
 _.port_pairs  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/pairs.py:29
 _.limits  # TESTS fransys-author/tests/surface/test_coverage_facts.py:89
 

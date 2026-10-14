@@ -2,6 +2,7 @@
 
 from .cache import DIGEST_CACHE_SIZE, ByDigest, digest_cached
 from .canonical import dumps, from_data, loads, to_data
+from .codes import WHO_ACTS, CodeInfo
 from .diff import ModelDiff, diff
 from .draft import Draft
 from .encode import JsonValue, write_json
@@ -31,8 +32,10 @@ from .values import Value, check_value, register_enum
 __all__ = [
     "DIGEST_CACHE_SIZE",
     "SCHEMA_VERSION",
+    "WHO_ACTS",
     "AuthoringKey",
     "ByDigest",
+    "CodeInfo",
     "Draft",
     "FieldSpec",
     "Finding",

@@ -18,7 +18,7 @@ channel with no finding.
 import fransys as fr
 from fransys.colours import BK
 
-INFO_CODES = {"ITEM_WITHOUT_PART", "PORT_UNCONNECTED"}
+INFO_CODES = {"ITEM_WITHOUT_PART", "FUNCTION_HALF_CONNECTED"}  # each coil is wired at A1 only
 
 
 def test_three_coil_requests_on_one_channel_are_contested() -> None:

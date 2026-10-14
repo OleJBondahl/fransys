@@ -2,6 +2,7 @@
 
 from .bootstrap import part_file_skeleton
 from .check import check
+from .codes import FINDING_CODES
 from .netlist import netlist
 
-__all__ = ["check", "netlist", "part_file_skeleton"]
+__all__ = ["FINDING_CODES", "check", "netlist", "part_file_skeleton"]

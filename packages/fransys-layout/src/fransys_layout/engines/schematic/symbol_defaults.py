@@ -29,9 +29,12 @@ STATE_ROWS = Table(
 )
 
 
-def default_symbol(kind: str, rest: str | None, protection_type: str | None) -> str | None:
+def default_symbol(
+    kind: str, rest: str | None, protection_type: str | None, operated_by: str | None = None
+) -> str | None:
     """The symbol `kind` draws by its state rows, or None; `rest` is `link_state`'s answer."""
-    row = first_match(STATE_ROWS, SymbolSubject(kind, rest, protection_type, None, None), FACTS)
+    subject = SymbolSubject(kind, rest, protection_type, None, None, operated_by)
+    row = first_match(STATE_ROWS, subject, FACTS)
     return None if row is None else str(row.then)
 
 

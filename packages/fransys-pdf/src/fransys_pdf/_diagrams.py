@@ -16,7 +16,7 @@ from fransys_model.layout import sheet_for
 from fransys_model.vocab import DocumentPreset, PageKind
 
 from ._frame import TitleBlockFields, background
-from ._geometry import document_facts, project_notice, subject_label
+from ._geometry import document_facts, subject_label
 from ._labels import sheet_label
 from ._marks import sheet_mark
 from ._sizes import sizes_of
@@ -44,7 +44,7 @@ def diagram_source(model: Model, record: Document, svgs: Mapping[str, str]) -> s
             page_title="Block diagram",
             scope=subject_label(model, record),
             sheet_counter=sheet_counter_text(diagram, len(found)),
-            notice=project_notice(model),
+            notice=record.notice,
             logo=record.logo,
         )
         mark = sheet_mark(outline[page_destination(model, diagram)])

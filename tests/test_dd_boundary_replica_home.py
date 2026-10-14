@@ -18,11 +18,20 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+import pytest
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
-from fransys_model.layout import DrawingSet, Label, Page, SymbolPlacement, layout_of
-from fransys_model.vocab.tables import aspect_nodes, functions, units
+from fransys_model.layout import (
+    DrawingSet,
+    Label,
+    LinkMarker,
+    Page,
+    Route,
+    SymbolPlacement,
+    layout_of,
+)
+from fransys_model.vocab.tables import aspect_nodes, conductors, functions, ports, units
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -123,3 +132,25 @@ def test_the_black_box_in_the_parent_stands_in_the_terminals_home_group() -> Non
         if unit is not None and unit[-2:] == ("outer", "unit")
     }
     assert groups == {("outer", "unit"): {"GA"}}
+
+
+@pytest.mark.xfail(strict=True, reason="layout-0216: a terminal is drawn, not referenced")
+def test_the_parents_wire_to_the_black_box_terminal_is_a_route_with_no_marker() -> None:
+    """In `outer`'s set the conductor K9:A1 - X1 external port is one route on one page, and no
+    link marker stands at either of its ports there (today a same-page reference pair)."""
+    model = _build().model
+    sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
+    outer = {uid for uid, u in units(model).items() if u.key[-2:] == ("outer", "unit")}
+    outer_pages = {pid for pid, page in pages.items() if sets[page.drawing_set].unit in outer}
+    k9 = next(p for p in ports(model).values() if "K9" in p.key[-5] and p.key[-1] == "A1")
+    conductor = next(c for c in conductors(model).values() if k9.id in (c.a, c.b))
+    routes = [
+        r
+        for r in layout_of(model, Route).values()
+        if r.conductor == conductor.id and r.page in outer_pages
+    ]
+    assert len(routes) == 1
+    ends = {conductor.a, conductor.b}
+    assert not [
+        m for m in layout_of(model, LinkMarker).values() if m.port in ends and m.page in outer_pages
+    ]

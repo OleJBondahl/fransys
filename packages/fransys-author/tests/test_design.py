@@ -78,33 +78,6 @@ def test_design_project_writes_one_project_record(parts):
     assert project.title == "T"
 
 
-def test_project_notice_defaults_to_empty(parts):
-    d = Design(parts)
-    d.project(
-        title="T",
-        number="P-1",
-        customer="C",
-        revision=1,
-        author="me",
-    )
-    project = _one(d.draft(), Project)
-    assert project.notice == ""
-
-
-def test_project_notice_is_written(parts):
-    d = Design(parts)
-    d.project(
-        title="T",
-        number="P-1",
-        customer="C",
-        revision=1,
-        author="me",
-        notice="CE, IP54",
-    )
-    project = _one(d.draft(), Project)
-    assert project.notice == "CE, IP54"
-
-
 def test_location_and_group_are_distinct_aspect_nodes_with_the_same_name(parts):
     d = Design(parts)
     c1 = d.location("C1", "cabinet")

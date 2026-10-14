@@ -30,7 +30,7 @@ def _unit_draft(parts):
     cab = scope.location("CAB", "Cabinet")
     supply = scope.group("SUP", "Supply")
     strip = scope.strip("X01", at=cab)
-    relay = scope.item("DEMO-CO-4P-24", tag="K1", at=cab, group=supply)
+    relay = scope.item("DEMO-RLY-4CO-24", tag="K1", at=cab, group=supply)
     wire = scope.wiring(colour="BK", gauge="1.5")
     for pole in (3, 4):
         terminal = strip.terminal("DEMO-TB-2.5", f"RUN{pole}", group=supply)

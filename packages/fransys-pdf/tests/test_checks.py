@@ -546,3 +546,34 @@ def test_empty_list_finding_for_wire_label_list_and_designation_list_added_with_
     messages = {f.message for f in findings}
     assert any("WIRE_LABEL_LIST" in message for message in messages)
     assert any("DESIGNATION_LIST" in message for message in messages)
+
+
+def test_notice_overflow_names_the_document_and_where_the_notice_is_authored():
+    """pdf-0036: the finding reads `Document.notice`, needs no `Project`, and its fix text names
+    `fr.document(notice=...)`."""
+    c1 = location("C1", "Demo cabinet")
+    doc = document(
+        "d1",
+        preset=_PRESET,
+        subject=c1,
+        cover="# Cover",
+        remove=_NO_SCHEMATIC_OR_LISTS,
+        notice="Property of Demo Co. " * 40,
+    )
+    findings = check(model(c1, doc), {})
+    (finding,) = [f for f in findings if f.code == "TITLE_BLOCK_NOTICE_OVERFLOW"]
+    assert finding.subjects == (doc.id,)
+    assert "fr.document(notice=" in finding.message
+
+
+def test_a_notice_that_fits_raises_no_overflow_finding():
+    c1 = location("C1", "Demo cabinet")
+    doc = document(
+        "d1",
+        preset=_PRESET,
+        subject=c1,
+        cover="# Cover",
+        remove=_NO_SCHEMATIC_OR_LISTS,
+        notice="(c) Demo AS",
+    )
+    assert check(model(c1, doc), {}) == ()

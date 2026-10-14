@@ -27,6 +27,7 @@ tag raises.
 
 `d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)` adds one device.
 `joins={1: K1.coil["A1"]}` with `parent=K1` fits a housing on K1's own leads: pin 1 is that pin, no wire.
+A contact block with `parent=` an operator head prints the head's tag, as `-S1:11` (guide `parts.md`).
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.
 
 Floating tags: every item call takes `None` for the tag, `d.add` too, and numbers the item from
@@ -215,7 +216,8 @@ for tag in ("H1", "H2", "H3"):
 
 ## Wiring and cables
 
-`wire=` is required on `d.series` and `d.wire`: a colour code and a cross-section in mm2.
+`d.wire` requires `wire=`: a colour code and a cross-section in mm2. `d.series` takes it in three shapes
+(Wire colours).
 
 ### Wire along a current path
 
@@ -262,6 +264,27 @@ k2, k3, k4 = (d.device(tag, "DEMO-CTR-3P-24") for tag in ("K2", "K3", "K4"))
 d.series(dc.plus, s1.nc, s2.no, k2.coil, dc.minus, wire=(BU, 0.75))
 d.series(s1.nc, *(k.aux for k in (k3, k4)), k2.coil, wire=(WH, 0.5))
 ```
+
+### A changeover in a series
+
+`k1.co_1.no` and `k1.co_1.nc` are the two throws of a changeover, each a series element: line at the
+common, load at the throw. The first series that reaches the common wires it once, for both series.
+Passing the whole changeover raises: a changeover is two throws, so use `K1.co_1.no` or `K1.co_1.nc`.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
+k1 = d.device("K1", "DEMO-RLY-2CO-24")
+k2 = d.device("K2", "DEMO-CTR-3P-24")
+k3 = d.device("K3", "DEMO-RLY-2CO-24")
+d.series(dc.plus, k1.co_1.no, k2.coil, dc.minus, wire=0.75)
+d.series(k1.co_1.nc, k3.coil, dc.minus, wire=0.75)
+```
+
+A selector part has its throws on the line side. The series enters it at its throws and draws it
+turned.
 
 The pair below feeds a coil from a supply through a bridged run.
 
@@ -390,8 +413,7 @@ A colour is an IEC 60757 code imported from `fransys.colours`: `BK`, `BN`, `RD`,
 a blue 0.75 mm2 wire.
 
 A wire spec shared by many wires is a module constant: `CTRL = (BU, 0.75)`, with `BU` imported. Pass it
-as `wire=CTRL` to `d.wire`, and to `d.series` for a whole path. `wire=` stays required on both calls;
-there is no default.
+as `wire=CTRL` to `d.wire`, and to `d.series` for a whole path. `wire=` stays required on `d.wire` only.
 
 ```python
 import fransys as fr
@@ -408,6 +430,44 @@ k1 = d.device("K1", "DEMO-CTR-3P-24")
 k2 = d.device("K2", "DEMO-CTR-3P-24")
 d.series(dc.plus, feed, k1.coil, dc.minus, wire=CTRL)
 d.series(dc.plus, feed, k2.coil, dc.minus, wire=CTRL)
+```
+
+### Colour by what a wire carries
+
+A design has eight wire rows: `fr.DC_SUPPLY`, `fr.DC_GROUND`, `fr.DC_CONTROL`, `fr.AC_L1`, `fr.AC_L2`,
+`fr.AC_L3`, `fr.AC_N` and `fr.AC_CONTROL`. A row's value is a colour, or a colour and a size.
+`d.series` picks each wire's row from what it carries, so you write the colours once.
+
+`fr.design(library, wiring={row: value})` sets rows for the design. `@fr.unit(..., wiring={row: value})`
+sets rows for that unit's body. A unit never inherits its parent's rows. With no `wiring=` it draws
+the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`, every DC row `BU`, no sizes.
+
+`d.series(..., wire=)` takes three shapes:
+
+- a size, `wire=0.75`: every wire takes its row's colour at that size.
+- a table, `wire={fr.DC_CONTROL: (WH, 0.75)}`: replaces only those rows for this series.
+- a spec, `wire=(BU, 0.75)`: every wire gets that colour and size, and the rows are ignored.
+
+A wire whose row has no size, with no size on the series, raises. Name the size in either place.
+
+A series that starts on one rail (`dc.plus`, `ac.L1`) is a control path. A wire at the rail's
+potential takes the rail's row. A fuse or a contact ends that potential, so the wires after it take
+`DC_CONTROL` or `AC_CONTROL`. A series that starts on a whole supply (`dc`, `ac`) is a power path:
+each pole keeps its conductor's row through every element. On a supply with `n=`, the first
+element with poles decides: as many as the phases leaves N unwired, one more takes N. A series that
+starts on no rail takes the rows the earlier series gave the net it starts on.
+
+```python
+import fransys as fr
+from fransys.colours import BK, RD, WH
+
+d = fr.design("demo_parts", wiring={
+    fr.DC_SUPPLY: RD, fr.DC_CONTROL: WH, fr.DC_GROUND: BK,
+})
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
+s1 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC")
+k1 = d.device("K1", "DEMO-CTR-3P-24")
+d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 mm2
 ```
 
 ## Earth pins

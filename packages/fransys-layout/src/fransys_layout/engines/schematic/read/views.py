@@ -16,6 +16,7 @@ lazy from collections.abc import Set as AbstractSet
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES, kind_roles
 from fransys_layout.engines.schematic.read.box_split import split_box
 from fransys_layout.engines.schematic.read.item_sides import function_groups
+from fransys_layout.engines.schematic.read.reading import symbol_choices
 from fransys_layout.geometry import box_port_name
 from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
@@ -58,6 +59,13 @@ def box_drawn(
     return spec.pin_function is None and (
         spec.roles.plc_channel or _symbol_for(spec, table, index, None)[0] is None
     )
+
+
+def box_functions(model: Model, specs: Iterable[FunctionSpec]) -> frozenset[Id[Any]]:
+    """The functions of `specs` drawn as a generic box, by the house rules and the choices."""
+    table = {(rule.kind, rule.category, rule.gender): rule for rule in DEFAULT_RULES}
+    index = choice_index(symbol_choices(model))
+    return frozenset(spec.function for spec in specs if box_drawn(spec, table, index))
 
 
 def _view_kind(group: Sequence[FunctionSpec], wired: AbstractSet[Id[Any]]) -> str:
@@ -255,13 +263,16 @@ def without_idle_terminals(
 
 
 def pin_views(
-    specs: tuple[FunctionSpec, ...],
+    specs: tuple[FunctionSpec, ...], boxed: AbstractSet[Id[Any]] = frozenset()
 ) -> tuple[tuple[FunctionSpec, ...], dict[Id[Any], Id[Any]]]:
-    """Every connector function becomes one view per pin; a view's handle is the port."""
+    """Every connector function becomes one view per pin; a view's handle is the port.
+
+    A connector of an item in `boxed`, a device chain's member, stays whole for its box (LC2).
+    """
     found: list[FunctionSpec] = []
     pin_of: dict[Id[Any], Id[Any]] = {}
     for spec in specs:
-        if spec.kind != "connector" or not spec.ports:  # a view per pin; no pin, no view
+        if spec.kind != "connector" or not spec.ports or spec.item in boxed:
             found.append(spec)
             continue
         for port in spec.ports:

@@ -6,13 +6,14 @@ The one place that decides it (decision author-0023); the series and the wire bo
 from typing import TYPE_CHECKING, cast
 
 from fransys_author.errors import AuthorError
-from fransys_model.vocab import Conductor
+from fransys_model.vocab import Conductor, Function, Item, Port, UnusedBoundary
 
 if TYPE_CHECKING:
     from fransys_author.design import Scope
     from fransys_author.handles import Terminal
     from fransys_author.surface._strip import TerminalStrip
     from fransys_author.surface.design import Design
+    from fransys_model.kernel import Id
 
 
 def is_unit_strip(strip: TerminalStrip | Terminal, design: Design | None) -> bool:
@@ -24,18 +25,38 @@ def _unit_name(strip: TerminalStrip) -> str:
     return "/".join(cast("Scope", strip._scope)._prefix)
 
 
-def _reach(strip: TerminalStrip, design: Design, count: int) -> tuple[Terminal, ...]:
-    """The next `count` boundary terminals of `strip` whose outside end has no conductor yet.
+def _boundary_reading(design: Design) -> tuple[set[Id[Port]], set[Id[Port]], set[Id[Function]]]:
+    """Ports wired inside the unit, ports wired outside it, and the functions declared unused."""
+    records = design._engine._design.draft().records()
+    units = {r.id: r.unit for r in records if isinstance(r, Item)}
+    owner = {r.id: units[r.item] for r in records if isinstance(r, Function) and r.item in units}
+    unit_of = {r.id: owner.get(r.function) for r in records if isinstance(r, Port)}
+    inside: set[Id[Port]] = set()
+    outside: set[Id[Port]] = set()
+    for c in (r for r in records if isinstance(r, Conductor)):
+        for end, other in ((c.a, c.b), (c.b, c.a)):
+            held = unit_of[end]
+            (inside if unit_of[other] == held else outside).add(end)
+    unused = {r.function for r in records if isinstance(r, UnusedBoundary)}
+    return inside, outside, unused
 
+
+def _reach(strip: TerminalStrip, design: Design, count: int) -> tuple[Terminal, ...]:
+    """The next `count` boundary terminals of `strip` for a container (author-0040).
+
+    In order, a terminal wired inside and free outside; never one declared unused.
     `_outside` also holds the numbers taken but not yet wired, as in one series call.
     """
-    draft = design._engine._design.draft()
-    wired = {end for c in draft.records() if isinstance(c, Conductor) for end in (c.a, c.b)}
-    free = [
-        n
+    inside, outside, unused = _boundary_reading(design)
+    open_ = [
+        (n, terminal)
         for n, terminal in sorted(strip._made.items())
-        if n not in strip._outside and terminal.outer.id not in wired
+        if n not in strip._outside
+        and terminal.outer.id not in outside
+        and terminal.function.id not in unused
     ]
+    wired = [n for n, t in open_ if t.inner.id in inside or t.outer.id in inside]
+    free = wired + [n for n, _ in open_ if n not in wired]
     if len(free) < count:
         unit = _unit_name(strip)
         msg = (

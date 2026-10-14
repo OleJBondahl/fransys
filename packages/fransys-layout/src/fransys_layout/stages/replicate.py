@@ -12,11 +12,18 @@ lazy from collections.abc import Mapping
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages.boundary_specs import boundary_replica, unit_specs
 from fransys_layout.stages.columns import replica_key
+from fransys_layout.stages.idle_copies import without_idle_copies
+from fransys_layout.stages.page_copies import with_page_copies
+from fransys_layout.stages.references.nets import star_wires
 from fransys_layout.stages.types import Cell, Column, Home
 
 if TYPE_CHECKING:
+    from collections.abc import Set as AbstractSet
+
+    from fransys_layout.stages.pagerun import PageInputs
     from fransys_layout.stages.types import (
         Connection,
+        DrawnFunction,
         FunctionSpec,
         Handle,
         PagePlan,
@@ -236,3 +243,43 @@ def drop_attached_replicas(
         same = len(kept) == len(column.cells)
         result.append(column if same else replace(column, cells=tuple(kept)))
     return tuple(result)
+
+
+def planned_columns(
+    plans: tuple[PagePlan, ...],
+    columns: tuple[Column, ...],
+    drawn: tuple[DrawnFunction, ...],
+    inputs: PageInputs,
+) -> tuple[tuple[PagePlan, ...], tuple[Column, ...]]:
+    """The planned pages and columns: replicas dropped, then each terminal on each wire's page.
+
+    layout-0216: a terminal stands on every page a wire of it ends on, never a reference there,
+    and a copy that then draws no wire goes; a star net's wires wait for the copies at each wire.
+    """
+    plans = drop_replicas(plans, columns)
+    terminals = {spec.function for spec in inputs.functions if spec.roles.terminal}
+    starred = {c.handle for c in star_wires(inputs.connections, inputs.functions, columns)}
+    ends = [
+        (own, far)
+        for c in inputs.connections
+        if c.handle not in starred
+        for own, far in ((c.a, c.b), (c.b, c.a))
+        if own.function in terminals and far.function not in terminals
+    ]
+    columns = with_page_copies(plans, drop_attached_replicas(plans, columns), drawn, ends)
+    return without_idle_copies(plans, columns, _links(inputs, terminals, starred))
+
+
+def _links(
+    inputs: PageInputs, terminals: AbstractSet[Handle], starred: AbstractSet[Handle]
+) -> list[tuple[Handle, Handle]]:
+    """Each wire of a terminal under the drop: none the caller keeps whole, none of a star."""
+    held = {
+        f for c in inputs.connections if c.handle in starred for f in (c.a.function, c.b.function)
+    }
+    return [
+        (own.function, far.function)
+        for c in inputs.connections
+        for own, far in ((c.a, c.b), (c.b, c.a))
+        if own.function in terminals - held - inputs.whole
+    ]

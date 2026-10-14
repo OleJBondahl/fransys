@@ -4,6 +4,7 @@ A stage code is defined in the stage that emits it, because `stages` may not imp
 `lint`; it is re-exported here so this module is the complete list. Codes are stable.
 """
 
+from fransys_layout.lint import codes_defects, codes_design
 from fransys_layout.stages.columns import (
     FUNCTION_UNPLACED_IN_COLUMN,
 )
@@ -106,3 +107,5 @@ ALL_CODES: tuple[str, ...] = (
     WIRE_OVER_LABEL,
     WIRE_THROUGH_SYMBOL,
 )
+
+FINDING_CODES = (*codes_defects.FINDING_CODES, *codes_design.FINDING_CODES)

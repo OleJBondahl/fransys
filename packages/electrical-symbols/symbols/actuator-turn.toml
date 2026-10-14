@@ -1,0 +1,14 @@
+schema = 1
+name = "Actuator (operated by turning)"
+kind = "qualifier"
+status = "unverified"
+reference = { standard = "IEC 60617", number = "actuator-turn" }
+
+anchors = [
+  { id = "link", at = [0, 0], dir = "E" },
+]
+
+# The stepped operator: a stroke from the link, a step up, another stroke.
+elements = [
+  { polyline = [[0, 0], [-0.75, 0], [-0.75, -0.5], [-1.5, -0.5]] },
+]

@@ -14,6 +14,7 @@ from fransys_model.vocab import (
     CableProductFacet,
     CorePair,
     FootprintFacet,
+    OperatedBy,
     Part,
     PartCategory,
     PartLibrary,
@@ -115,6 +116,9 @@ def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[Part
             category=PartCategory(part_data["category"]),
             class_code=part_data["class_code"],
             library=library_id,
+            operated_by=OperatedBy(part_data["operated_by"])
+            if "operated_by" in part_data
+            else None,
         ),
         origin=part_origin,
     )

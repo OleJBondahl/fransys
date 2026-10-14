@@ -120,14 +120,6 @@ def project_facts(model: Model) -> tuple[str, str, str, str, str, str]:
     )
 
 
-def project_notice(model: Model) -> str:
-    """The project-wide IP-notice text (pdf-0010), `""` with no `Project`."""
-    table = projects(model)
-    if not table:
-        return ""
-    return next(iter(table.values())).notice
-
-
 def document_release(model: Model, record: Document) -> Id[UnitRelease] | None:
     """The release whose revision history `record` shows: its unit's, `None` for the project's."""
     unit = document_unit(model, record)
@@ -137,14 +129,16 @@ def document_release(model: Model, record: Document) -> Id[UnitRelease] | None:
 
 
 def document_facts(model: Model, record: Document) -> tuple[str, str, str, str, str, str]:
-    """`project_facts`, or for a unit document the unit release's own, customer empty."""
+    """`project_facts`, or for a unit document the unit release's own, customer empty.
+
+    A unit document's author is the `created` of the unit's current revision (pdf-0036 D5).
+    """
     unit = document_unit(model, record)
     if unit is None:
         return project_facts(model)
-    _title, _number, _customer, _revision, _revision_date, author = project_facts(model)
     release = unit_release(model, unit)
     matching = current_revision(model, release.id)
-    revision_date = "" if matching is None else matching.date
+    revision_date, author = ("", "") if matching is None else (matching.date, matching.created)
     return (
         release.title,
         release.number,

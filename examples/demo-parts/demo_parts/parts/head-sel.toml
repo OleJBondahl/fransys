@@ -1,0 +1,9 @@
+schema = 1
+
+[part]
+mpn = "DEMO-HEAD-SEL"
+manufacturer = "Demo"
+description = "Selector switch head, two positions, stay-put; contact blocks sold apart"
+category = "electromechanical"
+class_code = "S"
+operated_by = "turn"

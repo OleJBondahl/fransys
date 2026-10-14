@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.closure import net_of, physical_nets
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.cable import OpenCoreFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.joins import joined_ports
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 
 NET_UNREALISED: Final[str] = "NET_UNREALISED"
 NET_SHORTED: Final[str] = "NET_SHORTED"
-PORT_UNCONNECTED: Final[str] = "PORT_UNCONNECTED"
+FUNCTION_HALF_CONNECTED: Final[str] = "FUNCTION_HALF_CONNECTED"
 CONDUCTOR_ON_UNINSTALLED: Final[str] = "CONDUCTOR_ON_UNINSTALLED"
 NET_POTENTIAL_CONFLICT: Final[str] = "NET_POTENTIAL_CONFLICT"
 
@@ -141,22 +142,45 @@ def _conductor_findings(plant: _Plant) -> list[Finding]:
     return found
 
 
-def _unconnected(plant: _Plant) -> list[Finding]:
+# Two-port functions that carry current through: one end wired and the other open is a mistake.
+_THROUGH_KINDS: Final = frozenset(
+    {
+        FunctionKind.COIL,
+        FunctionKind.LOAD,
+        FunctionKind.CONTACT_NO,
+        FunctionKind.CONTACT_NC,
+        FunctionKind.SWITCH,
+        FunctionKind.PROTECTION,
+        FunctionKind.ACTUATOR,
+    }
+)
+_TWO_PORTS: Final = 2
+
+
+def _half_connected(plant: _Plant) -> list[Finding]:
     wired = {end for conductor in plant.conductors.values() for end in (conductor.a, conductor.b)}
     wired |= joined_ports(plant.model)
     wired |= {f.at for f in facets_of(plant.model, OpenCoreFacet).values() if f.at is not None}
-    return [
-        _finding(
-            PORT_UNCONNECTED,
-            Severity.INFO,
-            (port.id,),
-            f"port {ref(port)} is in no net and on no conductor or mate",
-        )
-        for port in plant.ports.values()
-        if port.id not in plant.declared
-        and port.id not in wired
-        and (port.function, port.name) not in plant.mated
-    ]
+    by_function: dict[Id[Function], list[Port]] = {}
+    for port in plant.ports.values():
+        by_function.setdefault(port.function, []).append(port)
+    found = []
+    for function_id, held in by_function.items():
+        function = plant.functions[function_id]
+        if len(held) != _TWO_PORTS or function.kind not in _THROUGH_KINDS:
+            continue
+        used = [
+            port.id in plant.declared
+            or port.id in wired
+            or (port.function, port.name) in plant.mated
+            for port in held
+        ]
+        if used.count(True) != 1:
+            continue
+        opened = held[used.index(False)]
+        message = f"{ref(function)} is connected at one port and open at {ref(opened)}"
+        found.append(_finding(FUNCTION_HALF_CONNECTED, Severity.WARNING, (opened.id,), message))
+    return found
 
 
 def check_connectivity(model: Model) -> tuple[Finding, ...]:
@@ -169,6 +193,6 @@ def check_connectivity(model: Model) -> tuple[Finding, ...]:
         *_unrealised(plant),
         *_per_physical_net(plant),
         *_conductor_findings(plant),
-        *_unconnected(plant),
+        *_half_connected(plant),
     ]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

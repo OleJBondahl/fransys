@@ -22,6 +22,11 @@ if TYPE_CHECKING:
 _UNGROUPED = ("ungrouped",)
 
 
+def _at(keys: WriteKeys, host: Id[Any] | None) -> AuthoringKey:
+    """layout-0216: a copy drawn at its wire is keyed by the function it stands at."""
+    return () if host is None else ("at", *keys.function[host])
+
+
 def placements(
     keys: WriteKeys,
     results: StageResults,
@@ -35,7 +40,7 @@ def placements(
     records = []
     discriminator: dict[tuple[Id[Any], int, int], AuthoringKey] = {}
     away = {
-        (cell.function, column.key)
+        (cell.function, column.key): cell.host if cell.at_wire else None
         for column in results.columns
         for cell in column.cells
         if cell.home is Home.ELSEWHERE
@@ -47,7 +52,12 @@ def placements(
         if (placed.function, placed.column) in away:
             group = columns[placed.column].group
             extra = nodes[group] if group is not None else _UNGROUPED
-            extra = (*extra, "drawing_set", *sets[placed.drawing_set].key[len(PREFIX) + 1 :])
+            extra = (
+                *extra,
+                "drawing_set",
+                *sets[placed.drawing_set].key[len(PREFIX) + 1 :],
+                *_at(keys, away[placed.function, placed.column]),
+            )
         real, pin = real_function(keys, placed.function)
         if pin is not None:
             extra = (*extra, "pin", pin)

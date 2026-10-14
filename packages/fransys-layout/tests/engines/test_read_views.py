@@ -84,3 +84,11 @@ def test_a_ref_on_a_port_that_is_no_pin_is_left_alone() -> None:
     """A port not in `pin_of` is returned as it is, its `symbol_port` too."""
     ref = PortRef(function=hid("function", 1), port=hid("port", 11), symbol_port="top")
     assert repin(ref, {}) == ref
+
+
+def test_a_connector_of_a_boxed_device_stays_whole() -> None:
+    """LC2 (layout-0215): a device chain's member keeps its connector for its one box."""
+    connector = function_spec(1, kind="connector")
+    specs, pin_of = pin_views((connector,), frozenset({connector.item}))
+    assert specs == (connector,)
+    assert pin_of == {}

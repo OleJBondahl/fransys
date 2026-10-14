@@ -56,7 +56,7 @@ d.layout.profile(sheet=a4)
 | `marker_padding` | 2 | Clear space between a link marker's text and its outline, on every edge. | Larger padding makes markers and their boxes bigger. | Markers look cramped. |
 | `route_turn_penalty` | 4 | The cost of one bend in a wire. | A higher cost makes wires straighter and longer. | Wires zigzag. |
 | `route_crossing_penalty` | 16 | The cost of one wire crossing another. | A higher cost avoids crossings at the price of longer wires. | Too many crossings. |
-| `hide_unused_pins` | `False` | Hide a box-drawn pin with no conductor, and a function with none, on drawings only. | Drawings are shorter; every list still shows every pin. | An interface with many unused pins. |
+| `hide_unused_pins` | `False` | Hide a box-drawn pin with no conductor, and a function with none, on drawings only. | Drawings are shorter; every list still shows every pin. A box in a chain draws only its wired pins (LONG-CHAIN D2). | An interface with many unused pins. |
 | `band_ranks` | supply 0, `terminal.first` 0, protection 1, switch and contacts 2, sensor 3, coil, load, actuator and `terminal` 4, `terminal.last` 5 | A map of function kind to the horizontal band it sits in, top first. `terminal.first` and `terminal.last` sit beside `terminal`. | Moves kinds up or down the column. The map replaces the house map whole: restate every kind you want ranked. | A circuit reads better with another top-to-bottom order. |
 | `group_ranks` | empty | A map of an aspect group's label to its page rank. | Orders the groups of pages. A group with no rank sorts last. | You want the pages in your own order. |
 

@@ -1,0 +1,17 @@
+schema = 1
+
+[part]
+mpn = "DEMO-BLOCK-1NC-21"
+manufacturer = "Demo"
+description = "Contact block for a head, one break contact, marked 21-22"
+category = "electromechanical"
+class_code = "S"
+
+[[function]]
+name = "nc"
+kind = "switch"
+ports = [
+    { name = "21", role = "generic", side = "line" },
+    { name = "22", role = "generic", side = "load" },
+]
+links = [{ a = "21", b = "22", kind = "switched", rest = "closed" }]

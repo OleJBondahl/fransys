@@ -3,7 +3,7 @@
 import contextlib
 import dataclasses
 from typing import cast
-lazy from collections.abc import Iterator
+lazy from collections.abc import Iterator, Mapping
 
 from fransys_author.design import Design as EngineDesign
 from fransys_author.errors import AuthorError
@@ -13,11 +13,14 @@ lazy from fransys_model.kernel import Draft
 
 from ._coverage import Coverage
 from ._device import Devices
+from ._rows import IEC, table
 from ._series import Series
 from ._strip import Strips
 from ._tags import bare
 from ._units import Units
 from ._wire import Wires
+lazy from ._potential import Given, PortId
+lazy from ._rows import RowValue, WiringRow
 
 
 class Design(Devices, Wires, Strips, Series, Coverage, Units):
@@ -27,11 +30,17 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
     """
 
     def __init__(
-        self, library: Draft, *, place: str | None = None, scope: Scope | None = None
+        self,
+        library: Draft,
+        *,
+        place: str | None = None,
+        scope: Scope | None = None,
+        wiring: Mapping[WiringRow, RowValue] | None = None,
     ) -> None:
         """Hold `library` and the default `place`; `design()` is the one way to make this.
 
         `scope` is the engine scope of a unit's child (`d.add`); none makes a fresh engine.
+        `wiring` replaces rows of the IEC 60204-1 default table for this design's series.
         """
         self.library = library
         engine = EngineDesign(library) if scope is None else scope
@@ -41,6 +50,9 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
         self._function: str | None = None
         self._group: Group | None = None
         self._claimed: set[tuple[str | None, str]] = set()
+        self._wiring = table(wiring, IEC)
+        self._given: dict[PortId, Given] = {}  # the row a series gave each port (S4)
+        self._wired_commons: set[PortId] = set()  # changeover commons a series wired (S7)
 
     def location(self, name: str, text: str, *, within: str | None = None) -> Location:
         """Declare the place `name` (printed `+name`) with its `text`.
@@ -129,9 +141,15 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
         return f"{scope}/{tag}" if scope else tag
 
 
-def design(library: Draft, *, place: str | None = None) -> Design:
+def design(
+    library: Draft,
+    *,
+    place: str | None = None,
+    wiring: Mapping[WiringRow, RowValue] | None = None,
+) -> Design:
     """Start a circuit over the part `library`; `place` is its devices' default place.
 
+    `wiring` replaces rows of the IEC 60204-1 default table for every series.
     Does not load parts: pass the Draft the facade loaded.
     """
-    return Design(library, place=place)
+    return Design(library, place=place, wiring=wiring)

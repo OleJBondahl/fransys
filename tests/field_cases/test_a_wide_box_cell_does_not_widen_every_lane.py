@@ -31,7 +31,7 @@ def _build() -> fr.BuildResult:
     cab = d.location("CAB", "Cabinet")
     d.layout.profile(hide_unused_pins=True)
     first, second = d.device("P1", "DEMO-PSU-24-5OUT"), d.device("P2", "DEMO-PSU-24-5OUT")
-    changeover = d.device("Q1", "DEMO-CO-4P-24")
+    changeover = d.device("Q1", "DEMO-RLY-4CO-24")
     live = d.terminal_strip("X1", "DEMO-TB-2.5", 6).run("L", 6, bridged=True)
     zero = d.terminal_strip("X2", "DEMO-TB-2.5", 6).run("L", 6, bridged=True)
     d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)

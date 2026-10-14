@@ -121,8 +121,11 @@ def _unboxed(
 
 
 def _paired(one: DrawnFunction) -> bool:
-    """layout-0107: a paired box keeps its resolved pin order and x, `_turned_box` would undo it."""
-    return bool(one.fed_by) or one.feeds is not None
+    """layout-0107: a paired box keeps its resolved pin order and x, `_turned_box` would undo it.
+
+    A device chain's box keeps them too (layout-0215).
+    """
+    return bool(one.fed_by) or one.feeds is not None or one.chained
 
 
 def _turned_box(

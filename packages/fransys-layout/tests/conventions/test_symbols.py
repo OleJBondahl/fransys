@@ -45,6 +45,38 @@ def test_each_row_is_hit_alone(row_id: str) -> None:
     assert _hit(SymbolSubject(kind, rest, protection, category, gender)) == (row_id, symbol)
 
 
+# layout-0220: row id -> (operated_by, rest, symbol) of a switch; each hits that row alone
+_OPERATED: dict[str, tuple[str, str, str]] = {
+    "T2.22": ("push", "operated", "push-button"),
+    "T2.23": ("push", "rest", "push-button-break"),
+    "T2.24": ("mushroom", "rest", "emergency-stop"),
+    "T2.25": ("turn", "operated", "selector-make"),
+    "T2.26": ("turn", "rest", "selector-break"),
+    "T2.27": ("position", "operated", "position-switch-make"),
+    "T2.28": ("position", "rest", "position-switch-break"),
+}
+
+
+@pytest.mark.parametrize("row_id", list(_OPERATED))
+def test_each_operator_row_is_hit_alone(row_id: str) -> None:
+    """A switch's operator and rest state reach that row, ahead of the plain switch rows."""
+    operated, rest, symbol = _OPERATED[row_id]
+    subject = SymbolSubject("switch", rest, None, None, None, operated)
+    assert _hit(subject) == (row_id, symbol)
+
+
+def test_an_operator_on_another_kind_or_an_open_mushroom_falls_through() -> None:
+    """Only a switch reads its operator; a mushroom open at rest has no row and draws a make."""
+    assert _hit(SymbolSubject("generic", "rest", None, None, None, "push")) == (
+        "T2.4",
+        "break-contact",
+    )
+    assert _hit(SymbolSubject("switch", "operated", None, None, None, "mushroom")) == (
+        "T2.1",
+        "make-contact",
+    )
+
+
 def test_the_row_order_is_the_contract() -> None:
     """Swapping the connector's plain row ahead of its female row changes the symbol."""
     rows = list(SYMBOL_DEFAULTS.rows)

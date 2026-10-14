@@ -223,7 +223,7 @@ def unconnected_ports(model: Model) -> tuple[Id[Port], ...]:
     """Every port whose physical net is a singleton, in id order (`physical_nets` is sorted).
 
     A conductor, a `conductive` link or a `Mate` reaching a port connects it; a declared
-    `Net` does not, deliberately unlike `PORT_UNCONNECTED`, which is about authoring intent.
+    `Net` does not, deliberately unlike `FUNCTION_HALF_CONNECTED`, which is about authoring intent.
 
     Args:
         model: The model to read.

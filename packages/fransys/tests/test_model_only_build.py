@@ -108,7 +108,7 @@ def _changeover_no_document_draft(parts):
     supply = scope.group("SUP", "Supply")
     field_a = scope.strip("X01", at=field)
     field_b = scope.strip("X02", at=field)
-    relay = scope.item("DEMO-CO-4P-24", tag="K1", at=cab, group=supply)
+    relay = scope.item("DEMO-RLY-4CO-24", tag="K1", at=cab, group=supply)
     wire = scope.wiring(colour="BK", gauge="1.5")
     for pole in (3, 4):
         make = field_a.terminal("DEMO-TB-2.5", f"RUN{pole}", group=supply)

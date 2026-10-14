@@ -20,6 +20,7 @@ from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
+from fransys_layout.engines.schematic import _finish
 from fransys_layout.stages import pagerun
 from fransys_model import derive
 from fransys_model.derive import box_lines
@@ -99,8 +100,10 @@ def test_a_router_called_with_no_wrap_gap_keeps_the_framing_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # The wrap came from the box heights of the day; the pin lines of model-0206 change them,
-    # so the case is pinned to boxes without pin lines.
+    # so the case is pinned to boxes without pin lines. Layout-0211's cells facing their device
+    # take the coil wire off the header's stack, so it is pinned to the pins' edge too.
     monkeypatch.setattr(box_lines, "_pin_lines", lambda *_: ())
+    monkeypatch.setattr(_finish, "lead_ends", lambda *_: {})
     real = pagerun.PageRoom
     monkeypatch.setattr(pagerun, "PageRoom", lambda **room: replace(real(**room), wrap_gap=None))
     assert _wrapping(build()) != []

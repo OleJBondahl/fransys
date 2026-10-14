@@ -166,10 +166,14 @@ class Cable:
             self.spare(pe_core)
 
     def _series_between(self, design: Design, before: _Side, after: _Side) -> None:
-        """Core i joins `before`'s load i to `after`'s line i, in core order without GNYE."""
+        """Core i joins `before`'s load i to `after`'s line i, in core order without GNYE.
+
+        Each pass of a cable takes its next free cores, so a return leg takes the next core.
+        """
         pairs = pair(before[1].load, after[1].line)
         pe_core = next((i for i, c in enumerate(self._colours, 1) if c == GNYE), None)
-        plain = [i for i in range(1, len(self._colours) + 1) if i != pe_core]
+        taken = self._used | {pe_core}
+        plain = [i for i in range(1, len(self._colours) + 1) if i not in taken]
         if len(plain) < len(pairs):
             msg = f"{self._label} has {len(plain)} cores for {len(pairs)} poles"
             raise AuthorError(msg)

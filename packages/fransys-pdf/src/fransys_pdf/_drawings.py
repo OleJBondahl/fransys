@@ -28,7 +28,6 @@ from ._geometry import (
     _drawing_set_pages,
     document_facts,
     location_label,
-    project_notice,
     subject_label,
     undrawn_replica_only_sets,
 )
@@ -95,7 +94,7 @@ def schematic_fields(
             page_title=forms[page.id][0],
             scope=scope,
             sheet_counter=sheet_counter_text(page, totals[page.drawing_set]),
-            notice=project_notice(model),
+            notice=record.notice,
             logo=record.logo,
             page_title_shorter=forms[page.id][1:],
         )
@@ -125,7 +124,7 @@ def schematic_source(
             page_title="Schematic",
             scope=subject_label(model, record),
             sheet_counter="",
-            notice=project_notice(model),
+            notice=record.notice,
             logo=record.logo,
         )
         margin = text_margin(sheet)
@@ -271,7 +270,7 @@ def harness_run_fields(
                 page_title=heading,
                 scope=scope,
                 sheet_counter="",
-                notice=project_notice(model),
+                notice=record.notice,
                 logo=record.logo,
             ),
             group,
@@ -322,7 +321,7 @@ def harness_drawing_source(
             page_title="Harness drawing",
             scope=subject_label(model, record),
             sheet_counter="",
-            notice=project_notice(model),
+            notice=record.notice,
             logo=record.logo,
         )
         margin = text_margin(sheet)

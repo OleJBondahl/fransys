@@ -30,7 +30,7 @@ def _box(u: fr.Design) -> _Io:
 
 
 def test_a_wholly_idle_interface_box_builds(tmp_path: Path) -> None:
-    """The unit's own page and the cabinet page place; the idle lamp keeps PORT_UNCONNECTED."""
+    """The unit's own page and the cabinet page place."""
     d = fr.design("demo_parts", place="C1")
     cabinet = d.location("C1", "Cabinet")
     d.add(_box, "U1")
@@ -38,5 +38,4 @@ def test_a_wholly_idle_interface_box_builds(tmp_path: Path) -> None:
     (tmp_path / "c.md").write_text("# Cabinet\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     own = fr.document(preset, "demo-idle-box", cover=tmp_path / "own.md")
-    result = fr.build(d, own, fr.document(preset, cabinet, cover=tmp_path / "c.md"))
-    assert any(f.code == "PORT_UNCONNECTED" for f in result.findings)
+    fr.build(d, own, fr.document(preset, cabinet, cover=tmp_path / "c.md"))

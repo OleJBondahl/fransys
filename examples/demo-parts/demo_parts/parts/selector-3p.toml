@@ -1,0 +1,38 @@
+schema = 1
+
+[part]
+mpn = "DEMO-SEL-3P-24"
+manufacturer = "Demo"
+description = "Supply selector, 3 changeover poles, commons toward the load, 24 V DC coil"
+category = "electromechanical"
+class_code = "Q"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[[function]]
+name = "co"
+kind = "contact_co"
+symbol = "change-over-contact"
+ports = [
+    { name = "11", role = "common", side = "load" },
+    { name = "12", role = "break", side = "line" },
+    { name = "14", role = "make", side = "line" },
+    { name = "21", role = "common", side = "load" },
+    { name = "22", role = "break", side = "line" },
+    { name = "24", role = "make", side = "line" },
+    { name = "31", role = "common", side = "load" },
+    { name = "32", role = "break", side = "line" },
+    { name = "34", role = "make", side = "line" },
+]
+links = [
+    { a = "11", b = "12", kind = "switched" },
+    { a = "11", b = "14", kind = "switched" },
+    { a = "21", b = "22", kind = "switched" },
+    { a = "21", b = "24", kind = "switched" },
+    { a = "31", b = "32", kind = "switched" },
+    { a = "31", b = "34", kind = "switched" },
+]

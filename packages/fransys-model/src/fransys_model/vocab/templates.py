@@ -10,6 +10,7 @@ from .enums import (
     FunctionKind,
     LinkKind,
     LinkRest,
+    OperatedBy,
     PartCategory,
     PoleSide,
     PortRole,
@@ -67,7 +68,8 @@ class Part:
     (`class_code="K"`) shared by every `-K1`, `-K2`, ... `Item`, so the MPN is never typed twice.
     Guarded by `part_conformance`, which checks every referencing `Item` matches its templates.
     `library` names the part library that supplied it, `None` for a part authored in
-    Python.
+    Python. `operated_by` says what operates its contacts as sold (parts-0020);
+    `None` means not stated.
     """
 
     id: Id[Part]
@@ -78,6 +80,7 @@ class Part:
     category: PartCategory
     class_code: str
     library: Id[PartLibrary] | None = None
+    operated_by: OperatedBy | None = None
     ext: frozendict[str, Value] = frozendict()
 
 

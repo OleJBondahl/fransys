@@ -87,7 +87,7 @@ def test_a_changeover_pole_stands_across_both_supplies_at_628_7_volts(
     """MAIN's L1 at the make throw and EMERG's L1 at the break throw: the open gap holds both."""
     model, p = changeover_bus()
     assert rail_pairs(model, fn_id(p["q1"], "co_1")) == {("E_L1", "M_L1")}
-    found = check_ratings(rated(model, "DEMO-CO-4P-24", "co_1", voltage_ac_v=volts))
+    found = check_ratings(rated(model, "DEMO-RLY-4CO-24", "co_1", voltage_ac_v=volts))
     if not fires:
         assert found == ()
         return

@@ -89,6 +89,15 @@ def test_the_symbols_agree_with_the_parts_lint_table(rest: str) -> None:
     assert _SYMBOL_REST[symbol] == {"rest": "closed", "operated": "open"}[rest]
 
 
+@pytest.mark.parametrize("operated", ["push", "turn", "position"])
+@pytest.mark.parametrize("rest", ["rest", "operated"])
+def test_the_operator_symbols_agree_with_the_parts_lint_table(operated: str, rest: str) -> None:
+    """layout-0220: each operator row's symbol has the rest state `_rest.py` gives it."""
+    symbol = default_symbol("switch", rest, None, operated)
+    assert symbol is not None
+    assert _SYMBOL_REST[symbol] == {"rest": "closed", "operated": "open"}[rest]
+
+
 @pytest.mark.parametrize(
     ("protection_type", "symbol"),
     [

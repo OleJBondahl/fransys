@@ -69,7 +69,7 @@ ports = [
     {{ name = "1", role = "generic" }},
     {{ name = "2", role = "generic" }},
 ]
-links = [{{ a = "1", b = "2", kind = "conductive" }}]
+links = [{{ a = "1", b = "2", kind = "{link}" }}]
 
 [function.protection]
 type = "{kind}"
@@ -91,9 +91,9 @@ def _built(tmp_path):
         "terminal": _DEMO_TERMINAL.read_text(encoding="utf-8"),
         "pb": _SWITCH.format(mpn="DEF-PB", symbol=""),
         "es": _SWITCH.format(mpn="DEF-ES", symbol='symbol = "emergency-stop"\n'),
-        "fu": _PROTECTION.format(mpn="DEF-FU", kind="fuse"),
-        "mb": _PROTECTION.format(mpn="DEF-MB", kind="mcb"),
-        "ol": _PROTECTION.format(mpn="DEF-OL", kind="overload"),
+        "fu": _PROTECTION.format(mpn="DEF-FU", kind="fuse", link="protective"),
+        "mb": _PROTECTION.format(mpn="DEF-MB", kind="mcb", link="protective"),
+        "ol": _PROTECTION.format(mpn="DEF-OL", kind="overload", link="conductive"),
     }
     for name, text in texts.items():
         (tmp_path / "parts" / f"{name}.toml").write_text(text, encoding="utf-8")

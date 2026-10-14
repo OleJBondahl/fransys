@@ -6,17 +6,15 @@ re-exports it (CONTACT-STATES CS2, CS4, decision 0019).
 A throw is a part fact, the `PortTemplate.role` `COMMON`/`BREAK`/`MAKE`, never a pin name.
 """
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
+lazy from collections.abc import Mapping
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 
 from .core import Function, Port
 from .enums import FunctionKind, LinkKind, LinkRest, PortRole
 from .tables import functions, internal_links, port_templates, ports
-lazy from .templates import InternalLink
-
-if TYPE_CHECKING:
-    from .templates import PortTemplate
+lazy from .templates import InternalLink, PortTemplate
 
 
 @value
@@ -51,6 +49,22 @@ def _pole(a_role: PortRole, b_role: PortRole) -> tuple[bool, PortRole] | None:
     if b_role is PortRole.COMMON and a_role in throws:
         return False, a_role
     return None
+
+
+def link_throw(
+    link: InternalLink, templates: Mapping[Id[PortTemplate], PortTemplate]
+) -> tuple[Id[PortTemplate], PortRole, Id[PortTemplate]] | None:
+    """`(common, BREAK or MAKE, throw)` when `link` is a switched link joining a common to a throw.
+
+    The template-level reading `changeover_throws` builds on; authoring reads it before a model.
+    """
+    if link.kind is not LinkKind.SWITCHED:
+        return None
+    pole = _pole(templates[link.a].role, templates[link.b].role)
+    if pole is None:
+        return None
+    common_is_a, throw = pole
+    return (link.a, throw, link.b) if common_is_a else (link.b, throw, link.a)
 
 
 def _changeover_ports(model: Model) -> dict[Id[PortTemplate], list[Port]]:
@@ -92,13 +106,10 @@ def _throws(model: Model) -> frozendict[Id[Function], tuple[Throws, ...]]:
             by_function_template.setdefault((port.function, template), []).append(port)
     reached: dict[Id[Port], dict[PortRole, set[Id[Port]]]] = {}
     for link in internal_links(model).values():
-        if link.kind is not LinkKind.SWITCHED:
+        found = link_throw(link, templates)
+        if found is None:
             continue
-        pole = _pole(templates[link.a].role, templates[link.b].role)
-        if pole is None:
-            continue
-        common_is_a, throw = pole
-        common, thrown = (link.a, link.b) if common_is_a else (link.b, link.a)
+        common, throw, thrown = found
         for port in by_template.get(common, ()):
             others = by_function_template.get((port.function, thrown), ())
             if others:

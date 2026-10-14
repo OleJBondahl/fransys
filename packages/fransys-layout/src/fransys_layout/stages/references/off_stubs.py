@@ -12,7 +12,7 @@ from itertools import count
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import Facing, cut_runs
-from fransys_layout.stages.black_box import black_box_tops, is_black_box
+from fransys_layout.stages.black_box import black_box_tops, is_black_box, stub_places
 from fransys_layout.stages.types import Home
 from fransys_model.derive.drawing_text import off_stub_line
 
@@ -222,16 +222,10 @@ def _stub_ends(
     for c in crossing:
         for ref in (c.a, c.b):
             end_text = next(queues[ref.port], None) if ref.port in queues else None
-            black_box = outward.get(ref.function)
-            pages = sorted(
-                page
-                for page, column in world.where.get(ref.function, {}).items()
-                if (
-                    page[0] in black_box
-                    if black_box is not None
-                    else (ref.function, column) not in away
-                )
-            )
+            where = world.where.get(ref.function, {})
+            boxes = [p for p in where if p[0] in outward.get(ref.function, ())]
+            homes = [p for p, column in where.items() if (ref.function, column) not in away]
+            pages = sorted(stub_places(boxes, homes))
             if not pages or end_text is None or (ref.port, end_text) in seen:
                 continue
             seen.add((ref.port, end_text))

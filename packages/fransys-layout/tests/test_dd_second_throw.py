@@ -22,7 +22,7 @@ from fransys_model.vocab.tables import functions, ports
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
 
-_CHANGEOVER = "DEMO-CO-4P-24"
+_CHANGEOVER = "DEMO-RLY-4CO-24"
 
 
 def _built() -> Model:

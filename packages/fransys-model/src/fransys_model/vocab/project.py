@@ -14,9 +14,8 @@ class Project:
     is current; the date is that entry's, authored once on the `Revision` record and never read
     from a clock (SC4, decision model-0082: `derive.current_revision`). Both are ints of 1 or
     more, refused when the record is made (`release_version`, FD4); they print as
-    `derive.revision_text` (`1.3`). `notice` is the title
-    block's IP notice cell text, written by `d.project(notice=...)`; the default `""` fills an
-    empty cell (spec page-frame R11.4, decision model-0051).
+    `derive.revision_text` (`1.3`). The title block's IP notice lives on `Document`
+    (decision model-0225).
     """
 
     id: Id[Project]
@@ -26,7 +25,6 @@ class Project:
     customer: str
     revision: int
     author: str
-    notice: str = ""
     version: int = 1
     ext: frozendict[str, Value] = frozendict()
 

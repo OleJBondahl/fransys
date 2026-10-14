@@ -13,7 +13,7 @@ from .ids import Id
 from .record import value
 from .values import register_enum
 
-_CODE = re.compile(r"[A-Z][A-Z0-9_]*")
+CODE_SHAPE = re.compile(r"[A-Z][A-Z0-9_]*")
 
 
 @register_enum
@@ -60,7 +60,7 @@ class Finding:
 
         Raises `SchemaError` when `code` is not `UPPER_SNAKE`, or a subject is not an `Id`.
         """
-        if _CODE.fullmatch(self.code) is None:
+        if CODE_SHAPE.fullmatch(self.code) is None:
             msg = f"finding code {self.code!r} is not UPPER_SNAKE"
             raise SchemaError(msg, kind=type(self).__qualname__)
         if not all(isinstance(subject, Id) for subject in self.subjects):

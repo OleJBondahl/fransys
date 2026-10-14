@@ -96,13 +96,21 @@ def _build(
 
 
 def _unit_drawn(result: fr.BuildResult) -> list[str]:
-    """The name of every function of the unit's items that the layout draws."""
+    """The name of every function of the unit's items that the layout draws.
+
+    A device box draws several functions: its pins name them (layout-0215, "p1.1").
+    """
     model = result.model
     return sorted(
-        functions(model)[p.function].key[-1]
-        for p in layout_of(model, SymbolPlacement).values()
-        if items(model)[functions(model)[p.function].item].unit is not None
-        and functions(model)[p.function].key[-1] != "lamp"
+        {
+            name
+            for p in layout_of(model, SymbolPlacement).values()
+            if items(model)[functions(model)[p.function].item].unit is not None
+            for name in (
+                {pin.split(".")[0] for pin in p.ports} or {functions(model)[p.function].key[-1]}
+            )
+            if name != "lamp"
+        }
     )
 
 
@@ -142,7 +150,11 @@ def test_the_unit_pdf_is_the_same_bytes_under_a_parent_with_another_profile(
 
 
 def test_a_parent_profile_does_not_reach_a_unit_without_one(tmp_path: Path) -> None:
-    """The parent hides unused pins; the unit sets nothing, so its idle supply stays drawn."""
+    """The parent hides unused pins; the unit sets nothing, so it draws as it does alone.
+
+    The switch stands in a device chain with the lamp, and a chain box draws only its wired
+    pins whatever the profile (LONG-CHAIN LC2, owner 2026-10-13), so the idle supply is not drawn.
+    """
     for sub in ("alone", "inside", "plain"):
         (tmp_path / sub).mkdir()
     alone = _build(tmp_path / "alone", unit_profile=None, parent=None, beside=False)
@@ -151,7 +163,7 @@ def test_a_parent_profile_does_not_reach_a_unit_without_one(tmp_path: Path) -> N
     )
     plain = _build(tmp_path / "plain", unit_profile=None, parent=None, beside=True)
     assert _unit_drawn(inside) == _unit_drawn(alone)
-    assert "supply" in _unit_drawn(inside)
+    assert _unit_drawn(inside) == ["p1", "p2"]
     assert _unit_pdf(inside, tmp_path / "o-inside") == _unit_pdf(plain, tmp_path / "o-plain")
 
 

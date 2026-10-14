@@ -36,8 +36,8 @@ def _built() -> tuple[fr.Model, fr.Pin, fr.Pin, fr.Pin, fr.Pin]:
     relay = d.device("K1", _RELAY)
     cable = d.cable("W1", _CABLE)
     wired, cored = strip[1], strip[2]
-    d.wire(wired, relay.co_1["12"], wire=(BK, 1.5))
-    cable.core(1, cored, relay.co_1["11"])
+    d.wire(wired, relay.co["12"], wire=(BK, 1.5))
+    cable.core(1, cored, relay.co["11"])
     model = fr.build(d).model
     return model, wired.inner, wired.outer, cored.inner, cored.outer
 
@@ -63,7 +63,7 @@ def test_outer_is_a_valid_wire_end() -> None:
     d.location("CAB", "Cabinet")
     terminal = d.terminal_strip("X01", _TERMINAL)[1]
     relay = d.device("K1", _RELAY)
-    d.wire(terminal.outer, relay.co_1["12"], wire=(BK, 1.5))
+    d.wire(terminal.outer, relay.co["12"], wire=(BK, 1.5))
     (wire,) = _ends(fr.build(d).model, ConductorKind.WIRE)
     assert terminal.outer.id in wire
     assert terminal.inner.id not in wire

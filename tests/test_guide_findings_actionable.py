@@ -15,8 +15,14 @@ from pathlib import Path
 import pytest
 
 PACKAGES = Path(__file__).resolve().parent.parent / "packages"
-FINDINGS_PAGES = ("findings-validators", "findings-render", "findings-pdf", "findings-kicad")
-_WHO = frozenset({"consumer", "Fransys", "note"})
+FINDINGS_PAGES = (
+    "findings-validators",
+    "findings-render",
+    "findings-pdf",
+    "findings-kicad",
+    "findings-parts",
+)
+_WHO = frozenset({"consumer", "part author", "Fransys", "note"})
 _BANNED = re.compile(r"nothing to fix|accept", re.IGNORECASE)
 _CODE_SHAPE = re.compile(r"^[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$")
 _MIN_COVERED = 100  # codes whose severity the scan sees; far below today's count, above vacuity

@@ -9,6 +9,7 @@ units and wires, and it is never split into places.
 The function builds the unit's devices on the design it receives and returns an instance of a
 `typing.NamedTuple` class, one field per interface device. `d.add(fn, "U1")` builds the unit into
 your design as instance `U1` and returns it, typed. Any other return raises. Every device the function creates belongs to that unit.
+`@fr.unit(..., wiring={row: value})` sets the unit's wire rows (authoring.md, Wire colours). With no `wiring=` the unit draws the IEC default, never its parent's rows.
 
 The second argument is the instance's printed tag, bare and with no lowercase letter: `"U3"`,
 never `"u3"` or `"-U3"`. It is also the instance's key. A container prints the tag before the

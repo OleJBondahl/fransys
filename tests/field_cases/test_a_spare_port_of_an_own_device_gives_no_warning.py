@@ -5,7 +5,7 @@ strip. Only the first connector is wired, to the strip. The second connector is 
 part has the port, so it cannot be removed.
 
 The bug: `UNIT_CONNECTOR_DANGLING` warned on every such spare, and the consumer had no fix to make.
-Fixed by decision model-0219: the code is retired, and `PORT_UNCONNECTED` (INFO) still reports it.
+Fixed by decision model-0219: the code is retired. A spare connector is no finding at all.
 """
 
 from typing import Any, NamedTuple
@@ -30,5 +30,5 @@ def test_a_spare_port_of_an_own_device_gives_no_warning() -> None:
     d = fr.design("demo_parts")
     d.add(_spare, "U1")
     codes = {f.code for f in fr.build(d).findings}
-    assert "PORT_UNCONNECTED" in codes  # the spare is still reported, as INFO
+    assert "FUNCTION_HALF_CONNECTED" not in codes  # a spare connector is not a half-wired function
     assert "UNIT_CONNECTOR_DANGLING" not in codes

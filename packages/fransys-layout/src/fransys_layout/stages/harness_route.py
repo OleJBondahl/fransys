@@ -163,9 +163,14 @@ def _axis(step: tuple[int, int]) -> tuple[tuple[int, int], tuple[int, int]]:
 
 
 def longest_run(points: tuple[Point, ...]) -> tuple[Point, Point]:
-    """Layout-0154: the polyline's longest straight run; the first of equal ones."""
+    """Layout-0154: the polyline's longest straight run; the first of equal ones.
+
+    A leg whose split stands on its end is one point: its run is that point.
+    """
     return max(
-        pairwise(points), key=lambda run: abs(run[1].x - run[0].x) + abs(run[1].y - run[0].y)
+        pairwise(points),
+        key=lambda run: abs(run[1].x - run[0].x) + abs(run[1].y - run[0].y),
+        default=(points[0], points[0]),
     )
 
 

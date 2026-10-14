@@ -9,6 +9,7 @@ from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.handles import Port
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
+lazy from fransys_author.surface import _throws
 lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Function as ModelFunction
@@ -74,13 +75,15 @@ class Fn:
             """
             return pick(f"{self._label}.{self._fn.name}", str(marking), self._pins())
 
-        def __getattr__(self, name: str) -> Pin:
-            """The pin named `name` when it is an identifier (`K1.coil.A1`).
+        def __getattr__(self, name: str) -> Pin | _throws.Throw:
+            """The pin named `name` (`K1.coil.A1`); a changeover's throw `no` or `nc`.
 
             Does not guess: an unknown name raises an `AttributeError` that lists the pins.
             """
             if name.startswith("_"):
                 raise AttributeError(name)
+            if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
+                return _throws.throw(self._label, self._fn, name)
             return pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:

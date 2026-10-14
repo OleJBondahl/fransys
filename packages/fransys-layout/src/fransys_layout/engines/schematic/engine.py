@@ -14,6 +14,7 @@ from fransys_layout.stages import (
 from fransys_layout.stages.box_leave import box_columns
 from fransys_layout.stages.box_views import drawn_hidden, hidden_views
 from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
+from fransys_layout.stages.chain_boxes import chain_boxes
 from fransys_layout.stages.connector_boxes import PlacedConnectorBox
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
 from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
@@ -29,6 +30,7 @@ from fransys_layout.stages.references import (
 )
 from fransys_layout.stages.stacking import JoinedRun
 from fransys_layout.stages.tags import own_set_texts, row_labels
+from fransys_layout.stages.tall_columns import cut_tall, page_floor
 from fransys_layout.stages.texts.marker_room import MarkerRoom
 from fransys_layout.stages.texts.marker_row import place_markers
 from fransys_layout.stages.texts.markers import link_markers, placed_world
@@ -37,9 +39,7 @@ from fransys_layout.stages.tidy import clear_of_stubs, shift_pages
 from fransys_layout.stages.wide_columns import cut_wide
 from fransys_model.kernel import Finding, Id, value
 
-from ._arrange_columns import (
-    arranged,
-)
+from ._arrange_columns import arranged, kept_terminals
 from ._decide import decide
 from ._finish import Laid, boxed, cross_references, outlined_cells
 from ._lines import DrawnPieces, LineScene, draw_lines, harness_ink, strip_lines
@@ -134,7 +134,10 @@ def stage_layout(
     drawn, resolve_findings = resolve_with_defaults(inputs.functions, DEFAULT_RULES, inputs.choices)
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
-    drawn = potential_sides(drawn, rank_of, *power, (inputs.feeds, inputs.profile))
+    drawn = chain_boxes(  # layout-0215: a chain's pins face their neighbours
+        potential_sides(drawn, rank_of, *power, (inputs.feeds, inputs.profile)),
+        inputs.device_chains,
+    )
     # a boxed connector's pin views draw no symbol and no label; its box stands over them
     boxes = box_specs(model, inputs.functions)
     hidden = hidden_views(boxes)
@@ -225,7 +228,7 @@ def stage_layout(
         location_paths(model, plans),
     )
     # model-0059: each black box's dash-dot outline and its title, before routing
-    placed_box = boxed(inputs, placed_all, boxes, lines)
+    placed_box = boxed(inputs, (placed_all, drawn), boxes, lines)
     laid = Laid(
         plans,
         pages,
@@ -312,7 +315,7 @@ def _placed(
     """`plan_pages`, `references`, `place`; again on grown widths, at most `_REPLANS` times (0175).
 
     Each placing is checked again: a group folded below the page is cut, a grown width re-plans,
-    a column wider than the page is cut between its lanes (layout-0182).
+    a column too wide is cut between its lanes (layout-0182), one too tall its rows (layout-0215).
     """
     planned = plan_pages(run, drawn, columns, widths)
     first = planned.plans
@@ -320,8 +323,10 @@ def _placed(
     planned_with = widths
     for _ in range(_REPLANS):
         tall = tall_groups(placement.pages, run.inputs.sheet.bottom, run.inputs.middle)
-        # layout-0182: a column wider than the page is cut between its lanes
-        cut = cut_wide(run, placement, columns, grown, decided[0])
+        # layout-0182 cuts a column wider than the page between its lanes; 0215 a taller one
+        cut = cut_wide(run, placement, columns, grown, decided[0]) or cut_tall(
+            run, placement, columns, grown, page_floor(run.inputs)
+        )
         if grown == planned_with and not tall and cut is None:
             break
         run, columns, grown = cut or (run, columns, grown)
@@ -357,6 +362,7 @@ def _page_inputs(
         line_ends=frozenset((end.function, end.port) for c in inputs.carried for end in (c.a, c.b)),
         heads=heads,
         aside=frozenset(_pair(run) for run in joins if run.aside),
+        whole=kept_terminals(inputs),
     )
 
 

@@ -12,7 +12,6 @@ from ._geometry import (
     document_facts,
     document_metadata,
     preamble,
-    project_notice,
     resolve_sheet_format,
     subject_label,
 )
@@ -68,7 +67,7 @@ def section_fields(model: Model, record: Document, kind: PageKind) -> TitleBlock
         page_title=_HEADING_WORDS[kind],
         scope=subject_label(model, record),
         sheet_counter="",
-        notice=project_notice(model),
+        notice=record.notice,
         logo=record.logo,
     )
 

@@ -7,6 +7,10 @@ drawn in a box cell of another unit, with every wire inside its own unit; or its
 only in other drawing sets (a unit's black box in its parent's set whose wire is a stub at the
 unit's own page). Jumper routes do not meet. The count over the models below may only be zero.
 The pump-station example lives in another repository, so these fixtures stand for it.
+
+Decision layout-0216 adds two ratchets: no link marker stands on a terminal's path (a terminal is
+drawn where its conductor ends, never referenced), and no copy stands unwired on a page where a
+far end of it stands (the `same_page` cause).
 """
 
 import importlib.util
@@ -15,9 +19,10 @@ import tempfile
 from collections import defaultdict
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import fransys as fr
+import pytest
 from fransys_el import OPTIONS
 
 from fransys_layout.engines import lay_out_schematic
@@ -29,12 +34,16 @@ from fransys_model.layout import (
     Page,
     PowerSymbol,
     Route,
+    StarKind,
     SymbolPlacement,
     layout_of,
 )
 from fransys_model.vocab.enums import ConductorKind, FunctionKind
 from fransys_model.vocab.membership import in_unit_subtree
 from fransys_model.vocab.tables import conductors, functions, items, ports
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 ROOT = Path(__file__).resolve().parent.parent
 LAYOUT_TESTS = ROOT / "packages" / "fransys-layout" / "tests"
@@ -87,6 +96,7 @@ def _models() -> dict[str, Any]:
         )[0],
         "strip-block": strip.built().result.model,
         "bank-of-relays": bank._built(None, 8).model,
+        "bank-pages-coarse": bank._built("3.0", 9).model,
         "boundary-stub": boundary._build((("K1", "A1"),)),
         "power-text": _field_unit(power, "_shape", "shape"),
     }
@@ -155,8 +165,9 @@ def _other_set(model: Any, function: Any, page: Any, placed: dict[Any, set[Any]]
     return bool(there) and not any(pages[q].drawing_set == here for q in there)
 
 
-def loose_copies(model: Any) -> list[tuple]:
-    """Each `(page, function)` terminal copy no wire meets there, for one of the four causes."""
+def _unmet_copies(model: Any) -> list[tuple[Any, Any, dict[Any, set[Any]]]]:
+    """Each `(page, function, placed)` terminal copy no wire meets there; `placed` maps a
+    function to its pages."""
     wired = _met(model)
     ports_of = build_indexes(model).ports_by_function
     placed: dict[Any, set[Any]] = defaultdict(set)
@@ -167,16 +178,29 @@ def loose_copies(model: Any) -> list[tuple]:
         record = functions(model).get(p.function)
         if record is None or record.kind is not FunctionKind.TERMINAL:
             continue
-        if set(ports_of.get(p.function, ())) & wired[p.page]:
-            continue
-        if (
-            _no_wire(model, p.function)
-            or _block_shape(model, p.function, p.page, placed)
-            or _unwired_box_cell(model, p.function, p.page)
-            or _other_set(model, p.function, p.page, placed)
-        ):
-            found.append((p.page, p.function))
+        if not set(ports_of.get(p.function, ())) & wired[p.page]:
+            found.append((p.page, p.function, placed))
     return found
+
+
+def _same_page(model: Any, function: Any, page: Any, placed: dict[Any, set[Any]]) -> bool:
+    """A far end of the copy's terminal stands on `page`."""
+    return any(
+        page in placed.get(far, set()) | placed.get(far_port, set())
+        for far_port, far in _far_ends(model, function)
+    )
+
+
+def loose_copies(model: Any) -> list[tuple]:
+    """Each `(page, function)` terminal copy no wire meets there, for one of the four causes."""
+    return [
+        (page, function)
+        for page, function, placed in _unmet_copies(model)
+        if _no_wire(model, function)
+        or _block_shape(model, function, page, placed)
+        or _unwired_box_cell(model, function, page)
+        or _other_set(model, function, page, placed)
+    ]
 
 
 def _terminal_placements(model: Any) -> int:
@@ -197,24 +221,62 @@ def test_no_terminal_copy_stands_where_no_wire_meets_it() -> None:
     assert sum(counts.values()) == 0, counts
 
 
-def _terminal_references(model: Any) -> int:
-    """Link markers at a non-terminal port whose partner marker sits at a terminal port."""
-    markers = layout_of(model, LinkMarker)
+def _on_terminal_path(model: Any, marker: Any, markers: Mapping[Any, Any]) -> bool:
+    """A marker that is no off-page stub and whose own or partner port is a terminal's."""
+    if marker.star is StarKind.OFF:
+        return False
     kinds, port_records = functions(model), ports(model)
-    count = 0
-    for marker in markers.values():
-        partner = markers.get(marker.partner)
-        if partner is None:
-            continue
-        near, far = port_records[marker.port].function, port_records[partner.port].function
-        if (
-            kinds[near].kind is not FunctionKind.TERMINAL
-            and kinds[far].kind is FunctionKind.TERMINAL
-        ):
-            count += 1
-    return count
+    partner = markers[marker.partner]
+    return any(
+        kinds[port_records[m.port].function].kind is FunctionKind.TERMINAL
+        for m in (marker, partner)
+    )
+
+
+def _terminal_references(model: Any) -> int:
+    """Link markers on a terminal's path: a reference where a terminal should be drawn."""
+    markers = layout_of(model, LinkMarker)
+    return sum(1 for m in markers.values() if _on_terminal_path(model, m, markers))
 
 
 def test_a_terminal_fanned_out_to_groups_on_one_page_draws_no_reference() -> None:
     """The power-text model's X1:5 feeds four lamps on one page: its home joins them."""
     assert _terminal_references(_models()["power-text"]) == 0
+
+
+_XFAIL = pytest.mark.xfail(strict=True, reason="layout-0216: a terminal is drawn, not referenced")
+
+
+@_XFAIL
+def test_no_marker_stands_on_a_terminals_path() -> None:
+    counts = {name: _terminal_references(m) for name, m in _models().items()}
+    assert sum(counts.values()) == 0, counts
+
+
+def test_the_boundary_stub_model_still_has_an_off_stub() -> None:
+    """Stubs into another set keep their marker. Dropping every OFF marker from the model, or a
+    rule that routes stubs too, makes this fail."""
+    markers = layout_of(_models()["boundary-stub"], LinkMarker).values()
+    assert any(m.star is StarKind.OFF for m in markers)
+
+
+@cache
+def _fan_in() -> Any:
+    module = _load(
+        FIELD_CASES / "test_a_fan_in_onto_a_bridged_fuse_terminal_builds.py", "fan_in_for_copies"
+    )
+    return _field_unit(module, "_cab", "cab")
+
+
+@_XFAIL
+def test_no_copy_stands_unwired_beside_its_far_end() -> None:
+    models = {**_models(), "fan-in": _fan_in()}
+    counts = {
+        name: sum(
+            1
+            for page, function, placed in _unmet_copies(m)
+            if _same_page(m, function, page, placed)
+        )
+        for name, m in models.items()
+    }
+    assert sum(counts.values()) == 0, counts

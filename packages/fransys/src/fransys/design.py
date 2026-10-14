@@ -1,9 +1,11 @@
 """`design`: the staleness check in front of the typed parts module's surface (EA-PARTS)."""
 
+lazy from collections.abc import Mapping
 lazy from types import ModuleType
 
 from fransys_author import AuthorError
 from fransys_author.surface import Design
+lazy from fransys_author import RowValue, WiringRow
 
 from fransys.parts_module import library_digest
 from fransys.pipeline import parts
@@ -19,10 +21,15 @@ def _check_fresh(module: ModuleType) -> None:
         raise AuthorError(message)
 
 
-def design(*libraries: str | ModuleType, place: str | None = None) -> Design:
+def design(
+    *libraries: str | ModuleType,
+    place: str | None = None,
+    wiring: Mapping[WiringRow, RowValue] | None = None,
+) -> Design:
     """Start a `Design` from part-library names or generated parts modules, each checked fresh.
 
-    `place` names the first location, as a bare tag.
+    `place` names the first location, as a bare tag. `wiring` maps rows (`fr.DC_SUPPLY`, ...)
+    to a colour or a (colour, size): it replaces those IEC 60204-1 default rows for the design.
 
     Does not write files, build, or create devices.
     """
@@ -33,4 +40,4 @@ def design(*libraries: str | ModuleType, place: str | None = None) -> Design:
             continue
         _check_fresh(item)
         sources.extend(item.SOURCES)
-    return Design(parts(*sources), place=place)
+    return Design(parts(*sources), place=place, wiring=wiring)

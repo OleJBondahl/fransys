@@ -75,6 +75,44 @@ def test_protection_symbols_load_with_in_and_out_ports(number):
     assert any(path.through for path in symbol.paths)
 
 
+OPERATED_BY_SYMBOLS = [
+    "push-button-break",
+    "selector-make",
+    "selector-break",
+    "position-switch-make",
+    "position-switch-break",
+]
+
+
+@pytest.mark.parametrize("number", OPERATED_BY_SYMBOLS)
+def test_operated_by_symbols_have_ports_and_the_actuator_on_the_left(number):
+    """Each operated-by composite has `in`/`out`, a through path and drawing left of its ports."""
+    symbol = LIBRARY.get(number)
+    assert {p.id for p in symbol.ports} == {"in", "out"}
+    assert any(path.through for path in symbol.paths)
+    xs = [pt.x for e in symbol.elements if isinstance(e, (Line, Polyline)) for pt in _points(e)]
+    xs += [e.center.x - e.radius for e in symbol.elements if isinstance(e, Circle)]
+    assert min(xs) <= -3
+
+
+@pytest.mark.parametrize("number", ["actuator-turn", "actuator-position"])
+def test_new_actuator_qualifiers_are_qualifiers_with_a_link(number):
+    symbol = LIBRARY.get(number)
+    assert symbol.kind.value == "qualifier"
+    assert [a.id for a in symbol.anchors] == ["link"]
+
+
+def test_actuator_position_is_a_circle_with_no_closed_polyline():
+    """D49: the limit-switch actuator is a circle at the dashed linkage's end, no triangle."""
+    elements = SOURCE.get("actuator-position").elements
+    assert sum(isinstance(e, Circle) for e in elements) == 1
+    assert not any(isinstance(e, Polyline) and e.closed for e in elements)
+
+
+def _points(element):
+    return element.points if isinstance(element, Polyline) else (element.start, element.end)
+
+
 def test_emergency_stop_is_s00258_in_full():
     """Head left of the ports, ring right of the break contact, latching wedge on the link.
 

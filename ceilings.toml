@@ -135,7 +135,7 @@ surface_docstring_lines = 15
 "packages/fransys-author/src/fransys_author/design.py" = 736
 "packages/fransys-author/src/fransys_author/handles.py" = 305
 "packages/fransys-layout/src/fransys_layout/engines/schematic/_lines.py" = 314
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 307
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py" = 314
 "packages/fransys-layout/src/fransys_layout/stages/images.py" = 311
 "packages/fransys-layout/src/fransys_layout/stages/line_draw.py" = 306
 "packages/fransys-layout/src/fransys_layout/stages/middle_fold.py" = 309
@@ -191,15 +191,17 @@ surface_docstring_lines = 15
 
 [md_tokens]
 "docs/DESIGN.md" = 5063
+"packages/fransys-layout/docs/design/columns.md" = 5053
 "packages/fransys-layout/docs/design/lint.md" = 5323
-"packages/fransys-layout/docs/rules/harness-lines.md" = 5197
-"packages/fransys-layout/docs/rules/shared-support.md" = 5170
-"packages/fransys-layout/docs/rules/step-2-columns.md" = 5040
-"packages/fransys-layout/docs/rules/step-4-references.md" = 5400
-"packages/fransys-layout/docs/rules/step-5-place.md" = 6327
+"packages/fransys-layout/docs/rules/harness-lines.md" = 5482
+"packages/fransys-layout/docs/rules/shared-support.md" = 5188
+"packages/fransys-layout/docs/rules/step-2-columns.md" = 5119
+"packages/fransys-layout/docs/rules/step-3-partition.md" = 5410
+"packages/fransys-layout/docs/rules/step-4-references.md" = 5409
+"packages/fransys-layout/docs/rules/step-5-place.md" = 6601
 "packages/fransys-model/docs/design/derive-queries.md" = 5065
-"packages/fransys/src/fransys/guide/authoring.md" = 6354
-"packages/fransys/src/fransys/guide/drawing.md" = 5516
+"packages/fransys/src/fransys/guide/authoring.md" = 7077
+"packages/fransys/src/fransys/guide/drawing.md" = 5723
 "packages/fransys/src/fransys/guide/findings.md" = 6657
 "packages/fransys/src/fransys/guide/reading.md" = 5175
 

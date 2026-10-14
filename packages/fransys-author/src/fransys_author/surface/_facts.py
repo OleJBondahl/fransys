@@ -23,20 +23,23 @@ class Facts:
         customer: str,
         revision: int,
         author: str,
-        notice: str = "",
+        notice: str | None = None,
         version: int = 1,
     ) -> None:
         """State the title-block facts of the project, at most one per model.
 
-        Does not rename or default a field: the keywords are the engine's own.
+        Does not rename or default a field: the keywords are the engine's own. `notice` moved to
+        `fr.document(..., notice=...)`: passing it raises an `AuthorError`.
         """
+        if notice is not None:
+            msg = "the notice moved to fr.document(..., notice=...)"
+            raise AuthorError(msg)
         self._engine.project(
             title=title,
             number=number,
             customer=customer,
             revision=revision,
             author=author,
-            notice=notice,
             version=version,
         )
 

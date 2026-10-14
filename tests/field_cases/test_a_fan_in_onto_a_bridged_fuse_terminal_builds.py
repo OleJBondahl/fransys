@@ -19,17 +19,31 @@ Reported by a consumer, reproduced 2026-10-14. Fixing decision: model-0215 -- a 
 protective link is not a rail terminal, so it draws as a terminal and keeps its home cell.
 """
 
+from collections import defaultdict
 from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
+import pytest
 from fransys.colours import BU
 
-from fransys_model.layout import Route, layout_of
-from fransys_model.vocab.tables import ports
+from fransys_model.derive.indexes import build_indexes
+from fransys_model.layout import (
+    DrawingSet,
+    LinkMarker,
+    Page,
+    PowerSymbol,
+    Route,
+    SymbolPlacement,
+    layout_of,
+)
+from fransys_model.vocab.enums import ConductorKind, FunctionKind
+from fransys_model.vocab.tables import conductors, functions, ports
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from fransys_model.kernel import Id
 
 
 class _Cab(NamedTuple):
@@ -99,3 +113,33 @@ def test_the_wire_from_the_fuse_terminal_reaches_the_fan_in_without_a_u_turn(
     ]
     assert len(routes) == 2  # one per X2 terminal
     assert not any(_turns_back([(p.x, p.y) for p in r.points]) for r in routes)
+
+
+@pytest.mark.xfail(strict=True, reason="layout-0216: a terminal is drawn, not referenced")
+def test_the_top_level_set_draws_no_terminal_that_no_wire_meets(tmp_path: Path) -> None:
+    """Decision layout-0216: no terminal stands as a box cell on a top-level page with no route,
+    marker or power symbol of that page at its ports (today U1/X1:24V:6, U1/X2:1 and U1/X2:2)."""
+    (tmp_path / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
+    d = fr.design("demo_parts")
+    d.add(_cab, "U1")
+    model = fr.build(
+        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=tmp_path / "cover.md")
+    ).model
+    kinds, pages, sets = conductors(model), layout_of(model, Page), layout_of(model, DrawingSet)
+    met: dict[Id, set[Id]] = defaultdict(set)
+    for route in layout_of(model, Route).values():
+        if route.conductor is None or kinds[route.conductor].kind is not ConductorKind.JUMPER:
+            met[route.page] |= {route.a, route.b}
+    for marker in layout_of(model, LinkMarker).values():
+        met[marker.page].add(marker.port)
+    for power in layout_of(model, PowerSymbol).values():
+        met[power.page].add(power.port)
+    function_ports = build_indexes(model).ports_by_function
+    loose = [
+        p.function
+        for p in layout_of(model, SymbolPlacement).values()
+        if functions(model)[p.function].kind is FunctionKind.TERMINAL
+        and sets[pages[p.page].drawing_set].unit is None
+        and not set(function_ports.get(p.function, ())) & met[p.page]
+    ]
+    assert loose == []

@@ -65,23 +65,18 @@ _ORIGIN = Origin(file="packages/fransys-pdf/tests/_build.py", line=1, note="inve
 _RELEASES: dict[Id[UnitRelease], UnitRelease] = {}
 
 
-def project(  # noqa: PLR0913 -- one keyword per invented fact, each independently overridable
+def project(
     *,
     title: str = "Demo cabinet",
     number: str = "DEMO-1",
     customer: str = "Demo Co",
     revision: int = 1,
     author: str = "demo",
-    notice: str = "",
 ) -> Project:
     """A `Project` record; every field has an invented default, overridable by keyword.
 
     The printed revision date is the `Revision` entry's (`revision_entry(..., unit=None)`), not
     the project's: add one to the model where a test needs a date.
-
-    `notice` (decision model-0051) defaults to `""`, `Project`'s own
-    default -- an empty title-block notice cell, the same "invented default" every other
-    field here already follows.
     """
     return Project(
         id=make_id(Project, ("project",)),
@@ -91,7 +86,6 @@ def project(  # noqa: PLR0913 -- one keyword per invented fact, each independent
         customer=customer,
         revision=revision,
         author=author,
-        notice=notice,
     )
 
 
@@ -326,6 +320,7 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
     add: tuple[PageKind, ...] = (),
     remove: tuple[PageKind, ...] = (),
     logo: str | None = None,
+    notice: str = "",
 ) -> Document:
     """A `Document` record about `subject` (a location node, an item or a unit).
 
@@ -347,6 +342,7 @@ def document(  # noqa: PLR0913 -- one keyword per thing a test varies, as the ki
         cover=cover,
         notes=notes,
         logo=logo,
+        notice=notice,
     )
 
 

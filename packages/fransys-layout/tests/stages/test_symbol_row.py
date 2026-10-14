@@ -147,18 +147,21 @@ def test_a_symbol_that_does_not_reach_moves_nothing(builds) -> None:
     assert [(p.function, p.at) for p in with_rule] == [(p.function, p.at) for p in without]
 
 
-def test_a_shifted_row_over_the_page_foot_is_reported_not_moved(tmp_path: Path) -> None:
-    """N-case: the shift pushes the plug rows past the content box foot; `PAGE_OVERFULL` says so.
+def test_a_shifted_row_over_the_page_foot_continues_in_the_next_column(tmp_path: Path) -> None:
+    """N-case: the shift pushes the plug rows past the content box foot, so they continue at the
+    top of the next column with their mated board pins (layout-0215), and nothing is overfull.
 
-    No page move happens (the whole-box move reads width only), and without the rule the same
-    sheet is not overfull: the shift alone causes the finding.
+    Without the rule the same sheet keeps one column: the shift alone causes the cut.
     """
     result = _build(tmp_path, _REACHES, content_mm=_FOOT_MM)
+    (k1,) = (one.id for one in items(result.model).values() if one.tag == "K1")
     stages, findings = _laid_out(result, rule=True)
     assert {p.page for p in stages.layout.placed} == {1}
-    (over,) = (f for f in findings if f.code == "PAGE_OVERFULL")
+    assert "PAGE_OVERFULL" not in {f.code for f in findings}
+    (box,) = (p for p in stages.layout.placed if p.function == k1)
     pins = [p for p in stages.layout.placed if p.geometry.key == "contact-male"]
-    lowest = max(p.at.y for p in pins)  # only the shifted-down row crosses the foot
-    assert set(over.subjects) == {p.function for p in pins if p.at.y == lowest}
-    _, bare = _laid_out(result, rule=False)
-    assert "PAGE_OVERFULL" not in {f.code for f in bare}
+    assert {p.column for p in pins} - {box.column}
+    assert {p.at.x for p in pins} != {box.at.x}
+    bare = _placed(result, rule=False)
+    (alone,) = (p for p in bare if p.function == k1)
+    assert {p.column for p in bare if p.geometry.key == "contact-male"} == {alone.column}

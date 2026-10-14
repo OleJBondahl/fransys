@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="8.75mm" height="6.25mm" viewBox="-2.5 -1.5 3.5 2.5">
+<title>Actuator (operated by turning)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<polyline points="0,0 -0.75,0 -0.75,-0.5 -1.5,-0.5" stroke-width="0.1"/>
+</g>
+</svg>

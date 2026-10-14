@@ -11,8 +11,8 @@ class_code = "T"
 name = "input"
 kind = "load"
 ports = [
-    { name = "L", role = "generic" },
-    { name = "N", role = "generic" },
+    { name = "L", role = "generic", side = "line" },
+    { name = "N", role = "generic", side = "load" },
 ]
 
 [function.rating]

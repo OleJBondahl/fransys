@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 18,
+  "schema_version": 19,
   "tables": {
     "aspect_node": [
       {
@@ -2530,7 +2530,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-FUSE-2A"
+        "mpn": "SIM-FUSE-2A",
+        "operated_by": null
       },
       {
         "category": "plc_module",
@@ -2543,7 +2544,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-DI8-024"
+        "mpn": "SIM-DI8-024",
+        "operated_by": null
       },
       {
         "category": "plc_module",
@@ -2556,7 +2558,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-RTD4-PT100"
+        "mpn": "SIM-RTD4-PT100",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -2569,7 +2572,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-PB-NO"
+        "mpn": "SIM-PB-NO",
+        "operated_by": null
       },
       {
         "category": "terminal",
@@ -2582,7 +2586,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-TERMINAL-2.5MM"
+        "mpn": "SIM-TERMINAL-2.5MM",
+        "operated_by": null
       },
       {
         "category": "electromechanical",
@@ -2595,7 +2600,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-CONTACTOR-9A-1CO"
+        "mpn": "SIM-CONTACTOR-9A-1CO",
+        "operated_by": null
       },
       {
         "category": "cable",
@@ -2608,7 +2614,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-CABLE-2X0.75-SH"
+        "mpn": "SIM-CABLE-2X0.75-SH",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -2621,7 +2628,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-PSU-24VDC-5A"
+        "mpn": "SIM-PSU-24VDC-5A",
+        "operated_by": null
       },
       {
         "category": "plc_module",
@@ -2634,7 +2642,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-AI4-020"
+        "mpn": "SIM-AI4-020",
+        "operated_by": null
       },
       {
         "category": "plc_module",
@@ -2647,7 +2656,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-RACK-8"
+        "mpn": "SIM-RACK-8",
+        "operated_by": null
       },
       {
         "category": "electromechanical",
@@ -2660,7 +2670,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-CONTACTOR-9A-1NO"
+        "mpn": "SIM-CONTACTOR-9A-1NO",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -2673,7 +2684,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-PT-4-20MA"
+        "mpn": "SIM-PT-4-20MA",
+        "operated_by": null
       },
       {
         "category": "generic",
@@ -2686,7 +2698,8 @@
         ],
         "library": "part_library:76eaa59f907353a18b7d8ab57a7fea17",
         "manufacturer": "Example Co",
-        "mpn": "SIM-PT100-2W"
+        "mpn": "SIM-PT100-2W",
+        "operated_by": null
       }
     ],
     "part_library": [

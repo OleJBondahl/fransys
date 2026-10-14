@@ -40,13 +40,14 @@ def _headers(output: str) -> list[tuple[str, str]]:
     return _HEADER_RE.findall(output)
 
 
-def test_fransys_pdf_gives_exactly_its_seven_surface_names():
-    """`fransys_pdf`'s `__all__` has 7 names; `api()` prints exactly those 7,
-    including `PRESET_PAGES`, a plain data value with no signature of its own.
+def test_fransys_pdf_gives_exactly_its_eight_surface_names():
+    """`fransys_pdf`'s `__all__` has 8 names; `api()` prints exactly those 8,
+    including `FINDING_CODES` and `PRESET_PAGES`, plain data values with no signature.
     """
     import fransys_pdf
 
     assert tuple(fransys_pdf.__all__) == (
+        "FINDING_CODES",
         "PRESET_PAGES",
         "check",
         "document_pages",

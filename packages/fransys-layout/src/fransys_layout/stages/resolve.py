@@ -35,8 +35,9 @@ _POLE_PAIR_SIZE = 2
 THROW_SYMBOL_PORTS: Mapping[str, str] = frozendict({"common": "com", "break": "nc", "make": "no"})
 
 
-# layout-0105: `(kind, rest, protection_type)` to a symbol key or `None`; the engine passes it
-type DefaultSymbol = Callable[[str, str | None, str | None], str | None]
+# layout-0105, layout-0220: `(kind, rest, protection_type, operated_by)` to a symbol key or
+# `None`; the engine passes it
+type DefaultSymbol = Callable[[str, str | None, str | None, str | None], str | None]
 
 
 def resolve(
@@ -146,7 +147,7 @@ def _symbol_for(
     named = (
         None
         if default_symbol is None
-        else default_symbol(spec.kind, spec.rest, spec.protection_type)
+        else default_symbol(spec.kind, spec.rest, spec.protection_type, spec.operated_by)
     )
     if named is not None:
         return named, frozendict(dict[str, str]())
@@ -213,7 +214,7 @@ def throw_port(spec: FunctionSpec, port: PortSpec) -> str | None:
     """The symbol port a changeover port's throw role binds it to, `None` when it has no throw."""
     if not spec.roles.contact_changeover or port.throw is None:
         return None
-    return THROW_SYMBOL_PORTS[port.throw]
+    return pole_prefix(port.pole, spec.poles) + THROW_SYMBOL_PORTS[port.throw]
 
 
 def _throw_port(spec: FunctionSpec, port: PortSpec, port_map: frozendict[str, str]) -> str | None:

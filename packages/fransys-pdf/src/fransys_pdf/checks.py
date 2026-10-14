@@ -23,7 +23,7 @@ from fransys_model.derive import (
     unit_release,
 )
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import PageKind, documents, projects
+from fransys_model.vocab import PageKind, documents
 
 from ._cable_checks import harness_block_messages
 from ._cover_checks import cover_overflow_findings
@@ -251,24 +251,26 @@ def _text_overflow_findings(
 
 
 def _notice_overflow_findings(model: Model) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_NOTICE_OVERFLOW`: one finding if `Project.notice` misses any cell."""
-    project = next(iter(projects(model).values()), None)
-    if project is None or not project.notice:
-        return ()
+    """`TITLE_BLOCK_NOTICE_OVERFLOW`: one finding if a `Document.notice` misses its cell."""
     for subject, record in documents(model).items():
+        if not record.notice:
+            continue
         pages = document_pages(model, subject)
         sheet = resolve_sheet_format(model, record, pages)
         if not title_block_fits(sheet):
             continue
         width_mm, height_mm = notice_cell_size_mm(sheet)
         sizes = sizes_of(model, record)
-        if not notice_fits(project.notice, sizes, width_mm=width_mm, height_mm=height_mm):
+        if not notice_fits(record.notice, sizes, width_mm=width_mm, height_mm=height_mm):
             return (
                 Finding(
                     code="TITLE_BLOCK_NOTICE_OVERFLOW",
                     severity=Severity.WARNING,
-                    subjects=(project.id,),
-                    message="Project.notice does not fit the title block's notice cell, cut",
+                    subjects=(record.id,),
+                    message=(
+                        "the notice does not fit the title block's notice cell, cut; "
+                        "shorten fr.document(notice=...)"
+                    ),
                 ),
             )
     return ()

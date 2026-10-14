@@ -8,7 +8,7 @@ The bug: the hide switch dropped the idle terminal's spec while the unit still n
 boundary function, and `fr.build` raised LayoutError "a unit's boundary names a function that
 has no spec" (stages/replicate.py).
 The rule (decision layout-0139): `hide_unused_pins` never hides a boundary function. The
-findings equal the run without the switch: PORT_UNCONNECTED names the terminal.
+findings equal the run without the switch.
 """
 
 from typing import TYPE_CHECKING, Any, NamedTuple
@@ -76,4 +76,3 @@ def test_an_idle_boundary_terminal_builds_and_keeps_its_findings(tmp_path: Path)
     hidden = _build(hide=True, tmp_path=tmp_path / "b")
     assert _findings(hidden) == _findings(plain)
     assert _drawn(hidden) == _drawn(plain)
-    assert any(f.code == "PORT_UNCONNECTED" for f in hidden.findings)

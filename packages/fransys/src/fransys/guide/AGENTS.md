@@ -9,7 +9,7 @@ Python:
 importlib.resources.files("fransys").joinpath("guide")
 ```
 
-Read `index.md` next.
+Read `index.md` next. Write with the calls its "Which call first" section names.
 
 Import only `fransys`. Every guide example follows that one rule.
 

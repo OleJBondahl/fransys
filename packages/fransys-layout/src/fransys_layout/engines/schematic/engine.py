@@ -233,7 +233,7 @@ def stage_layout(
         placed_all,
         moved_shapes(placement.pages, placement.placed_all, placed_all),
     )
-    pages, outlines, placed_box, placed_all, markers, blocks = outlined_cells(
+    pages, outlines, external, placed_box, placed_all, markers, blocks = outlined_cells(
         model, inputs, columns, laid, placed_box
     )
     crossings = cross_references(model, inputs, placement, decided, contact_refs)
@@ -265,6 +265,7 @@ def stage_layout(
         frozenset(hidden),
         {plan.drawing_set: plan.unit for plan in plans},
         route_spans(routes),
+        {page: one.sides for page, one in blocks.items()},
     )
     drawn_lines = draw_lines(model, lines, inputs.carried, middle, scene)
 
@@ -276,6 +277,7 @@ def stage_layout(
         markers=markers,
         labels=drawn_lines.labels,
         outlines=outlines,
+        external_outlines=external,
     )
     # layout-0158: the lint reads the lines, the boxes, and the boxed pin views that draw nothing
     ink = harness_ink(drawn_lines, placed_box, drawn_hidden(placed_all, hidden, markers))

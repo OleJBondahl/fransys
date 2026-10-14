@@ -11,6 +11,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import designation_refusal, printed_designation
+from .instance_tag import instance_name, instance_tags
 from .kinds import item_kind
 from .order import natural_key
 from .overview import overview_graph
@@ -18,7 +19,7 @@ from .overview_levels import level_box_lines
 from .rows import ItemKind, OverviewNode
 from .rows_overview import TreeRow
 
-__all__ = ["overview_tree"]
+__all__ = ["overview_tree", "unit_own_drawing", "unit_system_designation"]
 
 type _Key = tuple[str, Id[Any]]
 
@@ -26,6 +27,18 @@ type _Key = tuple[str, Id[Any]]
 def _unit_label(model: Model, unit: Id[Unit]) -> str:
     """The row text of a unit: its box text relative to the unit that holds it."""
     return " ".join(level_box_lines(model, unit, units(model)[unit].parent))
+
+
+def unit_own_drawing(model: Model, unit: Id[Unit]) -> str:
+    """The drawing set of a unit's own panel line: its box text, then "in" and its release."""
+    lines = level_box_lines(model, unit, units(model)[unit].parent)
+    return f"{lines[0]} in {' '.join(lines[1:])}"
+
+
+def unit_system_designation(model: Model, unit: Id[Unit]) -> str | None:
+    """The unit named from the system level, tags joined (`-R1-A2`); `None` when untagged."""
+    tags = instance_tags(model, unit, None)
+    return instance_name(tags) if tags else None
 
 
 def _item_label(model: Model, node: OverviewNode) -> str:

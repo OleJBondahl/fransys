@@ -20,7 +20,7 @@ from .overview_levels import overview_level
 from .rows_overview import LocationBox, LocationFold, LocationLine
 lazy from .rows import OverviewLevel
 
-__all__ = ["location_fold", "top_place_of"]
+__all__ = ["location_fold", "location_place_title", "top_place_of"]
 
 _MIN_PLACES = 2
 
@@ -56,12 +56,25 @@ def _box_place(model: Model, box: Id[Any]) -> Id[AspectNode] | None:
     return _top(model, effective_placement(model, box, Aspect.LOCATION))
 
 
+def _place_lines(model: Model, place: Id[AspectNode]) -> tuple[str, ...]:
+    """A place's printed lines: its designation, then its description when it has one."""
+    text = (location_node_designation(model, place), aspect_nodes(model)[place].description)
+    return tuple(t for t in text if t)
+
+
+def location_place_title(model: Model, place: Id[AspectNode]) -> str:
+    """A place's printed title, its designation then its text on one line (`+ER Engine room`).
+
+    The box prints these as two lines; the overview's panel prints the title. One spelling.
+    """
+    return " ".join(_place_lines(model, place))
+
+
 def _place_box(model: Model, place: Id[AspectNode] | None, members: list[Id[Any]]) -> LocationBox:
     """One place as a box: its designation and description, or "No location"."""
     if place is None:
         return LocationBox(place=None, lines=("No location",), boxes=tuple(members))
-    text = (location_node_designation(model, place), aspect_nodes(model)[place].description)
-    return LocationBox(place=place, lines=tuple(t for t in text if t), boxes=tuple(members))
+    return LocationBox(place=place, lines=_place_lines(model, place), boxes=tuple(members))
 
 
 def _lines(

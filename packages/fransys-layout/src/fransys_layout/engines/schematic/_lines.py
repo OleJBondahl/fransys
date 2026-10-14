@@ -78,6 +78,7 @@ class LineScene:
     hidden: frozenset[Id[Any]] = frozenset()  # layout-0155: boxed pin views, which draw nothing
     units: Mapping[int, Id[Any] | None] = MappingProxyType({})  # each drawing set's unit
     wires: Mapping[_Page, tuple[Any, ...]] = MappingProxyType({})  # each page's wires as spans
+    sides: Mapping[_Page, tuple[Box, ...]] = MappingProxyType({})  # the boxes no line runs along
 
 
 @value
@@ -147,6 +148,7 @@ def _route_pages(lines: LineReads, grid: Grid, context: _Context) -> _Routed:
             on = (page, *_ends_on(line.ends, page, world))
             if on[1] and drawn_on(line, scene.units.get(page[0]), lines.top):
                 here = replace(_grid(grid, page, world), busy=covered[page], busy_penalty=BUSY)
+                here = replace(here, sides=scene.sides.get(page, ()))
                 pieces[page].append((line, made := _route_line(line, on, here, context)))
                 covered[page] |= frozenset().union(*(cells_of(pts) for _, pts in made.paths))
     return pieces

@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
+    OPPOSITE,
     WIRING_GRID,
     Box,
     Facing,
@@ -20,14 +21,17 @@ from fransys_layout.geometry import (
 )
 from fransys_layout.geometry.units import TEXT_GAP
 
+from .harness_route import root
 from .line_trunk import edge, tip
+from .space import End
 from .texts.candidates import Candidate, box_of, stub_anchor
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from .line_draw import EndOnPage, PinAt
-    from .space import End, Obstacle
+    from .harness_route import LineEnd
+    from .line_draw import EndOnPage, Fan, PinAt
+    from .space import Obstacle
 
 
 def aside(at: Point, target: Point, facing: Facing) -> Facing:
@@ -150,3 +154,22 @@ def _toward(pin: PinAt, side: Facing) -> PinAt:
         reach=edge,
         lead=lead,
     )
+
+
+def run_on(joint: Sequence[tuple[LineEnd, Fan | None]]) -> list[LineEnd]:
+    """W13-DIP: a non-root joint end whose line runs on to further rows is met on that run.
+
+    Met from its facing side it dipped a grid past the split, then ran on across it.
+    """
+    first = root([end for end, _ in joint]) if joint else None
+    return [
+        replace(end, end=_met_on(end.end, fan.rows[0].at))
+        if fan and fan.rows and end is not first
+        else end
+        for end, fan in joint
+    ]
+
+
+def _met_on(end: End, onward: Point) -> End:
+    """The split met from behind the run that leaves it toward `onward` (as `_row_run` leaves)."""
+    return End(end.at, OPPOSITE[aside(end.at, onward, end.facing)])

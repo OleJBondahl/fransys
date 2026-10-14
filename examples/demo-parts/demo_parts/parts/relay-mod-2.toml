@@ -23,7 +23,7 @@ resistance_ohm = "1600"
 name = "k2"
 kind = "coil"
 symbol = "operating-device"
-ports = [{ name = "B1", role = "generic", symbol_port = "in" }, { name = "B2", role = "generic", symbol_port = "out" }]
+ports = [{ name = "B1", role = "generic", symbol_port = "in", side = "line" }, { name = "B2", role = "generic", symbol_port = "out", side = "load" }]
 
 [function.operating]
 nominal_voltage_v = "24"

@@ -38,7 +38,16 @@ from ._data_alt import lens_data, matrix_data
 from ._data_changes import changes_data
 from ._data_findings import findings_data
 from ._data_heads import heads_data
-from ._data_places import holds_of, unit_place_label
+from ._data_order import reading_order
+from ._data_places import (
+    holds_of,
+    location_texts,
+    own_drawing,
+    place_label,
+    place_title,
+    unit_place_label,
+    unit_system_label,
+)
 from ._palette import palette_data
 from ._tabs import tab_texts
 
@@ -119,7 +128,7 @@ def _classes(tables: _Tables, ref: OverviewRef, unit: Id[Any] | None) -> list[st
     if ref.kind is OverviewRefKind.GROUP:
         return [tables.unit_label.get(unit), tables.aspect_label.get(ref.node), "group", None]
     if ref.kind is OverviewRefKind.PLACE:
-        return [None, None, "place", tables.aspect_label.get(ref.node)]
+        return [None, None, "place", None if ref.node is None else place_label(model, ref.node)]
     kind = {"unit": "unit", "fields": "field devices", "strips": "strip"}[ref.kind.value]
     place = unit_place_label(model, ref.unit) if kind == "unit" and ref.unit is not None else None
     return [own if own is not None else tables.unit_label.get(unit), None, kind, place]
@@ -130,8 +139,10 @@ def _box(
 ) -> Json:
     index, box, record = at
     held = holds_of(tables, box)
+    title = place_title(tables.model, box)
     return {
         **({} if held is None else {"holds": held}),
+        **({} if title is None else {"title": title}),
         "at": tables.ref(box.key.at),
         "cls": _classes(tables, box.key.ref, view.unit),
         "dashed": box.dashed,
@@ -175,6 +186,7 @@ def _view(tables: _Tables, rows: ViewRows, records: tuple[Any, Any, Any]) -> Jso
     texts = tab_texts(rows, brecs, lrecs, tables.text_height)
     return {
         "boxes": [_box(tables, rows, (i, b, brecs[i]), texts) for i, b in enumerate(rows.boxes)],
+        "order": reading_order(brecs),
         "level": tables.ref(rows.level),
         "heads": heads_data(tables.model, views[make_id(OverviewView, key)]),
         "lines": [_line(index, ln, rec) for ln, rec in zip(rows.lines, lrecs, strict=True)],
@@ -236,17 +248,23 @@ def page_data(
     graph = overview_graph(model)
     # A unit with no box in any view (a plant with no system view) prints its parts-tree row text.
     tree_text = {row.unit: row.label for row in overview_tree(model) if row.unit is not None}
+    labels = [tables.unit_label.get(u) or tree_text[u] for u in tables.unit_ix]
     return {
         "changes": changes_data(tables, drawn, changes),
         "findings": findings_data(tables, drawn, findings),
         "items": [_item(tables, n) for n in tables.nodes],
         "lens": lens_data(tables),
+        "location_texts": location_texts(model),
         "matrix": matrix_data(tables),
         "signals": [[[tables.item_ix[p.item], p.marking] for p in s.ports] for s in graph.signals],
         "text_height": tables.text_height,
         "tree": _tree(tables),
         "unit_parents": [_unit_parent(tables, u) for u in tables.unit_ix],
-        "units": [tables.unit_label.get(u) or tree_text[u] for u in tables.unit_ix],
+        "own_drawings": [own_drawing(model, u) for u in tables.unit_ix],
+        "unit_systems": [
+            unit_system_label(model, u, one) for u, one in zip(tables.unit_ix, labels, strict=True)
+        ],
+        "units": labels,
         "palette": palette_data(),
         "views": views,
     }

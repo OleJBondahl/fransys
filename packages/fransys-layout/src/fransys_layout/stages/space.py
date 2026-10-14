@@ -80,6 +80,7 @@ class Blocks:
 
     hard: tuple[Shape, ...] = ()
     soft: tuple[Shape, ...] = ()
+    sides: tuple[Box, ...] = ()  # BO6-SHRINK: boxes no wire runs along; a wire may cross one
 
 
 def unowned(boxes: Iterable[Box]) -> tuple[Shape, ...]:
@@ -93,6 +94,7 @@ class Space:
 
     shapes: tuple[Shape, ...]
     content: Box | None = None
+    sides: tuple[Box, ...] = ()  # see `Blocks.sides`
 
     def holds(self, box: Box) -> bool:
         """Containment: `box` lies inside `content`, closed (flush is inside), or none."""
@@ -206,6 +208,16 @@ def crosses(box: Box, run: Run) -> bool:
 def crosses_unless_leaving(box: Box, run: Run, lanes: Iterable[Lane]) -> bool:
     """With the row "a route may leave along its own port": `crosses`, but not for a leaver."""
     return crosses(box, run) and not any(_on_lane(one, run) for one in lanes)
+
+
+def runs_along(box: Box, run: Run) -> bool:
+    """Whether `run` lies on a side of `box` for a positive length; a crossing does not."""
+    right, bottom = box.x + box.width, box.y + box.height
+    if run.x == run.to_x and run.x in (box.x, right):
+        return min(run.to_y, bottom) > max(run.y, box.y)
+    if run.y == run.to_y and run.y in (box.y, bottom):
+        return min(run.to_x, right) > max(run.x, box.x)
+    return False
 
 
 def covers(box: Box, run: Run) -> bool:

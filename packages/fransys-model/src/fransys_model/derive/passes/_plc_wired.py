@@ -35,13 +35,20 @@ def unit_of(model: Model, function: Function) -> Id[Unit] | None:
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class WiredPick:
-    """What wiring decided: requests bound to a channel, and requests left ambiguous.
+    """What wiring decided: requests bound to a channel, left ambiguous, or contested.
 
     `ambiguous` maps a request function to the channels, in serving order, that tie for it.
+    `contested` maps a channel to the kind-matched requests, in request order, that all picked it.
     """
 
     bound: dict[Id[Function], Id[Function]]
     ambiguous: dict[Id[Function], tuple[Id[Function], ...]]
+    contested: dict[Id[Function], tuple[Id[Function], ...]]
+
+    @property
+    def unbound(self) -> set[Id[Function]]:
+        """The requests that bind nothing and skip the free queue: ambiguous and contested."""
+        return {*self.ambiguous, *(r for group in self.contested.values() for r in group)}
 
 
 def narrow(
@@ -105,8 +112,8 @@ def uncontested(
     picked: Mapping[Id[Function], Id[Function]],
     ranked: Mapping[Id[Function], tuple[int, SignalType]],
     requests: Sequence[PlcRequestFacet],
-) -> dict[Id[Function], Id[Function]]:
-    """W5 (model-0211, amended): the picks whose channel no other request picked.
+) -> tuple[dict[Id[Function], Id[Function]], dict[Id[Function], tuple[Id[Function], ...]]]:
+    """W5 (model-0211): the uncontested picks, and each channel picked by 2+ matched requests.
 
     A pick of the wrong kind (W2 found none) yields to a kind-matched pick of that channel.
     """
@@ -115,7 +122,12 @@ def uncontested(
     held = {picked[subject] for subject in matched}
     pool = {s: c for s, c in picked.items() if s in matched or c not in held}
     counts = Counter(pool.values())
-    return {subject: channel for subject, channel in pool.items() if counts[channel] == 1}
+    bound = {subject: channel for subject, channel in pool.items() if counts[channel] == 1}
+    contested: dict[Id[Function], list[Id[Function]]] = {}
+    for request in requests:
+        if request.subject in matched and counts[picked[request.subject]] > 1:
+            contested.setdefault(picked[request.subject], []).append(request.subject)
+    return bound, {channel: tuple(group) for channel, group in contested.items()}
 
 
 def wired_requests(
@@ -130,8 +142,8 @@ def wired_requests(
 
     `ranked` maps every channel function to its serving place and signal. One left binds; more
     than one is ambiguous and binds nothing. W5: a channel picked by two kind-matched requests,
-    or by two wrong-kind requests, binds neither. A wrong-kind pick yields to a kind-matched pick
-    of the same channel.
+    binds neither and is reported as contested; two wrong-kind requests bind neither and go to the
+    free queue. A wrong-kind pick yields to a kind-matched pick of the same channel.
     """
     by_function = ports_by_function(model)
     owners = {request.subject for request in requests}
@@ -144,17 +156,17 @@ def wired_requests(
         direct_neighbours(model),
     )
     picked: dict[Id[Function], Id[Function]] = {}
-    pick = WiredPick({}, {})
+    ambiguous: dict[Id[Function], tuple[Id[Function], ...]] = {}
     for request in requests:
         if request.subject in skip:
             continue
         left = wiring.left(request, set(taken))
         if len(left) > 1:
-            pick.ambiguous[request.subject] = tuple(left)
+            ambiguous[request.subject] = tuple(left)
         elif left:
             picked[request.subject] = left[0]
-    pick.bound.update(uncontested(picked, ranked, requests))
-    return pick
+    bound, contested = uncontested(picked, ranked, requests)
+    return WiredPick(bound, ambiguous, contested)
 
 
 def reaches_open_boundary(model: Model, function: Function) -> bool:

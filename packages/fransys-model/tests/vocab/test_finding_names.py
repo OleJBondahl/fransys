@@ -1,15 +1,18 @@
 """Tests: `name_findings` prints each reference as the drawings print the thing (overview-0003)."""
 
+import dataclasses
 import re
 from pathlib import Path
 
 from plant import Plant
 
+from fransys_model.derive.drawing_text import outline_title
 from fransys_model.derive.numbering_pins import name_findings, name_of
 from fransys_model.kernel import Finding, Id, Severity
 from fransys_model.vocab import validators
 from fransys_model.vocab.finding_ref import REF, ref
 from fransys_model.vocab.tables import items
+from fransys_model.vocab.validators.revisions import REVISION_CURRENT_MISSING, check_revisions
 
 
 def _finding(message: str) -> Finding:
@@ -73,3 +76,18 @@ def test_no_validator_template_writes_unit_right_before_a_unit_reference() -> No
     joined = {path: re.sub(r'"\s*f"', "", path.read_text()) for path in root.glob("*.py")}
     bad = [path.name for path, text in joined.items() if re.search(r"\bunit \{ref\(", text)]
     assert bad == []
+
+
+def test_a_missing_current_revision_names_the_release_as_its_title_block_prints_it() -> None:
+    plant = Plant()
+    unit = plant.unit("a-key", name="relay-board")
+    old = next(record for record in plant.records if record.id == unit)
+    release = next(record for record in plant.records if record.id == old.release)
+    plant.records[plant.records.index(release)] = dataclasses.replace(release, title="Relay Board")
+    model = plant.model()
+    (raw,) = [f for f in check_revisions(model) if f.code == REVISION_CURRENT_MISSING]
+    assert ref(release) in raw.message
+    (named,) = name_findings(model, (raw,))
+    assert outline_title(model, unit) == "Relay Board rev 1.1"
+    assert named.message.startswith(f"{outline_title(model, unit)}: ")
+    assert "relay-board" not in named.message

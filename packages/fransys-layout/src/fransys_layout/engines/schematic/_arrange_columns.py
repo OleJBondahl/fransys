@@ -26,7 +26,13 @@ from fransys_layout.stages.pin_ends import pin_keyed
 from fransys_layout.stages.replicate import replicate_boundaries, replicate_terminals
 from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_chains
 from fransys_layout.stages.types import Home
+from fransys_layout.stages.wired_copies import (
+    emptied_groups,
+    without_groups,
+    without_unwired_copies,
+)
 
+from ._stub_seats import far_set_seats, stub_seats
 from .defaults import HEADROOM_LANES
 from .read.reading import key_orders, terminal_sort_keys
 from .read.units import boundary_parents, unit_boundaries
@@ -130,7 +136,38 @@ def replicated_columns(
         drawn, inputs.connections, group_map(inputs.functions), free_pins(inputs, drawn)
     )
     columns = move_far_ends(columns, all_columns, far, fits)
+    terminals, pairs, kept, stubbed = _terminal_wires(inputs)
+    seats = stub_seats(model, inputs, columns, stubbed - kept)
+    seats |= far_set_seats(columns, inputs.crossing, stubbed - kept)
+    kept |= stubbed - {function for function, _ in seats} - kept
+    columns = without_unwired_copies(columns, terminals, pairs, kept, seats)
     return hub_order(columns, inputs.functions, inputs.connections)
+
+
+def _terminal_wires(
+    inputs: StageInputs,
+) -> tuple[
+    frozenset[Handle], tuple[tuple[Handle, Handle], ...], frozenset[Handle], frozenset[Handle]
+]:
+    """layout-0214: the terminals, each wire end (terminal, far), those kept and those stubbed.
+
+    A terminal with a harness line, a rail end, a mate or a declared net keeps every copy; a
+    crossing or off end is drawn at its stub's seat (`stub_seats`).
+    """
+    terminals = frozenset(s.function for s in inputs.functions if s.roles.terminal)
+    ends = [(c.a, c.b) for c in inputs.connections] + [(c.b, c.a) for c in inputs.connections]
+    whole = {r.port for c in inputs.carried for r in (c.a, c.b)}
+    whole |= {e.ref.port for e in inputs.rail_ends} | {
+        r.port for g in inputs.net_groups for r in g.ports
+    }
+    stubs = {r.port for c in inputs.crossing for r in (c.a, c.b)} | {
+        e.port for e in inputs.off_ends
+    }
+    kept = {s.function for s in inputs.functions for p in s.ports if p.port in whole}
+    kept |= {f for mate in inputs.mates for f in (mate.a, mate.b)}
+    stubbed = {s.function for s in inputs.functions for p in s.ports if p.port in stubs}
+    pairs = tuple((a.function, b.function) for a, b in ends if a.function in terminals)
+    return terminals, pairs, frozenset(kept & terminals), frozenset(stubbed & terminals)
 
 
 def free_pins(inputs: StageInputs, drawn: tuple[DrawnFunction, ...]) -> frozenset[Handle]:
@@ -169,4 +206,7 @@ def arranged(
         terminal_chains=chains,
     )
     columns = replicated_columns(model, inputs, drawn, all_columns)
+    # layout-0214: a hint on a group whose every copy went names nothing left to draw
+    gone = emptied_groups(all_columns, columns)
+    inputs = replace(inputs, hints=without_groups(inputs.hints, gone))
     return inputs, all_columns, columns, column_findings

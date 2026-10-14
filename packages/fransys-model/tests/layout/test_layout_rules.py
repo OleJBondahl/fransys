@@ -354,6 +354,7 @@ _FIELDS: dict[type, set[str]] = {
     },
     # A black box's dash-dot outline, drawn by render as layout placed it
     layout.Outline: {"unit", "page", "x", "y", "width", "height", "produced_by"},
+    layout.ExternalOutline: {"item", "page", "x", "y", "width", "height", "produced_by"},
     layout.Label: {
         "page",
         "function",

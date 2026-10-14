@@ -40,6 +40,8 @@ python -m fransys parts-module demo_parts demo_typed.py
 
 `fr.parts_module("demo_parts")` returns the same module as text, when a script writes the file itself.
 
+A function stands in a `d.series` when its line side is known: a coil's A1 and a contact's odd pin give it, else state `side`.
+
 The module records the library's digest. `fr.design(P, ...)` compares that digest with the
 library it loads and raises an error naming the command above when the module is stale. A
 whitespace edit in a part file is not stale; any changed fact is. The efficient level of the

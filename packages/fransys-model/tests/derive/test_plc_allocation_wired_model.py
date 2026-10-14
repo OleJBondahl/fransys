@@ -20,11 +20,9 @@ from fransys_model.derive.passes.plc_allocation import PLC_REQUEST_UNSERVABLE, a
 from fransys_model.kernel import make_id
 from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
-from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of
 from fransys_model.vocab.validators.plc import (
     PLC_BINDING_SIGNAL_MISMATCH,
-    PLC_BINDING_WIRING_MISMATCH,
     check_plc,
     check_plc_wiring,
 )
@@ -256,53 +254,6 @@ def test_the_boundary_check_is_narrow_a_sibling_units_boundary_is_not_on_the_cha
     assert _bound(model) == {}
 
 
-def test_two_requests_on_one_channels_net_fall_to_unservable_and_the_wiring_check_reports_it() -> (
-    None
-):
-    """Shared net (may pass on the base): `dev-1` and `dev-2` are both wired to `ch1`, so neither is
-    bound by wiring; they are served in key order (`ch1`, `ch2`); the wiring check reports the
-    request that went to `ch2` as today; no channel has two bindings.
-    """
-    plant = Plant()
-    unit = plant.unit("unit-u", name="unit U")
-    ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
-    ch1_port = plant.port(ch1, "1")
-    first = _request(plant, "dev-1", unit, to=ch1_port)
-    second = _request(plant, "dev-2", unit, to=ch1_port)
-    model, findings = allocate_plc(plant.model())
-    assert findings == ()
-    assert _bound(model) == {first: ch1, second: ch2}
-    bindings = list(facets_of(model, PlcBindingFacet).values())
-    assert len({binding.channel for binding in bindings}) == len(bindings)
-    by_subject = {binding.subject: binding for binding in bindings}
-    (mismatch,) = check_plc_wiring(model)
-    assert mismatch.code == PLC_BINDING_WIRING_MISMATCH
-    assert set(mismatch.subjects) == {by_subject[second].id, second, ch2}
-    assert f"{ref(second)} is wired to channel {ref(ch1)} but bound to channel {ref(ch2)}" in (
-        mismatch.message
-    )
-
-
-def test_two_requests_wired_to_the_second_channel_neither_takes_it_by_wiring() -> None:
-    """Proof: both requests are wired to `ch2`. Were `dev-1` bound by wiring it would take
-    `ch2` and `dev-2` would be the mismatch; with both shared, both fall to the scope rules
-    (`dev-1` gets `ch1`, `dev-2` gets `ch2`), so the one mismatch names `dev-1`, as before.
-    """
-    plant = Plant()
-    unit = plant.unit("unit-u", name="unit U")
-    ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
-    ch2_port = plant.port(ch2, "1")
-    first = _request(plant, "dev-1", unit, to=ch2_port)
-    second = _request(plant, "dev-2", unit, to=ch2_port)
-    model, findings = allocate_plc(plant.model())
-    assert findings == ()
-    assert _bound(model) == {first: ch1, second: ch2}
-    (mismatch,) = check_plc_wiring(model)
-    assert mismatch.code == PLC_BINDING_WIRING_MISMATCH
-    assert first in mismatch.subjects
-    assert second not in mismatch.subjects
-
-
 def test_a_do_request_wired_to_a_di_channel_binds_there_and_the_signal_check_reports_it() -> None:
     """The wiring is the fact; `allocate_plc` binds the DO request to the wired DI channel
     with no finding, and `check_plc` alone reports one PLC_BINDING_SIGNAL_MISMATCH for it.
@@ -359,6 +310,17 @@ def test_same_signal_contacts_on_a_shared_return_each_bind_their_directly_wired_
     assert check_plc_wiring(model) == ()
 
 
+def _misbound(
+    plant: Plant, name: str, unit: Id[Unit], wired: Id[Port], bound: Id[Function]
+) -> None:
+    """A request wired to port `wired` but hand-bound to channel `bound`: a wiring mismatch."""
+    function = _request(plant, name, unit, to=wired)
+    key = (name, "signal", "plc_binding")
+    plant.add(
+        PlcBindingFacet(id=make_id(PlcBindingFacet, key), key=key, subject=function, channel=bound)
+    )
+
+
 def test_a_wiring_mismatch_names_each_channel_by_its_pin_not_by_its_module() -> None:
     """Field case: both channels sit on one module, so the module-only text read "wired to channel
     -U1 but bound to channel -U1". A channel prints as the PLC list prints its pins.
@@ -368,8 +330,7 @@ def test_a_wiring_mismatch_names_each_channel_by_its_pin_not_by_its_module() -> 
     ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
     ch1_port = plant.port(ch1, "1")
     plant.port(ch2, "2")
-    _request(plant, "dev-1", unit, to=ch1_port)
-    _request(plant, "dev-2", unit, to=ch1_port)
+    _misbound(plant, "dev-1", unit, ch1_port, ch2)
     model, _ = allocate_plc(plant.model())
     (mismatch,) = name_findings(model, check_plc_wiring(model))
     assert mismatch.message.endswith("is wired to channel -U1:1 but bound to channel -U1:2")
@@ -384,8 +345,7 @@ def test_a_multi_pin_channel_is_named_by_the_pins_the_plc_list_prints() -> None:
     for name in ("2", "1"):
         plant.port(ch1, name)
     plant.port(ch2, "1")
-    _request(plant, "dev-1", unit, to=ch1_port)
-    _request(plant, "dev-2", unit, to=ch1_port)
+    _misbound(plant, "dev-1", unit, ch1_port, ch2)
     model, _ = allocate_plc(plant.model())
     pins = [row.pin for row in plc_channel_rows(model) if row.channel == ch1]
     assert len(pins) == 3

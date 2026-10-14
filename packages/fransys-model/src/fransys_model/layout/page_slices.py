@@ -4,6 +4,7 @@ from typing import Any, cast
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
 
+from .external_results import ExternalOutline
 from .harness_results import ConnectorBox, HarnessFanOut, HarnessLine
 from .results import Label, LinkMarker, Outline, Page, PowerSymbol, Route, SymbolPlacement
 from .tables import layout_of
@@ -15,6 +16,7 @@ _PAGE_KINDS: tuple[type[Any], ...] = (
     LinkMarker,
     Label,
     Outline,
+    ExternalOutline,
     HarnessLine,
     ConnectorBox,
     HarnessFanOut,
@@ -40,7 +42,8 @@ def page_slice[R](model: Model, record_type: type[R], page: Page) -> tuple[R, ..
     """Every `record_type` record on `page`, ordered by id; empty when there are none.
 
     `record_type` is one of the page-bound layout kinds: `SymbolPlacement`, `PowerSymbol`,
-    `Route`, `LinkMarker`, `Label`, `Outline`, `HarnessLine`, `ConnectorBox` or `HarnessFanOut`.
+    `Route`, `LinkMarker`, `Label`, `Outline`, `ExternalOutline`, `HarnessLine`, `ConnectorBox` or
+    `HarnessFanOut`.
     The grouping is built once per model digest (`digest_cached`), so reading every page costs
     one pass over each table, not one per page.
 

@@ -161,11 +161,22 @@ def _first_pin(
     return min(ends, key=lambda pair: column_of(pair[0].function).key)
 
 
-def _entry(mine: DrawnFunction, own: PortRef, far: DrawnFunction, other: PortRef) -> _Entry | None:
-    """The attachment entry at the far pin's port, `None` unless it faces N or S."""
+def _entry(
+    mine: DrawnFunction,
+    own: PortRef,
+    far: DrawnFunction,
+    other: PortRef,
+    *,
+    far_flipped: bool = False,
+) -> _Entry | None:
+    """The attachment entry at the far pin's port, `None` unless it faces N or S.
+
+    `far_flipped`: the far cell is drawn R180, so its port faces the other way.
+    """
     symbol = next(p.symbol_port for p in far.ports if p.port == other.port)
     geometry = next(g for g in far.geometry.ports if g.name == symbol)
-    facing = geometry.facing.value
+    far_facing = OPPOSITE[geometry.facing] if far_flipped else geometry.facing
+    facing = far_facing.value
     if facing not in ("n", "s"):
         return None
     own_symbol = next(p.symbol_port for p in mine.ports if p.port == own.port)
@@ -176,7 +187,7 @@ def _entry(mine: DrawnFunction, own: PortRef, far: DrawnFunction, other: PortRef
         geometry.at.x,
         mine.function,
         symbol,
-        own_facing != OPPOSITE[geometry.facing].value,
+        own_facing != OPPOSITE[far_facing].value,
     )
 
 

@@ -7,11 +7,11 @@ Layout draws the structure you author and invents none. This page says what layo
 - **Function blocks.** `with d.function("P1", "Pump 1"):` groups the devices made inside it. Layout packs whole blocks onto pages, left to right, in order, and never reorders them to fill a gap. A block wider than a page is split between columns and reports `GROUP_SPLIT`. `d.layout.order`, `keep_together`, `break_before` and the profile's `group_ranks` set the order.
 - **Page ends.** A page holds the blocks whose widths sum to the content width, 1312 grid units on the house A3 sheet. A column's width is the room it took when placed: symbols, pin labels, link markers and the column gap. In the twelve-relay example below, the first relay blocks each take 176 units, so the first page holds the supply and six relays. A page ends at the first block that does not fit, at a `break_before`, at a `keep_together` set that does not fit, or at the end of a drawing set.
 - **Current paths.** Layout finds a current path where each net between two devices holds exactly two poles. A pole is the pair of pins a symbol passes current through, such as a coil or one contact. The path stands as one column, top to bottom, with straight wires. A net of three or more poles ends a path.
-- **How to author a path.** `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path. Plain `d.wire` calls form one when each net keeps to two poles. `d.layout.chain(...)` names a path outright, and a named path wins over discovery.
+- **How to author a path.** Author each path with `d.series`. Hand-wired `d.wire` hops form a path only while each net keeps to two poles. `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path. `d.layout.chain(...)` names a path outright, and a named path wins over discovery.
 - **Block edges end a path.** A path never crosses from one function block into the next. When the two blocks land on different pages, the wire between them is cut into a marker pair and `CHAIN_BROKEN` warns. Keep each circuit inside one block.
 - **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals and references. An undeclared rail is a plain net: wires and link markers.
 - **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal drawn on both pages needs none.
-- **Flat designs.** A design of devices joined by point-to-point `d.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it.
+- **Flat designs.** A design of devices joined by point-to-point `d.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series.
 
 The two blocks below build the same twelve relays on one 24 V supply. Only the second declares the supply.
 
@@ -205,15 +205,11 @@ def blocks(c, hint=None, count=3):
 
 def coils(c, chain):
     psu = c.device("G1", "DEMO-PSU-24")
-    c.dc_supply("24VDC", psu.output)
+    dc = c.dc_supply("24VDC", psu.output)
     ks = [c.device(f"K{i}", "DEMO-RLY-2CO-24") for i in (1, 2, 3)]
     lamp = c.device("H1", "DEMO-LAMP-24")
-    c.wire(psu.output["+"], ks[0].coil["A1"], wire=(BU, 0.75))
-    c.wire(ks[0].coil["A2"], ks[1].coil["A1"], wire=(BU, 0.75))
-    c.wire(ks[0].coil["A2"], lamp.lamp["1"], wire=(BU, 0.75))
-    c.wire(ks[1].coil["A2"], ks[2].coil["A1"], wire=(BU, 0.75))
-    c.wire(ks[2].coil["A2"], psu.output["-"], wire=(BU, 0.75))
-    c.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+    c.series(dc.plus, *(k.coil for k in ks), dc.minus, wire=(BU, 0.75))
+    c.series(ks[0].coil, lamp.lamp, dc.minus, wire=(BU, 0.75))
     if chain:
         c.layout.chain(ks[0].coil, ks[1].coil, ks[2].coil)
     return {f"K{i}": k.coil for i, k in enumerate(ks, 1)}

@@ -1,6 +1,6 @@
 """The finishing steps of the engine loop: the outlines and the cross-reference requests."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.stages.box_views import (
@@ -12,6 +12,7 @@ from fransys_layout.stages.box_views import (
     slot_rows,
 )
 from fransys_layout.stages.content import content_box
+from fransys_layout.stages.external_outlines import ExternalInputs, external_outlines
 from fransys_layout.stages.outlines import OutlineInputs, unit_outlines
 from fransys_layout.stages.space import Blocks
 from fransys_layout.stages.texts.echoes import echo_requests
@@ -20,7 +21,7 @@ from ._middle import with_middle
 from .read.harness_lines import plug_mates
 from .read.location_paths import location_paths
 from .read.outline_texts import outline_titles
-from .read.units import black_boxes
+from .read.units import black_boxes, external_note_text, external_roots
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
         LabelRequest,
         LinkMarker,
         PagePlan,
+        PlacedExternalOutline,
         PlacedFunction,
         PlacedLabel,
         PlacedOutline,
@@ -140,12 +142,34 @@ def outlined_cells(
 ) -> tuple[
     Pages,
     tuple[PlacedOutline, ...],
+    tuple[PlacedExternalOutline, ...],
     tuple[PlacedConnectorBox, ...],
     list[PlacedFunction],
     tuple[LinkMarker, ...],
     PageBlocks,
 ]:
-    """`outlined`, then the pin views onto their cells (HL19): after it, so no group shifts."""
+    """`outlined`, then the pin views onto their cells (HL19), then the outlines by others.
+
+    The cells move after the black boxes, so no group shifts; the outlines by others stand on the
+    finished placements.
+    """
     pages, outlines, placed_box = outlined(model, inputs, columns, laid, placed_box)
     pages, placed, markers, blocks = cells_placed(pages, laid.placed, laid.markers, placed_box)
-    return pages, outlines, placed_box, placed, markers, blocks
+    by_others = ExternalInputs(
+        {spec.function: spec for spec in inputs.functions},
+        external_roots(model),
+        inputs.profile.text_height,
+        external_note_text(),
+    )
+    pages, external = external_outlines(laid.plans, pages, markers, by_others)
+    return pages, outlines, external, placed_box, placed, markers, _along(blocks, external)
+
+
+def _along(blocks: PageBlocks, external: Sequence[PlacedExternalOutline]) -> PageBlocks:
+    """BO6-SHRINK: each page's blocks gain its outlines by others as boxes no wire runs along."""
+    found = dict(blocks)
+    for one in external:
+        here = (one.drawing_set, one.page)
+        before = found.get(here, Blocks())
+        found[here] = replace(before, sides=(*before.sides, one.box))
+    return found

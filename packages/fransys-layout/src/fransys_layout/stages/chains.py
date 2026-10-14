@@ -165,12 +165,18 @@ def _leaves_its_set(terminal: FunctionSpec, host: FunctionSpec) -> bool:
     return unit is None and host_unit is None and location != host_location
 
 
+def _homes_and_flipped(built: Sequence[list[Cell]]) -> tuple[set[Handle], set[Handle]]:
+    """Every function with a cell, and those whose cell is drawn flipped."""
+    cells = [cell for column in built for cell in column]
+    return {c.function for c in cells}, {c.function for c in cells if c.flip}
+
+
 def _attach(built: Sequence[list[Cell]], reads: _AttachReads) -> list[list[Cell]]:
     """A one-terminal column wired to one N or S port becomes a cell of its host."""
     specs, drawn_of, members = reads.specs, reads.drawn_of, reads.members
     net_of, second = reads.net_of, reads.second
     connections, port_function = reads.connections, reads.port_function
-    home = {cell.function for cells in built for cell in cells}
+    home, flipped = _homes_and_flipped(built)
     found: dict[tuple[Handle, str], list[_Attachment]] = defaultdict(list)
     drop: set[int] = set()
     for position, cells in enumerate(built):
@@ -203,6 +209,7 @@ def _attach(built: Sequence[list[Cell]], reads: _AttachReads) -> list[list[Cell]
             PortRef(function=terminal, port=wired),
             drawn_host,
             PortRef(function=host, port=target),
+            far_flipped=host in flipped,
         )
         if entry is None:
             continue

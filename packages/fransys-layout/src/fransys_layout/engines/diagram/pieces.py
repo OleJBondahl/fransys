@@ -10,14 +10,9 @@ lazy from collections.abc import Sequence
 from fransys_layout.engines.diagram.columns import pieces
 from fransys_layout.engines.diagram.pack import pack_rows
 from fransys_layout.engines.diagram.place import place_diagram
-from fransys_layout.engines.diagram.sizes import tab_reach
-from fransys_layout.engines.diagram.values import (
-    PlacedBox,
-    PlacedDiagram,
-    PlacedSheet,
-    PlacedTab,
-)
-from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing, Point
+from fransys_layout.engines.diagram.values import PlacedDiagram, PlacedSheet
+from fransys_layout.engines.diagram.wrap import extent, wrapped
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Point
 lazy from fransys_layout.engines.diagram.values import DiagramFacts
 
 PIECE_GAP = 2 * PAGE_PAD  # clear space between two packed pieces
@@ -38,21 +33,6 @@ def _split(facts: DiagramFacts) -> list[tuple[DiagramFacts, list[int]]]:
         left = tuple(c for c in facts.left if c in members)
         result.append((replace(facts, boxes=boxes, lines=lines, column=column, left=left), idx))
     return result
-
-
-def _tab_x(box: PlacedBox, tab: PlacedTab) -> int:
-    """The x a tab reaches out to."""
-    reach = tab_reach(tab.text_width)
-    return box.x + box.width + reach if tab.side is Facing.E else box.x - reach
-
-
-def _extent(sheet: PlacedSheet) -> tuple[int, int, int, int]:
-    """The `(left, top, right, bottom)` of boxes, tabs and line points of `sheet`."""
-    xs = [v for b in sheet.boxes for v in (b.x, b.x + b.width, *(_tab_x(b, t) for t in b.tabs))]
-    ys = [v for b in sheet.boxes for v in (b.y, b.y + b.height)]
-    xs += [p.x for ln in sheet.lines for p in ln.points]
-    ys += [p.y for ln in sheet.lines for p in ln.points]
-    return min(xs), min(ys), max(xs), max(ys)
 
 
 def _moved(sheet: PlacedSheet, dx: int, dy: int) -> PlacedSheet:
@@ -84,7 +64,7 @@ def _down(value: int) -> int:
 
 def _slots(sheets: Sequence[PlacedSheet], shape: tuple[int, int]) -> list[tuple[int, int]]:
     """The `(dx, dy)` that moves each sheet to its packed place, from its grid-snapped corner."""
-    corners = [_extent(s) for s in sheets]
+    corners = [extent(s) for s in sheets]
     origin = [(_down(left), _down(top)) for left, top, _, _ in corners]
     sizes = [(r - ox, b - oy) for (_, _, r, b), (ox, oy) in zip(corners, origin, strict=True)]
     at = pack_rows(sizes, shape=shape, gap=PIECE_GAP)
@@ -115,11 +95,12 @@ def place_packed(facts: DiagramFacts, shape: tuple[int, int]) -> PlacedDiagram |
     sheet: the pieces share one canvas, so no sheet is cut.
     """
     parts = _split(facts)
-    if len(parts) == 1:
-        return place_diagram(facts)
     placed = [place_diagram(part) for part, _ in parts]
     if any(p is None or len(p.sheets) != 1 for p in placed):
         return None
-    sheets = [p.sheets[0] for p in placed if p is not None]
+    width = shape[0] - 2 * PAGE_PAD
+    sheets = [wrapped(p.sheets[0], width, facts.text_height) for p in placed if p is not None]
+    if len(parts) == 1:
+        return PlacedDiagram(unit=facts.unit, sheets=(sheets[0],))
     moved = [_moved(s, dx, dy) for s, (dx, dy) in zip(sheets, _slots(sheets, shape), strict=True)]
     return PlacedDiagram(unit=facts.unit, sheets=(_merged(moved, [idx for _, idx in parts]),))

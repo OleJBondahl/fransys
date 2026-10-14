@@ -9,9 +9,11 @@ a passed-through connector only. A strip's terminals drew in no set, so `fr.writ
 `CONNECTION_NOT_DRAWN` per wire on the container's and the skid's documents. The rule (decision
 layout-0162, amending layout-0160 from connectors to every boundary function): in one drawing
 set the outermost unit drawn as a black box that has the function on its boundary draws it. The
-print is the real path from the document's unit: `-U5-U2-X4` on the container's page, `-U2-X4`
-on the skid's. The cabinet's own document draws no `-X4`: no wire inside it reaches the strip,
-so only its terminal table lists it (L7, layout-0202, which amends the cabinet's local print).
+print is the real path from the document's unit: `-U5-U2-X4` on the container's page. The skid
+wires nothing to the strip, so its own set draws no box cell for it (layout-0214: a box cell the
+parent does not wire is a loose terminal). The cabinet's own document draws no `-X4`: no wire
+inside it reaches the strip, so only its terminal table lists it (L7,
+layout-0202, which amends the cabinet's local print).
 Its schematic then has nothing to draw and adds no page, and no `DOCUMENT_NO_DRAWINGS` fires
 while the table page stands (pdf-0033).
 """
@@ -99,9 +101,10 @@ def test_the_container_prints_the_real_path(written: _Written) -> None:
     assert any(t.startswith("-U5-U2-X4") for t in written.top)
 
 
-def test_the_skid_prints_the_path_from_itself(written: _Written) -> None:
-    assert any(t.startswith("-U2-X4") for t in written.skid)
-    assert [t for t in written.skid if "U5" in t] == []
+def test_the_skid_draws_no_box_cell_it_does_not_wire(written: _Written) -> None:
+    """layout-0214; the container, which wires the strip, still prints it (test above)."""
+    assert any(t.startswith("-U5-U2-X4") for t in written.top)
+    assert [t for t in written.skid if "X4" in t] == []
 
 
 def test_the_pass_through_has_no_connection_error(tmp_path: Path) -> None:
@@ -114,17 +117,19 @@ def test_the_pass_through_has_no_connection_error(tmp_path: Path) -> None:
     assert _errors(fr.build(d, skid)) == []
 
 
-def test_the_skid_document_draws_its_passed_up_strip(tmp_path: Path) -> None:
-    """pdf-0025: the skid's PDF source holds the box text `-U2-X4:1`, not "No drawings."."""
+def test_the_skid_document_builds_without_the_unwired_strip(tmp_path: Path) -> None:
+    """layout-0214 with pdf-0033: no `-U2-X4:1` box cell, no "No drawings." and no error."""
     d = fr.design("demo_parts")
     d.add(_top, "C1", place=None)
     (tmp_path / "skid.md").write_text("# skid\n", encoding="utf-8")
     skid = fr.document(
         fr.DocumentPreset.CABINET_SCHEMATIC, "demo-strip-skid", cover=tmp_path / "skid.md"
     )
-    fr.write(fr.build(d, skid), tmp_path / "out", intermediates=tmp_path / "im")
+    result = fr.build(d, skid)
+    assert _errors(result) == []
+    fr.write(result, tmp_path / "out", intermediates=tmp_path / "im")
     source = (tmp_path / "im" / "skid.typ").read_text(encoding="utf-8")
-    assert "-U2-X4:1" in source
+    assert "-U2-X4:1" not in source
     assert "No drawings." not in source
 
 

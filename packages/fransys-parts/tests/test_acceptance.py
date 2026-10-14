@@ -151,16 +151,17 @@ def test_demo_library_record_counts_and_keys():
     adds `cable-2x2x0_75-sp.toml` (a cable with no function or port),
     adds `plc-dio-1-1.toml` (2 functions/2 ports, no link or symbol choice),
     adds `terminal-fused-2_5.toml` (1 function/2 ports/1 symbol choice, a protective link),
-    so 58 parts, 141 templates, 297 ports, 47 links, 49 symbol choices)."""
+    adds `module-2p-com4.toml` (3 functions/10 ports, 2 symbol choices),
+    so 59 parts, 144 templates, 307 ports, 47 links, 51 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 58
-    assert len(function_templates(model)) == 141
-    assert len(port_templates(model)) == 297
+    assert len(parts(model)) == 59
+    assert len(function_templates(model)) == 144
+    assert len(port_templates(model)) == 307
     assert len(internal_links(model)) == 47
-    assert len(model.tables["layout.symbol_choice"]) == 49
+    assert len(model.tables["layout.symbol_choice"]) == 51
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")

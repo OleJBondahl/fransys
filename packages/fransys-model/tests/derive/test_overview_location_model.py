@@ -4,7 +4,7 @@ holds the folded boxes on the units example, where cables give the system level 
 from cable_drawing_builders import cable, device, edit
 from plant import Plant
 
-from fransys_model.derive import location_fold
+from fransys_model.derive import location_fold, location_place_title
 from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Item
@@ -97,3 +97,9 @@ def test_a_cable_inside_one_place_gives_no_location_line() -> None:
     fold = location_fold(model)
     assert fold is not None
     assert [(line.count, line.cables) for line in fold.lines] == [(1, (cables["w2"],))]
+
+
+def test_a_place_title_is_its_designation_then_its_text() -> None:
+    """The panel title and the box lines share one function (overview-0007)."""
+    node = make_id(AspectNode, ("p0",))
+    assert location_place_title(_model(2), node) == "+P0 Place"

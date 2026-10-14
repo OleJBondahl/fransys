@@ -68,7 +68,7 @@ def _box(
     """The stub box of `end` at `at`: the first far text, then each port tail once, its members."""
     rows, members = held
     far, *tails = (rows[0][0], *dict.fromkeys(t for row in rows for t in row[1:]))
-    others = end.item is not None and end_by_others(model, end.item, None)
+    others = end.item is not None and end_by_others(model, end.item)
     lines = (f"{far} ({external_note()})" if others else far, *tails)
     return StubBox(at, end, lines, others, members)
 

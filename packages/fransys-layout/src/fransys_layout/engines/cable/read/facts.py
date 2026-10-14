@@ -50,7 +50,7 @@ def _end(
     blank = end_outside_nested_unit(model, item, unit)
     return EndFacts(
         item=item,
-        dashed=end_by_others(model, item, unit),
+        dashed=end_by_others(model, item),
         blank=blank,
         label_width=text_width(end_label(model, item, unit, subject), height=height),
         pins=tuple(
@@ -115,7 +115,7 @@ def _cables(
     return tuple(
         CableFacts(
             cable=cable.cable,
-            external=end_by_others(model, cable.cable, unit),
+            external=end_by_others(model, cable.cable),
             heading_width=text_width(cable_heading(model, cable, unit), height=height),
             cores=_cores_of(cable, texts, height, ctx),
         )

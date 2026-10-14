@@ -153,8 +153,9 @@ def _intersects(box_a, box_b):
 # `sw`/`x1`), none of them a unit, so it carries zero outline groups either -- it is a wholly
 # new, separate page, not a merge into any existing group page (the two 2-member-group pages
 # below, at locations `C1`/`C2`, are unaffected: still 2 placements, 0 non-members, each).
-# 6 (the old count) + 1 (this new page) = 7.
-_EXPECTED_SYSTEM_PAGE_COUNT = 7
+# 6 (the old count) + 1 (this new page) = 7. Since layout-0214 round 2 the two `C1`/`C2` pages
+# go: their boxes draw no wire (each cable's stub stands at the cabinet's own page). 7 - 2 = 5.
+_EXPECTED_SYSTEM_PAGE_COUNT = 5
 
 # Group shapes, measured directly against this build (a probe script, not guessed): the
 # io-board's own 1-member `X1` boundary appears on each cabinet's own page, alongside 3
@@ -164,7 +165,7 @@ _EXPECTED_SYSTEM_PAGE_COUNT = 7
 # exclusion check there has nothing else to check against, measured and asserted as such
 # (0), not silently skipped.
 _EXPECTED_SINGLE_MEMBER_GROUP_COUNT = 2
-_EXPECTED_TWO_MEMBER_GROUP_COUNT = 2
+_EXPECTED_TWO_MEMBER_GROUP_COUNT = 0  # layout-0214 round 2: the top-level box pages are gone
 _EXPECTED_TOTAL_GROUP_COUNT = _EXPECTED_SINGLE_MEMBER_GROUP_COUNT + _EXPECTED_TWO_MEMBER_GROUP_COUNT
 _EXPECTED_NON_MEMBERS_PER_SINGLE_MEMBER_GROUP = 3
 _EXPECTED_NON_MEMBERS_PER_TWO_MEMBER_GROUP = 0

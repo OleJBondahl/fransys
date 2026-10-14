@@ -36,7 +36,7 @@ An accessory takes its holder's designation and uses up no number.
 
 `external=True` marks an item supplied by others. Every call that makes an item takes it: `d.device`,
 `d.terminal_strip`, `d.cable` and `d.harness`. The item has no BOM line. A strip's terminals are external
-with it; a cable's conductors carry no flag. The system's block diagram and cable drawings draw it dashed, with "(by others)". A unit's own drawings do not mark it.
+with it; a cable's conductors carry no flag. Every drawing marks it: dashed boxes with "(by others)", dashed outlines round schematic symbols.
 
 An external device or strip may take `None` for its part, when only its terminal names are known. It needs a tag and has no BOM line. A part-less device names its pins with `pins=` and draws as a box. A part-less strip's terminals offer only `.outer`.
 
@@ -72,12 +72,14 @@ import fransys as fr
 from fransys.colours import BU
 
 d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
 with d.function("RUN", "Pump run"):
-    k1 = d.device("K1", "DEMO-RLY-2CO-24")
+    k1 = d.device("K1", "DEMO-CTR-3P-24")
+    k2 = d.device("K2", "DEMO-CTR-3P-24")
     h1 = d.device("H1", "DEMO-LAMP-24")
     h2 = d.device("H2", "DEMO-LAMP-24")
-    d.wire(k1.co_1["14"], h1[1], wire=(BU, 0.75))
-    d.wire(k1.co_2["24"], h2[1], wire=(BU, 0.75))
+    d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))
+    d.series(dc.plus, k2.aux, h2.lamp, dc.minus, wire=(BU, 0.75))
 ```
 
 ```python
@@ -85,14 +87,15 @@ with d.function("RUN", "Pump run"):
 import fransys as fr
 from fransys.colours import BU
 
-LAMPS = {"H1": ("co_1", "14"), "H2": ("co_2", "24")}  # lamp tag -> the relay contact that lights it
+LAMPS = {"H1": "K1", "H2": "K2"}  # lamp tag -> the contactor whose auxiliary contact lights it
 
 d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
 with d.function("RUN", "Pump run"):
-    k1 = d.device("K1", "DEMO-RLY-2CO-24")
-    for tag, (function, pin) in LAMPS.items():
+    for tag, contactor in LAMPS.items():
+        k = d.device(contactor, "DEMO-CTR-3P-24")
         lamp = d.device(tag, "DEMO-LAMP-24")
-        d.wire(getattr(k1, function)[pin], lamp[1], wire=(BU, 0.75))
+        d.series(dc.plus, k.aux, lamp.lamp, dc.minus, wire=(BU, 0.75))
 ```
 
 `getattr(dev, f"DI{n}")` is the one spelling for a computed name. A name the device lacks raises an
@@ -182,7 +185,7 @@ d.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
 ### Bridges
 
 `X1.run(label, n, bridged=True)` takes `n` terminals as a named run, joined by jumpers when
-`bridged=True`. A run is the one spelling for a bridge. Two terminals are a run of two.
+`bridged=True`. A run's `bridged=` bridges a named run, and a strip's bridges plain terminals. Two terminals are a run of two.
 Made inside a function block, a run puts all its terminals in that block. Made outside every block, it puts
 none: each terminal joins the block it is first wired in.
 
@@ -199,34 +202,68 @@ raises. A strip or a run is also a pin of `d.wire` and a core's end: each place 
 terminal, `d.wire` on the inner side and `W1.core` on the outer side.
 
 ```python
-# a growing bridged run fed by d.wire
+# a growing bridged run fed by d.series
 import fransys as fr
 from fransys.colours import BU
 
 d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
 feed = d.terminal_strip("X1", "DEMO-TB-2.5").run("24V", bridged=True)
 for tag in ("H1", "H2", "H3"):
-    d.wire(feed, d.device(tag, "DEMO-LAMP-24")["1"], wire=(BU, 0.75))
+    d.series(dc.plus, feed, d.device(tag, "DEMO-LAMP-24").lamp, dc.minus, wire=(BU, 0.75))
 ```
 
 ## Wiring and cables
 
-`d.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire; more than two pins draw a daisy chain.
-`wire=` is required: a colour code and a cross-section in mm2.
+`wire=` is required on `d.series` and `d.wire`: a colour code and a cross-section in mm2.
 
 ### Wire along a current path
 
 `d.series(a, b, c, wire=(BU, 0.75))` wires elements end to end: each one's load side to the next
 one's line side, one wire per pole. A supply rail, a run, a device function, a cable and a strip
-are all elements.
+are all elements. A function is a series element when its part names its line side; else the
+series raises and names it.
 
 ### Branch inside a series
 
 `d.parallel(a, b)` is an element of a series: each member sits between the previous load and the next
 line.
 
-The pair below feeds a coil from a supply through a bridged run. A series element needs poles, so a
-single-pin lamp is wired with `d.wire` instead.
+A branch across several elements is a second series, from the split to the join. Below, the second
+series wires S1:NC to K3, K3 to K4 and K4 to the coil K2:A1 in WH 0.5.
+
+```python
+# easy: a branch across several elements
+import fransys as fr
+from fransys.colours import BU, WH
+
+d = fr.design("demo_parts")
+psu = d.device("G1", "DEMO-PSU-24")
+dc = d.dc_supply("24VDC", psu.output)
+s1 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC")
+s2 = d.device("S2", "DEMO-CTR-BLOCK-1NO1NC")
+k2 = d.device("K2", "DEMO-CTR-3P-24")
+k3 = d.device("K3", "DEMO-CTR-3P-24")
+k4 = d.device("K4", "DEMO-CTR-3P-24")
+d.series(dc.plus, s1.nc, s2.no, k2.coil, dc.minus, wire=(BU, 0.75))
+d.series(s1.nc, k3.aux, k4.aux, k2.coil, wire=(WH, 0.5))
+```
+
+```python
+# efficient: a branch across several elements
+import fransys as fr
+from fransys.colours import BU, WH
+
+d = fr.design("demo_parts")
+psu = d.device("G1", "DEMO-PSU-24")
+dc = d.dc_supply("24VDC", psu.output)
+s1, s2 = (d.device(tag, "DEMO-CTR-BLOCK-1NO1NC") for tag in ("S1", "S2"))
+k2, k3, k4 = (d.device(tag, "DEMO-CTR-3P-24") for tag in ("K2", "K3", "K4"))
+d.series(dc.plus, s1.nc, s2.no, k2.coil, dc.minus, wire=(BU, 0.75))
+d.series(s1.nc, *(k.aux for k in (k3, k4)), k2.coil, wire=(WH, 0.5))
+```
+
+The pair below feeds a coil from a supply through a bridged run.
 
 ```python
 # easy: terminal strip and series
@@ -264,6 +301,12 @@ def feed_coil(tag: str) -> None:
 for tag in ("K1", "K2"):
     feed_coil(tag)
 ```
+
+### Wire two named pins
+
+`d.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire; more than two pins draw a daisy chain.
+Use it only off a path: two named pins such as a signal pair, one signal daisy-chained, or a hop
+whose wire differs from the rest of its path. Anything that is a current path is a `d.series`.
 
 ### Cables
 

@@ -11,8 +11,8 @@ class_code = "P"
 name = "lamp"
 kind = "load"
 ports = [
-    { name = "1", role = "generic" },
-    { name = "2", role = "generic" },
+    { name = "1", role = "generic", side = "line" },
+    { name = "2", role = "generic", side = "load" },
 ]
 
 [function.operating]

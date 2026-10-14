@@ -12,8 +12,8 @@ name = "sw"
 kind = "switch"
 symbol = "make-contact"
 ports = [
-    { name = "A", role = "generic", symbol_port = "in" },
-    { name = "B", role = "generic", symbol_port = "out" },
+    { name = "A", role = "generic", side = "line", symbol_port = "in" },
+    { name = "B", role = "generic", side = "load", symbol_port = "out" },
 ]
 links = [{ a = "A", b = "B", kind = "switched", rest = "open" }]
 

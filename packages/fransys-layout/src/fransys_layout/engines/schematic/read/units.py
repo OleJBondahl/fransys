@@ -7,6 +7,7 @@ from fransys_layout.stages.exempt import UnitNesting
 from fransys_layout.stages.references import BlackBoxReads
 from fransys_layout.stages.replicate import UnitBoundary
 from fransys_model.derive import black_box_unit, natural_key
+from fransys_model.derive.drawing_text import external_note
 from fransys_model.derive.instance_tag import instance_name, instance_tags
 from fransys_model.vocab.membership import boundary, units
 from fransys_model.vocab.tables import functions, items, ports
@@ -28,6 +29,25 @@ def function_unit(model: Model, function: Id[Any]) -> Id[Any] | None:
 def boundary_edges(model: Model) -> frozenset[Id[Any]]:
     """The boundary functions of every unit of `model`."""
     return frozenset(f for unit in units_table(model) for f in boundary(model, unit))
+
+
+def external_note_text() -> str:
+    """The "by others" note's text (BO2), read here so the engine imports no derive."""
+    return external_note()
+
+
+def external_roots(model: Model) -> dict[Id[Any], Id[Any]]:
+    """Each external item's outermost external ancestor, itself when it has none (BO1)."""
+    flagged = unit_index(model).external
+    table = items(model)
+    roots: dict[Id[Any], Id[Any]] = {}
+    for item in flagged:
+        top, seen = item, {item}
+        while (parent := table[top].parent) in flagged and parent not in seen:
+            top = parent
+            seen.add(top)
+        roots[item] = top
+    return roots
 
 
 def containing_units(model: Model, unit: Id[Any] | None) -> frozenset[Id[Any]]:

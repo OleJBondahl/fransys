@@ -255,9 +255,9 @@ def box_lines(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[str, ..
     return (*((head,) if head else ()), outline_title(model, instance))
 
 
-def box_dashed(model: Model, box: BoxKey, unit: Id[Unit] | None) -> bool:
+def box_dashed(model: Model, box: BoxKey, unit: Id[Unit] | None) -> bool:  # noqa: ARG001 - the reading no longer decides; callers keep one signature
     """Whether the box is drawn dashed: an item whose end is by others."""
-    return box.kind != "unit" and end_by_others(model, cast("Id[Item]", box), unit)
+    return box.kind != "unit" and end_by_others(model, cast("Id[Item]", box))
 
 
 def _cable_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...]:

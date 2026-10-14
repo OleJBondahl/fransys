@@ -274,15 +274,15 @@ def _style_of(model, cable, item, unit=None):
     return _block(model, cable, unit)[2][item].style
 
 
-def test_by_others_end_dashed_only_in_the_absolute_reading():
-    """An external end is DASHED in the absolute reading, SOLID in the unit's.
+def test_by_others_end_dashed_in_every_reading():
+    """An external end is DASHED in the absolute reading and in the unit's (BO4).
 
-    Probe: the by-others mark applied in every reading.
+    Probe: `end_by_others` returning `unit is None and external(...)`.
     """
     s = _unit()
     (unit,) = {h.unit for h in layout_of(s.model, CableBlock).values() if h.unit is not None}
     assert _style_of(s.model, s.cable, s.motor) is EndStyle.DASHED
-    assert _style_of(s.model, s.cable, s.motor, unit) is EndStyle.SOLID
+    assert _style_of(s.model, s.cable, s.motor, unit) is EndStyle.DASHED
 
 
 def test_a_cable_of_row_links_alone_draws_its_row_and_a_heading_only_box():

@@ -10,6 +10,37 @@ Fransys is in Beta: the API may change between minor versions until 1.0.0, and e
 
 The public surface has four parts: `fr.__all__`, `fr.derive.__all__`, `fransys.colours`, and every keyword of every public call and every `d.*` method, with the `d.layout.profile` keywords and the `d.layout.sheet` numbers. Nothing else is public, and every part has an entry in this guide.
 
+## Which call first
+
+Write a design with the high-level calls below. They pair poles, take the next free terminal or
+core, and give layout the structure it draws. The low-level calls in the table are for their
+cases only.
+
+1. A cabinet or a board is a unit: `@fr.unit`, then `d.add` (units.md).
+2. Name places with `d.location`. Put each circuit in its own block, `with d.function(tag, text):`.
+3. Declare every supply with `d.dc_supply` or `d.ac_supply`. Start and end each path on its rails.
+4. Write each current path as one `d.series(...)`, source first. Devices, functions, rails, strips,
+   runs and cables are its elements.
+5. A branch between two neighbours is a `d.parallel(...)` element. A branch across several
+   elements is a second series, from the split to the join.
+6. Pass a strip, a run or a cable to the series. It takes the next free terminal or core, on the
+   right side.
+7. Bridge with `bridged=` on the strip or the run. Request a PLC signal on its function,
+   `K1.coil.plc(fr.DO, name)`, and never pick a channel.
+8. A circuit that repeats is a Python function around these calls, fed by a table (examples.md).
+9. Add `d.layout.*` advice last, only where the structure leaves the drawing a choice.
+
+| low-level call | only for |
+|---|---|
+| `d.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.wire(a, b, c)`; a hop whose wire differs from the rest of its path |
+| `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
+| `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
+| `d.net(name, *pins)` | a named net that no wire joins, such as a bus shown by its label |
+
+`d.series` raises `has no poles: name its pins` when a part does not say which pin is the line
+side. Fix the part file (`side = "line"`, parts.md), not the call. A real circuit that no
+high-level call can write is a gap in Fransys: report it with its smallest shape.
+
 ## Tasks
 
 Each task has one spelling. `P` is a generated parts module or an MPN string; `BU` and `BN` come
@@ -26,10 +57,12 @@ from `fransys.colours`.
 | read a function or pin | `Q1.coil`, `Q1["A1"]`, `Q1[2]` | authoring.md, read a function or pin |
 | add a terminal strip, take a terminal | `d.terminal_strip("X1", P.X, n)`, `X1[3]` | authoring.md, Strips and terminals |
 | a named, bridged run on a strip | `X1.run(label, n, bridged=True)` | authoring.md, Bridges |
-| bridge a set of auto-numbered terminals | `X1.run(label, bridged=True)`, then `d.wire(feed, pin, ...)` | authoring.md, Bridges |
-| wire two or more pins | `d.wire(a, b, wire=(BU, 0.75))` | authoring.md, Wiring and cables |
+| bridge a set of auto-numbered terminals | `X1.run(label, bridged=True)`, then the run passed to each `d.series` | authoring.md, Bridges |
 | wire along a current path | `d.series(a, b, c, wire=(BU, 0.75))` | authoring.md, wire along a current path |
 | branch inside a series | `d.parallel(a, b)` | authoring.md, branch inside a series |
+| a branch across part of a path | a second `d.series(split, ..., join, wire=...)` | authoring.md, Branch inside a series |
+| bridge adjacent plain terminals | `d.terminal_strip("X4", P.X, 6, bridged=(2, 6))` | authoring.md, Bridges |
+| wire two named pins off a path | `d.wire(a, b, wire=(BU, 0.75))` | authoring.md, Wiring and cables |
 | add a cable, wire a core | `d.cable("W1", P.X, length_m=)`, `W1.core(BN, a, b)` | authoring.md, Wiring and cables |
 | name a wire colour | `from fransys.colours import BU`, then `wire=(BU, 0.75)` | authoring.md, Wire colours |
 | earth pins | `d.earth(*pins)` | authoring.md, earth pins |
@@ -48,6 +81,7 @@ from `fransys.colours`.
 | put a unit's interface above or below its outline | `d.layout.side(u1.bus_in, fr.ABOVE)`, `fr.BELOW` | authoring.md, Layout profile |
 | define a unit | `@fr.unit(name, revision=, interface_version=, ...)` | units.md, define a unit |
 | add a unit instance, reach its boundary | `d.add(fn, "U1")` returns the unit's `NamedTuple`, `io.X1` | units.md, Nesting units |
+| mark some terminals of a strip a unit boundary | `d.terminal_strip("X1", P.X, 4, interface=(1, 2))`, `unused=` the same | units.md, The boundary |
 | mark a boundary device | `interface=True`, `unused=True` on `d.device` | units.md, The boundary |
 | leave one placed instance's boundary open | `d.add(fn, "U2", unused=("X1",))` | units.md, Leaving one instance open |
 | state a boundary's values | `X1.power.limits(rating=, operating=)` | units.md, The boundary |

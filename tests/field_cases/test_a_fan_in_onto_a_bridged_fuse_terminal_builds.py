@@ -10,14 +10,23 @@ fused terminal's own cell was on no page of the set, but the X2 cells hung on it
 host, and layout looked the host up on the page and did not find it. Dropping any one of the
 fused link, `bridged`, the supply, `interface`, or the second X2 terminal made it build.
 
+A second bug, in the same case: the wire from a flipped (turned 180 degrees) fuse terminal to the
+terminals hung on it left upward and U-turned down, because the attachment read the host port's
+facing from the unflipped geometry. The fix, FAN-IN-UTURN, has the attachment read the port
+as drawn.
+
 Reported by a consumer, reproduced 2026-10-14. Fixing decision: model-0215 -- a terminal with a
 protective link is not a rail terminal, so it draws as a terminal and keeps its home cell.
 """
 
+from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 from fransys.colours import BU
+
+from fransys_model.layout import Route, layout_of
+from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -58,3 +67,35 @@ def test_a_fan_in_onto_a_bridged_fuse_terminal_builds(tmp_path: Path) -> None:
         d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=tmp_path / "cover.md")
     )
     assert result.model is not None
+
+
+def _turns_back(points: list[tuple[int, int]]) -> bool:
+    """True when two segments one apart run opposite ways on one axis (a U, up then down)."""
+    steps = [(bx - ax, by - ay) for (ax, ay), (bx, by) in pairwise(points)]
+    for first, third in zip(steps, steps[2:], strict=False):
+        opposite = (first[0] * third[0] < 0 and first[1] == third[1] == 0) or (
+            first[1] * third[1] < 0 and first[0] == third[0] == 0
+        )
+        if opposite:
+            return True
+    return False
+
+
+def test_the_wire_from_the_fuse_terminal_reaches_the_fan_in_without_a_u_turn(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
+    d = fr.design("demo_parts")
+    d.add(_cab, "U1")
+    model = fr.build(
+        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=tmp_path / "cover.md")
+    ).model
+    port_key = {p.id: p.key for p in ports(model).values()}
+    routes = [
+        r
+        for r in layout_of(model, Route).values()
+        if ("U1", "X1", "terminal", "24V", "6", "fn", "terminal", "port", "external")
+        in (port_key[r.a], port_key[r.b])
+    ]
+    assert len(routes) == 2  # one per X2 terminal
+    assert not any(_turns_back([(p.x, p.y) for p in r.points]) for r in routes)

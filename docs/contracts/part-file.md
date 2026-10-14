@@ -83,7 +83,7 @@ Zero or more per file, one array entry per function the part has. Maps to the mo
 | `role` | string | A `PortRole` value: `"generic"`, `"internal"`, `"external"`, `"pe"`, or a throw role `"common"`, `"break"` (closed at rest), `"make"` (closed when operated). Every port of a `contact_co` function takes a throw role, whatever its pin name (`CHANGEOVER_ROLE`, decisions model-0091, parts-0007) |
 | `symbol_port` | string | Optional. The role-named port of `symbol` this port maps to, e.g. `"in"`, `"out"`. A port with no `symbol_port` keeps its own name. A `symbol_port` on a function with no `symbol` is a lint error (`SYMBOL_PORT_WITHOUT_SYMBOL`). A `contact_co` port takes none: the drawing binds a changeover by its throw roles (`CHANGEOVER_SYMBOL_PORT`) |
 | `marking` | string | Optional. What a drawing prints on this pin, when it differs from `name`. Omit it to print `name`; write `""` to print nothing |
-| `side` | string | Optional: `"line"` or `"load"`; else the marking fills it (parts-0010) |
+| `side` | string | Optional: `"line"` or `"load"`; else the marking fills it (parts-0010). A two-port function that a series passes through needs it when its marking gives no side |
 | `conductor` | string | Optional: `"L1"`, `"L2"`, `"L3"`, `"N"`, `"L+"`, `"L-"`, `"M"`; not `"PE"` (use `role = "pe"`), filled likewise |
 
 `links` entries:

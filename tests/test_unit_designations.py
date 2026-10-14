@@ -65,13 +65,14 @@ def test_the_board_units_own_set_prints_item_designations_below_its_root() -> No
 
 def test_a_cabinets_own_set_and_the_top_level_print_no_aspect() -> None:
     """A cabinet's own set prints "-X2", no "+C1" and no "+ER"; the top-level set prints the
-    item designation only too, "-X2" and "-M1", no "+ER+C1" and no "=FLD+FLD"
-    (layout-0066: the owner's rule has no top-level exception)."""
+    item designation only too, "-M1", no "+ER+C1" and no "=FLD+FLD"
+    (layout-0066: the owner's rule has no top-level exception). Its "-X2" box draws no wire, so
+    it is not drawn (layout-0214)."""
     texts = _tag_texts_by_set()
     cabinet = texts["demo-pump-cabinet"]
     assert "-X2" in cabinet
     assert not any(text.startswith(("+", "=")) or "+C1" in text for text in cabinet)
-    assert "-X2" in texts[None]
+    assert "-X2" not in texts[None]
     assert "-M1" in texts[None]
     assert not any("+" in text or "=" in text for text in texts[None])
 

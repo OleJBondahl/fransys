@@ -486,7 +486,7 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
     # UNDO: fransys_layout/stages/outlines.py: `unit_outlines` sets `title = below` always
     model = _system_model()
     outlines = layout_of(model, Outline)
-    assert len(outlines) == 4
+    assert len(outlines) == 2  # the top-level boxes draw no wire (layout-0214)
     height = DEFAULT_PROFILE.text_height
     above = 0
     inside = 0
@@ -503,7 +503,7 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
             assert outline.y < title.y
             assert title.y + height < outline.y + outline.height
             inside += 1
-    assert (above, inside) == (2, 2)
+    assert (above, inside) == (0, 2)  # above-left: stages/test_outlines_by_end.py
 
 
 def test_an_outline_title_falls_below_left_when_the_plug_and_its_tag_take_the_space_above() -> None:
@@ -521,7 +521,7 @@ def test_an_outline_title_falls_below_left_when_the_plug_and_its_tag_take_the_sp
 def test_a_units_boundary_pins_in_neighbouring_columns_stand_in_one_outline() -> None:
     """Two boundary connectors in neighbouring columns share one outline: one per run.
     Single wires: with a line at an interface the unit is one middle outline."""
-    # UNDO: fransys_layout/stages/outlines.py: `_column_runs` starts a new run for every
+    # UNDO: fransys_layout/stages/runs.py: `member_runs` starts a new run for every
     #   column
     model = _build_two_connectors(relay_between=False, lines=False)
     page = _top_level_page_with_outline(model)
@@ -535,7 +535,7 @@ def test_a_units_boundary_pins_in_neighbouring_columns_stand_in_one_outline() ->
 def test_a_column_that_is_not_the_units_cuts_its_outline_in_two() -> None:
     """Another column between two boundary connectors cuts the outline in two.
     Single wires: with a line at an interface the unit is one middle outline."""
-    # UNDO: fransys_layout/stages/outlines.py: `_column_runs` never cuts (one run per
+    # UNDO: fransys_layout/stages/runs.py: `member_runs` never cuts (one run per
     #   unit)
     model = _build_two_connectors(relay_between=True, lines=False)
     page = _top_level_page_with_outline(model)

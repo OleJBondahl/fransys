@@ -18,6 +18,7 @@ from .line_side import (
     aside,
     crosses_keepout,
     faced,
+    run_on,
     stub_in,
     stub_on_wire,
     turned,
@@ -139,7 +140,7 @@ def line_pieces(
     """
     drawn = _all_drawn(ends, absent, _within(grid.region, margin), grid)
     others = [end.branch for _, end, _ in drawn]
-    joint = [end for one, end, _ in drawn if not one.leaving]
+    joint = run_on([(end, fan) for one, end, fan in drawn if not one.leaving])
     leave = [end for one, end, _ in drawn if one.leaving]
     if len(joint) == 1:
         leave.append(joint.pop())

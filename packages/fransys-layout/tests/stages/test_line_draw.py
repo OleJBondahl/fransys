@@ -8,9 +8,9 @@ from dataclasses import replace
 from samples import hid
 
 from fransys_layout.geometry import Box, Facing, Point
-from fransys_layout.stages.harness_route import Grid, _unspiked
-from fransys_layout.stages.line_draw import EndOnPage, PinAt, Stub, fan_out, line_pieces
-from fransys_layout.stages.line_side import faced
+from fransys_layout.stages.harness_route import Grid, LineEnd, _unspiked
+from fransys_layout.stages.line_draw import EndOnPage, Fan, PinAt, Stub, fan_out, line_pieces
+from fransys_layout.stages.line_side import faced, run_on
 from fransys_layout.stages.space import End, Obstacle
 
 _GRID = Grid(region=Box(x=0, y=0, width=1000, height=1000), obstacles=(), turn_penalty=8)
@@ -353,3 +353,20 @@ def test_a_motors_pins_facing_apart_in_two_rows_fan_each_row_its_own_way() -> No
     assert fan.rows == (End(at=Point(x=72, y=168), facing=Facing.N),)
     ((_, path),) = pieces.paths
     assert set(path) >= {fan.at, fan.rows[0].at}
+
+
+def test_a_joint_end_that_runs_on_is_met_from_behind_the_run_and_the_root_keeps_its_facing() -> (
+    None
+):
+    """W13-DIP: the end whose line runs east to a further row is met facing west; others stay."""
+    root_end = LineEnd(branch=1, end=End(at=Point(x=0, y=200), facing=Facing.N), interface=True)
+    split = End(at=Point(x=208, y=224), facing=Facing.S)
+    plain = End(at=Point(x=300, y=224), facing=Facing.S)
+    fan = Fan(branch=2, at=split.at, legs=(), rows=(End(at=Point(x=440, y=176), facing=Facing.S),))
+    drawn = [(root_end, None), (LineEnd(2, split), fan), (LineEnd(3, plain), Fan(3, plain.at, ()))]
+    ends = run_on(drawn)
+    assert [one.end for one in ends] == [
+        root_end.end,
+        End(at=split.at, facing=Facing.W),
+        plain,
+    ]

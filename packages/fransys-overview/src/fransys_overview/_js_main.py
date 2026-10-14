@@ -166,7 +166,7 @@ $('up').addEventListener('click', () => {
 $('search').addEventListener('input', drawHits);
 $('search').addEventListener('keydown', (event) => {
   const first = hitsFor($('search').value)[0];
-  if (event.key === 'Enter' && first !== undefined) { locate(first); $('search').value = ''; drawHits(); }
+  if (event.key === 'Enter' && first !== undefined) { openHit(first); $('search').value = ''; drawHits(); }
   if (event.key === 'Escape') { $('search').value = ''; drawHits(); }
 });
 document.addEventListener('keydown', (event) => {

@@ -21,7 +21,7 @@ from fransys_layout.stages.harness_route import (
     root,
     text_centre,
 )
-from fransys_layout.stages.space import End, Obstacle, Shape, Space
+from fransys_layout.stages.space import End, Obstacle, Shape, Space, run_of, runs_along
 from fransys_layout.stages.texts.place_texts import place_texts
 
 _OPEN = Grid(region=Box(x=-80, y=-80, width=320, height=320), obstacles=(), turn_penalty=8)
@@ -190,3 +190,31 @@ def test_a_goal_on_a_keep_outs_edge_frees_that_keep_out_but_not_a_text_inside_it
         text.x < c[0] < text.x + text.width and text.y < c[1] < text.y + text.height
         for c in cells_of(path)
     )
+
+
+def _steps(path: tuple[Point, ...]) -> list[tuple[Point, Point]]:
+    """The path cut into grid steps of 8."""
+    found = []
+    for one, two in pairwise(path):
+        count = max(abs(two.x - one.x), abs(two.y - one.y)) // 8
+        dx, dy = (two.x - one.x) // max(count, 1), (two.y - one.y) // max(count, 1)
+        cells = [Point(x=one.x + dx * i, y=one.y + dy * i) for i in range(count + 1)]
+        found += list(pairwise(cells))
+    return found
+
+
+def test_a_line_whose_shortest_path_lies_along_a_routed_wire_takes_another() -> None:
+    """BO6-SHRINK: a step that touches either end cell may run along a wire; no other step does.
+
+    UNDO: `_path`'s `wires=grid.wires` -> `wires=()`, and the line runs straight down the wire.
+    """
+    wire = Box(x=0, y=8, width=0, height=48)
+    ends = (_end(1, 0, 0, Facing.S), _end(2, 0, 64, Facing.N))
+    path = line_paths(ends, Grid(region=_OPEN.region, obstacles=(), turn_penalty=8, wires=(wire,)))[
+        1
+    ]
+    assert (path[0], path[-1]) == (Point(x=0, y=0), Point(x=0, y=64))
+    assert len(path) > 2
+    inner = [s for s in _steps(path) if not {s[0], s[1]} & {path[0], path[-1]}]
+    assert inner
+    assert not any(runs_along(wire, run_of(a, b)) for a, b in inner)

@@ -371,9 +371,9 @@ def core_text(core: HarnessCore, mark: str = "") -> str:
     return " ".join(part for part in (str(core.index), core.colour, core.label, mark) if part)
 
 
-def end_by_others(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
-    """Whether an end of `item` is marked "by others": external, in the absolute reading."""
-    return unit is None and external(model, item)
+def end_by_others(model: Model, item: Id[Item]) -> bool:
+    """Whether an end of `item` is marked "by others": it is external, in every reading (BO4)."""
+    return external(model, item)
 
 
 def end_label(
@@ -388,12 +388,12 @@ def end_label(
     function = None if subject is None or not label else _end_connector(model, subject, unit, item)
     if function is not None:
         label += connector_segment(model, function)
-    if end_by_others(model, item, unit):
+    if end_by_others(model, item):
         return f"{label} ({external_note()})"
     return label
 
 
-def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> str:
+def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> str:  # noqa: ARG001 - the reading no longer decides; callers keep one signature
     """The cable's heading: designation, pair form, "shielded", length, then "by others".
 
     Example: `-W3, shielded, 3000 mm`, or `-W5, 2x2x0.75, screened pairs, 25000 mm` (CC10:
@@ -410,7 +410,7 @@ def cable_heading(model: Model, cable: HarnessCable, unit: Id[Unit] | None) -> s
         parts.append("shielded")
     if cable.length_mm is not None:
         parts.append(f"{cable.length_mm} mm")
-    if end_by_others(model, cable.cable, unit):
+    if end_by_others(model, cable.cable):
         parts.append(external_note())
     return ", ".join(parts)
 

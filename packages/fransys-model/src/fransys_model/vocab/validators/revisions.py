@@ -4,6 +4,7 @@ import re
 from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.revision_text import revision_text
 from fransys_model.vocab.tables import projects, revisions, unit_releases
 
@@ -34,11 +35,7 @@ def _current_missing(model: Model) -> list[Finding]:
     for release in unit_releases(model).values():
         if (release.id, release.version, release.revision) in current:
             continue
-        text = revision_text(release.version, release.revision)
-        message = (
-            f"unit {release.name!r}: its current revision {text} has no Revision "
-            f"entry: {_ADD_ENTRY}"
-        )
+        message = f"{ref(release)}: its current revision has no Revision entry: {_ADD_ENTRY}"
         found.append(_finding(REVISION_CURRENT_MISSING, Severity.ERROR, (release.id,), message))
     for project in projects(model).values():
         if (None, project.version, project.revision) not in current:

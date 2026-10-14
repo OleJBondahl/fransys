@@ -78,6 +78,7 @@ is the text a power symbol prints: the supply's name, else its potential. It is 
 another terminal of its strip.
 A schematic page draws no rail terminal. A pin wired to one, or to another pin on a power net, draws the rail's power symbol. No wire joins two such pins. The terminal table and the wire list still hold every landing and wire.
 A terminal is drawn at the pin it serves, once per page. A single-wire contact, and a coil on a PLC output channel, are drawn at the pin they serve, with a reference back to their device. A rail symbol faces away from its box: up above a top pin, down below a bottom pin.
+A terminal with no wire on a page is not drawn there. One wired to nothing is only in the terminal list.
 
 `fransys.derive.wire_rows(model, *, unit=None)` returns the wire list: one `WireRow` per
 wire, with `from_`, `to`, `colour`, `cross_section_mm2` and `label`. The `label` is the two end
@@ -297,9 +298,8 @@ d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
 f1 = d.device("F1", "DEMO-FUSE-DC-160")
 dc = d.dc_supply("HV", plus=x1[1], minus=x1[2], voltage=24, fault_current_a=6000)
-d.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
-d.wire(f1[2], x1[3], wire=(BK, 1.5))
-d.wire(dc.minus.pin, x1[4], wire=(BK, 1.5))
+d.series(dc.plus, f1.element, x1, wire=(BK, 1.5))
+d.series(dc.minus, x1, wire=(BK, 1.5))
 
 (fault,) = fr.derive.prospective_fault(fr.build(d).model)
 assert fault.current_a == 6000

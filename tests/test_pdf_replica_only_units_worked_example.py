@@ -1,9 +1,8 @@
-"""`fransys_pdf`'s replica-only drawing-set skip rule, proven
-against the units worked example's own real, facade-built geometry -- not a hand-built layout
-fixture. The pdf package unit tests prove the predicate's logic
-directly against hand-built `layout.*` records (the package's own unit of testing); this file
-proves the real worked example actually has the shape that predicate assumes, and that a real
-author-level rewiring flips it, both on `fr.build`'s own output.
+"""`fransys_pdf`'s replica-only drawing-set skip rule against the units worked example's own
+real, facade-built geometry. The pdf package unit tests prove the predicate's logic directly
+against hand-built `layout.*` records. Since layout-0214 the worked example no longer has that
+shape: a box cell the top does not wire is not drawn, so its set draws nothing; a real
+author-level rewiring still draws a set, both on `fr.build`'s own output.
 """
 
 import sys
@@ -37,7 +36,6 @@ from fransys_model.vocab.tables import items as items_table
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.templates import Part
 
-_REPLICA_ONLY_SET_COUNT = 2
 _IO_BOARD_COUNT = 1  # a `demo-io-board` unit's own single board
 _CABINET_OWN_STRIP_COUNT = 1  # a `demo-pump-cabinet` unit's own single strip, X2
 _UNWIRED_FIELD_TERMINALS = 2  # the first two field terminals; a third is wired to a neighbour
@@ -110,57 +108,37 @@ def _with_documents(model, *location_ids):
     return evolve(model, remove=tuple(documents(model)), put=docs, origin=_ORIGIN), docs
 
 
-def test_the_worked_examples_two_top_level_sets_are_replica_only_with_one_info_each():
-    """The real geometry `is_replica_only_undrawn` assumes: both cabinets' top-level (unit=
-    None) drawing sets hold only their own two field-terminal boundary replicas, no other
-    placement, no route, no marker -- confirmed here by count, not assumed by a hand-built
-    fixture (`_REPLICA_ONLY_SET_COUNT` is "two in the system build, one
-    per cabinet location")."""
+def test_the_worked_examples_top_level_sets_draw_nothing_and_report_nothing():
+    """layout-0214: both cabinets' top-level (unit=None) drawing sets held only their own two
+    field-terminal box cells, which no wire of the top meets. Those cells are not drawn, so no
+    set is replica-only, no `DRAWING_SET_REPLICA_ONLY` info is given and no document errs."""
     model, c1_id, c2_id = _build()
     model, docs = _with_documents(model, c1_id, c2_id)
     records = documents(model)
     for doc in docs:
         record = records[doc.id]
         assert schematic_pages(model, record, (PageKind.SCHEMATIC,)) == ()
-        assert len(replica_only_sets(model, record, (PageKind.SCHEMATIC,))) == 1
-    findings = check(model, {})
-    replica_findings = [f for f in findings if f.code == "DRAWING_SET_REPLICA_ONLY"]
-    assert len(replica_findings) == _REPLICA_ONLY_SET_COUNT
-    expected_messages = {
-        "drawing set +ER+C1 holds only black-box replicas: not drawn",
-        "drawing set +ER+C2 holds only black-box replicas: not drawn",
-    }
-    for finding in replica_findings:
-        assert finding.severity is Severity.INFO
-        assert finding.message in expected_messages
-    assert [f for f in findings if f.code == "DOCUMENT_NO_DRAWINGS"] == []
+        assert replica_only_sets(model, record, (PageKind.SCHEMATIC,)) == ()
+    codes = [f.code for f in check(model, {})]
+    assert "DRAWING_SET_REPLICA_ONLY" not in codes
+    assert "DOCUMENT_NO_DRAWINGS" not in codes
 
 
-def test_a_real_rewired_replica_boundary_draws_its_set_and_drops_the_info():
+def test_a_real_rewired_boundary_draws_its_set():
     """Can-fail 1, on real geometry: rebuilding with a third field terminal on pump1's own
     cabinet, wired to a brand-new unitless item at the same location (an "ordinary same-set
-    connection"), makes pump1's top-level set a real page -- pump2's own,
-    untouched, stays replica-only, so this is a genuine behavioural difference for one
-    cabinet, not a global flag flip.
+    connection"), makes pump1's top-level set a real page; pump2's own, untouched, draws
+    nothing. A genuine behavioural difference for one cabinet, not a global flag flip.
     """
     model, c1_id, c2_id = _build(extra_unitless_neighbor=True)
     model, docs = _with_documents(model, c1_id, c2_id)
     records = documents(model)
-    doc_c1, doc_c2 = docs
-    record_c1 = records[doc_c1.id]
-    record_c2 = records[doc_c2.id]
-
-    pages_c1 = schematic_pages(model, record_c1, (PageKind.SCHEMATIC,))
-    assert len(pages_c1) >= 1
+    record_c1, record_c2 = (records[doc.id] for doc in docs)
+    assert len(schematic_pages(model, record_c1, (PageKind.SCHEMATIC,))) >= 1
     assert replica_only_sets(model, record_c1, (PageKind.SCHEMATIC,)) == ()
-
     assert schematic_pages(model, record_c2, (PageKind.SCHEMATIC,)) == ()
-    assert len(replica_only_sets(model, record_c2, (PageKind.SCHEMATIC,))) == 1
-
-    findings = check(model, {})
-    replica_findings = [f for f in findings if f.code == "DRAWING_SET_REPLICA_ONLY"]
-    assert len(replica_findings) == 1
-    assert replica_findings[0].subjects[0] == doc_c2.id
+    assert replica_only_sets(model, record_c2, (PageKind.SCHEMATIC,)) == ()
+    assert "DRAWING_SET_REPLICA_ONLY" not in [f.code for f in check(model, {})]
 
 
 def _unit_by_name_and_prefix(model, *, name, prefix):

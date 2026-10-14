@@ -42,11 +42,11 @@ cab/w [absolute]
   EndBox item=M9 row=BlockRow.BOTTOM style=EndStyle.DASHED x=32 y=112 width=16 height=16 pins=[(0,M9/fn/motor/port/U,40,16,True)]
   CoreWire conductor=cab/w/core/1 run_a=[(0,40,32) (1,40,48)] run_b=[(0,40,112) (1,40,96)] text_x=40 text_y=80 stub_a=False stub_b=False
 cab/w [unit cab/unit]
-  CableBlock subject=cab/w unit=cab/unit width=48 height=144 pitch=16 sheet_format=None
-  CableBox item=cab/w kind=BoxKind.CABLE external=False x=16 y=48 width=24 height=48
-  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=16 y=16 width=16 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,24,16,True)]
-  EndBox item=M9 row=BlockRow.BOTTOM style=EndStyle.SOLID x=16 y=112 width=16 height=16 pins=[(0,M9/fn/motor/port/U,24,16,True)]
-  CoreWire conductor=cab/w/core/1 run_a=[(0,24,32) (1,24,48)] run_b=[(0,24,112) (1,24,96)] text_x=24 text_y=80 stub_a=False stub_b=False
+  CableBlock subject=cab/w unit=cab/unit width=80 height=144 pitch=16 sheet_format=None
+  CableBox item=cab/w kind=BoxKind.CABLE external=False x=32 y=48 width=24 height=48
+  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=32 y=16 width=16 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,40,16,True)]
+  EndBox item=M9 row=BlockRow.BOTTOM style=EndStyle.DASHED x=32 y=112 width=16 height=16 pins=[(0,M9/fn/motor/port/U,40,16,True)]
+  CoreWire conductor=cab/w/core/1 run_a=[(0,40,32) (1,40,48)] run_b=[(0,40,112) (1,40,96)] text_x=40 text_y=80 stub_a=False stub_b=False
 == nested
 pump1/io/w [absolute]
   CableBlock subject=pump1/io/w unit=None width=56 height=144 pitch=16 sheet_format=None
@@ -84,16 +84,16 @@ cab/w [absolute]
   CoreWire conductor=cab/w/core/3 run_a=[(0,80,32) (1,80,48)] run_b=[(0,48,120) (1,48,112) (2,80,112) (3,80,96)] text_x=80 text_y=80 stub_a=False stub_b=False
   CoreWire conductor=cab/w/core/4 run_a=[(0,96,32) (1,96,48)] run_b=[(0,136,120) (1,136,112) (2,96,112) (3,96,96)] text_x=96 text_y=80 stub_a=False stub_b=False
 cab/w [unit cab/unit]
-  CableBlock subject=cab/w unit=cab/unit width=96 height=160 pitch=16 sheet_format=None
-  CableBox item=cab/w kind=BoxKind.CABLE external=False x=8 y=48 width=80 height=48
-  EndBox item=M1 row=BlockRow.BOTTOM style=EndStyle.SOLID x=8 y=128 width=32 height=16 pins=[(0,M1/fn/motor/port/U,16,16,True) (1,M1/fn/motor/port/V,32,16,True)]
-  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=8 y=16 width=32 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,16,16,True) (1,cab/X5/terminal/2/fn/terminal/port/external,32,16,True)]
-  EndBox item=cab/X6 row=BlockRow.TOP style=EndStyle.SOLID x=56 y=16 width=32 height=16 pins=[(0,cab/X6/terminal/1/fn/terminal/port/external,64,16,True) (1,cab/X6/terminal/2/fn/terminal/port/external,80,16,True)]
-  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.SOLID x=56 y=128 width=32 height=16 pins=[(0,M2/fn/motor/port/U,64,16,True) (1,M2/fn/motor/port/V,80,16,True)]
-  CoreWire conductor=cab/w/core/2 run_a=[(0,32,32) (1,32,48)] run_b=[(0,64,128) (1,64,112) (2,32,112) (3,32,96)] text_x=32 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/1 run_a=[(0,16,32) (1,16,48)] run_b=[(0,16,128) (1,16,96)] text_x=16 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/3 run_a=[(0,64,32) (1,64,48)] run_b=[(0,32,128) (1,32,120) (2,40,120) (3,40,104) (4,64,104) (5,64,96)] text_x=64 text_y=80 stub_a=False stub_b=False
-  CoreWire conductor=cab/w/core/4 run_a=[(0,80,32) (1,80,48)] run_b=[(0,80,128) (1,80,96)] text_x=80 text_y=80 stub_a=False stub_b=False
+  CableBlock subject=cab/w unit=cab/unit width=168 height=152 pitch=16 sheet_format=None
+  CableBox item=cab/w kind=BoxKind.CABLE external=False x=24 y=48 width=80 height=48
+  EndBox item=M1 row=BlockRow.BOTTOM style=EndStyle.DASHED x=24 y=120 width=32 height=16 pins=[(0,M1/fn/motor/port/U,32,16,True) (1,M1/fn/motor/port/V,48,16,True)]
+  EndBox item=cab/X5 row=BlockRow.TOP style=EndStyle.SOLID x=24 y=16 width=32 height=16 pins=[(0,cab/X5/terminal/1/fn/terminal/port/external,32,16,True) (1,cab/X5/terminal/2/fn/terminal/port/external,48,16,True)]
+  EndBox item=cab/X6 row=BlockRow.TOP style=EndStyle.SOLID x=72 y=16 width=32 height=16 pins=[(0,cab/X6/terminal/1/fn/terminal/port/external,80,16,True) (1,cab/X6/terminal/2/fn/terminal/port/external,96,16,True)]
+  EndBox item=M2 row=BlockRow.BOTTOM style=EndStyle.DASHED x=112 y=120 width=32 height=16 pins=[(0,M2/fn/motor/port/U,120,16,True) (1,M2/fn/motor/port/V,136,16,True)]
+  CoreWire conductor=cab/w/core/2 run_a=[(0,48,32) (1,48,48)] run_b=[(0,120,120) (1,120,104) (2,48,104) (3,48,96)] text_x=48 text_y=80 stub_a=False stub_b=False
+  CoreWire conductor=cab/w/core/1 run_a=[(0,32,32) (1,32,48)] run_b=[(0,32,120) (1,32,96)] text_x=32 text_y=80 stub_a=False stub_b=False
+  CoreWire conductor=cab/w/core/3 run_a=[(0,80,32) (1,80,48)] run_b=[(0,48,120) (1,48,112) (2,80,112) (3,80,96)] text_x=80 text_y=80 stub_a=False stub_b=False
+  CoreWire conductor=cab/w/core/4 run_a=[(0,96,32) (1,96,48)] run_b=[(0,136,120) (1,136,112) (2,96,112) (3,96,96)] text_x=96 text_y=80 stub_a=False stub_b=False
 == harness_fan
 WH1 [absolute]
   CableBlock subject=WH1 unit=None width=256 height=168 pitch=64 sheet_format=None

@@ -13,13 +13,13 @@ from fransys_model.derive.designation import (
     port_designation,
     printed_designation,
 )
-from fransys_model.derive.drawing_text import outline_title, tag_text, wire_text
+from fransys_model.derive.drawing_text import outline_title, release_title, tag_text, wire_text
 from fransys_model.derive.instance_tag import instance_name, unit_tag
 from fransys_model.derive.kinds import item_kind
 from fransys_model.derive.plc_channel_text import plc_channel_text
 from fransys_model.kernel import Finding, Id, Model, Record, SchemaError
 from fransys_model.vocab.finding_ref import REF
-from fransys_model.vocab.tables import conductors, nets
+from fransys_model.vocab.tables import conductors, nets, unit_releases
 from fransys_model.vocab.tables import units as units_table
 
 if TYPE_CHECKING:
@@ -41,6 +41,11 @@ def _unit(model: Model, target: Id[Any]) -> str:
         return "unit"
     tag = unit_tag(model, target)
     return outline_title(model, target) if tag is None else f"unit {instance_name((tag,))}"
+
+
+def _release(model: Model, target: Id[Any]) -> str:
+    releases = unit_releases(model)
+    return release_title(releases[target]) if target in releases else "unit release"
 
 
 def _net(model: Model, target: Id[Any]) -> str:
@@ -76,6 +81,7 @@ _NAMERS: dict[str, Callable[[Model, Id[Any]], str]] = {
     "conductor": _wire,
     "function": _function,
     "unit": _unit,
+    "unit_release": _release,
     "net": _net,
 }
 

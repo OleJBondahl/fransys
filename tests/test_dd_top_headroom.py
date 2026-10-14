@@ -138,5 +138,5 @@ def test_without_headroom_the_unit_outlines_stay_below_the_top_reference_band(
     # UNDO: stages/place.py `_stack_page`: `band = reference_band(sheet, profile)` -> `band = 0`
     #     (the system model's outlines then stand at y = -2, above the content box)
     layout, _ = _run(_system_model(), monkeypatch, 0)
-    assert len(layout.outlines) == 4
+    assert len(layout.outlines) == 2  # the top-level boxes draw no wire (layout-0214)
     assert min(outline.box.y for outline in layout.outlines) >= 0

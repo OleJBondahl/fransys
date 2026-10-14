@@ -12,6 +12,7 @@ from itertools import count
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import Facing, cut_runs
+from fransys_layout.stages.black_box import black_box_tops, is_black_box
 from fransys_layout.stages.types import Home
 from fransys_model.derive.drawing_text import off_stub_line
 
@@ -47,20 +48,11 @@ def black_box_sets(
     reads: BlackBoxReads,
 ) -> dict[Id[Any], frozenset[int]]:
     """Per function of a nested unit, the drawing sets where it stands as a black box."""
-    nested, edges = reads.nested, reads.edges
-    top_of = {
-        spec.function: reads.top(spec.unit)
-        for spec in functions
-        if spec.unit in nested and (spec.pin_function in edges or spec.function in edges)
-    }
+    top_of = black_box_tops(functions, reads)
     found: dict[Id[Any], set[int]] = {}
     for one in seats:
-        own = top_of.get(one.function)
-        if (
-            unit_of[one.function] in nested
-            and unit_of[one.function] != set_unit[one.drawing_set]
-            and own in (None, set_unit[one.drawing_set])
-        ):
+        unit, here = unit_of[one.function], set_unit[one.drawing_set]
+        if is_black_box(unit, here, top_of.get(one.function), reads.nested):
             found.setdefault(one.function, set()).add(one.drawing_set)
     return {function: frozenset(sets) for function, sets in found.items()}
 

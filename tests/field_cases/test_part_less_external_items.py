@@ -76,14 +76,18 @@ def test_the_schematic_draws_q8_as_a_box_of_five_pins_and_x8_as_terminals() -> N
     assert box.geometry.key == "generic-box"
     terminal = drawn[("X8", "terminal", "1", "fn", "terminal")]
     assert terminal.geometry.key == "terminal"
-    assert {lb.kind.value for lb in layout.labels if lb.subject == terminal.function} == {"tag"}
-    labels = [lb for lb in layout.labels if lb.subject == box.function]
+    own = [
+        lb for lb in layout.labels if lb.slot != "external_note"
+    ]  # the BO2 notes are not designations
+    assert {lb.kind.value for lb in own if lb.subject == terminal.function} == {"tag"}
+    labels = [lb for lb in own if lb.subject == box.function]
     assert [lb.kind.value for lb in labels] == ["tag"]
     pins = {
         lb.slot
         for lb in layout.labels
         if lb.kind.value == "marking" and (model.key_of(lb.subject) or ())[:2] == ("G/Q8", "fn")
     }
+    assert sum(lb.slot == "external_note" for lb in layout.labels) == 2  # one per external item
     assert pins == {f"marking.{pin}" for pin in ("L1", "L2", "L3", "N", "PE")}
 
 

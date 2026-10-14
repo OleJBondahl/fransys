@@ -36,7 +36,7 @@ select, input, button { background: var(--bg); color: var(--fg); border: 1px sol
 button { cursor: pointer; }
 #features { font-size: 12px; }
 #features summary { cursor: pointer; }
-#feat-body { position: absolute; z-index: 6; top: 100%; right: 12px; min-width: 200px;
+#feat-body { position: absolute; z-index: 6; top: 100%; min-width: 200px;
   padding: 6px 10px;
   background: var(--bg); border: 1px solid var(--border); }
 #feat-body label { display: block; white-space: nowrap; }
@@ -86,8 +86,8 @@ main { display: flex; flex: 1; min-height: 0; }
   background: var(--panel); font-size: 12px; }
 #detail h2 { margin: 0 0 6px; font-size: 14px; }
 #detail p { margin: 0 0 6px; }
-#members { margin: 0; padding: 0; list-style: none; }
-#members button { width: 100%; text-align: left; margin-bottom: 2px; }
+#members, #boxlist { margin: 0; padding: 0; list-style: none; }
+#members button, #boxlist button { width: 100%; text-align: left; margin-bottom: 2px; }
 #opens button { margin: 0 4px 4px 0; }
 .sr { position: absolute; left: -9999px; }
 @media print {

@@ -21,3 +21,9 @@ def test_the_features_panel_hangs_from_the_header_bottom() -> None:
     assert features.get("position") != "relative"
     assert body["position"] == "absolute"
     assert body["top"] == "100%"
+
+
+def test_the_features_panel_starts_at_the_toggle() -> None:
+    body = _rule("#feat-body")
+    assert "right" not in body
+    assert "left" not in body

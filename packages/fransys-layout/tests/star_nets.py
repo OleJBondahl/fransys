@@ -14,7 +14,10 @@ from fransys_model.vocab import Aspect, FunctionKind
 
 @cache
 def star_nets(n: int) -> Model:
-    """`n` stars: terminal `XA:i` to `XB:n-1-i` to `XC:i`, frozen, not laid out."""
+    """`n` stars: terminal `XA:i` to `XB:n-1-i` to `XC:i` and back to `XA:i`, frozen, not laid out.
+
+    Two wires on every terminal: a terminal with one wire attaches to its neighbour (no star).
+    """
     b = _Builder(second_location=False, chains_enabled=False)
     for group in ("ga", "gb"):
         b._node(group, Aspect.FUNCTION, group.upper())
@@ -29,6 +32,7 @@ def star_nets(n: int) -> Model:
     for i in range(n):
         b.wire(ta[i].port("terminal", "external"), tb[n - 1 - i].port("terminal", "external"))
         b.wire(tb[n - 1 - i].port("terminal", "external"), tc[i].port("terminal", "external"))
+        b.wire(ta[i].port("terminal", "external"), tc[i].port("terminal", "external"))
     draft = Draft()
     draft.extend(b.records, origin=_ORIGIN)
     return freeze(draft)

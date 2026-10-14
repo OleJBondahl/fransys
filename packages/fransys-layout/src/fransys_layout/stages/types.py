@@ -776,6 +776,17 @@ class PlacedOutline:
     box: Box
 
 
+@value
+class PlacedExternalOutline:
+    """The dashed boundary of one run of an external item's symbols on one page."""
+
+    item: Id[Any]
+    lead: Id[Any]
+    drawing_set: int
+    page: int
+    box: Box
+
+
 # --- whole result --------------------------------------------------------------------
 
 
@@ -790,3 +801,4 @@ class Layout:
     markers: tuple[LinkMarker, ...]
     labels: tuple[PlacedLabel, ...]
     outlines: tuple[PlacedOutline, ...] = ()
+    external_outlines: tuple[PlacedExternalOutline, ...] = ()

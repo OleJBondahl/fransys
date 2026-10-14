@@ -23,7 +23,7 @@ from fransys_layout.geometry import (
     port_exit,
 )
 
-from .space import Cell, End, Obstacle, obstacle_index, step_admitted
+from .space import Cell, End, Obstacle, obstacle_index, run_of, runs_along, step_admitted
 
 if TYPE_CHECKING:
     from .cell_index import CellIndex
@@ -48,6 +48,8 @@ class Field:
     # Per foreign-net cell, the axes ("h", "v") its wires pass it along; a
     # step may enter such a cell only across a straight foreign wire, and not turn in it
     axes: dict[Cell, frozenset[str]] = dataclasses.field(default_factory=dict)
+    sides: tuple[Box, ...] = ()  # boxes no step runs along (`space.runs_along`); a step may cross
+    wires: tuple[Box, ...] = ()  # a step that touches either end cell may run along a wire
 
 
 def cells_of(points: tuple[Point, ...]) -> frozenset[Cell]:
@@ -79,8 +81,17 @@ class _Search:
         """`step_admitted`, asked once per step in this call (the obstacles do not change)."""
         key = (here, cell)
         if key not in self.admitted:
-            self.admitted[key] = step_admitted(here, cell, self.obstacles, self.ends)
+            self.admitted[key] = step_admitted(
+                here, cell, self.obstacles, self.ends
+            ) and not self._along(here, cell)
         return self.admitted[key]
+
+    def _along(self, here: Cell, cell: Cell) -> bool:
+        """Along a side or a wire; a step that touches either end cell may run along a wire."""
+        if self.field.sides and _along_a_side(here, cell, self.field.sides):
+            return True
+        wires = self.field.wires
+        return bool(wires) and not {here, cell} & self.ends and _along_a_side(here, cell, wires)
 
     def moves(self, state: _State, cost: int) -> Iterator[tuple[_State, int]]:
         """Each state a step from `state` reaches, with its cost; none that cannot beat `bound`."""
@@ -98,6 +109,12 @@ class _Search:
             if self.field.axes and not _crosses_cleanly((x, y), came, heading, cell, self.field):
                 continue
             yield (cell, heading), price
+
+
+def _along_a_side(here: Cell, cell: Cell, sides: tuple[Box, ...]) -> bool:
+    """Whether the step runs along a side of one of `sides` (`space.runs_along`)."""
+    run = run_of(Point(x=here[0], y=here[1]), Point(x=cell[0], y=cell[1]))
+    return any(runs_along(box, run) for box in sides)
 
 
 def grid_path(start: End, goal: End, field: Field) -> tuple[Point, ...] | None:

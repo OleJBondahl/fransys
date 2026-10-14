@@ -14,7 +14,7 @@ Can-fail (each check, by one mutation of `stages/outlines.py`, undone after):
 - a pin at its column's top no longer stands at the top end: `{all(m < t for m in mine for t in
   theirs)}` -> `{False}` (`test_a_pin_at_its_columns_top_between_two_top_end_mates_stands_in_...`).
 - the runs of one end stay one: `runs += [([one], True) for one in top_set]`.
-- another end's column cuts a run: `_column_runs(top_set, placed)` -> `_column_runs(top_set, ())`.
+- another end's column cuts a run: `member_runs(top_set, placed)` -> `member_runs(top_set, ())`.
 - the top-end bottom edge: `bottom = max(b.y + b.height for b in mating)` gets `+ margin`.
 - the top-end title below-left when free: `title = below if free else above` -> `title = above`.
 - ... else above-left: `free = not any(overlaps(below, other) for other in taken)` -> `free = True`.

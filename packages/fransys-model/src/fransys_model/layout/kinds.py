@@ -6,6 +6,7 @@ by them. Each pass removes only its own tuple's kinds (CT5, Q3).
 
 from .cable_results import CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire
 from .diagram_results import DiagramBox, DiagramLine, DiagramMarker, DiagramSheet
+from .external_results import ExternalOutline
 from .formats import Profile, SheetFormat
 from .harness_results import ConnectorBox, HarnessFanOut, HarnessLine, StubEnd
 from .hints import (
@@ -45,6 +46,7 @@ AUTHORED_KINDS: tuple[type, ...] = (
 DERIVED_KINDS: tuple[type, ...] = (
     ConnectorBox,
     DrawingSet,
+    ExternalOutline,
     HarnessFanOut,
     HarnessLine,
     Label,

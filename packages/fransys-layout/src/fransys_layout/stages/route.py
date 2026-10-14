@@ -299,7 +299,8 @@ def _space(
         + (room.blocks.soft if soft else ())
         + tuple(
             Shape(owner=_marker_owner(marker, owner_of), box=marker.box) for marker in room.markers
-        )
+        ),
+        sides=room.blocks.sides,
     )
 
 
@@ -379,6 +380,7 @@ def _search(
                 turn_penalty=page.profile.route_turn_penalty,
                 crossing_penalty=page.profile.route_crossing_penalty,
                 axes=axes,
+                sides=page.space.sides,
             ),
         )
         if points is not None:

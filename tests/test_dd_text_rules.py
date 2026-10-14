@@ -373,19 +373,19 @@ def test_a_top_level_tag_is_the_item_designation_only(build) -> None:
 
 
 def test_a_run_of_terminals_prints_its_strip_once_and_then_short_points() -> None:
-    """On each of the four pump-cabinet pages two terminals of one strip stand in one row:
+    """On each cabinet's own page two terminals of one strip stand in one row:
     the strip once (left of the run) and a point text each."""
     # UNDO: fransys_model/derive/drawing_text.py: `run_point_text` returns the full form
     model = _system_model()
     points = _labels(model, slot="tag.point")
     strips = _labels(model, slot="tag.strip")
-    assert len(points) == 8  # two terminals on each of four pump-cabinet pages
-    assert len(strips) == 4  # one strip tag per run
+    # two terminals on each cabinet's own page; the top-level box pages are gone (layout-0214)
+    assert len(points) == 4
+    assert len(strips) == 2  # one strip tag per run
     assert {label_text(model, lb) for lb in points} == {"1", "2"}
     assert all(label_text(model, lb) == _derived_strip(model, lb) for lb in strips)
-    # two on the top-level pages and two in the units' own sets: all the item designation only
-    # (layout-0066: no top-level exception)
-    assert [label_text(model, lb) for lb in strips] == ["-X2"] * 4
+    # in the units' own sets: the item designation only (layout-0066)
+    assert [label_text(model, lb) for lb in strips] == ["-X2"] * 2
 
 
 def test_a_three_phase_row_prints_the_strip_once_and_l1_l2_l3_points() -> None:

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.lookups import position_rank, unit_chain
 from fransys_model.derive.passes._plc_ambiguous import ambiguous_findings
+from fransys_model.derive.passes._plc_contested import contested_findings
 from fransys_model.derive.passes._plc_wired import (
     reaches_open_boundary,
     unit_of,
@@ -104,8 +105,9 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     Requests serve by `(priority, requesting Function.key, Function.id)`, channels by `(rack
     Item.key, module position, module Item.key, plc_channel.channel, Function.id)`. A request
     already carrying a `plc_binding` is skipped. Returns the model with one `plc_binding` per
-    request served and one finding per request left; a model with nothing to bind comes back as the
-    same object.
+    request served and one finding per request left (`PLC_CHANNEL_CONTESTED` once per channel wired
+    to two or more kind-matched requests, which bind nothing); a model with nothing to bind comes
+    back as the same object.
     """
     bindings = facets_of(model, PlcBindingFacet)
     bound_subjects = {binding.subject for binding in bindings.values()}
@@ -123,17 +125,20 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
         taken=existing,
         ranked={function.id: (place, signal) for place, (function, signal) in enumerate(ranked)},
     )
-    taken = existing | set(pick.bound.values())
+    taken = existing | set(pick.bound.values()) | set(pick.contested)
     channels = _channels(model, ranked)
     free = {
         key: deque(function for function in queue if function.id not in taken)
         for key, queue in channels.items()
     }
     served: list[PlcBindingFacet] = []
-    findings = ambiguous_findings(model, requests, pick.ambiguous)
+    findings = [
+        *ambiguous_findings(model, requests, pick.ambiguous),
+        *contested_findings(model, pick.contested),
+    ]
     origins: dict[Id[PlcBindingFacet], Origin] = {}
     for request in requests:
-        if request.subject in bound_subjects or request.subject in pick.ambiguous:
+        if request.subject in bound_subjects or request.subject in pick.unbound:
             continue
         function = all_functions[request.subject]
         channel = pick.bound.get(request.subject)

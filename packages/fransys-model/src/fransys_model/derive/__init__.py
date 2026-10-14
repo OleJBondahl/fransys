@@ -124,7 +124,7 @@ from .overview_lanes import (
     overview_strip_joins,
 )
 from .overview_levels import open_strips, overview_level, strip_view
-from .overview_location import location_fold
+from .overview_location import location_fold, location_place_title
 from .overview_marks import diff_marks
 from .overview_strip_stubs import strip_stubs
 from .overview_stub_ends import StubBox, StubLine, stub_ends
@@ -142,7 +142,7 @@ from .overview_text import (
     overview_stub_lines,
     overview_stub_text,
 )
-from .overview_tree import overview_tree
+from .overview_tree import overview_tree, unit_own_drawing, unit_system_designation
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
 from .page_destination import page_destination, sheet_text, sheet_title_text
@@ -512,6 +512,7 @@ __all__ = [
     "load_limits",
     "location_fold",
     "location_node_designation",
+    "location_place_title",
     "mates",
     "natural_key",
     "net_of",
@@ -612,10 +613,12 @@ __all__ = [
     "unit_items",
     "unit_location",
     "unit_matrix",
+    "unit_own_drawing",
     "unit_release",
     "unit_releases",
     "unit_strips",
     "unit_subtree",
+    "unit_system_designation",
     "units",
     "unused_terminals",
     "wire_rows",

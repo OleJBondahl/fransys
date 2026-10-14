@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.geometry import (
     WIRING_GRID,
     Box,
-    cut_runs,
     first_clear,
     hull,
     is_clear,
@@ -18,6 +17,7 @@ from fransys_layout.geometry import (
 )
 
 from .lookups import placed_keepout
+from .runs import column_stretches, member_runs, run_box
 from .slices import by_key, page_of
 from .tidy import TEXT_GAP
 from .types import Home, LabelKind, PlacedLabel, PlacedOutline
@@ -98,7 +98,7 @@ def _by_end(
     """One unit's black-box placements split into the top-end and bottom-end sets."""
     ends = _column_ends(members, faces, cells)
     resolved = {column: end for column, end in ends.items() if end is not None}
-    for stretch in _column_stretches(members, placed):
+    for stretch in column_stretches(members, placed):
         for at, column in enumerate(stretch):
             if ends[column] is None:
                 joined = _joined_ends(stretch, ends, at)
@@ -112,48 +112,7 @@ def _by_end(
     return top, bottom
 
 
-def _column_stretches(
-    members: Sequence[PlacedFunction], placed: tuple[PlacedFunction, ...]
-) -> list[list[AuthoringKey]]:
-    """The columns of `members` by x, cut where a column of none of them stands between two."""
-    own = {one.column for one in members}
-    x_of: dict[AuthoringKey, int] = {}
-    for one in members:
-        x_of[one.column] = min(x_of.get(one.column, one.at.x), one.at.x)
-    others = [one.at.x for one in placed if one.column not in own]
-    ordered = sorted(own, key=lambda key: (x_of[key], str(key)))
-    return cut_runs(ordered, lambda key: x_of[key], others)
-
-
-def _column_runs(
-    members: Sequence[PlacedFunction], placed: tuple[PlacedFunction, ...]
-) -> list[list[PlacedFunction]]:
-    """One end's placements of a unit, cut into runs so a frame never spans unrelated columns."""
-    runs = []
-    for stretch in _column_stretches(members, placed):
-        run = [one for column in stretch for one in members if one.column == column]
-        runs.extend(_cut_by_foreign(run, placed))
-    return runs
-
-
-def _cut_by_foreign(
-    run: Sequence[PlacedFunction], placed: tuple[PlacedFunction, ...]
-) -> list[list[PlacedFunction]]:
-    """OUTLINE-ENCLOSE: a non-member in a member's column between two members cuts the run."""
-    names = {m.function for m in run}
-    parts: dict[int, list[PlacedFunction]] = {}
-    for one in run:
-        ys = [m.at.y for m in run if m.column == one.column]
-        cuts = [
-            f.at.y
-            for f in placed
-            if f.column == one.column and f.function not in names and min(ys) < f.at.y < max(ys)
-        ]
-        parts.setdefault(sum(c < one.at.y for c in cuts), []).append(one)
-    return [parts[k] for k in sorted(parts)]
-
-
-def _marker_reach(marker: LinkMarker) -> Box:
+def marker_reach(marker: LinkMarker) -> Box:
     """A marker's box with its stub: the box joined to the port's anchor point."""
     return union(Box(x=marker.at.x, y=marker.at.y, width=0, height=0), marker.box)
 
@@ -170,20 +129,17 @@ def _frame(
     margin = WIRING_GRID // 2
     bodies = [translate(m.geometry.body, dx=m.at.x, dy=m.at.y) for m in members]
     mating = [b for m, b in zip(members, bodies, strict=True) if (m.function, m.column) in faces]
-    boxes = [*bodies, *texts]
     # Never left of the content box (layout-0187: inset), so neither frame nor title leaves it
-    whole = hull(boxes)
-    left = max(whole.x - margin, floor)
-    right = whole.x + whole.width + margin
+    whole = run_box(members, texts, padding=margin, floor=floor)
     top_end = top_end and bool(mating)
     if top_end:
         # the replicas stand above their plugs, their bodies' bottoms on the mating line
-        top = whole.y - margin
+        top = whole.y
         bottom = (line := hull(mating)).y + line.height
     else:
-        top = hull(mating).y if mating else whole.y - margin
-        bottom = whole.y + whole.height + margin
-    return Box(x=left, y=top, width=right - left, height=bottom - top), top_end
+        top = hull(mating).y if mating else whole.y
+        bottom = whole.y + whole.height
+    return Box(x=whole.x, y=top, width=whole.width, height=bottom - top), top_end
 
 
 def _exit_cells(placed: Sequence[PlacedFunction]) -> list[Box]:
@@ -243,8 +199,8 @@ def _run_groups(
     groups: dict[tuple[Handle, int], tuple[list[PlacedFunction], bool]] = {}
     for unit, members in _unit_members(placed, run, own_unit).items():
         top_set, bottom_set = _by_end(members, run.faces, run.cells, placed)
-        runs = [(r, False) for r in _column_runs(bottom_set, placed)]
-        runs += [(r, True) for r in _column_runs(top_set, placed)]
+        runs = [(r, False) for r in member_runs(bottom_set, placed)]
+        runs += [(r, True) for r in member_runs(top_set, placed)]
         groups.update({(unit, index): r for index, r in enumerate(runs)})
     return groups
 
@@ -262,15 +218,15 @@ def _run_frame(
     names |= {p.port for m in members for p in run.spec_of[m.function].ports}
     texts = [label.box for label in first if label.subject in names]
     # A member port's link marker, stub included, stands inside the frame
-    texts += [_marker_reach(marker) for marker in page_markers if marker.port in names]
+    texts += [marker_reach(marker) for marker in page_markers if marker.port in names]
     if run.boxes:  # layout-0155: a member pin's connector box stands inside too
         owners = {(m.drawing_set, m.page, run.spec_of[m.function].pin_function) for m in members}
         texts += [run.boxes[owner] for owner in owners if owner in run.boxes]
     return _frame(members, run.faces, texts, top_end=top_end, floor=run.inputs.inset)
 
 
-def _title_box(
-    box: Box, size: tuple[int, int], taken: Sequence[Box], *, drawn_top: bool, inset: int
+def title_box(
+    box: Box, size: tuple[int, int], taken: Sequence[Box], *, drawn_top: bool, inset: int = 0
 ) -> Box:
     """Where a unit's title goes: above or below its frame, whichever is free (layout-0104)."""
     margin = WIRING_GRID // 2
@@ -291,7 +247,7 @@ def _title_box(
     )
 
 
-def _page_taken(
+def page_taken(
     placed: tuple[PlacedFunction, ...],
     first: tuple[PlacedLabel, ...],
     page_markers: Sequence[LinkMarker],
@@ -300,7 +256,7 @@ def _page_taken(
     taken = [placed_keepout(one) for one in placed]
     taken += _exit_cells(placed)
     taken += [label.box for label in first]
-    taken += [_marker_reach(marker) for marker in page_markers]
+    taken += [marker_reach(marker) for marker in page_markers]
     return taken
 
 
@@ -313,7 +269,7 @@ def _page_outlines(
     """One page's outline titles and outlines, one pair per run of a unit's black box."""
     page_markers = run.markers.get((plan.drawing_set, plan.number), ())
     groups = _run_groups(placed, run, plan.unit)
-    taken = _page_taken(placed, first, page_markers)
+    taken = page_taken(placed, first, page_markers)
     titles: list[PlacedLabel] = []
     outlines: list[PlacedOutline] = []
     height = run.inputs.profile.text_height
@@ -323,7 +279,7 @@ def _page_outlines(
         box, drawn_top = _run_frame(members, first, page_markers, run, top_end=top_end)
         lead = min(members, key=lambda m: (m.at.x, m.at.y)).function
         size = (text_width(run.inputs.title(unit), height=height), height)
-        title = _title_box(box, size, taken, drawn_top=drawn_top, inset=run.inputs.inset)
+        title = title_box(box, size, taken, drawn_top=drawn_top, inset=run.inputs.inset)
         taken.append(title)
         titles.append(
             PlacedLabel(

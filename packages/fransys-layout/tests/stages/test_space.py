@@ -22,6 +22,7 @@ from fransys_layout.stages.space import (
     lane,
     obstacle_index,
     run_admitted,
+    runs_along,
     step_admitted,
     unowned,
 )
@@ -312,3 +313,20 @@ def _touches_for_a_step(far: int, monkeypatch: pytest.MonkeyPatch) -> int:
 def test_unowned_gives_each_box_a_shape_no_lane_is_exempt_from() -> None:
     boxes = [Box(x=0, y=0, width=2, height=2), Box(x=4, y=0, width=2, height=2)]
     assert unowned(boxes) == (Shape(owner=None, box=boxes[0]), Shape(owner=None, box=boxes[1]))
+
+
+@pytest.mark.parametrize(
+    ("run", "along"),
+    [
+        (Run(x=40, y=8, to_x=40, to_y=24), True),  # the right side, from above into it
+        (Run(x=16, y=32, to_x=24, to_y=32), True),  # the bottom side
+        (Run(x=40, y=0, to_x=40, to_y=16), False),  # meets the corner only
+        (Run(x=8, y=24, to_x=48, to_y=24), False),  # crosses both sides
+        (Run(x=48, y=16, to_x=48, to_y=32), False),  # beside the box, off its side
+    ],
+)
+def test_runs_along_is_a_side_shared_for_a_length_and_never_a_crossing(
+    run: Run, *, along: bool
+) -> None:
+    """BO6-SHRINK. UNDO: `runs_along`: `> max(run.y, box.y)` -> `>= max(run.y, box.y)`."""
+    assert runs_along(_BOX, run) is along

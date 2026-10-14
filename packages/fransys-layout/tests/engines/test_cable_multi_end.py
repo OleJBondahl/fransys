@@ -145,7 +145,7 @@ def test_fan_out_draws_with_bends_and_its_ends_one_pitch_apart():
     _check(_block(s.model, s.cable))
 
 
-def test_swap_in_a_unit_draws_one_jog_and_core_texts_follow_the_top_row():
+def test_swap_in_a_unit_core_texts_follow_the_top_row():
     """The 2:2 swap bends; each core text stands on its column, in the top
     row's order, with its core number. Probe: `_split` returning None (the cycle stays)."""
     s = _swap()
@@ -155,7 +155,8 @@ def test_swap_in_a_unit_draws_one_jog_and_core_texts_follow_the_top_row():
     cables = block_cables(s.frozen, s.cable, unit)
     texts = {c.conductor: core_text(c) for c in cables[0].cores}
     assert [len(e.pins) for e in ends] == [2, 2, 2, 2]
-    assert sorted(len(w.run_b) for w in wires) == [2, 2, 4, 6]  # one jog
+    # BO4: the motors' ends carry "(by others)" in the unit too, so the labels spread the ends
+    assert sorted(len(w.run_b) for w in wires) == [2, 4, 4, 4]
     by_x = sorted(wires, key=lambda w: w.text_x)
     assert [texts[w.conductor].split()[0] for w in by_x] == ["1", "2", "3", "4"]
     assert box.x <= by_x[0].text_x

@@ -1,0 +1,56 @@
+schema = 1
+
+# A chain module: a power pass-through (minus, plus) and a 4-pin comms IN and OUT connector pair.
+# It stands in a daisy chain, each module wired to the next (field case LONG-CHAIN).
+[part]
+mpn = "DEMO-MODULE-2P-COM4"
+manufacturer = "Demo"
+description = "Chain module with two power poles and 4-pin comms IN and OUT connectors"
+category = "generic"
+class_code = "U"
+
+[[function]]
+name = "pwr"
+kind = "load"
+ports = [
+    { name = "minus", role = "generic", marking = "-" },
+    { name = "plus", role = "generic", marking = "+" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_power_w = "1.2"
+
+[[function]]
+name = "IN"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+    { name = "3", role = "generic", symbol_port = "in" },
+    { name = "4", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-4p"
+pincount = 4
+gender = "male"
+marking = "IN"
+
+[[function]]
+name = "OUT"
+kind = "connector"
+symbol = "connector-fixed"
+ports = [
+    { name = "1", role = "generic", symbol_port = "in" },
+    { name = "2", role = "generic", symbol_port = "out" },
+    { name = "3", role = "generic", symbol_port = "in" },
+    { name = "4", role = "generic", symbol_port = "out" },
+]
+
+[function.connector]
+style = "header-4p"
+pincount = 4
+gender = "male"
+marking = "OUT"

@@ -127,15 +127,19 @@ def test_a_bank_wider_than_the_house_page_leaves_no_box_off_the_page() -> None:
     assert _off_page(None, 10) == 0
 
 
-@pytest.mark.parametrize("count", [9])  # measured 4 vs 5; N=8 is 4 vs 4 (bank-coil-under)
+@pytest.mark.parametrize("count", [8])  # measured 3 vs 2; N=9, 10 are 3 vs 3 (layout-0214)
 def test_a_larger_module_adds_pages(count: int) -> None:
     """The coarser module lowers capacity, so the same bank takes more pages."""
     assert _pages("3.0", count) > _pages(None, count)
 
 
 def test_a_bank_inside_one_function_still_reports_the_group_split() -> None:
-    """The cut gives no finding, but a function wider than a page is split and says so."""
-    codes = _codes("3.0", 8, one_group=True)
+    """The cut gives no finding, but a function wider than a page is split and says so.
+
+    Nine relays: since layout-0214 the feed strip's home copies stand at their coils only, so
+    eight now fit one page.
+    """
+    codes = _codes("3.0", 9, one_group=True)
     assert codes.count(_CODE) == 0
     assert codes.count("GROUP_SPLIT") == 1
 

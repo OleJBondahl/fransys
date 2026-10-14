@@ -4,7 +4,8 @@ group, builds ("the records put name one id twice, with different content" befor
 Unit `inner` (a child of unit `outer`) holds, all at location FIELD, a strip terminal `T` in group
 GA, a relay `Ka` in GA wired to `T`'s outer port (so the chain splits at the group change and `T`
 keeps a column of its own), and a relay `K1` in group GB wired to `T`'s inner port on a page of its
-own (`break_before`). `T` is a boundary of `inner`. `T` is drawn three times: at home, as a replica
+own (`break_before`). `T` is a boundary of `inner`; relay `K9` of `outer` is wired to it, so
+the black box keeps it (layout-0214). `T` is drawn three times: at home, as a replica
 beside `K1` (group GB) in the same drawing set, and as the black box in `outer`'s set.
 `replicate_boundaries` took the black box's group from the last column of `T` (the replica beside
 `K1`), not from its home, so it inherited GB and two placements in two drawing sets took one key.
@@ -57,6 +58,9 @@ def _build():
     wire(k1.fn("coil")["A1"], terminal.inner)
     inner.break_before(group_b)
     inner.boundary(terminal)
+    # layout-0214: the parent wires the terminal, so its black box keeps the cell
+    k9 = outer.item("DEMO-RLY-2CO-24", name="K9")
+    outer.wiring(colour="BU", gauge="0.5")(k9.fn("coil")["A1"], terminal.function["external"])
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 

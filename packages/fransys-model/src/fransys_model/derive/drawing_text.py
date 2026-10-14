@@ -69,7 +69,7 @@ from fransys_model.layout import (
     sheet_format_of,
 )
 from fransys_model.vocab.aspects import AspectNode
-from fransys_model.vocab.core import Function, Item, Port, Unit
+from fransys_model.vocab.core import Function, Item, Port, Unit, UnitRelease
 from fransys_model.vocab.enums import Aspect, FunctionKind
 from fransys_model.vocab.membership import unit_items
 from fransys_model.vocab.tables import aspect_nodes, conductors, functions, items, ports
@@ -814,6 +814,8 @@ def _tag_label_text(model: Model, label: Label) -> str:
         raise SchemaError(msg, kind="layout.label", record_id=label.id)
     if label.slot == "outline_title":  # A black box's title, from its item's unit
         return outline_title(model, _black_box_unit(model, label))
+    if label.slot == "external_note":  # An external item's note, the same text everywhere
+        return external_note()
     unit = _own_unit(model, label)
     if unit is not None:
         own = _unit_label_text(model, label, unit)  # the unit's own set
@@ -866,13 +868,25 @@ def external_note() -> str:
     return "by others"
 
 
+def _release_name(release: UnitRelease) -> str:
+    return release.title or release.name
+
+
+def release_title(release: UnitRelease) -> str:
+    """A release as a title block prints it: `"Pump rev 1.1"`.
+
+    The title (else the name) and the revision text: the one home of the text, called by
+    `outline_title` and by a finding naming a release.
+    """
+    return f"{_release_name(release)} rev {revision_text(release.version, release.revision)}"
+
+
 def unit_label(model: Model, unit: Id[Unit]) -> str:
     """What a drawing, a cover or a title block prints for a unit (decision model-0066).
 
     The unit's release title (`derive.unit_release`), else its name when the title is empty.
     """
-    release = unit_release(model, unit)
-    return release.title or release.name
+    return _release_name(unit_release(model, unit))
 
 
 def outline_title(model: Model, unit: Id[Unit] | None) -> str:
@@ -880,8 +894,7 @@ def outline_title(model: Model, unit: Id[Unit] | None) -> str:
     if unit is None:
         msg = "an outline title needs a unit"
         raise SchemaError(msg, kind="unit")
-    release = unit_release(model, unit)
-    return f"{unit_label(model, unit)} rev {revision_text(release.version, release.revision)}"
+    return release_title(unit_release(model, unit))
 
 
 def _in_image_order(entries: list[Entry]) -> list[str]:
@@ -1009,6 +1022,7 @@ __all__ = [
     "port_marking",
     "position_text",
     "product_location",
+    "release_title",
     "row_letter",
     "strip_tag_text",
     "stub_far_end",

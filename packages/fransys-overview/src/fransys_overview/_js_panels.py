@@ -71,7 +71,8 @@ const drawLegend = (view) => {
       if (state.hidden.has(key)) state.hidden.delete(key); else state.hidden.add(key);
       commit(false);
     }, { 'aria-pressed': String(!state.hidden.has(key)), class: state.hidden.has(key) ? 'off' : '' });
-    node.append(swatch, document.createTextNode(cls + ' (' + counts.get(cls) + ')'));
+    const text = state.split === 'location' ? (data.location_texts[cls] ?? cls) : cls;
+    node.append(swatch, document.createTextNode(text + ' (' + counts.get(cls) + ')'));
     return node;
   }));
 };
@@ -104,6 +105,7 @@ const facts = (item) => {
   if (item.location !== null) out.push('Location: ' + item.location);
   if (item.group !== null) out.push('Function group: ' + item.group);
   if (item.mpn !== null) out.push('Part: ' + item.mpn);
+  if (item.unit !== null) out.push(data.own_drawings[item.unit]);
   if (!item.installed) out.push('Not installed');
   return out;
 };
@@ -142,6 +144,17 @@ const drawFold = (fold) => {
   $('detail').append(list);
 };
 
+/* The boxes of the level by designation in reading order: DOM text that a search, Ctrl-F or a reader finds; a click selects the box. */
+const drawBoxList = (view) => {
+  const list = el('ul', '', { id: 'boxlist' });
+  list.append(...view.order.map((i) => {
+    const row = el('li');
+    row.append(button(view.boxes[i].lines[0], () => { state.sel = 'b' + i; commit(false); }));
+    return row;
+  }));
+  $('detail').append(list);
+};
+
 /* O18: the codes the selected box or line holds with a count each, worst severity first. */
 const drawFindings = (view, which, at) => {
   if (!(state.feat.findings && hasFindings)) return;
@@ -174,6 +187,7 @@ const drawDetail = (view) => {
   if (state.sel === null) {
     detail(view.boxes.length + ' boxes, ' + view.lines.length + ' lines',
       ['Click a box or a line to trace its connections. Double-click a box, or press Enter, to open it.']);
+    drawBoxList(view);
     return;
   }
   const at = Number(state.sel.slice(1));
@@ -186,7 +200,8 @@ const drawDetail = (view) => {
   }
   const box = view.boxes[at];
   const own = box.ref[0] === 'item' ? data.items[box.ref[1]] : null;
-  detail(box.lines[0], [...box.lines.slice(1), ...(own === null ? [] : facts(own)),
+  const drawing = box.ref[0] === 'unit' ? [data.own_drawings[box.ref[1]]] : [];
+  detail(box.title ?? box.lines[0], [...(box.title === undefined ? box.lines.slice(1) : []), ...drawing, ...(own === null ? [] : facts(own)),
     ...(own === null ? [] : signalsOf(box.ref[1]))], own === null ? null : box.ref[1]);
   drawHolds(box);
   drawFindings(view, 0, at);
@@ -255,18 +270,21 @@ const locate = (item) => {
   commit(true);
 };
 
+const unitHit = (i) => data.units[i] + (data.unit_systems[i] === null ? '' : ' (' + data.unit_systems[i] + ')');
 const hitsFor = (query) => {
   const q = query.trim().toLowerCase();
   if (q === '') return [];
-  const found = data.items.map((item, i) => [item.label.toLowerCase(), i]).filter(([text]) => text.includes(q));
+  const found = [...data.items.map((item, i) => [item.label.toLowerCase(), ['item', i]]),
+    ...data.units.map((_, i) => [unitHit(i).toLowerCase(), ['unit', i]])].filter(([text]) => text.includes(q));
   found.sort((a, b) => (a[0].startsWith(q) ? 0 : 1) - (b[0].startsWith(q) ? 0 : 1));
-  return found.slice(0, 10).map(([, i]) => i);
+  return found.slice(0, 10).map(([, ref]) => ref);
 };
+const openHit = ([kind, i]) => { if (kind === 'unit') { go(i, null); commit(true); } else locate(i); };
 const drawHits = () => {
   const hits = hitsFor($('search').value);
-  $('hits').replaceChildren(...hits.map((i, n) => {
-    const row = el('li', data.items[i].label, { role: 'option', 'aria-selected': String(n === 0) });
-    row.addEventListener('mousedown', (event) => { event.preventDefault(); locate(i); $('search').value = ''; drawHits(); });
+  $('hits').replaceChildren(...hits.map((ref, n) => {
+    const row = el('li', ref[0] === 'unit' ? unitHit(ref[1]) : data.items[ref[1]].label, { role: 'option', 'aria-selected': String(n === 0) });
+    row.addEventListener('mousedown', (event) => { event.preventDefault(); openHit(ref); $('search').value = ''; drawHits(); });
     return row;
   }));
   $('search').setAttribute('aria-expanded', String(hits.length > 0));

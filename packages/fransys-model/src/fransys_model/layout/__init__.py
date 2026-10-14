@@ -23,6 +23,7 @@ from .enums import (
     Side,
     StarKind,
 )
+from .external_results import ExternalOutline
 from .formats import (
     Profile,
     SheetFormat,
@@ -106,6 +107,7 @@ __all__ = [
     "DrawingSet",
     "EndBox",
     "EndStyle",
+    "ExternalOutline",
     "FanLeg",
     "GroupHint",
     "HarnessFanOut",

@@ -9,20 +9,18 @@ K3, each bound to the channel A1 that K1 also holds.
 
 The ruling (designer, 2026-10-14, for 0.18, PLC-CONTESTED): two or more kind-matched requests
 whose wired pick is the same channel get one PLC_CHANNEL_CONTESTED (ERROR) naming them all, bind
-nothing and do not go to the free queue (model-0211 amendment, to come). Strict xfail until then.
+nothing and do not go to the free queue (model-0211 amendment, PLC-CONTESTED).
 
 The second test is the true model of the legacy circuit: only one coil asks. It binds the wired
 channel with no finding.
 """
 
 import fransys as fr
-import pytest
 from fransys.colours import BK
 
 INFO_CODES = {"ITEM_WITHOUT_PART", "PORT_UNCONNECTED"}
 
 
-@pytest.mark.xfail(strict=True, reason="until PLC-CONTESTED (0.18)")
 def test_three_coil_requests_on_one_channel_are_contested() -> None:
     d = fr.design("demo_parts")
     rack = d.rack("U1")
@@ -31,10 +29,14 @@ def test_three_coil_requests_on_one_channel_are_contested() -> None:
         coil = d.device(f"K{n}", "DEMO-CO-4P-24")
         d.wire(coil.coil["A1"], di.di_1["1"], wire=(BK, 1.0))
         coil.coil.plc(fr.DI, f"K{n} coil")
+    d.device("K4", "DEMO-CO-4P-24").coil.plc(fr.DI, "K4 free")
     findings = [f for f in fr.check(fr.build(d)) if f.code not in INFO_CODES]
     assert [f.code for f in findings] == ["PLC_CHANNEL_CONTESTED"]
     assert findings[0].severity is fr.Severity.ERROR
     assert all(f"-K{n}" in findings[0].message for n in (1, 2, 3))
+    assert "-A1:1" in findings[0].message
+    rows = fr.derive.plc_channel_rows(fr.build(d).model)
+    assert {row.pin: row.signal_name for row in rows if row.signal_name} == {"-A1:2": "K4 free"}
 
 
 def test_one_request_among_three_coils_on_a_net_binds_the_wired_channel_without_a_finding() -> None:

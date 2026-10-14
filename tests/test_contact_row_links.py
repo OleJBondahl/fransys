@@ -165,7 +165,8 @@ _ELEMENT = re.compile(r"<text [^>]*>[^<]*</text>|<line [^>]*/>")
 # The sha256 of every page's `<text>` and `<line>` elements, taken before the rows moved into
 # derive (CR3): a shifted row, heading or rule changes it. A render change elsewhere moves it too.
 PINS = {
-    "canary": "0b0c54eee91295b8c1df8b8500a116dc869cf6d4f499a7009cf63e799a05eb31",
+    # Re-pinned for BO6 (outlines drawn by others): one added "by others" note on a schematic page.
+    "canary": "35ffed839389ba4a36fe4ec139693c198acf36803a423853bdc96d2bba19d965",
     "spare": "6e51043910e2acb84ffd4fa8714fb70bde83870de9a5aa36c3dd20bb1a5e348a",
 }
 

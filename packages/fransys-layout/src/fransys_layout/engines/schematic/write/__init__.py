@@ -7,6 +7,7 @@ from fransys_layout.engines.schematic.defaults import ENGINE_NAME, ENGINE_VERSIO
 # the builders `placements`, `routes` and `labels` are called through their modules: a module and
 # its builder share a name, and the package attribute must stay the module
 from fransys_layout.engines.schematic.write import harness, labels, placements, routes
+from fransys_layout.engines.schematic.write.external import external_outlines
 from fransys_layout.engines.schematic.write.markers import link_markers
 from fransys_layout.engines.schematic.write.power import power_symbols
 from fransys_layout.engines.schematic.write.sets import drawing_sets, pages
@@ -41,6 +42,7 @@ def write_layout(model: Model, results: StageResults, keys: WriteKeys) -> Model:
         *power_symbols(keys, results, page_of, discriminator, stamp),
         *labels.labels(keys, results, page_of, discriminator, stamp),
         *labels.outlines(keys, layout, page_of, discriminator, stamp),
+        *external_outlines(keys, layout, page_of, discriminator, stamp),
         *harness.connector_boxes(keys, results.boxes, page_of, sets, stamp),
         *harness.harness_lines(keys, results.lines.lines, page_of, sets, stamp),
         *harness.harness_fan_outs(keys, results.lines.fan_outs, page_of, sets, stamp),

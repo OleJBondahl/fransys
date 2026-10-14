@@ -50,6 +50,7 @@ class Grid:
     busy_penalty: int = 0  # what each such cell costs: a line crosses, but never runs along
     stub: tuple[int, int] = (0, 0)  # The size of a leaving line's stub box
     wires: tuple[Box, ...] = ()  # The page's routed wires, as spans: a stub's box never sits on one
+    sides: tuple[Box, ...] = ()  # BO6-SHRINK: the boxes a line never runs along (`Field.sides`)
 
 
 def root(ends: Sequence[LineEnd]) -> LineEnd:
@@ -94,7 +95,7 @@ def _path(
     """One orthogonal run of `grid_path`, over the keep-outs when they shut it in.
 
     A line always draws: its end may stand where a text blocks its first step (layout-0154).
-    A line not even the free region can draw is a layout error.
+    BO6-SHRINK: off the outlines' sides, else along them; never along a wire. Else a layout error.
     """
     field = Field(
         region=grid.region,
@@ -103,18 +104,27 @@ def _path(
         busy=grid.busy,
         turn_penalty=grid.turn_penalty,
         crossing_penalty=grid.busy_penalty,
+        sides=grid.sides,
+        wires=grid.wires,
     )
-    points = (
-        grid_path(start, goal, field)
-        or grid_path(
-            start, goal, replace(field, obstacles=_not_around(grid.obstacles, start, goal))
-        )
-        or grid_path(start, goal, replace(field, obstacles=()))
+    points = _over_keepouts(start, goal, field) or _over_keepouts(
+        start, goal, replace(field, sides=())
     )
     if points is None:
         msg = f"no orthogonal path for harness line branch {branch}"
         raise LayoutError(msg)
     return _unspiked(points)
+
+
+def _over_keepouts(start: End, goal: End, field: Field) -> tuple[Point, ...] | None:
+    """`grid_path` with the keep-outs, then without those an end stands in, then with none."""
+    return (
+        grid_path(start, goal, field)
+        or grid_path(
+            start, goal, replace(field, obstacles=_not_around(field.obstacles, start, goal))
+        )
+        or grid_path(start, goal, replace(field, obstacles=()))
+    )
 
 
 def _not_around(obstacles: tuple[Obstacle, ...], start: End, goal: End) -> tuple[Obstacle, ...]:

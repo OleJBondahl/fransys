@@ -7,6 +7,7 @@ finding reaches `stage_results`' findings with the profile as its subject. All d
 import dataclasses
 from decimal import Decimal
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -40,7 +41,7 @@ def _found(profile: Profile | None) -> list:
     if profile is not None:
         draft.extend((profile,), origin=_ORIGIN)
     model = freeze(draft)
-    _, findings = stage_results(model, read_inputs(model))
+    _, findings = stage_results(model, read_inputs(model, options=OPTIONS))
     return [finding for finding in findings if finding.code == TEXT_TOO_SMALL]
 
 

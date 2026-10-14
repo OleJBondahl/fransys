@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.stages import PolePair
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -109,7 +111,7 @@ def _specs(
         (library, part, *templates.values(), *pins.values(), *internal_links, *stamped),
         origin=_ORIGIN,
     )
-    return {spec.key[-1]: spec for spec in read_inputs(freeze(draft)).functions}
+    return {spec.key[-1]: spec for spec in read_inputs(freeze(draft), options=OPTIONS).functions}
 
 
 def test_a_change_over_is_one_pole_and_has_no_pole_pair() -> None:
@@ -174,7 +176,7 @@ def test_a_function_with_no_template_has_one_pole_and_no_pair() -> None:
     )
     draft = Draft()
     draft.extend((item, function, port), origin=_ORIGIN)
-    (spec,) = read_inputs(freeze(draft)).functions
+    (spec,) = read_inputs(freeze(draft), options=OPTIONS).functions
     assert spec.function == function.id
     assert spec.poles == 1
     assert spec.pole_pairs == ()

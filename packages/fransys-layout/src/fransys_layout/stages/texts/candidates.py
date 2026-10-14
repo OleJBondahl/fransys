@@ -8,24 +8,15 @@ candidate beside the owner's placed anchor, so `place` can rank before any posit
 `ranked_candidates` is the one ranking. `place` reserves its first candidate (Room) and
 `texts` walks the whole list; neither ranks on its own.
 
-The table is data in `conventions/texts.py`, one row per kind: the sides in
-try-order, and along each side its steps in try-order. Its defaults follow
-today's anchoring: a tag, a marking and a cross-reference on their slot's own side first,
-then its mirror across the body
-(owner-relative), a reference or a stub at its stub. Along a side the nearest step comes
-first, down (or right) before up (or left). A row's steps are the whole bound of its moves:
-the placer adds only the content box, never the owner's keep-out. No
-kind stands above or below its function by default, since no slot label does today; a row is
-a data change there.
-The owner judges the defaults, and every change is a change to that
-file. `PRIORITY` is the kind's part of the placer's key.
+The table is the caller's (`LayoutOptions.texts`, seam 1): one `TextPlacement` per kind, the
+sides in try-order and along each side its steps in try-order, plus the kind's priority, its
+part of the placer's key. Along a side the nearest step comes first, down (or right) before up
+(or left). A row's steps are the whole bound of its moves: the placer adds only the content
+box, never the owner's keep-out.
 """
 
 from enum import Enum
-from typing import Any
 
-from fransys_layout.conventions import FACTS, fact, keyed, validate
-from fransys_layout.conventions.texts import TABLE
 from fransys_layout.geometry import OPPOSITE, WIRING_GRID, Box, Facing, LayoutError, Point
 from fransys_model.kernel import register_enum, value
 
@@ -63,40 +54,24 @@ class Side:
     mirror: bool = False
 
 
-# One row per kind: its sides in try-order.
-type CandidateTable = frozendict[TextKind, tuple[Side, ...]]
+@value
+class TextPlacement:
+    """Where one kind of text may stand, and when it is placed."""
+
+    priority: int  # a lower number is placed first
+    sides: tuple[Side, ...]
 
 
-@fact("text_kind", kind="drawing", values=tuple(k.value for k in TextKind))
-def _text_kind(text: TextKind) -> str:
-    """The kind of a text, for the table."""
-    return text.value
-
-
-validate(TABLE, FACTS)
-_ROWS: dict[str, Any] = keyed(TABLE, "text_kind")  # row: (priority, ((facing, steps, mirror), ...))
-
-
-def _side(one: tuple[str | None, tuple[int, ...], bool]) -> Side:
-    facing, steps, mirror = one
-    return Side(facing=None if facing is None else Facing(facing), steps=steps, mirror=mirror)
-
-
-DEFAULT_TABLE: CandidateTable = frozendict(
-    {kind: tuple(_side(one) for one in _ROWS[kind.value][1]) for kind in TextKind}
-)
-
-# A reference and a stub first, a tag and a marking next, then a contact image. A lower
-# number is placed first.
-PRIORITY: frozendict[TextKind, int] = frozendict({kind: _ROWS[kind.value][0] for kind in TextKind})
+# One row per kind, keyed by the kind's value.
+type TextTable = frozendict[str, TextPlacement]
 
 
 def ranked_candidates(
-    kind: TextKind, owner_facing: Facing | None, size: tuple[int, int], table: CandidateTable
+    kind: TextKind, owner_facing: Facing | None, size: tuple[int, int], table: TextTable
 ) -> tuple[Candidate, ...]:
     """The text's candidates, best first, from `table`'s row for `kind`."""
     found = []
-    for side in table[kind]:
+    for side in table[kind.value].sides:
         facing = owner_facing if side.facing is None else side.facing
         if facing is None:
             msg = f"a {kind.value} text stands at its owner's facing, and its owner has none"

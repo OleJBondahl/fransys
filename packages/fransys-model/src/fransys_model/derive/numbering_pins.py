@@ -23,6 +23,7 @@ from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import designating_ancestors, own_designation_or_none
+from .finding_names import name_findings, name_of
 from .instance_tag import unit_tag
 from .lookups import terminal_items
 from .rows import NumberingItem, NumberingPins, NumberingRetired
@@ -217,6 +218,8 @@ __all__ = [
     "dumps",
     "item_position",
     "loads",
+    "name_findings",
+    "name_of",
     "pins",
     "unit_position",
     "unit_relative_key",

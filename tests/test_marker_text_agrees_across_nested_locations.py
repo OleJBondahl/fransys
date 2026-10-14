@@ -13,6 +13,8 @@ ends always carry one number"), not a `#` reference. The stub's box is sized to 
 (`height` for a vertical N/S box, else `width`) holds the printed text.
 """
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines import lay_out_schematic
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import text_width
@@ -137,7 +139,7 @@ def test_marker_text_fits_its_box_across_two_unrelated_locations() -> None:
         ),
         origin=_ORIGIN,
     )
-    written, _findings = lay_out_schematic(freeze(draft))
+    written, _findings = lay_out_schematic(freeze(draft), OPTIONS)
 
     markers = layout_of(written, LinkMarker)
     assert len(markers) == _EXPECTED_MARKER_COUNT

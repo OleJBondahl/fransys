@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from samples import PROFILE, drawn, hid, placed
 
@@ -59,7 +60,7 @@ def test_the_engine_packs_every_page_on_the_labels_and_markers_it_draws() -> Non
 
     with patch.object(pagerun, "placed_widths", spy):
         model = freeze(build_cabinet(second_location=True, side_terminals=True))
-        stage_results(model, read_inputs(model))
+        stage_results(model, read_inputs(model, options=OPTIONS))
 
     assert seen
     assert all(extras for extras in seen)

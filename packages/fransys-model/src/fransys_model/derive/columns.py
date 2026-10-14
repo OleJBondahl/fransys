@@ -15,7 +15,7 @@ TERMINAL_COLUMNS = (
 # (owner ruling 2026-09-24): headed by these labels, not by the field name. The CSV's header is
 # the same label lower-cased with `_` for the space (`side_a`, `side_b`).
 TERMINAL_LABELS = {"internal_ends": "Side A", "external_ends": "Side B"}
-PLC_COLUMNS = ("channel_designation", "signal", "wired_to", "signal_name")
+PLC_COLUMNS = ("pin", "channel_name", "signal", "signal_name", "wired_to")
 BOM_COLUMNS = ("mpn", "revision", "manufacturer", "description", "count", "designations")
 WIRE_COLUMNS = ("from_", "to", "colour", "cross_section_mm2", "label")
 WIRE_LABELS = {"from_": "from"}  # the CSV header of the one column whose field name is a keyword

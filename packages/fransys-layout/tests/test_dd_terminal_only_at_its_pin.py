@@ -11,6 +11,7 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -35,7 +36,7 @@ def _placed() -> dict[str, list[tuple[int, int, int]]]:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     name = {i.id: fr.derive.printed_designation(model, i.id) for i in items(model).values()}
     placed: dict[str, list[tuple[int, int, int]]] = {}
     for p in results.layout.placed:

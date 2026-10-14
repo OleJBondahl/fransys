@@ -40,5 +40,6 @@ def sheet_text(model: Model, sheet: Page | DiagramSheet) -> str:
 
 
 def sheet_title_text(model: Model, sheet: Page | DiagramSheet, title: str) -> str:
-    """`Sheet 3: Pump 1`: a sheet's number and title as an outline entry prints them."""
-    return f"Sheet {sheet_text(model, sheet)}: {title}"
+    """`Sheet 3: Pump 1`: a sheet's outline entry text; with no title, `Sheet 3`."""
+    number = f"Sheet {sheet_text(model, sheet)}"
+    return f"{number}: {title}" if title else number

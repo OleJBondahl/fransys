@@ -28,6 +28,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -71,7 +72,7 @@ def _staged(*, split: bool = False, sixteen: bool = False) -> tuple:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, findings = stage_results(model, read_inputs(model))
+    results, findings = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, results.layout, findings
 
 
@@ -204,7 +205,7 @@ def test_a_contact_hangs_straight_down_and_its_column_ends_in_a_downward_supply_
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model
-    layout = stage_results(model, read_inputs(model))[0].layout
+    layout = stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
     (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
     (contact,) = _placed(model, layout, "K2", "aux")
     line = _pin_x(box, "di_1.1")
@@ -246,7 +247,10 @@ def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_chann
     model, layout, _ = _staged(sixteen=True)
     (box,) = (p for p in layout.placed if p.function in {i.id for i in items(model).values()})
     keepout = box.geometry.keepout
-    assert box.at.x + keepout.x + keepout.width <= read_inputs(model).sheet.content_width
+    assert (
+        box.at.x + keepout.x + keepout.width
+        <= read_inputs(model, options=OPTIONS).sheet.content_width
+    )
     for number in range(1, 17):
         (contact,) = _placed(model, layout, f"K{number + 1}", "aux")
         assert (contact.drawing_set, contact.page) == (box.drawing_set, box.page), number

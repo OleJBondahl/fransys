@@ -81,5 +81,6 @@ def test_the_same_assembly_inside_a_parent_that_leaves_x1_open_still_errors() ->
     d.add(_ship, "S1", place=None)
     errors = _errors(fr.build(d))
     assert any(
-        code == "BOUNDARY_UNCONNECTED" and "of unit S1/A1/U1/unit" in msg for code, msg in errors
+        code == "BOUNDARY_UNCONNECTED" and "of " in msg and "S1/A1" not in msg
+        for code, msg in errors
     )

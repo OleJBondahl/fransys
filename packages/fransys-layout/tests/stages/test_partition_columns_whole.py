@@ -10,6 +10,7 @@ import dataclasses
 from decimal import Decimal
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from samples import NO_HINTS, PROFILE, SHEET, column, hid
 
@@ -101,4 +102,4 @@ def _cabinet_on(width_mm: int):
     )
     draft.extend((sheet, profile), origin=_ORIGIN)
     model = freeze(draft)
-    return stage_results(model, read_inputs(model))[0]
+    return stage_results(model, read_inputs(model, options=OPTIONS))[0]

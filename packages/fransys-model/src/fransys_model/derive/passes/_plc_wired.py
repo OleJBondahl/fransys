@@ -6,6 +6,7 @@ unservable request is really open at the boundary of a standalone unit.
 """
 
 import dataclasses
+from collections import Counter
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.lookups import unit_chain
@@ -70,19 +71,25 @@ class _Wiring:
     neighbours: Mapping[Id[Function], frozenset[Id[Function]]]
 
     def eligible(
-        self, subject: Id[Function], claimed: Collection[Id[Function]]
+        self, request: PlcRequestFacet, claimed: Collection[Id[Function]]
     ) -> list[Id[Function]]:
-        """W1: the free channels on `subject`'s net whose own net holds no other request."""
+        """W1 (model-0211, amended): W1a keeps channels whose net holds no other request.
+
+        With none, W1b keeps the channels whose net holds the subject, whatever else it carries.
+        """
+        subject = request.subject
         own = self.by_function.get(subject, ())
         reached = wired_functions(self.model, own, self.channel_owner) - {subject}
-        return [
+        free = [channel for channel in reached if channel not in claimed]
+        alone = [
             channel
-            for channel in reached
-            if channel not in claimed
-            and wired_functions(self.model, self.by_function.get(channel, ()), self.request_owner)
-            - {channel}
-            == {subject}
+            for channel in free
+            if not wired_functions(
+                self.model, self.by_function.get(channel, ()), self.request_owner
+            )
+            - {channel, subject}
         ]
+        return alone or free
 
     def left(
         self, request: PlcRequestFacet, claimed: Collection[Id[Function]]
@@ -90,8 +97,25 @@ class _Wiring:
         """The channels left for `request` after W1 to W3, in serving order."""
         signal_of = {channel: signal for channel, (_, signal) in self.ranked.items()}
         adjacent = self.neighbours.get(request.subject, ())
-        found = narrow(request, self.eligible(request.subject, claimed), signal_of, adjacent)
+        found = narrow(request, self.eligible(request, claimed), signal_of, adjacent)
         return sorted(found, key=lambda channel: self.ranked[channel][0])
+
+
+def uncontested(
+    picked: Mapping[Id[Function], Id[Function]],
+    ranked: Mapping[Id[Function], tuple[int, SignalType]],
+    requests: Sequence[PlcRequestFacet],
+) -> dict[Id[Function], Id[Function]]:
+    """W5 (model-0211, amended): the picks whose channel no other request picked.
+
+    A pick of the wrong kind (W2 found none) yields to a kind-matched pick of that channel.
+    """
+    kind = {request.subject: request.signal for request in requests}
+    matched = {s for s, c in picked.items() if ranked[c][1] is kind[s]}
+    held = {picked[subject] for subject in matched}
+    pool = {s: c for s, c in picked.items() if s in matched or c not in held}
+    counts = Counter(pool.values())
+    return {subject: channel for subject, channel in pool.items() if counts[channel] == 1}
 
 
 def wired_requests(
@@ -105,7 +129,9 @@ def wired_requests(
     """Which requests bind by wiring (model-0211): W1 candidates, `narrow` (W2, W3), then W4.
 
     `ranked` maps every channel function to its serving place and signal. One left binds; more
-    than one is ambiguous and binds nothing. A channel two requests share binds nobody by wiring.
+    than one is ambiguous and binds nothing. W5: a channel picked by two kind-matched requests,
+    or by two wrong-kind requests, binds neither. A wrong-kind pick yields to a kind-matched pick
+    of the same channel.
     """
     by_function = ports_by_function(model)
     owners = {request.subject for request in requests}
@@ -117,17 +143,17 @@ def wired_requests(
         ranked,
         direct_neighbours(model),
     )
-    claimed = set(taken)
+    picked: dict[Id[Function], Id[Function]] = {}
     pick = WiredPick({}, {})
     for request in requests:
         if request.subject in skip:
             continue
-        left = wiring.left(request, claimed)
+        left = wiring.left(request, set(taken))
         if len(left) > 1:
             pick.ambiguous[request.subject] = tuple(left)
         elif left:
-            pick.bound[request.subject] = left[0]
-            claimed.add(left[0])
+            picked[request.subject] = left[0]
+    pick.bound.update(uncontested(picked, ranked, requests))
     return pick
 
 

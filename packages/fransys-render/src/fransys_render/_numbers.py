@@ -1,8 +1,7 @@
-"""Pure `Decimal` number formatting and grid-to-mm conversion: no `float` anywhere."""
+"""Pure `Decimal` number formatting: no `float` anywhere."""
 
 from decimal import Decimal
 
-from electrical_symbols import G_PER_MODULE
 from fransys_model.derive.print_sizes import font_size_mm
 
 
@@ -15,11 +14,6 @@ def format_decimal(value: Decimal) -> str:
     if normalized == 0:
         return "0"
     return f"{normalized:f}"
-
-
-def grid_to_mm(origin_mm: int, g: int | Decimal, module_mm: Decimal) -> Decimal:
-    """One grid coordinate `g` (0.125 M each) converted to an absolute mm position."""
-    return Decimal(origin_mm) + Decimal(g) * module_mm / G_PER_MODULE
 
 
 def printed_font_mm(text_height_mm: Decimal) -> Decimal:

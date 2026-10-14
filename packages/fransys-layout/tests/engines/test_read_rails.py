@@ -7,6 +7,7 @@ an AC strip are kept as before.
 
 import fransys as fr
 import fransys_author
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint.codes import CONNECTION_TO_UNDRAWN
@@ -37,7 +38,7 @@ def _read(*, current: str, rails: dict, bridged: bool, strip: bool = True, pin_p
         if bridged:
             d.link(terminals[0].inner, terminals[1].inner, kind="rail")
         d.net(potential, *(t.outer for t in terminals), cls="power", potential=potential)
-    return read_inputs(fr.build(parts, d.draft()).model)
+    return read_inputs(fr.build(parts, d.draft()).model, options=OPTIONS)
 
 
 def _codes(inputs) -> set[str]:

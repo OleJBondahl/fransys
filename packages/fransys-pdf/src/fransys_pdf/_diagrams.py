@@ -2,15 +2,23 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import diagram_sheets, document_unit, sheet_counter_text
+from fransys_model.derive import (
+    diagram_sheets,
+    document_unit,
+    page_destination,
+    sheet_counter_text,
+    sheet_text,
+)
 from fransys_model.derive.block_diagram import diagram_lines
+from fransys_model.derive.page_nav import outline_sheets
 from fransys_model.kernel import render_id
 from fransys_model.layout import sheet_for
 from fransys_model.vocab import DocumentPreset, PageKind
 
-from ._drawings import destination_mark
 from ._frame import TitleBlockFields, background
 from ._geometry import document_facts, project_notice, subject_label
+from ._labels import sheet_label
+from ._marks import sheet_mark
 from ._sizes import sizes_of
 from ._typst import literal
 
@@ -27,6 +35,7 @@ def diagram_source(model: Model, record: Document, svgs: Mapping[str, str]) -> s
     sheet = sheet_for(model, PageKind.BLOCK_DIAGRAM)
     size = f"width: {sheet.width_mm}mm, height: {sheet.height_mm}mm"
     pages = []
+    outline = {entry.destination: entry for entry in outline_sheets(model, found)}
     for diagram in found:
         if (svg := svgs.get(render_id(diagram.id))) is None:
             continue
@@ -38,10 +47,13 @@ def diagram_source(model: Model, record: Document, svgs: Mapping[str, str]) -> s
             notice=project_notice(model),
             logo=record.logo,
         )
+        mark = sheet_mark(outline[page_destination(model, diagram)])
         image = f'#image(bytes({literal(svg)}), format: "svg")'
-        mark = destination_mark(model, diagram)
         back = background(sheet, fields, sizes_of(model, record))
-        pages.append(f"#page({size}, margin: 0mm, background: {back})[{mark}{image}]")
+        numbering, start = sheet_label(sheet_text(model, diagram))
+        pages.append(
+            f"#page({size}, margin: 0mm, background: {back}{numbering})[{start}{mark}{image}]"
+        )
     return "\n#pagebreak()\n".join(pages)
 
 

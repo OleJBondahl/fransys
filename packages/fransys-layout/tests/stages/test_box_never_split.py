@@ -1,6 +1,7 @@
 """V5, layout-0103: an item box is drawn on one page, inside its content width, on every fixture."""
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from narrow_cabinet import narrow_model
 
@@ -19,7 +20,7 @@ _MODELS = {
 @pytest.mark.parametrize("name", sorted(_MODELS))
 def test_no_item_box_spans_two_pages_on_a_cabinet_fixture(name: str) -> None:
     model = _MODELS[name]()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, _ = stage_results(model, inputs)
     boxes = [p for p in results.layout.placed if p.geometry.key == GENERIC_BOX_KEY]
     assert boxes, "no box on this fixture: the check would pass over nothing"

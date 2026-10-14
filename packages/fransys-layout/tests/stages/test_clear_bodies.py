@@ -6,10 +6,12 @@ y 24..56. The first place is a box above that body, its stub up through the body
 a box to the east, its stub along y 88.
 """
 
+from fransys_el import TEXTS
 from samples import hid, placed
 
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import LinkMarker, MarkerSide
+from fransys_layout.stages.space import Space
 from fransys_layout.stages.texts.candidates import TextKind
 from fransys_layout.stages.texts.clear_bodies import place_clear_of_bodies
 from fransys_layout.stages.texts.marker_row import stub_boxes
@@ -50,6 +52,7 @@ def test_a_place_whose_stub_runs_through_a_foreign_symbol_is_not_taken() -> None
         own=(_OWN.function,),
         places=tuple(place for _, place in row),
     )
-    done, findings = place_clear_of_bodies((text,), {0: row}, (_OWN, _ABOVE), (), _CONTENT)
+    ground = Space(shapes=(), content=_CONTENT)
+    done, findings = place_clear_of_bodies((text,), {0: row}, (_OWN, _ABOVE), ground, TEXTS)
     assert findings == ()
     assert [one.index for one in done] == [1]

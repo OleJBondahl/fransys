@@ -9,6 +9,7 @@ own text; its box holds every line.
 
 from collections import Counter
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from samples import connection, hid
 
@@ -28,7 +29,7 @@ def test_a_reference_and_an_off_stub_on_one_port_are_one_marker_reference_list_f
     #     draws the stub as a second marker on the port; the one-record count fails
     # UNDO: stages/off_markers.py:_with_off, `width = max(box.width, ...)` -> `width = box.width`
     #     leaves the box narrower than the stub line; the width check fails
-    model, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)))
+    model, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)
     markers = layout_of(model, LinkMarker)
     assert set(Counter((m.port, m.page) for m in markers.values()).values()) == {1}
     (merged,) = (

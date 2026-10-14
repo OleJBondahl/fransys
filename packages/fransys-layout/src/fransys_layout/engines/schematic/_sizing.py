@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.stages._image_foot import marker_feet, with_marker_push
+from fransys_layout.stages.box_leave import narrowed
 from fransys_layout.stages.box_reach import sized_columns
 from fransys_layout.stages.images import image_reserves, with_flipped_below
 from fransys_layout.stages.references import Wiring, side_reference_rooms
@@ -10,6 +11,7 @@ from fransys_layout.stages.tags import row_labels
 from fransys_layout.stages.wide_columns import with_parts
 
 from .read.contact_marks import image_inputs
+from .read.harness_lines import box_specs
 
 if TYPE_CHECKING:
     from fransys_layout.stages import Column, ColumnWidth, DrawnFunction
@@ -29,6 +31,9 @@ def sized(
     own_set: tuple[LabelRequest, ...],
 ) -> tuple[tuple[DrawnFunction, ...], tuple[ColumnWidth, ...], ImageInputs, dict[Any, Any]]:
     """The sized `drawn` functions and column widths, and each contact image's reserve."""
+    drawn = narrowed(
+        drawn, box_specs(model, inputs.functions), inputs.profile.text_height
+    )  # layout-0206
     # Columns are sized with the keep-outs grown by the measured labels (`own_set`)
     # and by Room's first call for a reference beside an E or W port
     sides = side_reference_rooms(

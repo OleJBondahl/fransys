@@ -4,6 +4,7 @@ from plant import Plant
 
 from fransys_model.kernel import make_id
 from fransys_model.vocab.facets.terminal import TerminalFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.validators import check_strip_without_tag
 
 
@@ -27,5 +28,6 @@ def test_a_strip_whose_terminals_disagree_names_the_codes() -> None:
     plant = Plant()
     _strip(plant, "mixed", "X", "Y")
     (finding,) = check_strip_without_tag(plant.model())
-    assert "mixed" in finding.message
+    assert ref(finding.subjects[0]) in finding.message
+    assert "mixed" not in finding.message
     assert "(X, Y)" in finding.message

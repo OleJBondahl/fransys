@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.plc_wiring import owner_of_port, ports_by_function, wired_functions
 from fransys_model.vocab.tables import facets_of, functions
 from fransys_model.vocab.validators._natural_join import natural_join
@@ -53,8 +54,8 @@ def check_plc(model: Model) -> tuple[Finding, ...]:
                 severity=Severity.ERROR,
                 subjects=(binding.id, binding.subject, binding.channel),
                 message=(
-                    f"{'/'.join(asked.key)} asks for {request.signal.value} "
-                    f"but its channel {'/'.join(target.key)} {offered}: rewire it to a "
+                    f"{ref(asked)} asks for {request.signal.value} "
+                    f"but its channel {ref(target)} {offered}: rewire it to a "
                     f"{request.signal.value} channel, or ask for {other}"
                 ),
             )
@@ -75,7 +76,6 @@ def check_plc_wiring(model: Model) -> tuple[Finding, ...]:
     by_function = ports_by_function(model)
     wiring = _Wiring(
         model=model,
-        all_functions=all_functions,
         by_function=by_function,
         device_of=owner_of_port(by_function, request_functions),
         channel_of=owner_of_port(by_function, channel_functions),
@@ -94,7 +94,6 @@ class _Wiring:
     """The lookups `check_plc_wiring` reads: functions, ports by function, port owners."""
 
     model: Model
-    all_functions: Mapping[Id[Function], Function]
     by_function: Mapping[Id[Function], list[Id[Port]]]
     device_of: Mapping[Id[Port], Id[Function]]
     channel_of: Mapping[Id[Port], Id[Function]]
@@ -111,8 +110,8 @@ def _binding_findings(wiring: _Wiring, binding: PlcBindingFacet) -> list[Finding
         found.append(
             _mismatch(
                 subjects,
-                f"{_key(wiring, request)} is wired to channel {_keys(wiring, request_side)} "
-                f"but bound to channel {_key(wiring, channel)}",
+                f"{ref(request)} is wired to channel {_refs(request_side)} "
+                f"but bound to channel {ref(channel)}",
             )
         )
     on_channel = wiring.by_function.get(channel, ())
@@ -121,21 +120,16 @@ def _binding_findings(wiring: _Wiring, binding: PlcBindingFacet) -> list[Finding
         found.append(
             _mismatch(
                 subjects,
-                f"channel {_key(wiring, channel)} is wired to {_keys(wiring, channel_side)} "
-                f"but bound to request {_key(wiring, request)}",
+                f"channel {ref(channel)} is wired to {_refs(channel_side)} "
+                f"but bound to request {ref(request)}",
             )
         )
     return found
 
 
-def _key(wiring: _Wiring, function: Id[Function]) -> str:
-    """The function's key joined with `/`, the name a message prints."""
-    return "/".join(wiring.all_functions[function].key)
-
-
-def _keys(wiring: _Wiring, wired: Collection[Id[Function]]) -> str:
-    """The keys of several functions, sorted and joined with `, `."""
-    return natural_join(_key(wiring, function) for function in wired)
+def _refs(wired: Collection[Id[Function]]) -> str:
+    """The references to several functions, sorted and joined with `, `."""
+    return natural_join(ref(function) for function in wired)
 
 
 def _mismatch(subjects: tuple[Id[Any], ...], message: str) -> Finding:

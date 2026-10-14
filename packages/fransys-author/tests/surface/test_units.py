@@ -8,6 +8,7 @@ from fransys_author import AuthorError
 from fransys_author import surface as surface_module
 from fransys_author.surface import Design, Device, design, unit
 
+from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import freeze, merge
 from fransys_model.vocab import Boundary, Mate, Revision, Unit, UnitRelease, UnusedBoundary
 from fransys_model.vocab import Item as ModelItem
@@ -107,7 +108,8 @@ def test_unit_is_on_the_surface_and_off_the_package_root() -> None:
 
 def _unconnected(d):
     model = freeze(merge(pair_library(), d.draft()))
-    return [f for f in check_units(model) if f.code == BOUNDARY_UNCONNECTED]
+    found = name_findings(model, check_units(model))
+    return [f for f in found if f.code == BOUNDARY_UNCONNECTED]
 
 
 def _cabinet(*, mate: bool, unused: bool = False):

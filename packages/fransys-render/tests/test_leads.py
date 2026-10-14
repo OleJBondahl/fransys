@@ -24,6 +24,7 @@ from fransys_model.layout import (
     Route,
     RoutePoint,
     SheetFormat,
+    Side,
     SymbolPlacement,
     layout_of,
 )
@@ -192,6 +193,7 @@ def _marker(key_part, *, page, port, at, partner_key_part, width=13, height=8): 
         width=width,
         height=height,
         produced_by="test",
+        facing=Side.E,
     )
 
 

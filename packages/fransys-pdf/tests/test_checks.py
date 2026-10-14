@@ -335,10 +335,10 @@ def test_no_empty_list_finding_for_plc_list_when_it_has_rows():
         remove=(K.SCHEMATIC, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     module = item("mod1", description="PLC module")
-    module_part, template, fn, facet = plc_channel(
+    module_part, template, fn, facet, channel_pin = plc_channel(
         "ch1", module=module.id, name="ch1", signal=SignalType.DI, channel=1
     )
-    m = model(c1, doc, module, module_part, template, fn, facet)
+    m = model(c1, doc, module, module_part, template, fn, facet, channel_pin)
     findings = [
         f for f in check(m, {}) if f.code == "DOCUMENT_EMPTY_LIST" and "PLC_LIST" in f.message
     ]

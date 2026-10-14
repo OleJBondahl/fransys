@@ -25,7 +25,7 @@ def end_spots(
     where: Mapping[Id[Any], Mapping[Page, PlacedFunction]],
     top: frozenset[Id[Any]],
 ) -> Spots:
-    """The corner `end` is drawn at, by page: its plug's box, a top sheet's mate box, or a pin.
+    """The corner `end` is drawn at, by page: a plug's box, a top mate box, a pin or its box.
 
     Derive's `_line_stub_far` reads the same ends from the records; the lowest page wins there.
     """
@@ -40,9 +40,13 @@ def end_spots(
             }
         return at_box
     found: Spots = {}
-    for function in {ports(model)[port].function for port in end.ports}:
+    functions = {ports(model)[port].function for port in end.ports}
+    for function in functions:
         for page, one in where.get(function, {}).items():
             found[page] = min(found.get(page, (one.at.x, one.at.y)), (one.at.x, one.at.y))
+    for function in functions:  # layout-0206: a boxed connector whose pin views are not drawn
+        for page, box in boxes.get(function, {}).items():
+            found.setdefault(page, (box.box.x, box.box.y))
     return found
 
 

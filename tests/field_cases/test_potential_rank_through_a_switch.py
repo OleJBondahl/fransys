@@ -15,6 +15,7 @@ so it draws no 24 V bar.
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_model.derive import net_of, port_potential_rank, port_power_kind
@@ -60,7 +61,7 @@ def test_a_pin_behind_a_switch_ranks_as_its_rail(tmp_path) -> None:
     assert port_potential_rank(model, ahead) is not None
     assert port_potential_rank(model, behind) == port_potential_rank(model, ahead)
     assert port_potential_rank(model, lamp_pin) == port_potential_rank(model, ahead)
-    assert {s.port: s.rank for f in read_inputs(model).functions for s in f.ports}[
+    assert {s.port: s.rank for f in read_inputs(model, options=OPTIONS).functions for s in f.ports}[
         behind
     ] == port_potential_rank(model, ahead)
 

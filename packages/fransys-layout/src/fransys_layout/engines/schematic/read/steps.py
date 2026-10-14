@@ -54,6 +54,7 @@ from fransys_layout.stages import (
 )
 from fransys_layout.stages.offstubs import OffEnd, PortText, by_location, groups_by_location
 from fransys_layout.stages.types import Home
+from fransys_model.derive import channel_pins
 from fransys_model.kernel import Finding, Id
 
 if TYPE_CHECKING:
@@ -156,11 +157,26 @@ def item_reads(
     # An item whose every drawn function is symbol-defaulted is one box
     drawn_specs = specs
     specs, view_of, view_choices = item_views(model, specs, reading.symbol_choices(model), wired)
+    specs = flag_channels(model, specs)
     # Each item box's pins on the side of their function's rank; the functions that stand
     # apart from the box (a contact, a connector's pin views) are no part of it
     sides = pin_sides(model, boxed(drawn_specs, view_of), set(view_of.values()))
     refs = _remap(lambda ref: reitem(ref, view_of), refs)
     return specs, view_of, view_choices, sides, (land_on_pins(refs[0], landings), *refs[1:])
+
+
+def flag_channels(model: Model, specs: Specs) -> Specs:
+    """layout-0208: a pin `channel_pins` names is flagged a channel, so a coil stands under it."""
+    pins = channel_pins(model)
+    return tuple(
+        dataclasses.replace(
+            spec,
+            ports=tuple(
+                dataclasses.replace(p, channel=p.channel or p.port in pins) for p in spec.ports
+            ),
+        )
+        for spec in specs
+    )
 
 
 def off_reads_of(

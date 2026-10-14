@@ -7,6 +7,7 @@ boundary-only on its parent, so the wire enters B's box: the parent's wire, kept
 from typing import NamedTuple
 
 import fransys as fr
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 
@@ -42,7 +43,7 @@ def _parent(u: fr.Design) -> _Io:
 def test_a_wire_from_a_sub_unit_pin_to_the_parents_boundary_terminal_is_kept() -> None:
     d = fr.design("demo_parts", place="C1")
     d.add(_parent, "U1")
-    inputs = read_inputs(fr.build(d).model)
+    inputs = read_inputs(fr.build(d).model, options=OPTIONS)
     (lamp,) = (spec.function for spec in inputs.functions if spec.kind == "load")
     assert [c.a.function for c in inputs.connections] == [lamp]
     assert lamp not in {end.ref.function for end in inputs.rail_ends}

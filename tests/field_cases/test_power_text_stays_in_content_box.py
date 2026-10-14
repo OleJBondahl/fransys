@@ -26,6 +26,7 @@ left edge as any first box of a page does.
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import Box, generic_box_geometry, overlaps, translate
@@ -55,7 +56,7 @@ def _build(tmp_path):
 
 def test_no_power_text_touches_the_content_box_edge(tmp_path) -> None:
     model = _build(tmp_path).model
-    sheet = read_inputs(model).sheet
+    sheet = read_inputs(model, options=OPTIONS).sheet
     texts = [one for one in layout_of(model, Label).values() if one.slot == "power"]
     assert texts
     for one in texts:
@@ -84,7 +85,7 @@ def _t1(model):
 
 def test_a_supply_text_has_room_past_its_bar_and_stays_clear_of_the_frame(tmp_path) -> None:
     built = _build(tmp_path)
-    sheet = read_inputs(built.model).sheet
+    sheet = read_inputs(built.model, options=OPTIONS).sheet
     box, text, stem = _t1(built.model)
     assert [f for f in built.findings if f.code == "LABEL_UNPLACED"] == []
     assert text.x > 0

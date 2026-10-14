@@ -9,7 +9,7 @@ from fransys_layout.lint.naming import (
     Where,
     _groups_on,
     _pages_of,
-    name_findings,
+    append_pages_and_designations,
 )
 from fransys_layout.stages import (
     ColumnWidth,
@@ -169,7 +169,7 @@ def test_the_engine_pass_names_the_pages_a_split_unit_group_runs_over() -> None:
     pages, findings = _plan(dict.fromkeys("abc", 600), [_band("", "abc")])
     layout = Layout(pages=pages, placed=(), routes=(), decisions=(), markers=(), labels=())
     where = Where(pages=_pages_of(layout, (), NO_INK), groups=_groups_on(layout), labels={})
-    (named,) = name_findings({}, where, findings)
+    (named,) = append_pages_and_designations({}, where, findings)
     assert named.message.endswith("keep it on one page. (p1.1, p1.2)")
 
 

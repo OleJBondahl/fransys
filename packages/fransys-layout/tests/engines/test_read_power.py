@@ -8,6 +8,8 @@ declared by `_model`. Every net is invented; nothing names a real plant.
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.power import power_ends
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -141,7 +143,7 @@ def _power(current: Current | None, *, net_name: str | None = None) -> dict[str,
     draft = Draft()
     draft.extend(records, origin=_ORIGIN)
     model = freeze(draft)
-    assert read_inputs(model).power == power_ends(model)
+    assert read_inputs(model, options=OPTIONS).power == power_ends(model)
     ends = {one.port: one for one in power_ends(model)}
     return {key: ends[port.id] for key, port in ports.items() if port.id in ends}
 

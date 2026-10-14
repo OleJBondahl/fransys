@@ -867,7 +867,7 @@ def _list_pages_model():
     strip = item("x1", description="Strip one")
     t1, t1_facet = terminal("t1", strip=strip.id, group="L", index=1)
     module = item("mod1", description="PLC module")
-    module_part, template, fn, facet = plc_channel(
+    module_part, template, fn, facet, channel_pin = plc_channel(
         "ch1", module=module.id, name="ch1", signal=SignalType.DI, channel=1
     )
     module = dataclasses.replace(module, part=module_part.id)
@@ -884,7 +884,20 @@ def _list_pages_model():
     cable_records += (cable_product_facet("cb1", subject=cable_part.id),)
     items = (strip, module, a_item, b_item, board)
     placed = [place(f"p-{one.key[-1]}", item=one.id, node=c1.id) for one in items]
-    records = (c1, doc, strip, t1, t1_facet, module, module_part, template, fn, facet, *placed)
+    records = (
+        c1,
+        doc,
+        strip,
+        t1,
+        t1_facet,
+        module,
+        module_part,
+        template,
+        fn,
+        facet,
+        channel_pin,
+        *placed,
+    )
     records += (a_item, a_fn, a_port, b_item, b_fn, b_port, wire, label, board_part, board)
     records += (pcb_facet("board1", subject=board_part.id), *conn[:4], *conn[4], *cable_records)
     return model(*records), doc

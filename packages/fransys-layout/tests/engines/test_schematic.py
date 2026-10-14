@@ -6,9 +6,11 @@ Items are found by authoring key, never by designation.
 """
 
 import dataclasses
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -76,15 +78,15 @@ def test_stage_role_and_model_page_role_have_equal_member_names() -> None:
 
 def test_read_uses_the_defaults_when_no_profile_is_authored() -> None:
     """The cabinet authors no profile or sheet format: the house conventions apply."""
-    inputs = read_inputs(freeze(build_cabinet()))
-    assert inputs.profile == DEFAULT_PROFILE
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
+    assert inputs.profile == replace(DEFAULT_PROFILE, texts=OPTIONS.texts)
     assert inputs.sheet == DEFAULT_SHEET
 
 
 def test_read_outputs_are_sorted_and_order_free() -> None:
     """Every tuple `read_inputs` returns is sorted, so authoring order cannot leak in."""
-    forward = read_inputs(freeze(build_cabinet()))
-    backward = read_inputs(freeze(build_cabinet(reverse=True)))
+    forward = read_inputs(freeze(build_cabinet()), options=OPTIONS)
+    backward = read_inputs(freeze(build_cabinet(reverse=True)), options=OPTIONS)
     assert forward == backward
 
 
@@ -96,7 +98,7 @@ def test_read_skips_cable_functions_and_draws_not_installed_items() -> None:
     (a wired board connector is drawn: `test_board_internal`).
     """
     model = freeze(build_cabinet())
-    drawn_items = {spec.item for spec in read_inputs(model).functions}
+    drawn_items = {spec.item for spec in read_inputs(model, options=OPTIONS).functions}
     by_key = {item.key: item.id for item in items(model).values()}
     assert by_key[("cabinet", "w1")] not in drawn_items
     assert by_key[("cabinet", "a1")] not in drawn_items
@@ -106,7 +108,7 @@ def test_read_skips_cable_functions_and_draws_not_installed_items() -> None:
 
 def test_a_net_without_conductors_is_read_as_one_net_group() -> None:
     """No spanning tree is built while reading: the declared net arrives whole."""
-    inputs = read_inputs(freeze(build_cabinet()))
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
     (group,) = inputs.net_groups
     assert len(group.ports) == 2
     assert list(group.ports) == sorted(group.ports, key=lambda ref: (ref.port,))
@@ -114,7 +116,7 @@ def test_a_net_without_conductors_is_read_as_one_net_group() -> None:
 
 def test_every_connection_endpoint_is_a_port_of_a_drawn_function() -> None:
     """Endpoints are ids end to end: each one belongs to a function that is drawn."""
-    inputs = read_inputs(freeze(build_cabinet()))
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
     drawn_functions = {spec.function for spec in inputs.functions}
     for connection in inputs.connections:
         assert connection.a.function in drawn_functions
@@ -127,7 +129,7 @@ def _across_two_drawing_sets() -> Model:
     On the default sheet `=P1` and `=P2` share a page, so nothing is severed and there is no
     `layout.link_marker`; a second location cuts the K1 to K2 signal.
     """
-    model, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)))
+    model, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)
     return model
 
 
@@ -196,7 +198,7 @@ def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placemen
     # the second location has stubs and a merged reference; the extra relay cuts a wire (a pair)
     models = (
         _across_two_drawing_sets(),
-        lay_out_schematic(freeze(build_cabinet(extra_relay=True)))[0],
+        lay_out_schematic(freeze(build_cabinet(extra_relay=True)), OPTIONS)[0],
     )
     kinds = set()
     for model in models:
@@ -242,7 +244,7 @@ def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placemen
 
 def test_a_terminal_on_two_pages_has_two_placements_with_different_ids() -> None:
     """One subject, several records: the replica column's group key tells them apart."""
-    model, _ = lay_out_schematic(freeze(build_cabinet()))
+    model, _ = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
     by_function: dict[object, list[object]] = {}
     for placement in layout_of(model, SymbolPlacement).values():
         by_function.setdefault(_fields(placement)["function"], []).append(placement.id)
@@ -253,21 +255,21 @@ def test_a_terminal_on_two_pages_has_two_placements_with_different_ids() -> None
 
 def test_a_stale_derived_record_is_removed() -> None:
     """Replace, never patch: a derived record that no run would write is gone after one."""
-    once, _ = lay_out_schematic(freeze(build_cabinet()))
+    once, _ = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
     (first, *_) = layout_of(once, SymbolPlacement).values()
     key = ("layout", "schematic", "symbol_placement", "stale")
     stale = dataclasses.replace(first, id=make_id(SymbolPlacement, key), key=key)
     seeded = evolve(once, put=(stale,), origin=Origin(file="test", line=1, note="stale"))
     assert stale.id in derived_layout_ids(seeded)
-    again, _ = lay_out_schematic(seeded)
+    again, _ = lay_out_schematic(seeded, OPTIONS)
     assert stale.id not in derived_layout_ids(again)
     assert again.digests["layout"] == once.digests["layout"]
 
 
 def test_a_rerun_replaces_results_and_never_accumulates() -> None:
     """Replace, never patch: a second run leaves the same number of derived records."""
-    once, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)))
-    twice, _ = lay_out_schematic(once)
+    once, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)
+    twice, _ = lay_out_schematic(once, OPTIONS)
     for record_type in _DERIVED:
         assert len(layout_of(twice, record_type)) == len(layout_of(once, record_type))
     assert derived_layout_ids(twice) == derived_layout_ids(once)
@@ -275,7 +277,7 @@ def test_a_rerun_replaces_results_and_never_accumulates() -> None:
 
 def test_findings_are_returned_sorted_and_the_design_still_draws() -> None:
     """The unchained function is reported, and the model is laid out all the same."""
-    model, findings = lay_out_schematic(freeze(build_cabinet()))
+    model, findings = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
     assert FUNCTION_UNPLACED_IN_COLUMN in [f.code for f in findings]
     assert list(findings) == sorted(findings, key=lambda f: (f.code, f.subjects))
     assert layout_of(model, Page)
@@ -285,4 +287,4 @@ def test_a_chain_hint_that_contradicts_the_model_raises_a_layout_error() -> None
     """Structural problems raise: a chain whose functions are not connected is refused."""
     model = freeze(build_cabinet(broken_chain=True))
     with pytest.raises(HintError):
-        run_stages(model, read_inputs(model))
+        run_stages(model, read_inputs(model, options=OPTIONS))

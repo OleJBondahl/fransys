@@ -13,6 +13,7 @@ import importlib
 from typing import TYPE_CHECKING
 
 from dd_chain_fixtures import build, design
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic import engine, run_stages
@@ -47,7 +48,7 @@ def _run(
     """The cabinet's layout and finding codes with `lanes` lanes of headroom."""
     _set_room(monkeypatch, lanes=lanes, text_room=text_room)
     model = freeze(build_cabinet())
-    layout, _, findings = run_stages(model, read_inputs(model))
+    layout, _, findings = run_stages(model, read_inputs(model, options=OPTIONS))
     return layout, [finding.code for finding in findings]
 
 
@@ -64,7 +65,7 @@ def _run_relay(monkeypatch: pytest.MonkeyPatch, *, text_room: bool) -> tuple[Lay
     )
     d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A1"], k1.fn("co_1")["12"])
     result = build(parts, d)
-    layout = stage_results(result.model, read_inputs(result.model))[0].layout
+    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
     return layout, [finding.code for finding in result.findings]
 
 
@@ -88,7 +89,7 @@ def _highest_top(layout: Layout) -> int:
 def test_the_cabinet_has_no_content_box_finding_with_the_engine_constant() -> None:
     """Row 0 starts below the headroom, so no route or label leaves the content box."""
     model = freeze(build_cabinet())
-    _, _, findings = run_stages(model, read_inputs(model))
+    _, _, findings = run_stages(model, read_inputs(model, options=OPTIONS))
     codes = [finding.code for finding in findings]
     assert OUT_OF_CONTENT_BOX not in codes
     assert PAGE_OVERFULL not in codes
@@ -126,7 +127,7 @@ def test_no_cabinet_text_stands_closer_than_the_text_gap_to_the_left_frame() -> 
     """layout-0104: every label, an outline title among them, is 8 G (the house text gap, written
     out) from the content box's left edge on every page; the measured minimum is also not 0."""
     model = freeze(build_cabinet())
-    layout, _, _ = run_stages(model, read_inputs(model))
+    layout, _, _ = run_stages(model, read_inputs(model, options=OPTIONS))
     lefts = [label.box.x for label in layout.labels]
     assert lefts
     assert min(lefts) >= 8

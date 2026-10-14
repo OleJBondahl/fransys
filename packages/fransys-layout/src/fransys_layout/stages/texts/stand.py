@@ -21,7 +21,7 @@ from fransys_layout.stages.references.marker_boxes import reads_along, reference
 from fransys_layout.stages.references.types import Leave
 from fransys_model.derive.drawing_text import off_stub_line
 
-from .candidates import DEFAULT_TABLE, TextKind, box_of, ranked_candidates, stub_anchor
+from .candidates import TextKind, box_of, ranked_candidates, stub_anchor
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -190,12 +190,12 @@ def vertical(one: MarkerDecision, facing: Facing) -> bool:
     return reads_along(one.run, facing)
 
 
-def candidate_box(one: MarkerDecision, at: Point, facing: Facing) -> Box:
+def candidate_box(one: MarkerDecision, at: Point, facing: Facing, profile: Profile) -> Box:
     """`one`'s box at its first-ranked candidate beside its port at `at`, facing `facing`."""
     kind = TextKind.STUB if one.star == "off" else TextKind.REFERENCE
     width, height = one.size
     size = (height, width) if vertical(one, facing) else one.size
-    first = ranked_candidates(kind, facing, size, DEFAULT_TABLE)[0]
+    first = ranked_candidates(kind, facing, size, profile.texts)[0]
     return box_of(dataclasses.replace(first, out=along(one, facing)), stub_anchor(at), size)
 
 
@@ -242,7 +242,7 @@ def run_box(
 
 def _text_box(one: MarkerDecision, at: Point, facing: Facing, profile: Profile) -> Box:
     """`candidate_box` with a merged stub's line : the whole box the text takes."""
-    box = candidate_box(one, at, facing)
+    box = candidate_box(one, at, facing, profile)
     if one.merge is None:
         return box
     return merged(box, at, one.merge, profile, vertical=vertical(one, facing))[0]

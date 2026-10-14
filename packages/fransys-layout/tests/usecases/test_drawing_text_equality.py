@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from samples import built_links
 
@@ -269,8 +270,8 @@ def test_tag_and_marking_label_text_matches_what_the_stage_measured() -> None:
     markers, all of the golden's markers, are counted here and their text is checked on the
     narrow golden, the one that also has severed cuts.
     """
-    model = lay_out_schematic(freeze(build_cabinet()))[0]
-    inputs = read_inputs(model)
+    model = lay_out_schematic(freeze(build_cabinet()), OPTIONS)[0]
+    inputs = read_inputs(model, options=OPTIONS)
     drawn, _resolve_findings = resolve(
         inputs.functions, rules=DEFAULT_RULES, choices=inputs.choices
     )
@@ -338,14 +339,14 @@ def _narrow_layout(
     constructions drifting apart fails loudly here instead of silently checking the wrong
     layout against the golden's own claimed counts.
     """
-    model = lay_out_schematic(freeze(_narrow_sheet_draft()))[0]
+    model = lay_out_schematic(freeze(_narrow_sheet_draft()), OPTIONS)[0]
     digest_golden = _NARROW_DIGEST_GOLDEN.read_text(encoding="utf-8")
     # The golden's digest is of the `normalized` model; `model` stays as laid out for the loops.
     assert normalized(model).digests["layout"] + "\n" == digest_golden, (
         "_narrow_sheet_draft has drifted from the committed narrow golden: "
         "these loops would be checking the wrong layout"
     )
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     layout, drawn, _findings = run_stages(model, inputs)
     location_paths = {
         plan.drawing_set: location_path(model, plan.location)

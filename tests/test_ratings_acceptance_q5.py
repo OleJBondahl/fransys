@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from fransys_model.kernel import Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.ratings import Operating
 from fransys_model.vocab.validators.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
 
@@ -42,9 +43,11 @@ def test_a_boundary_rating_below_the_rails_of_another_unit_fires_and_names_the_u
     assert finding.code == RATING_VOLTAGE_BELOW_CIRCUIT
     assert finding.severity is Severity.ERROR
     assert finding.subjects == (built.boundary_fn,)
-    assert "boundary rating of unit" in finding.message
+    assert "boundary rating of " in finding.message
     assert "part or template rating" not in finding.message
-    assert all(text in finding.message for text in ("'x1'", "600", "800", "'+800'", "'0V'"))
+    assert ref(built.boundary_fn) in finding.message
+    assert "boundary rating of ⟨unit:" in finding.message
+    assert all(text in finding.message for text in ("600", "800", "'+800'", "'0V'"))
 
 
 def test_a_receiving_unit_that_states_its_limit_and_declares_no_supply_gives_no_finding() -> None:
@@ -58,7 +61,7 @@ def test_the_same_unit_inside_a_design_that_declares_the_supply_finds_the_inside
     (finding,) = check_ratings(built.model)
     assert finding.subjects == (built.lamp_fn,)
     assert "part or template rating" in finding.message
-    assert "'lamp'" in finding.message
+    assert ref(built.lamp_fn) in finding.message
     assert "100" in finding.message
     assert "800" in finding.message
 

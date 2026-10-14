@@ -9,6 +9,7 @@ from functools import cache
 from types import SimpleNamespace
 from typing import Any
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from samples import hid, page_plan
 from star_nets import star_nets
@@ -28,7 +29,7 @@ from fransys_model.kernel import Finding, Severity, freeze
 def _hundred() -> tuple[Finding, ...]:
     """The findings of the 100-star fixture, built once for this module (a build is 3 s)."""
     model = star_nets(100)
-    return stage_results(model, read_inputs(model))[1]
+    return stage_results(model, read_inputs(model, options=OPTIONS))[1]
 
 
 def _room(findings: tuple[Finding, ...]) -> list[Finding]:
@@ -49,7 +50,7 @@ def test_a_set_of_a_hundred_reference_groups_is_reported_once() -> None:
 def test_a_set_that_fits_its_room_is_not_reported() -> None:
     """The cabinet's reference boxes stand in the room reserved: no finding, so it is no noise."""
     model = freeze(build_cabinet())
-    assert not _room(stage_results(model, read_inputs(model))[1])
+    assert not _room(stage_results(model, read_inputs(model, options=OPTIONS))[1])
 
 
 def test_the_code_is_one_of_the_packages_codes() -> None:

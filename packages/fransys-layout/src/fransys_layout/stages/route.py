@@ -4,10 +4,7 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
-    OPPOSITE,
-    WIRING_GRID,
     Box,
-    Facing,
     LayoutError,
     Point,
     on_wiring_grid,
@@ -21,6 +18,7 @@ from . import lookups
 from ._sides import Edge, drawn_key, drawn_order, joined, joins_of, located, retarget
 from .content import content_box
 from .grid_path import Field, axes_of, cells_of, grid_path, reserve_exits
+from .sideways import sideways_ends
 from .space import Blocks, End, Obstacle, Shape, Space, span, unowned
 from .types import Route, RoutePoint
 from .wrap import wrap_strips
@@ -120,8 +118,7 @@ def route(
     for edge in drawn_order(edges, ends, placed_of):
         beside = edge.connection in room.aside
         aim = (edge, None, None) if beside else retarget(edge, joins, ends, placed_of)
-        here = _sideways(edge, page_inputs) if beside else page_inputs
-        points = _polyline(edge, aim, here, _Taken(used, along, port_exits))
+        points = _wired(edge, aim, page_inputs, _Taken(used, along, port_exits), beside=beside)
         if points is None:
             failures.append(
                 Finding(
@@ -155,30 +152,26 @@ def route(
     )
 
 
-def _sideways(edge: Edge, page: _Page) -> _Page:
-    """`page` with a level edge's ends facing each other along x: a beside wire leaves sideways."""
-    start, goal = page.ends[located(edge.a)], page.ends[located(edge.b)]
-    if start.at.x == goal.at.x:
-        return page
-    if start.at.y == goal.at.y:
-        way = Facing.E if goal.at.x > start.at.x else Facing.W
-        ends = {**page.ends, located(edge.a): replace(start, facing=way)}
-        return replace(page, ends={**ends, located(edge.b): replace(goal, facing=OPPOSITE[way])})
-    # A deeper pin that points up keeps its way and is entered from above (JOIN-VERTICAL), else
-    # the shallower one when it leaves down; the other end is entered sideways. Two grids or more
-    # between a down pin and an up pin leave both their ways, a jog between them.
-    high, low = (edge.a, edge.b) if start.at.y < goal.at.y else (edge.b, edge.a)
-    top, bottom = page.ends[located(high)], page.ends[located(low)]
-    if bottom.facing is Facing.N and not (
-        top.facing is Facing.S and bottom.at.y - top.at.y > WIRING_GRID
-    ):
-        keeper, tail, key = bottom, top, located(high)
-    elif top.facing is Facing.S and bottom.facing is not Facing.N:
-        keeper, tail, key = top, bottom, located(low)
-    else:
-        return page
-    way = Facing.W if keeper.at.x < tail.at.x else Facing.E
-    return replace(page, ends={**page.ends, key: replace(tail, facing=way)})
+def _aside(edge: Edge, page: _Page, *, above: bool = True) -> _Page:
+    """`page` with a beside edge's ends facing along x (`sideways_ends`)."""
+    return replace(page, ends=sideways_ends(edge, page.ends, above=above))
+
+
+def _wired(
+    edge: Edge,
+    aim: tuple[Edge, Join | None, Join | None],
+    page: _Page,
+    taken: _Taken,
+    *,
+    beside: bool,
+) -> tuple[Point, ...] | None:
+    """One edge's polyline; a beside wire whose sideways pin is boxed in tries the other pin."""
+    if not beside:
+        return _polyline(edge, aim, page, taken)
+    points = _polyline(edge, aim, _aside(edge, page), taken)
+    if points is None:  # ROUTE-016: the pin that leaves sideways had a text against its lane
+        points = _polyline(edge, aim, _aside(edge, page, above=False), taken)
+    return points
 
 
 def _marker_owner(marker: LinkMarker, owner_of: Mapping[Handle, Handle]) -> Handle:

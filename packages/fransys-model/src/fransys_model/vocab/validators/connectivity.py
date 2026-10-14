@@ -2,9 +2,10 @@
 
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.closure import net_of, physical_nets
 from fransys_model.vocab.facets.cable import OpenCoreFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.joins import joined_ports
 from fransys_model.vocab.membership import enclosing_boards
 from fransys_model.vocab.potentials import physical_potentials
@@ -38,8 +39,8 @@ def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message
 
 
 def _label(net: Net) -> str:
-    """What a person calls a net: its name if it has one, else its authoring key."""
-    return net.name if net.name is not None else key_text(net)
+    """What a person calls a net: its name if it has one, else its reference."""
+    return net.name if net.name is not None else ref(net)
 
 
 class _Plant:
@@ -130,10 +131,8 @@ def _conductor_findings(plant: _Plant) -> list[Finding]:
             if not item.installed
         }
         if pulled:
-            names = natural_join(key_text(item) for item in pulled.values())
-            message = (
-                f"conductor {key_text(conductor)} lands on an item that is not installed: {names}"
-            )
+            names = natural_join(ref(item) for item in pulled.values())
+            message = f"conductor {ref(conductor)} lands on an item that is not installed: {names}"
             found.append(
                 _finding(
                     CONDUCTOR_ON_UNINSTALLED, Severity.WARNING, (conductor.id, *pulled), message
@@ -151,7 +150,7 @@ def _unconnected(plant: _Plant) -> list[Finding]:
             PORT_UNCONNECTED,
             Severity.INFO,
             (port.id,),
-            f"port {key_text(port)} is in no net and on no conductor or mate",
+            f"port {ref(port)} is in no net and on no conductor or mate",
         )
         for port in plant.ports.values()
         if port.id not in plant.declared

@@ -28,6 +28,6 @@ def test_the_name_lands_on_the_channel_wired_directly_to_the_contact() -> None:
     d.wire(relay.co_1["14"], di.di_2["2"], wire=(BK, 1.0))
     relay.co_1.plc(fr.DI, "K5 closed")
     rows = fr.derive.plc_channel_rows(fr.build(d).model)
-    named = {row.channel_designation: row.signal_name for row in rows}
+    named = {row.pin: row.signal_name for row in rows}
     assert named["-A1:2"] == "K5 closed"
     assert not named["-A1:1"]

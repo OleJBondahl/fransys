@@ -13,6 +13,8 @@ import tomllib
 from importlib.resources import files
 from pathlib import Path
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines import lay_out_schematic
 from fransys_model.kernel import Finding, freeze
 
@@ -51,7 +53,7 @@ def _cabinet_findings() -> tuple[Finding, ...]:
         sys.path.remove(str(FIXTURE_TESTS))
     found: list[Finding] = []
     for variant in ({}, {"discovery": True}):
-        found.extend(lay_out_schematic(freeze(module.build_cabinet(**variant)))[1])
+        found.extend(lay_out_schematic(freeze(module.build_cabinet(**variant)), OPTIONS)[1])
     return tuple(found)
 
 

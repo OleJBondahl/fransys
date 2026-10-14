@@ -7,6 +7,7 @@ of overlaps and of lone cells cannot be read from it. They are the lint's own fu
 """
 
 from collections import Counter
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.lint import fill_shares, geometry_by_page, lone_cells
@@ -28,6 +29,7 @@ from .write import write_layout
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from fransys_layout.options import LayoutOptions
     from fransys_model.kernel import Id, Model
 
     from ._lint import LintScene
@@ -81,14 +83,16 @@ def _measures(
     }
 
 
-def _measured_once(model: Model, unit: Id[Any] | None) -> tuple[Model, Measures]:
+def _measured_once(
+    model: Model, unit: Id[Any] | None, *, options: LayoutOptions
+) -> tuple[Model, Measures]:
     """The engine's `_run_once`, which hands back what it measured in place of its findings."""
-    results, scene, _ = stage_scene(model, inputs := read_inputs(model, unit))
+    results, scene, _ = stage_scene(model, inputs := read_inputs(model, unit, options=options))
     laid = write_layout(model, results, write_keys(model, inputs.functions))
     return laid, _measures(scene, laid, printed_text(model, unit), printed_set_numbers(laid))
 
 
-def page_readability(model: Model) -> tuple[ReadabilityPage, ...]:
+def page_readability(model: Model, options: LayoutOptions) -> tuple[ReadabilityPage, ...]:
     """One `ReadabilityPage` per schematic page of `model`, in drawing set and page order.
 
     `model` is laid out: its `layout.page` records give each page its printed numbers. The engine
@@ -96,7 +100,7 @@ def page_readability(model: Model) -> tuple[ReadabilityPage, ...]:
     """
     if not has_pages(model):
         return ()
-    (_, base), runs = run_profiles(model, _measured_once)
+    (_, base), runs = run_profiles(model, partial(_measured_once, options=options))
     owned = {page: counts for page, (_, counts) in base.items()}
     for units, (_, measured) in runs:
         owned.update({page: counts for page, (unit, counts) in measured.items() if unit in units})

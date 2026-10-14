@@ -28,6 +28,7 @@ from unittest import mock
 
 import pytest
 from dd_chain_fixtures import build, design, terminal_chain, three_breakers
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from narrow_cabinet import narrow_model
 from wired_cabinet import wired_cabinet
@@ -53,7 +54,7 @@ class _Page:
 
 
 def _laid_out(model: Model) -> None:
-    stage_results(model, read_inputs(model))
+    stage_results(model, read_inputs(model, options=OPTIONS))
 
 
 def _coil_hub() -> None:

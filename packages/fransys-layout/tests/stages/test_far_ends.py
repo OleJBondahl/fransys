@@ -125,7 +125,7 @@ def test_a_contact_in_a_bundle_column_moves_alone_and_the_rest_closes_up() -> No
 
 def test_a_coil_serves_a_flagged_channel_pin_of_a_box_that_is_no_all_channel_module() -> None:
     """A module with power pins is no `plc_channel` function: its channel ports carry the flag."""
-    # UNDO: stages/far_ends.py:_is_channel, the `any(p.channel ...)` clause -> `False`
+    # UNDO: stages/far_ends.py:is_channel, the `any(p.channel ...)` clause -> `False`
     wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
     box = drawn(1, kind="connector")
     out = hid("port", 12)
@@ -220,3 +220,33 @@ def test_a_terminal_stays_home_when_the_host_column_does_not_fit() -> None:
     drawn_functions, wires, columns = _star()
 
     assert _run(drawn_functions, wires, columns, fits=False) == columns
+
+
+def test_a_coil_with_a_second_wire_moves_by_its_one_channel_wire() -> None:
+    """layout-0208: coil 5's `in` also feeds terminal 6, so it moves by its channel wire alone."""
+    # UNDO: stages/far_ends.py:_lone_end, drop the coil's channel filter (two wires: stays)
+    drawn_functions, columns = _pair(near="coil", far_kind="plc_channel")
+    wires = (
+        _wire(1, _ref(1, "out"), _ref(5, "in")),
+        _wire(2, _ref(6, "out"), _ref(5, "in")),
+    )
+    columns = (*columns, column("feed", (6,), group=2))
+
+    moved = _run((*drawn_functions, drawn(6, kind="terminal")), wires, columns)
+
+    assert moved[0] == replace(columns[0], cells=(_cell(1, 0), _moved(5, 1, 1, "out")))
+
+
+def test_a_coil_on_a_free_pin_stands_on_its_own_terminals_side_unflipped() -> None:
+    """layout-0208: coil 5's `in` on N pin `in`: above it flipped, or with the pin free below."""
+    # UNDO: stages/far_ends.py:_far_host, `free_side = ...` -> `free_side = False`
+    drawn_functions, columns = _pair(near="coil", far_kind="plc_channel")
+    wires = (_wire(1, _ref(1, "in"), _ref(5, "in")),)
+    far = FarInputs(drawn_functions, wires, {}, frozenset({_ref(1, "in").port}))
+
+    fixed = _run(drawn_functions, wires, columns)
+    free = move_far_ends(columns, columns, far, lambda _column: True)
+
+    above = replace(_moved(5, 0, 1, "in"), flip=True)
+    assert fixed == (replace(columns[0], cells=(above, _cell(1, 1))),)
+    assert free == (replace(columns[0], cells=(_cell(1, 0), _moved(5, 1, 1, "in"))),)

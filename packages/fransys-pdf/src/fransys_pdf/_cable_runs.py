@@ -10,6 +10,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, NamedTuple
 
 from ._frame import text_margin
+from ._labels import RESTART
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -115,5 +116,5 @@ def run_page(
     blocks = _flow(bodies, width, height)
     return (
         f"#page(margin: {margin}, header-ascent: 4mm, header: {{ {_header(heading, label)} }}, "
-        f"background: {background_source})[#metadata(none) <{label}>\n{blocks}]"
+        f"background: {background_source})[{RESTART}\n#metadata(none) <{label}>\n{blocks}]"
     )

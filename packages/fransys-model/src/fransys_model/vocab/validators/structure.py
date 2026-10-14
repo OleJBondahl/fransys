@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import aspect_nodes, items, placements, units
 
 if TYPE_CHECKING:
@@ -71,13 +72,11 @@ def _placement_findings(model: Model) -> list[Finding]:
     for placement in placements(model).values():
         aspect = nodes[placement.node].aspect.value
         by_item_aspect.setdefault((placement.item, aspect), []).append(placement.id)
-    all_items = items(model)
     return [
         _finding(
             PLACEMENT_DUPLICATE,
             (item, *placed),
-            f"item {key_text(all_items[item])} is placed {len(placed)} times "
-            f"in the {aspect} aspect",
+            f"item {ref(item)} is placed {len(placed)} times in the {aspect} aspect",
         )
         for (item, aspect), placed in by_item_aspect.items()
         if len(placed) > 1
@@ -91,7 +90,7 @@ def _containment_findings(model: Model) -> list[Finding]:
             CONTAINMENT_CYCLE,
             members,
             "the parent chain of items "
-            + ", ".join(sorted(key_text(all_items[member]) for member in members))
+            + ", ".join(sorted(ref(member) for member in members))
             + " loops",
         )
         for members in _cycles({item.id: item.parent for item in all_items.values()})
@@ -105,7 +104,7 @@ def _unit_findings(model: Model) -> list[Finding]:
             UNIT_CYCLE,
             members,
             "the parent chain of units "
-            + ", ".join(sorted(key_text(all_units[member]) for member in members))
+            + ", ".join(sorted(ref(member) for member in members))
             + " loops",
         )
         for members in _cycles({unit.id: unit.parent for unit in all_units.values()})

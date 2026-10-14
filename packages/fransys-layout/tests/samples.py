@@ -7,6 +7,8 @@ library, so a stage can be tested alone. All data is invented.
 import dataclasses
 from typing import TYPE_CHECKING, Any, cast
 
+from fransys_el import TEXTS
+
 from fransys_layout.engines.schematic.defaults import kind_roles
 from fransys_layout.geometry import (
     Box,
@@ -63,6 +65,7 @@ PROFILE = Profile(
     route_turn_penalty=4,
     route_crossing_penalty=16,
     route_margin=64,
+    texts=TEXTS,
 )
 
 NO_HINTS = PageHints(keep_together=(), break_before=(), order=())

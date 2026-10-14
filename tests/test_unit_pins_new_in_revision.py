@@ -148,7 +148,8 @@ def test_a_floating_number_that_moved_without_the_pins_is_designation_moved(
     with pytest.raises(fr.BuildErrors) as raised:
         fr.release(result, released, unit=cab)
     (moved,) = [f for f in raised.value.findings if f.code == "DESIGNATION_MOVED"]
-    assert "m2" in moved.message
+    assert "m2" not in moved.message
+    assert moved.message.startswith("unit -U")
 
 
 def test_retagging_a_released_item_is_designation_moved(released: Path) -> None:
@@ -163,4 +164,5 @@ def test_retagging_a_released_instance_is_designation_moved(released: Path) -> N
     with pytest.raises(fr.BuildErrors) as raised:
         fr.release(result, released, unit=cab)
     (moved,) = [f for f in raised.value.findings if f.code == "DESIGNATION_MOVED"]
-    assert "m1" in moved.message
+    assert "m1" not in moved.message
+    assert moved.message.startswith("unit -U")

@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import pytest
 from fransys.colours import BK
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -69,7 +70,7 @@ def test_a_part_less_external_strip_and_device_build_and_write(tmp_path: Path) -
 
 def test_the_schematic_draws_q8_as_a_box_of_five_pins_and_x8_as_terminals() -> None:
     model = _built().model
-    layout = stage_results(model, read_inputs(model))[0].layout
+    layout = stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
     drawn = {tuple(model.key_of(p.function) or ()): p for p in layout.placed}
     box = drawn[("G/Q8", "fn", "box")]
     assert box.geometry.key == "generic-box"

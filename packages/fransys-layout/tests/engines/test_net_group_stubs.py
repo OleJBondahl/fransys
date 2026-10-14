@@ -14,6 +14,8 @@ the two-location net is a plain marker pair again and the first test fails. With
 test sees `ROUTE_WRONG_PORT` and `CONNECTION_NOT_DRAWN`: one part hid the other's route.
 """
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines import lay_out_schematic
 from fransys_layout.lint.codes import (
     CONNECTION_NOT_DRAWN,
@@ -116,7 +118,7 @@ def _laid_out(at: dict[str, str]):
     )
     draft = Draft()
     draft.extend((*records, net), origin=_ORIGIN)
-    written, findings = lay_out_schematic(freeze(draft))
+    written, findings = lay_out_schematic(freeze(draft), OPTIONS)
     return written, findings, port_of
 
 

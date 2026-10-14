@@ -17,6 +17,7 @@ from fan_ink import (
     splits_on_foreign_keepouts,
     texts_in_fan_outlines,
 )
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from narrow_cabinet import narrow_model, narrow_results
 
@@ -36,7 +37,7 @@ def _every() -> tuple[StageResults, ...]:
         narrow_model(158),
         freeze(build_cabinet(second_location=True)),
     )
-    return tuple(stage_results(model, read_inputs(model))[0] for model in models)
+    return tuple(stage_results(model, read_inputs(model, options=OPTIONS))[0] for model in models)
 
 
 def test_no_core_or_bundle_line_runs_along_a_symbols_outline() -> None:

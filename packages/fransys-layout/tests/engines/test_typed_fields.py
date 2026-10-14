@@ -9,6 +9,7 @@ import dataclasses
 from functools import cache
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from wired_cabinet import wired_cabinet
 
@@ -30,7 +31,7 @@ from fransys_model.vocab.tables import items, ports
 def _laid_out(*, second_location: bool = False, wired: bool = False):
     """The cabinet laid out; `wired` gives `W1`'s cores as wires, not a line."""
     model = freeze((wired_cabinet if wired else build_cabinet)(second_location=second_location))
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, results, write_layout(model, results, write_keys(model))
 
 
@@ -238,7 +239,8 @@ def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
     assert stubs
     assert not any(m.ext for m in stubs)
     assert all(m.far is not None and m.facing is not None for m in stubs)
-    assert not any(m.far or m.carrier or m.facing for m in written if m.star is not StarKind.OFF)
+    assert not any(m.far or m.carrier for m in written if m.star is not StarKind.OFF)
+    assert all(m.facing is not None for m in written)
     assert {m.star.value for m in written} == {
         "off" if m.text else m.star for m in results.layout.markers
     }

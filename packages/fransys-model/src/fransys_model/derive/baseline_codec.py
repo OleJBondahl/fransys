@@ -88,7 +88,7 @@ def _unit_dict(u: BaselineUnit) -> dict[str, JsonValue]:
 
 
 def _item_dict(i: BaselineItem) -> dict[str, JsonValue]:
-    return {
+    row: dict[str, JsonValue] = {
         "designation": i.designation,
         "mpn": i.mpn,
         "manufacturer": i.manufacturer,
@@ -96,6 +96,9 @@ def _item_dict(i: BaselineItem) -> dict[str, JsonValue]:
         "external": i.external,
         "position": i.position,
     }
+    if i.parent is not None:
+        row["parent"] = i.parent  # written only when set: an older listing keeps its bytes
+    return row
 
 
 def _nested_unit_dict(u: BaselineNestedUnit) -> dict[str, JsonValue]:
@@ -201,6 +204,7 @@ def _item_from(value: object) -> BaselineItem:
         installed=cast("bool", d["installed"]),
         external=cast("bool", d["external"]),
         position=cast("int | None", d["position"]),
+        parent=cast("str | None", d.get("parent")),
     )
 
 
@@ -287,16 +291,28 @@ def loads(text: str) -> Listing:
     )
 
 
+def _without_parent(listing: Listing) -> Listing:
+    """`listing` with every item's `parent` dropped: parent is never compared (model-0212)."""
+    items = tuple(dataclasses.replace(row, parent=None) for row in listing.items)
+    return dataclasses.replace(listing, items=items)
+
+
+def matches(stored_text: str, fresh: Listing) -> bool:
+    """Whether the stored listing text equals `fresh`, `parent` aside (model-0212).
+
+    Equal bytes match at once; otherwise the two parse and compare as `differing_sections` does.
+    """
+    if stored_text == dumps(fresh):
+        return True
+    return not differing_sections(loads(stored_text), fresh)
+
+
 def differing_sections(a: Listing, b: Listing) -> tuple[str, ...]:
     """The names of `a`'s and `b`'s top-level fields that differ, in field order.
 
-    Args:
-        a: One listing.
-        b: The listing to compare it with.
-
-    Returns:
-        The differing `Listing` field names; `()` when the listings are equal.
+    `parent` is not compared. Returns `()` when the listings are equal.
     """
+    a, b = _without_parent(a), _without_parent(b)
     return tuple(
         field.name
         for field in dataclasses.fields(Listing)

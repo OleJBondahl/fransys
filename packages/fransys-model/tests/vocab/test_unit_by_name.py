@@ -3,6 +3,7 @@
 import pytest
 from plant import Plant
 
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.unit_by_name import unit_name_unresolved
 
 # ---- unit_name_unresolved: case (a), no release of that name ---------------------------------
@@ -49,12 +50,11 @@ def test_case_c_names_where_a_parented_instance_sits() -> None:
     name, not merely by where it sits (accepted-prose separators aside, model-0094)."""
     plant = Plant()
     outer = plant.unit("outer", name="cabinet")
-    plant.unit("a", name="board", parent=outer)
+    inner = plant.unit("a", name="board", parent=outer)
     plant.unit("b", name="board")
     text = unit_name_unresolved(plant.model(), "board")
     assert "under" in text
-    assert "outer" in text
-    assert "a (1.1) under outer" in text
+    assert f"{ref(inner)} (1.1) under {ref(outer)}" in text
 
 
 def test_exactly_one_match_raises_value_error() -> None:

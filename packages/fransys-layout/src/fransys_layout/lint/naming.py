@@ -85,7 +85,7 @@ def _groups_on(layout: Layout) -> dict[Id[Any], set[Page]]:
     return found
 
 
-def name_findings(
+def append_pages_and_designations(
     names: Mapping[Id[Any], str], where: Where, findings: Iterable[Finding]
 ) -> tuple[Finding, ...]:
     """`findings` with each message ending in the pages and designations of its subjects.

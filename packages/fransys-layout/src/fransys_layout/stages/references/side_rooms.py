@@ -17,7 +17,6 @@ lazy from collections.abc import Set as AbstractSet
 
 from fransys_layout.geometry import Facing
 from fransys_layout.stages.texts.candidates import (
-    DEFAULT_TABLE,
     TextKind,
     box_of,
     ranked_candidates,
@@ -82,7 +81,7 @@ def side_reference_rooms(
         carriers = {(c.function, c.carrier) for c in column.cells if c.side}
         if all(_wired_beside(cell, other, rows, carriers) for other in partners.get(port, ())):
             continue
-        first = ranked_candidates(TextKind.REFERENCE, g.facing, size, DEFAULT_TABLE)[0]
+        first = ranked_candidates(TextKind.REFERENCE, g.facing, size, profile.texts)[0]
         box = box_of(first, stub_anchor(g.at), size)
         if (REFERENCE_SLOT, box) not in found[cell.function]:
             found[cell.function].append((REFERENCE_SLOT, box))

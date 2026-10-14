@@ -9,7 +9,7 @@ from samples import SHEET, hid, page_plan, placed
 from fransys_layout.lint import lint_fill
 from fransys_layout.lint._harness import NO_INK
 from fransys_layout.lint.codes import ALL_CODES, PAGE_UNDERFILLED
-from fransys_layout.lint.naming import name_findings, where_drawn
+from fransys_layout.lint.naming import append_pages_and_designations, where_drawn
 from fransys_layout.stages import Layout
 from fransys_model.kernel import Severity
 
@@ -58,7 +58,7 @@ def test_a_full_page_gets_none() -> None:
 def test_each_page_is_judged_alone() -> None:
     layout = _layout(placed(1, x=8, y=16), placed(2, x=1232, y=800), placed(3, x=104, y=96, page=2))
     (finding,) = lint_fill(layout, sheet=SHEET)
-    (named,) = name_findings({}, where_drawn(layout, (), NO_INK, {}), [finding])
+    (named,) = append_pages_and_designations({}, where_drawn(layout, (), NO_INK, {}), [finding])
     assert named.message == "drawn content covers 0 % of the content box (p1.2)"
     assert finding.subjects == (hid("function", 3),)
 

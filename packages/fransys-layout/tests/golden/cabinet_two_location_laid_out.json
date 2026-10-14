@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 17,
+  "schema_version": 18,
   "tables": {
     "aspect_node": [
       {
@@ -4484,7 +4484,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "s",
         "far": null,
         "height": 63,
         "id": "layout.link_marker:160b36e3595153bdadea1fb5449f8119",
@@ -4520,7 +4520,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 63,
         "id": "layout.link_marker:208ed485c8b75372b91a76859a882fc0",
@@ -4556,7 +4556,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 63,
         "id": "layout.link_marker:3b422e41b83a52baa7fff18268406bbf",
@@ -4671,7 +4671,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 63,
         "id": "layout.link_marker:9c54c3b848235f3d8c843fe9c9835979",

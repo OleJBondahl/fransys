@@ -2,6 +2,7 @@
 
 from collections import Counter
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -12,7 +13,7 @@ from fransys_model.vocab.tables import functions
 
 def test_no_terminal_stands_twice_on_one_page_of_the_two_location_cabinet() -> None:
     model = freeze(build_cabinet(second_location=True))
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     terminal = {f.id for f in functions(model).values() if f.key[-1] == "terminal"}
     count = Counter(
         (p.function, p.drawing_set, p.page) for p in results.layout.placed if p.function in terminal

@@ -11,6 +11,7 @@ from dataclasses import replace
 from functools import cache
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from narrow_cabinet import narrow_model
 from samples import PROFILE, SHEET, hid, page_plan
@@ -48,7 +49,7 @@ def _laid_out(name: str) -> tuple[tuple[LinkMarker, ...], Model]:
         model = narrow_model(_NARROW_WIDTH_MM)
     else:
         model = freeze(build_cabinet(second_location=name == "two_location"))
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return results.layout.markers, write_layout(model, results, write_keys(model))
 
 

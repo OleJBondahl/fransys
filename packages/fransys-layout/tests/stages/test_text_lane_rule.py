@@ -6,6 +6,7 @@ text, 15 wide by 8, has a single candidate, over that lane. With an unowned text
 router has no exempt lane for `out`, so the wire seals in (ROUTE_FAILED).
 """
 
+from fransys_el import TEXTS
 from routing import route
 from samples import PROFILE, SHEET, connection, drawn, hid, placed
 
@@ -14,7 +15,7 @@ from fransys_layout.stages import LinkMarker, MarkerSide
 from fransys_layout.stages.labels import SlotFrame, port_lanes
 from fransys_layout.stages.route import ROUTE_FAILED
 from fransys_layout.stages.space import Shape, Space
-from fransys_layout.stages.texts.candidates import DEFAULT_TABLE, TextKind
+from fransys_layout.stages.texts.candidates import TextKind
 from fransys_layout.stages.texts.place_texts import Anchor, TextToPlace, place_texts
 from fransys_layout.stages.texts.power import with_power_labels
 
@@ -34,7 +35,7 @@ def test_a_text_does_not_stand_on_its_own_functions_lane() -> None:
         own=(own,),
     )
     lane = Shape(owner=own, box=Box(x=20, y=18, width=0, height=10))
-    (found,), _ = place_texts((text,), Space(shapes=()), DEFAULT_TABLE, lanes=(lane,))
+    (found,), _ = place_texts((text,), Space(shapes=()), TEXTS, lanes=(lane,))
     assert found.box != home
     assert not overlaps(found.box, lane.box)
 

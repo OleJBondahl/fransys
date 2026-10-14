@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.geometry import Box, Point, SymbolGeometry
 from fransys_layout.geometry.box_reach import Reach
+from fransys_layout.stages.texts.candidates import TextPlacement
 from fransys_model.kernel import AuthoringKey, Id, register_enum, value
 
 if TYPE_CHECKING:
@@ -145,6 +146,9 @@ class Profile:
     route_crossing_penalty: int
     route_margin: int
     hide_unused_pins: bool = False  # Leave out the pins and functions with no conductor
+    texts: frozendict[str, TextPlacement] = (
+        frozendict()
+    )  # the caller's text placement, by kind (seam 1)
 
 
 @value

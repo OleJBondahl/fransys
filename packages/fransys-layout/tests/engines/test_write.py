@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet, unit_with_release
 from wired_cabinet import wired_cabinet
 
@@ -90,7 +91,7 @@ def _laid_out(
     if width_mm is not None:
         draft.extend(_authored_sheet(width_mm), origin=_ORIGIN)
     model = freeze(draft)
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, results, write_layout(model, results, write_keys(model))
 
 
@@ -117,7 +118,7 @@ def test_every_page_names_the_authored_sheet_format_the_profile_names() -> None:
     """The engine creates no `layout.sheet_format`, but a page names the one it is drawn on."""
     model, results, out = _laid_out(width_mm=250)
     sheet_id = make_id(ModelSheetFormat, ("test", "sheet"))
-    assert read_inputs(model).sheet_format == sheet_id
+    assert read_inputs(model, options=OPTIONS).sheet_format == sheet_id
     assert results.sheet_format == sheet_id
     pages = _table(out, "page").values()
     assert pages
@@ -127,7 +128,7 @@ def test_every_page_names_the_authored_sheet_format_the_profile_names() -> None:
 def test_a_page_names_no_sheet_format_when_the_house_sheet_is_used() -> None:
     """Nothing authored: `None` is the house sheet, which is no record (model-0029)."""
     model, results, out = _laid_out()
-    assert read_inputs(model).sheet_format is None
+    assert read_inputs(model, options=OPTIONS).sheet_format is None
     assert results.sheet_format is None
     pages = _table(out, "page").values()
     assert pages
@@ -139,7 +140,7 @@ def test_a_sheet_no_profile_names_is_not_the_sheet_the_pages_are_drawn_on() -> N
     draft = build_cabinet()
     draft.extend((_authored_sheet(250)[0],), origin=_ORIGIN)
     model = freeze(draft)
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     assert {
         page.sheet_format
         for page in _table(write_layout(model, results, write_keys(model)), "page").values()
@@ -264,7 +265,7 @@ def _boundary_fixture() -> tuple[Model, Function, StageResults]:
         (top_release, child_release, top, child, item, function, boundary_record), origin=_ORIGIN
     )
     model = freeze(draft)
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, function, results
 
 

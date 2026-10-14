@@ -8,6 +8,7 @@ import importlib
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
 from power_fixture import power_model, power_run
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -63,6 +64,6 @@ def test_a_power_end_consumes_no_reference_digit(monkeypatch: pytest.MonkeyPatch
 
     monkeypatch.setattr(module, "set_digits", spy)
     model = power_model(60)
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     assert [one for one in results.layout.markers if one.symbol]
     assert seen == []

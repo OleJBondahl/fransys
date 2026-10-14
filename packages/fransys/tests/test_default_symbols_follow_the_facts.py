@@ -20,6 +20,7 @@ import fransys_author.surface as author_surface
 import fransys_parts
 import pytest
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -120,7 +121,7 @@ def _built(tmp_path):
 def drawn(tmp_path_factory) -> dict[str | None, str]:
     """The symbol each device's function draws, by its item tag."""
     model = _built(tmp_path_factory.mktemp("defaults"))
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     tag_of = {f.id: items(model)[f.item].tag for f in functions(model).values()}
     return {tag_of[p.function]: p.geometry.key for p in results.layout.placed}
 

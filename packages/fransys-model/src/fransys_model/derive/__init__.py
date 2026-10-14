@@ -116,12 +116,19 @@ from .open_cores import open_core_rows
 from .order import bom_sort_key, natural_key
 from .overview_field import field_devices, field_fold
 from .overview_fold import fold_level
-from .overview_lanes import lane_head, overview_lane_nodes
+from .overview_lanes import (
+    lane_head,
+    overview_lane_nodes,
+    overview_lane_strips,
+    overview_power_lines,
+    overview_strip_joins,
+)
 from .overview_levels import open_strips, overview_level, strip_view
 from .overview_location import location_fold
 from .overview_marks import diff_marks
 from .overview_strip_stubs import strip_stubs
 from .overview_stub_ends import StubBox, StubLine, stub_ends
+from .overview_stubs import overview_stub_west
 from .overview_tabs import line_tabs
 from .overview_text import (
     overview_end_text,
@@ -144,6 +151,7 @@ from .pairing import BoxPair, box_pairs
 from .part_functions import part_function_rows
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
+from .plc_rack import channel_pins
 from .plc_tables import plc_tables
 from .plc_words import plc_list_rows, signal_word
 from .potential import port_potential_current, port_potential_rank
@@ -426,6 +434,7 @@ __all__ = [
     "cell_parts",
     "cell_text",
     "changeover_throws",
+    "channel_pins",
     "check_side_hints",
     "column_rows",
     "column_values",
@@ -518,12 +527,16 @@ __all__ = [
     "overview_fold_stub_text",
     "overview_graph",
     "overview_lane_nodes",
+    "overview_lane_strips",
     "overview_level",
     "overview_lifted_text",
     "overview_line_text",
     "overview_location_line_text",
+    "overview_power_lines",
+    "overview_strip_joins",
     "overview_stub_lines",
     "overview_stub_text",
+    "overview_stub_west",
     "overview_tree",
     "overview_units",
     "overview_view_rows",

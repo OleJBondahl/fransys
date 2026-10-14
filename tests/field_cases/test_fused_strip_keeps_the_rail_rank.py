@@ -15,6 +15,7 @@ rail closure crosses it, so the pin ranks as 24 V. The return keeps the 0 V bar.
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_model.derive import net_of, port_potential_rank, port_power_kind
@@ -61,7 +62,7 @@ def test_the_strip_behind_the_fuse_ranks_as_the_rail(tmp_path) -> None:
     assert port_potential_rank(model, feed) is not None
     assert port_potential_rank(model, behind) == port_potential_rank(model, feed)
     assert port_potential_rank(model, strip_pin) == port_potential_rank(model, feed)
-    assert {s.port: s.rank for f in read_inputs(model).functions for s in f.ports}[
+    assert {s.port: s.rank for f in read_inputs(model, options=OPTIONS).functions for s in f.ports}[
         strip_pin
     ] == port_potential_rank(model, feed)
 

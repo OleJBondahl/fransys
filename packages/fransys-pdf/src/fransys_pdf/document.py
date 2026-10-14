@@ -16,6 +16,7 @@ from ._geometry import (
     resolve_sheet_format,
     subject_label,
 )
+from ._labels import LAST_PAGE, RESTART
 from ._lists import (
     bom_page,
     cable_list_page,
@@ -25,6 +26,7 @@ from ._lists import (
     terminal_list_page,
     wire_label_list_page,
 )
+from ._marks import list_mark
 from ._pages import cover_page, notes_page
 from ._schematic_yield import schematic_yields
 from ._sheet_index import sheet_index_page
@@ -75,7 +77,7 @@ def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: Pa
     """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC`."""
     fields = section_fields(model, record, kind)
     back = background(sheet, fields, sizes_of(model, record))
-    return f"#set page(margin: {text_margin(sheet)}, background: {back})"
+    return f"#set page(margin: {text_margin(sheet)}, background: {back})\n{RESTART}"
 
 
 _LIST_PAGES = {
@@ -99,7 +101,8 @@ def _text_page(kind: PageKind, model: Model, record: Document, pages: tuple[Page
         return contents_page(model, record, pages)
     if kind is PageKind.CABLE_LIST:
         return cable_list_page(model, record)
-    return _LIST_PAGES[kind](model, record)
+    body = _LIST_PAGES[kind](model, record)
+    return list_mark(body, section_fields(model, record, kind).page_title)
 
 
 def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` for the page background
@@ -150,7 +153,8 @@ def source(model: Model, document: Id[Document], svgs: Mapping[str, str]) -> str
             body = _section_prefix(model, record, sheet, kind) + "\n" + body
         page_bodies.append(body)
     head = document_metadata(model, record) + "\n" + preamble(sizes_of(model, record), sheet)
-    return head + "\n" + "\n#pagebreak()\n".join(page_bodies) + "\n"
+    body = "\n#pagebreak()\n".join(page_bodies)
+    return f"{head}\n{body}\n#metadata(none) <{LAST_PAGE}>\n"
 
 
 def document_pages(model: Model, document: Id[Document]) -> tuple[PageKind, ...]:

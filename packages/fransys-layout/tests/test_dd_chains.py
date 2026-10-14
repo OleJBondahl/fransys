@@ -9,6 +9,7 @@ only, and those all sit on one physical net (their ends have the same rank).
 
 import pytest
 from dd_chain_fixtures import MCB, TERMINAL, build, design, placed, route_between, terminal_key
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic import lay_out_schematic
 from fransys_model.kernel import Severity
@@ -185,7 +186,7 @@ def test_a_chain_never_spans_two_units() -> None:
     assert {f.code for f in result.findings if f.severity is Severity.ERROR} == {
         "UNIT_BOUNDARY_BYPASSED"
     }
-    model, _findings = lay_out_schematic(result.model)
+    model, _findings = lay_out_schematic(result.model, OPTIONS)
     inner = [placed(model, "cab", *key) for key in (Q1, Q2)]
     assert inner[0].x == inner[1].x
     assert inner[0].y < inner[1].y

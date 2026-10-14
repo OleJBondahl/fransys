@@ -9,6 +9,8 @@ port), and an idle connector is not drawn. A connection or net group dropped as 
 leaves its pins idle, so a test that used to see the connector drawn now sees no function at all.
 """
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint.codes import ALL_CODES, CONNECTION_TO_UNDRAWN
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -132,7 +134,7 @@ def test_a_net_group_wholly_on_one_board_is_skipped_with_no_finding() -> None:
     model = freeze(draft)
     assert len(model.tables["net"]) == 1, "the fixture has a net to examine"
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     assert inputs.net_groups == ()
     assert inputs.read_findings == ()
     # D8: the dropped net was the only wiring of both pins, so both connectors are idle
@@ -158,7 +160,7 @@ def test_a_drawn_connector_to_an_undrawn_relay_on_one_board_is_skipped_with_no_f
     model = freeze(draft)
     assert len(conductors_table(model)) == 1, "the fixture has a conductor to examine"
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     assert inputs.connections == ()
     assert inputs.read_findings == ()
     # D8: the dropped conductor was `X1`'s only wiring, so `X1` is idle; `K1` is never drawn
@@ -184,7 +186,7 @@ def test_a_cabinet_connector_to_a_board_relay_gets_exactly_one_connection_to_und
     model = freeze(draft)
     assert len(conductors_table(model)) == 1, "the fixture has a conductor to examine"
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     # D8: X9 is drawn as one view per wired pin, the view's handle the pin's port
     assert {spec.function: spec.pin_function for spec in inputs.functions} == {x9_p1.id: x9_fn.id}
     assert inputs.connections == ()
@@ -227,7 +229,7 @@ def test_drawn_connectors_on_two_different_boards_are_kept() -> None:
     )
     model = freeze(draft)
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     # D8: one view per wired pin, its handle the pin's port, its `pin_function` the connector
     views = {spec.function: spec.pin_function for spec in inputs.functions}
     assert views == {x1_p1.id: x1_fn.id, y1_p1.id: y1_fn.id}

@@ -15,6 +15,7 @@ side the groups stay whole, and inside a group the pins order by rank. The botto
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -38,7 +39,7 @@ def _t1_sides(tmp_path) -> dict[str, list[str]]:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     (box,) = (one for one in results.layout.placed if one.column[0].rpartition("/")[2] == "T1")
     found: dict[str, list[str]] = {}
     for port in sorted(box.geometry.ports, key=lambda p: p.at.x):

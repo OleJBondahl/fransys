@@ -131,6 +131,7 @@ fr.write(result, Path("out"))
 - `kicad.md`: importing a board netlist into KiCad, with the settings to use.
 - `layout-numbers.md`: every `d.layout.profile` keyword and every `d.layout.sheet` number, with its house value and its effect.
 - `examples.md`: worked examples, and a pointer to a full build script.
+- `moving-to-0.16-and-0.17.md`: what may newly stop a 0.15 or 0.16 build, the changed outputs and the new names.
 - `moving-to-0.15.md`: each renamed profile and readability name, the new `releases=` keyword and the system overview's Changes switch.
 - `moving-to-0.14.md`: every `fr.derive` name 0.14 removes, and what to use instead.
 - `moving-to-0.6.md`: each break from 0.5, with the old spelling, the new one and why.

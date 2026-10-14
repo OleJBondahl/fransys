@@ -19,6 +19,7 @@ from test_rail_pairs import _GENERIC, _NO, _load, _Relay
 from fransys_model.kernel import make_id
 from fransys_model.vocab import PartRatingFacet, rail_pairs
 from fransys_model.vocab.enums import Earthing, FunctionKind
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.templates import Part
 from fransys_model.vocab.validators.ratings import check_ratings
 
@@ -75,7 +76,8 @@ def test_a_single_pole_in_one_conductor_rated_below_its_rail_to_earth_gives_the_
     (finding,) = check_ratings(_pole("300").model())
     assert finding.subjects == (Plant.function_id("f1", "prot"),)
     assert finding.message == (
-        "function 'prot' of item f1 is rated 300 V AC (part or template rating), "
+        f"function {ref(Plant.function_id('f1', 'prot'))} is rated 300 V AC "
+        "(part or template rating), "
         "but rail 'L1' is at 398.4 V to earth (IT supply '400V')"
     )
 

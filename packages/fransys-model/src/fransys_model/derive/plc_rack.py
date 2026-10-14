@@ -6,12 +6,14 @@ See derive-queries.md.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
+from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.enums import PartCategory
 from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.scaling import ScalingFacet
-from fransys_model.vocab.tables import facets_of, functions, items, parts
+from fransys_model.vocab.membership import external
+from fransys_model.vocab.tables import facets_of, functions, items, parts, ports
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Item, Unit
+lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .designation import printed_designation
 from .indexes import build_indexes
@@ -137,3 +139,20 @@ def plc_rack_modules(
         )
         for module, part in _modules(model, idx, rack)
     )
+
+
+@digest_cached(DIGEST_CACHE_SIZE)
+def channel_pins(model: Model) -> frozenset[Id[Port]]:
+    """The pins that are a channel: a PLC channel template's, and every pin of a part-less device.
+
+    The second case is an external item with no part: its channels are unknown, so each pin is one.
+    """
+    templates = {facet.subject for facet in facets_of(model, PlcChannelFacet).values()}
+    all_functions, all_items = functions(model), items(model)
+    found = set()
+    for pin in ports(model).values():
+        function = all_functions[pin.function]
+        item = all_items[function.item]
+        if function.template in templates or (item.part is None and external(model, item.id)):
+            found.add(pin.id)
+    return frozenset(found)

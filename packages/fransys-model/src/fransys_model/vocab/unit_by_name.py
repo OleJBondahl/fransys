@@ -6,7 +6,8 @@ unresolved `unit_name` in its messages and `vocab` never imports `derive`
 other caller imports it from there.
 """
 
-from fransys_model.kernel import Id, Model, key_text
+from fransys_model.kernel import Id, Model  # noqa: TC001 -- surface hints resolve at runtime (test_signatures)
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.revision_text import revision_text
 from fransys_model.vocab.tables import unit_releases, units
 lazy from fransys_model.vocab.core import Unit
@@ -73,9 +74,9 @@ def unit_name_unresolved(model: Model, name: str) -> str:
     for unit_id in matches:
         unit = all_units[unit_id]
         release = releases[unit.release]
-        text = f"{key_text(unit)} ({revision_text(release.version, release.revision)})"
+        text = f"{ref(unit)} ({revision_text(release.version, release.revision)})"
         if unit.parent is not None:
-            text += f" under {key_text(all_units[unit.parent])}"
+            text += f" under {ref(all_units[unit.parent])}"
         instance_texts.append(text)
     return (
         f"{len(matches)} units are instances of {name!r}: {'; '.join(instance_texts)}. "

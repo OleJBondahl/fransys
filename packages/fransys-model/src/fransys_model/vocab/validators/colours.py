@@ -2,11 +2,12 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.colours import COLOUR_GRAMMAR, split_colour
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CableProductFacet
 from fransys_model.vocab.facets.wire import WireFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors, facets_of, parts
 
 if TYPE_CHECKING:
@@ -35,7 +36,7 @@ def check_colours(model: Model) -> tuple[Finding, ...]:
                 severity=Severity.ERROR,
                 subjects=(conductor.id, facet.id),
                 message=(
-                    f"{what} {key_text(conductor)} has colour {facet.colour!r}, "
+                    f"{what} {ref(conductor)} has colour {facet.colour!r}, "
                     f"which is not {COLOUR_GRAMMAR}"
                 ),
             )
@@ -50,7 +51,7 @@ def check_colours(model: Model) -> tuple[Finding, ...]:
                     severity=Severity.ERROR,
                     subjects=(product.subject, product.id),
                     message=(
-                        f"cable part {key_text(all_parts[product.subject])} core colour "
+                        f"cable part {all_parts[product.subject].mpn} core colour "
                         f"{index} is {colour!r}, which is not {COLOUR_GRAMMAR}"
                     ),
                 )

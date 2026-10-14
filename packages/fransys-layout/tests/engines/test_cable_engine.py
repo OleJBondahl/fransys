@@ -10,6 +10,7 @@ from typing import Any
 
 import fransys_author
 import fransys_parts
+from fransys_el import OPTIONS
 
 from fransys_layout import lay_out_cables, lay_out_schematic
 from fransys_layout.engines.cable.place import block_pitch
@@ -385,8 +386,8 @@ def test_cable_and_schematic_passes_commute():
     frozen = _flat().frozen
     sc, cs = frozen, frozen
     for _ in range(2):
-        sc = lay_out_cables(lay_out_schematic(sc)[0])[0]
-        cs = lay_out_schematic(lay_out_cables(cs)[0])[0]
+        sc = lay_out_cables(lay_out_schematic(sc, OPTIONS)[0])[0]
+        cs = lay_out_schematic(lay_out_cables(cs)[0], OPTIONS)[0]
     assert _records(sc) == _records(cs)
     assert sc.digests == cs.digests
     assert layout_of(sc, CableBlock)

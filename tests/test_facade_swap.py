@@ -16,6 +16,7 @@ import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
 from fransys_author import Design
+from fransys_el import OPTIONS
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -42,7 +43,7 @@ def _by_hand(design_factory):
     model = freeze(merge(parts, design.draft(), layout_trigger_document()))
     model, _ = allocate_plc(model)
     model, _ = number(model)
-    model, _ = lay_out_schematic(model)
+    model, _ = lay_out_schematic(model, OPTIONS)
     model, _ = lay_out_cables(model)
     return model
 

@@ -22,6 +22,7 @@ from fransys_model.layout import (
 )
 from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes, projects
 
+from ._labels import ROMAN
 from ._sizes import Sizes, font_mm
 from ._typst import literal
 
@@ -188,7 +189,7 @@ def preamble(sizes: Sizes, sheet: SheetFormat) -> str:
     return "\n".join(
         [
             f'#set text(font: "DejaVu Sans", size: {font_mm(sizes.body)})',
-            f"#set page(width: {sheet.width_mm}mm, height: {sheet.height_mm}mm)",
+            f"#set page(width: {sheet.width_mm}mm, height: {sheet.height_mm}mm, {ROMAN})",
             f"#show heading.where(level: 1): set text(size: {font_mm(sizes.heading_1)})",
             f"#show heading.where(level: 2): set text(size: {font_mm(sizes.heading_2)})",
             f"#show heading.where(level: 3): set text(size: {font_mm(sizes.body)})",

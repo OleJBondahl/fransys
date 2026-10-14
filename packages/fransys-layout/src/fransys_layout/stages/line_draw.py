@@ -70,6 +70,9 @@ class EndOnPage:
     box: Box | None = None
     mate: Box | None = None
     pins: tuple[PinAt, ...] = ()
+    toward: tuple[int, int] | None = (
+        None  # layout-0206: the rows of the line's far ends, for a plug-less box
+    )
 
 
 @dataclass(frozen=True)
@@ -280,7 +283,8 @@ def _drawn(
 ) -> tuple[EndOnPage, LineEnd, Fan | None]:
     """The end's `LineEnd`, and its fan-out when it ends in pins (to one side, as `way` says)."""
     if one.box is not None:
-        return one, LineEnd(one.branch, _box_end(one.box, one.mate), one.interface), None
+        end = _box_end(one.box, one.mate, one.toward)
+        return one, LineEnd(one.branch, end, one.interface), None
     rows = _pin_rows(turned(one.pins, way.turn[0]) if way.turn else faced(one.pins, way.toward))
     facing = rows[0][0].end.facing  # the line ends at the first row's split, out of that row
     avoid = [one.box for one in grid.obstacles]
@@ -361,9 +365,14 @@ def _row_run(fan: Fan, grid: Grid) -> tuple[Point, ...]:
     return tuple(run)
 
 
-def _box_end(box: Box, mate: Box | None) -> End:
-    """A plug box's edge middle away from the box it mates, on the grid: up unless it is below."""
+def _box_end(box: Box, mate: Box | None, toward: tuple[int, int] | None = None) -> End:
+    """A plug box's edge middle away from the box it mates, on the grid: up unless it is below.
+
+    A plug-less box (layout-0206) takes the edge facing the rows of the line's other ends.
+    """
     below = mate is not None and mate.y + mate.height <= box.y
+    if toward is not None:
+        below = toward[0] >= box.y + box.height
     x = box.x + box.width // 2
     x -= x % WIRING_GRID
     if below:

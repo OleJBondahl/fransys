@@ -91,8 +91,8 @@ def test_a_contactor_rated_150_a_on_each_pole_gives_a_finding_per_pole(tmp_path)
     for finding in found:
         assert finding.code == RATING_CURRENT_BELOW_BRANCH
         assert "rated 150 A DC" in finding.message
-        assert (
-            "below its branch's 186 A DC set by the source of function 'string'" in finding.message
+        assert "below its branch's 186 A DC set by the source of function ⟨function:" in (
+            finding.message
         )
 
 

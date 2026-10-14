@@ -10,6 +10,7 @@ from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Id, Model, Severity, evolve, make_id
 from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Unit
@@ -93,7 +94,7 @@ def unit_tag_duplicates(model: Model, code: str) -> list[Finding]:
             code=code,
             severity=Severity.ERROR,
             subjects=(unit.id,),
-            message=f"unit instance {'/'.join(unit.key)} has the tag {tag!r}, "
+            message=f"unit instance {ref(unit)} has the tag {tag!r}, "
             "which another instance under the same parent has too",
         )
         for (_, tag), same in groups.items()

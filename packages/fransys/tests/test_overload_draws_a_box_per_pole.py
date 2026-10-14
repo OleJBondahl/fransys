@@ -17,6 +17,7 @@ import fransys as fr
 import fransys_author.surface as author_surface
 import fransys_parts
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -87,8 +88,8 @@ def _built(tmp_path):
 
 def test_each_pole_of_an_overload_draws_a_thermal_box(tmp_path) -> None:
     model = _built(tmp_path)
-    results, _ = stage_results(model, read_inputs(model))
-    spec = next(f for f in read_inputs(model).functions if f.key[-1] == "main")
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
+    spec = next(f for f in read_inputs(model, options=OPTIONS).functions if f.key[-1] == "main")
     drawn = next(f for f in results.drawn if f.function == spec.function)
     assert drawn.geometry.key == "thermal-overload"
     assert drawn.geometry.poles == 3

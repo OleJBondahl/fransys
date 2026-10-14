@@ -73,8 +73,8 @@ def test_harness_without_tag_leaves_build(tmp_path: Path) -> None:
     result = _build(tmp_path)
     (finding,) = [f for f in result.findings if f.code == _CODE]
     assert finding.severity is Severity.ERROR
-    for part in ("w0", "tag"):
-        assert part in finding.message
+    assert finding.message.startswith("harness reads as a harness")
+    assert "w0" not in finding.message
     with pytest.raises(fr.BuildErrors) as raised:
         fr.write(result, tmp_path / "out")
     assert _CODE in {f.code for f in raised.value.findings}

@@ -7,7 +7,7 @@ from fransys_layout.lint.naming import (
     Where,
     _groups_on,
     _pages_of,
-    name_findings,
+    append_pages_and_designations,
 )
 from fransys_layout.stages import Layout
 from fransys_model.kernel import Finding, Severity
@@ -32,7 +32,7 @@ def _named(finding, labels=None, names=None):
     where = Where(
         pages=_pages_of(LAYOUT, (), NO_INK), groups=_groups_on(LAYOUT), labels=labels or {}
     )
-    return name_findings(names or {PORT: "-K1:13"}, where, [finding])[0].message
+    return append_pages_and_designations(names or {PORT: "-K1:13"}, where, [finding])[0].message
 
 
 def test_a_finding_on_a_placed_function_names_its_page_and_designation() -> None:

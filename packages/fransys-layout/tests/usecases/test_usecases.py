@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from debug_svg import write_debug_pages
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -71,7 +72,7 @@ _PLACEMENT_KIND = "layout.symbol_placement"
 @cache
 def _run(**options: bool) -> tuple[Model, tuple[Finding, ...]]:
     """The cabinet built with `options`, frozen and laid out; one run per option set."""
-    return lay_out_schematic(freeze(build_cabinet(**options)))
+    return lay_out_schematic(freeze(build_cabinet(**options)), OPTIONS)
 
 
 def _laid_out(**options: bool) -> Model:
@@ -221,14 +222,14 @@ def test_layout_is_independent_of_authoring_order() -> None:
 def test_layout_is_idempotent() -> None:
     """Laying out an already laid-out model changes no digest."""
     once = _laid_out()
-    twice, _ = lay_out_schematic(once)
+    twice, _ = lay_out_schematic(once, OPTIONS)
     assert twice.digests == once.digests
 
 
 def test_engineering_digests_are_untouched() -> None:
     """A layout run never changes the plant: `core` and `facet` digests stay equal."""
     authored = freeze(build_cabinet())
-    laid_out, _ = lay_out_schematic(authored)
+    laid_out, _ = lay_out_schematic(authored, OPTIONS)
     assert laid_out.digests["core"] == authored.digests["core"]
     assert laid_out.digests["facet"] == authored.digests["facet"]
     assert laid_out.digests["layout"] != authored.digests["layout"]
@@ -243,8 +244,8 @@ def _leak(monkeypatch: pytest.MonkeyPatch, extra_gap: Callable[[Model], int]) ->
     """
     real = engine.read_inputs
 
-    def read(model: Model, unit: Id[Any] | None = None) -> StageInputs:
-        inputs = real(model, unit)
+    def read(model: Model, unit: Id[Any] | None = None, *, options: Any) -> StageInputs:
+        inputs = real(model, unit, options=options)
         gap = inputs.profile.column_gap + extra_gap(model)
         return replace(inputs, profile=replace(inputs.profile, column_gap=gap))
 
@@ -288,7 +289,7 @@ def test_layout_is_independent_of_the_order_of_the_stage_inputs(
 ) -> None:
     """The shuffle that reaches the stages: every input tuple reordered, the same layout out."""
     model = freeze(build_cabinet())
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     assert run_stages(model, _reordered(inputs, order)) == run_stages(model, inputs)
 
 
@@ -308,7 +309,7 @@ def test_the_stage_input_shuffle_can_fail(monkeypatch: pytest.MonkeyPatch) -> No
 
     monkeypatch.setattr(engine, "stage_results", leaky)
     model = freeze(build_cabinet())
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     reversed_inputs = _reordered(inputs, lambda records: records[::-1])
     assert run_stages(model, reversed_inputs) != run_stages(model, inputs)
 
@@ -316,8 +317,8 @@ def test_the_stage_input_shuffle_can_fail(monkeypatch: pytest.MonkeyPatch) -> No
 def test_the_idempotence_check_can_fail(monkeypatch: pytest.MonkeyPatch) -> None:
     """An engine that lets earlier layout records steer the result changes a digest on a rerun."""
     _leak(monkeypatch, lambda model: 8 if model.tables.get("layout.route") else 0)
-    once, _ = lay_out_schematic(freeze(build_cabinet()))
-    twice, _ = lay_out_schematic(once)
+    once, _ = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
+    twice, _ = lay_out_schematic(once, OPTIONS)
     assert twice.digests != once.digests
 
 
@@ -346,7 +347,7 @@ def test_the_coherence_check_can_fail_on_the_cabinet(monkeypatch: pytest.MonkeyP
         return routes[1:], findings
 
     monkeypatch.setattr(pagerun, "route", lossy)
-    _, findings = lay_out_schematic(freeze(build_cabinet()))
+    _, findings = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
     assert CONNECTION_NOT_DRAWN in _coherence(findings)
 
 
@@ -361,7 +362,7 @@ def test_no_coherence_findings_when_the_cabinet_is_split_over_more_pages(width_m
     (300 mm gives 2 pages now, 245 mm still gives 3); the narrow golden pins one exact split.
     """
     model = freeze(_on_sheet(width_mm))
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     layout, _, findings = run_stages(model, inputs)
     assert len(layout.pages) > 1
     assert [marker for marker in layout.markers if not marker.star]
@@ -418,7 +419,7 @@ _NARROW_WIDTH_MM = 158
 @cache
 def _narrow_run(**options: bool) -> tuple[Model, tuple[Finding, ...]]:
     """The cabinet on the narrow sheet (`_NARROW_WIDTH_MM`), frozen and laid out."""
-    return lay_out_schematic(freeze(_on_sheet(_NARROW_WIDTH_MM, **options)))
+    return lay_out_schematic(freeze(_on_sheet(_NARROW_WIDTH_MM, **options)), OPTIONS)
 
 
 def _narrow_laid_out(**options: bool) -> Model:
@@ -432,7 +433,7 @@ def _two_location_laid_out() -> Model:
     No narrow sheet needed: the severed control signal from `-K1` `aux` (`=P1`, `+C1`) to
     `-K2` `aux` (`=P2`, `+C2`) already crosses drawing sets at the default width.
     """
-    return lay_out_schematic(freeze(build_cabinet(second_location=True)))[0]
+    return lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)[0]
 
 
 def _changed_placements(before: Model, after: Model) -> list[Id[Any]]:
@@ -484,8 +485,8 @@ def test_the_stability_check_can_fail(monkeypatch: pytest.MonkeyPatch) -> None:
     """An engine whose layout shifts when the model grows moves placements outside `=P2`."""
     functions = len(freeze(build_cabinet()).tables["function"])
     _leak(monkeypatch, lambda model: 8 if len(model.tables["function"]) > functions else 0)
-    before, _ = lay_out_schematic(freeze(build_cabinet()))
-    after, _ = lay_out_schematic(freeze(build_cabinet(extra_relay=True)))
+    before, _ = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
+    after, _ = lay_out_schematic(freeze(build_cabinet(extra_relay=True)), OPTIONS)
     assert _off_group_pages(before, after, make_id(AspectNode, ("p2",))) != []
 
 
@@ -514,8 +515,8 @@ def test_the_added_placement_check_can_fail(monkeypatch: pytest.MonkeyPatch) -> 
         return records, discriminator
 
     monkeypatch.setattr(placements_module, "placements", leaky)
-    before, _ = lay_out_schematic(freeze(build_cabinet()))
-    after, _ = lay_out_schematic(freeze(build_cabinet(extra_relay=True)))
+    before, _ = lay_out_schematic(freeze(build_cabinet()), OPTIONS)
+    after, _ = lay_out_schematic(freeze(build_cabinet(extra_relay=True)), OPTIONS)
     assert _off_group_pages_of(_added_placements(before, after), after, group) != []
 
 
@@ -595,7 +596,7 @@ def test_cabinet_two_location_layout_digest_matches_golden(
 def test_debug_pages_are_written_for_a_human_to_look_at(tmp_path: Path) -> None:
     """One SVG per page; looking at them is part of done for placement and routing work."""
     model = freeze(build_cabinet())
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     layout, _, _ = run_stages(model, inputs)
     paths = write_debug_pages(layout, tmp_path, sheet=inputs.sheet)
     assert len(paths) == len(layout.pages) > 0

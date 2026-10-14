@@ -38,7 +38,7 @@ from ._data_alt import lens_data, matrix_data
 from ._data_changes import changes_data
 from ._data_findings import findings_data
 from ._data_heads import heads_data
-from ._data_places import holds_of
+from ._data_places import holds_of, unit_place_label
 from ._palette import palette_data
 from ._tabs import tab_texts
 
@@ -121,7 +121,8 @@ def _classes(tables: _Tables, ref: OverviewRef, unit: Id[Any] | None) -> list[st
     if ref.kind is OverviewRefKind.PLACE:
         return [None, None, "place", tables.aspect_label.get(ref.node)]
     kind = {"unit": "unit", "fields": "field devices", "strips": "strip"}[ref.kind.value]
-    return [own if own is not None else tables.unit_label.get(unit), None, kind, None]
+    place = unit_place_label(model, ref.unit) if kind == "unit" and ref.unit is not None else None
+    return [own if own is not None else tables.unit_label.get(unit), None, kind, place]
 
 
 def _box(

@@ -5,6 +5,7 @@ import dataclasses
 from typing import Any
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet, unit_with_release
 from samples import column, connection, function_spec, hid
 
@@ -231,7 +232,7 @@ def test_a_connection_end_that_is_not_in_the_inputs_raises(missing: str) -> None
 
 def _cabinet_pairs(draft: Draft) -> tuple[StageInputs, set[tuple[tuple[str, ...], Id[Any] | None]]]:
     """The inputs, and each replica as (its terminal's function key, its group)."""
-    inputs = read_inputs(freeze(draft))
+    inputs = read_inputs(freeze(draft), options=OPTIONS)
     columns, _ = columns_from_chains(inputs.chains, inputs.functions)
     result = replicate_terminals(columns, inputs.functions, inputs.connections)
     key_of = {spec.function: spec.key for spec in inputs.functions}
@@ -381,7 +382,7 @@ def test_a_boundary_function_gets_a_black_box_replica_in_its_parent_unit() -> No
     """The replica takes its location, group and role from the home column; its own unit is
     the boundary unit's *parent*, and its key is `boundary_key`'s."""
     model, function_id, top, child = _boundary_model()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (spec,) = (s for s in inputs.functions if s.function == function_id)
     home = Column(
         key=("boundary-fixture", "home"),
@@ -408,7 +409,7 @@ def test_the_black_box_takes_its_group_from_the_home_and_not_from_a_terminal_rep
     # UNDO: stages/replicate.py, `replicate_boundaries`: `for column in homes for cell` ->
     #     `for column in columns for cell` (the replica column, keyed after the home, wins)
     model, function_id, top, child = _boundary_model()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     home = Column(
         key=("boundary-fixture", "a-home"),
         cells=(Cell(function=function_id, index=0),),
@@ -430,7 +431,7 @@ def test_a_boundary_function_with_no_outside_connection_still_replicates() -> No
     """Can-fail: replication is unconditional, not triggered by a connection -- this fixture's
     function has zero ports and zero conductors and still gets its black-box replica."""
     model, function_id, _, child = _boundary_model()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (spec,) = (s for s in inputs.functions if s.function == function_id)
     assert spec.ports == ()
     home = Column(
@@ -449,7 +450,7 @@ def test_a_top_level_units_own_boundary_gets_a_replica_in_the_top_level_set() ->
     """`Unit.parent is None`: the black box goes to the top level, not skipped ("or the top level").
     The replica's own `unit` is `None` and its key uses `boundary_key`'s `("top",)` branch."""
     model, function_id = _top_level_boundary_model()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (spec,) = (s for s in inputs.functions if s.function == function_id)
     home = Column(
         key=("boundary-fixture", "top-home"),
@@ -488,7 +489,7 @@ def test_a_boundary_function_with_no_spec_draws_nothing_and_is_no_fault() -> Non
 def test_a_boundary_function_in_no_column_raises() -> None:
     """The function has a spec but no column: also an assembly fault."""
     model, _function_id, _, _child = _boundary_model()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     with pytest.raises(LayoutError, match="no column"):
         _replicate_boundaries((), model, inputs.functions, ())
 

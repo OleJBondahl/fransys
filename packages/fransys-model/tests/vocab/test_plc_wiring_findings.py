@@ -8,6 +8,8 @@ from query_builders import make_channels
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.enums import LinkKind, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
+from fransys_model.vocab.finding_ref import ref
+from fransys_model.vocab.validators._natural_join import natural_join
 from fransys_model.vocab.validators.plc import check_plc_wiring
 
 if TYPE_CHECKING:
@@ -65,16 +67,18 @@ def _terminal(plant: Plant) -> tuple[Id[Port], Id[Port]]:
 
 
 def test_several_wired_devices_are_sorted_and_joined_with_a_comma() -> None:
-    """Created `z` first: the message still lists `y/fn, z/fn`."""
+    """The message names both devices and the channel by reference, never by key."""
     plant = Plant()
     bound, bound_pin = _channel(plant, "mod-a")
     request, _ = _request(plant, "sensor")
-    _, pin_z = _request(plant, "z")
-    _, pin_y = _request(plant, "y")
+    fn_z, pin_z = _request(plant, "z")
+    fn_y, pin_y = _request(plant, "y")
     _bind(plant, request, bound)
     plant.wire(bound_pin, pin_z, key="w-z")
     plant.wire(bound_pin, pin_y, key="w-y")
     (finding,) = check_plc_wiring(plant.model())
     assert finding.message == (
-        "channel mod-a/ch1 is wired to y/fn, z/fn but bound to request sensor/fn"
+        f"channel {ref(bound)} is wired to {natural_join([ref(fn_y), ref(fn_z)])} "
+        f"but bound to request {ref(request)}"
     )
+    assert "/" not in finding.message

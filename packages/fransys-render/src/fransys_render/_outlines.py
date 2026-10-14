@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.layout import Outline, sheet_format_of
 
-from ._numbers import format_decimal, grid_to_mm
+from ._numbers import format_decimal
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model

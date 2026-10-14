@@ -7,6 +7,7 @@ rule names.
 """
 
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES
 from fransys_layout.engines.schematic.read import read_inputs
@@ -120,7 +121,7 @@ def _connector_symbol(gender: Gender | None) -> str:
     draft.extend(
         (part, template, facet, x9, x8, x9_fn, x8_fn, x9_p1, x8_p1, conductor), origin=_ORIGIN
     )
-    inputs = read_inputs(freeze(draft))
+    inputs = read_inputs(freeze(draft), options=OPTIONS)
     drawn, _findings = resolve(inputs.functions, rules=DEFAULT_RULES, choices=inputs.choices)
     (view,) = (one for one in drawn if one.function == x9_p1.id)
     return view.geometry.key

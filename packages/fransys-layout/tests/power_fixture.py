@@ -10,6 +10,8 @@ from decimal import Decimal
 from functools import cache
 from itertools import pairwise
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
@@ -133,7 +135,7 @@ def power_run() -> tuple:
     Four pages and eleven power ends; every test module of the power symbols shares it.
     """
     model = power_model(60)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, findings = stage_results(model, inputs)
     return model, inputs, results, findings
 

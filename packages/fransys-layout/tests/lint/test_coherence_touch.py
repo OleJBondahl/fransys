@@ -18,7 +18,7 @@ from fransys_layout.lint.naming import (
     Where,
     _groups_on,
     _pages_of,
-    name_findings,
+    append_pages_and_designations,
 )
 from fransys_model.derive.drawing_text import position_text
 
@@ -55,7 +55,7 @@ def _all(routes, *, connections=CONNECTIONS, net_groups=()):
     touches = [one for one in findings if one.code == ROUTE_SHORTS_NETS]
     # the page and drawing set come from the engine's last pass, as the user reads them
     where = Where(pages=_pages_of(layout, (), NO_INK), groups=_groups_on(layout), labels={})
-    return list(name_findings({}, where, touches))
+    return list(append_pages_and_designations({}, where, touches))
 
 
 def _touches(routes, **kwargs):

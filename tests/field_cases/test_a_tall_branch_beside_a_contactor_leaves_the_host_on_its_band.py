@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -94,7 +95,7 @@ _RESULT, _DC_PAGE = _build()
 
 
 def _placed(suffix: str):  # the engine's placed function, a layout type
-    layout = stage_results(_RESULT.model, read_inputs(_RESULT.model))[0].layout
+    layout = stage_results(_RESULT.model, read_inputs(_RESULT.model, options=OPTIONS))[0].layout
     (host,) = (f.id for f in functions(_RESULT.model).values() if "/".join(f.key).endswith(suffix))
     (one,) = (p for p in layout.placed if p.function == host)
     return one
@@ -135,6 +136,6 @@ def test_the_taller_branchs_other_join_runs_as_an_l_clear_of_the_host() -> None:
 
 
 def test_the_dc_function_fits_one_sheet_of_the_unit() -> None:
-    layout = stage_results(_RESULT.model, read_inputs(_RESULT.model))[0].layout
+    layout = stage_results(_RESULT.model, read_inputs(_RESULT.model, options=OPTIONS))[0].layout
     unit_pages = [p for p in layout.pages if p.unit is not None]
     assert [p.number for p in unit_pages] == [1], unit_pages

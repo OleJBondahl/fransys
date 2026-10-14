@@ -214,7 +214,7 @@ def test_no_header_or_footer_argument_on_any_page_kind():
     m = model(c1, doc)
     text = source(m, doc.id, {})
     assert "header:" not in text
-    assert "footer:" not in text
+    assert text.count("footer:") == text.count("footer: none") == 1  # no page number (NV4)
     # Absence alone is also true of a blank page with no frame at all: pin that the same
     # page setup that has no header and no footer still has a background (the frame).
     assert "background:" in text

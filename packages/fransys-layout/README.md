@@ -9,7 +9,7 @@ Status: the first layers are done (geometry, stages, both lints, the schematic e
 A set of passes on the [fransys-model](../../packages/fransys-model) `Model`. An author connects components, places them in the `=` and `+` aspect trees, and may add soft hints. An engine decides drawing sets, pages, symbol positions, wire routes, cross-page links and label positions, and returns a new `Model` that carries the result as derived `layout.*` records.
 
 ```python
-def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]
+def lay_out_schematic(model: Model, options: LayoutOptions) -> tuple[Model, tuple[Finding, ...]]
 def lay_out_cables(model: Model) -> tuple[Model, tuple[Finding, ...]]
 ```
 
@@ -25,6 +25,8 @@ Model (… plus derived layout.*)  +  findings
 ```
 
 `lay_out_cables` lays out one block per reading and subject: two rows of end boxes, the closed cable box between them, and one wire per core (layout-0141). The rows are a two-colouring of the block's ends (model-0164). Between the cable box and the bottom row, a channel holds the wires that bend (layout-0145). A harness is one block, its cable boxes inside one dashed box (layout-0146). A cable it cannot draw whole gets no block. `fransys_pdf` then stops any export that asks for that block (pdf-0022). The two engines replace only their own record kinds, so they run in either order.
+
+`options` carries the text placement table (decision layout-0192): this package holds no drawing convention of its own for it, and `fransys_el` supplies the electrical one.
 
 The model is the hub. This package reads the model and writes the model. It renders nothing, reads no file and defines no record kind: every `layout.*` kind lives in `fransys_model.layout`.
 

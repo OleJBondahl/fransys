@@ -8,6 +8,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -34,7 +35,7 @@ _ONE_LINE = (LabelKind.TAG, LabelKind.MARKING)
 def _run() -> tuple[Model, StageResults, list[dict]]:
     """The laid-out cabinet, its stage results and what `label_boxes` measured per page."""
     model = freeze(build_cabinet())
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     measured: list[dict] = []
     original = pagerun._place_page
 

@@ -13,6 +13,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -36,7 +37,7 @@ def _run(cabinet: str) -> tuple[dict[int, int], dict[int, int]]:
         return band
 
     with patch.object(place, "_reference_band", spy):
-        results, _ = stage_results(model, read_inputs(model))
+        results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     # a reference box stands turned at an N or S port: its long side is the box's width
     widths = {
         one.drawing_set: max(one.box.width, one.box.height)
@@ -88,7 +89,7 @@ def test_the_page_side_rooms_carry_the_sets_digits_the_early_call_keeps_the_floo
         return patch.object(module, "side_reference_rooms", spy)
 
     with watch("engine", engine), watch("page", pagerun):
-        stage_results(model, read_inputs(model))
+        stage_results(model, read_inputs(model, options=OPTIONS))
     assert calls["engine"]
     assert set(calls["engine"]) == {FLOOR}
     assert any(one != FLOOR for one in calls["page"])

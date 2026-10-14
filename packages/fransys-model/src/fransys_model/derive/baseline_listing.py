@@ -21,7 +21,7 @@ from fransys_model.vocab.tables import (
 )
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Unit
+lazy from fransys_model.vocab.core import Item, Unit
 
 from .baseline_designation import (
     _cross_function_text,
@@ -67,15 +67,18 @@ def _repr_key(value: object) -> tuple[bool, str]:
 # -- listing(model, unit) -------------------------------------------------
 
 
+def _listing_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str:
+    """The `designation` the `items` section prints for `item`: `""` for a unit's sole root."""
+    return "" if is_sole_unit_root(model, item) else unit_designation(model, unit, item)
+
+
 def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
     parts_table = parts(model)
     rows = []
     for item in items(model).values():
         if item.unit != unit or lone_cable(model, item.id) is not None:  # model-0150
             continue
-        designation = (
-            "" if is_sole_unit_root(model, item.id) else unit_designation(model, unit, item.id)
-        )
+        designation = _listing_designation(model, unit, item.id)
         part = None if item.part is None else parts_table[item.part]
         rows.append(
             BaselineItem(
@@ -85,6 +88,9 @@ def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
                 installed=item.installed,
                 external=external(model, item.id),
                 position=item.position,
+                parent=None
+                if item.parent is None
+                else _listing_designation(model, unit, item.parent),
             )
         )
     rows.sort(

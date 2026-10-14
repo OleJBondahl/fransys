@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -69,7 +70,7 @@ def test_the_ground_row_keeps_one_height(tmp_path: Path) -> None:
     result = _build(tmp_path)
     assert "POWER_SYMBOL_UNPLACED" not in {f.code for f in fr.check(result)}
     model = result.model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     (k1,) = (one.id for one in items(model).values() if one.tag == "K1")
     own = {f.id for f in functions(model).values() if f.item == k1} | {k1}
     (box,) = (placed_keepout(one) for one in results.layout.placed if one.function in own)

@@ -21,7 +21,7 @@ from . import lookups
 from ._labelling import _reflected, home
 from .lookups import placed_keepout
 from .space import End, Run, Shape, Space, lane
-from .texts.candidates import DEFAULT_TABLE, TextKind
+from .texts.candidates import TextKind
 from .texts.place_texts import Anchor, TextToPlace, place_texts
 from .types import LabelKind, PlacedLabel, Profile
 
@@ -87,7 +87,7 @@ def place_slot_labels(
             )
         )
         asked[kind, request.subject, request.slot] = (request, where)
-    found, findings = place_texts(tuple(texts), space, DEFAULT_TABLE, lanes=lanes)
+    found, findings = place_texts(tuple(texts), space, frame.profile.texts, lanes=lanes)
     labels = []
     for one in found:
         request, where = asked[one.kind, one.handle, one.slot]

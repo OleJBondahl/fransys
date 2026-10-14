@@ -3,6 +3,7 @@
 from decimal import Decimal
 from functools import cache
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import StageResults, stage_results
@@ -16,7 +17,7 @@ from fransys_model.layout import Profile, SheetFormat
 def narrow_results(width_mm: int) -> tuple[StageResults, tuple[Finding, ...]]:
     """The stage results and findings of the cabinet on a sheet with `width_mm` of content."""
     model = narrow_model(width_mm)
-    return stage_results(model, read_inputs(model))
+    return stage_results(model, read_inputs(model, options=OPTIONS))
 
 
 @cache

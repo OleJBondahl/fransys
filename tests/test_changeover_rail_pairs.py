@@ -18,6 +18,7 @@ import pytest
 
 from fransys_model.kernel import Severity
 from fransys_model.vocab.closure import rail_pairs
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.validators import ALL_VALIDATORS
 from fransys_model.vocab.validators.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
 
@@ -93,4 +94,5 @@ def test_a_changeover_pole_stands_across_both_supplies_at_628_7_volts(
     (finding,) = found
     assert finding.code == RATING_VOLTAGE_BELOW_CIRCUIT
     assert finding.subjects == (fn_id(p["q1"], "co_1"),)
-    assert all(text in finding.message for text in ("'co_1'", "'E_L1'", "'M_L1'", "628.7"))
+    assert ref(fn_id(p["q1"], "co_1")) in finding.message
+    assert all(text in finding.message for text in ("'E_L1'", "'M_L1'", "628.7"))

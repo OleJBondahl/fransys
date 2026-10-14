@@ -8,6 +8,7 @@ import fransys_parts
 from _model_build_cover import cabinet_document, layout_trigger_document, system_document
 from demo_designs import cabinet_design
 from fransys.pipeline import BuildResult
+from fransys_el import OPTIONS
 
 from fransys_layout import lay_out_schematic
 from fransys_model.kernel import Severity
@@ -40,7 +41,7 @@ def test_a_document_with_no_schematic_page_builds_with_no_layout_record():
 
 def test_the_exports_of_that_document_equal_those_of_a_build_that_laid_out_anyway(tmp_path):
     lean = _build(lambda _c1: system_document())
-    laid_out, _findings = lay_out_schematic(lean.model)
+    laid_out, _findings = lay_out_schematic(lean.model, OPTIONS)
     assert dict(laid_out.tables["layout.page"])  # not vacuous: the forced layout drew pages
     assert _written(lean, tmp_path / "lean") == _written(
         BuildResult(model=laid_out, findings=lean.findings), tmp_path / "forced"

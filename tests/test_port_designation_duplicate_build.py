@@ -114,6 +114,7 @@ def test_the_build_returns_one_error_naming_the_item_the_functions_and_the_text(
     assert finding.severity is Severity.ERROR
     for part in ("A1", "ch1", "ch2", repr("-A1:7"), "pin markings"):
         assert part in finding.message
+    assert "⟨" not in finding.message
     assert [f.severity for f in duplicate.findings].count(Severity.ERROR) == 1
 
 

@@ -11,6 +11,7 @@ from fransys_layout.stages import (
     Layout,
     onepage,
 )
+from fransys_layout.stages.box_leave import box_columns
 from fransys_layout.stages.box_views import drawn_hidden, hidden_views
 from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
 from fransys_layout.stages.connector_boxes import PlacedConnectorBox
@@ -68,6 +69,7 @@ from .write import write_layout
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from fransys_layout.options import LayoutOptions
     from fransys_layout.stages import ColumnWidth
     from fransys_layout.stages.pagerun import Decide
     from fransys_layout.stages.references import References
@@ -146,6 +148,9 @@ def stage_layout(
     # a middle unit's line views leave their columns; its lines' conductors are no routes
     inputs, columns, middle, reach = strip_middle(model, inputs, columns)
     inputs, lines = strip_lines(model, inputs)
+    columns = box_columns(
+        columns, boxes, (*inputs.connections, *inputs.crossing), inputs.net_groups
+    )
     texts = tag_texts(model)
     rowed, pin_requests = row_labels(texts, inputs.functions, all_columns, slot_requests)
     own_set = own_set_texts(texts, boundary_edge_set(model), rowed, inputs.functions)
@@ -353,7 +358,7 @@ def _page_inputs(
     )
 
 
-def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]:
+def lay_out_schematic(model: Model, options: LayoutOptions) -> tuple[Model, tuple[Finding, ...]]:
     """Lay out every drawn function of `model` and return the laid-out model.
 
     Read, `stage_results` in stage order, then `write_layout`. Pure and deterministic:
@@ -362,13 +367,16 @@ def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     already holds derived layout records has them replaced. Findings are sorted by
     `(code, subjects, message)`. A half-finished design still lays out; only structural
     problems raise (`LayoutError`). Each unit with drawings is drawn with its own profile
-    (model-0192): one run per profile in use, spliced by drawing set (`profiles.py`).
+    (model-0192): one run per profile in use, spliced by drawing set (`profiles.py`). `options`
+    holds the caller's conventions (seam 1).
     """
-    return lay_out(model, _run_once)
+    return lay_out(model, partial(_run_once, options=options))
 
 
-def _run_once(model: Model, unit: Id[Any] | None) -> tuple[Model, tuple[Finding, ...]]:
+def _run_once(
+    model: Model, unit: Id[Any] | None, *, options: LayoutOptions
+) -> tuple[Model, tuple[Finding, ...]]:
     """The whole pass with the profile of `unit` (`None`: the top design's)."""
-    results, scene, found = stage_layout(model, inputs := read_inputs(model, unit))
+    results, scene, found = stage_layout(model, inputs := read_inputs(model, unit, options=options))
     laid = write_layout(model, results, write_keys(model, inputs.functions))
     return laid, linted(model, scene, found, printed_set_numbers(laid))

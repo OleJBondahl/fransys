@@ -15,6 +15,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -51,7 +52,7 @@ _PROJECT: dict[str, Any] = {
 @cache
 def _cabinet() -> Model:
     """The layout package's cabinet, laid out with the house profile (no authored profile)."""
-    return lay_out_schematic(freeze(build_cabinet()))[0]
+    return lay_out_schematic(freeze(build_cabinet()), OPTIONS)[0]
 
 
 def _design(*, second_tag: str = "K2", relays: bool = True, lamp_rails: tuple[str, str] = ("", "")):
@@ -254,7 +255,7 @@ def test_a_seven_block_column_ends_inside_the_page_at_the_house_row_spacing() ->
     def gaps(column: list) -> list[int]:
         return [b[1] - a[2] for a, b in pairwise(column)]
 
-    inputs = read_inputs(house.model)
+    inputs = read_inputs(house.model, options=OPTIONS)
     for result, column in ((house, house_column), (wide, wide_column)):
         assert overfull(result) == []
         assert len(column) == 7

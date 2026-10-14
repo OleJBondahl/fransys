@@ -73,8 +73,9 @@ def line_points(
     """The points of line `i` from its lower-stage end `ends[0]` to the other."""
     (su, sv), (tu, tv) = (plan.stage[ends[0]], plan.stage[ends[1]]), touches
     if su == sv:
-        c = room.chans[su]
-        x = room.xs[su] + room.wide[su] + c.lead + (c.count + 1 + c.same.index(i)) * TRACK_PITCH
+        s = su - 1 if plan.runs_west(i, su) else su
+        c = room.chans[s]
+        x = room.xs[s] + room.wide[s] + c.lead + (c.count + 1 + c.same.index(i)) * TRACK_PITCH
         return tidy((tu, Point(x=x, y=tu.y), Point(x=x, y=tv.y), tv))
     mid = _middle(room, su, i)
     if sv - su >= LONG:

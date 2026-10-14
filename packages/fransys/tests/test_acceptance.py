@@ -17,6 +17,7 @@ from fransys.pipeline import (
     _svgs,
     _svgs_cache,
 )
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic import lay_out_schematic
 from fransys_layout.geometry import SymbolPortError
@@ -807,7 +808,7 @@ def test_symbol_port_missing_falls_back_to_the_part_with_no_matching_port_templa
     assert any(f.code == "ITEM_PART_MISMATCH" for f in result.findings)
     assert not any(f.code == "SYMBOL_PORT_MISSING" for f in result.findings)
     with pytest.raises(SymbolPortError) as raised:
-        lay_out_schematic(result.model)
+        lay_out_schematic(result.model, OPTIONS)
     finding = symbol_port_missing_finding(result.model, raised.value)
     assert finding.severity is Severity.ERROR
     assert finding.subjects == (part_id,)

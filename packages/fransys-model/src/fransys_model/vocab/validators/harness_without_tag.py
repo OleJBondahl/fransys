@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.own_designation import has_own_designation
 from fransys_model.vocab.tables import items
@@ -25,7 +26,7 @@ def check_harness_without_tag(model: Model) -> tuple[Finding, ...]:
             severity=Severity.ERROR,
             subjects=(item.id,),
             message=(
-                f"{key_text(item)} reads as a harness (a marked harness or a cable child), "
+                f"{ref(item)} reads as a harness (a marked harness or a cable child), "
                 "but has no designation: give it a tag: d.harness(tag=...), or tag= on the item"
             ),
         )

@@ -8,6 +8,7 @@ found by authoring key, never by designation.
 import dataclasses
 from decimal import Decimal
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet, unit_with_release
 
 from fransys_layout.engines.schematic import run_stages
@@ -31,7 +32,7 @@ def _function(model, item_key: tuple[str, ...], name: str):
 
 def _spec(model, item_key: tuple[str, ...], name: str):
     function = _function(model, item_key, name)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (spec,) = (s for s in inputs.functions if s.function == function.id)
     return spec
 
@@ -70,7 +71,7 @@ def test_tag_text_of_a_normal_function_is_the_item_designation() -> None:
     (layout-0066: no aspect segments, top level included)."""
     model = freeze(build_cabinet())
     function = _function(model, ("cabinet", "k1"), "coil")
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (tag,) = (t for t in inputs.label_texts if t.subject == function.id and t.kind is LabelKind.TAG)
     assert tag.text == "-K1"
 
@@ -80,7 +81,7 @@ def test_tag_text_of_a_terminal_function_is_strip_colon_marking() -> None:
     always dash-prefixed (decision model-0052)."""
     model = freeze(build_cabinet())
     function = _function(model, ("cabinet", "x1", "1"), "terminal")
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (tag,) = (t for t in inputs.label_texts if t.subject == function.id and t.kind is LabelKind.TAG)
     assert tag.text == "-X1:1"
 
@@ -112,7 +113,7 @@ def test_a_function_specs_unit_is_none_with_no_units_authored() -> None:
     model = freeze(build_cabinet())
     spec = _spec(model, ("cabinet", "k1"), "coil")
     assert spec.unit is None
-    assert read_inputs(model).units == ()
+    assert read_inputs(model, options=OPTIONS).units == ()
 
 
 def test_a_function_specs_unit_is_copied_from_its_items_own_unit() -> None:
@@ -129,7 +130,7 @@ def test_a_function_specs_unit_is_copied_from_its_items_own_unit() -> None:
     )
     spec = _spec(with_unit, ("cabinet", "k1"), "coil")
     assert spec.unit == unit.id
-    assert unit.id in {info.unit for info in read_inputs(with_unit).units}
+    assert unit.id in {info.unit for info in read_inputs(with_unit, options=OPTIONS).units}
 
 
 def test_read_uses_an_authored_profile_and_the_sheet_format_it_names() -> None:
@@ -166,7 +167,7 @@ def test_read_uses_an_authored_profile_and_the_sheet_format_it_names() -> None:
     draft.extend((sheet, profile), origin=_ORIGIN)
     model = freeze(draft)
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
 
     assert inputs.profile.column_gap == 40
     assert inputs.profile.row_gap == 24
@@ -193,7 +194,7 @@ def _authored(**numbers) -> Draft:
 
 def test_read_an_authored_profile_with_no_sheet_reads_the_house_sheet_and_no_sheet_id() -> None:
     """`sheet_format=None` names no record: the authored numbers, the house sheet, no sheet id."""
-    inputs = read_inputs(freeze(_authored(column_gap=40)))
+    inputs = read_inputs(freeze(_authored(column_gap=40)), options=OPTIONS)
 
     assert inputs.profile.column_gap == 40
     assert inputs.sheet == DEFAULT_SHEET
@@ -202,8 +203,8 @@ def test_read_an_authored_profile_with_no_sheet_reads_the_house_sheet_and_no_she
 
 def test_read_an_authored_row_spacing_reaches_the_stage_profile() -> None:
     """`Profile.row_spacing` is a field the reader converts, not an engine constant."""
-    assert read_inputs(freeze(_authored(row_spacing=96))).profile.row_spacing == 96
-    assert read_inputs(freeze(_authored())).profile.row_spacing == 88
+    assert read_inputs(freeze(_authored(row_spacing=96)), options=OPTIONS).profile.row_spacing == 96
+    assert read_inputs(freeze(_authored()), options=OPTIONS).profile.row_spacing == 88
 
 
 def _boundary(unit: Unit, function_id) -> Boundary:
@@ -255,7 +256,7 @@ def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> 
         ),
         origin=_ORIGIN,
     )
-    inputs = read_inputs(with_units)
+    inputs = read_inputs(with_units, options=OPTIONS)
     assert element.id in {spec.function for spec in inputs.functions}
 
     layout, _drawn, _findings = run_stages(with_units, inputs)
@@ -278,7 +279,7 @@ def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> 
 def test_a_net_group_role_comes_from_its_net_class() -> None:
     """The `LATCH` net is `NetClass.CONTROL`, so its `NetGroup` role is `CONTROL`."""
     model = freeze(build_cabinet())
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (group,) = inputs.net_groups
     assert group.role is Role.CONTROL
 
@@ -305,8 +306,8 @@ def test_a_jumper_is_no_layout_connection_and_is_never_routed() -> None:
     )
     bridged = evolve(model, put=(jumper,), origin=_ORIGIN)
 
-    assert jumper.id not in {c.handle for c in read_inputs(bridged).connections}
-    written, _findings = lay_out_schematic(bridged)
+    assert jumper.id not in {c.handle for c in read_inputs(bridged, options=OPTIONS).connections}
+    written, _findings = lay_out_schematic(bridged, OPTIONS)
     assert jumper.id not in {r.conductor for r in layout_of(written, Route).values()}
 
 
@@ -333,7 +334,7 @@ def test_a_port_the_part_marks_with_nothing_gets_no_marking_label() -> None:
         ),
         origin=_ORIGIN,
     )
-    written, _findings = lay_out_schematic(marked)
+    written, _findings = lay_out_schematic(marked, OPTIONS)
     markings = {
         label.port: label_text(written, label)
         for label in layout_of(written, Label).values()

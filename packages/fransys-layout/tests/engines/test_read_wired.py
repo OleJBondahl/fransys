@@ -5,6 +5,7 @@ module's box like an unwired one. Hand-built models, the helpers of
 """
 
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -124,7 +125,7 @@ def test_a_pin_on_a_net_group_dropped_for_an_undrawn_end_keeps_its_view() -> Non
         (_pcb_facet(board_part), board_part, board, k1, x9, k1_fn, x9_fn, k1_p, x9_p1, x9_p2, net)
     )
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     assert inputs.net_groups == ()
     assert len(inputs.read_findings) == 1
     assert {spec.function for spec in inputs.functions} == {x9_p1.id, x9_p2.id}
@@ -171,7 +172,7 @@ def test_a_plc_channel_wired_only_through_a_net_group_or_a_stranded_conductor_is
         )
     )
 
-    by_function = {spec.function: spec for spec in read_inputs(model).functions}
+    by_function = {spec.function: spec for spec in read_inputs(model, options=OPTIONS).functions}
     assert do_1.id not in by_function
     assert do_2.id not in by_function
     box = by_function[module.id]
@@ -187,7 +188,7 @@ def test_the_item_box_carries_the_item_view_and_channel_facts() -> None:
     p1, p2 = _port(do_1, "1"), _port(do_2, "1")
     model = _model((module, do_1, do_2, p1, p2))
 
-    specs = read_inputs(model).functions
+    specs = read_inputs(model, options=OPTIONS).functions
     assert [s.function for s in specs] == [module.id]
     assert specs[0].roles.item_view
     assert specs[0].roles.plc_channel

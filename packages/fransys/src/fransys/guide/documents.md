@@ -18,7 +18,9 @@ read the same way; leaving it out (the default) leaves that cell empty.
 
 Every preset also takes `PageKind.SHEET_INDEX`, a "Sheets" page after the notes that lists each
 sheet (`3`, `2.3`, block diagram sheets `B1`, `B2`) with its title and PDF page. It prints from two
-sheets; `remove=(fr.PageKind.SHEET_INDEX,)` drops it.
+sheets; `remove=(fr.PageKind.SHEET_INDEX,)` drops it. The PDF is navigable and prints the same.
+Cross references and Sheets rows are invisible links. The outline lists sheets and devices. The
+viewer numbers a sheet by its sheet number and other pages in roman.
 
 ```python
 from pathlib import Path

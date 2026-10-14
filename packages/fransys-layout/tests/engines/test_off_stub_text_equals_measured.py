@@ -24,6 +24,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from workspace_root import WORKSPACE_ROOT
 
@@ -95,7 +96,7 @@ def _wires():
 
 @cache
 def _cabinet_two_location():
-    return lay_out_schematic(freeze(build_cabinet(second_location=True)))[0]
+    return lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)[0]
 
 
 _FIXTURES = {
@@ -140,7 +141,7 @@ def test_the_derived_stub_text_equals_the_measured_text(name: str) -> None:
     model = _FIXTURES[name]()
     stubs = _stubs(model)
     assert stubs, "the fixture draws no off stub"
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, _ = stage_results(model, inputs)
     measured = {
         (one.port, one.at.x, one.at.y): one.text
@@ -216,7 +217,7 @@ def test_a_stand_in_stub_carries_its_mates_far_end_and_carrier() -> None:
 
 def _inputs_with(*, far_differs: bool):
     """The two-location cabinet's inputs plus a second `OffEnd` of its first end's text."""
-    inputs = read_inputs(freeze(build_cabinet(second_location=True)))
+    inputs = read_inputs(freeze(build_cabinet(second_location=True)), options=OPTIONS)
     first = inputs.off_ends[0]
     other = next(end.far for end in inputs.off_ends if end.far != first.far)
     twin = dataclasses.replace(first, far=other if far_differs else first.far)

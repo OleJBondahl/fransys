@@ -11,6 +11,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout import lay_out_schematic, page_readability
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 @cache
 def _laid(*, discovery: bool) -> tuple[Model, tuple[Finding, ...]]:
-    return lay_out_schematic(freeze(build_cabinet(discovery=discovery)))
+    return lay_out_schematic(freeze(build_cabinet(discovery=discovery)), OPTIONS)
 
 
 def _printed(model: Model) -> dict:
@@ -70,7 +71,7 @@ def _expected_lone(model: Model, findings: tuple[Finding, ...]) -> Counter:
 @pytest.mark.parametrize("discovery", [False, True], ids=["default", "discovery"])
 def test_every_page_row_counts_what_the_findings_count(*, discovery: bool) -> None:
     model, findings = _laid(discovery=discovery)
-    rows = page_readability(model)
+    rows = page_readability(model, OPTIONS)
     assert rows
     struck, lone = _expected_struck(model, findings), _expected_lone(model, findings)
     assert _by_page(rows, "struck_labels") == {
@@ -82,7 +83,7 @@ def test_every_page_row_counts_what_the_findings_count(*, discovery: bool) -> No
 def test_the_discovery_variant_has_lone_cells_for_the_test_to_count() -> None:
     model, findings = _laid(discovery=True)
     assert sum(_expected_lone(model, findings).values()) == 2
-    assert sum(_by_page(page_readability(model), "lone_cells").values()) == 2
+    assert sum(_by_page(page_readability(model, OPTIONS), "lone_cells").values()) == 2
 
 
 @pytest.mark.parametrize("discovery", [False, True], ids=["default", "discovery"])
@@ -91,7 +92,7 @@ def test_a_page_row_prints_the_share_its_page_underfilled_finding_prints(
 ) -> None:
     model, findings = _laid(discovery=discovery)
     messages = [f.message for f in findings if f.code == PAGE_UNDERFILLED]
-    fill = _by_page(page_readability(model), "fill_percent")
+    fill = _by_page(page_readability(model, OPTIONS), "fill_percent")
     under = {page: share for page, share in fill.items() if share < 50}
     assert under
     assert len(messages) == len(under)
@@ -104,6 +105,6 @@ def test_a_page_row_prints_the_share_its_page_underfilled_finding_prints(
 
 def test_the_rows_are_in_drawing_set_and_page_order_and_name_printed_numbers() -> None:
     model, _ = _laid(discovery=False)
-    rows = page_readability(model)
+    rows = page_readability(model, OPTIONS)
     assert [(r.drawing_set, r.number) for r in rows] == sorted(_printed(model).values())
     assert {r.page for r in rows} == set(_printed(model))

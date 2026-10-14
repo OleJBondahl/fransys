@@ -59,9 +59,10 @@ def _named_errors(result: fr.BuildResult) -> list[fr.Finding]:
 
 
 @pytest.mark.parametrize("fill", _CASES)
-def test_the_strip_gets_an_error_naming_its_key(fill: Any) -> None:
+def test_the_strip_gets_an_error_naming_its_kind_not_its_key(fill: Any) -> None:
     (finding,) = _named_errors(_built(fill))
-    assert "spare" in finding.message
+    assert finding.message.startswith(("strip ", "device "))
+    assert "spare" not in finding.message
 
 
 @pytest.mark.parametrize("fill", _CASES)

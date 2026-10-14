@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from symdef import Weight, to_fragment_mm
 
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.derive.print_sizes import (
     ASCENT_RATIO,
@@ -25,7 +26,7 @@ from fransys_model.vocab import functions, items
 
 from ._leads import visible_symbol
 from ._markers import text_glyph
-from ._numbers import format_decimal, grid_to_mm, printed_font_mm
+from ._numbers import format_decimal, printed_font_mm
 from ._style import FONT_NAME
 from ._symbol_geometry import oriented_power_symbol, oriented_symbol, to_grid
 

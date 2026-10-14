@@ -30,6 +30,7 @@ from fransys_model.layout import (
     sheet_format_of,
 )
 
+from ._cable_ink import Ink
 from ._cable_pen import Pen
 from ._style import style_block
 
@@ -46,10 +47,10 @@ def _of_block[R: (CableBox, EndBox, CoreWire, OpenCoreWire)](
     return tuple(sorted((r for r in records if r.block == block.id), key=lambda r: r.id))
 
 
-def _boxes(model: Model, pen: Pen, block: CableBlock, cables: tuple[HarnessCable, ...]) -> str:
+def _boxes(model: Model, ink: Ink, block: CableBlock, cables: tuple[HarnessCable, ...]) -> None:
     """The harness box first (dashed, its label), then each cable box (solid, its heading)."""
     by_cable = {cable.cable: cable for cable in cables}
-    parts = []
+    pen = ink.pen
     for box in sorted(_of_block(model, CableBox, block), key=lambda b: b.kind is BoxKind.CABLE):
         harness = box.kind is BoxKind.HARNESS
         text = (
@@ -58,69 +59,62 @@ def _boxes(model: Model, pen: Pen, block: CableBlock, cables: tuple[HarnessCable
             else cable_heading(model, by_cable[box.item], block.unit)
         )
         css = "harness-box" if harness else "cable-box"
-        parts.append(pen.rect(css, (box.x, box.y, box.width, box.height), dashed=harness))
-        parts.append(pen.text("heading", (box.x + pen.pad_g, box.y + pen.pad_g), text))
-    return "".join(parts)
+        ink.shape(pen.rect(css, (box.x, box.y, box.width, box.height), dashed=harness))
+        ink.text("heading", (box.x + pen.pad_g, box.y + pen.pad_g), text)
 
 
 _DASHED_BY_STYLE = {EndStyle.SOLID: False, EndStyle.DASHED: True}  # a blank end draws no box
 _LABEL_BELOW = {BlockRow.TOP: False, BlockRow.BOTTOM: True}
 
 
-def _cells(model: Model, pen: Pen, block: CableBlock, end: EndBox, *, dashed: bool) -> str:
+def _cells(model: Model, ink: Ink, block: CableBlock, end: EndBox, *, dashed: bool) -> None:
     """One marking per pin cell, centred on the cell, and a divider on each cell's left edge.
 
     The cell's width is layout's (layout-0152), so its edge is half that from x.
     """
+    pen = ink.pen
     pins = {pin.port: pin for pin in drawn_pins(model, block.subject, end.item, block.unit)}
     top = end.y + Decimal(end.height - pen.font_g) / 2
-    parts = []
     for n, cell in enumerate(end.pins):
         pin = pins[cell.port]
         if n:
             edge = cell.x - Decimal(cell.width) / 2
-            parts.append(
+            ink.shape(
                 pen.line("pin-cell", (edge, end.y), (edge, end.y + end.height), dashed=dashed)
             )
-        parts.append(pen.text("pin", (cell.x, top), pin.marking, middle=True))
-    return "".join(parts)
+        ink.text("pin", (cell.x, top), pin.marking, middle=True)
 
 
-def _end(model: Model, pen: Pen, block: CableBlock, end: EndBox) -> str:
+def _end(model: Model, ink: Ink, block: CableBlock, end: EndBox) -> None:
     """One end box, its label (above a top box, below a bottom one) and pin cells; none if blank."""
     if end.style is EndStyle.BLANK:
-        return ""
+        return
+    pen = ink.pen
     dashed = _DASHED_BY_STYLE[end.style]
     label = end_label(model, end.item, block.unit, block.subject)
     below = end.y + end.height + pen.pad_g
     above = end.y - pen.pad_g - pen.font_g
-    parts = [pen.outline("end-box", (end.x, end.y, end.width, end.height), dashed=dashed)]
+    ink.shape(pen.outline("end-box", (end.x, end.y, end.width, end.height), dashed=dashed))
     if label:
         centre = end.x + Decimal(end.width) / 2
-        parts.append(
-            pen.text(
-                "end-label",
-                (centre, below if _LABEL_BELOW[end.row] else above),
-                label,
-                middle=True,
-            )
-        )
-    return "".join(parts) + _cells(model, pen, block, end, dashed=dashed)
+        at = (centre, below if _LABEL_BELOW[end.row] else above)
+        ink.text("end-label", at, label, middle=True)
+    _cells(model, ink, block, end, dashed=dashed)
 
 
-def _wire(pen: Pen, wire: CoreWire | OpenCoreWire, text: str, *, link: bool) -> str:
+def _wire(ink: Ink, wire: CoreWire | OpenCoreWire, text: str, *, link: bool) -> None:
     """One core or single wire: its two runs and its text, from layout's points.
 
     The text reads upward along the wire; a row link's reads level, centred on the point.
     """
-    runs = "".join(
-        pen.polyline("core", tuple((point.x, point.y) for point in run))
-        for run in (wire.run_a, wire.run_b)
-    )
+    pen = ink.pen
+    for run in (wire.run_a, wire.run_b):
+        ink.shape(pen.polyline("core", tuple((point.x, point.y) for point in run)))
     if link:
         top = Decimal(wire.text_y) - Decimal(pen.font_g) / 2
-        return runs + pen.text("core", (wire.text_x, top), text, middle=True)
-    return runs + pen.upward_text("core", (wire.text_x, wire.text_y), text)
+        ink.text("core", (wire.text_x, top), text, middle=True)
+    else:
+        ink.upward_text("core", (wire.text_x, wire.text_y), text)
 
 
 def _core_of(wire: CoreWire | OpenCoreWire) -> Id[Any]:
@@ -128,25 +122,22 @@ def _core_of(wire: CoreWire | OpenCoreWire) -> Id[Any]:
 
 
 def _brackets(
-    model: Model, pen: Pen, block: CableBlock, wires: tuple[CoreWire | OpenCoreWire, ...]
-) -> str:
+    model: Model, ink: Ink, block: CableBlock, wires: tuple[CoreWire | OpenCoreWire, ...]
+) -> None:
     """Each pair bracket: a line over its two cores' texts with a tick down each, and its label.
 
     It stands in the pair room under the cable box's heading (`pair_room`, layout's own).
     """
+    pen = ink.pen
     room = pair_room(pen.font_g, pen.pad_g, WIRING_GRID)
     boxes = {box.item: box for box in _of_block(model, CableBox, block)}
     xs = {_core_of(wire): wire.text_x for wire in wires}
-    parts = []
     for bracket in block_brackets(model, block.subject, block.unit):
         top = boxes[bracket.cable].y
         a, b = xs[bracket.core_a], xs[bracket.core_b]
         line, tick = top + room.line, top + room.tick
-        parts.append(pen.polyline("core", ((a, tick), (a, line), (b, line), (b, tick))))
-        parts.append(
-            pen.text("core", (Decimal(a + b) / 2, top + room.label), bracket.label, middle=True)
-        )
-    return "".join(parts)
+        ink.shape(pen.polyline("core", ((a, tick), (a, line), (b, line), (b, tick))))
+        ink.text("core", (Decimal(a + b) / 2, top + room.label), bracket.label, middle=True)
 
 
 def _render_block(model: Model, block: CableBlock) -> str:
@@ -157,14 +148,15 @@ def _render_block(model: Model, block: CableBlock) -> str:
     cables = block_cables(model, block.subject, block.unit)
     texts = core_texts(model, block.subject, block.unit)
     links = set(row_links(model, block.subject, block.unit))
-    body = _boxes(model, pen, block, cables)
-    body += "".join(_end(model, pen, block, end) for end in _of_block(model, EndBox, block))
+    ink = Ink(pen)
+    _boxes(model, ink, block, cables)
+    for end in _of_block(model, EndBox, block):
+        _end(model, ink, block, end)
     wires = (*_of_block(model, CoreWire, block), *_of_block(model, OpenCoreWire, block))
-    body += "".join(
-        _wire(pen, wire, texts[_core_of(wire)], link=_core_of(wire) in links) for wire in wires
-    )
-    body += _brackets(model, pen, block, wires)
-    return pen.svg(block.width, block.height, style_block() + body)
+    for wire in wires:
+        _wire(ink, wire, texts[_core_of(wire)], link=_core_of(wire) in links)
+    _brackets(model, ink, block, wires)
+    return pen.svg(block.width, block.height, style_block() + ink.body())
 
 
 def cable_blocks(model: Model) -> frozendict[str, str]:

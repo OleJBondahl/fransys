@@ -1,123 +1,104 @@
-"""Lanes, the order half: the stage column and the (lane, stage) cell of every box (O4).
+"""Lanes, the order half: the stage column and the (lane, stage) cell of every box (O4, LO3 to LO5).
 
-Stubs stand in stage 0, west. Their host boxes come next and the rest by line distance from them;
-with no stub the busiest box is the source. A cell stacks its boxes in the level's text order.
+West stubs stand in the first column, east stubs after the last stage. The stages run over the
+power lines from the boxes the west stubs join. A cell stacks strip-joined boxes by the first
+terminal they join (LO5), then the rest in reader order.
 """
 
-from collections import deque
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-lazy from collections.abc import Mapping, Sequence
+lazy from collections.abc import Collection, Sequence
 lazy from collections.abc import Set as AbstractSet
 
+from fransys_layout.engines.overview.lanes.flow import neighbours, stack, stages
+
 if TYPE_CHECKING:
-    from fransys_layout.engines.overview.read.values import Ident, ViewFacts
+    from fransys_layout.engines.overview.read.values import BoxSpec, Ident, ViewFacts
 
 
 @dataclass(frozen=True, slots=True)
 class Plan:
-    """Each box's lane and stage, the boxes of each (lane, stage) cell, the counts."""
+    """Each box's lane and stage, the boxes of each cell, the counts, the lines run west of a stage.
+
+    `west` holds the lines whose same-stage run stands in the gap before the stage, not after it.
+    """
 
     lane: dict[Ident, int]
     stage: dict[Ident, int]
     cells: dict[tuple[int, int], list[Ident]]
     lanes: int
     stages: int
+    west: frozenset[int] = frozenset()
+
+    def runs_west(self, line: int, stage: int) -> bool:
+        """Whether a same-stage `line` at `stage` runs in the gap before it (the first has none)."""
+        return line in self.west and stage > 0
 
 
-def _near(facts: ViewFacts, inner: AbstractSet[Ident]) -> dict[Ident, list[Ident]]:
-    """Each inner box's inner neighbours over the level's lines."""
-    near: dict[Ident, list[Ident]] = {b: [] for b in inner}
-    for ln in facts.lines:
-        if ln.a != ln.b and ln.a in inner and ln.b in inner:
-            near[ln.a].append(ln.b)
-            near[ln.b].append(ln.a)
-    return near
+def _reader_order(facts: ViewFacts) -> list[BoxSpec]:
+    """The boxes in reader order, by the rank the reader gave each."""
+    return [b for _, b in sorted(zip(facts.rank, facts.boxes, strict=True), key=lambda t: t[0])]
 
 
-def _hosts(facts: ViewFacts, stubs: AbstractSet[Ident]) -> set[Ident]:
-    """The boxes a stub line leaves from."""
+def _hosts(facts: ViewFacts, stubs: Collection[Ident], inner: Collection[Ident]) -> set[Ident]:
+    """The inner boxes a line leaves from to a box of `stubs`."""
     return {
         end
         for ln in facts.lines
         for stub, end in ((ln.a, ln.b), (ln.b, ln.a))
-        if stub in stubs and end not in stubs
+        if stub in stubs and end in inner
     }
 
 
-def _spread(
-    depth: Mapping[Ident, int],
-    near: Mapping[Ident, Sequence[Ident]],
-    order: Mapping[Ident, int],
-    sources: Sequence[Ident],
+def _sources(
+    inner: Sequence[Ident],
+    pairs: Sequence[tuple[Ident, Ident]],
+    west: AbstractSet[Ident],
+    east: AbstractSet[Ident],
+) -> list[Ident]:
+    """The boxes the west stubs join, else the busiest box no east stub joins (first on a tie)."""
+    joined = [b for b in inner if b in west]
+    near = neighbours(inner, pairs)
+    free = [b for b in inner if b not in east]
+    return joined or ([max(free, key=lambda b: len(set(near[b])))] if free else [])
+
+
+def _stages(
+    facts: ViewFacts, inner: Sequence[Ident], west_stubs: AbstractSet[Ident]
 ) -> dict[Ident, int]:
-    """Breadth first from `sources` (depth 0): `depth` with the boxes not yet reached filled in."""
-    queue = deque(s for s in sources if s not in depth)
-    found = {**depth, **dict.fromkeys(queue, 0)}
-    while queue:
-        box = queue.popleft()
-        for other in sorted(near[box], key=order.__getitem__):
-            if other not in found:
-                found[other] = found[box] + 1
-                queue.append(other)
-    return found
-
-
-def stages(facts: ViewFacts) -> dict[Ident, int]:
-    """The stage column of every box."""
-    order = {b.box: n for n, b in enumerate(facts.boxes)}
-    stubs = {b.box for b in facts.boxes if b.key.at is not None}
-    inner = [b for b in order if b not in stubs]
-    near = _near(facts, set(inner))
-    hosts = sorted(_hosts(facts, stubs) & set(inner), key=order.__getitem__)
-    depth = _spread({}, near, order, hosts)
-    while len(depth) < len(inner):
-        rest = [b for b in inner if b not in depth]
-        depth = _spread(depth, near, order, [max(rest, key=lambda b: (len(near[b]), -order[b]))])
-    shift = 1 if stubs else 0
-    return {**{b: d + shift for b, d in depth.items()}, **dict.fromkeys(stubs, 0)}
-
-
-SWEEPS = 4  # barycentre passes over the cells, alternating east and west
-
-
-def _proxy(cells: Mapping[tuple[int, int], Sequence[Ident]]) -> dict[Ident, float]:
-    """A box's place down the page: its lane, plus its share of the way down its cell."""
-    return {b: lane + n / len(m) for (lane, _), m in cells.items() for n, b in enumerate(m)}
-
-
-def _mean(place: Mapping[Ident, float], near: Mapping[Ident, Sequence[Ident]], box: Ident) -> float:
-    """The mean place of `box`'s neighbours, its own place when it has none."""
-    return sum(place[o] for o in near[box]) / len(near[box]) if near[box] else place[box]
-
-
-def _sweep(
-    cells: Mapping[tuple[int, int], Sequence[Ident]],
-    near: Mapping[Ident, Sequence[Ident]],
-    *,
-    west: bool,
-) -> dict[tuple[int, int], list[Ident]]:
-    """Cells with each multi-box one re-sorted by the mean place of its boxes' neighbours."""
-    place = _proxy(cells)
-    found = {k: list(v) for k, v in cells.items()}
-    for key in sorted(cells, key=lambda k: k[1], reverse=west):
-        if len(found[key]) > 1:
-            found[key].sort(key=lambda b: _mean(place, near, b))
-            place.update(_proxy({key: found[key]}))
-    return found
+    """The stage of every box: inner boxes by LO3, west stubs at 0, east stubs after the last."""
+    inside = set(inner)
+    stubs = {b.box for b in facts.boxes} - inside
+    pairs = [(ln.a, ln.b) for ln in facts.lines if ln.a in inside and ln.b in inside]
+    flow = [
+        p
+        for p, power in zip(((ln.a, ln.b) for ln in facts.lines), facts.power, strict=True)
+        if power
+    ]
+    west = _hosts(facts, west_stubs, inside)
+    east = _hosts(facts, stubs - west_stubs, inside)
+    shift = 1 if west_stubs else 0
+    found = {
+        b: s + shift
+        for b, s in stages(inner, flow, pairs, _sources(inner, pairs, west, east), east).items()
+    }
+    last = max(found.values(), default=0) + 1
+    return {**found, **{s: 0 if s in west_stubs else last for s in stubs}}
 
 
 def make_plan(facts: ViewFacts) -> Plan:
-    """The plan of a lanes view: `facts.lanes` gives each box's lane."""
+    """The plan of a lanes view: lanes from `facts.lanes`, west stubs from `facts.west`."""
     lane = {b.box: facts.lanes[n] for n, b in enumerate(facts.boxes)}
-    stage = stages(facts)
-    cells: dict[tuple[int, int], list[Ident]] = {}
-    for b in facts.boxes:
-        cells.setdefault((lane[b.box], stage[b.box]), []).append(b.box)
-    near = _near(facts, set(lane))
-    for n in range(SWEEPS):
-        cells = _sweep(cells, near, west=bool(n % 2))
+    stubs = {b.box for b in facts.boxes if b.key.at is not None}
+    west = {b.box for b, w in zip(facts.boxes, facts.west, strict=True) if w}
+    stage = _stages(facts, [b.box for b in _reader_order(facts) if b.box not in stubs], west)
+    order = _reader_order(facts)
+    join = {b.box: j if j >= 0 else math.inf for b, j in zip(facts.boxes, facts.join, strict=True)}
+    cells = stack([b.box for b in order], {b: (lane[b], stage[b]) for b in lane}, join)
+    inner = frozenset(i for i, ln in enumerate(facts.lines) if not {ln.a, ln.b} & stubs)
     return Plan(
+        west=inner,
         lane=lane,
         stage=stage,
         cells=cells,

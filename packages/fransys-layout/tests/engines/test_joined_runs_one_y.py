@@ -16,6 +16,7 @@ from functools import cache
 
 import pytest
 from dd_chain_fixtures import terminal_chain, three_breakers
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from narrow_cabinet import narrow_results
 
@@ -25,7 +26,7 @@ from fransys_model.kernel import Model, freeze
 
 
 def _laid_out(model: Model) -> StageResults:
-    return stage_results(model, read_inputs(model))[0]
+    return stage_results(model, read_inputs(model, options=OPTIONS))[0]
 
 
 _CASES = {

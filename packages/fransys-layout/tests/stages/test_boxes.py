@@ -6,7 +6,7 @@ from samples import drawn, function_spec, hid
 
 from fransys_layout.geometry import GENERIC_BOX_KEY, SymbolGeometry, generic_box_geometry
 from fransys_layout.stages import DrawnFunction, DrawnPort
-from fransys_layout.stages.boxes import port_ranks, potential_sides
+from fransys_layout.stages.boxes import port_ranks, potential_sides, turning_ports
 
 
 def _port(function: int, which: int):
@@ -67,3 +67,15 @@ def test_a_box_on_one_potential_or_a_symbol_that_is_no_box_is_left_as_drawn() ->
     assert found == (one, through)
     assert one.geometry.key == GENERIC_BOX_KEY
     assert through.geometry.key != GENERIC_BOX_KEY
+
+
+def test_box_sides_turns_a_generic_boxs_unpinned_ports_only() -> None:
+    """layout-0208: a pinned port, a paired box and a symbol that is no box turn nothing."""
+    # UNDO: stages/boxes.py:turning_ports, drop `if p.symbol_port not in pinned` (all turn)
+    box = _box(1, generic_box_geometry(("a", "b")))
+    a, b = (p.port for p in box.ports)
+
+    assert turning_ports(box, ({}, {}, {})) == {a, b}
+    assert turning_ports(box, ({}, {}, {a: "n"})) == {b}
+    assert turning_ports(replace(box, feeds=hid("function", 9)), ({}, {}, {})) == frozenset()
+    assert turning_ports(drawn(2), ({}, {}, {})) == frozenset()

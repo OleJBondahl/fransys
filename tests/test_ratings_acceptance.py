@@ -27,6 +27,7 @@ from fransys_author import Design
 from fransys_model.kernel import Draft, Origin, Severity, evolve, freeze
 from fransys_model.vocab import function_operating, function_rating, part_rating
 from fransys_model.vocab.enums import LinkKind
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.ratings import Operating, Rating
 from fransys_model.vocab.tables import internal_links, parts
 from fransys_model.vocab.validators import ALL_VALIDATORS
@@ -90,7 +91,8 @@ def test_a_three_pole_contactor_on_l1_l2_l3_fires_below_398_4_volts(volts, fires
     assert finding.code == RATING_VOLTAGE_BELOW_CIRCUIT
     assert finding.severity is Severity.ERROR
     assert finding.subjects == (main,)
-    assert all(text in finding.message for text in ("'main'", "250", "398.4", "'L1'", "'L2'"))
+    assert ref(main) in finding.message
+    assert all(text in finding.message for text in ("250", "398.4", "'L1'", "'L2'"))
 
 
 # -- 2: a motor behind the contactor -------------------------------------------------------
@@ -101,7 +103,7 @@ def test_a_motor_behind_a_contactor_and_mcbs_fires_through_the_switched_links() 
     model = rated(model, "DEMO-MOTOR-4KW", "motor", voltage_ac_v="250")
     (finding,) = check_ratings(model)
     assert finding.subjects == (fn_id(p["m1"], "motor"),)
-    assert "'motor'" in finding.message
+    assert ref(fn_id(p["m1"], "motor")) in finding.message
     assert "250" in finding.message
     assert "398.4" in finding.message
 

@@ -4,11 +4,12 @@ import itertools
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import net_of
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.print_sizes import JUNCTION_DOT_MM
 from fransys_model.layout import sheet_format_of
 
 from ._markers import marker_facing, markers_on_page, stub_end
-from ._numbers import format_decimal, grid_to_mm
+from ._numbers import format_decimal
 from ._routes import routes_on_page
 
 if TYPE_CHECKING:

@@ -6,6 +6,7 @@ and `offstubs.py`; this module orchestrates it. `labels.label_requests` builds t
 requests once `resolve` has chosen the symbols.
 """
 
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.read import reading, steps
@@ -39,6 +40,7 @@ from fransys_model.kernel import Finding, Id, value
 from fransys_model.layout import POWER_SLOT
 
 if TYPE_CHECKING:
+    from fransys_layout.options import LayoutOptions
     from fransys_model.kernel import Model
 
 
@@ -87,10 +89,13 @@ class StageInputs:
     carried: tuple[Connection, ...] = ()
 
 
-def read_inputs(model: Model, unit: Id[Any] | None = None) -> StageInputs:
+def read_inputs(
+    model: Model, unit: Id[Any] | None = None, *, options: LayoutOptions
+) -> StageInputs:
     """Read the drawn functions, their connections and every authored hint.
 
-    The profile and sheet are `unit`'s (`None`: the top design's), whatever is drawn.
+    The profile and sheet are `unit`'s (`None`: the top design's), whatever is drawn; the profile
+    carries the caller's text placement (`options.texts`).
     """
     indexes = build_indexes(model)
     specs, undrawn, wires, rail_ends = steps.rail_reads(model, indexes)
@@ -119,7 +124,7 @@ def read_inputs(model: Model, unit: Id[Any] | None = None) -> StageInputs:
         units=reading.unit_infos(model),
         hints=reading.page_hints(model),
         label_texts=steps.label_texts(model, indexes, drawn, (pin_of, view_of, landings)),
-        profile=profile,
+        profile=replace(profile, texts=options.texts),
         sheet=sheet,
         sheet_format=sheet_format,
         unused_sheet_formats=unused_sheets,

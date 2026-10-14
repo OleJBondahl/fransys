@@ -3,7 +3,7 @@
 import re
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.revision_text import revision_text
 from fransys_model.vocab.tables import projects, revisions, unit_releases
 
@@ -52,7 +52,8 @@ def _date_format(model: Model) -> list[Finding]:
     found = []
     for entry in revisions(model).values():
         if not _DATE_RE.fullmatch(entry.date):
-            message = f"revision {key_text(entry)}'s date {entry.date!r} is not YYYY-MM-DD"
+            text = revision_text(entry.version, entry.revision)
+            message = f"revision {text}'s date {entry.date!r} is not YYYY-MM-DD"
             found.append(_finding(REVISION_DATE_FORMAT, Severity.ERROR, (entry.id,), message))
     return found
 
@@ -61,7 +62,8 @@ def _initials_missing(model: Model) -> list[Finding]:
     found = []
     for entry in revisions(model).values():
         if entry.created == "":
-            message = f"revision {key_text(entry)} has no created initials"
+            text = revision_text(entry.version, entry.revision)
+            message = f"revision {text} has no created initials"
             found.append(_finding(REVISION_INITIALS_MISSING, Severity.ERROR, (entry.id,), message))
     return found
 

@@ -59,8 +59,10 @@ def _check_marker_stub(rec: LinkMarker) -> None:
     if rec.lead is False and rec.box_x is None:
         _refuse(rec, kind, "a link marker that is not the lead of a shared box needs a box_x")
     is_off = rec.star is StarKind.OFF
-    if (rec.far is not None) != is_off or (rec.facing is not None) != is_off:
-        _refuse(rec, kind, "a link marker's far and facing are set exactly when it is an off stub")
+    if rec.facing is None:
+        _refuse(rec, kind, "a link marker always stores its facing")
+    if (rec.far is not None) != is_off:
+        _refuse(rec, kind, "a link marker's far is set exactly when it is an off stub")
     if rec.carrier is not None and rec.far is None:
         _refuse(rec, kind, "a link marker's carrier needs a far")
 
@@ -272,8 +274,9 @@ class LinkMarker:
     severed net is the physical net of `port`; neither is stored. `width`/`height` are the
     reserved box's size in G, never re-measured. `box_x` is the left edge of a shared box,
     `lead` marks the box's lead marker, `stub_extra` is extra stub length in G, `via_x`/`via_y`
-    are the stub's bend (both or neither), `star` is the star point drawn, or `None`. `far`,
-    `carrier` and `facing` are set only on an off stub and never re-derived. `vertical` is
+    are the stub's bend (both or neither), `star` is the star point drawn, or `None`. `far`
+    and `carrier` are set only on an off stub. `facing`, the side the box sits out from the port,
+    is set on every marker and never re-derived. `vertical` is
     layout's decision that the text reads along its wire, bottom to top; `width`/`height`
     are then the turned box's. `wrap_at` is the words on the first line of a text layout
     broke in two, `None` for one line.
@@ -306,8 +309,8 @@ class LinkMarker:
     def __post_init__(self) -> None:
         """Refuse a bad size, lone `via_x`/`via_y`, a negative `stub_extra`, a boxless non-lead.
 
-        Also an off stub without `far` and `facing`, either on any other marker, and a
-        `carrier` without `far`.
+        Also a marker without `facing`, `far` on any but an off stub (or an off stub without
+        it), and a `carrier` without `far`.
         """
         _check_size(self, "a link marker's", "layout.link_marker")
         _check_marker_numbers(self)

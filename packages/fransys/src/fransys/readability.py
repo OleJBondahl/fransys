@@ -1,5 +1,7 @@
 """`readability`: how readable the schematic pages of a build are (decision 0182)."""
 
+from fransys_el import OPTIONS
+
 from fransys_layout import page_readability
 from fransys_model.derive import ReadabilityReport, readability_units
 
@@ -17,5 +19,5 @@ def readability(result: BuildResult) -> ReadabilityReport:
 
     Does not write a file, emit anything from `write`, or raise on findings.
     """
-    pages = page_readability(result.model)
+    pages = page_readability(result.model, OPTIONS)
     return ReadabilityReport(pages=pages, units=readability_units(pages))

@@ -23,6 +23,7 @@ from scale_units_fixture import (  # noqa: E402
     pump_cabinet,
 )
 
+from fransys_model.derive.numbering_pins import name_findings  # noqa: E402
 from fransys_model.kernel import Severity  # noqa: E402
 from fransys_model.vocab.validators import units as validators  # noqa: E402
 
@@ -63,13 +64,17 @@ def test_the_findings_of_three_instances_with_one_unused_declaration_missing():
         if i != 2:
             for terminal in field:
                 container.unused(terminal)
-    findings = validators.check_units(fr.build(parts, d.draft()).model)
+    model = fr.build(parts, d.draft()).model
+    findings = name_findings(model, validators.check_units(model))
     assert [(f.code, f.severity) for f in findings] == [
         ("BOUNDARY_UNCONNECTED", Severity.ERROR),
         ("BOUNDARY_UNCONNECTED", Severity.ERROR),
     ]
-    tail = " of unit pump2/unit is not connected across it and has no declared UnusedBoundary"
+    tail = (
+        " of demo-pump-cabinet rev 1.2"
+        " is not connected across it and has no declared UnusedBoundary"
+    )
     assert sorted(f.message for f in findings) == [
-        f"boundary function pump2/X2/terminal/1/fn/terminal{tail}",
-        f"boundary function pump2/X2/terminal/2/fn/terminal{tail}",
+        f"boundary function -X2:1{tail}",
+        f"boundary function -X2:2{tail}",
     ]

@@ -15,6 +15,7 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -35,7 +36,7 @@ def _layout(plant, *, hide: bool) -> tuple:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, results.layout
 
 
@@ -125,5 +126,5 @@ def test_the_plc_list_keeps_the_spare_channel_with_the_switch_on() -> None:
     model, _ = _layout(_module, hide=True)
     rows = plc_channel_rows(model)
     assert len(rows) == 4
-    assert rows[-1].channel_designation.endswith(":4")
+    assert rows[-1].pin.endswith(":4")
     assert rows[-1].wired_to is None

@@ -7,10 +7,10 @@ from fransys_model.derive import (
     document_unit,
     harness_cables,
     item_designation,
-    page_destination,
     page_title_forms,
     reading_cables,
     sheet_counter_text,
+    sheet_text,
 )
 from fransys_model.derive.cable_drawing import (
     cable_block_key,
@@ -18,6 +18,7 @@ from fransys_model.derive.cable_drawing import (
     drawn_blocks,
     wire_harness_subjects,
 )
+from fransys_model.derive.page_nav import outline_sheets
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind, items, parts
 
@@ -31,6 +32,9 @@ from ._geometry import (
     subject_label,
     undrawn_replica_only_sets,
 )
+from ._labels import RESTART, sheet_label
+from ._links import page_links
+from ._marks import sheet_mark
 from ._sizes import sizes_of
 from ._typst import literal
 
@@ -38,8 +42,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive import HarnessCable
+    from fransys_model.derive.page_nav import OutlineSheet
     from fransys_model.kernel import Id, Model
-    from fransys_model.layout import DiagramSheet, DrawingSet, Page, SheetFormat
+    from fransys_model.layout import DrawingSet, Page, SheetFormat
     from fransys_model.vocab import Document, Item
 
 NO_DRAWINGS = '#par(text("No drawings."))'
@@ -98,10 +103,12 @@ def schematic_fields(
     )
 
 
-def destination_mark(model: Model, page: Page | DiagramSheet) -> str:
-    """A hidden heading labelled with the page's destination, so the PDF anchors the page (O21)."""
-    label = page_destination(model, page)
-    return f"#place(hide[#heading(level: 1, outlined: false)[{label}] <{label}>])"
+def _sheet_extras(
+    model: Model, sheet: SheetFormat, page: Page, entry: OutlineSheet, known: set[Id[Page]]
+) -> tuple[str, str, str]:
+    """The page's numbering argument, what precedes its image (label, marks) and its links."""
+    numbering, start = sheet_label(sheet_text(model, page))
+    return numbering, f"{start}{sheet_mark(entry)}", page_links(model, page, sheet, known)
 
 
 def schematic_source(
@@ -123,14 +130,17 @@ def schematic_source(
         )
         margin = text_margin(sheet)
         back = background(sheet, fields, sizes_of(model, record))
-        return f"#page(margin: {margin}, background: {back})[{NO_DRAWINGS}]"
+        return f"#page(margin: {margin}, background: {back})[{RESTART}\n{NO_DRAWINGS}]"
     fields = schematic_fields(model, record, pages_found)
+    known = {page.id for page in pages_found}
     blocks = []
-    for page, page_fields in zip(pages_found, fields, strict=True):
+    outline = outline_sheets(model, pages_found)
+    known = {page.id for page in pages_found}
+    for page, page_fields, entry in zip(pages_found, fields, outline, strict=True):
         image = f'#image(bytes({literal(svgs[render_id(page.id)])}), format: "svg")'
-        mark = destination_mark(model, page)
         back = background(sheet, page_fields, sizes_of(model, record))
-        blocks.append(f"#page(margin: 0mm, background: {back})[{mark}{image}]")
+        numbering, before, links = _sheet_extras(model, sheet, page, entry, known)
+        blocks.append(f"#page(margin: 0mm, background: {back}{numbering})[{before}{image}{links}]")
     return "\n#pagebreak()\n".join(blocks)
 
 
@@ -317,5 +327,5 @@ def harness_drawing_source(
         )
         margin = text_margin(sheet)
         back = background(sheet, fields, sizes_of(model, record))
-        return f"#page(margin: {margin}, background: {back})[{NO_DRAWINGS}]"
+        return f"#page(margin: {margin}, background: {back})[{RESTART}\n{NO_DRAWINGS}]"
     return _cable_runs(model, record, sheet, blocks, svgs)

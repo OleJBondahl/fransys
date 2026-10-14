@@ -9,6 +9,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.units import boundary_edge_set
@@ -57,7 +58,7 @@ def test_the_boundary_pins_hold_the_outer_and_the_nested_boundary_function_and_n
     board.boundary(board.item("DEMO-CONN-2P", tag="J1", at=at_c1, group=net))
     cab.item("DEMO-LAMP-24", tag="H1", at=at_c1, group=net)
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     drawn = _keys(model, {spec.function for spec in inputs.functions})
     assert ("cab", "H1") in drawn
     edges = open_ends(inputs.functions, boundary_edge_set(model), frozenset())

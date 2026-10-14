@@ -12,6 +12,8 @@ import dataclasses
 import importlib.util
 from pathlib import Path
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic import _lint, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint import check_nowhere
@@ -40,7 +42,7 @@ def test_a_nested_units_wire_is_drawn_and_the_guard_is_silent() -> None:
     """
     result = _DRAW._build_nested_wire()
     assert not [f for f in result.findings if f.severity is Severity.ERROR]
-    inputs = read_inputs(result.model)
+    inputs = read_inputs(result.model, options=OPTIONS)
     layout, drawn, _findings = run_stages(result.model, inputs)
     assert check_nowhere(layout, inputs.connections, inputs.net_groups, drawn) == ()
 
@@ -71,7 +73,7 @@ def test_a_stubbed_conductor_is_drawn_by_its_stubs_and_nowhere_without_them() ->
     """
     model = _DRAW._build_top_level_units(second_unit=False, same=True).model
     ends = {_DRAW._pin_one(model, "f"), _DRAW._pin_one(model, "h")}
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     layout, drawn, _findings = run_stages(model, inputs)
     stubbed = (*inputs.connections, *inputs.crossing)
     assert check_nowhere(layout, stubbed, inputs.net_groups, drawn) == ()
@@ -109,7 +111,7 @@ def test_the_same_layout_without_the_nets_routes_and_markers_is_drawn_nowhere() 
     """
     model = _DRAW._build_nested_wire().model
     ends = {_DRAW._pin_one(model, "f"), _DRAW._pin_one(model, "h")}
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     layout, drawn, _findings = run_stages(model, inputs)
     assert any(r.a in ends or r.b in ends for r in layout.routes) or any(
         m.port in ends for m in layout.markers

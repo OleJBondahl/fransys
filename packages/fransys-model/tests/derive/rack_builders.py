@@ -65,7 +65,10 @@ def _channels(plant: Plant, item: Id[Item], part: Id[Part]) -> None:
         one for one in plant.records if isinstance(one, FunctionTemplate) and one.part == part
     ]
     for template in reversed(templates):
-        plant.function(item, template.name, template=template.id, kind=FunctionKind.PLC_CHANNEL)
+        function = plant.function(
+            item, template.name, template=template.id, kind=FunctionKind.PLC_CHANNEL
+        )
+        plant.port(function, template.name.removeprefix("ch"))
 
 
 def _position(plant: Plant, item: Id[Item], position: int) -> None:

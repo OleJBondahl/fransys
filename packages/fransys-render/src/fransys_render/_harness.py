@@ -5,6 +5,7 @@ from xml.sax.saxutils import escape
 
 from fransys_model.derive import connector_box_lines, line_designation
 from fransys_model.derive.drawing_text import port_marking
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import drawn_lines_on_page, drawn_on_page
 from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.layout import (
@@ -16,7 +17,7 @@ from fransys_model.layout import (
     sheet_format_of,
 )
 
-from ._numbers import format_decimal, grid_to_mm, printed_font_mm
+from ._numbers import format_decimal, printed_font_mm
 from ._routes import _point_mm
 
 if TYPE_CHECKING:

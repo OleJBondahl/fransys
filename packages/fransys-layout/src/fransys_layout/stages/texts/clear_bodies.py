@@ -4,10 +4,9 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Box, port_page_at, translate
-from fransys_layout.stages.space import Shape, Space, unowned
+from fransys_layout.stages.space import Shape, Space
 from fransys_layout.stages.stub_runs import functions_through, solids
 
-from .candidates import DEFAULT_TABLE
 from .place_texts import place_texts
 
 if TYPE_CHECKING:
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
     from fransys_layout.stages import LinkMarker, PlacedFunction
     from fransys_model.kernel import Finding
 
+    from .candidates import TextTable
     from .place_texts import Place, PlacedText, TextToPlace
 
 
@@ -46,10 +46,13 @@ def place_clear_of_bodies(
     texts: tuple[TextToPlace, ...],
     rows: Mapping[int, Sequence[tuple[LinkMarker, Place]]],
     here: Sequence[PlacedFunction],
-    decided: Sequence[Box],
-    content: Box,
+    ground: Space,
+    table: TextTable,
 ) -> tuple[tuple[PlacedText, ...], tuple[Finding, ...]]:
-    """The page's texts clear of foreign symbols, never stranding a marker."""
+    """The page's texts clear of foreign symbols, never stranding a marker.
+
+    `ground` holds the page's other ink as shapes and the content box the texts stay in.
+    """
     # the lint's `_foreign` counts a port on the body's side edge as the body: grown by one in x
     bodies = tuple(
         Shape(
@@ -57,11 +60,10 @@ def place_clear_of_bodies(
         )
         for one in here
     )
-    runs = unowned(decided)
-    space = Space(shapes=(*bodies, *runs), content=content)
-    done, findings = place_texts(_stub_clear(texts, rows, here), space, DEFAULT_TABLE)
+    space = Space(shapes=(*bodies, *ground.shapes), content=ground.content)
+    done, findings = place_texts(_stub_clear(texts, rows, here), space, table)
     if findings:
-        return place_texts(texts, Space(shapes=runs, content=content), DEFAULT_TABLE)
+        return place_texts(texts, ground, table)
     return done, findings
 
 

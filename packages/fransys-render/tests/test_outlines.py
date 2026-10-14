@@ -7,11 +7,11 @@ import re
 from decimal import Decimal
 
 from fransys_render import pages
-from fransys_render._numbers import grid_to_mm
 from fransys_render._outlines import _outline_glyph, outlines_group
 
 from electrical_symbols import GENERIC_BOX_KEY
 from fransys_model.derive.drawing_text import label_text
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import (
     DrawingSet,

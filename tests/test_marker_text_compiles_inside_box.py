@@ -49,6 +49,7 @@ from fransys_model.layout import (
     Orientation,
     Page,
     PageRole,
+    Side,
     SymbolPlacement,
     default_profile,
     layout_of,
@@ -291,6 +292,7 @@ def _model_and_owner_marker_id():
         width=width,
         height=_TEXT_HEIGHT_G + 2 * _MARKER_PADDING_G,
         produced_by="test",
+        facing=Side.N,
     )
     marker_partner = LinkMarker(
         id=partner_id,
@@ -304,6 +306,7 @@ def _model_and_owner_marker_id():
         width=13 + 2 * _MARKER_PADDING_G,
         height=_TEXT_HEIGHT_G + 2 * _MARKER_PADDING_G,
         produced_by="test",
+        facing=Side.N,
     )
 
     doc = Document(

@@ -2,6 +2,7 @@
 
 from fransys_model.kernel import SchemaError
 
+from .baseline_ancestry import removed_ancestry
 from .baseline_diff_units import (
     _boundary_changes,
     _item_changes,
@@ -46,4 +47,7 @@ def diff(a: Listing, b: Listing) -> ListingDiff:
         *_mate_changes(a.mates, b.mates),
         *_net_changes(a.nets, b.nets),
     ]
-    return ListingDiff(a=a.unit, b=b.unit, changes=tuple(changes))
+    rows = tuple(changes)
+    return ListingDiff(
+        a=a.unit, b=b.unit, changes=rows, ancestry=removed_ancestry(a, rows, subject)
+    )

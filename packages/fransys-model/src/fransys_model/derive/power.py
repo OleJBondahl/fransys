@@ -1,8 +1,17 @@
 """What a physical net is on the drawing: supply, ground, protective earth or none (model-0117)."""
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab import ConductorKind, Current, Item, Net, NetClass, Port, PowerKind
-from fransys_model.vocab.closure import net_of, physical_nets
+from fransys_model.vocab import (
+    ConductorKind,
+    Current,
+    Item,
+    LinkKind,
+    Net,
+    NetClass,
+    Port,
+    PowerKind,
+)
+from fransys_model.vocab.closure import link_groups, net_of, physical_nets
 from fransys_model.vocab.potentials import pe_firsts, physical_potentials
 from fransys_model.vocab.tables import conductors, items, nets, supply_of_potential
 
@@ -122,13 +131,20 @@ def _bridged(model: Model) -> frozenset[Id[Item]]:
     return frozenset(found)
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
+def _fused(model: Model) -> frozenset[Id[Item]]:
+    """Items whose part has a `protective` link (a fuse in the path), model-0215."""
+    return frozenset(g.item for g in link_groups(model, frozenset({LinkKind.PROTECTIVE})))
+
+
 def is_rail_terminal(model: Model, terminal: Id[Item]) -> bool:
     """Whether `terminal` is a rail terminal: on a DC rail or a PE net, bridged within its strip.
 
     A rail terminal draws no symbol: its pins show the rail's power symbol. An AC rail,
-    an unbridged terminal and any item that is not a terminal are `False`.
+    an unbridged terminal, a terminal whose part has a protective link and any
+    item that is not a terminal are `False`.
     """
-    if terminal not in _bridged(model):
+    if terminal not in _bridged(model) or terminal in _fused(model):
         return False
     idx = build_indexes(model)
     return any(

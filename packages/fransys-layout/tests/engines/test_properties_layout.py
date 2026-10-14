@@ -6,6 +6,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -72,8 +73,8 @@ def _run(
     if width_mm is not None:
         draft.extend(_narrow(width_mm), origin=_ORIGIN)
     model = freeze(draft)
-    laid_out, _ = lay_out_schematic(model)
-    inputs = read_inputs(model)
+    laid_out, _ = lay_out_schematic(model, OPTIONS)
+    inputs = read_inputs(model, options=OPTIONS)
     return model, laid_out, inputs, stage_results(model, inputs)[0]
 
 
@@ -222,7 +223,7 @@ def test_a_location_with_no_authored_document_is_laid_out_and_a_document_changes
         origin=_ORIGIN,
     )
     with_document = freeze(draft)
-    laid_out, _ = lay_out_schematic(with_document)
+    laid_out, _ = lay_out_schematic(with_document, OPTIONS)
     assert documents(with_document)
     assert with_document.digests["core"] != model.digests["core"]
     assert laid_out.digests["layout"] == out.digests["layout"]

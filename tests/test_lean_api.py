@@ -66,8 +66,8 @@ def test_fransys_pdf_output_is_byte_identical_across_two_calls():
     assert lean_api.api("fransys_pdf") == lean_api.api("fransys_pdf")
 
 
-def test_model_package_maps_to_its_twelve_surface_modules():
-    """`_package_modules("fransys_model")` is exactly the twelve public modules, sorted --
+def test_model_package_maps_to_its_fifteen_surface_modules():
+    """`_package_modules("fransys_model")` is exactly the fifteen public modules, sorted --
     the general prefix rule, not a special case for the model.
     """
     assert lean_api._package_modules("fransys_model") == (
@@ -76,8 +76,11 @@ def test_model_package_maps_to_its_twelve_surface_modules():
         "fransys_model.derive.block_diagram",
         "fransys_model.derive.cable_drawing",
         "fransys_model.derive.drawing_text",
+        "fransys_model.derive.grid_mm",
+        "fransys_model.derive.marker_box",
         "fransys_model.derive.numbering_pins",
         "fransys_model.derive.order",
+        "fransys_model.derive.page_nav",
         "fransys_model.derive.print_sizes",
         "fransys_model.derive.text_width",
         "fransys_model.kernel",
@@ -86,8 +89,8 @@ def test_model_package_maps_to_its_twelve_surface_modules():
     )
 
 
-def test_model_api_output_covers_all_twelve_modules_own_names():
-    """`api("fransys_model")` prints at least one header per one of the twelve modules."""
+def test_model_api_output_covers_all_fifteen_modules_own_names():
+    """`api("fransys_model")` prints at least one header per one of the fifteen modules."""
     output = lean_api.api("fransys_model")
     modules_seen = {module for module, _name in _headers(output)}
     assert modules_seen == {
@@ -96,8 +99,11 @@ def test_model_api_output_covers_all_twelve_modules_own_names():
         "fransys_model.derive.block_diagram",
         "fransys_model.derive.cable_drawing",
         "fransys_model.derive.drawing_text",
+        "fransys_model.derive.grid_mm",
+        "fransys_model.derive.marker_box",
         "fransys_model.derive.numbering_pins",
         "fransys_model.derive.order",
+        "fransys_model.derive.page_nav",
         "fransys_model.derive.print_sizes",
         "fransys_model.derive.text_width",
         "fransys_model.kernel",

@@ -58,6 +58,7 @@ from .facets import (
     TerminalFacet,
     WireFacet,
 )
+from .finding_ref import ref
 from .instantiate import PartBundle, instantiate
 from .markings import (
     Pole,
@@ -233,6 +234,7 @@ __all__ = [
     "projects",
     "rail_pairs",
     "rail_phase_problem",
+    "ref",
     "revisions",
     "split_colour",
     "supply_systems",

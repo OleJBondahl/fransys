@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.roles import ROLE_ORDER, physical_net, strongest
@@ -166,7 +167,7 @@ def _cabinet() -> tuple[StageInputs, Ports, dict[str, Id[Net]]]:
     )
     draft = Draft()
     draft.extend((*records, *nets, *conductors), origin=_ORIGIN)
-    return read_inputs(freeze(draft)), ports, net_ids
+    return read_inputs(freeze(draft), options=OPTIONS), ports, net_ids
 
 
 def test_a_conductor_takes_the_strongest_role_of_its_two_ports() -> None:

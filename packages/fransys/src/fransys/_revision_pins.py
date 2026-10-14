@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_model.derive import numbering_pins
 from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins, unit_relative_key
 from fransys_model.kernel import Finding, Id, Severity, make_id, require_origin
-from fransys_model.vocab import AssignedUnitTagFacet, items
+from fransys_model.vocab import AssignedUnitTagFacet, items, ref
 from fransys_model.vocab import units as units_table
 
 from . import _designation_pins
@@ -84,7 +84,7 @@ def moved(model: Model, unit: Id[Unit], path: Path, source: NumberingPins) -> li
             severity=Severity.ERROR,
             subjects=(subjects[move.key],),
             message=(
-                f"{'/'.join(move.key)} was pinned to {move.old_text!r} in {where}, "
+                f"{ref(subjects[move.key])} was pinned to {move.old_text!r} in {where}, "
                 f"and now prints {move.new_text!r}"
             ),
         )
@@ -101,7 +101,7 @@ def new_in_revision(model: Model, unit: Id[Unit], source: NumberingPins) -> list
             code=NEW_IN_REVISION,
             severity=Severity.INFO,
             subjects=(subjects[row.key],),
-            message=f"{'/'.join(row.key)} is new in this revision and takes {row.text!r}",
+            message=f"{ref(subjects[row.key])} is new in this revision and takes {row.text!r}",
         )
         for row in numbering_pins.pins(model, unit).items
         if not row.authored and (row.key, row.scope, row.code) not in known

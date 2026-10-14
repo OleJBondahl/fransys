@@ -2,6 +2,7 @@
 
 from itertools import pairwise
 
+from fransys_el import OPTIONS
 from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -59,7 +60,7 @@ def _steps(geometry) -> list[int]:
 
 
 def _box_placements(model):
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     written = write_layout(model, results, write_keys(model))
     placements = list(dict(written.tables["layout.symbol_placement"]).values())
     return [p for p in placements if isinstance(p, SymbolPlacement) and p.symbol == GENERIC_BOX_KEY]

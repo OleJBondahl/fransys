@@ -64,7 +64,10 @@ def test_the_number_counts_the_worst_severity_and_the_list_holds_all() -> None:
     view, box = _view_with(data, "item", 0)
     assert _flags(data, view)[box] == ["error", 2]
     listed = next(f for f in data["findings"][view][0] if f[0] == box)[3]
-    assert listed == [["error", "DEMO_FINDING", 2], ["info", "DEMO_FINDING", 1]]
+    assert listed == [
+        ["error", "DEMO_FINDING", 2, ["demo", "demo"]],
+        ["info", "DEMO_FINDING", 1, ["demo"]],
+    ]
 
 
 def test_a_subject_not_drawn_counts_on_its_nearest_drawn_ancestor() -> None:
@@ -116,7 +119,7 @@ def test_write_passes_its_findings_into_the_page(monkeypatch: Any, tmp_path: Any
         seen["findings"] = findings
         return {}
 
-    monkeypatch.setattr(pipeline, "_check", lambda *_: (known,))
+    monkeypatch.setattr(pipeline, "_raw_findings", lambda *_: (known,))
     monkeypatch.setattr(pipeline, "_exports", spy)
     fr.write(result, tmp_path)
     assert seen["findings"] == (known,)

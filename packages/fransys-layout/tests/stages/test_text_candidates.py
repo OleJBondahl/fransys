@@ -8,14 +8,15 @@ before it placed through `place_texts`), with odd sizes so their floor divisions
 """
 
 import pytest
+from fransys_el import TEXTS
 
 from fransys_layout.geometry import Box, Facing, LayoutError, Point
 from fransys_layout.stages.texts.candidates import (
-    DEFAULT_TABLE,
     Candidate,
-    CandidateTable,
     Side,
     TextKind,
+    TextPlacement,
+    TextTable,
     box_of,
     ranked_candidates,
     stub_anchor,
@@ -31,7 +32,7 @@ def test_a_tag_ranks_its_own_sides_steps_nearest_first_then_its_mirrors() -> Non
     again its own side first and then the mirror, so a text with a near place never moves."""
     near, past = (0, 7, -7, 14, -14), (21, -21, 28, -28)
     for own, mirror in ((Facing.W, Facing.E), (Facing.E, Facing.W)):
-        found = ranked_candidates(TextKind.TAG, own, _TEXT, DEFAULT_TABLE)
+        found = ranked_candidates(TextKind.TAG, own, _TEXT, TEXTS)
         assert found == tuple(
             Candidate(side=side, offset=offset, row=False)
             for offsets in (near, past)
@@ -43,12 +44,14 @@ def test_a_tag_ranks_its_own_sides_steps_nearest_first_then_its_mirrors() -> Non
 def test_a_text_at_its_owners_facing_with_an_owner_of_no_facing_raises() -> None:
     """A reference's row stands at its port's facing; with no facing there is no candidate."""
     with pytest.raises(LayoutError, match="its owner has none"):
-        ranked_candidates(TextKind.REFERENCE, None, _TEXT, DEFAULT_TABLE)
+        ranked_candidates(TextKind.REFERENCE, None, _TEXT, TEXTS)
 
 
 def test_the_steps_are_the_texts_own_height() -> None:
     """A step is one height of the text itself, so a taller text steps further."""
-    table: CandidateTable = frozendict({TextKind.TAG: (Side(facing=Facing.S, steps=(0, 1, -2)),)})
+    table: TextTable = frozendict(
+        {"tag": TextPlacement(priority=0, sides=(Side(facing=Facing.S, steps=(0, 1, -2)),))}
+    )
     assert ranked_candidates(TextKind.TAG, None, (10, 13), table) == (
         Candidate(side=Facing.S, offset=0, row=True),
         Candidate(side=Facing.S, offset=13, row=True),
@@ -69,7 +72,7 @@ def test_a_port_text_stands_one_stub_step_out_centred_on_the_port(
     facing: Facing, expected: Box
 ) -> None:
     """At port (80, 56): E x = 80 + 8, W x = 80 - 8 - 43, N/S x = 80 - 43 // 2; y likewise."""
-    candidate = ranked_candidates(TextKind.REFERENCE, facing, (43, 15), DEFAULT_TABLE)[0]
+    candidate = ranked_candidates(TextKind.REFERENCE, facing, (43, 15), TEXTS)[0]
     assert box_of(candidate, stub_anchor(Point(x=80, y=56)), (43, 15)) == expected
 
 

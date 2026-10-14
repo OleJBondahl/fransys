@@ -39,6 +39,7 @@ package = false
 members = [
     "packages/fransys-model",
     "packages/fransys-layout",
+    "packages/fransys-el",
     "packages/electrical-symbols",
     "packages/fransys-parts",
     "packages/fransys-author",
@@ -55,6 +56,7 @@ members = [
 [tool.uv.sources]
 fransys-model = { workspace = true }
 fransys-layout = { workspace = true }
+fransys-el = { workspace = true }
 electrical-symbols = { workspace = true }
 fransys = { workspace = true }
 fransys-parts = { workspace = true }

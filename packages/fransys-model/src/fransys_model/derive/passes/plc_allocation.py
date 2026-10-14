@@ -14,6 +14,7 @@ from fransys_model.derive.passes._plc_wired import (
 from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
 from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of, functions, items
 
 if TYPE_CHECKING:
@@ -86,8 +87,7 @@ def _unservable(function: Function, request: PlcRequestFacet, *, declared: bool)
         severity=Severity.ERROR,
         subjects=(request.id, function.id),
         message=(
-            f"{'/'.join(function.key)} asks for {request.signal.value} "
-            f"as {request.signal_name!r}, {cause}"
+            f"{ref(function)} asks for {request.signal.value} as {request.signal_name!r}, {cause}"
         ),
     )
 

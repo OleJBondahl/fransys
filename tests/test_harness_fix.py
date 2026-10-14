@@ -11,13 +11,14 @@ import sys
 from pathlib import Path
 
 import pytest
+from fransys_el import OPTIONS
 
 sys.path.insert(0, str(Path(__file__).parent))  # the sibling fixture modules
 import ha_p3_cases
 import ha_study_board
 from fransys_render._leads import _absolute, wired_local_ports
 from fransys_render._markers import box_origin, marker_facing, markers_group
-from fransys_render._numbers import format_decimal, grid_to_mm
+from fransys_render._numbers import format_decimal
 from fransys_render._symbol_geometry import oriented_symbol
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -26,6 +27,7 @@ from fransys_layout.geometry import Box, Point, pad
 from fransys_layout.geometry.units import TEXT_GAP
 from fransys_layout.lint._harness import through
 from fransys_model.derive import draws_as_line
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.layout import (
     ConnectorBox,
     HarnessFanOut,
@@ -139,7 +141,7 @@ def test_a_line_label_keeps_the_house_text_gap_from_its_line(name: str) -> None:
     A label with no such place is reported `LABEL_UNPLACED`, never placed silently.
     """
     model = _built(name).model
-    results, findings = stage_results(model, read_inputs(model))
+    results, findings = stage_results(model, read_inputs(model, options=OPTIONS))
     unplaced = {s for f in findings if f.code == "LABEL_UNPLACED" for s in f.subjects}
     lines = [line for line in results.lines.lines if line.harness not in unplaced]
     for line in lines:
@@ -198,7 +200,9 @@ def test_hl19_the_box_over_k1_is_as_wide_as_its_cells_and_overlaps_no_text() -> 
     ]
     assert found == []
     # the symbols keep their places in their circuits: coil and contact stand in two columns
-    assert (placed[coil].x, placed[aux].x) == (248, 832)
+    # (layout-0206: the boxed pin views left their columns, so the columns stand closer)
+    # (layout-0187 inset: this page needs no shift, its leftmost box already stands at x=16)
+    assert (placed[coil].x, placed[aux].x) == (216, 712)
     assert not box.x <= placed[coil].x <= box.x + box.width
 
 

@@ -13,8 +13,15 @@ from fransys_layout.stages.arrange import (
     same_unit_connectivity,
 )
 from fransys_layout.stages.attach import attach_replicas, hub_order
+from fransys_layout.stages.boxes import port_ranks, power_maps, turning_ports
 from fransys_layout.stages.chains import ChainRecords, discover_chains
-from fransys_layout.stages.far_ends import FarInputs, group_map, move_far_ends, sheet_fits
+from fransys_layout.stages.far_ends import (
+    FarInputs,
+    group_map,
+    is_channel,
+    move_far_ends,
+    sheet_fits,
+)
 from fransys_layout.stages.pin_ends import pin_keyed
 from fransys_layout.stages.replicate import replicate_boundaries, replicate_terminals
 from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_chains
@@ -119,9 +126,26 @@ def replicated_columns(
     columns = replicate_boundaries(columns, unit_boundaries(model), inputs.functions, all_columns)
     fits = sheet_fits(drawn, inputs.profile, inputs.sheet, HEADROOM_LANES)
     columns = attach_replicas(columns, all_columns, drawn, inputs.connections, fits)
-    far = FarInputs(drawn, inputs.connections, group_map(inputs.functions))
+    far = FarInputs(
+        drawn, inputs.connections, group_map(inputs.functions), free_pins(inputs, drawn)
+    )
     columns = move_far_ends(columns, all_columns, far, fits)
     return hub_order(columns, inputs.functions, inputs.connections)
+
+
+def free_pins(inputs: StageInputs, drawn: tuple[DrawnFunction, ...]) -> frozenset[Handle]:
+    """layout-0208: the channel pins whose box side `box_sides` turns toward their partners."""
+    power = (
+        port_ranks(inputs.functions),
+        *power_maps(inputs.power, inputs.item_north, inputs.item_south),
+    )
+    turning = {one.function: turning_ports(one, power) for one in drawn}
+    return frozenset(
+        p.port
+        for one in drawn
+        for p in one.ports
+        if is_channel(one, p.port) and p.port in turning[one.function]
+    )
 
 
 def arranged(

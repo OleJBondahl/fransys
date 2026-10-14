@@ -17,6 +17,7 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -33,7 +34,7 @@ def _layout(plant) -> tuple:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, results.layout
 
 
@@ -91,7 +92,7 @@ def _module_unwired(d) -> None:
 def test_a_plc_module_box_takes_v1_sides_for_its_power_and_its_channels() -> None:
     """The module's box (power and four unwired channels) fixes V1 sides: power N, channels S."""
     model, _ = _layout(_module_unwired)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     kind = {port.id: functions(model)[port.function].kind for port in ports(model).values()}
     owner = {f.id: items(model)[f.item].key[-1] for f in functions(model).values()}
     tag = {p.id: owner[ports(model)[p.id].function] for p in ports(model).values()}

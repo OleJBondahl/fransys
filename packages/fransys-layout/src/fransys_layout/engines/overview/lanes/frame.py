@@ -16,17 +16,22 @@ if TYPE_CHECKING:
     from fransys_layout.stages.corridor import CorridorPlan
 
 
-def side_of(stage: Mapping[Ident, int], me: Ident, far: Ident) -> Facing:
-    """West towards an earlier stage, east towards a later one and for the same stage."""
-    return Facing.W if stage[far] < stage[me] else Facing.E
+def side_of(
+    stage: Mapping[Ident, int], me: Ident, far: Ident, *, west_same: bool = False
+) -> Facing:
+    """West towards an earlier stage, east towards a later one; the same stage east, or west."""
+    return (
+        Facing.W if stage[far] < stage[me] or (stage[far] == stage[me] and west_same) else Facing.E
+    )
 
 
-def raw_ends(facts: ViewFacts, stage: Mapping[Ident, int]) -> tuple[RawEnd, ...]:
+def raw_ends(facts: ViewFacts, plan: Plan) -> tuple[RawEnd, ...]:
     """Both ends of every line, in line order."""
     out = []
     for i, ln in enumerate(facts.diagram.lines):
-        out.append(RawEnd(i, ln.a, ln.b, side_of(stage, ln.a, ln.b), ln.tab_a))
-        out.append(RawEnd(i, ln.b, ln.a, side_of(stage, ln.b, ln.a), ln.tab_b))
+        west = plan.runs_west(i, plan.stage[ln.a])
+        out.append(RawEnd(i, ln.a, ln.b, side_of(plan.stage, ln.a, ln.b, west_same=west), ln.tab_a))
+        out.append(RawEnd(i, ln.b, ln.a, side_of(plan.stage, ln.b, ln.a, west_same=west), ln.tab_b))
     return tuple(out)
 
 

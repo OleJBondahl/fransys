@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import pytest
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -74,7 +75,7 @@ def _laid_out(result: fr.BuildResult, *, rule: bool) -> tuple[Any, tuple[Finding
     with pytest.MonkeyPatch.context() as patch:
         if not rule:
             patch.setattr(stack_room, "clear_symbols", lambda *_, **__: None)
-        return stage_results(result.model, read_inputs(result.model))
+        return stage_results(result.model, read_inputs(result.model, options=OPTIONS))
 
 
 def _placed(result: fr.BuildResult, *, rule: bool) -> tuple[PlacedFunction, ...]:

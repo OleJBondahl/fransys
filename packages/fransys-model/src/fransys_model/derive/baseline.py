@@ -14,25 +14,27 @@ disjoint from it). This module is the surface only; the code lives beside it by 
   short-circuits), which makes it degenerate exactly to the ordinary, full model-relative
   `reference_designation`/`printed_designation`.
 - `baseline_codec`: `dumps`/`loads`, the canonical JSON codec, and `differing_sections`, which
-  names the top-level fields two listings disagree on, for `REVISION_ALREADY_RELEASED` and
-  `BASELINE_DIFFERS`'s messages.
+  names the top-level fields two listings disagree on, and `matches`, whether stored text equals a
+  fresh listing; both ignore `parent`. `REVISION_ALREADY_RELEASED` and `BASELINE_DIFFERS` use them.
 - `baseline_subjects`: `change_subjects`, the `Id` each diff row's subject text names.
 - `baseline_diff`, `baseline_diff_units`, `baseline_diff_wiring`: `diff`.
 """
 
 from .baseline_change_text import change_identity
-from .baseline_codec import differing_sections, dumps, loads
+from .baseline_codec import differing_sections, dumps, loads, matches
 from .baseline_designation import unit_designation
 from .baseline_diff import diff
 from .baseline_listing import listing
 from .baseline_subjects import change_subjects
 from .rows import CHANGE_COLUMNS, Change, Listing, ListingDiff
+from .rows_removed import RemovedAncestry
 
 __all__ = [
     "CHANGE_COLUMNS",
     "Change",
     "Listing",
     "ListingDiff",
+    "RemovedAncestry",
     "change_identity",
     "change_subjects",
     "diff",
@@ -40,5 +42,6 @@ __all__ = [
     "dumps",
     "listing",
     "loads",
+    "matches",
     "unit_designation",
 ]

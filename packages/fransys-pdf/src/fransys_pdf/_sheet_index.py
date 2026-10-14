@@ -2,7 +2,7 @@
 
 The Page cell is Typst's physical page at the sheet's destination label (ruling 2026-10-14,
 the frame's `physical_page`), never a Python page count: a list page that overflows moves every
-later page.
+later page. Every cell links to the sheet's page (NV1), invisibly.
 """
 
 from typing import TYPE_CHECKING
@@ -34,6 +34,7 @@ def sheet_index_page(model: Model, record: Document, kinds: tuple[PageKind, ...]
     for row in rows:
         page = f"context text(str({physical_page(f'locate(<{row.destination}>)')}))"
         title = field_cell(sheet, sizes, "page_title", row.title, shorter=row.shorter)[2]
-        cells.extend((f"text({literal(row.sheet)})", f"text({literal(title)})", page))
+        shown = (f"text({literal(row.sheet)})", f"text({literal(title)})", page)
+        cells.extend(f"link(<{row.destination}>, {cell})" for cell in shown)
     table = f"#table(columns: (auto, 1fr, auto), stroke: {RULE}, " + ", ".join(cells) + ")"
     return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)

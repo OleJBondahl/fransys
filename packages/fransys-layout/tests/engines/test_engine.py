@@ -12,6 +12,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from routing import route
 from samples import NO_HINTS, PROFILE, SHEET, drawn, hid, placed
@@ -112,7 +113,7 @@ def _run(
         )
         draft.extend((sheet, profile), origin=_ORIGIN)
     model = freeze(draft)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, findings = stage_results(model, inputs)
     return inputs, results, findings
 

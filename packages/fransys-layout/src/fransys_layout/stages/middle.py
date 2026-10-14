@@ -83,7 +83,7 @@ def group_index(groups: Sequence[MiddleGroup]) -> dict[AuthoringKey, tuple[Middl
     return index
 
 
-def _compact(column: Column, gone: frozenset[Id[Any]]) -> Column:
+def compact(column: Column, gone: frozenset[Id[Any]]) -> Column:
     """`column` without the cells in `gone`, its rows renumbered from 0 with no gap."""
     kept = [cell for cell in column.cells if cell.function not in gone]
     rows = {index: n for n, index in enumerate(sorted({cell.index for cell in kept}))}
@@ -129,7 +129,7 @@ def _strip_one(column: Column, owners: Mapping[Id[Any], list[_Owner]]) -> Column
             draws_in(unit, hidden, column.unit) for unit, _, hidden in owners.get(cell.function, ())
         )
     )
-    return _compact(column, gone) if gone else column
+    return compact(column, gone) if gone else column
 
 
 def draws_in(unit: Id[Any], hidden: frozenset[Id[Any] | None], column_unit: Id[Any] | None) -> bool:

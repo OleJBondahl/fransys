@@ -8,6 +8,7 @@ new record kind, so a rerun over the written model replaces the symbols instead 
 from functools import cache
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
 from power_fixture import power_model, power_run
 
 from fransys_layout.engines import lay_out_schematic
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
 
 @cache
 def _written() -> Model:
-    return lay_out_schematic(power_model(60))[0]
+    return lay_out_schematic(power_model(60), OPTIONS)[0]
 
 
 def _places():
@@ -110,6 +111,6 @@ def test_a_rerun_over_the_written_model_gives_the_same_symbols() -> None:
     UNDO: in `derived_layout_ids` leave out the power symbol table.
     """
     once = _written()
-    twice, _ = lay_out_schematic(once)
+    twice, _ = lay_out_schematic(once, OPTIONS)
     assert set(layout_of(twice, PowerSymbol)) == set(layout_of(once, PowerSymbol))
     assert set(derived_layout_ids(once)) >= set(layout_of(once, PowerSymbol))

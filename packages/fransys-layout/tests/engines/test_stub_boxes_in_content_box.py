@@ -1,6 +1,7 @@
 """Every harness stub box, as render will draw it, lies inside its page's content box."""
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from usecases.test_usecases import _NARROW_WIDTH_MM, _on_sheet
 
@@ -21,8 +22,8 @@ CASES = {
 def test_every_stub_box_lies_inside_the_content_box(name: str) -> None:
     """The box origin is the one render derives: centred on the stub unless `box_x` holds it."""
     model = freeze(CASES[name]())
-    content = content_box(read_inputs(model).sheet)
-    laid, _ = lay_out_schematic(model)
+    content = content_box(read_inputs(model, options=OPTIONS).sheet)
+    laid, _ = lay_out_schematic(model, OPTIONS)
     markers = [m for m in laid.tables["layout.link_marker"].values() if isinstance(m, LinkMarker)]
     stubs = [m for m in markers if m.carrier is not None]
     assert stubs or name == "cabinet_two_location"  # that case has no leaving harness stub

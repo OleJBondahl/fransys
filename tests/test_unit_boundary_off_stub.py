@@ -111,4 +111,3 @@ def test_a_boundary_declared_unused_draws_no_pin() -> None:
     placed = {p.function for p in layout_of(model, SymbolPlacement).values()}
     assert x2
     assert not placed & (x2 | {ports(model)[p].function for p in x2})
-    assert "UNIT_CONNECTOR_DANGLING" not in {f.code for f in result.findings}

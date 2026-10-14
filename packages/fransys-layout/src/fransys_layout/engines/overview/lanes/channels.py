@@ -2,7 +2,8 @@
 
 A line between neighbouring stages runs in the channel between them. A line across two or more
 stages runs in its channel to its corridor track, along the corridor, then down its last channel.
-A line within one stage takes a track after the planned ones, right of its column.
+A line within one stage takes a track after the planned ones, right of its column, or left of it
+when the plan runs it west.
 """
 
 from dataclasses import dataclass, replace
@@ -86,7 +87,7 @@ def stage_nets(
         u, v = sorted((ln.a, ln.b), key=lambda b: (plan.stage[b], b != ln.a))
         su, sv = plan.stage[u], plan.stage[v]
         if su == sv:
-            same[su].append(i)
+            same[su - 1 if plan.runs_west(i, su) else su].append(i)
         elif i in track_y:
             nets[su].append((i, by[i, u].y, track_y[i]))
             nets[sv - 1].append((i, track_y[i], by[i, v].y))

@@ -23,6 +23,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 from fransys_kicad import netlist as kicad_netlist
 
 from fransys_layout.engines.schematic.engine import lay_out_schematic, stage_results
@@ -81,7 +82,6 @@ from fransys_model.vocab.validators.units import (
     BOUNDARY_UNCONNECTED,
     MATE_PORT_MISMATCH,
     UNIT_BOUNDARY_BYPASSED,
-    UNIT_CONNECTOR_DANGLING,
     UNUSED_CONTRADICTED,
 )
 
@@ -333,7 +333,6 @@ def test_numbering_without_unit_in_the_sibling_group_diverges_on_the_second_boar
 
 _OTHER_U5_CODES = (
     UNIT_BOUNDARY_BYPASSED,
-    UNIT_CONNECTOR_DANGLING,
     MATE_PORT_MISMATCH,
     UNUSED_CONTRADICTED,
     BOUNDARY_NOT_IN_UNIT,
@@ -474,7 +473,7 @@ def test_removing_the_boards_boundary_gives_unit_boundary_bypassed():
     """Can-fail: `io_board(..., mark_boundary=False)` (a scratch copy of the worked
     example's function, not an edit to it) drops `u.boundary(x1)`. The cabinet's mate onto
     the board's `X1` then crosses a unit boundary that is nobody's declared interface:
-    "function pump1/io/X1/fn/x1 crosses out of unit pump1/io/unit without being its
+    "function pump1/io/X1/fn/x1 crosses out of pump1/io/unit without being its
     boundary" (captured verbatim from this scenario for the hand-back).
     """
 
@@ -505,7 +504,7 @@ def test_removing_the_boards_boundary_gives_unit_boundary_bypassed():
     result = fr.build(parts, d.draft(), layout_trigger_document())
     bypassed = [f for f in result.findings if f.code == UNIT_BOUNDARY_BYPASSED]
     assert len(bypassed) > 0
-    assert "crosses out of unit" in bypassed[0].message
+    assert "crosses out of " in bypassed[0].message
 
 
 # -- model-0040/layout-0044: DEMO-PCB-IO is a real board -----------------------
@@ -957,7 +956,7 @@ def test_no_cross_unit_decision_for_a_correctly_authored_boundary() -> None:
     the `write/` package's record list, confirmed by reading it).
     """
     model = _cross_unit_probe_model()
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     cases = Counter(decision.case for decision in results.layout.decisions)
     assert cases[LinkCase.SEVERED] >= _SEVERED_CUT_COUNT
     assert cases[LinkCase.CROSS_UNIT] == 0
@@ -1009,7 +1008,7 @@ def test_a_wire_bypassing_a_units_boundary_is_caught_and_drawn_cross_unit() -> N
     bypassed = [f for f in result.findings if f.code == UNIT_BOUNDARY_BYPASSED]
     assert len(bypassed) == 1
 
-    results, _ = stage_results(result.model, read_inputs(result.model))
+    results, _ = stage_results(result.model, read_inputs(result.model, options=OPTIONS))
     assert len(results.layout.decisions) > 0
     by_case = Counter(decision.case for decision in results.layout.decisions)
     assert by_case[LinkCase.CROSS_UNIT] == 1
@@ -1157,7 +1156,7 @@ def test_a_top_level_units_boundary_wired_to_unitless_content_ends_in_a_stub_at_
     nested one. That gap predates and is outside this fix; not asserted as correct here.
     """
     model = _top_level_boundary_to_unitless_probe_model()
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     by_case = Counter(decision.case for decision in results.layout.decisions)
     assert by_case[LinkCase.CROSS_UNIT] == 0
     assert not results.layout.decisions, "no cut of any case"
@@ -1166,7 +1165,7 @@ def test_a_top_level_units_boundary_wired_to_unitless_content_ends_in_a_stub_at_
     by_key = {item.key: item.id for item in items_of(model).values()}
     x1_fn = _function_of(model, by_key[("top-probe", "x1")], "fn").id
     p1_fn = _function_of(model, by_key[("top-probe", "p1")], "fn").id
-    laid, _ = lay_out_schematic(model)
+    laid, _ = lay_out_schematic(model, OPTIONS)
     sets, laid_pages = layout_of_model(laid, DrawingSet), layout_of_model(laid, Page)
     stubs = {
         m.port: (sets[laid_pages[m.page].drawing_set].unit, off_stub_text(laid, m))

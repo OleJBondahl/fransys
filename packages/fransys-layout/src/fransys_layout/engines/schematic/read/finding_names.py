@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.lint.naming import name_findings, where_drawn
+from fransys_layout.lint.naming import append_pages_and_designations, where_drawn
 from fransys_model.derive import natural_key
 from fransys_model.derive.designation import (
     function_designation,
@@ -59,4 +59,4 @@ def named_findings(
         for number, path in location_paths(model, layout.pages).items()
     }
     where = where_drawn(layout, specs, ink, labels)
-    return name_findings(subject_names(model, found), where, found)
+    return append_pages_and_designations(subject_names(model, found), where, found)

@@ -23,6 +23,7 @@ from fransys_model.vocab import (
     RatingFacet,
 )
 from fransys_model.vocab.enums import Current, FunctionKind
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.templates import FunctionTemplate
 from fransys_model.vocab.validators.ratings_breaking import (
     RATING_BREAKING_BELOW_FAULT,
@@ -138,9 +139,9 @@ def test_worked_example_gives_the_three_findings() -> None:
         Severity.ERROR,
         (_fn("FM"),),
     )
-    assert "function 'f' of item FM breaks 15000 A DC at 1000 V at 15 ms" in below.message
+    assert f"function {ref(_fn('FM'))} breaks 15000 A DC at 1000 V at 15 ms" in below.message
     assert "below the prospective 18000 A DC" in below.message
-    assert "function 'f' of item m00" in below.message
+    assert ref(_fn("m00")) in below.message
     draw = check_load_draw(model)
     assert [(f.code, f.severity) for f in draw] == [
         (LOADS_ABOVE_LIMIT, Severity.WARNING),

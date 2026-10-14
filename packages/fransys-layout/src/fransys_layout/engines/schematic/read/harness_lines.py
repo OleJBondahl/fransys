@@ -182,3 +182,9 @@ def plug_mates(lines: LineReads) -> dict[Id[Function], Id[Function]]:
         for end in line.ends
         if end.plug is not None and end.mates is not None
     }
+
+
+def line_owners(model: Model, lines: LineReads) -> dict[Id[Any], Id[Any]]:
+    """Each port a line's end lands on, to its connector function."""
+    table = ports(model)
+    return {p: table[p].function for line in lines.lines for end in line.ends for p in end.ports}

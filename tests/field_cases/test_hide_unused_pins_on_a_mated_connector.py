@@ -13,6 +13,7 @@ layout-0112's drawn set). It states no new rule, so no decision number.
 from typing import TYPE_CHECKING
 
 import fransys as fr
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -46,7 +47,7 @@ def test_hide_unused_pins_builds_a_mated_connector(tmp_path: Path) -> None:
     result = _build(tmp_path)
     assert [f for f in result.findings if f.severity.name == "ERROR"] == []
     model = result.model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     (k1,) = (one.id for one in items(model).values() if one.tag == "K1")
     own = {f.id for f in functions(model).values() if f.item == k1}
     pin = {p.name: p.id for p in ports(model).values() if p.function in own}

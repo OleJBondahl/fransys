@@ -5,6 +5,7 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.unused import without_unused
@@ -30,7 +31,7 @@ def _spare_names(*, hide: bool) -> tuple[set[str], set[str]]:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     every = (*inputs.functions, *inputs.spares)
     drawn, spares = without_unused(model, every, inputs.choices, hide=hide)
     tag_of = {one.id: one.key[-1] for one in items(model).values()}

@@ -356,7 +356,7 @@ def _plc_model(*, nested_host):
 
 def _plc_rows(model, unit):
     """The unit's PLC rows by channel designation: `{"-A1:1": row, "-A1:2": row}`."""
-    return {row.channel_designation: row for row in plc_channel_rows(model, unit=unit)}
+    return {row.pin: row for row in plc_channel_rows(model, unit=unit)}
 
 
 def test_a_nested_units_plc_row_leaves_an_outside_end_and_an_outside_device_empty():

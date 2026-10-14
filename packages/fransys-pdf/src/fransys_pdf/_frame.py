@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive.drawing_text import row_letter
 from fransys_model.derive.text_width import UNITS_PER_EM, text_units
 
+from ._labels import LAST_PAGE
 from ._sizes import THICK_STROKE, THIN_STROKE, Sizes, font_mm
 from ._typst import literal
 
@@ -40,7 +41,8 @@ def physical_page(position: str = "here()") -> str:
     return f"{position}.page()"
 
 
-_PAGE_COUNTER = f'context (str({physical_page()}) + " of " + str(counter(page).final().first()))'
+_LAST = physical_page(f"locate(<{LAST_PAGE}>)")
+_PAGE_COUNTER = f'context (str({physical_page()}) + " of " + str({_LAST}))'
 
 # The house column widths, c1-c7, left to right (mm, exact on the 410 mm house frame
 # width once the 20 mm square logo column is set aside): the defaults for the

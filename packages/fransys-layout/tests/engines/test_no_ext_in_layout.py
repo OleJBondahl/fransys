@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from workspace_root import WORKSPACE_ROOT
 
@@ -57,12 +58,12 @@ _USECASES = _load_usecases()
 
 @cache
 def _cabinet():
-    return lay_out_schematic(freeze(build_cabinet()))[0]
+    return lay_out_schematic(freeze(build_cabinet()), OPTIONS)[0]
 
 
 @cache
 def _cabinet_two_location():
-    return lay_out_schematic(freeze(build_cabinet(second_location=True)))[0]
+    return lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)[0]
 
 
 _FIXTURES = {

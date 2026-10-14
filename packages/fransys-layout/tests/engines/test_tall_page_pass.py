@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 from samples import hid
 lazy import pytest
@@ -32,7 +33,7 @@ def test_the_cabinet_with_no_tall_group_plans_its_pages_twice_as_before(
     plan = engine.plan_pages
     monkeypatch.setattr(engine, "plan_pages", lambda *args: (calls.append(1), plan(*args))[1])
     model = freeze(build_cabinet())
-    stage_results(model, read_inputs(model))
+    stage_results(model, read_inputs(model, options=OPTIONS))
     assert len(calls) == 2
 
 

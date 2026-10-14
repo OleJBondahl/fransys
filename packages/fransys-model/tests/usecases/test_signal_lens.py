@@ -15,7 +15,7 @@ def test_the_lens_lists_every_channel_with_its_kind_and_field_device() -> None:
     model = freeze(build_cabinet())
     lens = signal_lens(model)
     channels = [c for module in lens for c in module.channels]
-    rows = plc_channel_rows(model)
+    rows = list({row.channel: row for row in plc_channel_rows(model)}.values())
     assert len(channels) >= len(rows) > 0
     bound = [c for c in channels if c.device is not None]
     assert sorted(str(c.signal_name) for c in bound) == sorted(

@@ -46,7 +46,7 @@ def test_a_terminal_boundary_rating_below_the_circuit_is_found() -> None:
     d.wire(psu.output["-"], io.X1[2].outer, wire=(BU, 0.5))
     found = [f for f in fr.build(d).findings if f.code == "RATING_VOLTAGE_BELOW_CIRCUIT"]
     assert len(found) == 1
-    assert "boundary rating of unit" in found[0].message
+    assert "boundary rating of " in found[0].message
 
 
 def _io_run(bridged: object):

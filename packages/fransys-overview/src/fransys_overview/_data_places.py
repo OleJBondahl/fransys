@@ -5,12 +5,13 @@ They come from `derive.location_fold`: the page lists them and recomputes no pla
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.derive import location_fold
+from fransys_model.derive import location_fold, unit_location
 from fransys_model.layout import OverviewRefKind
+from fransys_model.vocab import aspect_nodes
 
 if TYPE_CHECKING:
     from fransys_model.derive import ViewBox
-    from fransys_model.kernel import Id
+    from fransys_model.kernel import Id, Model
 
     from ._data import _Tables
 
@@ -30,3 +31,9 @@ def _member(tables: _Tables, member: Id[Any]) -> list[Any]:
         return [["unit", tables.unit_ix[member]], tables.unit_label[member]]
     node = tables.nodes[tables.item_ix[member]]
     return [["item", tables.item_ix[member]], node.designation or node.description]
+
+
+def unit_place_label(model: Model, unit: Id[Any]) -> str | None:
+    """The label of the location node `unit` is placed at (`derive.unit_location`), else `None`."""
+    node = unit_location(model, unit)
+    return None if node is None else aspect_nodes(model)[node].label

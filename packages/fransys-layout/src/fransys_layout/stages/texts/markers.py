@@ -100,7 +100,7 @@ def link_markers(
             drawing_set=one.drawing_set,
             page=one.page,
             at=end.at,
-            box=candidate_box(one, end.at, end.facing),
+            box=candidate_box(one, end.at, end.facing, profile),
             partner_page=one.partner_page,
             stub_extra=along(one, end.facing),
             star=one.star,

@@ -20,6 +20,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 
 # `test_declared_dependencies.py`'s pattern for importing a sibling root test module.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -211,7 +212,7 @@ def _build_boundary_mated_to_top_level_harness(*, nested: bool):
         # The mate bypasses the outer unit's boundary on purpose: `UNIT_BOUNDARY_BYPASSED` is an
         # ERROR, so `fr.build` runs no layout (decision 0028); lay the numbered model out directly.
         assert errors == {"UNIT_BOUNDARY_BYPASSED"}
-        model, _findings = lay_out_schematic(model)
+        model, _findings = lay_out_schematic(model, OPTIONS)
     else:
         assert errors == set()
     name = "demo-io-board" if nested else "demo-pump-cabinet"

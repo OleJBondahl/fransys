@@ -12,13 +12,13 @@ from fransys_layout.geometry import Box, Facing, LayoutError, Point, first_clear
 from fransys_layout.stages.space import Run, covers, crosses
 from fransys_model.kernel import Finding, Id, Severity, value
 
-from .candidates import PRIORITY, TextKind, box_of, ranked_candidates
+from .candidates import TextKind, box_of, ranked_candidates
 
 if TYPE_CHECKING:
     from fransys_layout.stages.space import Shape, Space
     from fransys_layout.stages.types import Handle
 
-    from .candidates import CandidateTable
+    from .candidates import TextTable
 
 LABEL_UNPLACED = "LABEL_UNPLACED"
 
@@ -84,7 +84,7 @@ class PlacedText:
 def place_texts(
     texts: tuple[TextToPlace, ...],
     space: Space,
-    table: CandidateTable,
+    table: TextTable,
     *,
     lanes: tuple[Shape, ...] = (),
     runs: tuple[Run, ...] = (),
@@ -94,7 +94,7 @@ def place_texts(
     stubs: list[tuple[Handle, Box]] = []
     findings: list[Finding] = []
     seen: set[tuple[TextKind, Handle, str]] = set()
-    for text in sorted(texts, key=_key):
+    for text in sorted(texts, key=lambda one: _key(one, table)):
         if (text.kind, text.handle, text.slot) in seen:
             msg = "two texts to place share one kind, handle and slot"
             raise LayoutError(msg)
@@ -159,7 +159,7 @@ def _first_free(
     )
 
 
-def _options(text: TextToPlace, table: CandidateTable) -> list[tuple[Place, bool]]:
+def _options(text: TextToPlace, table: TextTable) -> list[tuple[Place, bool]]:
     """The text's candidates in order, each with whether its anchor `fits`."""
     if text.places:
         return [(place, place.fits) for place in text.places]
@@ -171,10 +171,10 @@ def _options(text: TextToPlace, table: CandidateTable) -> list[tuple[Place, bool
     ]
 
 
-def _key(text: TextToPlace) -> tuple[int, int, int, int, Handle, str]:
+def _key(text: TextToPlace, table: TextTable) -> tuple[int, int, int, int, Handle, str]:
     """Key order: priority, the call's rank, position, handle, then the slot."""
     return (
-        PRIORITY[text.kind],
+        table[text.kind.value].priority,
         text.rank,
         text.position.x,
         text.position.y,

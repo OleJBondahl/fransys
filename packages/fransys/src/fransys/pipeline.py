@@ -61,7 +61,7 @@ from fransys_model.derive import (
     unit_subtree,
     units,
 )
-from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins
+from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins, name_findings
 from fransys_model.derive.order import finding_order_key
 from fransys_model.kernel import (
     Finding,
@@ -356,7 +356,7 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     number_findings = (*number_findings, *_revision_pins.new_findings(model, sources))
     validator_findings = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
     validator_findings.extend(check_side_hints(model))
-    findings = (*plc_findings, *number_findings, *validator_findings)
+    findings = name_findings(model, (*plc_findings, *number_findings, *validator_findings))
     if _has_error(findings) or not _has_document(model):
         return BuildResult(model=model, findings=_by_code_in_reader_order(findings, model))
     model, layout_findings = lay_out_if_needed(model)
@@ -373,7 +373,7 @@ def _by_code_in_reader_order(findings: tuple[Finding, ...], model: Model) -> tup
     return tuple(
         finding
         for group in by_code.values()
-        for finding in sorted(group, key=lambda f: finding_order_key(model, f))
+        for finding in sorted(group, key=lambda f: (finding_order_key(model, f), f.message))
     )
 
 
@@ -388,8 +388,8 @@ def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...
                 _SEVERITY_RANK[f.severity],
                 f.code,
                 finding_order_key(model, f),
-                f.subjects,
                 f.message,
+                f.subjects,
             ),
         )
     )
@@ -757,7 +757,7 @@ def write(
     if intermediates is not None:
         intermediates.mkdir(parents=True, exist_ok=True)
         _write_intermediates(model, svgs, intermediates)
-    findings = _check(result, svgs)
+    findings = _resolved(raw := _raw_findings(result, svgs), model)
     _clean_stale_exports(out_dir, model, resolved_unit)
     errors = tuple(finding for finding in findings if finding.severity is Severity.ERROR)
     if errors:
@@ -766,7 +766,7 @@ def write(
         model,
         svgs,
         unit=resolved_unit,
-        findings=findings,
+        findings=raw,
         changes=_changes_since(model, releases, resolved_unit),
     )
     written = []
@@ -816,8 +816,7 @@ def _revision_already_released_finding(
     """
     stored_text = stored_listing(release.path)
     new_listing = baseline.listing(model, unit)
-    new_text = baseline.dumps(new_listing)
-    if stored_text is None or stored_text == new_text:
+    if stored_text is None or baseline.matches(stored_text, new_listing):
         return None
     stored = baseline.loads(stored_text)
     sections = ", ".join(baseline.differing_sections(stored, new_listing))
@@ -841,8 +840,7 @@ def _baseline_differs_finding(
     The caller decides what no stored baseline means; this only answers whether it differs.
     """
     new_listing = baseline.listing(model, unit)
-    new_text = baseline.dumps(new_listing)
-    if stored_text == new_text:
+    if baseline.matches(stored_text, new_listing):
         return None
     sections = sections_text(baseline.loads(stored_text), new_listing)
     release_revision_text = revision_text(release.version, release.revision)
@@ -1055,7 +1053,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     model = result.model
     resolved_unit = _resolve_unit(model, unit)
     svgs = _result_svgs(result)
-    l4 = _l4_findings(model, resolved_unit, into)
+    l4 = name_findings(model, _l4_findings(model, resolved_unit, into))
     raw_findings = _revision_pins.with_warnings(_raw_findings(result, svgs), l4)
     findings = _resolved(raw_findings, model)
     errors = tuple(finding for finding in (*findings, *l4) if finding.severity is Severity.ERROR)
@@ -1070,7 +1068,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     new_listing_text = baseline.dumps(new_listing)
 
     stored_text = stored_listing(target)
-    if stored_text is not None and stored_text == new_listing_text:
+    if stored_text is not None and baseline.matches(stored_text, new_listing):
         return target
 
     exports = _exports(model, svgs, unit=resolved_unit)

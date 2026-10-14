@@ -68,7 +68,7 @@ _.L_MINUS  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:14
 _.M  # TESTS fransys-parts/tests/test_pole_facts.py:139
 _.pole_side  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.conductor_mark  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
-_.channel_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
+_.ancestry  # OTHER fransys-overview/src/fransys_overview/_data_changes.py:88
 _.wired_to  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.field_device  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.field_device_designation  # OTHER fransys-wago/src/fransys_wago/modules.py:84

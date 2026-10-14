@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic import engine, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
@@ -73,7 +74,7 @@ def _run(
     """
     if lanes is not None:
         monkeypatch.setattr(engine, "TOP_HEADROOM_LANES", lanes)
-    layout, _, findings = run_stages(model, read_inputs(model))
+    layout, _, findings = run_stages(model, read_inputs(model, options=OPTIONS))
     return layout, {finding.code for finding in findings}
 
 
@@ -122,7 +123,7 @@ def test_the_shipped_headroom_keeps_every_record_inside_the_content_box(
     assert top >= 0  # nothing stands above the content box
     # and the first row still starts near it: the bound is the model's own band, sized by the
     # widest digits of this run (layout-0135)
-    inputs = read_inputs(model_of())
+    inputs = read_inputs(model_of(), options=OPTIONS)
     band = real(inputs.sheet, inputs.profile, max(seen)[1])
     assert top <= engine.TOP_HEADROOM_LANES * WIRING_GRID + band - _REACH_ABOVE_ROW
 

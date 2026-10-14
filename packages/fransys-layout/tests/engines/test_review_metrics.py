@@ -13,6 +13,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -71,7 +72,7 @@ def _cabinet(*, reverse: bool = False, second_location: bool = False, width_mm: 
     if width_mm is not None:
         _narrow(draft, width_mm)
     model = freeze(draft)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, findings = stage_results(model, inputs)
     return inputs, results, findings
 

@@ -124,7 +124,7 @@ through one of these two, so none can disagree about what a cable is. `unit_cabl
 `fransys.derive.is_plc_module(model, item)` returns whether `item`'s part has category
 `PLC_MODULE`. A rack is an item with at least one such child, and `plc_rack_modules` lists them.
 
-`fransys.derive.plc_tables(model, unit=None)` returns the PLC list as one `PlcTable` per controller or module, in the row order of `plc_channel_rows`.
+`fransys.derive.plc_tables(model, unit=None)` returns the PLC list as one `PlcTable` per controller or module, in the row order of `plc_channel_rows`. The PLC list has one row per pin, so a channel with two pins has two rows.
 
 `fransys.derive.unit_strips(model, unit)` and `fransys.derive.unit_boards(model, unit)`
 return the terminal strips and the boards that `unit` owns directly, sorted by id, never those of

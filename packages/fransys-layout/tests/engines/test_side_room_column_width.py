@@ -12,6 +12,7 @@ from importlib import import_module
 from typing import Any
 from unittest.mock import patch
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import StageResults, stage_results
@@ -54,8 +55,8 @@ def _run() -> tuple[StageResults, dict[str, Any]]:
         watch("page", pagerun),
         patch.object(engine, "place_pages", passes),
     ):
-        results, _ = stage_results(model, read_inputs(model))
-    seen["gap"] = read_inputs(model).profile.column_gap
+        results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
+    seen["gap"] = read_inputs(model, options=OPTIONS).profile.column_gap
     return results, seen
 
 

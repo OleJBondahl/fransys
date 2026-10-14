@@ -148,7 +148,13 @@ const drawFindings = (view, which, at) => {
   const flag = data.findings[data.views.indexOf(view)][which].find((f) => f[0] === at);
   if (flag === undefined) return;
   const list = el('ul', '', { id: 'findings' });
-  list.append(...flag[3].map((r) => el('li', r[1] + ' (' + r[0] + ') x ' + r[2])));
+  list.append(...flag[3].map((r) => {
+    const row = el('li', r[1] + ' (' + r[0] + ') x ' + r[2]);
+    const texts = el('ul');
+    texts.append(...r[3].map((m) => el('li', m)));
+    row.append(texts);
+    return row;
+  }));
   const total = flag[3].reduce((n, r) => n + r[2], 0);
   $('detail').append(el('h3', 'Findings (' + total + ')'), list);
 };

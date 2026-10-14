@@ -1,13 +1,14 @@
 """Far ends drawn at the pin they serve, the step after `attach_replicas`.
 
-A contact, or a coil on a PLC output channel, whose one wire reaches a single pin in another
-group's column moves its home there, above an N pin or below an S pin, if the column still fits.
+A contact whose one wire, or a coil whose one channel wire (A1 or A2, layout-0208), reaches a
+single pin in another group's column moves its home there, above an N pin or below an S pin, if
+the column still fits.
 """
 
 from functools import partial
 from typing import TYPE_CHECKING, NamedTuple
 
-from fransys_layout.geometry import WIRING_GRID, draw_order
+from fransys_layout.geometry import OPPOSITE, WIRING_GRID, draw_order
 from fransys_layout.geometry.box_reach import Reach, Row, extent, spread
 from fransys_layout.geometry.symbols import channel_pitch
 from fransys_layout.stages.attach import _entry
@@ -45,14 +46,19 @@ class _Facts(NamedTuple):
     drawn_of: Mapping[Handle, DrawnFunction]
     touching: Mapping[Handle, tuple[Connection, ...]]
     groups: Mapping[Handle, object]
+    free: frozenset[Handle]
 
 
 class FarInputs(NamedTuple):
-    """What far ends read besides the columns: the drawn run, its wires, each function's group."""
+    """What far ends read besides the columns: the drawn run, its wires, each function's group.
+
+    `free`: the caller's channel pins whose box side is not yet fixed; a coil takes its own side.
+    """
 
     drawn: tuple[DrawnFunction, ...]
     connections: tuple[Connection, ...]
     groups: Mapping[Handle, object]
+    free: frozenset[Handle] = frozenset()
 
 
 def group_map(functions: Sequence[FunctionSpec]) -> dict[Handle, object]:
@@ -75,7 +81,12 @@ def move_far_ends(
         for cell in column.cells
         if cell.home is not Home.ELSEWHERE
     }
-    facts = _Facts({one.function: one for one in far.drawn}, _touching(far.connections), far.groups)
+    facts = _Facts(
+        {one.function: one for one in far.drawn},
+        _touching(far.connections),
+        far.groups,
+        far.free,
+    )
     placed: dict[AuthoringKey, tuple[_Entry, ...]] = {}
     leaving: dict[AuthoringKey, frozenset[Handle]] = {}
     for column in columns:
@@ -99,22 +110,20 @@ def _far_host(
     terminal: Handle, column: Column, home_of: Mapping[Handle, Column], facts: _Facts
 ) -> tuple[Column, _Entry] | None:
     """The host column and entry of a lone far end, `None` unless every rule holds."""
-    drawn_of, touching, groups = facts
-    wires = touching.get(terminal, ())
-    if len(wires) != 1:
+    drawn_of, touching, groups, free = facts
+    ends = _lone_end(terminal, drawn_of, touching.get(terminal, ()))
+    if ends is None:
         return None
-    own, other = (wires[0].a, wires[0].b)
-    if other.function == terminal:
-        own, other = other, own
+    own, other = ends
     host = home_of.get(other.function)
     if host is None:
         return None
     far = drawn_of[other.function]
-    # layout-0103: a box's column also holds the contacts that chain discovery put under it
+    mine = drawn_of[terminal]
+    # layout-0103: a box's column also holds the far ends that chain discovery put by it
     own_column = (
         host.key == column.key
-        and drawn_of[terminal].roles.contact
-        and _is_channel(far, other)
+        and is_channel(far, other.port)
         and groups.get(terminal) != groups.get(other.function)
     )
     if (host.group, host.drawing_set_key) == (
@@ -122,22 +131,50 @@ def _far_host(
         column.drawing_set_key,
     ) and not own_column:
         return None
-    mine = drawn_of[terminal]
+    # layout-0208: a far end that hosts a replica (a coil's feed terminal) keeps it in its column
+    if host.key != column.key and any(cell.host == terminal for cell in column.cells):
+        return None
     # one pin: no other wire at it (a PLC module's box is one function, its channels pins)
     if len(_wires_at(far, other, touching)) != 1 or not _serves(mine, far, other):
         return None
-    entry = _entry(mine, own, far, other)
+    # layout-0208: a coil takes a free pin's side from its own wired terminal
+    free_side = mine.roles.coil and other.port in free
+    entry = _free_entry(mine, own, far, other) if free_side else _entry(mine, own, far, other)
     return None if entry is None else (host, entry)
 
 
-def _is_channel(far: DrawnFunction, end: PortRef) -> bool:
-    """Whether `end` is a PLC channel's pin: the whole function is one, or the port is flagged."""
-    return far.roles.plc_channel or any(p.channel for p in far.ports if p.port == end.port)
+def _free_entry(mine: DrawnFunction, own: PortRef, far: DrawnFunction, other: PortRef) -> _Entry:
+    """layout-0208: at a pin of no fixed side the far end stands unflipped, the pin turns to it.
+
+    Its order key is the pin's place in the box: before the turn two pins share an x.
+    """
+    symbol = next(p.symbol_port for p in far.ports if p.port == other.port)
+    own_symbol = next(p.symbol_port for p in mine.ports if p.port == own.port)
+    own_facing = next(g.facing for g in mine.geometry.ports if g.name == own_symbol)
+    place = [g.name for g in far.geometry.ports].index(symbol)
+    return (other.function, OPPOSITE[own_facing].value, place, mine.function, symbol, False)
+
+
+def _lone_end(
+    terminal: Handle, drawn_of: Mapping[Handle, DrawnFunction], wires: Sequence[Connection]
+) -> tuple[PortRef, PortRef] | None:
+    """The (own, far) ends of a far end's one wire; a coil's one wire to a channel (layout-0208)."""
+    ends = [(c.b, c.a) if c.b.function == terminal else (c.a, c.b) for c in wires]
+    if drawn_of[terminal].roles.coil:
+        ends = [
+            (own, other) for own, other in ends if is_channel(drawn_of[other.function], other.port)
+        ]
+    return ends[0] if len(ends) == 1 else None
+
+
+def is_channel(far: DrawnFunction, port: Handle) -> bool:
+    """Whether `port` of `far` is a channel pin: its function is one, or the port is flagged."""
+    return far.roles.plc_channel or any(p.channel for p in far.ports if p.port == port)
 
 
 def _serves(mine: DrawnFunction, far: DrawnFunction, end: PortRef) -> bool:
     """A contact serves any pin; a coil serves a PLC output channel only."""
-    return mine.roles.contact or (mine.roles.coil and _is_channel(far, end))
+    return mine.roles.contact or (mine.roles.coil and is_channel(far, end.port))
 
 
 def sheet_fits(
@@ -187,6 +224,6 @@ def _span(drawn_of: Mapping[Handle, DrawnFunction], column: Column) -> int:
 def _wires_at(far: DrawnFunction, end: PortRef, touching: _Touching) -> tuple[Connection, ...]:
     """The wires at the far pin: at its port on a PLC module's box, else on the whole function."""
     wires = touching[end.function]
-    if not _is_channel(far, end):
+    if not is_channel(far, end.port):
         return wires
     return tuple(c for c in wires if end.port in (c.a.port, c.b.port))

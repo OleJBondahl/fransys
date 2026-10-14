@@ -18,6 +18,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -97,7 +98,7 @@ def _build(shape: str, *, beside: bool = True, bottom_up: bool = False) -> fr.Bu
 
 def _at(result: fr.BuildResult, tag: str) -> tuple[int, int]:
     """The drawn position of the function whose key ends in `tag`, as (x, y)."""
-    layout = stage_results(result.model, read_inputs(result.model))[0].layout
+    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
     ids = {f.id for f in functions(result.model).values() if f"{tag}/fn/" in "/".join(f.key)}
     (one,) = (p for p in layout.placed if p.function in ids)
     return one.at.x, one.at.y
@@ -105,7 +106,7 @@ def _at(result: fr.BuildResult, tag: str) -> tuple[int, int]:
 
 def _top(result: fr.BuildResult) -> int:
     """The y of the page's topmost placed function."""
-    layout = stage_results(result.model, read_inputs(result.model))[0].layout
+    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
     return min(p.at.y for p in layout.placed)
 
 
@@ -127,7 +128,7 @@ _SHAPES = [
 
 def _lamp(result: fr.BuildResult) -> tuple[tuple[int, int], tuple[int, int, int, int]]:
     """H1's pin 1, and its body outline as (left, top, right, bottom), in page coordinates."""
-    layout = stage_results(result.model, read_inputs(result.model))[0].layout
+    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
     ids = {f.id for f in functions(result.model).values() if "H1/fn/" in "/".join(f.key)}
     (one,) = (p for p in layout.placed if p.function in ids)
     pin = next(q for q in one.geometry.ports if q.name == "1")

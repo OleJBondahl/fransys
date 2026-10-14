@@ -23,12 +23,12 @@ from fransys_layout.stages.line_trunk import LEAVE_GRIDS
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.route import port_end
 from fransys_layout.stages.space import Shape, Space, span
-from fransys_layout.stages.texts.candidates import DEFAULT_TABLE
 from fransys_layout.stages.texts.place_texts import place_texts
 from fransys_layout.stages.types import PlacedLabel
 from fransys_model.kernel import Finding, value
 
-from .read.harness_lines import drawn_on, line_reads
+from .read.harness_lines import drawn_on, line_owners, line_reads
+from .read.line_box_end import boxed_end, rows_of
 from .read.line_texts import LineTexts, line_texts, stub_box, widest_stub
 from .read.stub_places import line_spots
 
@@ -103,6 +103,7 @@ class _World:
     interfaces: frozenset[Id[Any]]
     leaving: frozenset[Id[Any]]
     top: frozenset[Id[Any]]  # a top-level unit's interfaces: its own sheet draws their lines leave
+    owner_of: Mapping[Id[Any], Id[Any]] = MappingProxyType({})  # a line end's port, its connector
 
 
 def harness_ink(
@@ -123,7 +124,7 @@ def draw_lines(
     scene: LineScene,
 ) -> DrawnPieces:
     """Layout-0154: each line on each page its ends stand on, its labels placed (item 4)."""
-    world = _world(carried, units, scene)
+    world = replace(_world(carried, units, scene), owner_of=line_owners(model, lines))
     texts = replace(
         line_texts(model, lines), spots=line_spots(model, lines, world), sheet=scene.sheet
     )
@@ -225,16 +226,19 @@ def _pages(line: LineRead, world: _World) -> list[_Page]:
 def _ends_on(
     ends: Sequence[HarnessLineEnd], page: _Page, world: _World
 ) -> tuple[list[EndOnPage], list[int]]:
-    """The line's ends drawn on `page`, and the branches of those that are not, in order."""
+    """The line's ends drawn on `page`, and the branches of those that are not, in order.
+
+    Layout-0206: a plug-less box end then takes the edge facing the rows of the other ends.
+    """
+    first = [(end, _end_on(end, page, world)) for end in ends]
     found: list[EndOnPage] = []
-    absent: list[int] = []
-    for end in ends:
-        one = _end_on(end, page, world)
-        if one is None:
-            absent.append(end.branch)
-        else:
-            found.append(one)
-    return found, absent
+    for end, first_try in first:
+        others = [two for other, two in first if two is not None and other is not end]
+        again = first_try is not None and first_try.box is not None and end.plug is None
+        placed = _end_on(end, page, world, rows_of(others)) if again else first_try
+        if placed is not None:
+            found.append(placed)
+    return found, [end.branch for end, one in first if one is None]
 
 
 def _trunk(
@@ -253,7 +257,9 @@ def _trunk(
     return None
 
 
-def _end_on(end: HarnessLineEnd, page: _Page, world: _World) -> EndOnPage | None:
+def _end_on(
+    end: HarnessLineEnd, page: _Page, world: _World, toward: tuple[int, int] | None = None
+) -> EndOnPage | None:
     """One end on `page`: its plug's box with its mate's, or its pins standing there."""
     interface = end.mates in world.interfaces
     if end.plug is not None:
@@ -266,7 +272,9 @@ def _end_on(end: HarnessLineEnd, page: _Page, world: _World) -> EndOnPage | None
             end.branch, interface, leaving, box.box, mate.box if mate is not None else None
         )
     pins = tuple(_pins(end, page, world))
-    return EndOnPage(end.branch, interface, pins=pins) if pins else None
+    if pins:
+        return EndOnPage(end.branch, interface, pins=pins)
+    return boxed_end(end, page, world.boxes, world.owner_of, toward)
 
 
 def _own_sheet(
@@ -315,7 +323,21 @@ def _page_pieces(
     texts, world, scene = run
     paths = [(line.owner, branch, points) for line, one in pieces for branch, points in one.paths]
     legs = [leg.points for _, one in pieces for fan in one.fans for leg in fan.legs]
-    centres, unplaced = _label_boxes(paths, legs, texts, world.shapes.get(page, []), scene)
+    stubs = tuple(
+        stub_box(
+            texts,
+            line,
+            stub,
+            (page, scene.units.get(page[0]), tuple(_ends_on(line.ends, page, world)[1])),
+            scene.profile,
+        )
+        for line, one in pieces
+        for stub in one.stubs
+    )
+    # layout-0206: a label keeps the house text gap off every stub box
+    stub_boxes = (Shape(owner=None, box=pad(stub.box, TEXT_GAP)) for stub in stubs)
+    shapes = [*world.shapes.get(page, []), *stub_boxes]
+    centres, unplaced = _label_boxes(paths, legs, texts, shapes, scene)
     lines = tuple(
         DrawnLine(
             harness=owner,
@@ -339,17 +361,6 @@ def _page_pieces(
         )
         for line, one in pieces
         for fan in one.fans
-    )
-    stubs = tuple(
-        stub_box(
-            texts,
-            line,
-            stub,
-            (page, scene.units.get(page[0]), tuple(_ends_on(line.ends, page, world)[1])),
-            scene.profile,
-        )
-        for line, one in pieces
-        for stub in one.stubs
     )
     return DrawnPieces(
         lines=(*found.lines, *lines),
@@ -382,5 +393,5 @@ def _label_boxes(
         for owner, branch, points in paths
     )
     space = Space(shapes=(*shapes, *runs), content=content_box(scene.sheet))
-    placed, unplaced = place_texts(to_place, space, DEFAULT_TABLE)
+    placed, unplaced = place_texts(to_place, space, scene.profile.texts)
     return {(one.handle, int(one.slot)): one for one in placed}, unplaced

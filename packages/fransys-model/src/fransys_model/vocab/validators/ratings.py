@@ -6,8 +6,9 @@ Codes: `RATING_VOLTAGE_BELOW_CIRCUIT`.
 from fractions import Fraction
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import voltage
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.rail_reach import (
     RailReach,
     Stand,
@@ -17,24 +18,24 @@ from fransys_model.vocab.rail_reach import (
     worst_stand,
 )
 from fransys_model.vocab.rating_readers import function_ratings
-from fransys_model.vocab.tables import functions, items, units
+from fransys_model.vocab.tables import functions, units
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from decimal import Decimal
 
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Item, Unit
+    from fransys_model.vocab.core import Function, Unit
     from fransys_model.vocab.rating_readers import FunctionRating
 
 RATING_VOLTAGE_BELOW_CIRCUIT: Final[str] = "RATING_VOLTAGE_BELOW_CIRCUIT"
 
 
-def _message(function: Function, item: Item, limit: Decimal, stand: Stand, source: str) -> str:
+def _message(function: Function, limit: Decimal, stand: Stand, source: str) -> str:
     """Name the function, its rating and its source, the rails and V, and say when IT applied."""
     first = stand.rails[0]
     kind = "AC" if first.ac else "DC"
-    where = f"function {function.name!r} of item {'/'.join(item.key)}"
+    where = f"function {ref(function)}"
     text = f"{where} is rated {limit:f} V {kind} ({source}), but "
     volt = voltage.show(stand.volt)
     if len(stand.rails) == 1:
@@ -50,7 +51,7 @@ def _message(function: Function, item: Item, limit: Decimal, stand: Stand, sourc
 
 
 def _finding(
-    function: Function, item: Item, limit: Decimal, stands: list[Stand], source: str
+    function: Function, limit: Decimal, stands: list[Stand], source: str
 ) -> Finding | None:
     rating = Fraction(limit)
     firing = [s for s in stands if voltage.exceeds(s.volt, rating)]
@@ -61,18 +62,18 @@ def _finding(
         code=RATING_VOLTAGE_BELOW_CIRCUIT,
         severity=Severity.ERROR,
         subjects=(function.id,),
-        message=_message(function, item, limit, worst, source),
+        message=_message(function, limit, worst, source),
     )
 
 
 def _source_label(source: FunctionRating, unit_of: Mapping[Id[Unit], Unit]) -> str:
     if source.unit is None:
         return "part or template rating"
-    return f"boundary rating of unit {key_text(unit_of[source.unit])}"
+    return f"boundary rating of {ref(unit_of[source.unit])}"
 
 
 def _source_findings(
-    function: Function, item: Item, source: FunctionRating, label: str, reach: RailReach
+    function: Function, source: FunctionRating, label: str, reach: RailReach
 ) -> list[Finding]:
     found: list[Finding] = []
     for ac, limit in (
@@ -84,7 +85,7 @@ def _source_findings(
         stands = reach.stands(ac=ac)
         if stands is None:
             continue
-        finding = _finding(function, item, limit, stands, label)
+        finding = _finding(function, limit, stands, label)
         if finding is not None:
             found.append(finding)
     return found
@@ -100,7 +101,6 @@ def check_ratings(model: Model) -> tuple[Finding, ...]:
     if not lookup:
         return ()
     ports_of = ports_by_function(model)
-    item_of = items(model)
     unit_of = units(model)
     found: list[Finding] = []
     for function in functions(model).values():
@@ -110,6 +110,5 @@ def check_ratings(model: Model) -> tuple[Finding, ...]:
         reach = reach_of(model, function.id, lookup, ports_of)
         for source in sources:
             label = _source_label(source, unit_of)
-            item = item_of[function.item]
-            found += _source_findings(function, item, source, label, reach)
+            found += _source_findings(function, source, label, reach)
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

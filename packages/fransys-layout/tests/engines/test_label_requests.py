@@ -3,6 +3,7 @@
 import dataclasses
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def _requests() -> tuple[tuple[DrawnFunction, ...], tuple[LabelRequest, ...]]:
-    inputs = read_inputs(freeze(build_cabinet()))
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
     drawn, _ = resolve(inputs.functions, rules=DEFAULT_RULES, choices=inputs.choices)
     return drawn, label_requests(inputs.label_texts, drawn)
 
@@ -74,7 +75,7 @@ def test_a_symbol_without_marking_slots_gets_no_marking_request() -> None:
 
 def test_a_symbol_without_a_tag_slot_gets_no_tag_request() -> None:
     """The condition is the chosen symbol's own slots: strip them and every request goes."""
-    inputs = read_inputs(freeze(build_cabinet()))
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
     drawn, _ = resolve(inputs.functions, rules=DEFAULT_RULES, choices=inputs.choices)
     bare = dataclasses.replace(drawn[0], geometry=dataclasses.replace(drawn[0].geometry, slots=()))
     requests = label_requests(inputs.label_texts, (bare,))
@@ -83,7 +84,7 @@ def test_a_symbol_without_a_tag_slot_gets_no_tag_request() -> None:
 
 def test_a_labelled_conductor_gives_no_wire_request() -> None:
     """V8 (owner 2026-10-02): a schematic page prints no wire label; the wire list holds it."""
-    inputs = read_inputs(freeze(build_cabinet()))
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
     _, requests = _requests()
     assert {r.kind for r in requests} >= {LabelKind.TAG, LabelKind.MARKING}
     assert LabelKind.WIRE not in {r.kind for r in requests}
@@ -93,7 +94,7 @@ def test_a_labelled_conductor_gives_no_wire_request() -> None:
 
 def test_requests_are_sorted_by_kind_subject_and_slot() -> None:
     """One explicit order, whatever the order of the drawn functions."""
-    inputs = read_inputs(freeze(build_cabinet()))
+    inputs = read_inputs(freeze(build_cabinet()), options=OPTIONS)
     drawn, _ = resolve(inputs.functions, rules=DEFAULT_RULES, choices=inputs.choices)
     forward = label_requests(inputs.label_texts, drawn)
     backward = label_requests(tuple(reversed(inputs.label_texts)), tuple(reversed(drawn)))

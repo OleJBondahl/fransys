@@ -26,16 +26,17 @@ TEMPLATE: Final[str] = """<!DOCTYPE html>
 html, body { height: 100%; margin: 0; }
 body { display: flex; flex-direction: column; background: var(--bg); color: var(--fg);
   font: 14px/1.4 system-ui, sans-serif; }
-header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 6px 12px;
+header { position: relative; display: flex; flex-wrap: wrap; align-items: center;
+  gap: 6px 14px; padding: 6px 12px;
   background: var(--panel); border-bottom: 1px solid var(--border); }
 h1 { margin: 0; font-size: 17px; }
 label.pick { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
 select, input, button { background: var(--bg); color: var(--fg); border: 1px solid var(--border);
   border-radius: 3px; padding: 3px 6px; font: inherit; }
 button { cursor: pointer; }
-#features { position: relative; font-size: 12px; }
+#features { font-size: 12px; }
 #features summary { cursor: pointer; }
-#feat-body { position: absolute; z-index: 6; top: 100%; left: 0; min-width: 200px;
+#feat-body { position: absolute; z-index: 6; top: 100%; right: 12px; min-width: 200px;
   padding: 6px 10px;
   background: var(--bg); border: 1px solid var(--border); }
 #feat-body label { display: block; white-space: nowrap; }

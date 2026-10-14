@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines import lay_out_schematic
 from fransys_layout.engines.schematic import run_stages
@@ -41,7 +42,7 @@ pages_of = _FIXTURE.pages_of
 def test_the_fixture_is_example_sized_and_has_what_the_properties_need() -> None:
     """F5: >= 5 groups, >= 4 pages, two groups on one page, contact images, no ERROR."""
     model = build()
-    layout = run_stages(model, read_inputs(model))[0]
+    layout = run_stages(model, read_inputs(model, options=OPTIONS))[0]
     pages = pages_of(model)
     assert len(pages) >= 4
     assert len({group for page in pages for group in page}) >= 5
@@ -86,7 +87,7 @@ def test_the_layout_is_independent_of_the_order_of_the_stage_inputs(order) -> No
     # UNDO: in stages/images.py::contact_images, drop the sort key of the item
     # groups and of the contacts inside a group (by function id) and this test fails.
     model = build()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     assert (
         _differences(run_stages(model, _reordered(inputs, order)), run_stages(model, inputs))
         == set()
@@ -103,7 +104,7 @@ def test_the_stage_input_shuffle_changes_only_the_order_of_the_labels(order) -> 
     """
     # UNDO: none found: the engine re-sorts at several layers (defence in depth).
     model = build()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     base, shuffled = run_stages(model, inputs), run_stages(model, _reordered(inputs, order))
     assert _differences(shuffled, base) <= {"labels"}
     assert sorted(map(repr, shuffled[0].labels)) == sorted(map(repr, base[0].labels))
@@ -115,7 +116,7 @@ def test_the_shuffle_check_can_fail() -> None:
     """The comparison flags a reordered label tuple, a dropped placement and a dropped finding."""
     # UNDO: change `_differences` to return set() and this test fails.
     model = build()
-    layout, drawn, findings = base = run_stages(model, read_inputs(model))
+    layout, drawn, findings = base = run_stages(model, read_inputs(model, options=OPTIONS))
     assert len(layout.labels) >= 2
     reversed_labels = dataclasses.replace(layout, labels=layout.labels[::-1])
     assert _differences((reversed_labels, drawn, findings), base) == {"labels"}
@@ -155,8 +156,8 @@ def test_a_model_whose_tables_are_in_another_order_gives_one_layout(seed: int) -
     shuffled = _with_tables_shuffled(model, seed)
     assert shuffled == model
     assert list(shuffled.tables["function"]) != list(model.tables["function"])
-    once, once_findings = lay_out_schematic(model)
-    again, again_findings = lay_out_schematic(shuffled)
+    once, once_findings = lay_out_schematic(model, OPTIONS)
+    again, again_findings = lay_out_schematic(shuffled, OPTIONS)
     assert again.digests["layout"] == once.digests["layout"]
     assert again_findings == once_findings
     assert {k: v for k, v in again.tables.items() if k.startswith("layout.")} == {

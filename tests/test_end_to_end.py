@@ -12,9 +12,9 @@ from fransys_model.kernel.ids import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab import documents
 
-# `/Type /Page` but not `/Type /Pages` (the page tree root) -- confirmed by compiling and
-# inspecting a real PDF (plan `.fransys/sdd-plan-pdf-stage2.md`, Task 7).
-_PDF_PAGE = re.compile(rb"/Type\s*/Page(?!s)")
+# `/Type /Page` but not `/Type /Pages` (the page tree root) or `/Type /PageLabel` (NV4) --
+# confirmed by compiling and inspecting a real PDF (plan `.fransys/sdd-plan-pdf-stage2.md`, Task 7).
+_PDF_PAGE = re.compile(rb"/Type\s*/Page(?![A-Za-z])")
 
 # A minimal valid SVG, sized to the house sheet's content box: enough
 # for Typst to place and compile, standing in for `fransys_render.pages` (still a

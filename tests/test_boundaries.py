@@ -29,6 +29,7 @@ ALLOWED: dict[str, frozenset[str]] = {
     "fransys_parts": frozenset({"fransys_model"}),
     "fransys_author": frozenset({"fransys_model"}),
     "fransys_layout": frozenset({"fransys_model", "electrical_symbols"}),
+    "fransys_el": frozenset({"fransys_model", "fransys_layout", "electrical_symbols"}),
     "fransys_render": frozenset({"fransys_model", "electrical_symbols"}),
     "fransys_reports": frozenset({"fransys_model"}),
     "fransys_pdf": frozenset({"fransys_model"}),
@@ -51,6 +52,7 @@ THIRD_PARTY: dict[str, frozenset[str]] = {
     "fransys_parts": frozenset(),
     "fransys_author": frozenset(),
     "fransys_layout": frozenset({"symdef"}),
+    "fransys_el": frozenset(),
     "fransys_render": frozenset({"symdef"}),
     "fransys_reports": frozenset(),
     "fransys_pdf": frozenset(),
@@ -139,6 +141,14 @@ def test_the_check_can_fail():
     }
     assert violations("fransys_render", "from fransys_model.kernel import Model") == set()
     assert violations("fransys_pdf", "from . import presets\nimport tomllib") == set()
+
+
+def test_layout_and_render_never_import_fransys_el():
+    """Seam 1 (layout-0192): the electrical package depends on the core, never the reverse."""
+    for core in ("fransys_layout", "fransys_render"):
+        assert "fransys_el" not in ALLOWED[core]
+        assert violations(core, "import fransys_el") == {"fransys_el"}
+    assert violations("fransys_el", "from fransys_layout import LayoutOptions") == set()
 
 
 def test_the_third_party_check_can_fail():

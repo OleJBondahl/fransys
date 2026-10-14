@@ -100,6 +100,18 @@ def box_sides(
     return tuple(found)
 
 
+def turning_ports(
+    one: DrawnFunction,
+    power: tuple[Mapping[Id[Any], int], Mapping[Id[Any], str], Mapping[Id[Any], str]],
+) -> frozenset[Id[Any]]:
+    """The ports `box_sides` turns toward their partners: an unpaired generic box's unpinned."""
+    rank_of, kind_of, sides = power
+    if not one.geometry.generic_box or _paired(one):
+        return frozenset()
+    pinned = item_pins(one.ports, sides) or pinned_sides(one.ports, rank_of, kind_of)
+    return frozenset(p.port for p in one.ports if p.symbol_port not in pinned)
+
+
 def _unboxed(
     partners: Mapping[Id[Any], list[Id[Any]]], drawn: tuple[DrawnFunction, ...]
 ) -> dict[Id[Any], list[Id[Any]]]:

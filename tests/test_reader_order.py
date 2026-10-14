@@ -10,7 +10,8 @@ Canary: each CSV list, each PDF list, the loom page order, the overview's items,
 box ports, the KiCad net name and the findings print `-X2` before `-X10`.
 Rename: a change of the keys changes no CSV byte, no overview page byte (the page holds no Id, A10),
 no PDF text run on any page and no netlist byte. SVG draw order is not compared: it changes
-bytes, not the picture.
+bytes, not the picture. Every `fr.check` finding message also reads the same, in finding order
+(FT3, overview-0003): a variant design raises the codes that used to print keys.
 
 Each site that fails today is its own strict xfail, so its test flips when its fix lands.
 The sites not reached: the wago XML (no PLC channel in the design), the unit block-diagram sheets
@@ -28,7 +29,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 import fransys as fr
 import pypdfium2
 import pytest
-from fransys.colours import BK, RD
+from fransys.colours import BK, GNYE, RD
 
 from fransys_layout import lay_out_overview
 from fransys_model.layout import OverviewBox, OverviewLine, layout_of
@@ -445,3 +446,67 @@ def test_a_rename_leaves_the_overview_positions_identical(first: _Run, second: _
     assert shapes[0], "the canary system level holds boxes"
     assert shapes[1], "the canary's top-level cable is a line of the system level"
     assert shapes == _overview_shapes(second)
+
+
+# ---- FT3: finding messages survive a rename -------------------------------------------------
+
+_ANY_ID = re.compile(r"\b[a-z_]+:[0-9a-f]{32}\b")
+_SUBJECT_KEY = re.compile(r"^(  subject: \S+:\d+) \(.*\)$", re.MULTILINE)
+_VARIANT_CODES = {"PE_NOT_GNYE", "GNYE_NOT_PE", "STRIP_WITHOUT_TAG", "ITEM_WITHOUT_PART"}
+
+
+def _variant(salt: str) -> fr.BuildResult:
+    """The canary plus the smallest additions that raise the ERROR and part-conformance codes.
+
+    A single wire on a PE net coloured RD (`PE_NOT_GNYE`), a GNYE wire on a non-PE net
+    (`GNYE_NOT_PE`) and one floating strip with no terminals (`STRIP_WITHOUT_TAG`). The canary
+    itself raises `ITEM_WITHOUT_PART`. An ERROR stops `fr.write`, so the variant is only built.
+    """
+    d, _ = _design(salt)
+    lamps = [d.device(f"P{c}", "DEMO-LAMP-24", place="C1", name=f"{salt}p{c}") for c in "ABCD"]
+    d.earth(lamps[0][1], lamps[1][1])
+    d.wire(lamps[0][1], lamps[1][1], wire=(RD, 0.75))
+    d.net("N1", lamps[2][1], lamps[3][1])
+    d.wire(lamps[2][1], lamps[3][1], wire=(GNYE, 0.75))
+    d.terminal_strip(None, "DEMO-TB-2.5", place="C1", name=f"{salt}bare")
+    return fr.build(d)
+
+
+def _plain(message: str) -> str:
+    """A described message without the authoring key and the Id order of its subject lines.
+
+    `describe` appends `file:line (key)` per subject, in `Id` order: the line stays, sorted; the
+    key is the subject line's own and not message text (FT1).
+    """
+    head, *subjects = message.split("\n")
+    return "\n".join([head, *sorted(_SUBJECT_KEY.sub(r"\1", line) for line in subjects)])
+
+
+def _messages(result: fr.BuildResult) -> list[tuple[str, str]]:
+    """Every `fr.check` finding as (code, message), in finding order."""
+    return [(f.code, _plain(f.message)) for f in fr.check(result)]
+
+
+@pytest.fixture(scope="module")
+def variants() -> tuple[fr.BuildResult, fr.BuildResult]:
+    return _variant("a-"), _variant("b-")
+
+
+def test_the_variant_raises_each_code_the_message_test_needs(
+    variants: tuple[fr.BuildResult, fr.BuildResult],
+) -> None:
+    for result in variants:
+        assert {code for code, _ in _messages(result)} >= _VARIANT_CODES
+
+
+def test_a_rename_leaves_every_finding_message_identical(
+    first: _Run,
+    second: _Run,
+    variants: tuple[fr.BuildResult, fr.BuildResult],
+) -> None:
+    """FT1, FT3: a message names a thing as the drawings print it, so no key shows in it."""
+    pairs = [(_messages(first.result), _messages(second.result)), tuple(map(_messages, variants))]
+    for a, b in pairs:
+        assert a, "the design raises findings"
+        assert a == b
+        assert not any(_ANY_ID.search(message) for _, message in a)

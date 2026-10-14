@@ -17,6 +17,7 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from fransys.colours import BN, BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -46,7 +47,7 @@ def _built(name: str = "T") -> tuple:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     result = fr.build(d, doc)
-    return result, stage_results(result.model, read_inputs(result.model))[0].layout
+    return result, stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
 
 
 def _box(model, layout, tag: str):

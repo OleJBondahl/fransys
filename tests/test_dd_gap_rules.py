@@ -18,6 +18,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -421,8 +422,8 @@ def test_two_far_ends_on_a_reference_port_are_each_named_and_the_list_stays_apar
 def test_a_turned_reference_with_an_off_stub_renders_and_prints_the_measured_arrow() -> None:
     """Layout-0053: a reference that is wired AND carries a stub to another location
     turns E and stays one off-stub record; render draws it and prints the arrow layout measured."""
-    # UNDO: fransys_render/_markers.py:_turned_glyphs, drop `far=None, carrier=None,
-    #     facing=None` from its `dataclasses.replace(...)`: render raises SchemaError
+    # UNDO: fransys_render/_markers.py:_turned_glyphs, drop `far=None, carrier=None`
+    #     from its `dataclasses.replace(...)`: render raises SchemaError
     # UNDO: fransys_layout/engines/schematic/write/markers.py:_facing, delete the
     #     `if one.turn is not None:` branch: the turned stub reads E and prints "->" where
     #     layout measured "<-"
@@ -438,7 +439,7 @@ def test_a_turned_reference_with_an_off_stub_renders_and_prints_the_measured_arr
     (merged,) = (m for m in layout_of(model, LinkMarker).values() if m.via_x is not None)
     assert merged.star is StarKind.OFF  # one record: the list and the stub
     svg = pages[f"{merged.page.kind}:{merged.page.value}"]
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     (measured,) = (m.text for m in results.layout.markers if m.text and m.port == merged.port)
     assert marker_text(model, merged).split("\n")[-1] == measured
     assert measured in svg
@@ -450,8 +451,8 @@ def test_a_turned_reference_that_carries_a_stub_is_one_merged_record_render_draw
     line in one box); render draws it and prints the arrow layout measured. K1.A1 is wired to
     K2.A1, K4.A1 and K3.A2 (a star: same-side pins are wired), and a cable core leaves it for
     +FLD."""
-    # UNDO: fransys_render/_markers.py:_turned_glyphs, drop `far=None, carrier=None,
-    #     facing=None` from its `dataclasses.replace(...)`: render raises SchemaError
+    # UNDO: fransys_render/_markers.py:_turned_glyphs, drop `far=None, carrier=None`
+    #     from its `dataclasses.replace(...)`: render raises SchemaError
     parts, d, c1, grp = _design()
     wire = d.wiring(colour="BU", gauge="0.5")
     relays = {
@@ -469,7 +470,7 @@ def test_a_turned_reference_that_carries_a_stub_is_one_merged_record_render_draw
     assert merged.star is StarKind.OFF  # one record: the list and the stub
     assert merged.port == hub.id
     svg = pages[f"{merged.page.kind}:{merged.page.value}"]
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     (measured,) = (m.text for m in results.layout.markers if m.text and m.port == merged.port)
     assert marker_text(model, merged).split("\n")[-1] == measured
     assert measured in svg

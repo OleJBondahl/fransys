@@ -170,6 +170,7 @@ def _marker(  # noqa: PLR0913 -- one param per LinkMarker field a test needs to 
         width=width,
         height=height,
         produced_by=PRODUCED_BY,
+        facing=Side.E,
     )
 
 

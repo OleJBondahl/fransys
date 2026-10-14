@@ -5,6 +5,7 @@ Box 1 has top pins `a1 a2` (fed by box 2) and `b1 b2` (box 3 feeds `b1`), a bott
 
 from dataclasses import replace
 
+from fransys_el import TEXTS
 from samples import drawn, hid
 
 from fransys_layout.geometry import generic_box_geometry
@@ -44,6 +45,7 @@ PROFILE = Profile(
     route_turn_penalty=0,
     route_crossing_penalty=0,
     route_margin=0,
+    texts=TEXTS,
 )
 
 

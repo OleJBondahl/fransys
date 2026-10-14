@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 17,
+  "schema_version": 18,
   "tables": {
     "aspect_node": [
       {
@@ -4774,7 +4774,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "s",
         "far": null,
         "height": 47,
         "id": "layout.link_marker:160b36e3595153bdadea1fb5449f8119",
@@ -4810,7 +4810,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 47,
         "id": "layout.link_marker:3b422e41b83a52baa7fff18268406bbf",
@@ -4846,7 +4846,7 @@
         "box_x": 48,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 47,
         "id": "layout.link_marker:7dbcfd09e9e950d085594bb129be2bdf",
@@ -4886,7 +4886,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 47,
         "id": "layout.link_marker:9c54c3b848235f3d8c843fe9c9835979",
@@ -4922,7 +4922,7 @@
         "box_x": null,
         "carrier": null,
         "ext": {},
-        "facing": null,
+        "facing": "n",
         "far": null,
         "height": 47,
         "id": "layout.link_marker:b8df8f998f515b89a384af064b7b6249",

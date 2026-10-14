@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-TB-FUSE-2.5"
+manufacturer = "Demo"
+description = "Fused terminal block, 2.5 mm2, the fuse sits between its two connections"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "terminal"
+kind = "terminal"
+symbol = "terminal"
+ports = [
+    { name = "internal", role = "internal", symbol_port = "n" },
+    { name = "external", role = "external", symbol_port = "s" },
+]
+links = [{ a = "internal", b = "external", kind = "protective" }]

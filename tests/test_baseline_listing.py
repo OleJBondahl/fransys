@@ -116,6 +116,7 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "installed": True,
                 "external": False,
                 "position": None,
+                "parent": "",
             },
             {
                 "designation": "=BRD-X1",
@@ -124,6 +125,7 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "installed": True,
                 "external": False,
                 "position": None,
+                "parent": "",
             },
         ],
         "units": [],

@@ -15,17 +15,25 @@ lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .designation import location_node_designation, printed_designation
 from .drawing_text import stub_far_end
+from .kinds import item_kind
 from .lookups import unit_chain
 from .order import natural_key
 from .overview_field import field_devices
 from .overview_levels import level_box, level_box_lines, merge_stubs, stub_far_root
 from .overview_location import top_place_of
 from .overview_names import display_unit
-from .rows import OverviewLinkKind, OverviewStub
+from .rows import ItemKind, OverviewLinkKind, OverviewStub
 from .rows_overview import FoldStub, StubPlace, StubWire
 lazy from .overview_conns import Conn
 
-__all__ = ["RawStub", "fold_stubs", "inner_stub", "outside_stub", "shared_stubs"]
+__all__ = [
+    "RawStub",
+    "fold_stubs",
+    "inner_stub",
+    "outside_stub",
+    "overview_stub_west",
+    "shared_stubs",
+]
 
 
 class RawStub(NamedTuple):
@@ -267,3 +275,16 @@ def shared_stubs(
     wires += homes
     wires.sort(key=lambda w: rank[w.part.box])
     return _ordered([*more, *stubs], rank), tuple(wires)
+
+
+def overview_stub_west(model: Model, unit: Id[Unit], end: OverviewRef) -> bool:
+    """Whether the lanes stub for `end` stands west of the level of `unit`; else east.
+
+    West: an item that is a terminal strip, or one held by a unit that encloses `unit`.
+    """
+    if end.kind is not OverviewRefKind.ITEM or end.item is None:
+        return False
+    if item_kind(model, end.item) is ItemKind.STRIP:
+        return True
+    owner = items(model)[end.item].unit
+    return owner is not None and owner in unit_chain(model, unit)

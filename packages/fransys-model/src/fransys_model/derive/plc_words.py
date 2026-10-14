@@ -47,7 +47,8 @@ def plc_list_rows(
 
 def _plc_cells(row: PlcChannelRow) -> tuple[str | None, ...]:
     cells: dict[str, str | None] = {
-        "channel_designation": row.channel_designation,
+        "pin": row.pin,
+        "channel_name": row.channel_name,
         "signal": signal_word(row.signal),
         "wired_to": row.wired_to,
         "signal_name": (

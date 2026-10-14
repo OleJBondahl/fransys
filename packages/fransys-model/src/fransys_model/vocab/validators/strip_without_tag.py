@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.numbering_codes import item_class_code, terminal_class_codes
 from fransys_model.vocab.own_designation import has_own_designation
@@ -32,7 +33,7 @@ def check_strip_without_tag(model: Model) -> tuple[Finding, ...]:
             severity=Severity.ERROR,
             subjects=(item.id,),
             message=(
-                f"{key_text(item)} has no part, no tag and no class code to number from: "
+                f"{ref(item)} has no part, no tag and no class code to number from: "
                 f"{_why(model, item)}; give it a part, a tag, or terminals of one class code"
             ),
         )

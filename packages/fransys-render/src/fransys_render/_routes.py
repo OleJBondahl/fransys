@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import wire_run
 from fransys_model.layout import Route, page_slice, sheet_format_of
 
-from ._numbers import format_decimal, grid_to_mm
+from ._numbers import format_decimal
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model

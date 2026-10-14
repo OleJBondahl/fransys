@@ -5,6 +5,8 @@ one NC contact. The block is no device: its contacts are owned by `K1`, so they 
 `K1`'s table and carry marks. Every name is invented.
 """
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.contact_marks import image_inputs
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -89,7 +91,7 @@ def test_a_blocks_contacts_are_owned_by_its_parent_and_carry_marks() -> None:
     # UNDO: read/contact_marks.py:image_inputs, `owned_contacts(model, item)` -> only those whose
     #     function is a spec of `item` itself (a block's contacts then have no owner)
     model = _contactor_with_block()
-    inputs = image_inputs(model, read_inputs(model))
+    inputs = image_inputs(model, read_inputs(model, options=OPTIONS))
     fn = {name: make_id(Function, key) for name, key in _KEYS.items()}
     parent = make_id(Item, ("k1",))
     assert inputs.owners == {fn["main"]: parent, fn["c53"]: parent, fn["c61"]: parent}

@@ -9,9 +9,9 @@ import pypdfium2.raw as pdfium_raw
 import pytest
 import typst
 from _build import document, drawing_set, layout_page, location, model, unit
-from fransys_pdf import _drawings, font_dir, source
+from fransys_pdf import font_dir, source
 
-from fransys_model.derive import page_destination
+from fransys_model.derive import page_destination, page_nav
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind
 
@@ -79,7 +79,7 @@ def test_a_swapped_label_fails_the_destination_check(monkeypatch):
     first, second = pages[0], pages[1]
     swapped = {first.id: page_destination(m, second), second.id: page_destination(m, first)}
     monkeypatch.setattr(
-        _drawings,
+        page_nav,
         "page_destination",
         lambda model, page: swapped.get(page.id, page_destination(model, page)),
     )

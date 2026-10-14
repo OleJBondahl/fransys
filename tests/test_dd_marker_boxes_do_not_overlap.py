@@ -14,6 +14,8 @@ from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
 
+from fransys_el import OPTIONS
+
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import overlaps
@@ -35,7 +37,7 @@ def _fixture():
 def test_no_two_marker_boxes_overlap_on_a_page() -> None:
     """Of the markers that draw a box of their own, none shares interior area with another."""
     model = _fixture()._built(hide=False).model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     pages = defaultdict(list)
     for one in results.layout.markers:
         if not one.symbol and one.lead:

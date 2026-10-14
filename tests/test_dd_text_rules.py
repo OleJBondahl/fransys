@@ -23,6 +23,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import cabinet_document, layout_trigger_document
+from fransys_el import OPTIONS
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines import lay_out_schematic
@@ -893,7 +894,9 @@ def _cabinet_model():
         cabinet = _load(tests / "layout_cabinet.py")
     finally:
         sys.path.remove(str(tests))
-    return lay_out_schematic(freeze(cabinet.build_cabinet(discovery=True, extra_relay=True)))[0]
+    return lay_out_schematic(
+        freeze(cabinet.build_cabinet(discovery=True, extra_relay=True)), OPTIONS
+    )[0]
 
 
 def _crossings_and_overlaps(model):

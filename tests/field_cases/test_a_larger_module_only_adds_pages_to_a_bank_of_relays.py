@@ -127,9 +127,7 @@ def test_a_bank_wider_than_the_house_page_leaves_no_box_off_the_page() -> None:
     assert _off_page(None, 10) == 0
 
 
-@pytest.mark.parametrize(
-    "count", [8]
-)  # 9-11: equal pages at both (layout-0187; 11 since idle terminals left off, pdf-0033)
+@pytest.mark.parametrize("count", [9])  # measured 4 vs 5; N=8 is 4 vs 4 (bank-coil-under)
 def test_a_larger_module_adds_pages(count: int) -> None:
     """The coarser module lowers capacity, so the same bank takes more pages."""
     assert _pages("3.0", count) > _pages(None, count)

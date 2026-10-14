@@ -8,6 +8,7 @@ its height, and not nearer than the house text gap (8 G, written out) to the lef
 from collections import defaultdict
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic import run_stages
@@ -44,7 +45,7 @@ def _boxes(layout) -> dict[tuple[int, int], list[Box]]:
 )
 def test_every_page_stays_inside_the_content_box_on_all_four_sides(kwargs) -> None:
     model = freeze(build_cabinet(**kwargs))
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     layout, _, _ = run_stages(model, inputs)
     width, height = inputs.sheet.content_width, inputs.sheet.content_height
     pages = _boxes(layout)

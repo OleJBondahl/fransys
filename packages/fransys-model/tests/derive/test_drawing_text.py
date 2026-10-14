@@ -22,6 +22,7 @@ from fransys_model.layout import (
     Page,
     PageRole,
     SheetFormat,
+    Side,
     StarKind,
 )
 from fransys_model.vocab.connectivity import Conductor
@@ -216,6 +217,7 @@ def _star_text(origin: Origin, branch_xs: tuple[int, ...]) -> str:
             width=13,
             height=8,
             produced_by=PRODUCED_BY,
+            facing=Side.E,
         )
     ]
     ports = [_port(new_id, function=fn.id, name=str(i + 1)) for i in range(len(branch_xs))]
@@ -235,6 +237,7 @@ def _star_text(origin: Origin, branch_xs: tuple[int, ...]) -> str:
                 width=13,
                 height=8,
                 produced_by=PRODUCED_BY,
+                facing=Side.E,
             )
         )
     add_all(draft, sheet, ds, page_a, page_b, item, fn, ref_port, *ports, *markers, origin=origin)

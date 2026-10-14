@@ -37,7 +37,7 @@ def test_channels_of_a_table_run_by_channel_number() -> None:
     """The rows of one table are ordered by channel number, not by creation order."""
     built = build_racks()
     module = next(t for t in plc_tables(built.model) if t.item == built.first_rack_module)
-    assert [row.channel_designation.rsplit(":", 1)[1] for row in module.rows] == ["1", "2"]
+    assert [row.channel_name for row in module.rows] == ["1", "2"]
 
 
 def test_every_row_is_in_exactly_one_table_in_list_order() -> None:

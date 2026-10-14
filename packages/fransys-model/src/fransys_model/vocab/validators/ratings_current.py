@@ -5,14 +5,15 @@ Codes: `RATING_CURRENT_BELOW_BRANCH`, `LOAD_ABOVE_LIMIT`, `LOADS_ABOVE_LIMIT`.
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.current_bounds import CurrentBound, LimitRole, highest
 from fransys_model.vocab.current_chains import chains_unordered
 from fransys_model.vocab.enums import Current
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.load_limits import LoadLimit, load_limits
 from fransys_model.vocab.rail_reach import rails_by_potential, reached_kinds
 from fransys_model.vocab.rating_readers import function_ratings
-from fransys_model.vocab.tables import functions, items, units
+from fransys_model.vocab.tables import units
 from fransys_model.vocab.validators._natural_join import natural_join
 
 if TYPE_CHECKING:
@@ -41,24 +42,23 @@ def _worst_bounds(model: Model) -> dict[tuple[Id[Function], Current], CurrentBou
     return {key: highest(bounds) for key, bounds in found.items()}
 
 
-def _setter(model: Model, bound: CurrentBound) -> str:
+def _setter(bound: CurrentBound) -> str:
     """Name what set `bound`: the source, or the protective device, with its function and item."""
     what = "the source" if bound.role is LimitRole.SOURCE else "the protective device"
-    return f"{what} of {_named(model, bound.by)}"
+    return f"{what} of {_named(bound.by)}"
 
 
-def _states(model: Model, bound: CurrentBound) -> str:
+def _states(bound: CurrentBound) -> str:
     """`, with item K at rest`: the item states that give `bound`; nothing when none is involved."""
     named = [
-        f"item {'/'.join(items(model)[item].key)} {'at rest' if state == 'rest' else 'operated'}"
+        f"item {ref(item)} {'at rest' if state == 'rest' else 'operated'}"
         for item, state in bound.states
     ]
     return f", with {' and '.join(named)}" if named else ""
 
 
-def _named(model: Model, function: Id[Function]) -> str:
-    record = functions(model)[function]
-    return f"function {record.name!r} of item {'/'.join(items(model)[record.item].key)}"
+def _named(function: Id[Function]) -> str:
+    return f"function {ref(function)}"
 
 
 def check_ratings_current(model: Model) -> tuple[Finding, ...]:
@@ -83,7 +83,7 @@ def check_ratings_current(model: Model) -> tuple[Finding, ...]:
             label = (
                 "part or template rating"
                 if source.unit is None
-                else f"boundary rating of unit {key_text(unit_of[source.unit])}"
+                else f"boundary rating of {ref(unit_of[source.unit])}"
             )
             found.append(
                 Finding(
@@ -91,9 +91,9 @@ def check_ratings_current(model: Model) -> tuple[Finding, ...]:
                     severity=Severity.ERROR,
                     subjects=(function,),
                     message=(
-                        f"{_named(model, function)} is rated {rated:f} A {kind.name} ({label}), "
+                        f"{_named(function)} is rated {rated:f} A {kind.name} ({label}), "
                         f"below its branch's {bound.value:f} A {kind.name} "
-                        f"set by {_setter(model, bound)}{_states(model, bound)}"
+                        f"set by {_setter(bound)}{_states(bound)}"
                     ),
                 )
             )
@@ -105,15 +105,15 @@ def _bounded(model: Model) -> list[tuple[LoadLimit, CurrentBound]]:
     return [(entry, entry.bound) for entry in load_limits(model) if entry.bound is not None]
 
 
-def _above_alone(model: Model, entries: list[tuple[LoadLimit, CurrentBound]]) -> list[Finding]:
+def _above_alone(entries: list[tuple[LoadLimit, CurrentBound]]) -> list[Finding]:
     """`LOAD_ABOVE_LIMIT`, one per function, current kind and setter, for a draw above its limit."""
     seen: dict[tuple[Id[Function], Current, Id[Function]], Finding] = {}
     for load, bound in entries:
         if load.draw_a > bound.value:
             message = (
-                f"{_named(model, load.function)} draws {load.draw_a:f} A {load.kind.name}, "
+                f"{_named(load.function)} draws {load.draw_a:f} A {load.kind.name}, "
                 f"above its limit of {bound.value:f} A {load.kind.name} "
-                f"set by {_setter(model, bound)}{_states(model, bound)}"
+                f"set by {_setter(bound)}{_states(bound)}"
             )
             seen.setdefault(
                 (load.function, load.kind, bound.by),
@@ -127,7 +127,7 @@ def _above_alone(model: Model, entries: list[tuple[LoadLimit, CurrentBound]]) ->
     return list(seen.values())
 
 
-def _together(model: Model, entries: list[tuple[LoadLimit, CurrentBound]]) -> list[Finding]:
+def _together(entries: list[tuple[LoadLimit, CurrentBound]]) -> list[Finding]:
     """`LOADS_ABOVE_LIMIT`: per limit (setter, pole ports, kind), loads above it only together."""
     groups: dict[_Key, dict[Id[Function], LoadLimit]] = {}
     firsts: dict[_Key, CurrentBound] = {}
@@ -140,11 +140,11 @@ def _together(model: Model, entries: list[tuple[LoadLimit, CurrentBound]]) -> li
         bound, total = firsts[key], sum(load.draw_a for load in members.values())
         if total <= bound.value or any(load.draw_a > bound.value for load in members.values()):
             continue
-        named = natural_join(f"{_named(model, f)} {members[f].draw_a:f} A" for f in members)
+        named = natural_join(f"{_named(f)} {members[f].draw_a:f} A" for f in members)
         message = (
             f"loads {named} draw {total:f} A {bound.kind.name} together, above the limit of "
-            f"{bound.value:f} A {bound.kind.name} set by {_setter(model, bound)}"
-            f"{_states(model, bound)}"
+            f"{bound.value:f} A {bound.kind.name} set by {_setter(bound)}"
+            f"{_states(bound)}"
         )
         found.append(
             Finding(
@@ -164,5 +164,5 @@ def check_load_draw(model: Model) -> tuple[Finding, ...]:
     the loads of one limit sum above it and none is above it alone.
     """
     entries = _bounded(model)
-    found = [*_above_alone(model, entries), *_together(model, entries)]
+    found = [*_above_alone(entries), *_together(entries)]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

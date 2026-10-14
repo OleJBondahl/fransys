@@ -18,6 +18,7 @@ from fransys_model.kernel import Model, make_id
 from fransys_model.vocab.core import Unit
 from fransys_model.vocab.enums import FunctionKind, PartCategory, SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of, functions
 from fransys_model.vocab.templates import FunctionTemplate, Part
 from fransys_model.vocab.validators.plc import check_plc, check_plc_wiring
@@ -159,7 +160,7 @@ def test_a_unit_built_alone_and_inside_a_system_get_the_same_bindings() -> None:
     system_built = _units_a_and_b()
     system, system_findings = allocate_plc(system_built.model)
     assert alone_findings == system_findings == ()
-    columns = ("channel_designation", "signal", "wired_to", "field_device_designation")
+    columns = ("pin", "signal", "wired_to", "field_device_designation")
     columns += ("signal_name",)
     alone_rows = [
         tuple(getattr(row, column) for column in columns) for row in plc_channel_rows(alone)
@@ -185,7 +186,7 @@ def test_a_unit_short_of_its_own_channels_is_unservable_however_free_another_uni
     assert _bound(model) == dict(zip(devices[:2], own, strict=True))
     assert finding.code == PLC_REQUEST_UNSERVABLE
     assert devices[2] in finding.subjects
-    assert "dev-a3/signal" in finding.message
+    assert ref(devices[2]) in finding.message
     assert devices[2] not in _bound(model)
 
 
@@ -408,7 +409,7 @@ def test_a_cabinet_serving_from_its_own_subtree_lists_the_same_alone_and_in_a_sy
         assert findings == ()
         return model, cab
 
-    columns = ("channel_designation", "signal", "wired_to", "field_device_designation")
+    columns = ("pin", "signal", "wired_to", "field_device_designation")
     columns += ("signal_name",)
 
     def rows(model: Model, cab: Id[Unit]) -> list[tuple[object, ...]]:

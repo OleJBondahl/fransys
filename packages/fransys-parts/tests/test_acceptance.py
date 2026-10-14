@@ -150,16 +150,17 @@ def test_demo_library_record_counts_and_keys():
     adds `ctrl-20p.toml` (21 functions/22 ports, no link or symbol choice),
     adds `cable-2x2x0_75-sp.toml` (a cable with no function or port),
     adds `plc-dio-1-1.toml` (2 functions/2 ports, no link or symbol choice),
-    so 57 parts, 140 templates, 295 ports, 46 links, 48 symbol choices)."""
+    adds `terminal-fused-2_5.toml` (1 function/2 ports/1 symbol choice, a protective link),
+    so 58 parts, 141 templates, 297 ports, 47 links, 49 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 57
-    assert len(function_templates(model)) == 140
-    assert len(port_templates(model)) == 295
-    assert len(internal_links(model)) == 46
-    assert len(model.tables["layout.symbol_choice"]) == 48
+    assert len(parts(model)) == 58
+    assert len(function_templates(model)) == 141
+    assert len(port_templates(model)) == 297
+    assert len(internal_links(model)) == 47
+    assert len(model.tables["layout.symbol_choice"]) == 49
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")
@@ -619,4 +620,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 17
+    assert SCHEMA_VERSION == 18

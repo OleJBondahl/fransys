@@ -10,6 +10,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -82,7 +83,7 @@ def _run(
         )
         draft.extend((sheet, profile), origin=_ORIGIN)
     model = freeze(draft)
-    out, findings = lay_out_schematic(model)
+    out, findings = lay_out_schematic(model, OPTIONS)
     return model, out, findings
 
 
@@ -116,7 +117,7 @@ def _moved_off_shared_pages(plain: Model, extra: Model, group: object) -> list:
 def test_laying_out_one_model_twice_gives_one_result(flags: dict) -> None:
     """A pure pass: equal layout digest and findings, and no engineering digest moves."""
     model, out, findings = _run(**flags)
-    again, again_findings = lay_out_schematic(model)
+    again, again_findings = lay_out_schematic(model, OPTIONS)
     assert again.digests["layout"] == out.digests["layout"]
     assert again_findings == findings
     assert out.digests["layout"] != model.digests["layout"]
@@ -138,7 +139,7 @@ def test_two_insertion_orders_give_one_layout_digest(flags: dict) -> None:
 def test_laying_out_a_laid_out_model_replaces_and_never_stacks(flags: dict) -> None:
     """The pass on its own output: same digests, same record count per derived kind."""
     _, once, findings = _run(**flags)
-    twice, again_findings = lay_out_schematic(once)
+    twice, again_findings = lay_out_schematic(once, OPTIONS)
     counts = {kind: len(_table(once, kind)) for kind in _KINDS}
     assert all(counts[kind] for kind in ("page", "symbol_placement", "route", "label"))
     assert {kind: len(_table(twice, kind)) for kind in _KINDS} == counts

@@ -74,3 +74,27 @@ def test_the_same_model_gives_the_same_bytes_twice():
     m, doc, pages = _fixture("Short notes.")
     svgs = {render_id(page.id): _SVG for page in pages}
     assert source(m, doc.id, svgs) == source(m, doc.id, svgs)
+
+
+def _index_page(pdf: pdfium.PdfDocument) -> int:
+    for index in range(len(pdf)):
+        if "Page title\r\nSheets" in pdf[index].get_textpage().get_text_bounded():
+            return index
+    message = "no index page"
+    raise AssertionError(message)
+
+
+def test_every_cell_of_a_row_links_to_its_sheets_page():
+    m, doc, pages = _fixture(_NOTES)
+    pdf = _compile(m, doc, pages)
+    rows = sheet_index_rows(m, doc, (PageKind.SCHEMATIC,))
+    page = pdf[_index_page(pdf)]
+    targets = []
+    for n in range(pdfium_raw.FPDFPage_GetAnnotCount(page.raw)):
+        annot = pdfium_raw.FPDFPage_GetAnnot(page.raw, n)
+        if pdfium_raw.FPDFAnnot_GetSubtype(annot) == pdfium_raw.FPDF_ANNOT_LINK:
+            dest = pdfium_raw.FPDFLink_GetDest(pdf.raw, pdfium_raw.FPDFAnnot_GetLink(annot))
+            targets.append(pdfium_raw.FPDFDest_GetDestPageIndex(pdf.raw, dest) + 1)
+        pdfium_raw.FPDFPage_CloseAnnot(annot)
+    expected = [_destination_page(pdf, row.destination) for row in rows]
+    assert sorted(targets) == sorted(expected * 3)

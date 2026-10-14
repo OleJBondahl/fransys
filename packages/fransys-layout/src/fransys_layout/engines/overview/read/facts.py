@@ -5,7 +5,13 @@ lazy from typing import TYPE_CHECKING, Any
 from fransys_layout.engines.diagram.sizes import TEXT_PAD
 from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.engines.overview.read.column import open_column
-from fransys_layout.engines.overview.read.values import BoxSpec, LaneHead, LineSpec, ViewFacts
+from fransys_layout.engines.overview.read.values import (
+    BoxSpec,
+    LaneHead,
+    LanePlan,
+    LineSpec,
+    ViewFacts,
+)
 from fransys_layout.geometry import snap_up, text_width
 from fransys_model.derive import text_room_g
 from fransys_model.layout.tables import profile_of, sheet_format_of
@@ -48,7 +54,7 @@ def view_facts(
     level: tuple[Id[Any] | None, OverviewRef | None, OverviewMode],
     open_: OverviewRef | None,
     specs: tuple[tuple[BoxSpec, ...], tuple[LineSpec, ...]],
-    plan: tuple[tuple[int, ...], tuple[tuple[Id[Any], str], ...]] = ((), ()),
+    plan: LanePlan,
 ) -> ViewFacts:
     """The facts of one view: sizes from the profile, no sheet limit, the profile's penalties.
 
@@ -84,8 +90,13 @@ def view_facts(
         boxes=boxes,
         lines=lines,
         diagram=diagram,
-        lanes=plan[0],
+        lanes=plan.lanes,
         heads=tuple(
-            LaneHead(owner=o, text=t, width=text_width(t, height=height)) for o, t in plan[1]
+            LaneHead(owner=o, text=t, width=text_width(t, height=height))
+            for o, t in zip(plan.head_owners, plan.head_texts, strict=True)
         ),
+        west=plan.west,
+        power=plan.power,
+        join=plan.join,
+        rank=plan.rank,
     )

@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -56,5 +57,5 @@ def _cabinet(*, with_document: bool) -> tuple[Model, Model]:
             origin=_ORIGIN,
         )
     model = freeze(draft)
-    laid, _ = lay_out_schematic(model)
+    laid, _ = lay_out_schematic(model, OPTIONS)
     return model, laid

@@ -12,6 +12,7 @@ request, the test fails on the top-level label.
 
 import importlib.util
 
+from fransys_el import OPTIONS
 from workspace_root import WORKSPACE_ROOT
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -37,7 +38,7 @@ def _system_model():
 
 def test_a_connector_row_lead_is_measured_from_the_text_render_prints() -> None:
     model = _system_model()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, _ = stage_results(model, inputs)
     height = inputs.profile.text_height
     measured = sorted(one.box.width for one in results.layout.labels if one.slot == "tag.conn")

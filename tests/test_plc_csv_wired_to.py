@@ -1,7 +1,7 @@
 """The PLC list is a wiring list (model-0065): `plc.csv` names where each channel is wired.
 
 On the export side, the facade's `plc.csv` (the whole
-model's and a unit's own) has the header `channel_designation,signal,wired_to,signal_name`, names
+model's and a unit's own) has the header `pin,channel_name,signal,signal_name,wired_to`, names
 no field device, and holds the far end of the wire on a channel's pin, printed in the list's
 context (a unit's own list reads it short, the whole model's by its location path).
 """
@@ -23,7 +23,7 @@ from test_units_worked_example import _PROJECT
 from fransys_model.derive import unit_release
 from fransys_model.vocab.tables import units
 
-_HEADER = ["channel_designation", "signal", "wired_to", "signal_name"]
+_HEADER = ["pin", "channel_name", "signal", "signal_name", "wired_to"]
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +64,7 @@ def test_the_whole_models_plc_csv_names_the_wired_end_by_its_path_and_no_field_d
     all_dir, _unit_dir = exports
     text, rows = _rows(all_dir)
     assert next(csv.reader(text.splitlines())) == _HEADER
-    assert [(row["channel_designation"], row["wired_to"]) for row in rows] == [
+    assert [(row["pin"], row["wired_to"]) for row in rows] == [
         ("-A1:1", "+ER+C1-X1:1"),
         ("-A1:2", ""),
     ]
@@ -76,7 +76,7 @@ def test_a_units_plc_csv_reads_the_wired_end_short_and_names_no_field_device(exp
     _all_dir, unit_dir = exports
     text, rows = _rows(unit_dir)
     assert next(csv.reader(text.splitlines())) == _HEADER
-    assert [(row["channel_designation"], row["wired_to"]) for row in rows] == [
+    assert [(row["pin"], row["wired_to"]) for row in rows] == [
         ("-A1:1", "-X1:1"),
         ("-A1:2", ""),
     ]

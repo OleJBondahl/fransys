@@ -18,6 +18,7 @@ import fransys_author.surface as author_surface
 import fransys_parts
 import pytest
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -87,8 +88,8 @@ def _built(tmp_path, marks: tuple[str, str, str, str]):
 @pytest.mark.parametrize("marks", _CASES.values(), ids=_CASES)
 def test_the_line_end_draws_on_top_and_the_poles_follow_marking_order(tmp_path, marks) -> None:
     model = _built(tmp_path, marks)
-    results, _ = stage_results(model, read_inputs(model))
-    spec = next(f for f in read_inputs(model).functions if f.key[-1] == "contacts")
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
+    spec = next(f for f in read_inputs(model, options=OPTIONS).functions if f.key[-1] == "contacts")
     drawn = next(f for f in results.drawn if f.function == spec.function)
     name_of = {p.port: p.name for p in spec.ports}
     symbol_port = {dp.port: dp.symbol_port for dp in drawn.ports}

@@ -40,7 +40,7 @@ def _point_text(point: BreakingPoint, kind: Current) -> str:
 
 def _sources(model: Model, fault: ProspectiveFault) -> str:
     """The sources counted: source functions by name, declared supplies by supply name."""
-    named = [_named(model, f) for f in fault.functions]
+    named = [_named(f) for f in fault.functions]
     named += [f"supply {supply_systems(model)[s].name!r}" for s in fault.supplies]
     return ", ".join(named) or "none"
 
@@ -49,22 +49,20 @@ def _below(
     model: Model, function: Id[Function], fault: ProspectiveFault, point: BreakingPoint
 ) -> str:
     return (
-        f"{_named(model, function)} breaks {_point_text(point, fault.kind)}, "
+        f"{_named(function)} breaks {_point_text(point, fault.kind)}, "
         f"below the prospective {fault.current_a:f} A {fault.kind.name} "
         f"from {_sources(model, fault)}"
     )
 
 
-def _no_data(
-    model: Model, function: Id[Function], fault: ProspectiveFault, volts: str, short: str
-) -> str:
+def _no_data(function: Id[Function], fault: ProspectiveFault, volts: str, short: str) -> str:
     tau = fault.time_constant_ms
     if short == "voltage":
         why = f"no point is rated for the circuit voltage of {volts} V"
     else:
         known = "unknown" if tau is None else f"{tau:f} ms"
         why = f"no point covers the time constant of the sources, {known}"
-    return f"{_named(model, function)} states breaking points for {fault.kind.name}, but {why}"
+    return f"{_named(function)} states breaking points for {fault.kind.name}, but {why}"
 
 
 def _finding(
@@ -77,7 +75,7 @@ def _finding(
     choice = chosen_point(points, voltage.magnitude(volt), fault.time_constant_ms)
     subjects = (function,)
     if isinstance(choice, str):
-        message = _no_data(model, function, fault, voltage.show(volt), choice)
+        message = _no_data(function, fault, voltage.show(volt), choice)
         return Finding(
             code=RATING_BREAKING_NO_DATA,
             severity=Severity.WARNING,

@@ -1,6 +1,9 @@
 """The schematic engine's shipped defaults."""
 
+from dataclasses import replace
 from decimal import Decimal
+
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES
 from fransys_layout.engines.schematic.read import read_inputs
@@ -124,9 +127,9 @@ def test_default_profile_converges_with_an_authored_profile_of_the_same_values()
     draft.extend((sheet, profile), origin=_ORIGIN)
     model = freeze(draft)
 
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
 
-    assert inputs.profile == DEFAULT_PROFILE
+    assert inputs.profile == replace(DEFAULT_PROFILE, texts=OPTIONS.texts)
 
 
 def test_a_profile_of_only_its_identity_reads_as_the_house_profile_and_sheet() -> None:
@@ -137,8 +140,8 @@ def test_a_profile_of_only_its_identity_reads_as_the_house_profile_and_sheet() -
     draft = Draft()
     draft.extend((ModelProfile(id=make_id(ModelProfile, key), key=key),), origin=_ORIGIN)
 
-    inputs = read_inputs(freeze(draft))
+    inputs = read_inputs(freeze(draft), options=OPTIONS)
 
-    assert inputs.profile == DEFAULT_PROFILE
+    assert inputs.profile == replace(DEFAULT_PROFILE, texts=OPTIONS.texts)
     assert inputs.sheet == DEFAULT_SHEET
     assert inputs.sheet_format is None

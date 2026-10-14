@@ -2,11 +2,12 @@
 
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.closure import net_of
 from fransys_model.vocab.enums import ConductorKind, PortRole
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.potentials import pe_firsts
 from fransys_model.vocab.tables import conductors, facets_of, items, nets, ports
 
@@ -59,13 +60,12 @@ def _conductor_findings(model: Model, earth: frozenset[Id[Port]]) -> list[Findin
     for conductor, colour, facet in _coloured(model):
         subjects = (conductor.id,) if facet is None else (conductor.id, facet)
         on_pe = _on_pe(model, earth, conductor.a)
-        name = key_text(conductor)
         if colour == _GNYE and not on_pe and _on_pe(model, declared, conductor.a):
-            text = f"conductor {name} is green-yellow but its net is not PE"
+            text = f"conductor {ref(conductor)} is green-yellow but its net is not PE"
             found.append(_finding(GNYE_NOT_PE, Severity.ERROR, subjects, text))
         single = conductor.kind is ConductorKind.WIRE and conductor.carrier is None
         if single and on_pe and colour not in {"", _GNYE}:
-            text = f"wire {name} is on a PE net but coloured {colour!r}, not GNYE"
+            text = f"wire {ref(conductor)} is on a PE net but coloured {colour!r}, not GNYE"
             found.append(_finding(PE_NOT_GNYE, Severity.WARNING, subjects, text))
     return found
 
@@ -83,7 +83,7 @@ def _port_findings(model: Model, earth: frozenset[Id[Port]]) -> list[Finding]:
             PE_PORT_OFF_PE,
             Severity.WARNING,
             (port.id,),
-            f"port {key_text(port)} has role PE but its net is not PE",
+            f"port {ref(port)} has role PE but its net is not PE",
         )
         for port in ports(model).values()
         if port.role is PortRole.PE

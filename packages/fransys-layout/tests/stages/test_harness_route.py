@@ -7,6 +7,7 @@ on a box's bottom edge faces S. Each test names the one Edit that makes it fail.
 from itertools import pairwise
 
 import pytest
+from fransys_el import TEXTS
 from samples import hid
 
 from fransys_layout.geometry import Box, Facing, LayoutError, Point
@@ -21,7 +22,6 @@ from fransys_layout.stages.harness_route import (
     text_centre,
 )
 from fransys_layout.stages.space import End, Obstacle, Shape, Space
-from fransys_layout.stages.texts.candidates import DEFAULT_TABLE
 from fransys_layout.stages.texts.place_texts import place_texts
 
 _OPEN = Grid(region=Box(x=-80, y=-80, width=320, height=320), obstacles=(), turn_penalty=8)
@@ -146,7 +146,7 @@ def test_the_longest_run_is_the_longest_segment_not_the_first() -> None:
 def test_the_label_takes_the_first_candidate_above_the_longest_run() -> None:
     """The text stands centred over the longest run, horizontal, `TEXT_GAP` off it."""
     placed, findings = place_texts(
-        (line_text(_HARNESS, 1, _LINE, (30, 7)),), Space(shapes=()), DEFAULT_TABLE
+        (line_text(_HARNESS, 1, _LINE, (30, 7)),), Space(shapes=()), TEXTS
     )
     assert findings == ()
     assert placed[0].box == Box(x=25, y=1, width=30, height=7)
@@ -157,7 +157,7 @@ def test_a_blocked_first_candidate_moves_the_label_to_the_next_along_the_run() -
     """A shape over candidate 0 only, and the text takes candidate 1. Probe: the
     label placed at a fixed spot, and it stays on the blocked one."""
     space = Space(shapes=(Shape(owner=None, box=Box(x=24, y=1, width=4, height=7)),))
-    placed, findings = place_texts((line_text(_HARNESS, 1, _LINE, (30, 7)),), space, DEFAULT_TABLE)
+    placed, findings = place_texts((line_text(_HARNESS, 1, _LINE, (30, 7)),), space, TEXTS)
     assert findings == ()
     assert text_centre(placed[0]) == Point(x=47, y=4)
 
@@ -166,7 +166,7 @@ def test_two_legs_of_one_harness_place_their_labels_in_one_call() -> None:
     """One handle, one slot per branch: two legs never clash in the placer's key."""
     other = (Point(x=0, y=40), Point(x=0, y=120))
     texts = (line_text(_HARNESS, 1, _LINE, (30, 7)), line_text(_HARNESS, 2, other, (30, 7)))
-    placed, _ = place_texts(texts, Space(shapes=()), DEFAULT_TABLE)
+    placed, _ = place_texts(texts, Space(shapes=()), TEXTS)
     assert {one.slot for one in placed} == {"1", "2"}
     assert text_centre(next(one for one in placed if one.slot == "2")) == Point(x=23, y=80)
 

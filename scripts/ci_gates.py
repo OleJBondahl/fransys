@@ -62,6 +62,7 @@ DATA_GLOBS: tuple[str, ...] = (
     "uv.lock",
     "ceilings.toml",
     "packages/*/src/*/conventions/**",  # module-level tables are read at import only
+    "packages/fransys-el/src/*/texts.py",  # the text-placement table, read at import only
     "packages/fransys-model/src/fransys_model/derive/rows.py",  # the same, for the row shapes
 )
 # Every non-.py file under these is data too (bundle.json, guide pages, fonts, fixtures).

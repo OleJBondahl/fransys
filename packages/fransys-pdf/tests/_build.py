@@ -513,8 +513,8 @@ def external_port(key_part: str) -> Port:
 
 def plc_channel(
     key_part: str, *, module: Id[Item], name: str, signal: SignalType, channel: int
-) -> tuple[Part, FunctionTemplate, Function, PlcChannelFacet]:
-    """An unbound PLC channel `name` of `module`, with its own invented module `Part`."""
+) -> tuple[Part, FunctionTemplate, Function, PlcChannelFacet, Port]:
+    """An unbound PLC channel `name` of `module` with its one pin `1`, and its invented `Part`."""
     module_part = part(f"{key_part}-part", description="Invented PLC module")
     template_key = ("plc_channel_template", key_part)
     template = FunctionTemplate(
@@ -541,7 +541,16 @@ def plc_channel(
         signal=signal,
         channel=channel,
     )
-    return module_part, template, fn, facet
+    pin_key = (*function_key, "1")
+    pin = Port(
+        id=make_id(Port, pin_key),
+        key=pin_key,
+        function=fn.id,
+        template=None,
+        name="1",
+        role=PortRole.GENERIC,
+    )
+    return module_part, template, fn, facet, pin
 
 
 def pcb_facet(key_part: str, *, subject: Id[Part], revision: str = "A") -> PcbFacet:

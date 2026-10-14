@@ -2,8 +2,9 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.enums import PartCategory
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.membership import marked_harnesses
 from fransys_model.vocab.tables import items, parts
 
@@ -25,8 +26,8 @@ def check_harness_holds_plc_module(model: Model) -> tuple[Finding, ...]:
             severity=Severity.ERROR,
             subjects=(item.id, item.parent),
             message=(
-                f"{key_text(item)} is a PLC module under the harness "
-                f"{key_text(items(model)[item.parent])}: build the rack with d.rack, not d.harness"
+                f"{ref(item)} is a PLC module under the harness "
+                f"{ref(items(model)[item.parent])}: build the rack with d.rack, not d.harness"
             ),
         )
         for item in items(model).values()

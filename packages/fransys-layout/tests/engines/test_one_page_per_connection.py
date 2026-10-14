@@ -19,6 +19,7 @@ from decimal import Decimal
 from functools import cache
 from typing import TYPE_CHECKING
 
+from fransys_el import OPTIONS
 from layout_cabinet import _Builder, _specs
 
 from fransys_layout.engines import lay_out_schematic
@@ -127,7 +128,7 @@ def build(*, net_group: bool = False, width_mm: int = _WIDTH_MM) -> Draft:
 @cache
 def run(*, net_group: bool = False) -> tuple[Model, tuple[Finding, ...]]:
     """The model laid out."""
-    return lay_out_schematic(freeze(build(net_group=net_group)))
+    return lay_out_schematic(freeze(build(net_group=net_group)), OPTIONS)
 
 
 def _pages_of(model: Model, *, conductor: Id[Conductor] | None = None, net: Id[Net] | None = None):
@@ -166,7 +167,7 @@ def test_both_ends_of_each_wire_stand_on_both_pages() -> None:
     come from `replicate_terminals` (a wire from a terminal to a function of another group).
     """
     model = freeze(build())
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, _ = stage_results(model, inputs)
     ends = {
         c.handle: (c.a.function, c.b.function)
@@ -196,7 +197,7 @@ def test_a_wire_drawn_on_one_page_has_no_marker_and_no_wire_label() -> None:
     model, _ = run()
     ends = {
         ref.port
-        for c in read_inputs(model).connections
+        for c in read_inputs(model, options=OPTIONS).connections
         if c.handle in {_HOMES, _TIE}
         for ref in (c.a, c.b)
     }
@@ -209,7 +210,7 @@ def test_a_wire_drawn_on_one_page_has_no_marker_and_no_wire_label() -> None:
 def test_a_wire_with_a_common_page_is_not_cut_and_has_no_decision() -> None:
     """`links` decides only the cuts: a wire both of whose ends share a page is drawn, not cut."""
     model = freeze(build())
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     handles = {decision.connection for decision in results.layout.decisions}
     assert not handles & {_HOMES, _TIE}
     # The fixture's lamp-to-terminal wires may turn back, so only these two are counted
@@ -220,5 +221,5 @@ def test_a_second_run_gives_the_same_layout_digest() -> None:
     """Choosing the page is a function of the model: a rerun on the result changes nothing."""
     for net_group in (False, True):
         once, _ = run(net_group=net_group)
-        twice, _ = lay_out_schematic(once)
+        twice, _ = lay_out_schematic(once, OPTIONS)
         assert twice.digests["layout"] == once.digests["layout"]

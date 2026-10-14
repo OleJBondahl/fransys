@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from plant import Plant
 from rating_plant import load, rail, rated, supply
 
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.validators.ratings import check_ratings
 
 if TYPE_CHECKING:
@@ -28,7 +29,7 @@ def _two_ac(rating: str) -> list[Finding]:
 def test_two_earthed_ac_supplies_at_one_phase_stand_at_the_sum_not_at_zero() -> None:
     (finding,) = _two_ac("400")
     assert finding.message == (
-        "function 'f' of item d is rated 400 V AC (part or template rating), "
+        f"function {ref(Plant.function_id('d', 'f'))} is rated 400 V AC (part or template rating), "
         "but rails 'L1' and 'L1B' stand across it at 460 V "
         "(two AC supplies, no fixed phase: the sum of their voltages to earth)"
     )

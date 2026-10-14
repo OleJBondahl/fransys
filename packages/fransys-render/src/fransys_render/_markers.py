@@ -10,6 +10,8 @@ from symdef import Direction
 from electrical_symbols import WIRING_GRID
 from fransys_model.derive import draws_as_line, text_room_g
 from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.grid_mm import grid_to_mm
+from fransys_model.derive.marker_box import marker_box_origin
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
@@ -17,6 +19,7 @@ from fransys_model.layout import (
     HarnessLine,
     LinkMarker,
     PlacementView,
+    Side,
     SymbolPlacement,
     layout_of,
     page_slice,
@@ -27,7 +30,7 @@ from fransys_model.layout import Page as PageRecord
 from fransys_model.vocab import functions, ports
 
 from ._constants import MARKER_ARROW_DEPTH_G
-from ._numbers import format_decimal, grid_to_mm, printed_font_mm
+from ._numbers import format_decimal, printed_font_mm
 from ._symbol_geometry import oriented_symbol, to_grid
 
 if TYPE_CHECKING:
@@ -116,28 +119,8 @@ def geometry_facing(model: Model, marker: LinkMarker) -> Direction:
 
 
 def box_origin(marker: LinkMarker, facing: Direction) -> tuple[int, int]:
-    """The box's top-left corner: `marker_box`'s own four-way match, the record's own size."""
-    w, h = marker.width, marker.height
-    x, y = _base_origin(marker, facing, w, h)
-    stub = marker.stub_extra
-    x, y = x + facing.dx * stub, y + facing.dy * stub
-    if marker.box_x is not None:  # One box shared across a bundle row
-        x = marker.box_x
-    return x, y
-
-
-def _base_origin(marker: LinkMarker, facing: Direction, w: int, h: int) -> tuple[int, int]:
-    match facing:
-        case Direction.E:
-            return marker.x + WIRING_GRID, marker.y - h // 2
-        case Direction.W:
-            return marker.x - WIRING_GRID - w, marker.y - h // 2
-        case Direction.N:
-            return marker.x - w // 2, marker.y - WIRING_GRID - h
-        case Direction.S:
-            return marker.x - w // 2, marker.y + WIRING_GRID
-    msg = f"unhandled facing {facing!r}"
-    raise AssertionError(msg)
+    """The box's top-left corner: derive's one rule, `marker_box_origin`."""
+    return marker_box_origin(marker, Side[facing.name])
 
 
 def stub_end(marker: LinkMarker, facing: Direction) -> tuple[int, int]:
@@ -300,7 +283,6 @@ def _turned_glyphs(
         "star": None,
         "far": None,
         "carrier": None,
-        "facing": None,
     }
     at_via = dataclasses.replace(
         marker,

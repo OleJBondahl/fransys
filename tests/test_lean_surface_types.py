@@ -268,8 +268,13 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
     # module's `write_json` really is measured, so an empty answer is not an unread file.
     resolved = {entry.name for entry in lean_surface.resolve_surface_names(("fransys_layout",))}
     assert resolved == {
+        "Facing",
         "HintError",
+        "LayoutOptions",
+        "Side",
         "SymbolPortError",
+        "TextKind",
+        "TextPlacement",
         "lay_out_cables",
         "lay_out_diagrams",
         "lay_out_overview",

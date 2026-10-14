@@ -10,12 +10,13 @@ from fransys_model.derive.drawing_text import (
     contact_image,
     label_text,
 )
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.layout import Label, profile_of_page, sheet_format_of
 from fransys_model.vocab import functions, items, ports
 
-from ._numbers import format_decimal, grid_to_mm, printed_font_mm
+from ._numbers import format_decimal, printed_font_mm
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model

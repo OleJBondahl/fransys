@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.cables import is_cable
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CableProductFacet, OpenCoreFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import conductors, facets_of, items
 
 if TYPE_CHECKING:
@@ -43,7 +44,7 @@ def check_cables(model: Model) -> tuple[Finding, ...]:
                     severity=Severity.WARNING if have < want else Severity.ERROR,
                     subjects=(cable.id, product.id),
                     message=(
-                        f"cable {key_text(cable)} carries {have} cores, its product has {want}"
+                        f"cable {ref(cable)} carries {have} cores, its product has {want}"
                         + (": wire it, or mark it with W1.spare(...)" if have < want else "")
                     ),
                 )

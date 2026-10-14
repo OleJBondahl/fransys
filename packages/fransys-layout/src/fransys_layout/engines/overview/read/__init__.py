@@ -8,7 +8,7 @@ from typing import Any
 from fransys_layout.engines.diagram.read.readings import readings
 from fransys_layout.engines.overview.read.facts import view_facts
 from fransys_layout.engines.overview.read.lanes import lane_plan
-from fransys_layout.engines.overview.read.values import BoxSpec, LineSpec, box_ident
+from fransys_layout.engines.overview.read.values import BoxSpec, LanePlan, LineSpec, box_ident
 from fransys_model.derive import overview_view_rows
 from fransys_model.layout import BoxKey, OverviewMode
 lazy from fransys_layout.engines.overview.read.values import ViewFacts
@@ -47,7 +47,7 @@ def _facts(model: Model, rows: ViewRows) -> ViewFacts:
         tuple(_line(line, n) for n, line in enumerate(rows.lines)),
     )
     unit = rows.unit
-    plan = lane_plan(model, unit, rows) if rows.mode is OverviewMode.LANES and unit else ((), ())
+    plan = lane_plan(model, unit, rows) if rows.mode is OverviewMode.LANES and unit else LanePlan()
     return view_facts(model, (rows.unit, rows.level, rows.mode), rows.open, specs, plan)
 
 

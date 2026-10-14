@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 import fransys as fr
 import pytest
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -143,7 +144,7 @@ def _no_error_codes(result: fr.BuildResult) -> set[str]:
 
 
 def _stage_run(model):
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     results, _ = stage_results(model, inputs)
     return inputs, results
 

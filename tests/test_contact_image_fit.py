@@ -19,10 +19,10 @@ import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
 from fransys_render import pages
-from fransys_render._numbers import grid_to_mm
 
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import text_width
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.layout import Label, LabelKind, default_sheet_format, layout_of
 
 _TEXT = re.compile(r'<text class="label" x="([^"]+)" y="([^"]+)" font-size="[^"]+">([^<]*)</text>')

@@ -19,6 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _PROJECT, _system_design, pump_cabinet
 
 from fransys_model.derive import unit_release
+from fransys_model.derive.numbering_pins import name_findings
+from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.unit_by_name import unit_name_unresolved
 from fransys_model.vocab.validators.documents import DOCUMENT_UNIT_UNRESOLVED
@@ -107,7 +109,13 @@ def test_unit_name_subject_with_two_instances_gives_one_document_unit_unresolved
 
     unresolved = [f for f in result.findings if f.code == DOCUMENT_UNIT_UNRESOLVED]
     assert len(unresolved) == 1
-    expected = unit_name_unresolved(result.model, "demo-pump-cabinet")
+    raw = Finding(
+        code=DOCUMENT_UNIT_UNRESOLVED,
+        severity=Severity.ERROR,
+        subjects=(),
+        message=unit_name_unresolved(result.model, "demo-pump-cabinet"),
+    )
+    expected = name_findings(result.model, (raw,))[0].message
     assert unresolved[0].message == expected
     assert "2 units are instances of" in expected
 

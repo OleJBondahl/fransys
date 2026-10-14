@@ -2,8 +2,9 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
-from fransys_model.vocab.tables import conductors, items
+from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
+from fransys_model.vocab.tables import conductors
 from fransys_model.vocab.wire_harness import wire_harnesses
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ def check_wire_on_two_harnesses(model: Model) -> tuple[Finding, ...]:
     for conductor in conductors(model):
         pair = wire_harnesses(model, conductor)
         if len(pair) > 1:
-            names = " and ".join(key_text(items(model)[harness]) for harness in pair)
+            names = " and ".join(ref(harness) for harness in pair)
             found.append(
                 Finding(
                     code=WIRE_ON_TWO_HARNESSES,

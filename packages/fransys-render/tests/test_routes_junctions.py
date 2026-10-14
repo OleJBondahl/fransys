@@ -3,9 +3,10 @@
 from decimal import Decimal
 
 from fransys_render import pages
-from fransys_render._numbers import format_decimal, grid_to_mm
+from fransys_render._numbers import format_decimal
 from fransys_render._routes import _point_mm, routes_group, routes_on_page
 
+from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import wire_run
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import (

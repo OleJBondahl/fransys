@@ -160,7 +160,13 @@ def _common(c: _Ctx, one: StageMarker) -> dict[str, Any]:
 def _record(c: _Ctx, one: StageMarker, other: StageMarker) -> LinkMarker:
     key = _key_of(c, one, other)
     partner = make_id(LinkMarker, _key_of(c, other, one))
-    return LinkMarker(id=make_id(LinkMarker, key), key=key, partner=partner, **_common(c, one))
+    return LinkMarker(
+        id=make_id(LinkMarker, key),
+        key=key,
+        partner=partner,
+        facing=_facing(one),
+        **_common(c, one),
+    )
 
 
 def _star_marker(
@@ -183,7 +189,7 @@ def _star_marker(
         star=StarKind.OFF if off else StarKind[one.star.upper()],
         far=off.far if off else None,
         carrier=off.carrier if off else None,
-        facing=_facing(one) if off else None,
+        facing=_facing(one),
         wrap_at=one.wrap_at,
         **_common(c, one),
     )

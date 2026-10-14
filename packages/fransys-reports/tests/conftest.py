@@ -273,7 +273,9 @@ class Plant:
                 channel=number,
             )
             self.add(template, facet)
-            found.append(self.function(module, f"ch{number}", template=template.id))
+            function = self.function(module, f"ch{number}", template=template.id)
+            self.port(function, str(number))
+            found.append(function)
         return found
 
     def bind(self, device: Id[Item], channel: Id[Function], signal_name: str) -> Id[Function]:

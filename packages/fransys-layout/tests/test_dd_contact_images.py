@@ -12,6 +12,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -40,7 +41,7 @@ _TEXT, _PAD = DEFAULT_PROFILE.text_height, DEFAULT_PROFILE.marker_padding
 @cache
 def _cabinet() -> Model:
     """The cabinet, laid out with the house profile."""
-    return lay_out_schematic(freeze(build_cabinet()))[0]
+    return lay_out_schematic(freeze(build_cabinet()), OPTIONS)[0]
 
 
 @cache

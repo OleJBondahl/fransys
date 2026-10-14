@@ -35,6 +35,7 @@ GUIDE_PAGES = (
     "reading-rows",
     "reading-records",
     "keywords",
+    "moving-to-0.16-and-0.17",
     "moving-to-0.15",
     "moving-to-0.14",
     "findings",

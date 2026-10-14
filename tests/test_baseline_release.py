@@ -1759,3 +1759,26 @@ def test_verify_skips_the_system_with_no_project_record_at_all(released):
 
     assert not projects(result.model), "this fixture's own point: no Project record exists"
     assert fr.verify(result, into) == ()
+
+
+# -- model-0212, point REMOVED-PARENT: parent is never compared against a stored listing ----
+
+
+def test_an_old_listing_without_parent_matches_the_new_derived_one(released, tmp_path_factory):
+    """A listing stored before `parent` existed matches the fresh one: no `BASELINE_DIFFERS`,
+    no `REVISION_ALREADY_RELEASED`, until it is released again.
+    """
+    result, base_into, board_target, _cabinet_target, board_scope, _cabinet_scope = released
+    into = _copy_into(tmp_path_factory, base_into)
+    stripped = 0
+    for path in into.rglob("listing.json"):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for row in data["items"]:
+            stripped += row.pop("parent", None) is not None
+        path.write_text(json.dumps(data, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    assert stripped, "the fixture holds parented items, or this test proves nothing"
+
+    codes = {f.code for f in fr.verify(result, into)}
+    assert "BASELINE_DIFFERS" not in codes
+    target = fr.release(result, into, unit=board_scope)
+    assert target == into / board_target.relative_to(base_into)

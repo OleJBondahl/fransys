@@ -7,6 +7,7 @@ layout-0032). All data invented.
 
 from decimal import Decimal
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines import lay_out_schematic
@@ -64,7 +65,7 @@ def _cabinet(*sheets: SheetFormat, named: SheetFormat | None = None) -> Draft:
 
 def _unused(draft: Draft):
     model = freeze(draft)
-    _, findings = stage_results(model, read_inputs(model))
+    _, findings = stage_results(model, read_inputs(model, options=OPTIONS))
     return [finding for finding in findings if finding.code == SHEET_FORMAT_UNUSED]
 
 
@@ -113,7 +114,7 @@ def test_every_unused_sheet_format_gets_its_own_finding_in_handle_order() -> Non
 def test_read_inputs_carries_only_the_ids_of_the_unused_sheet_formats() -> None:
     """The reader hands over the ids of the unused sheet formats, sorted, one finding each."""
     used, other, third = _sheet("used"), _sheet("other"), _sheet("third")
-    inputs = read_inputs(freeze(_cabinet(used, other, third, named=used)))
+    inputs = read_inputs(freeze(_cabinet(used, other, third, named=used)), options=OPTIONS)
     assert inputs.unused_sheet_formats == tuple(sorted((other.id, third.id)))
     assert inputs.sheet_format == used.id
 
@@ -125,7 +126,7 @@ def test_a_profile_with_no_sheet_lays_the_cabinet_out_on_the_house_sheet() -> No
         (Profile(id=make_id(Profile, ("test", "profile")), key=("test", "profile")),),
         origin=_ORIGIN,
     )
-    model, _findings = lay_out_schematic(freeze(draft))
+    model, _findings = lay_out_schematic(freeze(draft), OPTIONS)
     pages = layout_of(model, Page).values()
     assert pages
     assert {page.sheet_format for page in pages} == {None}
@@ -134,6 +135,6 @@ def test_a_profile_with_no_sheet_lays_the_cabinet_out_on_the_house_sheet() -> No
 def test_the_public_engine_returns_the_warning() -> None:
     """`lay_out_schematic` returns it with every other finding, and lays the cabinet out."""
     sheet = _sheet("orphan")
-    model, findings = lay_out_schematic(freeze(_cabinet(sheet)))
+    model, findings = lay_out_schematic(freeze(_cabinet(sheet)), OPTIONS)
     assert [f.code for f in findings].count(SHEET_FORMAT_UNUSED) == 1
     assert model.digests["layout"]

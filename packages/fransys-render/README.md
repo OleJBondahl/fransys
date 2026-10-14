@@ -89,7 +89,7 @@ Symbols (render-0001):
 - The recipe is `LIBRARY.get`, then `repeat`, then `orient`. `GENERIC_BOX_KEY` builds `generic_box` from the placement's function's model ports, named `<function>.<port>` as layout named them, sorted as `resolve` sorts them (layout-0042).
 - A key neither generic nor in the library gives `None`: `pages` draws an 8x8 placeholder rectangle with the key as text, and `check` reports `UNKNOWN_SYMBOL_KEY`.
 - A real body is `to_fragment_mm(oriented_symbol(...), module_mm=, weights_mm=, dash_mm=, font_family=, font_mm=, cap_ratio=)` under `translate(x_mm,y_mm)` only. It draws in absolute mm: weights 0.25 (normal) and 0.5 (thick), dashes 1.25/0.625, font `DejaVu Sans` (Condensed, bundled) at the 1.8 mm label role. Orientation is already baked into the element coordinates.
-- `to_grid` and `grid_to_mm` are small duplicates of facts private to other packages. They are not algorithms.
+- `to_grid` is a small duplicate of a fact private to another package. It is not an algorithm. `grid_to_mm` lives in `fransys_model.derive.grid_mm` (PAGES-NAV P1), since pdf places links by it too.
 - `to_grid` multiplies by 8, exact for a multiple of 0.125. `grid_to_mm` divides `module_mm` by 8, a power of two, so the `Decimal` is exact (0.3125 mm for `module_mm=2.5`).
 - A `not-installed` placement's `<g>` carries `class="symbol not-installed"`. `_leads.visible_symbol` drops unwired bound leads before the fragment is built. A fan-out leg ending on a port wires it, as a route end does (layout-0158).
 - A placement is `not-installed` when `functions(model)[placement.function].item` has `installed=False`.

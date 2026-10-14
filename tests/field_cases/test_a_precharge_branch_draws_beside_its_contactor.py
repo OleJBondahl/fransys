@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -132,7 +133,7 @@ def test_no_beside_join_runs_through_a_symbol_or_a_label() -> None:
 
 def _host_keepout(result: fr.BuildResult) -> Box:
     """K1's main function keep-out on its page, from the one keep-out function."""
-    layout = stage_results(result.model, read_inputs(result.model))[0].layout
+    layout = stage_results(result.model, read_inputs(result.model, options=OPTIONS))[0].layout
     (host,) = (
         f.id for f in functions(result.model).values() if "/".join(f.key).endswith("K1/fn/main")
     )

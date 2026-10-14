@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 def place_lanes(facts: ViewFacts) -> PlacedSheet:
     """The one sheet of a lanes view, boxes in lanes and stages, lines in channels and corridors."""
     plan = make_plan(facts)
-    raw = raw_ends(facts, plan.stage)
+    raw = raw_ends(facts, plan)
     size = box_sizes(facts, raw)
     high = {b: h for b, (_, h) in size.items()}
     found = corridors(facts, plan)

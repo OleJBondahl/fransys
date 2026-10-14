@@ -59,6 +59,7 @@ from fransys_model.vocab import (
 
 from ._bridge import BRIDGE_COLUMN_WIDTH_MM, bridge_cell_typst, bridge_geometry, bridge_lane_x_mm
 from ._flow import flow_columns
+from ._marks import LIST_HEADING
 from ._tables import table_source
 from ._typst import description_par, literal
 
@@ -264,7 +265,7 @@ def _list_title(
 
 def _list_heading(title: str) -> str:
     """The level-2 heading of `title`, `""` for none."""
-    return f"#heading(level: 2, text({literal(title)}))\n" if title else ""
+    return f"{LIST_HEADING}text({literal(title)}))\n" if title else ""
 
 
 def terminal_list_page(model: Model, record: Document) -> str:

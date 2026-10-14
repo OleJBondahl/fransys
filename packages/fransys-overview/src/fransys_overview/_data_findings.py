@@ -17,6 +17,7 @@ from fransys_model.derive import (
     item_kind,
     item_of_port,
 )
+from fransys_model.derive.order import finding_order_key
 from fransys_model.kernel import Severity, parent_chain
 from fransys_model.vocab import Aspect, conductors, functions, items, units
 
@@ -140,23 +141,30 @@ def _count(
                 _hit(boxes, at, index, rank)
 
 
-def _flat(tally: Tally, findings: tuple[Finding, ...]) -> list[list[Any]]:
-    """`[index, worst severity, count of that severity, [[severity, code, count], ...]]`.
+def _flat(model: Model, tally: Tally, findings: tuple[Finding, ...]) -> list[list[Any]]:
+    """`[index, worst, count, [[severity, code, count, messages], ...]]`, worst code first.
 
-    The list holds each (severity, code) once with its count of distinct findings, worst first.
-    No message text: messages print names, which a rename changes (A10).
+    Messages follow in finding order (FT4); they print designations, never an Id (A10).
     """
     out: list[list[Any]] = []
     for at, held in sorted(tally.items()):
         worst = max(held.values())
-        counts: dict[tuple[int, str], int] = {}
+        counts: dict[tuple[int, str], list[Finding]] = {}
         for i, rank in held.items():
-            key = (rank, findings[i].code)
-            counts[key] = counts.get(key, 0) + 1
+            counts.setdefault((rank, findings[i].code), []).append(findings[i])
         ordered = sorted(counts.items(), key=lambda one: (-one[0][0], one[0][1]))
-        listed = [[_NAME[rank], code, n] for (rank, code), n in ordered]
+        listed = [
+            [_NAME[rank], code, len(found), _messages(model, found)]
+            for (rank, code), found in ordered
+        ]
         out.append([at, _NAME[worst], sum(1 for r in held.values() if r == worst), listed])
     return out
+
+
+def _messages(model: Model, found: list[Finding]) -> list[str]:
+    """The messages of one code's findings in finding order."""
+    ordered = sorted(found, key=lambda f: (finding_order_key(model, f), f.message))
+    return [f.message for f in ordered]
 
 
 def findings_data(
@@ -175,7 +183,10 @@ def findings_data(
         per_view.append(tallies)
     if not any(boxes or lines for boxes, lines in per_view):
         return None
-    return [[_flat(boxes, findings), _flat(lines, findings)] for boxes, lines in per_view]
+    return [
+        [_flat(tables.model, boxes, findings), _flat(tables.model, lines, findings)]
+        for boxes, lines in per_view
+    ]
 
 
 __all__ = ["findings_data"]

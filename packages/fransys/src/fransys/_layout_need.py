@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 import fransys_pdf
 from fransys_author import AuthorError
+from fransys_el import OPTIONS
 
 from fransys_layout import HintError, SymbolPortError, lay_out_diagrams, lay_out_schematic
 from fransys_model.kernel import Finding, Severity, describe
@@ -43,7 +44,7 @@ def _schematic_if_needed(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     if not needs_schematic_layout(model):
         return model, ()
     try:
-        return lay_out_schematic(model)
+        return lay_out_schematic(model, OPTIONS)
     except HintError as error:
         raise hint_error_to_author_error(model, error) from error
     except SymbolPortError as error:

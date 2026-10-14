@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import fransys as fr
 import pytest
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -42,7 +43,7 @@ def _build(
 def _channel_ports(result: fr.BuildResult) -> list[tuple[str, Point, Facing]]:
     """Channel 1's ports of the module's box: its name, place and facing."""
     model = result.model
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     (box,) = (one.geometry for one in results.layout.placed if one.geometry.key == "generic-box")
     return [(p.name, p.at, p.facing) for p in box.ports if p.name.startswith("ai_1.")]
 

@@ -24,11 +24,12 @@ from fransys_render._markers import (
     marker_facing,
     stub_end,
 )
-from fransys_render._numbers import format_decimal, grid_to_mm
+from fransys_render._numbers import format_decimal
 
 from fransys_model.derive import draws_as_line
 from fransys_model.derive.drawing_text import off_stub_text
-from fransys_model.kernel import Origin, evolve
+from fransys_model.derive.grid_mm import grid_to_mm
+from fransys_model.kernel import Origin, SchemaError, evolve
 from fransys_model.layout import LinkMarker, Page, Side, StarKind, layout_of, sheet_format_of
 
 _ORIGIN = Origin(file="tests/test_off_stub_facing.py", line=1, note="facing flip")
@@ -146,13 +147,9 @@ def test_turning_the_stored_facing_turns_the_arrow_and_the_drawn_stub(
     assert line not in _svg_of(flipped_model, flipped)
 
 
-def test_a_marker_without_a_stored_facing_takes_the_geometry_facing() -> None:
-    """No fixture lays out a page-boundary marker, so an off stub is turned into a plain one.
-
-    The stub is one at a port: a line stub has no port geometry."""
+def test_a_marker_without_a_stored_facing_is_refused() -> None:
+    """layout-0205: every marker stores its facing; a plain one without it does not build."""
     model = _models()["system"]
     stub = next(m for m in _off_stubs(model) if not _is_line_stub(model, m))
-    plain = dataclasses.replace(stub, star=None, far=None, carrier=None, facing=None)
-    plain_model = evolve(model, remove=[stub.id], put=[plain], origin=_ORIGIN)
-    assert marker_facing(plain_model, plain) is geometry_facing(plain_model, plain)
-    assert marker_facing(plain_model, plain).name == stub.facing.name
+    with pytest.raises(SchemaError):
+        dataclasses.replace(stub, star=None, far=None, carrier=None, facing=None)

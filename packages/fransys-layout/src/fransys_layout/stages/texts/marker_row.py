@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, follow
 from fransys_layout.stages.labels import decided_runs
 from fransys_layout.stages.lookups import owner_of
+from fransys_layout.stages.space import Space, unowned
 from fransys_layout.stages.tidy import turned
 
 from .candidates import TextKind
@@ -123,7 +124,8 @@ def _place_page(
     rows = _rows(stand, standing, runs, markers, room)
     content = Box(x=room.inset, y=-FAR, width=room.width - room.inset, height=2 * FAR)
     texts = _texts(stand, standing, rows, room.owner)
-    done, findings = place_clear_of_bodies(texts, rows, here, decided, content)
+    ground = Space(shapes=unowned(decided), content=content)
+    done, findings = place_clear_of_bodies(texts, rows, here, ground, room.profile.texts)
     return _written(done, rows, markers, mates), findings
 
 

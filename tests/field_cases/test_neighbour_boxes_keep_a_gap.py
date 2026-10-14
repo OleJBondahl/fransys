@@ -17,6 +17,7 @@ from typing import Any
 
 import fransys as fr
 from fransys.colours import BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -44,7 +45,11 @@ def _built():
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     built = fr.build(d, doc)
     model = built.model
-    return built.findings, model, stage_results(model, read_inputs(model))[0].layout
+    return (
+        built.findings,
+        model,
+        stage_results(model, read_inputs(model, options=OPTIONS))[0].layout,
+    )
 
 
 def _gaps(model, layout) -> dict[str, int]:

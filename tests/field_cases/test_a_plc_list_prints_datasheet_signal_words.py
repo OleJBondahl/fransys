@@ -29,7 +29,7 @@ def built() -> fr.BuildResult:
 
 def test_the_list_prints_the_signal_words(built: fr.BuildResult) -> None:
     cells = plc_list_rows(plc_channel_rows(built.model))
-    assert {cell[1] for cell in cells} == {"DI", "DO", "AI (mA)"}
+    assert {cell[2] for cell in cells} == {"DI", "DO", "AI (mA)"}
 
 
 def test_a_channel_with_no_function_prints_spare(built: fr.BuildResult) -> None:

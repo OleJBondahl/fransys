@@ -29,7 +29,7 @@ from fransys_layout.stages.sizing import with_rooms
 from fransys_layout.stages.space import Shape, Space, unowned
 from fransys_layout.stages.types import LabelKind, PlacedLabel
 
-from .candidates import DEFAULT_TABLE, TextKind
+from .candidates import TextKind
 from .marker_row import corridor, stub_boxes
 from .place_texts import Anchor, TextToPlace, place_texts
 from .stand import leave_port, symbol_port
@@ -208,7 +208,7 @@ def with_power_labels(
         return labels, ()
     shapes = page_shapes(markers, placed, labels, symbols=True)
     space = Space(shapes=shapes, content=frame.content)
-    done, findings = place_texts(texts, space, DEFAULT_TABLE, lanes=port_lanes(placed))
+    done, findings = place_texts(texts, space, frame.profile.texts, lanes=port_lanes(placed))
     by_port = {one.port: one for one in places}
     made = tuple(
         PlacedLabel(
@@ -289,7 +289,7 @@ def _room(
 ) -> tuple[str, Box]:
     """The first free candidate of `one`'s text, by `_text` and the placer; width only, padded."""
     (done,), _ = place_texts(
-        (_text(one, None, profile, _ROOM_SLOT),), Space(shapes=shapes), DEFAULT_TABLE
+        (_text(one, None, profile, _ROOM_SLOT),), Space(shapes=shapes), profile.texts
     )
     pad = profile.marker_padding
     return _ROOM_SLOT, Box(

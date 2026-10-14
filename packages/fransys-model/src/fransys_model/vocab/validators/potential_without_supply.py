@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.rail_reach import earth_potentials
 from fransys_model.vocab.tables import nets, supply_of_potential, supply_systems
 
@@ -24,7 +25,7 @@ def check_potential_without_supply(model: Model) -> tuple[Finding, ...]:
             continue
         origin = model.origins[net.id]
         message = (
-            f"net {key_text(net)} ({origin.file}:{origin.line}) carries potential {potential!r}, "
+            f"net {ref(net)} ({origin.file}:{origin.line}) carries potential {potential!r}, "
             f"which no supply declares (declared: {named}): it gets no rank and no power symbol"
         )
         found.append(

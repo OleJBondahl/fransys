@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.kernel import Finding, Severity, key_text
+from fransys_model.kernel import Finding, Severity
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import (
     function_templates,
     functions,
@@ -86,7 +87,7 @@ def _differing(*facts: tuple[str, object, object]) -> str:
 def _port_findings(
     item: Item, function: Function, template: FunctionTemplate, index: _Index
 ) -> list[Finding]:
-    where = f"function {function.name!r} of item {key_text(item)}"
+    where = f"function {function.name!r} of item {ref(item)}"
     pairing = _pair_up(index.ports_of.get(function.id, ()), index.pins_of.get(template.id, ()))
     found = [
         _mismatch(f"{where} has no port for template {pin.name!r}", item.id, function.id, pin.id)
@@ -119,7 +120,7 @@ def _port_findings(
 def _item_findings(
     item: Item, templates: tuple[FunctionTemplate, ...], index: _Index
 ) -> list[Finding]:
-    where = f"item {key_text(item)}"
+    where = f"item {ref(item)}"
     pairing = _pair_up(index.functions_of.get(item.id, ()), templates)
     found = [
         _mismatch(f"{where} has no function for template {template.name!r}", item.id, template.id)
@@ -176,7 +177,7 @@ def check_part_conformance(model: Model) -> tuple[Finding, ...]:
                     code=ITEM_WITHOUT_PART,
                     severity=Severity.INFO,
                     subjects=(item.id,),
-                    message=f"item {key_text(item)} has no part: its functions are not checked",
+                    message=f"item {ref(item)} has no part: its functions are not checked",
                 )
             )
         else:

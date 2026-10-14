@@ -29,6 +29,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic import lay_out_schematic, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
@@ -229,11 +230,11 @@ def test_a_wire_that_bypasses_the_boundaries_keeps_its_cross_unit_decision_and_n
     # layout (decision 0028); lay the numbered model out directly.
     assert UNIT_BOUNDARY_BYPASSED in {f.code for f in result.findings}
     assert {code for code, _subjects in _errors(result)} == {UNIT_BOUNDARY_BYPASSED}
-    model, _layout_findings = lay_out_schematic(result.model)
+    model, _layout_findings = lay_out_schematic(result.model, OPTIONS)
     fa, fb = _pin_one(model, "fa"), _pin_one(model, "fb")
     (fa_set,), (fb_set,) = ({s for s, _ in _stands(model, p)} for p in (fa, fb))
     assert fa_set != fb_set  # no drawing set holds a page of each end
-    layout, _drawn, _findings = run_stages(model, read_inputs(model))
+    layout, _drawn, _findings = run_stages(model, read_inputs(model, options=OPTIONS))
     (decision,) = [d for d in layout.decisions if {d.a, d.b} == {fa, fb}]
     assert decision.case is LinkCase.CROSS_UNIT
     assert _wire_markers(model, fa, fb) == []

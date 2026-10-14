@@ -14,6 +14,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.offstubs import end_text, far_maps, off_reads
@@ -92,7 +93,7 @@ def test_a_core_with_no_carrier_stubs_with_no_cable_and_ends_at_the_far_device()
     # UNDO: engines/schematic/read/offstubs.py: `end_text` reads `record.carrier`
     #   as the harness (`carrier = "w3"`) instead of `None` for a wire with none
     model = _build(bare=True)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (text,) = _x1_texts(model, inputs)
     (end,) = (e for e in inputs.off_ends if e.port == text.port)
     assert end.carrier is None
@@ -105,7 +106,7 @@ def test_a_cable_core_names_the_outermost_carrier() -> None:
     # UNDO: engines/schematic/read/offstubs.py: `end_text`'s carrier walk stops
     #   after reading `record.carrier` (no `while` loop), so the carrier is the cable, not -W3
     model = _build()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (text,) = _x1_texts(model, inputs)
     (end,) = (e for e in inputs.off_ends if e.port == text.port)
     assert end.carrier is not None
@@ -118,7 +119,7 @@ def test_a_far_plug_with_no_mate_is_named_itself() -> None:
     # UNDO: engines/schematic/read/offstubs.py: `end_text` looks the far port up
     #   with `mated.get(...) or K1` (a fixed partner), so a plug with no mate reads as K1
     model = _build(far_mate=False)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (text,) = _x1_texts(model, inputs)
     (end,) = (e for e in inputs.off_ends if e.port == text.port)
     far = functions(model)[ports(model)[end.far].function]
@@ -132,7 +133,7 @@ def test_a_mate_inside_one_location_stubs_a_top_level_units_pin() -> None:
     # UNDO: stages/offstubs.py: `ends_in_stubs` returns only
     #   `crosses_location(a, b)` (no stub for a boundary pin whose far end is outside its unit)
     model = _build(one_location=True)
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     assert [t.text for t in _x1_texts(model, inputs)] == [
         StubText(cable="-W3", far="+C1-K1", port=":1")
     ]
@@ -145,7 +146,7 @@ def test_a_mate_whose_plug_pin_ends_no_conductor_gives_none() -> None:
     # UNDO: stages/offstubs.py: `mate_stub` indexes
     #   `ending[0]` without the `if not ending` return (an IndexError)
     model = _build()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     x1, p1 = _pin_pair(model, inputs)
     reads = off_reads(model, far_maps(model))
     assert mate_stub((), (x1, p1), (x1.function, p1.function), reads) is None
@@ -158,7 +159,7 @@ def test_a_mate_stub_is_the_bridge_and_the_conductors_end_moved_to_the_pin() -> 
     # UNDO: stages/offstubs.py: `mate_stub` returns the text and
     #   the `OffEnd` without `dataclasses.replace(..., port=near)` (they keep the plug pin's port)
     model = _build()
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     x1, p1 = _pin_pair(model, inputs)
     maps = far_maps(model)
     reads = off_reads(model, maps)
@@ -208,7 +209,7 @@ def test_the_conductor_a_mate_stub_names_does_not_depend_on_a_handle() -> None:
     texts = []
     for n_to_p2, n_to_k2 in ((1, 2), (2, 1), (5, 3), (3, 5)):
         model = _build_two_wires(n_to_p2=n_to_p2, n_to_k2=n_to_k2)
-        (text,) = _x1_texts(model, read_inputs(model))
+        (text,) = _x1_texts(model, read_inputs(model, options=OPTIONS))
         texts.append(text.text)
     assert len(set(texts)) == 1
 
@@ -245,7 +246,7 @@ def test_far_maps_map_by_function_and_name_and_end_text_equals_the_inline_build(
         assert len(maps.by_name) == len(ports(model))
         assert all(maps.partner[b] == a and maps.partner[a] == b for a, b in maps.partner.items())
         assert len(maps.partner) == 2 * len(mates(model))
-        for c in read_inputs(model).connections:
+        for c in read_inputs(model, options=OPTIONS).connections:
             # a bridge's synthetic end is no model port; no stub text is asked of it
             for near in (n for n in (c.a.port, c.b.port) if n in ports(model)):
                 text, end = end_text(model, maps, c, near)
@@ -257,7 +258,7 @@ def test_crosses_location_needs_two_specs_each_in_a_location() -> None:
     # UNDO: stages/offstubs.py: `crosses_location` drops the
     #   `not a.location_path or not b.location_path` test (an IndexError on the empty path)
     model = _build()
-    x1, p1 = _pin_pair(model, read_inputs(model))
+    x1, p1 = _pin_pair(model, read_inputs(model, options=OPTIONS))
     bare = dataclasses.replace(p1, location_path=())
     assert crosses_location(x1, p1)
     assert not crosses_location(x1, x1)

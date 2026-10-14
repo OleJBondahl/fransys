@@ -28,6 +28,7 @@ from fransys_model.vocab.ratings import Operating, Rating
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 from .rows_cores import OpenCoreRow
+from .rows_removed import RemovedAncestry
 
 
 @value
@@ -79,20 +80,17 @@ class BomLine:
 
 @value
 class PlcChannelRow:
-    """One PLC channel's wiring line: channel, signal, where it is wired.
+    """One pin of a PLC channel.
 
-    `wired_to` is where the builder wires the channel's pin: the printed far end of every
-    conductor at the channel function's ports, sorted and joined with `CELL_SEPARATOR`, `None`
-    when nothing is printed. `field_device` and
-    `field_device_designation` are the device bound to the channel, `signal_name` its request's: the
-    rack modules read the same fields (`PlcRackChannel`); the list prints `signal_name` but not
-    `field_device` or `field_device_designation` (`PLC_COLUMNS`). All three are `None` for an
-    allocated-but-unbound channel. Every designation is signed (`"-A3:1"`,
-    `"-B12"`, `"-J1:1"`).
+    `pin` is its printed designation (`-A2:5`), `channel_name` the
+    channel's own number, `wired_to` the printed far ends at that port joined with `CELL_SEPARATOR`
+    (`None` for none). The device fields and `signal_name` are `None` for an unbound channel.
     """
 
     channel: Id[Function]
-    channel_designation: str
+    port: Id[Port]
+    pin: str
+    channel_name: str
     signal: SignalType
     wired_to: str | None
     field_device: Id[Function] | None
@@ -700,7 +698,7 @@ class BaselineUnit:
 
 @value
 class BaselineItem:
-    """One `items` entry of a baseline listing: an item of the listed unit itself."""
+    """One `items` entry of a baseline listing; `parent` is its parent's designation (0212)."""
 
     designation: str
     mpn: str
@@ -708,6 +706,7 @@ class BaselineItem:
     installed: bool
     external: bool
     position: int | None
+    parent: str | None = None
 
 
 @value
@@ -822,6 +821,7 @@ class ListingDiff:
     a: BaselineUnit
     b: BaselineUnit
     changes: tuple[Change, ...]
+    ancestry: tuple[RemovedAncestry, ...] = ()
 
 
 CHANGE_COLUMNS = ("section", "change", "subject", "field", "before", "after")

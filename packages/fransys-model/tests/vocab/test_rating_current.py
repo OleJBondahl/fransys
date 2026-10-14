@@ -20,7 +20,10 @@ from current_plant import (
 from plant import Plant
 from rating_plant import rail, supply
 
+from fransys_model.kernel import make_id
+from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import Current
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.validators.ratings_current import (
     check_ratings_current,
 )
@@ -70,7 +73,8 @@ def test_a_full_range_fuse_bounds_the_branch_at_its_own_rating() -> None:
     finding = _the_finding(_fused("90"))
     assert finding.subjects == (Plant.function_id("K", "f"),)
     assert finding.message.endswith(
-        "below its branch's 100 A DC set by the protective device of function 'f' of item F"
+        "below its branch's 100 A DC set by the protective device of function "
+        + ref(Plant.function_id("F", "f"))
     )
 
 
@@ -118,9 +122,10 @@ def _changeover_plant(d_amps: str, *, rated: bool = True, unrelated: bool = Fals
 
 
 _D_110 = (
-    "function 'f' of item D is rated 110 A DC (part or template rating), "
-    "below its branch's 120 A DC set by the source of function 'f' of item E, "
-    "with item CO at rest"
+    f"function {ref(Plant.function_id('D', 'f'))} is rated 110 A DC (part or template rating), "
+    "below its branch's 120 A DC set by the source of function "
+    f"{ref(Plant.function_id('E', 'f'))}, "
+    f"with item {ref(make_id(Item, ('CO',)))} at rest"
 )
 
 

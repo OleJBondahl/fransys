@@ -62,3 +62,12 @@ def test_one_tag_in_two_function_blocks_inside_a_cabinet_unit_is_a_duplicate() -
     d = fr.design("demo_parts", place="C1")
     d.add(_cabinet, "CAB")
     assert "DESIGNATION_DUPLICATE" in [f.code for f in fr.build(d).findings]
+
+
+def test_the_duplicate_message_prints_the_item_not_its_key() -> None:
+    d = fr.design("demo_parts", place="C1")
+    d.add(_cabinet, "CAB")
+    (finding, *_) = [f for f in fr.build(d).findings if f.code == "DESIGNATION_DUPLICATE"]
+    assert "-" in finding.message
+    assert "⟨" not in finding.message
+    assert "/" not in finding.message.split("designation")[0]

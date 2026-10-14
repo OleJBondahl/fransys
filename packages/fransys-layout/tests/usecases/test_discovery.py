@@ -11,6 +11,7 @@ from functools import cache
 from typing import Any
 
 from dd_chain_fixtures import MCB, TERMINAL, build, design, placed, terminal_key
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic import run_stages
@@ -32,7 +33,7 @@ def _model(*, discovery: bool) -> Model:
 
 @cache
 def _inputs(*, discovery: bool) -> StageInputs:
-    return read_inputs(_model(discovery=discovery))
+    return read_inputs(_model(discovery=discovery), options=OPTIONS)
 
 
 def _function(model: Model, key: tuple[str, ...]) -> Id[Any]:
@@ -311,7 +312,7 @@ def test_a_hinted_chain_wins_over_discovery_end_to_end() -> None:
     draft = build_cabinet(discovery=True)
     draft.extend((chain,), origin=_ORIGIN)
     model = freeze(draft)
-    results, _ = stage_results(model, read_inputs(model))
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
 
     claiming = [
         column

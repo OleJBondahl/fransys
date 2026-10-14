@@ -56,8 +56,8 @@ class LaneHead:
 class ViewFacts:
     """One view to place: its level (`unit`, `level`), `mode` and the one `open` thing.
 
-    `diagram` holds the measured boxes and lines; `boxes` and `lines` are the same rows with what
-    the records need. `lanes` is each box's lane; `heads` the text of each grouped lane.
+    `diagram` holds the measured rows; `boxes` and `lines` add what the records need. The lanes
+    fields: `lanes`, `heads`, `west` stubs, `power` lines, `join` terminal place (-1: none), `rank`.
     """
 
     unit: Id[Unit] | None
@@ -69,3 +69,24 @@ class ViewFacts:
     diagram: DiagramFacts
     lanes: tuple[int, ...] = ()
     heads: tuple[LaneHead, ...] = ()
+    west: tuple[bool, ...] = ()
+    power: tuple[bool, ...] = ()
+    join: tuple[int, ...] = ()
+    rank: tuple[int, ...] = ()
+
+
+@value
+class LanePlan:
+    """What the model gives a lanes view.
+
+    Per box its lane and whether it is a west stub, per line whether it is a power line, and the
+    owner and text of each grouped lane.
+    """
+
+    lanes: tuple[int, ...] = ()
+    head_owners: tuple[Ident, ...] = ()
+    head_texts: tuple[str, ...] = ()
+    west: tuple[bool, ...] = ()
+    power: tuple[bool, ...] = ()
+    join: tuple[int, ...] = ()
+    rank: tuple[int, ...] = ()

@@ -20,6 +20,7 @@ from pathlib import Path
 
 import fransys as fr
 from fransys.colours import BN, BU
+from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -60,7 +61,7 @@ def _built(*, rails: bool = True) -> tuple:
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
     model = fr.build(d, doc).model
-    return model, stage_results(model, read_inputs(model))[0].layout
+    return model, stage_results(model, read_inputs(model, options=OPTIONS))[0].layout
 
 
 def _item(model, tag: str):
@@ -155,7 +156,7 @@ def test_the_box_stands_on_a_function_drawn_in_it_not_on_one_drawn_apart() -> No
     """The box's placement is no contact's: with the lowest id drawn apart, the next one stands."""
     model, _ = _built()
     m1 = _item(model, "M1")
-    inputs = read_inputs(model)
+    inputs = read_inputs(model, options=OPTIONS)
     (view,) = (s for s in inputs.functions if s.function == m1)
     ids = sorted(f.id for f in functions(model).values() if f.item == m1)
     apart = dataclasses.replace(
@@ -210,7 +211,7 @@ def test_the_image_of_a_module_wired_to_terminals_crosses_no_wire() -> None:
 def test_a_box_with_a_contact_is_not_a_coil() -> None:
     """layout-0123 F3: the box and K1's coil both own contacts apart; only the coil is a coil."""
     model, _ = _built()
-    specs = {s.function: s for s in read_inputs(model).functions}
+    specs = {s.function: s for s in read_inputs(model, options=OPTIONS).functions}
     box = specs[_item(model, "M1")]
     (coil,) = (s for s in specs.values() if s.kind == "coil")
     assert box.roles.contacts_apart

@@ -14,10 +14,13 @@ from typing import TYPE_CHECKING
 from plant import Plant
 from test_plc_allocation_units_model import Site, _bound, _site
 
+from fransys_model.derive import plc_channel_rows
+from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.derive.passes.plc_allocation import PLC_REQUEST_UNSERVABLE, allocate_plc
 from fransys_model.kernel import make_id
 from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
+from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of
 from fransys_model.vocab.validators.plc import (
     PLC_BINDING_SIGNAL_MISMATCH,
@@ -275,7 +278,7 @@ def test_two_requests_on_one_channels_net_fall_to_unservable_and_the_wiring_chec
     (mismatch,) = check_plc_wiring(model)
     assert mismatch.code == PLC_BINDING_WIRING_MISMATCH
     assert set(mismatch.subjects) == {by_subject[second].id, second, ch2}
-    assert "dev-2/signal is wired to channel mod-u/ch1 but bound to channel mod-u/ch2" in (
+    assert f"{ref(second)} is wired to channel {ref(ch1)} but bound to channel {ref(ch2)}" in (
         mismatch.message
     )
 
@@ -334,3 +337,57 @@ def test_a_channel_an_existing_binding_names_is_not_booked_twice() -> None:
     assert _bound(model) == {hand: ch1, wired: ch2}
     bindings = list(facets_of(model, PlcBindingFacet).values())
     assert len({binding.channel for binding in bindings}) == len(bindings)
+
+
+def test_same_signal_contacts_on_a_shared_return_each_bind_their_directly_wired_channel() -> None:
+    """Shared return: `dev-1` and `dev-2` (both DI) and both channels sit on one return net, so
+    every channel's net holds a same-signal rival. W1b keeps both channels for each request, W3
+    keeps the one it has a direct conductor to, and the two picks differ: each binds by wiring,
+    here the reverse of the key order, which the free queue would not give.
+    """
+    plant = Plant()
+    unit = plant.unit("unit-u", name="unit U")
+    ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
+    first = _request(plant, "dev-1", unit, to=plant.port(ch2, "1"))
+    second = _request(plant, "dev-2", unit, to=plant.port(ch1, "1"))
+    common = plant.function(plant.item("common", designation="X-common", unit=unit), "return")
+    for index, function in enumerate((first, second, ch1, ch2)):
+        plant.wire(plant.port(function, "2"), plant.port(common, "r"), key=f"return-{index}")
+    model, findings = allocate_plc(plant.model())
+    assert findings == ()
+    assert _bound(model) == {first: ch2, second: ch1}
+    assert check_plc_wiring(model) == ()
+
+
+def test_a_wiring_mismatch_names_each_channel_by_its_pin_not_by_its_module() -> None:
+    """Field case: both channels sit on one module, so the module-only text read "wired to channel
+    -U1 but bound to channel -U1". A channel prints as the PLC list prints its pins.
+    """
+    plant = Plant()
+    unit = plant.unit("unit-u", name="unit U")
+    ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
+    ch1_port = plant.port(ch1, "1")
+    plant.port(ch2, "2")
+    _request(plant, "dev-1", unit, to=ch1_port)
+    _request(plant, "dev-2", unit, to=ch1_port)
+    model, _ = allocate_plc(plant.model())
+    (mismatch,) = name_findings(model, check_plc_wiring(model))
+    assert mismatch.message.endswith("is wired to channel -U1:1 but bound to channel -U1:2")
+
+
+def test_a_multi_pin_channel_is_named_by_the_pins_the_plc_list_prints() -> None:
+    """The message's pins for a channel are its `PlcChannelRow.pin` texts, joined by ", "."""
+    plant = Plant()
+    unit = plant.unit("unit-u", name="unit U")
+    ch1, ch2 = _site(plant, Site("rack-u", "mod-u", "U1", 2, unit))
+    ch1_port = plant.port(ch1, "10")
+    for name in ("2", "1"):
+        plant.port(ch1, name)
+    plant.port(ch2, "1")
+    _request(plant, "dev-1", unit, to=ch1_port)
+    _request(plant, "dev-2", unit, to=ch1_port)
+    model, _ = allocate_plc(plant.model())
+    pins = [row.pin for row in plc_channel_rows(model) if row.channel == ch1]
+    assert len(pins) == 3
+    (mismatch,) = name_findings(model, check_plc_wiring(model))
+    assert f"wired to channel {', '.join(pins)} but" in mismatch.message

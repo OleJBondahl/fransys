@@ -49,10 +49,10 @@ def test_the_panel_list_holds_each_code_once_with_its_count_worst_first(demo_cab
     """Breaks if a code repeats per finding, loses its count, or lists a milder code first."""
     held = _data(demo_cabinet, _mixed())[0][0][0][3]
     assert held == [
-        ["warning", "WARN_MANY", 1],
-        ["warning", "WARN_ONE", 1],
-        ["info", "INFO_ONE", 1],
-        ["info", "INFO_TWO", 1],
+        ["warning", "WARN_MANY", 1, ["warn many"]],
+        ["warning", "WARN_ONE", 1, ["warn one"]],
+        ["info", "INFO_ONE", 1, ["info one"]],
+        ["info", "INFO_TWO", 1, ["info two"]],
     ]
 
 
@@ -62,7 +62,7 @@ def test_two_findings_of_one_code_list_once_with_a_count_of_two(demo_cabinet):
         Finding(code="SAME", severity=f.severity, subjects=f.subjects, message=f.message)
         for f in twin
     )
-    assert _data(demo_cabinet, twin)[0][0][0][3] == [["info", "SAME", 2]]
+    assert _data(demo_cabinet, twin)[0][0][0][3] == [["info", "SAME", 2, ["info two", "info one"]]]
 
 
 def test_a_box_with_only_info_reads_info(demo_cabinet):
@@ -74,9 +74,13 @@ def test_the_page_script_lists_the_findings_in_the_panel():
     assert "drawFindings(view, 0, at)" in APP_JS
 
 
-def test_the_page_data_holds_no_message_text(demo_cabinet):
-    """Breaks if a message (which prints names, A10) reaches the findings data."""
-    one = Finding(
-        code="X_Y", severity=Severity.INFO, subjects=(_item("k1"),), message="secret-name"
+def test_the_messages_of_a_code_follow_the_finding_order(demo_cabinet):
+    """Breaks if a message is left off its code row or lists in Id order (FT4, A10)."""
+    twin = tuple(
+        Finding(code="SAME", severity=f.severity, subjects=f.subjects, message=f.message)
+        for f in _mixed()
+        if f.code in {"INFO_ONE", "INFO_TWO"}
     )
-    assert "secret-name" not in repr(_data(demo_cabinet, (one,)))
+    listed = _data(demo_cabinet, twin)[0][0][0][3][0][3]
+    assert listed == ["info two", "info one"]
+    assert _data(demo_cabinet, tuple(reversed(twin)))[0][0][0][3][0][3] == listed

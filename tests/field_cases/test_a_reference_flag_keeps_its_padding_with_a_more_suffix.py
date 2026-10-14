@@ -17,6 +17,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.derive.text_width import text_width
 from fransys_model.layout import LinkMarker, default_profile, layout_of
@@ -61,7 +62,7 @@ def test_a_reference_flag_keeps_its_padding_with_a_more_suffix() -> None:
     model = fr.build(
         d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "demo-flags", cover=cover)
     ).model
-    height = default_profile().text_height
+    height = DEFAULT_PROFILE.text_height
     padding = default_profile().marker_padding
     flags = [(marker_text(model, m), m) for m in layout_of(model, LinkMarker).values()]
     suffixed = [(t, m) for t, m in flags if t.startswith("#") and " +" in t]

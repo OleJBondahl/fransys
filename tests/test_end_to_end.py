@@ -69,7 +69,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
     """The demo cabinet document's PDF has one page per resolved `PageKind` and embeds the font.
 
     The acceptance bullet: "a page count equal to `document_pages` expanded
-    ... the Liberation Serif family name in the bytes ... `<stem>.typ` in the intermediates
+    ... the DejaVu Sans family name in the bytes ... `<stem>.typ` in the intermediates
     that compiles on its own." Byte-equality on a second write is the separate test below.
     """
     model = demo_cabinet_document.model
@@ -94,7 +94,7 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
     assert len(_PDF_PAGE.findall(pdf_bytes)) == len(pages) - 1
 
     # Typst embeds the family as a subsetted PostScript name with no space.
-    assert b"LiberationSerif" in pdf_bytes
+    assert b"DejaVuSansCondensed" in pdf_bytes
 
     typ_files = list(intermediates.glob("*.typ"))
     assert len(typ_files) == 1

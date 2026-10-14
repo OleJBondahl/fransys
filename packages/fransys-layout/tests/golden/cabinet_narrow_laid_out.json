@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 14,
+  "schema_version": 15,
   "tables": {
     "aspect_node": [
       {
@@ -2181,22 +2181,22 @@
             "points": [
               {
                 "index": 0,
-                "x": 80,
-                "y": 128
-              },
-              {
-                "index": 1,
                 "x": 72,
                 "y": 128
               },
               {
+                "index": 1,
+                "x": 64,
+                "y": 128
+              },
+              {
                 "index": 2,
-                "x": 48,
+                "x": 40,
                 "y": 128
               },
               {
                 "index": 3,
-                "x": 48,
+                "x": 40,
                 "y": 120
               }
             ]
@@ -2204,7 +2204,7 @@
         ],
         "page": "layout.page:a31d6b548d9c5efa99135060bcc9085f",
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "x": 80,
+        "x": 72,
         "y": 128
       },
       {
@@ -2419,7 +2419,7 @@
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 130,
+        "text_x": 131,
         "text_y": 312
       },
       {
@@ -2444,17 +2444,17 @@
         "points": [
           {
             "index": 0,
-            "x": 80,
+            "x": 72,
             "y": 128
           },
           {
             "index": 1,
-            "x": 136,
+            "x": 128,
             "y": 128
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 108,
+        "text_x": 100,
         "text_y": 116
       },
       {
@@ -2525,7 +2525,7 @@
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 138,
+        "text_x": 139,
         "text_y": 500
       },
       {
@@ -2575,7 +2575,7 @@
           }
         ],
         "produced_by": "fransys-layout/schematic 0.0.0",
-        "text_x": 178,
+        "text_x": 179,
         "text_y": 304
       },
       {
@@ -2689,7 +2689,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
+        "width": 20,
         "x": 196,
         "y": 386
       },
@@ -2718,7 +2718,7 @@
         "port": "port:490cc3d74f7059a99cd374d6ad856883",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 4,
+        "width": 5,
         "x": 58,
         "y": 210
       },
@@ -2776,8 +2776,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
-        "x": 33,
+        "width": 20,
+        "x": 32,
         "y": 222
       },
       {
@@ -2805,8 +2805,8 @@
         "port": "port:0fa411fdc4865b64827b88e18c4ce4d5",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
-        "x": 50,
+        "width": 10,
+        "x": 42,
         "y": 184
       },
       {
@@ -2832,8 +2832,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 183,
+        "width": 12,
+        "x": 184,
         "y": 300
       },
       {
@@ -2861,7 +2861,7 @@
         "port": "port:bad71d289f08572c8ccdc08bc3caf4b1",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.2",
-        "width": 4,
+        "width": 5,
         "x": 58,
         "y": 150
       },
@@ -2890,7 +2890,7 @@
         "port": "port:0e81585171845cc79382debbeca1e62b",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.3.in",
-        "width": 4,
+        "width": 5,
         "x": 122,
         "y": 336
       },
@@ -2948,7 +2948,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
+        "width": 20,
         "x": 28,
         "y": 82
       },
@@ -2977,7 +2977,7 @@
         "port": "port:82da7d09686c58718c9db5aec2a27b04",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.1.in",
-        "width": 4,
+        "width": 5,
         "x": 250,
         "y": 336
       },
@@ -3039,7 +3039,7 @@
         "port": "port:145127dbbe58575e8c0c97f21ea8432f",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 4,
+        "width": 5,
         "x": 194,
         "y": 258
       },
@@ -3068,7 +3068,7 @@
         "port": "port:2f71fb2525755ef4aea7edd1dcdfc8c5",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
+        "width": 10,
         "x": 330,
         "y": 152
       },
@@ -3095,8 +3095,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 223,
+        "width": 12,
+        "x": 224,
         "y": 348
       },
       {
@@ -3124,7 +3124,7 @@
         "port": "port:762b0ca017295929ae164dda7b1ce8a8",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.1.out",
-        "width": 4,
+        "width": 5,
         "x": 250,
         "y": 360
       },
@@ -3151,8 +3151,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 295,
+        "width": 12,
+        "x": 296,
         "y": 268
       },
       {
@@ -3180,7 +3180,7 @@
         "port": "port:49fc7c31215551dd838dc09b78fa9743",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.2.in",
-        "width": 4,
+        "width": 5,
         "x": 282,
         "y": 336
       },
@@ -3209,7 +3209,7 @@
         "port": "port:45afd9b9fc6251f3841ffea81284d852",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
+        "width": 10,
         "x": 122,
         "y": 104
       },
@@ -3236,8 +3236,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 375,
+        "width": 12,
+        "x": 376,
         "y": 92
       },
       {
@@ -3292,7 +3292,7 @@
         "port": "port:057824ef5b0656d6b2fb6250a8779951",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.1.in",
-        "width": 4,
+        "width": 5,
         "x": 58,
         "y": 336
       },
@@ -3353,8 +3353,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
-        "x": 169,
+        "width": 20,
+        "x": 168,
         "y": 158
       },
       {
@@ -3384,8 +3384,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
-        "x": 52,
+        "width": 20,
+        "x": 44,
         "y": 82
       },
       {
@@ -3414,7 +3414,7 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
         "width": 10,
-        "x": 50,
+        "x": 42,
         "y": 316
       },
       {
@@ -3471,7 +3471,7 @@
         "port": "port:20d144873c0b55cc8775a28324adb668",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
+        "width": 10,
         "x": 26,
         "y": 312
       },
@@ -3500,7 +3500,7 @@
         "port": "port:158f431d5b725b57be33fbd70d51173b",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
+        "width": 10,
         "x": 218,
         "y": 184
       },
@@ -3527,8 +3527,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 95,
+        "width": 12,
+        "x": 96,
         "y": 92
       },
       {
@@ -3556,7 +3556,7 @@
         "port": "port:543cca800edd51e3a0b82d46d832f809",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
+        "width": 10,
         "x": 218,
         "y": 154
       },
@@ -3585,7 +3585,7 @@
         "port": "port:5da9b795565658d19e2ddf9e68dbacb8",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.3.out",
-        "width": 4,
+        "width": 5,
         "x": 122,
         "y": 360
       },
@@ -3614,7 +3614,7 @@
         "port": "port:59578fddceb65170a7f44e99528d0c05",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 4,
+        "width": 5,
         "x": 250,
         "y": 210
       },
@@ -3643,7 +3643,7 @@
         "port": "port:5e65cafe1fa458b09e2d9e375318cac4",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
+        "width": 10,
         "x": 402,
         "y": 104
       },
@@ -3676,8 +3676,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 20,
-        "x": 24,
+        "width": 22,
+        "x": 22,
         "y": 356
       },
       {
@@ -3704,8 +3704,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
-        "x": 225,
+        "width": 20,
+        "x": 224,
         "y": 110
       },
       {
@@ -3733,7 +3733,7 @@
         "port": "port:5711a91bd77c5c1a9b1c04f8e378b15c",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.3.in",
-        "width": 4,
+        "width": 5,
         "x": 314,
         "y": 336
       },
@@ -3762,7 +3762,7 @@
         "port": "port:fb7ee816ac7f50f6b1c36670a4beaa34",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.2.out",
-        "width": 4,
+        "width": 5,
         "x": 282,
         "y": 360
       },
@@ -3789,7 +3789,7 @@
           {
             "page": "layout.page:a31d6b548d9c5efa99135060bcc9085f",
             "port": "port:859ebdba6be856349f34142302e48808",
-            "x": 48
+            "x": 40
           }
         ],
         "port": null,
@@ -3824,7 +3824,7 @@
         "port": "port:19feed79d0b75cc7bee6999e0523f84f",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
+        "width": 10,
         "x": 402,
         "y": 80
       },
@@ -3854,7 +3854,7 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
         "width": 10,
-        "x": 50,
+        "x": 42,
         "y": 284
       },
       {
@@ -3911,8 +3911,8 @@
         "port": "port:246677f05f75581eab1f344c23df66b9",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
-        "x": 50,
+        "width": 10,
+        "x": 42,
         "y": 154
       },
       {
@@ -3938,7 +3938,7 @@
           {
             "page": "layout.page:a31d6b548d9c5efa99135060bcc9085f",
             "port": "port:859ebdba6be856349f34142302e48808",
-            "x": 48
+            "x": 40
           }
         ],
         "port": null,
@@ -3977,7 +3977,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "contacts",
-        "width": 70,
+        "width": 74,
         "x": 332,
         "y": 298
       },
@@ -4060,7 +4060,7 @@
         "port": "port:96ce0cb31cd753868750d7686e30ed1c",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
+        "width": 10,
         "x": 330,
         "y": 128
       },
@@ -4088,8 +4088,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
-        "x": 52,
+        "width": 20,
+        "x": 44,
         "y": 418
       },
       {
@@ -4117,7 +4117,7 @@
         "port": "port:ad48479fba165a30a870efc1ed1f9fe2",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.1.out",
-        "width": 4,
+        "width": 5,
         "x": 58,
         "y": 360
       },
@@ -4145,7 +4145,7 @@
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
         "width": 12,
-        "x": 32,
+        "x": 24,
         "y": 172
       },
       {
@@ -4171,8 +4171,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 303,
+        "width": 12,
+        "x": 304,
         "y": 140
       },
       {
@@ -4199,8 +4199,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
-        "x": 33,
+        "width": 20,
+        "x": 32,
         "y": 110
       },
       {
@@ -4237,7 +4237,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "contacts",
-        "width": 74,
+        "width": 80,
         "x": 220,
         "y": 458
       },
@@ -4266,7 +4266,7 @@
         "port": "port:e03d5b75790d5ae2a0eb13b0880d9938",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
+        "width": 10,
         "x": 122,
         "y": 80
       },
@@ -4295,7 +4295,7 @@
         "port": "port:7436d655f86b574293dc98c28e259621",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 4,
+        "width": 5,
         "x": 194,
         "y": 288
       },
@@ -4382,7 +4382,7 @@
         "port": "port:d6e5900cb4b75d509633134ddc222c59",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
+        "width": 10,
         "x": 26,
         "y": 282
       },
@@ -4420,8 +4420,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "contacts",
-        "width": 70,
-        "x": 52,
+        "width": 74,
+        "x": 44,
         "y": 458
       },
       {
@@ -4448,7 +4448,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
+        "width": 20,
         "x": 60,
         "y": 458
       },
@@ -4477,7 +4477,7 @@
         "port": "port:0c33114b84405b6bb50eb9c1400aaab2",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.1",
-        "width": 4,
+        "width": 5,
         "x": 58,
         "y": 130
       },
@@ -4506,7 +4506,7 @@
         "port": "port:9ab9cd6fa2b45c3a84155166f0441d07",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 8,
+        "width": 10,
         "x": 26,
         "y": 184
       },
@@ -4535,7 +4535,7 @@
         "port": "port:250a27f3b48e537c932851bda3e6117f",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 4,
+        "width": 5,
         "x": 250,
         "y": 240
       },
@@ -4564,7 +4564,7 @@
         "port": "port:43fc60d96e0d52528eac5456b3a46de4",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.out",
-        "width": 4,
+        "width": 5,
         "x": 58,
         "y": 240
       },
@@ -4592,7 +4592,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
+        "width": 20,
         "x": 220,
         "y": 418
       },
@@ -4619,8 +4619,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 31,
+        "width": 12,
+        "x": 32,
         "y": 348
       },
       {
@@ -4702,7 +4702,7 @@
         "port": "port:3f41267c98715918b12c9ad0dc3f2607",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.3.out",
-        "width": 4,
+        "width": 5,
         "x": 314,
         "y": 360
       },
@@ -4729,8 +4729,8 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 13,
-        "x": 15,
+        "width": 12,
+        "x": 8,
         "y": 300
       },
       {
@@ -4757,7 +4757,7 @@
         "port": null,
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "tag",
-        "width": 19,
+        "width": 20,
         "x": 252,
         "y": 458
       },
@@ -4786,7 +4786,7 @@
         "port": "port:42d760ffc7ee5b8699ad6eb76d50f893",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.2.out",
-        "width": 4,
+        "width": 5,
         "x": 90,
         "y": 360
       },
@@ -4815,7 +4815,7 @@
         "port": "port:dfdfa90b77085ea78eabf6e40e84f265",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.in",
-        "width": 8,
+        "width": 10,
         "x": 26,
         "y": 154
       },
@@ -4844,7 +4844,7 @@
         "port": "port:693feaf569485bdd925938c3b7f0a9be",
         "produced_by": "fransys-layout/schematic 0.0.0",
         "slot": "marking.2.in",
-        "width": 4,
+        "width": 5,
         "x": 90,
         "y": 336
       }
@@ -4881,7 +4881,7 @@
         "vertical": false,
         "via_x": null,
         "via_y": null,
-        "width": 65,
+        "width": 67,
         "wrap_at": null,
         "x": 120,
         "y": 520
@@ -4892,7 +4892,7 @@
         "ext": {},
         "facing": null,
         "far": null,
-        "height": 42,
+        "height": 47,
         "id": "layout.link_marker:160b36e3595153bdadea1fb5449f8119",
         "key": [
           "layout",
@@ -4923,7 +4923,7 @@
         "y": 320
       },
       {
-        "box_x": 136,
+        "box_x": 128,
         "carrier": "item:521c45788155565cbe11d129331d6c9e",
         "ext": {},
         "facing": "e",
@@ -4955,9 +4955,9 @@
         "vertical": false,
         "via_x": null,
         "via_y": null,
-        "width": 104,
+        "width": 107,
         "wrap_at": null,
-        "x": 128,
+        "x": 120,
         "y": 128
       },
       {
@@ -4966,7 +4966,7 @@
         "ext": {},
         "facing": null,
         "far": null,
-        "height": 42,
+        "height": 47,
         "id": "layout.link_marker:3b422e41b83a52baa7fff18268406bbf",
         "key": [
           "layout",
@@ -5002,7 +5002,7 @@
         "ext": {},
         "facing": null,
         "far": null,
-        "height": 42,
+        "height": 47,
         "id": "layout.link_marker:7dbcfd09e9e950d085594bb129be2bdf",
         "key": [
           "layout",
@@ -5042,7 +5042,7 @@
         "ext": {},
         "facing": null,
         "far": null,
-        "height": 42,
+        "height": 47,
         "id": "layout.link_marker:87cd07ed002d5f3ea501ad97e7bf3f29",
         "key": [
           "layout",
@@ -5084,7 +5084,7 @@
         "ext": {},
         "facing": null,
         "far": null,
-        "height": 42,
+        "height": 47,
         "id": "layout.link_marker:9c54c3b848235f3d8c843fe9c9835979",
         "key": [
           "layout",
@@ -5120,7 +5120,7 @@
         "ext": {},
         "facing": null,
         "far": null,
-        "height": 42,
+        "height": 47,
         "id": "layout.link_marker:de1d5a5fa9d45f42a6d80df494461f4b",
         "key": [
           "layout",
@@ -5282,14 +5282,14 @@
           "profile"
         ],
         "marker_padding": 2,
-        "min_text_mm": "2.5",
+        "min_text_height_mm": "1.8",
         "route_crossing_penalty": 16,
         "route_margin": 64,
         "route_turn_penalty": 4,
         "row_gap": 32,
         "row_spacing": 88,
         "sheet_format": "layout.sheet_format:abc9106611e35b05851ccbd123f503fa",
-        "text_height": 8,
+        "text_height_mm": "1.8",
         "unit": null
       }
     ],
@@ -5433,12 +5433,12 @@
         "points": [
           {
             "index": 0,
-            "x": 48,
+            "x": 40,
             "y": 160
           },
           {
             "index": 1,
-            "x": 48,
+            "x": 40,
             "y": 120
           }
         ],
@@ -5493,12 +5493,12 @@
         "points": [
           {
             "index": 0,
-            "x": 48,
+            "x": 40,
             "y": 192
           },
           {
             "index": 1,
-            "x": 48,
+            "x": 40,
             "y": 280
           }
         ],
@@ -5772,12 +5772,12 @@
         "points": [
           {
             "index": 0,
-            "x": 48,
+            "x": 40,
             "y": 440
           },
           {
             "index": 1,
-            "x": 48,
+            "x": 40,
             "y": 328
           }
         ],
@@ -5996,7 +5996,7 @@
         "sides": [],
         "symbol": "operating-device",
         "view": "function",
-        "x": 48,
+        "x": 40,
         "y": 304
       },
       {
@@ -6213,7 +6213,7 @@
         "sides": [],
         "symbol": "terminal",
         "view": "function",
-        "x": 48,
+        "x": 40,
         "y": 112
       },
       {
@@ -6265,7 +6265,7 @@
         "sides": [],
         "symbol": "break-contact",
         "view": "function",
-        "x": 48,
+        "x": 40,
         "y": 176
       },
       {
@@ -6534,7 +6534,7 @@
         "sides": [],
         "symbol": "terminal",
         "view": "function",
-        "x": 48,
+        "x": 40,
         "y": 448
       },
       {

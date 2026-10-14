@@ -19,7 +19,8 @@ from enum import Enum
 from typing import Any
 
 from fransys_model.kernel import AuthoringKey, Id, register_enum, value
-from fransys_model.layout import Page
+from fransys_model.layout import OverviewRef, Page
+from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit
 from fransys_model.vocab.enums import FunctionKind, Gender, SignalType
@@ -401,6 +402,34 @@ class ContentsRow(_CableFacts):
 
 
 @register_enum
+class ItemKind(Enum):
+    """What an item is, as the overview colours and filters it.
+
+    One value per item. `TERMINAL` is a strip's terminal, `STRIP` the item holding terminals.
+    `DEVICE` is everything the other seven do not name.
+    """
+
+    TERMINAL = "terminal"
+    STRIP = "strip"
+    CONNECTOR = "connector"
+    PLC_MODULE = "plc_module"
+    CABLE = "cable"
+    HARNESS = "harness"
+    BOARD = "board"
+    DEVICE = "device"
+
+
+@register_enum
+class SignalKind(Enum):
+    """The form and direction of a PLC signal."""
+
+    DIGITAL_IN = "digital_in"
+    DIGITAL_OUT = "digital_out"
+    ANALOGUE_IN = "analogue_in"
+    ANALOGUE_OUT = "analogue_out"
+
+
+@register_enum
 class OverviewLinkKind(Enum):
     """How two items are connected in the overview: the closed set of kinds.
 
@@ -474,6 +503,163 @@ class OverviewGraph:
     nodes: tuple[OverviewNode, ...]
     links: tuple[OverviewLink, ...]
     signals: tuple[OverviewSignal, ...]
+
+
+# -- overview levels (`derive.overview_levels`, model-0197) ------------------
+
+
+@value
+class LineRef:
+    """The identity of a line on a level: its two boxes in text order, its kind and its carrier.
+
+    A box is a unit instance or an item id. `via` is the cable item of a cable line, else `None`.
+    """
+
+    a: Id[Any]
+    b: Id[Any]
+    kind: OverviewLinkKind
+    via: Id[Item] | None
+
+
+@value
+class OverviewBox:
+    """One box of a level: a nested unit, a folded strip or an item.
+
+    `box` is a unit instance or an item id; `kind` is the item's kind, `None` for a unit.
+    `lines` is the box text as the block diagram prints it, `tabs` the boundary or connector
+    designations that stand on its border. `terminals` is a strip's terminal count, else 0.
+    `group` and `location` are the item's effective function and location nodes.
+    """
+
+    box: Id[Any]
+    kind: ItemKind | None
+    lines: tuple[str, ...]
+    tabs: tuple[str, ...]
+    dashed: bool
+    group: Id[AspectNode] | None
+    location: Id[AspectNode] | None
+    terminals: int
+
+
+@value
+class OverviewLine:
+    """One line of a level, lifted from the connections it stands for.
+
+    `count` is those connections: conductors, or mates for a mate line. `label` is the carrier's
+    designation, "" for none. `conductors` is empty for a mate line.
+    """
+
+    ref: LineRef
+    label: str
+    count: int
+    conductors: tuple[Id[Conductor], ...]
+
+
+@value
+class OverviewStub:
+    """The outside end of connections leaving an opened unit, read as the schematic's stub is.
+
+    `box` is the visible box inside the level. `far` is the far device's designation and `ports`
+    its port tails (`stub_far_end`); `end` is its root item, `count` the connections it stands for.
+    """
+
+    box: Id[Any]
+    kind: OverviewLinkKind
+    via: Id[Item] | None
+    far: str
+    ports: str
+    end: OverviewRef
+    count: int
+
+
+@value
+class OverviewLevel:
+    """One level of the overview: the system (`unit=None`) or an opened unit."""
+
+    unit: Id[Unit] | None
+    boxes: tuple[OverviewBox, ...]
+    lines: tuple[OverviewLine, ...]
+    stubs: tuple[OverviewStub, ...]
+
+
+@value
+class StripTerminal:
+    """One terminal of an open strip, with its lines to the level's visible boxes."""
+
+    item: Id[Item]
+    label: str
+    lines: tuple[OverviewLine, ...]
+
+
+@value
+class StripView:
+    """An open strip: its terminals in strip order (group, then index)."""
+
+    strip: Id[Item]
+    terminals: tuple[StripTerminal, ...]
+
+
+# -- overview matrix, lens and marks (model-0197) ----------------------------
+
+
+@value
+class MatrixCell:
+    """The cables between two boxes of the matrix: `row` before `col` on the axis.
+
+    `row` and `col` index `UnitMatrix.axis`; `count` is the number of distinct cables.
+    """
+
+    row: int
+    col: int
+    count: int
+    cables: tuple[Id[Item], ...]
+
+
+@value
+class UnitMatrix:
+    """The system-level boxes against each other: the axis in text order, the pairs with cables."""
+
+    axis: tuple[OverviewBox, ...]
+    cells: tuple[MatrixCell, ...]
+
+
+@value
+class LensChannel:
+    """One channel of a PLC module for the Signals lens: its signal kind and field device.
+
+    The device fields are `None` for a spare channel.
+    """
+
+    channel: Id[Function]
+    number: int
+    kind: SignalKind
+    signal_name: str | None
+    device: Id[Function] | None
+    device_item: Id[Item] | None
+    device_designation: str | None
+
+
+@value
+class LensModule:
+    """One PLC module of the Signals lens with its channels in channel order."""
+
+    module: Id[Item]
+    designation: str
+    channels: tuple[LensChannel, ...]
+
+
+@value
+class DiffMark:
+    """The drawn boxes and lines one `ListingDiff` row marks on a level.
+
+    `change` indexes `ListingDiff.changes`; `status` is that row's `added`, `removed` or `changed`.
+    A removed row, or one of a section nothing draws, marks nothing.
+    """
+
+    change: int
+    status: str
+    boxes: tuple[Id[Any], ...]
+    lines: tuple[LineRef, ...]
 
 
 @value
@@ -714,22 +900,24 @@ class HarnessLineEnd:
 class ReadabilityPage:
     """What `fr.readability` measures of one schematic page.
 
-    `drawing_set` and `number` are as printed. `text_mm` is the smallest printed text size and
-    `min_text_mm` the profile's floor for it. `fill_percent` is the share of the content box the
+    `drawing_set` and `number` are as printed.
+    `text_height_mm` is the profile's capital height of text
+    and `min_text_height_mm` its floor for it. `fill_percent` is the share of the content box the
     drawn content covers, in whole percent. The four counts are the lint findings' own:
     `wire_crossings` (two wires of different conductors crossing), `struck_labels`
     (`WIRE_OVER_LABEL`), `text_overlaps` (`TEXT_OVERLAP`) and `lone_cells` (`LONE_CELL`).
     The references drawn on the page: contact images with the contacts they list, stars with the
     branches they name, and page cuts, which name one other page each. `single_*` counts the
-    images with one contact and the stars with one branch.
+    images with one contact and the stars with one branch; `single_contact_images_other_page` counts
+    the single images whose contact is on another page.
     """
 
     page: Id[Page]
     unit: Id[Unit] | None
     drawing_set: int
     number: int
-    text_mm: Decimal
-    min_text_mm: Decimal
+    text_height_mm: Decimal
+    min_text_height_mm: Decimal
     fill_percent: int
     wire_crossings: int
     struck_labels: int
@@ -738,6 +926,7 @@ class ReadabilityPage:
     contact_images: int
     contact_image_targets: int
     single_contact_images: int
+    single_contact_images_other_page: int
     stars: int
     star_branches: int
     single_branch_stars: int
@@ -746,15 +935,15 @@ class ReadabilityPage:
 
 @value
 class ReadabilityUnit:
-    """One unit's pages together: counts add up, `text_mm` and `fill_percent` are the lowest.
+    """One unit's pages together: counts add up, `text_height_mm` and `fill_percent` are the lowest.
 
-    `unit` is `None` for the design's own pages. `min_text_mm` is the highest floor of its pages.
+    `unit` is `None` for the design's own pages. `min_text_height_mm` is the highest floor of them.
     """
 
     unit: Id[Unit] | None
     pages: int
-    text_mm: Decimal
-    min_text_mm: Decimal
+    text_height_mm: Decimal
+    min_text_height_mm: Decimal
     fill_percent: int
     wire_crossings: int
     struck_labels: int
@@ -763,6 +952,7 @@ class ReadabilityUnit:
     contact_images: int
     contact_image_targets: int
     single_contact_images: int
+    single_contact_images_other_page: int
     stars: int
     star_branches: int
     single_branch_stars: int

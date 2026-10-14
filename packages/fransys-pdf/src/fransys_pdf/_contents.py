@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import CONTENTS_COLUMNS, cell_text, column_values, contents_rows
 
 from ._drawings import harness_cables_for
+from ._sizes import RULE
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -24,4 +25,4 @@ def contents_page(model: Model, record: Document, pages: tuple[PageKind, ...]) -
     for row in contents_rows(cables):
         values = column_values(row, CONTENTS_COLUMNS)
         cells.extend(f"text({literal(cell_text(value))})" for value in values)
-    return f"#table(columns: {len(_HEADERS)}, stroke: 0.5pt, " + ", ".join(cells) + ")"
+    return f"#table(columns: {len(_HEADERS)}, stroke: {RULE}, " + ", ".join(cells) + ")"

@@ -10,6 +10,7 @@ from fransys_model.vocab import DocumentPreset, PageKind
 
 from ._frame import TitleBlockFields, background
 from ._geometry import document_facts, project_notice, subject_label
+from ._sizes import sizes_of
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -47,9 +48,8 @@ def diagram_source(model: Model, record: Document, svgs: Mapping[str, str]) -> s
             logo=record.logo,
         )
         image = f'#image(bytes({literal(svg)}), format: "svg")'
-        pages.append(
-            f"#page({size}, margin: 0mm, background: {background(sheet, fields)})[{image}]"
-        )
+        back = background(sheet, fields, sizes_of(model, record))
+        pages.append(f"#page({size}, margin: 0mm, background: {back})[{image}]")
     return "\n#pagebreak()\n".join(pages)
 
 

@@ -272,6 +272,7 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "SymbolPortError",
         "lay_out_cables",
         "lay_out_diagrams",
+        "lay_out_overview",
         "lay_out_schematic",
         "page_readability",
     }

@@ -276,7 +276,7 @@ def _drawing(layout) -> str:
     return sha256(repr((placed, texts, routes)).encode()).hexdigest()[:16]
 
 
-_DRAWING = {"plain": "4de1e1b3b2ea305d", "split": "8ef76fea558fb9b8", "sixteen": "f9b72cc2f05b4386"}
+_DRAWING = {"plain": "46ab0f57ff2f0b6a", "split": "634dd3c55c0dbf7d", "sixteen": "77b39a642b9d9c7b"}
 
 
 @pytest.fixture(scope="module")

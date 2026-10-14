@@ -10,7 +10,7 @@ from typing import Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document
 
 from fransys_layout.lint.codes import LONE_CELL
 from fransys_model.vocab.tables import functions, ports
@@ -86,13 +86,14 @@ def _lone_functions(result) -> list[tuple[str, ...]]:
 
 
 def test_a_boundary_connector_is_open_on_its_own_set_and_an_unwired_symbol_still_fires() -> None:
-    """G4: X1's outside is open by U2, so no `LONE_CELL` for it, in either drawing set it stands in.
+    """G4: X1's outside is open by U2, so no `LONE_CELL` for it on the unit's own set.
 
     The unwired lamp inside the unit is the twin: it fires, exactly once. Before the fix X1 gave
-    two findings per pin (its own set and the system set's stand-in).
+    two findings per pin (its own set and the system set's stand-in). The unit's document prints
+    its own set only, and a look finding names no set nobody prints (model-0201).
 
     # UNDO: engines/schematic/engine.py, pass `open_ends=frozenset()` to `lint_chains`
     """
     parts, d = _standalone_unit()
-    found = _lone_functions(fr.build(parts, d.draft(), layout_trigger_document()))
+    found = _lone_functions(fr.build(parts, d.draft(), cabinet_document("demo-pump-cabinet")))
     assert found == [("cab", "H1", "fn", "lamp")]

@@ -68,7 +68,9 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # +1: Design.rack read only by author tests ; owner 2026-10-07: ceilings may rise;
 # cleanup round 2026-10-08 lowers
 # +1: PlcChannelRow.channel_designation, no longer read by the sort (model-0194); ceilings may rise
-WHITELIST_CEILING = 115
+# +3: overview row fields read only by tests until the OVERVIEW Part 3 page reads them; owner
+# 2026-10-07: ceilings may rise; cleanup round lowers
+WHITELIST_CEILING = 119
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(

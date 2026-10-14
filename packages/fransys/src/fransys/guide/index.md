@@ -119,9 +119,10 @@ fr.write(result, Path("out"))
 - `authoring.md`: places, functions, devices, wiring, cables, colours.
 - `harnesses.md`: adding a harness, and how its cables and plugs print.
 - `units.md`: a unit's boundary, its revisions, and nesting one unit inside another.
+- `overview.md`: reading the system overview page `write` makes.
 - `build.md`: `build`, `check`, `write`, `release`, `verify`, and where each can fail.
 - `documents.md`: presets, covers, subjects, and one PDF per drawing.
-- `drawing.md`: what layout reads, a checklist for a readable cabinet, the size levers and the findings that mean missing structure.
+- `drawing.md`: what layout reads, a checklist for a readable cabinet, printed sizes and grid pitch, and the findings that mean missing structure.
 - `reading.md`: reading a built model back: tables, rows, designations and ratings.
 - `reading-rows.md`: the column constants, row types, row functions and printed texts of `fr.derive`.
 - `reading-records.md`: the record types, lookups and ratings of `fr.derive`.

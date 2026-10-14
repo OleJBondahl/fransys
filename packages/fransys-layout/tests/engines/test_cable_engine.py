@@ -361,7 +361,10 @@ def test_every_text_stays_inside_its_block():
                     assert x0 >= box.x, where
                     assert x1 <= box.x + box.width, where
                 if kind == "core":  # Under the heading, inside the box
-                    h, pad = (profile_of(model).text_height, profile_of(model).marker_padding)
+                    h, pad = (
+                        profile_and_sheet(model)[0].text_height,
+                        profile_of(model).marker_padding,
+                    )
                     assert y0 >= box.y + 2 * pad + h, where
                     assert y1 <= box.y + box.height, where
     assert kinds == {"label", "heading", "core", "link"}

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document
 
 from fransys_model.layout import LinkMarker, Route, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, ports
@@ -40,9 +40,14 @@ def design() -> tuple[Any, Any]:
     return parts, d
 
 
-def build(parts: Any, d: Any) -> Any:
-    """Build and lay out; the result carries `model` and `findings`."""
-    return fr.build(parts, d.draft(), layout_trigger_document())
+def build(parts: Any, d: Any, prints: Any = None) -> Any:
+    """Build and lay out; the result carries `model` and `findings`.
+
+    The look findings (`LONE_CELL`) only name a set some document prints (model-0201): a test that
+    reads them passes the location whose cabinet schematic prints the design as `prints`.
+    """
+    document = layout_trigger_document() if prints is None else cabinet_document(prints)
+    return fr.build(parts, d.draft(), document)
 
 
 def contactor_with_pole_one_wired(*, relays: bool) -> Any:

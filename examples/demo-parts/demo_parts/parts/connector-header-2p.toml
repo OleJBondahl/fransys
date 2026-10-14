@@ -3,7 +3,7 @@ schema = 1
 [part]
 mpn = "DEMO-CONN-2P"
 manufacturer = "Demo"
-description = "Connector housing, 2-pin header"
+description = "Header, 2-pin"
 category = "connector"
 class_code = "J"
 

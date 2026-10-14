@@ -55,6 +55,7 @@ from fransys_model.vocab import (
 )
 
 from ._flow import flow_columns
+from ._sizes import RULE
 from ._typst import description_par, literal
 
 if TYPE_CHECKING:
@@ -125,7 +126,7 @@ def _table(headers: tuple[str, ...], rows: list[tuple[object, ...]], wide: tuple
     for row in rows:
         cells.extend(_cell_typst(row[i]) for i in kept)
     widths = ", ".join(_widths([headers[i] in wide for i in kept]))
-    return f"#table(columns: ({widths}), stroke: 0.5pt, " + ", ".join(cells) + ")"
+    return f"#table(columns: ({widths}), stroke: {RULE}, " + ", ".join(cells) + ")"
 
 
 def plc_channel_rows_for(model: Model, record: Document) -> tuple[PlcChannelRow, ...]:
@@ -287,7 +288,6 @@ _TERMINAL_SIDES = ("internal_ends", "external_ends")  # both unbounded text: `1f
 _BRIDGE_COLUMN_WIDTH_MM = 15  # fixed column width
 _BRIDGE_LANE_GAP_MM = 3  # lanes centred in the column, this far apart
 _BRIDGE_TICK_HALF_WIDTH_MM = 1
-_BRIDGE_STROKE = "0.5pt"
 
 
 @dataclass(frozen=True, slots=True)
@@ -362,19 +362,16 @@ def _bridge_mark_typst(mark: _BridgeMark | None, x_mm: float) -> str:
     segments = []
     if mark.top:
         segments.append(
-            f"place(top+left, line(start: ({x}mm, 0%), end: ({x}mm, 50%), "
-            f"stroke: {_BRIDGE_STROKE}))"
+            f"place(top+left, line(start: ({x}mm, 0%), end: ({x}mm, 50%), stroke: {RULE}))"
         )
     if mark.bottom:
         segments.append(
-            f"place(top+left, line(start: ({x}mm, 50%), end: ({x}mm, 100%), "
-            f"stroke: {_BRIDGE_STROKE}))"
+            f"place(top+left, line(start: ({x}mm, 50%), end: ({x}mm, 100%), stroke: {RULE}))"
         )
     if mark.tick:
         left, right = _mm(x_mm - _BRIDGE_TICK_HALF_WIDTH_MM), _mm(x_mm + _BRIDGE_TICK_HALF_WIDTH_MM)
         segments.append(
-            f"place(top+left, line(start: ({left}mm, 50%), end: ({right}mm, 50%), "
-            f"stroke: {_BRIDGE_STROKE}))"
+            f"place(top+left, line(start: ({left}mm, 50%), end: ({right}mm, 50%), stroke: {RULE}))"
         )
     return "".join(f"#{segment}\n" for segment in segments)
 
@@ -443,7 +440,7 @@ def _terminal_table(
     widths = _widths([_TERMINAL_DATA[i] in _TERMINAL_SIDES for i in kept])
     if bridge:
         widths.append(f"{_BRIDGE_COLUMN_WIDTH_MM}mm")
-    return f"#table(columns: ({', '.join(widths)}), stroke: 0.5pt, " + ", ".join(cells) + ")"
+    return f"#table(columns: ({', '.join(widths)}), stroke: {RULE}, " + ", ".join(cells) + ")"
 
 
 def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:

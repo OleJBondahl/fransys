@@ -1,9 +1,12 @@
 """The schematic engine's shipped defaults."""
 
+from decimal import Decimal
+
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE, DEFAULT_SHEET
 from fransys_layout.geometry import symbol_geometry
+from fransys_model.derive import text_room_g
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import Profile as ModelProfile
 from fransys_model.layout import SheetFormat as ModelSheetFormat
@@ -68,7 +71,7 @@ def test_default_profile_is_the_model_house_profile() -> None:
     assert DEFAULT_PROFILE.column_gap == house.column_gap
     assert DEFAULT_PROFILE.row_gap == house.row_gap
     assert DEFAULT_PROFILE.route_margin == house.route_margin
-    assert DEFAULT_PROFILE.text_height == house.text_height
+    assert DEFAULT_PROFILE.text_height == text_room_g(house.text_height_mm, Decimal("2.5"))
     assert DEFAULT_PROFILE.marker_padding == house.marker_padding
     assert DEFAULT_PROFILE.route_turn_penalty == house.route_turn_penalty
     assert DEFAULT_PROFILE.route_crossing_penalty == house.route_crossing_penalty
@@ -109,7 +112,8 @@ def test_default_profile_converges_with_an_authored_profile_of_the_same_values()
         column_gap=house.column_gap,
         row_gap=house.row_gap,
         route_margin=house.route_margin,
-        text_height=house.text_height,
+        text_height_mm=house.text_height_mm,
+        min_text_height_mm=house.min_text_height_mm,
         marker_padding=house.marker_padding,
         route_turn_penalty=house.route_turn_penalty,
         route_crossing_penalty=house.route_crossing_penalty,

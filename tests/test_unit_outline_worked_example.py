@@ -21,6 +21,7 @@ from _model_build_cover import layout_trigger_document
 from fransys_render._symbol_geometry import oriented_symbol, to_grid
 from symdef.boxes import body_box
 
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_model.derive import connector_box_lines
 from fransys_model.layout import (
     ConnectorBox,
@@ -28,7 +29,6 @@ from fransys_model.layout import (
     Outline,
     Page,
     SymbolPlacement,
-    default_profile,
     layout_of,
 )
 from fransys_model.vocab.tables import functions as functions_of
@@ -227,7 +227,7 @@ def test_every_outline_group_encloses_its_own_members_and_nothing_else():
             if t.page == outline.page and t.function in {m.function for m in members}
         ]
         assert title.y >= 0
-        text_height = default_profile().text_height
+        text_height = DEFAULT_PROFILE.text_height
         outside = title.y + text_height <= box[1] or title.y >= box[3]
 
         member_functions = {p.function for p in members}

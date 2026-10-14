@@ -27,8 +27,9 @@ def _module(*sources: str, digest: str | None = None):
     )
 
 
+# A name no other test imports: sys.modules caches by name, a shared one reads another tree.
 def _plant(tmp_path, monkeypatch) -> Path:
-    root = tmp_path / "plant_parts"
+    root = tmp_path / "design_plant_parts"
     shutil.copytree(
         Path(demo_parts.__file__).parent, root, ignore=shutil.ignore_patterns("__pycache__")
     )
@@ -58,14 +59,14 @@ def test_string_path_needs_no_module() -> None:
 
 def test_changed_fact_makes_the_module_stale_and_whitespace_does_not(tmp_path, monkeypatch) -> None:
     part = _plant(tmp_path, monkeypatch)
-    module = _module("plant_parts")
+    module = _module("design_plant_parts")
     design(module)
 
     part.write_text(part.read_text(encoding="utf-8") + "\n\n", encoding="utf-8")
     design(module)
 
     part.write_text(part.read_text(encoding="utf-8").replace('"2.4"', '"3.0"'), encoding="utf-8")
-    with pytest.raises(AuthorError, match="plant_parts"):
+    with pytest.raises(AuthorError, match="design_plant_parts"):
         design(module)
 
 

@@ -139,8 +139,8 @@ def test_schematic_pages_are_inlined_in_number_order_when_every_key_is_present()
     assert text.count("#pagebreak()") == 2  # COVER|SCHEMATIC, then between the two SCHEMATIC pages
     # The sheet counter (`n / N` within the drawing set) is its own number, not the document
     # counter: page 1's cell reads "1 / 2", page 2's reads "2 / 2", each in its own block.
-    assert 'text(size: 10pt, text("1 / 2"))' in text
-    assert 'text(size: 10pt, text("2 / 2"))' in text
+    assert 'text(size: 3.42934mm, text("1 / 2"))' in text
+    assert 'text(size: 3.42934mm, text("2 / 2"))' in text
 
 
 def test_schematic_pages_fall_back_to_no_drawings_when_one_key_is_missing():
@@ -713,7 +713,7 @@ def test_system_preset_with_no_top_level_cable_contributes_no_harness_drawing_pa
     m = model(doc)
     text = source(m, doc.id, {})
     assert '#par(text("No drawings."))' not in text
-    assert 'text(size: 10pt, text("Harness drawing"))' not in text
+    assert 'text(size: 3.42934mm, text("Harness drawing"))' not in text
 
 
 def test_system_preset_with_one_top_level_cable_draws_its_page_and_no_no_drawings():
@@ -822,7 +822,7 @@ def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page(
     assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
     # Proves the page carries its OWN title cell, not the NOTES page's: pre-fix, this cell
     # pair never appears anywhere in the source (the bare paragraph sets no title block).
-    assert 'text(size: 8pt, "Page title"), text(size: 10pt, text("Schematic"))' in text
+    assert 'text(size: 2.46912mm, "Page title"), text(size: 3.42934mm, text("Schematic"))' in text
 
 
 def test_harness_drawing_no_drawings_page_sets_its_own_title_block_after_a_notes_page():
@@ -846,7 +846,10 @@ def test_harness_drawing_no_drawings_page_sets_its_own_title_block_after_a_notes
     text = source(m, doc.id, {})
     assert text.count('#par(text("No drawings."))') == 1
     assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
-    assert 'text(size: 8pt, "Page title"), text(size: 10pt, text("Harness drawing"))' in text
+    title_cell = (
+        'text(size: 2.46912mm, "Page title"), text(size: 3.42934mm, text("Harness drawing"))'
+    )
+    assert title_cell in text
 
 
 def _list_pages_model():

@@ -57,10 +57,10 @@ _EXPECTED_NARROW_LOCATION_CROSSING_COUNT = 0
 # The fixed reference box width for the house sheet format (`links.reference_box_width`,
 # decision layout-0089): every plain pair and star reference (REF or BRANCH) on this sheet
 # shares this one value, never measured from its own text.
-_FIXED_REFERENCE_WIDTH_G = 42
+_FIXED_REFERENCE_WIDTH_G = 47
 # The OFF stub at the end of a leaving harness line; its text now lists every far
-# device with its place, so the two narrow stubs measure 65 and 104 G
-_LINE_STUB_WIDTHS_G = {65, 104}
+# device with its place, so the two narrow stubs measure 67 and 107 G
+_LINE_STUB_WIDTHS_G = {67, 107}
 
 
 def _crosses_location(model: Model, marker: LinkMarker) -> bool:
@@ -111,10 +111,10 @@ def test_two_location_markers_are_location_prefixed_and_wider_than_a_plain_box()
 def test_the_location_prefix_and_width_checks_can_fail() -> None:
     """The narrow golden's 2 same-location pair markers cross no location.
 
-    Every marker but the 2 line stubs is 42 G wide.
+    Every marker but the 2 line stubs is 47 G wide.
 
     Exercises the identical `_crosses_location` helper and width rule the real assertion above
-    uses, over a golden where the correct answer (0 crossing, width exactly 42) differs from
+    uses, over a golden where the correct answer (0 crossing, width exactly 47) differs from
     what a page-vs-location confusion or a hardcoded non-42 width would give: the pair markers
     sit on different pages (asserted), so a page comparison counts both. Since decision
     layout-0089 every reference on this golden -- pair and star alike, it has no off stub --
@@ -131,7 +131,7 @@ def test_the_location_prefix_and_width_checks_can_fail() -> None:
     assert _location_crossing_count(model) == _EXPECTED_NARROW_LOCATION_CROSSING_COUNT
     assert {_along(marker) for marker in pairs} == {_FIXED_REFERENCE_WIDTH_G}
     # A harness line leaving the page ends in an OFF line stub (layout-0154),
-    # 65 and 104 G long, not a reference; every other marker keeps the fixed reference width.
+    # 67 and 107 G long, not a reference; every other marker keeps the fixed reference width.
     line_stubs = [m for m in markers.values() if "line_stub" in str(m.key)]
     assert len(line_stubs) == 2
     assert {_along(marker) for marker in line_stubs} == _LINE_STUB_WIDTHS_G

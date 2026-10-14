@@ -31,7 +31,11 @@ class LineFacts:
 
 @value
 class DiagramFacts:
-    """One reading's diagram to place: boxes in text order, lines in line order, the sheet in G."""
+    """One reading's diagram to place: boxes in text order, lines in line order, the sheet in G.
+
+    `column` stands in one column, `left` lists its left neighbours; `row_height` above 0 is
+    each column box's height; `share_tracks` lets disjoint same-column lines share a track.
+    """
 
     unit: Ident | None
     boxes: tuple[BoxFacts, ...]
@@ -41,6 +45,10 @@ class DiagramFacts:
     crossing_penalty: int
     width: int
     height: int
+    column: tuple[Ident, ...] = ()
+    left: tuple[Ident, ...] = ()
+    row_height: int = 0
+    share_tracks: bool = False
 
 
 @value
@@ -95,13 +103,25 @@ class PlacedMarker:
 
 
 @value
+class PlacedText:
+    """A free text on a sheet, by its owner: the top-left corner and the size it fills."""
+
+    owner: Ident
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+@value
 class PlacedSheet:
-    """One sheet of a diagram, numbered from 1 left to right."""
+    """One sheet of a diagram, numbered from 1 left to right; `texts` are the free texts."""
 
     number: int
     boxes: tuple[PlacedBox, ...]
     lines: tuple[PlacedLine, ...]
     markers: tuple[PlacedMarker, ...]
+    texts: tuple[PlacedText, ...] = ()
 
 
 @value

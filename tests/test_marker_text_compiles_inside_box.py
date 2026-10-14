@@ -37,6 +37,7 @@ from fransys_render import pages
 from fransys_render._constants import MARKER_ARROW_DEPTH_G
 
 from electrical_symbols import GENERIC_BOX_KEY
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import text_width
 from fransys_model.derive.drawing_text import frame_column, frame_row, marker_text, position_text
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -102,7 +103,7 @@ _PARTNER_PAGE_NUMBER = 1  # together with the column and row below, the owner ma
 # (`frame_column`/`frame_row`'s own arithmetic, unchanged by this rename); the model's one
 # severed pair is always reference number 1 (`reference_number`, the `#n-` prefix).
 
-_TEXT_HEIGHT_G = default_profile().text_height  # 8 G: the house profile's own marker box height
+_TEXT_HEIGHT_G = DEFAULT_PROFILE.text_height  # 8 G: the house profile's own marker box height
 _MARKER_PADDING_G = default_profile().marker_padding  # 2 G: decision layout-0043's amendment
 
 

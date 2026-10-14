@@ -22,6 +22,7 @@ from fransys_render import pages as render_pages
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import WIRING_GRID, Orientation, symbol_geometry
 from fransys_layout.lint.codes import LABEL_UNPLACED
 from fransys_model.derive.drawing_text import (
@@ -40,7 +41,6 @@ from fransys_model.layout import (
     Route,
     StarKind,
     SymbolPlacement,
-    default_profile,
     default_sheet_format,
     layout_of,
 )
@@ -143,7 +143,7 @@ def test_a_ring_of_generic_boxes_lays_out_and_places_each_function_once(count) -
 
 def _boxes(model):
     """Page id -> [(top, bottom)] of every keep-out, label box and marker box on that page."""
-    height = default_profile().text_height
+    height = DEFAULT_PROFILE.text_height
     placed = layout_of(model, SymbolPlacement)
     origin = {p.function: p for p in placed.values()}
     found = defaultdict(list)

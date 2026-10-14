@@ -53,13 +53,13 @@ def _two_cells(headroom_lanes):
 
 
 def test_headroom_is_part_of_the_page_height_a_column_that_fits_without_it_may_not() -> None:
-    """On the least height two cells need, cell 1 spans 48..80 and cell 2, narrowed to
-    `row_gap`, 112..144, which ends on the floor (the content height less the bottom band) and
-    fits. One lane pushes cell 2 to 120..152, past the floor, and spacing cannot narrow further.
+    """On the least height two cells need, cell 1 spans 56..88 and cell 2, narrowed to
+    `row_gap`, 120..152, which ends on the floor (the content height less the bottom band) and
+    fits. One lane pushes cell 2 to 128..160, past the floor, and spacing cannot narrow further.
     """
     placed, findings = _two_cells(0)
     assert findings == ()
-    assert _keepout({one.function: one for one in placed}[hid("function", 2)]).y == 112
+    assert _keepout({one.function: one for one in placed}[hid("function", 2)]).y == 120
     _, findings = _two_cells(1)
     assert [f.code for f in findings] == [PAGE_OVERFULL]
     assert findings[0].subjects == (hid("function", 2),)

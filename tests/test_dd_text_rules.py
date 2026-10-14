@@ -22,7 +22,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from _model_build_cover import layout_trigger_document
+from _model_build_cover import cabinet_document, layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines import lay_out_schematic
@@ -214,7 +214,8 @@ def _three_phase(strip: str = "X01"):
     for i in range(3):
         wire(feed[i].inner, main[str(2 * i + 1)])
         wire(main[str(2 * i + 2)], out[i].inner)
-    return fr.build(parts, d.draft(), layout_trigger_document())
+    # a cabinet schematic prints the cabinet: a look finding names no unprinted set (model-0201)
+    return fr.build(parts, d.draft(), cabinet_document(c1))
 
 
 def _units_strip(terminal_count: int, *, three_phase: bool):
@@ -893,7 +894,7 @@ def _cabinet_model():
         cabinet = _load(tests / "layout_cabinet.py")
     finally:
         sys.path.remove(str(tests))
-    return lay_out_schematic(freeze(cabinet.build_cabinet(discovery=False)))[0]
+    return lay_out_schematic(freeze(cabinet.build_cabinet(discovery=True, extra_relay=True)))[0]
 
 
 def _crossings_and_overlaps(model):
@@ -935,10 +936,10 @@ def test_routes_of_different_nets_only_cross_straight_and_share_no_track(
 ) -> None:
     """Crossings are straight and no two nets share a track.
 
-    The fixture is the chained cabinet (`discovery=False`) with `attach_replicas` off: its three
-    crossings came from the -X2:1 replica standing apart, and layout-0108 draws the replica over its
-    pin, which leaves the cabinet none. The discovery cabinet has none since its same-side
-    stars became wires. No
+    The fixture is the discovery cabinet with the extra relay K9 and `attach_replicas` off: its
+    three crossings come from the -X2:1 replica standing apart, and layout-0108 draws the replica
+    over its pin, which leaves the cabinet none. The chained cabinet (`discovery=False`) had the
+    same three until the DejaVu widths moved its columns (EXACT-SIZES). No
     single-line undo is known to fail this: the router avoids sharing a track on cost alone.
     It fails once both rules go (axes empty AND the profile's `route_crossing_penalty` 0: 2
     touches, 1 shared track). The other tests carry the can-fail load for the rest of the

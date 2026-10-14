@@ -2,12 +2,14 @@
 
 from typing import TYPE_CHECKING
 
-from .types import LabelKind, LabelRequest, RequestPartner
+from .types import Home, LabelKind, LabelRequest, RequestPartner
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
-    from .types import FunctionSpec, Handle, PlacedFunction
+    from fransys_model.kernel import AuthoringKey
+
+    from .types import Column, FunctionSpec, Handle, PlacedFunction
 
 
 def by_owner(
@@ -53,3 +55,30 @@ def home_references(
         )
         for s in contacts
     ]
+
+
+def replica_cells(columns: Sequence[Column]) -> dict[tuple[AuthoringKey, Handle], Handle | None]:
+    """layout-0184: `(column key, function)` of each cell drawn away from its home -> its unit."""
+    return {
+        (column.key, cell.function): column.unit
+        for column in columns
+        for cell in column.cells
+        if cell.home is Home.ELSEWHERE
+    }
+
+
+def home_placements(
+    pages: Sequence[tuple[tuple[PlacedFunction, ...], tuple[object, ...]]],
+    replicas: Mapping[tuple[AuthoringKey, Handle], Handle | None],
+    units: Mapping[Handle, Handle | None],
+) -> dict[Handle, PlacedFunction]:
+    """Each function's home placement; with no home drawn, a replica of its own unit, else any."""
+    home: dict[Handle, PlacedFunction] = {}
+    tier: dict[Handle, int] = {}
+    for placed, _ in pages:
+        for one in placed:
+            at = (one.column, one.function)
+            rank = 0 if at not in replicas else 1 if replicas[at] == units.get(one.function) else 2
+            if rank < tier.get(one.function, 3):  # the first placement of the best tier wins
+                home[one.function], tier[one.function] = one, rank
+    return home

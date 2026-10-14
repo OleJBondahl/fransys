@@ -17,6 +17,7 @@ from .hints import (
     SideHint,
     SymbolChoice,
 )
+from .overview_results import OverviewBox, OverviewLine, OverviewView
 from .results import (
     DrawingSet,
     Label,
@@ -55,3 +56,4 @@ DERIVED_KINDS: tuple[type, ...] = (
 )
 CABLE_KINDS: tuple[type, ...] = (CableBlock, CableBox, CoreWire, EndBox)
 DIAGRAM_KINDS: tuple[type, ...] = (DiagramSheet, DiagramBox, DiagramLine, DiagramMarker)
+OVERVIEW_KINDS: tuple[type, ...] = (OverviewView, OverviewBox, OverviewLine)

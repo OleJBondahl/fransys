@@ -7,7 +7,7 @@ The mean is weighted by lines: parallel lines to one neighbour count once each.
 """
 
 from fractions import Fraction
-lazy from collections.abc import Hashable, Iterable, Mapping
+lazy from collections.abc import Collection, Hashable, Iterable, Mapping
 
 
 def _sorted_by[B: Hashable](
@@ -26,16 +26,23 @@ def _sorted_by[B: Hashable](
 
 
 def order_columns[B: Hashable](
-    columns: tuple[tuple[B, ...], ...], lines: Iterable[tuple[B, B]], rank: Mapping[B, int]
+    columns: tuple[tuple[B, ...], ...],
+    lines: Iterable[tuple[B, B]],
+    rank: Mapping[B, int],
+    pinned: Collection[B] = (),
 ) -> tuple[tuple[B, ...], ...]:
-    """Reorder each column's rows by one pass down, one up; `rank` is each box's text rank."""
+    """Reorder each column's rows by one pass down, one up; `rank` is each box's text rank.
+
+    A column that holds a `pinned` box keeps its rows; the other columns follow it.
+    """
     ends: dict[B, list[B]] = {box: [] for column in columns for box in column}
     for a, b in lines:
         ends[a].append(b)
         ends[b].append(a)
     result = list(columns)
-    for i in range(1, len(result)):
+    fixed = {i for i, column in enumerate(columns) if any(b in pinned for b in column)}
+    for i in sorted(set(range(1, len(result))) - fixed):
         result[i] = _sorted_by(result[i], result[i - 1], ends, rank)
-    for i in range(len(result) - 2, -1, -1):
+    for i in sorted(set(range(len(result) - 1)) - fixed, reverse=True):
         result[i] = _sorted_by(result[i], result[i + 1], ends, rank)
     return tuple(result)

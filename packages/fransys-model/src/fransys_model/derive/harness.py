@@ -41,6 +41,7 @@ from .lookups import (
     pin_order,
     require,
 )
+from .memo import Memo
 from .order import natural_key
 from .reports import cable_rows
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
@@ -190,6 +191,7 @@ def _cable_facts(model: Model, cable: Id[Item], facts: _Facts) -> HarnessCable:
     )
 
 
+@Memo
 def _facts_of(model: Model, unit: Id[Unit] | None = None) -> _Facts:
     """Every lookup a cable's own facts are read from, built once for the whole query.
 

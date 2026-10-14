@@ -16,6 +16,7 @@ disjoint from it). This module is the surface only; the code lives beside it by 
 - `baseline_codec`: `dumps`/`loads`, the canonical JSON codec, and `differing_sections`, which
   names the top-level fields two listings disagree on, for `REVISION_ALREADY_RELEASED` and
   `BASELINE_DIFFERS`'s messages.
+- `baseline_subjects`: `change_subjects`, the `Id` each diff row's subject text names.
 - `baseline_diff`, `baseline_diff_units`, `baseline_diff_wiring`: `diff`.
 """
 
@@ -24,6 +25,7 @@ from .baseline_codec import differing_sections, dumps, loads
 from .baseline_designation import unit_designation
 from .baseline_diff import diff
 from .baseline_listing import listing
+from .baseline_subjects import change_subjects
 from .rows import CHANGE_COLUMNS, Change, Listing, ListingDiff
 
 __all__ = [
@@ -32,6 +34,7 @@ __all__ = [
     "Listing",
     "ListingDiff",
     "change_identity",
+    "change_subjects",
     "diff",
     "differing_sections",
     "dumps",

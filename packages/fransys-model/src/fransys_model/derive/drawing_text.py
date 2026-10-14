@@ -180,7 +180,7 @@ def content_extent(millimetres: int, module_mm: Decimal) -> int:
     return int(millimetres * _G_PER_MODULE // module_mm)
 
 
-def _cell(model: Model, page: Page, x: int, y: int) -> tuple[int, str]:
+def cell(model: Model, page: Page, x: int, y: int) -> tuple[int, str]:
     """The frame-grid `(column, row letter)` the point `x`, `y` falls in on `page`'s sheet."""
     sheet = sheet_format_of(model, page.sheet_format)
     wide = content_extent(sheet.content_width_mm, sheet.module_mm)
@@ -481,7 +481,7 @@ def _reading_key(model: Model, pages: Mapping[Id[Page], Page], marker: LinkMarke
     page = pages[marker.page]
     return (
         page.number,
-        *_cell(model, page, marker.x, marker.y),
+        *cell(model, page, marker.x, marker.y),
         marker.port,
     )
 
@@ -564,13 +564,13 @@ def _seat(model: Model, page: Page) -> Seat:
 
 def _position_between(model: Model, own_page: Page, partner_page: Page, x: int, row: str) -> str:
     """The position at `x`/`row` on `partner_page`, read from `own_page`: the lookups."""
-    column = _cell(model, partner_page, x, 0)[0]
+    column = cell(model, partner_page, x, 0)[0]
     return partner_position_text(_seat(model, own_page), _seat(model, partner_page), column, row)
 
 
 def place_text(model: Model, own_page: Page, partner_page: Page, x: int, y: int) -> str:
     """The cell at `x`, `y` on `partner_page` as `own_page` reads it: derive's one text."""
-    return _position_between(model, own_page, partner_page, x, _cell(model, partner_page, x, y)[1])
+    return _position_between(model, own_page, partner_page, x, cell(model, partner_page, x, y)[1])
 
 
 def _marker_position(model: Model, marker: LinkMarker, partner: LinkMarker) -> str:
@@ -587,7 +587,7 @@ def _partner_row(model: Model, page: Page, port: Id[Port]) -> str:
     """
     function = ports(model)[port].function
     placement = placements_by_function_page(model)[function, page.id]
-    return _cell(model, page, 0, placement.y)[1]
+    return cell(model, page, 0, placement.y)[1]
 
 
 def _partner_place(

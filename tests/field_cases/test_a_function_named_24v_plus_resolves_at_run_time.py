@@ -33,11 +33,12 @@ _PART = (
 )
 
 
+# Names no other test imports: sys.modules caches by name, a shared one reads another tree.
 def _library(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     names: tuple[str, ...],
-    name: str = "plant_parts",
+    name: str = "fieldcase_plant_parts",
 ) -> str:
     package = tmp_path / name
     (package / "parts").mkdir(parents=True)
@@ -69,6 +70,6 @@ def test_a_plus_and_a_minus_function_resolve_by_attribute_and_by_raw_name(
 def test_two_names_that_map_to_one_identifier_fail_generation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    library = _library(tmp_path, monkeypatch, ("24V+", "24V_plus"), "clash_parts")
+    library = _library(tmp_path, monkeypatch, ("24V+", "24V_plus"), "fieldcase_clash_parts")
     with pytest.raises(fr.AuthorError, match=r"'24V\+' and '24V_plus'.*P_24V_plus"):
         parts_module(library)

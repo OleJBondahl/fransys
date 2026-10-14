@@ -12,12 +12,14 @@ from typing import TYPE_CHECKING, Any
 from fransys_layout.lint import fill_shares, geometry_by_page, lone_cells
 from fransys_layout.lint.codes import TEXT_OVERLAP, WIRE_OVER_LABEL
 from fransys_layout.lint.page_counts import reference_counts, wire_crossings
+from fransys_layout.lint.printed import on_printed
 from fransys_layout.stages.slices import by_key, page_of
 
 from ._lint import chain_records
 from .engine import stage_scene
 from .profiles import run_profiles
 from .read import read_inputs
+from .read.printed import printed_set_numbers
 from .read.report import has_pages, page_homes, report_rows
 from .read.sheets import printed_text
 from .read.write_keys import write_keys
@@ -34,8 +36,10 @@ if TYPE_CHECKING:
 type Measures = dict[Id[Any], tuple[Id[Any] | None, dict[str, Any]]]
 
 
-def _measures(scene: LintScene, laid: Model, printed: tuple[Decimal, Decimal]) -> Measures:
-    """The unit and the row counts of every placed page of one run, by its `Page` id."""
+def _measures(
+    scene: LintScene, laid: Model, text: tuple[Decimal, Decimal], printed: frozenset[int] | None
+) -> Measures:
+    """The unit and the row counts of every page of one run in a printed set, by its `Page` id."""
     layout, sheet = scene.layout, scene.inputs.sheet
     fill = fill_shares(layout, sheet=sheet)
     found = Counter(
@@ -55,8 +59,8 @@ def _measures(scene: LintScene, laid: Model, printed: tuple[Decimal, Decimal]) -
         homes[here][0]: (
             homes[here][1],
             {
-                "text_mm": printed[0],
-                "min_text_mm": printed[1],
+                "text_height_mm": text[0],
+                "min_text_height_mm": text[1],
                 "fill_percent": int(share * 100),
                 "wire_crossings": wire_crossings(routes.get(here, ())),
                 "struck_labels": found[here, WIRE_OVER_LABEL],
@@ -65,6 +69,7 @@ def _measures(scene: LintScene, laid: Model, printed: tuple[Decimal, Decimal]) -
                 "contact_images": refs[here].contact_images,
                 "contact_image_targets": refs[here].contact_image_targets,
                 "single_contact_images": refs[here].single_contact_images,
+                "single_contact_images_other_page": refs[here].single_contact_images_other_page,
                 "stars": refs[here].stars,
                 "star_branches": refs[here].star_branches,
                 "single_branch_stars": refs[here].single_branch_stars,
@@ -72,6 +77,7 @@ def _measures(scene: LintScene, laid: Model, printed: tuple[Decimal, Decimal]) -
             },
         )
         for here, share in fill.items()
+        if on_printed(here, printed)
     }
 
 
@@ -79,7 +85,7 @@ def _measured_once(model: Model, unit: Id[Any] | None) -> tuple[Model, Measures]
     """The engine's `_run_once`, which hands back what it measured in place of its findings."""
     results, scene, _ = stage_scene(model, inputs := read_inputs(model, unit))
     laid = write_layout(model, results, write_keys(model, inputs.functions))
-    return laid, _measures(scene, laid, printed_text(model, unit))
+    return laid, _measures(scene, laid, printed_text(model, unit), printed_set_numbers(laid))
 
 
 def page_readability(model: Model) -> tuple[ReadabilityPage, ...]:

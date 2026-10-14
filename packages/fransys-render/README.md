@@ -5,7 +5,7 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 `pages(model) -> frozendict[str, str]` renders every `layout.page` of a laid-out model to one
 SVG each, keyed by `render_id(page.id)`: unit outlines (decision layout-0045: one dash-dot
 outline, labelled `<unit title> rev <revision>`, per black-box unit instance on the page), symbols (real library symbols and
-the generic box, drawn through `symdef.to_fragment`; a truly unknown key gets an 8x8
+the generic box, drawn through `symdef.to_fragment_mm`; a truly unknown key gets an 8x8
 G placeholder), routes, junction dots, link markers, and label text, in that fixed
 order; a bound lead (`Line.port`) draws only when its port has a route, marker or marking label
 on it (decision render-0002). The
@@ -77,7 +77,7 @@ Bound leads (render-0002):
 - The slot is scoped to the owning placement by the label's subject port's function, so same-named slots on two placements cannot collide.
 
 Labels:
-- Every text is an XML-escaped `<text>` element, never a path, in the font family `Liberation Serif, Times New Roman, serif`.
+- Every text is an XML-escaped `<text>` element, never a path, in the font family `DejaVu Sans, sans-serif`.
 - Slot texts are not drawn from the symbol.
 - No font width table lives here. A label is anchored at its recorded `x`, `y`; the vertical anchor is the baseline from the font's ascent ratio.
 - A label is `not-installed` only when its subject is a function or port whose item has `installed=False`. A conductor label never is.
@@ -88,7 +88,7 @@ Unit outlines: layout writes one `layout.outline` per black box and its title as
 Symbols (render-0001):
 - The recipe is `LIBRARY.get`, then `repeat`, then `orient`. `GENERIC_BOX_KEY` builds `generic_box` from the placement's function's model ports, named `<function>.<port>` as layout named them, sorted as `resolve` sorts them (layout-0042).
 - A key neither generic nor in the library gives `None`: `pages` draws an 8x8 placeholder rectangle with the key as text, and `check` reports `UNKNOWN_SYMBOL_KEY`.
-- A real body is `to_fragment(oriented_symbol(...))` under `translate(x_mm,y_mm) scale(module_mm)`. The toolkit draws in raw module units, so the transform scales first and translates second. Orientation is already baked into the element coordinates.
+- A real body is `to_fragment_mm(oriented_symbol(...), module_mm=, weights_mm=, dash_mm=, font_family=, font_mm=, cap_ratio=)` under `translate(x_mm,y_mm)` only. It draws in absolute mm: weights 0.25 (normal) and 0.5 (thick), dashes 1.25/0.625, font `DejaVu Sans` (Condensed, bundled) at the 1.8 mm label role. Orientation is already baked into the element coordinates.
 - `to_grid` and `grid_to_mm` are small duplicates of facts private to other packages. They are not algorithms.
 - `to_grid` multiplies by 8, exact for a multiple of 0.125. `grid_to_mm` divides `module_mm` by 8, a power of two, so the `Decimal` is exact (0.3125 mm for `module_mm=2.5`).
 - A `not-installed` placement's `<g>` carries `class="symbol not-installed"`. `_leads.visible_symbol` drops unwired bound leads before the fragment is built. A fan-out leg ending on a port wires it, as a route end does (layout-0158).
@@ -101,7 +101,7 @@ Style block:
 - `unit-boundary` is IEC 60617's dash-dot line: long dash, gap, dot, gap, the dot one `STROKE_WIDTH_MM` long. The patterns are render's own choice.
 - Stroke widths and dash arrays are bare numbers, not `mm` lengths. `0.25mm` compiled to about 0.93 mm on Typst/resvg. A bare `0.25` is 0.25 user units, since the viewBox makes one unit one mm. `tests/test_stroke_width_compiles_correctly.py` proves it on pixels.
 - `not-installed` is written for a stroke-only shape: dashed grey outline, no fill. `text.not-installed` is solid grey fill, no stroke, no dash. It is more specific than `.not-installed`, whose `fill: none` would leave a label as a thin dashed outline.
-- A real symbol's line weight is the toolkit's own `0.1` module units, scaled to mm by the ancestor transform. `.symbol`'s rule never reaches those descendants.
+- A real symbol's line weights are set in mm by `to_fragment_mm`. `.symbol`'s rule never reaches those descendants.
 - `.not-installed *` (stroke) and `.not-installed [fill]` (fill, only a filled shape) override the toolkit's inline attributes on Typst's SVG output. `tests/test_symbol_not_installed_compiles_grey.py` proves it.
-- The `.not-installed *` stroke width alone divides by `module_mm`: it is read inside the `scale(module_mm)` transform, and a bare `0.25` there rendered 0.625 mm on the house sheet.
+- The `.not-installed *` stroke-dasharray is a plain 0.25 mm, since no scale transform remains.
 - Render count test (render-0006, floor 100): `tests/test_render_scale_counts.py` fails when any render code object's calls, resumes or loop turns grow over 2.5x per doubling of build_scale; it shares `tests/scale_counter.py` with layout's.

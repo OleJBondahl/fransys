@@ -84,7 +84,7 @@ def test_a_blocked_label_moves_one_text_height_down_first() -> None:
         occupied=(Box(x=120, y=92, width=32, height=8),),
         frame=SlotFrame(content=None, profile=PROFILE),
     )
-    assert labels[0].box == Box(x=120, y=100, width=13, height=8)
+    assert labels[0].box == Box(x=120, y=100, width=12, height=8)
     assert findings == ()
 
 
@@ -97,7 +97,7 @@ def test_a_label_reflects_to_the_opposite_side_when_its_own_side_is_full() -> No
         occupied=(Box(x=120, y=80, width=80, height=32),),
         frame=SlotFrame(content=None, profile=PROFILE),
     )
-    assert labels[0].box == Box(x=75, y=92, width=13, height=8)
+    assert labels[0].box == Box(x=76, y=92, width=12, height=8)
     assert findings == ()
 
 
@@ -124,7 +124,7 @@ def test_the_box_height_is_the_profiles_text_height_whatever_the_slot_box_says()
         (drawn(1),),
         frame=SlotFrame(content=None, profile=PROFILE),
     )
-    assert labels[0].box == Box(x=120, y=92, width=13, height=8)
+    assert labels[0].box == Box(x=120, y=92, width=12, height=8)
 
 
 def test_a_short_and_a_long_tag_keep_one_near_edge() -> None:

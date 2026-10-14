@@ -99,4 +99,4 @@ def test_a_router_called_with_no_wrap_gap_keeps_the_framing_path(
 ) -> None:
     real = pagerun.PageRoom
     monkeypatch.setattr(pagerun, "PageRoom", lambda **room: replace(real(**room), wrap_gap=None))
-    assert _wrapping(build()) != []
+    assert _wrapping(build(plc_above=True)) != []

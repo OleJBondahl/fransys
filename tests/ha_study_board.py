@@ -1,6 +1,7 @@
 """The study board: one unit with five interfaces, each on a harness.
 
-`build(hint=True)` adds the side hint that fixes `bus_in` on top. Built from `demo_parts` only.
+`build(hint=True)` adds the side hint that fixes `bus_in` on top; `plc_above=True` fixes `plc_io`
+on top. Built from `demo_parts` only.
 """
 
 import tempfile
@@ -46,12 +47,14 @@ def _board(d: fr.Design) -> _Io:
     return _Io(*(j[n] for n in _Io._fields))
 
 
-def build(*, hint: bool = False) -> fr.BuildResult:
+def build(*, hint: bool = False, plc_above: bool = False) -> fr.BuildResult:
     d = fr.design("demo_parts", place="C1")
     cab = d.location("C1", "Cabinet")
     psu = d.device("T1", "DEMO-PSU-24")
     d.dc_supply("S", psu)
     io = d.add(_board, "U1")
+    if plc_above:
+        d.layout.side(io.plc_io, fr.ABOVE)
     if hint:
         d.layout.side(io.bus_in, fr.ABOVE)
     x = d.terminal_strip("X1", "DEMO-TB-2.5", 14)

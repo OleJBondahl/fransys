@@ -111,7 +111,7 @@ def _with_documents(model, *location_ids):
 
 
 def test_the_worked_examples_two_top_level_sets_are_replica_only_with_one_info_each():
-    """The real geometry `_is_replica_only_undrawn` assumes: both cabinets' top-level (unit=
+    """The real geometry `is_replica_only_undrawn` assumes: both cabinets' top-level (unit=
     None) drawing sets hold only their own two field-terminal boundary replicas, no other
     placement, no route, no marker -- confirmed here by count, not assumed by a hand-built
     fixture (`_REPLICA_ONLY_SET_COUNT` is "two in the system build, one
@@ -280,9 +280,13 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
     )
     model_with_doc = evolve(model, put=[doc], origin=_ORIGIN)
     text = source(model_with_doc, doc.id, {})
-    assert 'text(size: 8pt, "Scope"), text(size: 10pt, text("demo-pump-cabinet"))' in text
-    assert 'text(size: 8pt, "Revision"), text(size: 10pt, text("1.2"))' in text
-    assert 'text(size: 8pt, "Revision date"), text(size: 10pt, text("2026-01-01"))' in text
+    assert (
+        'text(size: 2.46912mm, "Scope"), text(size: 3.42934mm, text("demo-pump-cabinet"))' in text
+    )
+    assert 'text(size: 2.46912mm, "Revision"), text(size: 3.42934mm, text("1.2"))' in text
+    assert (
+        'text(size: 2.46912mm, "Revision date"), text(size: 3.42934mm, text("2026-01-01"))' in text
+    )
 
 
 def _system_document(id_suffix: str) -> Document:

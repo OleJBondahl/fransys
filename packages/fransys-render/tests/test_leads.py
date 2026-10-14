@@ -236,7 +236,7 @@ def test_acceptance_3_terminal_wired_on_n_only_draws_one_circle_one_lead():
     group = symbols_group(model, page)
     assert group.count("<circle") == 1
     assert group.count("<line") == 1
-    assert 'x1="0" y1="-0.25" x2="0" y2="-1"' in group  # the N lead, and only the N lead
+    assert 'x1="0" y1="-0.625" x2="0" y2="-2.5"' in group  # the N lead, and only the N lead
 
 
 def test_a_bare_terminal_draws_only_the_circle():
@@ -313,7 +313,7 @@ def test_a_link_marker_on_the_port_draws_its_lead():
 
     group = symbols_group(model, page)
     assert group.count("<line") == 1
-    assert 'x1="0" y1="0.25" x2="0" y2="1"' in group  # the S lead
+    assert 'x1="0" y1="0.625" x2="0" y2="2.5"' in group  # the S lead (mm: module 2.5)
 
 
 def test_a_fan_out_leg_ending_on_the_port_draws_its_lead():
@@ -352,7 +352,7 @@ def test_a_fan_out_leg_ending_on_the_port_draws_its_lead():
 
     group = symbols_group(model, page)
     assert group.count("<line") == 1
-    assert 'x1="0" y1="0.25" x2="0" y2="1"' in group  # the S lead
+    assert 'x1="0" y1="0.625" x2="0" y2="2.5"' in group  # the S lead (mm: module 2.5)
 
 
 # --- A marking label naming the port also draws its lead (unit-tested: terminal has no marking

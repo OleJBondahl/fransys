@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    boundary,
     current_revision,
+    document_drawing_sets,
     document_unit,
-    drawing_set_is_replica_only,
+    is_replica_only_undrawn,
     item_description,
     item_designation,
     revision_text,
@@ -15,16 +15,14 @@ from fransys_model.derive import (
 from fransys_model.derive.drawing_text import unit_label
 from fransys_model.layout import (
     DrawingSet,
-    LinkMarker,
     Page,
-    Route,
     SheetFormat,
-    SymbolPlacement,
     layout_of,
     sheet_format_of,
 )
 from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes, projects
 
+from ._sizes import Sizes, font_mm
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -39,64 +37,19 @@ _PRESET_WORDS: dict[DocumentPreset, str] = {
 }
 
 
-def _matched_drawing_sets(model: Model, record: Document) -> tuple[DrawingSet, ...]:
-    """`record`'s drawing sets by `number`: a location's top-level set, a unit's sets."""
-    all_sets = layout_of(model, DrawingSet).values()
-    if record.location is not None:
-        matching = [
-            drawing_set
-            for drawing_set in all_sets
-            if drawing_set.location == record.location and drawing_set.unit is None
-        ]
-    elif (unit := document_unit(model, record)) is not None:
-        matching = [drawing_set for drawing_set in all_sets if drawing_set.unit == unit]
-    else:
-        matching = []
-    return tuple(sorted(matching, key=lambda found: found.number))
-
-
-def _is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
-    """Whether the set has placements, all replicas, and no conductor route or `LinkMarker`.
-
-    A replica of the page unit's own boundary counts as drawn (pdf-0025).
-    """
-    pages = {
-        page.id for page in layout_of(model, Page).values() if page.drawing_set == drawing_set.id
-    }
-    placed = [
-        placement.function
-        for placement in layout_of(model, SymbolPlacement).values()
-        if placement.page in pages
-    ]
-    if not placed:
-        return False
-    # pdf-0025: a replica of the page unit's own boundary (a pass-through) is its drawing
-    if drawing_set.unit is not None and set(placed) & set(boundary(model, drawing_set.unit)):
-        return False
-    if not drawing_set_is_replica_only(model, drawing_set.id):
-        return False
-    has_conductor_route = any(
-        route.conductor is not None
-        for route in layout_of(model, Route).values()
-        if route.page in pages
-    )
-    has_marker = any(marker.page in pages for marker in layout_of(model, LinkMarker).values())
-    return not (has_conductor_route or has_marker)
-
-
 def _drawing_set_pages(
     model: Model, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[Page, ...]:
     """The subject's drawing-set pages in `number` order, replica-only sets skipped."""
     if PageKind.SCHEMATIC not in pages:
         return ()
-    matched = _matched_drawing_sets(model, record)
+    matched = document_drawing_sets(model, record)
     if not matched:
         return ()
     order = {
         drawing_set.id: drawing_set.number
         for drawing_set in matched
-        if not _is_replica_only_undrawn(model, drawing_set)
+        if not is_replica_only_undrawn(model, drawing_set)
     }
     if not order:
         return ()
@@ -112,8 +65,8 @@ def undrawn_replica_only_sets(
         return ()
     return tuple(
         drawing_set
-        for drawing_set in _matched_drawing_sets(model, record)
-        if _is_replica_only_undrawn(model, drawing_set)
+        for drawing_set in document_drawing_sets(model, record)
+        if is_replica_only_undrawn(model, drawing_set)
     )
 
 
@@ -230,15 +183,15 @@ def document_heading(model: Model, record: Document) -> str:
     return f"{words} — {subject}"
 
 
-def preamble(sheet: SheetFormat) -> str:
+def preamble(sizes: Sizes, sheet: SheetFormat) -> str:
     """Text, page size and type sizes, once; margin and background are per page kind."""
     return "\n".join(
         [
-            '#set text(font: "Liberation Serif", size: 10pt)',
+            f'#set text(font: "DejaVu Sans", size: {font_mm(sizes.body)})',
             f"#set page(width: {sheet.width_mm}mm, height: {sheet.height_mm}mm)",
-            "#show heading.where(level: 1): set text(size: 16pt)",
-            "#show heading.where(level: 2): set text(size: 13pt)",
-            "#show heading.where(level: 3): set text(size: 11pt)",
-            "#show table: set text(size: 9pt)",
+            f"#show heading.where(level: 1): set text(size: {font_mm(sizes.heading_1)})",
+            f"#show heading.where(level: 2): set text(size: {font_mm(sizes.heading_2)})",
+            f"#show heading.where(level: 3): set text(size: {font_mm(sizes.body)})",
+            f"#show table: set text(size: {font_mm(sizes.label)})",
         ]
     )

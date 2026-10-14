@@ -2,10 +2,19 @@
 
 from typing import TYPE_CHECKING
 
-from symdef import to_fragment
+from symdef import Weight, to_fragment_mm
 
-from fransys_model.derive import text_size_mm
 from fransys_model.derive.order import drawn_on_page
+from fransys_model.derive.print_sizes import (
+    ASCENT_RATIO,
+    CAPITAL_RATIO,
+    LINE_THICK_MM,
+    LINE_THIN_MM,
+    SYMBOL_DASH_GAP_MM,
+    SYMBOL_DASH_MM,
+    TextRole,
+    role_height_mm,
+)
 from fransys_model.layout import (
     PowerSymbol,
     SymbolPlacement,
@@ -14,10 +23,10 @@ from fransys_model.layout import (
 )
 from fransys_model.vocab import functions, items
 
-from ._constants import ASCENT_RATIO
 from ._leads import visible_symbol
 from ._markers import text_glyph
-from ._numbers import format_decimal, grid_to_mm
+from ._numbers import format_decimal, grid_to_mm, printed_font_mm
+from ._style import FONT_NAME
 from ._symbol_geometry import oriented_power_symbol, oriented_symbol, to_grid
 
 if TYPE_CHECKING:
@@ -54,10 +63,10 @@ def _rect_glyph(sheet: SheetFormat, placement: SymbolPlacement) -> str:
 def _text_glyph(sheet: SheetFormat, profile: Profile, placement: SymbolPlacement) -> str:
     """The placement's `symbol` key, centred in the rectangle: baseline mirrors `_markers.py`."""
     top_mm = grid_to_mm(sheet.content_y_mm, placement.y - _HALF_SIZE_G, sheet.module_mm)
-    font_size_mm = text_size_mm(profile.text_height, sheet.module_mm)
-    baseline_mm = top_mm + font_size_mm * ASCENT_RATIO
+    font = printed_font_mm(profile.text_height_mm)
+    baseline_mm = top_mm + font * ASCENT_RATIO
     x_mm = grid_to_mm(sheet.content_x_mm, placement.x, sheet.module_mm)
-    return text_glyph(placement.symbol, x_mm, baseline_mm, font_size_mm)
+    return text_glyph(placement.symbol, x_mm, baseline_mm, font)
 
 
 def _not_installed(model: Model, placement: SymbolPlacement) -> bool:
@@ -97,20 +106,27 @@ def _power_lead(sheet: SheetFormat, power: PowerSymbol, symbol: Symbol) -> str:
 
 def _symbol_fragment(
     sheet: SheetFormat,
+    profile: Profile,
     placement: SymbolPlacement | PowerSymbol,
     symbol: Symbol,
     *,
     not_installed: bool = False,
 ) -> str:
-    """`symbol`'s body, wrapped and positioned at `placement`'s absolute page position."""
+    """`symbol`'s body in absolute mm, translated to `placement`'s page position."""
     x_mm = grid_to_mm(sheet.content_x_mm, placement.x, sheet.module_mm)
     y_mm = grid_to_mm(sheet.content_y_mm, placement.y, sheet.module_mm)
     css_class = "symbol not-installed" if not_installed else "symbol"
-    transform = (
-        f"translate({format_decimal(x_mm)},{format_decimal(y_mm)}) "
-        f"scale({format_decimal(sheet.module_mm)})"
+    body = to_fragment_mm(
+        symbol,
+        module_mm=float(sheet.module_mm),
+        weights_mm={Weight.NORMAL: float(LINE_THIN_MM), Weight.THICK: float(LINE_THICK_MM)},
+        dash_mm=(float(SYMBOL_DASH_MM), float(SYMBOL_DASH_GAP_MM)),
+        font_family=FONT_NAME,
+        font_mm=float(printed_font_mm(role_height_mm(TextRole.LABEL, profile.text_height_mm))),
+        cap_ratio=float(CAPITAL_RATIO),
     )
-    return f'<g class="{css_class}" transform="{transform}">{to_fragment(symbol)}</g>'
+    transform = f"translate({format_decimal(x_mm)},{format_decimal(y_mm)})"
+    return f'<g class="{css_class}" transform="{transform}">{body}</g>'
 
 
 def symbols_group(model: Model, page: Page) -> str:
@@ -126,9 +142,11 @@ def symbols_group(model: Model, page: Page) -> str:
         else:
             symbol = visible_symbol(model, page, placement, symbol)
             not_installed = _not_installed(model, placement)
-            parts.append(_symbol_fragment(sheet, placement, symbol, not_installed=not_installed))
+            parts.append(
+                _symbol_fragment(sheet, profile, placement, symbol, not_installed=not_installed)
+            )
     for power in power_symbols_on_page(model, page):
         symbol = oriented_power_symbol(power)
-        parts.append(_symbol_fragment(sheet, power, symbol))
+        parts.append(_symbol_fragment(sheet, profile, power, symbol))
         parts.append(_power_lead(sheet, power, symbol))
     return "".join(parts)

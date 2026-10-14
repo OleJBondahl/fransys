@@ -54,6 +54,7 @@ from .codes import (
     WIRE_OVER_LABEL,
     WIRE_THROUGH_SYMBOL,
 )
+from .printed import LOOK_GEOMETRY, on_printed
 
 if TYPE_CHECKING:
     from fransys_layout.stages import (
@@ -91,14 +92,24 @@ class _Page:
 
 
 def lint_geometry(
-    layout: Layout, *, sheet: SheetFormat, ink: HarnessInk = NO_INK
+    layout: Layout,
+    *,
+    sheet: SheetFormat,
+    ink: HarnessInk = NO_INK,
+    printed: frozenset[int] | None = None,
 ) -> tuple[Finding, ...]:
     """Report geometric defects of `layout` and its harness `ink`, sorted by `(code, subjects)`.
 
-    Harness lines, stubs and connector boxes follow layout-0158.
+    Harness lines, stubs and connector boxes follow layout-0158. The look findings of a set
+    that is not in `printed` are left out (model-0201).
     """
     found = geometry_by_page(layout, sheet=sheet, ink=ink)
-    return tuple(sorted((finding for _, finding in found), key=lambda f: (f.code, f.subjects)))
+    kept = (
+        finding
+        for here, finding in found
+        if finding.code not in LOOK_GEOMETRY or on_printed(here, printed)
+    )
+    return tuple(sorted(kept, key=lambda f: (f.code, f.subjects)))
 
 
 def geometry_by_page(

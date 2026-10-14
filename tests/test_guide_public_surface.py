@@ -74,6 +74,6 @@ def test_the_guide_names_every_public_name_and_keyword():
 
 def test_the_collector_sees_keywords_and_numbers():
     names = public_names()
-    assert {"module_mm", "column_gap", "text_height", "build"} <= names
+    assert {"module_mm", "column_gap", "text_height_mm", "build"} <= names
     assert mentioned("a_name", "see `a_name` here")
     assert not mentioned("a_name", "see a_name")

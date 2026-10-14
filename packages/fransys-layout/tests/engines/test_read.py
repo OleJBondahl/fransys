@@ -157,7 +157,7 @@ def test_read_uses_an_authored_profile_and_the_sheet_format_it_names() -> None:
         column_gap=40,
         row_gap=24,
         route_margin=48,
-        text_height=6,
+        text_height_mm=Decimal("1.3"),
         marker_padding=3,
         route_turn_penalty=2,
         route_crossing_penalty=8,

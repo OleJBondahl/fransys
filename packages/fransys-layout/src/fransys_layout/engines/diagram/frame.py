@@ -16,7 +16,7 @@ from fransys_layout.engines.diagram.arrange import (
     stack,
 )
 from fransys_layout.engines.diagram.channels import build_pairs, to_channel, to_cut
-from fransys_layout.engines.diagram.columns import assign_columns
+from fransys_layout.engines.diagram.columns import assign_columns, column_columns
 from fransys_layout.engines.diagram.frame_values import (
     Frame,
     FrameBox,
@@ -46,14 +46,18 @@ def _stacked(facts: DiagramFacts) -> Stacked | None:
     """Columns, orientation, sizes, stacking and ends (rules 1 to 5), or None if too tall."""
     ids = tuple(b.box for b in facts.boxes)
     joined = [(line.a, line.b) for line in facts.lines]
-    columns = order_columns(assign_columns(ids, joined), joined, {b: i for i, b in enumerate(ids)})
+    if facts.column:
+        stand = column_columns(ids, joined, facts.column, facts.left)
+    else:
+        stand = assign_columns(ids, joined)
+    columns = order_columns(stand, joined, {b: i for i, b in enumerate(ids)}, facts.column)
     joints = orient(facts, {b: c for c, col in enumerate(columns) for b in col})
     raw = raw_ends(joints)
     height = heights(facts, raw)
     y = stack(columns, height, facts.height)
     if y is None:
         return None
-    ends = place_ends(raw, y, facts.text_height)
+    ends = place_ends(raw, y, height, facts.text_height)
     return Stacked(columns=columns, joints=joints, height=height, y=y, ends=ends)
 
 

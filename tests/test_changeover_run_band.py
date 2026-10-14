@@ -20,7 +20,7 @@ from unittest import mock
 import pytest
 
 from fransys_layout.engines.schematic import engine
-from fransys_layout.engines.schematic.engine import stage_results
+from fransys_layout.engines.schematic.engine import linted, stage_layout
 from fransys_layout.stages.types import LabelKind
 from fransys_model.vocab.tables import functions, ports
 
@@ -44,12 +44,22 @@ def page(tmp_path_factory) -> tuple[Any, Any, tuple[Any, ...]]:
     """The no-unit field case built: the model, the engine's layout and its findings."""
     captured: list[tuple[Any, tuple[Any, ...]]] = []
 
-    def recording_results(model: Any, inputs: Any) -> Any:
-        results, findings = stage_results(model, inputs)
-        captured.append((results.layout, tuple(findings)))
-        return results, findings
+    layouts: list[Any] = []
 
-    with mock.patch.object(engine, "stage_results", recording_results):
+    def recording_layout(model: Any, inputs: Any) -> Any:
+        staged = stage_layout(model, inputs)
+        layouts.append(staged[0].layout)
+        return staged
+
+    def recording_findings(*given: Any) -> Any:
+        findings = linted(*given)
+        captured.append((layouts[-1], tuple(findings)))
+        return findings
+
+    with (
+        mock.patch.object(engine, "stage_layout", recording_layout),
+        mock.patch.object(engine, "linted", recording_findings),
+    ):
         model = _field_case._build(tmp_path_factory.mktemp("changeover"), in_unit=False).model
     ((layout, findings),) = captured
     return model, layout, findings

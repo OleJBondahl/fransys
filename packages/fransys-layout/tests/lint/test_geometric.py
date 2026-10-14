@@ -263,3 +263,32 @@ _RINGS = [
         id="closing in the middle of an arm",
     ),
 ]
+
+
+# --- the printed sets (model-0201) -----------------------------------------------------
+
+
+def _struck_and_outside() -> Layout:
+    """A route over a label (`WIRE_OVER_LABEL`) and a label past the box (`OUT_OF_CONTENT_BOX`)."""
+    return _layout(
+        routes=(_wire(((200, 184), (200, 300))),),
+        labels=(
+            _label(8, Box(x=190, y=240, width=20, height=8)),
+            _label(9, Box(x=1249, y=100, width=32, height=8)),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("printed", "expected"),
+    [
+        pytest.param(None, ["OUT_OF_CONTENT_BOX", "WIRE_OVER_LABEL"], id="every set"),
+        pytest.param(frozenset({1}), ["OUT_OF_CONTENT_BOX", "WIRE_OVER_LABEL"], id="set 1 printed"),
+        pytest.param(frozenset({2}), ["OUT_OF_CONTENT_BOX"], id="set 1 not printed"),
+    ],
+)
+def test_a_look_finding_skips_a_set_nobody_prints_but_a_geometry_finding_stays(
+    printed: frozenset[int] | None, expected: list[str]
+) -> None:
+    found = lint_geometry(_struck_and_outside(), sheet=SHEET, printed=printed)
+    assert [f.code for f in found] == expected

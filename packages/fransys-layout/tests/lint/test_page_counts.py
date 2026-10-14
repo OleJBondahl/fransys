@@ -68,7 +68,9 @@ def test_a_wire_with_a_bend_counts_each_run() -> None:
     assert wire_crossings([bent, _route(2, (8, 0), (8, 16))]) == 2
 
 
-def _label(slot: str, partners: int, kind: LabelKind = LabelKind.CROSS_REFERENCE) -> PlacedLabel:
+def _label(
+    slot: str, partners: int, kind: LabelKind = LabelKind.CROSS_REFERENCE, partner_page: int = 2
+) -> PlacedLabel:
     return PlacedLabel(
         kind=kind,
         subject=hid("function", 1),
@@ -77,7 +79,8 @@ def _label(slot: str, partners: int, kind: LabelKind = LabelKind.CROSS_REFERENCE
         page=1,
         box=_BOX,
         partners=tuple(
-            RequestPartner(port=hid("port", n), drawing_set=1, page=2, x=n) for n in range(partners)
+            RequestPartner(port=hid("port", n), drawing_set=1, page=partner_page, x=n)
+            for n in range(partners)
         ),
     )
 
@@ -114,6 +117,12 @@ def test_a_coils_contact_image_counts_its_contacts_and_one_contact_stands_alone(
         4,
         1,
     )
+
+
+def test_a_single_image_whose_contact_is_on_its_own_page_is_no_other_page_image() -> None:
+    labels = (_label("contacts", 1), _label("contacts", 1, partner_page=1), _label("contacts", 3))
+    found = reference_counts(labels, ())
+    assert (found.single_contact_images, found.single_contact_images_other_page) == (2, 1)
 
 
 def test_a_contacts_own_reference_to_its_coil_is_no_contact_image() -> None:

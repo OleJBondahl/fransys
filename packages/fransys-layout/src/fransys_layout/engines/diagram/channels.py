@@ -32,6 +32,7 @@ class Pair:
     right: int | None
     lines: tuple[int, ...]
     same: tuple[int, ...]
+    same_tracks: tuple[int, ...]
     tab_l: int
     tab_r: int
     label: int
@@ -44,7 +45,7 @@ class Pair:
         """The channel's width (rule 6): two page pads when nothing is routed in it."""
         if not self.lines and not self.same:
             return 2 * PAGE_PAD
-        tracks = (self.count + len(self.same) + 1) * TRACK_PITCH
+        tracks = (self.count + max(self.same_tracks, default=0) + 1) * TRACK_PITCH
         return self.tab_l + self.label + tracks + (self.label + self.tab_r if self.right else 0)
 
     @property
@@ -54,7 +55,7 @@ class Pair:
             return self.width
         if not self.lines and not self.same:
             return PAGE_PAD
-        return self.tab_l + self.label + len(self.same) * TRACK_PITCH + MARKER_W
+        return self.tab_l + self.label + max(self.same_tracks, default=0) * TRACK_PITCH + MARKER_W
 
     @property
     def lead(self) -> int:
@@ -94,6 +95,29 @@ class Context:
     ends: Ends
     line_y: Mapping[tuple[int, Ident], int]
     labels: Sequence[int]
+    share: bool
+
+
+def _span(line_y: Mapping[tuple[int, Ident], int], j: Joint) -> tuple[int, int]:
+    """The y span of a same-column line, top first."""
+    a, b = line_y[j.line, j.left], line_y[j.line, j.right]
+    return (min(a, b), max(a, b))
+
+
+def same_tracks(spans: Sequence[tuple[int, int]], *, share: bool) -> tuple[int, ...]:
+    """Each span's track, 1 nearest the column: its own, or with `share` the fewest that fit.
+
+    Spans that overlap (or touch) never share a track; greedy by start is optimal for intervals.
+    """
+    if not share:
+        return tuple(range(1, len(spans) + 1))
+    free: list[int] = []  # the end of the last span on each track
+    found = [0] * len(spans)
+    for k in sorted(range(len(spans)), key=lambda k: spans[k]):
+        track = next((t for t, end in enumerate(free) if end < spans[k][0]), len(free))
+        free[track : track + 1] = [spans[k][1]]
+        found[k] = track + 1
+    return tuple(found)
 
 
 def _pair(c: int, ctx: Context) -> Pair | None:
@@ -114,6 +138,10 @@ def _pair(c: int, ctx: Context) -> Pair | None:
         right=right,
         lines=tuple(j.line for j in between),
         same=tuple(j.line for j in same),
+        same_tracks=same_tracks(
+            [_span(ctx.line_y, j) for j in same],
+            share=ctx.share,
+        ),
         tab_l=tab_room(columns[c], ctx.ends, Facing.E),
         tab_r=tab_r,
         label=label_room(widest),
@@ -132,7 +160,14 @@ def build_pairs(
     """Every pair, left to right, or None when any channel cannot be planned."""
     line_y = {(e.line, box): e.y for (box, _), found in ends.items() for e in found}
     labels = [line.label_width for line in facts.lines]
-    ctx = Context(columns=columns, joints=joints, ends=ends, line_y=line_y, labels=labels)
+    ctx = Context(
+        columns=columns,
+        joints=joints,
+        ends=ends,
+        line_y=line_y,
+        labels=labels,
+        share=facts.share_tracks,
+    )
     pairs = [_pair(c, ctx) for c in range(len(columns))]
     return None if None in pairs else tuple(p for p in pairs if p is not None)
 
@@ -148,6 +183,7 @@ def to_channel(pair: Pair, start: int) -> FrameChannel:
         label=pair.label,
         lines=pair.lines,
         same=pair.same,
+        same_tracks=pair.same_tracks,
         tracks=pair.tracks,
         count=pair.count,
         width=pair.width,
@@ -162,6 +198,7 @@ def to_cut(pair: Pair, left_sheet: int) -> FrameCut:
         left_sheet=left_sheet,
         lines=pair.lines,
         same=pair.same,
+        same_tracks=pair.same_tracks,
         tab_l=pair.tab_l,
         tab_r=pair.tab_r,
         label=pair.label,

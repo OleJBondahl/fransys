@@ -41,7 +41,7 @@ def test_a_function_with_a_strapped_pole_and_a_live_pole_is_a_side_element_nowhe
     wire(k1["2"], t2.inner)
     wire(t3.outer, k2["3"])
     wire(k2["4"], t4.inner)
-    result = build(parts, d)
+    result = build(parts, d, prints=c)
     model = result.model
     assert _lone_cells(result) == COILS
     first = tuple(placed(model, *key) for key in (XA1, K1, XA2))
@@ -86,7 +86,7 @@ def test_an_unwired_second_pole_leaves_the_function_a_side_element() -> None:
     wire(k1["2"], k2["2"])
     wire(t1.outer, k1["1"])
     wire(k1["2"], t2.inner)
-    result = build(parts, d)
+    result = build(parts, d, prints=c)
     model = result.model
     assert _lone_cells(result) == COILS
     k1_at, side = placed(model, *K1), placed(model, *K2)

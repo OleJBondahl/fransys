@@ -1,5 +1,6 @@
 """Every `AuthorError` case: a failing test and a passing twin."""
 
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -172,7 +173,6 @@ def test_a_float_gauge_is_refused(parts):
 
 
 def test_a_str_or_decimal_gauge_is_accepted(parts):
-    from decimal import Decimal
 
     d = Design(parts)
     d.wiring(colour="BU", gauge="0.75")
@@ -198,7 +198,6 @@ def test_a_float_scale_bound_is_refused(parts):
 
 
 def test_str_or_decimal_scale_bounds_are_accepted(parts):
-    from decimal import Decimal
 
     d = Design(parts)
     k1 = d.item("TEST-RLY-2CO", tag="K1")
@@ -389,7 +388,6 @@ def test_sheet_missing_a_required_field(parts):
 
 
 def test_sheet_with_every_required_field_is_not_an_error(parts):
-    from decimal import Decimal
 
     d = Design(parts)
     d.sheet(
@@ -407,7 +405,6 @@ def test_sheet_with_every_required_field_is_not_an_error(parts):
 
 
 def test_sheet_with_an_unknown_field_is_refused(parts):
-    from decimal import Decimal
 
     d = Design(parts)
     # `colour` is not one of `ModelSheetFormat`'s fields, so **extra is deliberately
@@ -576,7 +573,6 @@ def test_a_units_revision_key_does_not_collide_with_the_projects_own(parts):
 
 
 def test_profile_with_an_unknown_number_is_refused(parts):
-    from decimal import Decimal
 
     d = Design(parts)
     sheet = d.sheet(
@@ -597,7 +593,7 @@ def test_profile_with_an_unknown_number_is_refused(parts):
             column_gap=4,
             row_gap=4,
             route_margin=2,
-            text_height=3,
+            text_height_mm=Decimal("1.2"),
             route_turn_penalty=1,
             route_crossing_penalty=2,
             wobble_factor=9,

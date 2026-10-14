@@ -64,6 +64,7 @@ from ._lists import (
     wire_rows_for,
 )
 from ._markdown import parse, unsupported
+from ._sizes import Sizes, sizes_of
 from .document import _HEADING_WORDS, document_pages, section_fields
 
 if TYPE_CHECKING:
@@ -144,13 +145,14 @@ class _FieldTarget:
 
     subject: _DocId
     sheet: SheetFormat
+    sizes: Sizes
 
 
 def _one_line_overflow_finding(
     target: _FieldTarget, field: str, text: str, *, where: str, fallback: str | None
 ) -> Finding | None:
     """One `TITLE_BLOCK_TEXT_OVERFLOW` finding if `text` and `fallback` both miss."""
-    shown, ok, _printed = field_cell(target.sheet, field, text, fallback=fallback)
+    shown, ok, _printed = field_cell(target.sheet, target.sizes, field, text, fallback=fallback)
     if ok:
         return None
     return Finding(
@@ -174,7 +176,7 @@ def _document_level_overflow_findings(
         "revision_date": revision_date,
         "author": author,
     }
-    target = _FieldTarget(subject=subject, sheet=sheet)
+    target = _FieldTarget(subject=subject, sheet=sheet, sizes=sizes_of(model, record))
     findings = []
     for field in _DOCUMENT_LEVEL_ONE_LINE_FIELDS:
         finding = _one_line_overflow_finding(
@@ -247,7 +249,7 @@ def _text_overflow_findings(
     sheet = resolve_sheet_format(model, record, pages)
     if not title_block_fits(sheet):
         return ()
-    target = _FieldTarget(subject=subject, sheet=sheet)
+    target = _FieldTarget(subject=subject, sheet=sheet, sizes=sizes_of(model, record))
     return _document_level_overflow_findings(model, subject, record, sheet) + (
         _page_overflow_findings(model, target, record, pages, svgs)
     )
@@ -264,7 +266,8 @@ def _notice_overflow_findings(model: Model) -> tuple[Finding, ...]:
         if not title_block_fits(sheet):
             continue
         width_mm, height_mm = notice_cell_size_mm(sheet)
-        if not notice_fits(project.notice, width_mm=width_mm, height_mm=height_mm):
+        sizes = sizes_of(model, record)
+        if not notice_fits(project.notice, sizes, width_mm=width_mm, height_mm=height_mm):
             return (
                 Finding(
                     code="TITLE_BLOCK_NOTICE_OVERFLOW",

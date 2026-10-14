@@ -1,12 +1,12 @@
-"""Vendored fonts: Liberation Serif 2.1.5, four faces plus its licence."""
+"""Vendored fonts: DejaVu Sans Condensed 2.37, four faces plus its licence."""
 
 from fransys_pdf import font_dir
 
 _FACES = (
-    "LiberationSerif-Regular.ttf",
-    "LiberationSerif-Bold.ttf",
-    "LiberationSerif-Italic.ttf",
-    "LiberationSerif-BoldItalic.ttf",
+    "DejaVuSansCondensed.ttf",
+    "DejaVuSansCondensed-Bold.ttf",
+    "DejaVuSansCondensed-Oblique.ttf",
+    "DejaVuSansCondensed-BoldOblique.ttf",
 )
 
 
@@ -20,4 +20,4 @@ def test_the_licence_text_is_present():
     names = {path.name for path in font_dir().iterdir()}
     assert "LICENSE" in names
     text = (font_dir() / "LICENSE").read_text(encoding="utf-8")
-    assert "SIL OPEN FONT LICENSE" in text.upper()
+    assert "Bitstream" in text

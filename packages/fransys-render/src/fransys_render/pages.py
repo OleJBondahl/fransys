@@ -42,7 +42,7 @@ def _render_page(model: Model, page: Page) -> str:
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width_mm}mm" height="{height_mm}mm" '
         f'viewBox="0 0 {width_mm} {height_mm}">'
-        f"{style_block(sheet.module_mm)}"
+        f"{style_block()}"
         f"{outlines_group(model, page)}"
         f"{symbols_group(model, page)}"
         f"{routes_group(model, page)}"

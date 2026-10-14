@@ -28,11 +28,11 @@ if TYPE_CHECKING:
 
 ROOT = Path(__file__).resolve().parents[1]
 
-#: `fransys_model`'s own eleven surface modules (amended 2026-09-27 to add
+#: `fransys_model`'s own twelve surface modules (amended 2026-09-27 to add
 #: `derive.numbering_pins`, and by model-0159 to add
 #: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`, model-0190 to add
-#: `derive.text_width`): not its top-level package,
-#: which is excluded from the surface entirely -- only these eleven dotted paths are read by
+#: `derive.text_width`, EXACT-SIZES E10 to add `derive.print_sizes`): not its top-level package,
+#: which is excluded from the surface entirely -- only these twelve dotted paths are read by
 #: other packages.
 _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.kernel",
@@ -45,6 +45,7 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive.cable_drawing",
     "fransys_model.derive.block_diagram",
     "fransys_model.derive.order",
+    "fransys_model.derive.print_sizes",
     "fransys_model.derive.text_width",
 )
 

@@ -20,9 +20,10 @@ import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
 
+from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_model.derive.drawing_text import marker_text, off_stub_text
 from fransys_model.kernel import Severity
-from fransys_model.layout import LinkMarker, StarKind, layout_of, profile_of
+from fransys_model.layout import LinkMarker, StarKind, layout_of
 from fransys_model.vocab.tables import functions, ports
 
 _PROJECT: dict[str, Any] = {
@@ -90,7 +91,7 @@ def _one_box(model, stubs: list[LinkMarker]) -> None:
     (lead,) = [m for m in stubs if m.lead]
     lines = marker_text(model, lead).split("\n")
     assert len(lines) == len(stubs)
-    assert len(lines) * profile_of(model).text_height <= lead.width
+    assert len(lines) * profile_and_sheet(model)[0].text_height <= lead.width
 
 
 def _build_with_marker(far: tuple[str, ...]):

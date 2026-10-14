@@ -81,7 +81,10 @@ def test_a_unit_in_two_locations_is_one_drawing_set_with_straight_page_numbers(n
     model = result.model
     (u1,) = (unit.id for unit in units(model).values() if unit_release(model, unit.id).name == "u1")
     own = [s for s in layout_of(model, DrawingSet).values() if s.unit == u1]
-    assert len(own) == 1
+    assert len(own) == 1, (
+        "a unit with several sets would need the printed `p<set>.<page>` form and the PDF label"
+        " aligned on the unit-local rank (designer 2026-10-12, SET-RANK)"
+    )
     numbers = _numbers(model, own[0])
     assert len(numbers) > 1
     assert numbers == list(range(1, len(numbers) + 1))

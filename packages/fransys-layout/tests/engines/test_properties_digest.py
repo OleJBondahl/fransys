@@ -74,7 +74,6 @@ def _run(
             column_gap=DEFAULT_PROFILE.column_gap,
             row_gap=DEFAULT_PROFILE.row_gap,
             route_margin=DEFAULT_PROFILE.route_margin,
-            text_height=DEFAULT_PROFILE.text_height,
             marker_padding=DEFAULT_PROFILE.marker_padding,
             route_turn_penalty=DEFAULT_PROFILE.route_turn_penalty,
             route_crossing_penalty=DEFAULT_PROFILE.route_crossing_penalty,
@@ -250,7 +249,7 @@ def _groups_sharing_a_page_with_p2(*models: Model) -> set:
 
 @pytest.mark.parametrize(
     ("width_mm", "cut", "replica", "page_lost"),
-    [(_APART_WIDTH, 1, True, False), (_MERGING_WIDTH, 1, False, True), (250, 0, False, False)],
+    [(_APART_WIDTH, 1, True, False), (_MERGING_WIDTH, 1, False, True), (260, 0, False, False)],
 )
 def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_net(
     *, width_mm: int | None, cut: int, replica: bool, page_lost: bool
@@ -262,7 +261,8 @@ def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_n
     and a page is keyed by its first group, so one whose group moves onto P2's page is lost
     (`page_lost`). On the default sheet and on `_MERGING_WIDTH` `=P2` leaves the page it shared
     with `=P1`, so the K1:14 to K2:13 wire, the only one across the two, is cut and gets its
-    marker pair (links.md 6.6): `cut` is 1 there and 0 on the 250 mm sheet, where every group has a
+    marker pair (links.md 6.6): `cut` is 1 there and 0 on the 260 mm sheet (250 mm no longer
+    keeps `=SUP` and `=P2` apart once K9 widens `=P2`), where every group has a
     page of its own before and after. On the default sheet `=P2` also stands apart from
     `=SUP`, whose page keeps its key, so `=P2`'s page needs its own replica of the rail terminal
     `-X2:1` (`replica`), a new placement of `-X2`.

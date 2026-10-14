@@ -69,18 +69,18 @@ def default_sheet_format() -> SheetFormat:
 class Profile:
     """The tunable numbers of the layout rules; at most one per unit and one for the top.
 
-    Gaps, `row_spacing`, `route_margin`, `text_height` and `marker_padding` are in `G`;
+    Gaps, `row_spacing`, `route_margin` and `marker_padding` are in `G`;
     penalties are unitless. `row_spacing` is the gap a column's next block keeps below the
     keep-out of the block before it. `marker_padding` is the clearance between a link
     marker's text and its outline, on every edge. `band_ranks` maps a `FunctionKind` value
     to the rank of its horizontal band, top first; `"terminal.first"` and `"terminal.last"`
     sit beside `"terminal"`. `group_ranks` maps the label of a `=` aspect node to its rank;
     an unranked group sorts last. `hide_unused_pins` hides, on drawings only, a box-drawn
-    pin with no conductor. `min_text_mm` is the smallest font size in mm that `text_height` may
-    print at before `TEXT_TOO_SMALL` fires. Every field defaults to its house value; a set field
-    replaces it whole, a rank map is never merged. `unit` is the unit whose own drawings the profile
-    governs, `None` for the top design's; `profile_of(model, unit)` returns the authored
-    profile of exactly that unit, else `default_profile()`, never a containing unit's.
+    pin with no conductor. `text_height_mm` is the capital height of drawn text in mm (ISO 3098's
+    h); `min_text_height_mm` is the least it may be before `TEXT_TOO_SMALL` fires. A set field
+    replaces its house value whole, a rank map is never merged. `unit` is the unit whose own
+    drawings the profile governs, `None` for the top design's; `profile_of(model, unit)` returns
+    that unit's authored profile, else `default_profile()`, never a containing unit's.
     """
 
     id: Id[Profile]
@@ -94,9 +94,9 @@ class Profile:
     row_gap: int = 32
     row_spacing: int = 88
     route_margin: int = 64
-    text_height: int = 8
-    # A font size in mm, not a cap height: render sizes text by font size (model-0195).
-    min_text_mm: Decimal = Decimal("2.5")
+    # Capital heights in mm; the layout's text room in G follows from text_height_mm (E5, E6).
+    text_height_mm: Decimal = Decimal("1.8")
+    min_text_height_mm: Decimal = Decimal("1.8")
     marker_padding: int = 2
     route_turn_penalty: int = 4
     route_crossing_penalty: int = 16

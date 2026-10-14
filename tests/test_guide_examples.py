@@ -46,6 +46,7 @@ GUIDE_PAGES = (
     "kicad",
     "moving-to-fransys",
     "drawing",
+    "overview",
 )
 
 # Same shape as `packages/fransys/tests/test_api.py`'s own `_FIRST_PARTY_NOT_FRANSYS`/

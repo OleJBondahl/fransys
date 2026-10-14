@@ -36,9 +36,9 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id
 
 _PROFILE = dataclasses.replace(PROFILE, marker_padding=4)
-# `reference_box_width` (38 G of "#99-p99:8F" at text height 8, plus 2 * 4 G) by one line,
+# `reference_box_width` (43 G of "#99-p99:8F" at text height 8, plus 2 * 4 G) by one line,
 # one wiring-grid step E of `aux` at (8, 0), centred on it
-_BOX = Box(x=16, y=-8, width=46, height=16)
+_BOX = Box(x=16, y=-8, width=51, height=16)
 _AUX = hid("port", 13)
 
 

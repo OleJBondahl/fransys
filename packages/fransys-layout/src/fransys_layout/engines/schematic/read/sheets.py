@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.lint.codes import SHEET_FORMAT_UNUSED, TEXT_TOO_SMALL
-from fransys_model.derive import text_size_mm, text_under_floor
+from fransys_model.derive import text_under_floor
 from fransys_model.kernel import Finding, Severity
-from fransys_model.layout import profile_of, sheet_format_of
+from fransys_model.layout import profile_of
 
 if TYPE_CHECKING:
     from decimal import Decimal
@@ -34,21 +34,19 @@ def unused_sheet_findings(
 
 
 def printed_text(model: Model, unit: Id[Any] | None) -> tuple[Decimal, Decimal]:
-    """The printed text size of `unit`'s profile in mm, and the `min_text_mm` it is held to."""
+    """The text height of `unit`'s profile in mm, and the `min_text_height_mm` it is held to."""
     profile = profile_of(model, unit)
-    sheet = sheet_format_of(model, profile.sheet_format)
-    return text_size_mm(profile.text_height, sheet.module_mm), profile.min_text_mm
+    return profile.text_height_mm, profile.min_text_height_mm
 
 
 def text_floor_findings(model: Model, unit: Id[Any] | None) -> tuple[Finding, ...]:
-    """One `TEXT_TOO_SMALL` when `unit`'s profile prints text under its `min_text_mm` (layout-0179).
+    """One `TEXT_TOO_SMALL` when `unit`'s profile text height is under its minimum (layout-0179).
 
     The subject is the profile; a unit's own profile adds the unit, so the per-profile merge
     (model-0192) keeps the finding of the run that read it. It never changes a drawing.
     """
     profile = profile_of(model, unit)
-    sheet = sheet_format_of(model, profile.sheet_format)
-    printed = text_under_floor(profile, sheet.module_mm)
+    printed = text_under_floor(profile)
     if printed is None:
         return ()
     name = ".".join(profile.key)
@@ -59,8 +57,8 @@ def text_floor_findings(model: Model, unit: Id[Any] | None) -> tuple[Finding, ..
             severity=Severity.WARNING,
             subjects=subjects,
             message=(
-                f"profile {name} prints text at {format(printed.normalize(), 'f')} mm, "
-                f"under its minimum of {format(profile.min_text_mm.normalize(), 'f')} mm"
+                f"profile {name} sets a text height of {format(printed.normalize(), 'f')} mm, "
+                f"under its minimum of {format(profile.min_text_height_mm.normalize(), 'f')} mm"
             ),
         ),
     )

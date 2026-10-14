@@ -9,7 +9,7 @@ Layout draws the structure you author and invents none. This page says what layo
 - **Current paths.** Layout finds a current path where each net between two devices holds exactly two poles. A pole is the pair of pins a symbol passes current through, such as a coil or one contact. The path stands as one column, top to bottom, with straight wires. A net of three or more poles ends a path.
 - **How to author a path.** `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path. Plain `d.wire` calls form one when each net keeps to two poles. `d.layout.chain(...)` names a path outright, and a named path wins over discovery.
 - **Block edges end a path.** A path never crosses from one function block into the next. When the two blocks land on different pages, the wire between them is cut into a marker pair and `CHAIN_BROKEN` warns. Keep each circuit inside one block.
-- **Supplies.** A declared supply (`d.ac_supply`, `d.dc_supply`) draws a power symbol at each pin wired to its rails. No wire or marker leads there. An undeclared rail is an ordinary net, drawn with wires and link markers.
+- **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals and references. An undeclared rail is a plain net: wires and link markers.
 - **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal drawn on both pages needs none.
 - **Flat designs.** A design of devices joined by point-to-point `d.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it.
 
@@ -74,7 +74,7 @@ def coil_x(model, n):
     return next(p.x for p in model.tables["layout.symbol_placement"].values() if p.key[-3:-1] == (f"F{n}/K{n}", "fn"))
 
 
-assert coil_x(draw.model, 2) - coil_x(draw.model, 1) == 176
+assert coil_x(draw.model, 2) - coil_x(draw.model, 1) == 184
 assert coil_x(draw.model, 7) < coil_x(draw.model, 1)
 ```
 
@@ -122,17 +122,17 @@ def markers(own):
 assert markers(own=True) < markers(own=False)
 ```
 
-## The size levers
+## Printed sizes and grid pitch
 
 Authored numbers live on the sheet and the profile. A unit sets its own in its body, and a unit with none uses the house values. `layout-numbers.md` lists every sheet number and profile keyword with its house value and effect.
 
-- **`module_mm`, on the sheet** (see `layout-numbers.md`). This is the lever for size. One grid unit is `module_mm / 8` millimetres, and symbols, text and spacing all scale with it. The house value is 2.5. A smaller value fits more on a page, and a larger one fits less. Size is the reader's choice, not a fix: content that does not fit is split into function blocks.
-- **`text_height`, on the profile** (see `layout-numbers.md`). This is a style choice. It is the text size in grid units, 8 in the house profile, so text is `text_height * module_mm / 8` millimetres tall. Never lower it to fit a page: the symbols stay the same size and the text shrinks against them. A value past what the symbols leave room for leaves tags without a place.
-- **`min_text_mm`, on the profile.** This is the floor under the text, a font size in millimetres: `Decimal("2.5")` in the house profile, which is what the house `text_height` prints. A cap height of 2.5 mm (ISO 3098) is a font size of about 3.8 mm in the drawing font. The floor changes no drawing. A profile that prints text under it gets one `TEXT_TOO_SMALL`.
+- **`module_mm`, on the sheet** (see `layout-numbers.md`). This is the grid pitch. One grid unit is `module_mm / 8` millimetres, and symbols and spacing scale with it; text and line widths are fixed in mm. The house value is 2.5. A smaller value fits more on a page, and a larger one fits less. Pitch is the reader's choice, not a fix: content that does not fit is split into function blocks.
+- **`text_height_mm`, on the profile** (see `layout-numbers.md`). A style choice: the capital height in mm (ISO 3098) of the smallest text on every page kind, 1.8 in the house profile, which takes 8 `G`. A larger role prints at its ISO size (2.5, 3.5 or 5 mm) or this height, whichever is larger. Nothing shrinks text to fit. A value past what the symbols leave room for leaves tags without a place.
+- **`min_text_height_mm`, on the profile.** This is the floor under the text, a capital height in millimetres: `Decimal("1.8")` in the house profile, the height the house `text_height_mm` prints. The floor changes no drawing. A profile that prints text under it gets one `TEXT_TOO_SMALL`.
 - **`column_gap`, on the profile** (see `layout-numbers.md`). This is spacing: grid units between columns, 48 in the house profile. Change it to give wires and tags room, not to fit a page.
 
 ```python
-def circuits(c, module_mm, text_height=8):
+def circuits(c, module_mm, text_height_mm=Decimal("1.8")):
     psu = c.device("G1", "DEMO-PSU-24")
     dc = c.dc_supply("24VDC", psu.output)
     for i in range(1, 31):
@@ -144,7 +144,7 @@ def circuits(c, module_mm, text_height=8):
         content_width_mm=410, content_height_mm=267, frame_columns=8, frame_rows=6,
         module_mm=Decimal(module_mm),
     )
-    c.layout.profile(sheet=sheet, text_height=text_height)
+    c.layout.profile(sheet=sheet, text_height_mm=text_height_mm)
 
 
 _, house_pages = draw(lambda c: circuits(c, "2.5"))
@@ -303,7 +303,7 @@ top_only = draw(lambda c: numbers(c), top=lambda d: d.layout.profile(sheet=compa
 assert top_only == house_pages
 
 try:
-    draw(lambda c: (c.layout.profile(text_height=8), c.layout.profile(text_height=9)))
+    draw(lambda c: (c.layout.profile(text_height_mm=Decimal("1.8")), c.layout.profile(text_height_mm=Decimal("2.0"))))
 except Exception as error:
     assert type(error).__name__ == "AuthorError"
 else:
@@ -320,10 +320,10 @@ else:
 ## Findings that mean missing structure
 
 - **`FUNCTION_UNPLACED_IN_COLUMN`.** No current path reaches the function, so it stands alone in a column. A box-drawn device, such as a power supply or a lamp, has no pole of its own. It stands in a path only when a path ends on it. A lamp wired straight across two rails is on none, and wired after a contact it ends that contact's path. Many of these in one unit mean many devices hang on no path.
-- **`LABEL_UNPLACED`.** A tag, marking or cross-reference found no free place. A `text_height` above the house value is one cause. Put it back to 8 and size the drawing with `module_mm`.
+- **`LABEL_UNPLACED`.** A tag, marking or cross-reference found no free place. A `text_height_mm` above the house value is one cause. Put it back to 1.8.
 - **`CHAIN_BROKEN`.** A path was cut by a page break between two blocks. Keep the circuit in one block.
 - **`PAGE_OVERFULL` and `OUT_OF_CONTENT_BOX`.** A circuit is too big for its page. Declare its supply, wire it as paths, or split it into blocks. If it still fires, send the smallest model that shows it.
-- **Readability.** Five findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_mm`. `PAGE_UNDERFILLED` says a page's content covers under half of its content box. `TEXT_OVERLAP`, `WIRE_OVER_LABEL` and `LABEL_UNPLACED` say text collides with text or a wire, or has no place. To print larger, raise `module_mm` on the sheet or `text_height` on the profile.
+- **Readability.** Five findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_height_mm`. `PAGE_UNDERFILLED` says a page's content covers under half of its content box. `TEXT_OVERLAP`, `WIRE_OVER_LABEL` and `LABEL_UNPLACED` say text collides with text or a wire, or has no place. To print text larger, raise `text_height_mm` on the profile.
 
 The next block counts the first two. Lamps wired across the rails stand alone, lamps after a contact do not, and a text height of 24 leaves tags without a place.
 
@@ -345,26 +345,27 @@ across, _ = draw(lambda c: lamps(c, after_contact=False))
 after, _ = draw(lambda c: lamps(c, after_contact=True))
 assert across.count("FUNCTION_UNPLACED_IN_COLUMN") > after.count("FUNCTION_UNPLACED_IN_COLUMN")
 
-big_text, _ = draw(lambda c: circuits(c, "2.5", text_height=24))
+big_text, _ = draw(lambda c: circuits(c, "2.5", text_height_mm=Decimal("5.4")))
 assert "LABEL_UNPLACED" in big_text
 ```
 
 ## Reading the pages as numbers
 
-`fr.readability(result)` returns a `ReadabilityReport` with the numbers behind the findings: one `ReadabilityPage` row for each schematic page in `.pages` and one `ReadabilityUnit` row for each unit in `.units`. The three types are also in `fr.derive`. The same model gives equal rows, so compare a unit between revisions by its rows. It writes no file and `fr.write` does not emit it. It lays the schematic out again.
+`fr.readability(result)` returns a `ReadabilityReport` with the numbers behind the findings: one `ReadabilityPage` row for each schematic page in `.pages` and one `ReadabilityUnit` row for each unit in `.units`. The three types are also in `fr.derive`. The same model gives equal rows, so compare a unit between revisions by its rows. It writes no file and `fr.write` does not emit it. It lays the schematic out again. Only a drawing set that some document prints gets rows. The look findings (`PAGE_UNDERFILLED`, `WIRE_OVER_LABEL`, `TEXT_OVERLAP`, `LONE_CELL`) skip the other sets too.
 
 - **`drawing_set`, `number` and `unit`.** The page as printed in the corner, and the unit it belongs to (`None` for the design's own pages).
-- **`text_mm` and `min_text_mm`.** The smallest printed text size in mm and the floor the profile holds it to. Change nothing when `text_mm` is at or over the floor. When under, raise `module_mm` on the sheet or `text_height` on the profile.
+- **`text_height_mm` and `min_text_height_mm`.** The smallest printed capital height in mm and its floor. Change nothing when `text_height_mm` is at or over the floor. When under, raise `text_height_mm` on the profile.
 - **`fill_percent`.** The share of the page's content box the drawing covers, in whole percent. A low number is a mostly empty page with small text. Merge its group into the page before it, or drop a `break_before`.
 - **`wire_crossings`.** How often a wire runs across a wire of another net. A high number means a tangled page. Order the groups with `order`, or put the crossing nets on separate pages.
-- **`struck_labels`.** Texts a wire runs through (`WIRE_OVER_LABEL`). Raise `module_mm` or give the text room: a shorter tag, or a wider column gap.
+- **`struck_labels`.** Texts a wire runs through (`WIRE_OVER_LABEL`). Give the text room: a shorter tag, or a wider column gap.
 - **`text_overlaps`.** Texts that overlap each other or a symbol they do not belong to (`TEXT_OVERLAP`). The same two changes.
 - **`lone_cells`.** Symbols standing alone on a page (`LONE_CELL`). Keep the circuit in one block, or wire the symbol.
 - **`contact_images`, `contact_image_targets` and `single_contact_images`.** The coil images on the page, the contacts they list and the images that list one. Many single images mean a relay used for one contact: a plain wire may read better.
+- **`single_contact_images_other_page`.** The single images whose one contact is on another page, a part of `single_contact_images`. Such an image points off the page, so it reads less well than one beside its contact.
 - **`stars`, `star_branches` and `single_branch_stars`.** The net references on the page, the branches they name on other pages and the references that name one. Many mean the net is cut across pages: declare the supply so it is drawn once, or keep the net's ends together.
 - **`page_cuts`.** The wires of two ports cut at a page break, each naming one other page. Keep the two ends in one block, or add a terminal where the circuit changes page.
 
-A unit row adds up the counts of its pages and takes the smallest `text_mm` and `fill_percent` and the highest `min_text_mm`. Its `pages` is the page count.
+A unit row adds up the counts of its pages and takes the smallest `text_height_mm` and `fill_percent` and the highest `min_text_height_mm`. Its `pages` is the page count.
 
 ```python
 @fr.unit(
@@ -381,6 +382,6 @@ d.add(measured, "U1")
 doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md"))
 report = fr.readability(fr.build(d, doc))
 assert report.pages
-assert all(page.text_mm >= page.min_text_mm for page in report.pages)
+assert all(page.text_height_mm >= page.min_text_height_mm for page in report.pages)
 assert sum(unit.pages for unit in report.units) == len(report.pages)
 ```

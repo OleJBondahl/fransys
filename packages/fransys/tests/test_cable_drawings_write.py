@@ -15,7 +15,7 @@ from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.vocab import DocumentPreset
 from fransys_model.vocab.tables import items
 
-_LONG_TAG = "W" + "L" * 300
+_LONG_TAG = "W" + "L" * 400
 
 
 def _design(*, extra=None, cable_tag="W1"):
@@ -136,7 +136,7 @@ def test_write_refuses_a_cable_the_engine_cannot_draw(good_written, tmp_path):
 def test_write_refuses_a_block_wider_than_the_page(good_written, tmp_path):
     """Facade half: a block wider than the 1280 G page body fails the write.
 
-    Widened by a 300-character cable tag (`core` takes no label; the heading is the cable's
+    Widened by a 400-character cable tag (`core` takes no label; the heading is the cable's
     designation). The good model (positive control) writes. Probe: pdf's block-size check skipped.
     """
     assert good_written()[0]

@@ -51,7 +51,7 @@ lazy from fransys_model.vocab import Operating, Rating
 from ._beside import check_beside
 from ._boundary_values import build_boundary_values
 from ._catalogue import build_catalogue
-from ._decimal import as_decimal
+from ._decimal import ProfileNumber, as_decimal
 from ._enums import member
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
@@ -362,7 +362,7 @@ class Scope(LinkScope, SupplyScope):
         return record.id
 
     def profile(
-        self, *, sheet: Id[ModelSheetFormat] | None = None, **numbers: int | frozendict[str, int]
+        self, *, sheet: Id[ModelSheetFormat] | None = None, **numbers: ProfileNumber
     ) -> None:
         """A `layout.profile`; at most one per unit, and one for the top design.
 

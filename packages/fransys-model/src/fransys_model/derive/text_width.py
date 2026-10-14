@@ -1,4 +1,4 @@
-"""The one width of drawn text: Liberation Serif advances from the TTFs (model-0190).
+"""The one width of drawn text: DejaVu Sans Condensed advances from the TTFs (model-0190).
 
 Reached as `fransys_model.derive.text_width.<name>`, never re-exported from `derive/__init__.py`.
 Layout measures in grid units, pdf in millimetres; both scale `text_units`, so there is one rule.

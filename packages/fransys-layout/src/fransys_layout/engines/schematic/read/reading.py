@@ -9,7 +9,11 @@ field. `functions.py` builds one
 import dataclasses
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.schematic.read.house import DEFAULT_SHEET, to_stage_profile
+from fransys_layout.engines.schematic.read.house import (
+    DEFAULT_SHEET,
+    HOUSE_MODULE_MM,
+    to_stage_profile,
+)
 from fransys_layout.stages import (
     Chain,
     ChainEntry,
@@ -321,7 +325,7 @@ def profile_and_sheet(
     """The profile of `unit` (`profile_of`; `None`: the top), the sheet it names and that id."""
     profile = profile_of(model, unit)
     if profile.sheet_format is None:
-        return to_stage_profile(profile), DEFAULT_SHEET, None
+        return to_stage_profile(profile, HOUSE_MODULE_MM), DEFAULT_SHEET, None
     sheet_record = layout_of(model, ModelSheetFormat)[profile.sheet_format]
     sheet = SheetFormat(
         name=sheet_record.name,
@@ -330,7 +334,7 @@ def profile_and_sheet(
         frame_columns=sheet_record.frame_columns,
         frame_rows=sheet_record.frame_rows,
     )
-    return to_stage_profile(profile), sheet, profile.sheet_format
+    return to_stage_profile(profile, sheet_record.module_mm), sheet, profile.sheet_format
 
 
 def unused_sheet_formats(model: Model) -> tuple[Id[Any], ...]:

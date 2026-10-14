@@ -116,9 +116,11 @@ def test_the_unit_documents_title_block_revision_cell_prints_2_1():
         remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
     text = source(model, doc.id, {})
-    assert 'text(size: 8pt, "Revision"), text(size: 10pt, text("2.1"))' in text
+    assert 'text(size: 2.46912mm, "Revision"), text(size: 3.42934mm, text("2.1"))' in text
     for old in ("2", "1", "01", "1.1"):
-        assert f'text(size: 8pt, "Revision"), text(size: 10pt, text("{old}"))' not in text
+        assert (
+            f'text(size: 2.46912mm, "Revision"), text(size: 3.42934mm, text("{old}"))' not in text
+        )
 
 
 def test_the_cover_lists_both_history_rows_as_1_1_and_2_1():

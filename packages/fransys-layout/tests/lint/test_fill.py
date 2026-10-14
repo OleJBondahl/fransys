@@ -3,6 +3,7 @@
 The invented sheet is 1280 x 886 G. A symbol's keep-out is 56 x 32 G around its origin.
 """
 
+import pytest
 from samples import SHEET, hid, page_plan, placed
 
 from fransys_layout.lint import lint_fill
@@ -68,3 +69,15 @@ def test_a_pin_view_is_named_by_its_real_function() -> None:
         layout, sheet=SHEET, pin_functions={hid("function", 2): hid("function", 9)}
     )
     assert finding.subjects == (hid("function", 1), hid("function", 9))
+
+
+@pytest.mark.parametrize(
+    ("printed", "count"),
+    [(None, 1), (frozenset({1}), 1), (frozenset({2}), 0)],
+    ids=["every set", "set 1 printed", "set 1 not printed"],
+)
+def test_a_page_of_a_set_nobody_prints_gets_no_finding(
+    printed: frozenset[int] | None, count: int
+) -> None:
+    layout = _layout(placed(1, x=104, y=96), placed(2, x=104, y=304))
+    assert len(lint_fill(layout, sheet=SHEET, printed=printed)) == count

@@ -10,9 +10,10 @@ from dataclasses import replace
 
 from samples import PROFILE, SHEET, column, drawn, hid, page_plan
 
+from fransys_layout.geometry import WIRING_GRID
 from fransys_layout.stages.page_stacking import PageStacking
 from fransys_layout.stages.place import _reference_band, page_stack
-from fransys_layout.stages.references.marker_boxes import reference_size
+from fransys_layout.stages.references.marker_boxes import reference_box_width, reference_size
 from fransys_layout.stages.references.types import MarkerDecision
 from fransys_layout.stages.texts.stand import page_texts
 from fransys_layout.stages.types import MarkerSide
@@ -60,5 +61,7 @@ def test_two_stacked_ends_hold_a_vertical_box_between_them() -> None:
     assert bare < band  # premise: the house gap alone leaves no room for the box
     assert _apart(_reference(12)) >= band
     assert _apart(_reference(21)) >= band  # a text at the lower port asks the same room
-    assert _apart(_reference(12), _reference(21)) >= 2 * band  # a text at each: a band each
+    # a text at each: each box's own reach (its length and one grid, before the band's snap)
+    reach = WIRING_GRID + reference_box_width(SHEET, _TIGHT)
+    assert _apart(_reference(12), _reference(21)) >= 2 * reach
     assert _apart(_reference(11)) == bare  # a text at neither of the two ports asks none

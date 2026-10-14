@@ -10,28 +10,24 @@ design, so the byte-equality golden encodes it, not an unfinished look.
 """
 
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.drawing_text import row_letter
 from fransys_model.derive.text_width import UNITS_PER_EM, text_units
 
+from ._sizes import THICK_STROKE, THIN_STROKE, Sizes, font_mm
 from ._typst import literal
 
 if TYPE_CHECKING:
     from fransys_model.layout import SheetFormat
 
-_BORDER_STROKE = "0.5mm"
-_GRID_STROKE = "0.25mm"
-_GRID_LABEL_PT = "8pt"
-_TITLE_LABEL_PT = "8pt"
-_TITLE_VALUE_PT = "10pt"
-_TITLE_HEADING_PT = "12pt"
-_NOTICE_PT = "6pt"
+_BORDER_STROKE = THICK_STROKE
+_GRID_STROKE = THIN_STROKE
 _PADDING_MM = 5  # non-drawing pages' inner padding inside the content box
 _BAND_MIN_MM = 20  # a band under this gives no title block, and TITLE_BLOCK_NO_ROOM
 _CELL_INSET_MM = 2  # clearance (both sides) a one-line field's text is cut to fit inside
 _NOTICE_INSET_MM = 1  # clearance (all sides) the notice cell's wrapped text is padded by
-_NOTICE_SIZE_PT = 6.0
 _LINE_HEIGHT_EM = 1.2  # a standard typographic leading, close to Typst's own default paragraph
 # spacing at this size -- documented approximation, same status as `_wrap_lines`' own.
 
@@ -63,8 +59,6 @@ _FIELD_COLUMNS: dict[str, tuple[int, ...]] = {
     "scope": (3,),
     "sheet_counter": (4,),
 }
-
-_MM_PER_PT = 25.4 / 72
 
 
 @dataclass(frozen=True)
@@ -126,15 +120,15 @@ def _frame_border(sheet: SheetFormat) -> str:
     )
 
 
-def _grid_cell(label: str) -> str:
-    return f"align(center+horizon, text(size: {_GRID_LABEL_PT}, {literal(label)}))"
+def _grid_cell(label: str, sizes: Sizes) -> str:
+    return f"align(center+horizon, text(size: {font_mm(sizes.label)}, {literal(label)}))"
 
 
-def _column_strip(sheet: SheetFormat, *, y_top: int) -> str:
+def _column_strip(sheet: SheetFormat, sizes: Sizes, *, y_top: int) -> str:
     """One numbered strip (top or bottom margin): `1fr` row, inner ticks only."""
     n = sheet.frame_columns
     depth = sheet.content_y_mm
-    cells = [_grid_cell(str(i + 1)) for i in range(n)]
+    cells = [_grid_cell(str(i + 1), sizes) for i in range(n)]
     columns = ", ".join("1fr" for _ in range(n))
     ticks = [f"grid.vline(x: {i}, stroke: {_GRID_STROKE})" for i in range(1, n)]
     children = ", ".join(ticks + cells)
@@ -145,11 +139,11 @@ def _column_strip(sheet: SheetFormat, *, y_top: int) -> str:
     )
 
 
-def _row_strip(sheet: SheetFormat, *, x_left: int) -> str:
+def _row_strip(sheet: SheetFormat, sizes: Sizes, *, x_left: int) -> str:
     """One lettered strip (left or right margin), `_column_strip`'s twin."""
     n = sheet.frame_rows
     depth = sheet.content_x_mm
-    cells = [_grid_cell(row_letter(i)) for i in range(n)]
+    cells = [_grid_cell(row_letter(i), sizes) for i in range(n)]
     rows = ", ".join("1fr" for _ in range(n))
     ticks = [f"grid.hline(y: {i}, stroke: {_GRID_STROKE})" for i in range(1, n)]
     children = ", ".join(ticks + cells)
@@ -160,42 +154,42 @@ def _row_strip(sheet: SheetFormat, *, x_left: int) -> str:
     )
 
 
-def _grid(sheet: SheetFormat) -> str:
+def _grid(sheet: SheetFormat, sizes: Sizes) -> str:
     """The reference grid on every margin, counted as `derive.drawing_text.frame_column`."""
     right_x = sheet.width_mm - sheet.content_x_mm  # the frame border's right edge
     bottom_y = sheet.height_mm - sheet.content_y_mm
     return "\n".join(
         [
-            _column_strip(sheet, y_top=0),
-            _column_strip(sheet, y_top=bottom_y),
-            _row_strip(sheet, x_left=0),
-            _row_strip(sheet, x_left=right_x),
+            _column_strip(sheet, sizes, y_top=0),
+            _column_strip(sheet, sizes, y_top=bottom_y),
+            _row_strip(sheet, sizes, x_left=0),
+            _row_strip(sheet, sizes, x_left=right_x),
         ]
     )
 
 
-def text_width_mm(text: str, *, size_pt: float, bold: bool = False) -> float:
-    """The width of `text` in Liberation Serif at `size_pt`, from the one table."""
-    return text_units(text, bold=bold) / UNITS_PER_EM * size_pt * _MM_PER_PT
+def text_width_mm(text: str, *, size_mm: float, bold: bool = False) -> float:
+    """The width of `text` in DejaVu Sans Condensed at `size_mm`, from the one table."""
+    return text_units(text, bold=bold) / UNITS_PER_EM * size_mm
 
 
-def fits(text: str, *, size_pt: float, bold: bool = False, width_mm: float) -> bool:
-    """Whether `text` set at `size_pt` (bold or not) is no wider than `width_mm`."""
-    return text_width_mm(text, size_pt=size_pt, bold=bold) <= width_mm
+def fits(text: str, *, size_mm: float, bold: bool = False, width_mm: float) -> bool:
+    """Whether `text` set at `size_mm` (bold or not) is no wider than `width_mm`."""
+    return text_width_mm(text, size_mm=size_mm, bold=bold) <= width_mm
 
 
 def cut_to_width(
-    text: str, *, size_pt: float, bold: bool = False, width_mm: float
+    text: str, *, size_mm: float, bold: bool = False, width_mm: float
 ) -> tuple[str, bool]:
     """`(shown, was_cut)`: `text` if it fits, else cut by character plus `…`."""
-    if fits(text, size_pt=size_pt, bold=bold, width_mm=width_mm):
+    if fits(text, size_mm=size_mm, bold=bold, width_mm=width_mm):
         return text, False
-    ellipsis_width = text_width_mm("…", size_pt=size_pt, bold=bold)
+    ellipsis_width = text_width_mm("…", size_mm=size_mm, bold=bold)
     budget = width_mm - ellipsis_width
     kept = ""
     for ch in text:
         candidate = kept + ch
-        if text_width_mm(candidate, size_pt=size_pt, bold=bold) > budget:
+        if text_width_mm(candidate, size_mm=size_mm, bold=bold) > budget:
             break
         kept = candidate
     return kept + "…", True
@@ -204,7 +198,7 @@ def cut_to_width(
 def one_line_field(
     preferred: str,
     *,
-    size_pt: float,
+    size_mm: float,
     bold: bool = False,
     width_mm: float,
     fallback: str | None = None,
@@ -214,10 +208,10 @@ def one_line_field(
     The one rule for which text a one-line cell prints and whether it needs the cut; the base is
     `fallback` when given, else `preferred`.
     """
-    if fits(preferred, size_pt=size_pt, bold=bold, width_mm=width_mm):
+    if fits(preferred, size_mm=size_mm, bold=bold, width_mm=width_mm):
         return preferred, True
     base = preferred if fallback is None else fallback
-    return base, fits(base, size_pt=size_pt, bold=bold, width_mm=width_mm)
+    return base, fits(base, size_mm=size_mm, bold=bold, width_mm=width_mm)
 
 
 def title_columns(
@@ -239,20 +233,15 @@ def title_block_field_width_mm(sheet: SheetFormat, field: str) -> float:
     return span - _CELL_INSET_MM
 
 
-def field_size_pt(field: str) -> float:
-    """The point size a one-line field's value is set at: 12 pt bold for `title`, else 10."""
-    return 12.0 if field == "title" else 10.0
-
-
 def field_cell(
-    sheet: SheetFormat, field: str, text: str, *, fallback: str | None = None
+    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, fallback: str | None = None
 ) -> tuple[str, bool, str]:
     """`(base, fits, printed)` of a title-block field's one-line cell.
 
     `one_line_field` at the field's own cell; `printed` is the base, cut if it misses.
     """
     metrics = {
-        "size_pt": field_size_pt(field),
+        "size_mm": sizes.body,
         "bold": field == "title",
         "width_mm": title_block_field_width_mm(sheet, field),
     }
@@ -260,8 +249,10 @@ def field_cell(
     return base, ok, base if ok else cut_to_width(base, **metrics)[0]
 
 
-def _one_line(sheet: SheetFormat, field: str, text: str, *, fallback: str | None = None) -> str:
-    return field_cell(sheet, field, text, fallback=fallback)[2]
+def _one_line(
+    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, fallback: str | None = None
+) -> str:
+    return field_cell(sheet, sizes, field, text, fallback=fallback)[2]
 
 
 def notice_cell_size_mm(sheet: SheetFormat) -> tuple[float, float]:
@@ -271,8 +262,8 @@ def notice_cell_size_mm(sheet: SheetFormat) -> tuple[float, float]:
     return (c7 - 2 * _NOTICE_INSET_MM, band - 2 * _NOTICE_INSET_MM)
 
 
-def _wrap_lines(text: str, *, size_pt: float, width_mm: float) -> list[str]:
-    """Greedy word-wrap at `size_pt`: an approximation of Typst's wrap, enough for `notice_fits`."""
+def _wrap_lines(text: str, *, size_mm: float, width_mm: float) -> list[str]:
+    """Greedy word-wrap at `size_mm`: an approximation of Typst's wrap, enough for `notice_fits`."""
     words = text.split()
     if not words:
         return [""]
@@ -280,7 +271,7 @@ def _wrap_lines(text: str, *, size_pt: float, width_mm: float) -> list[str]:
     current = words[0]
     for word in words[1:]:
         candidate = f"{current} {word}"
-        if text_width_mm(candidate, size_pt=size_pt) <= width_mm:
+        if text_width_mm(candidate, size_mm=size_mm) <= width_mm:
             current = candidate
         else:
             lines.append(current)
@@ -289,12 +280,12 @@ def _wrap_lines(text: str, *, size_pt: float, width_mm: float) -> list[str]:
     return lines
 
 
-def notice_fits(text: str, *, width_mm: float, height_mm: float) -> bool:
-    """Whether `text` wrapped at `_NOTICE_SIZE_PT` fits `height_mm` (overflow check)."""
+def notice_fits(text: str, sizes: Sizes, *, width_mm: float, height_mm: float) -> bool:
+    """Whether `text` wrapped at the label size fits `height_mm` (overflow check)."""
     if not text:
         return True
-    lines = _wrap_lines(text, size_pt=_NOTICE_SIZE_PT, width_mm=width_mm)
-    line_height_mm = _NOTICE_SIZE_PT * _LINE_HEIGHT_EM * _MM_PER_PT
+    lines = _wrap_lines(text, size_mm=sizes.label, width_mm=width_mm)
+    line_height_mm = sizes.label * _LINE_HEIGHT_EM
     if line_height_mm <= 0:
         return False
     max_lines = int(height_mm // line_height_mm)
@@ -304,14 +295,14 @@ def notice_fits(text: str, *, width_mm: float, height_mm: float) -> bool:
 def _cell(
     label: str,
     value: str,
+    sizes: Sizes,
     *,
-    size: str = _TITLE_VALUE_PT,
     bold: bool = False,
     mark: str | None = None,
 ) -> str:
-    """One title-block cell: 8 pt label over a Typst value; `mark` is a `typst query` label."""
+    """One title-block cell: 1.8 mm label over a Typst value; `mark` is a `typst query` label."""
     rendered = f"strong({value})" if bold else value
-    value_text = f"text(size: {size}, {rendered})"
+    value_text = f"text(size: {font_mm(sizes.body)}, {rendered})"
     if mark is not None:
         # A label attaches to markup content, not a bare code-mode call: `[...]` wraps it
         # into a content block first, the same trick `_frame.background`'s own docstring
@@ -319,7 +310,7 @@ def _cell(
         value_text = f"[#{value_text}<{mark}>]"
     return (
         f"align(center+horizon, stack(dir: ttb, spacing: 1mm, "
-        f"text(size: {_TITLE_LABEL_PT}, {literal(label)}), {value_text}))"
+        f"text(size: {font_mm(sizes.label)}, {literal(label)}), {value_text}))"
     )
 
 
@@ -327,9 +318,9 @@ def _value(text: str) -> str:
     return f"text({literal(text)})"
 
 
-def _notice_cell(notice: str, *, width_mm: float, height_mm: float) -> str:
-    """The IP-notice cell: 6 pt, wrapped, clipped (not ellipsised) to its inner box."""
-    body = f"text(size: {_NOTICE_PT}, {literal(notice)})"
+def _notice_cell(notice: str, sizes: Sizes, *, width_mm: float, height_mm: float) -> str:
+    """The IP-notice cell: label size, wrapped, clipped (not ellipsised) to its inner box."""
+    body = f"text(size: {font_mm(sizes.label)}, {literal(notice)})"
     return (
         f"pad(x: {_NOTICE_INSET_MM}mm, y: {_NOTICE_INSET_MM}mm, "
         f"block(width: {_mm(width_mm)}mm, height: {_mm(height_mm)}mm, clip: true, {body}))"
@@ -349,51 +340,60 @@ def _logo_cell(logo: str | None, *, size_mm: float) -> str:
     return f"align(center+horizon, {content})"
 
 
-def _title_block(sheet: SheetFormat, fields: TitleBlockFields) -> str:
+_LABELS = {
+    "title": "Title",
+    "number": "Number",
+    "revision": "Revision",
+    "revision_date": "Revision date",
+    "customer": "Customer",
+    "author": "Author",
+    "page_title": "Page title",
+    "scope": "Scope",
+    "sheet_counter": "Sheet",
+}
+
+
+def _field_cell(
+    sheet: SheetFormat, sizes: Sizes, name: str, value: str, *, fallback: str | None = None
+) -> str:
+    shown = _value(_one_line(sheet, sizes, name, value, fallback=fallback))
+    return _cell(_LABELS[name], shown, sizes, bold=name == "title")
+
+
+def _title_rows(
+    sheet: SheetFormat, fields: TitleBlockFields, sizes: Sizes, extra: tuple[str, str]
+) -> list[str]:
+    """The two grid rows' cells; `extra` is the notice and logo cells, spanning both rows."""
+    text = partial(_field_cell, sheet, sizes)
+    fallback = fields.page_title_fallback or None
+    return [
+        f"grid.cell(colspan: 3, {text('title', fields.title)})",
+        text("number", fields.number),
+        text("revision", fields.revision),
+        text("revision_date", fields.revision_date),
+        f"grid.cell(rowspan: 2, {extra[0]})",
+        f"grid.cell(rowspan: 2, {extra[1]})",
+        text("customer", fields.customer),
+        text("author", fields.author),
+        text("page_title", fields.page_title, fallback=fallback),
+        text("scope", fields.scope),
+        text("sheet_counter", fields.sheet_counter),
+        _cell("Page", _PAGE_COUNTER, sizes, mark=PAGE_COUNTER_LABEL),
+    ]
+
+
+def _title_block(sheet: SheetFormat, fields: TitleBlockFields, sizes: Sizes) -> str:
     """The title block: one `grid()`, one-line fields cut with `…`."""
     x0 = sheet.content_x_mm
     width = sheet.width_mm - 2 * x0
     band_top = sheet.content_y_mm + sheet.content_height_mm
     row_height = band_height_mm(sheet) / 2
-    c1, c2, c3, c4, c5, c6, c7, logo = title_columns(sheet)
-
+    widths = title_columns(sheet)
     notice_w, notice_h = notice_cell_size_mm(sheet)
-    title_cell = _cell(
-        "Title",
-        _value(_one_line(sheet, "title", fields.title)),
-        size=_TITLE_HEADING_PT,
-        bold=True,
-    )
-    notice_cell = _notice_cell(fields.notice, width_mm=notice_w, height_mm=notice_h)
-    logo_cell = _logo_cell(fields.logo, size_mm=logo)
-    row1 = [
-        f"grid.cell(colspan: 3, {title_cell})",
-        _cell("Number", _value(_one_line(sheet, "number", fields.number))),
-        _cell("Revision", _value(_one_line(sheet, "revision", fields.revision))),
-        _cell("Revision date", _value(_one_line(sheet, "revision_date", fields.revision_date))),
-        f"grid.cell(rowspan: 2, {notice_cell})",
-        f"grid.cell(rowspan: 2, {logo_cell})",
-    ]
-    row2 = [
-        _cell("Customer", _value(_one_line(sheet, "customer", fields.customer))),
-        _cell("Author", _value(_one_line(sheet, "author", fields.author))),
-        _cell(
-            "Page title",
-            _value(
-                _one_line(
-                    sheet,
-                    "page_title",
-                    fields.page_title,
-                    fallback=fields.page_title_fallback or None,
-                )
-            ),
-        ),
-        _cell("Scope", _value(_one_line(sheet, "scope", fields.scope))),
-        _cell("Sheet", _value(_one_line(sheet, "sheet_counter", fields.sheet_counter))),
-        _cell("Page", _PAGE_COUNTER, mark=PAGE_COUNTER_LABEL),
-    ]
-    children = ", ".join(row1 + row2)
-    columns = ", ".join(f"{_mm(w)}mm" for w in (c1, c2, c3, c4, c5, c6, c7, logo))
+    notice_cell = _notice_cell(fields.notice, sizes, width_mm=notice_w, height_mm=notice_h)
+    logo_cell = _logo_cell(fields.logo, size_mm=widths[7])
+    children = ", ".join(_title_rows(sheet, fields, sizes, (notice_cell, logo_cell)))
+    columns = ", ".join(f"{_mm(w)}mm" for w in widths)
     rows = f"{_mm(row_height)}mm, {_mm(row_height)}mm"
     return (
         f"#place(top+left, dx: {x0}mm, dy: {_mm(band_top)}mm, "
@@ -402,9 +402,9 @@ def _title_block(sheet: SheetFormat, fields: TitleBlockFields) -> str:
     )
 
 
-def background(sheet: SheetFormat, fields: TitleBlockFields) -> str:
+def background(sheet: SheetFormat, fields: TitleBlockFields, sizes: Sizes) -> str:
     """The `#page` background: border, grid, and the title block if `title_block_fits`."""
-    parts = [_frame_border(sheet), _grid(sheet)]
+    parts = [_frame_border(sheet), _grid(sheet, sizes)]
     if title_block_fits(sheet):
-        parts.append(_title_block(sheet, fields))
+        parts.append(_title_block(sheet, fields, sizes))
     return "[" + "\n".join(parts) + "]"

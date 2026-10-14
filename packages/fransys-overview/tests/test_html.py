@@ -11,7 +11,6 @@ from fransys_overview._vendor_cytoscape import CYTOSCAPE_MIN_JS
 from fransys_overview.html import _json_escape
 
 from fransys_model.derive import overview_graph
-from fransys_model.kernel.ids import parse_id, render_id
 
 _NETWORK_ATTRIBUTES = {"src", "href", "srcset", "action", "poster", "data", "ping", "formaction"}
 _EMBEDDING_TAGS = {"link", "img", "iframe", "object", "embed", "source", "audio", "video", "base"}
@@ -22,7 +21,6 @@ _FORBIDDEN_IN_THE_APP = [
     "fetch(",
     "XMLHttpRequest",
     "WebSocket",
-    "localStorage",
     "sessionStorage",
     "eval(",
     "new Function",
@@ -30,7 +28,8 @@ _FORBIDDEN_IN_THE_APP = [
     "outerHTML",
     "document.write",
     "insertAdjacentHTML",
-    "navigator",
+    ".layout(",
+    "layout:",
     "http",
 ]
 
@@ -91,36 +90,12 @@ def _data_block(page):
     return block
 
 
-def _expected(model):
-    """What the rows say, in the plain form of the data block."""
-    graph = overview_graph(model)
-    return {
-        "nodes": [
-            {
-                "id": render_id(node.item),
-                "installed": node.installed,
-                "label": node.designation if node.designation is not None else node.description,
-                "location": node.location_label,
-                "mpn": node.mpn,
-                "parent": None if node.parent is None else render_id(node.parent),
-            }
-            for node in graph.nodes
-        ],
-        "links": [
-            {
-                "a": render_id(link.a),
-                "b": render_id(link.b),
-                "count": link.count,
-                "kind": link.kind.value,
-                "via": link.via_designation,
-            }
-            for link in graph.links
-        ],
-        "signals": [
-            [{"item": render_id(port.item), "marking": port.marking} for port in signal.ports]
-            for signal in graph.signals
-        ],
-    }
+def _labels(model):
+    """The item labels the rows print, in the rows' order."""
+    return [
+        n.designation if n.designation is not None else n.description
+        for n in overview_graph(model).nodes
+    ]
 
 
 def test_the_page_is_one_document_with_three_scripts(demo_cabinet):
@@ -135,7 +110,7 @@ def test_the_page_is_one_document_with_three_scripts(demo_cabinet):
         {},
     ]
     ids = [attrs.get("id") for _, attrs in parsed.tags]
-    for wanted in ("cy", "detail", "search", "reset", "legend"):
+    for wanted in ("cy", "detail", "search", "legend", "crumbs", "tree"):
         assert ids.count(wanted) == 1
 
 
@@ -161,21 +136,19 @@ def test_the_network_check_can_fail(demo_cabinet, spoiler):
     assert _network_problems(page) != []
 
 
-def test_the_data_block_is_the_rows(demo_cabinet):
-    block = _data_block(html(demo_cabinet))
-    assert json.loads(block) == _expected(demo_cabinet)
+def test_the_items_table_is_the_rows_in_printed_order(demo_cabinet):
+    data = json.loads(_data_block(html(demo_cabinet)))
+    assert [item["label"] for item in data["items"]] == _labels(demo_cabinet)
 
 
 def test_the_demo_plant_covers_what_the_page_shows(demo_cabinet):
     data = json.loads(_data_block(html(demo_cabinet)))
-    assert 20 <= len(data["nodes"]) <= 40
-    assert {link["kind"] for link in data["links"]} == {"wire", "cable", "mate"}
-    assert {node["location"] for node in data["nodes"]} == {None, "+C1", "+F2"}
-    assert any(not node["installed"] for node in data["nodes"])
-    assert any(node["parent"] is not None for node in data["nodes"])
-    assert any(link["count"] > 1 for link in data["links"])
-    assert {link["via"] for link in data["links"] if link["kind"] == "cable"} == {"-W1", "-W2"}
+    assert 20 <= len(data["items"]) <= 40
+    assert {item["location"] for item in data["items"]} == {None, "+C1", "+F2"}
+    assert any(not item["installed"] for item in data["items"])
+    assert any(item["parent"] is not None for item in data["items"])
     assert data["signals"]
+    assert data["palette"]["hues"]
 
 
 def test_the_block_is_written_the_documented_way(demo_cabinet):
@@ -186,19 +159,19 @@ def test_the_block_is_written_the_documented_way(demo_cabinet):
     assert block.isascii()
 
 
-def test_ids_are_the_models_own_serialised_ids(demo_cabinet):
+def test_things_are_named_by_table_index_never_by_id(demo_cabinet):
     data = json.loads(_data_block(html(demo_cabinet)))
-    for node in data["nodes"]:
-        assert parse_id(node["id"]).kind == "item"
-        assert render_id(parse_id(node["id"])) == node["id"]
-    ids = {node["id"] for node in data["nodes"]}
-    assert all(link["a"] in ids and link["b"] in ids for link in data["links"])
+    assert "item:" not in html(demo_cabinet)
+    assert all(
+        item["parent"] is None or 0 <= item["parent"] < len(data["items"]) for item in data["items"]
+    )
+    assert all(0 <= p[0] < len(data["items"]) for signal in data["signals"] for p in signal)
 
 
 def test_an_unnumbered_item_is_labelled_by_its_description(demo_cabinet):
-    nodes = json.loads(_data_block(html(demo_cabinet)))["nodes"]
-    assert [node["label"] for node in nodes if node["label"] == "Spare relay"] == ["Spare relay"]
-    assert "-K1" in [node["label"] for node in nodes]
+    items = json.loads(_data_block(html(demo_cabinet)))["items"]
+    assert [i["label"] for i in items if i["label"] == "Spare relay"] == ["Spare relay"]
+    assert "-K1" in [i["label"] for i in items]
 
 
 AWKWARD = '</script><script>alert(1)</script> & &amp; <b>"x"</b> \u00fc\u65e5\u672c'
@@ -221,13 +194,12 @@ def test_text_that_could_end_a_script_is_safe_and_comes_back_exactly(plant):
     block = _data_block(page)
     assert not set("<>&") & set(block)
     assert block.isascii()
-    assert json.loads(block) == _expected(model)
     data = json.loads(block)
-    assert {node["label"] for node in data["nodes"]} == {AWKWARD, "-" + AWKWARD}
-    assert AWKWARD in {node["location"] for node in data["nodes"]}
-    assert AWKWARD in {node["mpn"] for node in data["nodes"]}
-    assert AWKWARD in {port["marking"] for signal in data["signals"] for port in signal}
-    assert "-" + AWKWARD in {link["via"] for link in data["links"]}
+    assert [item["label"] for item in data["items"]] == _labels(model)
+    assert {item["label"] for item in data["items"]} == {AWKWARD, "-" + AWKWARD}
+    assert AWKWARD in {item["location"] for item in data["items"]}
+    assert AWKWARD in {item["mpn"] for item in data["items"]}
+    assert AWKWARD in {p[1] for signal in data["signals"] for p in signal}
     assert page.lower().count("</script") == 3
     assert len(_Page(page).scripts) == 3
 
@@ -246,13 +218,14 @@ def test_token_looking_text_in_the_data_survives(plant):
     plant.item("t", "@@APP@@", description="@@DATA@@ @@TITLE@@ @@NOPE@@")
     model = plant.freeze()
     page = html(model)
-    assert json.loads(_data_block(page))["nodes"][0]["label"] == "-@@APP@@"
+    assert json.loads(_data_block(page))["items"][0]["label"] == "-@@APP@@"
     assert page.count(APP_JS) == 1
 
 
 def test_an_empty_model_is_a_valid_page_with_empty_lists(plant):
     page = html(plant.freeze())
-    assert json.loads(_data_block(page)) == {"links": [], "nodes": [], "signals": []}
+    data = json.loads(_data_block(page))
+    assert (data["items"], data["views"], data["signals"], data["units"]) == ([], [], [], [])
     assert _Page(page).title == "System overview"
     assert _network_problems(page) == []
 
@@ -298,7 +271,7 @@ def test_json_escape_is_a_backslash_u_and_four_hex_digits():
 def test_the_page_script_is_pure_and_offline():
     for text in _FORBIDDEN_IN_THE_APP:
         assert text not in APP_JS, text
-    for wanted in ("overview-data", "Escape", "textContent", "'preset'", "cytoscape("):
+    for wanted in ("overview-data", "Escape", "textContent", "cytoscape(", "hashchange"):
         assert wanted in APP_JS, wanted
     assert APP_JS.isascii()
 

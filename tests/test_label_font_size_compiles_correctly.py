@@ -28,10 +28,15 @@ from pathlib import Path
 import typst
 from fransys_pdf import font_dir, source
 from fransys_render import pages
-from fransys_render._constants import ASCENT_RATIO
 
+from fransys_model.derive.print_sizes import (
+    ASCENT_RATIO,
+    TextRole,
+    font_size_mm,
+    role_height_mm,
+)
 from fransys_model.kernel import Draft, Origin, freeze, make_id
-from fransys_model.layout import DrawingSet, Label, LabelKind, Page, PageRole
+from fransys_model.layout import DrawingSet, Label, LabelKind, Page, PageRole, default_profile
 from fransys_model.vocab import (
     Aspect,
     AspectNode,
@@ -71,9 +76,11 @@ _MODULE_MM = 2.5
 _CONTENT_ORIGIN_MM = 5
 _LABEL_X_G, _LABEL_Y_G = 80, 80  # -> (35, 35) mm
 
-# `default_profile().text_height` is 8 G (`_constants.py`'s own docstring cites this for the
-# goldens); font_size_mm = grid_to_mm(0, 8, 2.5) = 2.5, the house sheet's intended label size.
-_EXPECTED_FONT_SIZE_MM = Decimal("2.5")
+# The label role is a 1.8 mm capital height (EXACT-SIZES E3); its font size is that over the
+# bundled font's capital ratio, to 0.0001 mm as render prints it.
+_EXPECTED_FONT_SIZE_MM = font_size_mm(
+    role_height_mm(TextRole.LABEL, default_profile().text_height_mm)
+).quantize(Decimal("0.0001"))
 
 # Tolerance on the measured ink HEIGHT of one digit glyph ("1", MARKING kind: the port name
 # verbatim, no dash prefix), not the font-size itself -- glyph metrics are never pixel-exact

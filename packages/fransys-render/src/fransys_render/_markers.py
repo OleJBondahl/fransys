@@ -8,9 +8,10 @@ from xml.sax.saxutils import escape
 from symdef import Direction
 
 from electrical_symbols import WIRING_GRID
-from fransys_model.derive import draws_as_line, text_size_mm
+from fransys_model.derive import draws_as_line, text_room_g
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.derive.order import drawn_on_page
+from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.layout import (
     HarnessLine,
@@ -25,8 +26,8 @@ from fransys_model.layout import (
 from fransys_model.layout import Page as PageRecord
 from fransys_model.vocab import functions, ports
 
-from ._constants import ASCENT_RATIO, MARKER_ARROW_DEPTH_G
-from ._numbers import format_decimal, grid_to_mm
+from ._constants import MARKER_ARROW_DEPTH_G
+from ._numbers import format_decimal, grid_to_mm, printed_font_mm
 from ._symbol_geometry import oriented_symbol, to_grid
 
 if TYPE_CHECKING:
@@ -256,16 +257,15 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
     drawn = marker if at is None else at
     box_x, box_y = box_origin(drawn, facing)
     lines = marker_text(model, marker).split("\n")  # A star reference wraps
+    font_mm = printed_font_mm(profile.text_height_mm)
+    room = text_room_g(profile.text_height_mm, sheet.module_mm)
     if drawn.vertical:
-        font_mm = text_size_mm(profile.text_height, sheet.module_mm)
-        pad_x = (marker.width - len(lines) * profile.text_height) // 2
+        pad_x = (marker.width - len(lines) * room) // 2
         y_mm = grid_to_mm(sheet.content_y_mm, box_y + marker.height // 2, sheet.module_mm)
         return "".join(
             text_glyph(
                 line,
-                grid_to_mm(
-                    sheet.content_x_mm, box_x + pad_x + index * profile.text_height, sheet.module_mm
-                )
+                grid_to_mm(sheet.content_x_mm, box_x + pad_x + index * room, sheet.module_mm)
                 + font_mm * ASCENT_RATIO,
                 y_mm,
                 font_mm,
@@ -274,14 +274,13 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
             for index, line in enumerate(lines)
         )
     center_x = box_x + marker.width // 2
-    pad_g = (marker.height - len(lines) * profile.text_height) // 2
-    font_size_mm = text_size_mm(profile.text_height, sheet.module_mm)
+    pad_g = (marker.height - len(lines) * room) // 2
     x_mm = grid_to_mm(sheet.content_x_mm, center_x, sheet.module_mm)
     glyphs = []
     for index, line in enumerate(lines):
-        top_g = box_y + pad_g + index * profile.text_height
+        top_g = box_y + pad_g + index * room
         top_mm = grid_to_mm(sheet.content_y_mm, top_g, sheet.module_mm)
-        glyphs.append(text_glyph(line, x_mm, top_mm + font_size_mm * ASCENT_RATIO, font_size_mm))
+        glyphs.append(text_glyph(line, x_mm, top_mm + font_mm * ASCENT_RATIO, font_mm))
     return "".join(glyphs)
 
 

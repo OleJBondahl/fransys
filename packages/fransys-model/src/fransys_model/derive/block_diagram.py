@@ -44,6 +44,7 @@ __all__ = [
     "DiagramLine",
     "box_dashed",
     "box_lines",
+    "box_of",
     "box_order",
     "diagram_facts",
     "diagram_lines",
@@ -126,7 +127,7 @@ def _on_connector(model: Model, port: Id[Port]) -> bool:
     return functions(model)[ports(model)[port].function].kind is FunctionKind.CONNECTOR
 
 
-def _box_of(model: Model, landed: Id[Item], unit: Id[Unit] | None) -> BoxKey | None:
+def box_of(model: Model, landed: Id[Item], unit: Id[Unit] | None) -> BoxKey | None:
     """The reading's box holding `landed`: a child unit instance, or the root item itself.
 
     A unit-held item climbs `unit_chain`, a unit-less one its `parent` chain. `None` when `landed`
@@ -161,7 +162,7 @@ def end_box(model: Model, port: Id[Port], unit: Id[Unit] | None) -> BoxEnd | Non
         if mated is None:
             return None
         landed, anchored = mated, True
-    box = _box_of(model, landed, unit)
+    box = box_of(model, landed, unit)
     return None if box is None else BoxEnd(box=box, landed=landed, anchored=anchored)
 
 

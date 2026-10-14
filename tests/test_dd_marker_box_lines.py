@@ -13,8 +13,9 @@ from pathlib import Path
 
 import pytest
 
+from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_model.derive.drawing_text import marker_text
-from fransys_model.layout import LinkMarker, layout_of, profile_of
+from fransys_model.layout import LinkMarker, layout_of
 
 
 def _star_per_set():
@@ -47,7 +48,7 @@ def test_a_box_holds_a_line_for_every_target_at_its_pin(fill: int) -> None:
     #     -> `first.width` (other-page)
     fixture = _star_per_set()
     model, _ = fixture._build(fixture._APART, fill=fill)
-    height = profile_of(model).text_height
+    height = profile_and_sheet(model)[0].text_height
     shared = 0
     assert _pins(model)
     for markers in _pins(model).values():

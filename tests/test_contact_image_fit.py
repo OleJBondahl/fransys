@@ -21,8 +21,9 @@ from _model_build_cover import layout_trigger_document
 from fransys_render import pages
 from fransys_render._numbers import grid_to_mm
 
+from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import text_width
-from fransys_model.layout import Label, LabelKind, default_sheet_format, layout_of, profile_of
+from fransys_model.layout import Label, LabelKind, default_sheet_format, layout_of
 
 _TEXT = re.compile(r'<text class="label" x="([^"]+)" y="([^"]+)" font-size="[^"]+">([^<]*)</text>')
 _LINE = re.compile(r'<line class="marker" x1="([^"]+)" y1="([^"]+)" x2="([^"]+)"')
@@ -130,7 +131,7 @@ def _drawn_image(tmp_path: Path, names: tuple[str, str, str]) -> tuple[list, dic
         "bottom": bottom,
         "divider": divider,
         "module": sheet.module_mm,
-        "text_height": profile_of(model).text_height,
+        "text_height": profile_and_sheet(model)[0].text_height,
     }
 
 

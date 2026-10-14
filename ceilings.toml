@@ -21,7 +21,7 @@ surface_docstring_lines = 15
 "packages/fransys-author/src/fransys_author/design.py::Scope.symbol" = 17
 "packages/fransys-author/src/fransys_author/handles.py::Strip.terminal" = 17
 "packages/fransys-kicad/src/fransys_kicad/_sexpr.py::_read" = 17
-"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_scene" = 47
+"packages/fransys-layout/src/fransys_layout/engines/schematic/engine.py::stage_layout" = 46
 "packages/fransys-layout/src/fransys_layout/engines/schematic/read/views.py::item_views" = 35
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/labels.py::labels" = 19
 "packages/fransys-layout/src/fransys_layout/engines/schematic/write/placements.py::placements" = 23
@@ -141,12 +141,12 @@ surface_docstring_lines = 15
 "packages/fransys-layout/src/fransys_layout/stages/route.py" = 333
 "packages/fransys-model/src/fransys_model/derive/designation.py" = 360
 "packages/fransys-model/src/fransys_model/derive/drawing_text.py" = 560
-"packages/fransys-model/src/fransys_model/derive/rows.py" = 370
+"packages/fransys-model/src/fransys_model/derive/rows.py" = 465
 "packages/fransys-parts/src/fransys_parts/lint.py" = 514
 "packages/fransys-pdf/src/fransys_pdf/_lists.py" = 352
-"packages/fransys-pdf/src/fransys_pdf/checks.py" = 385
+"packages/fransys-pdf/src/fransys_pdf/checks.py" = 388
 "packages/fransys/src/fransys/derive.py" = 315
-"packages/fransys/src/fransys/pipeline.py" = 776
+"packages/fransys/src/fransys/pipeline.py" = 817
 
 [docstring_lines]
 "packages/fransys-author/src/fransys_author/handles.py::Item.__getitem__" = 6
@@ -192,14 +192,14 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/pipeline.py::write" = 1
 
 [md_tokens]
-"packages/fransys-layout/docs/design/lint.md" = 5263
+"packages/fransys-layout/docs/design/lint.md" = 5323
 "packages/fransys-layout/docs/rules/harness-lines.md" = 5101
 "packages/fransys-layout/docs/rules/shared-support.md" = 5073
 "packages/fransys-layout/docs/rules/step-4-references.md" = 5264
-"packages/fransys-layout/docs/rules/step-5-place.md" = 5714
+"packages/fransys-layout/docs/rules/step-5-place.md" = 5856
 "packages/fransys-model/docs/design/derive-queries.md" = 5065
 "packages/fransys/src/fransys/guide/authoring.md" = 5521
-"packages/fransys/src/fransys/guide/drawing.md" = 5357
+"packages/fransys/src/fransys/guide/drawing.md" = 5459
 "packages/fransys/src/fransys/guide/findings.md" = 6657
 "packages/fransys/src/fransys/guide/reading.md" = 5062
 

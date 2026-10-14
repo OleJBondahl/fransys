@@ -17,6 +17,7 @@ from fransys_layout.stages.connector_boxes import PlacedConnectorBox
 from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
 from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
 from fransys_layout.stages.firstlabels import labelled_pages
+from fransys_layout.stages.image_refs import replica_cells
 from fransys_layout.stages.images import contact_images
 from fransys_layout.stages.middle_tall import recut, tall_groups
 from fransys_layout.stages.offstubs import OffEnd
@@ -53,6 +54,7 @@ from .read.harness_lines import box_specs
 from .read.labels import label_requests
 from .read.line_texts import marker_keepouts
 from .read.location_paths import location_paths, unit_paths
+from .read.printed import printed_set_numbers
 from .read.tag_texts import tag_texts
 from .read.units import (
     boundary_edge_set,
@@ -106,9 +108,26 @@ def stage_results(model: Model, inputs: StageInputs) -> tuple[StageResults, tupl
 
 
 def stage_scene(
-    model: Model, inputs: StageInputs
+    model: Model, inputs: StageInputs, printed: frozenset[int] | None = None
 ) -> tuple[StageResults, LintScene, tuple[Finding, ...]]:
     """`stage_results` and the scene its lint read, which the readability report measures."""
+    results, scene, found = stage_layout(model, inputs)
+    return results, scene, linted(model, scene, found, printed)
+
+
+def linted(
+    model: Model, scene: LintScene, found: tuple[Finding, ...], printed: frozenset[int] | None
+) -> tuple[Finding, ...]:
+    """`found` and the lint of `scene`, named and sorted; look findings skip unprinted sets."""
+    lint = lint_findings(scene, printed)
+    named = named_findings(model, scene.inputs.functions, scene.layout, scene.ink, [*found, *lint])
+    return tuple(sorted(named, key=lambda f: (f.code, f.subjects, f.message)))
+
+
+def stage_layout(
+    model: Model, inputs: StageInputs
+) -> tuple[StageResults, LintScene, tuple[Finding, ...]]:
+    """Stages 1 to 8: the results, the scene stage 9 lints, and the findings before the lint."""
     drawn, resolve_findings = resolve_with_defaults(inputs.functions, DEFAULT_RULES, inputs.choices)
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
@@ -192,7 +211,13 @@ def stage_scene(
     # the shift pushes out of the content box is reported by OUT_OF_CONTENT_BOX
     pages, placed_all, markers = shift_pages(plans, pages, markers, inputs.sheet, placement.rooms)
     # The contact image under each coil, and each contact's reference to its coil
-    pages, contact_refs = contact_images(plans, pages, img, markers, location_paths(model, plans))
+    pages, contact_refs = contact_images(
+        plans,
+        pages,
+        replace(img, replicas=replica_cells(columns)),
+        markers,
+        location_paths(model, plans),
+    )
     # model-0059: each black box's dash-dot outline and its title, before routing
     placed_box = boxed(inputs, placed_all, boxes, lines)
     laid = Laid(
@@ -250,10 +275,7 @@ def stage_scene(
     ink = harness_ink(drawn_lines, placed_box, drawn_hidden(placed_all, hidden, markers))
     edges = open_ends(inputs.functions, boundary_edge_set(model))
     scene = LintScene(layout, columns, drawn, inputs, members, edges, ink)
-    lint = lint_findings(scene)
-    findings = named_findings(
-        model, inputs.functions, layout, ink, [*findings, *drawn_lines.findings, *lint]
-    )
+    findings.extend(drawn_lines.findings)
     planned = {planned.column for plan in plans for planned in plan.columns}
     return (
         StageResults(
@@ -268,7 +290,7 @@ def stage_scene(
             lines=drawn_lines,
         ),
         scene,
-        tuple(sorted(findings, key=lambda f: (f.code, f.subjects, f.message))),
+        tuple(findings),
     )
 
 
@@ -346,6 +368,6 @@ def lay_out_schematic(model: Model) -> tuple[Model, tuple[Finding, ...]]:
 
 def _run_once(model: Model, unit: Id[Any] | None) -> tuple[Model, tuple[Finding, ...]]:
     """The whole pass with the profile of `unit` (`None`: the top design's)."""
-    results, findings = stage_results(model, inputs := read_inputs(model, unit))
-    keys = write_keys(model, inputs.functions)
-    return write_layout(model, results, keys), findings
+    results, scene, found = stage_layout(model, inputs := read_inputs(model, unit))
+    laid = write_layout(model, results, write_keys(model, inputs.functions))
+    return laid, linted(model, scene, found, printed_set_numbers(laid))

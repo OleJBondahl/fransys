@@ -24,6 +24,7 @@ from fransys_pdf import source
 from fransys_pdf._cable_runs import Block
 from fransys_pdf._drawings import _cable_runs
 from fransys_pdf._geometry import document_heading, preamble, subject_label
+from fransys_pdf._sizes import sizes_of
 
 from fransys_model.kernel.ids import render_id
 from fransys_model.vocab import DocumentPreset, PageKind, documents
@@ -82,7 +83,7 @@ def test_an_item_documents_subject_label_has_no_sign():
 def test_a_drawing_pages_scope_cell_reads_the_bare_location():
     c1 = location("C1", "Demo cabinet")
     text = _schematic_source(c1)
-    assert 'text(size: 8pt, "Scope"), text(size: 10pt, text("C1"))' in text
+    assert 'text(size: 2.46912mm, "Scope"), text(size: 3.42934mm, text("C1"))' in text
     assert '"+C1"' not in text
 
 
@@ -93,5 +94,5 @@ def test_a_harness_drawing_pages_scope_cell_reads_the_bare_harness():
     sheet = sheet_format("wide", width_mm=150, height_mm=200, frame_columns=1, frame_rows=1)
     block = Block("k", "", "")
     runs = _cable_runs(m, documents(m)[doc.id], sheet, (block,), {"k": "<svg>block</svg>"})
-    text = preamble(sheet) + runs
-    assert 'text(size: 8pt, "Scope"), text(size: 10pt, text("H1"))' in text
+    text = preamble(sizes_of(m, documents(m)[doc.id]), sheet) + runs
+    assert 'text(size: 2.46912mm, "Scope"), text(size: 3.42934mm, text("H1"))' in text

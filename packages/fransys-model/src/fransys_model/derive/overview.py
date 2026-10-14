@@ -5,12 +5,14 @@ See design/derive-queries-structure.md.
 
 from typing import TYPE_CHECKING
 
+from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
+from fransys_model.vocab.membership import unit_items
 from fransys_model.vocab.tables import conductors, functions, items, mates, parts, ports
-lazy from fransys_model.kernel import Model
 
 from .closure import physical_nets
 from .designation import designation_holder, own_designation_or_none, printed_designation
 from .lookups import item_description, item_of_port, location_label, pin_order, terminal_items
+from .memo import Memo
 from .order import NaturalKey, natural_key
 from .rows import (
     OverviewGraph,
@@ -24,7 +26,7 @@ from .rows import (
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
     from fransys_model.vocab.connectivity import Conductor
-    from fransys_model.vocab.core import Item
+    from fransys_model.vocab.core import Item, Unit
 
     type _Group = tuple[Id[Item], Id[Item], OverviewLinkKind, Id[Item] | None]
 
@@ -160,6 +162,7 @@ def _signals(model: Model) -> tuple[OverviewSignal, ...]:
     )
 
 
+@digest_cached(DIGEST_CACHE_SIZE)
 def overview_graph(model: Model) -> OverviewGraph:
     """The overview: one node per item, the aggregated links between items, the multi-item signals.
 
@@ -174,3 +177,28 @@ def overview_graph(model: Model) -> OverviewGraph:
     port id)`; signals sort by their first port.
     """
     return OverviewGraph(nodes=_nodes(model), links=_links(model), signals=_signals(model))
+
+
+@Memo
+def _links_at(model: Model) -> dict[Id[Item], tuple[int, ...]]:
+    """For each item, the positions in `overview_graph(model).links` of the links it ends."""
+    found: dict[Id[Item], list[int]] = {}
+    for at, link in enumerate(overview_graph(model).links):
+        for end in {link.a, link.b}:
+            found.setdefault(end, []).append(at)
+    return {item: tuple(held) for item, held in found.items()}
+
+
+def links_of(model: Model, item: Id[Item]) -> tuple[OverviewLink, ...]:
+    """The links of `overview_graph` that end at `item`, in link order."""
+    links = overview_graph(model).links
+    return tuple(links[at] for at in _links_at(model).get(item, ()))
+
+
+@Memo
+def unit_links(model: Model, unit: Id[Unit]) -> tuple[OverviewLink, ...]:
+    """The links of `overview_graph` that end at an item of `unit` or of a unit inside it."""
+    at = _links_at(model)
+    picked = sorted({n for item in unit_items(model, unit) for n in at.get(item, ())})
+    links = overview_graph(model).links
+    return tuple(links[n] for n in picked)

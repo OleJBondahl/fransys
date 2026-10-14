@@ -20,7 +20,7 @@ from unittest import mock
 import pytest
 
 from fransys_layout.engines.schematic import engine
-from fransys_layout.engines.schematic.engine import stage_results
+from fransys_layout.engines.schematic.engine import stage_layout
 from fransys_model.vocab.tables import functions, ports
 
 _FIELD_CASE = (
@@ -39,12 +39,12 @@ def _laid_out(tmp: Path, *, in_unit: bool) -> tuple[Any, Any]:
     """The field case built, its model and the engine's layout."""
     captured: list[Any] = []
 
-    def recording_results(model: Any, inputs: Any) -> Any:
-        results, findings = stage_results(model, inputs)
-        captured.append(results.layout)
-        return results, findings
+    def recording_layout(model: Any, inputs: Any) -> Any:
+        staged = stage_layout(model, inputs)
+        captured.append(staged[0].layout)
+        return staged
 
-    with mock.patch.object(engine, "stage_results", recording_results):
+    with mock.patch.object(engine, "stage_layout", recording_layout):
         model = _field_case._build(tmp, in_unit=in_unit).model
     return model, captured[-1]
 

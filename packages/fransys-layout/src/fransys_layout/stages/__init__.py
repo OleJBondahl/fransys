@@ -1,5 +1,6 @@
 """Stages layer: pure, engine-agnostic steps over small frozen values."""
 
+from ._ordering import group_order
 from .columns import boundary_key, columns_from_chains, replica_key
 from .cutpages import cut_pages
 from .labels import place_slot_labels
@@ -112,6 +113,7 @@ __all__ = (
     "column_widths",
     "columns_from_chains",
     "cut_pages",
+    "group_order",
     "links",
     "partition",
     "place",

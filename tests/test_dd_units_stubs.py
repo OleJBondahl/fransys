@@ -23,6 +23,7 @@ import pytest
 from _model_build_cover import layout_trigger_document
 from fransys_render import pages as render_pages
 
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.stages.tidy import TEXT_GAP
 from fransys_model.derive import (
     connector_box_lines,
@@ -41,7 +42,6 @@ from fransys_model.layout import (
     Page,
     StarKind,
     SymbolPlacement,
-    default_profile,
     layout_of,
 )
 from fransys_model.vocab import Aspect
@@ -486,7 +486,7 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
     model = _system_model()
     outlines = layout_of(model, Outline)
     assert len(outlines) == 4
-    height = default_profile().text_height
+    height = DEFAULT_PROFILE.text_height
     above = 0
     inside = 0
     for outline_id, title in _titles(model).items():

@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))  # the sibling fixture modules
 import ha_p3_cases
 import ha_study_board
 
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import WIRING_GRID
 from fransys_model.derive import harness_line_ends, line_conductors, line_designation
 from fransys_model.derive.drawing_text import off_stub_text
@@ -29,7 +30,6 @@ from fransys_model.layout import (
     Route,
     StarKind,
     SymbolPlacement,
-    default_profile,
     layout_of,
 )
 from fransys_model.vocab.tables import boundaries, functions, items
@@ -96,7 +96,7 @@ def test_each_line_label_stands_beside_its_longest_run_and_none_overlap() -> Non
     UNDO: `text_centre` returns a fixed spot, `Point(x=0, y=0)`.
     """
     model = _board().model
-    height = default_profile().text_height
+    height = DEFAULT_PROFILE.text_height
     boxes = []
     for one in layout_of(model, HarnessLine).values():
         points = [(p.x, p.y) for p in one.points]

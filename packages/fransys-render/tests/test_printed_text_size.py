@@ -1,14 +1,15 @@
-"""model-0195 (A3): render's font size on a label, a marker and a symbol text is `text_size_mm`."""
+"""EXACT-SIZES E3/E4: a label, a marker and a symbol text print at the profile's capital height."""
 
 import dataclasses
 import re
+from decimal import Decimal
 
 import pytest
 from fransys_render._labels import _label_element
 from fransys_render._markers import _text_element, marker_facing
 from fransys_render._symbols import _text_glyph, symbols_on_page
 
-from fransys_model.derive import text_size_mm
+from fransys_model.derive.print_sizes import CAPITAL_RATIO
 from fransys_model.layout import (
     Label,
     LinkMarker,
@@ -20,7 +21,7 @@ from fransys_model.layout import (
 
 pytestmark = pytest.mark.wp("render")
 
-_PROFILE = dataclasses.replace(default_profile(), text_height=5)
+_PROFILE = dataclasses.replace(default_profile(), text_height_mm=Decimal("2.5"))
 
 
 def _font_size(svg: str) -> str:
@@ -29,8 +30,9 @@ def _font_size(svg: str) -> str:
     return match.group(1)
 
 
-def _expected(sheet) -> str:
-    return format(text_size_mm(_PROFILE.text_height, sheet.module_mm).normalize(), "f")
+def _expected() -> str:
+    size = (Decimal("2.5") / CAPITAL_RATIO).quantize(Decimal("0.0001"))
+    return format(size.normalize(), "f")
 
 
 def _page_and_sheet(model):
@@ -46,7 +48,7 @@ def test_a_label_prints_at_the_derived_size(cabinet_laid_out):
         if item.page == page.id and item.slot not in ("contact_no", "contact_nc")
     )
     svg = _label_element(cabinet_laid_out, sheet, _PROFILE, label)
-    assert _font_size(svg) == _expected(sheet)
+    assert _font_size(svg) == _expected()
 
 
 @pytest.mark.parametrize("vertical", [False, True])
@@ -57,11 +59,11 @@ def test_a_marker_prints_at_the_derived_size(cabinet_laid_out, vertical):
     )
     facing = marker_facing(cabinet_laid_out, marker)
     svg = _text_element(sheet, _PROFILE, cabinet_laid_out, marker, facing)
-    assert _font_size(svg) == _expected(sheet)
+    assert _font_size(svg) == _expected()
 
 
 def test_a_symbol_text_prints_at_the_derived_size(cabinet_laid_out):
     page, sheet = _page_and_sheet(cabinet_laid_out)
     placement = symbols_on_page(cabinet_laid_out, page)[0]
     svg = _text_glyph(sheet, _PROFILE, dataclasses.replace(placement, symbol="unknown"))
-    assert _font_size(svg) == _expected(sheet)
+    assert _font_size(svg) == _expected()

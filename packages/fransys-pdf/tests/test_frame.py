@@ -25,6 +25,7 @@ from fransys_pdf._frame import (
     text_width_mm,
     title_block_fits,
 )
+from fransys_pdf._sizes import Sizes
 
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import make_id
@@ -33,6 +34,7 @@ from fransys_model.layout import SheetFormat, default_sheet_format
 from fransys_model.vocab import DocumentPreset, PageKind, documents
 
 K = PageKind
+_TEN_PT_MM = 10 * 25.4 / 72  # the size the width numbers in these tests were worked out at
 _SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm"></svg>'
 
 
@@ -97,12 +99,12 @@ def test_title_block_band_too_small_still_draws_frame_and_grid_with_no_title_blo
     # Frame border, sized from width_mm/height_mm/content_x_mm/content_y_mm alone, still drawn.
     assert "rect(width: 400mm, height: 277mm, stroke: 0.5mm)" in text
     # Grid still drawn: column 1's label is present.
-    assert 'text(size: 8pt, "1")' in text
+    assert 'text(size: 2.46912mm, "1")' in text
     # No title-block content at all: `_cell`'s own label/value stack never appears. (The
     # cover page's own project-facts table also says "Title", so that alone isn't specific
     # enough -- this checks for the title-block cell's distinctive `stack(dir: ttb, ...)`.)
-    assert 'stack(dir: ttb, spacing: 1mm, text(size: 8pt, "Title")' not in text
-    assert 'stack(dir: ttb, spacing: 1mm, text(size: 8pt, "Customer")' not in text
+    assert 'stack(dir: ttb, spacing: 1mm, text(size: 2.46912mm, "Title")' not in text
+    assert 'stack(dir: ttb, spacing: 1mm, text(size: 2.46912mm, "Customer")' not in text
 
 
 def test_row_strips_sit_in_the_true_left_and_right_margins():
@@ -168,8 +170,8 @@ def test_grid_columns_come_from_the_sheet_format_not_a_constant():
     svgs = {render_id(page.id): _SVG}
     text = source(m, doc.id, svgs)
     for label in ("1", "2", "3", "4", "5", "6", "7", "8"):
-        assert f'text(size: 8pt, "{label}")' in text
-    assert 'text(size: 8pt, "9")' not in text
+        assert f'text(size: 2.46912mm, "{label}")' in text
+    assert 'text(size: 2.46912mm, "9")' not in text
     # The grid strip's own width is `content_width_mm` (380), not the frame border's
     # `width_mm - 2*content_x_mm` (400, which the border rect legitimately also emits).
     assert "block(width: 380mm, height: 10mm" in text
@@ -193,9 +195,9 @@ def test_grid_columns_with_six_columns_differ_from_eight():
     svgs = {render_id(page.id): _SVG}
     text = source(m, doc.id, svgs)
     for label in ("1", "2", "3", "4", "5", "6"):
-        assert f'text(size: 8pt, "{label}")' in text
-    assert 'text(size: 8pt, "7")' not in text
-    assert 'text(size: 8pt, "8")' not in text
+        assert f'text(size: 2.46912mm, "{label}")' in text
+    assert 'text(size: 2.46912mm, "7")' not in text
+    assert 'text(size: 2.46912mm, "8")' not in text
 
 
 def test_no_header_or_footer_argument_on_any_page_kind():
@@ -271,8 +273,8 @@ def test_bold_text_width_differs_from_regular():
     table (not a no-op): the same text set bold measures a different width.
     """
     text = "A somewhat long value"
-    regular = text_width_mm(text, size_pt=10.0, bold=False)
-    bold = text_width_mm(text, size_pt=10.0, bold=True)
+    regular = text_width_mm(text, size_mm=_TEN_PT_MM, bold=False)
+    bold = text_width_mm(text, size_mm=_TEN_PT_MM, bold=True)
     assert regular != bold
 
 
@@ -282,14 +284,14 @@ def test_cut_to_width_bold_needs_more_cutting_than_regular():
     the regular text fits untouched while the bold text must be cut.
     """
     text = "A somewhat long value"
-    size_pt = 10.0
-    regular_width = text_width_mm(text, size_pt=size_pt, bold=False)
-    bold_width = text_width_mm(text, size_pt=size_pt, bold=True)
+    size_mm = _TEN_PT_MM
+    regular_width = text_width_mm(text, size_mm=size_mm, bold=False)
+    bold_width = text_width_mm(text, size_mm=size_mm, bold=True)
     width_mm = (regular_width + bold_width) / 2
-    assert fits(text, size_pt=size_pt, bold=False, width_mm=width_mm)
-    assert not fits(text, size_pt=size_pt, bold=True, width_mm=width_mm)
-    assert cut_to_width(text, size_pt=size_pt, bold=False, width_mm=width_mm) == (text, False)
-    bold_cut, bold_was_cut = cut_to_width(text, size_pt=size_pt, bold=True, width_mm=width_mm)
+    assert fits(text, size_mm=size_mm, bold=False, width_mm=width_mm)
+    assert not fits(text, size_mm=size_mm, bold=True, width_mm=width_mm)
+    assert cut_to_width(text, size_mm=size_mm, bold=False, width_mm=width_mm) == (text, False)
+    bold_cut, bold_was_cut = cut_to_width(text, size_mm=size_mm, bold=True, width_mm=width_mm)
     assert bold_was_cut is True
     assert bold_cut != text
     assert bold_cut.endswith("…")
@@ -300,11 +302,11 @@ def test_cut_to_width_default_bold_is_false():
     width where only the bold rendering needs cutting, the default call must not cut.
     """
     text = "A somewhat long value"
-    size_pt = 10.0
-    regular_width = text_width_mm(text, size_pt=size_pt, bold=False)
-    bold_width = text_width_mm(text, size_pt=size_pt, bold=True)
+    size_mm = _TEN_PT_MM
+    regular_width = text_width_mm(text, size_mm=size_mm, bold=False)
+    bold_width = text_width_mm(text, size_mm=size_mm, bold=True)
     width_mm = (regular_width + bold_width) / 2
-    assert cut_to_width(text, size_pt=size_pt, width_mm=width_mm) == (text, False)
+    assert cut_to_width(text, size_mm=size_mm, width_mm=width_mm) == (text, False)
 
 
 def test_cut_to_width_loop_uses_bold_metrics_not_regular():
@@ -313,13 +315,17 @@ def test_cut_to_width_loop_uses_bold_metrics_not_regular():
     regular cumulative widths of a bold-heavy repeated character, cutting bold text stops
     three characters earlier than cutting the same text with the loop's bold flag dropped.
     """
-    size_pt = 10.0
-    text = "m" * 20  # bold 'm' (0.833 em) is noticeably wider than regular 'm' (0.7778 em)
-    ellipsis_width = text_width_mm("…", size_pt=size_pt, bold=True)
-    budget = 28.0  # between 9 bold m's (26.45) and 10 bold m's (29.39) cumulative width
+    size_mm = _TEN_PT_MM
+    text = "m" * 20  # bold 'm' is noticeably wider than regular 'm' in the bundled font
+    ellipsis_width = text_width_mm("…", size_mm=size_mm, bold=True)
+    bold_9 = text_width_mm("m" * 9, size_mm=size_mm, bold=True)
+    regular_10 = text_width_mm("m" * 10, size_mm=size_mm, bold=False)
+    bold_10 = text_width_mm("m" * 10, size_mm=size_mm, bold=True)
+    budget = (bold_9 + bold_10) / 2  # between 9 and 10 bold ms
+    assert regular_10 <= budget  # the regular table would keep a tenth m: the test can tell
     width_mm = budget + ellipsis_width
-    assert not fits(text, size_pt=size_pt, bold=True, width_mm=width_mm)
-    kept, was_cut = cut_to_width(text, size_pt=size_pt, bold=True, width_mm=width_mm)
+    assert not fits(text, size_mm=size_mm, bold=True, width_mm=width_mm)
+    kept, was_cut = cut_to_width(text, size_mm=size_mm, bold=True, width_mm=width_mm)
     assert was_cut is True
     assert kept == "m" * 9 + "…"
 
@@ -331,56 +337,56 @@ def test_cut_to_width_stops_strictly_before_the_width_not_at_it():
     """
     text = "ABCDEFGH"
 
-    def _exact(size_pt: float) -> bool:  # float sums must give back the budget exactly
-        e, c = text_width_mm("…", size_pt=size_pt), text_width_mm("AB", size_pt=size_pt)
+    def _exact(size_mm: float) -> bool:  # float sums must give back the budget exactly
+        e, c = text_width_mm("…", size_mm=size_mm), text_width_mm("AB", size_mm=size_mm)
         return (e + c) - e == c
 
-    size_pt = next(s for s in (10.0, 9.0, 8.0, 12.0, 11.0, 7.0) if _exact(s))
-    ellipsis_width = text_width_mm("…", size_pt=size_pt, bold=False)
-    candidate_width = text_width_mm("AB", size_pt=size_pt, bold=False)
+    size_mm = next(s for s in (10.0, 9.0, 8.0, 12.0, 11.0, 7.0) if _exact(s))
+    ellipsis_width = text_width_mm("…", size_mm=size_mm, bold=False)
+    candidate_width = text_width_mm("AB", size_mm=size_mm, bold=False)
     width_mm = ellipsis_width + candidate_width
-    assert not fits(text, size_pt=size_pt, width_mm=width_mm)
-    assert cut_to_width(text, size_pt=size_pt, width_mm=width_mm) == ("AB…", True)
+    assert not fits(text, size_mm=size_mm, width_mm=width_mm)
+    assert cut_to_width(text, size_mm=size_mm, width_mm=width_mm) == ("AB…", True)
 
 
 def test_wrap_lines_of_empty_text_is_one_empty_line():
     """The `not words` guard: no words at all still returns one (empty) line, never none."""
-    assert _wrap_lines("", size_pt=10, width_mm=100) == [""]
+    assert _wrap_lines("", size_mm=10, width_mm=100) == [""]
 
 
 def test_wrap_lines_of_one_word_returns_it_unwrapped():
     """A single word never enters the `for` loop body at all -- the post-loop
     `lines.append(current)` is what actually returns it.
     """
-    assert _wrap_lines("OneWord", size_pt=10, width_mm=100) == ["OneWord"]
+    assert _wrap_lines("OneWord", size_mm=10, width_mm=100) == ["OneWord"]
 
 
 def test_wrap_lines_splits_two_words_that_do_not_fit_together():
     """The loop's `else` branch: when the combined candidate is too wide, the first word
     ends its own line and the second starts a new one -- neither dropped nor merged.
     """
-    size_pt = 10
+    size_mm = 10
     word1, word2 = "wordone", "wordtwo"
-    combined_width = text_width_mm(f"{word1} {word2}", size_pt=size_pt)
-    single_widths = (text_width_mm(word1, size_pt=size_pt), text_width_mm(word2, size_pt=size_pt))
+    combined_width = text_width_mm(f"{word1} {word2}", size_mm=size_mm)
+    single_widths = (text_width_mm(word1, size_mm=size_mm), text_width_mm(word2, size_mm=size_mm))
     width_mm = (max(single_widths) + combined_width) / 2
     assert width_mm > max(single_widths)  # each word alone fits
     assert width_mm < combined_width  # together they do not
-    assert _wrap_lines(f"{word1} {word2}", size_pt=size_pt, width_mm=width_mm) == [word1, word2]
+    assert _wrap_lines(f"{word1} {word2}", size_mm=size_mm, width_mm=width_mm) == [word1, word2]
 
 
 def test_wrap_lines_keeps_two_words_together_at_the_exact_boundary():
     """The loop's own `<= width_mm` (not `<`) keeps two words on one line when their combined
     width lands exactly on `width_mm`, proving the comparison is inclusive, not strict.
     """
-    size_pt = 10
+    size_mm = 10
     text = "wordone wordtwo"
-    width_mm = text_width_mm(text, size_pt=size_pt)
-    assert _wrap_lines(text, size_pt=size_pt, width_mm=width_mm) == [text]
+    width_mm = text_width_mm(text, size_mm=size_mm)
+    assert _wrap_lines(text, size_mm=size_mm, width_mm=width_mm) == [text]
 
 
 def test_notice_fits_empty_text_is_always_true():
     """The `not text` early return: even a width and height too small for any real text
     still reports a fit, because there is no text to wrap.
     """
-    assert notice_fits("", width_mm=1, height_mm=1) is True
+    assert notice_fits("", Sizes(2.5, 3.4, 4.8, 6.9), width_mm=1, height_mm=1) is True

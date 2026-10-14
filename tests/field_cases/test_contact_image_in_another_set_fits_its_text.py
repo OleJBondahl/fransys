@@ -18,9 +18,10 @@ import fransys as fr
 import pytest
 from fransys.colours import BU
 
+from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import text_width
 from fransys_model.derive.drawing_text import contact_image
-from fransys_model.layout import Label, LabelKind, layout_of, profile_of
+from fransys_model.layout import Label, LabelKind, layout_of
 
 _WIRE = (BU, 0.5)
 
@@ -52,7 +53,7 @@ def _built():
 def tables() -> list[tuple[Label, list[str], int]]:
     """Each contact label, its entries (NO then NC), and the width its text needs."""
     model = _built().model
-    profile = profile_of(model)
+    profile, _, _ = profile_and_sheet(model)
     found = []
     for label in layout_of(model, Label).values():
         if label.kind is LabelKind.CROSS_REFERENCE and label.slot == "contacts":

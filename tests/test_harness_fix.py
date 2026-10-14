@@ -198,7 +198,7 @@ def test_hl19_the_box_over_k1_is_as_wide_as_its_cells_and_overlaps_no_text() -> 
     ]
     assert found == []
     # the symbols keep their places in their circuits: coil and contact stand in two columns
-    assert (placed[coil].x, placed[aux].x) == (232, 808)
+    assert (placed[coil].x, placed[aux].x) == (232, 816)
     assert not box.x <= placed[coil].x <= box.x + box.width
 
 

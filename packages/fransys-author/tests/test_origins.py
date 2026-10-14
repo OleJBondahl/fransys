@@ -238,7 +238,7 @@ def test_sheet_and_profile_origins_are_their_own_calling_lines(parts):
         column_gap=4,
         row_gap=4,
         route_margin=2,
-        text_height=3,
+        text_height_mm=Decimal("1.2"),
         marker_padding=1,
         route_turn_penalty=1,
         route_crossing_penalty=2,

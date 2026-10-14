@@ -50,14 +50,19 @@ def chain_records(scene: LintScene) -> StageRecords:
     return StageRecords(scene.columns, scene.drawn, connections, inputs.net_groups, inputs.mates)
 
 
-def lint_findings(scene: LintScene) -> list[Finding]:
-    """Stage 9: the geometry, chain, coherence and member findings of `scene.layout`."""
+def lint_findings(scene: LintScene, printed: frozenset[int] | None = None) -> list[Finding]:
+    """Stage 9: the geometry, chain, coherence and member findings of `scene.layout`.
+
+    The look findings skip a set that is not in `printed` (the printed sets' numbers, model-0201).
+    """
     layout, drawn, inputs = scene.layout, scene.drawn, scene.inputs
     members, open_ends = scene.members, scene.open_ends
-    findings = list(lint_geometry(layout, sheet=inputs.sheet, ink=scene.ink))
+    findings = list(lint_geometry(layout, sheet=inputs.sheet, ink=scene.ink, printed=printed))
     pin_functions = {s.function: s.pin_function for s in inputs.functions if s.pin_function}
-    findings.extend(lint_fill(layout, sheet=inputs.sheet, pin_functions=pin_functions))
-    findings.extend(lint_chains(layout, chain_records(scene), open_ends=open_ends))
+    findings.extend(
+        lint_fill(layout, sheet=inputs.sheet, pin_functions=pin_functions, printed=printed)
+    )
+    findings.extend(lint_chains(layout, chain_records(scene), open_ends=open_ends, printed=printed))
     # Star markers answer no cut decision
     paired = replace(layout, markers=tuple(m for m in layout.markers if not m.star))
     function_units = {spec.function: spec.unit for spec in inputs.functions}

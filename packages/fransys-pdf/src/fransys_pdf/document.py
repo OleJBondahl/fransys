@@ -26,6 +26,7 @@ from ._lists import (
     wire_label_list_page,
 )
 from ._pages import cover_page, notes_page
+from ._sizes import sizes_of
 from .presets import page_kinds
 
 if TYPE_CHECKING:
@@ -70,7 +71,8 @@ def section_fields(model: Model, record: Document, kind: PageKind) -> TitleBlock
 def _section_prefix(model: Model, record: Document, sheet: SheetFormat, kind: PageKind) -> str:
     """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC`."""
     fields = section_fields(model, record, kind)
-    return f"#set page(margin: {text_margin(sheet)}, background: {background(sheet, fields)})"
+    back = background(sheet, fields, sizes_of(model, record))
+    return f"#set page(margin: {text_margin(sheet)}, background: {back})"
 
 
 _LIST_PAGES = {
@@ -140,7 +142,7 @@ def source(model: Model, document: Id[Document], svgs: Mapping[str, str]) -> str
         if kind not in _SELF_FRAMED:
             body = _section_prefix(model, record, sheet, kind) + "\n" + body
         page_bodies.append(body)
-    head = document_metadata(model, record) + "\n" + preamble(sheet)
+    head = document_metadata(model, record) + "\n" + preamble(sizes_of(model, record), sheet)
     return head + "\n" + "\n#pagebreak()\n".join(page_bodies) + "\n"
 
 

@@ -12,6 +12,7 @@ from layout_cabinet import build_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
+from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.engines.schematic.read.write_keys import write_keys
 from fransys_layout.engines.schematic.write import write_layout
 from fransys_layout.geometry import text_width
@@ -19,13 +20,13 @@ from fransys_layout.stages import pagerun
 from fransys_layout.stages.sizing import label_boxes
 from fransys_model.derive.drawing_text import label_text
 from fransys_model.kernel import freeze
-from fransys_model.layout import Label, LabelKind, default_profile, layout_of
+from fransys_model.layout import Label, LabelKind, layout_of
 
 if TYPE_CHECKING:
     from fransys_layout.engines.schematic.engine import StageResults
     from fransys_model.kernel import Model
 
-_PROFILE = default_profile()
+_PROFILE = DEFAULT_PROFILE
 _ONE_LINE = (LabelKind.TAG, LabelKind.MARKING)
 
 

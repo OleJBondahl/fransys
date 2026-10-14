@@ -6,6 +6,7 @@ from fransys_model.derive import revision_history, revision_text
 
 from ._geometry import document_heading, document_release
 from ._markdown import BulletList, NumberedList, Paragraph, Run, parse, to_typst
+from ._sizes import RULE
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -24,11 +25,10 @@ _PADDING_MM = 5
 _REVISION_COLUMNS = ("Revision", "Date", "Description", "Created", "Checked", "Approved")
 DESCRIPTION_WIDTH_MM = 120  # Amended 2026-09-24: the one capped, wrapping column
 
-# `_cover_checks.py`'s own `COVER_OVERFLOW` estimate of one row's height (a single-line row's
-# auto height comes out close to this on its own, at the table's 9 pt, `_geometry.preamble`'s
-# `#show table: set text(size: 9pt)`); the table's real rows are auto ("sized to its
-# content"), not forced to a fixed height, so a wrapped description can grow its own row.
-TABLE_HEADER_MM = 6.0
+# `_cover_checks.py`'s own `COVER_OVERFLOW` estimate of the header row: the table text's font
+# size (`_geometry.preamble`'s label size) plus the cell insets, 6.0 mm at the house size. The
+# table's real rows are auto ("sized to its content"), so a wrapped description grows its row.
+TABLE_INSET_MM = 3.53
 
 
 def _flatten_lists(elements: tuple[Element, ...]) -> tuple[Element, ...]:
@@ -73,7 +73,7 @@ def _revision_table(entries: tuple[Revision, ...]) -> str:
     for entry in entries:
         cells.extend(f"text({literal(value)})" for value in _revision_row(entry))
     columns = f"(auto, auto, {DESCRIPTION_WIDTH_MM}mm, auto, auto, auto)"
-    return f"#table(columns: {columns}, stroke: 0.5pt, " + ", ".join(cells) + ")"
+    return f"#table(columns: {columns}, stroke: {RULE}, " + ", ".join(cells) + ")"
 
 
 def cover_page(model: Model, record: Document) -> str:

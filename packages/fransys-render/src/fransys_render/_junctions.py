@@ -4,9 +4,9 @@ import itertools
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import net_of
+from fransys_model.derive.print_sizes import JUNCTION_DOT_MM
 from fransys_model.layout import sheet_format_of
 
-from ._constants import JUNCTION_DOT_DIAMETER_MM
 from ._markers import marker_facing, markers_on_page, stub_end
 from ._numbers import format_decimal, grid_to_mm
 from ._routes import routes_on_page
@@ -79,7 +79,7 @@ def junction_locations(model: Model, page: Page) -> tuple[_Point, ...]:
 def junctions_group(model: Model, page: Page) -> str:
     """Every junction dot on `page` as one `<circle>` each, ordered by position."""
     sheet = sheet_format_of(model, page.sheet_format)
-    radius_mm = format_decimal(JUNCTION_DOT_DIAMETER_MM / 2)
+    radius_mm = format_decimal(JUNCTION_DOT_MM / 2)
     circles = []
     for x, y in junction_locations(model, page):
         cx = format_decimal(grid_to_mm(sheet.content_x_mm, x, sheet.module_mm))

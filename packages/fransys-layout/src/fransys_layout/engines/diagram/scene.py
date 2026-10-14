@@ -101,5 +101,9 @@ def scene_of(facts: DiagramFacts, sheet: PlacedSheet) -> Scene:
         t for b in sheet.boxes for t in (*_box_texts(b, widths[b.box], th), *_tab_texts(b, th))
     ]
     texts += [_label_text(line, facts) for line in sheet.lines]
+    texts += [
+        SceneText(owner=t.owner, rect=Box(x=t.x, y=t.y, width=t.width, height=t.height))
+        for t in sheet.texts
+    ]
     lines = tuple(_scene_line(line, boxes, markers) for line in sheet.lines)
     return Scene(boxes=boxes, texts=tuple(texts), lines=lines, markers=markers)

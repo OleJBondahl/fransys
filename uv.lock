@@ -88,19 +88,19 @@ wheels = [
 
 [[package]]
 name = "demo-parts"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "examples/demo-parts" }
 
 [[package]]
 name = "electrical-symbols"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/electrical-symbols" }
 dependencies = [
     { name = "symdef" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "symdef", specifier = "==0.5.0" }]
+requires-dist = [{ name = "symdef", specifier = "==0.6.0" }]
 
 [[package]]
 name = "execnet"
@@ -138,7 +138,7 @@ wheels = [
 
 [[package]]
 name = "fransys"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys" }
 dependencies = [
     { name = "fransys-author" },
@@ -171,7 +171,7 @@ requires-dist = [
 
 [[package]]
 name = "fransys-author"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-author" }
 dependencies = [
     { name = "fransys-model" },
@@ -182,7 +182,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-kicad"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-kicad" }
 dependencies = [
     { name = "fransys-model" },
@@ -193,7 +193,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-layout"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-layout" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -205,17 +205,17 @@ dependencies = [
 requires-dist = [
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "symdef", specifier = "==0.5.0" },
+    { name = "symdef", specifier = "==0.6.0" },
 ]
 
 [[package]]
 name = "fransys-model"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-overview"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-overview" }
 dependencies = [
     { name = "fransys-model" },
@@ -226,7 +226,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-parts"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-parts" }
 dependencies = [
     { name = "fransys-model" },
@@ -237,7 +237,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-pdf"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-pdf" }
 dependencies = [
     { name = "fransys-model" },
@@ -248,7 +248,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-render"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-render" }
 dependencies = [
     { name = "electrical-symbols" },
@@ -260,12 +260,12 @@ dependencies = [
 requires-dist = [
     { name = "electrical-symbols", editable = "packages/electrical-symbols" },
     { name = "fransys-model", editable = "packages/fransys-model" },
-    { name = "symdef", specifier = "==0.5.0" },
+    { name = "symdef", specifier = "==0.6.0" },
 ]
 
 [[package]]
 name = "fransys-reports"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-reports" }
 dependencies = [
     { name = "fransys-model" },
@@ -276,7 +276,7 @@ requires-dist = [{ name = "fransys-model", editable = "packages/fransys-model" }
 
 [[package]]
 name = "fransys-wago"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "packages/fransys-wago" }
 dependencies = [
     { name = "fransys-model" },
@@ -335,7 +335,7 @@ dev = [
     { name = "pytest-xdist", specifier = "==3.8.0" },
     { name = "ruff", specifier = "==0.16.9" },
     { name = "rust-just", specifier = "==1.58.0" },
-    { name = "symdef", specifier = "==0.5.0" },
+    { name = "symdef", specifier = "==0.6.0" },
     { name = "ty", specifier = "==0.0.84" },
     { name = "typst", specifier = "==0.15.0" },
     { name = "vulture", specifier = "==2.16" },
@@ -692,11 +692,11 @@ wheels = [
 
 [[package]]
 name = "symdef"
-version = "0.5.0"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9d/74/2a0c7799655b5855d19a7734b6b3da5b729229a8af8c91601cdeebaa8aa8/symdef-0.5.0.tar.gz", hash = "sha256:f14367b5a7f44583f3c9bdcc27ae91b54505308dc2fc1715c2a0449debb6a548", size = 273577, upload-time = "2026-10-07T18:44:10.953Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2b/0a/ec76e2928bbfd7c1d922a1fe082cdb95bc109d99ed50b2c06c2fe57a9868/symdef-0.6.0.tar.gz", hash = "sha256:5d77b3379f2a2ab82fe8666dc9f4fec5d6712dff73b8930f22c97f4c3868ea49", size = 277811, upload-time = "2026-10-13T07:55:42.979Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/83/0aecfd56481cdfbb1507803f253ba2e5b9bf812f5e2c9d8d6ccfbdef18e9/symdef-0.5.0-py3-none-any.whl", hash = "sha256:644abb9fcc597be6a52a2efff7e3db1ade5b79a41f2155c88a27f17f86f4482e", size = 89038, upload-time = "2026-10-07T18:44:09.731Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/78/0f6ac08bc37cec77be19f0931aea812debe6fde97ee1c3ce822ecbcaa94b/symdef-0.6.0-py3-none-any.whl", hash = "sha256:b1e563e78172426e550d0e04aa2d15e3e34bb9fe6717c0b0a7a7144a57fcfcec", size = 91629, upload-time = "2026-10-13T07:55:41.448Z" },
 ]
 
 [[package]]

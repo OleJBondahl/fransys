@@ -1,5 +1,6 @@
 """The derive width table equals the TTFs' `hmtx` advances, every code point, both weights."""
 
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
@@ -11,12 +12,13 @@ from fransys_model.derive import _text_widths as table
 from fransys_model.derive.text_width import text_units
 
 FONTS = Path(fransys_pdf.__file__).parent / "fonts"
+FILES = {"Regular": "DejaVuSansCondensed.ttf", "Bold": "DejaVuSansCondensed-Bold.ttf"}
 WEIGHTS = {"Regular": table.REGULAR_PAIRS, "Bold": table.BOLD_PAIRS}
 
 
 @pytest.mark.parametrize("weight", WEIGHTS)
 def test_table_matches_font(weight):
-    font = TTFont(FONTS / f"LiberationSerif-{weight}.ttf")
+    font = TTFont(FONTS / FILES[weight])
     cmap: Any = font.getBestCmap()
     hmtx: Any = font["hmtx"]
     assert cast("Any", font["head"]).unitsPerEm == table.UNITS_PER_EM
@@ -28,7 +30,7 @@ def test_table_matches_font(weight):
 
 @pytest.mark.parametrize("weight", WEIGHTS)
 def test_norwegian_letters_are_measured_with_the_ttf_width(weight):
-    font = TTFont(FONTS / f"LiberationSerif-{weight}.ttf")
+    font = TTFont(FONTS / FILES[weight])
     cmap: Any = font.getBestCmap()
     hmtx: Any = font["hmtx"]
     in_table = {int(pair.split("=")[0], 16) for pair in WEIGHTS[weight].split()}
@@ -40,7 +42,22 @@ def test_norwegian_letters_are_measured_with_the_ttf_width(weight):
 def test_cover_line_estimate_follows_the_measured_width():
     from fransys_pdf._cover_checks import _line_count
 
-    assert _line_count("W" * 60, width_mm=50, size_pt=10) > _line_count(
-        "i" * 60, width_mm=50, size_pt=10
+    assert _line_count("W" * 60, width_mm=50, size_mm=10) > _line_count(
+        "i" * 60, width_mm=50, size_mm=10
     )
-    assert _line_count("", width_mm=50, size_pt=10) == 1
+    assert _line_count("", width_mm=50, size_mm=10) == 1
+
+
+def test_capital_ratio_and_ascent_equal_the_regular_ttf():
+    """A5 (E4): derive's ratios are the glyph H's top and `sTypoAscender` over unitsPerEm.
+
+    The font's OS/2 table is version 1, so it has no `sCapHeight`; the H glyph's top is the cap.
+    """
+    from fransys_model.derive import print_sizes
+
+    font = TTFont(FONTS / FILES["Regular"])
+    cmap: Any = font.getBestCmap()
+    glyf: Any = font["glyf"]
+    units = cast("Any", font["head"]).unitsPerEm
+    assert Decimal(glyf[cmap[ord("H")]].yMax) / units == print_sizes.CAPITAL_RATIO
+    assert Decimal(cast("Any", font["OS/2"]).sTypoAscender) / units == print_sizes.ASCENT_RATIO

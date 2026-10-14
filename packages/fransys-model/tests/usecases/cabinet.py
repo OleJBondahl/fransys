@@ -249,11 +249,15 @@ def _module(kit: Kit, rack: Ref, row: _ModuleRow) -> Ref:
     return kit.stamp(bundle, key, Slot(f"A1-{position}", parent=rack.item, position=position))
 
 
-def _rack(kit: Kit, catalogue: Catalogue, things: Things) -> None:
+def _rack(kit: Kit, catalogue: Catalogue, things: Things, *, cpu: bool = False) -> None:
     """Rack `A1` and its three modules."""
     things["a1"] = rack = kit.stamp(catalogue["rack"], ("a1",), Slot("A1"))
     for row in _MODULES:
         things[f"a1-{row[0]}"] = _module(kit, rack, row)
+    if cpu:
+        part = kit.part(PartSpec("module-cpu", "SIM-CPU", "A", PartCategory.PLC_MODULE))
+        slot = Slot("A1-4", parent=rack.item, position=4)
+        things["a1-cpu"] = kit.stamp(part, (*rack.key, "m4"), slot)
 
 
 def _request(kit: Kit, device: Ref, asked: tuple[str, SignalType, int], channel: Ref) -> None:
@@ -344,7 +348,7 @@ def _field(kit: Kit, catalogue: Catalogue, things: Things) -> None:
     _request(kit, s1, ("Start_PB", SignalType.DI, 1), things["a1-2"])
 
 
-def build_cabinet() -> Draft:
+def build_cabinet(*, cpu: bool = False) -> Draft:
     """Build the cabinet fixture: a `Draft`, not yet frozen.
 
     The invented design (every item but the terminals is numbered by hand, and a terminal
@@ -363,7 +367,7 @@ def build_cabinet() -> Draft:
     - Terminal strip `X2` (field wiring): three pairs `PT01`, `TT01`, `S1`; field conductors
       land on `external` ports, panel wires to the PLC on `internal` ports.
     - PLC rack `A1` with modules `A1-1` (4 x `AI_CURRENT`), `A1-2` (8 x `DI`) and `A1-3`
-      (4 x `RTD`); `position` is the slot.
+      (4 x `RTD`); `position` is the slot. With `cpu=True`, also `A1-4`, a CPU with no channel.
     - Field devices `B1` (pressure transmitter, `plc_request` and `scaling`, cable `W1`), `B2`
       (RTD probe, cable `W2`) and `S1` (start pushbutton, two `wire` conductors, no cable).
       The bindings are authored as `plc_allocation` would write them (decision 0020), so the
@@ -376,7 +380,7 @@ def build_cabinet() -> Draft:
     things: Things = {}
     _supply(kit, catalogue, things)
     _strips(kit, catalogue, things)
-    _rack(kit, catalogue, things)
+    _rack(kit, catalogue, things, cpu=cpu)
     _field(kit, catalogue, things)
     enclosure = kit.node("c1", Aspect.LOCATION, "C1", "main enclosure")
     for thing in things.values():

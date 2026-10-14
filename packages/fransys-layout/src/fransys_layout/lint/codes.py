@@ -54,6 +54,9 @@ DIAGRAM_LINE_OFF_BOX = "DIAGRAM_LINE_OFF_BOX"
 DIAGRAM_LINE_THROUGH_BOX = "DIAGRAM_LINE_THROUGH_BOX"
 DIAGRAM_TEXT_OVERLAP = "DIAGRAM_TEXT_OVERLAP"
 
+# engines/overview/engine.py, ERROR: a view the diagram placer finds no room plan for
+OVERVIEW_UNPLACED = "OVERVIEW_UNPLACED"
+
 # engines/schematic/read/ (`__init__.py`, `sheets.py`): SHEET_FORMAT_UNUSED and TEXT_TOO_SMALL, both
 # WARNING. Defined here, imported there, because `lint` may not import `engines`.
 SHEET_FORMAT_UNUSED = "SHEET_FORMAT_UNUSED"

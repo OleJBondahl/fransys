@@ -15,8 +15,7 @@ from fransys_model.derive.drawing_text import (
 from ._image_foot import table_x
 from ._image_stack import foot_down, headed_width, settled_tables
 from ._image_widest import widest_places
-from .boxes import first_placed
-from .image_refs import by_owner, home_references, unplaced_coil_owners
+from .image_refs import by_owner, home_placements, home_references, unplaced_coil_owners
 from .lookups import placed_keepout
 from .place import axis_offset
 from .room import grow_keepout
@@ -56,6 +55,9 @@ class ImageInputs:
     owners: Mapping[Handle, Handle] | None = None  # contact function -> the item owning it
     spares: tuple[FunctionSpec, ...] = ()  # Contacts on no page, listed "<mark> <no_place>"
     row_order: Mapping[Handle, tuple[Any, ...]] = field(default_factory=dict)  # Order, model-0138
+    replicas: Mapping[tuple[AuthoringKey, Handle], Handle | None] = field(
+        default_factory=dict
+    )  # layout-0184: each replica cell -> its column's unit
     no_place: str = field(kw_only=True)  # layout-0112: the model's text for "not drawn"
     heads: Mapping[Handle, str] = field(default_factory=dict)  # coil -> its table's heading (0170)
 
@@ -313,7 +315,7 @@ def contact_images(
 ]:
     """A NO | NC contact table under each coil; order is by function id, not input order."""
     sheet, profile = inputs.sheet, inputs.profile
-    home = first_placed(one for placed, _ in pages for one in placed)
+    home = home_placements(pages, inputs.replicas, {s.function: s.unit for s in inputs.functions})
     by_item = by_owner([s for s in inputs.functions if s.function in home], inputs.owners)
     coil_unplaced = unplaced_coil_owners(inputs.functions, inputs.owners, home)
     spare_of = by_owner([s for s in inputs.spares if s.roles.contact], inputs.owners)

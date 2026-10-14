@@ -18,7 +18,7 @@ def _profile(value: str) -> Profile:
         column_gap=48,
         row_gap=32,
         route_margin=16,
-        text_height=8,
+        text_height_mm=Decimal("1.8"),
         marker_padding=2,
         route_turn_penalty=5,
         route_crossing_penalty=20,
@@ -69,10 +69,10 @@ def test_a_unit_without_a_profile_gets_the_house_profile_not_the_tops() -> None:
     assert profile_of(model).column_gap == 3
 
 
-def test_min_text_mm_defaults_to_the_house_size_and_an_authored_one_survives_profile_of() -> None:
-    """model-0195: `min_text_mm` is 2.5 mm by default; an authored value is read back whole."""
-    assert default_profile().min_text_mm == Decimal("2.5")
+def test_min_text_height_mm_defaults_to_the_house_size_and_an_authored_one_survives() -> None:
+    """model-0203: `min_text_height_mm` is 1.8 mm by default; an authored one is read back."""
+    assert default_profile().min_text_height_mm == Decimal("1.8")
     release, unit = _board_unit()
-    authored = dataclasses.replace(_profile("a"), min_text_mm=Decimal("1.8"))
+    authored = dataclasses.replace(_profile("a"), min_text_height_mm=Decimal("2.5"))
     model = _freeze(sheet_format(), release, unit, authored)
-    assert profile_of(model).min_text_mm == Decimal("1.8")
+    assert profile_of(model).min_text_height_mm == Decimal("2.5")

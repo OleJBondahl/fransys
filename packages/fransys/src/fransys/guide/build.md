@@ -5,7 +5,8 @@
 when there is a document.
 `check` collects every finding about a built model, including some `build` itself never sees.
 `write` writes the model's exports to a directory. It raises, and writes nothing, if any
-finding is an `ERROR`.
+finding is an `ERROR`. `check` also places the system overview (`overview.html`) and returns its
+findings, so a whole-system or a unit write meets them at the same gate; `build` never does.
 
 ## Where a build can fail
 
@@ -200,6 +201,10 @@ title block or history table. The names are a built-in default with no option or
   patterns are still cleaned for one more release. Known limit: a unit that leaves the model
   leaves its last PDF behind in `out/all/`.
 - **Releases.** `fr.release` writes the same names, and its manifest lists them.
+- **Changes in the overview.** `fr.write(result, out_dir, releases=into)` takes the folder you pass
+  to `fr.release`. When it holds a release of the system (the one at the model's revision, else
+  the previous one), `overview.html` gains a Changes switch that marks what changed since it.
+  Without `releases`, or with no release there, the page has no such switch.
 
 Every file `write` writes is UTF-8 without a byte order mark, with `\n` line ends, on every OS.
 

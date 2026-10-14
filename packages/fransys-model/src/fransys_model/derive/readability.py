@@ -16,8 +16,8 @@ def readability_units(pages: Iterable[ReadabilityPage]) -> tuple[ReadabilityUnit
         ReadabilityUnit(
             unit=group[0].unit,
             pages=len(group),
-            text_mm=min(one.text_mm for one in group),
-            min_text_mm=max(one.min_text_mm for one in group),
+            text_height_mm=min(one.text_height_mm for one in group),
+            min_text_height_mm=max(one.min_text_height_mm for one in group),
             fill_percent=min(one.fill_percent for one in group),
             wire_crossings=sum(one.wire_crossings for one in group),
             struck_labels=sum(one.struck_labels for one in group),
@@ -26,6 +26,9 @@ def readability_units(pages: Iterable[ReadabilityPage]) -> tuple[ReadabilityUnit
             contact_images=sum(one.contact_images for one in group),
             contact_image_targets=sum(one.contact_image_targets for one in group),
             single_contact_images=sum(one.single_contact_images for one in group),
+            single_contact_images_other_page=sum(
+                one.single_contact_images_other_page for one in group
+            ),
             stars=sum(one.stars for one in group),
             star_branches=sum(one.star_branches for one in group),
             single_branch_stars=sum(one.single_branch_stars for one in group),

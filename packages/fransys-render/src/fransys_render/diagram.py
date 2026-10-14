@@ -69,12 +69,12 @@ def _sheet_body(model: Model, pen: Pen, sheet: DiagramSheet, found: _Found) -> s
 def _render_sheet(model: Model, sheet: DiagramSheet, found: _Found) -> str:
     """One sheet's SVG at full sheet size; the diagram sits at the content box offset."""
     page = sheet_for(model, PageKind.BLOCK_DIAGRAM)
-    pen = Pen(page.module_mm, profile_of(model).text_height, DIAGRAM_TEXT_PAD_G)
+    pen = Pen(page.module_mm, profile_of(model).text_height_mm, DIAGRAM_TEXT_PAD_G)
     offset = f"{page.content_x_mm} {page.content_y_mm}"
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{page.width_mm}mm" '
         f'height="{page.height_mm}mm" viewBox="0 0 {page.width_mm} {page.height_mm}">'
-        f'{style_block(page.module_mm)}<g transform="translate({offset})">'
+        f'{style_block()}<g transform="translate({offset})">'
         f"{_sheet_body(model, pen, sheet, found)}</g></svg>"
     )
 

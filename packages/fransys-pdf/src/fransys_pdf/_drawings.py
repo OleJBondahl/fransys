@@ -7,6 +7,7 @@ from fransys_model.derive import (
     document_unit,
     harness_cables,
     item_designation,
+    page_destination,
     reading_cables,
 )
 from fransys_model.derive.cable_drawing import (
@@ -29,6 +30,7 @@ from ._geometry import (
     subject_label,
     undrawn_replica_only_sets,
 )
+from ._sizes import sizes_of
 from ._typst import literal
 
 if TYPE_CHECKING:
@@ -100,6 +102,12 @@ def schematic_fields(
     )
 
 
+def _destination_mark(model: Model, page: Page) -> str:
+    """A hidden heading labelled with the page's destination, so the PDF anchors the page (O21)."""
+    label = page_destination(model, page)
+    return f"#place(hide[#heading(level: 1, outlined: false)[{label}] <{label}>])"
+
+
 def schematic_source(
     model: Model,
     record: Document,
@@ -118,12 +126,15 @@ def schematic_source(
             logo=record.logo,
         )
         margin = text_margin(sheet)
-        return f"#page(margin: {margin}, background: {background(sheet, fields)})[{NO_DRAWINGS}]"
+        back = background(sheet, fields, sizes_of(model, record))
+        return f"#page(margin: {margin}, background: {back})[{NO_DRAWINGS}]"
     fields = schematic_fields(model, record, pages_found)
     blocks = []
     for page, page_fields in zip(pages_found, fields, strict=True):
         image = f'#image(bytes({literal(svgs[render_id(page.id)])}), format: "svg")'
-        blocks.append(f"#page(margin: 0mm, background: {background(sheet, page_fields)})[{image}]")
+        mark = _destination_mark(model, page)
+        back = background(sheet, page_fields, sizes_of(model, record))
+        blocks.append(f"#page(margin: 0mm, background: {back})[{mark}{image}]")
     return "\n#pagebreak()\n".join(blocks)
 
 
@@ -282,7 +293,9 @@ def _cable_runs(
             if block.key in svgs
         ]
         line = group[0].line if group[0].mpn else fields.page_title
-        runs.append(run_page(sheet, index, line, background(sheet, fields), bodies))
+        runs.append(
+            run_page(sheet, index, line, background(sheet, fields, sizes_of(model, record)), bodies)
+        )
     return "\n#pagebreak()\n".join(runs)
 
 
@@ -307,5 +320,6 @@ def harness_drawing_source(
             logo=record.logo,
         )
         margin = text_margin(sheet)
-        return f"#page(margin: {margin}, background: {background(sheet, fields)})[{NO_DRAWINGS}]"
+        back = background(sheet, fields, sizes_of(model, record))
+        return f"#page(margin: {margin}, background: {back})[{NO_DRAWINGS}]"
     return _cable_runs(model, record, sheet, blocks, svgs)

@@ -14,6 +14,7 @@ from fransys_layout.engines.diagram.sizes import (
     ROW_GAP,
     TEXT_LEAD,
     TEXT_PAD,
+    G,
     attach_pitch,
 )
 from fransys_layout.geometry import Facing, snap_up
@@ -80,8 +81,11 @@ def box_height(box: BoxFacts, ends: int, text_height: int) -> int:
 def heights(facts: DiagramFacts, ends: tuple[RawEnd, ...]) -> dict[Ident, int]:
     """Each box's height from the busier of its two sides."""
     count = Counter((e.box, e.side) for e in ends)
+    flat = facts.row_height
     return {
-        b.box: box_height(b, max(count[b.box, Facing.E], count[b.box, Facing.W]), facts.text_height)
+        b.box: flat
+        if flat and b.box in facts.column
+        else box_height(b, max(count[b.box, Facing.E], count[b.box, Facing.W]), facts.text_height)
         for b in facts.boxes
     }
 
@@ -103,17 +107,30 @@ def stack(
     return y
 
 
+def step(box_high: int, count: int, pitch: int) -> int:
+    """The distance between a side's `count` ends: `pitch`, or less to fit inside `box_high`."""
+    return min(pitch, max(G, box_high // (count + 1) // G * G))
+
+
 def place_ends(
-    ends: tuple[RawEnd, ...], y: Mapping[Ident, int], text_height: int
+    ends: tuple[RawEnd, ...], y: Mapping[Ident, int], height: Mapping[Ident, int], text_height: int
 ) -> dict[tuple[Ident, Facing], tuple[FrameEnd, ...]]:
-    """The ends of each box side, ordered by the far box's top then line, with their y."""
+    """The ends of each box side, ordered by the far box's top then line, with their y.
+
+    A box too low for its ends at `attach_pitch` spaces them evenly, on the grid, inside it.
+    """
     groups: dict[tuple[Ident, Facing], list[RawEnd]] = {}
     for e in ends:
         groups.setdefault((e.box, e.side), []).append(e)
     pitch = attach_pitch(text_height)
     return {
         (box, side): tuple(
-            FrameEnd(line=e.line, side=side, y=y[box] + pitch * (k + 1), tab=e.tab)
+            FrameEnd(
+                line=e.line,
+                side=side,
+                y=y[box] + step(height[box], len(group), pitch) * (k + 1),
+                tab=e.tab,
+            )
             for k, e in enumerate(sorted(group, key=lambda e: (y[e.far], e.line)))
         )
         for (box, side), group in groups.items()

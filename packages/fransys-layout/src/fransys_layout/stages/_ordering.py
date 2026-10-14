@@ -168,7 +168,7 @@ def base_order(
         else:
             by_group.setdefault((column.role, column.group), []).append(column)
     for (role, group), members in by_group.items():
-        key = (ROLE_ORDER.index(role), 0, *_group_key(tables.info_of[group], group_ranks))
+        key = (ROLE_ORDER.index(role), 0, *group_key(tables.info_of[group], group_ranks))
         found.append((key, (group,), _link_order(members, pole_links), role))
     found.sort(key=lambda row: row[0])
     units = []
@@ -188,23 +188,21 @@ def base_order(
     return units
 
 
-def _group_key(
-    info: GroupInfo, group_ranks: frozendict[str, int]
-) -> tuple[int | AuthoringKey, ...]:
+def group_key(info: GroupInfo, group_ranks: frozendict[str, int]) -> tuple[int | AuthoringKey, ...]:
     """The label's profile rank; unranked groups last, by natural label, then by key."""
     rank = group_ranks.get(info.label)
     return (1, 0, info.order, info.key) if rank is None else (0, rank, 0, info.key)
 
 
 def _blockers(
-    units: Sequence[Unit], order_hints: tuple[OrderHint, ...]
+    heads: Sequence[Handle | None], order_hints: tuple[OrderHint, ...]
 ) -> dict[int, set[int]] | None:
-    """Per unit index, the indices that must come first; `None` when no hint names a group here."""
+    """Per item index, the indices that must come first; `None` when no hint names a head here."""
     positions: dict[Handle, list[int]] = {}
-    for index, unit in enumerate(units):
-        if unit.groups[0] is not None:
-            positions.setdefault(unit.groups[0], []).append(index)
-    blockers: dict[int, set[int]] = {index: set() for index in range(len(units))}
+    for index, head in enumerate(heads):
+        if head is not None:
+            positions.setdefault(head, []).append(index)
+    blockers: dict[int, set[int]] = {index: set() for index in range(len(heads))}
     applied = False
     for hint in order_hints:
         if hint.before in positions and hint.after in positions:
@@ -214,15 +212,15 @@ def _blockers(
     return blockers if applied else None
 
 
-def _unblocked_order(units: Sequence[Unit], blockers: Mapping[int, set[int]]) -> list[int]:
-    """Unit indices, each the first still waiting whose blockers are placed; a cycle raises."""
+def _unblocked_order(heads: Sequence[Handle | None], blockers: Mapping[int, set[int]]) -> list[int]:
+    """Item indices, each the first still waiting whose blockers are placed; a cycle raises."""
     order: list[int] = []
     placed: set[int] = set()
-    while len(order) < len(units):
-        waiting = [index for index in range(len(units)) if index not in placed]
+    while len(order) < len(heads):
+        waiting = [index for index in range(len(heads)) if index not in placed]
         free = next((index for index in waiting if blockers[index] <= placed), None)
         if free is None:
-            stuck = (units[index].groups[0] for index in waiting)
+            stuck = (heads[index] for index in waiting)
             msg = "order hints form a cycle"
             subjects = tuple(sorted(group for group in stuck if group is not None))
             raise HintError(msg, subjects=subjects)
@@ -231,9 +229,25 @@ def _unblocked_order(units: Sequence[Unit], blockers: Mapping[int, set[int]]) ->
     return order
 
 
+def hint_order(heads: Sequence[Handle | None], order_hints: tuple[OrderHint, ...]) -> list[int]:
+    """Item indices after the order hints, a stable pass; a cycle raises `HintError`."""
+    blockers = _blockers(heads, order_hints)
+    if blockers is None:
+        return list(range(len(heads)))
+    return _unblocked_order(heads, blockers)
+
+
 def reorder(units: Sequence[Unit], order_hints: tuple[OrderHint, ...]) -> list[Unit]:
     """Move groups an order hint names, a stable pass; a cycle raises `HintError`."""
-    blockers = _blockers(units, order_hints)
-    if blockers is None:
-        return list(units)
-    return [units[index] for index in _unblocked_order(units, blockers)]
+    return [units[index] for index in hint_order([unit.groups[0] for unit in units], order_hints)]
+
+
+def group_order(
+    infos: Sequence[GroupInfo],
+    *,
+    group_ranks: frozendict[str, int],
+    order_hints: tuple[OrderHint, ...],
+) -> list[GroupInfo]:
+    """Groups by profile rank, then natural order, then the order hints; a cycle raises."""
+    ranked = sorted(infos, key=lambda info: group_key(info, group_ranks))
+    return [ranked[index] for index in hint_order([info.group for info in ranked], order_hints)]

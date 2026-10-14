@@ -56,15 +56,22 @@ def _marker(conductor: int, port: int, side: MarkerSide = MarkerSide.OWNER, *, p
 
 
 def _lint(
-    functions, columns, *, drawn_functions=_DRAWN, mates=(), open_ends=frozenset(), **given
+    functions,
+    columns,
+    *,
+    drawn_functions=_DRAWN,
+    mates=(),
+    open_ends=frozenset(),
+    **given,
 ) -> tuple[Finding, ...]:
     """Lint `functions` in `columns`; `wiring` overrides `markers`, `connections`, `net_groups`."""
+    printed = given.pop("printed", None)  # the numbers of the printed sets (model-0201)
     wiring: dict[str, Any] = {"markers": (), "connections": _CHAIN, "net_groups": ()} | given
     layout = layout_of(markers=wiring["markers"], functions=functions)
     records = StageRecords(
         columns, drawn_functions, wiring["connections"], wiring["net_groups"], mates
     )
-    return lint_chains(layout, records, open_ends=open_ends)
+    return lint_chains(layout, records, open_ends=open_ends, printed=printed)
 
 
 # --- LONE_CELL (a): the column was cut across pages -----------------------------------------
@@ -92,6 +99,19 @@ def _lint(
 def test_a_column_cut_across_pages_strands_its_lone_cell(columns, functions, expected) -> None:
     """A placed function alone in its column on the page fires only if the column has more."""
     assert _lint(functions, columns) == expected
+
+
+@pytest.mark.parametrize(
+    ("printed", "expected"),
+    [
+        pytest.param(None, (_lone(1, _STRANDED),), id="every set"),
+        pytest.param(frozenset({1}), (_lone(1, _STRANDED),), id="set 1 printed"),
+        pytest.param(frozenset({2}), (), id="set 1 not printed"),
+    ],
+)
+def test_a_lone_cell_on_a_set_nobody_prints_is_not_reported(printed, expected) -> None:
+    """model-0201: a look finding names no page of an unprinted set."""
+    assert _lint((_F1,), (column("a", (1, 2)),), printed=printed) == expected
 
 
 # --- LONE_CELL (b): no wired port at all ----------------------------------------------------

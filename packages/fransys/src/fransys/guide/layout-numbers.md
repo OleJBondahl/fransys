@@ -17,7 +17,7 @@ A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is 
 | `content_height_mm` | Height of the content box. | Page capacity down the page, by the same rule. A taller box fits more rows. | A different paper size. |
 | `frame_columns` | Columns of the reference grid printed on the frame. | The content box is divided evenly. Cross references and findings name a position as a column and a row. | Rarely; more columns on a wide sheet. |
 | `frame_rows` | Rows of the reference grid. | The same, for rows. | Rarely. |
-| `module_mm` | Millimetres of one symbol module. Number or `Decimal`. | The size lever. Every symbol, gap and text scales with it. A smaller module fits more on a page and prints smaller; a larger one prints larger and splits sooner. | The first thing to change when a page is too crowded or too small. |
+| `module_mm` | Millimetres of one symbol module. Number or `Decimal`. | The grid pitch. Symbol bodies and gaps scale with it; text sizes and line widths do not, they are fixed in mm. A smaller module fits more on a page; a larger one splits sooner. | The first thing to change when a page is too crowded. |
 
 ```python
 from decimal import Decimal
@@ -51,7 +51,8 @@ d.layout.profile(sheet=a4)
 | `row_gap` | 32 | The smallest clear height between two blocks stacked in a column. | A column too tall for its page closes its spacing down to this value and no further. | Rarely; lower it to fit a tall column. |
 | `row_spacing` | 88 | The clear height a block keeps below the one above it, when the page has room. | Looser spacing reads easier; it falls back toward `row_gap` on a full page. | A sparse page that wastes height, or a crowded one. |
 | `route_margin` | 64 | How far outside the box spanned by a wire's two ends the router may look first. | A larger margin finds a detour round a block; a smaller one keeps wires short. | A wire takes a long way round, or cannot find a way. |
-| `text_height` | 8 | The height of one line of text, in `G`. | Sets text size, and with it label widths and the room texts take. | A style choice only. See below. |
+| `text_height_mm` | 1.8 | The smallest text on every page kind, a capital height in mm (ISO 3098); a larger role keeps its own size or this one, whichever is larger. | Sets text size, and with it the room texts take: font size over one `G`, rounded up. | A style choice only. See below. |
+| `min_text_height_mm` | 1.8 | The smallest capital height in mm the text may print at. | Changes no drawing. A profile printing under the floor gets one `TEXT_TOO_SMALL` warning, and nothing is shrunk or grown. | The recommended floor is the house 1.8. Lower it only when the small text is intended. Otherwise raise `text_height_mm`. |
 | `marker_padding` | 2 | Clear space between a link marker's text and its outline, on every edge. | Larger padding makes markers and their boxes bigger. | Markers look cramped. |
 | `route_turn_penalty` | 4 | The cost of one bend in a wire. | A higher cost makes wires straighter and longer. | Wires zigzag. |
 | `route_crossing_penalty` | 16 | The cost of one wire crossing another. | A higher cost avoids crossings at the price of longer wires. | Too many crossings. |
@@ -59,7 +60,7 @@ d.layout.profile(sheet=a4)
 | `band_ranks` | supply 0, `terminal.first` 0, protection 1, switch and contacts 2, sensor 3, coil, load, actuator and `terminal` 4, `terminal.last` 5 | A map of function kind to the horizontal band it sits in, top first. `terminal.first` and `terminal.last` sit beside `terminal`. | Moves kinds up or down the column. The map replaces the house map whole: restate every kind you want ranked. | A circuit reads better with another top-to-bottom order. |
 | `group_ranks` | empty | A map of an aspect group's label to its page rank. | Orders the groups of pages. A group with no rank sorts last. | You want the pages in your own order. |
 
-## The size lever
+## Grid pitch and printed sizes
 
-`module_mm` is the lever that sets the size of a drawing. To make a crowded page fit, make `module_mm` smaller; the page then holds more `G` and everything prints smaller. To print larger, make it larger and accept more pages.
-`text_height` is a style choice. It changes how large the text is against the symbols, which keep their size. Never use it to make a page fit: a page that is too full needs a smaller `module_mm` or less on the page.
+`module_mm` sets the grid pitch, not the printed size of text or lines, which are fixed in mm. To make a crowded page fit, make `module_mm` smaller; the page then holds more `G`. A larger one gives more pages.
+`text_height_mm` sets the smallest text on every page, as a capital height in mm. Never use it to make a page fit: a page that is too full needs a smaller `module_mm` or less on the page.

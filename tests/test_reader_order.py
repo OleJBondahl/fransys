@@ -6,11 +6,11 @@ units, locations, a part-less generic box with ports 1, 2, 10 and 11, a contacto
 functions, and a board net with the pins 2 and 10. The design is built and written once under a
 first set of `name=` keys and once under a second set, so every Id changes and no printed text may.
 
-Canary: each CSV list, each PDF list, the loom page order, the overview's links, the generic
+Canary: each CSV list, each PDF list, the loom page order, the overview's items, the generic
 box ports, the KiCad net name and the findings print `-X2` before `-X10`.
-Rename: a change of the keys changes no CSV byte, no HTML byte (once each item Id is replaced
-by the item's label, since the overview carries the Ids), no PDF text run on any page and no
-netlist byte. SVG draw order is not compared: it changes bytes, not the picture.
+Rename: a change of the keys changes no CSV byte, no overview page byte (the page holds no Id, A10),
+no PDF text run on any page and no netlist byte. SVG draw order is not compared: it changes
+bytes, not the picture.
 
 Each site that fails today is its own strict xfail, so its test flips when its fix lands.
 The sites not reached: the wago XML (no PLC channel in the design), the unit block-diagram sheets
@@ -29,6 +29,9 @@ import fransys as fr
 import pypdfium2
 import pytest
 from fransys.colours import BK, RD
+
+from fransys_layout import lay_out_overview
+from fransys_model.layout import OverviewBox, OverviewLine, layout_of
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -130,8 +133,9 @@ def _design(salt: str) -> tuple[fr.Design, Any]:  # the location handle is not a
         n: d.terminal_strip(f"X{n}", "DEMO-TB-2.5", 12, place="C1", name=f"{salt}x{n}") for n in _NS
     }
     board = _board(salt)
-    for n in _NS:
-        d.add(board, f"U{n}", name=f"{salt}u{n}")
+    boards = {n: d.add(board, f"U{n}", name=f"{salt}u{n}") for n in _NS}
+    link = d.cable("W9", "DEMO-CBL-4G1.5", place="C1", name=f"{salt}w9")
+    link.core(1, boards[_NS[0]].J1["1"], boards[_NS[1]].J1["1"])  # the system level holds a line
     d.device("B1", None, external=True, pins=("10", "1", "11", "2"), place="C1", name=f"{salt}box")
     for n in _NS:
         _circuit(d, strips, n, salt)
@@ -337,11 +341,10 @@ def _overview(run: _Run) -> dict:
     return json.loads(found.group(1))
 
 
-def test_the_overview_lists_links_by_the_natural_designations_of_their_ends(first: _Run) -> None:
-    data = _overview(first)
-    label = {node["id"]: node["label"] for node in data["nodes"]}
-    ends = [(label[link["a"]], label[link["b"]]) for link in data["links"]]
-    keys = [(fr.derive.natural_key(a), fr.derive.natural_key(b)) for a, b in ends]
+def test_the_overview_lists_its_items_by_natural_designation(first: _Run) -> None:
+    labels = [item["label"] for item in _overview(first)["items"]]
+    keys = [fr.derive.natural_key(label) for label in labels]
+    assert len(labels) > len(_NS)
     assert keys == sorted(keys)
 
 
@@ -375,13 +378,6 @@ def test_the_rename_changes_no_file_name(first: _Run, second: _Run) -> None:
     assert sorted(first.pdfs) == sorted(second.pdfs)
 
 
-def _by_label(run: _Run) -> str:
-    """The overview HTML with each item Id replaced by that item's label."""
-    html = _file(run, "overview.html").decode()
-    label = {node["id"]: node["label"] for node in _overview(run)["nodes"]}
-    return _ITEM_ID.sub(lambda found: label.get(found.group(0), found.group(0)), html)
-
-
 @pytest.mark.parametrize(
     "name",
     _params(
@@ -393,8 +389,11 @@ def test_a_rename_leaves_each_csv_byte_identical(first: _Run, second: _Run, name
     assert _file(first, name) == _file(second, name)
 
 
-def test_a_rename_leaves_the_overview_identical_but_for_its_ids(first: _Run, second: _Run) -> None:
-    assert _by_label(first) == _by_label(second)
+def test_a_rename_leaves_the_overview_page_byte_identical(first: _Run, second: _Run) -> None:
+    """A10: the page holds no Id, so a change of every Id changes no byte of it."""
+    page = _file(first, "overview.html")
+    assert not _ITEM_ID.search(page.decode())
+    assert page == _file(second, "overview.html")
 
 
 @pytest.mark.parametrize(
@@ -416,3 +415,25 @@ def test_a_rename_leaves_each_pdf_page_text_identical(
 
 def test_a_rename_leaves_each_netlist_identical(first: _Run, second: _Run) -> None:
     assert first.netlists == second.netlists
+
+
+def _overview_shapes(run: _Run) -> tuple[list[str], list[str]]:
+    """Every overview box rectangle with its tabs, and every line's points, without any Id."""
+    out = lay_out_overview(run.result.model)[0]
+    boxes = [
+        (b.x, b.y, b.width, b.height, b.dashed, tuple((t.x, t.y, t.text_width) for t in b.tabs))
+        for b in layout_of(out, OverviewBox).values()
+    ]
+    lines = [
+        (ln.kind, tuple((p.x, p.y) for p in ln.points), ln.text_x, ln.text_y)
+        for ln in layout_of(out, OverviewLine).values()
+    ]
+    return sorted(map(repr, boxes)), sorted(map(repr, lines))
+
+
+def test_a_rename_leaves_the_overview_positions_identical(first: _Run, second: _Run) -> None:
+    """A10: the overview engine's boxes, tabs and lines do not read an Id's spelling."""
+    shapes = _overview_shapes(first)
+    assert shapes[0], "the canary system level holds boxes"
+    assert shapes[1], "the canary's top-level cable is a line of the system level"
+    assert shapes == _overview_shapes(second)

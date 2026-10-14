@@ -1,8 +1,10 @@
-"""Write `derive/_text_widths.py` from the Liberation Serif TTFs; no network.
+"""Write `derive/_text_widths.py` from the DejaVu Sans Condensed TTFs; no network.
 
 Usage: `uv run python packages/fransys-model/scripts/write_text_widths.py`. Build-time tool: it
 reads the two fonts under `fransys-pdf` with fontTools (a dev dependency) and writes the tracked
-module of advance widths, in font units, for ASCII, Latin-1 and the few symbols drawings print.
+module of advance widths, in font units, for ASCII, Latin-1 and the few symbols drawings print,
+with the capital height (the glyph H's top: the font's OS/2 table is version 1, so it has no
+`sCapHeight`) and the typographic ascent (`sTypoAscender`), both in font units.
 """
 
 import hashlib
@@ -26,16 +28,18 @@ CODEPOINTS = (
     0x2126,
     0x03A9,
 )
-_HEADER = '''"""Liberation Serif advance widths, in font units; GENERATED, do not edit.
+_HEADER = '''"""DejaVu Sans Condensed advance widths, in font units; GENERATED, do not edit.
 
-Written by `scripts/write_text_widths.py` from the two TTFs under `fransys_pdf/fonts/` (SIL OFL
-1.1, metric-compatible with Times New Roman), so one table serves every text width (model-0190).
-Each string holds `codepoint-in-hex=advance` pairs.
+Written by `scripts/write_text_widths.py` from the two TTFs under `fransys_pdf/fonts/` (Bitstream
+Vera licence), so one table serves every text width (model-0190). The capital height and the
+ascent come from the regular face. Each string holds `codepoint-in-hex=advance` pairs.
 sha256 Regular {regular}
 sha256 Bold    {bold}
 """
 
 UNITS_PER_EM = {upem}
+CAP_HEIGHT_UNITS = {cap}
+ASCENT_UNITS = {ascent}
 
 '''
 
@@ -53,12 +57,20 @@ def _literal(name: str, pairs: str) -> str:
 
 
 def main() -> None:
-    paths = {w: FONTS / f"LiberationSerif-{w}.ttf" for w in ("Regular", "Bold")}
+    paths = {
+        "Regular": FONTS / "DejaVuSansCondensed.ttf",
+        "Bold": FONTS / "DejaVuSansCondensed-Bold.ttf",
+    }
     fonts = {w: TTFont(p) for w, p in paths.items()}
     upems = {cast("Any", f["head"]).unitsPerEm for f in fonts.values()}
     assert len(upems) == 1, upems  # noqa: S101 - build-time script: stop on mixed units-per-em
     sha = {w: hashlib.sha256(p.read_bytes()).hexdigest() for w, p in paths.items()}
-    text = _HEADER.format(regular=sha["Regular"], bold=sha["Bold"], upem=upems.pop())
+    regular = fonts["Regular"]
+    cap = cast("Any", regular["glyf"])[cast("Any", regular.getBestCmap())[ord("H")]].yMax
+    ascent = cast("Any", regular["OS/2"]).sTypoAscender
+    text = _HEADER.format(
+        regular=sha["Regular"], bold=sha["Bold"], upem=upems.pop(), cap=cap, ascent=ascent
+    )
     text += _literal("REGULAR_PAIRS", _pairs(fonts["Regular"]))
     text += _literal("BOLD_PAIRS", _pairs(fonts["Bold"]))
     TARGET.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")

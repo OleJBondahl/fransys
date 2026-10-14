@@ -6,6 +6,7 @@ from xml.sax.saxutils import escape
 from fransys_model.derive import connector_box_lines, line_designation
 from fransys_model.derive.drawing_text import port_marking
 from fransys_model.derive.order import drawn_lines_on_page, drawn_on_page
+from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.layout import (
     ConnectorBox,
     DrawingSet,
@@ -15,8 +16,7 @@ from fransys_model.layout import (
     sheet_format_of,
 )
 
-from ._constants import ASCENT_RATIO
-from ._numbers import format_decimal, grid_to_mm
+from ._numbers import format_decimal, grid_to_mm, printed_font_mm
 from ._routes import _point_mm
 
 if TYPE_CHECKING:
@@ -45,14 +45,13 @@ def _text(
 
 
 def _line_element(
-    model: Model, sheet: SheetFormat, step: int, line: HarnessLine, unit: Id[Any] | None
+    model: Model, sheet: SheetFormat, font_mm: Decimal, line: HarnessLine, unit: Id[Any] | None
 ) -> str:
     points = " ".join(_point_mm(sheet, point.x, point.y) for point in line.points)
     element = f'<polyline class="harness-line" points="{points}"/>'
     designation = line_designation(model, line.harness, line.branch, unit=unit)
     if not designation:
         return element
-    font_mm = grid_to_mm(0, step, sheet.module_mm)
     baseline = _y_mm(sheet, line.text_y) - font_mm / 2 + font_mm * ASCENT_RATIO
     return element + _text(_x_mm(sheet, line.text_x), baseline, font_mm, designation, middle=True)
 
@@ -60,10 +59,11 @@ def _line_element(
 def harness_lines_group(model: Model, page: Page) -> str:
     """Every harness line on `page` as one `<polyline>` each, in `wire_run` order, with its text."""
     sheet = sheet_format_of(model, page.sheet_format)
-    step = profile_of_page(model, page).text_height
+    font_mm = printed_font_mm(profile_of_page(model, page).text_height_mm)
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return "".join(
-        _line_element(model, sheet, step, line, unit) for line in drawn_lines_on_page(model, page)
+        _line_element(model, sheet, font_mm, line, unit)
+        for line in drawn_lines_on_page(model, page)
     )
 
 
@@ -76,8 +76,7 @@ def _rect(css_class: str, sheet: SheetFormat, box: ConnectorBox | BoxCell) -> st
     )
 
 
-def _cell_element(model: Model, sheet: SheetFormat, step: int, cell: BoxCell) -> str:
-    font_mm = grid_to_mm(0, step, sheet.module_mm)
+def _cell_element(model: Model, sheet: SheetFormat, font_mm: Decimal, cell: BoxCell) -> str:
     top = _y_mm(sheet, cell.y) + (grid_to_mm(0, cell.height, sheet.module_mm) - font_mm) / 2
     centre = _x_mm(sheet, cell.x) + grid_to_mm(0, cell.width, sheet.module_mm) / 2
     name = port_marking(model, cell.port)
@@ -88,10 +87,9 @@ def _cell_element(model: Model, sheet: SheetFormat, step: int, cell: BoxCell) ->
 
 
 def _box_element(
-    model: Model, sheet: SheetFormat, step: int, box: ConnectorBox, unit: Id[Any] | None
+    model: Model, sheet: SheetFormat, font_mm: Decimal, box: ConnectorBox, unit: Id[Any] | None
 ) -> str:
     lines = connector_box_lines(model, box.function, unit=unit)
-    font_mm = grid_to_mm(0, step, sheet.module_mm)
     texts = "".join(
         _text(
             _x_mm(sheet, slot.x),
@@ -102,16 +100,16 @@ def _box_element(
         for slot in box.texts
         if slot.index < len(lines)
     )
-    cells = "".join(_cell_element(model, sheet, step, cell) for cell in box.cells)
+    cells = "".join(_cell_element(model, sheet, font_mm, cell) for cell in box.cells)
     return _rect("connector-box", sheet, box) + texts + cells
 
 
 def connector_boxes_group(model: Model, page: Page) -> str:
     """Every connector box on `page`: its rectangle, text lines and pin cells, by place."""
     sheet = sheet_format_of(model, page.sheet_format)
-    step = profile_of_page(model, page).text_height
+    font_mm = printed_font_mm(profile_of_page(model, page).text_height_mm)
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     return "".join(
-        _box_element(model, sheet, step, box, unit)
+        _box_element(model, sheet, font_mm, box, unit)
         for box in drawn_on_page(model, ConnectorBox, page)
     )

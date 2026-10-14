@@ -22,6 +22,10 @@ if str(_ROOT) not in sys.path:
     # `tests/test_reauthoring.py` needs it for `layout_cabinet`.
     sys.path.insert(0, str(_ROOT))
 
+_TESTS = str(_ROOT / "tests")  # the tests import their sibling test modules by name
+if _TESTS not in sys.path:
+    sys.path.insert(0, _TESTS)
+
 from _model_build_cover import cabinet_document  # noqa: E402
 from demo_designs import cabinet_design, harness_with_board_design  # noqa: E402
 

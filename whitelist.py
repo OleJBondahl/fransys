@@ -80,7 +80,6 @@ _.mate_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.from_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.cross_section_mm2  # DICT fransys-model/src/fransys_model/derive/rows.py:165
 _.to_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
-_.via_designation  # OTHER fransys-overview/src/fransys_overview/html.py:52
 _.added  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.changed  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.change  # OTHER fransys-reports/src/fransys_reports/changes.py:62
@@ -261,6 +260,7 @@ _.limits  # TESTS fransys-author/tests/surface/test_coverage_facts.py:89
 # model field read only in layout or render stays here (CT5-2, layout-0141).
 _.stub_a  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.stub_b  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
+_.stub_of  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 # CT5-2: the cable drawing's fields and enum members, read by render's cable_blocks
 _.pitch  # OTHER fransys-layout/tests/engines/test_cable_engine.py:269
 _.text_x  # OTHER fransys-render/src/fransys_render/cables.py:109
@@ -275,3 +275,7 @@ _.tab_a  # OTHER fransys-render/src/fransys_render/diagram.py:55
 _.tab_b  # OTHER fransys-render/src/fransys_render/diagram.py:56
 _.text_width  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:46
 _.dashed  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:68
+# OVERVIEW Part 1 rows: read by tests only, until the OVERVIEW Part 3 page reads them
+_.axis  # TESTS ../tests/test_overview_matrix.py:25
+_.device_designation  # TESTS fransys-model/tests/usecases/test_signal_lens.py:20
+_.status  # TESTS fransys-model/tests/derive/test_overview_marks_model.py:34

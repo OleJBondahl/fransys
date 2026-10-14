@@ -51,6 +51,7 @@ class ReferenceCounts:
     contact_images: int = 0
     contact_image_targets: int = 0
     single_contact_images: int = 0
+    single_contact_images_other_page: int = 0
     stars: int = 0
     star_branches: int = 0
     single_branch_stars: int = 0
@@ -72,6 +73,14 @@ def _is_image(label: PlacedLabel) -> bool:
     return label.kind is LabelKind.CROSS_REFERENCE and label.slot == "contacts"
 
 
+def _is_other_page_single(label: PlacedLabel) -> bool:
+    """Whether `label` is a contact image with one contact, and that contact is on another page."""
+    if not _is_image(label) or len(label.partners) != 1:
+        return False
+    partner = label.partners[0]
+    return (partner.drawing_set, partner.page) != (label.drawing_set, label.page)
+
+
 def reference_counts(
     labels: tuple[PlacedLabel, ...], markers: tuple[LinkMarker, ...]
 ) -> ReferenceCounts:
@@ -91,6 +100,7 @@ def reference_counts(
         contact_images=len(images),
         contact_image_targets=sum(images),
         single_contact_images=images.count(1),
+        single_contact_images_other_page=sum(1 for one in labels if _is_other_page_single(one)),
         stars=len(stars),
         star_branches=sum(stars),
         single_branch_stars=stars.count(1),

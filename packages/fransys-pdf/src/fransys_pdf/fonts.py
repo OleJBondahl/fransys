@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 def font_dir() -> Path:
-    """The directory holding the vendored Liberation Serif faces and their licence text.
+    """The directory holding the vendored DejaVu Sans Condensed faces and their licence text.
 
     A path through `importlib.resources`, not a read: the directory need not exist for
     this call to succeed. The package adds no third-party dependency and reads no file

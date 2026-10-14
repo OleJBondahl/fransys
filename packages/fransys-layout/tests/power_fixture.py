@@ -164,7 +164,6 @@ def power_model(width_mm: int | None = None) -> Model:
             column_gap=DEFAULT_PROFILE.column_gap,
             row_gap=DEFAULT_PROFILE.row_gap,
             route_margin=DEFAULT_PROFILE.route_margin,
-            text_height=DEFAULT_PROFILE.text_height,
             marker_padding=DEFAULT_PROFILE.marker_padding,
             route_turn_penalty=DEFAULT_PROFILE.route_turn_penalty,
             route_crossing_penalty=DEFAULT_PROFILE.route_crossing_penalty,

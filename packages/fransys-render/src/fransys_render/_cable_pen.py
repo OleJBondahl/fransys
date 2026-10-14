@@ -4,15 +4,19 @@ from dataclasses import dataclass
 from decimal import Decimal
 from xml.sax.saxutils import escape
 
-from ._constants import ASCENT_RATIO, OUTLINE_DASH_GAP_MM, OUTLINE_DASH_LONG_MM, STROKE_WIDTH_MM
-from ._numbers import format_decimal, grid_to_mm
+from fransys_model.derive import text_room_g
+from fransys_model.derive.print_sizes import (
+    ASCENT_RATIO,
+    DASH_GAP_MM,
+    DASH_LONG_MM,
+    LINE_THIN_MM,
+)
+
+from ._numbers import format_decimal, grid_to_mm, printed_font_mm
 
 type Grid = int | Decimal
 
-_DASH = (
-    f' stroke-dasharray="{format_decimal(OUTLINE_DASH_LONG_MM)},'
-    f'{format_decimal(OUTLINE_DASH_GAP_MM)}"'
-)
+_DASH = f' stroke-dasharray="{format_decimal(DASH_LONG_MM)},{format_decimal(DASH_GAP_MM)}"'
 
 
 @dataclass(frozen=True)
@@ -24,8 +28,18 @@ class Pen:
     """
 
     module_mm: Decimal
-    font_g: int
+    text_height_mm: Decimal
     pad_g: int
+
+    @property
+    def font_g(self) -> int:
+        """The grid units one text line is given."""
+        return text_room_g(self.text_height_mm, self.module_mm)
+
+    @property
+    def font_mm(self) -> Decimal:
+        """The printed font size in mm."""
+        return printed_font_mm(self.text_height_mm)
 
     def mm(self, g: Grid) -> str:
         """`g` grid units as mm, in the shortest decimal form."""
@@ -33,7 +47,7 @@ class Pen:
 
     def svg(self, width: Grid, height: Grid, body: str) -> str:
         """The `<svg>` of a `width` x `height` block, padded half a stroke so its outline shows."""
-        margin = STROKE_WIDTH_MM / 2
+        margin = LINE_THIN_MM / 2
         w = format_decimal(Decimal(self.mm(width)) + 2 * margin)
         h = format_decimal(Decimal(self.mm(height)) + 2 * margin)
         return (
@@ -87,7 +101,7 @@ class Pen:
         With `end` the text ends at x, so it reads leftward from a point.
         """
         x, top = at
-        font_mm = grid_to_mm(0, self.font_g, self.module_mm)
+        font_mm = self.font_mm
         baseline = grid_to_mm(0, top, self.module_mm) + font_mm * ASCENT_RATIO
         anchor = ' text-anchor="middle"' if middle else ' text-anchor="end"' if end else ""
         return (
@@ -101,7 +115,7 @@ class Pen:
         The turn is about the baseline's midpoint, as the schematic's vertical references are
         (render-0008); the em box then lies half a font either side of x.
         """
-        font_mm = grid_to_mm(0, self.font_g, self.module_mm)
+        font_mm = self.font_mm
         x = grid_to_mm(0, at[0], self.module_mm) - font_mm / 2 + font_mm * ASCENT_RATIO
         sx, sy = format_decimal(x), self.mm(at[1])
         return (

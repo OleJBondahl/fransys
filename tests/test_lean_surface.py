@@ -46,6 +46,7 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.numbering_pins",
     "fransys_model.derive.order",
+    "fransys_model.derive.print_sizes",
     "fransys_model.derive.text_width",
     "fransys_model.kernel",
     "fransys_model.layout",

@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
-from fransys_model.derive import text_size_mm
+from fransys_model.derive import text_room_g
 from fransys_model.derive.drawing_text import (
     CONTACT_SLOTS,
     contact_heading,
@@ -11,11 +11,11 @@ from fransys_model.derive.drawing_text import (
     label_text,
 )
 from fransys_model.derive.order import drawn_on_page
+from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.layout import Label, profile_of_page, sheet_format_of
 from fransys_model.vocab import functions, items, ports
 
-from ._constants import ASCENT_RATIO
-from ._numbers import format_decimal, grid_to_mm
+from ._numbers import format_decimal, grid_to_mm, printed_font_mm
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -45,10 +45,10 @@ def _not_installed(model: Model, label: Label) -> bool:
 def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
     """A coil's contact image, at the label's measured box."""
     no, nc = contact_image(model, label)
-    step = profile.text_height
+    step = text_room_g(profile.text_height_mm, sheet.module_mm)
     pad = profile.marker_padding
     half = label.width // 2
-    font_mm = grid_to_mm(0, step, sheet.module_mm)
+    font_mm = printed_font_mm(profile.text_height_mm)
     css_class = "label not-installed" if _not_installed(model, label) else "label"
 
     def mm_x(x: int):  # noqa: ANN202 -- one-line closure returning `format_decimal`'s own `-> str`, restating it adds nothing
@@ -92,13 +92,13 @@ def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: La
     if label.slot in CONTACT_SLOTS:
         return _contact_image(model, sheet, profile, label)
     top_mm = grid_to_mm(sheet.content_y_mm, label.y, sheet.module_mm)
-    font_size_mm = text_size_mm(profile.text_height, sheet.module_mm)
-    baseline_mm = top_mm + font_size_mm * ASCENT_RATIO
+    font_mm = printed_font_mm(profile.text_height_mm)
+    baseline_mm = top_mm + font_mm * ASCENT_RATIO
     x_mm = grid_to_mm(sheet.content_x_mm, label.x, sheet.module_mm)
     css_class = "label not-installed" if _not_installed(model, label) else "label"
     return (
         f'<text class="{css_class}" x="{format_decimal(x_mm)}" y="{format_decimal(baseline_mm)}" '
-        f'font-size="{format_decimal(font_size_mm)}">'
+        f'font-size="{format_decimal(font_mm)}">'
         f"{escape(label_text(model, label))}</text>"
     )
 

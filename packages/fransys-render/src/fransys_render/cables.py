@@ -124,7 +124,7 @@ def _render_block(model: Model, block: CableBlock) -> str:
     """One block's SVG, sized to the block in mm on its sheet's module."""
     sheet = sheet_format_of(model, block.sheet_format)
     profile = profile_of(model)
-    pen = Pen(sheet.module_mm, profile.text_height, profile.marker_padding)
+    pen = Pen(sheet.module_mm, profile.text_height_mm, profile.marker_padding)
     cables = block_cables(model, block.subject, block.unit)
     texts = {core.conductor: core_text(core) for cable in cables for core in cable.cores}
     texts |= {w.conductor: w.text for w in block_wires(model, block.subject, block.unit)}
@@ -135,7 +135,7 @@ def _render_block(model: Model, block: CableBlock) -> str:
         _wire(pen, wire, texts[wire.conductor], link=wire.conductor in links)
         for wire in _of_block(model, CoreWire, block)
     )
-    return pen.svg(block.width, block.height, style_block(sheet.module_mm) + body)
+    return pen.svg(block.width, block.height, style_block() + body)
 
 
 def cable_blocks(model: Model) -> frozendict[str, str]:

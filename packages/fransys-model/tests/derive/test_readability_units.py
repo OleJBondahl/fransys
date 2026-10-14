@@ -11,8 +11,8 @@ _BASE = ReadabilityPage(
     unit=None,
     drawing_set=1,
     number=1,
-    text_mm=Decimal("2.5"),
-    min_text_mm=Decimal("2.5"),
+    text_height_mm=Decimal("2.5"),
+    min_text_height_mm=Decimal("2.5"),
     fill_percent=80,
     wire_crossings=1,
     struck_labels=2,
@@ -21,6 +21,7 @@ _BASE = ReadabilityPage(
     contact_images=5,
     contact_image_targets=6,
     single_contact_images=7,
+    single_contact_images_other_page=12,
     stars=8,
     star_branches=9,
     single_branch_stars=10,
@@ -47,6 +48,7 @@ def test_the_counts_add_up_and_the_page_count_is_the_pages() -> None:
         12,
         14,
     )
+    assert row.single_contact_images_other_page == 24
     assert (row.stars, row.star_branches, row.single_branch_stars, row.page_cuts) == (
         16,
         18,
@@ -57,17 +59,20 @@ def test_the_counts_add_up_and_the_page_count_is_the_pages() -> None:
 
 def test_the_smallest_text_and_the_emptiest_page_stand_for_the_unit() -> None:
     pages = [
-        _page(1, text_mm=Decimal("2.5"), fill_percent=80),
-        _page(2, text_mm=Decimal("1.8"), fill_percent=12),
+        _page(1, text_height_mm=Decimal("2.5"), fill_percent=80),
+        _page(2, text_height_mm=Decimal("1.8"), fill_percent=12),
     ]
     (row,) = readability_units(pages)
-    assert (row.text_mm, row.fill_percent) == (Decimal("1.8"), 12)
+    assert (row.text_height_mm, row.fill_percent) == (Decimal("1.8"), 12)
 
 
 def test_the_floor_of_the_unit_is_the_highest_floor_of_its_pages() -> None:
-    pages = [_page(1, min_text_mm=Decimal("2.0")), _page(2, min_text_mm=Decimal("2.5"))]
+    pages = [
+        _page(1, min_text_height_mm=Decimal("2.0")),
+        _page(2, min_text_height_mm=Decimal("2.5")),
+    ]
     (row,) = readability_units(pages)
-    assert row.min_text_mm == Decimal("2.5")
+    assert row.min_text_height_mm == Decimal("2.5")
 
 
 def test_each_unit_has_its_own_row_in_the_order_its_first_page_comes() -> None:

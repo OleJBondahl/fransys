@@ -299,7 +299,7 @@ _CLASH_ORIGIN = Origin(file="test_acceptance.py", line=1, note="deliberate clash
 
 
 def _clashing_boards_model():
-    """Two board items sharing one designation and no placement, so `_subjects.ref` collides."""
+    """Two boards, one designation, no placement: `reference_fragment` collides."""
     parts_and_boards = []
     for suffix in ("a", "b"):
         part = Part(
@@ -346,7 +346,7 @@ def _two_units_of_one_release_with_clashing_documents():
     """Two `Unit` instances of one `UnitRelease`, each the subject of its own document (EN3).
 
     A unit's export prefix is its release's own name/version/revision, never the unit's own
-    identity (`_subjects.export_prefix`), so both documents' PDF names collide even though the
+    identity (`derive.export_prefix`), so both documents' PDF names collide even though the
     documents themselves are unrelated records: `_export_name_clash`'s `hint`-not-`None`
     branch ("keep one document per release").
     """

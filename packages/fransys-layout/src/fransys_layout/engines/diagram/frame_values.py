@@ -66,8 +66,8 @@ class FrameTrack:
 class FrameChannel:
     """The room right of column `left` on a sheet; `right` is the next column, None after the last.
 
-    From `start`: `tab_l`, `label`, tracks 1..`count` at `track_x(t)`, the `same` lines on the
-    tracks after them, `label`, `tab_r`. `lines` run between `left` and `right`.
+    From `start`: `tab_l`, `label`, tracks 1..`count`, the `same` lines on the tracks after them
+    (`same_tracks[k]` of `same[k]`), `label`, `tab_r`. `lines` run between `left` and `right`.
     """
 
     left: int
@@ -78,6 +78,7 @@ class FrameChannel:
     label: int
     lines: tuple[int, ...]
     same: tuple[int, ...]
+    same_tracks: tuple[int, ...]
     tracks: tuple[FrameTrack, ...]
     count: int
     width: int
@@ -100,6 +101,7 @@ class FrameCut:
     left_sheet: int
     lines: tuple[int, ...]
     same: tuple[int, ...]
+    same_tracks: tuple[int, ...]
     tab_l: int
     tab_r: int
     label: int

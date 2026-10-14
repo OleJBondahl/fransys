@@ -35,16 +35,21 @@ from fransys_reports import (
 )
 from fransys_wago import modules_xml as modules_xml_of
 
-from fransys_layout import lay_out_cables
+from fransys_layout import lay_out_cables, lay_out_overview
 from fransys_model.derive import (
     allocate_plc,
     baseline,
     check_side_hints,
     current_revision,
+    document_export_name,
     document_unit,
+    export_name,
+    export_ref,
+    export_set_name,
     list_context,
     number,
     numbering_pins,
+    reference_fragment,
     release_order,
     revision_text,
     same_version,
@@ -85,8 +90,6 @@ lazy from fransys_model.kernel import AuthoringKey, Draft, Model, Origin
 
 from . import _args, _designation_pins, _revision_pins, _subjects
 from ._baseline_cause import sections_text
-from ._export_names import document_export_name as _document_export_name
-from ._export_names import export_name as _export_name
 from ._history_gate import history_findings
 from ._layout_need import lay_out_if_needed, needs_schematic_layout
 from ._release_files import release_file_findings
@@ -95,7 +98,7 @@ from ._release_reader import listed_siblings, stored_listing, stored_numbering
 from .documents import engine_subject
 
 if TYPE_CHECKING:
-    from fransys_model.derive.baseline import Listing
+    from fransys_model.derive.baseline import Listing, ListingDiff
     from fransys_model.vocab import Item, UnitRelease
     from fransys_model.vocab import Unit as ModelUnit
 
@@ -412,6 +415,9 @@ def _draw_svgs(model: Model) -> dict[str, str]:
 # `release`) for the one model a caller is working on right now, so the last result is enough,
 # and it is the cheapest bound this repo's biggest systems allow (WHERE's research file).
 _svgs_cache = digest_cached(1)(_draw_svgs)
+# The overview engine's one pure call, shared by `check` (its findings) and `write` (the page's
+# model), as `_svgs` is (OVERVIEW O25). `build` never runs it: no document, no layout.
+_overview = digest_cached(1)(lay_out_overview)
 
 
 def _svgs(model: Model) -> dict[str, str]:
@@ -439,6 +445,8 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
     raw = list(result.findings)
     for board in _subjects.boards(model):
         raw.extend(kicad_check(model, board))
+    if not _has_error(result.findings):
+        raw.extend(_overview(model)[1])
     if not _has_error(result.findings) and _has_document(model):
         raw.extend(fransys_pdf.check(model, svgs))
         if needs_schematic_layout(model):
@@ -481,7 +489,7 @@ def _write_intermediates(model: Model, svgs: dict[str, str], intermediates: Path
         (intermediates / f"{_file_safe(page_key)}.svg").write_bytes(svg.encode("utf-8"))
     for board in _subjects.boards(model):
         text = kicad_netlist(model, board)
-        (intermediates / f"netlist-{_subjects.ref(model, board)}.net").write_bytes(
+        (intermediates / f"netlist-{reference_fragment(model, board)}.net").write_bytes(
             text.encode("utf-8")
         )
     for document_id, record in documents(model).items():
@@ -558,7 +566,13 @@ def _resolve_unit(model: Model, unit: object) -> Id[ModelUnit] | None:
     raise TypeError(msg)
 
 
-def _add_system_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit] | None) -> None:
+def _add_system_exports(
+    ledger: _ExportLedger,
+    model: Model,
+    unit: Id[ModelUnit] | None,
+    findings: tuple[Finding, ...] = (),
+    changes: ListingDiff | None = None,
+) -> None:
     """The CSV reports, and with `unit=None` the two whole-system views."""
     made: dict[str, tuple[str, Callable[[], str]]] = {
         "bom": ("csv", partial(bom_csv, model, unit)),
@@ -568,9 +582,12 @@ def _add_system_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit]
         "cables": ("csv", partial(cables_csv, model, unit=unit)),
     }
     if unit is None:
-        made["overview"] = ("html", partial(overview_html, model))
+        made["overview"] = (
+            "html",
+            partial(overview_html, _overview(model)[0], findings=findings, changes=changes),
+        )
     for kind, (extension, produce) in made.items():
-        ledger.add(kind, _export_name(model, unit, extension, kind=kind), None, produce)
+        ledger.add(kind, export_name(model, unit, extension, kind=kind), None, produce)
 
 
 def _list_context(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) -> Id[Any] | None:
@@ -597,20 +614,20 @@ def _add_item_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit] |
     """One terminal CSV per strip, one connector CSV per board, one WAGO XML per rack."""
     strips, boards, racks = _item_subjects(model, unit)
     for strip in strips:
-        fragment = _subjects.export_ref(model, strip, unit)
-        name = _export_name(model, unit, "csv", kind="terminals", fragment=fragment)
+        fragment = export_ref(model, strip, unit)
+        name = export_name(model, unit, "csv", kind="terminals", fragment=fragment)
         context = _list_context(model, unit, strip)
         produce = partial(terminal_csv_of, model, strip, unit=unit, context=context)
         ledger.add("terminals", name, strip, produce)
     for board in boards:
-        fragment = _subjects.export_ref(model, board, unit)
-        name = _export_name(model, unit, "csv", kind="connectors", fragment=fragment)
+        fragment = export_ref(model, board, unit)
+        name = export_name(model, unit, "csv", kind="connectors", fragment=fragment)
         context = _list_context(model, unit, board)
         produce = partial(connectors_csv_of, model, board, unit=unit, context=context)
         ledger.add("connectors", name, board, produce)
     for rack in racks:
-        fragment = _subjects.export_ref(model, rack, unit)
-        name = _export_name(model, unit, "xml", kind="wago", fragment=fragment)
+        fragment = export_ref(model, rack, unit)
+        name = export_name(model, unit, "xml", kind="wago", fragment=fragment)
         ledger.add("wago", name, rack, partial(modules_xml_of, model, rack, unit=unit))
 
 
@@ -627,34 +644,45 @@ def _add_document_exports(
     all_units = units(model)
     release_by_name: dict[str, Id[Any]] = {}
     for document_id, record in document_entries:
-        name = _document_export_name(model, unit, record)
+        name = document_export_name(model, unit, record)
         hint = None
         document_own_unit = document_unit(model, record)
         if document_own_unit is not None:
             release_id = all_units[document_own_unit].release
             if release_by_name.get(name) == release_id:
-                hint = _subjects.export_set_name(model, document_own_unit)
+                hint = export_set_name(model, document_own_unit)
             release_by_name[name] = release_id
         ledger.add(
             "pdf", name, document_id, partial(_compile_pdf, model, document_id, svgs), hint=hint
         )
 
 
-def _ledger(
-    model: Model, svgs: dict[str, str], unit: Id[ModelUnit] | None, *, names_only: bool = False
+def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all keyword
+    model: Model,
+    svgs: dict[str, str],
+    unit: Id[ModelUnit] | None,
+    *,
+    names_only: bool = False,
+    findings: tuple[Finding, ...] = (),
+    changes: ListingDiff | None = None,
 ) -> _ExportLedger:
     ledger = _ExportLedger(model, names_only=names_only)
-    _add_system_exports(ledger, model, unit)
+    _add_system_exports(ledger, model, unit, findings, changes)
     _add_item_exports(ledger, model, unit)
     _add_document_exports(ledger, model, svgs, unit)
     return ledger
 
 
 def _exports(
-    model: Model, svgs: dict[str, str], *, unit: Id[ModelUnit] | None = None
+    model: Model,
+    svgs: dict[str, str],
+    *,
+    unit: Id[ModelUnit] | None = None,
+    findings: tuple[Finding, ...] = (),
+    changes: ListingDiff | None = None,
 ) -> dict[str, bytes]:
     """Every export of `model` by name: `unit` restricts them to that unit; no netlist."""
-    return _ledger(model, svgs, unit).exports
+    return _ledger(model, svgs, unit, findings=findings, changes=changes).exports
 
 
 def export_names(
@@ -690,7 +718,7 @@ def _clean_stale_exports(out_dir: Path, model: Model, unit: Id[ModelUnit] | None
         for path in out_dir.glob(pattern):
             if path.is_file():
                 path.unlink()
-    set_name = _subjects.export_set_name(model, unit)
+    set_name = export_set_name(model, unit)
     if set_name:
         _remove_prefixed(out_dir, set_name)
     if unit is None:
@@ -704,13 +732,17 @@ def write(
     *,
     unit: object = None,
     intermediates: Path | None = None,
+    releases: Path | None = None,
 ) -> tuple[Path, ...]:
     """Write a built model's exports into `out_dir` and return their paths, sorted.
 
     Writes CSV reports, WAGO XML, overview HTML and one PDF per document; `unit=` restricts them to
     that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
-    sources) go only to `intermediates`, if given. Any `ERROR` in `check(result)` raises
-    `BuildErrors` and leaves `out_dir` without an export, whole-model, with no escape hatch.
+    sources) go only to `intermediates`, if given. `releases` is a release root as `release`'s
+    `into`: with a stored release of the system there, `overview.html` marks what changed since it
+    (the release at the model's revision, else the previous one); `None` marks nothing. Any
+    `ERROR` in `check(result)` raises `BuildErrors` and leaves `out_dir` without an export,
+    whole-model, with no escape hatch.
     Also raises `ExportNameClash`, `TypeError` or `ValueError` for a bad `unit`.
 
     Does not write when `check` finds an ERROR; does not touch files in `out_dir` it does not own.
@@ -727,7 +759,13 @@ def write(
     errors = tuple(finding for finding in findings if finding.severity is Severity.ERROR)
     if errors:
         raise BuildErrors(errors)
-    exports = _exports(model, svgs, unit=resolved_unit)
+    exports = _exports(
+        model,
+        svgs,
+        unit=resolved_unit,
+        findings=findings,
+        changes=_changes_since(model, releases, resolved_unit),
+    )
     written = []
     for name, data in exports.items():
         path = out_dir / name
@@ -867,6 +905,24 @@ def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
         if best_order is None or sibling_order > best_order:
             best_order, best = sibling_order, sibling_listing
     return best
+
+
+def _since_listing(release: _ReleaseTarget) -> Listing | None:
+    """The release stored at the model's own revision, else the previous one, or `None`."""
+    stored_text = stored_listing(release.path)
+    if stored_text is not None:
+        return baseline.loads(stored_text)
+    return _previous_release_listing(release)
+
+
+def _changes_since(
+    model: Model, releases: Path | None, unit: Id[ModelUnit] | None
+) -> ListingDiff | None:
+    """The system's `ListingDiff` from the release `_since_listing` finds, or `None`."""
+    if releases is None or unit is not None or not projects(model):
+        return None
+    since = _since_listing(_release_target(model, None, releases))
+    return None if since is None else baseline.diff(since, baseline.listing(model, None))
 
 
 def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
@@ -1084,15 +1140,11 @@ def diff(
             raise FileNotFoundError(msg)
         a = baseline.loads(text)
     else:
-        current_text = stored_listing(target_info.path)
-        if current_text is not None:
-            a = baseline.loads(current_text)
-        else:
-            previous = _previous_release_listing(target_info)
-            if previous is None:
-                msg = f"no released revision found under {target_info.path.parent}"
-                raise FileNotFoundError(msg)
-            a = previous
+        since = _since_listing(target_info)
+        if since is None:
+            msg = f"no released revision found under {target_info.path.parent}"
+            raise FileNotFoundError(msg)
+        a = since
     return changes_markdown(baseline.diff(a, b))
 
 

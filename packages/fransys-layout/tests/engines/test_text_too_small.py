@@ -1,6 +1,6 @@
-"""A profile that prints text under its `min_text_mm` gets one `TEXT_TOO_SMALL` warning.
+"""A profile whose `text_height_mm` is under its `min_text_height_mm` gets one `TEXT_TOO_SMALL`.
 
-`read_inputs` builds it from the profile and the sheet's module (decision layout-0179), so the
+`read_inputs` builds it from the profile (decisions layout-0179, layout-0185), so the
 finding reaches `stage_results`' findings with the profile as its subject. All data invented.
 """
 
@@ -26,7 +26,6 @@ def _profile(**changes: object) -> Profile:
         column_gap=DEFAULT_PROFILE.column_gap,
         row_gap=DEFAULT_PROFILE.row_gap,
         route_margin=DEFAULT_PROFILE.route_margin,
-        text_height=DEFAULT_PROFILE.text_height,
         marker_padding=DEFAULT_PROFILE.marker_padding,
         route_turn_penalty=DEFAULT_PROFILE.route_turn_penalty,
         route_crossing_penalty=DEFAULT_PROFILE.route_crossing_penalty,
@@ -50,12 +49,12 @@ def test_the_code_is_listed() -> None:
 
 
 def test_a_small_text_height_is_warned_about_with_both_sizes() -> None:
-    profile = _profile(text_height=2)
+    profile = _profile(text_height_mm=Decimal(1))
     (finding,) = _found(profile)
     assert finding.severity is Severity.WARNING
     assert finding.subjects == (profile.id,)
     assert finding.message == (
-        "profile test.profile prints text at 0.625 mm, under its minimum of 2.5 mm"
+        "profile test.profile sets a text height of 1 mm, under its minimum of 1.8 mm"
     )
 
 
@@ -65,9 +64,14 @@ def test_the_house_text_height_and_the_house_profile_give_none() -> None:
 
 
 def test_a_lower_floor_gives_none() -> None:
-    assert _found(_profile(text_height=2, min_text_mm=Decimal("0.5"))) == []
+    assert _found(_profile(text_height_mm=Decimal(1), min_text_height_mm=Decimal("0.5"))) == []
 
 
 def test_the_floor_is_exact_at_the_boundary() -> None:
-    assert _found(_profile(text_height=2, min_text_mm=Decimal("0.625"))) == []
-    assert len(_found(_profile(text_height=2, min_text_mm=Decimal("0.626")))) == 1
+    """A height equal to the floor does not fire; a hundredth of a mm under it does."""
+    assert _found(_profile(text_height_mm=Decimal("1.8"), min_text_height_mm=Decimal("1.8"))) == []
+    assert _found(_profile(text_height_mm=Decimal("2.5"), min_text_height_mm=Decimal("2.5"))) == []
+    assert (
+        len(_found(_profile(text_height_mm=Decimal("1.79"), min_text_height_mm=Decimal("1.8"))))
+        == 1
+    )

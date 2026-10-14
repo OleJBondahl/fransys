@@ -17,8 +17,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import system_document
-from fransys import _subjects
-from fransys.pipeline import BuildResult, ExportNameClash, _export_name
+from fransys.pipeline import BuildResult, ExportNameClash, export_name
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by name.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -30,6 +29,7 @@ from test_write_unit_worked_example import (
     _unit_id,
 )
 
+from fransys_model.derive import export_prefix, export_set_name
 from fransys_model.kernel import Draft, Origin, freeze, make_id, merge
 from fransys_model.vocab import (
     Document,
@@ -289,32 +289,32 @@ def test_two_boards_with_distinct_relative_names_in_one_unit_folder_do_not_clash
     assert {"u-v1.1-connectors-X1.csv", "u-v1.1-connectors-X2.csv"} <= _names(written)
 
 
-# -- EXPORT-NAMES Part 1: export_set_name, export_prefix, _export_name's join -----------------
+# -- EXPORT-NAMES Part 1: export_set_name, export_prefix, export_name's join -----------------
 
 
 def test_export_set_name_and_prefix_are_empty_with_no_project_and_no_unit():
     """EN1: a system write of a model with no `Project` at all has no prefix."""
     model = freeze(Draft())
-    assert _subjects.export_set_name(model, None) == ""
-    assert _subjects.export_prefix(model, None) == ""
+    assert export_set_name(model, None) == ""
+    assert export_prefix(model, None) == ""
 
 
 def test_export_set_name_and_prefix_for_the_system_use_the_projects_number_and_revision(worked):
     """EN1's system case, the spec's own worked numbers: `Project` number `P-1001`, version 1
     (defaulted, `_PROJECT` gives none), revision 1."""
     result, _cabinet, _board = worked
-    assert _subjects.export_set_name(result.model, None) == "P-1001"
-    assert _subjects.export_prefix(result.model, None) == "P-1001-v1.1"
+    assert export_set_name(result.model, None) == "P-1001"
+    assert export_prefix(result.model, None) == "P-1001-v1.1"
 
 
 def test_export_set_name_and_prefix_for_a_unit_use_its_own_release_not_the_project(worked):
     """EN1's unit case: the release's own name, version and revision, never the `Project`'s,
     even though this fixture's model has a `Project` (`P-1001-v1.1`) too."""
     result, cabinet, board = worked
-    assert _subjects.export_set_name(result.model, cabinet) == "demo-pump-cabinet"
-    assert _subjects.export_prefix(result.model, cabinet) == "demo-pump-cabinet-v1.2"
-    assert _subjects.export_set_name(result.model, board) == "demo-io-board"
-    assert _subjects.export_prefix(result.model, board) == "demo-io-board-v1.3"
+    assert export_set_name(result.model, cabinet) == "demo-pump-cabinet"
+    assert export_prefix(result.model, cabinet) == "demo-pump-cabinet-v1.2"
+    assert export_set_name(result.model, board) == "demo-io-board"
+    assert export_prefix(result.model, board) == "demo-io-board-v1.3"
 
 
 def test_export_prefix_reads_the_projects_actual_version():
@@ -331,7 +331,7 @@ def test_export_prefix_reads_the_projects_actual_version():
     )
     d.revision(1, date="2026-09-23", text="First issue", created="XX")
     result = fr.build(fr.parts(), d.draft(), system_document())
-    assert _subjects.export_prefix(result.model, None) == "P-1001-v2.1"
+    assert export_prefix(result.model, None) == "P-1001-v2.1"
 
 
 def test_export_prefix_for_a_unit_is_unaffected_by_a_missing_project():
@@ -351,26 +351,26 @@ def test_export_prefix_for_a_unit_is_unaffected_by_a_missing_project():
     motor = d.item("DEMO-MOTOR-4KW", tag="M1", at=fld, group=fld_grp)
     d.cable("DEMO-CBL-4G1.5", tag="WM1", length_mm=15000).core(1, terminal.outer, motor["U"])
     result = fr.build(parts, d.draft(), system_document())
-    assert _subjects.export_set_name(result.model, u.unit_id) == "demo-unit"
-    assert _subjects.export_prefix(result.model, u.unit_id) == "demo-unit-v3.4"
+    assert export_set_name(result.model, u.unit_id) == "demo-unit"
+    assert export_prefix(result.model, u.unit_id) == "demo-unit-v3.4"
 
 
 def test_export_name_joins_prefix_kind_and_fragment(worked):
-    """EN2: `_export_name` joins whichever of prefix/kind/fragment is non-empty with `-`."""
+    """EN2: `export_name` joins whichever of prefix/kind/fragment is non-empty with `-`."""
     result, _cabinet, _board = worked
     model = result.model
-    assert _export_name(model, None, "pdf") == "P-1001-v1.1.pdf"
-    assert _export_name(model, None, "csv", kind="bom") == "P-1001-v1.1-bom.csv"
-    assert _export_name(model, None, "csv", kind="terminals", fragment="X2") == (
+    assert export_name(model, None, "pdf") == "P-1001-v1.1.pdf"
+    assert export_name(model, None, "csv", kind="bom") == "P-1001-v1.1-bom.csv"
+    assert export_name(model, None, "csv", kind="terminals", fragment="X2") == (
         "P-1001-v1.1-terminals-X2.csv"
     )
 
 
 def test_export_name_with_no_project_gives_todays_bare_names():
-    """EN1's own escape hatch: an empty prefix leaves `_export_name` at today's bare names."""
+    """EN1's own escape hatch: an empty prefix leaves `export_name` at today's bare names."""
     model = freeze(Draft())
-    assert _export_name(model, None, "csv", kind="bom") == "bom.csv"
-    assert _export_name(model, None, "csv", kind="terminals", fragment="X1") == "terminals-X1.csv"
+    assert export_name(model, None, "csv", kind="bom") == "bom.csv"
+    assert export_name(model, None, "csv", kind="terminals", fragment="X1") == "terminals-X1.csv"
 
 
 # -- EXPORT-NAMES Part 1, acceptance 2: stale exports removed by prefix (EN4) -----------------
@@ -513,7 +513,7 @@ def test_a_system_write_with_no_project_writes_the_bare_cover_stem_for_the_syste
     tmp_path,
 ):
     """Acceptance 4a: with no `Project`, the system's own document keeps today's bare
-    `<cover-stem>.pdf`, through `_export_name`'s own fallback, not a separate f-string."""
+    `<cover-stem>.pdf`, through `export_name`'s own fallback, not a separate f-string."""
     result = _no_project_unit_and_system_design(tmp_path)
     names = _names(fr.write(result, tmp_path / "out", unit=None))
     assert "system.pdf" in names

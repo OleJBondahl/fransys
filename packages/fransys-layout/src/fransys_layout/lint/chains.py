@@ -15,6 +15,7 @@ from fransys_layout.stages._polelinks import net_sizes, pole_ports
 from fransys_model.kernel import Finding, Severity
 
 from .codes import CHAIN_BROKEN, LONE_CELL
+from .printed import on_printed
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -153,15 +154,21 @@ def lint_chains(
     records: StageRecords,
     *,
     open_ends: frozenset[Handle] = frozenset(),
+    printed: frozenset[int] | None = None,
 ) -> tuple[Finding, ...]:
-    """Report `LONE_CELL` and `CHAIN_BROKEN` warnings, sorted by `(code, subjects)`."""
+    """Report `LONE_CELL` and `CHAIN_BROKEN` warnings, sorted by `(code, subjects)`.
+
+    A lone cell on a set that is not in `printed` is left out (model-0201).
+    """
     facts = _facts(layout, records)
     pages: defaultdict[Handle, set[tuple[int, int]]] = defaultdict(set)
     for one in layout.placed:
         pages[one.function].add((one.drawing_set, one.page))
     seen: set[tuple[Handle, str]] = set()
     findings = []
-    for _, finding in _lone_cells(layout, facts, open_ends):
+    for here, finding in _lone_cells(layout, facts, open_ends):
+        if not on_printed(here, printed):
+            continue
         if (finding.subjects[0], finding.message) not in seen:
             seen.add((finding.subjects[0], finding.message))
             findings.append(finding)

@@ -65,7 +65,7 @@ def test_a_slot_label_may_stand_in_its_own_functions_port_column() -> None:
     (label,), findings = place_slot_labels(
         (request,), (only,), (drawn(1),), frame=SlotFrame(content=None, profile=PROFILE)
     )
-    assert label.box == Box(x=120, y=92, width=13, height=8)
+    assert label.box == Box(x=120, y=92, width=12, height=8)
     assert findings == ()
 
 
@@ -113,7 +113,7 @@ def test_finish_page_leaves_an_unplaced_label_out_of_the_routers_reserved_boxes(
         slot="tag",
         drawing_set=1,
         page=1,
-        box=Box(x=120, y=92, width=13, height=8),
+        box=Box(x=120, y=92, width=12, height=8),
     )
     stuck = PlacedLabel(
         kind=LabelKind.TAG,

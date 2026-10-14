@@ -14,6 +14,7 @@ from fransys_layout.stages.slices import by_key, page_of
 from fransys_model.kernel import Finding, Severity
 
 from .codes import PAGE_UNDERFILLED
+from .printed import on_printed
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -50,17 +51,22 @@ def fill_shares(layout: Layout, *, sheet: SheetFormat) -> dict[tuple[int, int], 
 
 
 def lint_fill(
-    layout: Layout, *, sheet: SheetFormat, pin_functions: Mapping[Handle, Handle] | None = None
+    layout: Layout,
+    *,
+    sheet: SheetFormat,
+    pin_functions: Mapping[Handle, Handle] | None = None,
+    printed: frozenset[int] | None = None,
 ) -> tuple[Finding, ...]:
     """One `PAGE_UNDERFILLED` (INFO) per schematic page under `UNDERFILL_SHARE`, by page.
 
     A pin view is placed under its port's handle; `pin_functions` maps it to its real function.
+    A page of a set that is not in `printed` gets none (model-0201).
     """
     named = pin_functions or {}
     placed_on = by_key(layout.placed, page_of)
     findings = []
     for here, share in fill_shares(layout, sheet=sheet).items():
-        if share >= UNDERFILL_SHARE:
+        if share >= UNDERFILL_SHARE or not on_printed(here, printed):
             continue
         findings.append(
             Finding(

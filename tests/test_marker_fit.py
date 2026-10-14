@@ -30,7 +30,6 @@ from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import text_width
 from fransys_layout.stages.references.marker_boxes import reference_box_width
@@ -39,7 +38,6 @@ from fransys_model.kernel import loads
 from fransys_model.layout import (
     LinkMarker,
     Page,
-    Profile,
     StarKind,
     layout_of,
 )
@@ -77,12 +75,9 @@ def _resized(marker: LinkMarker, *, along: int, across: int) -> LinkMarker:
 
 
 def _profile_numbers(model: Model) -> tuple[int, int]:
-    """The model's own authored `layout.profile.text_height`/`marker_padding`, or the defaults."""
-    profiles = layout_of(model, Profile)
-    if profiles:
-        profile = next(iter(profiles.values()))
-        return profile.text_height, profile.marker_padding
-    return DEFAULT_PROFILE.text_height, DEFAULT_PROFILE.marker_padding
+    """The model's profile as the stages read it: the text room in G and `marker_padding`."""
+    profile, _, _ = profile_and_sheet(model)
+    return profile.text_height, profile.marker_padding
 
 
 def _measured_size(

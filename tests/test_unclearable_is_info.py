@@ -1,6 +1,6 @@
 """A drawing defect no consumer action clears is INFO, with Fransys's own text (layout-0252).
 
-The ten codes of `UNCLEARABLE` are the render-stage WARNINGs whose `who` is Fransys. Each is INFO
+The twelve codes of `UNCLEARABLE` are the render-stage WARNINGs whose `who` is Fransys. Each is INFO
 in its `CodeInfo`, carries the text as its fix, and no emitting site writes `Severity.WARNING`
 beside it. Every other layout WARNING keeps a consumer fix and stays a WARNING.
 """
@@ -19,7 +19,7 @@ TEXT = "Fransys could not draw this cleanly; please report it with the smallest 
 def test_every_unclearable_code_is_info_with_the_text() -> None:
     infos = {info.code: info for info in FINDING_CODES}
     assert COULD_NOT_DRAW == TEXT
-    assert len(UNCLEARABLE) == 10
+    assert len(UNCLEARABLE) == 12
     for code in UNCLEARABLE:
         assert infos[code].severities == (Severity.INFO,), code
         assert infos[code].fix == TEXT, code

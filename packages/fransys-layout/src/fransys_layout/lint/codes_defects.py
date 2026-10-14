@@ -16,11 +16,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="DIAGRAM_LABEL_STRUCK",
-        severities=(Severity.ERROR,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="A line of a block diagram or an overview view passes through a line label.",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(
@@ -46,11 +46,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
     ),
     CodeInfo(
         code="DIAGRAM_LINES_SHARE_TRACK",
-        severities=(Severity.ERROR,),
+        severities=(Severity.INFO,),
         stage="render",
         who="Fransys",
         cause="Two cables of a block diagram or an overview view run along one track.",
-        fix="A Fransys defect: send the smallest model that shows it.",
+        fix=COULD_NOT_DRAW,
         page="findings-render",
     ),
     CodeInfo(

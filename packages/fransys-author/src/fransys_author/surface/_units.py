@@ -76,6 +76,23 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     )
 
 
+def check_history(definition: UnitDef[Any]) -> None:
+    """Raise `AuthorError` for a history entry that meets the release's own revision record."""
+    own = definition.entry
+    for entry in definition.history:
+        version = entry.get("version", definition.version)
+        if (version, entry["revision"]) != (definition.version, definition.revision):
+            continue
+        if {k: v for k, v in entry.items() if k != "version"} == own:
+            continue
+        msg = (
+            f"unit {definition.name!r}: history entry {version}.{entry['revision']} "
+            f"({entry['text']!r}) is also the unit's own current revision record; "
+            "give the entry its old `version=`"
+        )
+        raise AuthorError(msg)
+
+
 class Units:
     """The `add` call of `Design`."""
 
@@ -93,6 +110,7 @@ class Units:
         Does not take a lowercase tag. Returns the unit function's result; `name=` as in `device`.
         `unused=` names fields (`"X1"`, a terminal, run or strip) or functions (`"X1.x1"`).
         """
+        check_history(definition)
         key = self._claim(
             check_add(definition.name, definition.class_code, tag, name), per_function=True
         )

@@ -14,11 +14,14 @@ from .codes import (
     DIAGRAM_LINE_THROUGH_BOX,
     DIAGRAM_LINES_SHARE_TRACK,
     DIAGRAM_TEXT_OVERLAP,
+    UNCLEARABLE,
 )
 
 
 def _error(code: str, subjects: tuple[Ident, ...], message: str) -> Finding:
-    return Finding(code=code, severity=Severity.ERROR, subjects=subjects, message=message)
+    """ERROR, or INFO for a code in `UNCLEARABLE` (layout-0252)."""
+    severity = Severity.INFO if code in UNCLEARABLE else Severity.ERROR
+    return Finding(code=code, severity=severity, subjects=subjects, message=message)
 
 
 def check_box_overlap(scene: Scene) -> tuple[Finding, ...]:

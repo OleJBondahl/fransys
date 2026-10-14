@@ -11,8 +11,8 @@ Codes the layout and the drawing stage emit. Who acts is explained in [`findings
 | DIAGRAM_BOX_OVERLAP | ERROR | render | Fransys | Two boxes of a block diagram or of an overview view, or a tab and a box, overlap. | A Fransys defect: send the smallest model that shows it. |
 | DIAGRAM_CABLE_FANOUT | INFO | render | note | A cable reaches three or more boxes, so the block diagram draws a line from its first box to each other. | Nothing is wrong; split the cable only if a line per pair is not wanted. |
 | DIAGRAM_CABLE_ONE_BOX | INFO | render | note | A cable's ends reach one box or none, so the block diagram draws no line for it. | Usually nothing to fix: the cable runs inside one box, or an end is an unmated plug. |
-| DIAGRAM_LABEL_STRUCK | ERROR | render | Fransys | A line of a block diagram or an overview view passes through a line label. | A Fransys defect: send the smallest model that shows it. |
-| DIAGRAM_LINES_SHARE_TRACK | ERROR | render | Fransys | Two cables of a block diagram or an overview view run along one track. | A Fransys defect: send the smallest model that shows it. |
+| DIAGRAM_LABEL_STRUCK | INFO | render | Fransys | A line of a block diagram or an overview view passes through a line label. | Fransys could not draw this cleanly; please report it with the smallest model |
+| DIAGRAM_LINES_SHARE_TRACK | INFO | render | Fransys | Two cables of a block diagram or an overview view run along one track. | Fransys could not draw this cleanly; please report it with the smallest model |
 | DIAGRAM_LINE_OFF_BOX | ERROR | render | Fransys | A line of a block diagram or an overview view does not end on its box's outline or tab. | A Fransys defect: send the smallest model that shows it. |
 | DIAGRAM_LINE_THROUGH_BOX | ERROR | render | Fransys | A line of a block diagram or an overview view crosses a box other than its own two. | A Fransys defect: send the smallest model that shows it. |
 | DIAGRAM_LOOSE_WIRE | INFO | render | note | In the system reading, a wire with no cable joins two boxes and is not drawn. | Usually nothing to fix: the unit pages show it as stubs. Put it in a cable to give it a line. |

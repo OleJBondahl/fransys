@@ -1,13 +1,12 @@
-"""Field case: a fan-out cable's lines on the block diagram carry the `.n` branch suffix.
+"""Field case: every diagram line of a fan-out cable prints the cable's own designation.
 
 The engineering shape: a 1:3 fan-out cable W1. Core 1 runs from a header J1 to J2, core 2 to J3
 and core 3 to J4, so the block diagram draws three lines from the cable's first box. A second
 cable W2 joins two boxes.
 
-The bug: the three lines all printed the plain `-W1`, so a reader could not tell the branches
-apart, while a harness line of three or more ends prints `-W13.n` on each branch (owner F3,
-2026-10-07). Fixed by decision layout-0199 (LEGACY-B3 L17): the lines of a fan-out print `-W1.1`,
-`-W1.2`, `-W1.3`; a cable with one line prints plain.
+The bug: layout-0199 (LEGACY-B3 L17) gave the three lines `-W1.1`, `-W1.2`, `-W1.3`, carrying
+the harness-line suffix (owner F3) onto the diagram, where it read as three different cables.
+Fixed by decision layout-0259: each line prints `-W1`. Harness lines on cabinet pages keep `.n`.
 """
 
 import fransys as fr
@@ -31,6 +30,6 @@ def built() -> fr.BuildResult:
     return fr.build(d)
 
 
-def test_the_lines_of_a_fan_out_print_a_branch_number(built: fr.BuildResult) -> None:
+def test_every_line_of_a_fan_out_prints_the_plain_designation(built: fr.BuildResult) -> None:
     printed = sorted(line.designation for line in diagram_lines(built.model, None))
-    assert printed == ["-W1.1", "-W1.2", "-W1.3", "-W2"]
+    assert printed == ["-W1", "-W1", "-W1", "-W2"]

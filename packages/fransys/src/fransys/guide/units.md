@@ -409,6 +409,8 @@ A unit's `revision=` only states which revision is current. Earlier entries go i
 list of mappings with `revision`, `date`, `text` and `created`. The decorator writes the history
 first, then the unit's own entry from `date=`, `text=` and `by=`. If the current revision has no
 entry, the build reports `REVISION_CURRENT_MISSING`.
+Each history entry also takes `version`. An entry with no `version` takes the unit's current
+version, so after a version bump, earlier entries must name their old `version`.
 
 ```python
 from typing import NamedTuple

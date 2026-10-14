@@ -120,6 +120,8 @@ ALL_CODES: tuple[str, ...] = (
 # Drawing defects no consumer action clears: INFO with `codes_defects.COULD_NOT_DRAW` (layout-0252)
 UNCLEARABLE: frozenset[str] = frozenset(
     {
+        DIAGRAM_LABEL_STRUCK,
+        DIAGRAM_LINES_SHARE_TRACK,
         JOIN_UNALIGNED,
         LINE_ON_OUTLINE,
         POWER_SYMBOL_UNPLACED,

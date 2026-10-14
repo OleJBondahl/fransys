@@ -1,7 +1,7 @@
-designation,style,pincount,gender,mate_designation,marking,net,mate_port_designation
--U1-U2-J1,mstb-header-3p,3,female,-U1-J1,1,,-U1-J1:1
--U1-U2-J1,mstb-header-3p,3,female,-U1-J1,2,,-U1-J1:2
--U1-U2-J1,mstb-header-3p,3,female,-U1-J1,3,,-U1-J1:3
--U1-U2-J2,mstb-header-3p,3,female,-U1-J2,1,,-U1-J2:1
--U1-U2-J2,mstb-header-3p,3,female,-U1-J2,2,,-U1-J2:2
--U1-U2-J2,mstb-header-3p,3,female,-U1-J2,3,,-U1-J2:3
+designation,style,pincount,gender,mate_designation,marking,net,mate_port_designation,ends
+-U1-U2-J1,mstb-header-3p,3,female,-U1-J1,1,,-U1-J1:1,-U1-DO1:DO1; -U1-U2-K1:A1
+-U1-U2-J1,mstb-header-3p,3,female,-U1-J1,2,,-U1-J1:2,-U1-DO1:DO2; -U1-U2-K2:A1
+-U1-U2-J1,mstb-header-3p,3,female,-U1-J1,3,,-U1-J1:3,-U1-DO1:0V; -U1-U2-K1:A2; -U1-U2-K2:A2
+-U1-U2-J2,mstb-header-3p,3,female,-U1-J2,1,,-U1-J2:1,-U1-U2-K1:11; -U1-U2-K2:11; -U1-X2:24V:4
+-U1-U2-J2,mstb-header-3p,3,female,-U1-J2,2,,-U1-J2:2,-U1-B12:95; -U1-U2-K1:14
+-U1-U2-J2,mstb-header-3p,3,female,-U1-J2,3,,-U1-J2:3,-U1-B22:95; -U1-U2-K2:14

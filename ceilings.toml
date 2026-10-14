@@ -148,14 +148,6 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/derive.py" = 315
 "packages/fransys/src/fransys/pipeline.py" = 817
 
-[docstring_lines]
-"packages/fransys-author/src/fransys_author/handles.py::Item.__getitem__" = 6
-"packages/fransys-author/src/fransys_author/surface/_pairing.py::poles" = 6
-
-[surface_docstring_lines]
-"packages/fransys-reports/src/fransys_reports/csv.py::connectors_csv" = 16
-"packages/fransys-reports/src/fransys_reports/csv.py::terminal_csv" = 16
-
 [surface_types]
 "packages/electrical-symbols/src/electrical_symbols/box_ports.py::default_order" = 1
 "packages/fransys-model/src/fransys_model/derive/list_cells.py::cell_parts" = 1

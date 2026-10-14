@@ -31,8 +31,8 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Document, PageKind, Revision
 
-# The inner padding, the same value `_pages._PADDING_MM` and `_frame.py`'s own private
-# constant independently apply: the flowed cover text and the table both lose this much of
+# The inner padding, the same value `_frame.py`'s own private constant applies independently:
+# the flowed cover text and the table both lose this much of
 # the content box's own height on every side (spec-fixed, not tunable).
 _PADDING_MM = 5
 _LINE_HEIGHT_EM = 1.3

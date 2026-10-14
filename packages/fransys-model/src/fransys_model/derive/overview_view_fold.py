@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from fransys_model.layout import BoxKey, OverviewRef, OverviewRefKind
 lazy from fransys_model.kernel import Model
 
+from .overview_levels import level_box_lines
 from .overview_text import (
     overview_field_join_text,
     overview_fold_line_text,
@@ -97,18 +98,21 @@ def _joins(model: Model, fold: FieldFold) -> tuple[ViewLine, ...]:
     )
 
 
-def _members(plain: Rows, fold: FieldFold) -> tuple[ViewMember, ...]:
-    """The fold's devices as member rows: each device's box text and the text of its lines."""
-    text = {b.key.ref.item: b.lines for b in plain[0] if b.key.at is None}
+def _members(model: Model, plain: Rows, fold: FieldFold) -> tuple[ViewMember, ...]:
+    """The fold's devices as member rows: each device's box text and the text of its lines.
+
+    A device wired by loose wires has no box in `plain`, so its text is `level_box_lines`.
+    """
     rows = []
     for d in fold.devices:
         ref = OverviewRef(kind=OverviewRefKind.ITEM, item=d)
+        lines = level_box_lines(model, d, None)
         held = [ln.text for ln in plain[1] if BoxKey(ref=ref) in (ln.a, ln.b)]
         rows.append(
             ViewMember(
                 ref=ref,
-                lines=text[d],
-                text=overview_member_text(text[d], ", ".join(dict.fromkeys(held))),
+                lines=lines,
+                text=overview_member_text(lines, ", ".join(dict.fromkeys(held))),
             )
         )
     return tuple(rows)
@@ -122,7 +126,10 @@ def field_rows(model: Model, plain: Rows, folds: tuple[FieldFold, ...]) -> Rows:
     }
     made = tuple(
         ViewBox(
-            key=BoxKey(ref=_field_ref(f)), lines=f.lines, dashed=False, members=_members(plain, f)
+            key=BoxKey(ref=_field_ref(f)),
+            lines=f.lines,
+            dashed=False,
+            members=_members(model, plain, f),
         )
         for f in folds
     )

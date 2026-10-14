@@ -17,11 +17,6 @@ if TYPE_CHECKING:
 
 _NOTES_HEADING = literal("Notes")
 
-# The inner padding, the same value `_frame.text_margin` applies independently: the page's
-# own margin box is the content box shrunk by this on every side, so the revision table's
-# `dy` (below) has to add it back to reach the content box's own bottom edge.
-_PADDING_MM = 5
-
 _REVISION_COLUMNS = ("Revision", "Date", "Description", "Created", "Checked", "Approved")
 DESCRIPTION_WIDTH_MM = 120  # Amended 2026-09-24: the one capped, wrapping column
 
@@ -88,10 +83,11 @@ def cover_page(model: Model, record: Document) -> str:
     # (`[#set align(center) ...]`) also dodges that text but is not equivalent -- it is a new
     # nested container, so the heading's own default spacing no longer collapses against the
     # page top, and it lands about 9 mm lower (confirmed by compiling that too).
+    # The table stands on the margin box's foot, 5 mm above the title block (pdf-0027).
     parts = [f"#align(center, [\n{heading}\n{body}\n])"]
     table = _revision_table(revision_history(model, document_release(model, record)))
     if table:
-        parts.append(f"#place(bottom + center, dy: {_PADDING_MM}mm)[{table}]")
+        parts.append(f"#place(bottom + center)[{table}]")
     return "\n".join(parts)
 
 

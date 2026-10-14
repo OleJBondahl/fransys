@@ -93,7 +93,7 @@ _GOLDEN = (
     'ding(level: 1, text("Harness drawing — C1 Demo cabinet"))\n#heading(lev'
     'el: 1, text("Cover heading"))\n#par(text("Cover text with ") + strong(t'
     'ext("bold")) + text(" and ") + emph(text("italic")) + text("."))\n])\n#p'
-    "lace(bottom + center, dy: 5mm)[#table(columns: (auto, auto, 120mm, aut"
+    "lace(bottom + center)[#table(columns: (auto, auto, 120mm, aut"
     'o, auto, auto), stroke: 0.18mm, table.header(strong(text("Revision")),'
     ' strong(text("Date")), strong(text("Description")), strong(text("Creat'
     'ed")), strong(text("Checked")), strong(text("Approved"))), text("1.1")'

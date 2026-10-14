@@ -97,6 +97,10 @@ assert any(p.name == "demo-io-board-v1.1.pdf" for p in fr.write(board_result, Pa
 
 The PDF is named after the unit and its release, `demo-io-board-v1.1.pdf`.
 
+## List pages
+
+The terminal, PLC, connector, wire-label and designation lists flow in two columns. The cable list and the BOM take the full width. A row never splits. A table that reaches a column foot continues in the next column or page under its heading with " (cont.)". A split leaves at least two rows on each side, else the table moves whole. A long token breaks only at a hyphen or a slash. The cover's revision table stands one padding above the title block.
+
 ## Cable drawings
 
 A `HARNESS_DRAWING` page draws each cable as one block, and a harness of two or more cables as one block around its cables. A block has its end boxes with their pins, a box per cable with its heading, and one wire per core. A core whose two ends stand in one row is a short link at that row. Two cores on one pin stand side by side in the pin's cell. A harness whose cables interleave is not drawn yet. A document that shows it stops with

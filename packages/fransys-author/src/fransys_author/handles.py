@@ -224,9 +224,8 @@ class Item:
     def __getitem__(self, marking: str) -> Port:
         """The port marked `marking` on any function of this item.
 
-        Raises:
-            AuthorError: no port of the item carries `marking`, or two functions of it do
-                (write `item.fn("<name>")[marking]` instead).
+        Raises `AuthorError` when no port carries `marking`, or two functions do: then
+        write `item.fn("<name>")[marking]`.
         """
         ports = [port for function in self.functions for port in function.ports]
         return _port_by_marking(ports, marking, owner="item")

@@ -71,10 +71,9 @@ def terminal_csv(
 ) -> str:
     """Write the terminal connection list of one strip as CSV.
 
-    Formats ``fransys_model.derive.queries.terminal_rows``, one row per terminal
-    child of `strip`, including unused terminals. Side A is the internal ports' far ends,
-    side B the external ports'; ``jumper_group`` names the bridge. `unit` and `context` pass
-    through to `terminal_rows` (`derive.list_context` for `context`). Pure.
+    Formats ``fransys_model.derive.queries.terminal_rows``, one row per terminal child of `strip`,
+    including unused terminals. Side A is the internal ports' far ends, side B the external ports';
+    ``jumper_group`` names the bridge. `unit` and `context` pass through (`derive.list_context`).
 
     Args:
         model: A frozen, numbered model.
@@ -176,10 +175,9 @@ def connectors_csv(
 ) -> str:
     """Write the connector pinout list of one board as CSV.
 
-    Formats ``fransys_model.derive.queries.connector_rows``: each board-edge connector, its
-    pins, the net on each pin, and what it mates with. One line per pin, the connector's fields
-    repeated on each line, so an engineer can filter the file; a connector with no pins has no
-    line. Pure.
+    Formats ``fransys_model.derive.queries.connector_rows``: each board-edge connector, its pins,
+    the net on each pin, and what it mates with. One line per pin, the connector's fields repeated
+    on each line, so an engineer can filter the file; a connector with no pins has no line.
 
     Args:
         model: A frozen, numbered model.

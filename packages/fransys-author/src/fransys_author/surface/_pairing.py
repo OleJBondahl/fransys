@@ -163,8 +163,7 @@ def _without_links(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
 def poles(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
     """The poles of `fn` as (line port, load port), in the model's pole order.
 
-    Layout twin: `fransys_layout.stages.resolve.poles_and_pairs`; the one pole function
-    is the model's `function_poles`.
+    Layout twin: `fransys_layout.stages.resolve.poles_and_pairs`; the model's `function_poles`.
     Does not read a name or a marking, and does not guess a side: no side fact raises.
     """
     template = facts.function_template(fn)

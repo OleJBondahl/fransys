@@ -5,7 +5,6 @@ own (`derive.rows`), the same objects `fransys_reports.csv` prints from: a root 
 that neither package keeps a copy of its own.
 """
 
-from dataclasses import dataclass
 from itertools import product
 from typing import TYPE_CHECKING
 
@@ -54,8 +53,9 @@ from fransys_model.vocab import (
     ports,
 )
 
+from ._bridge import BRIDGE_COLUMN_WIDTH_MM, bridge_cell_typst, bridge_geometry, bridge_lane_x_mm
 from ._flow import flow_columns
-from ._sizes import RULE
+from ._tables import table_source
 from ._typst import description_par, literal
 
 if TYPE_CHECKING:
@@ -110,23 +110,27 @@ def _widths(wide: list[bool]) -> list[str]:
     return widths
 
 
-def _table(headers: tuple[str, ...], rows: list[tuple[object, ...]], wide: tuple[str, ...]) -> str:
-    """`#table(...)`: `""` if no rows or all blank (pdf-0019, 0011); `wide`: `1fr` (0008)."""
+def _table(
+    headers: tuple[str, ...],
+    rows: list[tuple[object, ...]],
+    wide: tuple[str, ...],
+    *,
+    title: str = "",
+    label: str = "",
+) -> str:
+    """The list table: `""` if no rows or all blank (pdf-0019, 0011); `wide`: `1fr` (0008).
+
+    `title` is the heading a carried table repeats with " (cont.)", `label` its anchor (pdf-0027).
+    """
     if not rows:
         return ""
     kept = _kept_columns(rows, len(headers))
     if not kept:
         return ""
-    header = (
-        "table.header("
-        + ", ".join(f"strong(text({literal(_humanise(headers[i]))}))" for i in kept)
-        + ")"
-    )
-    cells = [header]
-    for row in rows:
-        cells.extend(_cell_typst(row[i]) for i in kept)
-    widths = ", ".join(_widths([headers[i] in wide for i in kept]))
-    return f"#table(columns: ({widths}), stroke: {RULE}, " + ", ".join(cells) + ")"
+    names = [f"strong(text({literal(_humanise(headers[i]))}))" for i in kept]
+    body = [[_cell_typst(row[i]) for i in kept] for row in rows]
+    widths = _widths([headers[i] in wide for i in kept])
+    return table_source(widths, names, body, title=title, label=label)
 
 
 def plc_channel_rows_for(model: Model, record: Document) -> tuple[PlcChannelRow, ...]:
@@ -137,11 +141,16 @@ def plc_channel_rows_for(model: Model, record: Document) -> tuple[PlcChannelRow,
 def plc_list_page(model: Model, record: Document) -> str:
     """The PLC_LIST: a headed table per `plc_tables` entry in two columns, scoped to the unit."""
     unit = document_unit(model, record)
-    sections = [
-        _list_heading(model, table.item, unit, table.designation)
-        + _table(PLC_COLUMNS, column_rows(table.rows, PLC_COLUMNS), ("wired_to", "signal_name"))
-        for table in plc_tables(model, unit=unit, context=record.location)
-    ]
+    sections = []
+    for number, table in enumerate(plc_tables(model, unit=unit, context=record.location)):
+        title = _list_title(model, table.item, unit, table.designation)
+        rows = column_rows(table.rows, PLC_COLUMNS)
+        sections.append(
+            _list_heading(title)
+            + _table(
+                PLC_COLUMNS, rows, ("wired_to", "signal_name"), title=title, label=f"plc{number}"
+            )
+        )
     return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
@@ -174,7 +183,7 @@ def wire_label_list_page(model: Model, record: Document) -> str:
     table = _table(
         WIRE_COLUMNS,
         column_rows(wire_rows_for(model, record), WIRE_COLUMNS),
-        ("label",),
+        ("from_", "to", "label"),  # every free-text column: `auto` ones starve a `1fr` (pdf-0027)
     )
     return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
@@ -215,8 +224,7 @@ def _bom_scope(
 def bom_page(model: Model, record: Document) -> str:
     """The BOM table, scoped by `_bom_scope`."""
     rows = column_rows(bom_lines(model, scope=_bom_scope(model, record)), BOM_COLUMNS)
-    table = _table(BOM_COLUMNS, rows, ("description", "designations"))
-    return flow_columns([table], share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
+    return _table(BOM_COLUMNS, rows, ("description", "designations"))
 
 
 def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
@@ -229,28 +237,38 @@ def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]
     return tuple(strip for strip in terminal_strips(model) if strip in at_location)
 
 
-def _list_heading(
+def _list_title(
     model: Model, item: Id[Item], unit: Id[Unit] | None, designation: str | None = None
 ) -> str:
-    """A section's level-2 heading, unit-relative; `""` for a unit's own root (model-0061).
+    """A section's heading text, unit-relative; `""` for a unit's own root (model-0061).
 
     `designation` is the printed one when the caller has it (`PlcTable.designation`).
     """
     if is_own_unit_root(model, item, unit):
         return ""
-    text = printed_designation(model, item, unit=unit) if designation is None else designation
-    return f"#heading(level: 2, text({literal(text)}))\n"
+    return printed_designation(model, item, unit=unit) if designation is None else designation
+
+
+def _list_heading(title: str) -> str:
+    """The level-2 heading of `title`, `""` for none."""
+    return f"#heading(level: 2, text({literal(title)}))\n" if title else ""
 
 
 def terminal_list_page(model: Model, record: Document) -> str:
     """The TERMINAL_LIST section: a headed table per strip; unit-relative (pdf-0012)."""
-    sections = [
-        _list_heading(model, strip, document_unit(model, record))
-        + description_par(items(model)[strip].description)  # author-0013
-        + _terminal_table(model, rows, _side_headings(model, strip))
-        for strip in _terminal_strips_for(model, record)
-        if (rows := terminal_rows_for(model, record, strip))  # a strip with no rows has no page
-    ]
+    unit = document_unit(model, record)
+    sections = []
+    for number, strip in enumerate(_terminal_strips_for(model, record)):
+        if not (rows := terminal_rows_for(model, record, strip)):  # no rows, no page
+            continue
+        title = _list_title(model, strip, unit)
+        sections.append(
+            _list_heading(title)
+            + description_par(items(model)[strip].description)  # author-0013
+            + _terminal_table(
+                model, rows, _side_headings(model, strip), title=title, label=f"term{number}"
+            )
+        )
     return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)
 
 
@@ -285,107 +303,6 @@ def _side_headings(model: Model, strip: Id[Item]) -> tuple[str, str]:
 
 _TERMINAL_DATA = TERMINAL_COLUMNS[:-1]  # designation, group, index, internal_ends, external_ends
 _TERMINAL_SIDES = ("internal_ends", "external_ends")  # both unbounded text: `1fr` each (pdf-0008)
-_BRIDGE_COLUMN_WIDTH_MM = 15  # fixed column width
-_BRIDGE_LANE_GAP_MM = 3  # lanes centred in the column, this far apart
-_BRIDGE_TICK_HALF_WIDTH_MM = 1
-
-
-@dataclass(frozen=True, slots=True)
-class _BridgeMark:
-    """One row's mark in one lane: half-lines `top`/`bottom` (both: through), `tick`."""
-
-    top: bool
-    bottom: bool
-    tick: bool
-
-
-def _bridge_spans(groups: tuple[int | None, ...]) -> dict[int, tuple[int, int]]:
-    """Each jumper group's (first, last) row index in `groups`, 0-based."""
-    first: dict[int, int] = {}
-    last: dict[int, int] = {}
-    for index, group in enumerate(groups):
-        if group is None:
-            continue
-        first.setdefault(group, index)
-        last[group] = index
-    return {group: (first[group], last[group]) for group in first}
-
-
-def _bridge_lanes(spans: dict[int, tuple[int, int]]) -> dict[int, int]:
-    """Each group's lane in group-number order; overlapping row spans never share one."""
-    lane_ends: list[int] = []  # lane_ends[lane] is the last row index that lane is used through
-    lanes: dict[int, int] = {}
-    for group in sorted(spans):
-        first, last = spans[group]
-        lane = next((i for i, end in enumerate(lane_ends) if end < first), None)
-        if lane is None:
-            lane = len(lane_ends)
-            lane_ends.append(last)
-        else:
-            lane_ends[lane] = last
-        lanes[group] = lane
-    return lanes
-
-
-def _bridge_geometry(groups: tuple[int | None, ...]) -> tuple[tuple[_BridgeMark | None, ...], ...]:
-    """One entry per row, a mark (or `None`) per lane; an empty tuple with no group."""
-    spans = _bridge_spans(groups)
-    lanes = _bridge_lanes(spans)
-    lane_count = len(set(lanes.values()))  # distinct lanes used, not `len(lanes)` (one per group)
-    rows: list[list[_BridgeMark | None]] = [[None] * lane_count for _ in groups]
-    for group, (first, last) in spans.items():
-        lane = lanes[group]
-        for index in range(first, last + 1):
-            rows[index][lane] = _BridgeMark(
-                top=index != first, bottom=index != last, tick=groups[index] == group
-            )
-    return tuple(tuple(row) for row in rows)
-
-
-def _bridge_lane_x_mm(lane_count: int) -> tuple[float, ...]:
-    """Each lane's x offset (mm): centred in the Bridge column, `_BRIDGE_LANE_GAP_MM` apart."""
-    centre = _BRIDGE_COLUMN_WIDTH_MM / 2
-    offset = (lane_count - 1) / 2
-    return tuple(centre + (index - offset) * _BRIDGE_LANE_GAP_MM for index in range(lane_count))
-
-
-def _mm(value: float) -> str:
-    """`value` as a Typst mm length: `10` not `10.0`, deterministic (source purity)."""
-    return f"{value:g}"
-
-
-def _bridge_mark_typst(mark: _BridgeMark | None, x_mm: float) -> str:
-    """One lane's marks for one row as `#place(...)` lines; `y` is % of the cell."""
-    if mark is None:
-        return ""
-    x = _mm(x_mm)
-    segments = []
-    if mark.top:
-        segments.append(
-            f"place(top+left, line(start: ({x}mm, 0%), end: ({x}mm, 50%), stroke: {RULE}))"
-        )
-    if mark.bottom:
-        segments.append(
-            f"place(top+left, line(start: ({x}mm, 50%), end: ({x}mm, 100%), stroke: {RULE}))"
-        )
-    if mark.tick:
-        left, right = _mm(x_mm - _BRIDGE_TICK_HALF_WIDTH_MM), _mm(x_mm + _BRIDGE_TICK_HALF_WIDTH_MM)
-        segments.append(
-            f"place(top+left, line(start: ({left}mm, 50%), end: ({right}mm, 50%), stroke: {RULE}))"
-        )
-    return "".join(f"#{segment}\n" for segment in segments)
-
-
-def _bridge_cell_typst(
-    row_marks: tuple[_BridgeMark | None, ...], lane_xs: tuple[float, ...]
-) -> str:
-    """One row's Bridge cell (pdf-0007): `breakable: false` scopes `%` to the row; `inset: 0pt`."""
-    if not row_marks:
-        return 'table.cell(inset: 0pt, text(""))'
-    content = "".join(
-        _bridge_mark_typst(mark, x) for mark, x in zip(row_marks, lane_xs, strict=True)
-    )
-    return f"table.cell(inset: 0pt, breakable: false)[{content}]"
 
 
 def _ends_without_jumpers(
@@ -411,13 +328,15 @@ def _terminal_table(
         TERMINAL_LABELS["internal_ends"],
         TERMINAL_LABELS["external_ends"],
     ),
+    *,
+    title: str = "",
+    label: str = "",
 ) -> str:
     """The TERMINAL_LIST table: data columns, then a drawn Bridge column (pdf-0007, 0008, 0011)."""
     if not rows:
         return ""
-    geometry = _bridge_geometry(tuple(row.jumper_group for row in rows))
-    lane_xs = _bridge_lane_x_mm(len(geometry[0]) if geometry else 0)
-    label = {"internal_ends": headings[0], "external_ends": headings[1]}
+    geometry = bridge_geometry(tuple(row.jumper_group for row in rows))
+    side_label = {"internal_ends": headings[0], "external_ends": headings[1]}
     values = []
     for row in rows:
         ends = dict(
@@ -428,19 +347,20 @@ def _terminal_table(
     bridge = any(geometry)  # a strip with no jumper group has an all-empty Bridge column
     if not kept and not bridge:
         return ""
-    headers = [label.get(_TERMINAL_DATA[i]) or _humanise(_TERMINAL_DATA[i]) for i in kept] + (
+    headers = [side_label.get(_TERMINAL_DATA[i]) or _humanise(_TERMINAL_DATA[i]) for i in kept] + (
         ["Bridge"] if bridge else []
     )
-    header = "table.header(" + ", ".join(f"strong(text({literal(h)}))" for h in headers) + ")"
-    cells = [header]
+    body = []
     for row_values, row_marks in zip(values, geometry, strict=True):
-        cells.extend(_cell_typst(row_values[i]) for i in kept)
+        cells = [_cell_typst(row_values[i]) for i in kept]
         if bridge:
-            cells.append(_bridge_cell_typst(row_marks, lane_xs))
+            cells.append(bridge_cell_typst(row_marks, bridge_lane_x_mm(len(row_marks))))
+        body.append(cells)
     widths = _widths([_TERMINAL_DATA[i] in _TERMINAL_SIDES for i in kept])
     if bridge:
-        widths.append(f"{_BRIDGE_COLUMN_WIDTH_MM}mm")
-    return f"#table(columns: ({', '.join(widths)}), stroke: {RULE}, " + ", ".join(cells) + ")"
+        widths.append(f"{BRIDGE_COLUMN_WIDTH_MM}mm")
+    heads = [f"strong(text({literal(h)}))" for h in headers]
+    return table_source(widths, heads, body, title=title, label=label)
 
 
 def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
@@ -459,10 +379,19 @@ def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
 def connector_list_page(model: Model, record: Document) -> str:
     """The CONNECTOR_LIST section: a headed table per board; unit-relative (pdf-0012)."""
     unit = document_unit(model, record)
-    sections = [
-        _list_heading(model, board, unit)
-        + _table((*CONNECTOR_COLUMNS, *PIN_COLUMNS), lines, ("net",))
-        for board in _boards_for(model, record)
-        if (lines := pin_lines(connector_rows_for(model, record, board)))  # no rows, no page
-    ]
+    sections = []
+    for number, board in enumerate(_boards_for(model, record)):
+        if not (lines := pin_lines(connector_rows_for(model, record, board))):  # no rows, no page
+            continue
+        title = _list_title(model, board, unit)
+        sections.append(
+            _list_heading(title)
+            + _table(
+                (*CONNECTOR_COLUMNS, *PIN_COLUMNS),
+                lines,
+                ("net",),
+                title=title,
+                label=f"conn{number}",
+            )
+        )
     return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)

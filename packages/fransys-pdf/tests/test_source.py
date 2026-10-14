@@ -890,7 +890,7 @@ def _list_pages_model():
     return model(*records), doc
 
 
-_FLOWING = ("terminal_list_page", "plc_list_page", "bom_page", "wire_label_list_page")
+_FLOWING = ("terminal_list_page", "plc_list_page", "wire_label_list_page")
 _FLOWING += ("designation_list_page", "connector_list_page")
 
 
@@ -912,10 +912,11 @@ def test_every_flowing_list_page_has_content_inside_its_columns(page):
     assert "#table(" in text
 
 
-def test_the_cable_list_page_stays_full_width():
-    """A3 (pdf-0026, L8): the cable list has a table and declares no columns."""
+@pytest.mark.parametrize("page", ["cable_list_page", "bom_page"])
+def test_the_cable_list_and_the_bom_stay_full_width(page):
+    """A3 (pdf-0026, L8; pdf-0027, L14): the cable list and the BOM have a table, no columns."""
     m, doc = _list_pages_model()
-    text = _lists.cable_list_page(m, documents(m)[doc.id])
+    text = getattr(_lists, page)(m, documents(m)[doc.id])
     assert "#table(" in text
     assert "#columns(" not in text
 

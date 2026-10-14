@@ -39,7 +39,6 @@ class LintScene:
     drawn: tuple[DrawnFunction, ...]
     inputs: StageInputs
     members: Members
-    open_ends: frozenset[Any]
     ink: HarnessInk
 
 
@@ -47,7 +46,7 @@ def chain_records(scene: LintScene) -> StageRecords:
     """What the chain lint reads beside the layout; a pin a line carries a conductor to is wired."""
     inputs = scene.inputs  # layout-0154
     connections = (*inputs.connections, *inputs.carried)
-    return StageRecords(scene.columns, scene.drawn, connections, inputs.net_groups, inputs.mates)
+    return StageRecords(scene.columns, scene.drawn, connections, inputs.net_groups, inputs.loose)
 
 
 def lint_findings(scene: LintScene, printed: frozenset[int] | None = None) -> list[Finding]:
@@ -56,13 +55,13 @@ def lint_findings(scene: LintScene, printed: frozenset[int] | None = None) -> li
     The look findings skip a set that is not in `printed` (the printed sets' numbers, model-0201).
     """
     layout, drawn, inputs = scene.layout, scene.drawn, scene.inputs
-    members, open_ends = scene.members, scene.open_ends
+    members = scene.members
     findings = list(lint_geometry(layout, sheet=inputs.sheet, ink=scene.ink, printed=printed))
     pin_functions = {s.function: s.pin_function for s in inputs.functions if s.pin_function}
     findings.extend(
         lint_fill(layout, sheet=inputs.sheet, pin_functions=pin_functions, printed=printed)
     )
-    findings.extend(lint_chains(layout, chain_records(scene), open_ends=open_ends, printed=printed))
+    findings.extend(lint_chains(layout, chain_records(scene), printed=printed))
     # Star markers answer no cut decision
     paired = replace(layout, markers=tuple(m for m in layout.markers if not m.star))
     function_units = {spec.function: spec.unit for spec in inputs.functions}

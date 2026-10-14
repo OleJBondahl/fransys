@@ -14,7 +14,7 @@ from fransys_layout.engines.cable.values import (
 )
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import WIRING_GRID, text_width
-from fransys_model.derive import HarnessCable, HarnessCore, printed_designation
+from fransys_model.derive import HarnessCable, HarnessCore, bar_items, printed_designation
 from fransys_model.derive.cable_drawing import (
     DrawnOpen,
     block_brackets,
@@ -48,11 +48,15 @@ def _end(
 ) -> EndFacts:
     """One end's flags, label width and drawn pins."""
     blank = end_outside_nested_unit(model, item, unit)
+    earth = item in bar_items(model)
     return EndFacts(
         item=item,
         dashed=end_by_others(model, item),
         blank=blank,
-        label_width=text_width(end_label(model, item, unit, subject), height=height),
+        label_width=0
+        if earth
+        else text_width(end_label(model, item, unit, subject), height=height),
+        earth=earth,
         pins=tuple(
             PinFacts(
                 port=pin.port,

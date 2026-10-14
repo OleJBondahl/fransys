@@ -264,10 +264,10 @@ def far_end(
     rec = ports(model)[port]
     owner = items(model)[functions(model)[rec.function].item]
     tail = ":" + (_own_designation(model, owner.id) if terminal_of(model, owner.id) else rec.name)
+    head = text.removesuffix(tail)  # a bar's end prints no screw (model-0221): no tail
     node = effective_placement(model, owner.id, Aspect.LOCATION)
-    return _located(
-        model, node, end_context(model, owner.id, node, context, unit), text[: -len(tail)]
-    ), tail
+    place = end_context(model, owner.id, node, context, unit)
+    return _located(model, node, place, head), text[len(head) :]
 
 
 def stub_far_end(

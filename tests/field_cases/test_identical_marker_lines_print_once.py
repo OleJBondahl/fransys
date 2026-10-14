@@ -27,6 +27,8 @@ def _texts() -> dict[str, list[str]]:
     with d.function("G", "Group"):
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         k2, k3 = (d.device(tag, "DEMO-RLY-2CO-24") for tag in ("K2", "K3"))
+        # layout-0218: unwired, K1's coil and aux draw nothing; one wire draws both
+        d.wire(k1.coil["A1"], k1.aux["13"], wire=(BU, 0.5))
     ends = [k1.main[pin] for pin in "135"] + [k2.coil["A2"], k3.coil["A2"]]
     for end in ends[1:]:
         d.wire(ends[0], end, wire=(BU, 0.5))
@@ -39,5 +41,6 @@ def _texts() -> dict[str, list[str]]:
 
 def test_three_ends_in_one_cell_give_one_marker_line() -> None:
     texts = _texts()
-    assert texts["-K3:A2"] == ["#1-2A +1"]  # C2: the first place and one more distinct one
+    # layout-0218: the drawn K1 coil takes a cell of its own: one more place
+    assert texts["-K3:A2"] == ["#1-2A +2"]  # C2: the first place and two more distinct ones
     assert all(len(lines) == len(set(lines)) for lines in texts.values())

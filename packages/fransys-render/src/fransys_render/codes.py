@@ -8,10 +8,13 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severities=(Severity.ERROR,),
         stage="render",
         who="consumer",
-        cause="The model has functions to draw, but layout made no page for them.",
+        cause=(
+            "The model has connected functions to draw, but layout made no page for them. A "
+            "function with nothing connected is drawn on no page and does not count."
+        ),
         fix=(
-            "Add a document so layout runs, and check the drawn location or unit has connected "
-            "content."
+            "Add a document so layout runs, and check the drawn location or unit holds the "
+            "connected content."
         ),
         page="findings-render",
     ),

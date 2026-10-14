@@ -3,7 +3,9 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from electrical_symbols import WIRING_GRID
+from symdef import Orientation, orient
+
+from electrical_symbols import LIBRARY, WIRING_GRID
 from fransys_model.derive import printed_designation
 from fransys_model.derive.cable_drawing import (
     block_brackets,
@@ -32,7 +34,9 @@ from fransys_model.layout import (
 
 from ._cable_ink import Ink
 from ._cable_pen import Pen
+from ._numbers import format_decimal
 from ._style import style_block
+from ._symbols import symbol_body
 
 if TYPE_CHECKING:
     from fransys_model.derive import HarnessCable
@@ -85,9 +89,32 @@ def _cells(model: Model, ink: Ink, block: CableBlock, end: EndBox, *, dashed: bo
         ink.text("pin", (cell.x, top), pin.marking, middle=True)
 
 
+_EARTH_PORT_G = 2 * WIRING_GRID  # the symbol's port lies two modules from its origin
+_EARTH_TURN = {BlockRow.TOP: Orientation.R180, BlockRow.BOTTOM: Orientation.R0}
+
+
+def _earth(ink: Ink, end: EndBox) -> None:
+    """A bar's end: a PE symbol at each landed cell, its port on the core's end; no box, no text.
+
+    A top end's core starts at the box's bottom edge and a bottom end's ends at its top edge.
+    """
+    pen = ink.pen
+    top = end.row is BlockRow.TOP
+    symbol = orient(LIBRARY.get("protective-earth"), _EARTH_TURN[end.row])
+    port_y = end.y + end.height if top else end.y
+    y = Decimal(pen.mm(port_y - _EARTH_PORT_G if top else port_y + _EARTH_PORT_G))
+    for cell in (cell for cell in end.pins if cell.landed):
+        body = symbol_body(symbol, pen.module_mm, pen.font_mm)
+        move = f"translate({pen.mm(cell.x)},{format_decimal(y)})"
+        ink.shape(f'<g class="symbol earth" transform="{move}">{body}</g>')
+
+
 def _end(model: Model, ink: Ink, block: CableBlock, end: EndBox) -> None:
     """One end box, its label (above a top box, below a bottom one) and pin cells; none if blank."""
     if end.style is EndStyle.BLANK:
+        return
+    if end.style is EndStyle.EARTH:
+        _earth(ink, end)
         return
     pen = ink.pen
     dashed = _DASHED_BY_STYLE[end.style]

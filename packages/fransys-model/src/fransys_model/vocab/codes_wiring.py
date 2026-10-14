@@ -86,13 +86,25 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="BAR_NOT_PE",
+        severities=(Severity.ERROR,),
+        stage="validators",
+        who="consumer",
+        cause=(
+            "A port of a `bar` function has a role other than `pe`. A bar carries protective "
+            "earth only, until the copper bar drawing (owner question) is ruled."
+        ),
+        fix='Set `role = "pe"` on the port in the part file.',
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="NET_UNREALISED",
         severities=(Severity.WARNING,),
         stage="validators",
         who="consumer",
         cause=(
             "A declared net's ports fall into more than one physical net, and no single board "
-            "holds them all."
+            "holds them all. Not for the PE net."
         ),
         fix=(
             "Wire the missing conductors, or remove the ports that should not share the "

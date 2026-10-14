@@ -29,6 +29,7 @@ from fransys_model.vocab import (
     is_cable,
     part_rating,
 )
+from fransys_model.vocab.bars import bar_items, is_bar_port
 from fransys_model.vocab.energy_flow import gives_energy, takes_energy
 from fransys_model.vocab.load_limits import LoadLimit, load_limits
 from fransys_model.vocab.prospective_fault import ProspectiveFault, prospective_fault
@@ -112,6 +113,7 @@ from .list_cells import (
     pin_lines,
 )
 from .lookups import black_box_unit, connector_facets, item_of_port, pin_order, terminal_items
+from .loose import function_is_loose
 from .mate_rows import mates
 from .open_cores import open_core_rows
 from .order import bom_sort_key, natural_key
@@ -417,6 +419,7 @@ __all__ = [
     "WireRow",
     "allocate_plc",
     "aspect_nodes",
+    "bar_items",
     "black_box_unit",
     "board_netlist",
     "boards",
@@ -478,6 +481,7 @@ __all__ = [
     "first_leg",
     "fold_level",
     "function_designation",
+    "function_is_loose",
     "function_is_reached",
     "function_is_unused",
     "function_operating",
@@ -487,6 +491,7 @@ __all__ = [
     "harness_cables",
     "harness_line_ends",
     "harness_wires",
+    "is_bar_port",
     "is_black_box_item",
     "is_cable",
     "is_own_unit_root",

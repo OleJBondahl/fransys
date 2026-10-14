@@ -1,0 +1,13 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PEBAR-CUT"
+manufacturer = "Demo"
+description = "PE copper flat bar, cut to length (invented)"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "pe"
+kind = "bar"
+ports = []

@@ -412,7 +412,7 @@ class ItemKind(Enum):
     """What an item is, as the overview colours and filters it.
 
     One value per item. `TERMINAL` is a strip's terminal, `STRIP` the item holding terminals.
-    `DEVICE` is everything the other seven do not name.
+    `DEVICE` is everything the other eight do not name.
     """
 
     TERMINAL = "terminal"
@@ -422,6 +422,7 @@ class ItemKind(Enum):
     CABLE = "cable"
     HARNESS = "harness"
     BOARD = "board"
+    BAR = "bar"
     DEVICE = "device"
 
 

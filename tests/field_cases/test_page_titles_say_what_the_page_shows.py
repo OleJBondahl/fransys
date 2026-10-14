@@ -16,6 +16,7 @@ is cut with "…" and raises `TITLE_BLOCK_TEXT_OVERFLOW`, whose message names `d
 """
 
 import re
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import fransys as fr
@@ -34,9 +35,12 @@ def _build(root: Path, *, blocks: int, hint: str | None) -> tuple[fr.BuildResult
     d.project(title="Cabinet", number="CAB-1", customer="Demo Co", revision=1, author="d")
     d.revision(1, date="2026-10-12", text="First issue", created="XX")
     cabinet = d.location("C1", "Cabinet")
+    relays = []
     for i in range(1, blocks + 1):
         with d.function(f"F{i}", f"Relay and lamp circuit {i}"):
-            d.device(f"K{i}", "DEMO-RLY-2CO-24")
+            relays.append(d.device(f"K{i}", "DEMO-RLY-2CO-24"))
+    for a, b in pairwise(relays):
+        d.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     h1 = d.device("H1", "DEMO-LAMP-24")
     d.wire(x1.run("SIG", 1)[1], h1.lamp["1"], wire=("WH", 0.75))

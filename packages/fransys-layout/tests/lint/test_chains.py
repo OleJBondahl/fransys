@@ -1,22 +1,24 @@
-"""`lint_chains`: `LONE_CELL` (a symbol stranded or unwired) and `CHAIN_BROKEN` (a cut wire)."""
+"""`lint_chains`: `LONE_CELL` (a symbol stranded or loose) and `CHAIN_BROKEN` (a cut wire)."""
 
 import dataclasses
 from typing import Any
 
 import pytest
 from coherence_helpers import group, layout_of, marker
-from samples import column, connection, drawn, hid, placed
+from samples import column, connection, drawn, function_spec, hid, placed
 
 from fransys_layout.geometry import LayoutError
 from fransys_layout.lint import lint_chains
 from fransys_layout.lint.chains import StageRecords
 from fransys_layout.lint.codes import CHAIN_BROKEN, LONE_CELL
 from fransys_layout.stages import DrawnFunction, MarkerSide
-from fransys_layout.stages.types import MatedFunctions
 from fransys_model.kernel import Finding, Severity
 
 _STRANDED = "a symbol stands alone on its page although its column has more cells"
-_UNWIRED = "a symbol has no drawn conductor at all"
+_LOOSE = (
+    "a symbol has nothing connected, so it is not drawn: wire 13 and 14, or remove it if it is"
+    " not used"
+)
 _CUT = "a connection between two cells was cut into a marker pair"
 
 # Function n has ports 10n + 1 and 10n + 2. Connection 1 wires ports 12 and 21, connection 2
@@ -60,8 +62,7 @@ def _lint(
     columns,
     *,
     drawn_functions=_DRAWN,
-    mates=(),
-    open_ends=frozenset(),
+    loose=(),
     **given,
 ) -> tuple[Finding, ...]:
     """Lint `functions` in `columns`; `wiring` overrides `markers`, `connections`, `net_groups`."""
@@ -69,9 +70,9 @@ def _lint(
     wiring: dict[str, Any] = {"markers": (), "connections": _CHAIN, "net_groups": ()} | given
     layout = layout_of(markers=wiring["markers"], functions=functions)
     records = StageRecords(
-        columns, drawn_functions, wiring["connections"], wiring["net_groups"], mates
+        columns, drawn_functions, wiring["connections"], wiring["net_groups"], loose
     )
-    return lint_chains(layout, records, open_ends=open_ends, printed=printed)
+    return lint_chains(layout, records, printed=printed)
 
 
 # --- LONE_CELL (a): the column was cut across pages -----------------------------------------
@@ -117,21 +118,21 @@ def test_a_lone_cell_on_a_set_nobody_prints_is_not_reported(printed, expected) -
 # --- LONE_CELL (b): no wired port at all ----------------------------------------------------
 
 
-def _mate(a: int, b: int) -> tuple[MatedFunctions, ...]:
-    return (MatedFunctions(a=hid("function", a), b=hid("function", b)),)
+def test_a_loose_function_is_one_finding_at_no_page_naming_its_pins() -> None:
+    """layout-0218 (A4): function 4 has nothing connected and is placed nowhere: one `LONE_CELL`.
 
+    Its message names the pins to wire; it names no page, since the function is on none.
 
-def test_a_symbol_placed_in_two_drawing_sets_is_reported_once() -> None:
-    """Function 1 has no wire at all and stands in drawing sets 1 and 2: one finding, not two.
-
-    Rule (b) is a fact of the symbol, not of a placement; a black-box stand-in in a parent's set
-    is the same symbol again.
-
-    # UNDO: lint/chains.py, drop the `seen` test (one finding per placement again)
+    # UNDO: lint/chains.py, `lint_chains` leaves out `loose_findings(records.loose)`
     """
+    findings = _lint((_F1, _F2), (column("a", (1, 2)),), loose=(function_spec(4),))
+    assert findings == (_lone(4, _LOOSE),)
+
+
+def test_a_placed_function_with_no_wire_is_no_lone_cell_by_itself() -> None:
+    """The lint no longer measures wires: only `loose` and a cut column give a `LONE_CELL`."""
     second_set = dataclasses.replace(_F1, drawing_set=2)
-    findings = _lint((_F1, second_set), (column("a", (1,)),), connections=())
-    assert findings == (_lone(1, _UNWIRED),)
+    assert _lint((_F1, second_set), (column("a", (1,)),), connections=()) == ()
 
 
 # --- CHAIN_BROKEN ---------------------------------------------------------------------------

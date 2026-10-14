@@ -13,6 +13,7 @@ the cases where the box stays (a shared box; a neighbour in the way).
 """
 
 from dataclasses import replace
+from itertools import pairwise
 from typing import Any
 
 import fransys as fr
@@ -75,10 +76,22 @@ def _star(*, third_branch: bool, fan_net: bool = False):
     fillers = {group: [lamp(f"Y{group}{n}", group) for n in range(_FILLERS)] for group in (1, 2, 3)}
     for branch in branches[: 3 if third_branch else 2]:
         wire(hub, branch)
+    fan = (fillers[1][0], fillers[2][0], fillers[2][1], fillers[3][0])
     if fan_net:
-        fan_hub, *fan_ends = (fillers[1][0], fillers[2][0], fillers[2][1], fillers[3][0])
+        fan_hub, *fan_ends = fan
         for end in fan_ends:
             wire(fan_hub, end)
+    # layout-0218: an unwired filler draws no page; the others pair up on nets of their own on
+    # their group's page, apart from the fan net's ends (with or without the fan net)
+    for group_fillers in fillers.values():
+        rest = [one for one in group_fillers if one not in fan]
+        for one, other in zip(rest[::2], rest[1::2], strict=False):
+            wire(one, other)
+        if len(rest) % 2:
+            wire(rest[-2], rest[-1])
+    if not fan_net:
+        wire(fan[0], fan[1])
+        wire(fan[2], fan[3])
     return fr.build(parts, d.draft(), layout_trigger_document())
 
 
@@ -228,9 +241,10 @@ def _pump_motor(*, wide: bool):
     def lamp(tag: str, group: int):
         return d.item("DEMO-LAMP-24", tag=tag, at=cabinet, group=groups[group]).fn("lamp")["1"]
 
-    for group in (1, 2, 3):
-        for n in range(_FILLERS):
-            lamp(f"Y{group}{n}", group)
+    for group in (1, 2, 3):  # layout-0218: an unwired filler draws no page, so each group is wired
+        fillers = [lamp(f"Y{group}{n}", group) for n in range(_FILLERS)]
+        for one, other in pairwise(fillers):
+            wire(one, other)
     for n, group in enumerate((1, 1, 2) if wide else (1, 1)):
         wire(motor["U"], lamp(f"A{n}", group))
     for group in (1, 2, 3):

@@ -6,11 +6,12 @@ unreachable end keeps every copy. These cases pin each branch of that rule.
 
 import dataclasses
 
-from samples import column, hid
+from samples import column, function_spec, hid
 
 from fransys_layout.stages.types import Column, GroupSet, Home, OrderHint, PageHints
 from fransys_layout.stages.wired_copies import (
     emptied_groups,
+    loose_groups,
     without_groups,
     without_unwired_copies,
 )
@@ -90,6 +91,16 @@ def test_emptied_group_is_returned() -> None:
     a = column("a", (1,), group=1)
     b = column("b", (2,), group=2)
     assert emptied_groups((a, b), (a,)) == frozenset({g2})
+
+
+def test_a_loose_functions_group_with_no_column_is_returned() -> None:
+    """layout-0218: a group holding a loose function and left with no column is reported.
+
+    # UNDO: stages/wired_copies.py `loose_groups` returns `frozenset()`
+    """
+    kept = column("a", (1,), group=1)
+    loose = (function_spec(2, group=1), function_spec(3, group=2), function_spec(4, group=None))
+    assert loose_groups(loose, (kept,)) == frozenset({g2})
 
 
 def test_none_group_is_never_returned() -> None:

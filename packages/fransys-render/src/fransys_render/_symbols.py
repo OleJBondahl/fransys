@@ -31,6 +31,8 @@ from ._style import FONT_NAME
 from ._symbol_geometry import oriented_power_symbol, oriented_symbol, to_grid
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from symdef.model import Symbol
 
     from fransys_model.kernel import Model
@@ -105,6 +107,19 @@ def _power_lead(sheet: SheetFormat, power: PowerSymbol, symbol: Symbol) -> str:
     )
 
 
+def symbol_body(symbol: Symbol, module_mm: Decimal, font_mm: Decimal) -> str:
+    """`symbol` drawn by the toolkit in mm at its own origin, with the drawing's pens and font."""
+    return to_fragment_mm(
+        symbol,
+        module_mm=float(module_mm),
+        weights_mm={Weight.NORMAL: float(LINE_THIN_MM), Weight.THICK: float(LINE_THICK_MM)},
+        dash_mm=(float(SYMBOL_DASH_MM), float(SYMBOL_DASH_GAP_MM)),
+        font_family=FONT_NAME,
+        font_mm=float(font_mm),
+        cap_ratio=float(CAPITAL_RATIO),
+    )
+
+
 def _symbol_fragment(
     sheet: SheetFormat,
     profile: Profile,
@@ -117,15 +132,8 @@ def _symbol_fragment(
     x_mm = grid_to_mm(sheet.content_x_mm, placement.x, sheet.module_mm)
     y_mm = grid_to_mm(sheet.content_y_mm, placement.y, sheet.module_mm)
     css_class = "symbol not-installed" if not_installed else "symbol"
-    body = to_fragment_mm(
-        symbol,
-        module_mm=float(sheet.module_mm),
-        weights_mm={Weight.NORMAL: float(LINE_THIN_MM), Weight.THICK: float(LINE_THICK_MM)},
-        dash_mm=(float(SYMBOL_DASH_MM), float(SYMBOL_DASH_GAP_MM)),
-        font_family=FONT_NAME,
-        font_mm=float(printed_font_mm(role_height_mm(TextRole.LABEL, profile.text_height_mm))),
-        cap_ratio=float(CAPITAL_RATIO),
-    )
+    font_mm = printed_font_mm(role_height_mm(TextRole.LABEL, profile.text_height_mm))
+    body = symbol_body(symbol, sheet.module_mm, font_mm)
     transform = f"translate({format_decimal(x_mm)},{format_decimal(y_mm)})"
     return f'<g class="{css_class}" transform="{transform}">{body}</g>'
 

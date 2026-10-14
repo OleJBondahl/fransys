@@ -103,22 +103,26 @@ finding in it is an `ERROR`, before touching `out_dir`. See below.
 passes, the validators, layout, and the board check. When the model holds a document it adds the
 drawing and PDF checks. A script reads findings only through it.
 
-The design above has one device and no wiring, so its document has nothing to draw:
+The design above has one device and no wiring, so its document has nothing to draw. This one
+keeps only its schematic, the BOM page taken out:
 
 ```python
 from pathlib import Path
 
 cabinet_cover = Path("cabinet.md")
 cabinet_cover.write_text("# Cabinet\n")
-doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, x1, cover=cabinet_cover)
+doc = fr.document(
+    fr.DocumentPreset.CABINET_SCHEMATIC, x1, cover=cabinet_cover, remove=(fr.PageKind.BOM,)
+)
 
 result = fr.build(d, doc)
 assert len(fr.check(result)) == 4
 ```
 
-`fr.check(result)` holds three `DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, one `ERROR`, `LAYOUT_MISSING`,
-that only the drawing and PDF checks find. The schematic page has nothing to draw and is left out;
-the BOM page stands. A script that asserted the design clean would have shipped it.
+`fr.check(result)` holds three `DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, one `ERROR`, `DOCUMENT_NO_DRAWINGS`,
+that only the drawing and PDF checks find. A symbol with nothing connected is not drawn, so the
+schematic page has no drawing and the document no other page. A script that asserted the design
+clean would have shipped it.
 
 `write` runs the same check internally, so it raises on those errors:
 
@@ -146,7 +150,7 @@ counted per code on one line.
 ```python
 text = fr.report(result)
 assert text.startswith("build: 1 error, 0 warnings, 3 notes\n")
-assert "  see: findings-render#layout_missing\n" in text
+assert "  see: findings-pdf#document_no_drawings\n" in text
 assert text.endswith("notes: DOCUMENT_EMPTY_LIST 3\n")
 ```
 

@@ -7,8 +7,10 @@ import pytest
 
 from fransys_layout.engines.schematic.read.functions import function_spec
 from fransys_layout.stages.resolve import throw_port
+from fransys_model.derive.drawing_text import label_text
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.layout import Orientation, SymbolPlacement, layout_of
+from fransys_model.layout import Label, LabelKind, Orientation, SymbolPlacement, layout_of
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions
 
 
@@ -69,3 +71,28 @@ def test_each_pole_binds_its_own_symbol_throws_in_marking_order(built) -> None:
         for n in (1, 2, 3)
         for t, s in (("1", "com"), ("2", "nc"), ("4", "no"))
     }
+
+
+def test_q1s_unwired_coil_is_not_drawn_and_its_contacts_print_q1_with_no_cell(built) -> None:
+    """layout-0218 (A3): -Q1's coil has nothing connected, so no symbol and no contact table.
+
+    Each drawn contact of -Q1 still prints its tag, "-Q1", with no cell: no cross-reference.
+
+    # UNDO: engines/schematic/read/loose.py, `without_loose` returns `inputs` unchanged
+    """
+    model = built.model
+    table = functions(model)
+    q1 = {f for f, one in table.items() if one.key[-3] == "Q1"}
+    coil = {f for f in q1 if table[f].kind is FunctionKind.COIL}
+    placed = {p.function for p in layout_of(model, SymbolPlacement).values()}
+    labels = tuple(layout_of(model, Label).values())
+    assert coil, "the selector has a coil"
+    assert not coil & placed, "no coil symbol for -Q1"
+    assert not [one for one in labels if one.function in coil], "no contact table, no tag"
+    contacts = (q1 & placed) - coil
+    assert contacts, "the selector's contacts are drawn"
+    for function in contacts:
+        own = [one for one in labels if one.function == function]
+        tags = [label_text(model, one) for one in own if one.kind is LabelKind.TAG]
+        assert tags == ["-Q1"]
+        assert not [one for one in own if one.kind is LabelKind.CROSS_REFERENCE]

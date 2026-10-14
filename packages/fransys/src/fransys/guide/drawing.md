@@ -13,6 +13,7 @@ Layout draws the structure you author and invents none. This page says what layo
 - **Device chains.** Some devices draw no symbol of their own, such as modules with an IN and an OUT connector. When such devices in one block are wired hop to hop, each wire alone, they form a chain. Each device then draws as one box with its wired pins only, and the chain stands as one column. A box's top pins face the device above and its bottom pins the device below, so each hop's wires run straight down. A chain starts at its end that sorts first by designation. A ring opens at its device that sorts first, and the wire that closes the ring becomes a marker pair.
 - **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals and references. An undeclared rail is a plain net: wires and link markers.
 - **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal drawn on both pages needs none.
+- **Nothing connected, nothing drawn.** A symbol with nothing connected is not drawn; its list holds it.
 - **Flat designs.** A design of devices joined by point-to-point `d.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series.
 
 The two blocks below build the same twelve relays on one 24 V supply. Only the second declares the supply.
@@ -198,7 +199,10 @@ def blocks(c, hint=None, count=3):
     groups = {}
     for i in range(1, count + 1):
         with c.function(f"F{i}", f"Relay {i}") as group:
-            c.device(f"K{i}", "DEMO-RLY-2CO-24")
+            k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
+            feed = c.terminal_strip(f"X{i}", "DEMO-TB-2.5", 2)
+            c.wire(feed[1], k.coil["A1"], wire=(BU, 0.75))  # a symbol with nothing connected
+            c.wire(k.coil["A2"], feed[2], wire=(BU, 0.75))  # is not drawn
         groups[f"F{i}"] = group
     if hint:
         hint(c.layout, groups)
@@ -253,9 +257,11 @@ def compact_sheet(scope):
 
 
 def numbers(c, sheet=False):
+    dc = c.dc_supply("24VDC", c.device("G1", "DEMO-PSU-24").output)
     for i in range(1, 34):
         with c.function(f"F{i}", f"Relay {i}"):
-            c.device(f"K{i}", "DEMO-RLY-2CO-24")
+            k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
+            c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
     compact = compact_sheet(c)
     if sheet:
         c.layout.profile(sheet=compact)

@@ -4,6 +4,7 @@ Codes the part-file lint emits, at `fr.lint` and when `fr.design` or `fr.parts` 
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
 | --- | --- | --- | --- | --- | --- |
+| BAR_SYMBOL | ERROR | library load | part author | A `bar` function names a `symbol`; a bar is never drawn. | Remove the function's `symbol` key. |
 | BOARD_WITHOUT_PCB | WARNING | library load | part author | A part with `category = "board"` has no `[pcb]` table. | Add a `[pcb]` table with a `revision` string, or change `category` to the part's real category. |
 | CABLE_PAIR_INVALID | ERROR | library load | part author | A `[cable_product]` `pairs` entry breaks a pair rule: a core is out of range, in two pairs, or `SH`, or a `screen` is not a unique `SH` core. | Give each `pairs` entry two integer `cores` in range, none `SH` and none in another pair, and a `screen` that is one unique `SH` core. |
 | CABLE_WITHOUT_PRODUCT | ERROR | library load | part author | A part with `category = "cable"` has no `[cable_product]` table, or a part with another category has one. | Add a `[cable_product]` table to a cable part, or remove `[cable_product]` from a part whose `category` is not `cable`. |
@@ -21,7 +22,7 @@ Codes the part-file lint emits, at `fr.lint` and when `fr.design` or `fr.parts` 
 | FIELD_UNKNOWN | ERROR | library load | part author | A table holds a key the part-file contract does not name for that table. | Remove the key, or correct its spelling to a field the part-file contract names. |
 | FILE_NAME | WARNING | library load | part author | A part file's name has characters other than lowercase letters, digits, hyphens and underscores. | Rename the file using only lowercase letters, digits, hyphens and underscores. |
 | FUNCTION_NAME_DUPLICATE | ERROR | library load | part author | Two `[[function]]` entries of one part have the same `name`. | Give one of the functions a different `name`. |
-| FUNCTION_WITHOUT_PORTS | ERROR | library load | part author | A `[[function]]` has an empty `ports` list. | Add at least one entry to the function's `ports` array, or remove the function. |
+| FUNCTION_WITHOUT_PORTS | ERROR | library load | part author | A `[[function]]` other than a `bar` has an empty `ports` list. | Add at least one entry to the function's `ports` array, or remove the function. |
 | JOIN_INTO_CONNECTOR | ERROR | library load | part author | A header pin's `joins` names a port of a `connector` function. | Point `joins` at a port of a non-connector function of the same part. |
 | JOIN_PORT_TWICE | ERROR | library load | part author | Two header pins of one part both `joins` the same function port. | Remove the `joins` from one of the two header pins, or point it at a different port. |
 | JOIN_PORT_UNKNOWN | ERROR | library load | part author | A header pin's `joins` value does not name a port of a function in this part, or is not `<function>.<port>`. | Set `joins` to `<function>.<port>` naming an existing port of another function of this part. |

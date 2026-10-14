@@ -8,13 +8,21 @@ from collections import Counter
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from fransys_layout.stages.lookups import group_of
 from fransys_layout.stages.types import Home
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
     from collections.abc import Set as AbstractSet
 
-    from fransys_layout.stages.types import Cell, Column, Handle, OrderHint, PageHints
+    from fransys_layout.stages.types import (
+        Cell,
+        Column,
+        FunctionSpec,
+        Handle,
+        OrderHint,
+        PageHints,
+    )
 
 type Copy = tuple[int, int]  # (column index, cell index)
 
@@ -110,6 +118,12 @@ def emptied_groups(before: tuple[Column, ...], after: tuple[Column, ...]) -> fro
     """The groups that had a column in `before` and have none in `after`."""
     left = {c.group for c in after}
     return frozenset(c.group for c in before if c.group is not None and c.group not in left)
+
+
+def loose_groups(loose: tuple[FunctionSpec, ...], after: tuple[Column, ...]) -> frozenset[Handle]:
+    """layout-0218: the groups of `loose` functions that have no column in `after`."""
+    left = {c.group for c in after}
+    return frozenset(g for g in map(group_of, loose) if g is not None and g not in left)
 
 
 def without_groups(hints: PageHints, groups: AbstractSet[Handle]) -> PageHints:

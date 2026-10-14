@@ -63,6 +63,8 @@ def contactor_with_pole_one_wired(*, relays: bool) -> Any:
     k1 = d.item("DEMO-CTR-3P-24", tag="K1", at=c, group=g)
     wire(top.terminal(TERMINAL, group=g).outer, k1.fn("main")["1"])
     wire(k1.fn("main")["2"], bottom.terminal(TERMINAL, group=g).inner)
+    # layout-0218: an unwired coil is drawn nowhere; one wire to K1's own aux keeps it drawn
+    wire(k1.fn("coil")["A1"], k1.fn("aux")["13"])
     if relays:
         feed = top.terminal(TERMINAL, group=g)
         for tag in ("K2", "K3", "K4"):

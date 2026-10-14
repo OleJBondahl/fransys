@@ -6,7 +6,9 @@ lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
+from fransys_author.surface._bar import take_screw
 from fransys_author.surface._device import part_mpn
+from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import Ends, pair
 from fransys_author.surface._parent import cable_parent_item
 from fransys_author.surface._strip import TerminalStrip
@@ -42,11 +44,13 @@ def _length_mm(length_m: float | str | Decimal | None) -> int | None:
     return int(mm)
 
 
-def _outer(end: Port | Terminal | TerminalStrip, design: Design | None = None) -> Port:
+def _outer(end: Port | Terminal | TerminalStrip | Fn, design: Design | None = None) -> Port:
     """A terminal stands for its field side, `.outer`: a cable core goes to the field.
 
     A strip or run stands for its next free terminal, the step `d.series` takes.
     """
+    if isinstance(end, Fn):
+        return take_screw(design, end)
     if isinstance(end, TerminalStrip):
         end = take(end, design, 1)[0]
     return end.outer if isinstance(end, Terminal) else end
@@ -102,8 +106,8 @@ class Cable:
     def core(
         self,
         which: str | int,
-        a: Port | Terminal | TerminalStrip,
-        b: Port | Terminal | TerminalStrip | None = None,
+        a: Port | Terminal | TerminalStrip | Fn,
+        b: Port | Terminal | TerminalStrip | Fn | None = None,
     ) -> None:
         """Wire core `which` (a colour code or a 1-based number) between `a` and `b`.
 
@@ -119,14 +123,16 @@ class Cable:
         self._claim(index)
         self._cable.core(index, *ends)
 
-    def _screen_end(self, index: int, a: Port | Terminal | TerminalStrip) -> None:
+    def _screen_end(self, index: int, a: Port | Terminal | TerminalStrip | Fn) -> None:
         if self._colours[index - 1] != SH:
             msg = f"{self._label} core {index} is not SH: park a spare with spare(..., at=)"
             raise AuthorError(msg)
         self._claim(index)
         self._cable.open_core(index, _outer(a, self._design))
 
-    def spare(self, *cores: str | int, at: Port | Terminal | TerminalStrip | None = None) -> None:
+    def spare(
+        self, *cores: str | int, at: Port | Terminal | TerminalStrip | Fn | None = None
+    ) -> None:
         """Mark cores spare: `spare(GY)`, `spare(BK, GY)`, `spare(BK, at=x1[7])`, or `spare()`.
 
         `spare()` marks every core not wired or marked so far, so wire first. `at=` parks one

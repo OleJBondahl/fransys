@@ -50,7 +50,7 @@ def test_a_terminal_wired_only_to_a_rail_terminal_draws_a_power_symbol(tmp_path:
 
 def test_a_device_pe_pin_wired_to_a_pe_bar_terminal_draws_protective_earth(tmp_path: Path) -> None:
     """The earth shape of the same cause (layout-0137): a PE pin wired to a bridged PE bar draws the
-    PE symbol. A pin joined only by `d.earth` draws bare by design and warns `NET_UNREALISED`."""
+    PE symbol. A pin joined only by `d.earth` draws it too (PE-BAR B0)."""
     d = fr.design("demo_parts", place="CAB")
     cab = d.location("CAB", "Cabinet")
     bar = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True)
@@ -61,3 +61,38 @@ def test_a_device_pe_pin_wired_to_a_pe_bar_terminal_draws_protective_earth(tmp_p
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "c.md")
     model = fr.build(d, doc).model
     assert [s.symbol for s in layout_of(model, PowerSymbol).values()] == ["protective-earth"]
+
+
+def _motor_earth(tmp_path: Path, *, wired: bool) -> fr.BuildResult:
+    d = fr.design("demo_parts", place="CAB")
+    cab = d.location("CAB", "Cabinet")
+    bar = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True)
+    motor = d.device("M1", "DEMO-MOTOR-4KW")
+    if wired:
+        d.wire(motor.motor["PE"], bar[1], wire=("GNYE", 2.5))
+    d.earth(motor.motor["PE"], bar[1])
+    (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
+    return fr.build(
+        d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "c.md")
+    )
+
+
+def _motor_pe_symbols(result: fr.BuildResult) -> list[str]:
+    model = result.model
+    (item,) = (i for i in items(model) if fr.derive.printed_designation(model, i) == "-M1")
+    funcs = {f.id for f in functions(model).values() if f.item == item}
+    pe = {p.id for p in ports(model).values() if p.function in funcs and p.key[-1] == "PE"}
+    return [s.symbol for s in layout_of(model, PowerSymbol).values() if s.port in pe]
+
+
+def test_a_pe_pin_joined_only_by_earth_draws_protective_earth(tmp_path: Path) -> None:
+    """B0 (PE-BAR): every pin joined by `d.earth` draws the PE symbol, wired or not."""
+    result = _motor_earth(tmp_path, wired=False)
+    assert _motor_pe_symbols(result) == ["protective-earth"]
+    assert "NET_UNREALISED" not in {f.code for f in fr.check(result)}
+
+
+def test_a_wire_to_a_pe_terminal_changes_nothing_on_the_pin_symbol(tmp_path: Path) -> None:
+    bare = _motor_pe_symbols(_motor_earth(tmp_path, wired=False))
+    wired = _motor_pe_symbols(_motor_earth(tmp_path, wired=True))
+    assert bare == wired == ["protective-earth"]

@@ -508,6 +508,44 @@ def test_board_and_rack_model_has_no_layout_missing_finding():
     assert not any(f.code == "LAYOUT_MISSING" for f in findings)
 
 
+def _wired_to_a_partner(draft: Draft, port: Port, origin: Origin) -> None:
+    """Conduct `port` to a part-less terminal's port, so its function is drawn (layout-0218)."""
+    partner_item = Item(
+        id=make_id(Item, ("t",)),
+        key=("t",),
+        part=None,
+        parent=None,
+        position=None,
+        tag="X9",
+        description="Invented terminal",
+    )
+    partner_function = Function(
+        id=make_id(Function, ("t", "f")),
+        key=("t", "f"),
+        item=partner_item.id,
+        template=None,
+        name="f",
+        kind=FunctionKind.GENERIC,
+    )
+    partner_port = Port(
+        id=make_id(Port, ("t", "f", "1")),
+        key=("t", "f", "1"),
+        function=partner_function.id,
+        template=None,
+        name="1",
+        role=PortRole.GENERIC,
+    )
+    conductor = Conductor(
+        id=make_id(Conductor, ("wire-1",)),
+        key=("wire-1",),
+        a=port.id,
+        b=partner_port.id,
+        kind=ConductorKind.WIRE,
+        carrier=None,
+    )
+    draft.extend([partner_item, partner_function, partner_port, conductor], origin=origin)
+
+
 def _model_with_an_unlaid_out_function():
     """A frozen model: one `Function`, no location, never run through `lay_out_schematic`.
 
@@ -535,8 +573,18 @@ def _model_with_an_unlaid_out_function():
         name="f",
         kind=FunctionKind.GENERIC,
     )
+    port = Port(
+        id=make_id(Port, ("function", "1")),
+        key=("function", "1"),
+        function=function.id,
+        template=None,
+        name="1",
+        role=PortRole.GENERIC,
+    )
     draft = Draft()
-    draft.extend([item, function, _system_document("unlaid-out-function")], origin=origin)
+    draft.extend([item, function, port, _system_document("unlaid-out-function")], origin=origin)
+    # layout-0218: a function with nothing connected is drawn on no page, so wire its port.
+    _wired_to_a_partner(draft, port, origin)
     return freeze(draft)
 
 
@@ -670,6 +718,8 @@ def _model_with_a_symbol_port_mismatch() -> tuple[Draft, Id, Id]:
     draft.extend(
         [item, function, port, _system_document("symbol-port-mismatch")], origin=_DESIGN_ORIGIN
     )
+    # layout-0218: an unconnected function is drawn on no page, so the mismatch needs a wire.
+    _wired_to_a_partner(draft, port, _DESIGN_ORIGIN)
     return draft, part.id, port_template.id
 
 
@@ -792,6 +842,8 @@ def _model_with_an_extra_port_symbol_mismatch() -> tuple[Draft, Id]:
     draft.add(part, origin=_PART_HEADER_ORIGIN)
     draft.extend([function_template, port_template], origin=_FUNCTION_ORIGIN)
     draft.extend([item, function, extra_port], origin=_DESIGN_ORIGIN)
+    # layout-0218: an unconnected function is drawn on no page, so the extra port needs a wire.
+    _wired_to_a_partner(draft, extra_port, _DESIGN_ORIGIN)
     return draft, part.id
 
 
@@ -872,6 +924,8 @@ def _model_with_a_part_less_symbol_mismatch() -> tuple[Draft, Id]:
         [item, function, port, _system_document("part-less-symbol-mismatch")],
         origin=_DESIGN_ORIGIN,
     )
+    # layout-0218: an unconnected function is drawn on no page, so the mismatch needs a wire.
+    _wired_to_a_partner(draft, port, _DESIGN_ORIGIN)
     return draft, function.id
 
 

@@ -33,7 +33,7 @@ _BAD_CODES = {"ROUTE_FAILED", "CONNECTION_NOT_DRAWN", "DOCUMENT_NO_DRAWINGS"}
 def _circuit(d: fr.Design) -> _Open:
     """Poles 3 and 4 of one changeover: each pole's make throw and break throw wired to its
     own terminal of a field strip (one strip for make throws, a second for break throws); no
-    other wiring.
+    other wiring than the coil's feed from a cabinet strip.
     """
     d.location("CAB", "Cabinet")
     d.location("FIELD", "Field strips")
@@ -46,6 +46,11 @@ def _circuit(d: fr.Design) -> _Open:
         fn = getattr(relay, f"co_{pole}")
         d.wire(brk, fn[f"{pole}2"], wire=(BK, 1.5))  # break throw
         d.wire(make, fn[f"{pole}4"], wire=(BK, 1.5))  # make throw
+    # layout-0218: an unwired coil is drawn nowhere; its feed from a cabinet strip keeps K1's
+    # coil, and so its contact table and the contacts' cross-references, on the page
+    feed = d.terminal_strip("X03", _TERMINAL, place="CAB")
+    d.wire(feed[1], relay.coil["A1"], wire=(BK, 0.75))
+    d.wire(feed[2], relay.coil["A2"], wire=(BK, 0.75))
     return _Open()
 
 

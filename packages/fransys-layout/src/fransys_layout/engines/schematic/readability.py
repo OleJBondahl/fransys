@@ -47,9 +47,7 @@ def _measures(
     found = Counter(
         (here, f.code) for here, f in geometry_by_page(layout, sheet=sheet, ink=scene.ink)
     )
-    lone = Counter(
-        here for here, _ in lone_cells(layout, chain_records(scene), open_ends=scene.open_ends)
-    )
+    lone = Counter(here for here, _ in lone_cells(layout, chain_records(scene)))
     routes, labels, markers = (
         by_key(layout.routes, page_of),
         by_key(layout.labels, page_of),

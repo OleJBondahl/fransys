@@ -35,6 +35,8 @@ def _block_key(block: PlacedBlock) -> tuple[str, ...]:
 def _style(end: PlacedEnd) -> EndStyle:
     if end.blank:
         return EndStyle.BLANK
+    if end.earth:
+        return EndStyle.EARTH
     return EndStyle.DASHED if end.dashed else EndStyle.SOLID
 
 

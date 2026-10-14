@@ -18,6 +18,7 @@ from fransys_model.derive.lone_cable import printing_item
 from fransys_model.derive.lookups import effective_placement, require, strip_set
 from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
+from fransys_model.vocab.bars import is_bar_port
 from fransys_model.vocab.enums import Aspect, FunctionKind
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 from fransys_model.vocab.facets.connector import ConnectorFacet
@@ -440,15 +441,13 @@ def connector_designation(
 def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = None) -> str:
     """Render `port` as its item's designation and its name (`-K1:13`), always dash-prefixed.
 
-    A terminal's port drops its name (`terminal_designation`); a connector pin reads `-U2-X1:1`.
+    A terminal's port drops its name (`terminal_designation`); a connector pin reads `-U2-X1:1`;
+    a bar's port drops it too (`-PE1`): the screw is no part of the wiring (PE-BAR B4).
 
     Args:
         model: The frozen model to read.
         port: The port to render.
         unit: The unit whose own document is printed; `None` renders the whole-model form.
-
-    Returns:
-        The port's printed label.
 
     Raises:
         SchemaError: `port` is not of `model`, or its item (a terminal's parent too) has none.
@@ -458,6 +457,8 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
         msg = "the id is not a port of the model"
         raise SchemaError(msg, kind="port", record_id=port)
     owner = items(model)[functions(model)[record.function].item]
+    if is_bar_port(model, port):
+        return printed_designation(model, owner.id, unit=unit)
     if terminal_of(model, owner.id) is None:
         return f"{connector_designation(model, record.function, unit=unit)}:{record.name}"
     return terminal_designation(model, owner.id, unit=unit)

@@ -70,11 +70,13 @@ Zero or more per file, one array entry per function the part has. Maps to the mo
 | Field | Type | Meaning |
 |---|---|---|
 | `name` | string | Function name, stamped onto every instance, e.g. `"coil"`, `"co_1"` |
-| `kind` | string | A `FunctionKind` value: `"coil"`, `"contact_no"`, `"contact_nc"`, `"contact_co"`, `"protection"`, `"switch"`, `"terminal"`, `"connector"`, `"plc_channel"`, `"supply"`, `"load"`, `"sensor"`, `"actuator"`, `"generic"` |
+| `kind` | string | A `FunctionKind` value: `"coil"`, `"contact_no"`, `"contact_nc"`, `"contact_co"`, `"protection"`, `"switch"`, `"terminal"`, `"connector"`, `"plc_channel"`, `"supply"`, `"load"`, `"sensor"`, `"actuator"`, `"generic"`, `"bar"` |
 | `symbol` | string | Optional. Symbol key: a lowercase, hyphenated slug naming a symbol in `electrical-symbols`. A function with no `symbol` gets no authored `layout.symbol_choice`, and the layout engine's rules by kind apply |
 | `energy` | string | Optional, on a supply or load function only: `"in"` or `"out"`. Default: load in, supply out. Any other kind fails lint (`ENERGY_ON_NON_POWER`) |
-| `ports` | array of tables | See below. At least one entry |
+| `ports` | array of tables | See below. At least one entry, except a `bar` cut to length (below) |
 | `links` | array of tables | See below. Optional; omit for a function with no internal connectivity |
+
+A `bar` writes one port per screw, role `"pe"`; one cut to length writes none, and each landing makes a screw. It takes no `symbol` (`BAR_SYMBOL`): a bar is never drawn.
 
 `ports` entries:
 

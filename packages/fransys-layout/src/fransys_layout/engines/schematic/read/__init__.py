@@ -87,6 +87,8 @@ class StageInputs:
     feeds: tuple[BoxFeed, ...] = ()
     # layout-0154: the conductors harness lines carry, out of `connections` and `crossing`
     carried: tuple[Connection, ...] = ()
+    # layout-0218: the functions with nothing connected, on no page (`LONE_CELL` names them)
+    loose: tuple[FunctionSpec, ...] = ()
     # layout-0215: the device chains, each drawn as one column of boxes (LC2)
     device_chains: tuple[DeviceChain, ...] = ()
 

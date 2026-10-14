@@ -325,6 +325,9 @@ def _draw(
     found = _search(edge, page, used, along, port_exits)
     if found is None and page.soft:
         found = _search(edge, _all_rectangles_open(page), used, along, port_exits)
+    if found is None and port_exits:
+        # layout-0223: a port boxed in by its neighbours' exit cells may still cross them straight.
+        found = _search(edge, page, used, along, None)
     if found is None:
         return None
     ends = [page.ends[located(one)].at for one in (edge.a, edge.b)]

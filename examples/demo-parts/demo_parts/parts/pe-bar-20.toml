@@ -1,0 +1,34 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PEBAR-20"
+manufacturer = "Demo"
+description = "PE bar, 20 screws (invented)"
+category = "terminal"
+class_code = "X"
+
+[[function]]
+name = "pe"
+kind = "bar"
+ports = [
+    { name = "1", role = "pe" },
+    { name = "2", role = "pe" },
+    { name = "3", role = "pe" },
+    { name = "4", role = "pe" },
+    { name = "5", role = "pe" },
+    { name = "6", role = "pe" },
+    { name = "7", role = "pe" },
+    { name = "8", role = "pe" },
+    { name = "9", role = "pe" },
+    { name = "10", role = "pe" },
+    { name = "11", role = "pe" },
+    { name = "12", role = "pe" },
+    { name = "13", role = "pe" },
+    { name = "14", role = "pe" },
+    { name = "15", role = "pe" },
+    { name = "16", role = "pe" },
+    { name = "17", role = "pe" },
+    { name = "18", role = "pe" },
+    { name = "19", role = "pe" },
+    { name = "20", role = "pe" },
+]

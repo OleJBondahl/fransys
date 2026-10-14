@@ -136,13 +136,15 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         stage="render",
         who="consumer",
         cause=(
-            "A placed symbol has no drawn conductor, or stands alone on a page though its "
-            "column has cells elsewhere."
+            "A symbol has nothing connected, so it is drawn on no page; the message names the "
+            "pins to wire and no page. Or a symbol stands alone on a page though its column has "
+            "cells elsewhere."
         ),
         fix=(
-            "Wire the port, or move the column's cells onto one page. A unit's own open "
-            "boundary functions never give it, nor the item box standing under them (decisions "
-            "layout-0077 and layout-0202)."
+            "Wire the named pins, or remove the device if it is not used; or move the column's "
+            "cells onto one page. A unit's own open boundary functions and the item box "
+            "standing under them, spare contacts and spare terminals never give it (decisions "
+            "layout-0077, layout-0202 and layout-0218)."
         ),
         page="findings-render",
     ),

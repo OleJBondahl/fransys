@@ -5,13 +5,15 @@ from typing import Any
 from plant import Plant
 
 from fransys_model.kernel import Finding, Id, Severity, make_id
+from fransys_model.vocab.connectivity import Net
 from fransys_model.vocab.core import Item, Port
-from fransys_model.vocab.enums import FunctionKind
+from fransys_model.vocab.enums import FunctionKind, NetClass
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import ports
 from fransys_model.vocab.validators.connectivity import (
     FUNCTION_HALF_CONNECTED,
     NET_SHORTED,
+    NET_UNREALISED,
     check_connectivity,
 )
 
@@ -21,6 +23,30 @@ def _of(plant: Plant, code: str) -> list[Finding]:
 
 
 # ---- NET_UNREALISED -----------------------------------------------------------------------
+
+
+def _two_piece_net(net_class: NetClass) -> Plant:
+    plant = Plant()
+    a, b = plant.pin("a", "f", "1"), plant.pin("b", "f", "1")
+    plant.add(
+        Net(
+            id=make_id(Net, ("n",)),
+            key=("n",),
+            name=None,
+            net_class=net_class,
+            ports=(a, b),
+            potential=None,
+        )
+    )
+    return plant
+
+
+def test_a_pe_net_in_two_physical_nets_is_not_unrealised() -> None:
+    assert _of(_two_piece_net(NetClass.PE), NET_UNREALISED) == []
+
+
+def test_a_non_pe_net_in_two_physical_nets_is_unrealised() -> None:
+    assert len(_of(_two_piece_net(NetClass.GENERIC), NET_UNREALISED)) == 1
 
 
 # ---- board realisation --------------------------------------------------------------------

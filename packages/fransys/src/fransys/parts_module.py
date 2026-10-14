@@ -52,7 +52,8 @@ def _getitem(names: list[str]) -> list[str]:
 def _function_class(cls: str, fn: str, pins: list[str]) -> list[str]:
     lines = [f"class {cls}__{function_identifier(fn)}(TypedFn):"]
     lines += [f"    {pin}: Pin" for pin in pins if pin.isidentifier()]
-    return [*lines, *_getitem(pins), ""]
+    # a bar cut to length writes no pin (PE-BAR amendment 1): its class body is `pass`
+    return [*lines, *(_getitem(pins) if pins else ["    pass"]), ""]
 
 
 def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) -> list[str]:

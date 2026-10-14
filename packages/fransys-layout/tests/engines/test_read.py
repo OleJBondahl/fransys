@@ -18,8 +18,10 @@ from fransys_layout.stages import LabelKind, PolePair, Role
 from fransys_model.kernel import Draft, Origin, evolve, freeze, make_id
 from fransys_model.layout import Profile as ModelProfile
 from fransys_model.layout import SheetFormat as ModelSheetFormat
-from fransys_model.vocab import AspectNode, Boundary, Item, Unit
+from fransys_model.vocab import AspectNode, Boundary, Conductor, Item, Unit
+from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.tables import items as items_table
+from fransys_model.vocab.tables import ports as ports_table
 
 _ORIGIN = Origin(file="tests/engines/test_read.py", line=1, note="read.py unit tests")
 
@@ -242,10 +244,18 @@ def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> 
     fuse = table[make_id(Item, ("cabinet", "a1", "f1"))]
     edge = _function(model, ("cabinet", "a1"), "edge")
     element = _function(model, ("cabinet", "a1", "f1"), "element")
+    # layout-0218: a function with nothing connected is drawn nowhere; one wire across the fuse
+    # keeps its element drawn, and still no wire inside reaches the edge connector
+    one, two = sorted(p.id for p in ports_table(model).values() if p.function == element.id)
+    key = ("read-fixture", "fuse-wire")
+    across = Conductor(
+        id=make_id(Conductor, key), key=key, a=one, b=two, kind=ConductorKind.WIRE, carrier=None
+    )
     with_units = evolve(
         model,
         remove=(board.id, fuse.id),
         put=(
+            across,
             parent_release,
             release,
             parent,

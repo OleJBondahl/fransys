@@ -24,6 +24,7 @@ if TYPE_CHECKING:
         Column,
         Connection,
         DrawnFunction,
+        FunctionSpec,
         Handle,
         Layout,
         NetGroup,
@@ -31,14 +32,7 @@ if TYPE_CHECKING:
     from fransys_layout.stages.types import MatedFunctions
 
 _NET_OF_TWO = 2
-
-
-def mate_map(mates: tuple[MatedFunctions, ...]) -> dict[Handle, Handle]:
-    """Each mated function or pin mapped to the one it is plugged into, in both directions."""
-    found: dict[Handle, Handle] = {}
-    for pair in mates:
-        found[pair.a], found[pair.b] = pair.b, pair.a
-    return found
+_STRANDED = "a symbol stands alone on its page although its column has more cells"
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +40,6 @@ class _Facts:
     """What the checks need of the stage records, and nothing else."""
 
     cells: Mapping[tuple[str, ...], frozenset[Handle]]
-    unwired: frozenset[Handle]
     cuttable: Mapping[Handle, tuple[Handle, Handle]]
     kinds: Mapping[Handle, str]
 
@@ -59,7 +52,15 @@ class StageRecords:
     drawn: tuple[DrawnFunction, ...]
     connections: tuple[Connection, ...]
     net_groups: tuple[NetGroup, ...]
-    mates: tuple[MatedFunctions, ...] = ()
+    loose: tuple[FunctionSpec, ...] = ()  # layout-0218: drawn on no page (`function_is_loose`)
+
+
+def mate_map(mates: tuple[MatedFunctions, ...]) -> dict[Handle, Handle]:
+    """Each mated function or pin mapped to the one it is plugged into, in both directions."""
+    found: dict[Handle, Handle] = {}
+    for pair in mates:
+        found[pair.a], found[pair.b] = pair.b, pair.a
+    return found
 
 
 def _facts(layout: Layout, records: StageRecords) -> _Facts:
@@ -73,28 +74,12 @@ def _facts(layout: Layout, records: StageRecords) -> _Facts:
     if any(one.column not in by_column for one in layout.placed):
         msg = "a placed function's column has no stage column"
         raise LayoutError(msg)
-    wired = {
-        *(end.port for one in connections for end in (one.a, one.b)),
-        *(end.port for one in net_groups for end in one.ports),
-        *(one.port for one in layout.markers),
-    }
-    on_wire = {
-        function
-        for function, one in by_function.items()
-        if not wired.isdisjoint(p.port for p in one.ports)
-    }
-    mate_of = mate_map(records.mates)
     poles = {function: pole_ports(one) for function, one in by_function.items()}
     sizes = net_sizes(connections, net_groups)
     return _Facts(
         cells={
             key: frozenset(cell.function for cell in one.cells) for key, one in by_column.items()
         },
-        unwired=frozenset(
-            function
-            for function in by_function
-            if function not in on_wire and mate_of.get(function) not in on_wire
-        ),
         cuttable={
             one.handle: (one.a.function, one.b.function)
             for one in connections
@@ -119,41 +104,58 @@ def _split_by_pages(
 
 
 def lone_cells(
-    layout: Layout, records: StageRecords, *, open_ends: frozenset[Handle] = frozenset()
+    layout: Layout, records: StageRecords
 ) -> tuple[tuple[tuple[int, int], Finding], ...]:
     """Each `LONE_CELL` with the `(drawing set, page)` it is on; a function on two pages twice."""
-    return _lone_cells(layout, _facts(layout, records), open_ends)
+    return _lone_cells(layout, _facts(layout, records))
 
 
-def _lone_cells(
-    layout: Layout, facts: _Facts, open_ends: frozenset[Handle]
-) -> tuple[tuple[tuple[int, int], Finding], ...]:
+def _lone_cells(layout: Layout, facts: _Facts) -> tuple[tuple[tuple[int, int], Finding], ...]:
     """Pass 1 of `lint_chains`: the lone cells by page, a column's cells in set order."""
     placed: defaultdict[tuple[int, int, tuple[str, ...]], set[Handle]] = defaultdict(set)
     for one in layout.placed:
         placed[(one.drawing_set, one.page, one.column)].add(one.function)
     found = []
     for (drawing_set, page, column), functions in placed.items():
-        cut = len(functions) == 1 and not facts.cells[column] <= functions
-        for function in functions:
-            if cut:
-                message = "a symbol stands alone on its page although its column has more cells"
-            elif function in facts.unwired and function not in open_ends:
-                message = "a symbol has no drawn conductor at all"
-            else:
-                continue
-            finding = Finding(
-                code=LONE_CELL, severity=Severity.WARNING, subjects=(function,), message=message
+        if len(functions) > 1 or facts.cells[column] <= functions:
+            continue
+        found.extend(
+            (
+                (drawing_set, page),
+                Finding(
+                    code=LONE_CELL, severity=Severity.WARNING, subjects=(one,), message=_STRANDED
+                ),
             )
-            found.append(((drawing_set, page), finding))
+            for one in functions
+        )
     return tuple(found)
+
+
+def loose_findings(loose: tuple[FunctionSpec, ...]) -> tuple[Finding, ...]:
+    """layout-0218: one `LONE_CELL` per function with nothing connected, at no page."""
+    return tuple(
+        Finding(
+            code=LONE_CELL,
+            severity=Severity.WARNING,
+            subjects=(spec.function,),
+            message=(
+                "a symbol has nothing connected, so it is not drawn: "
+                f"wire {_listed(tuple(p.name for p in spec.ports))}, or remove it if it is not used"
+            ),
+        )
+        for spec in loose
+    )
+
+
+def _listed(names: tuple[str, ...]) -> str:
+    """`A1`, `A1 and A2`, `1, 2 and 3`."""
+    return " and ".join([", ".join(names[:-1]), names[-1]]) if len(names) > 1 else "".join(names)
 
 
 def lint_chains(
     layout: Layout,
     records: StageRecords,
     *,
-    open_ends: frozenset[Handle] = frozenset(),
     printed: frozenset[int] | None = None,
 ) -> tuple[Finding, ...]:
     """Report `LONE_CELL` and `CHAIN_BROKEN` warnings, sorted by `(code, subjects)`.
@@ -166,12 +168,13 @@ def lint_chains(
         pages[one.function].add((one.drawing_set, one.page))
     seen: set[tuple[Handle, str]] = set()
     findings = []
-    for here, finding in _lone_cells(layout, facts, open_ends):
+    for here, finding in _lone_cells(layout, facts):
         if not on_printed(here, printed):
             continue
         if (finding.subjects[0], finding.message) not in seen:
             seen.add((finding.subjects[0], finding.message))
             findings.append(finding)
+    findings.extend(loose_findings(records.loose))
     findings.extend(
         Finding(
             code=CHAIN_BROKEN,

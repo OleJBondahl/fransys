@@ -9,8 +9,8 @@ import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.read.units import boundary_edge_set
-from fransys_layout.stages.types import Home, RailEnd
-from fransys_model.derive import is_rail_terminal, port_power_kind, terminal_items
+from fransys_layout.stages.types import Home, PortRef, RailEnd
+from fransys_model.derive import bar_items, is_rail_terminal, port_power_kind, terminal_items
 from fransys_model.vocab import PowerKind
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.membership import crosses_unit
@@ -20,7 +20,7 @@ from fransys_model.vocab.tables import ports as ports_table
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from fransys_layout.stages.types import Connection, FunctionSpec, NetGroup, PortRef
+    from fransys_layout.stages.types import Connection, FunctionSpec, NetGroup
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.connectivity import Conductor
 
@@ -28,11 +28,12 @@ _LINKS = frozenset({ConductorKind.BUSBAR, ConductorKind.RAIL})
 
 
 def rail_terminal_functions(model: Model, specs: tuple[FunctionSpec, ...]) -> frozenset[Id[Any]]:
-    """The functions of `specs` that are terminals of a rail terminal item."""
+    """The functions of `specs` that are terminals of a rail terminal item, or of a bar (B3)."""
+    bars = bar_items(model)
     return frozenset(
         spec.function
         for spec in specs
-        if spec.kind == "terminal" and is_rail_terminal(model, spec.item)
+        if spec.item in bars or (spec.kind == "terminal" and is_rail_terminal(model, spec.item))
     )
 
 
@@ -131,3 +132,25 @@ def rail_groups(
         elif len(ports) > 1:
             found.append(dataclasses.replace(group, ports=ports))
     return tuple(found)
+
+
+def earth_ends(
+    model: Model,
+    specs: tuple[FunctionSpec, ...],
+    wires: tuple[Connection, ...],
+    ends: tuple[RailEnd, ...],
+) -> tuple[RailEnd, ...]:
+    """`ends` and a stand-in end for each drawn PE pin that has no wire, so it takes its symbol.
+
+    The pin's own port is the stand-in's handle: no conductor leads there (PE-BAR B0).
+    """
+    strip_terminals = terminal_items(model)
+    taken = {end.ref.port for end in ends} | {ref.port for c in wires for ref in (c.a, c.b)}
+    stand_ins = [
+        RailEnd(ref=PortRef(function=spec.function, port=port.port), connection=port.port)
+        for spec in specs
+        if spec.item not in strip_terminals
+        for port in spec.ports
+        if port.port not in taken and port_power_kind(model, port.port) is PowerKind.PE
+    ]
+    return (*ends, *stand_ins)

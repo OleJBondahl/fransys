@@ -30,6 +30,7 @@ from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Model, Severity, evolve
 from fransys_model.kernel.origin import require_origin
+from fransys_model.vocab.bars import bar_items
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
 from fransys_model.vocab.finding_ref import ref
@@ -219,14 +220,15 @@ def _harness_end_ambiguities(model: Model) -> list[Finding]:
 def _port_duplicates(model: Model, terminals: frozenset[Id[Item]]) -> list[Finding]:
     """One finding per (item, printed port text) shared by more than one port of that item.
 
-    The text is `port_designation`, the one rule for what a port prints.
-    A terminal is left out (its two ports are one point), as is an item that cannot print one.
+    The text is `port_designation`. A terminal (two ports, one point), a bar (each screw prints the
+    bar) and an item that cannot print one are left out.
     """
     idx = build_indexes(model)
     all_functions = functions(model)
+    bars = bar_items(model)
     findings: list[Finding] = []
     for item in items(model).values():
-        if item.id in terminals or not can_print_designation(model, item.id):
+        if item.id in terminals or item.id in bars or not can_print_designation(model, item.id):
             continue
         by_text: dict[str, list[tuple[Id[Port], str]]] = {}
         for function in idx.functions_by_item.get(item.id, ()):

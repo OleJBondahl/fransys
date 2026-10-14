@@ -160,14 +160,16 @@ def test_demo_library_record_counts_and_keys():
     OPERATED-BY adds two function-less heads (`head-estop.toml`, `head-sel.toml`), three blocks
     (`block-1nc.toml`, `block-1nc-21.toml`, `block-1no.toml`, 1/2/1 each) and `ls-1no1nc.toml`
     (2/4/2), none with a symbol choice, and `pb-nc.toml` drops its symbol: 69 parts, 155
-    templates, 348 ports, 68 links, 55 symbol choices)."""
+    templates, 348 ports, 68 links, 55 symbol choices; PE-BAR adds `pe-bar-20.toml` (1/20)
+    and `pe-bar-cut.toml` (1/0), so
+    71 parts, 157 templates, 368 ports, 68 links, 55 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 69
-    assert len(function_templates(model)) == 155
-    assert len(port_templates(model)) == 348
+    assert len(parts(model)) == 71
+    assert len(function_templates(model)) == 157
+    assert len(port_templates(model)) == 368
     assert len(internal_links(model)) == 68
     assert len(model.tables["layout.symbol_choice"]) == 55
 

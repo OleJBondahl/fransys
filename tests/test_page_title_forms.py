@@ -5,6 +5,7 @@ One build per module: three blocks on one page, a hinted block, hinted devices, 
 designations only.
 """
 
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import fransys as fr
@@ -26,6 +27,8 @@ def _build(root: Path, *, hint: str) -> Model:
     for i in range(1, 4):
         with d.function(f"F{i}", f"Relay circuit {i}") as group:
             devices.append((group, d.device(f"K{i}", "DEMO-RLY-2CO-24")))
+    for (_, a), (_, b) in pairwise(devices):
+        d.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
     if hint == "block":
         d.layout.page_title(devices[1][0], "Hinted block")
     if hint == "devices":

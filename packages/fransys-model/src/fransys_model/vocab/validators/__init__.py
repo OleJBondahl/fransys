@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from .bars import check_bars
 from .cables import check_cables
 from .colours import check_colours
 from .connectivity import check_connectivity
@@ -33,6 +34,7 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
     check_part_conformance,
     check_part_library,
     check_connectivity,
+    check_bars,
     check_cables,
     check_colours,
     check_earth,
@@ -55,6 +57,7 @@ ALL_VALIDATORS: tuple[Callable[[Model], tuple[Finding, ...]], ...] = (
 
 __all__ = [
     "ALL_VALIDATORS",
+    "check_bars",
     "check_breaking",
     "check_cables",
     "check_colours",

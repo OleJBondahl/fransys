@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.closure import net_of, physical_nets
-from fransys_model.vocab.enums import FunctionKind
+from fransys_model.vocab.enums import FunctionKind, NetClass
 from fransys_model.vocab.facets.cable import OpenCoreFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.joins import joined_ports
@@ -92,6 +92,8 @@ class _Plant:
 def _unrealised(plant: _Plant) -> list[Finding]:
     found = []
     for net in plant.nets.values():
+        if net.net_class is NetClass.PE:
+            continue
         pieces = {net_of(plant.model, port) for port in net.ports}
         if len(pieces) > 1 and not plant.board_realised(net):
             message = f"net {_label(net)} falls into {len(pieces)} physical nets"

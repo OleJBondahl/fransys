@@ -191,6 +191,42 @@ def test_cable_pair_screen_named_twice(tmp_path):
     assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, pairs)
 
 
+def _bar_part(symbol_line="", ports=None):
+    """A bar function with `ports` (a TOML array), and `symbol_line` before it if given."""
+    ports = ports if ports is not None else _bar_ports(20)
+    return _PART_HEAD + f'[[function]]\nname = "pe"\nkind = "bar"\n{symbol_line}ports = {ports}\n'
+
+
+def _bar_ports(count):
+    """`count` PE ports named `1`..`count`, as one TOML array."""
+    return "[" + ", ".join(f'{{ name = "{n}", role = "pe" }}' for n in range(1, count + 1)) + "]"
+
+
+def test_bar_with_a_symbol_is_refused_and_the_message_names_the_fix(tmp_path):
+    root = _root(tmp_path, parts={"p.toml": _bar_part('symbol = "terminal"\n')})
+    (finding,) = [f for f in _findings(root) if f.code == "BAR_SYMBOL"]
+    assert finding.severity is Severity.ERROR
+    assert "a bar is never drawn: remove symbol" in finding.message
+    assert "BAR_SYMBOL" not in _codes(_root(tmp_path, parts={"p.toml": _bar_part()}))
+
+
+def test_bar_with_twenty_pe_ports_and_no_symbol_is_clean(tmp_path):
+    root = _root(tmp_path, parts={"p.toml": _bar_part()})
+    assert "BAR_SYMBOL" not in _codes(root)
+    assert "FUNCTION_WITHOUT_PORTS" not in _codes(root)
+    assert _codes(root) == set()
+
+
+def test_cut_to_length_bar_with_no_ports_is_not_a_function_without_ports(tmp_path):
+    root = _root(tmp_path, parts={"p.toml": _bar_part(ports="[]")})
+    assert "FUNCTION_WITHOUT_PORTS" not in _codes(root)
+
+
+def test_a_generic_function_with_no_ports_is_still_refused(tmp_path):
+    part = _PART_HEAD + '[[function]]\nname = "f1"\nkind = "generic"\nports = []\n'
+    assert "FUNCTION_WITHOUT_PORTS" in _codes(_root(tmp_path, parts={"p.toml": part}))
+
+
 _OPERATED_HEAD = _PART_HEAD.replace(
     'class_code = "X"\n', 'class_code = "X"\noperated_by = "mushroom"\n'
 )

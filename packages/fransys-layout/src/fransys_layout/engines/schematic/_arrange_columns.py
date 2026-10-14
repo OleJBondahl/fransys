@@ -29,6 +29,7 @@ from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_cha
 from fransys_layout.stages.types import Home
 from fransys_layout.stages.wired_copies import (
     emptied_groups,
+    loose_groups,
     without_groups,
     without_unwired_copies,
 )
@@ -217,6 +218,6 @@ def arranged(
     )
     columns = replicated_columns(model, inputs, drawn, all_columns)
     # layout-0214: a hint on a group whose every copy went names nothing left to draw
-    gone = emptied_groups(all_columns, columns)
+    gone = emptied_groups(all_columns, columns) | loose_groups(inputs.loose, columns)
     inputs = replace(inputs, hints=without_groups(inputs.hints, gone))
     return inputs, all_columns, columns, column_findings

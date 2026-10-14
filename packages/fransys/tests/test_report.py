@@ -11,16 +11,22 @@ def _built_with_a_document(tmp_path) -> fr.BuildResult:
     x1 = d.device("X1", "DEMO-CONN-2P")
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
-    return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, x1, cover=cover))
+    return fr.build(
+        d,
+        fr.document(
+            fr.DocumentPreset.CABINET_SCHEMATIC, x1, cover=cover, remove=(fr.PageKind.BOM,)
+        ),
+    )
 
 
 def test_a_report_gives_the_summary_each_error_and_the_notes(tmp_path):
-    info = _codes.BY_CODE["LAYOUT_MISSING"]
-    assert fr.report(_built_with_a_document(tmp_path)).splitlines() == [
+    info = _codes.BY_CODE["DOCUMENT_NO_DRAWINGS"]
+    lines = fr.report(_built_with_a_document(tmp_path)).splitlines()
+    assert [line for line in lines if not line.startswith("  at: ")] == [
         "build: 1 error, 0 warnings, 3 notes",
-        "LAYOUT_MISSING (error): the model has functions to draw but no layout.page record",
+        "DOCUMENT_NO_DRAWINGS (error): SCHEMATIC: no drawing set found",
         f"  fix: {info.fix}",
-        "  see: findings-render#layout_missing",
+        "  see: findings-pdf#document_no_drawings",
         "notes: DOCUMENT_EMPTY_LIST 3",
     ]
 

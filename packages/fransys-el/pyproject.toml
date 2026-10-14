@@ -1,12 +1,12 @@
 [project]
 name = "fransys-el"
-version = "0.18.2"
+version = "0.18.3"
 description = "Fransys electrical conventions: the values a general layout core takes as options."
 requires-python = ">=3.15"
 dependencies = [
-    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.18.2#subdirectory=packages/fransys-model",
-    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.18.2#subdirectory=packages/fransys-layout",
-    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.18.2#subdirectory=packages/electrical-symbols",
+    "fransys-model @ git+https://github.com/OleJBondahl/fransys@v0.18.3#subdirectory=packages/fransys-model",
+    "fransys-layout @ git+https://github.com/OleJBondahl/fransys@v0.18.3#subdirectory=packages/fransys-layout",
+    "electrical-symbols @ git+https://github.com/OleJBondahl/fransys@v0.18.3#subdirectory=packages/electrical-symbols",
 ]
 
 [build-system]

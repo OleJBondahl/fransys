@@ -540,7 +540,7 @@ def _check_ports(entry: _toml.Table, symbol: object, path: str, line: int) -> li
     ports = entry.get("ports")
     if type(ports) is not list:
         return []
-    if len(ports) == 0:
+    if len(ports) == 0 and entry.get("kind") != "bar":
         return [_toml.finding("FUNCTION_WITHOUT_PORTS", path, line, "function has no ports")]
     findings: list[Finding] = []
     names_seen: set[str] = set()

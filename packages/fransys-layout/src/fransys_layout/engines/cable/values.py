@@ -61,6 +61,7 @@ class EndFacts:
     blank: bool
     label_width: int
     pins: tuple[PinFacts, ...]
+    earth: bool = False
 
     @property
     def places(self) -> int:
@@ -132,6 +133,7 @@ class PlacedEnd:
     width: int
     height: int
     cells: tuple[PlacedCell, ...]
+    earth: bool = False
 
 
 @value

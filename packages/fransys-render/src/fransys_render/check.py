@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from electrical_symbols import library_version
-from fransys_model.derive import function_designation, schematic_functions
+from fransys_model.derive import function_designation, function_is_loose, schematic_functions
 from fransys_model.derive.drawing_text import location_path, position_text
 from fransys_model.kernel import Finding, SchemaError, Severity
 from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
@@ -70,8 +70,12 @@ def _library_version_mismatch_findings(
 
 
 def _layout_missing_findings(model: Model) -> tuple[Finding, ...]:
-    """One `LAYOUT_MISSING` (`ERROR`) when schematic functions exist but no `layout.page` does."""
-    if schematic_functions(model) and not layout_of(model, Page):
+    """One `LAYOUT_MISSING` (`ERROR`) when a schematic function to draw exists but no page does.
+
+    A function with nothing connected is drawn on no page (`function_is_loose`, layout-0218).
+    """
+    drawn = (f for f in schematic_functions(model) if not function_is_loose(model, f))
+    if any(drawn) and not layout_of(model, Page):
         return (
             Finding(
                 code=LAYOUT_MISSING,

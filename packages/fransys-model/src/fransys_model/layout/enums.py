@@ -116,8 +116,9 @@ class BoxKind(Enum):
 
 @register_enum
 class EndStyle(Enum):
-    """How an `EndBox` is drawn: solid, dashed (an end by others) or blank."""
+    """How an `EndBox` is drawn: solid, dashed (an end by others), blank, or earth (a bar)."""
 
     SOLID = "solid"
     DASHED = "dashed"
     BLANK = "blank"
+    EARTH = "earth"

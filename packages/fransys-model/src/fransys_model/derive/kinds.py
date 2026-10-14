@@ -6,6 +6,7 @@ already have one home and decide nothing a second time.
 
 lazy from collections.abc import Callable
 
+from fransys_model.vocab.bars import bar_items
 from fransys_model.vocab.cables import is_cable
 from fransys_model.vocab.enums import FunctionKind, SignalType
 from fransys_model.vocab.membership import is_harness, require
@@ -57,16 +58,17 @@ _TESTS: tuple[tuple[ItemKind, Callable[[Model, Item], bool]], ...] = (
     (ItemKind.STRIP, lambda model, item: item.id in strip_set(model)),
     (ItemKind.PLC_MODULE, is_plc_module),
     (ItemKind.BOARD, lambda model, item: item.part in unit_index(model).pcb_parts),
+    (ItemKind.BAR, lambda model, item: item.id in bar_items(model)),
     (ItemKind.CONNECTOR, lambda model, item: _only_connectors(model, item.id)),
 )
 
 
 def item_kind(model: Model, item: Id[Item]) -> ItemKind:
-    """What `item` is: harness, cable, terminal, strip, PLC module, board, connector or device.
+    """What `item` is: harness, cable, terminal, strip, PLC module, board, bar, connector or device.
 
     The first that holds, in that order. Each test is the one predicate that already decides it:
     `is_harness`, `is_cable`, `terminal_items`, `strip_set`, `is_plc_module`, a part with a `pcb`
-    facet, and an item whose functions are all connectors. `DEVICE` is the rest.
+    facet, `bar_items`, and an item whose functions are all connectors. `DEVICE` is the rest.
 
     Raises:
         SchemaError: `item` is not an item of `model`.

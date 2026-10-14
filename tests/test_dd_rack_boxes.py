@@ -116,11 +116,16 @@ def test_several_groups_share_one_page() -> None:
     # UNDO: fransys_layout/stages/_packing.py:pack
     #     `used + run.width > content_width` becomes `True`
     parts, d = _design()
-    c1 = d.location("C1", "Cabinet")
-    for name in ("G1", "G2", "G3"):
+    c1, wire = d.location("C1", "Cabinet"), d.wiring(colour="BU", gauge="0.5")
+    lamps = [
         d.item(
             "DEMO-LAMP-24", tag=f"P{name[-1]}", name=name.lower(), at=c1, group=d.group(name, name)
         )
+        for name in ("G1", "G2", "G3")
+    ]
+    # layout-0218: a loose lamp draws no page, so the three lamps are wired in a chain
+    wire(lamps[0].fn("lamp")["2"], lamps[1].fn("lamp")["1"])
+    wire(lamps[1].fn("lamp")["2"], lamps[2].fn("lamp")["1"])
     pages = layout_of(fr.build(parts, d.draft(), layout_trigger_document()).model, Page).values()
     assert len(pages) < 3
     assert max(len(page.groups) for page in pages) >= 2
@@ -131,11 +136,13 @@ def _plc_modules():
     parts, d = _design()
     c1, plc = d.location("C1", "Cabinet"), d.group("PLC", "PLC")
     do = d.item("DEMO-PLC-DO-2", tag="DO1", name="do", at=c1, group=plc)
-    d.item("DEMO-PLC-DI-2", tag="DI1", name="di", at=c1, group=plc)
+    di = d.item("DEMO-PLC-DI-2", tag="DI1", name="di", at=c1, group=plc)
     wire = d.wiring(colour="BU", gauge="0.5")
     for name, channel in (("k1", "do_1"), ("k2", "do_2")):
         k = d.item("DEMO-RLY-2CO-24", tag=name.upper(), name=name, at=c1, group=plc)
         wire(do.fn(channel)[channel[-1]], k.fn("coil")["A1"])
+    # layout-0218: DI1 keeps di_2 unwired; one wired channel draws the module as a box
+    wire(di.fn("di_1")["1"], k.fn("co_1")["14"])
     return fr.build(parts, d.draft(), layout_trigger_document()).model
 
 
@@ -236,7 +243,10 @@ def test_the_engines_box_keeps_two_modules_between_ports_on_one_side() -> None:
     # UNDO: electrical_symbols/generic_box.py:_pitch returns 1.0
     parts, d = _design()
     c1, grp = d.location("C1", "Cabinet"), d.group("A", "A")
-    d.item("DEMO-MOTOR-4KW", tag="M1", name="m1", at=c1, group=grp)
+    m1 = d.item("DEMO-MOTOR-4KW", tag="M1", name="m1", at=c1, group=grp)
+    # layout-0218: a relay coil on PE keeps the motor drawn; the pins keep their places
+    k1 = d.item("DEMO-RLY-2CO-24", tag="K1", name="k1", at=c1, group=grp)
+    d.wiring(colour="BU", gauge="0.5")(k1.fn("coil")["A2"], m1.fn("motor")["PE"])
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
     motor = _placed(model, "m1", "motor")
     marks = _marking_labels(model, motor, "m1")

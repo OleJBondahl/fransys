@@ -35,7 +35,7 @@ class FunctionKind(Enum):
     """What kind of `Function` an item exposes.
 
     Example: the relay `-K1` example has one `COIL` function and `CONTACT_NO`/
-    `CONTACT_CO` functions for its contacts.
+    `CONTACT_CO` functions for its contacts. A `BAR` is a conductor bar sold as one product.
     """
 
     COIL = "coil"
@@ -52,6 +52,7 @@ class FunctionKind(Enum):
     SENSOR = "sensor"
     ACTUATOR = "actuator"
     GENERIC = "generic"
+    BAR = "bar"
 
 
 @register_enum

@@ -28,6 +28,7 @@ from fransys_layout.engines.schematic.read.item_sides import pin_sides
 from fransys_layout.engines.schematic.read.labels import LabelText
 from fransys_layout.engines.schematic.read.offstubs import far_maps, off_reads
 from fransys_layout.engines.schematic.read.rails import (
+    earth_ends,
     mark_boundary_rails,
     rail_groups,
     rail_terminal_functions,
@@ -92,6 +93,7 @@ def rail_reads(
         spec for spec in specs if spec.function not in undrawn or spec.home is Home.ELSEWHERE
     )
     wires, rail_ends = rail_wires(model, reading.connections(model, indexes), specs, undrawn)
+    rail_ends = earth_ends(model, specs, wires, rail_ends)
     return specs, undrawn, wires, rail_ends
 
 

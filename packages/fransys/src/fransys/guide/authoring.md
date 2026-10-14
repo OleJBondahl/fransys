@@ -472,8 +472,8 @@ d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 
 
 ## Earth pins
 
-`d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A wired pin draws the PE
-symbol. A pin joined only by `d.earth` draws bare and warns `NET_UNREALISED`.
+`d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. Every pin joined by
+`d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row.
 
 ```python
 import fransys as fr
@@ -485,6 +485,22 @@ pe = x1.run("PE", 2, bridged=True)
 m1 = d.device("M1", "DEMO-MOTOR-4KW")
 d.wire(m1.motor["PE"], pe[1], wire=(GNYE, 2.5))
 d.earth(m1.motor["PE"], pe[1])
+```
+
+A PE bar takes its landings. Pass the bar's function where a pin goes: it takes its next free screw
+and joins it to the PE net. A bar with every screw taken raises. A bar cut to length from stock writes
+no port, so each landing makes a screw. The bar is never drawn, and each end on it draws the PE symbol.
+
+```python
+import fransys as fr
+from fransys.colours import GNYE
+
+d = fr.design("demo_parts")
+pe1 = d.device("PE1", "DEMO-PEBAR-20")
+m1 = d.device("M1", "DEMO-MOTOR-4KW")
+w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP")
+d.wire(m1.motor["PE"], pe1.pe, wire=(GNYE, 2.5))  # screw 1
+w2.core(5, pe1.pe)  # the one-ended screen, screw 2
 ```
 
 ## A named signal net

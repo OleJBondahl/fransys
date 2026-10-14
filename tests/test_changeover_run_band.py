@@ -99,7 +99,10 @@ def _parts(page: tuple[Any, Any, tuple[Any, ...]]) -> tuple[list, list, list, li
     tags = [
         one
         for one in layout.labels
-        if one.kind is LabelKind.TAG and one.subject in keys and keys[one.subject][1] == "terminal"
+        if one.kind is LabelKind.TAG
+        and one.subject in keys
+        and keys[one.subject][1] == "terminal"
+        and keys[one.subject][0] in {"X01", "X02"}  # layout-0218: X03 feeds the coil
     ]
     references = [
         (keys[one.subject][2], one)

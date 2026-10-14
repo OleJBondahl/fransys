@@ -9,7 +9,8 @@ from fransys_author.design import Design as EngineDesign
 from fransys_author.errors import AuthorError
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Group, Location
-lazy from fransys_model.kernel import Draft
+lazy from fransys_model.kernel import Draft, Id
+lazy from fransys_model.vocab import Function
 
 from ._coverage import Coverage
 from ._device import Devices
@@ -52,6 +53,7 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
         self._claimed: set[tuple[str | None, str]] = set()
         self._wiring = table(wiring, IEC)
         self._given: dict[PortId, Given] = {}  # the row a series gave each port (S4)
+        self._screws: dict[Id[Function], int] = {}  # screws taken so far on each PE bar
         self._wired_commons: set[PortId] = set()  # changeover commons a series wired (S7)
 
     def location(self, name: str, text: str, *, within: str | None = None) -> Location:

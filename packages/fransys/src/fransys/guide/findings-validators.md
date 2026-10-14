@@ -6,6 +6,7 @@ Codes the model checks, the build, `release` and `verify` and the library load e
 | --- | --- | --- | --- | --- | --- |
 | ASPECT_CROSS_PARENT | ERROR | validators | consumer | An aspect node's parent belongs to a different aspect (function, location or product). | Move the node under a parent of the same aspect, or fix its authored parent. |
 | ASPECT_CYCLE | ERROR | validators | consumer | An aspect node's parent chain loops back on itself. | Correct the parent authored on one of the looping nodes. |
+| BAR_NOT_PE | ERROR | validators | consumer | A port of a `bar` function has a role other than `pe`. A bar carries protective earth only, until the copper bar drawing (owner question) is ruled. | Set `role = "pe"` on the port in the part file. |
 | BASELINE_DIFFERS | ERROR | release, verify | consumer | A unit instance in the released subtree, or checked by `verify`, has a listing differing from its released baseline. | Release the nested unit's new revision, then the containing unit again, or find why its content changed. |
 | BOUNDARY_NOT_IN_UNIT | ERROR | validators | consumer | A unit's boundary function belongs to an item outside that unit's subtree. | Declare the boundary on a function whose item is in the unit, or fix the item's unit/parent. |
 | BOUNDARY_UNCONNECTED | ERROR | validators | consumer | A unit's boundary function is not connected across the unit nor declared unused. | Wire the boundary, or leave it open: `unused=` on `d.add` for one instance, on `d.device` for all. A unit alone in its design never fires it, nor an interface passed up from a nested unit. |
@@ -35,7 +36,7 @@ Codes the model checks, the build, `release` and `verify` and the library load e
 | MULTILINE_STRING | ERROR | library load | consumer | A part-file string contains a line break, which the contract forbids. | Use a single-line string, or TOML's escaped `\n`. |
 | NET_POTENTIAL_CONFLICT | ERROR | validators | consumer | One physical net joins two declared nets that are rails of different supply potentials. | Fix the wiring or net declarations so no net joins two potentials. |
 | NET_SHORTED | ERROR | validators | consumer | One physical net joins declared nets of different names. | Fix the wiring, or give the nets one name if they are one signal (same-name nets join silently). |
-| NET_UNREALISED | WARNING | validators | consumer | A declared net's ports fall into more than one physical net, and no single board holds them all. | Wire the missing conductors, or remove the ports that should not share the declared net. |
+| NET_UNREALISED | WARNING | validators | consumer | A declared net's ports fall into more than one physical net, and no single board holds them all. Not for the PE net. | Wire the missing conductors, or remove the ports that should not share the declared net. |
 | PART_LIBRARY_VERSION_CONFLICT | ERROR | library load | consumer | Two `PartLibrary` records share a name but declare different versions. | Load only one version of each named part library. |
 | PE_NOT_GNYE | WARNING | validators | consumer | A single wire on a PE net is not green-yellow (an empty colour is not a finding). | Colour the wire GNYE. |
 | PE_PORT_OFF_PE | WARNING | validators | consumer | A port with role PE is on a net that is not PE. Silent on a net no declared net lists. | Wire the port to the PE net. |

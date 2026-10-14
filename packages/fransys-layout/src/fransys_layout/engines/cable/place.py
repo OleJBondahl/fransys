@@ -91,11 +91,17 @@ def _origin(facts: BlockFacts, pitch: int) -> int:
     return snap_up(max((_overhang(end, pitch) for end in drawn), default=0))
 
 
-def _top_y(end: EndFacts, rise_by: int) -> tuple[int, int]:
+def _earth_room(row: tuple[EndFacts, ...]) -> int:
+    """One module more for a bar's PE symbol: it reaches 37 units past the core, the band 32."""
+    return G if any(end.earth for end in row) else 0
+
+
+def _top_y(row: tuple[EndFacts, ...], rise_by: int) -> tuple[int, int]:
     """The end box's y and the cable box's y of a top row; its links lift the box by `rise_by`."""
-    if end.blank:
+    if row[0].blank:
         return 0, STUB
-    return ROW, 3 * ROW + rise_by
+    room = _earth_room(row)
+    return ROW + room, 3 * ROW + room + rise_by
 
 
 def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> PlacedEnd:
@@ -122,6 +128,7 @@ def _place_end(end: EndFacts, x0: int, pitch: int, y: int, *, top: bool) -> Plac
         top=top,
         dashed=end.dashed,
         blank=end.blank,
+        earth=end.earth,
         x=x0,
         y=y,
         width=end.places * pitch,
@@ -155,9 +162,9 @@ def _place_rows(
     `drop` is the height between the box and a drawn bottom row: its tracks. The upper
     band grows for the top row's links.
     """
-    end_y = _top_y(facts.top[0], 0)[0] if facts.top else 0
+    end_y = _top_y(facts.top, 0)[0] if facts.top else 0
     top = _place_row(facts.top, x0, pitch, end_y, top=True)
-    box_y = _top_y(facts.top[0], lift(facts, top))[1] if facts.top else 0
+    box_y = _top_y(facts.top, lift(facts, top))[1] if facts.top else 0
     harness = facts.harness_width is not None
     if harness:
         box_y = box_top(facts, box_y)
@@ -167,7 +174,7 @@ def _place_rows(
     blank = facts.bottom[0].blank
     end_y = below + (STUB if blank else drop)
     bottom = _place_row(facts.bottom, x0, pitch, end_y, top=False)
-    return (*top, *bottom), box_y, end_y + (0 if blank else 2 * ROW)
+    return (*top, *bottom), box_y, end_y + (0 if blank else 2 * ROW + _earth_room(facts.bottom))
 
 
 def _landings(facts: BlockFacts, ends: tuple[PlacedEnd, ...], box_y: int = 0) -> list[Landing]:
@@ -296,7 +303,7 @@ def _frame(
 
 
 def _top_y_of(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> int:
-    return _top_y(facts.top[0], lift(facts, ends))[1] if facts.top else 0
+    return _top_y(facts.top, lift(facts, ends))[1] if facts.top else 0
 
 
 def _right(

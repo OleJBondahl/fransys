@@ -137,7 +137,14 @@ def _design(salt: str) -> tuple[fr.Design, Any]:  # the location handle is not a
     boards = {n: d.add(board, f"U{n}", name=f"{salt}u{n}") for n in _NS}
     link = d.cable("W9", "DEMO-CBL-4G1.5", place="C1", name=f"{salt}w9")
     link.core(1, boards[_NS[0]].J1["1"], boards[_NS[1]].J1["1"])  # the system level holds a line
-    d.device("B1", None, external=True, pins=("10", "1", "11", "2"), place="C1", name=f"{salt}box")
+    b1 = d.device(
+        "B1", None, external=True, pins=("10", "1", "11", "2"), place="C1", name=f"{salt}box"
+    )
+    # layout-0218: a box with nothing connected is drawn nowhere; a lamp across pins 1 and 2
+    # keeps B1 drawn
+    lamp = d.device("P1", "DEMO-LAMP-24", place="C1", name=f"{salt}p1")
+    d.wire(b1["1"], lamp.lamp["1"], wire=(BK, 0.5))
+    d.wire(lamp.lamp["2"], b1["2"], wire=(BK, 0.5))
     for n in _NS:
         _circuit(d, strips, n, salt)
     return d, cabinet

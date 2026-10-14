@@ -32,9 +32,9 @@ def test_each_designation_reads_its_own_kind() -> None:
 
 
 def test_every_kind_is_reached_and_a_terminal_is_a_terminal() -> None:
-    """The merged design holds all eight kinds; the strip's children are terminals."""
+    """Every kind but BAR (neither design has a bar); a strip's children are terminals."""
     kinds = _kinds()
-    assert set(kinds.values()) == set(ItemKind)
+    assert set(kinds.values()) == set(ItemKind) - {ItemKind.BAR}
     assert {k for name, k in kinds.items() if ":" in name} == {ItemKind.TERMINAL}
 
 

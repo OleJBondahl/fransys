@@ -31,6 +31,10 @@ def _relay_with_the_wrong_symbol(*, whole_item: bool) -> BuildResult:
     sup = d.group("SUP", "Supply")
     k1 = d.item("DEMO-RLY-2CO-24", tag="K1", at=c1, group=sup)
     d.symbol(k1 if whole_item else k1.fn("coil"), "psu")
+    # layout-0218: an unwired device is drawn on no page, so wire the coil to a terminal.
+    terminal = d.strip("X1", at=c1).terminal("DEMO-TB-2.5", group=sup)
+    wire = d.wiring(colour="BU", gauge="0.5")
+    wire(terminal.inner, k1.fn("coil")["A1"])
     return fr.build(parts, d.draft(), cabinet_document(c1))
 
 

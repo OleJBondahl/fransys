@@ -16,7 +16,7 @@ from fransys_layout.stages.box_views import drawn_hidden, hidden_views
 from fransys_layout.stages.boxes import port_ranks, potential_sides, power_maps
 from fransys_layout.stages.chain_boxes import chain_boxes
 from fransys_layout.stages.connector_boxes import PlacedConnectorBox
-from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt, open_ends
+from fransys_layout.stages.exempt import ExemptInputs, boundary_exempt
 from fransys_layout.stages.finish import FinishRun, finish_pages, ink_keepouts
 from fransys_layout.stages.firstlabels import labelled_pages
 from fransys_layout.stages.image_refs import replica_cells
@@ -55,11 +55,11 @@ from .read.harness_lines import box_specs
 from .read.labels import label_requests
 from .read.line_texts import marker_keepouts
 from .read.location_paths import location_paths, unit_paths
+from .read.loose import without_loose
 from .read.printed import printed_set_numbers
 from .read.tag_texts import tag_texts
 from .read.units import (
     boundary_edge_set,
-    open_end_inputs,
     unit_nesting,
 )
 from .read.write_keys import write_keys
@@ -131,6 +131,7 @@ def stage_layout(
     model: Model, inputs: StageInputs
 ) -> tuple[StageResults, LintScene, tuple[Finding, ...]]:
     """Stages 1 to 8: the results, the scene stage 9 lints, and the findings before the lint."""
+    inputs = without_loose(model, inputs)  # layout-0218: nothing connected, not drawn
     drawn, resolve_findings = resolve_with_defaults(inputs.functions, DEFAULT_RULES, inputs.choices)
     rank_of = port_ranks(inputs.functions)
     power = power_maps(inputs.power, inputs.item_north, inputs.item_south)
@@ -284,8 +285,7 @@ def stage_layout(
     )
     # layout-0158: the lint reads the lines, the boxes, and the boxed pin views that draw nothing
     ink = harness_ink(drawn_lines, placed_box, drawn_hidden(placed_all, hidden, markers))
-    edges = open_ends(inputs.functions, *open_end_inputs(model))
-    scene = LintScene(layout, columns, drawn, inputs, members, edges, ink)
+    scene = LintScene(layout, columns, drawn, inputs, members, ink)
     findings.extend(drawn_lines.findings)
     planned = {planned.column for plan in plans for planned in plan.columns}
     return (

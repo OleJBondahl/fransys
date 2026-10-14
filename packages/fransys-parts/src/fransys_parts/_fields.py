@@ -109,6 +109,8 @@ CABLE_PRODUCT_FIELDS = {
     "core_colours": _Field(list, elem_type=str),
     "gauge_mm2": _Field(str),
     "shielded": _Field(bool),
+    # CC8: inline tables `{ cores = [1, 2], screen = 5 }`; their contents are the pair lint's
+    "pairs": _Field(list, required=False, elem_type=dict),
 }
 CONNECTOR_FIELDS = {
     "style": _Field(str),

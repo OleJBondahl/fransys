@@ -23,6 +23,7 @@ from fransys_reports import (
     cables_csv,
     changes_csv,
     changes_markdown,
+    cores_csv,
     designations_csv,
     plc_csv,
     wires_csv,
@@ -113,6 +114,7 @@ _STALE_EXPORT_PATTERNS = (
     "wire*.csv",
     "designations.csv",
     "cables.csv",
+    "cores.csv",
     "terminals-*.csv",
     "connectors-*.csv",
     "wago-*.xml",
@@ -580,6 +582,7 @@ def _add_system_exports(
         "wires": ("csv", partial(wires_csv, model, unit=unit)),
         "designations": ("csv", partial(designations_csv, model, unit=unit)),
         "cables": ("csv", partial(cables_csv, model, unit=unit)),
+        "cores": ("csv", partial(cores_csv, model, unit=unit)),
     }
     if unit is None:
         made["overview"] = (
@@ -690,9 +693,9 @@ def export_names(
 ) -> dict[tuple[str, Id[Any] | None], str]:
     """The file name `write` gives each export of `result`, by `(kind, subject)`.
 
-    A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"` or `"cables"` (subject
-    `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or `"pdf"`
-    (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
+    A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"`, `"cables"` or `"cores"`
+    (subject `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or
+    `"pdf"` (the document id). `unit=` is `write`'s. Writes nothing and compiles no PDF; raises what
     `write` raises for a bad `unit` or a name two subjects share (`ExportNameClash`).
 
     Does not write a file, compile a PDF or run `check`.

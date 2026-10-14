@@ -152,9 +152,6 @@ _.builds  # TESTS fransys-model/tests/kernel/test_cache.py:40
 # exercised by fransys-author's own tests (most also named by example in the consumer
 # guide, packages/fransys/src/fransys/guide/*.md, though four -- chain, order, profile,
 # plc -- are only named there as a concept, not shown as the DSL call).
-_.location  # TESTS fransys-author/tests/test_origins.py:61
-_.scope  # TESTS fransys-author/tests/test_perf_draft.py:27
-_.boundary  # TESTS fransys-author/tests/test_errors.py:441
 _.unused  # TESTS fransys-author/tests/test_errors.py:482
 _.strip  # TESTS fransys-author/tests/test_origins.py:90
 _.cable  # TESTS fransys-author/tests/test_origins.py:109
@@ -181,6 +178,7 @@ _.run  # TESTS fransys-author/tests/test_errors.py:233
 # fransys-author's own tests (plus draw_in's own README example); not named in the guide.
 _.draw_in  # TESTS fransys-author/tests/test_design.py:813
 _.scale  # TESTS fransys-author/tests/test_origins.py:261
+_.page_title  # TESTS fransys-author/tests/surface/test_layout_page_title.py:27
 
 # surface/ (EA-CORE): the engineer surface is off `__all__` until EA-SWAP, so only its own tests
 # call device/terminal_strip and the colour constants.
@@ -279,3 +277,11 @@ _.dashed  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:68
 _.axis  # TESTS ../tests/test_overview_matrix.py:25
 _.device_designation  # TESTS fransys-model/tests/usecases/test_signal_lens.py:20
 _.status  # TESTS fransys-model/tests/derive/test_overview_marks_model.py:34
+# CABLE-CORES: drawn-mark and open-core row fields read in other packages
+_.core_a  # OTHER fransys-render/src/fransys_render/cables.py:143
+_.core_b  # OTHER fransys-render/src/fransys_render/cables.py:143
+_.tick  # OTHER fransys-pdf/src/fransys_pdf/_bridge.py:90
+_.room  # OTHER fransys-layout/src/fransys_layout/engines/cable/read/facts.py:157
+_.at_designation  # TESTS fransys-model/tests/derive/test_cable_open_core_texts.py:76
+_.shorter  # OTHER fransys-pdf/src/fransys_pdf/_sheet_index.py:36
+_.SHEET_INDEX  # OTHER fransys-pdf/src/fransys_pdf/document.py:46

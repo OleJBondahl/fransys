@@ -20,7 +20,7 @@ from _model_build_cover import layout_trigger_document
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fransys_pdf import check, source
 from fransys_pdf._drawings import replica_only_sets, schematic_pages
-from fransys_pdf._lists import _boards_for, _terminal_strips_for, bom_page
+from fransys_pdf._lists import _connector_rows_for_page, _terminal_strips_for, bom_page
 from fransys_render import cable_blocks as render_cable_blocks
 from fransys_render import pages as render_pages
 from test_units_worked_example import _PROJECT, io_board
@@ -179,14 +179,15 @@ def _unit_by_name_and_prefix(model, *, name, prefix):
 
 
 def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
-    """`fransys_pdf._lists._boards_for`/`_terminal_strips_for` (decision
+    """`fransys_pdf._lists._connector_rows_for_page`/`_terminal_strips_for` (decision
     pdf-0006), proven on the worked example's real, facade-built geometry: a unit document's
     TERMINAL_LIST/CONNECTOR_LIST cover only items whose own `Item.unit` is that unit,
     directly -- never the recursive subtree.
 
-    This is also the crash the fix closes: before it, `_boards_for` asserted the document's
-    `location` was not `None`, which a unit-subject `pcb_schematic` document -- exactly
-    `io_board`'s own worked-example shape -- violates, so `source()` raised `AssertionError`
+    This is also the crash the fix closes: before it, `_boards_for` (now
+    `_connector_rows_for_page`) asserted the document's `location` was not `None`, which a
+    unit-subject `pcb_schematic` document -- exactly `io_board`'s own worked-example shape --
+    violates, so `source()` raised `AssertionError`
     for `io_doc` below. `PageKind.SCHEMATIC` is removed from both documents so the unrelated
     missing-SVG concern of a real drawing page never masks that.
     """
@@ -239,20 +240,22 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
     # io-board unit's own board, nothing recursed in from anywhere else.
     io_text = source(model, io_doc.id, {})
     assert io_text.count("#heading(level: 2,") == _IO_BOARD_COUNT
-    assert len(_boards_for(model, records[io_doc.id])) == _IO_BOARD_COUNT
+    assert len(_connector_rows_for_page(model, records[io_doc.id])) == _IO_BOARD_COUNT
 
     # The cabinet unit's own document: its TERMINAL_LIST covers its own strip (X2), but its
     # CONNECTOR_LIST is empty -- the board belongs to the nested `demo-io-board` unit, and
     # direct membership never recurses into a nested unit's own items.
     cabinet_text = source(model, cabinet_doc.id, {})
-    # Exactly one level-2 heading (TERMINAL_LIST's own X2 section): CONNECTOR_LIST renders
-    # `None.`, no heading. A regression to the recursive subtree would pull in pump1's own
-    # nested io-board's strip too (there is none) or, worse, both cabinets' strips.
-    assert cabinet_text.count("#heading(level: 2,") == _CABINET_OWN_STRIP_COUNT
+    # Two level-2 headings: TERMINAL_LIST's own X2 section and CONNECTOR_LIST's one table, for
+    # the cabinet's own plug `-WH1-P1` (pdf-0030). A regression to the recursive subtree would
+    # pull in the nested io-board's connectors too.
+    assert cabinet_text.count("#heading(level: 2,") == _CABINET_OWN_STRIP_COUNT + 1
+    assert '#heading(level: 2, text("-WH1-P1"))' in cabinet_text
     assert "X2" in cabinet_text
     cabinet_record = records[cabinet_doc.id]
     assert len(_terminal_strips_for(model, cabinet_record)) == _CABINET_OWN_STRIP_COUNT
-    assert _boards_for(model, cabinet_record) == ()
+    (own_connector,) = _connector_rows_for_page(model, cabinet_record)
+    assert own_connector.designation == "-WH1-P1"
 
 
 def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to_end():

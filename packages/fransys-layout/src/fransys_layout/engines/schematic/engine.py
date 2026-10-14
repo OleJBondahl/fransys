@@ -58,6 +58,7 @@ from .read.printed import printed_set_numbers
 from .read.tag_texts import tag_texts
 from .read.units import (
     boundary_edge_set,
+    open_end_inputs,
     unit_nesting,
 )
 from .read.write_keys import write_keys
@@ -273,7 +274,7 @@ def stage_layout(
     )
     # layout-0158: the lint reads the lines, the boxes, and the boxed pin views that draw nothing
     ink = harness_ink(drawn_lines, placed_box, drawn_hidden(placed_all, hidden, markers))
-    edges = open_ends(inputs.functions, boundary_edge_set(model))
+    edges = open_ends(inputs.functions, *open_end_inputs(model))
     scene = LintScene(layout, columns, drawn, inputs, members, edges, ink)
     findings.extend(drawn_lines.findings)
     planned = {planned.column for plan in plans for planned in plan.columns}
@@ -311,7 +312,7 @@ def _placed(
     placement, grown, decided = place_pages(run, drawn, planned, widths, decide)
     planned_with = widths
     for _ in range(_REPLANS):
-        tall = tall_groups(placement.pages, run.inputs.sheet.content_height, run.inputs.middle)
+        tall = tall_groups(placement.pages, run.inputs.sheet.bottom, run.inputs.middle)
         # layout-0182: a column wider than the page is cut between its lanes
         cut = cut_wide(run, placement, columns, grown, decided[0])
         if grown == planned_with and not tall and cut is None:

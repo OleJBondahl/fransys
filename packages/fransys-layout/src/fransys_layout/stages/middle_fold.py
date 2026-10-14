@@ -117,7 +117,7 @@ def folded_page(
     found: tuple[Finding, ...],
 ) -> tuple[tuple[PlacedFunction, ...], tuple[GroupShape, ...], tuple[Finding, ...]]:
     """The page folded (layout-0153) with its `PAGE_OVERFULL` widened by the fold's reach."""
-    height = inputs.sheet.content_height
+    height = inputs.sheet.bottom
     folded, shapes = fold_page(placed, plan, inputs.middle, inputs.profile)
     return folded, shapes, fold_overfull(folded, shapes, height, found)
 

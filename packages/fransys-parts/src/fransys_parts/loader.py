@@ -12,6 +12,7 @@ from pathlib import Path
 from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, Severity, make_id
 from fransys_model.vocab import (
     CableProductFacet,
+    CorePair,
     FootprintFacet,
     Part,
     PartCategory,
@@ -163,6 +164,10 @@ def _build_part_file(draft: Draft, parsed: _toml.ParsedFile, library_id: Id[Part
                 core_colours=tuple(cable_product["core_colours"]),
                 gauge_mm2=Decimal(cable_product["gauge_mm2"]),
                 shielded=cable_product["shielded"],
+                pairs=tuple(
+                    CorePair(cores=tuple(pair["cores"]), screen=pair.get("screen"))
+                    for pair in cable_product.get("pairs", ())
+                ),
             ),
             origin=origin,
         )

@@ -9,7 +9,18 @@ from fransys_layout.geometry import Box
 if TYPE_CHECKING:
     from fransys_layout.stages.types import SheetFormat
 
-SHEET = cast("SheetFormat", SimpleNamespace(content_width=400, content_height=400))  # all it reads
+SHEET = cast(
+    "SheetFormat",
+    SimpleNamespace(
+        content_width=400,
+        content_height=400,
+        right=400,
+        bottom=400,
+        inset=0,
+        inner_width=400,
+        inner_height=400,
+    ),
+)  # all it reads
 
 
 def test_a_box_over_the_left_edge_slides_right_and_one_inside_stays() -> None:

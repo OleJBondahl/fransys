@@ -7,7 +7,7 @@ lazy from collections.abc import Mapping, Sequence
 
 from fransys_layout.engines.diagram.labels import label_at
 from fransys_layout.engines.diagram.route import tidy
-from fransys_layout.engines.diagram.sizes import PAGE_PAD, TRACK_PITCH, tab_reach
+from fransys_layout.engines.diagram.sizes import TRACK_PITCH, tab_reach
 from fransys_layout.engines.diagram.values import (
     PlacedBox,
     PlacedLine,
@@ -15,7 +15,7 @@ from fransys_layout.engines.diagram.values import (
     PlacedTab,
     PlacedText,
 )
-from fransys_layout.geometry import Box, Facing, Point
+from fransys_layout.geometry import PAGE_PAD, Box, Facing, Point
 from fransys_layout.stages.corridor import LONG
 lazy from fransys_layout.engines.overview.lanes.channels import Channel
 

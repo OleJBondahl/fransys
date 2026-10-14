@@ -27,6 +27,8 @@ from fransys_model.vocab.enums import FunctionKind, Gender, SignalType
 from fransys_model.vocab.ratings import Operating, Rating
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
+from .rows_cores import OpenCoreRow
+
 
 @value
 class TerminalRow:
@@ -35,7 +37,8 @@ class TerminalRow:
     An unused terminal has empty `internal`/`external` tuples; bridged terminals share one
     `jumper_group` number. `internal_ends` and `external_ends`
     are the rendered far-end port designations of those conductors, aligned index for index
-    with `internal` and `external`: `internal_ends[i]` is where `internal[i]` goes. Given a
+    with `internal` and `external`: `internal_ends[i]` is where `internal[i]` goes. After those come
+    the open cores landing there (`-W1 GY spare`), which have no conductor. Given a
     `context` location, `terminal_rows` prints an end outside it with its location path in
     front (`+EXT-M1:U1`) and one inside it short (`-B12:2/T1`).
     """
@@ -238,6 +241,7 @@ class ConnectorPin:
     `marking` is the port's name. `net` is the name of the declared net that lists the port,
     named as `board_netlist` names its nets; `None` when no declared net lists it. The mate's
     pin is the port of equal name on the mated function (a `Mate` carries no pin map).
+    `ends` are the far ends of every conductor on the pin or its mate, as `far_ends` prints them.
     """
 
     port: Id[Port]
@@ -245,6 +249,7 @@ class ConnectorPin:
     net: str | None
     mate_port: Id[Port] | None
     mate_port_designation: str | None
+    ends: tuple[str, ...]
 
 
 @value
@@ -342,7 +347,8 @@ class HarnessCable:
     `mpn` and `description` are the cable `Part`'s; `core_count`, `gauge_mm2` and `shielded` are
     its `cable_product` facet; `length_mm` is the item's `cable` facet. Each is `None` where the
     part or the facet is absent. `designation` is the cable's `printed_designation` (`"-W1"`),
-    the text the drawing's cable node title prints.
+    the text the drawing's cable node title prints. `open_cores` are the cable's spares and
+    one-ended screens (`open_core_rows`), which have no conductor and so are not in `cores`.
     """
 
     cable: Id[Item]
@@ -355,6 +361,7 @@ class HarnessCable:
     length_mm: int | None
     cores: tuple[HarnessCore, ...]
     ends: tuple[HarnessEnd, ...]
+    open_cores: tuple[OpenCoreRow, ...] = ()
 
 
 @value
@@ -380,11 +387,12 @@ class CableListRow(_CableFacts):
     so a cable authored either way round reads the same way round. `from_label` is the first end's
     `HarnessEnd.designation`, the text the drawing prints. `to_label` lists every other end's
     designation in that order, joined by `", "`. With one end `to_label` is `""`, with none
-    both are.
+    both are. `pairs` is the number of twisted pairs of the product, `None` for a product with none.
     """
 
     from_label: str
     to_label: str
+    pairs: int | None = None
 
 
 @value

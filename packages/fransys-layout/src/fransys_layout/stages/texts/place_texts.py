@@ -106,7 +106,7 @@ def place_texts(
         # the texts of one handle stand along one stub: theirs cross each other's boxes
         crossing = [*blockers, *(box for handle, box in stubs if handle != text.handle)]
         foreign = [one.box for one in placed if one.handle != text.handle]
-        others = [_run(shape.box) for shape in lanes if shape.owner not in text.own]
+        others = [_run(shape.box) for shape in lanes]
         options = _options(text, table)
         fitting = (
             (i, place)

@@ -16,6 +16,10 @@ page; there is no separate `notes` parameter, and a missing notes file is not an
 means no notes page. `logo` is an optional path to an SVG for the title block's logo cell,
 read the same way; leaving it out (the default) leaves that cell empty.
 
+Every preset also takes `PageKind.SHEET_INDEX`, a "Sheets" page after the notes that lists each
+sheet (`3`, `2.3`, block diagram sheets `B1`, `B2`) with its title and PDF page. It prints from two
+sheets; `remove=(fr.PageKind.SHEET_INDEX,)` drops it.
+
 ```python
 from pathlib import Path
 from typing import NamedTuple
@@ -84,7 +88,9 @@ class Io(NamedTuple):
 
 @fr.unit("demo-io-board", revision=1, interface_version=1, date="2026-02-02", text="First", by="XX")
 def board(u):
-    return Io(u.device("X1", "DEMO-CONN-2P", interface=True))
+    x1 = u.device("X1", "DEMO-CONN-2P", interface=True)
+    u.wire(x1["1"], u.device("H1", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
+    return Io(x1)
 
 
 d2 = fr.design("demo_parts")
@@ -100,6 +106,8 @@ The PDF is named after the unit and its release, `demo-io-board-v1.1.pdf`.
 ## List pages
 
 The terminal, PLC, connector, wire-label and designation lists flow in two columns. The cable list and the BOM take the full width. A row never splits. A table that reaches a column foot continues in the next column or page under its heading with " (cont.)". A split leaves at least two rows on each side, else the table moves whole. A long token breaks only at a hyphen or a slash. The cover's revision table stands one padding above the title block.
+
+The connector list prints one table per connector, headed by its designation and the item's description, with a row per pin: Pin, Net, Mate and Ends. The `CABINET_SCHEMATIC` preset carries it. A pin no wire inside the unit reaches is not drawn on the unit's own pages, and its row in the connector table is where it shows. A cabinet document with no connector reports an INFO `DOCUMENT_EMPTY_LIST`, as it does for terminals.
 
 ## Cable drawings
 
@@ -171,13 +179,21 @@ drawing.** Places only split drawing sets at the top level, outside any unit.
 Concretely: naming the unit's release (as `"demo-io-board"` above) draws that unit's one
 schematic. Naming a device that sits inside a unit (`X1`, not the unit) matches no
 drawing set at all, because the layout that device belongs to is attributed to the
-unit, not to the bare device. `check` reports `DOCUMENT_NO_DRAWINGS` (an `ERROR`), and `write`
-turns any `ERROR` into `fr.BuildErrors` with no export written.
+unit, not to the bare device. A schematic with nothing to draw adds no page and no finding while
+the document has another content page (a list with rows, a harness drawing, a block diagram).
+With none, `check` reports `DOCUMENT_NO_DRAWINGS` (an `ERROR`), and `write`
+turns any `ERROR` into `fr.BuildErrors` with no export written. The harness and diagram messages
+of `DOCUMENT_NO_DRAWINGS` stay `ERROR`s whatever else the document holds.
 
 ```python
 d3 = fr.design("demo_parts")
 io = d3.add(board, "U1")
-inner_document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, io.X1, cover=cover)
+inner_document = fr.document(
+    fr.DocumentPreset.CABINET_SCHEMATIC,
+    io.X1,
+    cover=cover,
+    remove=(fr.PageKind.PLC_LIST, fr.PageKind.TERMINAL_LIST, fr.PageKind.BOM),
+)
 inner_result = fr.build(d3, inner_document)
 inner_findings = fr.check(inner_result)
 assert "DOCUMENT_NO_DRAWINGS" in {f.code for f in inner_findings}

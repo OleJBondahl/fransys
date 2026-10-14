@@ -21,7 +21,7 @@ from .export_names import document_export_name
 from .page_destination import page_destination, set_rank
 from .printed_sets import document_drawing_sets
 
-__all__ = ["ItemPage", "is_replica_only_undrawn", "item_pages"]
+__all__ = ["ItemPage", "drawn_pages", "is_replica_only_undrawn", "item_pages"]
 
 
 def is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
@@ -62,7 +62,7 @@ class ItemPage:
     text: str
 
 
-def _pages_of(model: Model, record: Document) -> tuple[Page, ...]:
+def drawn_pages(model: Model, record: Document) -> tuple[Page, ...]:
     """`record`'s drawn pages in set then page order, replica-only sets skipped."""
     sets = document_drawing_sets(model, record)
     sets = [s for s in sets if not is_replica_only_undrawn(model, s)]
@@ -84,7 +84,7 @@ def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:
     funcs = functions(model)
     for record in documents(model).values():
         name = document_export_name(model, None, record)
-        for page in _pages_of(model, record):
+        for page in drawn_pages(model, record):
             destination = page_destination(model, page)
             for placement in sorted(by_page[page.id], key=lambda p: (p.y, p.x)):
                 column, row = cell(model, page, placement.x, placement.y)

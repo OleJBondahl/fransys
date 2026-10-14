@@ -7,6 +7,7 @@ lazy from decimal import Decimal
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Item
 from fransys_author.surface._links import engine_handle
+from fransys_author.surface._page_title import hint_page_title
 from fransys_author.surface._side import hint_side
 from fransys_model.vocab import FunctionKind
 lazy from fransys_author.design import Design as EngineDesign
@@ -34,9 +35,9 @@ class Layout:
     def chain(self, *functions: Fn | Device | Terminal, beside: Fn | Device | None = None) -> None:
         """Advise one drawn current path through the functions, source first.
 
-        `beside` names a host function whose two nets the chain's ends sit on: the chain is
-        drawn next to the host, joined to it by short horizontals. Wire first: it raises
-        `AuthorError` when the chain's end nets are not two nets of the host.
+        `beside` names a host function: the chain is drawn next to it, joined by short
+        horizontals at each end net it shares with the host, one or two. Wire first: it raises
+        `AuthorError` when no end net is a net of the host.
         Does not connect anything: it only advises the layout engine.
         """
         handles = [engine_handle(f, "d.layout.chain", terminal=True) for f in functions]
@@ -97,6 +98,14 @@ class Layout:
         the unit's interface, as `u1.bus_in`; an interface with no harness line ignores it.
         """
         hint_side(self._engine, target, side)
+
+    def page_title(self, thing: Group | Fn | Device | TerminalStrip, text: str) -> None:
+        """Advise the title of every drawing page that draws a block, a function or a device.
+
+        Does not draw anything itself: the page prints this text before its blocks' texts. A
+        thing takes one title; an empty text raises `AuthorError`.
+        """
+        hint_page_title(self._engine, thing, text)
 
     def sheet(self, name: str, **numbers: int | Decimal) -> Id[SheetFormat]:
         """Advise a sheet format by name and numbers; returns its handle for `profile`.

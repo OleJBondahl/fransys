@@ -8,9 +8,11 @@ Each constant is a tuple or a dict of field names. The list outputs read them in
 
 - `BOM_COLUMNS` is `('mpn', 'revision', 'manufacturer', 'description', 'count', 'designations')`. It orders the columns of the bill of materials list.
 - `CABLE_LIST_COLUMNS` is `('designation', 'mpn', 'description', 'core_count', 'gauge_mm2', 'length_mm', 'from_label', 'to_label')`. It orders the columns of the cable list. The two `*_label` columns are the far-end texts of the cable.
+- `CORE_LIST_COLUMNS` is `('cable', 'core', 'colour', 'pair', 'end_a', 'end_b', 'note')`. It orders the columns of the core list. `pair` is the core's pair word, `note` is `spare` for a spare core.
 - `DESIGNATION_COLUMNS` is `('designation', 'reference', 'description')`. It orders the columns of the designation list: the printed designation, the full reference and the description.
 - `CONNECTOR_COLUMNS` is `('designation', 'style', 'pincount', 'gender', 'mate_designation')`. It orders the connector part of the connector list. Each pin line repeats these fields.
-- `PIN_COLUMNS` is `('marking', 'net', 'mate_port_designation')`. It orders the pin part of the connector list, after `CONNECTOR_COLUMNS`. One line per pin.
+- `PIN_COLUMNS` is `('marking', 'net', 'mate_port_designation', 'ends')`. It orders the pin part of the connector list, after `CONNECTOR_COLUMNS`. One line per pin.
+- `CONNECTOR_LABELS` is `{'marking': 'Pin', 'mate_port_designation': 'Mate'}`. It gives the headings of those two columns in the connector table of a PDF.
 - `PLC_COLUMNS` is `('channel_designation', 'signal', 'wired_to', 'signal_name')`. It orders the PLC channel list. The field device is not printed in this list, although the row carries it.
 - `TERMINAL_COLUMNS` is `('designation', 'group', 'index', 'internal_ends', 'external_ends', 'jumper_group')`. It orders the terminal list of a strip.
 - `TERMINAL_LABELS` is `{'internal_ends': 'Side A', 'external_ends': 'Side B'}`. It gives the headings of the two far-end columns of a terminal list. The CSV file writes them in snake case, as `side_a` and `side_b`.
@@ -24,7 +26,7 @@ Every row is a frozen record. A row is the one shape an output reads, so the lay
 
 - `CableRow` is one core of one cable, both ends. Fields: `cable`, `cable_designation`, `index`, `colour`, `conductor`, `end_a`, `end_a_designation`, `end_b`, `end_b_designation`. The ends are ports; the designations are their printed text.
 - `ChannelScaling` is the scaling of a field device, projected so a formatter never looks it up. Fields: `unit`, `raw_min`, `raw_max` (integers), and `eng_min`, `eng_max` (decimals).
-- `ConnectorPin` is one pin of a board connector. Fields: `port`, `marking`, `net`, `mate_port`, `mate_port_designation`. The `marking` is the port's name. The `net` is the declared net that lists the port, or `None` when none does. The mate's pin is the port of the same name on the mated function.
+- `ConnectorPin` is one pin of a board connector. Fields: `port`, `marking`, `net`, `mate_port`, `mate_port_designation`, `ends`. The `marking` is the port's name. The `net` is the declared net that lists the port, or `None` when none does. The mate's pin is the port of the same name on the mated function. The `ends` are the far ends of every conductor on the pin or on its mate, as a terminal row prints them; empty when there is none.
 - `ConnectorRow` is one connector of a board, as `connector_rows` lists it. Fields: `connector`, `designation`, `style`, `pincount`, `gender`, `mate`, `mate_designation`, `pins`. The `gender` is `None` when the part file states none. The `mate` is `None` when the connector is unmated. The `pins` is a tuple of `ConnectorPin`.
 - `DesignationRow` is one line of the designation list. Fields: `item`, `designation`, `reference`, `description`. The `designation` is the printed designation, and `reference` is the reference designation.
 - `HarnessCore` is one core of a harness cable, with the label its wire carries. Fields: `conductor`, `index`, `colour`, `label`, `end_a`, `end_a_designation`, `end_b`, `end_b_designation`. The `label` is `None` when the wire has none. Every core of one cable runs from the same physical end to the same other end.
@@ -49,6 +51,8 @@ Each function takes a frozen model and returns rows. None of them writes a file 
 - `board_netlist` takes a model and a board item. It returns the `BoardNetlist` of that board. Its parts are the footprinted descendants of the board. Its nets join the board's internal conductors and its declared nets, never `Mate`s. It raises a schema error when the board is not an item of the model, or when it or a listed item has no designation. Use it to check a board's connectivity yourself; the KiCad export builds the same netlist.
 - `plc_channel_rows` returns one `PlcChannelRow` per PLC channel function, sorted by channel designation, then id. Its `unit` keyword keeps one unit's channels. Its `context` keyword sets the location the list prints for, and it has no effect once `unit` is given.
 - `plc_tables` returns the rows of `plc_channel_rows`, grouped into one `PlcTable` per carrying item, in the same order. A controller's own channels form its table, the modules' tables follow in rack order, and items in no rack come last, one table each. An item with no channel has no table. Its `unit` and `context` keywords are those of `plc_channel_rows`. Use it when you print one table per controller or module, as the PLC list does.
+- `signal_word` returns the word a printed list uses for a `SignalType`: `DI`, `DO`, `AI (V)`, `AI (mA)`, `AO (V)`, `AO (mA)`, `RTD` or `DO (relay)`. The CSV keeps the enum value.
+- `plc_list_rows` takes `PlcChannelRow`s and returns one `PLC_COLUMNS` tuple per row for a printed list. The signal is its `signal_word`. A channel with no device and no wire prints `spare` as its signal name.
 - `terminal_rows` returns one `TerminalRow` per terminal of a strip. Terminals sort by the natural key of their group, then by index, then by id. A far end outside the given `context` prints with its location path in front, such as `+EXT-M1:U1`. A far end inside it prints short, such as `-B12:2/T1`.
 
 ## Printed texts and order keys

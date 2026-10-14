@@ -114,11 +114,14 @@ def test_a_join_leaves_a_multi_pole_host_pin_before_it_turns_to_the_branch() -> 
     """K1's other poles end on the pin's row: a level join would run through their pin ends."""
     result, _ = _build()
     points = _points(result, "R1/2:fn/4:lamp/4:port/1:1", "K1")
-    host, corner, branch = points if points[0][1] != points[1][1] else points[::-1]
-    assert len(points) == 3
-    assert host[0] == corner[0], "it leaves the pin along the pin's own direction"
-    assert abs(corner[1] - host[1]) >= _GRID, "by at least one grid"
-    assert corner[1] == branch[1], "then runs level to the branch pin"
+    host, first, second, branch = points if points[0][0] == points[1][0] else points[::-1]
+    assert len(points) == 4
+    assert host[0] == first[0], "it leaves the pin along the pin's own direction"
+    assert abs(first[1] - host[1]) >= _GRID, "by at least one grid"
+    assert first[1] == second[1], "then runs level"
+    assert second[0] == branch[0], (
+        "and enters the branch's box pin square to its edge (JOIN-VERTICAL)"
+    )
 
 
 def test_no_beside_join_runs_through_a_symbol_or_a_label() -> None:

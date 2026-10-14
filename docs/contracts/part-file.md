@@ -139,6 +139,12 @@ At most one per file. Maps to the model's `cable_product` facet (subject: `Part`
 | `core_colours` | array of strings | One entry per core, in core index order, e.g. `["BN", "BK", "GY", "GNYE"]`. Each is an IEC 60757 colour code: a base code, two base codes joined (`GNYE`), a base code with a number (`BK1`), or `SH` for a shield (model-0070); anything else is an ERROR |
 | `gauge_mm2` | string | Cross-section in mm², read as `Decimal` |
 | `shielded` | boolean | |
+| `pairs` | array of tables, optional | One `{ cores = [a, b], screen = n }` per twisted pair: two core numbers, and its `SH` core if it has one. The drawing labels the pairs P1, P2 (CC8) |
+
+`CABLE_PAIR_INVALID` (ERROR) refuses a core out of range or in two pairs. It also refuses a pair core that is `SH`, and a screen that is not `SH` or is named twice.
+| `pairs` | array of tables, optional | One `{ cores = [a, b], screen = n }` per twisted pair: two core numbers, and its `SH` core if it has one. The drawing labels the pairs P1, P2 (CC8) |
+
+`CABLE_PAIR_INVALID` (ERROR) refuses a core out of range or in two pairs. It also refuses a pair core that is `SH`, and a screen that is not `SH` or is named twice.
 
 ### `[function.protection]`
 

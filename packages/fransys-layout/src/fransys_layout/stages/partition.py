@@ -14,6 +14,7 @@ from fransys_layout.geometry import WIRING_GRID, HintError, LayoutError
 from fransys_model.kernel import AuthoringKey, Finding, Severity
 
 from ._gather import Bands, gather
+from ._hint_refusal import refusal_message
 from ._ordering import Tables, base_order, buckets, column_order, membership, reorder
 from ._packing import merge, pack, placements
 from .place import _without_tag
@@ -33,7 +34,15 @@ if TYPE_CHECKING:
 
     from ._ordering import Bucket
     from ._packing import Placement, Unit
-    from .types import Column, DrawnFunction, Handle, PageHints, Profile, SheetFormat
+    from .types import (
+        Column,
+        DrawnFunction,
+        FunctionSpec,
+        Handle,
+        PageHints,
+        Profile,
+        SheetFormat,
+    )
 
 GROUP_SPLIT = "GROUP_SPLIT"
 UNIT_GROUP_SPLIT = "UNIT_GROUP_SPLIT"
@@ -96,6 +105,7 @@ class ColumnTables:
     units: tuple[UnitInfo, ...]
     pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...] = ()
     bands: Bands = field(default_factory=Bands)
+    functions: tuple[FunctionSpec, ...] = ()  # layout-0195: names the loop in a hint refusal
 
 
 def partition(
@@ -118,7 +128,7 @@ def partition(
     )
     ordered = tuple(sorted(columns, key=column_order))
     _check_inputs(ordered, given, tables)
-    _check_hints(hints, ordered)
+    _check_hints(hints, ordered, given)
     found = buckets(ordered, tables)
     findings = list(_order_hint_findings(hints, membership(found)))
     pages: list[PagePlan] = []
@@ -139,11 +149,11 @@ def partition(
             # layout-0153: each unit group one unit, before keep-together sets take it whole
             gather(reorder(ranked, hints.order), given.bands, tables.width_of),
             hints.keep_together,
-            sheet.content_width,
+            sheet.inner_width,
         )
         met |= bucket_met
-        runs, split = placements(packed, tables.width_of, sheet.content_width, given.pole_links)
-        for page in pack(runs, sheet.content_width):
+        runs, split = placements(packed, tables.width_of, sheet.inner_width, given.pole_links)
+        for page in pack(runs, sheet.inner_width):
             pages.append(_page(bucket, number, page, tables))
             number += 1
         findings.extend(_split_findings(split, given.bands, tables))
@@ -184,7 +194,7 @@ def _refuse_duplicates(table: str, subjects: Sequence[Hashable]) -> None:
         raise LayoutError(msg)
 
 
-def _check_hints(hints: PageHints, columns: tuple[Column, ...]) -> None:
+def _check_hints(hints: PageHints, columns: tuple[Column, ...], given: ColumnTables) -> None:
     """`LayoutError` on an empty keep-together set, `HintError` on a hint with no column (5.4)."""
     if any(not together.groups for together in hints.keep_together):
         msg = "a keep-together set names no group"
@@ -198,7 +208,8 @@ def _check_hints(hints: PageHints, columns: tuple[Column, ...]) -> None:
     }
     missing = sorted(named - placed)
     if missing:
-        msg = "a page hint names a group with no column"
+        infos = {info.group: info for info in given.groups}
+        msg = refusal_message(missing[0], columns, given.functions, infos)
         raise HintError(msg, subjects=tuple(missing))
 
 

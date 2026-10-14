@@ -83,6 +83,10 @@ def _build_boundary_pair(*, parent: str | None):
     group_a, group_b = ua.group("GA", "Group A"), ub.group("GB", "Group B")
     ja = ua.item("DEMO-CONN-2P", name="ja", tag="X1", at=at, group=group_a)
     jb = ub.item("DEMO-CONN-2P", name="jb", tag="X2", at=at, group=group_b)
+    if parent is not None:  # a wire inside each unit: the pin it reaches gives the unit its own set
+        for unit, joint, group, tag in ((ua, ja, group_a, "H1"), (ub, jb, group_b, "H2")):
+            lamp = unit.item("DEMO-LAMP-24", name="lamp", tag=tag, at=at, group=group)
+            unit.wiring(colour="BU", gauge="0.5")(joint["2"], lamp["1"])
     ua.boundary(ja)
     ub.boundary(jb)
     scope.wiring(colour="BU", gauge="0.5")(ja["1"], jb["1"])

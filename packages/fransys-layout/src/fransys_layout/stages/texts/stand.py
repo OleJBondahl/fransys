@@ -206,7 +206,11 @@ RUN_PIN_GAP = 3 * WIRING_GRID
 
 
 def run_box(
-    first: Box, ends: tuple[Point, Point], content_width: int, text: str, profile: Profile
+    first: Box,
+    ends: tuple[Point, Point],
+    content_width: int,
+    text: str,
+    profile: Profile,
 ) -> tuple[Box, int | None]:
     """A run's one box over its pins, and where its text breaks."""
     pad, height = 2 * profile.marker_padding, profile.text_height

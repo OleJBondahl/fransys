@@ -38,6 +38,9 @@ def snap_up(coord: Coord, *, grid: int = WIRING_GRID) -> Coord:
     return -(-coord // grid) * grid
 
 
+PAGE_PAD = 2 * WIRING_GRID  # clear space between the frame line and a page's ink (layout-0187)
+
+
 def on_wiring_grid(point: Point) -> bool:
     """Whether both coordinates of `point` are multiples of `WIRING_GRID`."""
     return point.x % WIRING_GRID == 0 and point.y % WIRING_GRID == 0

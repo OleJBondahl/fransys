@@ -10,14 +10,13 @@ lazy from collections.abc import Mapping
 
 from fransys_layout.engines.diagram.frame_values import FrameEnd
 from fransys_layout.engines.diagram.sizes import (
-    PAGE_PAD,
     ROW_GAP,
     TEXT_LEAD,
     TEXT_PAD,
     G,
     attach_pitch,
 )
-from fransys_layout.geometry import Facing, snap_up
+from fransys_layout.geometry import PAGE_PAD, Facing, snap_up
 lazy from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, Ident
 
 

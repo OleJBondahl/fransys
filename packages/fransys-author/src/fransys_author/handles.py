@@ -16,6 +16,7 @@ from fransys_model.vocab import (
     CoreFacet,
     Function,
     FunctionKind,
+    OpenCoreFacet,
     Placement,
     PlcRequestFacet,
     PortRole,
@@ -442,6 +443,29 @@ class Cable:
             index=index,
         )
         self._recorder._add(facet, origin)
+
+    def open_core(self, index: int, at: Port | None = None) -> None:
+        """Core `index` of this cable with one end or none: a spare, or a screen earthed at `at`.
+
+        Args:
+            index: The 1-based core number.
+            at: The port the one end lands on, or `None` for a core that lands nowhere.
+
+        Raises:
+            AuthorError: `index` is not one of this cable's cores.
+        """
+        if not 1 <= index <= len(self._core_colours):
+            msg = f"core {index} is out of range: this cable has {len(self._core_colours)} core(s)"
+            raise AuthorError(msg)
+        key = scoped(self.key, "open_core", str(index))
+        facet = OpenCoreFacet(
+            id=make_id(OpenCoreFacet, key),
+            key=key,
+            subject=self.id,
+            index=index,
+            at=None if at is None else as_port(at).id,
+        )
+        self._recorder._add(facet, caller_origin())
 
 
 def _write_group_hint(recorder: _Recorder, function: Fn, group: Group, origin: Origin) -> None:

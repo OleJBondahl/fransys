@@ -55,6 +55,9 @@ class OutlineInputs:
     middle: frozenset[tuple[Handle, int, int]] = frozenset()
     # layout-0160: a unit's black box in a set above it, `derive.black_box_unit`, read once
     black_box: Mapping[tuple[Handle, Handle | None], Handle] = field(default_factory=dict)
+    inset: int = (
+        0  # layout-0187: the gap kept inside the frame line; no outline or title crosses it
+    )
 
 
 def _column_ends(
@@ -161,15 +164,16 @@ def _frame(
     texts: Sequence[Box],
     *,
     top_end: bool,
+    floor: int = 0,
 ) -> tuple[Box, bool]:
     """One run's outline rectangle and whether it is a top-end box; a plug stays out."""
     margin = WIRING_GRID // 2
     bodies = [translate(m.geometry.body, dx=m.at.x, dy=m.at.y) for m in members]
     mating = [b for m, b in zip(members, bodies, strict=True) if (m.function, m.column) in faces]
     boxes = [*bodies, *texts]
-    # Never left of the content box, so neither the frame nor its title leaves it
+    # Never left of the content box (layout-0187: inset), so neither frame nor title leaves it
     whole = hull(boxes)
-    left = max(whole.x - margin, 0)
+    left = max(whole.x - margin, floor)
     right = whole.x + whole.width + margin
     top_end = top_end and bool(mating)
     if top_end:
@@ -262,15 +266,17 @@ def _run_frame(
     if run.boxes:  # layout-0155: a member pin's connector box stands inside too
         owners = {(m.drawing_set, m.page, run.spec_of[m.function].pin_function) for m in members}
         texts += [run.boxes[owner] for owner in owners if owner in run.boxes]
-    return _frame(members, run.faces, texts, top_end=top_end)
+    return _frame(members, run.faces, texts, top_end=top_end, floor=run.inputs.inset)
 
 
-def _title_box(box: Box, text: str, taken: Sequence[Box], *, drawn_top: bool, height: int) -> Box:
+def _title_box(
+    box: Box, size: tuple[int, int], taken: Sequence[Box], *, drawn_top: bool, inset: int
+) -> Box:
     """Where a unit's title goes: above or below its frame, whichever is free (layout-0104)."""
     margin = WIRING_GRID // 2
-    width = text_width(text, height=height)
+    width, height = size
     # layout-0104: a title left of the content box's text gap moves right to it
-    at_x = max(box.x, TEXT_GAP)
+    at_x = max(box.x, inset + TEXT_GAP)
     above = Box(x=at_x, y=box.y - margin - height, width=width, height=height)
     below = Box(x=at_x, y=box.y + box.height + margin, width=width, height=height)
     # drawn_top, the mirror: below-left when free, else above-left (the top room holds it)
@@ -279,7 +285,7 @@ def _title_box(box: Box, text: str, taken: Sequence[Box], *, drawn_top: bool, he
         first_clear(
             order,
             box_of=lambda one: one,
-            blocked=lambda one: not is_clear(one, taken) or (not drawn_top and one.y < 0),
+            blocked=lambda one: not is_clear(one, taken) or (not drawn_top and one.y < inset),
         )
         or order[1]
     )
@@ -316,7 +322,8 @@ def _page_outlines(
     ):
         box, drawn_top = _run_frame(members, first, page_markers, run, top_end=top_end)
         lead = min(members, key=lambda m: (m.at.x, m.at.y)).function
-        title = _title_box(box, run.inputs.title(unit), taken, drawn_top=drawn_top, height=height)
+        size = (text_width(run.inputs.title(unit), height=height), height)
+        title = _title_box(box, size, taken, drawn_top=drawn_top, inset=run.inputs.inset)
         taken.append(title)
         titles.append(
             PlacedLabel(

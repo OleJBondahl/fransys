@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from fransys_layout.stages import pagerun
 from fransys_model import derive
+from fransys_model.derive import box_lines
 from fransys_model.layout import ConnectorBox, HarnessLine, Route, layout_of
 
 if TYPE_CHECKING:
@@ -97,6 +98,9 @@ def test_no_wire_runs_along_three_sides_of_one_box() -> None:
 def test_a_router_called_with_no_wrap_gap_keeps_the_framing_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # The wrap came from the box heights of the day; the pin lines of model-0206 change them,
+    # so the case is pinned to boxes without pin lines.
+    monkeypatch.setattr(box_lines, "_pin_lines", lambda *_: ())
     real = pagerun.PageRoom
     monkeypatch.setattr(pagerun, "PageRoom", lambda **room: replace(real(**room), wrap_gap=None))
     assert _wrapping(build(plc_above=True)) != []

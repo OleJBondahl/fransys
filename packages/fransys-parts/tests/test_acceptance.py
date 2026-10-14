@@ -148,14 +148,16 @@ def test_demo_library_record_counts_and_keys():
     adds `contactor-leads.toml` (2 functions/4 ports/2 symbol choices, 1 link),
     adds `switch-8p.toml` (9 functions/10 ports, no link or symbol choice),
     adds `ctrl-20p.toml` (21 functions/22 ports, no link or symbol choice),
-    so 55 parts, 138 templates, 293 ports, 46 links, 48 symbol choices)."""
+    adds `cable-2x2x0_75-sp.toml` (a cable with no function or port),
+    adds `plc-dio-1-1.toml` (2 functions/2 ports, no link or symbol choice),
+    so 57 parts, 140 templates, 295 ports, 46 links, 48 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 55
-    assert len(function_templates(model)) == 138
-    assert len(port_templates(model)) == 293
+    assert len(parts(model)) == 57
+    assert len(function_templates(model)) == 140
+    assert len(port_templates(model)) == 295
     assert len(internal_links(model)) == 46
     assert len(model.tables["layout.symbol_choice"]) == 48
 
@@ -355,15 +357,37 @@ def test_load_reads_an_installed_data_package():
     assert fransys_parts.load("demo_parts").records() == fransys_parts.load_path(DEMO).records()
 
 
-def test_a_loaded_cable_product_carries_its_colours_and_no_core_count():
-    """The part file's `core_count` is the author's checksum; the facet holds no count."""
+def _cable_product(mpn):
+    from fransys_model.kernel import make_id
+    from fransys_model.vocab import Part
     from fransys_model.vocab.facets.cable import CableProductFacet
 
+    subject = make_id(Part, ("part", "Demo", mpn))
     (facet,) = (
-        r for r in fransys_parts.load_path(DEMO).records() if isinstance(r, CableProductFacet)
+        r
+        for r in fransys_parts.load_path(DEMO).records()
+        if isinstance(r, CableProductFacet) and r.subject == subject
     )
+    return facet
+
+
+def test_a_loaded_cable_product_carries_its_colours_and_no_core_count():
+    """The part file's `core_count` is the author's checksum; the facet holds no count."""
+    facet = _cable_product("DEMO-CBL-4G1.5")
     assert facet.core_colours == ("BN", "BK", "GY", "GNYE")
     assert not hasattr(facet, "core_count")
+
+
+def test_a_cable_part_without_pairs_loads_with_no_pairs():
+    assert _cable_product("DEMO-CBL-4G1.5").pairs == ()
+
+
+def test_a_loaded_cable_product_carries_its_pairs_and_screens():
+    from fransys_model.vocab import CorePair
+
+    pairs = _cable_product("DEMO-CBL-2X2X0.75-SP").pairs
+    # MUTATION: load `screen` as None for every pair, so the screens of 5 and 6 are lost
+    assert pairs == (CorePair(cores=(1, 2), screen=5), CorePair(cores=(3, 4), screen=6))
 
 
 def test_internal_link_loads_the_same_record_whichever_end_is_written_first(tmp_path):
@@ -595,4 +619,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 15
+    assert SCHEMA_VERSION == 17

@@ -7,7 +7,6 @@ from fransys_layout.geometry import WIRING_GRID, snap_up
 
 G = WIRING_GRID
 
-PAGE_PAD = 2 * G  # clear space between the content box and the diagram
 TEXT_PAD = G  # inside a box, left and right of its texts
 TEXT_LEAD = G // 2  # between two text lines of a box
 TAB_PAD = G // 2  # around a tab's text: its width is the text and twice this

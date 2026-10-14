@@ -9,6 +9,7 @@ only measured them.
 from fransys_model.kernel import AuthoringKey, Id, Value, record, value
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Item, Port, Unit
+from fransys_model.vocab.facets.cable import OpenCoreFacet
 
 from .enums import BlockRow, BoxKind, EndStyle
 from .formats import SheetFormat
@@ -129,5 +130,37 @@ class CoreWire:
         """Store each run's points in `index` order; a repeated `index` is refused."""
         for name, found in (("run_a", self.run_a), ("run_b", self.run_b)):
             points = by_index(found, RoutePoint, kind="layout.core_wire", holder=holder_of(self))
+            if points is not None:
+                object.__setattr__(self, name, points)
+
+
+@record(kind="layout.open_core_wire")
+class OpenCoreWire:
+    """One open core drawn across a block's cable box: a `CoreWire` with no conductor (CC6).
+
+    `run_a` is the upper run from the top side, `run_b` the lower one from the bottom side.
+    `stub_a`/`stub_b` mark a side that is a stub, not a landing at a pin. The text is
+    `derive.cable_drawing.core_texts`'. Written only for a block that has an open core.
+    """
+
+    id: Id[OpenCoreWire]
+    key: AuthoringKey
+    block: Id[CableBlock]
+    core: Id[OpenCoreFacet]
+    run_a: tuple[RoutePoint, ...]
+    run_b: tuple[RoutePoint, ...]
+    text_x: int
+    text_y: int
+    stub_a: bool
+    stub_b: bool
+    produced_by: str
+    ext: frozendict[str, Value] = frozendict()
+
+    def __post_init__(self) -> None:
+        """Store each run's points in `index` order; a repeated `index` is refused."""
+        for name, found in (("run_a", self.run_a), ("run_b", self.run_b)):
+            points = by_index(
+                found, RoutePoint, kind="layout.open_core_wire", holder=holder_of(self)
+            )
             if points is not None:
                 object.__setattr__(self, name, points)

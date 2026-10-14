@@ -22,7 +22,10 @@ WIRE_LABELS = {"from_": "from"}  # the CSV header of the one column whose field 
 DESIGNATION_COLUMNS = ("designation", "reference", "description")
 # A connector row repeats on each of its pins, so a line is the connector's fields, then the pin's.
 CONNECTOR_COLUMNS = ("designation", "style", "pincount", "gender", "mate_designation")
-PIN_COLUMNS = ("marking", "net", "mate_port_designation")
+PIN_COLUMNS = ("marking", "net", "mate_port_designation", "ends")
+# The PDF connector table prints the pin's fields only, headed Pin, Net, Mate and Ends (pdf-0030).
+CONNECTOR_LABELS = {"marking": "Pin", "mate_port_designation": "Mate"}
 _CABLE_FIELDS = ("designation", "mpn", "description", "core_count", "gauge_mm2", "length_mm")
-CABLE_LIST_COLUMNS = (*_CABLE_FIELDS, "from_label", "to_label")
+CABLE_LIST_COLUMNS = (*_CABLE_FIELDS, "from_label", "to_label", "pairs")
 CONTENTS_COLUMNS = (*_CABLE_FIELDS, "ends")
+CORE_LIST_COLUMNS = ("cable", "core", "colour", "pair", "end_a", "end_b", "note")

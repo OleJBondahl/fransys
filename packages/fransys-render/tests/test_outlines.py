@@ -320,7 +320,9 @@ def test_pages_with_no_outline_record_render_no_outline():
 # Page counts, per golden (`conftest.py`'s own docstrings for the wide/narrow counts;
 # the two-location golden's counted directly, `layout_of(model, Page)`).
 _WIDE_GOLDEN_PAGE_COUNT = 2
-_NARROW_GOLDEN_PAGE_COUNT = 4  # was 5: harness lines merge sup page 1 into page 0
+_NARROW_GOLDEN_PAGE_COUNT = (
+    6  # was 4: the page inset (layout-0187) narrows the 158 mm sheet by 10 mm
+)
 # 2, not 3: the golden's `=P1` and `sup` groups now share drawing set c1's page 1
 # ("groups pack onto pages by their measured widths"), and `=P2` (drawing set c2) is the second.
 _TWO_LOCATION_GOLDEN_PAGE_COUNT = 2

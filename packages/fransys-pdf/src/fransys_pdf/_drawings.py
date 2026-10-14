@@ -8,7 +8,9 @@ from fransys_model.derive import (
     harness_cables,
     item_designation,
     page_destination,
+    page_title_forms,
     reading_cables,
+    sheet_counter_text,
 )
 from fransys_model.derive.cable_drawing import (
     cable_block_key,
@@ -16,9 +18,8 @@ from fransys_model.derive.cable_drawing import (
     drawn_blocks,
     wire_harness_subjects,
 )
-from fransys_model.derive.drawing_text import page_title, page_title_groups
 from fransys_model.kernel import render_id
-from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes, items, parts
+from fransys_model.vocab import DocumentPreset, PageKind, items, parts
 
 from ._cable_runs import Block, part_groups, run_page
 from ._frame import TitleBlockFields, background, text_margin
@@ -38,16 +39,10 @@ if TYPE_CHECKING:
 
     from fransys_model.derive import HarnessCable
     from fransys_model.kernel import Id, Model
-    from fransys_model.layout import DrawingSet, Page, SheetFormat
+    from fransys_model.layout import DiagramSheet, DrawingSet, Page, SheetFormat
     from fransys_model.vocab import Document, Item
 
 NO_DRAWINGS = '#par(text("No drawings."))'
-
-
-def _page_title_labels(model: Model, page: Page) -> str:
-    """The page's `=` group labels, `page_title`'s fallback, same filter (model-0097)."""
-    nodes = aspect_nodes(model)
-    return " ".join(f"={nodes[group.group].label}" for group in page_title_groups(model, page))
 
 
 def schematic_pages(
@@ -88,21 +83,22 @@ def schematic_fields(
         else subject_label(model, record)
     )
     totals = Counter(page.drawing_set for page in pages_found)
+    forms = {page.id: page_title_forms(model, page) for page in pages_found}
     return tuple(
         TitleBlockFields(
             *document_facts(model, record),
-            page_title=page_title(model, page),
+            page_title=forms[page.id][0],
             scope=scope,
-            sheet_counter=f"{page.number} / {totals[page.drawing_set]}",
+            sheet_counter=sheet_counter_text(page, totals[page.drawing_set]),
             notice=project_notice(model),
             logo=record.logo,
-            page_title_fallback=_page_title_labels(model, page),
+            page_title_shorter=forms[page.id][1:],
         )
         for page in pages_found
     )
 
 
-def _destination_mark(model: Model, page: Page) -> str:
+def destination_mark(model: Model, page: Page | DiagramSheet) -> str:
     """A hidden heading labelled with the page's destination, so the PDF anchors the page (O21)."""
     label = page_destination(model, page)
     return f"#place(hide[#heading(level: 1, outlined: false)[{label}] <{label}>])"
@@ -132,7 +128,7 @@ def schematic_source(
     blocks = []
     for page, page_fields in zip(pages_found, fields, strict=True):
         image = f'#image(bytes({literal(svgs[render_id(page.id)])}), format: "svg")'
-        mark = _destination_mark(model, page)
+        mark = destination_mark(model, page)
         back = background(sheet, page_fields, sizes_of(model, record))
         blocks.append(f"#page(margin: 0mm, background: {back})[{mark}{image}]")
     return "\n#pagebreak()\n".join(blocks)

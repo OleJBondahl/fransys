@@ -108,7 +108,7 @@ def test_the_engine_holds_the_first_pass_plans_as_the_sheets_room(
         lambda *_: (SimpleNamespace(drawn=(), pages=[]), next(calls), final),
     )
     nothing: Any = None  # the stubs read none of the drawn or the decide
-    sheet = SimpleNamespace(content_height=854)  # no page, so no group is tall
+    sheet = SimpleNamespace(content_height=854, bottom=854)  # no page, so no group is tall
     run: Any = SimpleNamespace(inputs=SimpleNamespace(sheet=sheet, middle={}))
     _, (_, found) = engine._placed(run, (), (), (), nothing)
     assert [one.code for one in found] == [REFERENCE_BOX_EXCEEDS_ROOM]
@@ -134,7 +134,7 @@ def _replans(monkeypatch: pytest.MonkeyPatch, measured: Any) -> int:
         ),
     )
     nothing: Any = None
-    sheet = SimpleNamespace(content_height=854)
+    sheet = SimpleNamespace(content_height=854, bottom=854)
     run: Any = SimpleNamespace(inputs=SimpleNamespace(sheet=sheet, middle={}))
     engine._placed(run, (), (), (), nothing)
     return len(plans)

@@ -100,7 +100,9 @@ def _passes(
         "place_pages",
         lambda *_: (SimpleNamespace(drawn=(), pages=placings()), widths, decided),
     )
-    run: Any = _Run(_Inputs(_middle(lower=lower), SimpleNamespace(content_height=FLOOR)))
+    run: Any = _Run(
+        _Inputs(_middle(lower=lower), SimpleNamespace(content_height=FLOOR, bottom=FLOOR))
+    )
     nothing: Any = None  # the stubs read none of the drawn or the decide
     engine._placed(run, (), (), (), nothing)
     return seen

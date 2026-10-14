@@ -27,12 +27,11 @@ from test_units_worked_example import _system_design
 from test_write_unit_worked_example import _unit_id
 
 from fransys_layout.engines.schematic import lay_out_schematic
-from fransys_model.derive import connector_box_lines
+from fransys_model.derive import connector_box_lines, page_title
 from fransys_model.derive.drawing_text import (
     label_text,
     marker_text,
     outline_title,
-    page_title,
 )
 from fransys_model.kernel import Severity
 from fransys_model.layout import (

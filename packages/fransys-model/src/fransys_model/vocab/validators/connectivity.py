@@ -4,11 +4,13 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.kernel import Finding, Severity, key_text
 from fransys_model.vocab.closure import net_of, physical_nets
+from fransys_model.vocab.facets.cable import OpenCoreFacet
 from fransys_model.vocab.joins import joined_ports
 from fransys_model.vocab.membership import enclosing_boards
 from fransys_model.vocab.potentials import physical_potentials
 from fransys_model.vocab.tables import (
     conductors,
+    facets_of,
     functions,
     items,
     mates,
@@ -143,6 +145,7 @@ def _conductor_findings(plant: _Plant) -> list[Finding]:
 def _unconnected(plant: _Plant) -> list[Finding]:
     wired = {end for conductor in plant.conductors.values() for end in (conductor.a, conductor.b)}
     wired |= joined_ports(plant.model)
+    wired |= {f.at for f in facets_of(plant.model, OpenCoreFacet).values() if f.at is not None}
     return [
         _finding(
             PORT_UNCONNECTED,

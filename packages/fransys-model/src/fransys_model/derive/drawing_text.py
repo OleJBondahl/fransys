@@ -5,7 +5,7 @@ See derive-text.md.
 The layout engine sizes a marker's box and a cross-reference label from their text; render
 must print exactly that text but may not import `fransys_layout`. Three pure formatters on
 plain values (`frame_column`, `position_text`, `location_prefix`) and a family of readers on a
-laid-out model (`marker_text`, `cross_reference_text`, `label_text`, `page_title`) hold that
+laid-out model (`marker_text`, `cross_reference_text`, `label_text`) hold that
 text so both sides call the same code. `fransys_layout.stages.references` calls the
 formatters and keeps no copy; render will call the readers. `port_designation_in` applies
 the same location rule to a list's end (`terminal_rows`, `wire_rows` and
@@ -48,6 +48,7 @@ from fransys_model.derive.pole_ports import pole_prefix
 from fransys_model.derive.port_marking import marking_text, port_marking
 from fransys_model.derive.reference_heads import heads_group
 from fransys_model.derive.revision_text import revision_text
+from fransys_model.derive.sheet_forms import set_page_text
 from fransys_model.derive.unit_nodes import chain_up, end_context, stub_place
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.derive.view_placements import placements_by_function_page
@@ -149,7 +150,7 @@ def position_text(  # noqa: PLR0913 -- one form for every position; own_page is 
     if not location_labels and set_number is not None:
         # A place in another drawing set with no location
         # prefix still names its set, "p3.2:1A" (set.page, then cell), so it is never ambiguous
-        return f"p{set_number}.{page_number}{cell}"
+        return f"p{set_page_text(set_number, page_number)}{cell}"
     prefix = "".join(f"+{label}" for label in location_labels)
     return f"{prefix}p{page_number}{cell}"
 
@@ -943,31 +944,14 @@ def page_title_groups(model: Model, page: Page) -> tuple[PageGroup, ...]:
     """Which of `page.groups` title `page` (model-0097).
 
     A unit's own groups only, when the page's drawing set has a unit; every group, unfiltered,
-    when the set has no unit (a location-subject page). `page_title` calls this; `fransys_pdf`'s
-    `_page_title_labels` calls it too, so the rule has one home (root
-    CLAUDE.md, "one rule computed in two places").
+    when the set has no unit (a location-subject page). `page_title_forms` calls this, so the
+    rule has one home.
     """
     unit = layout_of(model, DrawingSet)[page.drawing_set].unit
     if unit is None:
         return page.groups
     own = own_nodes(model, unit)
     return tuple(group for group in page.groups if group.group in own)
-
-
-def page_title(model: Model, page: Page) -> str:
-    """The page's title: its groups' descriptions, in `index` order, joined by `', '`.
-
-    `page.groups` is already stored in `index` order (`Page.__post_init__`). In a unit's own
-    set only the unit's own groups title a page (`own_nodes` decides via
-    `page_title_groups`, and an item of no unit never un-owns a function group); with
-    none, the unit's title, its name when the title is empty (`unit_label`, model-0066).
-    """
-    nodes = aspect_nodes(model)
-    unit = layout_of(model, DrawingSet)[page.drawing_set].unit
-    titles = [nodes[group.group].description for group in page_title_groups(model, page)]
-    if unit is None:
-        return ", ".join(titles)
-    return ", ".join(titles) or unit_label(model, unit)
 
 
 __all__ = [
@@ -995,7 +979,6 @@ __all__ = [
     "more_text",
     "off_stub_line",
     "outline_title",
-    "page_title",
     "page_title_groups",
     "partner_position_text",
     "place_text",

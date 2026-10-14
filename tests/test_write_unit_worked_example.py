@@ -46,6 +46,7 @@ _PUMP1_WRITE_FILES = frozenset(
     {
         "demo-pump-cabinet-v1.2-bom.csv",
         "demo-pump-cabinet-v1.2-cables.csv",
+        "demo-pump-cabinet-v1.2-cores.csv",
         "demo-pump-cabinet-v1.2.pdf",
         "demo-pump-cabinet-v1.2-designations.csv",
         "demo-pump-cabinet-v1.2-plc.csv",
@@ -65,6 +66,7 @@ _PUMP1_BOARD_WRITE_FILES = frozenset(
         "demo-io-board-v1.3.pdf",
         "demo-io-board-v1.3-bom.csv",
         "demo-io-board-v1.3-cables.csv",
+        "demo-io-board-v1.3-cores.csv",
         "demo-io-board-v1.3-connectors.csv",
         "demo-io-board-v1.3-designations.csv",
         "demo-io-board-v1.3-plc.csv",
@@ -83,6 +85,7 @@ _ALL_WRITE_FILES = frozenset(
         "P-1001-v1.1-bom.csv",
         "demo-pump-cabinet-v1.2.pdf",
         "P-1001-v1.1-cables.csv",
+        "P-1001-v1.1-cores.csv",
         "P-1001-v1.1-connectors-BRD-ER-C1-U1.csv",
         "P-1001-v1.1-connectors-BRD-ER-C2-U1.csv",
         "P-1001-v1.1-designations.csv",

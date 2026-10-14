@@ -111,7 +111,9 @@ def _spec(number: int, pin_of: int | None = None):
 def test_open_ends_are_the_boundary_functions_and_no_other_function() -> None:
     """Functions 1 and 2, the boundary function 1: only function 1 is an open end."""
     # UNDO: stages/exempt.py `open_ends`: the `in edges` test -> `not in edges` (function 2 only)
-    assert open_ends((_spec(1), _spec(2)), frozenset({hid("function", 1)})) == {hid("function", 1)}
+    assert open_ends((_spec(1), _spec(2)), frozenset({hid("function", 1)}), frozenset()) == {
+        hid("function", 1)
+    }
 
 
 def test_open_ends_follow_a_pin_view_to_its_boundary_function() -> None:
@@ -120,4 +122,14 @@ def test_open_ends_follow_a_pin_view_to_its_boundary_function() -> None:
     # UNDO: stages/exempt.py `open_ends`: `(spec.pin_function or spec.function) in edges` ->
     #   `spec.function in edges` (function 3 is dropped, function 1 kept)
     specs = (_spec(1, pin_of=2), _spec(2), _spec(3, pin_of=1))
-    assert open_ends(specs, frozenset({hid("function", 1)})) == {hid("function", 3)}
+    assert open_ends(specs, frozenset({hid("function", 1)}), frozenset()) == {hid("function", 3)}
+
+
+def test_open_ends_take_an_item_box_whose_every_port_is_a_boundary_port() -> None:
+    """Function 5 is an item box over function 1's ports; function 6 has a foreign port."""
+    # UNDO: stages/exempt.py `open_ends`: `all(...)` -> `any(...)` (function 6 joins)
+    box = replace(_spec(5), roles=replace(_spec(5).roles, item_view=True))
+    mixed = replace(_spec(6), roles=replace(_spec(6).roles, item_view=True))
+    edge_ports = frozenset(p.port for p in box.ports)
+    foreign = replace(mixed, ports=(*box.ports[:1], *_spec(7).ports[:1]))
+    assert open_ends((box, foreign), frozenset(), edge_ports) == {box.function}

@@ -68,11 +68,7 @@ def place_slot_labels(
         ),
         content=frame.content,
     )
-    lanes = tuple(
-        Shape(owner=one.function, box=Box(x=r.x, y=r.y, width=r.to_x - r.x, height=r.to_y - r.y))
-        for one in placed_of.values()
-        for r in _lanes(one)
-    )
+    lanes = port_lanes(tuple(placed_of.values()))
     texts, asked = [], {}
     for request in requests:
         placement = _placement(request, placed_of, owner_of)
@@ -125,6 +121,15 @@ def _slot_anchor(where: Home, kind: TextKind) -> Anchor:
     lift = where.step if kind is TextKind.CROSS_REFERENCE else 0
     span = Box(x=inner if west else inner - gap, y=box.y - lift, width=gap, height=box.height)
     return Anchor(box=span, facing=Facing.W if west else Facing.E)
+
+
+def port_lanes(placed: tuple[PlacedFunction, ...]) -> tuple[Shape, ...]:
+    """Every port's outward lane as a shape; no text stands on one, its own included."""
+    return tuple(
+        Shape(owner=one.function, box=Box(x=r.x, y=r.y, width=r.to_x - r.x, height=r.to_y - r.y))
+        for one in placed
+        for r in _lanes(one)
+    )
 
 
 def _lanes(one: PlacedFunction) -> tuple[Run, ...]:

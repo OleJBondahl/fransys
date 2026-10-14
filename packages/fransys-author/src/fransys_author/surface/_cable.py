@@ -12,7 +12,7 @@ from fransys_author.surface._parent import cable_parent_item
 from fransys_author.surface._strip import TerminalStrip
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
-from fransys_author.surface.colours import GNYE
+from fransys_author.surface.colours import GNYE, SH
 from fransys_model.vocab import PortRole
 lazy from fransys_author.surface._device import Device
 
@@ -66,6 +66,7 @@ class Cable:
     def __init__(self, label: str, cable: EngineCable, design: Design | None = None) -> None:
         """Wrap the engine `cable` under `label`; `d.cable` makes these, `design` its own."""
         self._label, self._cable, self._design = label, cable, design
+        self._used: set[int] = set()
 
     @property
     def _colours(self) -> tuple[str, ...]:
@@ -91,20 +92,58 @@ class Cable:
             msg = f"core {index} is {self._colours[index - 1]}: the PE core is GNYE (IEC 60204-1)"
             raise AuthorError(msg)
 
+    def _claim(self, index: int) -> None:
+        """Take core `index` for a wire or a mark; a second claim is an error."""
+        if index in self._used:
+            msg = f"{self._label} core {index} is already wired or marked spare"
+            raise AuthorError(msg)
+        self._used.add(index)
+
     def core(
         self,
         which: str | int,
         a: Port | Terminal | TerminalStrip,
-        b: Port | Terminal | TerminalStrip,
+        b: Port | Terminal | TerminalStrip | None = None,
     ) -> None:
         """Wire core `which` (a colour code or a 1-based number) between `a` and `b`.
 
-        Does not accept a non-GNYE core on a PE port, or a colour twice in the part: say the number.
+        `core(which, a)` is for an `SH` core only: a screen earthed at one end.
+        Does not accept a colour twice in the part, or a non-GNYE core on a PE port.
         """
         index = self._index(which)
+        if b is None:
+            self._screen_end(index, a)
+            return
         ends = (_outer(a, self._design), _outer(b, self._design))
         self._refuse_pe(index, ends)
+        self._claim(index)
         self._cable.core(index, *ends)
+
+    def _screen_end(self, index: int, a: Port | Terminal | TerminalStrip) -> None:
+        if self._colours[index - 1] != SH:
+            msg = f"{self._label} core {index} is not SH: park a spare with spare(..., at=)"
+            raise AuthorError(msg)
+        self._claim(index)
+        self._cable.open_core(index, _outer(a, self._design))
+
+    def spare(self, *cores: str | int, at: Port | Terminal | TerminalStrip | None = None) -> None:
+        """Mark cores spare: `spare(GY)`, `spare(BK, GY)`, `spare(BK, at=x1[7])`, or `spare()`.
+
+        `spare()` marks every core not wired or marked so far, so wire first. `at=` parks one
+        core on a pin. Does not take `at=` for an `SH` core (use `core(which, a)`).
+        """
+        if at is not None and len(cores) != 1:
+            msg = f"{self._label} spare(at=) takes exactly one core, got {len(cores)}"
+            raise AuthorError(msg)
+        indexes = [self._index(c) for c in cores] or [
+            i for i in range(1, len(self._colours) + 1) if i not in self._used
+        ]
+        if at is not None and self._colours[indexes[0] - 1] == SH:
+            msg = f"{self._label} core {indexes[0]} is SH: earth it with core(which, a)"
+            raise AuthorError(msg)
+        for index in indexes:
+            self._claim(index)
+            self._cable.open_core(index, None if at is None else _outer(at, self._design))
 
     def _series_width(self) -> None:
         """A cable sets no width: its neighbours do."""
@@ -118,9 +157,13 @@ class Cable:
         raise AuthorError(msg)
 
     def _land_pe(self, design: Design, pe_core: int | None, before: _Side, after: _Side) -> None:
-        """Wire the GNYE core when a neighbour has a PE port; else it stays spare."""
-        if pe_core is not None and any(ends.pe is not None for _, ends in (before, after)):
+        """Wire the GNYE core when a neighbour has a PE port; else mark it spare (CC4)."""
+        if pe_core is None or pe_core in self._used:
+            return
+        if any(ends.pe is not None for _, ends in (before, after)):
             self.core(pe_core, *(self._pe_end(design, el, ends) for el, ends in (before, after)))
+        else:
+            self.spare(pe_core)
 
     def _series_between(self, design: Design, before: _Side, after: _Side) -> None:
         """Core i joins `before`'s load i to `after`'s line i, in core order without GNYE."""

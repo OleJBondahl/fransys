@@ -3,6 +3,8 @@
 The CLI is deferred (F10).
 """
 
+import importlib.metadata
+
 from fransys_author import AuthorError
 from fransys_author.surface import (
     ABOVE,
@@ -52,6 +54,8 @@ from .pipeline import (
     write,
 )
 from .readability import readability
+
+__version__ = importlib.metadata.version("fransys")
 
 __all__ = [
     "ABOVE",

@@ -10,14 +10,13 @@ from fransys_layout.engines.diagram.frame import build_frame
 from fransys_layout.engines.diagram.read import read_diagrams
 from fransys_layout.engines.diagram.sizes import (
     MARKER_W,
-    PAGE_PAD,
     TRACK_PITCH,
     attach_pitch,
     label_room,
     tab_reach,
 )
 from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
-from fransys_layout.geometry import WIRING_GRID, Facing, snap_up
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing, snap_up
 from fransys_layout.stages.channel import plan_channel
 from fransys_model.kernel import Id
 lazy from fransys_layout.engines.diagram.frame_values import Frame

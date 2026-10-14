@@ -102,7 +102,7 @@ def ordered_columns(
         tie_key=tie_key,
         fits=lambda row: (
             column_widths((row,), drawn, profile=inputs.profile)[0].width
-            <= inputs.sheet.content_width
+            <= inputs.sheet.inner_width
         ),
     )
     return rack_order(all_columns, inputs.functions), chains

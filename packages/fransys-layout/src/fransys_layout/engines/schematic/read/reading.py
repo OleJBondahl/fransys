@@ -14,6 +14,7 @@ from fransys_layout.engines.schematic.read.house import (
     HOUSE_MODULE_MM,
     to_stage_profile,
 )
+from fransys_layout.geometry import PAGE_PAD
 from fransys_layout.stages import (
     Chain,
     ChainEntry,
@@ -333,6 +334,7 @@ def profile_and_sheet(
         content_height=content_extent(sheet_record.content_height_mm, sheet_record.module_mm),
         frame_columns=sheet_record.frame_columns,
         frame_rows=sheet_record.frame_rows,
+        inset=PAGE_PAD,
     )
     return to_stage_profile(profile, sheet_record.module_mm), sheet, profile.sheet_format
 

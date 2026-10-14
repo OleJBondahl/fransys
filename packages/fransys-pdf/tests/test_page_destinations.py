@@ -39,7 +39,7 @@ def _fixture():
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
+        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM, PageKind.SHEET_INDEX),
     )
     return model(c1, c2, u, ds1, ds2, *pages, doc), doc, pages
 

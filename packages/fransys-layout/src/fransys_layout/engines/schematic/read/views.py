@@ -21,8 +21,13 @@ from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
 from fransys_layout.stages.resolve import _symbol_for, choice_index, throw_port
 from fransys_layout.stages.slices import by_key
-from fransys_layout.stages.types import MatedFunctions
-from fransys_model.derive import enclosing_boards, is_sole_unit_root
+from fransys_layout.stages.types import Home, MatedFunctions
+from fransys_model.derive import (
+    enclosing_boards,
+    function_is_reached,
+    is_sole_unit_root,
+    port_is_reached,
+)
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import item_tag_text
 from fransys_model.kernel import SchemaError, parent_chain
@@ -192,17 +197,36 @@ def without_idle_pins(
     pin_of: Mapping[Id[Any], Id[Any]],
     used: AbstractSet[Id[Any]],
 ) -> tuple[tuple[FunctionSpec, ...], dict[Id[Any], Id[Any]]]:
-    """Every pin view kept that is wired, or whose mated pin is wired."""
+    """Every pin view kept that is wired, or whose mated pin is wired (layout-0197).
+
+    A boundary pin no wire inside reaches (`port_is_reached`, itself or its mate) is kept for the
+    parent's black box with `Home.ELSEWHERE`.
+    """
     mate_of = mate_map(pin_mates(model, pin_of))
     kept = {port for port in pin_of if port in used or mate_of.get(port) in used}
     live = {pin_of[port] for port in kept}
     edges = {f for unit in unit_ids(model) for f in boundary(model, unit)}
     edges -= {one.function for one in unused_boundaries(model).values()}
+    away = {
+        port
+        for port, f in pin_of.items()
+        if f in edges
+        and not (port_is_reached(model, port) or _mate_reached(model, mate_of.get(port)))
+    }
     kept |= {port for port, f in pin_of.items() if f in edges and f not in live}
     return (
-        tuple(spec for spec in specs if spec.pin_function is None or spec.function in kept),
+        tuple(
+            dataclasses.replace(spec, home=Home.ELSEWHERE) if spec.function in away else spec
+            for spec in specs
+            if spec.pin_function is None or spec.function in kept
+        ),
         {port: function for port, function in pin_of.items() if port in kept},
     )
+
+
+def _mate_reached(model: Model, mate: Id[Any] | None) -> bool:
+    """Whether the mated pin `mate`, if any, is reached by a wire inside its drawing."""
+    return mate is not None and port_is_reached(model, mate)
 
 
 def without_idle_terminals(
@@ -210,16 +234,24 @@ def without_idle_terminals(
     specs: tuple[FunctionSpec, ...],
     used: AbstractSet[Id[Any]],
 ) -> tuple[FunctionSpec, ...]:
-    """Every spec except a terminal none of whose ports is on a connection, net group or mate."""
+    """Every spec except a terminal none of whose ports is on a connection, net group or mate.
+
+    A unit's boundary terminal stays for the parent's black box, but without its home on the
+    unit's own pages unless a wire inside reaches it (layout-0202).
+    """
     mated = {f for mate in mates_table(model).values() for f in (mate.a, mate.b)}
-    mated |= {f for unit in unit_ids(model) for f in boundary(model, unit)}
-    return tuple(
-        spec
-        for spec in specs
-        if spec.kind != "terminal"
-        or spec.function in mated
-        or any(port.port in used for port in spec.ports)
-    )
+    edges = {f for unit in unit_ids(model) for f in boundary(model, unit)}
+    kept = []
+    for spec in specs:
+        terminal = spec.kind == "terminal"
+        if terminal and spec.function in edges:
+            idle = spec.function not in mated and not function_is_reached(model, spec.function)
+            kept.append(dataclasses.replace(spec, home=Home.ELSEWHERE) if idle else spec)
+        elif not (
+            terminal and spec.function not in mated and not any(p.port in used for p in spec.ports)
+        ):
+            kept.append(spec)
+    return tuple(kept)
 
 
 def pin_views(

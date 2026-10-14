@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from fransys_layout.geometry import PAGE_PAD
 from fransys_model.layout import Label, LinkMarker, Outline, layout_of
 
 _SOURCE = Path(__file__).resolve().parent / "test_dd_boundary_draw.py"
@@ -55,7 +56,7 @@ def test_an_outline_holds_the_reference_box_and_its_title_stands_above_it(model)
             assert outline.y <= marker.y - marker.height
             assert marker.y <= outline.y + outline.height
             (title,) = (
-                t for t in titles if t.page == outline.page and t.x == max(outline.x, 8)
-            )  # layout-0104: a title keeps the 8 G text gap from the frame
+                t for t in titles if t.page == outline.page and t.x == max(outline.x, PAGE_PAD + 8)
+            )  # layout-0104: a title keeps the 8 G text gap inside the inset
             assert title.y + title.height <= outline.y
     assert held

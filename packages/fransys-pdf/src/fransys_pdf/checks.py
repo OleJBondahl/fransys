@@ -18,9 +18,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    bom_lines,
-    cable_list_rows,
-    designation_list,
     document_unit,
     location_node_designation,
     unit_release,
@@ -54,16 +51,8 @@ from ._geometry import (
     mixed_sheet_formats,
     resolve_sheet_format,
 )
-from ._lists import (
-    _boards_for,
-    _bom_scope,
-    _terminal_strips_for,
-    connector_rows_for,
-    plc_channel_rows_for,
-    terminal_rows_for,
-    wire_rows_for,
-)
 from ._markdown import parse, unsupported
+from ._schematic_yield import _LIST_KINDS, list_rows, schematic_yields
 from ._sizes import Sizes, sizes_of
 from .document import _HEADING_WORDS, document_pages, section_fields
 
@@ -149,17 +138,23 @@ class _FieldTarget:
 
 
 def _one_line_overflow_finding(
-    target: _FieldTarget, field: str, text: str, *, where: str, fallback: str | None
+    target: _FieldTarget, field: str, text: str, *, where: str, shorter: tuple[str, ...]
 ) -> Finding | None:
-    """One `TITLE_BLOCK_TEXT_OVERFLOW` finding if `text` and `fallback` both miss."""
-    shown, ok, _printed = field_cell(target.sheet, target.sizes, field, text, fallback=fallback)
+    """One `TITLE_BLOCK_TEXT_OVERFLOW` finding if `text` and every `shorter` form miss.
+
+    A page title's message names `d.layout.page_title`, the way to set a title that fits (PT1).
+    """
+    shown, ok, _printed = field_cell(target.sheet, target.sizes, field, text, shorter=shorter)
     if ok:
         return None
+    remedy = "; set a shorter title with d.layout.page_title" if field == "page_title" else ""
     return Finding(
         code="TITLE_BLOCK_TEXT_OVERFLOW",
         severity=Severity.WARNING,
         subjects=(target.subject,),
-        message=f"{field} ({where}): {shown!r} does not fit its title-block cell, cut with '…'",
+        message=(
+            f"{field} ({where}): {shown!r} does not fit its title-block cell, cut with '…'{remedy}"
+        ),
     )
 
 
@@ -180,7 +175,7 @@ def _document_level_overflow_findings(
     findings = []
     for field in _DOCUMENT_LEVEL_ONE_LINE_FIELDS:
         finding = _one_line_overflow_finding(
-            target, field, values[field], where="document", fallback=None
+            target, field, values[field], where="document", shorter=()
         )
         if finding is not None:
             findings.append(finding)
@@ -198,15 +193,15 @@ def _page_fields_overflow_findings(
     if not pages:
         return ()
     findings = [
-        _one_line_overflow_finding(target, "scope", pages[0][0].scope, where=kind, fallback=None)
+        _one_line_overflow_finding(target, "scope", pages[0][0].scope, where=kind, shorter=())
     ]
     for fields, where in pages:
-        for name, text, fallback in (
-            ("page_title", fields.page_title, fields.page_title_fallback or None),
-            ("sheet_counter", fields.sheet_counter, None),
+        for name, text, shorter in (
+            ("page_title", fields.page_title, fields.page_title_shorter),
+            ("sheet_counter", fields.sheet_counter, ()),
         ):
             findings.append(
-                _one_line_overflow_finding(target, name, text, where=where, fallback=fallback)
+                _one_line_overflow_finding(target, name, text, where=where, shorter=shorter)
             )
     return tuple(finding for finding in findings if finding is not None)
 
@@ -305,6 +300,9 @@ def _schematic_no_drawings_message(
 ) -> str | None:
     pages_found = schematic_pages(model, record, pages)
     if not pages_found:
+        if schematic_yields(model, record, pages):
+            # pdf-0033: nothing to draw and another content page stands: no page, no finding.
+            return None
         if replica_only_sets(model, record, pages):
             # Every matched set was replica-only and dropped -- there was
             # really something there, just deliberately not drawn (its own INFO finding
@@ -403,46 +401,6 @@ def _no_top_level_cables_findings(
     )
 
 
-_LIST_KINDS = (
-    PageKind.PLC_LIST,
-    PageKind.TERMINAL_LIST,
-    PageKind.CONNECTOR_LIST,
-    PageKind.WIRE_LABEL_LIST,
-    PageKind.DESIGNATION_LIST,
-    PageKind.CABLE_LIST,
-    PageKind.BOM,
-)
-
-
-def _list_rows(  # noqa: PLR0911 -- one branch per list `PageKind`, as `document._page_source`
-    model: Model, record: Document, kind: PageKind
-) -> tuple[object, ...]:
-    """The rows `kind`'s list page renders for `record`, for `DOCUMENT_EMPTY_LIST`."""
-    if kind is PageKind.PLC_LIST:
-        return plc_channel_rows_for(model, record)
-    if kind is PageKind.TERMINAL_LIST:
-        return tuple(
-            row
-            for strip in _terminal_strips_for(model, record)
-            for row in terminal_rows_for(model, record, strip)
-        )
-    if kind is PageKind.CONNECTOR_LIST:
-        return tuple(
-            row
-            for board in _boards_for(model, record)
-            for row in connector_rows_for(model, record, board)
-        )
-    if kind is PageKind.WIRE_LABEL_LIST:
-        return wire_rows_for(model, record)
-    if kind is PageKind.DESIGNATION_LIST:
-        return tuple(designation_list(model, unit=document_unit(model, record)))
-    if kind is PageKind.CABLE_LIST:
-        return tuple(cable_list_rows(model, unit=document_unit(model, record)))
-    return tuple(
-        bom_lines(model, scope=_bom_scope(model, record))
-    )  # kind is PageKind.BOM: the last one
-
-
 def _empty_list_findings(
     model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
@@ -454,7 +412,7 @@ def _empty_list_findings(
             message=f"{kind.name} has no rows: the page is left out",
         )
         for kind in _LIST_KINDS
-        if kind in pages and not _list_rows(model, record, kind)
+        if kind in pages and not list_rows(model, record, kind)
     )
 
 

@@ -9,7 +9,7 @@ derived kind (page, placement, route) is written only by a pass and carries
 is what the tests and `derived_layout_ids` go by.
 """
 
-from .cable_results import CableBlock, CableBox, CoreWire, EndBox, PinCell
+from .cable_results import CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire, PinCell
 from .diagram_results import BoxRef, DiagramBox, DiagramLine, DiagramMarker, DiagramSheet, TabCell
 from .enums import (
     BlockRow,
@@ -46,6 +46,7 @@ from .hints import (
     GroupHint,
     KeepTogether,
     OrderHint,
+    PageTitle,
     SideHint,
     SymbolChoice,
 )
@@ -114,6 +115,7 @@ __all__ = [
     "LabelKind",
     "LinkMarker",
     "MarkerSide",
+    "OpenCoreWire",
     "OrderHint",
     "Orientation",
     "Outline",
@@ -127,6 +129,7 @@ __all__ = [
     "Page",
     "PageGroup",
     "PageRole",
+    "PageTitle",
     "PinCell",
     "PlacementView",
     "PowerSymbol",

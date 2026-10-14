@@ -78,14 +78,15 @@ def _need(
     boxes: Sequence[Box],
     first: Sequence[PlacedLabel],
     axis: str,
-    extent: int,
+    sheet: SheetFormat,
     up: Callable[[int], int],
 ) -> int:
-    """The shift on one axis keeping boxes in the box; on x, texts TEXT_GAP from its left edge."""
+    """The shift on one axis keeping boxes in the inset box; on x, texts TEXT_GAP from its left."""
     size = "width" if axis == "x" else "height"
+    extent = sheet.right if axis == "x" else sheet.bottom
     cells = list(boxes)
-    lows = [(getattr(b, axis), 0) for b in cells] + [
-        (getattr(b.box, axis), TEXT_GAP) for b in first
+    lows = [(getattr(b, axis), sheet.inset) for b in cells] + [
+        (getattr(b.box, axis), sheet.inset + TEXT_GAP) for b in first
     ]
     need = max((g - low for low, g in lows if low < g), default=0)
     shift = up(need) if need > 0 else 0
@@ -119,8 +120,8 @@ def shift_pages(
         if not placed and not first:
             moved_pages.append((placed, first))
             continue
-        dx = _need(ink := page_ink(placed, rooms or {}), first, "x", sheet.content_width, up)
-        dy = _need(ink, first, "y", sheet.content_height, up)
+        dx = _need(ink := page_ink(placed, rooms or {}), first, "x", sheet, up)
+        dy = _need(ink, first, "y", sheet, up)
         if not dx and not dy:
             moved_pages.append((placed, first))
             continue

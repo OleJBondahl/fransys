@@ -34,9 +34,13 @@ _LINE_HEIGHT_EM = 1.2  # a standard typographic leading, close to Typst's own de
 PAGE_COUNTER_LABEL = "fransys-page-counter"
 """The label on the title block's document-counter cell, for `typst query`."""
 
-_PAGE_COUNTER = (
-    'context (str(counter(page).get().first()) + " of " + str(counter(page).final().first()))'
-)
+
+def physical_page(position: str = "here()") -> str:
+    """Typst for the physical PDF page at `position`: the one source of "Page m" and the index."""
+    return f"{position}.page()"
+
+
+_PAGE_COUNTER = f'context (str({physical_page()}) + " of " + str(counter(page).final().first()))'
 
 # The house column widths, c1-c7, left to right (mm, exact on the 410 mm house frame
 # width once the 20 mm square logo column is set aside): the defaults for the
@@ -76,7 +80,7 @@ class TitleBlockFields:
     sheet_counter: str
     notice: str = ""
     logo: str | None = None
-    page_title_fallback: str = ""
+    page_title_shorter: tuple[str, ...] = ()
 
 
 def band_height_mm(sheet: SheetFormat) -> int:
@@ -201,17 +205,18 @@ def one_line_field(
     size_mm: float,
     bold: bool = False,
     width_mm: float,
-    fallback: str | None = None,
+    shorter: tuple[str, ...] = (),
 ) -> tuple[str, bool]:
-    """`(text, fits)`: `preferred` if it fits, else `fallback` if it fits, else the base.
+    """`(text, fits)`: the first of `preferred` and `shorter` that fits, else the last, cut.
 
-    The one rule for which text a one-line cell prints and whether it needs the cut; the base is
-    `fallback` when given, else `preferred`.
+    The one rule for which text a one-line cell prints and whether it needs the cut; `shorter`
+    follows `preferred` in decreasing length (PT1).
     """
-    if fits(preferred, size_mm=size_mm, bold=bold, width_mm=width_mm):
-        return preferred, True
-    base = preferred if fallback is None else fallback
-    return base, fits(base, size_mm=size_mm, bold=bold, width_mm=width_mm)
+    candidates = (preferred, *shorter)
+    for text in candidates:
+        if fits(text, size_mm=size_mm, bold=bold, width_mm=width_mm):
+            return text, True
+    return candidates[-1], False
 
 
 def title_columns(
@@ -234,7 +239,7 @@ def title_block_field_width_mm(sheet: SheetFormat, field: str) -> float:
 
 
 def field_cell(
-    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, fallback: str | None = None
+    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, shorter: tuple[str, ...] = ()
 ) -> tuple[str, bool, str]:
     """`(base, fits, printed)` of a title-block field's one-line cell.
 
@@ -245,14 +250,14 @@ def field_cell(
         "bold": field == "title",
         "width_mm": title_block_field_width_mm(sheet, field),
     }
-    base, ok = one_line_field(text, fallback=fallback, **metrics)
+    base, ok = one_line_field(text, shorter=shorter, **metrics)
     return base, ok, base if ok else cut_to_width(base, **metrics)[0]
 
 
 def _one_line(
-    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, fallback: str | None = None
+    sheet: SheetFormat, sizes: Sizes, field: str, text: str, *, shorter: tuple[str, ...] = ()
 ) -> str:
-    return field_cell(sheet, sizes, field, text, fallback=fallback)[2]
+    return field_cell(sheet, sizes, field, text, shorter=shorter)[2]
 
 
 def notice_cell_size_mm(sheet: SheetFormat) -> tuple[float, float]:
@@ -354,9 +359,9 @@ _LABELS = {
 
 
 def _field_cell(
-    sheet: SheetFormat, sizes: Sizes, name: str, value: str, *, fallback: str | None = None
+    sheet: SheetFormat, sizes: Sizes, name: str, value: str, *, shorter: tuple[str, ...] = ()
 ) -> str:
-    shown = _value(_one_line(sheet, sizes, name, value, fallback=fallback))
+    shown = _value(_one_line(sheet, sizes, name, value, shorter=shorter))
     return _cell(_LABELS[name], shown, sizes, bold=name == "title")
 
 
@@ -365,7 +370,6 @@ def _title_rows(
 ) -> list[str]:
     """The two grid rows' cells; `extra` is the notice and logo cells, spanning both rows."""
     text = partial(_field_cell, sheet, sizes)
-    fallback = fields.page_title_fallback or None
     return [
         f"grid.cell(colspan: 3, {text('title', fields.title)})",
         text("number", fields.number),
@@ -375,7 +379,7 @@ def _title_rows(
         f"grid.cell(rowspan: 2, {extra[1]})",
         text("customer", fields.customer),
         text("author", fields.author),
-        text("page_title", fields.page_title, fallback=fallback),
+        text("page_title", fields.page_title, shorter=fields.page_title_shorter),
         text("scope", fields.scope),
         text("sheet_counter", fields.sheet_counter),
         _cell("Page", _PAGE_COUNTER, sizes, mark=PAGE_COUNTER_LABEL),

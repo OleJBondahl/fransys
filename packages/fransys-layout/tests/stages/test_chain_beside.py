@@ -6,6 +6,8 @@ Function `n` is the sample through symbol (`samples`): model port `13` at the to
 """
 
 from dataclasses import replace
+from typing import Any
+lazy from collections.abc import Mapping
 
 from samples import drawn, function_spec, hid
 from test_joins import _spots, _wire
@@ -13,7 +15,11 @@ from test_joins import _spots, _wire
 from fransys_layout.geometry import WIRING_GRID, Facing
 from fransys_layout.stages import Chain, ChainEntry, columns_from_chains
 from fransys_layout.stages._chain_beside import beside_hosts, beside_links
-from fransys_layout.stages.references.beside_runs import beside_runs, joined_pairs
+from fransys_layout.stages.references.beside_runs import beside_pairs, beside_runs, joined_pairs
+from fransys_layout.stages.references.markers import clear_of_runs
+from fransys_layout.stages.references.types import MarkerDecision
+from fransys_layout.stages.stacking import JoinedEnd, JoinedRun
+from fransys_layout.stages.types import MarkerSide
 
 _HOST = hid("function", 1)
 _ROOMS = {(1, 1): 800}
@@ -132,3 +138,95 @@ def test_a_crowded_host_pin_leaves_one_grid_before_its_run_turns() -> None:
     )
     (run,) = runs
     assert {end.port: end.drop for end in run.ends} == {wire.a.port: WIRING_GRID, wire.b.port: 0}
+
+
+def test_a_branch_with_one_host_net_reads_from_the_end_on_the_host() -> None:
+    """CB4: only the last end (net 3) is on the host, so 3 stands on top whatever its pin height."""
+    # UNDO: stages/_chain_beside.py `_upside_down`: `first is None or first > last` -> `False`
+    by_key = _columns(top_net=9, bottom_net=3)
+    assert [cell.function for cell in by_key["branch"].cells] == [
+        hid("function", 3),
+        hid("function", 2),
+    ]
+
+
+def test_a_branch_whose_first_end_alone_is_on_the_host_keeps_its_order() -> None:
+    by_key = _columns(top_net=1, bottom_net=9)
+    assert [cell.function for cell in by_key["branch"].cells] == [
+        hid("function", 2),
+        hid("function", 3),
+    ]
+
+
+def test_a_wire_of_a_two_port_net_beside_its_host_is_asked_for_a_join() -> None:
+    """A conductor outside every star net still joins a beside column to its host's (CBF1)."""
+    # UNDO: stages/references/beside_runs.py `beside_pairs`: `if not hosts:` -> `if True:`
+    spots = _spots(("a", (1,)), ("b", (3,)))
+    wire = _wire(1, (1, 2), (3, 1))
+    hosts: Mapping[Any, Any] = {("invented", "b"): ("invented", "a")}
+    assert beside_pairs([wire], [], spots, hosts) == (wire,)
+    assert beside_pairs([wire], [wire], spots, hosts) == (), "a star's wire is asked already"
+    assert beside_pairs([wire], [], spots, {}) == (), "no beside column, no ask"
+
+
+def test_a_branch_with_a_box_head_and_one_inner_step_reads_from_the_end_on_the_host() -> None:
+    """CBF1: the box head (2) is the end on the host's lower net 1, so it ends the chain."""
+    # UNDO: stages/columns.py `read_down(chain, full, ...)` -> `read_down(chain, steps, ...)`
+    #     (the one inner step never reads reversed, so the box stays the head)
+    box = function_spec(2)
+    chain = Chain(
+        chain=hid("layout.chain", 2),
+        key=("invented", "branch"),
+        entries=(
+            ChainEntry(function=box.function, index=0, box=True),
+            ChainEntry(function=hid("function", 3), index=1),
+        ),
+        beside=_HOST,
+    )
+    specs = (_host(top_net=3, bottom_net=1), function_spec(3))
+    columns, _ = columns_from_chains(
+        (chain,), specs, drawn=(drawn(1), drawn(3)), boxes={box.function: box}
+    )
+
+    (column,) = (c for c in columns if c.beside is not None)
+    assert column.beside == _HOST
+    assert [cell.index for cell in column.cells] == [0]
+
+
+def test_a_box_pin_leaves_one_grid_before_its_run_turns() -> None:
+    """JOIN-VERTICAL: a box pin's run never lies along its edge, so it stands one grid off."""
+    # UNDO: stages/references/beside_runs.py `_drop`: `spot.crowded or spot.boxed` -> `spot.crowded`
+    spots = _spots(("a", (1,)), ("b", (3,)))
+    wire = _wire(1, (1, 2), (3, 1))
+    (host,) = spots[wire.a.port]
+    (branch,) = spots[wire.b.port]
+    boxed = replace(branch, boxed=True, facing=Facing.N)
+    _, runs, _ = beside_runs([(wire, boxed, host)], {("invented", "a"): ("invented", "b")}, _ROOMS)
+    (run,) = runs
+    assert {end.port: end.drop for end in run.ends} == {wire.a.port: 0, wire.b.port: -WIRING_GRID}
+
+
+def test_a_marker_at_a_dropped_pin_stands_a_grid_further_out() -> None:
+    """The run's row is the stub's first grid: the marker's box would touch it."""
+    # UNDO: stages/references/markers.py `clear_of_runs`: `if m.port in dropped` -> `if False`
+    near, far = (
+        MarkerDecision(
+            connection=hid("conductor", 1),
+            function=hid("function", 1),
+            port=hid("port", n),
+            side=MarkerSide.OWNER,
+            drawing_set=1,
+            page=1,
+            size=(48, 12),
+            partner=hid("port", 9),
+            partner_set=1,
+            partner_page=1,
+        )
+        for n in (1, 2)
+    )
+    ends = (
+        JoinedEnd(column=("a",), port=near.port, drop=-WIRING_GRID),
+        JoinedEnd(column=("b",), port=far.port),
+    )
+    found = clear_of_runs((near, far), (JoinedRun(drawing_set=1, page=1, ends=ends, aside=True),))
+    assert [m.out for m in found] == [WIRING_GRID, 0]

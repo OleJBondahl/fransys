@@ -25,8 +25,10 @@ from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .cable_end_rank import cable_end_rank
+from .core_pairs import cable_pairs
 from .designation import (
     _own_designation,
+    connector_segment,
     end_outside_nested_unit,
     printed_designation,
     prints_connector_label,
@@ -42,6 +44,7 @@ from .lookups import (
     require,
 )
 from .memo import Memo
+from .open_cores import open_core_rows
 from .order import natural_key
 from .reports import cable_rows
 from .rows import CableListRow, ContentsRow, HarnessCable, HarnessCore, HarnessEnd, HarnessPin
@@ -188,6 +191,7 @@ def _cable_facts(model: Model, cable: Id[Item], facts: _Facts) -> HarnessCable:
         length_mm=facts.lengths.get(cable),
         cores=cores,
         ends=_ends(model, cores, facts),
+        open_cores=open_core_rows(model, cable, unit=facts.unit),
     )
 
 
@@ -372,6 +376,13 @@ def _readable_cables(
     return tuple(sorted(found, key=lambda cable: (natural_key(cable.designation), cable.cable)))
 
 
+def end_text(model: Model, end: HarnessEnd) -> str:
+    """The end's designation, behind it the connector's segment when the device prints one."""
+    if end.connector is None or not end.designation:
+        return end.designation
+    return end.designation + connector_segment(model, end.connector)
+
+
 def cable_list_rows(model: Model, *, unit: Id[Unit] | None = None) -> tuple[CableListRow, ...]:
     """One `CableListRow` per cable of one reading: `unit`'s own, or the top-level ones.
 
@@ -402,8 +413,9 @@ def cable_list_rows(model: Model, *, unit: Id[Unit] | None = None) -> tuple[Cabl
                 core_count=cable_facts.core_count,
                 gauge_mm2=cable_facts.gauge_mm2,
                 length_mm=cable_facts.length_mm,
-                from_label=kept[0].designation if kept else "",
-                to_label=", ".join(end.designation for end in kept[1:]),
+                from_label=end_text(model, kept[0]) if kept else "",
+                to_label=", ".join(end_text(model, end) for end in kept[1:]),
+                pairs=len(cable_pairs(model, cable)) or None,
             )
         )
     return tuple(sorted(found, key=lambda row: (natural_key(row.designation), row.cable)))

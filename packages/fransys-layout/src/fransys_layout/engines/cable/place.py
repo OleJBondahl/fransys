@@ -20,6 +20,7 @@ from fransys_layout.engines.cable.place_links import (
     lower,
     upper_lines,
 )
+from fransys_layout.engines.cable.place_open import STUB, Landing, open_landing
 from fransys_layout.engines.cable.place_rows import landing_map, row_xs
 from fransys_layout.engines.cable.place_wires import (
     crosses,
@@ -47,7 +48,6 @@ from fransys_layout.stages.space import Obstacle
 
 G = WIRING_GRID
 ROW = 2 * G  # label room, end-box height and the band between an end box and the cable box
-STUB = G  # the stub of a blank end
 
 
 def block_pitch(widest: int) -> int:
@@ -141,6 +141,12 @@ def _place_row(
     return tuple(_place_end(end, x, pitch, y, top=top) for end, x in zip(row, xs, strict=True))
 
 
+def _gap(facts: BlockFacts) -> int:
+    """The room under the cable box before the first track: a harness frame or a stub has it."""
+    stubbed = any(core.open for core in facts.cores)
+    return G if facts.harness_width is not None or stubbed else 0
+
+
 def _place_rows(
     facts: BlockFacts, x0: int, pitch: int, drop: int
 ) -> tuple[tuple[PlacedEnd, ...], int, int]:
@@ -155,7 +161,7 @@ def _place_rows(
     harness = facts.harness_width is not None
     if harness:
         box_y = box_top(facts, box_y)
-    below = box_y + box_room(facts)[0] + (G if harness else 0)
+    below = box_y + box_room(facts)[0] + _gap(facts)
     if not facts.bottom:
         return top, box_y, below
     blank = facts.bottom[0].blank
@@ -164,14 +170,17 @@ def _place_rows(
     return (*top, *bottom), box_y, end_y + (0 if blank else 2 * ROW)
 
 
-type Landing = tuple[bool, tuple[int, PlacedEnd], tuple[int, PlacedEnd]]
+def _landings(facts: BlockFacts, ends: tuple[PlacedEnd, ...], box_y: int = 0) -> list[Landing]:
+    """Per core: whether `end_a` is the top end, then its top and bottom landing as (x, end).
 
-
-def _landings(facts: BlockFacts, ends: tuple[PlacedEnd, ...]) -> list[Landing]:
-    """Per core: whether `end_a` is the top end, then its top and bottom landing as (x, end)."""
+    `box_y` places an open core's stubs; only `_wires` reads their height.
+    """
     where = landing_map(ends)
     found = []
     for core in _cores(facts):
+        if core.open:
+            found.append(open_landing(facts, core, where, box_y))
+            continue
         a, b = where[core.conductor, core.end_a], where[core.conductor, core.end_b]
         found.append((True, a, b) if a[1].top else (False, b, a))
     return found
@@ -209,7 +218,7 @@ def _wires(
 
     A row link keeps its row (`place_links`); a bottom-row link is routed with the lower cores.
     """
-    landings = _landings(facts, ends)
+    landings = _landings(facts, ends, box_y)
     below = box_y + box_room(facts)[0]
     pairs = [
         (Point(x=top[0], y=below), Point(x=top[0] if bottom[1].blank else bottom[0], y=bottom[1].y))
@@ -247,6 +256,7 @@ def _core_wire(
         text_y=box_y + box_room(facts)[1],
         stub_a=(top if a_top else bottom)[1].blank,
         stub_b=(bottom if a_top else top)[1].blank,
+        open=core.open,
     )
     return wire, (upper, lower_run)
 
@@ -322,7 +332,7 @@ def _place_at(
         return None
     boxes, harness = frame
     shape = [placed.box for placed in boxes]
-    band = _band(facts, ends, tuple(shape), box_y + box_room(facts)[0] + (G if harness else 0))
+    band = _band(facts, ends, tuple(shape), box_y + box_room(facts)[0] + _gap(facts))
     wires = _wires(facts, ends, box_y, plan, band)
     if wires is None:
         return None

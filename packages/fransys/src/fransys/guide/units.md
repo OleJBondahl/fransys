@@ -144,7 +144,9 @@ are declared once there: `d.device("X2", "DEMO-CONN-2P", interface=True, unused=
 of one placed instance open, the container names it on `d.add`. `unused=("X1",)` takes every boundary
 function of the device in the unit's field `X1`. `unused=("X1.x1",)` takes that one function. A field that holds a tuple of devices takes an index, `"X[0]"` or `"X[0].x1"`. The bare `"X"` takes every element. A
 misspelt field raises and lists the fields. A name that is no boundary raises and lists the boundary
-functions. A boundary both mated and declared unused still gives `UNUSED_CONTRADICTED`.
+functions. A boundary both mated and declared unused still gives `UNUSED_CONTRADICTED`. The check
+runs at the unit the `unused=` is on: a function that unit hands up from a nested unit, and wires
+across the nested one, is not contradicted.
 
 A field typed `fr.Terminal` names that terminal's one function: `unused=("X1",)`. A field typed
 `fr.Run` or `fr.TerminalStrip` names every boundary terminal it holds. `"X1[1].f"` on a terminal

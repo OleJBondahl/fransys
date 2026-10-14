@@ -6,6 +6,7 @@ layout defaults, so it lives in `read/`, the one place that may import `fransys_
 
 lazy from decimal import Decimal
 
+from fransys_layout.geometry import PAGE_PAD
 from fransys_layout.stages import Profile, SheetFormat
 from fransys_model.derive import text_room_g
 from fransys_model.derive.drawing_text import content_extent
@@ -25,6 +26,7 @@ DEFAULT_SHEET = SheetFormat(
     content_height=content_extent(_HOUSE_SHEET.content_height_mm, _HOUSE_SHEET.module_mm),
     frame_columns=_HOUSE_SHEET.frame_columns,
     frame_rows=_HOUSE_SHEET.frame_rows,
+    inset=PAGE_PAD,
 )
 
 

@@ -106,6 +106,7 @@ def outlined(
         placed_box,
         moved,
         black_boxes(model),
+        inputs.sheet.inset,
     )
     pages, outlines = unit_outlines(laid.plans, laid.pages, laid.markers, titled)
     return with_middle(laid.plans, pages, outlines, placed_box, laid.shapes)

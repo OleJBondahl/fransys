@@ -5,6 +5,7 @@ from collections import deque
 from typing import TYPE_CHECKING, Final
 
 from fransys_model.derive.lookups import position_rank, unit_chain
+from fransys_model.derive.passes._plc_ambiguous import ambiguous_findings
 from fransys_model.derive.passes._plc_wired import (
     reaches_open_boundary,
     unit_of,
@@ -115,27 +116,27 @@ def allocate_plc(model: Model) -> tuple[Model, tuple[Finding, ...]]:
     )
     ranked = _ranked(model)
     existing = {binding.channel for binding in bindings.values()}
-    wired = wired_requests(
+    pick = wired_requests(
         model,
         requests,
         skip=bound_subjects,
         taken=existing,
-        rank={function.id: place for place, (function, _) in enumerate(ranked)},
+        ranked={function.id: (place, signal) for place, (function, signal) in enumerate(ranked)},
     )
-    taken = existing | set(wired.values())
+    taken = existing | set(pick.bound.values())
     channels = _channels(model, ranked)
     free = {
         key: deque(function for function in queue if function.id not in taken)
         for key, queue in channels.items()
     }
     served: list[PlcBindingFacet] = []
-    findings: list[Finding] = []
+    findings = ambiguous_findings(model, requests, pick.ambiguous)
     origins: dict[Id[PlcBindingFacet], Origin] = {}
     for request in requests:
-        if request.subject in bound_subjects:
+        if request.subject in bound_subjects or request.subject in pick.ambiguous:
             continue
         function = all_functions[request.subject]
-        channel = wired.get(request.subject)
+        channel = pick.bound.get(request.subject)
         if channel is None:
             queue = _serving(model, unit_of(model, function), request.signal, channels)
             available = free.get(queue)

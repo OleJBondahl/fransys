@@ -131,8 +131,8 @@ def test_a_nested_units_connector_csv_keeps_its_columns_with_the_mate_cells_empt
     (csv_path,) = (path for path in written if path.name.endswith("connectors.csv"))
     lines = csv_path.read_text(encoding="utf-8").splitlines()
     assert lines[0].startswith("designation,style,pincount,gender,mate_designation,")
-    assert "-X1,header-2p,2,male,,1,," in lines
-    assert "-X1,header-2p,2,male,,2,," in lines
+    assert "-X1,header-2p,2,male,,1,,,-K1:A1" in lines
+    assert "-X1,header-2p,2,male,,2,,,-K1:A2" in lines
     assert "WH1-P1" not in "\n".join(lines)
 
 

@@ -207,7 +207,8 @@ class Run(TerminalStrip):
             first, last = (1, count) if bridged is True else bridged
             numbers = range(first, last + 1)
             strip._bridge(*(self._terminal(number) for number in numbers))
-            self._claim(*numbers)
+            if strip._now() is not None:  # outside every block each terminal joins its first block
+                self._claim(*numbers)
 
     @override
     def _as_parent(self) -> Strip:

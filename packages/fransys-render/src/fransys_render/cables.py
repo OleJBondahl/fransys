@@ -1,17 +1,19 @@
 """Laid-out cable blocks to SVG, one per `layout.cable_block`."""
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from electrical_symbols import WIRING_GRID
 from fransys_model.derive import printed_designation
 from fransys_model.derive.cable_drawing import (
+    block_brackets,
     block_cables,
-    block_wires,
     cable_block_key,
     cable_heading,
-    core_text,
+    core_texts,
     drawn_pins,
     end_label,
+    pair_room,
     row_links,
 )
 from fransys_model.layout import (
@@ -22,6 +24,7 @@ from fransys_model.layout import (
     CoreWire,
     EndBox,
     EndStyle,
+    OpenCoreWire,
     layout_of,
     profile_of,
     sheet_format_of,
@@ -32,10 +35,10 @@ from ._style import style_block
 
 if TYPE_CHECKING:
     from fransys_model.derive import HarnessCable
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Id, Model
 
 
-def _of_block[R: (CableBox, EndBox, CoreWire)](
+def _of_block[R: (CableBox, EndBox, CoreWire, OpenCoreWire)](
     model: Model, kind: type[R], block: CableBlock
 ) -> tuple[R, ...]:
     """Every `kind` record of `block`, ordered by `id`."""
@@ -88,7 +91,7 @@ def _end(model: Model, pen: Pen, block: CableBlock, end: EndBox) -> str:
     if end.style is EndStyle.BLANK:
         return ""
     dashed = _DASHED_BY_STYLE[end.style]
-    label = end_label(model, end.item, block.unit)
+    label = end_label(model, end.item, block.unit, block.subject)
     below = end.y + end.height + pen.pad_g
     above = end.y - pen.pad_g - pen.font_g
     parts = [pen.outline("end-box", (end.x, end.y, end.width, end.height), dashed=dashed)]
@@ -105,7 +108,7 @@ def _end(model: Model, pen: Pen, block: CableBlock, end: EndBox) -> str:
     return "".join(parts) + _cells(model, pen, block, end, dashed=dashed)
 
 
-def _wire(pen: Pen, wire: CoreWire, text: str, *, link: bool) -> str:
+def _wire(pen: Pen, wire: CoreWire | OpenCoreWire, text: str, *, link: bool) -> str:
     """One core or single wire: its two runs and its text, from layout's points.
 
     The text reads upward along the wire; a row link's reads level, centred on the point.
@@ -120,21 +123,47 @@ def _wire(pen: Pen, wire: CoreWire, text: str, *, link: bool) -> str:
     return runs + pen.upward_text("core", (wire.text_x, wire.text_y), text)
 
 
+def _core_of(wire: CoreWire | OpenCoreWire) -> Id[Any]:
+    return wire.core if isinstance(wire, OpenCoreWire) else wire.conductor
+
+
+def _brackets(
+    model: Model, pen: Pen, block: CableBlock, wires: tuple[CoreWire | OpenCoreWire, ...]
+) -> str:
+    """Each pair bracket: a line over its two cores' texts with a tick down each, and its label.
+
+    It stands in the pair room under the cable box's heading (`pair_room`, layout's own).
+    """
+    room = pair_room(pen.font_g, pen.pad_g, WIRING_GRID)
+    boxes = {box.item: box for box in _of_block(model, CableBox, block)}
+    xs = {_core_of(wire): wire.text_x for wire in wires}
+    parts = []
+    for bracket in block_brackets(model, block.subject, block.unit):
+        top = boxes[bracket.cable].y
+        a, b = xs[bracket.core_a], xs[bracket.core_b]
+        line, tick = top + room.line, top + room.tick
+        parts.append(pen.polyline("core", ((a, tick), (a, line), (b, line), (b, tick))))
+        parts.append(
+            pen.text("core", (Decimal(a + b) / 2, top + room.label), bracket.label, middle=True)
+        )
+    return "".join(parts)
+
+
 def _render_block(model: Model, block: CableBlock) -> str:
     """One block's SVG, sized to the block in mm on its sheet's module."""
     sheet = sheet_format_of(model, block.sheet_format)
     profile = profile_of(model)
     pen = Pen(sheet.module_mm, profile.text_height_mm, profile.marker_padding)
     cables = block_cables(model, block.subject, block.unit)
-    texts = {core.conductor: core_text(core) for cable in cables for core in cable.cores}
-    texts |= {w.conductor: w.text for w in block_wires(model, block.subject, block.unit)}
+    texts = core_texts(model, block.subject, block.unit)
     links = set(row_links(model, block.subject, block.unit))
     body = _boxes(model, pen, block, cables)
     body += "".join(_end(model, pen, block, end) for end in _of_block(model, EndBox, block))
+    wires = (*_of_block(model, CoreWire, block), *_of_block(model, OpenCoreWire, block))
     body += "".join(
-        _wire(pen, wire, texts[wire.conductor], link=wire.conductor in links)
-        for wire in _of_block(model, CoreWire, block)
+        _wire(pen, wire, texts[_core_of(wire)], link=_core_of(wire) in links) for wire in wires
     )
+    body += _brackets(model, pen, block, wires)
     return pen.svg(block.width, block.height, style_block() + body)
 
 

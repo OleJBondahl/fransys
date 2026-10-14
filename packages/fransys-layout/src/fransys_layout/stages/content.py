@@ -1,4 +1,4 @@
-"""The sheet's content box: the one place `Box(0, 0, content_width, content_height)` is built.
+"""The sheet's content box: the one place the box inside the inset is built (layout-0187).
 
 Also the page's drawn extent, the box a harness line routes in (layout-0166).
 """
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 
 def content_box(sheet: SheetFormat) -> Box:
-    """`sheet`'s content box in page coordinates, whose edge no text may cross."""
-    return Box(x=0, y=0, width=sheet.content_width, height=sheet.content_height)
+    """`sheet`'s content box in page coordinates, inset by `sheet.inset`; no ink may cross it."""
+    return Box(x=sheet.inset, y=sheet.inset, width=sheet.inner_width, height=sheet.inner_height)
 
 
 def drawn_extent(content: Box, keepouts: Iterable[Box], room: int) -> Box:

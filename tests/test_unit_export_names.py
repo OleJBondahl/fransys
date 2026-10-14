@@ -130,6 +130,7 @@ def test_the_boards_folder_never_names_the_boards_own_tag(board_write, cabinet_w
     assert text_files == {
         "demo-io-board-v1.3-bom.csv",
         "demo-io-board-v1.3-cables.csv",
+        "demo-io-board-v1.3-cores.csv",
         "demo-io-board-v1.3-connectors.csv",
         "demo-io-board-v1.3-designations.csv",
         "demo-io-board-v1.3-plc.csv",

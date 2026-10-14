@@ -1,8 +1,8 @@
 """Field case: a strip terminal and a relay contact pin on one page, facing each other's way.
 
-The engineering shape: twelve small circuits in one unit, each a relay whose contact takes its
-feed from one of six terminals of a shared strip and whose coil is fed from another strip. The
-first six circuits fill a page; the next six reuse the same six terminals, so a terminal is
+The engineering shape: ten small circuits in one unit, each a relay whose contact takes its
+feed from one of five terminals of a shared strip and whose coil is fed from another strip. The
+first five circuits fill a page; the next five reuse the same five terminals, so a terminal is
 drawn on the second page too, in the boundary row. On the first page the terminal stands in
 its own column and a contact stands in another: the terminal's pin leaves southward, the
 contact's pin northward. The two ends are one wire between neighbours, not a turn round a device.
@@ -31,8 +31,8 @@ if TYPE_CHECKING:
     from fransys_model.kernel import Id
     from fransys_model.vocab import Port
 
-_CIRCUITS = 12
-_BUS = 6
+_CIRCUITS = 10
+_BUS = 5
 
 
 class _Io(NamedTuple):
@@ -50,7 +50,7 @@ class _Io(NamedTuple):
     number="S-1",
 )
 def _shape(d: fr.Design) -> _Io:
-    """Twelve relay circuits on two shared strips, six terminals reused."""
+    """Ten relay circuits on two shared strips, five terminals reused."""
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 8, interface=True)
     x2 = d.terminal_strip("X2", "DEMO-TB-2.5", 8)
     for i in range(_CIRCUITS):

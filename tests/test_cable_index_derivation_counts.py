@@ -1,7 +1,8 @@
 """Speed guard: `derive.reports`'s two cable indexes build once per digest.
 
-`_cable_products_by_part` and `_cores_by_cable` (`derive/reports.py`) replace two per-call
-O(n) scans (`_product_colours`'s linear search over every `CableProductFacet`, and
+`_cable_products_by_part` (`derive/core_pairs.py`) and `_cores_by_cable` (`derive/reports.py`)
+replace two per-call O(n) scans (`_product_colours`'s linear search over every
+`CableProductFacet`, and
 `cable_rows`'s per-call rebuild of `core_of` plus its scan of every conductor) with a
 `digest_cached` index apiece. The whole point of the change is that each index builds once
 per model digest, not once per `cable_rows` call: this test counts the DECORATED builder's
@@ -34,8 +35,8 @@ if str(_TESTS_DIR) not in sys.path:
 
 from scale_units_fixture import build_scale  # noqa: E402
 
+from fransys_model.derive.core_pairs import _cable_products_by_part  # noqa: E402
 from fransys_model.derive.reports import (  # noqa: E402
-    _cable_products_by_part,
     _cores_by_cable,
     cable_rows,
 )

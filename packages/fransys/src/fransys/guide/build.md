@@ -8,6 +8,8 @@ when there is a document.
 finding is an `ERROR`. `check` also places the system overview (`overview.html`) and returns its
 findings, so a whole-system or a unit write meets them at the same gate; `build` never does.
 
+`fr.__version__` gives the installed Fransys version. It is not in `fr.__all__`.
+
 ## Where a build can fail
 
 Four stages. Each fails differently. A mistake in an authoring call itself, such as a design call
@@ -114,9 +116,10 @@ result = fr.build(d, doc)
 assert len(fr.check(result)) == 6
 ```
 
-`fr.check(result)` holds two `PORT_UNCONNECTED` `INFO` findings from the validators, two
-`DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, two `ERROR`s that only the drawing
-and PDF checks find. A script that asserted the design clean would have shipped it.
+`fr.check(result)` holds two `PORT_UNCONNECTED` `INFO` findings from the validators, three
+`DOCUMENT_EMPTY_LIST` `INFO` findings and, most importantly, one `ERROR`, `LAYOUT_MISSING`,
+that only the drawing and PDF checks find. The schematic page has nothing to draw and is left out;
+the BOM page stands. A script that asserted the design clean would have shipped it.
 
 `write` runs the same check internally, so it raises on those errors:
 
@@ -124,13 +127,13 @@ and PDF checks find. A script that asserted the design clean would have shipped 
 try:
     fr.write(result, Path("out"))
 except fr.BuildErrors as e:
-    assert len(e.findings) == 2
+    assert len(e.findings) == 1
     assert all(f.severity is fr.Severity.ERROR for f in e.findings)
 else:
     raise AssertionError("expected BuildErrors")
 ```
 
-`e.findings` holds exactly the two `ERROR`s, not every finding of `fr.check(result)`. `out_dir` is
+`e.findings` holds exactly the one `ERROR`, not every finding of `fr.check(result)`. `out_dir` is
 left with nothing written for this build. No bad export, ever. There is no `allow_errors`,
 `force` or `draft` parameter on `write`, and none will be added.
 
@@ -148,6 +151,7 @@ written = fr.write(result, Path("out"))
 assert sorted(p.name for p in written) == [
     "bom.csv",
     "cables.csv",
+    "cores.csv",
     "designations.csv",
     "overview.html",
     "plc.csv",
@@ -156,8 +160,8 @@ assert sorted(p.name for p in written) == [
 ```
 
 `fr.export_names(result, *, unit=None)` gives the name `write` gives each export, by `(kind, subject)`,
-without writing or compiling anything. A kind is `bom`, `plc`, `wires`, `designations`, `overview`
-or `cables` (subject `None`); `terminals`, `connectors` or `wago` with the item's id; or `pdf` with
+without writing or compiling anything. A kind is `bom`, `plc`, `wires`, `designations`, `overview`,
+`cables` or `cores` (subject `None`); `terminals`, `connectors` or `wago` with the item's id; or `pdf` with
 the document's id. The key is a tuple: `("bom", None)` for a whole-set file, `("pdf", <document id>)`
 for a document. `write` names its files through it, so a script never builds a name itself.
 
@@ -188,6 +192,8 @@ title block or history table. The names are a built-in default with no option or
 - **Prefix, kind, fragment.** A name is `<prefix>[-<kind>][-<fragment>].<ext>`:
   `demo-io-board-v1.1-bom.csv`, per item `demo-io-board-v1.1-terminals-X1.csv`, and for the
   unit's own root the bare kind `demo-io-board-v1.1-terminals.csv`.
+- **Where each list is.** A unit's cables stay in the unit's own `cables.csv`, because a parent
+  sees the unit as a black box.
 - **A PDF is named by its subject, not its cover file.** A document of the set itself is
   `<prefix>.pdf`; a `harness_drawing` adds `-harness`; a document of an item or location inside
   the set adds that subject's fragment. A document whose subject is a unit takes that unit's

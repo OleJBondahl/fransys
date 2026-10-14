@@ -144,9 +144,9 @@ def sheet_fits(
     drawn: tuple[DrawnFunction, ...], profile: Profile, sheet: SheetFormat, headroom_lanes: int
 ) -> Callable[[Column], bool]:
     """layout-0074: a column fits when its rows, `row_spacing` apart, stand inside the sheet."""
-    room = sheet.content_height - headroom_lanes * WIRING_GRID
+    room = sheet.inner_height - headroom_lanes * WIRING_GRID
     return partial(
-        _fits, {one.function: one for one in drawn}, profile.row_spacing, room, sheet.content_width
+        _fits, {one.function: one for one in drawn}, profile.row_spacing, room, sheet.inner_width
     )
 
 

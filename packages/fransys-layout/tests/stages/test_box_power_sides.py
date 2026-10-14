@@ -165,3 +165,23 @@ def test_a_power_supply_has_ac_on_top_and_every_dc_pin_at_the_bottom() -> None:
     assert _sides(psu) == {"L": "n", "N": "n", "p": "s", "m": "s"}
     assert _x(psu, "L") < _x(psu, "N")
     assert _x(psu, "p") < _x(psu, "m")
+
+
+def test_a_box_of_a_beside_column_does_not_face_another_box() -> None:
+    """A box in `aside` keeps its pins off a box partner below; without it they turn to it."""
+    # UNDO: stages/boxes.py:box_sides, `if one.function in aside` -> `if False`
+    #     (the beside box turns its pin to the box partner)
+    box = _box(("a",))
+    other = replace(drawn(2), geometry=generic_box_geometry(("p",)))
+    other = replace(other, ports=(DrawnPort(port=_port(9), symbol_port="p"),))
+    at_box = replace(placed(1, x=0, y=0), geometry=box.geometry)
+    at_other = replace(placed(2, x=0, y=5000), geometry=other.geometry)
+    one = connection(1, 2, 1)
+    wired = (replace(one, b=replace(one.b, port=_port(9))),)
+    spots, boxes, none = (at_box, at_other), (box, other), ({}, {}, {})
+
+    (plain, _) = box_sides(spots, boxes, wired, none)
+    (aside, _) = box_sides(spots, boxes, wired, none, frozenset({box.function}))
+
+    assert _sides(plain) == {"a": "s"}
+    assert _sides(aside) != {"a": "s"}

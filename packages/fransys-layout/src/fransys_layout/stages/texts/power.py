@@ -23,6 +23,7 @@ from fransys_layout.geometry import (
     text_width,
     translate,
 )
+from fransys_layout.stages.labels import port_lanes
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.sizing import with_rooms
 from fransys_layout.stages.space import Shape, Space, unowned
@@ -206,7 +207,8 @@ def with_power_labels(
     if not texts:
         return labels, ()
     shapes = page_shapes(markers, placed, labels, symbols=True)
-    done, findings = place_texts(texts, Space(shapes=shapes, content=frame.content), DEFAULT_TABLE)
+    space = Space(shapes=shapes, content=frame.content)
+    done, findings = place_texts(texts, space, DEFAULT_TABLE, lanes=port_lanes(placed))
     by_port = {one.port: one for one in places}
     made = tuple(
         PlacedLabel(

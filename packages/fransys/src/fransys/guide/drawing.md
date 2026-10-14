@@ -89,7 +89,8 @@ The pump-station example in the examples repository has this shape.
 5. Wire each circuit as a path, source first: supply, protection, switching, load. Layout stands the bands in that order, with the first terminal on top and the last at the bottom.
 6. Set the page order once with `d.layout.profile(group_ranks=...)`. A rank map replaces the house one whole, and an unranked block sorts last.
 7. Set `hide_unused_pins=True` to leave unwired pins of box-drawn devices off the drawings. The lists keep them.
-8. Build, then read `fr.check(result)`. The last part of this page lists the findings that point at a missing item above.
+8. A terminal that only the parent wires is left off the unit's own pages; its table lists it.
+9. Build, then read `fr.check(result)`. The last part of this page lists the findings that point at a missing item above.
 
 Take each consumer's terminal inside the consumer's own block, since a terminal joins the block it is first taken in. One terminal shared by blocks on different pages needs a marker pair for each of them.
 
@@ -135,7 +136,7 @@ Authored numbers live on the sheet and the profile. A unit sets its own in its b
 def circuits(c, module_mm, text_height_mm=Decimal("1.8")):
     psu = c.device("G1", "DEMO-PSU-24")
     dc = c.dc_supply("24VDC", psu.output)
-    for i in range(1, 31):
+    for i in range(1, 34):
         with c.function(f"F{i}", f"Relay {i}"):
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
             c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
@@ -162,6 +163,7 @@ Each hint advises the layout and invents nothing. Every name below is a method o
 | These groups on one sheet | `d.layout.keep_together(g1, g2)` | Moves the later groups beside the first, so they share a page when their widths fit. |
 | This order | `d.layout.order(g1, g2)` | Moves `g2` after `g1`. The other groups keep their places. |
 | This group starts a new sheet | `d.layout.break_before(g)` | Starts a new page at `g`. |
+| This page title | `d.layout.page_title(thing, text)` | Prints `text` as the title of the pages that draw the block, function or device. |
 
 `d.series` is a wiring call, not a layout hint, so it has no row.
 
@@ -253,7 +255,7 @@ def compact_sheet(scope):
 
 
 def numbers(c, sheet=False):
-    for i in range(1, 31):
+    for i in range(1, 34):
         with c.function(f"F{i}", f"Relay {i}"):
             c.device(f"K{i}", "DEMO-RLY-2CO-24")
     compact = compact_sheet(c)
@@ -322,7 +324,7 @@ else:
 - **`FUNCTION_UNPLACED_IN_COLUMN`.** No current path reaches the function, so it stands alone in a column. A box-drawn device, such as a power supply or a lamp, has no pole of its own. It stands in a path only when a path ends on it. A lamp wired straight across two rails is on none, and wired after a contact it ends that contact's path. Many of these in one unit mean many devices hang on no path.
 - **`LABEL_UNPLACED`.** A tag, marking or cross-reference found no free place. A `text_height_mm` above the house value is one cause. Put it back to 1.8.
 - **`CHAIN_BROKEN`.** A path was cut by a page break between two blocks. Keep the circuit in one block.
-- **`PAGE_OVERFULL` and `OUT_OF_CONTENT_BOX`.** A circuit is too big for its page. Declare its supply, wire it as paths, or split it into blocks. If it still fires, send the smallest model that shows it.
+- **`PAGE_OVERFULL` and `OUT_OF_CONTENT_BOX`.** A circuit is too big for its page. Declare its supply, wire it as paths, or split it into blocks. Else send the smallest model. `PAGE_PAD` frames the ink.
 - **Readability.** Five findings tell you whether the printed pages can be read. `TEXT_TOO_SMALL` says the profile prints text under `min_text_height_mm`. `PAGE_UNDERFILLED` says a page's content covers under half of its content box. `TEXT_OVERLAP`, `WIRE_OVER_LABEL` and `LABEL_UNPLACED` say text collides with text or a wire, or has no place. To print text larger, raise `text_height_mm` on the profile.
 
 The next block counts the first two. Lamps wired across the rails stand alone, lamps after a contact do not, and a text height of 24 leaves tags without a place.

@@ -9,7 +9,7 @@ from fransys_layout.stages.replicate import UnitBoundary
 from fransys_model.derive import black_box_unit, natural_key
 from fransys_model.derive.instance_tag import instance_name, instance_tags
 from fransys_model.vocab.membership import boundary, units
-from fransys_model.vocab.tables import functions, items
+from fransys_model.vocab.tables import functions, items, ports
 from fransys_model.vocab.tables import units as units_table
 from fransys_model.vocab.unit_index import unit_index
 
@@ -105,6 +105,12 @@ def black_box_reads(model: Model, nested: frozenset[Id[Any] | None]) -> BlackBox
 def boundary_edge_set(model: Model) -> frozenset[Id[Any]]:
     """Every unit's boundary functions, in one set (`own_set_texts`)."""
     return frozenset(f for unit in units(model) for f in boundary(model, unit))
+
+
+def open_end_inputs(model: Model) -> tuple[frozenset[Id[Any]], frozenset[Id[Any]]]:
+    """The boundary functions and their ports (`open_ends` reads an item box through the ports)."""
+    edges = boundary_edge_set(model)
+    return edges, frozenset(port.id for port in ports(model).values() if port.function in edges)
 
 
 def shared_boundaries(model: Model) -> frozenset[Id[Any]]:

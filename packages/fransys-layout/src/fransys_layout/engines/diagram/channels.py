@@ -10,12 +10,11 @@ lazy from collections.abc import Mapping, Sequence
 from fransys_layout.engines.diagram.frame_values import FrameChannel, FrameCut, FrameTrack
 from fransys_layout.engines.diagram.sizes import (
     MARKER_W,
-    PAGE_PAD,
     TRACK_PITCH,
     label_room,
     tab_reach,
 )
-from fransys_layout.geometry import Facing
+from fransys_layout.geometry import PAGE_PAD, Facing
 from fransys_layout.stages.channel import plan_channel
 lazy from fransys_layout.engines.diagram.arrange import Joint
 lazy from fransys_layout.engines.diagram.frame_values import FrameEnd

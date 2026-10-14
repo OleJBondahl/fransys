@@ -285,7 +285,7 @@ def _stack_page(
         _cells(column, drawn_of, profile, stacking.label_boxes)
         for column in _in_plan_order(plan, columns)
     ]
-    _spread(page, profile.column_gap)
+    _spread(page, profile.column_gap, sheet.inset)
     # The first rows leave room above for their texts (tags, point texts, markers on N
     # ports) and the last rows below, inside the content box
     lift, sink = _text_room(page, profile, drawn_of, texts)
@@ -296,10 +296,10 @@ def _stack_page(
     lift, sink = max(lift, band, up), max(sink, band, down)
     # Two ports stacked along a stub stand as far apart as the texts at them reach out
     make_room(page, drawn_of, texts, gaps_of=gaps_of, profile=profile)
-    top = stacking.headroom_lanes * WIRING_GRID + lift
+    top = sheet.inset + stacking.headroom_lanes * WIRING_GRID + lift
     for rows in page:
         _stack(rows, profile.row_gap, top=top)
-    floor = sheet.content_height - stacking.bottom_headroom_lanes * WIRING_GRID - sink
+    floor = sheet.bottom - stacking.bottom_headroom_lanes * WIRING_GRID - sink
     _align_faces(page)  # A mated pair touches before the spacing measures it
     _space(page, profile.row_spacing, narrowed)
     return page, top, floor
@@ -563,9 +563,8 @@ def _widest_step(rows: Sequence[list[_Cell]]) -> int | None:
     return max(steps, default=None)
 
 
-def _spread(page: Sequence[list[list[_Cell]]], column_gap: int) -> None:
+def _spread(page: Sequence[list[list[_Cell]]], column_gap: int, left: int = 0) -> None:
     """Give every column its axis, left to right, keep-out edges a column gap apart."""
-    left = 0
     for rows in page:
         _lane_offsets(rows)
         cells = [cell for row in rows for cell in row]

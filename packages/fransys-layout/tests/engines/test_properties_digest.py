@@ -175,7 +175,7 @@ def test_a_relay_in_one_group_changes_records_only_on_the_pages_of_that_group(
 
 def test_the_page_local_check_can_fail() -> None:
     """A group on a page of its own that also changes is caught: `=P2` is asked about a
-    layout it shares no page with (the 250 mm sheet's own layout, moved by the relay)."""
+    layout it shares no page with (the 254 mm sheet's own layout, moved by the relay)."""
     _, plain, _ = _run(width_mm=250)
     _, extra, _ = _run(extra_relay=True, width_mm=250)
     assert _moved_off_shared_pages(plain, extra, make_id(AspectNode, ("nowhere",))) != []
@@ -249,7 +249,7 @@ def _groups_sharing_a_page_with_p2(*models: Model) -> set:
 
 @pytest.mark.parametrize(
     ("width_mm", "cut", "replica", "page_lost"),
-    [(_APART_WIDTH, 1, True, False), (_MERGING_WIDTH, 1, False, True), (260, 0, False, False)],
+    [(_APART_WIDTH, 1, True, False), (_MERGING_WIDTH, 1, False, True), (264, 0, False, False)],
 )
 def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_net(
     *, width_mm: int | None, cut: int, replica: bool, page_lost: bool
@@ -261,7 +261,7 @@ def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_n
     and a page is keyed by its first group, so one whose group moves onto P2's page is lost
     (`page_lost`). On the default sheet and on `_MERGING_WIDTH` `=P2` leaves the page it shared
     with `=P1`, so the K1:14 to K2:13 wire, the only one across the two, is cut and gets its
-    marker pair (links.md 6.6): `cut` is 1 there and 0 on the 260 mm sheet (250 mm no longer
+    marker pair (links.md 6.6): `cut` is 1 there and 0 on the 264 mm sheet (254 mm no longer
     keeps `=SUP` and `=P2` apart once K9 widens `=P2`), where every group has a
     page of its own before and after. On the default sheet `=P2` also stands apart from
     `=SUP`, whose page keeps its key, so `=P2`'s page needs its own replica of the rail terminal

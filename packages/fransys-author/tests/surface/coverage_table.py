@@ -48,6 +48,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.bridge": surface("TerminalStrip.run(bridged=)"),
     "Scope.cable": surface("Design.cable") + surface("Design.cable(length_m=)"),
     "Cable.core": surface("Cable.core"),
+    "Cable.open_core": surface("Cable.spare"),
     "Scope.wiring": surface("Design.wire"),
     "Wiring.__call__": surface("Design.wire(n=)"),
     "Wiring.run": surface("Design.wire"),

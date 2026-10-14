@@ -26,6 +26,8 @@ from ._lists import (
     wire_label_list_page,
 )
 from ._pages import cover_page, notes_page
+from ._schematic_yield import schematic_yields
+from ._sheet_index import sheet_index_page
 from ._sizes import sizes_of
 from .presets import page_kinds
 
@@ -42,6 +44,7 @@ if TYPE_CHECKING:
 _HEADING_WORDS: dict[PageKind, str] = {
     PageKind.COVER: "Cover",
     PageKind.NOTES: "Notes",
+    PageKind.SHEET_INDEX: "Sheets",
     PageKind.CONTENTS: "Contents",
     PageKind.PLC_LIST: "PLC list",
     PageKind.TERMINAL_LIST: "Terminal list",
@@ -90,6 +93,8 @@ def _text_page(kind: PageKind, model: Model, record: Document, pages: tuple[Page
         return cover_page(model, record)
     if kind is PageKind.NOTES:
         return notes_page(record)
+    if kind is PageKind.SHEET_INDEX:
+        return sheet_index_page(model, record, pages)
     if kind is PageKind.CONTENTS:
         return contents_page(model, record, pages)
     if kind is PageKind.CABLE_LIST:
@@ -107,6 +112,8 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
 ) -> str:
     """The Typst source of one page kind; the two drawing kinds set their own frame."""
     if kind is PageKind.SCHEMATIC:
+        if schematic_yields(model, record, pages):  # pdf-0033: no drawing set, no page
+            return ""
         return schematic_source(model, record, sheet, schematic_pages(model, record, pages), svgs)
     if kind is PageKind.HARNESS_DRAWING:
         cables = harness_cables_for(model, record, pages)

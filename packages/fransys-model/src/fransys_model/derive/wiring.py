@@ -17,10 +17,11 @@ lazy from fransys_model.vocab.connectivity import Conductor, Net
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .closure import physical_nets
-from .designation import end_outside_nested_unit, terminal_designation, unit_list_context
-from .drawing_text import port_designation_in
+from .designation import terminal_designation, unit_list_context
+from .far_ends import far_ends
 from .indexes import build_indexes
 from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
+from .open_core_ends import open_ends_at
 from .order import in_designation_order, natural_key
 from .rows import TerminalRow
 
@@ -88,15 +89,6 @@ def _jumper_groups(model: Model, rows: list[Id[Item]]) -> dict[Id[Item], int]:
     return number
 
 
-def _end_text(
-    model: Model, port: Id[Port], context: Id[AspectNode] | None, unit: Id[Unit] | None
-) -> str:
-    """One far end as printed: `""` outside a nested `unit`, else `port_designation_in`."""
-    if end_outside_nested_unit(model, item_of_port(model, port), unit):
-        return ""
-    return port_designation_in(model, port, context, unit=unit)
-
-
 def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's context
     model: Model,
     idx: Indexes,
@@ -118,17 +110,7 @@ def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's co
         for port in idx.ports_by_function.get(function, ())
         if ports(model)[port].role is role
     }
-    all_conductors = conductors(model)
-
-    def far(conductor: Id[Conductor]) -> Id[Port]:
-        record = all_conductors[conductor]
-        return record.b if record.a in near else record.a
-
-    pairs = sorted(
-        ((_end_text(model, far(conductor), context, unit), conductor) for conductor in landed),
-        key=lambda pair: (natural_key(pair[0]), pair[1]),
-    )
-    return tuple(c for _, c in pairs), tuple(text for text, _ in pairs)
+    return far_ends(model, near, landed, unit=unit, context=context)
 
 
 def terminal_rows(
@@ -190,8 +172,14 @@ def terminal_rows(
                 index=facets[child].index,
                 internal=internal,
                 external=external,
-                internal_ends=internal_ends,
-                external_ends=external_ends,
+                internal_ends=(
+                    *internal_ends,
+                    *open_ends_at(model, child, PortRole.INTERNAL, unit=unit),
+                ),
+                external_ends=(
+                    *external_ends,
+                    *open_ends_at(model, child, PortRole.EXTERNAL, unit=unit),
+                ),
                 jumper_group=groups.get(child),
             )
         )

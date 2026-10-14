@@ -20,7 +20,7 @@ from .apart import apart_markers
 from .cuts import LINK_FANOUT, LINK_PARTNER_UNLOCATED, CutLocations, links
 from .digits import FLOOR, Digits, more_digits, set_digits
 from .joins import JOIN_UNALIGNED, joined_runs
-from .markers import split_markers, star_markers
+from .markers import clear_of_runs, split_markers, star_markers
 from .nets import side_functions, star_nets, with_orphans, without_starred
 from .off_stubs import black_box_sets, with_off_markers
 from .power import with_power_ends
@@ -147,7 +147,7 @@ def _decided(
     decided = References(
         joins=joins.runs,
         decisions=decisions,
-        markers=_with_rail_ends(markers, inputs, scene, off),
+        markers=clear_of_runs(_with_rail_ends(markers, inputs, scene, off), joins.runs),
         off_ends=off_ends(inputs.off_ends, inputs.off_texts),
         digits=(),
         echoes=echoes,

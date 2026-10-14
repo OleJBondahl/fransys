@@ -6,7 +6,7 @@ design/facets.md. Adding a domain means adding a module here, never touching `co
 
 from .assigned_designation import AssignedDesignationFacet
 from .assigned_unit_tag import AssignedUnitTagFacet
-from .cable import CableFacet, CableProductFacet, CoreFacet
+from .cable import CableFacet, CableProductFacet, CoreFacet, CorePair, OpenCoreFacet
 from .connector import ConnectorFacet
 from .crimp import ContactFit, ContactsFacet
 from .harness import HarnessFacet
@@ -29,8 +29,10 @@ __all__ = [
     "ContactFit",
     "ContactsFacet",
     "CoreFacet",
+    "CorePair",
     "FootprintFacet",
     "HarnessFacet",
+    "OpenCoreFacet",
     "OperatingFacet",
     "PartRatingFacet",
     "PcbFacet",

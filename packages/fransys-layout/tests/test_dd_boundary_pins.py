@@ -60,7 +60,7 @@ def test_the_boundary_pins_hold_the_outer_and_the_nested_boundary_function_and_n
     inputs = read_inputs(model)
     drawn = _keys(model, {spec.function for spec in inputs.functions})
     assert ("cab", "H1") in drawn
-    edges = open_ends(inputs.functions, boundary_edge_set(model))
+    edges = open_ends(inputs.functions, boundary_edge_set(model), frozenset())
     assert _keys(model, edges) == {("cab", "X1"), ("cab", "brd", "J1")}
 
 

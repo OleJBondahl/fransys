@@ -8,7 +8,7 @@ with a function's ports. It is answered here, over `vocab.closure.net_of`, and n
 from typing import TYPE_CHECKING
 
 from fransys_model.vocab.closure import net_of
-from fransys_model.vocab.tables import ports
+from fransys_model.vocab.tables import conductors, ports
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping
@@ -46,3 +46,17 @@ def wired_functions(
         if net is not None:
             found.update(owner_of[p] for p in net.ports if p in owner_of)
     return frozenset(found)
+
+
+def direct_neighbours(model: Model) -> dict[Id[Function], frozenset[Id[Function]]]:
+    """Each function mapped to the functions one conductor joins it to (model-0211).
+
+    A net also passes terminals, links and mates; this is the single conductor only.
+    """
+    all_ports = ports(model)
+    found: dict[Id[Function], set[Id[Function]]] = {}
+    for conductor in conductors(model).values():
+        a, b = all_ports[conductor.a].function, all_ports[conductor.b].function
+        found.setdefault(a, set()).add(b)
+        found.setdefault(b, set()).add(a)
+    return {function: frozenset(others) for function, others in found.items()}

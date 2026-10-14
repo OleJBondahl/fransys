@@ -60,10 +60,11 @@ class _Page:
     owner: dict[Id[Any], Id[Any]]
     joined: frozenset[Id[Any]]
     wired_at: frozenset[tuple[int, int, int, int]]
-    width: int
-    height: int
+    width: int  # the right edge of the content box
+    height: int  # its bottom edge
     profile: Profile
     terminals: frozenset[Id[Any]] = frozenset()
+    inset: int = 0
 
 
 def place_markers(
@@ -79,8 +80,9 @@ def place_markers(
         owner=owner_of(drawn),
         joined=joined_ports(around.connections, around.columns),
         wired_at=wired_points(placed, drawn, around.wired),
-        width=around.sheet.content_width,
-        height=around.sheet.content_height,
+        width=around.sheet.right,
+        height=around.sheet.bottom,
+        inset=around.sheet.inset,
         profile=around.profile,
         terminals=frozenset(one.function for one in drawn if one.roles.terminal),
     )
@@ -119,7 +121,7 @@ def _place_page(
     stand = _stand(markers, mates, room.profile)
     standing = [i for i in standing if not any(i in rest for rest in mates.values())]
     rows = _rows(stand, standing, runs, markers, room)
-    content = Box(x=0, y=-FAR, width=room.width, height=2 * FAR)
+    content = Box(x=room.inset, y=-FAR, width=room.width - room.inset, height=2 * FAR)
     texts = _texts(stand, standing, rows, room.owner)
     done, findings = place_clear_of_bodies(texts, rows, here, decided, content)
     return _written(done, rows, markers, mates), findings
@@ -335,7 +337,7 @@ def _within_lane(box: Box, lane: Lane | None) -> bool:
 
 def _in_room(marker: LinkMarker, room: _Page) -> bool:
     """Whether a tier's box stays inside the content box, top to bottom."""
-    return marker.box.y >= 0 and marker.box.y + marker.box.height <= room.height
+    return marker.box.y >= room.inset and marker.box.y + marker.box.height <= room.height
 
 
 def _tier(
@@ -347,7 +349,7 @@ def _tier(
     steps = {box.x + k * _MARGIN for k in range(-box.width // _MARGIN, box.width // _MARGIN + 1)}
     steps |= {x + WIRING_GRID for x, _, _ in reach}
     steps |= {x - WIRING_GRID - box.width for x, _, _ in reach}
-    steps |= {0, room.width - box.width}
+    steps |= {room.inset, room.width - box.width}
     xs = sorted(
         (x for x in steps if low <= x <= high and x != box.x),
         key=lambda x: (abs(x - box.x), x < box.x),
@@ -374,7 +376,7 @@ def _beyond(
             ):
                 end = x + box.width
                 between = any(x > one_x >= stub or end < one_x <= stub for one_x, _, _ in near)
-                if between and 0 <= x <= room.width - box.width:
+                if between and room.inset <= x <= room.width - box.width:
                     found.append((x - stub if x > stub else stub - end, x))
     south = box.y >= first.at.y
     moved = [

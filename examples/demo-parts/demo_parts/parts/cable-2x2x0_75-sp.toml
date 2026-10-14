@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CBL-2X2X0.75-SP"
+manufacturer = "Demo"
+description = "Instrument cable, 2 twisted pairs with a screen per pair, 0.75 mm2"
+category = "cable"
+class_code = "W"
+
+[rating]
+voltage_ac_v = "500"
+
+[cable_product]
+core_count = 6
+core_colours = ["WH", "BN", "WH", "BN", "SH", "SH"]
+gauge_mm2 = "0.75"
+shielded = false
+pairs = [{ cores = [1, 2], screen = 5 }, { cores = [3, 4], screen = 6 }]

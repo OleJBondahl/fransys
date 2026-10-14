@@ -172,3 +172,13 @@ def test_a_strip_with_no_mark_writes_no_boundary() -> None:
 def test_interface_outside_a_unit_raises_the_engines_error(parts: Draft) -> None:
     with pytest.raises(AuthorError, match="needs a unit"):
         design(parts).terminal_strip("X1", "TEST-TB", 2, interface=True)
+
+
+def test_a_bridged_run_outside_a_block_takes_no_terminal(parts: Draft) -> None:
+    d = design(parts)
+    run = d.terminal_strip("X1", "TEST-TB").run("L", 3, bridged=True)
+    with d.function("P1", "first") as p1:
+        t2 = run[2]
+    assert _groups_of(d, run[1]) == []
+    assert _groups_of(d, t2) == [p1.id]
+    assert _groups_of(d, run[3]) == []

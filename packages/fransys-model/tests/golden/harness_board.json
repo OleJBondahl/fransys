@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 15,
+  "schema_version": 17,
   "tables": {
     "aspect_node": [
       {
@@ -107,6 +107,7 @@
           "cable-4x05",
           "cable_product"
         ],
+        "pairs": [],
         "shielded": true,
         "subject": "part:925cc60b07255b0985f664a2001a6266"
       }

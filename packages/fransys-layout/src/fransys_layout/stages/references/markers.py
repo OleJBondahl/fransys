@@ -9,6 +9,7 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.geometry import WIRING_GRID
 from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.types import Home
 from fransys_model.derive.drawing_text import marker_lines, more_count
@@ -21,6 +22,7 @@ from .nets import branch_pages, shown
 from .types import Leave, LinkWorld, MarkerDecision, MarkerSpec, PortEnd
 
 if TYPE_CHECKING:
+    from fransys_layout.stages.stacking import JoinedRun
     from fransys_layout.stages.types import Cell, Column, Connection, Profile
     from fransys_model.kernel import AuthoringKey, Id
 
@@ -30,6 +32,17 @@ if TYPE_CHECKING:
 def terminal_lift(profile: Profile) -> int:
     """How far a terminal's marker stands out, clear of a packed strip row's point texts."""
     return 2 * profile.text_height
+
+
+def clear_of_runs(
+    markers: tuple[MarkerDecision, ...], runs: tuple[JoinedRun, ...]
+) -> tuple[MarkerDecision, ...]:
+    """A marker at a pin whose beside run leaves by a grid stands a grid further out.
+
+    The run's row is the stub's first grid out (layout-0174), so the marker's box would touch it.
+    """
+    dropped = {end.port for run in runs if run.aside for end in run.ends if end.drop}
+    return tuple(replace(m, out=m.out + WIRING_GRID) if m.port in dropped else m for m in markers)
 
 
 def star_markers(stars: tuple[Star, ...], scene: MarkerScene) -> tuple[MarkerDecision, ...]:

@@ -4,6 +4,7 @@ The trunk runs `LEAVE_GRIDS` straight out of a free point of the bar near its mi
 line enters the root's box, and ends in its stub. The stub's box is measured from `size`.
 """
 
+from dataclasses import replace
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
@@ -17,13 +18,14 @@ from fransys_layout.geometry import (
     through,
 )
 
+from .content import drawn_extent
 from .space import End, span
 from .texts.candidates import Candidate, box_of, stub_anchor
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from .harness_route import Grid
+    from .harness_route import Grid, LineEnd
 
 LEAVE_GRIDS = 6  # layout-0154: a leaving line runs 48 G, one column gap, straight out
 
@@ -120,3 +122,9 @@ def halves(points: tuple[Point, ...], at: Point) -> tuple[tuple[Point, ...], tup
 def _clean(points: Sequence[Point]) -> tuple[Point, ...]:
     """`points` less a repeat of a point next to itself."""
     return tuple(p for n, p in enumerate(points) if n == 0 or p != points[n - 1])
+
+
+def holding_ends(grid: Grid, joint: Sequence[LineEnd]) -> Grid:
+    """`grid` with its region grown to hold every end of the joint (layout-0187)."""
+    spots = [Box(x=one.end.at.x, y=one.end.at.y, width=0, height=0) for one in joint]
+    return replace(grid, region=drawn_extent(grid.region, spots, LEAVE_GRIDS * WIRING_GRID))

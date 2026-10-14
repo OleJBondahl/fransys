@@ -9,14 +9,17 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
         DocumentPreset.CABINET_SCHEMATIC: (
             _K.COVER,
             _K.NOTES,
+            _K.SHEET_INDEX,
             _K.SCHEMATIC,
             _K.PLC_LIST,
             _K.TERMINAL_LIST,
+            _K.CONNECTOR_LIST,
             _K.BOM,
         ),
         DocumentPreset.HARNESS_DRAWING: (
             _K.COVER,
             _K.NOTES,
+            _K.SHEET_INDEX,
             _K.CONTENTS,
             _K.HARNESS_DRAWING,
             _K.BOM,
@@ -24,6 +27,7 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
         DocumentPreset.PCB_SCHEMATIC: (
             _K.COVER,
             _K.NOTES,
+            _K.SHEET_INDEX,
             _K.SCHEMATIC,
             _K.CONNECTOR_LIST,
             _K.BOM,
@@ -33,6 +37,7 @@ PRESET_PAGES: frozendict[DocumentPreset, tuple[PageKind, ...]] = frozendict(
         DocumentPreset.SYSTEM: (
             _K.COVER,
             _K.NOTES,
+            _K.SHEET_INDEX,
             _K.BLOCK_DIAGRAM,
             _K.HARNESS_DRAWING,
             _K.CABLE_LIST,

@@ -40,7 +40,7 @@ _SHEET = {
     "frame_rows": 6,
     "module_mm": Decimal("2.5"),
 }
-_FOOT_MM = 86  # a content box 275 grids high: the plug rows' keep-outs end at 208, or 216 shifted
+_FOOT_MM = 96  # the keep-outs end at 224, or 232 shifted (the page inset moved the rows down 16)
 
 
 def _build(tmp: Path, row_gap: int, *, content_mm: int | None = None) -> fr.BuildResult:

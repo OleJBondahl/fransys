@@ -6,7 +6,7 @@ The next sheet starts at the cut's leading zone. A column that fits no sheet alo
 
 lazy from collections.abc import Sequence
 
-from fransys_layout.engines.diagram.sizes import PAGE_PAD
+from fransys_layout.geometry import PAGE_PAD
 lazy from fransys_layout.engines.diagram.channels import Pair
 
 

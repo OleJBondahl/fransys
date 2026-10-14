@@ -24,6 +24,7 @@ from _model_build_cover import layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
+from fransys_layout.geometry import PAGE_PAD
 from fransys_layout.stages.tidy import TEXT_GAP
 from fransys_model.derive import (
     connector_box_lines,
@@ -479,7 +480,7 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
 
     Nothing stands above a top-level page's outline. A nested board at a harness line's end is a
     middle outline on its parent unit's page, its title inside (layout-0153).
-    Layout-0155: boxes widen the outline; a title left of `TEXT_GAP` moves to it
+    Layout-0155: boxes widen the outline; a title left of the inset and `TEXT_GAP` moves to it
     (layout-0104).
     """
     # UNDO: fransys_layout/stages/outlines.py: `unit_outlines` sets `title = below` always
@@ -492,7 +493,7 @@ def test_an_outline_title_is_above_left_when_that_is_free() -> None:
     for outline_id, title in _titles(model).items():
         outline = outlines[outline_id]
         if _set_of(model, outline.page).unit is None:
-            assert title.x == max(outline.x, TEXT_GAP)
+            assert title.x == max(outline.x, PAGE_PAD + TEXT_GAP)
             assert title.y + height < outline.y
             above += 1
         else:
@@ -513,7 +514,7 @@ def test_an_outline_title_falls_below_left_when_the_plug_and_its_tag_take_the_sp
     (outline,) = layout_of(model, Outline).values()
     (title,) = _titles(model).values()
     assert label_text(model, title) == "demo-pump-cabinet rev 1.1"
-    assert title.x == max(outline.x, TEXT_GAP)  # layout-0104
+    assert title.x == max(outline.x, PAGE_PAD + TEXT_GAP)  # layout-0104
     assert title.y >= outline.y + outline.height
 
 

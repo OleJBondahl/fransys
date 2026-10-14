@@ -22,7 +22,7 @@ from .line_side import (
     stub_on_wire,
     turned,
 )
-from .line_trunk import edge, halves, tip, trunk_end
+from .line_trunk import edge, halves, holding_ends, tip, trunk_end
 from .space import End
 
 if TYPE_CHECKING:
@@ -217,7 +217,7 @@ def _joint_pieces(
     grid: Grid,
     trunk: tuple[Facing, tuple[int, int]] | None,
 ) -> tuple[list[tuple[int, tuple[Point, ...]]], list[Stub]]:
-    """The paths and stubs of the joint ends: the trunk out, or a stub to the end off the page."""
+    grid = holding_ends(grid, joint)
     out = _trunk(joint, absent, grid, trunk)
     if out is not None:
         return out[0], [out[1]]

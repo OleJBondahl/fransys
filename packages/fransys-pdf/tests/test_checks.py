@@ -37,7 +37,7 @@ _PRESET = DocumentPreset.CABINET_SCHEMATIC
 K = PageKind
 # Trims a `CABINET_SCHEMATIC` document to COVER (+NOTES): no SCHEMATIC or list page, so `check`
 # has nothing new to report beyond what a test itself sets up.
-_NO_SCHEMATIC_OR_LISTS = (K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM)
+_NO_SCHEMATIC_OR_LISTS = (K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM)
 
 
 def test_no_findings_for_a_fully_supported_cover_and_notes():
@@ -119,7 +119,7 @@ def _cabinet_with_pages(*, formats):
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     records.append(doc)
     return model(*records), doc
@@ -168,7 +168,12 @@ def test_no_drawings_for_a_pcb_schematic_document_with_no_drawing_set():
     board = item("jb1", description="Invented board", part=board_part.id)
     pcb = pcb_facet("boarditem", subject=board_part.id)
     doc = document(
-        "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
+        "d1",
+        preset=DocumentPreset.PCB_SCHEMATIC,
+        subject=board,
+        cover="# Cover",
+        notes=None,
+        remove=(PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
     m = model(board_part, board, pcb, doc)
     findings = [f for f in check(m, {}) if f.code == "DOCUMENT_NO_DRAWINGS"]
@@ -176,6 +181,18 @@ def test_no_drawings_for_a_pcb_schematic_document_with_no_drawing_set():
     assert finding.severity is Severity.ERROR
     assert finding.subjects == (doc.id,)
     assert "no drawing set" in finding.message
+
+
+def test_a_schematic_with_no_drawing_set_yields_to_another_content_page():
+    """pdf-0033: the same board with its BOM page left in gives no DOCUMENT_NO_DRAWINGS."""
+    board_part = part("boarditem", description="Invented board")
+    board = item("jb1", description="Invented board", part=board_part.id)
+    pcb = pcb_facet("boarditem", subject=board_part.id)
+    doc = document(
+        "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
+    )
+    m = model(board_part, board, pcb, doc)
+    assert [f for f in check(m, {}) if f.code == "DOCUMENT_NO_DRAWINGS"] == []
 
 
 def test_no_drawings_for_a_harness_with_no_cable():
@@ -264,7 +281,7 @@ def _cabinet_with_drawing_set():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     m = model(c1, ds, p1, p2, doc)
     return m, doc, p1, p2
@@ -295,7 +312,7 @@ def test_empty_list_finding_for_a_page_kind_added_with_no_rows():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.SCHEMATIC, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     m = model(c1, doc)
     findings = [f for f in check(m, {}) if f.code == "DOCUMENT_EMPTY_LIST"]
@@ -315,7 +332,7 @@ def test_no_empty_list_finding_for_plc_list_when_it_has_rows():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.SCHEMATIC, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     module = item("mod1", description="PLC module")
     module_part, template, fn, facet = plc_channel(
@@ -360,7 +377,7 @@ def test_no_empty_list_finding_for_connector_list_when_a_board_has_a_connector()
         cover="# Cover",
         notes=None,
         add=(K.CONNECTOR_LIST,),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     board_part = part("board1", description="Invented board")
     board = item("jb1", description="Board one", part=board_part.id)
@@ -399,7 +416,7 @@ def test_no_empty_list_finding_for_wire_label_list_when_a_labelled_wire_exists()
         cover="# Cover",
         notes=None,
         add=(K.WIRE_LABEL_LIST,),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     a_item, a_fn, a_port = pin("p1", "P1")
     b_item, b_fn, b_port = pin("p2", "P2")
@@ -425,7 +442,7 @@ def test_no_empty_list_finding_for_designation_list_when_an_item_exists():
         cover="# Cover",
         notes=None,
         add=(K.DESIGNATION_LIST,),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     demo = item("k1", description="Invented relay")
     m = model(c1, doc, demo)
@@ -448,7 +465,7 @@ def test_no_empty_list_finding_for_cable_list_when_a_cable_exists():
         cover="# Cover",
         notes=None,
         add=(K.CABLE_LIST,),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     cable_part = part("w1", description="Cable one part")
     cable_product = cable_product_facet("w1", subject=cable_part.id, core_count=0)
@@ -471,7 +488,7 @@ def test_no_empty_list_finding_for_bom_when_a_part_linked_item_is_placed():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST),
+        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST),
     )
     demo_part = part("relay", description="Invented relay")
     demo_item = item("k1", description="Invented relay", part=demo_part.id)
@@ -522,7 +539,7 @@ def test_empty_list_finding_for_wire_label_list_and_designation_list_added_with_
         cover="# Cover",
         notes=None,
         add=(K.WIRE_LABEL_LIST, K.DESIGNATION_LIST),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
     )
     m = model(c1, doc)
     findings = [f for f in check(m, {}) if f.code == "DOCUMENT_EMPTY_LIST"]

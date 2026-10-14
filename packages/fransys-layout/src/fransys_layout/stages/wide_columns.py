@@ -172,7 +172,7 @@ def _wide(
         for column in columns
         if column.key in planned
         and column.key not in run.inputs.middle
-        and width_of[column.key] > run.inputs.sheet.content_width
+        and width_of[column.key] > run.inputs.sheet.inner_width
         and len(set(lane_of(column).values())) > 1
     ]
 
@@ -190,7 +190,7 @@ def cut_wide(
         return None
     gap = run.inputs.profile.column_gap
     ink = _ink(run, placement, references)
-    room = run.inputs.sheet.content_width - gap
+    room = run.inputs.sheet.inner_width - gap
     cut = {c.key: _lane_parts(c, ink, _lane_links(c, placement.drawn, run), room) for c in wide}
     cut = {key: parts for key, parts in cut.items() if len(parts) > 1}
     if not cut:

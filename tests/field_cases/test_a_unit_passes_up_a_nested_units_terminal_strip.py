@@ -10,7 +10,10 @@ a passed-through connector only. A strip's terminals drew in no set, so `fr.writ
 layout-0162, amending layout-0160 from connectors to every boundary function): in one drawing
 set the outermost unit drawn as a black box that has the function on its boundary draws it. The
 print is the real path from the document's unit: `-U5-U2-X4` on the container's page, `-U2-X4`
-on the skid's, `-X4` on the cabinet's.
+on the skid's. The cabinet's own document draws no `-X4`: no wire inside it reaches the strip,
+so only its terminal table lists it (L7, layout-0202, which amends the cabinet's local print).
+Its schematic then has nothing to draw and adds no page, and no `DOCUMENT_NO_DRAWINGS` fires
+while the table page stands (pdf-0033).
 """
 
 import re
@@ -58,7 +61,6 @@ def _errors(result: fr.BuildResult) -> list[str]:
 class _Written(NamedTuple):
     top: list[str]
     skid: list[str]
-    cab: list[str]
 
 
 @pytest.fixture(scope="module")
@@ -70,7 +72,6 @@ def written() -> _Written:
     for stem, name in (
         ("top", "demo-strip-top"),
         ("skid", "demo-strip-skid"),
-        ("cab", "demo-strip-cab"),
     ):
         (root / f"{stem}.md").write_text(f"# {stem}\n", encoding="utf-8")
         docs.append(
@@ -91,7 +92,7 @@ def written() -> _Written:
                 found += re.findall(r">([^<>]+)</text>", svg)
         return found
 
-    return _Written(texts("demo-strip-top"), texts("demo-strip-skid"), texts("demo-strip-cab"))
+    return _Written(texts("demo-strip-top"), texts("demo-strip-skid"))
 
 
 def test_the_container_prints_the_real_path(written: _Written) -> None:
@@ -101,11 +102,6 @@ def test_the_container_prints_the_real_path(written: _Written) -> None:
 def test_the_skid_prints_the_path_from_itself(written: _Written) -> None:
     assert any(t.startswith("-U2-X4") for t in written.skid)
     assert [t for t in written.skid if "U5" in t] == []
-
-
-def test_the_cabinet_prints_the_strip_locally(written: _Written) -> None:
-    assert any(t.startswith("-X4") for t in written.cab)
-    assert [t for t in written.cab if "U2" in t or "U5" in t] == []
 
 
 def test_the_pass_through_has_no_connection_error(tmp_path: Path) -> None:
@@ -130,3 +126,19 @@ def test_the_skid_document_draws_its_passed_up_strip(tmp_path: Path) -> None:
     source = (tmp_path / "im" / "skid.typ").read_text(encoding="utf-8")
     assert "-U2-X4:1" in source
     assert "No drawings." not in source
+
+
+def test_the_cabinet_prints_the_strip_locally(tmp_path: Path) -> None:
+    """pdf-0033: the cabinet schematic has nothing to draw and adds no page; its table lists X4."""
+    d = fr.design("demo_parts")
+    d.add(_top, "C1", place=None)
+    (tmp_path / "cab.md").write_text("# cab\n", encoding="utf-8")
+    cab = fr.document(
+        fr.DocumentPreset.CABINET_SCHEMATIC, "demo-strip-cab", cover=tmp_path / "cab.md"
+    )
+    result = fr.build(d, cab)
+    assert "DOCUMENT_NO_DRAWINGS" not in _errors(result)
+    fr.write(result, tmp_path / "out", intermediates=tmp_path / "im")
+    source = (tmp_path / "im" / "cab.typ").read_text(encoding="utf-8")
+    assert "No drawings." not in source
+    assert "X4" in source

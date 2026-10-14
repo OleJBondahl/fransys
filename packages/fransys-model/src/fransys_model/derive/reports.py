@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
 from fransys_model.vocab.enums import ConductorKind
-from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
+from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.tables import conductors, facets_of, functions, items
@@ -24,6 +24,7 @@ lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .cable_end_rank import cable_end_rank
+from .core_pairs import _product_colours
 from .designation import (
     end_outside_nested_unit,
     is_own_unit_root,
@@ -52,18 +53,6 @@ from .wiring import terminal_strips
 
 if TYPE_CHECKING:
     from fransys_model.vocab.core import Function, Port
-    from fransys_model.vocab.templates import Part
-
-
-@digest_cached(DIGEST_CACHE_SIZE)
-def _cable_products_by_part(model: Model) -> frozendict[Id[Part], CableProductFacet]:
-    """Every `CableProductFacet` by the part it describes, built once per model digest.
-
-    The facet's `unique=True` allows at most one per part, so no first-match tie-break is needed.
-    """
-    return frozendict(
-        {facet.subject: facet for facet in facets_of(model, CableProductFacet).values()}
-    )
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -259,18 +248,6 @@ def _oriented_ends(model: Model, a: Id[Port], b: Id[Port]) -> tuple[Id[Port], Id
     rank_a = cable_end_rank(model, cable_end_owner(model, item_of_port(model, a)))
     rank_b = cable_end_rank(model, cable_end_owner(model, item_of_port(model, b)))
     return (a, b) if rank_a <= rank_b else (b, a)
-
-
-def _product_colours(model: Model, cable: Id[Item]) -> tuple[str, ...]:
-    """The `core_colours` of `cable`'s part's `cable_product`, `()` when it has none.
-
-    Reads `_cable_products_by_part`, an `Id[Part]`-keyed index built once per model digest.
-    """
-    part = items(model)[cable].part
-    if part is None:
-        return ()
-    facet = _cable_products_by_part(model).get(part)
-    return () if facet is None else facet.core_colours
 
 
 def _colour_at(colours: tuple[str, ...], index: int, conductor: Conductor) -> str:

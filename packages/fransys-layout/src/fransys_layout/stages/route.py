@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
     OPPOSITE,
+    WIRING_GRID,
     Box,
     Facing,
     LayoutError,
@@ -163,14 +164,17 @@ def _sideways(edge: Edge, page: _Page) -> _Page:
         way = Facing.E if goal.at.x > start.at.x else Facing.W
         ends = {**page.ends, located(edge.a): replace(start, facing=way)}
         return replace(page, ends={**ends, located(edge.b): replace(goal, facing=OPPOSITE[way])})
-    # The shallower pin keeps its way when it leaves down, else the deeper one when it leaves up;
-    # the other end is entered sideways
+    # A deeper pin that points up keeps its way and is entered from above (JOIN-VERTICAL), else
+    # the shallower one when it leaves down; the other end is entered sideways. Two grids or more
+    # between a down pin and an up pin leave both their ways, a jog between them.
     high, low = (edge.a, edge.b) if start.at.y < goal.at.y else (edge.b, edge.a)
     top, bottom = page.ends[located(high)], page.ends[located(low)]
-    if top.facing is Facing.S:
-        keeper, tail, key = top, bottom, located(low)
-    elif bottom.facing is Facing.N:
+    if bottom.facing is Facing.N and not (
+        top.facing is Facing.S and bottom.at.y - top.at.y > WIRING_GRID
+    ):
         keeper, tail, key = bottom, top, located(high)
+    elif top.facing is Facing.S and bottom.facing is not Facing.N:
+        keeper, tail, key = top, bottom, located(low)
     else:
         return page
     way = Facing.W if keeper.at.x < tail.at.x else Facing.E

@@ -230,9 +230,14 @@ def _natural(items: list[str]) -> bool:
     return items == sorted(items, key=fr.derive.natural_key)
 
 
+_LIST_TITLES = {t for titles in _PAGES.values() for t in titles} - {"schematic"}
+
+
 def _title(page: str) -> str:
+    """The page's list title; any other title (a schematic page's own) groups as "schematic"."""
     found = _PAGE_TITLE.search(page)
-    return found.group(1).strip() if found else "schematic"
+    title = found.group(1).strip() if found else ""
+    return title if title in _LIST_TITLES else "schematic"
 
 
 def _by_title(pages: tuple[_Page, ...]) -> dict[str, list[_Page]]:
@@ -279,7 +284,10 @@ def _params(cases: list[tuple], open_sites: dict[tuple, str]) -> list:
     ),
 )
 def test_each_csv_prints_its_tags_in_natural_order(first: _Run, name: str) -> None:
-    assert _out_of_order(_file(first, name).decode()) == {}
+    text = _file(first, name).decode()
+    if name.startswith("connectors"):  # the Ends column names wherever a wire goes (L18)
+        text = "\n".join(line.rsplit(",", 1)[0] for line in text.splitlines())
+    assert _out_of_order(text) == {}
 
 
 @pytest.mark.parametrize("n", _NS)

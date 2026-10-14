@@ -8,6 +8,7 @@ from fransys_model.derive import (
     BOM_COLUMNS,
     CABLE_LIST_COLUMNS,
     CONNECTOR_COLUMNS,
+    CORE_LIST_COLUMNS,
     DESIGNATION_COLUMNS,
     PIN_COLUMNS,
     PLC_COLUMNS,
@@ -20,6 +21,7 @@ from fransys_model.derive import (
     cell_text,
     column_rows,
     connector_rows,
+    core_list_rows,
     designation_list,
     pin_lines,
     plc_channel_rows,
@@ -208,3 +210,19 @@ def cables_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
         The CSV text. Same model digest, same bytes.
     """
     return _csv(cable_list_rows(model, unit=unit), CABLE_LIST_COLUMNS)
+
+
+def cores_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
+    """Write the core list as CSV (reports-0005).
+
+    Formats ``fransys_model.derive.core_list_rows``, one row per core of every cable
+    ``cables_csv`` lists for `unit`: its ends, its pair word and its spare mark. Pure.
+
+    Args:
+        model: A frozen, numbered model.
+        unit: The unit whose cables to list, or None for the system.
+
+    Returns:
+        The CSV text. Same model digest, same bytes.
+    """
+    return _csv(core_list_rows(model, unit=unit), CORE_LIST_COLUMNS)

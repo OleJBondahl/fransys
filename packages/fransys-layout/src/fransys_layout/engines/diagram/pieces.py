@@ -10,14 +10,14 @@ lazy from collections.abc import Sequence
 from fransys_layout.engines.diagram.columns import pieces
 from fransys_layout.engines.diagram.pack import pack_rows
 from fransys_layout.engines.diagram.place import place_diagram
-from fransys_layout.engines.diagram.sizes import PAGE_PAD, tab_reach
+from fransys_layout.engines.diagram.sizes import tab_reach
 from fransys_layout.engines.diagram.values import (
     PlacedBox,
     PlacedDiagram,
     PlacedSheet,
     PlacedTab,
 )
-from fransys_layout.geometry import WIRING_GRID, Facing, Point
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing, Point
 lazy from fransys_layout.engines.diagram.values import DiagramFacts
 
 PIECE_GAP = 2 * PAGE_PAD  # clear space between two packed pieces

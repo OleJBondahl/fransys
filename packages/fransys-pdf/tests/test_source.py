@@ -126,7 +126,7 @@ def test_schematic_pages_are_inlined_in_number_order_when_every_key_is_present()
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, p2, p1, doc)  # inserted out of number order: proves the sort, not insertion
     svgs = {
@@ -154,7 +154,7 @@ def test_schematic_pages_fall_back_to_no_drawings_when_one_key_is_missing():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, p1, p2, doc)
     svgs = {render_id(p1.id): "<svg>one</svg>"}
@@ -171,7 +171,7 @@ def test_schematic_pages_fall_back_to_no_drawings_when_the_location_has_no_drawi
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
     text = source(m, doc.id, {})
@@ -212,7 +212,7 @@ def test_location_document_picks_only_the_unit_none_set_at_its_location():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, u, ds_nested, ds_top, p_nested, p_top, doc)
     record = documents(m)[doc.id]
@@ -238,7 +238,7 @@ def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_o
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, c2, u, ds1, ds2, p1, p2, doc)
     record = documents(m)[doc.id]
@@ -272,7 +272,7 @@ def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, c2, u, r1, r2, p, rp, ds1, ds2, page1, page2, doc)
     svgs = {render_id(page1.id): "<svg>one</svg>", render_id(page2.id): "<svg>two</svg>"}
@@ -295,7 +295,7 @@ def test_sheet_format_of_the_locations_drawing_set_when_schematic_pages_are_requ
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, fmt, ds, page, doc)
     record = documents(m)[doc.id]
@@ -313,7 +313,7 @@ def test_house_sheet_when_the_drawing_sets_first_page_names_no_sheet_format():
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, page, doc)
     record = documents(m)[doc.id]
@@ -329,7 +329,7 @@ def test_house_sheet_when_schematic_is_requested_but_the_location_has_no_drawing
         subject=c1,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
     record = documents(m)[doc.id]
@@ -433,7 +433,7 @@ def test_the_scope_cell_of_a_unit_document_page_prints_the_title_not_the_name():
         subject=u,
         cover="# Cover",
         notes=None,
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, u, ds, page, doc)
     text = source(m, doc.id, {render_id(page.id): "<svg>one</svg>"})
@@ -814,7 +814,7 @@ def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page(
         subject=c1,
         cover="# Cover",
         notes="Some notes.",
-        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
+        remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
     text = source(m, doc.id, {})

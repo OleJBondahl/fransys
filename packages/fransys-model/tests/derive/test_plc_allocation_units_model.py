@@ -29,13 +29,14 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass(frozen=True)
 class Site:
-    """A PLC rack item holding one module of free DI channels, in `unit` (None: top level)."""
+    """A PLC rack item holding one module of free channels (DI unless `signal`), in `unit`."""
 
     rack: str
     module: str
     module_designation: str
     channels: int
     unit: Id[Unit] | None = None
+    signal: SignalType = SignalType.DI
 
 
 def _site(plant: Plant, site: Site) -> list[Id[Function]]:
@@ -71,7 +72,7 @@ def _site(plant: Plant, site: Site) -> list[Id[Function]]:
             id=make_id(PlcChannelFacet, (site.module, str(number), "facet")),
             key=(site.module, str(number), "facet"),
             subject=template.id,
-            signal=SignalType.DI,
+            signal=site.signal,
             channel=number,
         )
         plant.add(template, facet)

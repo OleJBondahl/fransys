@@ -10,7 +10,8 @@ from fransys_model.kernel import Id, value
 class CoreFacts:
     """One core: its key (core number), conductor, its two ports (`end_a` first), text width.
 
-    `link` is a row link: both ends in one row, drawn at the row, never in the box.
+    `link` is a row link, drawn at the row. An `open` core's `conductor` is its facet, and
+    `end_a` and `end_b` are the port that holds its place (`landed`: its landing, else a place).
     """
 
     key: int
@@ -19,6 +20,8 @@ class CoreFacts:
     end_b: Id[Any]
     text_width: int
     link: bool = False
+    open: bool = False
+    landed: bool = True
 
 
 @value
@@ -85,6 +88,7 @@ class BlockFacts:
     bottom: tuple[EndFacts, ...]
     harness_width: int | None = None
     wires: tuple[CoreFacts, ...] = ()
+    bracket_room: int = 0  # the height above the rows a bracket and its label take
 
     @property
     def cores(self) -> tuple[CoreFacts, ...]:
@@ -144,6 +148,7 @@ class PlacedWire:
     text_y: int
     stub_a: bool
     stub_b: bool
+    open: bool = False
 
 
 @value

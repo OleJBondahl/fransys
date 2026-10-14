@@ -14,7 +14,16 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import connector_label, connector_segments
 from fransys_model.kernel import Finding, Severity
 
-from . import _changeover, _fields, _function_facts, _joins, _power_loss, _ratings, _toml
+from . import (
+    _cable_pairs,
+    _changeover,
+    _fields,
+    _function_facts,
+    _joins,
+    _power_loss,
+    _ratings,
+    _toml,
+)
 
 if TYPE_CHECKING:
     from ._toml import ParsedFile
@@ -292,6 +301,7 @@ def _check_cable_product_section(
                     f"core_count {core_count} does not match {len(colours)} core_colours",
                 )
             )
+        findings.extend(_cable_pairs.check_pairs(cable_product, path, line))
     if category is not None and category != "cable":
         findings.append(
             _toml.finding(

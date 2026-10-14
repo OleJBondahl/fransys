@@ -107,6 +107,27 @@ class SheetFormat:
     content_height: int
     frame_columns: int
     frame_rows: int
+    inset: int = 0  # the gap kept between the frame line and ink, on every side (layout-0187)
+
+    @property
+    def inner_width(self) -> int:
+        """The width the ink may use: the content width less the inset twice."""
+        return self.content_width - 2 * self.inset
+
+    @property
+    def inner_height(self) -> int:
+        """The height the ink may use: the content height less the inset twice."""
+        return self.content_height - 2 * self.inset
+
+    @property
+    def right(self) -> int:
+        """The x of the right edge of the inset box."""
+        return self.content_width - self.inset
+
+    @property
+    def bottom(self) -> int:
+        """The y of the bottom edge of the inset box."""
+        return self.content_height - self.inset
 
 
 @value

@@ -19,10 +19,6 @@ class Ends(NamedTuple):
     head: FunctionSpec | None = None
     tail: FunctionSpec | None = None
 
-    def swapped(self) -> Ends:
-        """The ends of the chain read the other way."""
-        return Ends(head=self.tail, tail=self.head)
-
 
 def resolve(
     chain: Chain, specs: Mapping[Handle, FunctionSpec], boxes: Mapping[Handle, FunctionSpec]

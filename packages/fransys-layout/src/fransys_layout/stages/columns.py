@@ -70,6 +70,7 @@ def columns_from_chains(
             msg = "a chain has no entries"
             raise HintError(msg, subjects=(chain.chain,))
         full = resolve(chain, specs, boxes or {})
+        full = read_down(chain, full, specs, drawn_by)
         steps, ends = split_ends(chain, full)
         _check_series(chain, full)
         for _, spec in steps:
@@ -77,10 +78,6 @@ def columns_from_chains(
                 msg = "a function is in two chains, or twice in one chain"
                 raise HintError(msg, subjects=(chain.chain, spec.function))
             claimed.add(spec.function)
-        read = read_down(chain, steps, specs, drawn_by)
-        if len(read) > 1 and read[0][1] is not steps[0][1]:
-            ends = ends.swapped()
-        steps = read
         flipped = _entered_from_south(steps, drawn_by, connections, ends)
         cells = tuple(
             Cell(

@@ -182,6 +182,8 @@ d.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
 
 `X1.run(label, n, bridged=True)` takes `n` terminals as a named run, joined by jumpers when
 `bridged=True`. A run is the one spelling for a bridge. Two terminals are a run of two.
+Made inside a function block, a run puts all its terminals in that block. Made outside every block, it puts
+none: each terminal joins the block it is first wired in.
 
 `bridged=(first, last)` bridges terminals `first` to `last` only, one jumper between each
 consecutive pair. A pair outside 1 to `n`, or with `first >= last`, raises and names the range.
@@ -293,6 +295,29 @@ lamps = {tag: d.device(tag, "DEMO-LAMP-24") for tag in ("H1", "H2")}
 w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
 for colour, terminal, lamp, pin in CORES:
     w1.core(colour, x1[terminal], lamps[lamp][pin])
+```
+
+A core you leave unused is `w1.spare(GY)`, or `w1.spare()` for every core not wired so far. `at=x1[7]`
+parks one on a pin. The cable drawing prints "spare" on its row, and the schematic draws nothing. A
+screen (`SH`) earthed at one end takes one pin: `w2.core(5, pe[1])`. A part with `pairs` in its
+`[cable_product]` table gets a bracket and a P1, P2 label over each pair's rows.
+
+```python
+import fransys as fr
+from fransys.colours import GY
+
+d = fr.design("demo_parts")
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 8)
+pe = d.terminal_strip("X2", "DEMO-TB-PE-2.5", 2)
+h1 = d.device("H1", "DEMO-LAMP-24")
+w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
+w1.core(1, x1[1], h1[1])
+w1.spare(GY, at=x1[7])
+w1.spare()
+w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP", length_m=25)
+w2.core(1, x1[2], h1[2])
+w2.core(5, pe[1])
+w2.spare()
 ```
 
 `fn.pins` gives a function's pins as a tuple, in the order the connector list prints (`1, 2, 10, A1`),
@@ -508,15 +533,16 @@ lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
 
 ## Layout profile
 
-`d.layout` advises the drawing and never connects anything: `chain`, `keep_together`, `break_before`,
-`order`, `symbol`, `draw_in`, `side`, `sheet` and `profile`. `d.layout.side(u1.bus_in, fr.ABOVE)` puts a
-unit's interface above its outline, and `fr.BELOW` below it. It takes a field of the tuple `d.add`
-returns. An interface with no harness line ignores it. `d.layout.profile(hide_unused_pins=True)` hides
-every box-drawn pin with no conductor, and a function with none, on the drawings. Every list keeps
-every pin. The house value is off. `min_text_height_mm` is the floor ([Drawing well](drawing.md)).
-The design's profile governs the design's own pages only. A unit sets its own in its body. A unit with none uses the house values, never its parent's.
+`d.layout` advises the drawing and connects nothing: `chain`, `keep_together`, `break_before`,
+`order`, `symbol`, `draw_in`, `side`, `sheet`, `page_title` and `profile`. `d.layout.side(u1.bus_in, fr.ABOVE)` puts a
+unit's interface above its outline, and `fr.BELOW` below it. It takes a field of the `d.add` tuple.
+An interface with no harness line ignores it. `d.layout.page_title(x1, "Field terminals")` names the pages drawing a block, function or device. `d.layout.profile(hide_unused_pins=True)` hides
+every box-drawn pin with no conductor, and a function with none, on drawings. Every list keeps
+all pins. The house value is off. `min_text_height_mm` is the floor ([Drawing well](drawing.md)).
+The design's profile governs only its pages. A unit sets its own in its body; with none it
+uses the house values, never its parent's.
 
-`d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)` draws the chain in a column next to the element `k1.main`, joined by short horizontals with no marker. Wire the chain and the element first: the chain's two end nets must be two nets of that element, or `AuthorError` names them.
+`d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)` draws the chain beside the element `k1.main`, joined by short unmarked horizontals. Wire first: the chain joins the element by each end net they share, one or two, else `AuthorError` names them. A one-pin box (a PLC channel) may end a chain and joins nothing.
 
 ```python
 import fransys as fr

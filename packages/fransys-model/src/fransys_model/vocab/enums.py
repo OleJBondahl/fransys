@@ -240,6 +240,7 @@ class PageKind(Enum):
 
     COVER = "cover"
     NOTES = "notes"
+    SHEET_INDEX = "sheet_index"
     CONTENTS = "contents"
     BLOCK_DIAGRAM = "block_diagram"
     SCHEMATIC = "schematic"

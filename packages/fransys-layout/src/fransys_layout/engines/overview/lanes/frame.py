@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
 from fransys_layout.engines.diagram.arrange import RawEnd, box_height, box_width
-from fransys_layout.engines.diagram.sizes import PAGE_PAD, ROW_GAP, TRACK_PITCH
-from fransys_layout.geometry import Facing, snap_up
+from fransys_layout.engines.diagram.sizes import ROW_GAP, TRACK_PITCH
+from fransys_layout.geometry import PAGE_PAD, Facing, snap_up
 from fransys_layout.stages.corridor import corridor_height, corridor_y, plan_corridors
 
 if TYPE_CHECKING:

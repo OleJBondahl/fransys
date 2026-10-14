@@ -12,7 +12,7 @@ from fransys_model.derive import (
     BOM_COLUMNS,
     CABLE_LIST_COLUMNS,
     CELL_SEPARATOR,
-    CONNECTOR_COLUMNS,
+    CONNECTOR_LABELS,
     DESIGNATION_COLUMNS,
     PIN_COLUMNS,
     PLC_COLUMNS,
@@ -27,20 +27,23 @@ from fransys_model.derive import (
     cell_parts,
     cell_text,
     column_rows,
+    connector_items,
     connector_rows,
+    connector_rows_of,
+    cores_text,
     designation_list,
     document_unit,
     is_own_unit_root,
     items_at,
     list_context,
-    pin_lines,
     plc_channel_rows,
+    plc_list_rows,
     plc_tables,
     printed_designation,
     terminal_items,
     terminal_rows,
     terminal_strips,
-    unit_boards,
+    unit_connector_items,
     unit_strips,
     wire_rows,
 )
@@ -49,6 +52,7 @@ from fransys_model.vocab import (
     DocumentPreset,
     PortRole,
     conductors,
+    functions,
     items,
     ports,
 )
@@ -59,7 +63,7 @@ from ._tables import table_source
 from ._typst import description_par, literal
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from fransys_model.derive import (
         ConnectorRow,
@@ -110,24 +114,29 @@ def _widths(wide: list[bool]) -> list[str]:
     return widths
 
 
-def _table(
+def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor and labels
     headers: tuple[str, ...],
     rows: list[tuple[object, ...]],
     wide: tuple[str, ...],
     *,
     title: str = "",
     label: str = "",
+    labels: Mapping[str, str] | None = None,
 ) -> str:
     """The list table: `""` if no rows or all blank (pdf-0019, 0011); `wide`: `1fr` (0008).
 
-    `title` is the heading a carried table repeats with " (cont.)", `label` its anchor (pdf-0027).
+    `title` is the heading a carried table repeats with " (cont.)", `label` its anchor (pdf-0027),
+    `labels` the header text of a column whose field name reads badly (pdf-0030).
     """
     if not rows:
         return ""
     kept = _kept_columns(rows, len(headers))
     if not kept:
         return ""
-    names = [f"strong(text({literal(_humanise(headers[i]))}))" for i in kept]
+    shown = labels or {}
+    names = [
+        f"strong(text({literal(shown.get(headers[i]) or _humanise(headers[i]))}))" for i in kept
+    ]
     body = [[_cell_typst(row[i]) for i in kept] for row in rows]
     widths = _widths([headers[i] in wide for i in kept])
     return table_source(widths, names, body, title=title, label=label)
@@ -144,7 +153,7 @@ def plc_list_page(model: Model, record: Document) -> str:
     sections = []
     for number, table in enumerate(plc_tables(model, unit=unit, context=record.location)):
         title = _list_title(model, table.item, unit, table.designation)
-        rows = column_rows(table.rows, PLC_COLUMNS)
+        rows: list[tuple[object, ...]] = list(plc_list_rows(table.rows))
         sections.append(
             _list_heading(title)
             + _table(
@@ -202,11 +211,15 @@ def designation_list_page(model: Model, record: Document) -> str:
 
 def cable_list_page(model: Model, record: Document) -> str:
     """The CABLE_LIST table: one row per cable of the document's unit; top-level for the system."""
-    return _table(
-        CABLE_LIST_COLUMNS,
-        column_rows(cable_list_rows(model, unit=document_unit(model, record)), CABLE_LIST_COLUMNS),
-        ("description", "from_label", "to_label"),
-    )
+    columns = tuple(name for name in CABLE_LIST_COLUMNS if name != "pairs")
+    rows = [
+        tuple(
+            cores_text(row.core_count, row.pairs) if n == "core_count" else getattr(row, n)
+            for n in columns
+        )
+        for row in cable_list_rows(model, unit=document_unit(model, record))
+    ]
+    return _table(columns, rows, ("description", "from_label", "to_label"))
 
 
 def _bom_scope(
@@ -312,11 +325,12 @@ def _ends_without_jumpers(
     all_conductors = conductors(model)
 
     def kept(ids: tuple[Id[Conductor], ...], ends: tuple[str, ...]) -> tuple[str, ...]:
-        return tuple(
+        wired = tuple(
             end
-            for conductor, end in zip(ids, ends, strict=True)
+            for conductor, end in zip(ids, ends, strict=False)
             if all_conductors[conductor].kind is not ConductorKind.JUMPER
         )
+        return (*wired, *ends[len(ids) :])  # the open cores come after the conductors' ends
 
     return kept(row.internal, row.internal_ends), kept(row.external, row.external_ends)
 
@@ -363,35 +377,38 @@ def _terminal_table(
     return table_source(widths, heads, body, title=title, label=label)
 
 
-def _boards_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
-    """The CONNECTOR_LIST boards: the item, else a unit's own, else the location's."""
+def _connector_rows_for_page(model: Model, record: Document) -> tuple[ConnectorRow, ...]:
+    """The CONNECTOR_LIST rows: a board document's board, else a unit's own, else the location's."""
+    unit = document_unit(model, record)
     if record.item is not None:
-        return (record.item,) if record.item in boards(model) else ()
-    if (unit := document_unit(model, record)) is not None:
-        return unit_boards(model, unit)
-    location = record.location
-    if location is None:
+        return (
+            connector_rows_for(model, record, record.item) if record.item in boards(model) else ()
+        )
+    if unit is not None:
+        scope = unit_connector_items(model, unit)
+    elif record.location is not None:
+        at_location = set(items_at(model, record.location))
+        scope = tuple(item for item in connector_items(model) if item in at_location)
+    else:
         return ()
-    at_location = set(items_at(model, location))
-    return tuple(board for board in boards(model) if board in at_location)
+    return connector_rows_of(model, scope, unit=unit, context=record.location)
 
 
 def connector_list_page(model: Model, record: Document) -> str:
-    """The CONNECTOR_LIST section: a headed table per board; unit-relative (pdf-0012)."""
-    unit = document_unit(model, record)
+    """The CONNECTOR_LIST section: a table per connector, headed by its designation (pdf-0030)."""
     sections = []
-    for number, board in enumerate(_boards_for(model, record)):
-        if not (lines := pin_lines(connector_rows_for(model, record, board))):  # no rows, no page
-            continue
-        title = _list_title(model, board, unit)
+    for number, row in enumerate(_connector_rows_for_page(model, record)):
+        item = items(model)[functions(model)[row.connector].item]
         sections.append(
-            _list_heading(title)
+            _list_heading(row.designation)
+            + description_par(item.description)
             + _table(
-                (*CONNECTOR_COLUMNS, *PIN_COLUMNS),
-                lines,
-                ("net",),
-                title=title,
+                PIN_COLUMNS,
+                column_rows(row.pins, PIN_COLUMNS),
+                ("net", "ends"),
+                title=row.designation,
                 label=f"conn{number}",
+                labels=CONNECTOR_LABELS,
             )
         )
     return flow_columns(sections, share_pct=_SHARE_PCT, gutter_pct=_GUTTER_PCT)

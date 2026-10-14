@@ -12,6 +12,7 @@ from fransys_model.layout import (
     CoreWire,
     EndBox,
     EndStyle,
+    OpenCoreWire,
     PinCell,
     RoutePoint,
 )
@@ -80,6 +81,23 @@ def _wire(wire: PlacedWire, key: AuthoringKey, block: Id[Any], stamp: str) -> Co
     )
 
 
+def _open_wire(wire: PlacedWire, key: AuthoringKey, block: Id[Any], stamp: str) -> OpenCoreWire:
+    wire_key = (*key, "open", render_id(wire.conductor))
+    return OpenCoreWire(
+        id=make_id(OpenCoreWire, wire_key),
+        key=wire_key,
+        block=block,
+        core=wire.conductor,
+        run_a=_points(wire.run_a),
+        run_b=_points(wire.run_b),
+        text_x=wire.text_x,
+        text_y=wire.text_y,
+        stub_a=wire.stub_a,
+        stub_b=wire.stub_b,
+        produced_by=stamp,
+    )
+
+
 def _box(
     key: AuthoringKey, block_id: Id[Any], stamp: str, kind: BoxKind, placed: PlacedCable
 ) -> CableBox:
@@ -134,5 +152,6 @@ def block_records(block: PlacedBlock, stamp: str) -> list[Any]:
         *around,
         *(_box(key, block_id, stamp, BoxKind.CABLE, c) for c in block.boxes),
         *(_end(end, key, block_id, stamp) for end in block.ends),
-        *(_wire(wire, key, block_id, stamp) for wire in block.wires),
+        *(_wire(wire, key, block_id, stamp) for wire in block.wires if not wire.open),
+        *(_open_wire(wire, key, block_id, stamp) for wire in block.wires if wire.open),
     ]

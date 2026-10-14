@@ -25,7 +25,15 @@ _COLUMNS = (
 )
 _HELPERS = ("cell_text", "column_rows", "pin_lines")
 # The PDF prints the derive labels as they are; the CSV prints them in snake_case (below).
-_PDF_NAMES = (*_COLUMNS, *_HELPERS, "TERMINAL_LABELS", "CELL_SEPARATOR", "cell_parts")
+# The PDF connector table prints a pin's fields only (pdf-0030): no CONNECTOR_COLUMNS, no pin_lines.
+_PDF_ONLY_CSV = {"CONNECTOR_COLUMNS", "pin_lines"}
+_PDF_NAMES = (
+    *(name for name in (*_COLUMNS, *_HELPERS) if name not in _PDF_ONLY_CSV),
+    "TERMINAL_LABELS",
+    "CONNECTOR_LABELS",
+    "CELL_SEPARATOR",
+    "cell_parts",
+)
 _REPORTS_NAMES = (*_COLUMNS, *_HELPERS)
 
 

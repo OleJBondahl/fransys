@@ -17,6 +17,7 @@ from fransys_layout.geometry import (
     Point,
     port_page_at,
 )
+from fransys_layout.stages.markers import stand_against_content_edge
 from fransys_layout.stages.references.types import Leave
 from fransys_layout.stages.types import LinkMarker, PortRef
 
@@ -165,8 +166,14 @@ def _with_runs(
     for indices in members.values():
         first, last = found[indices[0]], found[indices[-1]]
         box, wrap_at = run_box(
-            first.box, (first.at, last.at), sheet.content_width, first.text, profile
+            first.box,
+            (first.at, last.at),
+            sheet.right,
+            first.text,
+            profile,
         )
+        stubs = (first.at.x, last.at.x)
+        box = stand_against_content_edge(box, stubs, sheet.right, low=sheet.inset) or box
         for rank, index in enumerate(indices):
             found[index] = replace(
                 found[index], box=box, shared_box=True, lead=rank == 0, wrap_at=wrap_at

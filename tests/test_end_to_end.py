@@ -89,9 +89,12 @@ def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_docu
     # rows/pages to overflow onto a second physical page for this small demo cabinet) gives
     # exactly one `/Type /Page` object; pinned exactly, not a lower bound, because the
     # controller confirmed this same 6-kind shape against a real compiled PDF.
-    # except PLC_LIST: no PLC channel in the demo cabinet, so that page is left out (pdf-0019).
+    # except PLC_LIST, CONNECTOR_LIST and SHEET_INDEX: no PLC channel, no connector and one sheet in
+    # the demo cabinet, so those pages are left out (pdf-0019, the empty-list rule).
     assert fr.PageKind.PLC_LIST in pages
-    assert len(_PDF_PAGE.findall(pdf_bytes)) == len(pages) - 1
+    assert fr.PageKind.CONNECTOR_LIST in pages
+    assert fr.PageKind.SHEET_INDEX in pages
+    assert len(_PDF_PAGE.findall(pdf_bytes)) == len(pages) - 3
 
     # Typst embeds the family as a subsetted PostScript name with no space.
     assert b"DejaVuSansCondensed" in pdf_bytes

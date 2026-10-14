@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 lazy from fransys_layout.geometry import Box
 
-from ._chain_beside import beside_links
+from ._chain_beside import beside_cells, beside_links
 from ._page_requests import _page_requests
 from ._polelinks import pole_links
 from .boxes import box_sides
@@ -186,6 +186,7 @@ def plan_pages(
                 )
             ),
             bands=middle_bands(inputs.middle, inputs.profile),
+            functions=inputs.functions,
         ),
         hints=inputs.hints,
         profile=inputs.profile,
@@ -228,7 +229,13 @@ def place_pages(
         )
         placed_all = tuple(one for placed, _ in pages for one in placed)
         turned = (
-            box_sides(placed_all, drawn, inputs.connections, (run.rank_of, *run.power))
+            box_sides(
+                placed_all,
+                drawn,
+                inputs.connections,
+                (run.rank_of, *run.power),
+                beside_cells(planned.columns),
+            )
             if attempt == 0
             else drawn
         )

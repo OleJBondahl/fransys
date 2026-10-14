@@ -33,6 +33,7 @@ from .symbols import (
 )
 from .units import (
     G_PER_MODULE,
+    PAGE_PAD,
     WIRING_GRID,
     Coord,
     Point,
@@ -47,6 +48,7 @@ __all__ = (
     "G_PER_MODULE",
     "NORTH",
     "OPPOSITE",
+    "PAGE_PAD",
     "PORT_PITCH_G",
     "SOUTH",
     "WIRING_GRID",

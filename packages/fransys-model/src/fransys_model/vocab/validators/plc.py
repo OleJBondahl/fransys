@@ -42,7 +42,11 @@ def check_plc(model: Model) -> tuple[Finding, ...]:
         if channel is not None and channel.signal is request.signal:
             continue
         asked = all_functions[binding.subject]
-        offered = "is not declared a channel" if channel is None else f"is {channel.signal.value}"
+        offered, other = (
+            ("is not declared a channel", "a declared channel")
+            if channel is None
+            else (f"is {channel.signal.value}", channel.signal.value)
+        )
         found.append(
             Finding(
                 code=PLC_BINDING_SIGNAL_MISMATCH,
@@ -50,7 +54,8 @@ def check_plc(model: Model) -> tuple[Finding, ...]:
                 subjects=(binding.id, binding.subject, binding.channel),
                 message=(
                     f"{'/'.join(asked.key)} asks for {request.signal.value} "
-                    f"but its channel {'/'.join(target.key)} {offered}"
+                    f"but its channel {'/'.join(target.key)} {offered}: rewire it to a "
+                    f"{request.signal.value} channel, or ask for {other}"
                 ),
             )
         )

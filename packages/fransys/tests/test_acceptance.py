@@ -394,7 +394,13 @@ def _two_units_of_one_release_with_clashing_documents():
             item=None,
             unit=unit.id,
             add=(),
-            remove=(PageKind.SCHEMATIC, PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
+            remove=(
+                PageKind.SCHEMATIC,
+                PageKind.PLC_LIST,
+                PageKind.TERMINAL_LIST,
+                PageKind.CONNECTOR_LIST,
+                PageKind.BOM,
+            ),
             cover="Invented cover text.",
             notes=None,
         )
@@ -471,7 +477,7 @@ def test_check_resolves_every_subject_through_describe(demo_cabinet):
         model=demo_cabinet,
         findings=(_warning_finding(subject),),
     )
-    (resolved,) = fr.check(result)
+    (resolved,) = (f for f in fr.check(result) if f.code == "DEMO_WARNING")
     assert f"{origin.file}:{origin.line}" in resolved.message
 
 

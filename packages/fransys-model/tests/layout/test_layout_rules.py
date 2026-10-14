@@ -222,6 +222,17 @@ _FIELDS: dict[type, set[str]] = {
         "stub_b",
         "produced_by",
     },
+    layout.OpenCoreWire: {
+        "block",
+        "core",
+        "run_a",
+        "run_b",
+        "text_x",
+        "text_y",
+        "stub_a",
+        "stub_b",
+        "produced_by",
+    },
     layout.EndBox: {
         "block",
         "item",
@@ -238,6 +249,7 @@ _FIELDS: dict[type, set[str]] = {
     layout.KeepTogether: {"groups"},
     layout.BreakBefore: {"group"},
     layout.OrderHint: {"before", "after"},
+    layout.PageTitle: {"text", "block", "function", "item"},
     layout.SideHint: {"function", "side"},
     layout.SymbolChoice: {"function", "template", "part", "kind", "symbol", "port_map"},
     layout.SheetFormat: {

@@ -225,9 +225,9 @@ def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> 
     must not be dropped.
 
     NEW assertion: `run_stages` produces a `PagePlan` for this unit (`layout.pages` has one
-    whose `unit` is the unit's id) and that page actually places both the board's `edge`
-    connector and the fuse's `element` function -- not merely "a page exists", but that its
-    real content survived.
+    whose `unit` is the unit's id) and that page actually places the fuse's `element` function
+    -- not merely "a page exists", but that its real content survived. The board's `edge`
+    connector, wired by no wire inside, is left off (layout-0197).
     """
     model = freeze(build_cabinet())
     parent, parent_release = unit_with_release(
@@ -267,10 +267,11 @@ def test_a_board_that_is_the_sole_root_of_its_unit_keeps_its_own_home_page() -> 
         for placed in layout.placed
         if placed.drawing_set == own_page.drawing_set and placed.page == own_page.number
     }
-    # The edge connector is drawn as its pin views
+    # No wire inside the unit reaches the edge connector: its pin views stay for the parent's
+    # black box, but the unit's own page does not draw them (layout-0197)
     edge_pins = {s.function for s in inputs.functions if s.pin_function == edge.id}
     assert edge_pins
-    assert edge_pins <= placed_here
+    assert not edge_pins & placed_here
     assert element.id in placed_here
 
 

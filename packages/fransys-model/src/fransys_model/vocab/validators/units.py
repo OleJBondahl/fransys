@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab.core import Function, Item, Port, Unit
+    from fransys_model.vocab.units import UnusedBoundary
 
 BOUNDARY_UNCONNECTED: Final[str] = "BOUNDARY_UNCONNECTED"
 UNIT_BOUNDARY_BYPASSED: Final[str] = "UNIT_BOUNDARY_BYPASSED"
@@ -260,6 +261,22 @@ def _connector_wired_without_mate(plant: _Plant) -> list[Finding]:
     return found
 
 
+def _declared_at(plant: _Plant, unused: UnusedBoundary, owners: list[Id[Unit]]) -> list[Id[Unit]]:
+    """The owners of the function whose instance carries the declaration (model-0210).
+
+    The key is the declaring scope's path, then `unused_boundary`, then the function. An owner
+    counts when its instance path is that scope or a direct child of it; none does: all owners.
+    """
+    scope = unused.key[:-2]
+    near = [
+        unit
+        for unit in owners
+        if plant.units[unit].key[: len(scope)] == scope
+        and len(plant.units[unit].key) - 1 <= len(scope) + 1
+    ]
+    return near or owners
+
+
 def _unused_contradicted(plant: _Plant) -> list[Finding]:
     boundary_units_of: dict[Id[Function], list[Id[Unit]]] = {}
     for boundary in plant.boundaries.values():
@@ -275,7 +292,7 @@ def _unused_contradicted(plant: _Plant) -> list[Finding]:
             )
             found.append(_finding(UNUSED_CONTRADICTED, Severity.WARNING, (function,), message))
             continue
-        for unit in owners:
+        for unit in _declared_at(plant, unused, owners):
             if not plant.crosses_out_of(unit, function):
                 continue
             message = (

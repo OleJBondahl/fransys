@@ -26,7 +26,7 @@ from _model_build_cover import cabinet_document, layout_trigger_document
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines import lay_out_schematic
-from fransys_model.derive import connector_box_lines, drawing_text, unit_release
+from fransys_model.derive import connector_box_lines, drawing_text, page_title, unit_release
 from fransys_model.derive.closure import net_of
 from fransys_model.derive.designation import (
     item_designation,
@@ -39,7 +39,6 @@ from fransys_model.derive.drawing_text import (
     is_device_terminal,
     item_tag_text,
     label_text,
-    page_title,
     point_text,
     run_point_text,
     strip_tag_text,

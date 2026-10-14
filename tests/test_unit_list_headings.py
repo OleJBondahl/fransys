@@ -253,7 +253,7 @@ def test_a_units_own_connector_list_heads_an_inner_board_unit_relative(board_in_
     page = _lists.connector_list_page(model, unit_doc)
     assert '#heading(level: 2, text("-JB2"))' in page
     assert "-JB1-JB2" not in page
-    assert 'text("-JB2"), text("header")' in page  # the connector row is there
+    assert 'strong(text("Pin"))' in page  # the connector's pin table is there
 
 
 def test_a_location_documents_connector_list_keeps_the_inner_boards_full_heading(board_in_board):

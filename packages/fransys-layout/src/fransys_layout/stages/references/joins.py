@@ -27,7 +27,7 @@ from fransys_layout.stages._chain_beside import beside_hosts
 from fransys_layout.stages.stacking import JoinedEnd, JoinedRun, JoinEnd, StackedPort, join_y
 from fransys_model.kernel import Finding, Id, Severity, UnionFind
 
-from .beside_runs import beside_runs, joined_pairs
+from .beside_runs import beside_pairs, beside_runs, joined_pairs
 from .clear_runs import always_clear, run_clearance
 from .nets import star_wires
 from .types import Beside, Joins
@@ -67,6 +67,7 @@ class Spot:
     body: tuple[int, int]
     shifted: bool = False  # An attached part stands above this port's function in its column
     crowded: bool = False  # Another pin of the cell ends at the same offset, facing the same way
+    boxed: bool = False  # The pin stands on a generic box's edge, which a run never lies along
 
 
 def joined_runs(
@@ -84,7 +85,7 @@ def joined_runs(
     clear = run_clearance(spots, drawn, power)
     wires = star_wires(connections, functions, columns)
     hosts = beside_hosts(columns)
-    candidates = _same_page(wires, spots)
+    candidates = _same_page((*wires, *beside_pairs(connections, wires, spots, hosts)), spots)
     side, side_runs, refused = beside_runs(candidates, hosts, rooms)
     asked = {c.handle for c, x, y in candidates if _beside_wire(x, y, hosts)}
     rest = tuple(c for c in wires if c.handle not in asked)
@@ -125,11 +126,14 @@ def port_spots(
                 continue
             body = (min(s.offset for _, s in own), max(s.offset for _, s in own))
             shifted = _under_attachment(column, cell)
+            boxed = drawn_of[cell.function].geometry.generic_box
             for port, stacked in own:
                 end = JoinEnd(port=port.port, row=stacked.row, offset=stacked.offset, height=height)
                 crowded = _crowded(own, port.port, stacked)
                 found[port.port].append(
-                    Spot(*where, cell.index, last, stacked.facing, end, body, shifted, crowded)
+                    Spot(
+                        *where, cell.index, last, stacked.facing, end, body, shifted, crowded, boxed
+                    )
                 )
     return {port: tuple(spots) for port, spots in found.items()}
 

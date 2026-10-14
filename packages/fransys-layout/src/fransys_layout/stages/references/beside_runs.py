@@ -59,6 +59,32 @@ def beside_runs(
     return joined, runs, refused
 
 
+def beside_pairs(
+    connections: Sequence[Connection],
+    star: Sequence[Connection],
+    spots: Mapping[Id[Any], Sequence[Spot]],
+    hosts: Mapping[AuthoringKey, AuthoringKey],
+) -> tuple[Connection, ...]:
+    """The conductors outside a star net that join a beside column to its host's (CBF1).
+
+    A two-port host net is no star, yet its beside conductor is a short horizontal like any other.
+    """
+    if not hosts:
+        return ()
+    taken = {c.handle for c in star}
+    return tuple(
+        c
+        for c in connections
+        if c.handle not in taken
+        and any(
+            _is_beside((c, x, y), hosts)
+            for x in spots.get(c.a.port, ())
+            for y in spots.get(c.b.port, ())
+            if x.page == y.page
+        )
+    )
+
+
 def _fits(
     branch: Spot, y: int, rooms: Mapping[Page, int], last: Mapping[tuple[Page, AuthoringKey], int]
 ) -> bool:
@@ -83,11 +109,12 @@ def _branch_first(wire: _Wire, hosts: Mapping[AuthoringKey, AuthoringKey]) -> _W
 
 
 def _drop(spot: Spot) -> int:
-    """How far the run's y stands past a pin of a crowded cell, leaving the pin's way (layout-0174).
+    """How far the run's y stands past a crowded or box pin, leaving the pin's way (layout-0174).
 
-    A level join would run through the cell's other pin ends, so it leaves the pin by one grid.
+    A level join would run through the cell's other pin ends, or along a box's edge (JOIN-VERTICAL),
+    so it leaves the pin by one grid.
     """
-    if not spot.crowded:
+    if not (spot.crowded or spot.boxed):
         return 0
     return {Facing.S: WIRING_GRID, Facing.N: -WIRING_GRID}.get(spot.facing, 0)
 

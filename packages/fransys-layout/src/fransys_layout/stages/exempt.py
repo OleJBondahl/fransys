@@ -61,10 +61,22 @@ def _neighbours(
     return owner, mates, net
 
 
-def open_ends(functions: tuple[FunctionSpec, ...], edges: frozenset[Id[Any]]) -> frozenset[Id[Any]]:
-    """The drawn functions (pin views included) of boundary `edges`, whose outside is open."""
+def open_ends(
+    functions: tuple[FunctionSpec, ...], edges: frozenset[Id[Any]], edge_ports: frozenset[Id[Any]]
+) -> frozenset[Id[Any]]:
+    """The drawn functions (pin views included) of boundary `edges`, whose outside is open.
+
+    An item box stands under its item: it is open when all its ports are boundary `edge_ports`.
+    """
     return frozenset(
-        spec.function for spec in functions if (spec.pin_function or spec.function) in edges
+        spec.function
+        for spec in functions
+        if (spec.pin_function or spec.function) in edges
+        or (
+            spec.roles.item_view
+            and bool(spec.ports)
+            and all(port.port in edge_ports for port in spec.ports)
+        )
     )
 
 

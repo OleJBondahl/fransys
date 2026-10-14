@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
 from fransys_layout.engines.diagram.arrange import place_ends
-from fransys_layout.engines.diagram.sizes import PAGE_PAD, TRACK_PITCH, label_room, tab_reach
-from fransys_layout.geometry import WIRING_GRID, Facing
+from fransys_layout.engines.diagram.sizes import TRACK_PITCH, label_room, tab_reach
+from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing
 from fransys_layout.stages.channel import plan_channel
 
 if TYPE_CHECKING:

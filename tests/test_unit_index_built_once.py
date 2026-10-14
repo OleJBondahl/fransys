@@ -9,10 +9,9 @@ result cannot hide a rebuild.
 import sys
 from pathlib import Path
 
-from fransys_model.derive import item_designation, reference_designation
+from fransys_model.derive import item_designation, page_title, reference_designation
 from fransys_model.derive import unit_nodes as unit_nodes_module
 from fransys_model.derive.designation import own_nodes
-from fransys_model.derive.drawing_text import page_title
 from fransys_model.layout import Page
 from fransys_model.layout import layout_of as layout_of_model
 from fransys_model.vocab import membership

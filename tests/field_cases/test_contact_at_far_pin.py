@@ -276,7 +276,8 @@ def _drawing(layout) -> str:
     return sha256(repr((placed, texts, routes)).encode()).hexdigest()[:16]
 
 
-_DRAWING = {"plain": "46ab0f57ff2f0b6a", "split": "634dd3c55c0dbf7d", "sixteen": "77b39a642b9d9c7b"}
+# the digests moved with the page inset (layout-0187): every page starts PAGE_PAD in
+_DRAWING = {"plain": "f4eeefa2fc16c729", "split": "c32a0c5ba9686aa7", "sixteen": "3da3ec1343f09c93"}
 
 
 @pytest.fixture(scope="module")

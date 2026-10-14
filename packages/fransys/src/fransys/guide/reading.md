@@ -147,7 +147,21 @@ the overview sort by it, and `fn.pins` follows it. Sort pins through it, so no s
 
 `fransys.derive.cable_list_rows(model, unit=None)` returns one `CableListRow` per top-level cable,
 or per cable of `unit`, with its product facts. `from_label` is the first end's designation; `to_label` lists the others,
-in end order, joined by `, `.
+in end order, joined by `, `. An end on a device that prints its connectors as sub-parts names the
+connector behind the designation (`+C1-A1-X1`).
+`pairs` is the number of twisted pairs of the cable's product, `None` for a product without pairs,
+and `fransys.derive.cores_text(core_count, pairs)` is the Cores cell: `2x2` for two pairs, else the count.
+
+`fransys.derive.open_core_rows(model, cable, *, unit=None)` returns one `OpenCoreRow` per open core
+of `cable` (a spare, or a screen earthed at one end), by core number. A row holds the core's
+`index`, `colour`, the port it lands on (`at`, `at_designation`; `None` and `""` for none) and
+`spare`, false for an `SH` screen. `HarnessCable.open_cores` holds the same rows.
+
+`fransys.derive.core_list_rows(model, *, unit=None)` returns one `CoreListRow` per core of every cable
+`cable_list_rows` lists, in its order and by core number: the wired cores and the open ones, with the
+ends printed as the cable drawing prints them. A spare parked on a pin has it as `end_a`. `pair` is
+`P1` or `screen P1`, `""` outside a pair, and `note` is `spare` for a spare core.
+`CORE_LIST_COLUMNS` names the fields, in print order. `cores.csv` is this list.
 
 `fransys.derive.contents_rows(cables)` reshapes a tuple of `HarnessCable`s (from
 `harness_cables`, `top_level_cables` or `unit_cables`) into one `ContentsRow` per cable, its

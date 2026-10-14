@@ -23,7 +23,7 @@ def box_room(facts: BlockFacts) -> tuple[int, int]:
     The box holds the heading and the longest crossing core's text, upright on its axis (a link's
     stands at its row); every box shares the height.
     """
-    head = snap_up(2 * facts.pad + facts.text_height)
+    head = snap_up(2 * facts.pad + facts.text_height) + facts.bracket_room
     texts = (core.text_width for core in facts.cores if not core.link)
     longest = max(texts, default=0)
     height = max(BOX, head + snap_up(longest + 2 * facts.pad, grid=2 * G))

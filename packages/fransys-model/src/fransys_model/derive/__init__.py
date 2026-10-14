@@ -53,7 +53,9 @@ from .columns import (
     BOM_COLUMNS,
     CABLE_LIST_COLUMNS,
     CONNECTOR_COLUMNS,
+    CONNECTOR_LABELS,
     CONTENTS_COLUMNS,
+    CORE_LIST_COLUMNS,
     DESIGNATION_COLUMNS,
     PIN_COLUMNS,
     PLC_COLUMNS,
@@ -64,6 +66,8 @@ from .columns import (
 )
 from .contact_entries import NO_PLACE
 from .contacts import LinkState, Throws, changeover_throws, link_state, owned_contacts
+from .core_list import core_list_rows
+from .core_pairs import cores_text
 from .current_chains import CurrentBound, CurrentChain, CurrentPosition, LimitRole, current_chains
 from .designation import (
     connector_label,
@@ -108,6 +112,7 @@ from .list_cells import (
 )
 from .lookups import black_box_unit, connector_facets, item_of_port, pin_order, terminal_items
 from .mate_rows import mates
+from .open_cores import open_core_rows
 from .order import bom_sort_key, natural_key
 from .overview_field import field_devices, field_fold
 from .overview_fold import fold_level
@@ -133,12 +138,14 @@ from .overview_text import (
 from .overview_tree import overview_tree
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
-from .page_destination import page_destination
+from .page_destination import page_destination, sheet_text, sheet_title_text
+from .page_titles import page_title, page_title_forms, short_title
 from .pairing import BoxPair, box_pairs
 from .part_functions import part_function_rows
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
 from .plc_tables import plc_tables
+from .plc_words import plc_list_rows, signal_word
 from .potential import port_potential_current, port_potential_rank
 from .power import is_rail_terminal, port_power_kind, port_power_text, power_kind, power_text
 from .printed_sets import document_drawing_sets, printed_drawing_sets
@@ -152,7 +159,9 @@ from .queries import (
     cable_rows,
     cable_title,
     conductors_on_item,
+    connector_items,
     connector_rows,
+    connector_rows_of,
     contents_rows,
     core_colour,
     current_revision,
@@ -190,6 +199,7 @@ from .queries import (
     unconnected_ports,
     unit_boards,
     unit_cables,
+    unit_connector_items,
     unit_items,
     unit_release,
     unit_strips,
@@ -248,6 +258,7 @@ from .rows import (
     UnitMatrix,
     WireRow,
 )
+from .rows_cores import CoreListRow, OpenCoreRow
 from .rows_overview import (
     FieldFold,
     FieldJoin,
@@ -266,17 +277,22 @@ from .rows_overview import (
     TreeRow,
 )
 from .rows_overview_view import ViewBox, ViewLine, ViewMember, ViewRows
+from .rows_sheet_index import SheetIndexRow, sheet_index_rows
+from .sheet_forms import set_page_text, sheet_counter_text
+from .sheets import diagram_sheets, sheets
 from .side_hint_findings import check_side_hints
 from .supply_share import supply_share
 from .text_size import text_room_g, text_under_floor
-from .unused import function_is_unused, port_is_unused
+from .unused import function_is_reached, function_is_unused, port_is_reached, port_is_unused
 
 __all__ = [
     "BOM_COLUMNS",
     "CABLE_LIST_COLUMNS",
     "CELL_SEPARATOR",
     "CONNECTOR_COLUMNS",
+    "CONNECTOR_LABELS",
     "CONTENTS_COLUMNS",
+    "CORE_LIST_COLUMNS",
     "DESIGNATION_COLUMNS",
     "NO_PLACE",
     "PIN_COLUMNS",
@@ -300,6 +316,7 @@ __all__ = [
     "ConnectorPin",
     "ConnectorRow",
     "ContentsRow",
+    "CoreListRow",
     "CurrentBound",
     "CurrentChain",
     "CurrentPosition",
@@ -339,6 +356,7 @@ __all__ = [
     "NetClass",
     "NetlistNet",
     "NetlistPart",
+    "OpenCoreRow",
     "Operating",
     "OverviewBox",
     "OverviewGraph",
@@ -365,6 +383,7 @@ __all__ = [
     "ReadabilityPage",
     "ReadabilityReport",
     "ReadabilityUnit",
+    "SheetIndexRow",
     "SignalKind",
     "StripNote",
     "StripTerminal",
@@ -415,15 +434,20 @@ __all__ = [
     "connector_at_line_end",
     "connector_box_lines",
     "connector_facets",
+    "connector_items",
     "connector_label",
     "connector_rows",
+    "connector_rows_of",
     "connector_segments",
     "contents_rows",
     "core_colour",
+    "core_list_rows",
+    "cores_text",
     "current_chains",
     "current_revision",
     "designation_holder",
     "designation_list",
+    "diagram_sheets",
     "diff_marks",
     "document_drawing_sets",
     "document_export_name",
@@ -444,6 +468,7 @@ __all__ = [
     "first_leg",
     "fold_level",
     "function_designation",
+    "function_is_reached",
     "function_is_unused",
     "function_operating",
     "function_rating",
@@ -484,6 +509,7 @@ __all__ = [
     "nets",
     "no_conductor_at",
     "number",
+    "open_core_rows",
     "open_strips",
     "overview_end_text",
     "overview_field_join_text",
@@ -504,6 +530,8 @@ __all__ = [
     "own_nodes",
     "owned_contacts",
     "page_destination",
+    "page_title",
+    "page_title_forms",
     "part_function_rows",
     "part_rating",
     "physical_nets",
@@ -511,9 +539,11 @@ __all__ = [
     "pin_order",
     "placements",
     "plc_channel_rows",
+    "plc_list_rows",
     "plc_rack_modules",
     "plc_tables",
     "port_designation",
+    "port_is_reached",
     "port_is_unused",
     "port_potential_current",
     "port_potential_rank",
@@ -537,8 +567,16 @@ __all__ = [
     "revision_text",
     "same_version",
     "schematic_functions",
+    "set_page_text",
+    "sheet_counter_text",
+    "sheet_index_rows",
+    "sheet_text",
+    "sheet_title_text",
+    "sheets",
+    "short_title",
     "signal_kind",
     "signal_lens",
+    "signal_word",
     "standalone",
     "strip_stubs",
     "strip_view",
@@ -557,6 +595,7 @@ __all__ = [
     "unconnected_ports",
     "unit_boards",
     "unit_cables",
+    "unit_connector_items",
     "unit_items",
     "unit_location",
     "unit_matrix",

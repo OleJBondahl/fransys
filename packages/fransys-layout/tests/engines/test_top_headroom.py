@@ -18,6 +18,7 @@ from layout_cabinet import build_cabinet
 from fransys_layout.engines.schematic import engine, run_stages
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
+from fransys_layout.geometry import PAGE_PAD
 from fransys_layout.lint.codes import OUT_OF_CONTENT_BOX
 from fransys_layout.stages.place import PAGE_OVERFULL
 from fransys_model.kernel import freeze
@@ -112,11 +113,12 @@ def test_without_the_text_room_and_without_headroom_a_route_leaves_the_content_b
 ) -> None:
     """Can fail, and shows the band and the text room are what keep them in: turn them and the
     lanes off, and a route leaving a north-facing port of row 0 turns above the content-box top
-    (y < 0), which the lint reports. The frame gap (layout-0104) is off too: it moves the page
-    right and down by a grid, which lifts this one route to y 0."""
+    (y < PAGE_PAD, the inset box top; layout-0187), which the lint reports. The frame gap
+    (layout-0104) is off too: it moves the page
+    right and down by a grid, which lifts this one route to y 8, under the inset."""
     monkeypatch.setattr(importlib.import_module("fransys_layout.stages.tidy"), "TEXT_GAP", 0)
     layout, codes = _run_relay(monkeypatch, text_room=False)
-    assert _highest_route(layout) < 0
+    assert _highest_route(layout) < PAGE_PAD
     assert OUT_OF_CONTENT_BOX in codes
 
 

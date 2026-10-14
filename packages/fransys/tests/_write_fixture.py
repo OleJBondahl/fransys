@@ -51,7 +51,7 @@ def main(work: Path) -> None:
         DocumentPreset.CABINET_SCHEMATIC,
         c1,
         cover=cover,
-        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.BOM),
+        remove=(PageKind.PLC_LIST, PageKind.TERMINAL_LIST, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
     result = fr.build(parts, d.draft(), *documents, cabinet)
     fr.write(result, work / "out", intermediates=work / "intermediates")

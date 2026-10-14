@@ -56,12 +56,14 @@ def _top(host: FunctionSpec, drawing: DrawnFunction, nets: frozenset[Handle]) ->
 
 
 def _upside_down(steps: _Steps, host: FunctionSpec, drawing: DrawnFunction) -> bool:
-    """Whether the chain's first end net is the lower of its two, as the host is drawn."""
+    """Whether the chain's last end reads first: on the host's upper net, or alone on the host."""
     if len(steps) < _TWO:
         return False
     first = _top(host, drawing, _end_nets(steps, 0, 1))
     last = _top(host, drawing, _end_nets(steps, -1, -2))
-    return first is not None and last is not None and first > last
+    if last is None:
+        return False
+    return first is None or first > last
 
 
 def beside_hosts(columns: Sequence[Column]) -> dict[AuthoringKey, AuthoringKey]:
@@ -82,3 +84,8 @@ def beside_hosts(columns: Sequence[Column]) -> dict[AuthoringKey, AuthoringKey]:
 def beside_links(columns: Sequence[Column]) -> set[tuple[AuthoringKey, AuthoringKey]]:
     """The pairs of a beside column and its host's, as `partition` keeps them together."""
     return {(min(key, host), max(key, host)) for key, host in beside_hosts(columns).items()}
+
+
+def beside_cells(columns: Sequence[Column]) -> frozenset[Handle]:
+    """The functions standing in a beside column."""
+    return frozenset(cell.function for column in columns if column.beside for cell in column.cells)

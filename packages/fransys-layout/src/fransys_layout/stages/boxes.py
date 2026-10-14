@@ -68,8 +68,13 @@ def box_sides(
     drawn: tuple[DrawnFunction, ...],
     connections: tuple[Connection, ...],
     power: tuple[Mapping[Id[Any], int], Mapping[Id[Any], str], Mapping[Id[Any], str]],
+    aside: frozenset[Id[Any]] = frozenset(),
 ) -> tuple[DrawnFunction, ...]:
-    """Each generic box drawn with every port on the side facing its placed partners."""
+    """Each generic box drawn with every port on the side facing its placed partners.
+
+    A box of a beside column (`aside`, layout-0174) does not face another box: its column reads
+    from the host down, and the wire to a box-drawn end is a reference.
+    """
     # `power`: the potential ranks, the power kinds and the item-box sides, by port
     drawn_by = {one.function: one for one in drawn}
     where: dict[Id[Any], dict[tuple[int, int], tuple[int, int]]] = {}
@@ -90,8 +95,17 @@ def box_sides(
         if not one.geometry.generic_box or one.function not in home or _paired(one):
             found.append(one)
             continue
-        found.append(_turned_box(one, home[one.function], where, partners, power))
+        near = _unboxed(partners, drawn) if one.function in aside else partners
+        found.append(_turned_box(one, home[one.function], where, near, power))
     return tuple(found)
+
+
+def _unboxed(
+    partners: Mapping[Id[Any], list[Id[Any]]], drawn: tuple[DrawnFunction, ...]
+) -> dict[Id[Any], list[Id[Any]]]:
+    """`partners` less the ports of generic boxes."""
+    boxed = {p.port for one in drawn if one.geometry.generic_box for p in one.ports}
+    return {port: [q for q in qs if q not in boxed] for port, qs in partners.items()}
 
 
 def _paired(one: DrawnFunction) -> bool:

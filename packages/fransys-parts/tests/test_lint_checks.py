@@ -135,3 +135,57 @@ def _function(name, kind, marking=None):
         if marking is not None:
             text += f"marking = {marking}\n"
     return text + "\n"
+
+
+_SIX_CORES = '["WH", "BN", "WH", "BN", "SH", "SH"]'
+
+
+def _pair_part(pairs, colours=_SIX_CORES):
+    """A cable part whose `[cable_product]` carries `pairs` (inline-table text) over six cores."""
+    cable = _CLEAN_PART.replace('category = "generic"', 'category = "cable"')
+    return (
+        cable + "\n[cable_product]\n"
+        f'core_count = 6\ncore_colours = {colours}\ngauge_mm2 = "0.75"\nshielded = false\n'
+        f"pairs = {pairs}\n"
+    )
+
+
+def _pair_codes(tmp_path, pairs, colours=_SIX_CORES):
+    return _codes(_root(tmp_path, parts={"p.toml": _pair_part(pairs, colours)}))
+
+
+def test_cable_pair_valid_gives_no_pair_finding(tmp_path):
+    """Two pairs with screens 5 and 6, and an `SH` core (none here) named by no pair is fine."""
+    valid = "[{ cores = [1, 2], screen = 5 }, { cores = [3, 4], screen = 6 }]"
+    assert "CABLE_PAIR_INVALID" not in _pair_codes(tmp_path, valid)
+
+
+def test_cable_pair_core_out_of_range(tmp_path):
+    # MUTATION: drop the `core <= len(colours)` bound, so core 7 passes as a valid index
+    assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, "[{ cores = [1, 7] }]")
+
+
+def test_cable_pair_not_two_cores(tmp_path):
+    # MUTATION: accept any length of `cores`, so a three-core pair passes
+    assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, "[{ cores = [1, 2, 3] }]")
+
+
+def test_cable_pair_core_in_two_pairs(tmp_path):
+    # MUTATION: count each pair's cores separately, so core 2 named by two pairs passes
+    assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, "[{ cores = [1, 2] }, { cores = [2, 4] }]")
+
+
+def test_cable_pair_core_is_sh(tmp_path):
+    # MUTATION: skip the `colours[core - 1] == "SH"` test, so core 5 (SH) in a pair passes
+    assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, "[{ cores = [1, 5] }]")
+
+
+def test_cable_pair_screen_not_sh(tmp_path):
+    # MUTATION: stop checking the screen's colour, so core 3 (WH) as a screen passes
+    assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, "[{ cores = [1, 2], screen = 3 }]")
+
+
+def test_cable_pair_screen_named_twice(tmp_path):
+    # MUTATION: drop the `_repeated(screens)` report, so SH core 5 named by two pairs passes
+    pairs = "[{ cores = [1, 2], screen = 5 }, { cores = [3, 4], screen = 5 }]"
+    assert "CABLE_PAIR_INVALID" in _pair_codes(tmp_path, pairs)

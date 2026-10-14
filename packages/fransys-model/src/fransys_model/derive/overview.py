@@ -7,11 +7,22 @@ from typing import TYPE_CHECKING
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
 from fransys_model.vocab.membership import unit_items
-from fransys_model.vocab.tables import conductors, functions, items, mates, parts, ports
+from fransys_model.vocab.tables import conductors, functions, items, mates, parts
 
 from .closure import physical_nets
-from .designation import designation_holder, own_designation_or_none, printed_designation
-from .lookups import item_description, item_of_port, location_label, pin_order, terminal_items
+from .designation import (
+    designation_holder,
+    own_designation_or_none,
+    printed_designation,
+)
+from .lookups import (
+    item_description,
+    item_of_port,
+    location_label,
+    pin_order,
+    printed_port_name,
+    terminal_items,
+)
 from .memo import Memo
 from .order import NaturalKey, natural_key
 from .rows import (
@@ -143,7 +154,9 @@ def _signals(model: Model) -> tuple[OverviewSignal, ...]:
         found = sorted(
             (
                 OverviewPort(
-                    item=item_of_port(model, port), port=port, marking=ports(model)[port].name
+                    item=item_of_port(model, port),
+                    port=port,
+                    marking=printed_port_name(model, port),
                 )
                 for port in net.ports
             ),

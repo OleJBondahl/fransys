@@ -15,6 +15,7 @@ from fransys_model.kernel import (
     key_text,
     parent_chain,
 )
+from fransys_model.vocab.bars import is_bar_port
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
@@ -69,6 +70,7 @@ __all__ = [
     "no_conductor_at",
     "pin_order",
     "position_rank",
+    "printed_port_name",
     "require",
     "strip_set",
     "terminal_items",
@@ -276,3 +278,12 @@ def conductors_by_role(
             if landed:
                 by_role.setdefault(role, set()).update(landed)
     return by_role
+
+
+def printed_port_name(model: Model, port: Id[Port]) -> str:
+    """The port name a list prints after its item's designation; `""` for a bar's port (PE-BAR B4).
+
+    A bar's screw is no part of the wiring, so a bar end prints the bar alone (`-PE1`). Overview
+    and the release listing read this; `port_designation` reads it too.
+    """
+    return "" if is_bar_port(model, port) else ports(model)[port].name

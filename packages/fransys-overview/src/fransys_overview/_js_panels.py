@@ -114,7 +114,7 @@ const signalsOf = (index) => {
   const found = data.signals.filter((s) => s.some((p) => p[0] === index));
   const lines = found.length === 0 ? [] : [found.length + ' signal(s) through here'];
   for (const s of found.slice(0, 12)) {
-    const shown = s.slice(0, 6).map((p) => data.items[p[0]].label + ' (' + p[1] + ')').join('  -  ');
+    const shown = s.slice(0, 6).map((p) => data.items[p[0]].label + (p[1] === '' ? '' : ' (' + p[1] + ')')).join('  -  ');
     lines.push(s.length > 6 ? shown + '  ... ' + (s.length - 6) + ' more' : shown);
   }
   return lines;

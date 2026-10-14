@@ -21,6 +21,7 @@ from .designation import (
     terminal_of,
 )
 from .instance_tag import instance_name, instance_tags
+from .lookups import printed_port_name
 from .unit_nodes import SIGNS, chain_up
 
 if TYPE_CHECKING:
@@ -143,7 +144,9 @@ def _plain_port_text(model: Model, render_unit: Id[Unit] | None, port_id: Id[Por
     if owner.parent is not None and terminal_of(model, owner.id) is not None:
         strip_text = unit_designation(model, render_unit, owner.parent)
         return f"{strip_text}:{_own_designation(model, owner.id)}"
-    return f"{unit_designation(model, render_unit, owner.id)}:{record.name}"
+    text = unit_designation(model, render_unit, owner.id)
+    name = printed_port_name(model, port_id)
+    return f"{text}:{name}" if name else text
 
 
 def _cross_port_text(model: Model, unit: Id[Unit] | None, port_id: Id[Port]) -> str:

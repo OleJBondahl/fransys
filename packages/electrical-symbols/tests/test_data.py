@@ -26,16 +26,17 @@ PORT_ID = re.compile(r"^[a-z][a-z0-9_]*$")
 NOT_LENGTHS = {"schema", "repeat", "pole_pitch"}
 ARC_ANGLES = {"start", "end"}
 # The guide is never edited, so its five examples carry its own ids (six in all: the push-button
-# block also names the actuator); each is compared with the repo file after the id is replaced by
-# the slug in `number` and in `use`.
-GUIDE_SLUGS = {
-    "S00016": "connection-point",
-    "S00171": "actuator-push",
-    "S00227": "make-contact",
-    "S00230": "change-over-contact",
-    "S00254": "push-button",
-    "S00305": "operating-device",
+# block also names the actuator). Each example is keyed by its `name`, and a part of the push-button
+# block by its `as`; the ids are read from the guide at test time. Each block is compared with the
+# repo file after the id is replaced by the slug in `number` and in `use`.
+GUIDE_NAME_SLUGS = {
+    "Connection point": "connection-point",
+    "Make contact, general symbol": "make-contact",
+    "Change-over break before make contact": "change-over-contact",
+    "Switch, manually operated, push-button, automatic return": "push-button",
+    "Operating device, general symbol; relay coil, general symbol": "operating-device",
 }
+GUIDE_PART_SLUGS = {"contact": "make-contact", "actuator": "actuator-push"}
 # The one line a file may add to its guide example.
 GUIDE_EXTRA_LINE = {"push-button": "pole_pitch = 8\n"}
 # Guide examples the file draws mirrored top to bottom, by owner ruling: the file is checked
@@ -137,17 +138,25 @@ def duplicate_numbers(docs):
 
 
 def guide_blocks():
-    """Map slug to the guide's TOML example blocks: HTML-unescaped, the guide's ids replaced."""
+    """Map slug to the guide's TOML example blocks (HTML-unescaped, its ids replaced by slugs),
+    and the guide's ids read from them.
+    """
     page = GUIDE.read_bytes().decode("utf-8")
+    raws = [
+        html.unescape(raw)
+        for raw in re.findall(r'<pre data-lang="toml"><code>(.*?)</code></pre>', page, re.DOTALL)
+    ]
+    slugs = {}
+    for raw in raws:
+        doc = tomllib.loads(raw)
+        slugs[doc["reference"]["number"]] = GUIDE_NAME_SLUGS[doc["name"]]
+        for part in doc.get("parts", []):
+            slugs[part["use"]] = GUIDE_PART_SLUGS[part["as"]]
     blocks = {}
-    for raw in re.findall(r'<pre data-lang="toml"><code>(.*?)</code></pre>', page, re.DOTALL):
-        block = re.sub(
-            r'\b(number|use) = "([^"]+)"',
-            lambda m: f'{m[1]} = "{GUIDE_SLUGS[m[2]]}"',
-            html.unescape(raw),
-        )
+    for raw in raws:
+        block = re.sub(r'\b(number|use) = "([^"]+)"', lambda m: f'{m[1]} = "{slugs[m[2]]}"', raw)
         blocks[re.findall(r'number = "([^"]+)"', block)[0]] = block
-    return blocks
+    return blocks, set(slugs)
 
 
 def check_verbatim(number, text, block):
@@ -245,7 +254,7 @@ CHECKS = {
     "drawing-grid": check_drawing_grid,
 }
 CASES = [(path, check) for path in SYMBOL_FILES for check in CHECKS]
-GUIDE_BLOCKS = guide_blocks()
+GUIDE_BLOCKS, GUIDE_IDS = guide_blocks()
 
 GOOD = {
     "schema": 1,
@@ -429,7 +438,7 @@ def test_verbatim_check_flags_altered_blocks():
 
 def test_guide_ids_are_replaced_by_slugs_only_in_number_and_use():
     for slug, block in GUIDE_BLOCKS.items():
-        assert not any(guide_id in block for guide_id in GUIDE_SLUGS)
+        assert not any(guide_id in block for guide_id in GUIDE_IDS)
         assert f'number = "{slug}"' in block
     push_button = GUIDE_BLOCKS["push-button"]
     assert 'use = "make-contact"' in push_button

@@ -15,10 +15,9 @@ from fransys_model.derive.accessory_blocks import is_contact_block, items_with_a
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import instance_designation, unit_root
 from fransys_model.derive.lone_cable import printing_item
-from fransys_model.derive.lookups import effective_placement, require, strip_set
+from fransys_model.derive.lookups import effective_placement, printed_port_name, require, strip_set
 from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
-from fransys_model.vocab.bars import is_bar_port
 from fransys_model.vocab.enums import Aspect, FunctionKind
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
 from fransys_model.vocab.facets.connector import ConnectorFacet
@@ -457,7 +456,7 @@ def port_designation(model: Model, port: Id[Port], *, unit: Id[Unit] | None = No
         msg = "the id is not a port of the model"
         raise SchemaError(msg, kind="port", record_id=port)
     owner = items(model)[functions(model)[record.function].item]
-    if is_bar_port(model, port):
+    if not printed_port_name(model, port):
         return printed_designation(model, owner.id, unit=unit)
     if terminal_of(model, owner.id) is None:
         return f"{connector_designation(model, record.function, unit=unit)}:{record.name}"

@@ -22,10 +22,6 @@ IEC_ID = re.compile(r"S[0-9]{5}")
 # tracked matches today, not even the guide, so only the guide (never edited) is exempt, as for
 # IEC_ID; this file's own pattern text does not match itself.
 ITEM_ID = re.compile(r"60617-[0-9]|\b[0-9]{2}-[0-9]{2}-[0-9]{2}\b")
-# tests/test_data.py maps the guide's own ids to our slugs, because the guide is never edited and
-# still carries them. That dict is the one accepted residual; an id elsewhere in the file counts.
-RESIDUAL_FILE = "tests/test_data.py"
-RESIDUAL = re.compile(r"^GUIDE_SLUGS = \{.*?^\}\n", re.MULTILINE | re.DOTALL)
 
 # Rule 4 of docs/IEC_HANDLING.md; the words may be split by any whitespace, including a line end.
 FORBIDDEN = [
@@ -63,15 +59,8 @@ def scan(files, pattern, exempt=()):
 
 
 def id_problems(files):
-    """IEC ids everywhere but the guide and the residual dict in tests/test_data.py."""
-
-    def blank(match):  # keeps the line numbers
-        return "\n" * match.group().count("\n")
-
-    checked = [
-        (path, RESIDUAL.sub(blank, text) if path == RESIDUAL_FILE else text) for path, text in files
-    ]
-    return scan(checked, IEC_ID, {GUIDE})
+    """IEC ids everywhere but the guide."""
+    return scan(files, IEC_ID, {GUIDE})
 
 
 def item_id_problems(files):
@@ -154,11 +143,9 @@ def test_id_check_fires_on_an_old_style_id(tmp_path):
     assert id_problems([("symbols/fuse.toml", "number = 'S1234'\nid = 's12345'\n")]) == []
 
 
-def test_id_check_exempts_only_the_guide_and_the_residual_dict():
+def test_id_check_exempts_only_the_guide():
     assert id_problems([(GUIDE, f"<code>{OLD_ID}</code>")]) == []
-    residual = f'A = 1\nGUIDE_SLUGS = {{\n    "{OLD_ID}": "fuse",\n}}\nB = "{OLD_ID}"\n'
-    assert id_problems([(RESIDUAL_FILE, residual)]) == [f"{RESIDUAL_FILE}:5: {OLD_ID}"]
-    assert id_problems([("tests/test_gates.py", residual)]) != []
+    assert id_problems([("tests/test_data.py", f'A = "{OLD_ID}"\n')]) != []
 
 
 def test_item_id_check_fires_on_a_part_reference_and_on_a_part_item_id():
@@ -178,13 +165,6 @@ def test_item_id_check_ignores_dates_versions_and_the_allowed_forms():
 def test_item_id_check_exempts_only_the_guide():
     assert item_id_problems([(GUIDE, f"<code>{PART_REF} {ITEM}</code>")]) == []
     assert item_id_problems([(HANDLING, f"{PART_REF}")]) != []
-
-
-def test_the_residual_is_the_guide_slugs_dict_in_test_data():
-    text = dict(FILES)[RESIDUAL_FILE]
-    block = RESIDUAL.search(text)
-    assert block
-    assert len(IEC_ID.findall(block.group())) == len(IEC_ID.findall(text))
 
 
 @pytest.mark.parametrize("phrase", FORBIDDEN)

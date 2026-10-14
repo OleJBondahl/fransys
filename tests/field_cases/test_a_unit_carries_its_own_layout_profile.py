@@ -167,6 +167,63 @@ def test_a_parent_profile_does_not_reach_a_unit_without_one(tmp_path: Path) -> N
     assert _unit_pdf(inside, tmp_path / "o-inside") == _unit_pdf(plain, tmp_path / "o-plain")
 
 
+class _PlcIo(NamedTuple):
+    plc: fr.Device
+
+
+def _plc_box(*, hide: bool) -> Any:
+    """A unit whose input module has a wired supply and four idle channels."""
+
+    @fr.unit("demo-plc-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
+    def box(u: fr.Design) -> _PlcIo:
+        if hide:
+            u.layout.profile(hide_unused_pins=True)
+        plc = u.device("A1", "DEMO-PLC-DI-4P")
+        psu = u.device("G1", "DEMO-PSU-24")
+        u.wire(psu.output["+"], plc.power["24V"], wire=("WH", 0.75))
+        u.wire(psu.output["-"], plc.power["0V"], wire=("WH", 0.75))
+        return _PlcIo(plc)
+
+    return box
+
+
+def _plc_unit_ports(tmp_path: Path, *, parent_hides: bool, unit_hides: bool) -> list[str]:
+    """Every port the layout draws for the unit's items."""
+    d = fr.design("demo_parts", place="C1")
+    d.location("C1", "Cabinet")
+    if parent_hides:
+        d.layout.profile(hide_unused_pins=True)
+    d.add(_plc_box(hide=unit_hides), "U1")
+    (tmp_path / "plc.md").write_text("# Plc box\n", encoding="utf-8")
+    preset = fr.DocumentPreset.CABINET_SCHEMATIC
+    model = fr.build(d, fr.document(preset, "demo-plc-box", cover=tmp_path / "plc.md")).model
+    return sorted(
+        port
+        for p in layout_of(model, SymbolPlacement).values()
+        if items(model)[functions(model)[p.function].item].unit is not None
+        for port in p.ports
+    )
+
+
+def test_a_parent_hiding_idle_pins_leaves_a_wired_supply_unit_with_its_idle_pins(
+    tmp_path: Path,
+) -> None:
+    """The idle channels stay drawn under a parent that hides them; only the unit hides its own.
+
+    The control: the same unit with `hide_unused_pins` of its own loses the four idle channels,
+    so the setup is one the profile can change.
+    """
+    for sub in ("alone", "inside", "own"):
+        (tmp_path / sub).mkdir()
+    alone = _plc_unit_ports(tmp_path / "alone", parent_hides=False, unit_hides=False)
+    inside = _plc_unit_ports(tmp_path / "inside", parent_hides=True, unit_hides=False)
+    own = _plc_unit_ports(tmp_path / "own", parent_hides=False, unit_hides=True)
+    assert {"di_1.1", "di_4.4"} <= set(alone)
+    assert inside == alone
+    assert own != alone
+    assert not {"di_1.1", "di_4.4"} & set(own)
+
+
 def test_a_sheet_only_the_unit_profile_names_is_not_unused(tmp_path: Path) -> None:
     """The unit's pages are drawn on its sheet, and no finding calls that sheet unused."""
     result = _build(tmp_path, unit_profile=_OWN, parent=_PARENT, beside=True, own_sheet=True)

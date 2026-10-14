@@ -113,7 +113,7 @@ def _points(element):
     return element.points if isinstance(element, Polyline) else (element.start, element.end)
 
 
-def test_emergency_stop_is_s00258_in_full():
+def test_emergency_stop_is_the_full_symbol():
     """Head left of the ports, ring right of the break contact, latching wedge on the link.
 
     The head is the one Arc, the positive-opening mark the one Circle, the latching wedge

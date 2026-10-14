@@ -228,7 +228,9 @@ def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built
 # auxiliary-contact pins of each pump's 24 V rail cannot be cleared (three warnings at v0.11.0). v0.6.1 placed
 # the ground symbol at -J1:3 (layout-0117, GAPS.md G29). Exactly these
 # remain, counted by code. They are layout notes, not wiring faults.
-LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 3, "SYMBOL_OVERLAP": 0, "JOIN_UNALIGNED": 0}
+# v0.18.2 (layout-0222, intended change): a row of contacts fed from a rail places every power
+# symbol, so the three POWER_SYMBOL_UNPLACED warnings are gone.
+LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 0, "SYMBOL_OVERLAP": 0, "JOIN_UNALIGNED": 0}
 
 
 def assert_no_error_or_warning(findings: tuple[fr.Finding, ...]) -> None:

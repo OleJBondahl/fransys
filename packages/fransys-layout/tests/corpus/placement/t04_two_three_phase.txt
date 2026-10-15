@@ -1,0 +1,151 @@
+# FRANSYS PLACEMENT INSTANCE test_two_three_phase_supplies_with_named_rails__1
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+sym -Q2.main group=- body=-8,-16,72,32 keepout=-60,-16,138,32
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym -X1:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X1:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -F3.element group=- body=-8,-16,12,32 keepout=-60,-22,74,38
+  pin in N 0,-16
+  pin out S 0,16
+sym -X9:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X0:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X8:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X1:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X8:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X0:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X8:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X0:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -X9:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -F1.element group=- body=-8,-16,12,32 keepout=-60,-22,74,38
+  pin in N 0,-16
+  pin out S 0,16
+sym -F2.element group=- body=-8,-16,12,32 keepout=-60,-22,74,38
+  pin in N 0,-16
+  pin out S 0,16
+sym -X9:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+net n0 [rail rank=5 power=NONE] -F3.element.out -X8:3.terminal.n -X8:3.terminal.s
+net n2 [rail rank=4 power=NONE] -Q2.main.3.in -X1:3.terminal.n -X1:3.terminal.s
+net n3 [rail rank=1 power=NONE] -F1.element.in -X0:1.terminal.n -X0:1.terminal.s
+net n4 [rail rank=0 power=NONE] -Q2.main.1.in -X1:1.terminal.n -X1:1.terminal.s
+net n5 [rail rank=2 power=NONE] -Q2.main.2.out -X9:2.terminal.n -X9:2.terminal.s
+net n6 [rail rank=0 power=NONE] -Q2.main.1.out -X9:1.terminal.n -X9:1.terminal.s
+net n7 [rail rank=5 power=NONE] -F3.element.in -X0:3.terminal.n -X0:3.terminal.s
+net n8 [rail rank=3 power=NONE] -F2.element.in -X0:2.terminal.n -X0:2.terminal.s
+net n9 [rail rank=2 power=NONE] -Q2.main.2.in -X1:2.terminal.n -X1:2.terminal.s
+net n12 [rail rank=3 power=NONE] -F2.element.out -X8:2.terminal.n -X8:2.terminal.s
+net n13 [rail rank=4 power=NONE] -Q2.main.3.out -X9:3.terminal.n -X9:3.terminal.s
+net n14 [rail rank=1 power=NONE] -F1.element.out -X8:1.terminal.n -X8:1.terminal.s
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin 
+fact head -F3.element -F1.element -F2.element
+fact strip -X1 -X1:3.terminal -X1:2.terminal -X1:1.terminal
+fact strip -X9 -X9:3.terminal -X9:1.terminal -X9:2.terminal
+fact strip -X0 -X0:3.terminal -X0:1.terminal -X0:2.terminal
+fact strip -X8 -X8:1.terminal -X8:3.terminal -X8:2.terminal
+# legend only: a general placer must not read a symbol's kind.
+kind -Q2.main contact_no
+kind -X1:3.terminal terminal
+kind -X1:2.terminal terminal
+kind -F3.element protection
+kind -X9:3.terminal terminal
+kind -X0:3.terminal terminal
+kind -X8:1.terminal terminal
+kind -X1:1.terminal terminal
+kind -X8:3.terminal terminal
+kind -X0:1.terminal terminal
+kind -X8:2.terminal terminal
+kind -X0:2.terminal terminal
+kind -X9:1.terminal terminal
+kind -F1.element protection
+kind -F2.element protection
+kind -X9:2.terminal terminal
+# today's placement: page, origin and orientation of each drawn copy.
+today -Q2.main page=1 at=432,216 orient=R0 set=1
+today -X1:3.terminal page=1 at=496,104 orient=R180 set=1
+today -X1:2.terminal page=1 at=464,104 orient=R180 set=1
+today -F3.element page=1 at=328,248 orient=R0 set=1
+today -X9:3.terminal page=1 at=496,328 orient=R0 set=1
+today -X0:3.terminal page=1 at=328,104 orient=R180 set=1
+today -X8:1.terminal page=1 at=72,384 orient=R0 set=1
+today -X1:1.terminal page=1 at=432,104 orient=R180 set=1
+today -X8:3.terminal page=1 at=328,384 orient=R0 set=1
+today -X0:1.terminal page=1 at=72,104 orient=R180 set=1
+today -X8:2.terminal page=1 at=200,384 orient=R0 set=1
+today -X0:2.terminal page=1 at=200,104 orient=R180 set=1
+today -X9:1.terminal page=1 at=432,328 orient=R0 set=1
+today -F1.element page=1 at=72,248 orient=R0 set=1
+today -F2.element page=1 at=200,248 orient=R0 set=1
+today -X9:2.terminal page=1 at=464,328 orient=R0 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n8 page=1 set=1 a=-F2.element.in b=-X0:2.terminal.n 200,232 200,112
+route n7 page=1 set=1 a=-X0:3.terminal.n b=-F3.element.in 328,112 328,232
+route n4 page=1 set=1 a=-X1:1.terminal.n b=-Q2.main.1.in 432,112 432,200
+route n3 page=1 set=1 a=-X0:1.terminal.n b=-F1.element.in 72,112 72,232
+route n12 page=1 set=1 a=-F2.element.out b=-X8:2.terminal.n 200,264 200,376
+route n13 page=1 set=1 a=-X9:3.terminal.n b=-Q2.main.3.out 496,320 496,232
+route n14 page=1 set=1 a=-X8:1.terminal.n b=-F1.element.out 72,376 72,264
+route n0 page=1 set=1 a=-F3.element.out b=-X8:3.terminal.n 328,264 328,376
+route n9 page=1 set=1 a=-Q2.main.2.in b=-X1:2.terminal.n 464,200 464,112
+route n5 page=1 set=1 a=-Q2.main.2.out b=-X9:2.terminal.n 464,232 464,320
+route n2 page=1 set=1 a=-X1:3.terminal.n b=-Q2.main.3.in 496,112 496,200
+route n6 page=1 set=1 a=-Q2.main.1.out b=-X9:1.terminal.n 432,232 432,320
+# today's reference markers: one per printed cross-reference (net, pin, page, place).

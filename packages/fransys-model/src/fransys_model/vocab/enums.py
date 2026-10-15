@@ -187,11 +187,11 @@ class Aspect(Enum):
 
 @register_enum
 class SignalType(Enum):
-    """The electrical nature of a PLC channel or field request (facets.md and examples.md).
+    """The electrical nature of a PLC channel or field request, read as `fr.SignalType`.
 
-    Example: the design/examples.md 11 transmitter requests `AI_CURRENT` (4-20mA); a
-    Pt100
-    requests `RTD`.
+    Example: a 4-20 mA transmitter requests `AI_CURRENT`; a Pt100 requests `RTD`.
+    `fr.DI`, `fr.DO`, `fr.AI` and `fr.AO` stay the spelling for `DI`, `DO`, `AI_CURRENT` and
+    `AO_CURRENT`; this enum is the home of every other signal, such as `fr.SignalType.RTD`.
     """
 
     DI = "di"

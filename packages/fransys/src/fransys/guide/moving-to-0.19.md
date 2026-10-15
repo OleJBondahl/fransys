@@ -60,6 +60,25 @@ m1 = d.device("M1", "DEMO-MOTOR-4KW")
 d.series(ac, k1.main, x1, w1, m1, wire=(BK, 2.5))
 ```
 
+A fixed terminal, as an as-built cabinet numbers them. `x1[3]` takes the place of the next free
+terminal. `x1[1:4]` is terminals 1, 2 and 3 as one three-pole element, the end excluded. A tuple puts
+one terminal on each pole when they sit on different strips. A fixed terminal counts as taken, so a
+strip passed whole later skips it. A tuple that runs in order on one strip raises and names the
+slice to write:
+
+```python
+x2 = d.terminal_strip("X2", "DEMO-TB-2.5")
+h1 = d.device("H1", "DEMO-LAMP-24")
+x3 = d.terminal_strip("X3", "DEMO-TB-2.5", 6)
+
+# before: d.wire(dc.plus.pin, x2[3]), d.wire(x2[3].outer, h1.lamp["1"]), ...
+d.series(dc.plus, x2[3], h1.lamp, x2[4], dc.minus, wire=(BU, 0.75))
+# three phases on terminals 1, 2 and 3, and one terminal per pole across strips
+d.series(ac, k1.main, x3[1:4], wire=(BK, 2.5))
+x4, x5 = d.terminal_strip("X4", "DEMO-TB-2.5", 4), d.terminal_strip("X5", "DEMO-TB-2.5", 4)
+d.series(d.device("Q9", "DEMO-MCB-3P").element, (x2[5], x4[3], x5[3]), wire=(BK, 2.5))
+```
+
 ## Behaviour that changed
 
 | before | now | why |

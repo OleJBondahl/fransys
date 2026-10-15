@@ -220,15 +220,8 @@ def test_a_device_with_no_function_of_the_width_lists_what_it_has(lib: Draft) ->
 def test_a_pin_in_a_series_raises_use_detail_wire(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(
-        AuthorError, match=r"a pin or terminal is one wire: .* a fixed terminal is d\.detail\.wire"
-    ):
+    with pytest.raises(AuthorError, match=r"a pin is one wire: .* a fixed pin is d\.detail\.wire"):
         d.series(q1.main, k1.main["1"], wire=WIRE)
-    x1 = d.terminal_strip("X1", "TEST-TERM")
-    with pytest.raises(
-        AuthorError, match=r"a pin or terminal is one wire: .* a fixed terminal is d\.detail\.wire"
-    ):
-        d.series(q1.main, x1[1], wire=WIRE)
     assert not _wires(d)
 
 

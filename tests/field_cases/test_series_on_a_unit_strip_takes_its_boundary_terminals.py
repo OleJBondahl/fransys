@@ -136,3 +136,28 @@ def test_free_means_the_outside_end_has_no_conductor() -> None:
 
 def test_an_explicit_outer_side_is_the_same_outside_end() -> None:
     _free_after_wiring(lambda x1: x1[1].outer)
+
+
+def test_a_fixed_terminal_and_the_whole_strip_in_one_series_do_not_double_take() -> None:
+    """The fixed x1[1] is taken: the whole strip behind it lands on 2, never on 1 again."""
+    d = fr.design("demo_parts", place="C1")
+    s = d.add(_strip_unit(3), "U1")
+    h1, h2, h3 = (d.device(tag, "DEMO-LAMP-24") for tag in ("H1", "H2", "H3"))
+    d.series(h1.lamp, s.x1[1], h2.lamp, s.x1, h3.lamp, wire=(BK, 2.5))
+    assert {k[-1] for k in _landed(fr.build(d))} == {"1", "2"}
+
+
+def test_a_unit_that_names_its_own_terminal_in_a_series_still_offers_it_to_the_container() -> None:
+    """Only a container's fixed terminal is taken; the unit's own x1[1] stays a boundary one."""
+
+    @fr.unit("demo-fixed", revision=1, interface_version=1, date="2026-10-06", text="1", by="AB")
+    def unit(d: fr.Design) -> _Io:
+        x1 = d.terminal_strip("X1", _TB, 3, interface=True)
+        d.series(d.device("H0", "DEMO-LAMP-24").lamp, x1[1], wire=(BK, 2.5))
+        return _Io(x1)
+
+    d = fr.design("demo_parts", place="C1")
+    s = d.add(unit, "U1")
+    m1 = d.device("M1", "DEMO-MOTOR-4KW")
+    d.series(s.x1, d.cable("W1", "DEMO-CBL-4G1.5"), m1.motor, wire=(BK, 2.5))
+    assert {k[-1] for k in _landed(fr.build(d))} == {"1", "2", "3"}

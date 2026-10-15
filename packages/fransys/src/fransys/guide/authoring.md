@@ -312,9 +312,10 @@ A refusal starts with one of these texts. Each has one fix.
 | `N poles into M: name the pins` | pass elements with equal pole counts |
 | `conductors L1, L2 into L1, L3: name the pins` | pass elements whose conductor marks agree |
 | `<element> has N poles; a path from S takes` | pass the supply's phases, or the phases and N |
-| `a pin or terminal is one wire` | pass the function or the strip; a fixed terminal is `d.detail.wire` |
+| `a pin is one wire` | pass the function or the strip; a fixed pin is `d.detail.wire`, a fixed terminal is `x1[3]` |
 | `a changeover is two throws` | pass `K1.co_1.no` or `K1.co_1.nc` |
 | `a cable sits between two elements that are not cables` | put a plain element on each side of the cable |
+| `<run a> and <run b> both take poles`, `<run> takes poles` | a bridged run in a series, alone or in a parallel, shorts its poles: give each pole its own sized run and take `(x1.run("L1", n, bridged=True)[1], ...)` as a tuple, one terminal per pole |
 
 ### Cables
 

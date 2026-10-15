@@ -1,0 +1,58 @@
+schema = 1
+
+[part]
+mpn = "DEMO-VFD-4KW"
+manufacturer = "Demo"
+description = "Frequency converter, 4 kW, 400 V three-phase in and out, a 24 V run input and a fault relay"
+category = "generic"
+class_code = "T"
+
+[rating]
+power_loss_w = "120"
+
+[[function]]
+name = "input"
+kind = "load"
+ports = [
+    { name = "L1", role = "generic", side = "line", conductor = "L1" },
+    { name = "L2", role = "generic", side = "line", conductor = "L2" },
+    { name = "L3", role = "generic", side = "line", conductor = "L3" },
+]
+
+[function.rating]
+voltage_ac_v = "480"
+current_ac_a = "10"
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "U", role = "generic", side = "load", conductor = "L1" },
+    { name = "V", role = "generic", side = "load", conductor = "L2" },
+    { name = "W", role = "generic", side = "load", conductor = "L3" },
+]
+
+[function.operating]
+nominal_voltage_v = "400"
+nominal_power_w = "4000"
+
+[[function]]
+name = "run"
+kind = "load"
+ports = [
+    { name = "DI1", role = "generic", side = "line" },
+    { name = "DCOM", role = "generic", side = "load" },
+]
+
+[function.rating]
+voltage_dc_v = "30"
+
+[[function]]
+name = "fault"
+kind = "contact_nc"
+symbol = "break-contact"
+ports = [
+    { name = "11", role = "generic", symbol_port = "in" },
+    { name = "12", role = "generic", symbol_port = "out" },
+]
+links = [{ a = "11", b = "12", kind = "switched", rest = "closed" }]

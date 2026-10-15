@@ -1,13 +1,14 @@
 """Terminal strips: `d.terminal_strip("X1", part)` and `X1[3]`, terminal 3 by number."""
 
 from functools import partial
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, overload, override
 lazy from collections.abc import Callable
 lazy from types import EllipsisType
 
 from fransys_author._partless import check_partless
 from fransys_author.errors import AuthorError
 from fransys_author.surface._device import Device, _mark_boundary, _one_maker, part_mpn
+from fransys_author.surface._fixed import FixedTerminals, span
 from fransys_author.surface._runs import check_run
 from fransys_author.surface._strip_marks import (
     Bridged,
@@ -112,11 +113,19 @@ class TerminalStrip:
                         self._strip._recorder, terminal.id, terminal.key, group, caller_origin()
                     )
 
-    def __getitem__(self, number: int) -> Terminal:
-        """Terminal `number`, counted from 1.
+    @overload
+    def __getitem__(self, number: int) -> Terminal: ...
+
+    @overload
+    def __getitem__(self, number: slice) -> FixedTerminals: ...
+
+    def __getitem__(self, number: int | slice) -> Terminal | FixedTerminals:
+        """Terminal `number`, counted from 1; `X1[1:4]` is terminals 1, 2 and 3 as one element.
 
         Does not accept a number past `count`, or a text: it raises.
         """
+        if isinstance(number, slice):
+            return span(self, number)
         if isinstance(number, bool) or not isinstance(number, int) or number < 1:
             msg = f"{self._tag}[{number!r}]: a terminal number is an integer from 1"
             raise AuthorError(msg)
@@ -219,6 +228,7 @@ class Run(TerminalStrip):
         """Declare the run `label` on `strip`; `X3.run` makes these."""
         self._group = label
         self._grows = count is None
+        self._ties_terminals = bool(bridged) or count is None
         tag = f"{strip._tag}.run({label!r})"
         check_run_marks(tag, strip._spec, interface=interface, unused=unused)
         spec = (interface, unused) if interface or unused else tuple(s is True for s in strip._spec)

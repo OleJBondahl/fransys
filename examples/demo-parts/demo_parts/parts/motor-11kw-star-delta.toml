@@ -1,0 +1,33 @@
+schema = 1
+
+[part]
+mpn = "DEMO-MOTOR-11KW-YD"
+manufacturer = "Demo"
+description = "Three-phase motor, 11 kW, six winding terminals for star-delta starting"
+category = "generic"
+class_code = "M"
+
+[[function]]
+name = "start"
+kind = "actuator"
+ports = [
+    { name = "U1", role = "generic", conductor = "L1" },
+    { name = "V1", role = "generic", conductor = "L2" },
+    { name = "W1", role = "generic", conductor = "L3" },
+    { name = "PE", role = "pe" },
+]
+
+[function.operating]
+voltage_ac_v = "400"
+nominal_voltage_v = "400"
+nominal_power_w = "11000"
+nominal_current_a = "21"
+
+[[function]]
+name = "end"
+kind = "actuator"
+ports = [
+    { name = "W2", role = "generic", conductor = "L1" },
+    { name = "U2", role = "generic", conductor = "L2" },
+    { name = "V2", role = "generic", conductor = "L3" },
+]

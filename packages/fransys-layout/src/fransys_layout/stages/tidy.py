@@ -32,6 +32,11 @@ def turned(marker: LinkMarker, side: int = 1) -> LinkMarker:
     return replace(marker, turn=via, box=moved, stub_extra=0, vertical=True)
 
 
+def turned_places(marker: LinkMarker) -> list[LinkMarker]:
+    """The places of a turned box: one reach each side, then each farther out (layout-0090)."""
+    return [turned(marker, k * way) for k in range(1, 5) for way in (1, -1)]
+
+
 def stub(marker: LinkMarker) -> Run:
     """A marker's stub as a vertical `Run`: from its port to its box's near edge."""
     box, at = marker.box, marker.at

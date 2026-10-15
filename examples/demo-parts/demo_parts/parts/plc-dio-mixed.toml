@@ -1,0 +1,53 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PLC-DIO-MIXED"
+manufacturer = "Demo"
+description = "PLC module of mixed inputs and outputs, declared out of order: di_1, di_2, di_10, do_1, do_2"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "do_2"
+kind = "plc_channel"
+ports = [{ name = "O2", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 2
+
+[[function]]
+name = "di_10"
+kind = "plc_channel"
+ports = [{ name = "I10", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 10
+
+[[function]]
+name = "di_2"
+kind = "plc_channel"
+ports = [{ name = "I2", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 2
+
+[[function]]
+name = "do_1"
+kind = "plc_channel"
+ports = [{ name = "O1", role = "generic" }]
+
+[function.plc_channel]
+signal = "do"
+channel = 1
+
+[[function]]
+name = "di_1"
+kind = "plc_channel"
+ports = [{ name = "I1", role = "generic" }]
+
+[function.plc_channel]
+signal = "di"
+channel = 1

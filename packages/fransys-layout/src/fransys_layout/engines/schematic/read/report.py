@@ -1,5 +1,6 @@
 """Reading the laid-out model for the readability report: page homes, and the finished rows."""
 
+from collections import Counter
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -7,8 +8,10 @@ from fransys_model.derive import (
     PageWires,
     ReadabilityPage,
     ReadabilityReport,
+    contacts_not_drawn,
     page_wires,
     readability_units,
+    references_off_document,
 )
 from fransys_model.layout import DrawingSet, Page, layout_of
 
@@ -45,6 +48,8 @@ def report_rows(
         key=lambda page: (sets[page.drawing_set].number, page.number),
     )
     wires = page_wires(model, leads)
+    spare = contacts_not_drawn(model)
+    off = Counter(one.page for one in references_off_document(model))
     none = PageWires(bends=0, length_mm=Decimal(0))
     return tuple(
         ReadabilityPage(
@@ -54,6 +59,8 @@ def report_rows(
             number=page.number,
             wire_bends=wires.get(page.id, none).bends,
             wire_length_mm=wires.get(page.id, none).length_mm,
+            contacts_not_drawn=spare[page.id],
+            references_off_document=off[page.id],
             **counts[page.id],
         )
         for page in ordered

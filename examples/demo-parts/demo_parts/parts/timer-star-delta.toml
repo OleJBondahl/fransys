@@ -1,0 +1,37 @@
+schema = 1
+
+[part]
+mpn = "DEMO-TIMER-YD"
+manufacturer = "Demo"
+description = "Star-delta timer relay, 24 V DC, a star output and a delta output after the changeover pause"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
+
+[function.operating]
+nominal_voltage_v = "24"
+
+[[function]]
+name = "star"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "17", role = "generic", symbol_port = "in", side = "line" },
+    { name = "18", role = "generic", symbol_port = "out", side = "load" },
+]
+links = [{ a = "17", b = "18", kind = "switched" }]
+
+[[function]]
+name = "delta"
+kind = "contact_no"
+symbol = "make-contact"
+ports = [
+    { name = "27", role = "generic", symbol_port = "in", side = "line" },
+    { name = "28", role = "generic", symbol_port = "out", side = "load" },
+]
+links = [{ a = "27", b = "28", kind = "switched" }]

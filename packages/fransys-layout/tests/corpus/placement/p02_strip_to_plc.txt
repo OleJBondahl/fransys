@@ -1,0 +1,130 @@
+# FRANSYS PLACEMENT INSTANCE test_a_strip_wired_outside_routes_every_wire_to_a_plc_module_under_it__1
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+sym +C1-X9:4.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-X9:5.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-U1-X:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-X9:3.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-U1-X:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-U1-X:4.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-U1-X:5.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-X9:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-U1-X:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-X9:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +C1-U1-K1.item group=- body=-16,-16,176,32 keepout=-16,-16,228,32
+  pin di_1.1 N 0,-16
+  pin di_10.10 S 32,16
+  pin di_11.11 N 112,-16
+  pin di_12.12 S 48,16
+  pin di_13.13 N 128,-16
+  pin di_14.14 S 64,16
+  pin di_15.15 N 144,-16
+  pin di_16.16 S 80,16
+  pin di_2.2 N 16,-16
+  pin di_3.3 N 32,-16
+  pin di_4.4 N 48,-16
+  pin di_5.5 N 64,-16
+  pin di_6.6 S 0,16
+  pin di_7.7 N 80,-16
+  pin di_8.8 S 16,16
+  pin di_9.9 N 96,-16
+net n0 +C1-U1-K1.item.di_3.3 +C1-U1-X:3.terminal.n +C1-U1-X:3.terminal.s +C1-X9:3.terminal.n +C1-X9:3.terminal.s
+net n2 +C1-U1-K1.item.di_5.5 +C1-U1-X:5.terminal.n +C1-U1-X:5.terminal.s +C1-X9:5.terminal.n +C1-X9:5.terminal.s
+net n3 +C1-U1-K1.item.di_4.4 +C1-U1-X:4.terminal.n +C1-U1-X:4.terminal.s +C1-X9:4.terminal.n +C1-X9:4.terminal.s
+net n4 +C1-U1-K1.item.di_1.1 +C1-U1-X:1.terminal.n +C1-U1-X:1.terminal.s +C1-X9:1.terminal.n +C1-X9:1.terminal.s
+net n11 +C1-U1-K1.item.di_2.2 +C1-U1-X:2.terminal.n +C1-U1-X:2.terminal.s +C1-X9:2.terminal.n +C1-X9:2.terminal.s
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin +C1-U1-K1.item.di_6.6 +C1-U1-K1.item.di_5.5 +C1-U1-K1.item.di_12.12 +C1-U1-K1.item.di_7.7 +C1-U1-K1.item.di_1.1 +C1-U1-K1.item.di_10.10 +C1-U1-K1.item.di_3.3 +C1-U1-K1.item.di_16.16 +C1-U1-K1.item.di_13.13 +C1-U1-K1.item.di_11.11 +C1-U1-K1.item.di_4.4 +C1-U1-K1.item.di_15.15 +C1-U1-K1.item.di_2.2 +C1-U1-K1.item.di_14.14 +C1-U1-K1.item.di_9.9 +C1-U1-K1.item.di_8.8
+fact strip -X9 +C1-X9:4.terminal +C1-X9:5.terminal +C1-X9:3.terminal +C1-X9:1.terminal +C1-X9:2.terminal
+fact strip -U1-X +C1-U1-X:3.terminal +C1-U1-X:2.terminal +C1-U1-X:4.terminal +C1-U1-X:5.terminal +C1-U1-X:1.terminal
+# legend only: a general placer must not read a symbol's kind.
+kind +C1-X9:4.terminal terminal
+kind +C1-X9:5.terminal terminal
+kind +C1-U1-X:3.terminal terminal
+kind +C1-X9:3.terminal terminal
+kind +C1-U1-X:2.terminal terminal
+kind +C1-U1-X:4.terminal terminal
+kind +C1-U1-X:5.terminal terminal
+kind +C1-X9:1.terminal terminal
+kind +C1-U1-X:1.terminal terminal
+kind +C1-X9:2.terminal terminal
+kind +C1-U1-K1.item item
+# today's placement: page, origin and orientation of each drawn copy.
+today +C1-U1-X:3.terminal page=1 at=200,144 orient=R0 set=1
+today +C1-X9:3.terminal page=1 at=680,128 orient=R180 set=1
+today +C1-U1-X:2.terminal page=1 at=128,144 orient=R0 set=1
+today +C1-U1-X:4.terminal page=1 at=272,144 orient=R0 set=1
+today +C1-U1-X:5.terminal page=1 at=344,144 orient=R0 set=1
+today +C1-X9:1.terminal page=1 at=456,128 orient=R180 set=1
+today +C1-U1-X:1.terminal page=1 at=48,144 orient=R0 set=1
+today +C1-X9:2.terminal page=1 at=568,128 orient=R180 set=1
+today +C1-X9:4.terminal page=2 at=72,120 orient=R180 set=1
+today +C1-X9:5.terminal page=2 at=184,120 orient=R180 set=1
+today +C1-U1-X:3.terminal page=1 at=88,104 orient=R180 set=2
+today +C1-U1-X:2.terminal page=1 at=64,104 orient=R180 set=2
+today +C1-U1-X:4.terminal page=1 at=112,104 orient=R180 set=2
+today +C1-U1-X:5.terminal page=1 at=136,104 orient=R180 set=2
+today +C1-U1-X:1.terminal page=1 at=40,104 orient=R180 set=2
+today +C1-U1-K1.item page=1 at=40,160 orient=R0 set=2
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n2 page=1 set=2 a=+C1-U1-K1.item.di_5.5 b=+C1-U1-X:5.terminal.n 104,144 104,120 136,120 136,112
+route n11 page=1 set=2 a=+C1-U1-K1.item.di_2.2 b=+C1-U1-X:2.terminal.n 56,144 56,120 64,120 64,112
+route n3 page=1 set=2 a=+C1-U1-X:4.terminal.n b=+C1-U1-K1.item.di_4.4 112,112 112,136 88,136 88,144
+route n4 page=1 set=2 a=+C1-U1-K1.item.di_1.1 b=+C1-U1-X:1.terminal.n 40,144 40,112
+route n0 page=1 set=2 a=+C1-U1-X:3.terminal.n b=+C1-U1-K1.item.di_3.3 88,112 88,128 80,128 80,136 72,136 72,144
+# today's reference markers: one per printed cross-reference (net, pin, page, place).
+marker n11 +C1-U1-X:2.terminal.s page=1 set=2 at=64,96 side=OWNER star=OFF partner=+C1-U1-X:2.terminal.s@2.1
+marker n11 +C1-X9:2.terminal.n page=1 set=1 at=568,136 side=OWNER star=OFF partner=+C1-X9:2.terminal.n@1.1
+marker n2 +C1-X9:5.terminal.n page=2 set=1 at=184,128 side=OWNER star=OFF partner=+C1-X9:5.terminal.n@1.2
+marker n2 +C1-U1-X:5.terminal.s page=1 set=2 at=136,96 side=OWNER star=OFF partner=+C1-U1-X:5.terminal.s@2.1
+marker n4 +C1-X9:1.terminal.n page=1 set=1 at=456,136 side=OWNER star=OFF partner=+C1-X9:1.terminal.n@1.1
+marker n4 +C1-U1-X:1.terminal.s page=1 set=2 at=40,96 side=OWNER star=OFF partner=+C1-U1-X:1.terminal.s@2.1
+marker n3 +C1-U1-X:4.terminal.s page=1 set=2 at=112,96 side=OWNER star=OFF partner=+C1-U1-X:4.terminal.s@2.1
+marker n3 +C1-X9:4.terminal.n page=2 set=1 at=72,128 side=OWNER star=OFF partner=+C1-X9:4.terminal.n@1.2
+marker n0 +C1-U1-X:3.terminal.s page=1 set=2 at=88,96 side=OWNER star=OFF partner=+C1-U1-X:3.terminal.s@2.1
+marker n0 +C1-X9:3.terminal.n page=1 set=1 at=680,136 side=OWNER star=OFF partner=+C1-X9:3.terminal.n@1.1

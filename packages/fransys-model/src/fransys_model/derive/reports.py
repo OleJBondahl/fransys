@@ -226,7 +226,7 @@ def plc_channel_pairs(
         facet = channel_of.get(function.template)
         if facet is None or (unit is not None and not _item_belongs(model, function.item, unit)):
             continue
-        key = plc_channel_key(model, racks, function.item, facet.channel, function.id)
+        key = plc_channel_key(model, racks, function.item, facet.channel, function)
         keyed.extend((key, function.item, row) for row in _plc_pin_rows(scope, function, facet))
     return tuple((item, row) for _, item, row in sorted(keyed, key=lambda one: one[0]))
 

@@ -1,0 +1,33 @@
+schema = 1
+
+[part]
+mpn = "DEMO-ISO-4P"
+manufacturer = "Demo"
+description = "Main switch-disconnector, 4 poles (three phases and N), rotary handle"
+category = "electromechanical"
+class_code = "Q"
+operated_by = "turn"
+
+[[function]]
+name = "main"
+kind = "switch"
+ports = [
+    { name = "1", role = "generic", side = "line", conductor = "L1" },
+    { name = "2", role = "generic", side = "load", conductor = "L1" },
+    { name = "3", role = "generic", side = "line", conductor = "L2" },
+    { name = "4", role = "generic", side = "load", conductor = "L2" },
+    { name = "5", role = "generic", side = "line", conductor = "L3" },
+    { name = "6", role = "generic", side = "load", conductor = "L3" },
+    { name = "7", role = "generic", side = "line", conductor = "N" },
+    { name = "8", role = "generic", side = "load", conductor = "N" },
+]
+links = [
+    { a = "1", b = "2", kind = "switched", rest = "open" },
+    { a = "3", b = "4", kind = "switched", rest = "open" },
+    { a = "5", b = "6", kind = "switched", rest = "open" },
+    { a = "7", b = "8", kind = "switched", rest = "open" },
+]
+
+[function.rating]
+voltage_ac_v = "690"
+current_ac_a = "125"

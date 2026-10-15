@@ -100,7 +100,7 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `name` | required | The function block's name, printed `=name`. The devices made inside the `with` block belong to it. | `with d.function("RUN", "Pump run"):` |
+| `name` | required | The function block's name, printed `=name`. The devices made inside the `with` block belong to it, which sets their designation; the `d.series` a function is written in sets where it draws. | `with d.function("RUN", "Pump run"):` |
 | `text` | required | The block's description. It prints on the pages that draw the block. | `with d.function("RUN", "Pump run"):` |
 
 ## `d.location`

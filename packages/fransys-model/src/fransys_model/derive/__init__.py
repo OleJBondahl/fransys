@@ -150,6 +150,7 @@ from .overview_tree import overview_tree, unit_own_drawing, unit_system_designat
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
 from .page_destination import page_destination, sheet_text, sheet_title_text
+from .page_references import contacts_not_drawn, references_off_document
 from .page_titles import page_title, page_title_forms, short_title
 from .page_wires import page_wires
 from .pairing import BoxPair, box_pairs
@@ -289,7 +290,13 @@ from .rows_plc import (
     PlcTable,
     SignalKind,
 )
-from .rows_readability import PageWires, ReadabilityPage, ReadabilityReport, ReadabilityUnit
+from .rows_readability import (
+    OffDocumentReference,
+    PageWires,
+    ReadabilityPage,
+    ReadabilityReport,
+    ReadabilityUnit,
+)
 from .rows_sheet_index import SheetIndexRow, sheet_index_rows
 from .sheet_forms import set_page_text, sheet_counter_text
 from .sheets import diagram_sheets, sheets
@@ -372,6 +379,7 @@ __all__ = [
     "NetClass",
     "NetlistNet",
     "NetlistPart",
+    "OffDocumentReference",
     "OpenCoreRow",
     "Operating",
     "OverviewBox",
@@ -462,6 +470,7 @@ __all__ = [
     "connector_rows_of",
     "connector_segments",
     "contact_list_key",
+    "contacts_not_drawn",
     "contents_rows",
     "core_colour",
     "core_list_rows",
@@ -599,6 +608,7 @@ __all__ = [
     "reading_cables",
     "reference_designation",
     "reference_fragment",
+    "references_off_document",
     "release_order",
     "revision_history",
     "revision_text",

@@ -1,5 +1,6 @@
 """Each page's first slot call, run once its link markers stand, and its power symbols."""
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
 
@@ -48,16 +49,20 @@ def labelled_pages(
     tuple[LinkMarker, ...],
     tuple[Finding, ...],
 ]:
-    """Each page's `(placed, labels)`, the markers with power leads set, the findings."""
+    """Each page's `(placed, labels)`, the markers with power leads set, the findings.
+
+    A symbol clears the functions as placed: a neighbour's reserved table room is no block, for the
+    table is pushed clear of the symbol once it is placed (LEGACY-UNPLACED).
+    """
     found: list[tuple[tuple[PlacedFunction, ...], tuple[PlacedLabel, ...]]] = []
     findings: list[Finding] = []
     led: dict[int, LinkMarker] = {}
     for (placed, call), mine in zip(pages, by_plan(markers, page_of, plans), strict=True):
-        labels, label_findings = _first_labels(call, _held(tuple(mine)))
-        now, lead_findings = with_power_leads(tuple(mine), call.placed, labels)
+        labels, label_findings = _first_labels(replace(call, placed=placed), _held(tuple(mine)))
+        now, lead_findings = with_power_leads(tuple(mine), placed, labels)
         led.update((id(was), one) for was, one in zip(mine, now, strict=True))
         frame = SlotFrame(content=content_box(sheet), profile=call.profile)
-        labels, power_findings = with_power_labels(labels, call.placed, now, frame, power_slot)
+        labels, power_findings = with_power_labels(labels, placed, now, frame, power_slot)
         found.append((placed, labels))
         findings.extend((*label_findings, *lead_findings, *power_findings))
     return found, tuple(led.get(id(one), one) for one in markers), tuple(findings)

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 # by name: samples, layout_cabinet and debug_svg live here, coherence_helpers in lint.
 # The directories are appended, not inserted (workspace rule, see the
 # model conftest).
-for directory in (".", "lint", "stages"):
+for directory in (".", "core", "lint", "stages"):
     sys.path.append(str(Path(__file__).parent / directory))
 
 

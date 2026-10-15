@@ -1,0 +1,125 @@
+# FRANSYS PLACEMENT INSTANCE test_box_device_contact_stands_in_its_circuit__2
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+group G order=0 break_before=0 "Group"
+sym +CAB-X2:L:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +CAB-X2:L:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G+CAB-K1.coil group=G body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym +CAB-X1:L:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G+CAB-M1.dc_ok group=G body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym +CAB-X1:L:2.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G+CAB-K1.co_1 group=G body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G+CAB-M1.supply group=G body=-16,-16,200,32 keepout=-16,-16,252,32
+  pin in_1.1+ N 0,-16
+  pin in_1.1- N 16,-16
+  pin in_2.2+ N 152,-16
+  pin in_2.2- N 168,-16
+  pin out.+ S 0,16
+  pin out.- S 48,16
+sym =G+CAB-T1.supply group=G body=-16,-16,48,32 keepout=-16,-16,100,32
+  pin input.L N 0,-16
+  pin input.N N 16,-16
+  pin output.+ S 0,16
+  pin output.- S 16,16
+sym =G+CAB-U1.item group=G body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin di_1.1 N 0,-16
+  pin di_2.2 S 0,16
+sym =G+CAB-T2.supply group=G body=-16,-16,48,32 keepout=-16,-16,100,32
+  pin input.L N 0,-16
+  pin input.N N 16,-16
+  pin output.+ S 0,16
+  pin output.- S 16,16
+sym +CAB-X1:L:2.terminal@1 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym +CAB-X1:L:2.terminal@2 group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+net n1 =G+CAB-K1.coil.in =G+CAB-M1.dc_ok.out
+net n2 +CAB-X1:L:1.terminal.n +CAB-X1:L:1.terminal.s +CAB-X1:L:2.terminal.n +CAB-X1:L:2.terminal.s +CAB-X1:L:2.terminal@1.n +CAB-X1:L:2.terminal@1.s +CAB-X1:L:2.terminal@2.n +CAB-X1:L:2.terminal@2.s =G+CAB-K1.co_1.com =G+CAB-M1.dc_ok.in =G+CAB-M1.supply.out.+
+net n3 =G+CAB-M1.supply.in_2.2- =G+CAB-T2.supply.output.-
+net n4 =G+CAB-M1.supply.in_1.1- =G+CAB-T1.supply.output.-
+net n5 =G+CAB-K1.co_1.no =G+CAB-U1.item.di_1.1
+net n9 +CAB-X2:L:1.terminal.n +CAB-X2:L:1.terminal.s +CAB-X2:L:2.terminal.n +CAB-X2:L:2.terminal.s =G+CAB-K1.coil.out =G+CAB-M1.supply.out.-
+net n12 =G+CAB-M1.supply.in_1.1+ =G+CAB-T1.supply.output.+
+net n20 =G+CAB-M1.supply.in_2.2+ =G+CAB-T2.supply.output.+
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+fact item =G+CAB-K1.coil =G+CAB-K1.co_1
+fact item =G+CAB-M1.dc_ok =G+CAB-M1.supply
+fact item +CAB-X1:L:2.terminal +CAB-X1:L:2.terminal@1 +CAB-X1:L:2.terminal@2
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin =G+CAB-U1.item.di_1.1 =G+CAB-U1.item.di_2.2
+fact attached =G+CAB-K1.coil
+fact strip -X2 +CAB-X2:L:1.terminal +CAB-X2:L:2.terminal
+fact strip -X1 +CAB-X1:L:1.terminal +CAB-X1:L:2.terminal +CAB-X1:L:2.terminal@1 +CAB-X1:L:2.terminal@2
+# legend only: a general placer must not read a symbol's kind.
+kind +CAB-X2:L:1.terminal terminal
+kind +CAB-X2:L:2.terminal terminal
+kind =G+CAB-K1.coil coil
+kind +CAB-X1:L:1.terminal terminal
+kind =G+CAB-M1.dc_ok contact_no
+kind +CAB-X1:L:2.terminal terminal
+kind =G+CAB-K1.co_1 contact_co
+kind =G+CAB-M1.supply supply
+kind =G+CAB-T1.supply supply
+kind =G+CAB-U1.item item
+kind =G+CAB-T2.supply supply
+kind +CAB-X1:L:2.terminal@1 terminal
+kind +CAB-X1:L:2.terminal@2 terminal
+# today's placement: page, origin and orientation of each drawn copy.
+today +CAB-X2:L:1.terminal page=1 at=224,336 orient=R180 set=1
+today +CAB-X2:L:2.terminal page=1 at=480,432 orient=R180 set=1
+today =G+CAB-K1.coil page=1 at=480,312 orient=R0 set=1
+today +CAB-X1:L:1.terminal page=1 at=176,336 orient=R180 set=1
+today =G+CAB-M1.dc_ok page=1 at=480,184 orient=R0 set=1
+today +CAB-X1:L:2.terminal@1 page=1 at=480,128 orient=R0 set=1
+today +CAB-X1:L:2.terminal@2 page=1 at=72,128 orient=R0 set=1
+today =G+CAB-K1.co_1 page=1 at=72,184 orient=R0 set=1
+today =G+CAB-M1.supply page=1 at=176,176 orient=R0 set=1
+today =G+CAB-T1.supply page=1 at=176,112 orient=R0 set=1
+today =G+CAB-U1.item page=1 at=72,304 orient=R0 set=1
+today =G+CAB-T2.supply page=1 at=328,112 orient=R0 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n2 page=1 set=1 a==G+CAB-M1.supply.out.+ b=+CAB-X1:L:1.terminal.s 176,192 176,328
+route n1 page=1 set=1 a==G+CAB-M1.dc_ok.out b==G+CAB-K1.coil.in 480,200 480,288
+route n9 page=1 set=1 a=+CAB-X2:L:1.terminal.s b==G+CAB-M1.supply.out.- 224,328 224,192
+route n20 page=1 set=1 a==G+CAB-T2.supply.output.+ b==G+CAB-M1.supply.in_2.2+ 328,128 328,160
+route n3 page=1 set=1 a==G+CAB-M1.supply.in_2.2- b==G+CAB-T2.supply.output.- 344,160 344,128
+route n4 page=1 set=1 a==G+CAB-M1.supply.in_1.1- b==G+CAB-T1.supply.output.- 192,160 192,128
+route n5 page=1 set=1 a==G+CAB-U1.item.di_1.1 b==G+CAB-K1.co_1.no 72,288 72,200
+route n2 page=1 set=1 a==G+CAB-M1.dc_ok.in b=+CAB-X1:L:2.terminal@1.s 480,168 480,136
+route n12 page=1 set=1 a==G+CAB-M1.supply.in_1.1+ b==G+CAB-T1.supply.output.+ 176,160 176,128
+route n9 page=1 set=1 a=+CAB-X2:L:2.terminal.s b==G+CAB-K1.coil.out 480,424 480,336
+route n2 page=1 set=1 a=+CAB-X1:L:2.terminal@2.s b==G+CAB-K1.co_1.com 72,136 72,168
+# today's reference markers: one per printed cross-reference (net, pin, page, place).

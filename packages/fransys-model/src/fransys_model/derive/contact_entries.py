@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from fransys_model.derive.accessory_blocks import CONTACT_KINDS
 from fransys_model.derive.contacts import changeover_throws, link_state, owned_contacts
 from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.unused import function_is_unused
 from fransys_model.vocab import function_poles, marking_key, unlinked_poles
 from fransys_model.vocab.enums import FunctionKind, LinkKind
@@ -92,12 +93,7 @@ def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
     """A contact's printed `(line, load)` pole names; with no pole link, marking order."""
     own = _own_templates(model, function)
     templates = {t: port_templates(model)[t] for t in own if t is not None}
-    links = [
-        link
-        for link in internal_links(model).values()
-        if link.a in templates and link.b in templates
-    ]
-    found = function_poles(function.kind, links, templates)
+    found = poles_of(model, function.kind, templates)
     if found:
         return [
             (printed_name(model, own[a.id].id), printed_name(model, own[b.id].id))

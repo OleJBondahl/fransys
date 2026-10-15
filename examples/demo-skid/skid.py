@@ -14,6 +14,7 @@ from fransys.colours import BK, BU
 
 VALVES = 16
 STARTERS = 3
+VALVE_BREAKER = 8  # the tag number of the valve group's breaker: no fan breaker takes it
 POWER = (BK, 1.5)
 CONTROL = (BU, 0.5)
 
@@ -35,11 +36,13 @@ def starters(d: fr.Design, live: Handle, rail: Handle) -> list[tuple[Handle, Han
         q0 = d.device("Q0", "DEMO-MCB-3P")
         x3 = d.terminal_strip("X3", "DEMO-TB-2.5", 3 * STARTERS)
     made = []
+    breakers = [n for n in range(3, 4 + STARTERS) if n != VALVE_BREAKER][:STARTERS]
+    first_overload = max(13, breakers[-1] + 1)  # the overloads follow the breakers at any size
     with d.function("G2", "Fan starters"):
         for s in range(STARTERS):
-            f = d.device(f"F{3 + s}", "DEMO-MCB-3P")
+            f = d.device(f"F{breakers[s]}", "DEMO-MCB-3P")
             q = d.device(f"Q{3 + s}", "DEMO-CTR-3P-NC")
-            ol = d.device(f"F{13 + s}", "DEMO-OVERLOAD-3P")
+            ol = d.device(f"F{first_overload + s}", "DEMO-OVERLOAD-3P")
             mo = d.device(f"M{1 + s}", "DEMO-MOTOR-4KW")
             h = d.device(f"H{3 + s}", "DEMO-LAMP-24")
             if s == 0:

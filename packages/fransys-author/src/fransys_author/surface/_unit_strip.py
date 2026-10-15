@@ -53,6 +53,7 @@ def _reach(strip: TerminalStrip, design: Design, count: int) -> tuple[Terminal, 
         for n, terminal in sorted(strip._made.items())
         if n not in strip._outside
         and terminal.outer.id not in outside
+        and not terminal._fixed
         and terminal.function.id not in unused
     ]
     wired = [n for n, t in open_ if t.inner.id in inside or t.outer.id in inside]

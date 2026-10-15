@@ -71,6 +71,7 @@ from ._hint_writes import _write_group_hint, _write_side_hint
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
 from ._release import unit_release
+from ._series_blocks import SeriesBlocks
 from ._supply import SupplyScope
 from .errors import AuthorError
 from .handles import (
@@ -846,12 +847,14 @@ class Design(Scope):
         "_draft",
         "_earths",
         "_project_version",
+        "_series_blocks",
     )
 
     def __init__(self, parts: Draft) -> None:
         """Read `parts` once into a private index by `(manufacturer, mpn)` and by `mpn`."""
         self._draft = Draft()
         self._earths = Earths()
+        self._series_blocks = SeriesBlocks()
         self._catalogue = build_catalogue(parts)
         self._project_version: int | None = None
         self._assumed_version = False
@@ -942,6 +945,8 @@ class Design(Scope):
         """
         for net, origin in self._earths.nets():
             self._add(net, origin)
+        for hint, origin in self._series_blocks.resolve(self._draft):
+            self._add(hint, origin)
         return self._draft
 
     def _add(self, record: Record, origin: Origin) -> None:

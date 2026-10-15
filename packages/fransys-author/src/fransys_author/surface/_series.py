@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Callable, Mapping
 lazy from decimal import Decimal
 
+from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
 from fransys_author.surface._bare import bare_series
+from fransys_author.surface._block_ports import series_ports
 from fransys_author.surface._cable import Cables
 from fransys_author.surface._carry import series_name
 from fransys_author.surface._channels import take_channels
@@ -15,6 +17,7 @@ from fransys_author.surface._pairing import Ends, PartFacts
 from fransys_author.surface._poles import Poles, group
 from fransys_author.surface._potential import Given, hops, wire_rows
 from fransys_author.surface._rows import AC_N, table
+from fransys_author.surface._shorts import refuse_lone_tied_poles, refuse_tied_poles
 from fransys_author.surface._supplies import Supplies, _Rails
 from fransys_author.surface._wire import Colour, _gauge, wiring_for
 
@@ -77,6 +80,14 @@ def _entered(found: list[Ends], element: object, before: tuple[object, ...]) -> 
     return found
 
 
+def _refuse_shorts(element: object, width: int, before: Ends | None) -> None:
+    """A bridged run takes every pole of the series, alone or in a parallel, and shorts them."""
+    if isinstance(element, Parallel):
+        refuse_tied_poles(element, width, before)
+    else:
+        refuse_lone_tied_poles(element, width, before)
+
+
 def _resolve(design: Design, elements: tuple[object, ...], width: int) -> list[list[Ends]]:
     """The ends of every element; a bridge has none and needs a plain element on each side."""
     last = len(elements) - 1
@@ -89,6 +100,7 @@ def _resolve(design: Design, elements: tuple[object, ...], width: int) -> list[l
                 raise AuthorError(msg)
             found.append([])
         else:
+            _refuse_shorts(element, width, found[i - 1][0] if i and found[i - 1] else None)
             found.append(_entered(branches(design, element, width), element, elements[i - 1 : i]))
     return found
 
@@ -175,6 +187,13 @@ class Series(Supplies, Cables):
         _land_bridges(self, elements, found)
         self._wired_commons |= commons & touched
         self._remember(walked)
+        self._note_block(elements, found)
+
+    def _note_block(self: "Design", elements: tuple[object, ...], found: list[list[Ends]]) -> None:
+        """Tell the engine which block this series was written in (author-0050)."""
+        if self._group is not None:
+            ports = tuple(port.id for port in series_ports(elements, found))
+            self._engine._design._series_blocks.collect(self._group.id, ports, caller_origin())
 
     def _remember(self: "Design", walked: Walked | None) -> None:
         """Keep the row each wire took, for a later series that starts on its net (S4)."""

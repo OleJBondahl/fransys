@@ -10,7 +10,7 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `signal` | required | The `SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. | `k1.coil.plc(fr.DO, "pump-run")` |
+| `signal` | required | The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. | `k1.coil.plc(fr.DO, "pump-run")` |
 | `name` | required | The channel's name. It prints in the PLC lists and on the channel's address. | `k1.coil.plc(fr.DO, "pump-run")` |
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
 

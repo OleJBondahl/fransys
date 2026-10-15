@@ -1,0 +1,153 @@
+# FRANSYS PLACEMENT INSTANCE test_a_series_to_a_plc_module_takes_its_lowest_free_channel__1
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+sym +C1-S9.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S12.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S1.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S4.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S7.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S15.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S2.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S6.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S10.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S14.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S5.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S11.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S13.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S16.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S3.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-S8.sw group=- body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16 stand=16
+  pin out S 0,16
+sym +C1-G1.supply group=- body=-16,-16,56,32 keepout=-16,-16,108,32
+  pin input.L N 0,-16
+  pin input.N N 24,-16
+  pin output.+ S 0,16 stand=16
+  pin output.- S 24,16 stand=16
+sym +C1-A1.item group=- body=-16,-16,272,32 keepout=-16,-16,324,32
+  pin di_1.1 N 0,-16
+  pin di_10.10 N 144,-16
+  pin di_11.11 N 160,-16
+  pin di_12.12 N 176,-16
+  pin di_13.13 N 192,-16
+  pin di_14.14 N 208,-16
+  pin di_15.15 N 224,-16
+  pin di_16.16 N 240,-16
+  pin di_2.2 N 16,-16
+  pin di_3.3 N 32,-16
+  pin di_4.4 N 48,-16
+  pin di_5.5 N 64,-16
+  pin di_6.6 N 80,-16
+  pin di_7.7 N 96,-16
+  pin di_8.8 N 112,-16
+  pin di_9.9 N 128,-16
+net n0 [rail rank=0 power=NONE] +C1-A1.item.di_15.15 +C1-S15.sw.out
+net n2 [rail rank=0 power=NONE] +C1-A1.item.di_4.4 +C1-S4.sw.out
+net n3 [rail rank=0 power=NONE] +C1-A1.item.di_3.3 +C1-S3.sw.out
+net n4 [rail rank=0 power=NONE] +C1-A1.item.di_12.12 +C1-S12.sw.out
+net n5 [rail rank=0 power=SUPPLY] +C1-G1.supply.output.+ +C1-S1.sw.in +C1-S10.sw.in +C1-S11.sw.in +C1-S12.sw.in +C1-S13.sw.in +C1-S14.sw.in +C1-S15.sw.in +C1-S16.sw.in +C1-S2.sw.in +C1-S3.sw.in +C1-S4.sw.in +C1-S5.sw.in +C1-S6.sw.in +C1-S7.sw.in +C1-S8.sw.in +C1-S9.sw.in
+net n6 [rail rank=0 power=NONE] +C1-A1.item.di_5.5 +C1-S5.sw.out
+net n7 [rail rank=0 power=NONE] +C1-A1.item.di_8.8 +C1-S8.sw.out
+net n8 [rail rank=0 power=NONE] +C1-A1.item.di_2.2 +C1-S2.sw.out
+net n9 [rail rank=0 power=NONE] +C1-A1.item.di_7.7 +C1-S7.sw.out
+net n10 [rail rank=0 power=NONE] +C1-A1.item.di_9.9 +C1-S9.sw.out
+net n11 [rail rank=0 power=NONE] +C1-A1.item.di_16.16 +C1-S16.sw.out
+net n13 [rail rank=0 power=NONE] +C1-A1.item.di_14.14 +C1-S14.sw.out
+net n14 [rail rank=0 power=NONE] +C1-A1.item.di_13.13 +C1-S13.sw.out
+net n15 [rail rank=0 power=NONE] +C1-A1.item.di_10.10 +C1-S10.sw.out
+net n16 [rail rank=0 power=NONE] +C1-A1.item.di_1.1 +C1-S1.sw.out
+net n18 [rail rank=0 power=NONE] +C1-A1.item.di_6.6 +C1-S6.sw.out
+net n19 [rail rank=0 power=NONE] +C1-A1.item.di_11.11 +C1-S11.sw.out
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin +C1-A1.item.di_5.5 +C1-A1.item.di_2.2 +C1-A1.item.di_9.9 +C1-A1.item.di_12.12 +C1-A1.item.di_7.7 +C1-A1.item.di_3.3 +C1-A1.item.di_13.13 +C1-A1.item.di_1.1 +C1-A1.item.di_10.10 +C1-A1.item.di_4.4 +C1-A1.item.di_14.14 +C1-A1.item.di_6.6 +C1-A1.item.di_15.15 +C1-A1.item.di_8.8 +C1-A1.item.di_11.11 +C1-A1.item.di_16.16
+# legend only: a general placer must not read a symbol's kind.
+kind +C1-S9.sw switch
+kind +C1-S12.sw switch
+kind +C1-S1.sw switch
+kind +C1-S4.sw switch
+kind +C1-S7.sw switch
+kind +C1-S15.sw switch
+kind +C1-S2.sw switch
+kind +C1-S6.sw switch
+kind +C1-S10.sw switch
+kind +C1-S14.sw switch
+kind +C1-S5.sw switch
+kind +C1-S11.sw switch
+kind +C1-S13.sw switch
+kind +C1-S16.sw switch
+kind +C1-S3.sw switch
+kind +C1-S8.sw switch
+kind +C1-G1.supply supply
+kind +C1-A1.item item
+# today's placement: page, origin and orientation of each drawn copy.
+today +C1-G1.supply page=1 at=32,112 orient=R0 set=1
+today +C1-S9.sw page=2 at=720,120 orient=R0 set=1
+today +C1-S12.sw page=2 at=864,120 orient=R0 set=1
+today +C1-S1.sw page=2 at=72,120 orient=R0 set=1
+today +C1-S4.sw page=2 at=288,120 orient=R0 set=1
+today +C1-S7.sw page=2 at=504,120 orient=R0 set=1
+today +C1-S15.sw page=2 at=1080,120 orient=R0 set=1
+today +C1-S2.sw page=2 at=144,120 orient=R0 set=1
+today +C1-S6.sw page=2 at=432,120 orient=R0 set=1
+today +C1-S10.sw page=2 at=648,120 orient=R0 set=1
+today +C1-S14.sw page=2 at=1008,120 orient=R0 set=1
+today +C1-S5.sw page=2 at=360,120 orient=R0 set=1
+today +C1-S11.sw page=2 at=792,120 orient=R0 set=1
+today +C1-S13.sw page=2 at=936,120 orient=R0 set=1
+today +C1-S16.sw page=2 at=1152,120 orient=R0 set=1
+today +C1-S3.sw page=2 at=216,120 orient=R0 set=1
+today +C1-S8.sw page=2 at=576,120 orient=R0 set=1
+today +C1-A1.item page=2 at=72,240 orient=R0 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n16 page=2 set=1 a=+C1-A1.item.di_1.1 b=+C1-S1.sw.out 72,224 72,136
+route n0 page=2 set=1 a=+C1-S15.sw.out b=+C1-A1.item.di_15.15 1080,136 1080,200 296,200 296,224
+route n19 page=2 set=1 a=+C1-S11.sw.out b=+C1-A1.item.di_11.11 792,136 792,168 232,168 232,224
+route n3 page=2 set=1 a=+C1-S3.sw.out b=+C1-A1.item.di_3.3 216,136 216,208 104,208 104,224
+route n7 page=2 set=1 a=+C1-S8.sw.out b=+C1-A1.item.di_8.8 576,136 576,176 184,176 184,224
+route n9 page=2 set=1 a=+C1-S7.sw.out b=+C1-A1.item.di_7.7 504,136 504,184 168,184 168,224
+route n14 page=2 set=1 a=+C1-S13.sw.out b=+C1-A1.item.di_13.13 936,136 936,144 880,144 880,40 232,40 232,144 264,144 264,224
+route n2 page=2 set=1 a=+C1-S4.sw.out b=+C1-A1.item.di_4.4 288,136 288,200 120,200 120,224
+route n10 page=2 set=1 a=+C1-A1.item.di_9.9 b=+C1-S9.sw.out 200,224 200,160 720,160 720,136
+route n13 page=2 set=1 a=+C1-S14.sw.out b=+C1-A1.item.di_14.14 1008,136 1008,216 280,216 280,224
+route n11 page=2 set=1 a=+C1-S16.sw.out b=+C1-A1.item.di_16.16 1152,136 1152,224 352,224 352,144 312,144 312,224
+route n6 page=2 set=1 a=+C1-A1.item.di_5.5 b=+C1-S5.sw.out 136,224 136,152 360,152 360,136
+route n18 page=2 set=1 a=+C1-S6.sw.out b=+C1-A1.item.di_6.6 432,136 432,192 152,192 152,224
+route n15 page=2 set=1 a=+C1-S10.sw.out b=+C1-A1.item.di_10.10 648,136 648,208 224,208 224,216 216,216 216,224
+route n4 page=2 set=1 a=+C1-S12.sw.out b=+C1-A1.item.di_12.12 864,136 864,144 808,144 808,48 240,48 240,216 248,216 248,224
+route n8 page=2 set=1 a=+C1-A1.item.di_2.2 b=+C1-S2.sw.out 88,224 88,144 144,144 144,136
+# today's reference markers: one per printed cross-reference (net, pin, page, place).

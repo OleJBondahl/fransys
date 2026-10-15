@@ -1,0 +1,374 @@
+# FRANSYS PLACEMENT INSTANCE test_a_sixteen_channel_output_card_keeps_every_coil_under_its_pin__1
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+group G0 order=0 break_before=0 "PLC outputs"
+group G1 order=1 break_before=0 "Relays and lamps"
+sym =G1+CAB-P16.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K14.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K5.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-P3.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K15.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P6.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K16.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K7.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-P5.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K5.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K4.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K10.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K6.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P8.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-P1.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-P9.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K14.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P7.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K2.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K7.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P14.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K11.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K10.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P11.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K3.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K9.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K12.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K13.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K9.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K13.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K8.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-P10.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K17.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P2.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-P15.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K15.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K6.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K4.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K8.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-K17.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-P4.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K3.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K16.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-P12.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K2.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G1+CAB-K11.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16 stand=16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1+CAB-P13.lamp group=G1 body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin 1 N 0,-16
+  pin 2 S 0,16 stand=16
+sym =G1+CAB-K12.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24 stand=16
+sym =G0+CAB-K1.item group=G0 body=-16,-16,936,32 keepout=-16,-16,988,32
+  pin do_1.1 S 0,16
+  pin do_10.10 S 520,16
+  pin do_11.11 S 584,16
+  pin do_12.12 S 648,16
+  pin do_13.13 S 712,16
+  pin do_14.14 S 776,16
+  pin do_15.15 S 840,16
+  pin do_16.16 S 904,16
+  pin do_2.2 S 56,16
+  pin do_3.3 S 112,16
+  pin do_4.4 S 168,16
+  pin do_5.5 S 224,16
+  pin do_6.6 S 280,16
+  pin do_7.7 S 336,16
+  pin do_8.8 S 392,16
+  pin do_9.9 S 456,16
+net n0 [rail rank=1 power=GROUND] =G1+CAB-K10.coil.out =G1+CAB-K11.coil.out =G1+CAB-K12.coil.out =G1+CAB-K13.coil.out =G1+CAB-K14.coil.out =G1+CAB-K15.coil.out =G1+CAB-K16.coil.out =G1+CAB-K17.coil.out =G1+CAB-K2.coil.out =G1+CAB-K3.coil.out =G1+CAB-K4.coil.out =G1+CAB-K5.coil.out =G1+CAB-K6.coil.out =G1+CAB-K7.coil.out =G1+CAB-K8.coil.out =G1+CAB-K9.coil.out =G1+CAB-P1.lamp.2 =G1+CAB-P10.lamp.2 =G1+CAB-P11.lamp.2 =G1+CAB-P12.lamp.2 =G1+CAB-P13.lamp.2 =G1+CAB-P14.lamp.2 =G1+CAB-P15.lamp.2 =G1+CAB-P16.lamp.2 =G1+CAB-P2.lamp.2 =G1+CAB-P3.lamp.2 =G1+CAB-P4.lamp.2 =G1+CAB-P5.lamp.2 =G1+CAB-P6.lamp.2 =G1+CAB-P7.lamp.2 =G1+CAB-P8.lamp.2 =G1+CAB-P9.lamp.2
+net n1 =G0+CAB-K1.item.do_2.2 =G1+CAB-K3.coil.in
+net n5 [rail rank=0 power=NONE] =G1+CAB-K14.co_1.no =G1+CAB-P13.lamp.1
+net n7 =G0+CAB-K1.item.do_13.13 =G1+CAB-K14.coil.in
+net n9 =G0+CAB-K1.item.do_3.3 =G1+CAB-K4.coil.in
+net n11 =G0+CAB-K1.item.do_9.9 =G1+CAB-K10.coil.in
+net n13 [rail rank=0 power=SUPPLY] =G1+CAB-K10.co_1.com =G1+CAB-K11.co_1.com =G1+CAB-K12.co_1.com =G1+CAB-K13.co_1.com =G1+CAB-K14.co_1.com =G1+CAB-K15.co_1.com =G1+CAB-K16.co_1.com =G1+CAB-K17.co_1.com =G1+CAB-K2.co_1.com =G1+CAB-K3.co_1.com =G1+CAB-K4.co_1.com =G1+CAB-K5.co_1.com =G1+CAB-K6.co_1.com =G1+CAB-K7.co_1.com =G1+CAB-K8.co_1.com =G1+CAB-K9.co_1.com
+net n17 =G0+CAB-K1.item.do_10.10 =G1+CAB-K11.coil.in
+net n20 =G0+CAB-K1.item.do_1.1 =G1+CAB-K2.coil.in
+net n25 [rail rank=0 power=NONE] =G1+CAB-K13.co_1.no =G1+CAB-P12.lamp.1
+net n33 =G0+CAB-K1.item.do_12.12 =G1+CAB-K13.coil.in
+net n38 =G0+CAB-K1.item.do_14.14 =G1+CAB-K15.coil.in
+net n41 [rail rank=0 power=NONE] =G1+CAB-K12.co_1.no =G1+CAB-P11.lamp.1
+net n42 [rail rank=0 power=NONE] =G1+CAB-K5.co_1.no =G1+CAB-P4.lamp.1
+net n45 [rail rank=0 power=NONE] =G1+CAB-K8.co_1.no =G1+CAB-P7.lamp.1
+net n49 =G0+CAB-K1.item.do_5.5 =G1+CAB-K6.coil.in
+net n56 =G0+CAB-K1.item.do_16.16 =G1+CAB-K17.coil.in
+net n57 =G0+CAB-K1.item.do_15.15 =G1+CAB-K16.coil.in
+net n60 [rail rank=0 power=NONE] =G1+CAB-K3.co_1.no =G1+CAB-P2.lamp.1
+net n66 [rail rank=0 power=NONE] =G1+CAB-K2.co_1.no =G1+CAB-P1.lamp.1
+net n67 [rail rank=0 power=NONE] =G1+CAB-K15.co_1.no =G1+CAB-P14.lamp.1
+net n75 =G0+CAB-K1.item.do_6.6 =G1+CAB-K7.coil.in
+net n78 [rail rank=0 power=NONE] =G1+CAB-K10.co_1.no =G1+CAB-P9.lamp.1
+net n79 [rail rank=0 power=NONE] =G1+CAB-K4.co_1.no =G1+CAB-P3.lamp.1
+net n85 =G0+CAB-K1.item.do_8.8 =G1+CAB-K9.coil.in
+net n96 [rail rank=0 power=NONE] =G1+CAB-K11.co_1.no =G1+CAB-P10.lamp.1
+net n101 =G0+CAB-K1.item.do_11.11 =G1+CAB-K12.coil.in
+net n103 [rail rank=0 power=NONE] =G1+CAB-K9.co_1.no =G1+CAB-P8.lamp.1
+net n110 [rail rank=0 power=NONE] =G1+CAB-K7.co_1.no =G1+CAB-P6.lamp.1
+net n117 =G0+CAB-K1.item.do_4.4 =G1+CAB-K5.coil.in
+net n125 [rail rank=0 power=NONE] =G1+CAB-K16.co_1.no =G1+CAB-P15.lamp.1
+net n133 [rail rank=0 power=NONE] =G1+CAB-K17.co_1.no =G1+CAB-P16.lamp.1
+net n134 [rail rank=0 power=NONE] =G1+CAB-K6.co_1.no =G1+CAB-P5.lamp.1
+net n137 =G0+CAB-K1.item.do_7.7 =G1+CAB-K8.coil.in
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+fact item =G1+CAB-K14.coil =G1+CAB-K14.co_1
+fact item =G1+CAB-K5.coil =G1+CAB-K5.co_1
+fact item =G1+CAB-K15.co_1 =G1+CAB-K15.coil
+fact item =G1+CAB-K16.co_1 =G1+CAB-K16.coil
+fact item =G1+CAB-K7.coil =G1+CAB-K7.co_1
+fact item =G1+CAB-K4.coil =G1+CAB-K4.co_1
+fact item =G1+CAB-K10.coil =G1+CAB-K10.co_1
+fact item =G1+CAB-K6.co_1 =G1+CAB-K6.coil
+fact item =G1+CAB-K2.co_1 =G1+CAB-K2.coil
+fact item =G1+CAB-K11.coil =G1+CAB-K11.co_1
+fact item =G1+CAB-K3.co_1 =G1+CAB-K3.coil
+fact item =G1+CAB-K9.co_1 =G1+CAB-K9.coil
+fact item =G1+CAB-K12.co_1 =G1+CAB-K12.coil
+fact item =G1+CAB-K13.co_1 =G1+CAB-K13.coil
+fact item =G1+CAB-K8.coil =G1+CAB-K8.co_1
+fact item =G1+CAB-K17.co_1 =G1+CAB-K17.coil
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin =G0+CAB-K1.item.do_2.2 =G0+CAB-K1.item.do_9.9 =G0+CAB-K1.item.do_10.10 =G0+CAB-K1.item.do_3.3 =G0+CAB-K1.item.do_5.5 =G0+CAB-K1.item.do_1.1 =G0+CAB-K1.item.do_16.16 =G0+CAB-K1.item.do_6.6 =G0+CAB-K1.item.do_15.15 =G0+CAB-K1.item.do_8.8 =G0+CAB-K1.item.do_11.11 =G0+CAB-K1.item.do_14.14 =G0+CAB-K1.item.do_13.13 =G0+CAB-K1.item.do_4.4 =G0+CAB-K1.item.do_7.7 =G0+CAB-K1.item.do_12.12
+fact attached =G1+CAB-K14.coil =G1+CAB-K5.coil =G1+CAB-K7.coil =G1+CAB-K4.coil =G1+CAB-K10.coil =G1+CAB-K11.coil =G1+CAB-K9.coil =G1+CAB-K13.coil =G1+CAB-K8.coil =G1+CAB-K15.coil =G1+CAB-K6.coil =G1+CAB-K17.coil =G1+CAB-K3.coil =G1+CAB-K16.coil =G1+CAB-K2.coil =G1+CAB-K12.coil
+# legend only: a general placer must not read a symbol's kind.
+kind =G1+CAB-P16.lamp load
+kind =G1+CAB-K14.coil coil
+kind =G1+CAB-K5.coil coil
+kind =G1+CAB-P3.lamp load
+kind =G1+CAB-K15.co_1 contact_co
+kind =G1+CAB-P6.lamp load
+kind =G1+CAB-K16.co_1 contact_co
+kind =G1+CAB-K7.coil coil
+kind =G1+CAB-P5.lamp load
+kind =G1+CAB-K5.co_1 contact_co
+kind =G1+CAB-K4.coil coil
+kind =G1+CAB-K10.coil coil
+kind =G1+CAB-K6.co_1 contact_co
+kind =G1+CAB-P8.lamp load
+kind =G1+CAB-P1.lamp load
+kind =G1+CAB-P9.lamp load
+kind =G1+CAB-K14.co_1 contact_co
+kind =G1+CAB-P7.lamp load
+kind =G1+CAB-K2.co_1 contact_co
+kind =G1+CAB-K7.co_1 contact_co
+kind =G1+CAB-P14.lamp load
+kind =G1+CAB-K11.coil coil
+kind =G1+CAB-K10.co_1 contact_co
+kind =G1+CAB-P11.lamp load
+kind =G1+CAB-K3.co_1 contact_co
+kind =G1+CAB-K9.co_1 contact_co
+kind =G1+CAB-K12.co_1 contact_co
+kind =G1+CAB-K13.co_1 contact_co
+kind =G1+CAB-K9.coil coil
+kind =G1+CAB-K13.coil coil
+kind =G1+CAB-K8.coil coil
+kind =G1+CAB-P10.lamp load
+kind =G1+CAB-K17.co_1 contact_co
+kind =G1+CAB-P2.lamp load
+kind =G1+CAB-P15.lamp load
+kind =G1+CAB-K15.coil coil
+kind =G1+CAB-K6.coil coil
+kind =G1+CAB-K4.co_1 contact_co
+kind =G1+CAB-K8.co_1 contact_co
+kind =G1+CAB-K17.coil coil
+kind =G1+CAB-P4.lamp load
+kind =G1+CAB-K3.coil coil
+kind =G1+CAB-K16.coil coil
+kind =G1+CAB-P12.lamp load
+kind =G1+CAB-K2.coil coil
+kind =G1+CAB-K11.co_1 contact_co
+kind =G1+CAB-P13.lamp load
+kind =G1+CAB-K12.coil coil
+kind =G0+CAB-K1.item item
+# today's placement: page, origin and orientation of each drawn copy.
+today =G1+CAB-K14.coil page=1 at=768,184 orient=R0 set=1
+today =G1+CAB-K5.coil page=1 at=224,184 orient=R0 set=1
+today =G1+CAB-K7.coil page=1 at=336,184 orient=R0 set=1
+today =G1+CAB-K4.coil page=1 at=168,184 orient=R0 set=1
+today =G1+CAB-K10.coil page=1 at=512,184 orient=R0 set=1
+today =G1+CAB-K11.coil page=1 at=576,184 orient=R0 set=1
+today =G1+CAB-K9.coil page=1 at=448,184 orient=R0 set=1
+today =G1+CAB-K13.coil page=1 at=704,184 orient=R0 set=1
+today =G1+CAB-K8.coil page=1 at=392,184 orient=R0 set=1
+today =G1+CAB-K15.coil page=1 at=832,184 orient=R0 set=1
+today =G1+CAB-K6.coil page=1 at=280,184 orient=R0 set=1
+today =G1+CAB-K17.coil page=1 at=960,184 orient=R0 set=1
+today =G1+CAB-K3.coil page=1 at=112,184 orient=R0 set=1
+today =G1+CAB-K16.coil page=1 at=896,184 orient=R0 set=1
+today =G1+CAB-K2.coil page=1 at=56,184 orient=R0 set=1
+today =G1+CAB-K12.coil page=1 at=640,184 orient=R0 set=1
+today =G0+CAB-K1.item page=1 at=56,112 orient=R0 set=1
+today =G1+CAB-P3.lamp page=2 at=328,232 orient=R0 set=1
+today =G1+CAB-P6.lamp page=2 at=712,232 orient=R0 set=1
+today =G1+CAB-P5.lamp page=2 at=584,232 orient=R0 set=1
+today =G1+CAB-K5.co_1 page=2 at=456,112 orient=R0 set=1
+today =G1+CAB-K6.co_1 page=2 at=584,112 orient=R0 set=1
+today =G1+CAB-P8.lamp page=2 at=968,232 orient=R0 set=1
+today =G1+CAB-P1.lamp page=2 at=72,232 orient=R0 set=1
+today =G1+CAB-P9.lamp page=2 at=1104,232 orient=R0 set=1
+today =G1+CAB-P7.lamp page=2 at=840,232 orient=R0 set=1
+today =G1+CAB-K2.co_1 page=2 at=72,112 orient=R0 set=1
+today =G1+CAB-K7.co_1 page=2 at=712,112 orient=R0 set=1
+today =G1+CAB-K10.co_1 page=2 at=1104,112 orient=R0 set=1
+today =G1+CAB-K3.co_1 page=2 at=200,112 orient=R0 set=1
+today =G1+CAB-K9.co_1 page=2 at=968,112 orient=R0 set=1
+today =G1+CAB-P2.lamp page=2 at=200,232 orient=R0 set=1
+today =G1+CAB-K4.co_1 page=2 at=328,112 orient=R0 set=1
+today =G1+CAB-K8.co_1 page=2 at=840,112 orient=R0 set=1
+today =G1+CAB-P4.lamp page=2 at=456,232 orient=R0 set=1
+today =G1+CAB-P16.lamp page=3 at=896,232 orient=R0 set=1
+today =G1+CAB-K15.co_1 page=3 at=624,112 orient=R0 set=1
+today =G1+CAB-K16.co_1 page=3 at=760,112 orient=R0 set=1
+today =G1+CAB-K14.co_1 page=3 at=488,112 orient=R0 set=1
+today =G1+CAB-P14.lamp page=3 at=624,232 orient=R0 set=1
+today =G1+CAB-P11.lamp page=3 at=216,232 orient=R0 set=1
+today =G1+CAB-K12.co_1 page=3 at=216,112 orient=R0 set=1
+today =G1+CAB-K13.co_1 page=3 at=352,112 orient=R0 set=1
+today =G1+CAB-P10.lamp page=3 at=80,232 orient=R0 set=1
+today =G1+CAB-K17.co_1 page=3 at=896,112 orient=R0 set=1
+today =G1+CAB-P15.lamp page=3 at=760,232 orient=R0 set=1
+today =G1+CAB-P12.lamp page=3 at=352,232 orient=R0 set=1
+today =G1+CAB-K11.co_1 page=3 at=80,112 orient=R0 set=1
+today =G1+CAB-P13.lamp page=3 at=488,232 orient=R0 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n7 page=1 set=1 a==G1+CAB-K14.coil.in b==G0+CAB-K1.item.do_13.13 768,160 768,128
+route n38 page=1 set=1 a==G1+CAB-K15.coil.in b==G0+CAB-K1.item.do_14.14 832,160 832,128
+route n56 page=1 set=1 a==G0+CAB-K1.item.do_16.16 b==G1+CAB-K17.coil.in 960,128 960,160
+route n75 page=1 set=1 a==G0+CAB-K1.item.do_6.6 b==G1+CAB-K7.coil.in 336,128 336,160
+route n1 page=1 set=1 a==G0+CAB-K1.item.do_2.2 b==G1+CAB-K3.coil.in 112,128 112,160
+route n117 page=1 set=1 a==G1+CAB-K5.coil.in b==G0+CAB-K1.item.do_4.4 224,160 224,128
+route n9 page=1 set=1 a==G1+CAB-K4.coil.in b==G0+CAB-K1.item.do_3.3 168,160 168,128
+route n101 page=1 set=1 a==G0+CAB-K1.item.do_11.11 b==G1+CAB-K12.coil.in 640,128 640,160
+route n137 page=1 set=1 a==G1+CAB-K8.coil.in b==G0+CAB-K1.item.do_7.7 392,160 392,128
+route n49 page=1 set=1 a==G0+CAB-K1.item.do_5.5 b==G1+CAB-K6.coil.in 280,128 280,160
+route n85 page=1 set=1 a==G1+CAB-K9.coil.in b==G0+CAB-K1.item.do_8.8 448,160 448,128
+route n57 page=1 set=1 a==G1+CAB-K16.coil.in b==G0+CAB-K1.item.do_15.15 896,160 896,128
+route n20 page=1 set=1 a==G1+CAB-K2.coil.in b==G0+CAB-K1.item.do_1.1 56,160 56,128
+route n33 page=1 set=1 a==G1+CAB-K13.coil.in b==G0+CAB-K1.item.do_12.12 704,160 704,128
+route n17 page=1 set=1 a==G0+CAB-K1.item.do_10.10 b==G1+CAB-K11.coil.in 576,128 576,160
+route n11 page=1 set=1 a==G0+CAB-K1.item.do_9.9 b==G1+CAB-K10.coil.in 512,128 512,160
+route n134 page=2 set=1 a==G1+CAB-K6.co_1.no b==G1+CAB-P5.lamp.1 584,128 584,216
+route n60 page=2 set=1 a==G1+CAB-K3.co_1.no b==G1+CAB-P2.lamp.1 200,128 200,216
+route n79 page=2 set=1 a==G1+CAB-P3.lamp.1 b==G1+CAB-K4.co_1.no 328,216 328,128
+route n110 page=2 set=1 a==G1+CAB-K7.co_1.no b==G1+CAB-P6.lamp.1 712,128 712,216
+route n42 page=2 set=1 a==G1+CAB-K5.co_1.no b==G1+CAB-P4.lamp.1 456,128 456,216
+route n66 page=2 set=1 a==G1+CAB-P1.lamp.1 b==G1+CAB-K2.co_1.no 72,216 72,128
+route n45 page=2 set=1 a==G1+CAB-P7.lamp.1 b==G1+CAB-K8.co_1.no 840,216 840,128
+route n103 page=2 set=1 a==G1+CAB-K9.co_1.no b==G1+CAB-P8.lamp.1 968,128 968,216
+route n78 page=2 set=1 a==G1+CAB-K10.co_1.no b==G1+CAB-P9.lamp.1 1104,128 1104,216
+route n67 page=3 set=1 a==G1+CAB-P14.lamp.1 b==G1+CAB-K15.co_1.no 624,216 624,128
+route n133 page=3 set=1 a==G1+CAB-K17.co_1.no b==G1+CAB-P16.lamp.1 896,128 896,216
+route n5 page=3 set=1 a==G1+CAB-P13.lamp.1 b==G1+CAB-K14.co_1.no 488,216 488,128
+route n96 page=3 set=1 a==G1+CAB-P10.lamp.1 b==G1+CAB-K11.co_1.no 80,216 80,128
+route n25 page=3 set=1 a==G1+CAB-K13.co_1.no b==G1+CAB-P12.lamp.1 352,128 352,216
+route n41 page=3 set=1 a==G1+CAB-P11.lamp.1 b==G1+CAB-K12.co_1.no 216,216 216,128
+route n125 page=3 set=1 a==G1+CAB-P15.lamp.1 b==G1+CAB-K16.co_1.no 760,216 760,128
+# today's reference markers: one per printed cross-reference (net, pin, page, place).

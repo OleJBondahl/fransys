@@ -269,6 +269,9 @@ class Terminal:
     _scope: Any = field(
         default=None, init=False, compare=False, repr=False
     )  # the unit scope `limits` writes to; the surface sets it after making the terminal
+    _fixed: bool = field(
+        default=False, init=False, compare=False, repr=False
+    )  # a series named this terminal by number; a container's whole-strip take skips it
 
     @property
     def inner(self) -> Port:

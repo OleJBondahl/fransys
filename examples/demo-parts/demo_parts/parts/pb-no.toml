@@ -1,0 +1,18 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PB-NO"
+manufacturer = "Demo"
+description = "Push button, one make contact (start)"
+category = "electromechanical"
+class_code = "S"
+operated_by = "push"
+
+[[function]]
+name = "sw"
+kind = "switch"
+ports = [
+    { name = "A", role = "generic", side = "line" },
+    { name = "B", role = "generic", side = "load" },
+]
+links = [{ a = "A", b = "B", kind = "switched", rest = "open" }]

@@ -4,7 +4,15 @@ import dataclasses
 from collections import deque
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.derive.lookups import position_rank, unit_chain
+from fransys_model.derive.lookups import unit_chain
+from fransys_model.derive.order import (
+    ChannelTie,
+    ModuleKey,
+    natural_key,
+    plc_channel_tie,
+    plc_module_key,
+    plc_rack_key,
+)
 from fransys_model.derive.passes._plc_ambiguous import ambiguous_findings
 from fransys_model.derive.passes._plc_contested import contested_findings
 from fransys_model.derive.passes._plc_wired import (
@@ -25,13 +33,15 @@ if TYPE_CHECKING:
 
 PLC_REQUEST_UNSERVABLE: Final[str] = "PLC_REQUEST_UNSERVABLE"
 
-type _Order = tuple[tuple[str, ...], tuple[int, int], tuple[str, ...], int, Id[Function]]
+_NO_RACK: Final[ModuleKey] = ((0, 0), natural_key(""), ())
+
+type _Order = tuple[ModuleKey, ModuleKey, ChannelTie]
 
 
 def _ranked(model: Model) -> list[tuple[Function, SignalType]]:
     """Every channel function with its signal, in the one global serving order.
 
-    The order is rack key, `position` (`None` last), own key, `plc_channel` number, function id.
+    The order is `plc_rack_key`, `plc_module_key`, `plc_channel_tie`.
     No designation is read; `_channels` cuts it into one queue per (unit, signal).
     """
     channel_of = {facet.subject: facet for facet in facets_of(model, PlcChannelFacet).values()}
@@ -42,8 +52,8 @@ def _ranked(model: Model) -> list[tuple[Function, SignalType]]:
         if facet is None:
             continue
         module = modules[function.item]
-        rack = () if module.parent is None else modules[module.parent].key
-        order = (rack, position_rank(module), module.key, facet.channel, function.id)
+        rack = _NO_RACK if module.parent is None else plc_rack_key(modules[module.parent])
+        order = (rack, plc_module_key(module), plc_channel_tie(facet.channel, function))
         ranked.append((order, function, facet.signal))
     return [(function, signal) for _, function, signal in sorted(ranked, key=lambda r: r[0])]
 

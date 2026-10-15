@@ -1,0 +1,17 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CBL-8G0.75"
+manufacturer = "Demo"
+description = "Control cable, 8 cores, 0.75 mm2"
+category = "cable"
+class_code = "W"
+
+[rating]
+voltage_ac_v = "500"
+
+[cable_product]
+core_count = 8
+core_colours = ["BN", "BU", "BK", "GY", "WH", "VT", "OG", "RD"]
+gauge_mm2 = "0.75"
+shielded = false

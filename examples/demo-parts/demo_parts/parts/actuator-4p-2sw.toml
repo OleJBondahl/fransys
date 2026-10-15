@@ -1,0 +1,50 @@
+schema = 1
+
+[part]
+mpn = "DEMO-ACT-4P-2SW"
+manufacturer = "Demo"
+description = "Valve actuator, power pins 1 and 2, drive pins 3 and 4, two position switches"
+category = "electromechanical"
+class_code = "M"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "1", role = "generic", side = "line" },
+    { name = "2", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_power_w = "10"
+
+[[function]]
+name = "drive"
+kind = "load"
+ports = [
+    { name = "3", role = "generic", side = "line" },
+    { name = "4", role = "generic", side = "load" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_power_w = "2"
+
+[[function]]
+name = "sw_1"
+kind = "switch"
+ports = [
+    { name = "6", role = "generic", side = "line" },
+    { name = "5", role = "generic", side = "load" },
+]
+links = [{ a = "6", b = "5", kind = "switched", rest = "open" }]
+
+[[function]]
+name = "sw_2"
+kind = "switch"
+ports = [
+    { name = "8", role = "generic", side = "line" },
+    { name = "7", role = "generic", side = "load" },
+]
+links = [{ a = "8", b = "7", kind = "switched", rest = "open" }]

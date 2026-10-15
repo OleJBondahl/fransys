@@ -8,7 +8,7 @@ those of the handle methods and layout hints in `keywords-handles.md`, those of 
 
 A signal type says what kind of PLC channel or field signal a function asks for. The facade
 gives the common ones short names. `fr.DI`, `fr.DO`, `fr.AI` and `fr.AO` are all members of
-`SignalType`, and each is passed as the `signal` of `plc`.
+`fr.SignalType`, and each is passed as the `signal` of `plc`.
 
 - `DI`: a digital input, `SignalType.DI`.
 - `DO`: a digital output, `SignalType.DO`. `DO` belongs with `DI`, `AI` and `AO` as one of the four short names.
@@ -16,11 +16,19 @@ gives the common ones short names. `fr.DI`, `fr.DO`, `fr.AI` and `fr.AO` are all
 - `AO`: an analog output, the 4-20 mA current loop, `SignalType.AO_CURRENT`. Analog voltage outputs have no short name.
 
 The short names cover only the current loops and the
-two digital kinds. Use the full member for the rest:
+two digital kinds. Use the full member, `fr.SignalType.<NAME>`, for the rest:
 
-- `SignalType.AI_VOLTAGE` and `SignalType.AO_VOLTAGE`: analog voltage inputs and outputs.
-- `SignalType.RTD`: a resistance temperature detector, such as a Pt100.
-- `SignalType.RELAY`: a relay signal.
+- `fr.SignalType.AI_VOLTAGE` and `fr.SignalType.AO_VOLTAGE`: analog voltage inputs and outputs.
+- `fr.SignalType.RTD`: a resistance temperature detector, such as a Pt100.
+- `fr.SignalType.RELAY`: a relay signal.
+
+```python
+import fransys as fr
+
+assert fr.DI is fr.SignalType.DI
+assert fr.AI is fr.SignalType.AI_CURRENT
+rtd = fr.SignalType.RTD  # no short name; pass it as the `signal` of `plc`
+```
 
 ## Handle types
 

@@ -56,4 +56,20 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         ),
         page="findings-render",
     ),
+    CodeInfo(
+        code="REFERENCE_OFF_DOCUMENT",
+        severities=(Severity.WARNING,),
+        stage="render",
+        who="consumer",
+        cause=(
+            "A printed reference points to a page that no page of its own document holds, and its "
+            "text prints no location, so a reader cannot tell which document to open. The message "
+            "names the reference, its page and the target page."
+        ),
+        fix=(
+            "Print both drawing sets in one document, or give the target's drawing set a "
+            "location so the reference names it."
+        ),
+        page="findings-render",
+    ),
 )

@@ -3,13 +3,12 @@
 Reached as `derive.unit_matrix` and `derive.signal_lens` (model-0197).
 """
 
-from fransys_model.vocab.tables import functions
+from fransys_model.vocab.tables import functions, items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 
-from .designation import printed_designation
 from .kinds import signal_kind
-from .order import plc_racks
+from .order import plc_rack_key, plc_racks
 from .overview_field import field_devices
 from .overview_levels import overview_level
 from .plc_rack import plc_rack_modules
@@ -48,7 +47,7 @@ def unit_matrix(model: Model) -> UnitMatrix:
 def signal_lens(model: Model) -> tuple[LensModule, ...]:
     """The PLC modules with their channels and field devices.
 
-    Racks in designation order, then `plc_rack_modules`' physical order within each, so the lens
+    Racks in `plc_rack_key` order, then `plc_rack_modules`' physical order within each, so the lens
     reads the rack as the PLC list does. Each channel carries `signal_kind` of its signal type.
     A module with no channel is not listed. Raises `SchemaError`, as `plc_rack_modules` does,
     for a module or device with no designation.
@@ -79,8 +78,6 @@ def _lens_modules(model: Model) -> tuple[LensModule, ...]:
                 for channel in module.channels
             ),
         )
-        for rack in sorted(
-            plc_racks(model), key=lambda rack: (printed_designation(model, rack), rack)
-        )
+        for rack in sorted(plc_racks(model), key=lambda rack: plc_rack_key(items(model)[rack]))
         for module in plc_rack_modules(model, rack)
     )

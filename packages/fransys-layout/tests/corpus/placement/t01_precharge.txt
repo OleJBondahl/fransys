@@ -1,0 +1,126 @@
+# FRANSYS PLACEMENT INSTANCE test_a_precharge_branch_draws_beside_its_contactor__1
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+group DC order=0 break_before=0 "DC path"
+sym =DC-U1-S1.pole_2 group=DC body=-8,-16,12,32 keepout=-60,-22,74,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =DC-U1-X1:1.terminal group=DC body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DC-U1-K1.main group=DC body=-8,-16,72,32 keepout=-60,-16,138,32
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym =DC-U1-F2.element group=DC body=-4,-24,8,48 keepout=-56,-24,70,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =DC-U1-R1.lamp group=DC body=-16,-16,48,32 keepout=-16,-16,100,32
+  pin 1 N 0,-16
+  pin 2 N 16,-16
+sym =DC-U1-X1:2.terminal group=DC body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DC-U1-X2:1.terminal group=DC body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DC-U1-K3.main group=DC body=-8,-16,72,32 keepout=-60,-16,138,32
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym =DC-U1-F3.element group=DC body=-4,-24,8,48 keepout=-56,-24,70,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =DC-U1-S1.pole_1 group=DC body=-8,-16,12,32 keepout=-60,-22,74,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =DC-U1-F1.element group=DC body=-4,-24,8,48 keepout=-56,-24,70,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =DC-U1-K2.main group=DC body=-8,-16,72,32 keepout=-60,-16,138,32
+  pin 1.in N 0,-16
+  pin 1.out S 0,16
+  pin 2.in N 32,-16
+  pin 2.out S 32,16
+  pin 3.in N 64,-16
+  pin 3.out S 64,16
+sym =DC-U1-X2:2.terminal group=DC body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+net n0 =DC-U1-F1.element.in =DC-U1-S1.pole_1.out
+net n3 =DC-U1-F2.element.out =DC-U1-K2.main.1.in
+net n4 =DC-U1-K2.main.1.out =DC-U1-X2:2.terminal.n =DC-U1-X2:2.terminal.s
+net n5 =DC-U1-S1.pole_2.in =DC-U1-X1:2.terminal.n =DC-U1-X1:2.terminal.s
+net n7 =DC-U1-S1.pole_1.in =DC-U1-X1:1.terminal.n =DC-U1-X1:1.terminal.s
+net n12 =DC-U1-K1.main.1.out =DC-U1-R1.lamp.1 =DC-U1-X2:1.terminal.n =DC-U1-X2:1.terminal.s
+net n13 =DC-U1-K3.main.1.in =DC-U1-R1.lamp.2
+net n15 =DC-U1-F2.element.in =DC-U1-S1.pole_2.out
+net n16 =DC-U1-F1.element.out =DC-U1-F3.element.out =DC-U1-K1.main.1.in
+net n17 =DC-U1-F3.element.in =DC-U1-K3.main.1.out
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+fact item =DC-U1-S1.pole_2 =DC-U1-S1.pole_1
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact head =DC-U1-S1.pole_2 =DC-U1-F2.element =DC-U1-F3.element =DC-U1-S1.pole_1 =DC-U1-F1.element
+fact boxpin 
+fact strip -U1-X1 =DC-U1-X1:1.terminal =DC-U1-X1:2.terminal
+fact strip -U1-X2 =DC-U1-X2:1.terminal =DC-U1-X2:2.terminal
+# legend only: a general placer must not read a symbol's kind.
+kind =DC-U1-S1.pole_2 protection
+kind =DC-U1-X1:1.terminal terminal
+kind =DC-U1-K1.main contact_no
+kind =DC-U1-F2.element protection
+kind =DC-U1-R1.lamp load
+kind =DC-U1-X1:2.terminal terminal
+kind =DC-U1-X2:1.terminal terminal
+kind =DC-U1-K3.main contact_no
+kind =DC-U1-F3.element protection
+kind =DC-U1-S1.pole_1 protection
+kind =DC-U1-F1.element protection
+kind =DC-U1-K2.main contact_no
+kind =DC-U1-X2:2.terminal terminal
+# today's placement: page, origin and orientation of each drawn copy.
+today =DC-U1-S1.pole_2 page=1 at=448,248 orient=R0 set=1
+today =DC-U1-X1:1.terminal page=1 at=72,104 orient=R180 set=1
+today =DC-U1-K1.main page=1 at=72,552 orient=R0 set=1
+today =DC-U1-F2.element page=1 at=448,376 orient=R0 set=1
+today =DC-U1-R1.lamp page=1 at=264,672 orient=R0 set=1
+today =DC-U1-X1:2.terminal page=1 at=448,104 orient=R180 set=1
+today =DC-U1-X2:1.terminal page=1 at=72,688 orient=R0 set=1
+today =DC-U1-K3.main page=1 at=264,552 orient=MR180 set=1
+today =DC-U1-F3.element page=1 at=264,424 orient=MR180 set=1
+today =DC-U1-S1.pole_1 page=1 at=72,248 orient=R0 set=1
+today =DC-U1-F1.element page=1 at=72,376 orient=R0 set=1
+today =DC-U1-K2.main page=1 at=448,552 orient=R0 set=1
+today =DC-U1-X2:2.terminal page=1 at=448,688 orient=R0 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n12 page=1 set=1 a==DC-U1-X2:1.terminal.n b==DC-U1-K1.main.1.out 72,680 72,568
+route n0 page=1 set=1 a==DC-U1-S1.pole_1.out b==DC-U1-F1.element.in 72,264 72,352
+route n12 page=1 set=1 a==DC-U1-R1.lamp.1 b==DC-U1-K1.main.1.out 264,656 264,584 72,584 72,568
+route n13 page=1 set=1 a==DC-U1-K3.main.1.in b==DC-U1-R1.lamp.2 264,568 264,576 280,576 280,656
+route n3 page=1 set=1 a==DC-U1-F2.element.out b==DC-U1-K2.main.1.in 448,400 448,536
+route n16 page=1 set=1 a==DC-U1-F1.element.out b==DC-U1-K1.main.1.in 72,400 72,536
+route n15 page=1 set=1 a==DC-U1-F2.element.in b==DC-U1-S1.pole_2.out 448,352 448,264
+route n17 page=1 set=1 a==DC-U1-K3.main.1.out b==DC-U1-F3.element.in 264,536 264,448
+route n7 page=1 set=1 a==DC-U1-S1.pole_1.in b==DC-U1-X1:1.terminal.n 72,232 72,112
+route n4 page=1 set=1 a==DC-U1-K2.main.1.out b==DC-U1-X2:2.terminal.n 448,568 448,680
+route n5 page=1 set=1 a==DC-U1-X1:2.terminal.n b==DC-U1-S1.pole_2.in 448,112 448,232
+route n16 page=1 set=1 a==DC-U1-F1.element.out b==DC-U1-F3.element.out 72,400 264,400
+# today's reference markers: one per printed cross-reference (net, pin, page, place).

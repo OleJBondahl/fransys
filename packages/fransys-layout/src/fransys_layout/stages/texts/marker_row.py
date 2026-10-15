@@ -33,7 +33,7 @@ from fransys_layout.geometry import WIRING_GRID, Box, Facing, Point, follow
 from fransys_layout.stages.labels import decided_runs
 from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.space import Space, unowned
-from fransys_layout.stages.tidy import turned
+from fransys_layout.stages.tidy import turned_places
 
 from .candidates import TextKind
 from .clear_bodies import place_clear_of_bodies
@@ -281,7 +281,7 @@ def _row(marker: LinkMarker, room: _Page) -> list[tuple[LinkMarker, Place]]:
     if _turns(marker, room):
         # a lane on the pin's own x is its own wire's, whichever port stands there
         lanes = tuple(lane for lane in _lanes_beside(marker, room, south=south) if lane.x != at.x)
-        return [_place(turned(marker, side), reach_of(lanes), shut=room.shut) for side in (1, -1)]
+        return [_place(one, reach_of(lanes), shut=room.shut) for one in turned_places(marker)]
     if marker.shared_box or not (south or north) or not box.x <= at.x <= box.x + box.width:
         return [_place(marker, (), shut=room.shut)]
     lanes = _lanes_beside(marker, room, south=south)

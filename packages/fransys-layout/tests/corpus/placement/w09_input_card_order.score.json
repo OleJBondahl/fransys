@@ -1,0 +1,1 @@
+{"placement": {"harness_builds": 0, "loose": 1}, "placement_total": 1, "bends": 10, "excess_bends": 0, "length_g": 3456, "detour_g": 0, "crossings_raw": 17, "crossings": 17, "references": 0, "pages": 1, "symbols": 14, "bad": {"loose": ["+CAB-A1.item"]}, "name": "test_an_input_card_prints_its_pins_in_marking_order_whatever_its_partners_order__2"}

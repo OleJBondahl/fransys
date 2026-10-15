@@ -4,6 +4,8 @@
 PDF frame prints the first one that fits its cell. The source of the entries, first match: the
 texts of `layout.page_title` hints whose thing the page draws; the texts of the page's own
 blocks (`page_title_groups`); the designations its item labels print, each once, in drawn order.
+The forms shorten from the joined entries to "first to last" (one unit only) and "first and n
+more" (layout-0268).
 """
 
 lazy from collections.abc import Mapping
@@ -128,18 +130,31 @@ def _nested_unit(model: Model, set_unit: Id[Unit], node: Id[AspectNode]) -> Id[U
     return black_box_unit(model, max(owners, key=lambda one: len(unit_chain(model, one))), set_unit)
 
 
-def _block_entries(model: Model, page: Page) -> tuple[str, ...]:
-    """The page's block texts; a nested unit's groups print its title once (model-0256)."""
+def _block_entries(model: Model, page: Page) -> tuple[tuple[str, Id[Unit] | None], ...]:
+    """The page's block texts, each with its unit; a nested unit's groups print its title once.
+
+    A group the set's unit owns, or any group of a set with no unit, has unit `None` (model-0256).
+    """
     nodes = aspect_nodes(model)
     set_unit = layout_of(model, DrawingSet)[page.drawing_set].unit
-    texts: list[str] = []
+    found: list[tuple[str, Id[Unit] | None]] = []
     for group in page_title_groups(model, page):
         nested = None if set_unit is None else _nested_unit(model, set_unit, group.group)
         if nested is None:
-            texts.append(nodes[group.group].description)
-        elif (label := unit_label(model, nested)) not in texts:
-            texts.append(label)
-    return tuple(texts)
+            found.append((nodes[group.group].description, None))
+        elif (label := unit_label(model, nested)) not in (text for text, _ in found):
+            found.append((label, nested))
+    return tuple(found)
+
+
+def _entries(model: Model, page: Page) -> tuple[tuple[str, Id[Unit] | None], ...]:
+    """The title's entries, each with its unit (`None`: the set's own, or no unit)."""
+    if hinted := _hint_entries(model, page):
+        return tuple((text, None) for text in hinted)
+    blocks = _block_entries(model, page)
+    if blocks or layout_of(model, DrawingSet)[page.drawing_set].unit is not None:
+        return blocks
+    return tuple((text, None) for text in _designation_entries(model, page))
 
 
 def page_title_entries(model: Model, page: Page) -> tuple[str, ...]:
@@ -148,12 +163,7 @@ def page_title_entries(model: Model, page: Page) -> tuple[str, ...]:
     A page of a unit's own set takes no designations: with no hint and no block of its own it
     keeps the unit's title (PT5, model-0066).
     """
-    if hinted := _hint_entries(model, page):
-        return hinted
-    blocks = _block_entries(model, page)
-    if blocks or layout_of(model, DrawingSet)[page.drawing_set].unit is not None:
-        return blocks
-    return _designation_entries(model, page)
+    return tuple(text for text, _ in _entries(model, page))
 
 
 def short_title(entries: tuple[str, ...]) -> str | None:
@@ -176,18 +186,32 @@ def short_title(entries: tuple[str, ...]) -> str | None:
     return f"{first} to {last}"
 
 
-def page_title_forms(model: Model, page: Page) -> tuple[str, ...]:
-    """The candidate texts of `page`'s title, longest first: the joined entries, then a short form.
+def _more_form(entries: tuple[str, ...]) -> str:
+    """The lead entry and how many more there are: "Pump and 4 more" (layout-0268)."""
+    return f"{entries[0]} and {len(entries) - 1} more"
 
+
+def page_title_forms(model: Model, page: Page) -> tuple[str, ...]:
+    """The candidate texts of `page`'s title, each shorter than the one before.
+
+    The joined entries; then "first to last", only when every entry names one unit; then
+    the lead entry and "and n more". The frame prints the first that fits.
     A page with no entry keeps the unit's title in a unit's set, else the empty text.
     """
-    entries = page_title_entries(model, page)
-    if not entries:
+    found = _entries(model, page)
+    if not found:
         unit = layout_of(model, DrawingSet)[page.drawing_set].unit
         return ("" if unit is None else unit_label(model, unit),)
-    joined = _JOIN.join(entries)
-    short = short_title(entries)
-    return (joined,) if short is None or len(short) >= len(joined) else (joined, short)
+    entries = tuple(text for text, _ in found)
+    forms = [_JOIN.join(entries)]
+    candidates = [
+        short_title(entries) if len({unit for _, unit in found}) == 1 else None,
+        _more_form(entries) if len(entries) > 1 else None,
+    ]
+    for form in candidates:
+        if form is not None and len(form) < len(forms[-1]):
+            forms.append(form)
+    return tuple(forms)
 
 
 def page_title(model: Model, page: Page) -> str:

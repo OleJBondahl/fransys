@@ -14,7 +14,8 @@ bytes, not the picture. Every `fr.check` finding message also reads the same, in
 (FT3, overview-0003): a variant design raises the codes that used to print keys.
 
 Each site that fails today is its own strict xfail, so its test flips when its fix lands.
-The sites not reached: the wago XML (no PLC channel in the design), the unit block-diagram sheets
+A function-block tag is a key too (model-0259): the last test renames the block of a PLC rack.
+The sites not reached: the unit block-diagram sheets
 and the drawing-set order of units and locations (a document prints one drawing set, and a block
 diagram needs a top-level cable between units).
 Fixing decision: test-0136 (the canary and the rename test join the gate).
@@ -32,6 +33,7 @@ import pytest
 from fransys.colours import BK, GNYE, RD
 
 from fransys_layout import lay_out_overview
+from fransys_model.derive import signal_lens
 from fransys_model.layout import OverviewBox, OverviewLine, layout_of
 
 if TYPE_CHECKING:
@@ -517,3 +519,117 @@ def test_a_rename_leaves_every_finding_message_identical(
         assert a, "the design raises findings"
         assert a == b
         assert not any(_ANY_ID.search(message) for _, message in a)
+
+
+# ---- model-0259: a function-block tag is a key too ------------------------------------------
+
+
+class _Rack(NamedTuple):
+    """A unit with no boundary device to hand back."""
+
+
+@fr.unit("demo-plc-rack", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB")
+def _plc_rack(u: fr.Design) -> _Rack:
+    """A rack with two mixed modules: DI 1 and DO 1 of each share the channel number 1."""
+    rack = u.device("A1", "DEMO-PCB-IO", name="rack")
+    for n in (1, 2):
+        u.device(f"A{n + 1}", "DEMO-PLC-DIO-1", parent=rack, name=f"m{n}", position=n)
+    return _Rack()
+
+
+def _plc_exports(tag: str, root: Path) -> tuple[str, str]:
+    """plc.csv and the Wago XML text of the rack under block `tag`, the tag replaced by `@`."""
+    d = fr.design("demo_parts")
+    d.add(_plc_rack, tag)
+    written = fr.write(fr.build(d), root / tag)
+    (csv_path,) = (p for p in written if p.name.endswith("plc.csv"))
+    (xml_path,) = (p for p in written if p.suffix == ".xml" and "wago" in p.name)
+    return (
+        csv_path.read_text(encoding="utf-8").replace(tag, "@"),
+        xml_path.read_text(encoding="utf-8").replace(tag, "@"),
+    )
+
+
+def test_a_block_tag_rename_leaves_the_plc_list_and_the_wago_xml_identical(
+    tmp_path: Path,
+) -> None:
+    """A tie between DI 1 and DO 1 breaks on the part's names, not on an id that hashes the tag."""
+    runs = [_plc_exports(tag, tmp_path) for tag in ("AA", "ZZ", "M7", "B1")]
+    assert all(run[0] and run[1] for run in runs)
+    assert all(run == runs[0] for run in runs)
+
+
+@fr.unit(
+    "demo-plc-rack-b", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB"
+)
+def _plc_rack_b(u: fr.Design) -> _Rack:
+    """A second rack, of one input-only module, so the two racks print differently."""
+    rack = u.device("A2", "DEMO-PCB-IO", name="rack")
+    u.device("A3", "DEMO-PLC-DI-2", parent=rack, name="m", position=1)
+    return _Rack()
+
+
+def _two_rack_exports(tags: tuple[str, str], root: Path) -> dict[str, str]:
+    """plc.csv and each Wago XML of two racks in blocks `tags`, by file name, block n as `@n`."""
+    d = fr.design("demo_parts")
+    d.add(_plc_rack, tags[0])
+    d.add(_plc_rack_b, tags[1])
+    written = fr.write(fr.build(d), root / "-".join(tags))
+    found: dict[str, str] = {}
+    for path in written:
+        if path.name.endswith("plc.csv") or (path.suffix == ".xml" and "wago" in path.name):
+            name, text = path.name, path.read_text(encoding="utf-8")
+            for n, tag in enumerate(tags):
+                name, text = name.replace(tag, f"@{n}"), text.replace(tag, f"@{n}")
+            found[name] = text
+    return found
+
+
+def _two_rack_lens(tags: tuple[str, str]) -> list[str]:
+    """The Signals lens's module designations of two racks in blocks `tags`, block n as `@n`."""
+    d = fr.design("demo_parts")
+    d.add(_plc_rack, tags[0])
+    d.add(_plc_rack_b, tags[1])
+    printed = []
+    for module in signal_lens(fr.build(d).model):
+        text = module.designation
+        for n, tag in enumerate(tags):
+            text = text.replace(tag, f"@{n}")
+        printed.append(text)
+    return printed
+
+
+def test_a_block_tag_rename_never_reorders_racks_in_two_blocks(tmp_path: Path) -> None:
+    """Racks order by their own tag, not by the block prefix that a rename moves (model-0259).
+
+    The overview's Signals lens orders its racks the same way as the PLC list and the Wago XML.
+    """
+    tag_pairs = (("AA", "BB"), ("ZZ", "BB"), ("M7", "C1"))
+    runs = [_two_rack_exports(tags, tmp_path) for tags in tag_pairs]
+    assert all(len(run) >= 2 for run in runs)
+    assert all(run == runs[0] for run in runs)
+    lenses = [_two_rack_lens(tags) for tags in tag_pairs]
+    assert len(lenses[0]) == 3
+    assert all(lens == lenses[0] for lens in lenses)
+
+
+@fr.unit(
+    "demo-plc-mixed", revision=1, interface_version=1, date="2026-10-15", text="First", by="AB"
+)
+def _plc_mixed(u: fr.Design) -> _Rack:
+    """A rack with one module whose part declares do_2, di_10, di_2, do_1, di_1 in that order."""
+    rack = u.device("A1", "DEMO-PCB-IO", name="rack")
+    u.device("A2", "DEMO-PLC-DIO-MIXED", parent=rack, name="m", position=1)
+    return _Rack()
+
+
+def test_a_mixed_modules_channels_list_in_natural_order_of_the_part_function_names(
+    tmp_path: Path,
+) -> None:
+    """di_2 comes before di_10 and di_1 before do_1, whatever the part declares (model-0259)."""
+    d = fr.design("demo_parts")
+    d.add(_plc_mixed, "AA")
+    written = fr.write(fr.build(d), tmp_path)
+    (csv_path,) = (p for p in written if p.name.endswith("plc.csv"))
+    rows = csv_path.read_text(encoding="utf-8").splitlines()[1:]
+    assert [row.split(",")[0].split(":")[1] for row in rows] == ["I1", "O1", "I2", "O2", "I10"]

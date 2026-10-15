@@ -1,0 +1,36 @@
+schema = 1
+
+[part]
+mpn = "DEMO-RCD-4P-40-30"
+manufacturer = "Demo"
+description = "Residual current device, 4-pole, 40 A, 30 mA, type A"
+category = "protection"
+class_code = "F"
+
+[[function]]
+name = "element"
+kind = "protection"
+symbol = "rcd"
+ports = [
+    { name = "1", role = "generic", side = "line", conductor = "L1", symbol_port = "1.in" },
+    { name = "2", role = "generic", side = "load", conductor = "L1", symbol_port = "1.out" },
+    { name = "3", role = "generic", side = "line", conductor = "L2", symbol_port = "2.in" },
+    { name = "4", role = "generic", side = "load", conductor = "L2", symbol_port = "2.out" },
+    { name = "5", role = "generic", side = "line", conductor = "L3", symbol_port = "3.in" },
+    { name = "6", role = "generic", side = "load", conductor = "L3", symbol_port = "3.out" },
+    { name = "N1", marking = "N", role = "generic", side = "line", conductor = "N", symbol_port = "4.in" },
+    { name = "N2", marking = "N", role = "generic", side = "load", conductor = "N", symbol_port = "4.out" },
+]
+links = [
+    { a = "1", b = "2", kind = "protective" },
+    { a = "3", b = "4", kind = "protective" },
+    { a = "5", b = "6", kind = "protective" },
+    { a = "N1", b = "N2", kind = "protective" },
+]
+
+[function.protection]
+type = "rcd"
+
+[function.rating]
+voltage_ac_v = "400"
+current_ac_a = "40"

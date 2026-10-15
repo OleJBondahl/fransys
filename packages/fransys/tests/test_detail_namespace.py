@@ -14,8 +14,17 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # motor and relay coil draw, model-0232). At the batch merge of each of the last two, the merged
 # tree with that change's part files set back gave the digest from before it (API-BATCH), and
 # COIL-FAN-PINS's `plc-do-16ch.toml` (layout-0208 R1), checked the same way.
-# SCHEMA_VERSION 19 to 20 (model-0256) moved it too.
-_DIGEST_BEFORE_THE_MOVE = "2e734886cc5d3d361c32e1d1ee12d2bce67f80a41a5a585c70b627424898b7c0"
+# SCHEMA_VERSION 19 to 20 (model-0256) moved it too. LEGACY-SHORTS (2026-10-15) adds the demo
+# parts `actuator-4p-2sw.toml` and `cable-8g0_75.toml`; with those two files removed the digest is
+# the pin before it (2e734886c..., checked at base 121e32099 and at HEAD minus the two files).
+# CORPUS-MCC (2026-10-15) adds five demo parts (`switch-disconnector-4p`, `pb-no`,
+# `timer-star-delta`, `vfd-4kw`, `motor-11kw-star-delta`); with those five files removed the
+# digest is the pin before it (7449c9999..., checked on a copy of the library at HEAD).
+# CORPUS-BOARD (2026-10-15) adds `rcd-4p.toml` and `mcb-3pn.toml`; with those two files removed the
+# digest is the pin before it (fe7d8f55c..., checked on a copy of the merged library without them).
+# PLC-CHANNEL-ORDER-FIX (2026-10-15) adds `plc-dio-mixed.toml`; with that file removed the digest
+# is the pin before it (d8f37d280..., checked on a copy of the library without it).
+_DIGEST_BEFORE_THE_MOVE = "f8893f3f9a8e3d756c423dc228961e7e64a3460cf4d904e6d061ad5c867c15cf"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

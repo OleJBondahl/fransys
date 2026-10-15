@@ -17,7 +17,8 @@ lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .designation import printed_designation
 from .indexes import build_indexes
-from .lookups import channel_devices, position_rank, require
+from .lookups import channel_devices, require
+from .order import plc_channel_tie, plc_module_key
 from .rows_plc import ChannelScaling, PlcRackChannel, PlcRackModule
 
 if TYPE_CHECKING:
@@ -46,19 +47,20 @@ def _modules(model: Model, idx: Indexes, rack: Id[Item]) -> list[tuple[Item, Par
             found.append(
                 (module, parts(model)[cast("Id[Part]", module.part)])
             )  # is_plc_module: part is set
-    return sorted(found, key=lambda pair: (position_rank(pair[0]), pair[0].key))
+    return sorted(found, key=lambda pair: plc_module_key(pair[0]))
 
 
 def _channels(
     model: Model, idx: Indexes, facts: _Facts, module: Item, unit: Id[Unit] | None
 ) -> tuple[PlcRackChannel, ...]:
     all_functions = functions(model)
-    channels = []
+    channels, ties = [], {}
     for function_id in idx.functions_by_item.get(module.id, ()):
         template = all_functions[function_id].template
         facet = None if template is None else facts.channel_of.get(template)
         if facet is None:
             continue
+        ties[function_id] = plc_channel_tie(facet.channel, all_functions[function_id])
         device = facts.devices.get(function_id)
         request = None if device is None else facts.requests.get(device)
         scaling = None if device is None else facts.scalings.get(device)
@@ -85,7 +87,7 @@ def _channels(
                 ),
             )
         )
-    return tuple(sorted(channels, key=lambda channel: (channel.number, channel.channel)))
+    return tuple(sorted(channels, key=lambda channel: ties[channel.channel]))
 
 
 def plc_rack_modules(
@@ -95,11 +97,11 @@ def plc_rack_modules(
 
     The modules are the children of `rack` by `parent` whose `Part` has category `PLC_MODULE`; a
     module with no channel (a coupler, an end module) has `channels=()`. They order by `position`
-    (integers ascending, `None` last), then authoring key and id, the order `allocate_plc` serves
-    them in; `installed` is ignored. A module's channels are the functions whose template carries a
-    `plc_channel`, bound or spare, ordered by `(plc_channel.channel, function id)`. The field device
-    is read as `plc_channel_rows` reads it; `scaling` is its `scaling` facet, `None` for a spare
-    channel or a device without one.
+    (integers ascending, `None` last), then the module's own tag in natural order
+    (`plc_module_key`), the order `allocate_plc` serves them in; `installed` is ignored. A module's
+    channels are the functions whose template carries a `plc_channel`, bound or spare, ordered by
+    `plc_channel_tie`. The field device is read as `plc_channel_rows` reads it; `scaling` is its
+    `scaling` facet, `None` for a spare channel or a device without one.
 
     `unit` prints the designations as that unit's own document does; `None` the full form.
 

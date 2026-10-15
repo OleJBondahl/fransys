@@ -97,7 +97,7 @@ def _measures(
 class _Measured:
     """What one run measured: the page rows' counts, the loose symbols by unit, the power leads.
 
-    `leads` is the grids' length of the straight power leads of each page, by its `Page` id.
+    `leads` is the grids' length of the straight power leads of each measured page, by `Page` id.
     """
 
     measures: Measures
@@ -120,6 +120,7 @@ def _measured_once(
             {
                 homes[place.drawing_set, place.page][0]: place.grids * WIRING_GRID
                 for place in power_places(scene.layout.markers)
+                if homes[place.drawing_set, place.page][0] in measures
             }
         ),
     )

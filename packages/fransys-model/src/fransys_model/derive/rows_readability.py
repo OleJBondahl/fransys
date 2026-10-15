@@ -4,6 +4,7 @@ Row shapes beside `rows.py` (model-0199); they import nothing from it.
 """
 
 from decimal import Decimal
+from typing import Any
 
 from fransys_model.kernel import Id, value
 from fransys_model.layout import Page
@@ -14,9 +15,8 @@ from fransys_model.vocab.core import Unit
 class ReadabilityPage:
     """What `fr.readability` measures of one schematic page.
 
-    `drawing_set` and `number` are as printed.
-    `text_height_mm` is the profile's capital height of text
-    and `min_text_height_mm` its floor for it. `fill_percent` is the share of the content box the
+    `drawing_set` and `number` are as printed. `text_height_mm` is the profile's capital height of
+    text and `min_text_height_mm` its floor. `fill_percent` is the share of the content box the
     drawn content covers, in whole percent. The four counts are the lint findings' own:
     `wire_crossings` (two wires of different conductors crossing), `struck_labels`
     (`WIRE_OVER_LABEL`), `text_overlaps` (`TEXT_OVERLAP`) and `lone_cells` (`LONE_CELL`).
@@ -24,8 +24,9 @@ class ReadabilityPage:
     branches they name, and page cuts, which name one other page each. `single_*` counts the
     images with one contact and the stars with one branch; `single_contact_images_other_page` counts
     the single images whose contact is on another page.
-    `wire_bends` and `wire_length_mm` read the page's routes. A loose symbol has no page, so the
-    page row does not count it.
+    `wire_bends` and `wire_length_mm` read the page's routes. A loose symbol has no page.
+    `contacts_not_drawn` counts image entries that print N/A; `references_off_document`
+    counts references to another document that name none.
     """
 
     page: Id[Page]
@@ -49,6 +50,20 @@ class ReadabilityPage:
     star_branches: int
     single_branch_stars: int
     page_cuts: int
+    contacts_not_drawn: int
+    references_off_document: int
+
+
+@value
+class OffDocumentReference:
+    """A printed reference to a page of another document that its text does not name.
+
+    `subject` is the label or link marker, `page` the page it stands on, `target` the page it names.
+    """
+
+    subject: Id[Any]
+    page: Id[Page]
+    target: Id[Page]
 
 
 @value
@@ -87,6 +102,8 @@ class ReadabilityUnit:
     star_branches: int
     single_branch_stars: int
     page_cuts: int
+    contacts_not_drawn: int
+    references_off_document: int
 
 
 @value

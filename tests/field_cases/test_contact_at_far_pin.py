@@ -283,7 +283,7 @@ def _drawing(layout) -> str:
 
 
 # the digests moved with the page inset (layout-0187): every page starts PAGE_PAD in
-_DRAWING = {"plain": "f4eeefa2fc16c729", "split": "c32a0c5ba9686aa7", "sixteen": "42ab3d28889a939f"}
+_DRAWING = {"plain": "c35c39d5d9a1a09b", "split": "d409b25944633745", "sixteen": "42ab3d28889a939f"}
 
 
 @pytest.fixture(scope="module")

@@ -54,6 +54,7 @@ _EXPECTED_ALL = [
     "SIGNAL",
     "Run",
     "Severity",
+    "SignalType",
     "Terminal",
     "TerminalStrip",
     "TypedDevice",

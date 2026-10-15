@@ -11,7 +11,7 @@ order; a bound lead (`Line.port`) draws only when its port has a route, marker o
 on it (decision render-0002). The
 SVG carries schematic content only -- no frame, grid or title block (`fransys_pdf` draws
 those, once, on every page). `check(model) -> tuple[Finding, ...]` reports `UNKNOWN_SYMBOL_KEY`,
-`LIBRARY_VERSION_MISMATCH` and `LAYOUT_MISSING`; `PIN_MAP_INCOMPLETE` moved into
+`LIBRARY_VERSION_MISMATCH`, `LAYOUT_MISSING` and `REFERENCE_OFF_DOCUMENT` (model-0258); `PIN_MAP_INCOMPLETE` moved into
 `fransys_layout` (decision layout-0041, the binding it needs lives there). This package
 imports `fransys_model`, `symdef` and `electrical_symbols` only, never
 `fransys_layout`.

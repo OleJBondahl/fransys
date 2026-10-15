@@ -1,0 +1,126 @@
+# FRANSYS PLACEMENT INSTANCE test_an_input_card_prints_its_pins_in_marking_order_whatever_its_partners_order__2
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+group B1 order=0 break_before=0 "Block 1"
+group B2 order=1 break_before=0 "Block 2"
+group B3 order=2 break_before=0 "Block 3"
+group B4 order=3 break_before=0 "Block 4"
+group B5 order=4 break_before=0 "Block 5"
+group B6 order=5 break_before=0 "Block 6"
+group G0 order=6 break_before=0 "PLC inputs"
+sym =B2+CAB-S2.no group=B2 body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =B3+CAB-S3.no group=B3 body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =B6+CAB-S6.no group=B6 body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =B1+CAB-S1.no group=B1 body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =B4+CAB-S4.no group=B4 body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =B5+CAB-S5.no group=B5 body=-8,-16,8,32 keepout=-60,-16,74,32
+  pin in N 0,-16
+  pin out S 0,16
+sym =G0+CAB-K1.item group=G0 body=-16,-16,192,32 keepout=-16,-16,244,32
+  pin di_1.1 N 0,-16
+  pin di_10.10 S 16,16
+  pin di_11.11 N 128,-16
+  pin di_12.12 S 32,16
+  pin di_13.13 N 144,-16
+  pin di_14.14 S 48,16
+  pin di_15.15 N 160,-16
+  pin di_16.16 S 64,16
+  pin di_2.2 N 16,-16
+  pin di_3.3 N 32,-16
+  pin di_4.4 N 48,-16
+  pin di_5.5 N 64,-16
+  pin di_6.6 N 80,-16
+  pin di_7.7 N 96,-16
+  pin di_8.8 S 0,16
+  pin di_9.9 N 112,-16
+sym +CAB-A1.item group=- body=-16,-16,96,32 keepout=-16,-16,148,32
+  pin supply_field.F24V1 N 0,-16
+  pin supply_field.FGND1 S 0,16
+  pin supply_system.S24V N 32,-16
+  pin supply_system.SGND S 32,16
+sym +CAB-A1.connector group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym +CAB-A1.connector#2 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym +CAB-A1.connector#3 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym +CAB-A1.connector#4 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym +CAB-A1.connector#5 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym +CAB-A1.connector#6 group=- body=-8,-16,16,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+net n0 +CAB-A1.connector.in =B1+CAB-S1.no.in
+net n2 +CAB-A1.connector#6.in =B5+CAB-S5.no.in
+net n3 +CAB-A1.connector#2.in =B6+CAB-S6.no.in
+net n4 =B5+CAB-S5.no.out =G0+CAB-K1.item.di_5.5
+net n5 =B1+CAB-S1.no.out =G0+CAB-K1.item.di_1.1
+net n7 =B3+CAB-S3.no.out =G0+CAB-K1.item.di_3.3
+net n9 =B2+CAB-S2.no.out =G0+CAB-K1.item.di_2.2
+net n12 +CAB-A1.connector#4.in =B4+CAB-S4.no.in
+net n13 +CAB-A1.connector#3.in =B2+CAB-S2.no.in
+net n18 =B6+CAB-S6.no.out =G0+CAB-K1.item.di_6.6
+net n21 +CAB-A1.connector#5.in =B3+CAB-S3.no.in
+net n22 =B4+CAB-S4.no.out =G0+CAB-K1.item.di_4.4
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+fact item +CAB-A1.item +CAB-A1.connector +CAB-A1.connector#2 +CAB-A1.connector#3 +CAB-A1.connector#4 +CAB-A1.connector#5 +CAB-A1.connector#6
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin =G0+CAB-K1.item.di_1.1 =G0+CAB-K1.item.di_5.5 =G0+CAB-K1.item.di_9.9 =G0+CAB-K1.item.di_2.2 =G0+CAB-K1.item.di_8.8 =G0+CAB-K1.item.di_13.13 =G0+CAB-K1.item.di_10.10 =G0+CAB-K1.item.di_15.15 =G0+CAB-K1.item.di_14.14 =G0+CAB-K1.item.di_4.4 =G0+CAB-K1.item.di_7.7 =G0+CAB-K1.item.di_11.11 =G0+CAB-K1.item.di_16.16 =G0+CAB-K1.item.di_6.6 =G0+CAB-K1.item.di_3.3 =G0+CAB-K1.item.di_12.12
+# legend only: a general placer must not read a symbol's kind.
+kind =B2+CAB-S2.no switch
+kind =B3+CAB-S3.no switch
+kind =B6+CAB-S6.no switch
+kind =B1+CAB-S1.no switch
+kind =B4+CAB-S4.no switch
+kind =B5+CAB-S5.no switch
+kind =G0+CAB-K1.item item
+kind +CAB-A1.item item
+kind +CAB-A1.connector connector
+kind +CAB-A1.connector#2 connector
+kind +CAB-A1.connector#3 connector
+kind +CAB-A1.connector#4 connector
+kind +CAB-A1.connector#5 connector
+kind +CAB-A1.connector#6 connector
+# today's placement: page, origin and orientation of each drawn copy.
+today =B2+CAB-S2.no page=1 at=48,232 orient=R0 set=1
+today =B3+CAB-S3.no page=1 at=192,232 orient=R0 set=1
+today =B6+CAB-S6.no page=1 at=624,232 orient=R0 set=1
+today =B1+CAB-S1.no page=1 at=768,232 orient=R0 set=1
+today =B4+CAB-S4.no page=1 at=336,232 orient=R0 set=1
+today =B5+CAB-S5.no page=1 at=480,232 orient=R0 set=1
+today =G0+CAB-K1.item page=1 at=768,352 orient=R0 set=1
+today +CAB-A1.item page=1 at=1024,112 orient=R0 set=1
+today +CAB-A1.connector page=1 at=768,112 orient=R180 set=1
+today +CAB-A1.connector#2 page=1 at=624,112 orient=R180 set=1
+today +CAB-A1.connector#3 page=1 at=48,112 orient=R180 set=1
+today +CAB-A1.connector#4 page=1 at=336,112 orient=R180 set=1
+today +CAB-A1.connector#5 page=1 at=192,112 orient=R180 set=1
+today +CAB-A1.connector#6 page=1 at=480,112 orient=R180 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n5 page=1 set=1 a==G0+CAB-K1.item.di_1.1 b==B1+CAB-S1.no.out 768,336 768,248
+route n18 page=1 set=1 a==B6+CAB-S6.no.out b==G0+CAB-K1.item.di_6.6 624,248 624,304 848,304 848,336
+route n13 page=1 set=1 a==B2+CAB-S2.no.in b=+CAB-A1.connector#3.in 48,216 48,128
+route n7 page=1 set=1 a==B3+CAB-S3.no.out b==G0+CAB-K1.item.di_3.3 192,248 192,320 800,320 800,336
+route n0 page=1 set=1 a=+CAB-A1.connector.in b==B1+CAB-S1.no.in 768,128 768,216
+route n21 page=1 set=1 a==B3+CAB-S3.no.in b=+CAB-A1.connector#5.in 192,216 192,128
+route n4 page=1 set=1 a==B5+CAB-S5.no.out b==G0+CAB-K1.item.di_5.5 480,248 480,312 832,312 832,336
+route n22 page=1 set=1 a==G0+CAB-K1.item.di_4.4 b==B4+CAB-S4.no.out 816,336 816,272 336,272 336,248
+route n9 page=1 set=1 a==G0+CAB-K1.item.di_2.2 b==B2+CAB-S2.no.out 784,336 784,264 48,264 48,248
+route n12 page=1 set=1 a==B4+CAB-S4.no.in b=+CAB-A1.connector#4.in 336,216 336,128
+route n3 page=1 set=1 a=+CAB-A1.connector#2.in b==B6+CAB-S6.no.in 624,128 624,216
+route n2 page=1 set=1 a==B5+CAB-S5.no.in b=+CAB-A1.connector#6.in 480,216 480,128
+# today's reference markers: one per printed cross-reference (net, pin, page, place).

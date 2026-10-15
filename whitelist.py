@@ -240,3 +240,5 @@ _.shorter  # OTHER fransys-pdf/src/fransys_pdf/_sheet_index.py:36
 _.SHEET_INDEX  # OTHER fransys-pdf/src/fransys_pdf/document.py:46
 _.heading  # OTHER fransys-render/src/fransys_render/_labels.py:79
 _.titles  # OTHER fransys-render/src/fransys_render/_labels.py:80
+# PLACEMENT-FACTS: read by the problem builder later
+_.in_strip_row  # FIELDS fransys-model/src/fransys_model/derive/rows_footprints.py:23

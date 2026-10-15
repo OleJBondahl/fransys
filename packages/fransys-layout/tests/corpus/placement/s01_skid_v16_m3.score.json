@@ -1,0 +1,1 @@
+{"placement": {"source_off_loads_page": 2, "harness_builds": 0}, "placement_total": 2, "bends": 18, "excess_bends": 0, "length_g": 7608, "detour_g": 96, "crossings_raw": 3, "crossings": 3, "references": 23, "pages": 6, "symbols": 110, "bad": {"source_off_loads_page": ["=G4+CAB-F8.element", "=G4+CAB-F8.element"]}, "name": "skid_v16_m3"}

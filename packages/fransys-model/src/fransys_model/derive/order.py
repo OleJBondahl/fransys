@@ -14,10 +14,10 @@ from fransys_model.derive.designation import (
     terminal_of,
 )
 from fransys_model.derive.lookups import position_rank
-from fransys_model.derive.plc_rack import is_plc_module
 from fransys_model.kernel import Finding, Id, Model, SchemaError
 from fransys_model.layout import DrawingSet, HarnessLine, Page, layout_of, page_slice
 from fransys_model.vocab import marking_key
+from fransys_model.vocab.plc_module import is_plc_module
 from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
@@ -37,6 +37,9 @@ __all__ = [
     "in_designation_order",
     "natural_key",
     "plc_channel_key",
+    "plc_channel_tie",
+    "plc_module_key",
+    "plc_rack_key",
     "plc_racks",
     "port_designation_key",
     "wire_run",
@@ -109,23 +112,52 @@ def plc_racks(model: Model) -> frozenset[Id[Item]]:
     )
 
 
+type ChannelTie = tuple[int, NaturalKey, Id[Function]]
+type ModuleKey = tuple[tuple[int, int], NaturalKey, tuple[str, ...]]
+
+
+def plc_module_key(module: Item) -> ModuleKey:
+    """Sort key of a PLC module in its rack: `position=`, else its own tag in natural order.
+
+    The tag is the module's own designation without any block prefix, so renaming a function
+    block never moves it (model-0259). The authoring key only breaks a tie.
+    """
+    return position_rank(module), natural_key(module.tag or ""), module.key
+
+
+def plc_rack_key(rack: Item) -> ModuleKey:
+    """Sort key of a PLC rack: `position=`, else its own tag in natural order (model-0259).
+
+    Like `plc_module_key`, it holds no block prefix, so renaming a block never reorders racks.
+    """
+    return position_rank(rack), natural_key(rack.tag or ""), rack.key
+
+
+def plc_channel_tie(number: int, function: Function) -> ChannelTie:
+    """Sort key of a channel within a module: its number, then the part's own function name.
+
+    DI 1 and DO 1 share number 1; the template name (`di_1`, `do_1`) is the part's, so no id,
+    which hashes the block tag, decides the tie (model-0259). The id only breaks a repeat.
+    """
+    return number, natural_key(function.name), function.id
+
+
 def plc_channel_key(
-    model: Model, racks: frozenset[Id[Item]], item: Id[Item], number: int, function: Id[Function]
-) -> tuple[int, NaturalKey, int, tuple[int, int], tuple[str, ...], int, Id[Function]]:
+    model: Model, racks: frozenset[Id[Item]], item: Id[Item], number: int, function: Function
+) -> tuple[int, ModuleKey | NaturalKey, int, ModuleKey, ChannelTie]:
     """Sort key of a PLC channel: the one order of the PLC list's tables and rows (model-0194).
 
-    Racks by designation; in a rack its own channels, then each module in `plc_rack_modules` order
-    (`position`, authoring key); channels by `(number, function id)`. Last come the channels on
-    an item in no rack, by item designation. `racks` is `plc_racks(model)`.
+    Racks by designation; in a rack its own channels, then each module by `plc_module_key`;
+    channels by `plc_channel_tie`. Last come the channels on an item in no rack, by item
+    designation. `racks` is `plc_racks(model)`.
     """
     record = items(model)[item]
-    tail = (number, function)
+    tail = plc_channel_tie(number, function)
     if item in racks:
-        return (0, designation_key(model, item), 0, (0, 0), (), *tail)
+        return (0, plc_rack_key(record), 0, ((0, 0), natural_key(""), ()), tail)
     if record.parent in racks and is_plc_module(model, record):
-        rack = record.parent
-        return (0, designation_key(model, rack), 1, position_rank(record), record.key, *tail)
-    return (1, designation_key(model, item), 0, (0, 0), (), *tail)
+        return (0, plc_rack_key(items(model)[record.parent]), 1, plc_module_key(record), tail)
+    return (1, designation_key(model, item), 0, ((0, 0), natural_key(""), ()), tail)
 
 
 def by_place[T: _Placed](

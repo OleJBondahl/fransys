@@ -43,7 +43,7 @@ from fransys_parts import PartLibraryError
 
 from fransys import derive
 from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflict, Model, Severity
-from fransys_model.vocab import DocumentPreset, PageKind
+from fransys_model.vocab import DocumentPreset, PageKind, SignalType
 
 from ._release_reader import Release, ReleasePin, releases
 from ._report import report
@@ -108,6 +108,7 @@ __all__ = [
     "ReleasePin",
     "Run",
     "Severity",
+    "SignalType",
     "Terminal",
     "TerminalStrip",
     "TypedDevice",

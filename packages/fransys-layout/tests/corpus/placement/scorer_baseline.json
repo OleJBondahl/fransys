@@ -1,0 +1,561 @@
+{
+ "instances": {
+  "p01_sixteen_channel": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 3,
+   "references": {},
+   "symbols": 49,
+   "wiring": {
+    "bends": 0,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 1920
+   }
+  },
+  "p02_strip_to_plc": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 14,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 3,
+   "references": {
+    "stub": 10
+   },
+   "symbols": 11,
+   "wiring": {
+    "bends": 10,
+    "crossings": 2,
+    "detour_g": 0,
+    "excess_bends": 2,
+    "length_g": 240
+   }
+  },
+  "s01_skid_v16_m3": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 2,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 6,
+   "references": {
+    "star": 23
+   },
+   "symbols": 110,
+   "wiring": {
+    "bends": 18,
+    "crossings": 3,
+    "detour_g": 96,
+    "excess_bends": 0,
+    "length_g": 7608
+   }
+  },
+  "t01_precharge": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 1,
+   "references": {},
+   "symbols": 13,
+   "wiring": {
+    "bends": 4,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 1576
+   }
+  },
+  "t02_box_device_contact": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 1
+   },
+   "pages": 1,
+   "references": {},
+   "symbols": 12,
+   "wiring": {
+    "bends": 0,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 728
+   }
+  },
+  "t03_page_titles": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 1,
+    "row_broken": 0
+   },
+   "pages": 2,
+   "references": {
+    "tag_pair": 2
+   },
+   "symbols": 13,
+   "wiring": {
+    "bends": 36,
+    "crossings": 1,
+    "detour_g": 704,
+    "excess_bends": 18,
+    "length_g": 2864
+   }
+  },
+  "t04_two_three_phase": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 1,
+   "references": {},
+   "symbols": 16,
+   "wiring": {
+    "bends": 0,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 1224
+   }
+  },
+  "t05_sheet_index": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 2,
+   "references": {},
+   "symbols": 22,
+   "wiring": {
+    "bends": 0,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 968
+   }
+  },
+  "w01_series_to_plc": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 2,
+   "references": {},
+   "symbols": 18,
+   "wiring": {
+    "bends": 42,
+    "crossings": 84,
+    "detour_g": 640,
+    "excess_bends": 12,
+    "length_g": 8768
+   }
+  },
+  "w02_unit_profile": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 12,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 8,
+   "references": {
+    "star": 35,
+    "tag_pair": 24
+   },
+   "symbols": 66,
+   "wiring": {
+    "bends": 16,
+    "crossings": 1,
+    "detour_g": 240,
+    "excess_bends": 4,
+    "length_g": 5096
+   }
+  },
+  "w03_plc_list_pin": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 1,
+   "references": {},
+   "symbols": 9,
+   "wiring": {
+    "bends": 20,
+    "crossings": 25,
+    "detour_g": 672,
+    "excess_bends": 20,
+    "length_g": 4992
+   }
+  },
+  "w04_terminal_two_pages": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 2,
+   "references": {
+    "star": 4,
+    "tag_pair": 18
+   },
+   "symbols": 16,
+   "wiring": {
+    "bends": 16,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 3072
+   }
+  },
+  "w05_turned_marker": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 2,
+   "references": {
+    "star": 17
+   },
+   "symbols": 14,
+   "wiring": {
+    "bends": 22,
+    "crossings": 4,
+    "detour_g": 368,
+    "excess_bends": 6,
+    "length_g": 2616
+   }
+  },
+  "w06_wide_controller_row": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 10,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 1
+   },
+   "pages": 12,
+   "references": {
+    "star": 20
+   },
+   "symbols": 208,
+   "wiring": {
+    "bends": 40,
+    "crossings": 0,
+    "detour_g": 800,
+    "excess_bends": 40,
+    "length_g": 14672
+   }
+  },
+  "w07_nested_units": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 5,
+   "references": {
+    "star": 20
+   },
+   "symbols": 30,
+   "wiring": {
+    "bends": 0,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 320
+   }
+  },
+  "w08_wide_relay_bank": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 3,
+   "references": {},
+   "symbols": 85,
+   "wiring": {
+    "bends": 40,
+    "crossings": 19,
+    "detour_g": 880,
+    "excess_bends": 16,
+    "length_g": 10384
+   }
+  },
+  "w09_input_card_order": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 1,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 1,
+   "references": {},
+   "symbols": 14,
+   "wiring": {
+    "bends": 10,
+    "crossings": 17,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 3456
+   }
+  },
+  "w10_long_chain": {
+   "P": {
+    "attached_off_pin": 0,
+    "head_off_legs": 0,
+    "junction_off_line": 0,
+    "loose": 0,
+    "pair_cut": 0,
+    "row_broken": 0
+   },
+   "pages": 1,
+   "references": {
+    "star": 12
+   },
+   "symbols": 19,
+   "wiring": {
+    "bends": 0,
+    "crossings": 0,
+    "detour_g": 0,
+    "excess_bends": 0,
+    "length_g": 2592
+   }
+  }
+ },
+ "note": "The scorer (fransys_layout.core.score) run on today's dumped lines at bc1f5c36b. It is the one counter for old and new. baseline.md's contact_off_circuit is a different measure than P2 pair_cut and is not in this file.",
+ "sets": {
+  "large": {
+   "instances": {
+    "distribution_board_large": {
+     "P": {
+      "attached_off_pin": 0,
+      "head_off_legs": 100,
+      "junction_off_line": 122,
+      "loose": 4,
+      "pair_cut": 0,
+      "row_broken": 0
+     },
+     "pages": 14,
+     "references": {
+      "star": 184
+     },
+     "symbols": 234,
+     "wiring": {
+      "bends": 190,
+      "crossings": 50,
+      "detour_g": 3552,
+      "excess_bends": 140,
+      "length_g": 21840
+     }
+    },
+    "mcc_large": {
+     "P": {
+      "attached_off_pin": 0,
+      "head_off_legs": 69,
+      "junction_off_line": 106,
+      "loose": 0,
+      "pair_cut": 0,
+      "row_broken": 6
+     },
+     "pages": 52,
+     "references": {
+      "star": 418,
+      "stub": 100,
+      "tag_pair": 42
+     },
+     "symbols": 494,
+     "wiring": {
+      "bends": 374,
+      "crossings": 64,
+      "detour_g": 5296,
+      "excess_bends": 214,
+      "length_g": 59800
+     }
+    },
+    "skid_v48_m6": {
+     "P": {
+      "attached_off_pin": 0,
+      "head_off_legs": 11,
+      "junction_off_line": 1,
+      "loose": 0,
+      "pair_cut": 0,
+      "row_broken": 0
+     },
+     "pages": 16,
+     "references": {
+      "star": 64
+     },
+     "symbols": 253,
+     "wiring": {
+      "bends": 44,
+      "crossings": 5,
+      "detour_g": 688,
+      "excess_bends": 14,
+      "length_g": 16816
+     }
+    }
+   },
+   "sha": "a9f997727",
+   "totals": {
+    "P": 419,
+    "attached_off_pin": 0,
+    "bends": 608,
+    "crossings": 119,
+    "detour_g": 9536,
+    "excess_bends": 368,
+    "head_off_legs": 180,
+    "junction_off_line": 229,
+    "length_g": 98456,
+    "loose": 4,
+    "pages": 82,
+    "pair_cut": 0,
+    "references": 808,
+    "row_broken": 6,
+    "symbols": 981
+   }
+  },
+  "standard": {
+   "instances": {
+    "distribution_board": {
+     "P": {
+      "attached_off_pin": 0,
+      "head_off_legs": 44,
+      "junction_off_line": 62,
+      "loose": 4,
+      "pair_cut": 0,
+      "row_broken": 0
+     },
+     "pages": 8,
+     "references": {
+      "star": 94
+     },
+     "symbols": 120,
+     "wiring": {
+      "bends": 90,
+      "crossings": 27,
+      "detour_g": 1600,
+      "excess_bends": 64,
+      "length_g": 10936
+     }
+    },
+    "mcc": {
+     "P": {
+      "attached_off_pin": 0,
+      "head_off_legs": 21,
+      "junction_off_line": 36,
+      "loose": 0,
+      "pair_cut": 0,
+      "row_broken": 2
+     },
+     "pages": 17,
+     "references": {
+      "star": 142,
+      "stub": 32,
+      "tag_pair": 14
+     },
+     "symbols": 170,
+     "wiring": {
+      "bends": 132,
+      "crossings": 30,
+      "detour_g": 1488,
+      "excess_bends": 76,
+      "length_g": 20120
+     }
+    }
+   },
+   "sha": "a9f997727",
+   "totals": {
+    "P": 169,
+    "attached_off_pin": 0,
+    "bends": 222,
+    "crossings": 57,
+    "detour_g": 3088,
+    "excess_bends": 140,
+    "head_off_legs": 65,
+    "junction_off_line": 98,
+    "length_g": 31056,
+    "loose": 4,
+    "pages": 25,
+    "pair_cut": 0,
+    "references": 282,
+    "row_broken": 2,
+    "symbols": 290
+   }
+  }
+ },
+ "sha": "bc1f5c36b",
+ "totals": {
+  "P": 42,
+  "attached_off_pin": 0,
+  "bends": 274,
+  "crossings": 156,
+  "detour_g": 4400,
+  "excess_bends": 118,
+  "head_off_legs": 2,
+  "junction_off_line": 24,
+  "length_g": 73096,
+  "loose": 13,
+  "pair_cut": 1,
+  "references": 185,
+  "row_broken": 2
+ }
+}

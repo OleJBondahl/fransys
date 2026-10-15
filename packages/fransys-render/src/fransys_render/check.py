@@ -1,24 +1,32 @@
 """Render-time checks, reported as findings."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from electrical_symbols import library_version
-from fransys_model.derive import function_designation, function_is_loose, schematic_functions
+from fransys_model.derive import (
+    function_designation,
+    function_is_loose,
+    port_designation,
+    references_off_document,
+    schematic_functions,
+)
 from fransys_model.derive.drawing_text import location_path, position_text
 from fransys_model.kernel import Finding, SchemaError, Severity
-from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
+from fransys_model.layout import DrawingSet, Label, LinkMarker, Page, SymbolPlacement, layout_of
 
 from ._drawn_shorts import drawn_shorts
 from ._ink import page_ink
 from ._symbol_geometry import oriented_symbol
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Id, Model
+    from fransys_model.vocab import Function
 
 UNKNOWN_SYMBOL_KEY = "UNKNOWN_SYMBOL_KEY"
 LIBRARY_VERSION_MISMATCH = "LIBRARY_VERSION_MISMATCH"
 LAYOUT_MISSING = "LAYOUT_MISSING"
 DRAWING_SHORTS_NETS = "DRAWING_SHORTS_NETS"
+REFERENCE_OFF_DOCUMENT = "REFERENCE_OFF_DOCUMENT"
 
 
 def _about(model: Model, placement: SymbolPlacement) -> str:
@@ -104,14 +112,48 @@ def _drawing_shorts_nets_findings(model: Model) -> tuple[Finding, ...]:
     )
 
 
+def _page_text(model: Model, page: Page) -> str:
+    """`p3`, or `p2.3` for page 3 of set 2: the page as a reference prints it."""
+    return position_text(
+        page.number, None, None, (), layout_of(model, DrawingSet)[page.drawing_set].number
+    )
+
+
+def _reference_name(model: Model, subject: Id[Any]) -> str:
+    """The designation a label or link marker reference stands at."""
+    label = layout_of(model, Label).get(subject)
+    if label is None:
+        return port_designation(model, layout_of(model, LinkMarker)[subject].port)
+    return function_designation(model, cast("Id[Function]", label.function))
+
+
+def _reference_off_document_findings(model: Model) -> tuple[Finding, ...]:
+    """One `REFERENCE_OFF_DOCUMENT` (`WARNING`) per reference to another, unnamed document."""
+    pages = layout_of(model, Page)
+    return tuple(
+        Finding(
+            code=REFERENCE_OFF_DOCUMENT,
+            severity=Severity.WARNING,
+            subjects=(one.subject,),
+            message=(
+                f"the reference at {_reference_name(model, one.subject)} on "
+                f"{_page_text(model, pages[one.page])} points to "
+                f"{_page_text(model, pages[one.target])}, "
+                "a page of another document, and its text does not name that document"
+            ),
+        )
+        for one in references_off_document(model)
+    )
+
+
 def check(model: Model) -> tuple[Finding, ...]:
     """Check what `pages` cannot draw or drew against a stale library.
 
-    Four checks: a placement's symbol key is not in the installed library
-    (`UNKNOWN_SYMBOL_KEY`), a placement was laid out against a different library version
-    than the one installed (`LIBRARY_VERSION_MISMATCH`, skipped for a placement already
-    reported as unknown), the model has schematic functions to draw but no laid-out
-    page at all (`LAYOUT_MISSING`), and a page draws two nets joined (`DRAWING_SHORTS_NETS`).
+    Five checks: a symbol key not in the installed library (`UNKNOWN_SYMBOL_KEY`), a placement
+    laid out against another library version (`LIBRARY_VERSION_MISMATCH`, skipped when already
+    unknown), functions to draw but no laid-out page (`LAYOUT_MISSING`), a page drawing two nets
+    joined (`DRAWING_SHORTS_NETS`), and a reference to another document that does not name it
+    (`REFERENCE_OFF_DOCUMENT`, model-0258).
     Pure; raises nothing itself.
 
     Args:
@@ -128,5 +170,6 @@ def check(model: Model) -> tuple[Finding, ...]:
         *_library_version_mismatch_findings(model, placements),
         *_layout_missing_findings(model),
         *_drawing_shorts_nets_findings(model),
+        *_reference_off_document_findings(model),
     )
     return tuple(sorted(findings, key=lambda finding: (finding.subjects, finding.code)))

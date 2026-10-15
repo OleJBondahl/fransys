@@ -1,0 +1,1539 @@
+# FRANSYS PLACEMENT INSTANCE test_a_wide_controller_row_leaves_no_column_past_the_content_box__1
+# Units G. Wiring grid 8 G. Text height 8 G. Pin offsets and boxes are relative to the
+# symbol origin, at orientation R0. A pin's side is the way its wire leaves.
+# [rail rank=r power=K]: the net carries a declared supply potential; smaller rank is drawn
+# higher (AC by phase, DC high to low, 0 V, PE last). power=SUPPLY/GROUND/PE draws a symbol.
+area 1312 854
+group CH order=0 break_before=0 "Chains"
+group DRV order=1 break_before=0 "Drives"
+group G1 order=2 break_before=0 "Group 1"
+group G2 order=3 break_before=0 "Group 2"
+group G3 order=4 break_before=0 "Group 3"
+group G4 order=5 break_before=0 "Group 4"
+group G5 order=6 break_before=0 "Group 5"
+group G6 order=7 break_before=0 "Group 6"
+group G7 order=8 break_before=0 "Group 7"
+group G8 order=9 break_before=0 "Group 8"
+group G9 order=10 break_before=0 "Group 9"
+group G10 order=11 break_before=0 "Group 10"
+group G11 order=12 break_before=0 "Group 11"
+group G12 order=13 break_before=0 "Group 12"
+group G13 order=14 break_before=0 "Group 13"
+group G14 order=15 break_before=0 "Group 14"
+group G15 order=16 break_before=0 "Group 15"
+group G16 order=17 break_before=0 "Group 16"
+group G17 order=18 break_before=0 "Group 17"
+group G18 order=19 break_before=0 "Group 18"
+group G19 order=20 break_before=0 "Group 19"
+group G20 order=21 break_before=0 "Group 20"
+sym =G6-U1-X6:26.terminal group=G6 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B112.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-B121.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-B101.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-X5:0V:16.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G5-U1-K5.co_1 group=G5 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G2-U1-X6:22.terminal group=G2 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:6.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G20-U1-X4:24V:36.terminal group=G20 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G10-U1-X4:24V:26.terminal group=G10 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G11-U1-X4:24V:27.terminal group=G11 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:3.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G11-U1-K11.co_1 group=G11 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G1-U1-X4:24V:17.terminal group=G1 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:11.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC9.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G14-U1-X4:24V:30.terminal group=G14 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G19-U1-X6:39.terminal group=G19 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:7.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G19-U1-X5:0V:35.terminal group=G19 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:6.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G4-U1-X5:0V:20.terminal group=G4 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G16-U1-X6:36.terminal group=G16 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G20-U1-X6:40.terminal group=G20 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G1-U1-X5:0V:17.terminal group=G1 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G8-U1-X6:28.terminal group=G8 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC7.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B82.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G13-U1-K13.coil group=G13 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X5:0V:2.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:3.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B142.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G15-U1-X6:35.terminal group=G15 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC11.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =DRV-U1-X6:3.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G19-U1-K19.coil group=G19 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X5:0V:7.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G13-U1-X6:33.terminal group=G13 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:2.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G3-U1-K3.coil group=G3 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G18-U1-K18.co_1 group=G18 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =CH-U1-X4:24V:10.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B131.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G10-U1-X5:0V:26.terminal group=G10 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:8.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:12.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B42.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G9-U1-X6:29.terminal group=G9 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G10-U1-X6:30.terminal group=G10 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:4.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G2-U1-K2.coil group=G2 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G20-U1-K20.coil group=G20 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X4:24V:2.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G6-U1-X4:24V:22.terminal group=G6 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G17-U1-K17.co_1 group=G17 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G7-U1-X4:24V:23.terminal group=G7 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G15-U1-K15.co_1 group=G15 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G18-U1-K18.coil group=G18 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G14-U1-X6:34.terminal group=G14 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:9.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G13-U1-X4:24V:29.terminal group=G13 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC2.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-KC3.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X5:0V:14.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B11.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-B32.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G5-U1-X5:0V:21.terminal group=G5 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G7-U1-K7.coil group=G7 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G4-U1-K4.coil group=G4 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B51.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-X4:24V:12.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B111.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G12-U1-K12.co_1 group=G12 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =CH-U1-B72.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-KC14.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G9-U1-K9.coil group=G9 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B102.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =DRV-U1-X6:10.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC8.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G3-U1-K3.co_1 group=G3 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G17-U1-X4:24V:33.terminal group=G17 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:6.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G4-U1-X4:24V:20.terminal group=G4 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B41.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-B12.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-X5:0V:10.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC6.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X4:24V:5.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G8-U1-K8.coil group=G8 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym -U1-X4:24V:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G16-U1-K16.coil group=G16 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B52.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G5-U1-X4:24V:21.terminal group=G5 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G11-U1-X6:31.terminal group=G11 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G15-U1-X5:0V:31.terminal group=G15 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G8-U1-X4:24V:24.terminal group=G8 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B81.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G2-U1-X5:0V:18.terminal group=G2 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G16-U1-K16.co_1 group=G16 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G16-U1-X5:0V:32.terminal group=G16 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC4.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B132.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-KC12.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B31.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G1-U1-K1.co_1 group=G1 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G7-U1-K7.co_1 group=G7 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G12-U1-X5:0V:28.terminal group=G12 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G15-U1-X4:24V:31.terminal group=G15 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B62.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-KC13.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X5:0V:11.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:4.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC5.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G9-U1-X4:24V:25.terminal group=G9 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:9.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G19-U1-X4:24V:35.terminal group=G19 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G3-U1-X4:24V:19.terminal group=G3 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym -U1-U2.supply group=- body=-16,-16,32,32 keepout=-16,-16,84,32
+  pin + N 0,-16
+  pin - S 0,16
+sym =G7-U1-X6:27.terminal group=G7 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:4.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G8-U1-X5:0V:24.terminal group=G8 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B152.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G18-U1-X5:0V:34.terminal group=G18 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G14-U1-K14.co_1 group=G14 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =CH-U1-B22.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G20-U1-X5:0V:36.terminal group=G20 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC10.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G3-U1-X5:0V:19.terminal group=G3 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:7.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G4-U1-K4.co_1 group=G4 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G14-U1-X5:0V:30.terminal group=G14 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G2-U1-X4:24V:18.terminal group=G2 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G9-U1-K9.co_1 group=G9 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G8-U1-K8.co_1 group=G8 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G17-U1-X5:0V:33.terminal group=G17 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G17-U1-K17.coil group=G17 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B91.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G14-U1-K14.coil group=G14 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G11-U1-K11.coil group=G11 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G5-U1-K5.coil group=G5 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B151.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G10-U1-K10.coil group=G10 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-KC15.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G1-U1-X6:21.terminal group=G1 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:15.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B71.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G19-U1-K19.co_1 group=G19 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym -U1-X5:0V:1.terminal group=- body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G13-U1-X5:0V:29.terminal group=G13 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G17-U1-X6:37.terminal group=G17 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G12-U1-X6:32.terminal group=G12 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:15.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:14.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:13.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:8.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G6-U1-X5:0V:22.terminal group=G6 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G3-U1-X6:23.terminal group=G3 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G6-U1-K6.co_1 group=G6 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =CH-U1-B92.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-X4:24V:16.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X4:24V:8.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G7-U1-X5:0V:23.terminal group=G7 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G1-U1-K1.coil group=G1 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G6-U1-K6.coil group=G6 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =G12-U1-K12.coil group=G12 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-B122.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G2-U1-K2.co_1 group=G2 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =CH-U1-B61.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =CH-U1-X5:0V:13.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-X5:0V:9.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G18-U1-X4:24V:34.terminal group=G18 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =DRV-U1-X6:5.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G12-U1-X4:24V:28.terminal group=G12 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G9-U1-X5:0V:25.terminal group=G9 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B21.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym =G20-U1-K20.co_1 group=G20 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G18-U1-X6:38.terminal group=G18 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G13-U1-K13.co_1 group=G13 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G10-U1-K10.co_1 group=G10 body=-16,-16,16,32 keepout=-80,-16,94,32
+  pin com N 0,-16
+  pin nc S -16,16
+  pin no S 0,16
+sym =G15-U1-K15.coil group=G15 body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =DRV-U1-X6:1.terminal group=DRV body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G4-U1-X6:24.terminal group=G4 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G5-U1-X6:25.terminal group=G5 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G11-U1-X5:0V:27.terminal group=G11 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =G16-U1-X4:24V:32.terminal group=G16 body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-KC1.coil group=CH body=-16,-24,32,48 keepout=-68,-24,84,48
+  pin in N 0,-24
+  pin out S 0,24
+sym =CH-U1-X5:0V:5.terminal group=CH body=-8,-8,16,16 keepout=-8,-30,60,38
+  pin e E 8,0 node=0
+  pin n N 0,-8 node=0
+  pin s S 0,8 node=0
+  pin w W -8,0 node=0
+sym =CH-U1-B141.sw group=CH body=-28,-16,38,32 keepout=-80,-22,94,38
+  pin in N 0,-16
+  pin out S 0,16
+sym -U1-U2.connector group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#2 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#3 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#4 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#5 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#6 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#7 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#8 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#9 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#10 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#11 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#12 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#13 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#14 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#15 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#16 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#17 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#18 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#19 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+sym -U1-U2.connector#20 group=- body=-2,-16,4,32 keepout=-66,-16,80,32
+  pin in N 0,-16
+net n0 -U1-U2.supply.- -U1-X5:0V:1.terminal.n -U1-X5:0V:1.terminal.s =CH-U1-KC1.coil.out =CH-U1-KC10.coil.out =CH-U1-KC11.coil.out =CH-U1-KC12.coil.out =CH-U1-KC13.coil.out =CH-U1-KC14.coil.out =CH-U1-KC15.coil.out =CH-U1-KC2.coil.out =CH-U1-KC3.coil.out =CH-U1-KC4.coil.out =CH-U1-KC5.coil.out =CH-U1-KC6.coil.out =CH-U1-KC7.coil.out =CH-U1-KC8.coil.out =CH-U1-KC9.coil.out =CH-U1-X5:0V:10.terminal.n =CH-U1-X5:0V:10.terminal.s =CH-U1-X5:0V:11.terminal.n =CH-U1-X5:0V:11.terminal.s =CH-U1-X5:0V:12.terminal.n =CH-U1-X5:0V:12.terminal.s =CH-U1-X5:0V:13.terminal.n =CH-U1-X5:0V:13.terminal.s =CH-U1-X5:0V:14.terminal.n =CH-U1-X5:0V:14.terminal.s =CH-U1-X5:0V:15.terminal.n =CH-U1-X5:0V:15.terminal.s =CH-U1-X5:0V:16.terminal.n =CH-U1-X5:0V:16.terminal.s =CH-U1-X5:0V:2.terminal.n =CH-U1-X5:0V:2.terminal.s =CH-U1-X5:0V:3.terminal.n =CH-U1-X5:0V:3.terminal.s =CH-U1-X5:0V:4.terminal.n =CH-U1-X5:0V:4.terminal.s =CH-U1-X5:0V:5.terminal.n =CH-U1-X5:0V:5.terminal.s =CH-U1-X5:0V:6.terminal.n =CH-U1-X5:0V:6.terminal.s =CH-U1-X5:0V:7.terminal.n =CH-U1-X5:0V:7.terminal.s =CH-U1-X5:0V:8.terminal.n =CH-U1-X5:0V:8.terminal.s =CH-U1-X5:0V:9.terminal.n =CH-U1-X5:0V:9.terminal.s =G1-U1-K1.coil.out =G1-U1-X5:0V:17.terminal.n =G1-U1-X5:0V:17.terminal.s =G10-U1-K10.coil.out =G10-U1-X5:0V:26.terminal.n =G10-U1-X5:0V:26.terminal.s =G11-U1-K11.coil.out =G11-U1-X5:0V:27.terminal.n =G11-U1-X5:0V:27.terminal.s =G12-U1-K12.coil.out =G12-U1-X5:0V:28.terminal.n =G12-U1-X5:0V:28.terminal.s =G13-U1-K13.coil.out =G13-U1-X5:0V:29.terminal.n =G13-U1-X5:0V:29.terminal.s =G14-U1-K14.coil.out =G14-U1-X5:0V:30.terminal.n =G14-U1-X5:0V:30.terminal.s =G15-U1-K15.coil.out =G15-U1-X5:0V:31.terminal.n =G15-U1-X5:0V:31.terminal.s =G16-U1-K16.coil.out =G16-U1-X5:0V:32.terminal.n =G16-U1-X5:0V:32.terminal.s =G17-U1-K17.coil.out =G17-U1-X5:0V:33.terminal.n =G17-U1-X5:0V:33.terminal.s =G18-U1-K18.coil.out =G18-U1-X5:0V:34.terminal.n =G18-U1-X5:0V:34.terminal.s =G19-U1-K19.coil.out =G19-U1-X5:0V:35.terminal.n =G19-U1-X5:0V:35.terminal.s =G2-U1-K2.coil.out =G2-U1-X5:0V:18.terminal.n =G2-U1-X5:0V:18.terminal.s =G20-U1-K20.coil.out =G20-U1-X5:0V:36.terminal.n =G20-U1-X5:0V:36.terminal.s =G3-U1-K3.coil.out =G3-U1-X5:0V:19.terminal.n =G3-U1-X5:0V:19.terminal.s =G4-U1-K4.coil.out =G4-U1-X5:0V:20.terminal.n =G4-U1-X5:0V:20.terminal.s =G5-U1-K5.coil.out =G5-U1-X5:0V:21.terminal.n =G5-U1-X5:0V:21.terminal.s =G6-U1-K6.coil.out =G6-U1-X5:0V:22.terminal.n =G6-U1-X5:0V:22.terminal.s =G7-U1-K7.coil.out =G7-U1-X5:0V:23.terminal.n =G7-U1-X5:0V:23.terminal.s =G8-U1-K8.coil.out =G8-U1-X5:0V:24.terminal.n =G8-U1-X5:0V:24.terminal.s =G9-U1-K9.coil.out =G9-U1-X5:0V:25.terminal.n =G9-U1-X5:0V:25.terminal.s
+net n3 -U1-U2.supply.+ -U1-X4:24V:1.terminal.n -U1-X4:24V:1.terminal.s =CH-U1-B101.sw.in =CH-U1-B11.sw.in =CH-U1-B111.sw.in =CH-U1-B121.sw.in =CH-U1-B131.sw.in =CH-U1-B141.sw.in =CH-U1-B151.sw.in =CH-U1-B21.sw.in =CH-U1-B31.sw.in =CH-U1-B41.sw.in =CH-U1-B51.sw.in =CH-U1-B61.sw.in =CH-U1-B71.sw.in =CH-U1-B81.sw.in =CH-U1-B91.sw.in =CH-U1-X4:24V:10.terminal.n =CH-U1-X4:24V:10.terminal.s =CH-U1-X4:24V:11.terminal.n =CH-U1-X4:24V:11.terminal.s =CH-U1-X4:24V:12.terminal.n =CH-U1-X4:24V:12.terminal.s =CH-U1-X4:24V:13.terminal.n =CH-U1-X4:24V:13.terminal.s =CH-U1-X4:24V:14.terminal.n =CH-U1-X4:24V:14.terminal.s =CH-U1-X4:24V:15.terminal.n =CH-U1-X4:24V:15.terminal.s =CH-U1-X4:24V:16.terminal.n =CH-U1-X4:24V:16.terminal.s =CH-U1-X4:24V:2.terminal.n =CH-U1-X4:24V:2.terminal.s =CH-U1-X4:24V:3.terminal.n =CH-U1-X4:24V:3.terminal.s =CH-U1-X4:24V:4.terminal.n =CH-U1-X4:24V:4.terminal.s =CH-U1-X4:24V:5.terminal.n =CH-U1-X4:24V:5.terminal.s =CH-U1-X4:24V:6.terminal.n =CH-U1-X4:24V:6.terminal.s =CH-U1-X4:24V:7.terminal.n =CH-U1-X4:24V:7.terminal.s =CH-U1-X4:24V:8.terminal.n =CH-U1-X4:24V:8.terminal.s =CH-U1-X4:24V:9.terminal.n =CH-U1-X4:24V:9.terminal.s =G1-U1-K1.co_1.com =G1-U1-X4:24V:17.terminal.n =G1-U1-X4:24V:17.terminal.s =G10-U1-K10.co_1.com =G10-U1-X4:24V:26.terminal.n =G10-U1-X4:24V:26.terminal.s =G11-U1-K11.co_1.com =G11-U1-X4:24V:27.terminal.n =G11-U1-X4:24V:27.terminal.s =G12-U1-K12.co_1.com =G12-U1-X4:24V:28.terminal.n =G12-U1-X4:24V:28.terminal.s =G13-U1-K13.co_1.com =G13-U1-X4:24V:29.terminal.n =G13-U1-X4:24V:29.terminal.s =G14-U1-K14.co_1.com =G14-U1-X4:24V:30.terminal.n =G14-U1-X4:24V:30.terminal.s =G15-U1-K15.co_1.com =G15-U1-X4:24V:31.terminal.n =G15-U1-X4:24V:31.terminal.s =G16-U1-K16.co_1.com =G16-U1-X4:24V:32.terminal.n =G16-U1-X4:24V:32.terminal.s =G17-U1-K17.co_1.com =G17-U1-X4:24V:33.terminal.n =G17-U1-X4:24V:33.terminal.s =G18-U1-K18.co_1.com =G18-U1-X4:24V:34.terminal.n =G18-U1-X4:24V:34.terminal.s =G19-U1-K19.co_1.com =G19-U1-X4:24V:35.terminal.n =G19-U1-X4:24V:35.terminal.s =G2-U1-K2.co_1.com =G2-U1-X4:24V:18.terminal.n =G2-U1-X4:24V:18.terminal.s =G20-U1-K20.co_1.com =G20-U1-X4:24V:36.terminal.n =G20-U1-X4:24V:36.terminal.s =G3-U1-K3.co_1.com =G3-U1-X4:24V:19.terminal.n =G3-U1-X4:24V:19.terminal.s =G4-U1-K4.co_1.com =G4-U1-X4:24V:20.terminal.n =G4-U1-X4:24V:20.terminal.s =G5-U1-K5.co_1.com =G5-U1-X4:24V:21.terminal.n =G5-U1-X4:24V:21.terminal.s =G6-U1-K6.co_1.com =G6-U1-X4:24V:22.terminal.n =G6-U1-X4:24V:22.terminal.s =G7-U1-K7.co_1.com =G7-U1-X4:24V:23.terminal.n =G7-U1-X4:24V:23.terminal.s =G8-U1-K8.co_1.com =G8-U1-X4:24V:24.terminal.n =G8-U1-X4:24V:24.terminal.s =G9-U1-K9.co_1.com =G9-U1-X4:24V:25.terminal.n =G9-U1-X4:24V:25.terminal.s
+net n4 -U1-U2.connector.in =G15-U1-K15.coil.in
+net n7 =G7-U1-K7.co_1.no =G7-U1-X6:27.terminal.n =G7-U1-X6:27.terminal.s
+net n8 =CH-U1-B22.sw.out =CH-U1-KC2.coil.in
+net n9 -U1-U2.connector#2.in =DRV-U1-X6:4.terminal.n =DRV-U1-X6:4.terminal.s =G4-U1-K4.coil.in
+net n10 =CH-U1-B152.sw.out =CH-U1-KC15.coil.in
+net n14 =G14-U1-K14.co_1.no =G14-U1-X6:34.terminal.n =G14-U1-X6:34.terminal.s
+net n15 =CH-U1-B102.sw.out =CH-U1-KC10.coil.in
+net n17 -U1-U2.connector#18.in =DRV-U1-X6:10.terminal.n =DRV-U1-X6:10.terminal.s =G10-U1-K10.coil.in
+net n18 -U1-U2.connector#3.in =DRV-U1-X6:1.terminal.n =DRV-U1-X6:1.terminal.s =G1-U1-K1.coil.in
+net n20 =CH-U1-B112.sw.out =CH-U1-KC11.coil.in
+net n21 -U1-U2.connector#17.in =G16-U1-K16.coil.in
+net n24 =G6-U1-K6.co_1.no =G6-U1-X6:26.terminal.n =G6-U1-X6:26.terminal.s
+net n25 -U1-U2.connector#7.in =G19-U1-K19.coil.in
+net n26 -U1-U2.connector#20.in =DRV-U1-X6:8.terminal.n =DRV-U1-X6:8.terminal.s =G8-U1-K8.coil.in
+net n27 =CH-U1-B72.sw.out =CH-U1-KC7.coil.in
+net n28 =CH-U1-B42.sw.out =CH-U1-KC4.coil.in
+net n29 =CH-U1-B41.sw.out =CH-U1-B42.sw.in
+net n32 =G16-U1-K16.co_1.no =G16-U1-X6:36.terminal.n =G16-U1-X6:36.terminal.s
+net n33 =G4-U1-K4.co_1.no =G4-U1-X6:24.terminal.n =G4-U1-X6:24.terminal.s
+net n39 =G9-U1-K9.co_1.no =G9-U1-X6:29.terminal.n =G9-U1-X6:29.terminal.s
+net n40 -U1-U2.connector#12.in =DRV-U1-X6:2.terminal.n =DRV-U1-X6:2.terminal.s =G2-U1-K2.coil.in
+net n41 =G18-U1-K18.co_1.no =G18-U1-X6:38.terminal.n =G18-U1-X6:38.terminal.s
+net n44 =CH-U1-B142.sw.out =CH-U1-KC14.coil.in
+net n45 =CH-U1-B82.sw.out =CH-U1-KC8.coil.in
+net n46 -U1-U2.connector#8.in =DRV-U1-X6:3.terminal.n =DRV-U1-X6:3.terminal.s =G3-U1-K3.coil.in
+net n49 =G15-U1-K15.co_1.no =G15-U1-X6:35.terminal.n =G15-U1-X6:35.terminal.s
+net n52 =G3-U1-K3.co_1.no =G3-U1-X6:23.terminal.n =G3-U1-X6:23.terminal.s
+net n53 =CH-U1-B81.sw.out =CH-U1-B82.sw.in
+net n55 =CH-U1-B132.sw.out =CH-U1-KC13.coil.in
+net n58 -U1-U2.connector#4.in =G11-U1-K11.coil.in
+net n69 =CH-U1-B52.sw.out =CH-U1-KC5.coil.in
+net n70 =G17-U1-K17.co_1.no =G17-U1-X6:37.terminal.n =G17-U1-X6:37.terminal.s
+net n74 =G13-U1-K13.co_1.no =G13-U1-X6:33.terminal.n =G13-U1-X6:33.terminal.s
+net n78 =CH-U1-B122.sw.out =CH-U1-KC12.coil.in
+net n79 =G8-U1-K8.co_1.no =G8-U1-X6:28.terminal.n =G8-U1-X6:28.terminal.s
+net n80 -U1-U2.connector#5.in =G20-U1-K20.coil.in
+net n81 -U1-U2.connector#13.in =DRV-U1-X6:6.terminal.n =DRV-U1-X6:6.terminal.s =G6-U1-K6.coil.in
+net n84 -U1-U2.connector#19.in =DRV-U1-X6:7.terminal.n =DRV-U1-X6:7.terminal.s =G7-U1-K7.coil.in
+net n85 -U1-U2.connector#6.in =DRV-U1-X6:5.terminal.n =DRV-U1-X6:5.terminal.s =G5-U1-K5.coil.in
+net n89 =G5-U1-K5.co_1.no =G5-U1-X6:25.terminal.n =G5-U1-X6:25.terminal.s
+net n91 =CH-U1-B121.sw.out =CH-U1-B122.sw.in
+net n94 =CH-U1-B31.sw.out =CH-U1-B32.sw.in
+net n98 =CH-U1-B51.sw.out =CH-U1-B52.sw.in
+net n102 =CH-U1-B101.sw.out =CH-U1-B102.sw.in
+net n106 =CH-U1-B62.sw.out =CH-U1-KC6.coil.in
+net n112 =CH-U1-B151.sw.out =CH-U1-B152.sw.in
+net n115 =G19-U1-K19.co_1.no =G19-U1-X6:39.terminal.n =G19-U1-X6:39.terminal.s
+net n129 =G10-U1-K10.co_1.no =G10-U1-X6:30.terminal.n =G10-U1-X6:30.terminal.s
+net n131 =G1-U1-K1.co_1.no =G1-U1-X6:21.terminal.n =G1-U1-X6:21.terminal.s
+net n132 =CH-U1-B131.sw.out =CH-U1-B132.sw.in
+net n134 =G2-U1-K2.co_1.no =G2-U1-X6:22.terminal.n =G2-U1-X6:22.terminal.s
+net n139 -U1-U2.connector#9.in =DRV-U1-X6:9.terminal.n =DRV-U1-X6:9.terminal.s =G9-U1-K9.coil.in
+net n141 =CH-U1-B71.sw.out =CH-U1-B72.sw.in
+net n142 =CH-U1-B91.sw.out =CH-U1-B92.sw.in
+net n145 -U1-U2.connector#15.in =G14-U1-K14.coil.in
+net n147 =CH-U1-B21.sw.out =CH-U1-B22.sw.in
+net n148 -U1-U2.connector#14.in =G17-U1-K17.coil.in
+net n150 =CH-U1-B111.sw.out =CH-U1-B112.sw.in
+net n152 =CH-U1-B141.sw.out =CH-U1-B142.sw.in
+net n156 =CH-U1-B32.sw.out =CH-U1-KC3.coil.in
+net n164 =CH-U1-B61.sw.out =CH-U1-B62.sw.in
+net n170 =G12-U1-K12.co_1.no =G12-U1-X6:32.terminal.n =G12-U1-X6:32.terminal.s
+net n180 -U1-U2.connector#16.in =G13-U1-K13.coil.in
+net n184 -U1-U2.connector#10.in =G12-U1-K12.coil.in
+net n185 -U1-U2.connector#11.in =G18-U1-K18.coil.in
+net n188 =G11-U1-K11.co_1.no =G11-U1-X6:31.terminal.n =G11-U1-X6:31.terminal.s
+net n198 =G20-U1-K20.co_1.no =G20-U1-X6:40.terminal.n =G20-U1-X6:40.terminal.s
+net n210 =CH-U1-B92.sw.out =CH-U1-KC9.coil.in
+net n215 =CH-U1-B11.sw.out =CH-U1-B12.sw.in
+net n252 =CH-U1-B12.sw.out =CH-U1-KC1.coil.in
+# facts: not wires. 'item' = symbols that are parts of one device (a coil and its contacts).
+fact item =G5-U1-K5.co_1 =G5-U1-K5.coil
+fact item =G11-U1-K11.co_1 =G11-U1-K11.coil
+fact item =G13-U1-K13.coil =G13-U1-K13.co_1
+fact item =G19-U1-K19.coil =G19-U1-K19.co_1
+fact item =G3-U1-K3.coil =G3-U1-K3.co_1
+fact item =G18-U1-K18.co_1 =G18-U1-K18.coil
+fact item =G2-U1-K2.coil =G2-U1-K2.co_1
+fact item =G20-U1-K20.coil =G20-U1-K20.co_1
+fact item =G17-U1-K17.co_1 =G17-U1-K17.coil
+fact item =G15-U1-K15.co_1 =G15-U1-K15.coil
+fact item =G7-U1-K7.coil =G7-U1-K7.co_1
+fact item =G4-U1-K4.coil =G4-U1-K4.co_1
+fact item =G12-U1-K12.co_1 =G12-U1-K12.coil
+fact item =G9-U1-K9.coil =G9-U1-K9.co_1
+fact item =G8-U1-K8.coil =G8-U1-K8.co_1
+fact item =G16-U1-K16.coil =G16-U1-K16.co_1
+fact item =G1-U1-K1.co_1 =G1-U1-K1.coil
+fact item -U1-U2.supply -U1-U2.connector -U1-U2.connector#2 -U1-U2.connector#3 -U1-U2.connector#4 -U1-U2.connector#5 -U1-U2.connector#6 -U1-U2.connector#7 -U1-U2.connector#8 -U1-U2.connector#9 -U1-U2.connector#10 -U1-U2.connector#11 -U1-U2.connector#12 -U1-U2.connector#13 -U1-U2.connector#14 -U1-U2.connector#15 -U1-U2.connector#16 -U1-U2.connector#17 -U1-U2.connector#18 -U1-U2.connector#19 -U1-U2.connector#20
+fact item =G14-U1-K14.co_1 =G14-U1-K14.coil
+fact item =G10-U1-K10.coil =G10-U1-K10.co_1
+fact item =G6-U1-K6.co_1 =G6-U1-K6.coil
+# facts the placement rules read: box pins on a PLC channel, coils attached to them,
+# fan heads (protective devices), terminals by strip tag.
+fact boxpin 
+fact attached =CH-U1-KC9.coil =CH-U1-KC7.coil =G13-U1-K13.coil =CH-U1-KC11.coil =G19-U1-K19.coil =G3-U1-K3.coil =G2-U1-K2.coil =G20-U1-K20.coil =G18-U1-K18.coil =CH-U1-KC2.coil =CH-U1-KC3.coil =G7-U1-K7.coil =G4-U1-K4.coil =CH-U1-KC14.coil =G9-U1-K9.coil =CH-U1-KC8.coil =CH-U1-KC6.coil =G8-U1-K8.coil =G16-U1-K16.coil =CH-U1-KC4.coil =CH-U1-KC12.coil =CH-U1-KC13.coil =CH-U1-KC5.coil =CH-U1-KC10.coil =G17-U1-K17.coil =G14-U1-K14.coil =G11-U1-K11.coil =G5-U1-K5.coil =G10-U1-K10.coil =CH-U1-KC15.coil =G1-U1-K1.coil =G6-U1-K6.coil =G12-U1-K12.coil =G15-U1-K15.coil =CH-U1-KC1.coil
+fact strip -U1-X6 =G6-U1-X6:26.terminal =G2-U1-X6:22.terminal =G19-U1-X6:39.terminal =DRV-U1-X6:7.terminal =DRV-U1-X6:6.terminal =G16-U1-X6:36.terminal =G20-U1-X6:40.terminal =G8-U1-X6:28.terminal =G15-U1-X6:35.terminal =DRV-U1-X6:3.terminal =G13-U1-X6:33.terminal =DRV-U1-X6:2.terminal =DRV-U1-X6:8.terminal =G9-U1-X6:29.terminal =G10-U1-X6:30.terminal =G14-U1-X6:34.terminal =DRV-U1-X6:10.terminal =G11-U1-X6:31.terminal =DRV-U1-X6:4.terminal =DRV-U1-X6:9.terminal =G7-U1-X6:27.terminal =G1-U1-X6:21.terminal =G17-U1-X6:37.terminal =G12-U1-X6:32.terminal =G3-U1-X6:23.terminal =DRV-U1-X6:5.terminal =G18-U1-X6:38.terminal =DRV-U1-X6:1.terminal =G4-U1-X6:24.terminal =G5-U1-X6:25.terminal
+fact strip -U1-X5 =CH-U1-X5:0V:16.terminal =CH-U1-X5:0V:6.terminal =G19-U1-X5:0V:35.terminal =G4-U1-X5:0V:20.terminal =G1-U1-X5:0V:17.terminal =CH-U1-X5:0V:2.terminal =CH-U1-X5:0V:3.terminal =CH-U1-X5:0V:7.terminal =G10-U1-X5:0V:26.terminal =CH-U1-X5:0V:12.terminal =CH-U1-X5:0V:4.terminal =CH-U1-X5:0V:14.terminal =G5-U1-X5:0V:21.terminal =CH-U1-X5:0V:10.terminal =G15-U1-X5:0V:31.terminal =G2-U1-X5:0V:18.terminal =G16-U1-X5:0V:32.terminal =G12-U1-X5:0V:28.terminal =CH-U1-X5:0V:11.terminal =G8-U1-X5:0V:24.terminal =G18-U1-X5:0V:34.terminal =G20-U1-X5:0V:36.terminal =G3-U1-X5:0V:19.terminal =G14-U1-X5:0V:30.terminal =G17-U1-X5:0V:33.terminal =CH-U1-X5:0V:15.terminal -U1-X5:0V:1.terminal =G13-U1-X5:0V:29.terminal =CH-U1-X5:0V:8.terminal =G6-U1-X5:0V:22.terminal =G7-U1-X5:0V:23.terminal =CH-U1-X5:0V:13.terminal =CH-U1-X5:0V:9.terminal =G9-U1-X5:0V:25.terminal =G11-U1-X5:0V:27.terminal =CH-U1-X5:0V:5.terminal
+fact strip -U1-X4 =G20-U1-X4:24V:36.terminal =G10-U1-X4:24V:26.terminal =G11-U1-X4:24V:27.terminal =CH-U1-X4:24V:3.terminal =G1-U1-X4:24V:17.terminal =CH-U1-X4:24V:11.terminal =G14-U1-X4:24V:30.terminal =CH-U1-X4:24V:10.terminal =CH-U1-X4:24V:2.terminal =G6-U1-X4:24V:22.terminal =G7-U1-X4:24V:23.terminal =CH-U1-X4:24V:9.terminal =G13-U1-X4:24V:29.terminal =CH-U1-X4:24V:12.terminal =G17-U1-X4:24V:33.terminal =CH-U1-X4:24V:6.terminal =G4-U1-X4:24V:20.terminal =CH-U1-X4:24V:5.terminal -U1-X4:24V:1.terminal =G5-U1-X4:24V:21.terminal =G8-U1-X4:24V:24.terminal =G15-U1-X4:24V:31.terminal =G9-U1-X4:24V:25.terminal =G19-U1-X4:24V:35.terminal =G3-U1-X4:24V:19.terminal =CH-U1-X4:24V:4.terminal =CH-U1-X4:24V:7.terminal =G2-U1-X4:24V:18.terminal =CH-U1-X4:24V:15.terminal =CH-U1-X4:24V:14.terminal =CH-U1-X4:24V:13.terminal =CH-U1-X4:24V:16.terminal =CH-U1-X4:24V:8.terminal =G18-U1-X4:24V:34.terminal =G12-U1-X4:24V:28.terminal =G16-U1-X4:24V:32.terminal
+# legend only: a general placer must not read a symbol's kind.
+kind =G6-U1-X6:26.terminal terminal
+kind =CH-U1-B112.sw switch
+kind =CH-U1-B121.sw switch
+kind =CH-U1-B101.sw switch
+kind =CH-U1-X5:0V:16.terminal terminal
+kind =G5-U1-K5.co_1 contact_co
+kind =G2-U1-X6:22.terminal terminal
+kind =CH-U1-X5:0V:6.terminal terminal
+kind =G20-U1-X4:24V:36.terminal terminal
+kind =G10-U1-X4:24V:26.terminal terminal
+kind =G11-U1-X4:24V:27.terminal terminal
+kind =CH-U1-X4:24V:3.terminal terminal
+kind =G11-U1-K11.co_1 contact_co
+kind =G1-U1-X4:24V:17.terminal terminal
+kind =CH-U1-X4:24V:11.terminal terminal
+kind =CH-U1-KC9.coil coil
+kind =G14-U1-X4:24V:30.terminal terminal
+kind =G19-U1-X6:39.terminal terminal
+kind =DRV-U1-X6:7.terminal terminal
+kind =G19-U1-X5:0V:35.terminal terminal
+kind =DRV-U1-X6:6.terminal terminal
+kind =G4-U1-X5:0V:20.terminal terminal
+kind =G16-U1-X6:36.terminal terminal
+kind =G20-U1-X6:40.terminal terminal
+kind =G1-U1-X5:0V:17.terminal terminal
+kind =G8-U1-X6:28.terminal terminal
+kind =CH-U1-KC7.coil coil
+kind =CH-U1-B82.sw switch
+kind =G13-U1-K13.coil coil
+kind =CH-U1-X5:0V:2.terminal terminal
+kind =CH-U1-X5:0V:3.terminal terminal
+kind =CH-U1-B142.sw switch
+kind =G15-U1-X6:35.terminal terminal
+kind =CH-U1-KC11.coil coil
+kind =DRV-U1-X6:3.terminal terminal
+kind =G19-U1-K19.coil coil
+kind =CH-U1-X5:0V:7.terminal terminal
+kind =G13-U1-X6:33.terminal terminal
+kind =DRV-U1-X6:2.terminal terminal
+kind =G3-U1-K3.coil coil
+kind =G18-U1-K18.co_1 contact_co
+kind =CH-U1-X4:24V:10.terminal terminal
+kind =CH-U1-B131.sw switch
+kind =G10-U1-X5:0V:26.terminal terminal
+kind =DRV-U1-X6:8.terminal terminal
+kind =CH-U1-X5:0V:12.terminal terminal
+kind =CH-U1-B42.sw switch
+kind =G9-U1-X6:29.terminal terminal
+kind =G10-U1-X6:30.terminal terminal
+kind =CH-U1-X5:0V:4.terminal terminal
+kind =G2-U1-K2.coil coil
+kind =G20-U1-K20.coil coil
+kind =CH-U1-X4:24V:2.terminal terminal
+kind =G6-U1-X4:24V:22.terminal terminal
+kind =G17-U1-K17.co_1 contact_co
+kind =G7-U1-X4:24V:23.terminal terminal
+kind =G15-U1-K15.co_1 contact_co
+kind =G18-U1-K18.coil coil
+kind =G14-U1-X6:34.terminal terminal
+kind =CH-U1-X4:24V:9.terminal terminal
+kind =G13-U1-X4:24V:29.terminal terminal
+kind =CH-U1-KC2.coil coil
+kind =CH-U1-KC3.coil coil
+kind =CH-U1-X5:0V:14.terminal terminal
+kind =CH-U1-B11.sw switch
+kind =CH-U1-B32.sw switch
+kind =G5-U1-X5:0V:21.terminal terminal
+kind =G7-U1-K7.coil coil
+kind =G4-U1-K4.coil coil
+kind =CH-U1-B51.sw switch
+kind =CH-U1-X4:24V:12.terminal terminal
+kind =CH-U1-B111.sw switch
+kind =G12-U1-K12.co_1 contact_co
+kind =CH-U1-B72.sw switch
+kind =CH-U1-KC14.coil coil
+kind =G9-U1-K9.coil coil
+kind =CH-U1-B102.sw switch
+kind =DRV-U1-X6:10.terminal terminal
+kind =CH-U1-KC8.coil coil
+kind =G3-U1-K3.co_1 contact_co
+kind =G17-U1-X4:24V:33.terminal terminal
+kind =CH-U1-X4:24V:6.terminal terminal
+kind =G4-U1-X4:24V:20.terminal terminal
+kind =CH-U1-B41.sw switch
+kind =CH-U1-B12.sw switch
+kind =CH-U1-X5:0V:10.terminal terminal
+kind =CH-U1-KC6.coil coil
+kind =CH-U1-X4:24V:5.terminal terminal
+kind =G8-U1-K8.coil coil
+kind -U1-X4:24V:1.terminal terminal
+kind =G16-U1-K16.coil coil
+kind =CH-U1-B52.sw switch
+kind =G5-U1-X4:24V:21.terminal terminal
+kind =G11-U1-X6:31.terminal terminal
+kind =G15-U1-X5:0V:31.terminal terminal
+kind =G8-U1-X4:24V:24.terminal terminal
+kind =CH-U1-B81.sw switch
+kind =G2-U1-X5:0V:18.terminal terminal
+kind =G16-U1-K16.co_1 contact_co
+kind =G16-U1-X5:0V:32.terminal terminal
+kind =CH-U1-KC4.coil coil
+kind =CH-U1-B132.sw switch
+kind =CH-U1-KC12.coil coil
+kind =CH-U1-B31.sw switch
+kind =G1-U1-K1.co_1 contact_co
+kind =G7-U1-K7.co_1 contact_co
+kind =G12-U1-X5:0V:28.terminal terminal
+kind =G15-U1-X4:24V:31.terminal terminal
+kind =CH-U1-B62.sw switch
+kind =CH-U1-KC13.coil coil
+kind =CH-U1-X5:0V:11.terminal terminal
+kind =DRV-U1-X6:4.terminal terminal
+kind =CH-U1-KC5.coil coil
+kind =G9-U1-X4:24V:25.terminal terminal
+kind =DRV-U1-X6:9.terminal terminal
+kind =G19-U1-X4:24V:35.terminal terminal
+kind =G3-U1-X4:24V:19.terminal terminal
+kind -U1-U2.supply load
+kind =G7-U1-X6:27.terminal terminal
+kind =CH-U1-X4:24V:4.terminal terminal
+kind =G8-U1-X5:0V:24.terminal terminal
+kind =CH-U1-B152.sw switch
+kind =G18-U1-X5:0V:34.terminal terminal
+kind =G14-U1-K14.co_1 contact_co
+kind =CH-U1-B22.sw switch
+kind =G20-U1-X5:0V:36.terminal terminal
+kind =CH-U1-KC10.coil coil
+kind =G3-U1-X5:0V:19.terminal terminal
+kind =CH-U1-X4:24V:7.terminal terminal
+kind =G4-U1-K4.co_1 contact_co
+kind =G14-U1-X5:0V:30.terminal terminal
+kind =G2-U1-X4:24V:18.terminal terminal
+kind =G9-U1-K9.co_1 contact_co
+kind =G8-U1-K8.co_1 contact_co
+kind =G17-U1-X5:0V:33.terminal terminal
+kind =G17-U1-K17.coil coil
+kind =CH-U1-B91.sw switch
+kind =G14-U1-K14.coil coil
+kind =G11-U1-K11.coil coil
+kind =G5-U1-K5.coil coil
+kind =CH-U1-B151.sw switch
+kind =G10-U1-K10.coil coil
+kind =CH-U1-KC15.coil coil
+kind =G1-U1-X6:21.terminal terminal
+kind =CH-U1-X5:0V:15.terminal terminal
+kind =CH-U1-B71.sw switch
+kind =G19-U1-K19.co_1 contact_co
+kind -U1-X5:0V:1.terminal terminal
+kind =G13-U1-X5:0V:29.terminal terminal
+kind =G17-U1-X6:37.terminal terminal
+kind =G12-U1-X6:32.terminal terminal
+kind =CH-U1-X4:24V:15.terminal terminal
+kind =CH-U1-X4:24V:14.terminal terminal
+kind =CH-U1-X4:24V:13.terminal terminal
+kind =CH-U1-X5:0V:8.terminal terminal
+kind =G6-U1-X5:0V:22.terminal terminal
+kind =G3-U1-X6:23.terminal terminal
+kind =G6-U1-K6.co_1 contact_co
+kind =CH-U1-B92.sw switch
+kind =CH-U1-X4:24V:16.terminal terminal
+kind =CH-U1-X4:24V:8.terminal terminal
+kind =G7-U1-X5:0V:23.terminal terminal
+kind =G1-U1-K1.coil coil
+kind =G6-U1-K6.coil coil
+kind =G12-U1-K12.coil coil
+kind =CH-U1-B122.sw switch
+kind =G2-U1-K2.co_1 contact_co
+kind =CH-U1-B61.sw switch
+kind =CH-U1-X5:0V:13.terminal terminal
+kind =CH-U1-X5:0V:9.terminal terminal
+kind =G18-U1-X4:24V:34.terminal terminal
+kind =DRV-U1-X6:5.terminal terminal
+kind =G12-U1-X4:24V:28.terminal terminal
+kind =G9-U1-X5:0V:25.terminal terminal
+kind =CH-U1-B21.sw switch
+kind =G20-U1-K20.co_1 contact_co
+kind =G18-U1-X6:38.terminal terminal
+kind =G13-U1-K13.co_1 contact_co
+kind =G10-U1-K10.co_1 contact_co
+kind =G15-U1-K15.coil coil
+kind =DRV-U1-X6:1.terminal terminal
+kind =G4-U1-X6:24.terminal terminal
+kind =G5-U1-X6:25.terminal terminal
+kind =G11-U1-X5:0V:27.terminal terminal
+kind =G16-U1-X4:24V:32.terminal terminal
+kind =CH-U1-KC1.coil coil
+kind =CH-U1-X5:0V:5.terminal terminal
+kind =CH-U1-B141.sw switch
+kind -U1-U2.connector connector
+kind -U1-U2.connector#2 connector
+kind -U1-U2.connector#3 connector
+kind -U1-U2.connector#4 connector
+kind -U1-U2.connector#5 connector
+kind -U1-U2.connector#6 connector
+kind -U1-U2.connector#7 connector
+kind -U1-U2.connector#8 connector
+kind -U1-U2.connector#9 connector
+kind -U1-U2.connector#10 connector
+kind -U1-U2.connector#11 connector
+kind -U1-U2.connector#12 connector
+kind -U1-U2.connector#13 connector
+kind -U1-U2.connector#14 connector
+kind -U1-U2.connector#15 connector
+kind -U1-U2.connector#16 connector
+kind -U1-U2.connector#17 connector
+kind -U1-U2.connector#18 connector
+kind -U1-U2.connector#19 connector
+kind -U1-U2.connector#20 connector
+# today's placement: page, origin and orientation of each drawn copy.
+today =CH-U1-X5:0V:6.terminal page=1 at=944,584 orient=R0 set=1
+today =CH-U1-X4:24V:3.terminal page=1 at=296,104 orient=R180 set=1
+today =CH-U1-X5:0V:2.terminal page=1 at=80,584 orient=R0 set=1
+today =CH-U1-X5:0V:3.terminal page=1 at=296,584 orient=R0 set=1
+today =CH-U1-B42.sw page=1 at=728,320 orient=R0 set=1
+today =CH-U1-X5:0V:4.terminal page=1 at=512,584 orient=R0 set=1
+today =CH-U1-X4:24V:2.terminal page=1 at=80,104 orient=R180 set=1
+today =CH-U1-KC2.coil page=1 at=296,448 orient=R0 set=1
+today =CH-U1-KC3.coil page=1 at=512,448 orient=R0 set=1
+today =CH-U1-B11.sw page=1 at=80,192 orient=R0 set=1
+today =CH-U1-B32.sw page=1 at=512,320 orient=R0 set=1
+today =CH-U1-B51.sw page=1 at=944,192 orient=R0 set=1
+today =CH-U1-X4:24V:6.terminal page=1 at=944,104 orient=R180 set=1
+today =CH-U1-B41.sw page=1 at=728,192 orient=R0 set=1
+today =CH-U1-B12.sw page=1 at=80,320 orient=R0 set=1
+today =CH-U1-X4:24V:5.terminal page=1 at=728,104 orient=R180 set=1
+today =CH-U1-B52.sw page=1 at=944,320 orient=R0 set=1
+today =CH-U1-KC4.coil page=1 at=728,448 orient=R0 set=1
+today =CH-U1-B31.sw page=1 at=512,192 orient=R0 set=1
+today =CH-U1-KC5.coil page=1 at=944,448 orient=R0 set=1
+today =CH-U1-X4:24V:4.terminal page=1 at=512,104 orient=R180 set=1
+today =CH-U1-B22.sw page=1 at=296,320 orient=R0 set=1
+today =CH-U1-B21.sw page=1 at=296,192 orient=R0 set=1
+today =CH-U1-KC1.coil page=1 at=80,448 orient=R0 set=1
+today =CH-U1-X5:0V:5.terminal page=1 at=728,584 orient=R0 set=1
+today =CH-U1-B101.sw page=2 at=944,192 orient=R0 set=1
+today =CH-U1-X4:24V:11.terminal page=2 at=944,104 orient=R180 set=1
+today =CH-U1-KC9.coil page=2 at=728,448 orient=R0 set=1
+today =CH-U1-KC7.coil page=2 at=296,448 orient=R0 set=1
+today =CH-U1-B82.sw page=2 at=512,320 orient=R0 set=1
+today =CH-U1-X5:0V:7.terminal page=2 at=80,584 orient=R0 set=1
+today =CH-U1-X4:24V:10.terminal page=2 at=728,104 orient=R180 set=1
+today =CH-U1-X4:24V:9.terminal page=2 at=512,104 orient=R180 set=1
+today =CH-U1-B72.sw page=2 at=296,320 orient=R0 set=1
+today =CH-U1-B102.sw page=2 at=944,320 orient=R0 set=1
+today =CH-U1-KC8.coil page=2 at=512,448 orient=R0 set=1
+today =CH-U1-X5:0V:10.terminal page=2 at=728,584 orient=R0 set=1
+today =CH-U1-KC6.coil page=2 at=80,448 orient=R0 set=1
+today =CH-U1-B81.sw page=2 at=512,192 orient=R0 set=1
+today =CH-U1-B62.sw page=2 at=80,320 orient=R0 set=1
+today =CH-U1-X5:0V:11.terminal page=2 at=944,584 orient=R0 set=1
+today =CH-U1-KC10.coil page=2 at=944,448 orient=R0 set=1
+today =CH-U1-X4:24V:7.terminal page=2 at=80,104 orient=R180 set=1
+today =CH-U1-B91.sw page=2 at=728,192 orient=R0 set=1
+today =CH-U1-B71.sw page=2 at=296,192 orient=R0 set=1
+today =CH-U1-X5:0V:8.terminal page=2 at=296,584 orient=R0 set=1
+today =CH-U1-B92.sw page=2 at=728,320 orient=R0 set=1
+today =CH-U1-X4:24V:8.terminal page=2 at=296,104 orient=R180 set=1
+today =CH-U1-B61.sw page=2 at=80,192 orient=R0 set=1
+today =CH-U1-X5:0V:9.terminal page=2 at=512,584 orient=R0 set=1
+today =CH-U1-B112.sw page=3 at=80,320 orient=R0 set=1
+today =CH-U1-B121.sw page=3 at=296,192 orient=R0 set=1
+today =CH-U1-X5:0V:16.terminal page=3 at=944,584 orient=R0 set=1
+today =CH-U1-B142.sw page=3 at=728,320 orient=R0 set=1
+today =CH-U1-KC11.coil page=3 at=80,448 orient=R0 set=1
+today =CH-U1-B131.sw page=3 at=512,192 orient=R0 set=1
+today =CH-U1-X5:0V:12.terminal page=3 at=80,584 orient=R0 set=1
+today =CH-U1-X5:0V:14.terminal page=3 at=512,584 orient=R0 set=1
+today =CH-U1-X4:24V:12.terminal page=3 at=80,104 orient=R180 set=1
+today =CH-U1-B111.sw page=3 at=80,192 orient=R0 set=1
+today =CH-U1-KC14.coil page=3 at=728,448 orient=R0 set=1
+today =CH-U1-B132.sw page=3 at=512,320 orient=R0 set=1
+today =CH-U1-KC12.coil page=3 at=296,448 orient=R0 set=1
+today =CH-U1-KC13.coil page=3 at=512,448 orient=R0 set=1
+today =CH-U1-B152.sw page=3 at=944,320 orient=R0 set=1
+today =CH-U1-B151.sw page=3 at=944,192 orient=R0 set=1
+today =CH-U1-KC15.coil page=3 at=944,448 orient=R0 set=1
+today =CH-U1-X5:0V:15.terminal page=3 at=728,584 orient=R0 set=1
+today =CH-U1-X4:24V:15.terminal page=3 at=728,104 orient=R180 set=1
+today =CH-U1-X4:24V:14.terminal page=3 at=512,104 orient=R180 set=1
+today =CH-U1-X4:24V:13.terminal page=3 at=296,104 orient=R180 set=1
+today =CH-U1-X4:24V:16.terminal page=3 at=944,104 orient=R180 set=1
+today =CH-U1-B122.sw page=3 at=296,320 orient=R0 set=1
+today =CH-U1-X5:0V:13.terminal page=3 at=296,584 orient=R0 set=1
+today =CH-U1-B141.sw page=3 at=728,192 orient=R0 set=1
+today =DRV-U1-X6:6.terminal page=4 at=912,208 orient=R180 set=1
+today =DRV-U1-X6:3.terminal page=4 at=408,208 orient=R180 set=1
+today =DRV-U1-X6:2.terminal page=4 at=240,208 orient=R180 set=1
+today =DRV-U1-X6:4.terminal page=4 at=576,208 orient=R180 set=1
+today =DRV-U1-X6:5.terminal page=4 at=744,208 orient=R180 set=1
+today =DRV-U1-X6:1.terminal page=4 at=72,208 orient=R180 set=1
+today -U1-U2.connector#2 page=4 at=576,112 orient=R180 set=1
+today -U1-U2.connector#3 page=4 at=72,112 orient=R180 set=1
+today -U1-U2.connector#6 page=4 at=744,112 orient=R180 set=1
+today -U1-U2.connector#8 page=4 at=408,112 orient=R180 set=1
+today -U1-U2.connector#12 page=4 at=240,112 orient=R180 set=1
+today -U1-U2.connector#13 page=4 at=912,112 orient=R180 set=1
+today =G1-U1-X4:24V:17.terminal page=5 at=944,104 orient=R180 set=1
+today =DRV-U1-X6:7.terminal page=5 at=72,208 orient=R180 set=1
+today =G1-U1-X5:0V:17.terminal page=5 at=728,264 orient=R0 set=1
+today =DRV-U1-X6:8.terminal page=5 at=240,208 orient=R180 set=1
+today =DRV-U1-X6:10.terminal page=5 at=576,208 orient=R180 set=1
+today =G1-U1-K1.co_1 page=5 at=944,240 orient=R0 set=1
+today =DRV-U1-X6:9.terminal page=5 at=408,208 orient=R180 set=1
+today =G1-U1-X6:21.terminal page=5 at=944,376 orient=R0 set=1
+today =G1-U1-K1.coil page=5 at=728,120 orient=R0 set=1
+today -U1-U2.connector#9 page=5 at=408,112 orient=R180 set=1
+today -U1-U2.connector#18 page=5 at=576,112 orient=R180 set=1
+today -U1-U2.connector#19 page=5 at=72,112 orient=R180 set=1
+today -U1-U2.connector#20 page=5 at=240,112 orient=R180 set=1
+today =G2-U1-X6:22.terminal page=6 at=272,376 orient=R0 set=1
+today =G4-U1-X5:0V:20.terminal page=6 at=712,264 orient=R0 set=1
+today =G3-U1-K3.coil page=6 at=384,120 orient=R0 set=1
+today =G2-U1-K2.coil page=6 at=56,120 orient=R0 set=1
+today =G4-U1-K4.coil page=6 at=712,120 orient=R0 set=1
+today =G3-U1-K3.co_1 page=6 at=600,240 orient=R0 set=1
+today =G4-U1-X4:24V:20.terminal page=6 at=928,104 orient=R180 set=1
+today =G2-U1-X5:0V:18.terminal page=6 at=56,264 orient=R0 set=1
+today =G3-U1-X4:24V:19.terminal page=6 at=600,104 orient=R180 set=1
+today =G3-U1-X5:0V:19.terminal page=6 at=384,264 orient=R0 set=1
+today =G4-U1-K4.co_1 page=6 at=928,240 orient=R0 set=1
+today =G2-U1-X4:24V:18.terminal page=6 at=272,104 orient=R180 set=1
+today =G3-U1-X6:23.terminal page=6 at=600,376 orient=R0 set=1
+today =G2-U1-K2.co_1 page=6 at=272,240 orient=R0 set=1
+today =G4-U1-X6:24.terminal page=6 at=928,376 orient=R0 set=1
+today =G6-U1-X6:26.terminal page=7 at=600,376 orient=R0 set=1
+today =G5-U1-K5.co_1 page=7 at=272,240 orient=R0 set=1
+today =G6-U1-X4:24V:22.terminal page=7 at=600,104 orient=R180 set=1
+today =G7-U1-X4:24V:23.terminal page=7 at=928,104 orient=R180 set=1
+today =G5-U1-X5:0V:21.terminal page=7 at=56,264 orient=R0 set=1
+today =G7-U1-K7.coil page=7 at=712,120 orient=R0 set=1
+today =G5-U1-X4:24V:21.terminal page=7 at=272,104 orient=R180 set=1
+today =G7-U1-K7.co_1 page=7 at=928,240 orient=R0 set=1
+today =G7-U1-X6:27.terminal page=7 at=928,376 orient=R0 set=1
+today =G5-U1-K5.coil page=7 at=56,120 orient=R0 set=1
+today =G6-U1-X5:0V:22.terminal page=7 at=384,264 orient=R0 set=1
+today =G6-U1-K6.co_1 page=7 at=600,240 orient=R0 set=1
+today =G7-U1-X5:0V:23.terminal page=7 at=712,264 orient=R0 set=1
+today =G6-U1-K6.coil page=7 at=384,120 orient=R0 set=1
+today =G5-U1-X6:25.terminal page=7 at=272,376 orient=R0 set=1
+today =G10-U1-X4:24V:26.terminal page=8 at=936,104 orient=R180 set=1
+today =G8-U1-X6:28.terminal page=8 at=272,376 orient=R0 set=1
+today =G10-U1-X5:0V:26.terminal page=8 at=720,264 orient=R0 set=1
+today =G9-U1-X6:29.terminal page=8 at=600,376 orient=R0 set=1
+today =G10-U1-X6:30.terminal page=8 at=936,376 orient=R0 set=1
+today =G9-U1-K9.coil page=8 at=384,120 orient=R0 set=1
+today =G8-U1-K8.coil page=8 at=56,120 orient=R0 set=1
+today =G8-U1-X4:24V:24.terminal page=8 at=272,104 orient=R180 set=1
+today =G9-U1-X4:24V:25.terminal page=8 at=600,104 orient=R180 set=1
+today =G8-U1-X5:0V:24.terminal page=8 at=56,264 orient=R0 set=1
+today =G9-U1-K9.co_1 page=8 at=600,240 orient=R0 set=1
+today =G8-U1-K8.co_1 page=8 at=272,240 orient=R0 set=1
+today =G10-U1-K10.coil page=8 at=720,120 orient=R0 set=1
+today =G9-U1-X5:0V:25.terminal page=8 at=384,264 orient=R0 set=1
+today =G10-U1-K10.co_1 page=8 at=936,240 orient=R0 set=1
+today =G11-U1-X4:24V:27.terminal page=9 at=280,104 orient=R180 set=1
+today =G11-U1-K11.co_1 page=9 at=280,240 orient=R0 set=1
+today =G13-U1-K13.coil page=9 at=736,240 orient=R0 set=1
+today =G13-U1-X6:33.terminal page=9 at=952,376 orient=R0 set=1
+today =G13-U1-X4:24V:29.terminal page=9 at=952,104 orient=R180 set=1
+today =G12-U1-K12.co_1 page=9 at=616,240 orient=R0 set=1
+today =G11-U1-X6:31.terminal page=9 at=280,376 orient=R0 set=1
+today =G12-U1-X5:0V:28.terminal page=9 at=400,384 orient=R0 set=1
+today =G11-U1-K11.coil page=9 at=64,240 orient=R0 set=1
+today =G13-U1-X5:0V:29.terminal page=9 at=736,384 orient=R0 set=1
+today =G12-U1-X6:32.terminal page=9 at=616,376 orient=R0 set=1
+today =G12-U1-K12.coil page=9 at=400,240 orient=R0 set=1
+today =G12-U1-X4:24V:28.terminal page=9 at=616,104 orient=R180 set=1
+today =G13-U1-K13.co_1 page=9 at=952,240 orient=R0 set=1
+today =G11-U1-X5:0V:27.terminal page=9 at=64,384 orient=R0 set=1
+today -U1-U2.connector#4 page=9 at=64,112 orient=R180 set=1
+today -U1-U2.connector#10 page=9 at=400,112 orient=R180 set=1
+today -U1-U2.connector#16 page=9 at=736,112 orient=R180 set=1
+today =G14-U1-X4:24V:30.terminal page=10 at=280,104 orient=R180 set=1
+today =G16-U1-X6:36.terminal page=10 at=952,376 orient=R0 set=1
+today =G15-U1-X6:35.terminal page=10 at=616,376 orient=R0 set=1
+today =G15-U1-K15.co_1 page=10 at=616,240 orient=R0 set=1
+today =G14-U1-X6:34.terminal page=10 at=280,376 orient=R0 set=1
+today =G16-U1-K16.coil page=10 at=736,240 orient=R0 set=1
+today =G15-U1-X5:0V:31.terminal page=10 at=400,384 orient=R0 set=1
+today =G16-U1-K16.co_1 page=10 at=952,240 orient=R0 set=1
+today =G16-U1-X5:0V:32.terminal page=10 at=736,384 orient=R0 set=1
+today =G15-U1-X4:24V:31.terminal page=10 at=616,104 orient=R180 set=1
+today =G14-U1-K14.co_1 page=10 at=280,240 orient=R0 set=1
+today =G14-U1-X5:0V:30.terminal page=10 at=64,384 orient=R0 set=1
+today =G14-U1-K14.coil page=10 at=64,240 orient=R0 set=1
+today =G15-U1-K15.coil page=10 at=400,240 orient=R0 set=1
+today =G16-U1-X4:24V:32.terminal page=10 at=952,104 orient=R180 set=1
+today -U1-U2.connector page=10 at=400,112 orient=R180 set=1
+today -U1-U2.connector#15 page=10 at=64,112 orient=R180 set=1
+today -U1-U2.connector#17 page=10 at=736,112 orient=R180 set=1
+today =G19-U1-X6:39.terminal page=11 at=952,376 orient=R0 set=1
+today =G19-U1-X5:0V:35.terminal page=11 at=736,384 orient=R0 set=1
+today =G19-U1-K19.coil page=11 at=736,240 orient=R0 set=1
+today =G18-U1-K18.co_1 page=11 at=616,240 orient=R0 set=1
+today =G17-U1-K17.co_1 page=11 at=280,240 orient=R0 set=1
+today =G18-U1-K18.coil page=11 at=400,240 orient=R0 set=1
+today =G17-U1-X4:24V:33.terminal page=11 at=280,104 orient=R180 set=1
+today =G19-U1-X4:24V:35.terminal page=11 at=952,104 orient=R180 set=1
+today =G18-U1-X5:0V:34.terminal page=11 at=400,384 orient=R0 set=1
+today =G17-U1-X5:0V:33.terminal page=11 at=64,384 orient=R0 set=1
+today =G17-U1-K17.coil page=11 at=64,240 orient=R0 set=1
+today =G19-U1-K19.co_1 page=11 at=952,240 orient=R0 set=1
+today =G17-U1-X6:37.terminal page=11 at=280,376 orient=R0 set=1
+today =G18-U1-X4:24V:34.terminal page=11 at=616,104 orient=R180 set=1
+today =G18-U1-X6:38.terminal page=11 at=616,376 orient=R0 set=1
+today -U1-U2.connector#7 page=11 at=736,112 orient=R180 set=1
+today -U1-U2.connector#11 page=11 at=400,112 orient=R180 set=1
+today -U1-U2.connector#14 page=11 at=64,112 orient=R180 set=1
+today =G20-U1-X4:24V:36.terminal page=12 at=280,104 orient=R180 set=1
+today =G20-U1-X6:40.terminal page=12 at=280,376 orient=R0 set=1
+today =G20-U1-K20.coil page=12 at=64,240 orient=R0 set=1
+today -U1-X4:24V:1.terminal page=12 at=408,104 orient=R180 set=1
+today -U1-U2.supply page=12 at=408,184 orient=R0 set=1
+today =G20-U1-X5:0V:36.terminal page=12 at=64,384 orient=R0 set=1
+today -U1-X5:0V:1.terminal page=12 at=408,264 orient=R0 set=1
+today =G20-U1-K20.co_1 page=12 at=280,240 orient=R0 set=1
+today -U1-U2.connector#5 page=12 at=64,112 orient=R180 set=1
+# today's routes: one polyline per line, vertices in order from a to b (page, net, ends).
+route n8 page=1 set=1 a==CH-U1-B22.sw.out b==CH-U1-KC2.coil.in 296,336 296,424
+route n215 page=1 set=1 a==CH-U1-B12.sw.in b==CH-U1-B11.sw.out 80,304 80,208
+route n3 page=1 set=1 a==CH-U1-B31.sw.in b==CH-U1-X4:24V:4.terminal.n 512,176 512,112
+route n3 page=1 set=1 a==CH-U1-X4:24V:6.terminal.n b==CH-U1-B51.sw.in 944,112 944,176
+route n3 page=1 set=1 a==CH-U1-B11.sw.in b==CH-U1-X4:24V:2.terminal.n 80,176 80,112
+route n69 page=1 set=1 a==CH-U1-KC5.coil.in b==CH-U1-B52.sw.out 944,424 944,336
+route n0 page=1 set=1 a==CH-U1-X5:0V:2.terminal.n b==CH-U1-KC1.coil.out 80,576 80,472
+route n156 page=1 set=1 a==CH-U1-B32.sw.out b==CH-U1-KC3.coil.in 512,336 512,424
+route n29 page=1 set=1 a==CH-U1-B42.sw.in b==CH-U1-B41.sw.out 728,304 728,208
+route n94 page=1 set=1 a==CH-U1-B31.sw.out b==CH-U1-B32.sw.in 512,208 512,304
+route n0 page=1 set=1 a==CH-U1-KC2.coil.out b==CH-U1-X5:0V:3.terminal.n 296,472 296,576
+route n0 page=1 set=1 a==CH-U1-X5:0V:5.terminal.n b==CH-U1-KC4.coil.out 728,576 728,472
+route n252 page=1 set=1 a==CH-U1-B12.sw.out b==CH-U1-KC1.coil.in 80,336 80,424
+route n0 page=1 set=1 a==CH-U1-X5:0V:6.terminal.n b==CH-U1-KC5.coil.out 944,576 944,472
+route n28 page=1 set=1 a==CH-U1-B42.sw.out b==CH-U1-KC4.coil.in 728,336 728,424
+route n98 page=1 set=1 a==CH-U1-B52.sw.in b==CH-U1-B51.sw.out 944,304 944,208
+route n3 page=1 set=1 a==CH-U1-B41.sw.in b==CH-U1-X4:24V:5.terminal.n 728,176 728,112
+route n147 page=1 set=1 a==CH-U1-B22.sw.in b==CH-U1-B21.sw.out 296,304 296,208
+route n0 page=1 set=1 a==CH-U1-KC3.coil.out b==CH-U1-X5:0V:4.terminal.n 512,472 512,576
+route n3 page=1 set=1 a==CH-U1-X4:24V:3.terminal.n b==CH-U1-B21.sw.in 296,112 296,176
+route n164 page=2 set=1 a==CH-U1-B62.sw.in b==CH-U1-B61.sw.out 80,304 80,208
+route n3 page=2 set=1 a==CH-U1-X4:24V:8.terminal.n b==CH-U1-B71.sw.in 296,112 296,176
+route n141 page=2 set=1 a==CH-U1-B71.sw.out b==CH-U1-B72.sw.in 296,208 296,304
+route n0 page=2 set=1 a==CH-U1-X5:0V:10.terminal.n b==CH-U1-KC9.coil.out 728,576 728,472
+route n0 page=2 set=1 a==CH-U1-X5:0V:9.terminal.n b==CH-U1-KC8.coil.out 512,576 512,472
+route n142 page=2 set=1 a==CH-U1-B91.sw.out b==CH-U1-B92.sw.in 728,208 728,304
+route n3 page=2 set=1 a==CH-U1-X4:24V:7.terminal.n b==CH-U1-B61.sw.in 80,112 80,176
+route n27 page=2 set=1 a==CH-U1-B72.sw.out b==CH-U1-KC7.coil.in 296,336 296,424
+route n0 page=2 set=1 a==CH-U1-X5:0V:11.terminal.n b==CH-U1-KC10.coil.out 944,576 944,472
+route n15 page=2 set=1 a==CH-U1-B102.sw.out b==CH-U1-KC10.coil.in 944,336 944,424
+route n3 page=2 set=1 a==CH-U1-B101.sw.in b==CH-U1-X4:24V:11.terminal.n 944,176 944,112
+route n3 page=2 set=1 a==CH-U1-B81.sw.in b==CH-U1-X4:24V:9.terminal.n 512,176 512,112
+route n210 page=2 set=1 a==CH-U1-KC9.coil.in b==CH-U1-B92.sw.out 728,424 728,336
+route n53 page=2 set=1 a==CH-U1-B82.sw.in b==CH-U1-B81.sw.out 512,304 512,208
+route n0 page=2 set=1 a==CH-U1-X5:0V:7.terminal.n b==CH-U1-KC6.coil.out 80,576 80,472
+route n0 page=2 set=1 a==CH-U1-X5:0V:8.terminal.n b==CH-U1-KC7.coil.out 296,576 296,472
+route n102 page=2 set=1 a==CH-U1-B102.sw.in b==CH-U1-B101.sw.out 944,304 944,208
+route n45 page=2 set=1 a==CH-U1-B82.sw.out b==CH-U1-KC8.coil.in 512,336 512,424
+route n3 page=2 set=1 a==CH-U1-B91.sw.in b==CH-U1-X4:24V:10.terminal.n 728,176 728,112
+route n106 page=2 set=1 a==CH-U1-B62.sw.out b==CH-U1-KC6.coil.in 80,336 80,424
+route n132 page=3 set=1 a==CH-U1-B132.sw.in b==CH-U1-B131.sw.out 512,304 512,208
+route n55 page=3 set=1 a==CH-U1-B132.sw.out b==CH-U1-KC13.coil.in 512,336 512,424
+route n91 page=3 set=1 a==CH-U1-B122.sw.in b==CH-U1-B121.sw.out 296,304 296,208
+route n0 page=3 set=1 a==CH-U1-X5:0V:13.terminal.n b==CH-U1-KC12.coil.out 296,576 296,472
+route n0 page=3 set=1 a==CH-U1-X5:0V:14.terminal.n b==CH-U1-KC13.coil.out 512,576 512,472
+route n3 page=3 set=1 a==CH-U1-X4:24V:14.terminal.n b==CH-U1-B131.sw.in 512,112 512,176
+route n3 page=3 set=1 a==CH-U1-X4:24V:16.terminal.n b==CH-U1-B151.sw.in 944,112 944,176
+route n152 page=3 set=1 a==CH-U1-B142.sw.in b==CH-U1-B141.sw.out 728,304 728,208
+route n20 page=3 set=1 a==CH-U1-KC11.coil.in b==CH-U1-B112.sw.out 80,424 80,336
+route n44 page=3 set=1 a==CH-U1-KC14.coil.in b==CH-U1-B142.sw.out 728,424 728,336
+route n0 page=3 set=1 a==CH-U1-X5:0V:12.terminal.n b==CH-U1-KC11.coil.out 80,576 80,472
+route n10 page=3 set=1 a==CH-U1-KC15.coil.in b==CH-U1-B152.sw.out 944,424 944,336
+route n112 page=3 set=1 a==CH-U1-B152.sw.in b==CH-U1-B151.sw.out 944,304 944,208
+route n3 page=3 set=1 a==CH-U1-B141.sw.in b==CH-U1-X4:24V:15.terminal.n 728,176 728,112
+route n0 page=3 set=1 a==CH-U1-KC14.coil.out b==CH-U1-X5:0V:15.terminal.n 728,472 728,576
+route n150 page=3 set=1 a==CH-U1-B111.sw.out b==CH-U1-B112.sw.in 80,208 80,304
+route n78 page=3 set=1 a==CH-U1-B122.sw.out b==CH-U1-KC12.coil.in 296,336 296,424
+route n0 page=3 set=1 a==CH-U1-X5:0V:16.terminal.n b==CH-U1-KC15.coil.out 944,576 944,472
+route n3 page=3 set=1 a==CH-U1-X4:24V:12.terminal.n b==CH-U1-B111.sw.in 80,112 80,176
+route n3 page=3 set=1 a==CH-U1-B121.sw.in b==CH-U1-X4:24V:13.terminal.n 296,176 296,112
+route n18 page=4 set=1 a=-U1-U2.connector#3.in b==DRV-U1-X6:1.terminal.n 72,128 72,192 88,192 88,240 72,240 72,216
+route n9 page=4 set=1 a=-U1-U2.connector#2.in b==DRV-U1-X6:4.terminal.n 576,128 576,192 592,192 592,240 576,240 576,216
+route n40 page=4 set=1 a=-U1-U2.connector#12.in b==DRV-U1-X6:2.terminal.n 240,128 240,192 256,192 256,240 240,240 240,216
+route n81 page=4 set=1 a==DRV-U1-X6:6.terminal.n b=-U1-U2.connector#13.in 912,216 912,240 928,240 928,168 912,168 912,128
+route n85 page=4 set=1 a=-U1-U2.connector#6.in b==DRV-U1-X6:5.terminal.n 744,128 744,192 760,192 760,240 744,240 744,216
+route n46 page=4 set=1 a==DRV-U1-X6:3.terminal.n b=-U1-U2.connector#8.in 408,216 408,240 424,240 424,168 408,168 408,128
+route n84 page=5 set=1 a==DRV-U1-X6:7.terminal.n b=-U1-U2.connector#19.in 72,216 72,240 88,240 88,168 72,168 72,128
+route n17 page=5 set=1 a==DRV-U1-X6:10.terminal.n b=-U1-U2.connector#18.in 576,216 576,240 592,240 592,168 576,168 576,128
+route n0 page=5 set=1 a==G1-U1-K1.coil.out b==G1-U1-X5:0V:17.terminal.n 728,144 728,256
+route n3 page=5 set=1 a==G1-U1-K1.co_1.com b==G1-U1-X4:24V:17.terminal.n 944,224 944,112
+route n131 page=5 set=1 a==G1-U1-X6:21.terminal.n b==G1-U1-K1.co_1.no 944,368 944,256
+route n139 page=5 set=1 a==DRV-U1-X6:9.terminal.n b=-U1-U2.connector#9.in 408,216 408,240 424,240 424,168 408,168 408,128
+route n26 page=5 set=1 a==DRV-U1-X6:8.terminal.n b=-U1-U2.connector#20.in 240,216 240,240 256,240 256,168 240,168 240,128
+route n3 page=6 set=1 a==G3-U1-X4:24V:19.terminal.n b==G3-U1-K3.co_1.com 600,112 600,224
+route n134 page=6 set=1 a==G2-U1-X6:22.terminal.n b==G2-U1-K2.co_1.no 272,368 272,256
+route n0 page=6 set=1 a==G3-U1-K3.coil.out b==G3-U1-X5:0V:19.terminal.n 384,144 384,256
+route n3 page=6 set=1 a==G2-U1-X4:24V:18.terminal.n b==G2-U1-K2.co_1.com 272,112 272,224
+route n33 page=6 set=1 a==G4-U1-K4.co_1.no b==G4-U1-X6:24.terminal.n 928,256 928,368
+route n0 page=6 set=1 a==G4-U1-K4.coil.out b==G4-U1-X5:0V:20.terminal.n 712,144 712,256
+route n3 page=6 set=1 a==G4-U1-K4.co_1.com b==G4-U1-X4:24V:20.terminal.n 928,224 928,112
+route n0 page=6 set=1 a==G2-U1-K2.coil.out b==G2-U1-X5:0V:18.terminal.n 56,144 56,256
+route n52 page=6 set=1 a==G3-U1-K3.co_1.no b==G3-U1-X6:23.terminal.n 600,256 600,368
+route n0 page=7 set=1 a==G7-U1-X5:0V:23.terminal.n b==G7-U1-K7.coil.out 712,256 712,144
+route n3 page=7 set=1 a==G7-U1-K7.co_1.com b==G7-U1-X4:24V:23.terminal.n 928,224 928,112
+route n3 page=7 set=1 a==G5-U1-K5.co_1.com b==G5-U1-X4:24V:21.terminal.n 272,224 272,112
+route n0 page=7 set=1 a==G5-U1-X5:0V:21.terminal.n b==G5-U1-K5.coil.out 56,256 56,144
+route n7 page=7 set=1 a==G7-U1-X6:27.terminal.n b==G7-U1-K7.co_1.no 928,368 928,256
+route n24 page=7 set=1 a==G6-U1-K6.co_1.no b==G6-U1-X6:26.terminal.n 600,256 600,368
+route n89 page=7 set=1 a==G5-U1-X6:25.terminal.n b==G5-U1-K5.co_1.no 272,368 272,256
+route n0 page=7 set=1 a==G6-U1-K6.coil.out b==G6-U1-X5:0V:22.terminal.n 384,144 384,256
+route n3 page=7 set=1 a==G6-U1-X4:24V:22.terminal.n b==G6-U1-K6.co_1.com 600,112 600,224
+route n3 page=8 set=1 a==G10-U1-X4:24V:26.terminal.n b==G10-U1-K10.co_1.com 936,112 936,224
+route n79 page=8 set=1 a==G8-U1-K8.co_1.no b==G8-U1-X6:28.terminal.n 272,256 272,368
+route n0 page=8 set=1 a==G10-U1-K10.coil.out b==G10-U1-X5:0V:26.terminal.n 720,144 720,256
+route n3 page=8 set=1 a==G8-U1-X4:24V:24.terminal.n b==G8-U1-K8.co_1.com 272,112 272,224
+route n0 page=8 set=1 a==G9-U1-X5:0V:25.terminal.n b==G9-U1-K9.coil.out 384,256 384,144
+route n129 page=8 set=1 a==G10-U1-K10.co_1.no b==G10-U1-X6:30.terminal.n 936,256 936,368
+route n0 page=8 set=1 a==G8-U1-K8.coil.out b==G8-U1-X5:0V:24.terminal.n 56,144 56,256
+route n3 page=8 set=1 a==G9-U1-K9.co_1.com b==G9-U1-X4:24V:25.terminal.n 600,224 600,112
+route n39 page=8 set=1 a==G9-U1-K9.co_1.no b==G9-U1-X6:29.terminal.n 600,256 600,368
+route n74 page=9 set=1 a==G13-U1-X6:33.terminal.n b==G13-U1-K13.co_1.no 952,368 952,256
+route n0 page=9 set=1 a==G12-U1-X5:0V:28.terminal.n b==G12-U1-K12.coil.out 400,376 400,264
+route n0 page=9 set=1 a==G13-U1-X5:0V:29.terminal.n b==G13-U1-K13.coil.out 736,376 736,264
+route n180 page=9 set=1 a==G13-U1-K13.coil.in b=-U1-U2.connector#16.in 736,216 736,128
+route n3 page=9 set=1 a==G11-U1-K11.co_1.com b==G11-U1-X4:24V:27.terminal.n 280,224 280,112
+route n0 page=9 set=1 a==G11-U1-K11.coil.out b==G11-U1-X5:0V:27.terminal.n 64,264 64,376
+route n170 page=9 set=1 a==G12-U1-X6:32.terminal.n b==G12-U1-K12.co_1.no 616,368 616,256
+route n3 page=9 set=1 a==G13-U1-K13.co_1.com b==G13-U1-X4:24V:29.terminal.n 952,224 952,112
+route n188 page=9 set=1 a==G11-U1-X6:31.terminal.n b==G11-U1-K11.co_1.no 280,368 280,256
+route n184 page=9 set=1 a=-U1-U2.connector#10.in b==G12-U1-K12.coil.in 400,128 400,216
+route n58 page=9 set=1 a=-U1-U2.connector#4.in b==G11-U1-K11.coil.in 64,128 64,216
+route n3 page=9 set=1 a==G12-U1-X4:24V:28.terminal.n b==G12-U1-K12.co_1.com 616,112 616,224
+route n49 page=10 set=1 a==G15-U1-X6:35.terminal.n b==G15-U1-K15.co_1.no 616,368 616,256
+route n21 page=10 set=1 a==G16-U1-K16.coil.in b=-U1-U2.connector#17.in 736,216 736,128
+route n3 page=10 set=1 a==G16-U1-K16.co_1.com b==G16-U1-X4:24V:32.terminal.n 952,224 952,112
+route n3 page=10 set=1 a==G15-U1-X4:24V:31.terminal.n b==G15-U1-K15.co_1.com 616,112 616,224
+route n0 page=10 set=1 a==G16-U1-K16.coil.out b==G16-U1-X5:0V:32.terminal.n 736,264 736,376
+route n14 page=10 set=1 a==G14-U1-X6:34.terminal.n b==G14-U1-K14.co_1.no 280,368 280,256
+route n145 page=10 set=1 a==G14-U1-K14.coil.in b=-U1-U2.connector#15.in 64,216 64,128
+route n3 page=10 set=1 a==G14-U1-X4:24V:30.terminal.n b==G14-U1-K14.co_1.com 280,112 280,224
+route n0 page=10 set=1 a==G15-U1-X5:0V:31.terminal.n b==G15-U1-K15.coil.out 400,376 400,264
+route n4 page=10 set=1 a=-U1-U2.connector.in b==G15-U1-K15.coil.in 400,128 400,216
+route n0 page=10 set=1 a==G14-U1-K14.coil.out b==G14-U1-X5:0V:30.terminal.n 64,264 64,376
+route n32 page=10 set=1 a==G16-U1-X6:36.terminal.n b==G16-U1-K16.co_1.no 952,368 952,256
+route n0 page=11 set=1 a==G18-U1-K18.coil.out b==G18-U1-X5:0V:34.terminal.n 400,264 400,376
+route n0 page=11 set=1 a==G17-U1-K17.coil.out b==G17-U1-X5:0V:33.terminal.n 64,264 64,376
+route n41 page=11 set=1 a==G18-U1-X6:38.terminal.n b==G18-U1-K18.co_1.no 616,368 616,256
+route n25 page=11 set=1 a==G19-U1-K19.coil.in b=-U1-U2.connector#7.in 736,216 736,128
+route n3 page=11 set=1 a==G19-U1-K19.co_1.com b==G19-U1-X4:24V:35.terminal.n 952,224 952,112
+route n185 page=11 set=1 a=-U1-U2.connector#11.in b==G18-U1-K18.coil.in 400,128 400,216
+route n70 page=11 set=1 a==G17-U1-K17.co_1.no b==G17-U1-X6:37.terminal.n 280,256 280,368
+route n115 page=11 set=1 a==G19-U1-X6:39.terminal.n b==G19-U1-K19.co_1.no 952,368 952,256
+route n0 page=11 set=1 a==G19-U1-X5:0V:35.terminal.n b==G19-U1-K19.coil.out 736,376 736,264
+route n3 page=11 set=1 a==G17-U1-X4:24V:33.terminal.n b==G17-U1-K17.co_1.com 280,112 280,224
+route n3 page=11 set=1 a==G18-U1-K18.co_1.com b==G18-U1-X4:24V:34.terminal.n 616,224 616,112
+route n148 page=11 set=1 a==G17-U1-K17.coil.in b=-U1-U2.connector#14.in 64,216 64,128
+route n3 page=12 set=1 a=-U1-X4:24V:1.terminal.n b=-U1-U2.supply.+ 408,112 408,168
+route n0 page=12 set=1 a=-U1-X5:0V:1.terminal.n b=-U1-U2.supply.- 408,256 408,200
+route n3 page=12 set=1 a==G20-U1-X4:24V:36.terminal.n b==G20-U1-K20.co_1.com 280,112 280,224
+route n198 page=12 set=1 a==G20-U1-X6:40.terminal.n b==G20-U1-K20.co_1.no 280,368 280,256
+route n0 page=12 set=1 a==G20-U1-X5:0V:36.terminal.n b==G20-U1-K20.coil.out 64,376 64,264
+route n80 page=12 set=1 a=-U1-U2.connector#5.in b==G20-U1-K20.coil.in 64,128 64,216
+# today's reference markers: one per printed cross-reference (net, pin, page, place).
+marker n81 =DRV-U1-X6:6.terminal.n page=4 set=1 at=752,200 side=OWNER star=REF partner==G6-U1-K6.coil.in@1.6
+marker n139 =G9-U1-K9.coil.in page=7 set=1 at=320,216 side=USER star=BRANCH partner==DRV-U1-X6:9.terminal.n@1.5
+marker n9 =G4-U1-K4.coil.in page=6 set=1 at=56,96 side=USER star=BRANCH partner==DRV-U1-X6:4.terminal.n@1.4
+marker n18 =G1-U1-K1.coil.in page=5 set=1 at=328,96 side=USER star=BRANCH partner==DRV-U1-X6:1.terminal.n@1.4
+marker n40 =G2-U1-K2.coil.in page=5 set=1 at=592,96 side=USER star=BRANCH partner==DRV-U1-X6:2.terminal.n@1.4
+marker n84 =DRV-U1-X6:7.terminal.n page=4 set=1 at=888,200 side=OWNER star=REF partner==G7-U1-K7.coil.in@1.6
+marker n18 =DRV-U1-X6:1.terminal.n page=4 set=1 at=72,200 side=OWNER star=REF partner==G1-U1-K1.coil.in@1.5
+marker n85 =DRV-U1-X6:5.terminal.n page=4 set=1 at=616,200 side=OWNER star=REF partner==G5-U1-K5.coil.in@1.6
+marker n9 =DRV-U1-X6:4.terminal.n page=4 set=1 at=480,200 side=OWNER star=REF partner==G4-U1-K4.coil.in@1.6
+marker n85 =G5-U1-K5.coil.in page=6 set=1 at=320,96 side=USER star=BRANCH partner==DRV-U1-X6:5.terminal.n@1.4
+marker n17 =DRV-U1-X6:10.terminal.n page=5 set=1 at=208,200 side=OWNER star=REF partner==G10-U1-K10.coil.in@1.7
+marker n46 =DRV-U1-X6:3.terminal.n page=4 set=1 at=344,200 side=OWNER star=REF partner==G3-U1-K3.coil.in@1.5
+marker n81 =G6-U1-K6.coil.in page=6 set=1 at=584,96 side=USER star=BRANCH partner==DRV-U1-X6:6.terminal.n@1.4
+marker n26 =DRV-U1-X6:8.terminal.n page=4 set=1 at=1024,200 side=OWNER star=REF partner==G8-U1-K8.coil.in@1.7
+marker n26 =G8-U1-K8.coil.in page=7 set=1 at=56,216 side=USER star=BRANCH partner==DRV-U1-X6:8.terminal.n@1.4
+marker n139 =DRV-U1-X6:9.terminal.n page=5 set=1 at=72,200 side=OWNER star=REF partner==G9-U1-K9.coil.in@1.7
+marker n46 =G3-U1-K3.coil.in page=5 set=1 at=856,96 side=USER star=BRANCH partner==DRV-U1-X6:3.terminal.n@1.4
+marker n17 =G10-U1-K10.coil.in page=7 set=1 at=592,216 side=USER star=BRANCH partner==DRV-U1-X6:10.terminal.n@1.5
+marker n40 =DRV-U1-X6:2.terminal.n page=4 set=1 at=208,200 side=OWNER star=REF partner==G2-U1-K2.coil.in@1.5
+marker n84 =G7-U1-K7.coil.in page=6 set=1 at=848,96 side=USER star=BRANCH partner==DRV-U1-X6:7.terminal.n@1.4

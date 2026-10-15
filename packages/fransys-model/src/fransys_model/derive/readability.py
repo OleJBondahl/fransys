@@ -45,6 +45,8 @@ def readability_units(
             star_branches=sum(one.star_branches for one in group),
             single_branch_stars=sum(one.single_branch_stars for one in group),
             page_cuts=sum(one.page_cuts for one in group),
+            contacts_not_drawn=sum(one.contacts_not_drawn for one in group),
+            references_off_document=sum(one.references_off_document for one in group),
         )
         for group in by_unit.values()
     )

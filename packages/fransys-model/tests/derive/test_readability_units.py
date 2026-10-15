@@ -28,6 +28,8 @@ _BASE = ReadabilityPage(
     star_branches=9,
     single_branch_stars=10,
     page_cuts=11,
+    contacts_not_drawn=13,
+    references_off_document=14,
 )
 _UNIT = Id(kind="unit", value="u")
 
@@ -88,3 +90,8 @@ def test_each_unit_has_its_own_row_in_the_order_its_first_page_comes() -> None:
 
 def test_no_pages_give_no_rows() -> None:
     assert readability_units([], {}) == ()
+
+
+def test_the_spare_contacts_and_the_off_document_references_add_up() -> None:
+    (row,) = readability_units([_page(1), _page(2)], {})
+    assert (row.contacts_not_drawn, row.references_off_document) == (26, 28)

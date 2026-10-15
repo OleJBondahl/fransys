@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, cast
+lazy from collections.abc import Iterable, Sequence
 
 from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn
@@ -14,8 +15,6 @@ lazy from fransys_author.handles import Port, Terminal
 lazy from fransys_author.surface._device import Device
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
-
     from fransys_author.handles import Fn as EngineFn
     from fransys_author.surface.design import Design
     from fransys_model.vocab import Part
@@ -104,6 +103,7 @@ class DcSupply(_Rails):
     """A DC supply: `plus`, `minus` and `mid` when the source has an M conductor.
 
     Stands in a series whole, as a power path's poles, or by one rail, as a control path's.
+    Does not have a `mid` rail unless the source has an M conductor.
     """
 
     plus: SupplyRail

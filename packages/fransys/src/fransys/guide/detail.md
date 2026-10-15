@@ -259,7 +259,7 @@ def relays(c, declare):
     for i in range(1, 13):
         with c.function(f"F{i}", f"Relay {i}"):
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
-        if declare:
+        if dc is not None:
             c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
         else:
             c.detail.wire(psu.output["+"], k.coil["A1"], wire=(BU, 0.75))

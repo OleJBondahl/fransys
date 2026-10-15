@@ -29,7 +29,7 @@ def _inner(d: fr.Design) -> _Io:
 @fr.unit("demo-nest-middle", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
 def _middle(d: fr.Design) -> _Io:
     io = d.add(_inner, "I")
-    d.detail.wire(io.FIELD["1"], d.device("K1", _CONN)["1"], wire=("WH", 0.5))  # ty: ignore[not-subscriptable] -- a bare Device has no typed pins
+    d.detail.wire(io.FIELD["1"], d.device("K1", _CONN)["1"], wire=("WH", 0.5))
     return _Io(io.FIELD)
 
 
@@ -51,5 +51,5 @@ def test_wiring_inside_the_instance_does_not_contradict_unused() -> None:
 
 def test_a_conductor_the_container_adds_outside_still_contradicts() -> None:
     d, io = _ship()
-    d.detail.wire(io.FIELD["2"], d.device("P1", _CONN)["1"], wire=("WH", 0.5))  # ty: ignore[not-subscriptable] -- a bare Device has no typed pins
+    d.detail.wire(io.FIELD["2"], d.device("P1", _CONN)["1"], wire=("WH", 0.5))
     assert "UNUSED_CONTRADICTED" in _codes(d)

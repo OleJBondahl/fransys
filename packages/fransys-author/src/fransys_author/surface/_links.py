@@ -77,7 +77,7 @@ class Links:
             self._group,
             external=external,
         )
-        return Device(name or tag or "", item)
+        return Device(name or tag or "", item, None, tag)
 
     def rack(
         self: "Design",
@@ -102,4 +102,4 @@ class Links:
             group=self._group,
             external=external,
         )
-        return Device(name or tag, item)
+        return Device(name or tag, item, None, tag)

@@ -29,7 +29,7 @@ def _inner(d: fr.Design) -> _Io:
 @fr.unit("demo-io-pair", revision=1, interface_version=1, date="2026-01-01", text="first", by="AB")
 def _middle(d: fr.Design) -> _Io:
     io = d.add(_inner, "I")
-    d.detail.wire(io.X1["1"], d.device("K1", _CONN)["1"], wire=("WH", 0.5))  # ty: ignore[not-subscriptable] -- a bare Device has no typed pins
+    d.detail.wire(io.X1["1"], d.device("K1", _CONN)["1"], wire=("WH", 0.5))
     return _Io(io.X1)
 
 
@@ -60,7 +60,7 @@ def test_declared_on_the_unit_that_wires_it_is_still_contradicted() -> None:
     @fr.unit("demo-io-wrap", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
     def wrap(d: fr.Design) -> _Io:
         io = d.add(_inner, "I", unused=("X1",))
-        d.detail.wire(io.X1["1"], d.device("K1", _CONN)["1"], wire=("WH", 0.5))  # ty: ignore[not-subscriptable] -- a bare Device has no typed pins
+        d.detail.wire(io.X1["1"], d.device("K1", _CONN)["1"], wire=("WH", 0.5))
         return _Io(io.X1)
 
     d = fr.design("demo_parts", place="C1")

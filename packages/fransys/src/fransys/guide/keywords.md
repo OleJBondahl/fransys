@@ -34,12 +34,30 @@ rtd = fr.SignalType.RTD  # no short name; pass it as the `signal` of `plc`
 
 Handles are the objects a design returns and the reader holds. A consumer does not build them.
 
-- `Device`: one device, such as `Q1`. It reaches a function by name (`Q1.coil`) and a pin by brackets (`Q1[2]`). An unknown function or pin raises and lists the candidates.
+- `Device`: one device, such as `Q1`. It reaches a function by name (`Q1.coil`) and a pin by brackets (`Q1[2]`). An unknown function or pin raises and lists the candidates. `Q1.tag` is the tag the call gave, or `None`.
 - `Fn`: one function of a device, such as `K1.coil`. It reaches a pin by brackets (`Q1.main[2]`) or by name (`K1.coil.A1`). An unknown pin raises and lists the pins it has. `Fn.plc` requests a PLC channel.
 - `Pin`: one port of one `Fn`. It has an `id`, an authoring `key`, a `name` that brackets match, and a `role`, such as `INTERNAL` or `EXTERNAL`.
+- `Run`: a run of terminals on a strip, from `x1.run(...)`. It reaches a terminal by brackets (`run[1]`).
+- `Cable`: one cable from `d.cable`. `w1.core(BN, a, b)` wires a core.
+- `AcSupply`: what `d.ac_supply` returns. It holds the rails `L1`, `L2`, `L3` and `N` when it was given one.
+- `DcSupply`: what `d.dc_supply` returns. It holds the rails `plus`, `minus` and `mid`.
+- `SupplyRail`: one rail of a supply, such as `supply.L1` or `supply.plus`.
+- `UnitDef`: what `@fr.unit` returns, the release of one unit. `d.add(definition, "U1")` builds it; a function that takes build arguments returns one.
 - `TypedDevice`: the base a generated parts module subclasses once for each part. Its `mpn` is its whole contract. It adds no behaviour: the subclass only declares functions and pins.
 - `TypedFn`: the base a generated parts module subclasses for one function of one part. It adds no behaviour. Its subclass declares pins for the type checker.
 - `BuildResult`: the result of `fr.build`. It holds `model`, the frozen and laid-out `Model`, and `findings`, every finding collected while building it.
+
+## Type checking
+
+A script written in this guide's spellings type-checks with no `ty: ignore` and no `Any`. Your ty settings need nothing.
+
+- Every handle in "Handle types" has a name on `fr`, so `fr.Device`, `fr.AcSupply` or `fr.UnitDef[Io]` annotates a parameter or a return.
+- A function of a device is a `fr.Fn`: `k1.coil` and `q1.main` type as `fr.Fn`. A pin by brackets is a `fr.Pin`: `k1.coil["A2"]`, `q1["2"]` and `k1.coil.A1`. `k1.co.no` and `k1.co.nc` are changeover throws.
+- A device from an MPN string is untyped, so a call on it checks nothing. Annotate it `fr.Device` to check the calls on it.
+- On a `fr.Device`, a device-level pin by attribute (`q1.A1`) types as `fr.Fn` and is a ty error where a pin is needed. Write `q1["A1"]`; both run.
+- A wrong function or pin name is a run-time error. It raises and lists the names the part has.
+- A generated parts module (`fr.parts_module`) adds the part's own names. A misspelt function or pin on it is a type error, and the run-time error stays.
+- A unit with build arguments is a factory that returns `fr.UnitDef` (units.md, "Variants and revised copies").
 
 ## Severity
 

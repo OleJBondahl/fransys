@@ -230,7 +230,8 @@ shows. A link with `min_breaking_current_a` is partial-range and bounds no curre
 import fransys as fr
 
 d = fr.design("demo_parts")
-assert d.rating("DEMO-FUSE-LINK-4A-T").current_dc_a == 4
+rating = d.rating("DEMO-FUSE-LINK-4A-T")
+assert rating is not None and rating.current_dc_a == 4
 ```
 
 ## Reading a part's rating while authoring

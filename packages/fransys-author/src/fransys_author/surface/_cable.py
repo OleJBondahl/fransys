@@ -17,10 +17,10 @@ from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take, take_pe
 from fransys_author.surface.colours import GNYE, SH
 from fransys_model.vocab import PortRole
+lazy from fransys_author.handles import Cable as EngineCable
 lazy from fransys_author.surface._device import Device
 
 if TYPE_CHECKING:
-    from fransys_author.handles import Cable as EngineCable
     from fransys_author.surface.design import Design
 
 _MM_PER_M = 1000
@@ -63,9 +63,10 @@ class Cable:
     Does not guess a core: a doubled or missing colour raises and lists the candidates.
     """
 
-    def __init__(self, label: str, cable: EngineCable, design: Design | None = None) -> None:
-        """Wrap the engine `cable` under `label`; `d.cable` makes these, `design` its own."""
-        self._label, self._cable, self._design = label, cable, design
+    def __init__(self, label: str, cable: EngineCable) -> None:
+        """Wrap the engine `cable` under `label`; `d.cable` makes these and binds the design."""
+        self._label, self._cable = label, cable
+        self._design: Design | None = None  # `d.cable` binds it; named here without an import
         self._used: set[int] = set()
         self._by: dict[int, str] = {}  # core number -> the series that landed or parked it
 
@@ -140,7 +141,8 @@ class Cable:
         """Core: mark cores spare: `spare(GY)`, `spare(BK, at=x1[7])`, or `spare()`.
 
         `spare()` marks every core not wired or marked so far, so wire first. `at=` parks one
-        core on a pin. Does not take `at=` for an `SH` core (use `core(which, a)`).
+        core on a pin.
+        Does not take `at=` for an `SH` core (use `core(which, a)`).
         """
         if at is not None and len(cores) != 1:
             msg = f"{self._label} spare(at=) takes exactly one core, got {len(cores)}"
@@ -254,4 +256,6 @@ class Cables:
             parent=None if parent is None else cable_parent_item(parent),
             external=external,
         )
-        return Cable(name or tag or "", engine, self)
+        made = Cable(name or tag or "", engine)
+        made._design = self
+        return made

@@ -272,13 +272,6 @@ plus five checks of its own -- and any `ERROR` writes nothing, the same as `writ
 A unit's change list is relative to the unit, so a place that holds all of its items, added or removed, shows no change.
 
 ```python
-from typing import NamedTuple
-
-
-class Io(NamedTuple):
-    pass
-
-
 def board(revision, *, spare=None):
     """One unit design: the release `demo-io-board`, X1 on its boundary, X3, an optional spare."""
 
@@ -286,11 +279,11 @@ def board(revision, *, spare=None):
         "demo-io-board", revision=revision, interface_version=1, date="2026-09-27", text=f"Revision {revision}", by="OJB"
     )
     def io_board(d):
-        d.device("X1", "DEMO-CONN-2P", interface=True)
+        x1 = d.device("X1", "DEMO-CONN-2P", interface=True)
         d.device("X3", "DEMO-CONN-2P")
         if spare:
             d.device(spare, "DEMO-CONN-2P")
-        return Io()
+        return Io(x1)
 
     release_design = fr.design("demo_parts")
     release_design.add(io_board, "U1")

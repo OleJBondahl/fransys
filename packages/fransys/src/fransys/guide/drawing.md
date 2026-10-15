@@ -38,6 +38,14 @@ class Cabinet(NamedTuple):
 Path("cover.md").write_text("# Cabinet\n", encoding="utf-8")
 
 
+built = {}
+
+
+def rows(model, table):
+    """The rows of a layout table: `Record` values, whose fields are read by name."""
+    return model.tables[table].values()
+
+
 def draw(body, top=None):
     """Build one cabinet with a schematic; return its finding codes and its page count."""
 
@@ -55,7 +63,7 @@ def draw(body, top=None):
         top(d)
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md"))
     result = fr.build(d, doc)
-    draw.model = result.model
+    built["model"] = result.model
     return [f.code for f in fr.check(result)], len(result.model.tables["layout.page"])
 ```
 
@@ -76,8 +84,8 @@ def coil_x(model, n):
     return next(p.x for p in model.tables["layout.symbol_placement"].values() if p.key[-3:-1] == (f"F{n}/K{n}", "fn"))
 
 
-assert coil_x(draw.model, 2) - coil_x(draw.model, 1) == 184
-assert coil_x(draw.model, 7) < coil_x(draw.model, 1)
+assert coil_x(built["model"], 2) - coil_x(built["model"], 1) == 184
+assert coil_x(built["model"], 7) < coil_x(built["model"], 1)
 ```
 
 ## A checklist for a readable cabinet
@@ -160,8 +168,8 @@ def drawn(body):
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md"))
     result = fr.build(d, doc)
     names = {handle.id: name for name, handle in handles.items()}
-    pages = sorted(result.model.tables["layout.page"].values(), key=lambda p: (p.drawing_set, p.number))
-    x = {names[p.function]: p.x for p in result.model.tables["layout.symbol_placement"].values() if p.function in names}
+    pages = sorted(rows(result.model, "layout.page"), key=lambda p: (p.drawing_set, p.number))
+    x = {names[p.function]: p.x for p in rows(result.model, "layout.symbol_placement") if p.function in names}
     return [[names[g.group] for g in p.groups] for p in pages], x
 
 

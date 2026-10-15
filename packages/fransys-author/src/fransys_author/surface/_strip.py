@@ -176,8 +176,8 @@ class TerminalStrip:
         count: int | None = None,
         *,
         bridged: bool | tuple[int, int] = False,
-        interface: bool = False,
-        unused: bool = False,
+        interface: Marks = False,
+        unused: Marks = False,
     ) -> Run:
         """Core: a named run of `count` terminals that counts inside `label`, bridged when asked.
 
@@ -222,8 +222,8 @@ class Run(TerminalStrip):
         count: int | None,
         *,
         bridged: bool | tuple[int, int],
-        interface: bool = False,
-        unused: bool = False,
+        interface: Marks = False,
+        unused: Marks = False,
     ) -> None:
         """Declare the run `label` on `strip`; `X3.run` makes these."""
         self._group = label

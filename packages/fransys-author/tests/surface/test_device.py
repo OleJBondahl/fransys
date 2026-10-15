@@ -179,3 +179,11 @@ def test_plc_and_scale_reach_the_engine_function(parts: Draft) -> None:
     (request,) = _records(d, PlcRequestFacet)
     assert (request.signal.value, request.signal_name) == ("do", "Pump run")
     k1.coil.scale("bar", raw=(0, 100), eng=("0", "10"))
+
+
+def test_a_device_reports_the_tag_it_was_given_or_none(parts: Draft) -> None:
+    d = design(parts, place="C1")
+    assert d.device("K1", "TEST-RLY-2CO").tag == "K1"
+    assert d.device(None, "TEST-RLY-2CO", name="spare").tag is None
+    assert d.harness("W1").tag == "W1"
+    assert d.rack("A1").tag == "A1"

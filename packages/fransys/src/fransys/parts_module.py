@@ -45,6 +45,7 @@ def _literal(names: list[str]) -> str:
 def _getitem(names: list[str]) -> list[str]:
     return [
         "    if TYPE_CHECKING:",
+        "        @override",
         f"        def __getitem__(self, m: {_literal(names)}) -> Pin: ...",
     ]
 
@@ -121,7 +122,7 @@ def _header(sources: tuple[str, ...], digest: str) -> list[str]:
             f"regenerate with python -m fransys parts-module.{_TRIPLE}"
         ),
         "",
-        "from typing import TYPE_CHECKING, ClassVar, Literal, Never",
+        "from typing import TYPE_CHECKING, ClassVar, Literal, Never, override",
         "",
         "from fransys import Pin, TypedDevice, TypedFn",
         "",

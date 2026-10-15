@@ -37,7 +37,7 @@ def check_marks(tag: str, count: int | None, **specs: Marks) -> None:
 
 
 def check_run_marks(
-    tag: str, strip_spec: tuple[Marks, Marks], *, interface: bool, unused: bool
+    tag: str, strip_spec: tuple[Marks, Marks], *, interface: Marks, unused: Marks
 ) -> None:
     """Raise when a run marks (`interface=True`, `unused=True`) a strip that already marks all."""
     if (interface or unused) and any(spec is True for spec in strip_spec):

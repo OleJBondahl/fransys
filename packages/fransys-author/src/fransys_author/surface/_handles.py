@@ -1,6 +1,6 @@
 """Surface handles over the engine's: `Fn` and `Pin`, with every pin access checked at the line."""
 
-from typing import TYPE_CHECKING
+from typing import Literal, overload
 lazy from collections.abc import Sequence
 lazy from decimal import Decimal
 
@@ -78,26 +78,28 @@ class Fn:
             join_pe(self._fn, pin)
         return pin
 
-    if not TYPE_CHECKING:  # a typed part declares its pins; ty must see no catch-all
+    def __getitem__(self, marking: str | int) -> Pin:
+        """The pin marked `marking`; an integer needs no quotes.
 
-        def __getitem__(self, marking: str | int) -> Pin:
-            """The pin marked `marking`; an integer needs no quotes.
+        Does not guess: an unknown marking raises and lists the pins.
+        """
+        return self._screw(pick(f"{self._label}.{self._fn.name}", str(marking), self._pins()))
 
-            Does not guess: an unknown marking raises and lists the pins.
-            """
-            return self._screw(pick(f"{self._label}.{self._fn.name}", str(marking), self._pins()))
+    @overload
+    def __getattr__(self, name: Literal["no", "nc"]) -> _throws.Throw: ...
+    @overload
+    def __getattr__(self, name: str) -> Pin: ...
+    def __getattr__(self, name: str) -> Pin | _throws.Throw:
+        """The pin named `name` (`K1.coil.A1`); a changeover's throw `no` or `nc`.
 
-        def __getattr__(self, name: str) -> Pin | _throws.Throw:
-            """The pin named `name` (`K1.coil.A1`); a changeover's throw `no` or `nc`.
-
-            Does not guess: an unknown name raises an `AttributeError` that lists the pins.
-            """
-            if name.startswith("_"):
-                raise AttributeError(name)
-            if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
-                return _throws.throw(self._label, self._fn, name)
-            pin = pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
-            return self._screw(pin)
+        Does not guess: an unknown name raises an `AttributeError` that lists the pins.
+        """
+        if name.startswith("_"):
+            raise AttributeError(name)
+        if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
+            return _throws.throw(self._label, self._fn, name)
+        pin = pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
+        return self._screw(pin)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:
         """Core: request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.

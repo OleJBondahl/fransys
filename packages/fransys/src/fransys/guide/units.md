@@ -216,9 +216,9 @@ class Io(NamedTuple):
     X1: fr.Device
 
 
-def board_unit(name, revision, *, pins="DEMO-CONN-2P"):
+def board_unit(name: str, revision: int, *, pins: str = "DEMO-CONN-2P") -> fr.UnitDef[Io]:
     @fr.unit(name, revision=revision, interface_version=1, date="2026-01-01", text="issue", by="AB")
-    def board(d):
+    def board(d: fr.Design) -> Io:
         return Io(d.device("X1", pins, interface=True))
 
     return board

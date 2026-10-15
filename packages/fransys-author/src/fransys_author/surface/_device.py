@@ -1,6 +1,6 @@
 """Devices: `d.device("Q1", part)` and the checked references on what it returns."""
 
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, overload
 lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
@@ -30,9 +30,19 @@ class Device:
     Does not guess: an unknown function or pin raises and lists the candidates.
     """
 
-    def __init__(self, label: str, item: Item, scope: Scope | None = None) -> None:
-        """Wrap the engine `item` as `label`, made in the engine `scope`; `d.device` makes these."""
-        self._label, self._item, self._scope = label, item, scope
+    def __init__(
+        self, label: str, item: Item, scope: Scope | None = None, tag: str | None = None
+    ) -> None:
+        """Wrap the engine `item` as `label`, made in `scope`, with its authored `tag`."""
+        self._label, self._item, self._scope, self._tag = label, item, scope, tag
+
+    @property
+    def tag(self) -> str | None:
+        """The tag given to `d.device("K1", ...)`, as written; `None` when the call gave none.
+
+        Does not read the printed designation: `fr.derive.printed_designation` does.
+        """
+        return self._tag
 
     @property
     def id(self) -> Id[ModelItem]:
@@ -52,14 +62,22 @@ class Device:
                 join_pe(function, pin)
         return pin
 
-    if not TYPE_CHECKING:  # a typed part declares its functions and pins; ty must see no catch-all
+    def __getitem__(self, marking: str | int) -> Pin:
+        """The pin marked `marking` on any function; an integer needs no quotes.
 
-        def __getitem__(self, marking: str | int) -> Pin:
-            """The pin marked `marking` on any function; an integer needs no quotes.
+        Does not guess: an unknown or doubled marking raises and names the candidates.
+        """
+        return self._screw(pick(self._label, str(marking), self._pins()))
 
-            Does not guess: an unknown or doubled marking raises and names the candidates.
+    if TYPE_CHECKING:  # a name is a function; an untyped part's pin is `Q1["A1"]`
+
+        def __getattr__(self, name: str) -> Fn:
+            """The function `name` (`Q1.coil`).
+
+            Does not guess: an unknown name raises an `AttributeError` that lists the functions.
             """
-            return self._screw(pick(self._label, str(marking), self._pins()))
+
+    else:
 
         def __getattr__(self, name: str) -> Fn | Pin:
             """The function `name` (`Q1.coil`), else the one pin of that name (`Q1.A1`).
@@ -84,6 +102,10 @@ class TypedFn(Fn):
     Does not add behaviour: its subclass only declares pins for the type checker.
     """
 
+    if TYPE_CHECKING:  # a typed part names its pins: Fn's catch-alls must not hide a typo
+        __getattr__: ClassVar[None]
+        __getitem__: ClassVar[None]
+
 
 class TypedDevice[N: str = str, S = Any](Device):
     """The base a generated module subclasses for one part; `mpn` is its whole contract.
@@ -93,6 +115,10 @@ class TypedDevice[N: str = str, S = Any](Device):
 
     Does not add behaviour: its subclass only declares functions and pins.
     """
+
+    if TYPE_CHECKING:  # a typed part names its functions: Device's catch-alls must not hide a typo
+        __getattr__: ClassVar[None]
+        __getitem__: ClassVar[None]
 
     def __accepts__(self, name: N) -> None:
         """Use `N` contravariantly, so the checker rejects a name outside the part's functions."""
@@ -307,7 +333,7 @@ class Devices:
         _mark_boundary(self, item, interface=interface, unused=unused)
         _contacts.fit(self, item, contacts)
         cls = part if isinstance(part, type) else Device
-        made = cls(name or tag or "", item, self._engine)
+        made = cls(name or tag or "", item, self._engine, tag)
         if mounted_on is not None:
             mount(self, made, mounted_on)
         fit_leads(self, made, parent, joins)

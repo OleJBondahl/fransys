@@ -355,5 +355,7 @@ assert fr.derive.printed_designation(model, ids["X11"]) == "-X11"
 assert (mate.a_designation, mate.b_designation) == ("-X10", "-X11")
 
 cable_part = fr.derive.items(model)[ids["W1"]].part
-assert fr.derive.part_rating(model, cable_part).voltage_ac_v == 500
+assert cable_part is not None
+cable_rating = fr.derive.part_rating(model, cable_part)
+assert cable_rating is not None and cable_rating.voltage_ac_v == 500
 ```

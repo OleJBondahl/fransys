@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, ClassVar, Literal, Never, override
 
-from fransys import Pin, TypedDevice, TypedFn
+from fransys import Pin, Throw, TypedDevice, TypedFn
 
 SOURCES = ("example_parts",)
 LIBRARY_DIGEST = "e05ea95aef8c24af118e2ac3ce67596204db39910ea01ee546c82cf9c0e6e2b8"
@@ -328,6 +328,8 @@ class P_40_61_9_024_1000__coil(TypedFn):
 
 
 class P_40_61_9_024_1000__contact(TypedFn):
+    no: Throw
+    nc: Throw
     P_11: Pin
     P_12: Pin
     P_14: Pin

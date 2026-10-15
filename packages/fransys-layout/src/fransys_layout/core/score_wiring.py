@@ -9,17 +9,18 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .scene import Point, Wire
+    from .outputs import SceneWire
+    from .values import XY
 
 
 MIN_POINTS = 2  # a polyline needs two vertices to be a wire
 
 
-def _heading(a: Point, b: Point) -> tuple[int, int]:
+def _heading(a: XY, b: XY) -> tuple[int, int]:
     return ((b[0] > a[0]) - (b[0] < a[0]), (b[1] > a[1]) - (b[1] < a[1]))
 
 
-def shape(points: tuple[Point, ...]) -> tuple[int, int, int, int]:
+def shape(points: tuple[XY, ...]) -> tuple[int, int, int, int]:
     """Bends, excess bends, length and Manhattan distance between the ends of one polyline."""
     dirs = [_heading(a, b) for a, b in pairwise(points) if a != b]
     bends = sum(1 for a, b in pairwise(dirs) if a != b)
@@ -32,7 +33,7 @@ def shape(points: tuple[Point, ...]) -> tuple[int, int, int, int]:
     return bends, max(0, bends - need), length, abs(x1 - x0) + abs(y1 - y0)
 
 
-def crossings_on_page(wires: tuple[Wire, ...]) -> int:
+def crossings_on_page(wires: tuple[SceneWire, ...]) -> int:
     """Distinct (point, horizontal net, vertical net) where a run passes straight across another."""
     horizontal, vertical = [], []
     for wire in wires:
@@ -50,10 +51,10 @@ def crossings_on_page(wires: tuple[Wire, ...]) -> int:
     return len(found)
 
 
-def wiring(wires: tuple[Wire, ...]) -> dict[str, int]:
+def wiring(wires: tuple[SceneWire, ...]) -> dict[str, int]:
     """The five wiring terms over all wires of a scene."""
     total = {"crossings": 0, "bends": 0, "excess_bends": 0, "length_g": 0, "detour_g": 0}
-    by_page: dict[int, list[Wire]] = defaultdict(list)
+    by_page: dict[int, list[SceneWire]] = defaultdict(list)
     for wire in wires:
         if len(wire.points) < MIN_POINTS:
             continue

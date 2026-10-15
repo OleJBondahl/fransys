@@ -38,6 +38,7 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_author.surface",
     "fransys_author.surface.colours",
     "fransys_el",
+    "fransys_kernel",
     "fransys_kicad",
     "fransys_layout",
     "fransys_model.derive",
@@ -45,6 +46,7 @@ _EXPECTED_SURFACE_MODULES = (
     "fransys_model.derive.block_diagram",
     "fransys_model.derive.cable_drawing",
     "fransys_model.derive.contact_rows",
+    "fransys_model.derive.docs_site",
     "fransys_model.derive.drawing_text",
     "fransys_model.derive.grid_mm",
     "fransys_model.derive.marker_box",
@@ -65,7 +67,7 @@ _EXPECTED_SURFACE_MODULES = (
 )
 
 
-def test_surface_modules_is_the_expected_25_entries():
+def test_surface_modules_is_the_expected_26_entries():
     """Every `packages/*` top-level module (`fransys_model` excepted), its nine named
     modules, `fransys.colours` and the author package's two surface modules:
     no more, no fewer.

@@ -3,12 +3,12 @@
 import dataclasses
 from collections.abc import Callable
 
+from fransys_kernel import require_origin
 from fransys_model.derive.designation import designating_ancestors, own_designation_or_none
 from fransys_model.derive.instance_tag import unit_tag
 from fransys_model.derive.lookups import terminal_items
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Id, Model, Severity, evolve, make_id
-from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.facets.assigned_unit_tag import AssignedUnitTagFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import items

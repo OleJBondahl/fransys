@@ -37,7 +37,7 @@ IGNORED_DIRS = {
     "node_modules",
 }
 ALLOWED_LINES = {
-    ("packages/fransys-model/src/fransys_model/kernel/ids.py", '"schematika-model:id"'),
+    ("packages/fransys-kernel/src/fransys_kernel/ids.py", '"schematika-model:id"'),
     ("packages/fransys-kicad/src/fransys_kicad/netlist.py", '"schematika_kicad"'),
     (
         "docs/archive/specs/2026-09-26-consumer-guide.md",

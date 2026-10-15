@@ -178,14 +178,15 @@ def test_demo_library_record_counts_and_keys():
     PLC-CHANNEL-ORDER-FIX adds `plc-dio-mixed.toml` (5/5/0), so 95 parts, 248 templates, 521
     ports, 96 links, 62 symbol choices; TYPED-PINS adds `contactor-1p-marked.toml` (2/4/1, pins
     1/L1 and 2/T1) and `psu-24v-marked.toml` (2/4/0, pins 24V1 and 0V1), so 97 parts, 252
-    templates, 529 ports, 97 links, 64 symbol choices)."""
+    templates, 529 ports, 97 links, 64 symbol choices; PAIR adds `sensor-2w.toml` (1/2/0, no
+    symbol choice), so 98 parts, 253 templates, 531 ports)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 97
-    assert len(function_templates(model)) == 252
-    assert len(port_templates(model)) == 529
+    assert len(parts(model)) == 98
+    assert len(function_templates(model)) == 253
+    assert len(port_templates(model)) == 531
     assert len(internal_links(model)) == 97
     assert len(model.tables["layout.symbol_choice"]) == 64
 

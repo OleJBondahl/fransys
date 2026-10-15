@@ -4,7 +4,7 @@ from functools import partial
 from typing import Any
 
 from fransys_layout.engines.schematic.read.units import unit_order
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import render_id
 from fransys_model.vocab.tables import units
 lazy from fransys_model.kernel import Id, Model
 

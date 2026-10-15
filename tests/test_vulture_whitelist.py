@@ -75,7 +75,10 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # 2026-10-15);
 # owner 2026-10-07: ceilings may rise; cleanup round lowers
 # 77: CLEANUP-CEILINGS-2 dropped 58 entries a per-package run without the whitelist never flags
-WHITELIST_CEILING = 79
+# +61: CORE-WAVE0 contract fields, read by later stages; cleanup round lowers
+# +1: d.detail.star (DETAIL-STAR), 2026-10-15
+# +3: KeepWhole item_boxes, pole_groups, line_units (EL-GATES-FACTS), 2026-10-15
+WHITELIST_CEILING = 144
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(

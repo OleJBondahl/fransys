@@ -1,5 +1,7 @@
 # Layout numbers
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists every keyword of `d.layout.profile` and every number of `d.layout.sheet`: what it does, its house value, its effect on the drawing, and when to change it.
 A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is in millimetres, except `module_mm`.
 

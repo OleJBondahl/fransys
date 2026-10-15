@@ -85,7 +85,7 @@ from .handles import (
     Terminal,
     _item_from_stamped,
 )
-from .wiring import LinkScope, Wiring
+from .wiring import LinkScope, WireHints, Wiring
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -582,6 +582,10 @@ class Scope(LinkScope, SupplyScope):
             gauge=as_decimal(gauge, field="gauge"),
             label=label,
         )
+
+    def _wire_hints(self) -> WireHints:
+        """A maker for a wire whose row is resolved after freeze (model-0260)."""
+        return WireHints(self._design, self._prefix)
 
     def net(
         self, name: str, *ports: Port, cls: str = "control", potential: str | None = None

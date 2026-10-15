@@ -1,5 +1,7 @@
 # Reading: rows, columns and printed texts
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page covers `fr.derive`, the facade's read-only layer. It holds the column orders and labels of the list outputs and the row types they are built from. It also holds the row functions, and the texts and order keys every list shares. Use these to read a model yourself and get the same numbers, text and order the outputs print.
 
 ## Column and label constants

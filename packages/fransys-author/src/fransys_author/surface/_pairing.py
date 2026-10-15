@@ -33,6 +33,11 @@ NO_SIDE_FIX = (
     "its part states no line side. The part's author adds the port key `side` in the part file; "
     "otherwise wire its pins with d.detail.wire(pin, pin, wire=...)"
 )
+PARTLESS_FIX = (
+    "{what} belongs to a device with no part, so this call cannot read its poles. A series takes "
+    "such a device only as its last element: make it the last element, or wire it per core "
+    "with d.detail.wire(pin, pin, wire=...)"
+)
 _BY_HAND = "wire the poles one by one with d.detail.wire(pin, pin, wire=...)"
 
 
@@ -110,18 +115,26 @@ class PartFacts:
     def port_template(self, port: Port) -> PortTemplate:
         """The template of the engine `port`.
 
-        Does not accept a port made without a part: it has no template.
+        Raises `AuthorError` for a port made without a part: it has no template.
         """
         record = cast("ModelPort", self._design.record_of(port.id))
-        return self.templates[cast("Id[PortTemplate]", record.template)]
+        if record.template is None:
+            raise AuthorError(PARTLESS_FIX.format(what=f"pin {port.name!r}"))
+        return self.templates[record.template]
 
     def function_template(self, fn: Fn) -> FunctionTemplate:
         """The template of the engine function `fn`.
 
-        Does not accept a function made without a part: it has no template.
+        Raises `AuthorError` for a function made without a part: it has no template.
         """
         record = cast("Function", self._design.record_of(fn.id))
-        return self._functions[cast("Id[FunctionTemplate]", record.template)]
+        if record.template is None:
+            raise AuthorError(PARTLESS_FIX.format(what=f"function {fn.name!r}"))
+        return self._functions[record.template]
+
+    def partless(self, fn: Fn) -> bool:
+        """Whether `fn` belongs to a device made without a part (`template` is `None`)."""
+        return cast("Function", self._design.record_of(fn.id)).template is None
 
     def channel(self, fn: Fn) -> PlcChannelFacet | None:
         """The `plc_channel` fact of the function `fn`, `None` when it is no PLC channel.
@@ -151,6 +164,8 @@ class PartFacts:
 
         Does not infer a mark from the pin's name or marking.
         """
+        if cast("ModelPort", self._design.record_of(port.id)).template is None:
+            return None
         return self.port_template(port).conductor_mark
 
 
@@ -199,12 +214,14 @@ def _without_links(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
     return []
 
 
-def poles(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
+def poles(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> list[tuple[Port, Port]]:
     """The poles of `fn` as (line port, load port), in the model's pole order.
 
     Layout twin: `fransys_layout.stages.resolve.poles_and_pairs`; the model's `function_poles`.
-    Does not read a name or a marking, and does not guess a side: no side fact raises.
+    Does not read a name or a marking or guess a side. `partless_ok`: pins are poles, in order.
     """
+    if partless_ok and facts.partless(fn):
+        return [(port, port) for port in fn.ports if port.role is not PortRole.PE]
     template = facts.function_template(fn)
     found = function_poles(template.kind, facts.links(fn), facts.templates)
     if not found:
@@ -214,12 +231,12 @@ def poles(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
     return [(by_template[pole.ends[0].id], by_template[pole.ends[1].id]) for pole in found]
 
 
-def ends_of(facts: PartFacts, fn: Fn) -> Ends:
+def ends_of(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> Ends:
     """The line ends, load ends and PE port of `fn`, one pair per pole of `poles`.
 
     Does not pair them with another element's ends: `pair` does.
     """
-    pairs = poles(facts, fn)
+    pairs = poles(facts, fn, partless_ok=partless_ok)
     pe = next((port for port in fn.ports if port.role is PortRole.PE), None)
     line = tuple(End(a, facts.mark(a)) for a, _ in pairs)
     load = tuple(End(b, facts.mark(b)) for _, b in pairs)

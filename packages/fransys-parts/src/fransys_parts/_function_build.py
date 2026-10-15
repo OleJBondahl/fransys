@@ -19,6 +19,7 @@ from fransys_model.vocab import (
     PortTemplate,
     ProtectionType,
     SignalType,
+    WiringRow,
 )
 
 from . import _joins, _pole_facts, _ratings, _toml
@@ -82,6 +83,7 @@ def _add_ports(
                 marking=port.get("marking"),
                 pole_side=pole_side,
                 conductor_mark=conductor_mark,
+                source_row=WiringRow(port["source_row"]) if "source_row" in port else None,
                 joins=_joins.target_id(function_key[:-2], port["joins"])
                 if "joins" in port
                 else None,

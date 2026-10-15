@@ -34,6 +34,7 @@ TIERS = {
     **dict.fromkeys(OUTPUT, "Output"),
     "Fn.plc": "Core",
     "Fn.scale": "Core",
+    "Fn.pole": "Core",
     "Fn.limits": "Core",
     "Terminal.limits": "Core",
     "TerminalStrip.run": "Core",

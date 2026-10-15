@@ -148,3 +148,11 @@ def test_a_wrong_attribute_still_raises_and_lists_the_part_names() -> None:
         k.main.P_1_L2  # noqa: B018 -- the access is the test
     with pytest.raises(AttributeError, match=r"K1 has no function or pin 'P_2_T2'"):
         k.P_2_T2  # noqa: B018 -- the access is the test
+
+
+def test_a_changeover_function_declares_both_throws_and_a_contact_does_not() -> None:
+    text = parts_module("demo_parts")
+    assert "class DEMO_RLY_2CO_24__co_1(TypedFn):\n    no: Throw\n    nc: Throw\n" in text
+    assert "from fransys import Pin, Throw, TypedDevice, TypedFn" in text
+    coil = text.split("class DEMO_RLY_2CO_24__coil(")[1].split("\n\n")[0]
+    assert "Throw" not in coil

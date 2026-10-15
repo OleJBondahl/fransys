@@ -38,7 +38,7 @@ from fransys_pdf._pages import cover_page
 
 from fransys_model.derive import document_facts, project_facts
 from fransys_model.derive.cable_drawing import cable_block_key
-from fransys_model.kernel.ids import make_id, render_id
+from fransys_model.kernel import make_id, render_id
 from fransys_model.vocab import (
     ConductorKind,
     DocumentPreset,

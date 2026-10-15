@@ -10,7 +10,7 @@ from fransys_author.handles import Port
 from fransys_author.surface._bar_pe import join_pe
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Fn as EngineFn
-lazy from fransys_author.surface import _throws
+lazy from fransys_author.surface import _fn_pole, _throws
 lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Function as ModelFunction
@@ -105,13 +105,22 @@ class Fn:
 
         Does not guess: an unknown name raises an `AttributeError` that lists the pins.
         """
-        if name.startswith("_"):
+        if name.startswith("__") or "_fn" not in vars(self):  # copy, unpickle: no recursion
             raise AttributeError(name)
         if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
             return _throws.throw(self._label, self._fn, name)
         owner, pins = f"{self._label}.{self._fn.name}", self._pins()
         pin = pick(owner, attribute_pin(name, pins), pins, AuthorAttributeError)
         return self._screw(pin)
+
+    def pole(self, n: int, /) -> _fn_pole.FnPole:
+        """Core: one pole of this function as a series element, counted from 1 in pole order.
+
+        Example: `d.series(s1.main.pole(2), f2.element, wire=1.5)`; the series is one pole wide.
+
+        Does not accept a changeover (use .no or .nc) or a pole past the function's count.
+        """
+        return _fn_pole.checked(self, n)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:
         """Core: request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.

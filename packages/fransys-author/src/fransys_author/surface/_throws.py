@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._pairing import End, Ends
 from fransys_model.vocab import FunctionKind, PoleSide, PortRole, link_throw, port_order_key
+lazy from fransys_author.handles import Fn as EngineFn
 
 if TYPE_CHECKING:
-    from fransys_author.handles import Fn as EngineFn
     from fransys_author.handles import Port
     from fransys_author.surface._pairing import PartFacts
     from fransys_author.surface.design import Design
@@ -58,6 +58,8 @@ class Throw:
 
     A selector (its throws on the line side, or a `d.poles` group with `selector=True`) is
     entered at the throws and left at the commons. Several functions are one pole each, in order.
+
+    Does not wire by itself: it stands in a `d.series` call.
     """
 
     def __init__(self, fns: tuple[EngineFn, ...], name: str, *, selector: bool = False) -> None:

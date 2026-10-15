@@ -1,5 +1,7 @@
 # Finding codes: validators, build and release
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Codes the model checks, the build, `release` and `verify` and the library load emit. Who acts is explained in [`findings.md`](findings.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |
@@ -14,6 +16,7 @@ Codes the model checks, the build, `release` and `verify` and the library load e
 | CONDUCTOR_ON_UNINSTALLED | WARNING | validators | consumer | A conductor lands on an item that is not marked installed. | Mark the item installed, or remove the conductor if it is absent. |
 | CONNECTOR_WIRED_WITHOUT_MATE | WARNING | validators | consumer | A conductor from outside a nested unit lands directly on its boundary connector, whose part gender is male or female (neutral or unstated passes). | Mate a plug to the boundary connector (`u.mate(plug, connector)`) and wire the plug's pin instead. |
 | CONTAINMENT_CYCLE | ERROR | validators | consumer | An item's physical-containment parent chain loops back on itself. | Correct the parent authored on one of the looping items. |
+| CORE_INDEX_PAST_PRODUCT | ERROR | validators | consumer | A cable core is numbered past the core count of the cable's product. | Use a core from 1 to the product's core count, or choose a part with more cores. |
 | DESIGNATION_DUPLICATE | ERROR | build | consumer | Two items or unit instances under one parent print one designation: a tag equal to a sibling's text, or a retired or moved released one. | Give the item a distinct tag, or none. A tag a released revision reserved needs a new version. |
 | DESIGNATION_MOVED | ERROR | release | consumer | An item or unit instance pinned in the previous release now prints a different designation, written or numbered. | Restore the released tag; only a new version may change it. |
 | DESIGNATION_NEW_IN_REVISION | INFO | build, release | note | A new untagged item or unit instance took the next free number in a later revision. | Nothing is wrong; tag it if its number must stay fixed. |
@@ -39,7 +42,7 @@ Codes the model checks, the build, `release` and `verify` and the library load e
 | NET_UNREALISED | WARNING | validators | consumer | A declared net's ports fall into more than one physical net, and no single board holds them all. Not for the PE net. | Wire the missing conductors, or remove the ports that should not share the declared net. |
 | PART_LIBRARY_VERSION_CONFLICT | ERROR | library load | consumer | Two `PartLibrary` records share a name but declare different versions. | Load only one version of each named part library. |
 | PE_NOT_GNYE | WARNING | validators | consumer | A single wire on a PE net is not green-yellow (an empty colour is not a finding). | Colour the wire GNYE. |
-| PE_PORT_OFF_PE | WARNING | validators | consumer | A port with role PE is on a net that is not PE. Silent on a net no declared net lists. | Wire the port to the PE net. |
+| PE_PORT_OFF_PE | WARNING | validators | consumer | A port with role PE is on a net that is not PE. | Wire the port to the PE net. |
 | PLACEMENT_DUPLICATE | ERROR | validators | consumer | One item is placed more than once in the same aspect (function, location or product). | Remove the duplicate placement so the item is placed once per aspect. |
 | PLC_BINDING_SIGNAL_MISMATCH | ERROR | validators | consumer | A PLC binding's channel does not have the signal type the request asked for (or is not a declared channel at all). The message names the asked kind, the channel, its kind and both fixes. | Rewire the request to a channel of the asked kind, or ask for the channel's kind. |
 | PLC_BINDING_WIRING_MISMATCH | ERROR | validators | consumer | A PLC binding disagrees with the wiring: the request or channel function is wired to a different channel or request than its binding. | Rebind the request/channel to match the wiring, or rewire it to match the binding. |
@@ -74,3 +77,4 @@ Codes the model checks, the build, `release` and `verify` and the library load e
 | UNUSED_CONTRADICTED | WARNING | validators | consumer | A boundary declared unused names a function that is no unit's boundary, or is connected across the unit the declaration is on. | Remove `unused=` if the function is wired, or fix the unit/function it names. |
 | WIRE_COLOUR_UNKNOWN | ERROR | validators | consumer | A wire or cable-product core colour is not a recognized IEC 60757 colour code (or combination). | Use a base code, a combination of two, a base code with a core number, or shield code `SH`. |
 | WIRE_ON_TWO_HARNESSES | ERROR | validators | consumer | A wire joins plugs of two harnesses. | Wire to a plug of one harness, or use a cable. |
+| WIRE_ROW_UNRESOLVED | ERROR | build | consumer | A series or detail wire was written without a row, and at build end its net carries no rail of its unit, states no `source_row` and holds no PLC channel signal, or carries rails of two rows. The message names the net and the wire's two pins. | Give `wire=` on that series: a `(colour, size)`, or a size with a row table. A rail never reaches a wire across a unit boundary from its container. |

@@ -18,6 +18,7 @@ lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .closure import physical_nets
 from .designation import terminal_designation, unit_list_context
+from .facts.children import child_items
 from .far_ends import far_ends
 from .indexes import build_indexes
 from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
@@ -51,7 +52,7 @@ def conductors_on_item(
     idx = build_indexes(model)
     terminals = terminal_items(model)
     grouped: dict[Id[Item], frozendict[PortRole, tuple[Id[Conductor], ...]]] = {}
-    for child in idx.children_by_item.get(item, ()):
+    for child in child_items(model, item):
         if child not in terminals:
             continue
         by_role = conductors_by_role(model, idx, child)
@@ -139,7 +140,7 @@ def terminal_rows(
     idx = build_indexes(model)
     facets = {facet.subject: facet for facet in facets_of(model, TerminalFacet).values()}
     children = sorted(
-        (child for child in idx.children_by_item.get(strip, ()) if child in facets),
+        (child for child in child_items(model, strip) if child in facets),
         key=lambda child: (natural_key(facets[child].group), facets[child].index, child),
     )
     groups = _jumper_groups(model, children)
@@ -270,6 +271,6 @@ def unused_terminals(model: Model, strip: Id[Item]) -> tuple[Id[Item], ...]:
     terminals = terminal_items(model)
     return tuple(
         child
-        for child in idx.children_by_item.get(strip, ())
+        for child in child_items(model, strip)
         if child in terminals and not conductors_by_role(model, idx, child)
     )

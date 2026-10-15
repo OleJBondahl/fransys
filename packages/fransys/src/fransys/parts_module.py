@@ -8,6 +8,7 @@ from fransys_parts import load as parts_load
 
 from fransys_model.kernel import Model, freeze, merge
 from fransys_model.vocab import (
+    FunctionKind,
     Part,
     function_templates,
     identifier,
@@ -50,11 +51,16 @@ def _getitem(names: list[str]) -> list[str]:
     ]
 
 
-def _function_class(cls: str, fn: str, pins: list[str]) -> list[str]:
+def _function_class(cls: str, fn: str, pins: list[str], *, changeover: bool) -> list[str]:
     lines = [f"class {cls}__{identifier(fn)}(TypedFn):"]
+    if changeover:  # a pin named no/nc wins at run time (_handles), so the stub declares the pin
+        taken = {identifier(pin) for pin in pins}
+        lines += [f"    {throw}: Throw" for throw in ("no", "nc") if throw not in taken]
     lines += [f"    {identifier(pin)}: Pin" for pin in pins]
     # a bar cut to length writes no pin (PE-BAR amendment 1): its class body is `pass`
-    return [*lines, *(_getitem(pins) if pins else ["    pass"]), ""]
+    if pins:
+        lines += _getitem(pins)
+    return [*lines, *(["    pass"] if len(lines) == 1 else []), ""]
 
 
 def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) -> list[str]:
@@ -88,6 +94,15 @@ def _functions_of(model: Model) -> dict[object, list[tuple[str, list[str]]]]:
     for template in function_templates(model).values():
         by_part[template.part].append((template.name, pins_of[template.id]))
     return {part: sorted(fns, key=lambda fn: marking_key(fn[0])) for part, fns in by_part.items()}
+
+
+def _changeovers(model: Model) -> set[tuple[object, str]]:
+    """The (part, name) of every changeover function: the one fact is the template's kind."""
+    return {
+        (t.part, t.name)
+        for t in function_templates(model).values()
+        if t.kind is FunctionKind.CONTACT_CO
+    }
 
 
 def _check_unique(mpn: str, kind: str, names: list[str]) -> None:
@@ -132,7 +147,7 @@ def _header(sources: tuple[str, ...], digest: str) -> list[str]:
         "",
         "from typing import TYPE_CHECKING, ClassVar, Literal, Never, override",
         "",
-        "from fransys import Pin, TypedDevice, TypedFn",
+        "from fransys import Pin, Throw, TypedDevice, TypedFn",
         "",
         f"SOURCES = ({', '.join(map(repr, sources))},)",
         f"LIBRARY_DIGEST = {digest!r}",
@@ -149,12 +164,12 @@ def parts_module(*sources: str) -> str:
     Does not write a file: `python -m fransys parts-module` does.
     """
     model = _frozen(sources)
-    functions = _functions_of(model)
+    functions, changeovers = _functions_of(model), _changeovers(model)
     body: list[str] = []
     for cls, part in _named_parts(model):
         fns = functions.get(part.id, [])
         _check_identifiers(part.mpn, fns)
         for fn, pins in fns:
-            body += _function_class(cls, fn, pins)
+            body += _function_class(cls, fn, pins, changeover=(part.id, fn) in changeovers)
         body += [*_part_class(cls, part, fns), ""]
     return "\n".join([*_header(sources, model.digest), *body]).rstrip("\n") + "\n"

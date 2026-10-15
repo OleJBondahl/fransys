@@ -1,5 +1,7 @@
 # The system overview
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 `overview.html` is one file that `fr.write(result, out_dir)` puts beside the PDFs. It needs no network and no server: open it in a browser. This page says how to read it.
 
 The page starts at the system: each cabinet unit is a box, each cable a line. Double-click a unit, or select it and press Enter, to open it; the crumbs above the drawing and "Up one level" go back. A unit opens as its function groups, as all devices with strips drawn through, as lanes when it has them, or as plain boxes: pick one under "View". A stub opens its far side in place.

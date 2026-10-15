@@ -5,7 +5,8 @@ from decimal import Decimal
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record, value
 
 from .core import Port, Unit
-from .enums import Current, Earthing
+from .enums import ConductorMark, Current, Earthing
+from .wiring_rows import WiringRow, rail_row
 
 PHASE_STEP = 60
 
@@ -89,3 +90,26 @@ class SupplySystem:
                 msg = f"supply system {self.name!r} rail {potential!r} {problem}"
                 holder = self.id if type(self.id) is Id else None
                 raise SchemaError(msg, kind="supply_system", record_id=holder)
+
+
+_AC_MARKS = {0: ConductorMark.L1, 120: ConductorMark.L2, 240: ConductorMark.L3}
+
+
+def supply_rail_row(supply: SupplySystem, potential: str) -> WiringRow | None:
+    """The row the rail `potential` of `supply` gives a wire, or `None` when it has no such rail.
+
+    Read from the rail alone: an AC phase of 0, 120 or 240 degrees is L1 to L3 and an AC rail at
+    0 V is N; a DC rail above 0 V is L+ and one below is L-; a DC rail at 0 V is L- or, when the
+    supply has a rail below 0 V (a mid), M. Agrees with `rail_row` on every rail authoring makes.
+    """
+    rail = supply.rails.get(potential)
+    if rail is None:
+        return None
+    has_mid = any(other.max_v < 0 for other in supply.rails.values())
+    if supply.current is Current.AC:
+        mark = ConductorMark.N if rail.phase is None else _AC_MARKS.get(rail.phase)
+    elif rail.max_v > 0:
+        mark = ConductorMark.L_PLUS
+    else:
+        mark = ConductorMark.M if has_mid and rail.max_v == 0 else ConductorMark.L_MINUS
+    return None if mark is None else rail_row(mark, has_mid=has_mid)

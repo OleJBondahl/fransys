@@ -1,5 +1,7 @@
 # Moving to Fransys
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists every change a script written for version 0.6.1 under the old name must make for Fransys 0.7.0.
 Each entry gives the old spelling, the new one and one line of why.
 The old spellings sit in text blocks: they no longer run.

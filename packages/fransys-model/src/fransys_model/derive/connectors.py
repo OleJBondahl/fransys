@@ -18,6 +18,7 @@ from .designation import (
     end_outside_nested_unit,
     unit_list_context,
 )
+from .facts.mates import mate_port_of
 from .far_ends import far_ends
 from .indexes import build_indexes
 from .location_text import port_designation_in, product_designation_in
@@ -166,13 +167,10 @@ def _pins(  # noqa: PLR0913 -- one connector's lookups, its unit and the list's 
     unit: Id[Unit] | None,
     context: Id[AspectNode] | None,
 ) -> tuple[ConnectorPin, ...]:
-    mate_ports: dict[str, Id[Port]] = {}
-    for port in () if mate is None else idx.ports_by_function.get(mate, ()):
-        mate_ports.setdefault(ports(model)[port].name, port)
     pins = []
     for port in idx.ports_by_function.get(connector, ()):
         marking = ports(model)[port].name
-        mate_port = mate_ports.get(marking)
+        mate_port = None if mate is None else mate_port_of(model, port, mate)
         blank = mate is not None and end_outside_nested_unit(
             model, functions(model)[mate].item, unit
         )

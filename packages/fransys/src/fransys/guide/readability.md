@@ -1,5 +1,7 @@
 # Reading the pages as numbers
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 `fr.readability(result)` returns a `ReadabilityReport` with the numbers behind the findings: one `ReadabilityPage` row for each schematic page in `.pages` and one `ReadabilityUnit` row for each unit in `.units`. The three types are also in `fr.derive`. The same model gives equal rows, so compare a unit between revisions by its rows. It writes no file and `fr.write` does not emit it. It lays the schematic out again. Only a drawing set that some document prints gets rows. The look findings (`PAGE_UNDERFILLED`, `WIRE_OVER_LABEL`, `TEXT_OVERLAP`, `LONE_CELL`) skip the other sets too.
 
 The findings these numbers back are in `drawing.md`.

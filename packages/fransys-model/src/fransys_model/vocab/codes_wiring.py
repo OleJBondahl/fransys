@@ -126,9 +126,7 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severities=(Severity.WARNING,),
         stage="validators",
         who="consumer",
-        cause=(
-            "A port with role PE is on a net that is not PE. Silent on a net no declared net lists."
-        ),
+        cause="A port with role PE is on a net that is not PE.",
         fix="Wire the port to the PE net.",
         page="findings-validators",
     ),
@@ -277,6 +275,22 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         who="consumer",
         cause="A wire joins plugs of two harnesses.",
         fix="Wire to a plug of one harness, or use a cable.",
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="WIRE_ROW_UNRESOLVED",
+        severities=(Severity.ERROR,),
+        stage="build",
+        who="consumer",
+        cause=(
+            "A series or detail wire was written without a row, and at build end its net carries "
+            "no rail of its unit, states no `source_row` and holds no PLC channel signal, or "
+            "carries rails of two rows. The message names the net and the wire's two pins."
+        ),
+        fix=(
+            "Give `wire=` on that series: a `(colour, size)`, or a size with a row table. A rail "
+            "never reaches a wire across a unit boundary from its container."
+        ),
         page="findings-validators",
     ),
 )

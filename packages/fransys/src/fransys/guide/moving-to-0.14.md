@@ -1,5 +1,7 @@
 # Moving to 0.14
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists every `fr.derive` name 0.14 removes, and what to use instead.
 `fr.derive` now holds the names a consumer needs to read a model, and every one has a guide entry. The rest stay in the workspace for layout, render and the outputs. A consumer script that used a removed name changes as below.
 

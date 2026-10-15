@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 from hypothesis import settings
 
-from fransys_model.kernel import registry
+from fransys_kernel import registry
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 # --import-mode=importlib leaves the test directories off sys.path; the tests import their helpers
 # by name. Workspace rule: tests conftests append to sys.path, never insert(0), so no directory
 # comes ahead of another and the winner of a bare name never depends on load order.
-for directory in ("derive", "kernel", "layout", "usecases", "vocab"):
+for directory in ("derive", "layout", "usecases", "vocab"):
     sys.path.append(str(Path(__file__).parent / directory))
 
 # Decision 0020: derandomized so `just ci` is deterministic, no deadline so a slow CI runner

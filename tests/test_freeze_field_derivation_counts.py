@@ -33,8 +33,8 @@ if str(_TESTS_DIR) not in sys.path:
 from fransys import pipeline  # noqa: E402
 from scale_units_fixture import build_scale  # noqa: E402
 
-from fransys_model.kernel import schema  # noqa: E402
-from fransys_model.kernel.freeze import freeze  # noqa: E402
+from fransys_kernel import schema  # noqa: E402
+from fransys_model.kernel import freeze  # noqa: E402
 
 if TYPE_CHECKING:
     from types import CodeType

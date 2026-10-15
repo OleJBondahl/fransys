@@ -12,6 +12,7 @@ from fransys_model.vocab import (
     ConductorMark,
     PoleSide,
     PortTemplate,
+    WiringRow,
     function_templates,
     parts,
     port_templates,
@@ -185,3 +186,16 @@ def test_a_terminals_conductive_link_states_no_side(tmp_path):
     links = 'links = [{ a = "a", b = "b", kind = "conductive" }]'
     model = _model(tmp_path, _function("terminal", ports, links))
     assert _facts(model, "a")[0] is None
+
+
+def test_a_stated_source_row_loads_on_the_port_template_and_a_bad_one_is_refused(tmp_path):
+    """A pin states the wiring row it sources (model-0260); an unknown row name is refused."""
+    ports = (
+        '{ name = "u", role = "generic", source_row = "AC_L1" }, { name = "v", role = "generic" }'
+    )
+    model = _model(tmp_path, _function("generic", ports))
+    rows = {p.name: p.source_row for p in port_templates(model).values()}
+    assert rows == {"u": WiringRow.AC_L1, "v": None}
+    bad = ports.replace("AC_L1", "AC_L9")
+    with pytest.raises(PartLibraryError):
+        _model(tmp_path, _function("generic", bad))

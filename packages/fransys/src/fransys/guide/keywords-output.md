@@ -1,5 +1,7 @@
 # Keywords of the fr functions
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page has one table for each `fr.*` function: each named keyword, its default, its effect and an example call fragment.
 A call that takes only `*args` has no table, and one sentence says what it takes.
 

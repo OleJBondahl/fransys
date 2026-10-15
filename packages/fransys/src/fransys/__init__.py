@@ -1,9 +1,8 @@
 """Fransys facade: pipeline, findings policy, file writing.
 
-The CLI is deferred (F10).
+Documentation: https://olejbondahl.github.io/fransys/ (the site is the official copy,
+not the installed files).
 """
-
-import importlib.metadata
 
 from fransys_author import AuthorError
 from fransys_author.surface import (
@@ -19,6 +18,7 @@ from fransys_author.surface import (
     CONTROL,
     DC_CONTROL,
     DC_GROUND,
+    DC_SIGNAL,
     DC_SUPPLY,
     DI,
     DO,
@@ -39,6 +39,7 @@ from fransys_author.surface import (
     SupplyRail,
     Terminal,
     TerminalStrip,
+    Throw,
     TypedDevice,
     TypedFn,
     UnitDef,
@@ -47,11 +48,13 @@ from fransys_author.surface import (
 from fransys_parts import PartLibraryError
 
 from fransys import derive
+from fransys_model.derive.docs_site import version_url
 from fransys_model.kernel import Draft, Finding, FreezeError, MergeConflict, Model, Severity
 from fransys_model.vocab import DocumentPreset, PageKind, SignalType
 
 from ._release_reader import Release, ReleasePin, releases
 from ._report import report
+from ._version import __version__
 from .design import design
 from .documents import document
 from .parts_module import parts_module
@@ -70,7 +73,10 @@ from .pipeline import (
 )
 from .readability import readability
 
-__version__ = importlib.metadata.version("fransys")
+__doc__ += (
+    f"\nThis install, {__version__}: {version_url(__version__)}"
+    f" (agents: {version_url(__version__)}llms.txt)."
+)
 
 __all__ = [
     "ABOVE",
@@ -85,6 +91,7 @@ __all__ = [
     "CONTROL",
     "DC_CONTROL",
     "DC_GROUND",
+    "DC_SIGNAL",
     "DC_SUPPLY",
     "DI",
     "DO",
@@ -120,6 +127,7 @@ __all__ = [
     "SupplyRail",
     "Terminal",
     "TerminalStrip",
+    "Throw",
     "TypedDevice",
     "TypedFn",
     "UnitDef",

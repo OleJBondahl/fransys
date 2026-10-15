@@ -9,6 +9,7 @@ from fransys_author.surface._device import Device
 from fransys_author.surface._fixed import fixed
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, SeriesElement, ends_of, poles
+from fransys_author.surface._partless_end import box_ends
 from fransys_author.surface._throws import whole_changeover
 from fransys_model.vocab import FunctionKind
 
@@ -59,7 +60,7 @@ class Parallel:
 def _fn_ends(design: Design, fn: Fn) -> Ends:
     if fn._fn.kind is FunctionKind.CONTACT_CO:
         raise whole_changeover(fn._label, fn._fn)
-    ends = ends_of(design._pairing_facts, fn._fn)
+    ends = ends_of(design._pairing_facts, fn._fn, partless_ok=True)
     if not ends.line:
         msg = f"{fn._label}.{fn._fn.name} has no poles: {NO_SIDE_FIX}"
         raise AuthorError(msg)
@@ -69,6 +70,8 @@ def _fn_ends(design: Design, fn: Fn) -> Ends:
 def _device_ends(design: Design, device: Device, width: int | None) -> Ends:
     """The ends of the one function of `device` that has `width` poles."""
     facts = design._pairing_facts
+    if all(facts.partless(f) for f in device._item.functions):
+        return box_ends(facts, device._label, list(device._item.functions), width)
     fn = carrier_function(
         list(device._item.functions), lambda f: len(poles(facts, f)), width, device._label
     )

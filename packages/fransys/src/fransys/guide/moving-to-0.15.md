@@ -1,5 +1,7 @@
 # Moving to 0.15
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists each call, name and finding that 0.15 changes, with the old spelling and the new one.
 A consumer script that used an old spelling changes as below. The version is read with `importlib.metadata.version("fransys")`; there is no `fr.__version__`.
 

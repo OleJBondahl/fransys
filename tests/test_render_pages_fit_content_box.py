@@ -27,7 +27,7 @@ from fransys_pdf import document_pages
 from fransys_pdf._drawings import schematic_pages
 from fransys_pdf._geometry import resolve_sheet_format
 
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import render_id
 from fransys_model.vocab import documents
 
 if TYPE_CHECKING:

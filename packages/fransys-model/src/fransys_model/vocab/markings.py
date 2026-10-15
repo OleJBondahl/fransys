@@ -61,9 +61,15 @@ def _pole(a: PortTemplate, b: PortTemplate) -> Pole:
 
 
 def unlinked_poles(templates: Iterable[PortTemplate]) -> tuple[Pole, ...]:
-    """The poles of pins with no pole link: consecutive pins in `port_order_key` order pair."""
+    """The poles of pins with no pole link: consecutive pins in `port_order_key` order pair.
+
+    An odd pin left over is a one-pin pole `(pin, pin)`, last: no pin goes missing.
+    """
     ordered = sorted(templates, key=port_order_key)
-    return tuple(_pole(a, b) for a, b in zip(ordered[::2], ordered[1::2], strict=False))
+    poles = [_pole(a, b) for a, b in zip(ordered[::2], ordered[1::2], strict=False)]
+    if len(ordered) % 2:
+        poles.append(Pole(None, (ordered[-1], ordered[-1])))
+    return tuple(poles)
 
 
 def pole_order(

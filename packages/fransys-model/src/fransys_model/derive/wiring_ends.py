@@ -13,6 +13,7 @@ lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item
 
 from .columns import TERMINAL_LABELS
+from .facts.children import child_items
 from .indexes import build_indexes
 from .lookups import terminal_items
 lazy from .rows import TerminalRow
@@ -23,7 +24,7 @@ def _marking_pairs(model: Model, strip: Id[Item]) -> set[tuple[str | None, str |
     idx = build_indexes(model)
     terminals = terminal_items(model)
     pairs: set[tuple[str | None, str | None]] = set()
-    for child in idx.children_by_item.get(strip, ()):
+    for child in child_items(model, strip):
         if child not in terminals:
             continue
         markings: dict[PortRole, set[str | None]] = {

@@ -70,12 +70,11 @@ def _core(plant: Plant, cable: Id[Item], index: int | None) -> Id[Conductor]:
     return conductor
 
 
-def test_a_core_of_a_cable_with_no_product_raises() -> None:
+def test_a_core_of_a_cable_with_no_product_has_no_colour() -> None:
     # MUTATION: `_product_colours` returns `("",)` instead of `()` for a cable with no part
     plant, _, cable = _plant(None)
     core = _core(plant, cable, 1)
-    with pytest.raises(SchemaError, match="outside its cable product's 0 core colour"):
-        core_colour(plant.model(), core)
+    assert core_colour(plant.model(), core) == ""
 
 
 def test_a_core_with_no_core_facet_raises() -> None:
@@ -84,3 +83,10 @@ def test_a_core_with_no_core_facet_raises() -> None:
     core = _core(plant, cable, None)
     with pytest.raises(SchemaError, match="no `core` facet"):
         core_colour(plant.model(), core)
+
+
+def test_a_core_past_its_product_has_no_colour() -> None:
+    # MUTATION: `_colour_at` wraps the index (`colours[index % len(colours) - 1]`) or raises
+    plant, _, cable = _plant()
+    core = _core(plant, cable, 4)
+    assert core_colour(plant.model(), core) == ""

@@ -24,7 +24,8 @@ _lean_surface_spec.loader.exec_module(lean_surface)
 
 # import name -> first-party packages it may import (itself is always allowed)
 ALLOWED: dict[str, frozenset[str]] = {
-    "fransys_model": frozenset(),
+    "fransys_kernel": frozenset(),
+    "fransys_model": frozenset({"fransys_kernel"}),
     "electrical_symbols": frozenset(),
     "fransys_parts": frozenset({"fransys_model"}),
     "fransys_author": frozenset({"fransys_model"}),
@@ -47,6 +48,7 @@ FIRST_PARTY = frozenset(ALLOWED) | {"fransys"}
 # table is never checked for a third-party import at all (decision 0015). Each entry must equal
 # root DESIGN 4's third-party column for that package.
 THIRD_PARTY: dict[str, frozenset[str]] = {
+    "fransys_kernel": frozenset(),
     "fransys_model": frozenset(),
     "electrical_symbols": frozenset({"symdef"}),
     "fransys_parts": frozenset(),
@@ -149,6 +151,33 @@ def test_layout_and_render_never_import_fransys_el():
         assert "fransys_el" not in ALLOWED[core]
         assert violations(core, "import fransys_el") == {"fransys_el"}
     assert violations("fransys_el", "from fransys_layout import LayoutOptions") == set()
+
+
+CORE_DIR = PACKAGES_ROOT / "fransys-layout" / "src" / "fransys_layout" / "core"
+
+
+def core_violations(source: str) -> set[str]:
+    """Absolute imports of `fransys_layout.core` source that are not the standard library (E2)."""
+    return _imported(source) - sys.stdlib_module_names
+
+
+def test_the_placement_core_imports_nothing_outside_the_standard_library():
+    """layout-0269, E2: the core imports no workspace package and no third-party package."""
+    files = sorted(CORE_DIR.glob("*.py"))
+    assert len(files) > 1
+    found = {
+        f"{path.name}: {name}"
+        for path in files
+        for name in core_violations(path.read_text(encoding="utf-8"))
+    }
+    assert found == set()
+
+
+def test_the_core_import_check_can_fail():
+    assert core_violations("import fransys_model") == {"fransys_model"}
+    assert core_violations("from symdef import x") == {"symdef"}
+    assert core_violations("from fransys_layout import options") == {"fransys_layout"}
+    assert core_violations("from . import values\nimport typing\nimport dataclasses") == set()
 
 
 def test_the_third_party_check_can_fail():

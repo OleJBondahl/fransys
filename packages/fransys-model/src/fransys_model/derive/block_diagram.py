@@ -7,14 +7,14 @@ does. A diagram belongs to a reading: `unit=None` is the system, a unit its own.
 
 from typing import Any, cast
 
+from fransys_kernel import render_id
 from fransys_model.kernel import Id, Model, value
-from fransys_model.kernel.ids import render_id
 from fransys_model.layout import DiagramMarker, DiagramSheet, layout_of, sheet_for
 from fransys_model.vocab.cables import is_cable
 from fransys_model.vocab.enums import FunctionKind, PageKind
 from fransys_model.vocab.membership import is_harness, item_chain, unit_own_roots
 from fransys_model.vocab.tables import conductors, functions, items, ports
-lazy from fransys_model.vocab.core import Item, Port, Unit
+lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
 from .cable_drawing import end_by_others, end_label
 from .cable_end_rank import cable_end_owner
@@ -28,10 +28,9 @@ from .drawing_text import (
     product_location,
 )
 from .harness import reading_cables
-from .indexes import build_indexes
+from .harness_line_ends import mate_of, plug_of
 from .instance_tag import instance_name, instance_tags
 from .lookups import item_of_port, terminal_strip, unit_chain
-from .mate_rows import mate_partners
 from .order import NaturalKey, natural_key
 lazy from .rows import HarnessCable
 
@@ -103,29 +102,10 @@ class DiagramFact:
     subject: Id[Any]
 
 
-def _is_plug(model: Model, item: Id[Item]) -> bool:
-    """Whether `item` is a plug of a cable or harness: its parent is one, and it is no cable."""
-    parent = items(model)[item].parent
-    if parent is None or is_cable(model, item):
-        return False
-    return is_cable(model, parent) or is_harness(model, parent)
-
-
-def _mated_item(model: Model, item: Id[Item]) -> Id[Item] | None:
-    """The item mated to any function of `item`, the smallest id when several; `None` unmated."""
-    partners = mate_partners(model)
-    all_functions = functions(model)
-    found = (
-        all_functions[partner].item
-        for function in build_indexes(model).functions_by_item.get(item, ())
-        for partner in partners.get(function, ())
-    )
-    return min(found, default=None)
-
-
-def _on_connector(model: Model, port: Id[Port]) -> bool:
-    """Whether `port` belongs to a connector-kind function."""
-    return functions(model)[ports(model)[port].function].kind is FunctionKind.CONNECTOR
+def _connector_of(model: Model, port: Id[Port]) -> Id[Function] | None:
+    """The connector-kind function `port` belongs to, else `None`."""
+    function = ports(model)[port].function
+    return function if functions(model)[function].kind is FunctionKind.CONNECTOR else None
 
 
 def box_of(model: Model, landed: Id[Item], unit: Id[Unit] | None) -> BoxKey | None:
@@ -157,12 +137,14 @@ def end_box(model: Model, port: Id[Port], unit: Id[Unit] | None) -> BoxEnd | Non
     """
     item = item_of_port(model, port)
     landed = cable_end_owner(model, item)
-    anchored = terminal_strip(model, item) is not None or _on_connector(model, port)
-    if _is_plug(model, item):
-        mated = _mated_item(model, item)
-        if mated is None:
+    connector = _connector_of(model, port)
+    anchored = terminal_strip(model, item) is not None or connector is not None
+    plug = plug_of(model, item, connector)
+    if plug is not None:
+        mate = mate_of(model, plug)
+        if mate is None:
             return None
-        landed, anchored = mated, True
+        landed, anchored = functions(model)[mate].item, True
     box = box_of(model, landed, unit)
     return None if box is None else BoxEnd(box=box, landed=landed, anchored=anchored)
 

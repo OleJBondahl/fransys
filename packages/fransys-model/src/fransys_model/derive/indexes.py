@@ -3,6 +3,7 @@
 import dataclasses
 from typing import Any
 
+from fransys_model.derive.facts.children import children_index
 from fransys_model.kernel import (
     DIGEST_CACHE_SIZE,
     Id,
@@ -72,9 +73,7 @@ def build_indexes(model: Model) -> Indexes:
         items_by_part=index_ids(
             (i.part, i.id) for i in items(model).values() if i.part is not None
         ),
-        children_by_item=index_ids(
-            (i.parent, i.id) for i in items(model).values() if i.parent is not None
-        ),
+        children_by_item=children_index(model),
         facets_by_subject=index_ids(
             (facet_subject(facet), facet.id)
             for kind, table in model.tables.items()

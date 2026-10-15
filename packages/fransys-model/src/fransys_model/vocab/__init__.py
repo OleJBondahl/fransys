@@ -55,10 +55,12 @@ from .facets import (
     PlcRequestFacet,
     RatingFacet,
     ReservedDesignationFacet,
+    RowSpec,
     ScalingFacet,
     SupplyFacet,
     TerminalFacet,
     WireFacet,
+    WireRowHint,
 )
 from .finding_ref import ref
 from .instantiate import PartBundle, instantiate
@@ -84,7 +86,7 @@ from .rating_readers import (
 from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
 from .schema_version import SCHEMA_VERSION
-from .supply_system import Rail, SupplySystem, rail_phase_problem
+from .supply_system import Rail, SupplySystem, rail_phase_problem, supply_rail_row
 from .tables import (
     Boundary,
     UnusedBoundary,
@@ -116,6 +118,7 @@ from .templates import FunctionTemplate, InternalLink, Part, PartLibrary, PortTe
 from .unit_by_name import unit_name_unresolved, units_named
 from .unit_index import unit_index
 from .validators import ALL_VALIDATORS
+from .wiring_rows import WiringRow, control_of, is_control, rail_row
 
 # The kernel knows only `core`; the layers above name the rest, once, in this order. A
 # reference may point at the same namespace or an earlier one (decision 0009).
@@ -195,6 +198,7 @@ __all__ = [
     "RatingFacet",
     "ReservedDesignationFacet",
     "Revision",
+    "RowSpec",
     "ScalingFacet",
     "SignalType",
     "SupplyFacet",
@@ -205,6 +209,8 @@ __all__ = [
     "UnitRelease",
     "UnusedBoundary",
     "WireFacet",
+    "WireRowHint",
+    "WiringRow",
     "aspect_nodes",
     "boundaries",
     "boundary_operating",
@@ -212,6 +218,7 @@ __all__ = [
     "cable_items",
     "changeover_throws",
     "conductors",
+    "control_of",
     "crosses_unit",
     "documents",
     "effective_rating",
@@ -226,6 +233,7 @@ __all__ = [
     "instantiate",
     "internal_links",
     "is_cable",
+    "is_control",
     "is_pole_link",
     "items",
     "link_state",
@@ -244,9 +252,11 @@ __all__ = [
     "projects",
     "rail_pairs",
     "rail_phase_problem",
+    "rail_row",
     "ref",
     "revisions",
     "split_colour",
+    "supply_rail_row",
     "supply_systems",
     "unit_index",
     "unit_name_unresolved",

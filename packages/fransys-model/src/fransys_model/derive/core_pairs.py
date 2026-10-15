@@ -5,12 +5,10 @@ Cores cell each have one function here; layout, render and the lists call them.
 """
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
-from fransys_model.vocab.closure import net_of
 from fransys_model.vocab.facets.cable import CableProductFacet
-from fransys_model.vocab.potentials import pe_firsts
-from fransys_model.vocab.tables import facets_of, items, ports
+from fransys_model.vocab.potentials import on_pe_net
+from fransys_model.vocab.tables import facets_of, items
 lazy from fransys_model.vocab.core import Item, Port
-lazy from fransys_model.vocab.enums import PortRole
 lazy from fransys_model.vocab.facets.cable import CorePair
 lazy from fransys_model.vocab.templates import Part
 
@@ -43,18 +41,10 @@ def _product_colours(model: Model, cable: Id[Item]) -> tuple[str, ...]:
 def open_core_is_spare(model: Model, colour: str, at: Id[Port] | None) -> bool:
     """Whether an open core of `colour` landing at `at` is a spare: not a screen, not earthed.
 
-    A core landing on a PE-role port, or on a port of the PE net, is a protective core earthed
-    at that port (author-0044).
+    A core landing on a port of the PE net is a protective core earthed at that port. The author
+    joins a PE-role port to the PE net (author-0044), so a PE-role port off it is not earthed.
     """
-    return colour != SCREEN and not (at is not None and _is_pe(model, at))
-
-
-def _is_pe(model: Model, port: Id[Port]) -> bool:
-    """Whether `port` has the PE role or lies on a physical net holding a PE-class net's port."""
-    net = net_of(model, port)
-    return ports(model)[port].role is PortRole.PE or (
-        net is not None and net.ports[0] in pe_firsts(model)
-    )
+    return colour != SCREEN and not (at is not None and on_pe_net(model, at))
 
 
 @value

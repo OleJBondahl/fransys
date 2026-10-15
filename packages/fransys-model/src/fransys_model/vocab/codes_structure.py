@@ -238,4 +238,13 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         fix="Remove `unused=` if the function is wired, or fix the unit/function it names.",
         page="findings-validators",
     ),
+    CodeInfo(
+        code="CORE_INDEX_PAST_PRODUCT",
+        severities=(Severity.ERROR,),
+        stage="validators",
+        who="consumer",
+        cause="A cable core is numbered past the core count of the cable's product.",
+        fix="Use a core from 1 to the product's core count, or choose a part with more cores.",
+        page="findings-validators",
+    ),
 )

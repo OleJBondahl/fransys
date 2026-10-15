@@ -1,7 +1,8 @@
 """The reading of `wire=` and of a pin argument, shared by `d.series` and `d.detail.wire`."""
 
+from collections.abc import Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
@@ -13,6 +14,7 @@ from fransys_author.surface._unit_strip import is_unit_strip, take
 from fransys_model.vocab import COLOUR_GRAMMAR, split_colour
 
 if TYPE_CHECKING:
+    from fransys_author.surface._rows import RowValue, WiringRow
     from fransys_author.wiring import Wiring
 
     from .design import Design
@@ -20,6 +22,21 @@ if TYPE_CHECKING:
 _TUPLE_LEN = 2
 
 type Colour = str  # an IEC 60757 code from `colours`, such as BU or GNYE
+type Spec = tuple[Colour, float]
+type WireArg = Spec | tuple[Spec, ...] | float | str | Decimal | Mapping[WiringRow, RowValue] | None
+
+
+class RowWire(NamedTuple):
+    """A `wire=` with no colour of its own: a size or a row table, read per wire from its row."""
+
+    size: Decimal | None
+    rows: "Mapping[WiringRow, RowValue] | None"
+
+
+class PoleWire(NamedTuple):
+    """A `wire=` of one `(colour, size)` per pole, in pole order (author-0060)."""
+
+    wirings: "tuple[Wiring, ...]"
 
 
 def _gauge(mm2: object) -> Decimal:
@@ -44,6 +61,42 @@ def wiring_for(design: Design, wire: object) -> Wiring:
         msg = f"wire= is a (colour, mm2) tuple, got {wire!r}"
         raise AuthorError(msg)
     return design._engine.wiring(colour=_colour(wire[0]), gauge=_gauge(wire[1]))
+
+
+def _size(mm2: object) -> Decimal:
+    size = _gauge(mm2)
+    if size <= 0:
+        msg = f"wire= size is a positive cross-section in mm2, got {mm2!r}"
+        raise AuthorError(msg)
+    return size
+
+
+def _per_pole(design: Design, wire: tuple[object, ...]) -> PoleWire:
+    """A tuple of `(colour, mm2)` specs, one per pole; a size or row table among them is refused."""
+    for spec in wire:
+        if not (isinstance(spec, tuple) and len(spec) == _TUPLE_LEN):
+            msg = f"wire= per pole is a tuple of (colour, mm2) specs only, got {spec!r} in {wire!r}"
+            raise AuthorError(msg)
+    return PoleWire(tuple(wiring_for(design, spec) for spec in wire))
+
+
+def read_wire(design: Design, wire: WireArg) -> Wiring | RowWire | PoleWire:
+    """`wire=` read once: a `(colour, mm2)` is fixed wiring, a tuple of them one per pole."""
+    if isinstance(wire, tuple):
+        if any(isinstance(spec, tuple) for spec in wire):
+            return _per_pole(design, wire)
+        return wiring_for(design, wire)
+    if wire is None:
+        return RowWire(None, None)
+    if isinstance(wire, Mapping):
+        return RowWire(None, wire)
+    if isinstance(wire, int | float | str | Decimal) and not isinstance(wire, bool):
+        return RowWire(_size(wire), None)
+    msg = (
+        "wire= is a size, a table of rows, a (colour, mm2) tuple, or one such tuple per pole, "
+        f"got {wire!r}"
+    )
+    raise AuthorError(msg)
 
 
 def _port(design: Design, pin: object) -> Port:

@@ -1,5 +1,7 @@
 # Units
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 A unit is a released, independently built part of a design: a board, a cabinet, a box, anything
 built and delivered on its own revision. This page shows how to write one, mark its interface,
 record its revisions and nest it in a cabinet. A cabinet is itself a unit: it holds components,

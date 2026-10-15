@@ -18,7 +18,7 @@ def test_all_18_instances_are_read() -> None:
 @pytest.mark.parametrize("name", NAMES)
 def test_symbols_and_pages_equal_the_score_file(name: str) -> None:
     inst, want = READ[name], read_score(name)
-    ids = {b.id for b in inst.scene.boxes}
+    ids = {b.sym for b in inst.scene.boxes}
     assert len(ids) + len(inst.unplaced) == want["symbols"]
     assert len({b.page for b in inst.scene.boxes}) == want["pages"]
     assert len(inst.scene.markers) == want["references"]

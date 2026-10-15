@@ -1,5 +1,7 @@
 # Moving to 0.6
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists every change a 0.5 consumer script or part file must make for 0.6.
 Each entry gives the 0.5 spelling, the 0.6 spelling and one line of why.
 The 0.5 spellings sit in text blocks: they no longer run.

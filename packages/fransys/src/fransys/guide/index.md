@@ -1,5 +1,7 @@
 # Fransys
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Fransys is a Python toolkit for authoring electrical cabinet and harness designs and
 producing their schematics, parts lists and manufacturing exports from one model. This page
 lists every consumer task with its one spelling, then the install and the shape of a script.
@@ -76,8 +78,10 @@ from `fransys.colours`.
 | branch inside a series | `d.parallel(a, b)` | authoring.md, branch inside a series |
 | a branch across part of a path | a second `d.series(split, ..., join, wire=...)` | authoring.md, Branch inside a series |
 | bridge adjacent plain terminals | `d.terminal_strip("X4", P.X, 6, bridged=(2, 6))` | authoring.md, Bridges |
+| wire one point to many | `d.detail.star(src, (a, b, c), wire=...)` | detail.md, One point to many |
 | wire two named pins off a path | `d.detail.wire(a, b, wire=(BU, 0.75))` | detail.md, d.detail.wire |
 | add a cable | `d.cable("W1", P.X, length_m=)` in a `d.series`, which takes the next free core | authoring.md, Cables |
+| a signal pair through a cable, pin for pin | `d.pair(a, cable, b)` | keywords-design.md, d.pair |
 | choose one core of a cable | `W1.core(BN, a, b)` | detail.md, W1.core |
 | name a wire colour | `from fransys.colours import BU`, then `wire=(BU, 0.75)` | authoring.md, Wire colours |
 | colour wires by what they carry | `fr.design(..., wiring=)`, `@fr.unit(wiring=)` or `wire={row: ...}` | authoring.md, Wire colours |
@@ -87,6 +91,7 @@ from `fransys.colours`.
 | a busbar, a rail bond | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | detail.md |
 | AC or DC supply and rails | `d.ac_supply(...)`, `d.dc_supply(...)` | authoring.md, AC or DC supply and rails |
 | name a place inside a place | `d.location("BATT", text, within="HOLD")` | authoring.md, A place inside a place |
+| take one pole of a multi-pole function | `s1.main.pole(2)` | keywords-handles.md, Fn.pole |
 | list a function's pins in order | `fn.pins` | detail.md, W1.core |
 | plug a connector | `d.mate(a, b)` | authoring.md, plug a connector |
 | add a harness | `d.harness("W5")` | harnesses.md, add a harness |

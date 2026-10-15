@@ -1,5 +1,7 @@
 # Moving to 0.19
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists each call that 0.19 moves or changes, with the old spelling and the new one.
 A consumer script that used an old spelling changes as below.
 

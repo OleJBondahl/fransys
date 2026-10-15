@@ -1,5 +1,6 @@
 """`series` and `parallel` build the wires the engine script builds, and fail by name."""
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -7,7 +8,14 @@ from fransys_author import AuthorError
 from fransys_author.surface import design
 from fransys_author.surface._pairing import End, Ends
 
-from fransys_model.vocab import Conductor, FunctionKind, LinkKind, PartCategory, WireFacet
+from fransys_model.vocab import (
+    Conductor,
+    FunctionKind,
+    LinkKind,
+    PartCategory,
+    WireFacet,
+    WireRowHint,
+)
 
 from ..conftest import _library, _part  # noqa: TID252 -- importlib mode puts tests/ on no path
 from ..equivalence.series_parts import _poles, series_library  # noqa: TID252 -- same
@@ -101,12 +109,18 @@ def test_the_wire_is_a_colour_and_mm2_tuple(lib: Draft) -> None:
     assert _wires(d)
 
 
-def test_a_missing_wire_on_a_series_that_reaches_no_supply_raises(lib: Draft) -> None:
+def test_a_series_that_reaches_no_supply_writes_hinted_wires_and_no_facet(lib: Draft) -> None:
+    """Each made hop is a conductor and a `WireRowHint` over the table in force, no `WireFacet`."""
     d = design(lib, place="C1")
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(AuthorError, match=r"reaches no supply: give wire=\(colour, size\)"):
-        d.series(q1.main, k1)
-    assert not _wires(d)
+    d.series(q1.main, k1, wire=0.75)
+    records = d.draft().records()
+    hints = [r for r in records if isinstance(r, WireRowHint)]
+    assert len([r for r in records if isinstance(r, Conductor)]) == len(hints) == 3
+    assert not [r for r in records if isinstance(r, WireFacet)]
+    assert {h.gauge_mm2 for h in hints} == {Decimal("0.75")}
+    assert hints[0].rows["AC_L1"].colour == "BK"
+    assert hints[0].rows["DC_SIGNAL"].colour == "BU"
 
 
 def test_a_parallel_of_a_button_and_a_contactor_aux_in_a_one_pole_series(lib: Draft) -> None:

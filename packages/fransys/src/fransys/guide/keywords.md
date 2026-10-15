@@ -1,5 +1,7 @@
 # Keywords and handles
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page lists the public names of the facade's handles and signal types, then the keyword
 arguments of the record constructors. The keywords of the `d.*` calls are in `keywords-design.md`,
 those of the handle methods and layout hints in `keywords-handles.md`, those of the `fr.*` functions in `keywords-output.md`.
@@ -43,6 +45,7 @@ Handles are the objects a design returns and the reader holds. A consumer does n
 - `DcSupply`: what `d.dc_supply` returns. It holds the rails `plus`, `minus` and `mid`.
 - `SupplyRail`: one rail of a supply, such as `supply.L1` or `supply.plus`.
 - `UnitDef`: what `@fr.unit` returns, the release of one unit. `d.add(definition, "U1")` builds it; a function that takes build arguments returns one.
+- `Throw`: one throw of a changeover, `k1.co.no` or `k1.co.nc`. It stands in a `d.series` call as an element. A consumer does not build one (its `fns` are the changeover functions). A generated parts module declares it on every changeover function.
 - `TypedDevice`: the base a generated parts module subclasses once for each part. Its `mpn` is its whole contract. It adds no behaviour: the subclass only declares functions and pins.
 - `TypedFn`: the base a generated parts module subclasses for one function of one part. It adds no behaviour. Its subclass declares pins for the type checker.
 - `BuildResult`: the result of `fr.build`. It holds `model`, the frozen and laid-out `Model`, and `findings`, every finding collected while building it.
@@ -55,8 +58,8 @@ A script written in this guide's spellings type-checks with no `ty: ignore` and 
 - A device made from an MPN string is checked only at run time: a call on it checks nothing. Annotate it `fr.Device` to check the calls on it.
 - On a `fr.Device`, a device-level pin by attribute (`q1.A1`) types as `fr.Fn` and is a ty error where a pin is needed. Write `q1["A1"]`; both run.
 - Every handle in "Handle types" has a name on `fr`, so `fr.Device`, `fr.AcSupply` or `fr.UnitDef[Io]` annotates a parameter or a return.
-- A function of a device is a `fr.Fn`: `k1.coil` and `q1.main` type as `fr.Fn`. A pin by brackets is a `fr.Pin`: `k1.coil["A2"]`, `q1["2"]` and `k1.coil.A1`. `k1.co.no` and `k1.co.nc` are changeover throws.
-- A wrong function or pin name is a run-time error. It raises and lists the names the part has.
+- A function of a device is a `fr.Fn`: `k1.coil` and `q1.main` type as `fr.Fn`. A pin by brackets is a `fr.Pin`: `k1.coil["A2"]`, `q1["2"]` and `k1.coil.A1`. `k1.co.no` and `k1.co.nc` are changeover throws (`fr.Throw`); a generated changeover function declares both.
+- A wrong function or pin name is a run-time error. It raises and lists the names the part has. A pin named `+` or `-` is the attribute `_plus` or `_minus`.
 - A unit with build arguments is a factory that returns `fr.UnitDef` (units.md, "Variants and revised copies").
 
 ## Severity

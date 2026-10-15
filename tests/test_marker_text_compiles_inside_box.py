@@ -40,8 +40,7 @@ from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import text_width
 from fransys_model.derive.drawing_text import frame_column, frame_row, marker_text, position_text
-from fransys_model.kernel import Draft, Origin, freeze, make_id
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import Draft, Origin, freeze, make_id, render_id
 from fransys_model.layout import (
     DrawingSet,
     LinkMarker,

@@ -1,5 +1,7 @@
 # Detail calls
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Each call here is for a case no core call writes. Try the core call first (`authoring.md`): a
 series pairs poles and takes the next free terminal or core, and layout reads its structure. `d.detail`
 is a `fr.Detail` handle, as `d.layout` is a `fr.Layout`.
@@ -9,7 +11,9 @@ is a `fr.Detail` handle, as `d.layout` is a `fr.Layout`.
 | call | only for |
 |---|---|
 | `d.detail.wire(a, b, wire=...)` | two named pins off any path, such as a signal pair; one signal daisy-chained, `d.detail.wire(a, b, c)`; a hop whose printed wire differs from its row |
+| `d.detail.star(src, targets, wire=...)` | one point wired to many, one wire each; `d.detail.wire(src, *targets)` chains them instead |
 | `X1[3]`, `.inner`, `.outer` | a terminal whose number or side is fixed: a published pinout, or several wires on one terminal |
+| `d.pair(a, w1, b)` | a signal pair through a cable, pin for pin, with no line or load side; it is a verb, not a detail |
 | `W1.core(BN, a, b)` | a core whose colour or number a termination plan fixes |
 | `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus shown by its label |
 | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal power jumper; terminals bonded through their mounting rail |
@@ -19,10 +23,29 @@ smallest shape.
 
 ## d.detail.wire
 
-`d.detail.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire; `wire=` is required. More than two
+`d.detail.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire. `wire=` takes the shapes `d.series` takes: a size, a table of rows or a
+`(colour, size)`, but not a tuple per pole. A size or a table takes the row of the net. More than two
 pins draw a daisy chain, one wire per neighbouring pair. `label="L1"` prints a label on the wire.
 `n=2` draws a second wire in parallel between the same two pins. A strip or a run as a pin stands
 for its next free terminal, on the inner side.
+
+### One point to many
+
+`d.detail.star(src, targets, wire=...)` draws one wire from `src` to each target in the tuple or list
+`targets`, and none between targets. A strip as `src` stands for one terminal, shared by all
+targets. `wire=` reads as it does for `d.detail.wire`.
+
+### A wire with no row
+
+A bare number is always a size. A row's value in a table is a colour or a `(colour, size)`, never a
+bare number. When `d.series` or `d.detail.wire` cannot give a wire its row as written, the row is
+read at build end from the rails its net carries. Only rails of the wire's own unit and the units
+below it count. A rail never crosses a unit boundary from its container.
+
+A net that holds a PLC channel's signal takes `DC_SIGNAL`. A pin whose part states `source_row`
+(a drive's `U`, `V` and `W`) gives its row. A net with none of these is the error
+`WIRE_ROW_UNRESOLVED`, which names the net and the wire; give `wire=(colour, size)` on that series.
+A series of only cables, strips and loads needs no `wire=`.
 
 ```python
 import fransys as fr

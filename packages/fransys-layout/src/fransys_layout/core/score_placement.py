@@ -8,7 +8,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .scene import Box, Scene, Wire
+    from .outputs import Scene, SceneBox, SceneWire
 
 HUB = 3  # wires at a junction that make it a hub
 PAIR = 2  # pins of a net that make a pair
@@ -28,8 +28,8 @@ def _straight(scene: Scene) -> frozenset[tuple[int, int, int]]:
     )
 
 
-def _touching(box: Box, vertices: frozenset[tuple[int, int, int]]) -> list[str]:
-    return [p.name for p in box.pins if (box.page, p.x, p.y) in vertices]
+def _touching(box: SceneBox, vertices: frozenset[tuple[int, int, int]]) -> list[str]:
+    return [p.pin for p in box.pins if (box.page, p.x, p.y) in vertices]
 
 
 def loose(scene: Scene) -> list[str]:
@@ -37,14 +37,14 @@ def loose(scene: Scene) -> list[str]:
     vertices = _vertices(scene)
     marked = {(m.box, m.pin) for m in scene.markers}
     return [
-        b.id
+        b.sym
         for b in scene.boxes
         if not _touching(b, vertices)
-        and not any(p.stand or (b.id, p.name) in marked for p in b.pins)
+        and not any(p.stand or (b.sym, p.pin) in marked for p in b.pins)
     ]
 
 
-def _is_junction(box: Box) -> bool:
+def _is_junction(box: SceneBox) -> bool:
     nodes = {p.node for p in box.pins}
     return len(box.pins) > 1 and len(nodes) == 1 and None not in nodes
 
@@ -57,17 +57,17 @@ def junction_off_line(scene: Scene) -> list[str]:
     vertices, straight, lone = _vertices(scene), _straight(scene), set(loose(scene))
     out = []
     for box in scene.boxes:
-        if not _is_junction(box) or box.id in lone:
+        if not _is_junction(box) or box.sym in lone:
             continue
         touching = _touching(box, vertices)
-        on_line = any((box.page, p.x, p.y) in straight for p in box.pins if p.name in touching)
+        on_line = any((box.page, p.x, p.y) in straight for p in box.pins if p.pin in touching)
         hub = sum(1 for w in scene.wires if w.page == box.page and _ends_on(w, box)) >= HUB
         if not on_line and not hub:
-            out.append(box.id)
+            out.append(box.sym)
     return out
 
 
-def _ends_on(wire: Wire, box: Box) -> bool:
+def _ends_on(wire: SceneWire, box: SceneBox) -> bool:
     pins = {(p.x, p.y) for p in box.pins}
     return any(point in pins for point in wire.points)
 

@@ -50,6 +50,18 @@ def wire(
     return k.tag
 """
 
+THROWS = """
+import fransys as fr
+from demo_typed import DEMO_RLY_2CO_24
+
+
+def wire(d: fr.Design, ac: fr.AcSupply, dc: fr.DcSupply) -> None:
+    k = d.device("K1", DEMO_RLY_2CO_24)
+    d.series(ac.L1, k.co_1.no, dc.plus, wire=("BK", 2.5))
+    d.series(ac.L1, k.co_1.nc, dc.plus, wire=("BK", 2.5))
+    d.series(ac.L1, k.co_1.xx, dc.plus, wire=("BK", 2.5))
+"""
+
 
 def _guide_pages(folder: Path) -> None:
     for page in files("fransys").joinpath("guide").iterdir():
@@ -67,6 +79,7 @@ def findings(tmp_path_factory) -> list[str]:
     folder = tmp_path_factory.mktemp("ty")
     (folder / "demo_typed.py").write_text(parts_module("demo_parts"), encoding="utf-8")
     (folder / "spellings.py").write_text(SPELLINGS, encoding="utf-8")
+    (folder / "throws.py").write_text(THROWS, encoding="utf-8")
     _guide_pages(folder)
     run = subprocess.run(  # noqa: S603 -- the workspace's pinned ty, fixed arguments
         [
@@ -88,6 +101,13 @@ def _of(findings: list[str], needle: str) -> list[str]:
 
 def test_the_handle_spellings_type_check(findings) -> None:
     assert _of(findings, "spellings.py") == []
+
+
+def test_a_generated_changeover_types_its_throws(findings) -> None:
+    """`k.co_1.no` and `.nc` type-check on a generated part; `.xx` stays a ty error (0203, 0206)."""
+    lines = _of(findings, "throws.py")
+    assert len(lines) == 1, lines
+    assert "throws.py:10:" in lines[0], lines  # only the `.xx` line
 
 
 def test_every_guide_example_type_checks(findings) -> None:

@@ -1,2 +1,13 @@
 {% extends "base.html" %}
 {% block announce %}{{ config.extra.announce }}{% endblock %}
+{% block extrahead %}
+{% if page and page.url is defined %}
+<link rel="alternate" type="text/markdown" href="{{ base_url }}/{{ page.url }}index.md">
+{% endif %}
+{% endblock %}
+{% block content %}
+{{ super() }}
+{% if page and page.url is defined %}
+<p class="markdown-copy"><a href="{{ base_url }}/{{ page.url }}index.md">Markdown copy of this page</a></p>
+{% endif %}
+{% endblock %}

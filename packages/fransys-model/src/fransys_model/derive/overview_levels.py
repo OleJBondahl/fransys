@@ -12,7 +12,7 @@ lazy from collections.abc import Callable
 from fransys_model.layout import OverviewRef, OverviewRefKind
 from fransys_model.vocab.enums import Aspect, FunctionKind
 from fransys_model.vocab.membership import boundary, item_chain, unit_items
-from fransys_model.vocab.tables import conductors, functions, items, units
+from fransys_model.vocab.tables import conductors, functions, units
 from fransys_model.vocab.terminals import terminal_items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Unit
@@ -25,6 +25,7 @@ from .designation import (
     terminal_of,
 )
 from .drawing_text import stub_far_end
+from .facts.strips import strip_of
 from .kinds import item_kind
 from .lookups import effective_placement, item_of_port, strip_set
 from .memo import Memo
@@ -96,7 +97,7 @@ def _terminal_counts(model: Model) -> dict[Id[Item], int]:
     """Each strip's terminal count."""
     found: dict[Id[Item], int] = {}
     for terminal in terminal_items(model):
-        strip = items(model)[terminal].parent
+        strip = strip_of(model, terminal)
         if strip is not None:
             found[strip] = found.get(strip, 0) + 1
     return found
@@ -360,9 +361,7 @@ def strip_view(model: Model, strip: Id[Item], unit: Id[Unit]) -> StripView:
     outside `unit`.
     """
     terminals = terminal_items(model)
-    held = [
-        t for t in unit_items(model, unit) if t in terminals and items(model)[t].parent == strip
-    ]
+    held = [t for t in unit_items(model, unit) if t in terminals and strip_of(model, t) == strip]
     return StripView(
         strip=strip,
         terminals=tuple(

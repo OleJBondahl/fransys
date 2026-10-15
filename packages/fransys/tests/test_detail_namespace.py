@@ -29,7 +29,9 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # is the pin before it (d8f37d280..., checked on a copy of the library without it).
 # TYPED-PINS (2026-10-15) adds `contactor-1p-marked.toml` and `psu-24v-marked.toml`; with those two
 # files removed the digest is the pin before them (810ebd7ff..., checked on the library without).
-_DIGEST_BEFORE_THE_MOVE = "8a87748874bc11e709717e8b29b90981fd339ca6e2bdba0d494e8c12b0c6207e"
+# WIRE-ROWS P6 (model-0260) adds `source_row` to the demo `vfd-4kw.toml` outputs; with that file
+# set back the digest is the pin before it (8a8774887..., checked on a copy of the merged tree).
+_DIGEST_BEFORE_THE_MOVE = "8463a3d4fdc1486db51947e394128980f669ca1328b86972bfaaf2e44d02172a"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

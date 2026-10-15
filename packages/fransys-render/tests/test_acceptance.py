@@ -24,8 +24,7 @@ from fransys_el import REF_TINTS
 from fransys_render import pages
 
 from fransys_model.derive.drawing_text import label_text, marker_text
-from fransys_model.kernel import loads
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import loads, render_id
 from fransys_model.layout import Label, LabelKind, LinkMarker, Page, layout_of
 
 pytestmark = pytest.mark.wp("render")

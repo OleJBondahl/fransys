@@ -1,5 +1,7 @@
 # Finding codes: layout and render
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Codes the layout and the drawing stage emit. Who acts is explained in [`findings.md`](findings.md).
 
 | Code | Severity | Stage | Who acts | Meaning | Fix |

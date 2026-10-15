@@ -75,15 +75,25 @@ def test_a_one_record_change_shows_in_the_canonical_json_and_the_digest() -> Non
 
 @pytest.mark.parametrize("name", ["cabinet", "harness_board", "merged"])
 def test_no_validator_reports_a_warning_or_an_error(name: str) -> None:
-    """Only `INFO` findings remain, but `K1`'s contact `14`, left open beside the wired `13`."""
+    """The only non-INFO findings are the expected ones, and there is no error.
+
+    `K1`'s open contact `14` is one (cabinet and merged). The other is the harness shell's `PE`
+    port (H1), which rides a core to a pin on no declared PE net: `PE_PORT_OFF_PE` (G2) fires on
+    that port alone, on the board and on the merged design.
+    """
     model = _design(name)
     findings = [f for check in ALL_VALIDATORS for f in check(model)]
-    loud = [f for f in findings if f.severity is not Severity.INFO]
+    loud = sorted((f.code, f.subjects) for f in findings if f.severity is not Severity.INFO)
+    shell = (
+        []
+        if name == "cabinet"
+        else [("PE_PORT_OFF_PE", (_port(model, "h1", "fn", "shell", "port", "PE"),))]
+    )
     if name == "harness_board":
-        assert loud == []
+        assert loud == shell
         return
     open_14 = _port(model, "k1", "fn", "no_1", "port", "14")
-    assert [(f.code, f.subjects) for f in loud] == [("FUNCTION_HALF_CONNECTED", (open_14,))]
+    assert loud == sorted([("FUNCTION_HALF_CONNECTED", (open_14,)), *shell])
     assert findings, "the designs keep some INFO findings, so an empty list means a broken check"
 
 

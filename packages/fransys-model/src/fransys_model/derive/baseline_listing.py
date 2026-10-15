@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.kernel.encode import decimal_text
+from fransys_kernel import decimal_text
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.membership import external, is_sole_unit_root, unit_own_roots
 from fransys_model.vocab.rating_readers import boundary_operating, boundary_rating

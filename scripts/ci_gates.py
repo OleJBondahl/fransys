@@ -61,6 +61,7 @@ DATA_GLOBS: tuple[str, ...] = (
     "**/pyproject.toml",
     "uv.lock",
     "ceilings.toml",
+    "one-home.toml",
     "packages/*/src/*/conventions/**",  # module-level tables are read at import only
     "packages/fransys-el/src/*/texts.py",  # the text-placement table, read at import only
     "packages/fransys-model/src/fransys_model/derive/rows.py",  # the same, for the row shapes
@@ -77,6 +78,7 @@ ALWAYS_RUN: tuple[tuple[str, str], ...] = (
     ("tests/test_lean_code_shape.py", "a real src module"),
     ("tests/test_names.py", "text of every tracked file"),
     ("tests/test_no_second_cable_predicate.py", "ast of packages/*/src"),
+    ("tests/test_one_home.py", "one-home.toml and ast of packages/*/src"),
     ("tests/test_public_toml.py", "public.toml and git ls-files"),
     ("tests/test_readme_example.py", "README.md and website/example.py"),
     ("tests/test_site_banner.py", "website/mkdocs.yml and overrides"),

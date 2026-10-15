@@ -1,5 +1,7 @@
 # Reading: records, lookups and ratings
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page covers the records that describe a model's structure, the lookups that find them,
 and the ratings and currents that say what a circuit may carry. Each record type has a
 table function that returns every record of that type, keyed by id. Every name here is

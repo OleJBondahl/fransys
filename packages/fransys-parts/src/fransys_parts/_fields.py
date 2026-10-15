@@ -28,6 +28,7 @@ from fransys_model.vocab import (
     ProtectionType,
     Rating,
     SignalType,
+    WiringRow,
 )
 
 from . import _breaking_points, _toml
@@ -91,6 +92,8 @@ PORT_FIELDS = {
     # parts-0010: stated pole side and IEC 60445 conductor; PE is a role, so "PE" is refused
     "side": _Field(str, required=False, enum=PoleSide),
     "conductor": _Field(str, required=False, enum=ConductorMark),
+    # model-0260: the wiring row a pin sources (a drive output, a PSU secondary), by row name
+    "source_row": _Field(str, required=False, enum=WiringRow),
     # parts-0017: a header pin's function port, "<function>.<port>" of the same part
     "joins": _Field(str, required=False),
 }

@@ -1,10 +1,13 @@
 """Vocabulary: instance-level kinds (design/vocabulary.md 6, "Instance level")."""
 
+import dataclasses
+
 from fransys_model.kernel import AuthoringKey, Id, Value, record
 
 from .enums import FunctionKind, PortRole
 from .release_version import refuse_below_one
 from .templates import FunctionTemplate, Part, PortTemplate
+from .wiring_rows import WiringRow
 
 
 @record(kind="unit_release")
@@ -117,7 +120,8 @@ class Port:
     Example: the coil `Function` of the relay example has ports `A1` and `A2`.
     Guarded by `part_conformance` when `template` is set. `marking` is the part's own
     pin marking: `None` means "print the port's name", `""`
-    means "print nothing", any other string is printed as given.
+    means "print nothing", any other string is printed as given. `source_row` is the
+    part's stated wiring row for the pin, copied from its template, or `None`.
     """
 
     id: Id[Port]
@@ -127,4 +131,5 @@ class Port:
     name: str
     role: PortRole
     marking: str | None = None
+    source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     ext: frozendict[str, Value] = frozendict()

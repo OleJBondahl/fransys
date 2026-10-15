@@ -2,8 +2,7 @@
 
 from functools import cached_property
 from typing import TYPE_CHECKING
-lazy from collections.abc import Callable, Mapping
-lazy from decimal import Decimal
+lazy from collections.abc import Callable
 
 from fransys_author._origin import caller_origin
 from fransys_author.errors import AuthorError
@@ -12,29 +11,28 @@ from fransys_author.surface._block_ports import series_ports
 from fransys_author.surface._cable import Cables
 from fransys_author.surface._carry import series_name
 from fransys_author.surface._channels import take_channels
+from fransys_author.surface._detail_rows import hint_maker, row_wiring
 from fransys_author.surface._ends import Parallel, branches, is_bridge, width_of
 from fransys_author.surface._pairing import Ends, PartFacts
+from fransys_author.surface._partless_end import only_last
 from fransys_author.surface._poles import Poles, group
 from fransys_author.surface._potential import Given, hops, wire_rows
-from fransys_author.surface._rows import AC_N, table
+from fransys_author.surface._rows import AC_N
 from fransys_author.surface._shorts import refuse_lone_tied_poles, refuse_tied_poles
 from fransys_author.surface._supplies import Supplies, _Rails
-from fransys_author.surface._wire import Colour, _gauge, wiring_for
+from fransys_author.surface._wire import PoleWire, RowWire, WireArg, read_wire
 
 if TYPE_CHECKING:
     from fransys_author.handles import Port
     from fransys_author.surface._potential import Hop, PortId, Walked, Wire
-    from fransys_author.surface._rows import RowValue, WiringRow
+    from fransys_author.surface._rows import WiringRow
     from fransys_author.wiring import Wiring
 
     from .design import Design
 
-type WireArg = tuple[Colour, float] | float | str | Decimal | Mapping[WiringRow, RowValue] | None
-type _Maker = Callable[[Port, Port], Wiring]
+type _Maker = Callable[[Port, Port, int], Callable[..., None]]  # the pole is the pair's index
 
 _MINIMUM = 2
-_NO_SUPPLY = "this series reaches no supply: give wire=(colour, size)"
-_NO_SIZE = "give a size: wire=0.75, or a row with a size"
 
 
 def _supply_width(design: Design, supply: _Rails, after: tuple[object, ...]) -> int:
@@ -97,6 +95,7 @@ def _refuse_shorts(element: object, width: int, before: Ends | None) -> None:
 
 def _resolve(design: Design, elements: tuple[object, ...], width: int) -> list[list[Ends]]:
     """The ends of every element; a bridge has none and needs a plain element on each side."""
+    only_last(design._pairing_facts, elements)
     last = len(elements) - 1
     found: list[list[Ends]] = []
     for i, element in enumerate(elements):
@@ -120,9 +119,9 @@ def _wire_hops(maker: _Maker, joins: list[Hop], skip: set[PortId]) -> set[PortId
     """
     touched: set[PortId] = set()
     for hop in joins:
-        for port_a, port_b in hop.pairs if hop.made else ():
+        for pole, (port_a, port_b) in enumerate(hop.pairs if hop.made else ()):
             if not {port_a.id, port_b.id} & skip:
-                maker(port_a, port_b)(port_a, port_b)
+                maker(port_a, port_b, pole)(port_a, port_b)
                 touched |= {port_a.id, port_b.id}
     return touched
 
@@ -132,31 +131,32 @@ def _commons(elements: tuple[object, ...]) -> set[PortId]:
     return {port.id for element in elements for port in getattr(element, "_commons", ())}
 
 
-def _row_makers(design: Design, wire: WireArg, rows: dict[Wire, WiringRow]) -> _Maker:
-    """The maker of each wire from its row: the series' table or size over the scope's rows."""
-    scope = table(wire, design._wiring) if isinstance(wire, Mapping) else design._wiring
-    size = None if wire is None or isinstance(wire, Mapping) else _gauge(wire)
-    if size is not None and size <= 0:
-        msg = f"wire= size is a positive cross-section in mm2, got {wire!r}"
+def _row_makers(design: Design, wire: RowWire, rows: dict[Wire, WiringRow]) -> _Maker:
+    """The maker of each wire from its row; a wire with no row is hinted (model-0260)."""
+    makers = {row: row_wiring(design, row, wire) for row in set(rows.values())}
+    hinted = hint_maker(design, wire)
+    return lambda a, b, _p: makers[rows[a.id, b.id]] if (a.id, b.id) in rows else hinted
+
+
+def _read(design: Design, wire: WireArg, width: int) -> Wiring | RowWire | PoleWire:
+    """`wire=` read once; a per-pole tuple must give one spec for each of the `width` poles."""
+    read = read_wire(design, wire)
+    if isinstance(read, PoleWire) and len(read.wirings) != width:
+        msg = (
+            f"wire= has {len(read.wirings)} specs but the series has {width} poles: "
+            f"give one (colour, size) per pole, or one (colour, size) for all"
+        )
         raise AuthorError(msg)
-    makers: dict[WiringRow, Wiring] = {}
-    for row in set(rows.values()):
-        colour, gauge = scope[row]
-        gauge = gauge if size is None else size
-        if gauge is None:
-            raise AuthorError(_NO_SIZE)
-        makers[row] = design._engine.wiring(colour=colour, gauge=gauge)
-    return lambda a, b: makers[rows[a.id, b.id]]
+    return read
 
 
-def _maker(design: Design, wire: WireArg, walked: Walked | None) -> _Maker:
-    """One `(colour, size)` for every wire, else each wire's row; no row reached raises (S4)."""
-    if isinstance(wire, tuple):
-        spec = wiring_for(design, wire)
-        return lambda _a, _b: spec
-    if walked is None:
-        raise AuthorError(_NO_SUPPLY)
-    return _row_makers(design, wire, walked[0])
+def _maker(design: Design, wire: Wiring | RowWire | PoleWire, walked: Walked | None) -> _Maker:
+    """One `(colour, size)` for all wires, one per pole, else each made wire's row, else a hint."""
+    if isinstance(wire, PoleWire):
+        return lambda _a, _b, pole: wire.wirings[pole % len(wire.wirings)]  # parallel: next branch
+    if not isinstance(wire, RowWire):
+        return lambda _a, _b, _p: wire
+    return _row_makers(design, wire, walked[0] if walked is not None else {})
 
 
 def _land_bridges(design: Design, elements: tuple[object, ...], found: list[list[Ends]]) -> None:
@@ -179,18 +179,18 @@ class Series(Supplies, Cables):
     def series(self: "Design", *elements: object, wire: WireArg = None) -> None:
         """Wire the elements end to end: each one's load to the next one's line, one wire per pole.
 
-        `wire=` is a size (colours from the rows), a table of rows, or one `(colour, size)`.
+        `wire=` is a size, a table of rows, one `(colour, size)`, or one per pole in a tuple.
         Does not create devices, cross a unit's boundary (use mate) or decide the drawing.
         """
         if len(elements) < _MINIMUM:
             msg = f"d.series joins at least {_MINIMUM} elements, got {len(elements)}"
             raise AuthorError(msg)
-        elements = take_channels(self, elements)
-        elements = bare_series(self, elements)
-        found = _resolve(self, elements, _width(self, elements))
+        elements = bare_series(self, take_channels(self, elements))
+        width = _width(self, elements)
+        found = _resolve(self, elements, width)
         commons, joins = _commons(elements), hops(elements, found)
         walked = wire_rows(elements, found, joins, self._given)
-        maker = _maker(self, wire, walked)
+        maker = _maker(self, _read(self, wire, width), walked)
         touched = _wire_hops(maker, joins, commons & self._wired_commons)
         _land_bridges(self, elements, found)
         self._wired_commons |= commons & touched

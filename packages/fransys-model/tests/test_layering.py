@@ -9,16 +9,41 @@ import ast
 from pathlib import Path
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "fransys_model"
+KERNEL_SRC = Path(__file__).resolve().parents[2] / "fransys-kernel" / "src" / "fransys_kernel"
 
-# layer -> the layers it must not import
+# layer directory (under src/fransys_model) -> the modules it must not import (design 1.2).
+# A row whose directory is absent is skipped: `derive/facts`, `checks`, `derive/texts` and
+# `derive/rows` hold no directory yet.
 FORBIDDEN: dict[str, tuple[str, ...]] = {
     "kernel": (
         "fransys_model.vocab",
         "fransys_model.layout",
         "fransys_model.derive",
     ),
-    "vocab": ("fransys_model.layout", "fransys_model.derive"),
-    "layout": ("fransys_model.derive",),
+    "vocab": ("fransys_model.layout", "fransys_model.derive", "fransys_model.checks"),
+    "layout": ("fransys_model.derive", "fransys_model.checks"),
+    "derive/facts": (
+        "fransys_model.checks",
+        "fransys_model.derive.passes",
+        "fransys_model.derive.texts",
+        "fransys_model.derive.rows",
+    ),
+    "checks": (
+        "fransys_model.derive.passes",
+        "fransys_model.derive.texts",
+        "fransys_model.derive.rows",
+    ),
+    "derive/passes": (
+        "fransys_model.checks",
+        "fransys_model.derive.texts",
+        "fransys_model.derive.rows",
+    ),
+    "derive/texts": (
+        "fransys_model.checks",
+        "fransys_model.derive.passes",
+        "fransys_model.derive.rows",
+    ),
+    "derive/rows": ("fransys_model.checks", "fransys_model.derive.passes"),
 }
 
 
@@ -28,19 +53,21 @@ def _package_of(module_name: str, *, is_init: bool) -> str:
 
 
 def _resolve_import(module_name: str, *, is_init: bool, node: ast.ImportFrom) -> list[str]:
-    """Every absolute dotted name `node` could refer to, resolving relative imports."""
+    """Every absolute dotted name `node` could refer to: its module and each name as a submodule."""
     if node.level == 0:
         base = node.module or ""
-        return [base] if base else [alias.name for alias in node.names]
-    package = _package_of(module_name, is_init=is_init)
-    parts = package.split(".")
-    up = node.level - 1
-    if up:
-        parts = parts[:-up] if up < len(parts) else []
-    base = ".".join(parts)
-    if node.module:
-        base = f"{base}.{node.module}" if base else node.module
-    return [base] if base else [f"{base}.{alias.name}" for alias in node.names]
+    else:
+        package = _package_of(module_name, is_init=is_init)
+        parts = package.split(".")
+        up = node.level - 1
+        if up:
+            parts = parts[:-up] if up < len(parts) else []
+        base = ".".join(parts)
+        if node.module:
+            base = f"{base}.{node.module}" if base else node.module
+    if not base:
+        return [alias.name for alias in node.names]
+    return [base, *(f"{base}.{alias.name}" for alias in node.names)]
 
 
 def _imported_modules(module_name: str, source: str, *, is_init: bool) -> set[str]:
@@ -91,19 +118,72 @@ def _layer_violations(root: Path, forbidden: dict[str, tuple[str, ...]]) -> list
 
 
 def test_no_layer_imports_a_downstream_layer() -> None:
-    """No layer imports a layer to its left in `derive` → `layout` → `vocab` → `kernel`."""
+    """No layer row imports a row to its left (design 1.2)."""
     assert _layer_violations(SRC_ROOT, FORBIDDEN) == []
+
+
+def test_row_table_has_the_design_rows() -> None:
+    """The table holds kernel plus the seven rows of design 1.2, each a directory or absent."""
+    assert set(FORBIDDEN) == {
+        "kernel",
+        "vocab",
+        "layout",
+        "derive/facts",
+        "checks",
+        "derive/passes",
+        "derive/texts",
+        "derive/rows",
+    }
 
 
 def test_checker_fails_on_a_synthetic_violation() -> None:
     """The checker catches a `kernel` module importing `vocab`, fed as a source string."""
     source = "from fransys_model.vocab import core\n"
     imported = _imported_modules("fransys_model.kernel.bad", source, is_init=False)
-    assert _violates(imported, FORBIDDEN["kernel"]) == {"fransys_model.vocab"}
+    assert "fransys_model.vocab" in _violates(imported, FORBIDDEN["kernel"])
 
 
 def test_checker_fails_when_vocab_imports_layout() -> None:
     """The checker catches a `vocab` module importing `layout` (decision 0009)."""
     source = "from fransys_model.layout import pages\n"
     imported = _imported_modules("fransys_model.vocab.bad", source, is_init=False)
-    assert _violates(imported, FORBIDDEN["vocab"]) == {"fransys_model.layout"}
+    assert "fransys_model.layout" in _violates(imported, FORBIDDEN["vocab"])
+
+
+def test_checker_fails_when_passes_imports_rows() -> None:
+    """A `derive/passes` source importing `derive.rows`, by name from the package, is flagged."""
+    source = "from fransys_model.derive import rows\n"
+    imported = _imported_modules("fransys_model.derive.passes.bad", source, is_init=False)
+    assert "fransys_model.derive.rows" in _violates(imported, FORBIDDEN["derive/passes"])
+
+
+def _kernel_model_imports(root: Path) -> list[str]:
+    """One entry per `fransys_model` import found in a `fransys_kernel` source file."""
+    problems = []
+    for path in sorted(root.rglob("*.py")):
+        parts = list(path.relative_to(root.parent).with_suffix("").parts)
+        is_init = parts[-1] == "__init__"
+        module_name = ".".join(parts[:-1] if is_init else parts)
+        source = path.read_text(encoding="utf-8")
+        imported = _imported_modules(module_name, source, is_init=is_init)
+        problems.extend(
+            f"{path}: imports {bad}" for bad in sorted(_violates(imported, ("fransys_model",)))
+        )
+    return problems
+
+
+def test_the_kernel_package_imports_no_fransys_model() -> None:
+    """`fransys_kernel` sits under `fransys_model`: it never imports it (decision 0208)."""
+    assert len(list(KERNEL_SRC.rglob("*.py"))) == 27
+    assert _kernel_model_imports(KERNEL_SRC) == []
+
+
+def test_the_kernel_check_fails_on_a_synthetic_import(tmp_path: Path) -> None:
+    """The same scan catches a kernel module that imports `fransys_model`."""
+    root = tmp_path / "fransys_kernel"
+    root.mkdir()
+    (root / "bad.py").write_text("from fransys_model.vocab import core\n", encoding="utf-8")
+    assert _kernel_model_imports(root) == [
+        f"{root / 'bad.py'}: imports fransys_model.vocab",
+        f"{root / 'bad.py'}: imports fransys_model.vocab.core",
+    ]

@@ -1,5 +1,6 @@
 """Vocabulary: type-level kinds declared on a `Part` (design/vocabulary.md 6, "Type level"; 7)."""
 
+import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record
@@ -16,6 +17,7 @@ from .enums import (
     PortRole,
     ProtectionType,
 )
+from .wiring_rows import WiringRow
 
 if TYPE_CHECKING:
     from .connectivity import Conductor, Mate, Net
@@ -125,7 +127,9 @@ class PortTemplate:
     (decision model-0053; F2): `None` means "print the port's name", `""` means "print
     nothing", any other string is printed as given. `pole_side` and `conductor_mark` are the
     pin's facts (decision model-0126; F9): which side of a switching device it is on, and its
-    IEC 60445 conductor designation. `None` means not stated. PE stays `role = PE`.
+    IEC 60445 conductor designation. `source_row` (model-0260) is the wiring row a pin sources,
+    for a drive's output or a PSU's secondary; its `Port` carries a copy. `None` means not
+    stated. PE stays `role = PE`.
     `joins` (decision parts-0017; HA4) is a header pin's function port, on the same part: the two
     are one pin with no conductor between, and net closure joins them.
     """
@@ -138,6 +142,7 @@ class PortTemplate:
     marking: str | None = None
     pole_side: PoleSide | None = None
     conductor_mark: ConductorMark | None = None
+    source_row: WiringRow | None = dataclasses.field(default=None, metadata={"omit_none": True})
     joins: Id[PortTemplate] | None = None
     ext: frozendict[str, Value] = frozendict()
 

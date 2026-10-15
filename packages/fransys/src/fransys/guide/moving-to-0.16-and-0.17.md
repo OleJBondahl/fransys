@@ -1,5 +1,7 @@
 # Moving to 0.16 and 0.17
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page covers a move from 0.15 to 0.16, to 0.17, or across both. If you are on 0.16, read the 0.17 section only.
 Nothing in `fr.__all__` is removed or renamed. A stored model written by 0.15 or 0.16 no longer loads.
 

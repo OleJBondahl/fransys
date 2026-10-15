@@ -170,3 +170,15 @@ def test_nets_that_part_partway_are_one_bundle_over_the_span_they_share() -> Non
     assert [pole for _, pole in lanes] == [0, 1, 2]
     assert len({bundle for bundle, _ in lanes}) == 1
     assert _lane(model, "M2", "W") == lanes[2]
+
+
+def test_a_function_with_no_pole_link_bundles_by_its_fallback_poles() -> None:
+    """A 4-pin connector pairs (1, 2) and (3, 4): nets from pins 1 and 3 are poles 0 and 1."""
+    d = fr.design("demo_parts")
+    a, b = d.device("J1", "DEMO-CONN-4P"), d.device("J2", "DEMO-CONN-4P")
+    d.detail.wire(a[1], b[1], wire=_WIRE)
+    d.detail.wire(a[3], b[3], wire=_WIRE)
+    model = fr.build(d).model
+    (trunk,) = {_lane(model, "J1", pin)[0] for pin in ("1", "3")}
+    assert [_lane(model, "J1", pin) for pin in ("1", "3")] == [(trunk, 0), (trunk, 1)]
+    assert [_lane(model, "J2", pin) for pin in ("1", "3")] == [(trunk, 0), (trunk, 1)]

@@ -31,9 +31,9 @@ ROOT = Path(__file__).resolve().parents[1]
 #: `fransys_model`'s own fourteen surface modules (amended 2026-09-27 to add
 #: `derive.numbering_pins`, and by model-0159 to add
 #: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`, model-0190 to add
-#: `derive.text_width`, EXACT-SIZES E10 to add `derive.print_sizes`): not its top-level package,
-#: which is excluded from the surface entirely -- only these fourteen dotted paths are read by
-#: other packages.
+#: `derive.text_width`, EXACT-SIZES E10 to add `derive.print_sizes`, model-0261 to add
+#: `derive.docs_site`): not its top-level package, which is excluded from the surface entirely --
+#: only these fourteen dotted paths are read by other packages.
 _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.kernel",
     "fransys_model.vocab",
@@ -50,6 +50,7 @@ _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.derive.contact_rows",
     "fransys_model.derive.order",
     "fransys_model.derive.print_sizes",
+    "fransys_model.derive.docs_site",
     "fransys_model.derive.text_width",
 )
 

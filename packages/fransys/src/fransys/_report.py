@@ -17,7 +17,7 @@ def report(result: BuildResult) -> str:
     It holds a summary line, each ERROR and WARNING, then the notes.
 
     Each ERROR and WARNING prints its message, then an `at:` line per subject, its fix and its
-    guide anchor from the code's registry entry. INFO notes print counted per code on one line.
+    findings-row URL from the code's registry entry. INFO notes print counted per code on one line.
     The text only reads the findings and their `CodeInfo`; it adds no rule of its own.
 
     Does not write files, raise on an ERROR, or drop a finding.

@@ -4,16 +4,17 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Id, Model, SchemaError
+from fransys_model.vocab.cables import is_cable
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.tables import conductors, functions, items, ports
-from fransys_model.vocab.tables import mates as mates_table
 lazy from fransys_model.vocab.core import Function, Item, Port
 
 from .cable_end_rank import cable_end_owner
 from .designation import connector_designation
 from .harness import harness_cables, reading_cables
 from .lookups import item_of_port, require
+from .mate_rows import mate_partners
 from .order import natural_key, port_designation_key
 from .rows import HarnessLineEnd
 from .wire_harness import harness_of_wire
@@ -31,11 +32,9 @@ class _End:
     ports: tuple[Id[Port], ...]
 
 
-def _other_side(model: Model, plug: Id[Function]) -> Id[Function] | None:
-    for record in mates_table(model).values():
-        if plug in (record.a, record.b):
-            return record.b if record.a == plug else record.a
-    return None
+def mate_of(model: Model, plug: Id[Function]) -> Id[Function] | None:
+    """The connector mated to `plug`: the first `mate_partners` entry, in designation order."""
+    return next(iter(mate_partners(model).get(plug, ())), None)
 
 
 def _cables_of(model: Model, subject: Id[Item]) -> tuple[HarnessCable, ...]:
@@ -84,9 +83,22 @@ def _merged(model: Model, subject: Id[Item], cables: tuple[HarnessCable, ...]) -
     return list(by_item.values())
 
 
-def _plug(model: Model, end: _End, parents: set[Id[Item]]) -> Id[Function] | None:
-    """The end's connector function when its item is a direct child of a harness or cable."""
-    return end.connector if items(model)[end.item].parent in parents else None
+def plug_of(
+    model: Model,
+    item: Id[Item],
+    connector: Id[Function] | None,
+    parents: set[Id[Item]] | None = None,
+) -> Id[Function] | None:
+    """`connector` when `item` is a plug: a non-cable direct child of a line, a connector landed.
+
+    The line is one of `parents`, or any cable or harness when `parents` is `None` (model-0175).
+    """
+    parent = items(model)[item].parent
+    if connector is None or parent is None or is_cable(model, item):
+        return None
+    if parents is None:
+        parents = {parent} if is_cable(model, parent) or is_harness(model, parent) else set()
+    return connector if parent in parents else None
 
 
 def _sort_key(model: Model, end: _End, plug: Id[Function] | None) -> tuple[object, ...]:
@@ -111,7 +123,7 @@ def harness_line_ends(model: Model, subject: Id[Item]) -> tuple[HarnessLineEnd, 
     cables = _cables_of(model, subject)
     parents = {subject, *(cable.cable for cable in cables)}
     ends = _merged(model, subject, cables)
-    plugs = {end.item: _plug(model, end, parents) for end in ends}
+    plugs = {end.item: plug_of(model, end.item, end.connector, parents) for end in ends}
     ordered = sorted(ends, key=lambda end: _sort_key(model, end, plugs[end.item]))
     return tuple(
         HarnessLineEnd(
@@ -119,7 +131,7 @@ def harness_line_ends(model: Model, subject: Id[Item]) -> tuple[HarnessLineEnd, 
             branch=position,
             plug=(plug := plugs[end.item]),
             ports=() if plug else end.ports,
-            mates=_other_side(model, plug) if plug else None,
+            mates=mate_of(model, plug) if plug else None,
         )
         for position, end in enumerate(ordered, start=1)
     )

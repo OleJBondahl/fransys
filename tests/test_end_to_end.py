@@ -8,7 +8,7 @@ import typst
 from demo_designs import cabinet_design
 from fransys_pdf import document_pages, source
 
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab import documents
 

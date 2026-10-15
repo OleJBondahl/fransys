@@ -12,6 +12,7 @@ from typing import Any, get_args
 import pytest
 from plant import Plant
 
+from fransys_kernel.schema import annotations_of, resolve_target
 from fransys_model import derive, vocab
 from fransys_model.kernel import (
     FreezeError,
@@ -26,7 +27,6 @@ from fransys_model.kernel import (
     namespace_of,
     to_data,
 )
-from fransys_model.kernel.schema import annotations_of, resolve_target
 from fransys_model.vocab import (
     BoundaryValuesFacet,
     Operating,

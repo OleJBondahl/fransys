@@ -32,11 +32,13 @@ def test_a_split_branch_starts_on_a_control_net_and_takes_control_rows() -> None
     assert _wire(rows, "-K4:14", "-K2:A1") == (WH, 0.5)
 
 
-def test_a_series_that_reaches_no_supply_and_starts_on_no_series_net_raises() -> None:
+def test_a_series_that_reaches_no_supply_is_resolved_at_build_end_or_an_error_names_it() -> None:
     d = fr.design("demo_parts")
     k3, k4 = d.device("K3", "DEMO-CTR-3P-24"), d.device("K4", "DEMO-CTR-3P-24")
-    with pytest.raises(fr.AuthorError, match=r"reaches no supply: give wire=\(colour, size\)"):
-        d.series(k3.aux, k4.aux, wire=0.5)
+    d.series(k3.aux, k4.aux, wire=0.5)
+    found = [f for f in fr.build(d).findings if f.code == "WIRE_ROW_UNRESOLVED"]
+    assert found
+    assert "wire=" in found[0].message
 
 
 class _Io(NamedTuple):
@@ -193,3 +195,64 @@ def test_a_two_pole_first_element_on_a_three_phase_supply_with_n_names_both_coun
         fr.AuthorError, match=r"S1 has 2 poles, the path from 400V carries 3 .* or 4 .*d\.series"
     ):
         d.series(ac, s1.main, e1.load, wire=1.5)
+
+
+def _dc_with_k1_k2(wiring=_HOUSE):
+    d = fr.design("demo_parts", wiring=wiring)
+    dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
+    s1, k1 = d.device("S1", "DEMO-CTR-BLOCK-1NO1NC"), d.device("K1", "DEMO-CTR-3P-24")
+    return d, dc, s1, k1, d.device("K2", "DEMO-CTR-3P-24")
+
+
+def test_a_detail_wire_by_size_takes_the_row_an_earlier_series_gave_its_ports() -> None:
+    d, dc, s1, k1, k2 = _dc_with_k1_k2()
+    d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)
+    d.detail.wire(k1.coil["A2"], k2.coil["A1"], wire=0.5)
+    assert _wire(_rows(d), "-K1:A2", "-K2:A1") == (BK, 0.5)
+
+
+def test_a_detail_wire_with_a_row_table_takes_that_rows_colour_and_size() -> None:
+    d, dc, s1, k1, k2 = _dc_with_k1_k2()
+    d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)
+    d.detail.wire(k1.coil["A2"], k2.coil["A1"], wire={fr.DC_GROUND: (BN, 1.0)})
+    assert _wire(_rows(d), "-K1:A2", "-K2:A1") == (BN, 1.0)
+
+
+def test_a_detail_wire_by_size_with_no_row_on_either_end_is_hinted_and_errors_at_build() -> None:
+    d = fr.design("demo_parts", wiring=_HOUSE)
+    k1, k2 = d.device("K1", "DEMO-CTR-3P-24"), d.device("K2", "DEMO-CTR-3P-24")
+    d.detail.wire(k1.coil["A1"], k2.coil["A1"], wire=0.75)
+    assert [f.code for f in fr.build(d).findings if f.code == "WIRE_ROW_UNRESOLVED"] == [
+        "WIRE_ROW_UNRESOLVED"
+    ]
+
+
+def test_a_series_of_only_a_cable_and_loads_with_no_supply_wires_no_series_wire() -> None:
+    d = fr.design("demo_parts")
+    k1, k2 = d.device("K1", "DEMO-CTR-3P-24"), d.device("K2", "DEMO-CTR-3P-24")
+    w1 = d.cable("W1", "DEMO-CBL-4G1.5")
+    d.series(k1.coil, w1, k2.coil)  # no made hop and no supply: nothing to raise about
+
+
+def test_a_wiring_table_value_that_is_a_bare_number_raises_and_shows_the_pair_form() -> None:
+    expected = (
+        r"row AC_L1 value 0\.75 is a bare number, a size; "
+        r'give \(colour, size\) such as \("BK", 0\.75\)'
+    )
+    with pytest.raises(fr.AuthorError, match=expected):
+        fr.design("demo_parts", wiring={fr.AC_L1: 0.75})  # ty: ignore[invalid-argument-type] -- plants a bare number
+
+
+def test_a_series_starting_on_a_net_a_detail_wire_touched_takes_that_rows_control_path() -> None:
+    d, dc, s1, k1, k2 = _dc_with_k1_k2()
+    k3 = d.device("K3", "DEMO-CTR-3P-24")
+    d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)
+    d.detail.wire(k1.coil["A2"], k2.coil["A1"], wire=0.5)
+    d.series(k2.coil, k3.aux, wire=0.5)  # starts on K2 A1, which the detail wire gave DC_GROUND
+    assert _wire(_rows(d), "-K2:A2", "-K3:13") == (WH, 0.5)  # the control row of DC_GROUND
+
+
+def test_a_detail_wire_to_a_rail_pin_with_no_given_row_takes_the_rails_row_at_build_end() -> None:
+    d, dc, _s1, k1, _k2 = _dc_with_k1_k2()
+    d.detail.wire(k1.coil["A2"], dc.minus.pin, wire=0.75)
+    assert _wire(_rows(d), "-K1:A2", "-G1:-") == (BK, 0.75)

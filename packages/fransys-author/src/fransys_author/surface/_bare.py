@@ -41,7 +41,7 @@ def _pins(design: Design, element: object) -> _Pins:
     """The pins of a function with no pole; empty for any other element."""
     if not isinstance(element, Fn) or element._fn.kind is FunctionKind.CONTACT_CO:
         return ()
-    if ends_of(design._pairing_facts, element._fn).line:
+    if ends_of(design._pairing_facts, element._fn, partless_ok=True).line:
         return ()
     return tuple(port for port in element._fn.ports if port.role is not PortRole.PE)
 

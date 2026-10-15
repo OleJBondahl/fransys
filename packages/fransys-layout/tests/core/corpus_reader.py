@@ -1,4 +1,6 @@
-"""Reads one corpus instance into a `fransys_layout.core.Scene`.
+"""Reads one corpus instance into the contract's `fransys_layout.core.Scene`.
+
+The one copy of the dump-line reader: `internal/placement_research/` imports it by path.
 
 It parses the `today`, `route` and `marker` lines. It reads `sym`, `pin` and `net` lines only as
 far as the scene needs: a box's body and pins at their absolute places, each pin's net and node.
@@ -8,11 +10,22 @@ Of the `fact` lines it reads `boxpin`, `attached`, `head` and `strip`, the flags
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
-from fransys_layout.core import Box, Marker, Pin, Scene, Wire
+from fransys_layout.core import (
+    Box,
+    MarkerKind,
+    Scene,
+    SceneBox,
+    SceneMarker,
+    ScenePin,
+    SceneWire,
+    Side,
+    Size,
+)
 
 CORPUS = Path(__file__).parent.parent / "corpus" / "placement"
-CLASS = {"-": "tag_pair", "REF": "star", "BRANCH": "star", "OFF": "stub"}
+KIND: dict[str, MarkerKind] = {"-": "tag", "REF": "star", "BRANCH": "star", "OFF": "stub"}
 TURN = {"R0": (1, 1), "R180": (-1, -1), "MR180": (1, -1)}  # orientation -> (sx, sy) on R0 offsets
 
 
@@ -101,33 +114,33 @@ def _facts(by_kind: dict[str, list[list[str]]]) -> Facts:
     return Facts(flags["boxpin"], flags["attached"], flags["head"], strip)
 
 
-def _flip(side: str, sx: int, sy: int) -> str:
+def _flip(side: str, sx: int, sy: int) -> Side:
     swap = {"N": "S", "S": "N"} if sy < 0 else {}
     swap |= {"E": "W", "W": "E"} if sx < 0 else {}
-    return swap.get(side, side)
+    return cast("Side", swap.get(side, side))
 
 
 def _pin(
     sid: str, pw: list[str], origin: tuple[int, int], turn: tuple[int, int], ctx: tuple
-) -> Pin:
+) -> ScenePin:
     net_of, facts = ctx
     dx, dy = _ints(pw[3])
     kv = _kv(pw)
     ref = f"{sid}.{pw[1]}"
     node = int(kv["node"]) if "node" in kv else None
-    return Pin(
+    return ScenePin(
         pw[1],
         origin[0] + turn[0] * dx,
         origin[1] + turn[1] * dy,
+        _flip(pw[2], *turn),
         net_of.get(ref),
         node,
         "stand" in kv,
-        _flip(pw[2], *turn),
         ref in facts.boxpin,
     )
 
 
-def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple) -> Box:
+def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple) -> SceneBox:
     turn = TURN[_kv(words)["orient"]]
     ox, oy = _ints(_kv(words)["at"])
     origin = (ox, oy)
@@ -136,13 +149,12 @@ def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple) -> Box:
     xs = sorted((origin[0] + turn[0] * bx, origin[0] + turn[0] * (bx + bw)))
     ys = sorted((origin[1] + turn[1] * by, origin[1] + turn[1] * (by + bh)))
     facts = ctx[1]
-    return Box(
+    body = Box(xs[0], ys[0], xs[1] - xs[0], ys[1] - ys[0])
+    return SceneBox(
         sid,
         page,
-        xs[0],
-        ys[0],
-        xs[1] - xs[0],
-        ys[1] - ys[0],
+        body,
+        body,
         pins,
         sid in facts.attached,
         sid in facts.head,
@@ -151,30 +163,49 @@ def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple) -> Box:
 
 
 def read_instance(path: Path) -> Instance:
-    text = path.read_text(encoding="utf-8")
+    return read_text(path.read_text(encoding="utf-8"), path.name)
+
+
+def read_scene(text: str) -> Scene:
+    """The scene of an instance text, for the research reader."""
+    return read_text(text, "<text>").scene
+
+
+def read_text(text: str, name: str) -> Instance:
     by_kind = _lines(text)
     syms = _syms(text)
     net_of, rails = _nets(by_kind.get("net", []))
     today = by_kind.get("today", [])
-    assert {w[1] for w in today} <= set(syms), path.name
+    if unknown := {w[1] for w in today} - set(syms):
+        msg = f"{name}: today line for unknown symbol {sorted(unknown)}"
+        raise ValueError(msg)
     # a page that holds only routes or markers still gets its number (CORPUS-PANEL-2)
     keyed = today + by_kind.get("route", []) + by_kind.get("marker", [])
     number = {k: i for i, k in enumerate(sorted({_key(w) for w in keyed}))}
     ctx = (net_of, _facts(by_kind))
     boxes = [_box(w[1], syms[w[1]], w, number[_key(w)], ctx) for w in today]
     wires = [
-        Wire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])))
+        SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])))
         for w in by_kind.get("route", [])
     ]
     markers = []
     for w in by_kind.get("marker", []):
         sid, pin = _owner(w[2], syms)
-        markers.append(Marker(w[1], sid, pin, number[_key(w)], CLASS[_kv(w)["star"]]))
+        x, y = _ints(_kv(w)["at"])
+        markers.append(SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin))
     pages: dict[str, set[int]] = {}
     for b in boxes:
-        pages.setdefault(b.id, set()).add(b.page)
+        pages.setdefault(b.sym, set()).add(b.page)
     unplaced = frozenset(set(syms) - set(pages))
-    scene = Scene(tuple(boxes), tuple(wires), tuple(markers), frozenset(rails))
+    area = _ints(",".join(by_kind["area"][0][1:3]))
+    scene = Scene(
+        Size(*area),
+        len({b.page for b in boxes}),
+        tuple(boxes),
+        tuple(wires),
+        tuple(markers),
+        frozenset(rails),
+    )
     return Instance(scene, pages, unplaced)
 
 

@@ -1,0 +1,16 @@
+schema = 1
+
+[part]
+mpn = "DEMO-SENSOR-2W"
+manufacturer = "Demo"
+description = "Two-wire sensor, signal pins 1 and 2, no line or load side"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "sig"
+kind = "sensor"
+ports = [
+    { name = "1", role = "generic" },
+    { name = "2", role = "generic" },
+]

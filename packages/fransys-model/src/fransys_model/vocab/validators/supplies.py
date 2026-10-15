@@ -3,8 +3,8 @@
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Final
 
+from fransys_kernel import decimal_text
 from fransys_model.kernel import Finding, Severity
-from fransys_model.kernel.encode import decimal_text
 from fransys_model.vocab.supply_sources import source_declarations
 from fransys_model.vocab.tables import supply_systems
 

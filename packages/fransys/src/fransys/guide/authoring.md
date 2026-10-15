@@ -1,5 +1,7 @@
 # Authoring a design
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page teaches how to write a design with `fr.design`: places, function blocks, devices, terminal
 strips, wires, cables, supplies, PLC requests and layout advice. Each task has one spelling, shown
 first written out and then with Python around it.
@@ -166,15 +168,16 @@ for tag in ("H1", "H2", "H3"):
 
 ## Wiring and cables
 
-`d.series` takes `wire=` in three shapes (Wire colours): a colour code and a cross-section in mm2,
-a size, or a table of rows.
+`d.series` takes `wire=` in four shapes (Wire colours): a colour code and a cross-section in mm2,
+a size, a table of rows, or a tuple of `(colour, mm2)`, one per pole.
 
 ### Wire along a current path
 
 `d.series(a, b, c, wire=(BU, 0.75))` wires elements end to end: each one's load side to the next
 one's line side, one wire per pole. A supply rail, a run, a device function, a cable and a strip
 are all elements. A function is a series element when its part names its line side; else the
-series raises and names it.
+series raises and names it. A part-less external device may end a series: its pins meet the poles in
+declared order; anywhere else it raises.
 
 ### Branch inside a series
 
@@ -315,6 +318,7 @@ A refusal starts with one of these texts. Each has one fix.
 | `N poles into M: name the pins` | pass elements with equal pole counts |
 | `conductors L1, L2 into L1, L3: name the pins` | pass elements whose conductor marks agree |
 | `<element> has N poles; a path from S takes` | pass the supply's phases, or the phases and N |
+| `row <row> value <n> is a bare number, a size` | give the colour and the size as a tuple, such as `("BK", 1.5)` |
 | `a pin is one wire` | pass the function or the strip; a fixed pin is `d.detail.wire`, a fixed terminal is `x1[3]` |
 | `a changeover is two throws` | pass `K1.co_1.no` or `K1.co_1.nc` |
 | `a cable sits between two elements that are not cables` | put a plain element on each side of the cable |
@@ -338,6 +342,7 @@ d.series(dc.plus, x1, w1, d.device("H1", "DEMO-LAMP-24").lamp, dc.minus, wire=(B
 ```
 
 A core with a fixed colour or number is `W1.core(BN, a, b)`: see `detail.md`.
+Use `d.pair(x8[1:3], w1, b1.sig)` rather than `d.series` when the ends state no line or load side: core `i` joins pin `i` to pin `i`.
 
 ## Wire colours
 
@@ -347,7 +352,7 @@ a blue 0.75 mm2 wire.
 
 ### Colour by what a wire carries
 
-A design has eight wire rows: `fr.DC_SUPPLY`, `fr.DC_GROUND`, `fr.DC_CONTROL`, `fr.AC_L1`, `fr.AC_L2`,
+A design has nine wire rows: `fr.DC_SUPPLY`, `fr.DC_GROUND`, `fr.DC_CONTROL`, `fr.DC_SIGNAL`, `fr.AC_L1`, `fr.AC_L2`,
 `fr.AC_L3`, `fr.AC_N` and `fr.AC_CONTROL`. A row's value is a colour, or a colour and a size.
 `d.series` picks each wire's row from what it carries.
 
@@ -361,7 +366,7 @@ the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`, every D
 - a table, `wire={fr.DC_CONTROL: (WH, 0.75)}`: replaces only those rows for this series.
 - a spec, `wire=(BU, 0.75)`: every wire gets that colour and size, and the rows are ignored.
 
-A wire whose row has no size and no size on the series raises.
+A wire whose row has no size and no size on the series is `WIRE_ROW_UNRESOLVED`.
 
 A series that starts on one rail (`dc.plus`, `ac.L1`) is a control path. A wire at the rail's
 potential takes the rail's row. A fuse or a contact ends that potential: the wires after it take
@@ -369,6 +374,8 @@ potential takes the rail's row. A fuse or a contact ends that potential: the wir
 each pole keeps its conductor's row through every element. On a supply with `n=`, the first
 element with poles decides: as many as the phases leaves N unwired, one more takes N. A series that
 starts on no rail takes the rows the earlier series gave its net.
+
+A wire with no row when written is resolved at build end (`d.detail` page, "A wire with no row").
 
 ```python
 import fransys as fr

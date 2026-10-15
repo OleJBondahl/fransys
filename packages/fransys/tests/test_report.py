@@ -3,6 +3,7 @@
 import fransys as fr
 from fransys import _codes, _report
 
+_SITE = "https://olejbondahl.github.io/fransys/"
 _PATCHED = fr.build(fr.design("demo_parts"))  # an empty build; check is patched over it
 
 
@@ -26,7 +27,7 @@ def test_a_report_gives_the_summary_each_error_and_the_notes(tmp_path):
         "build: 1 error, 0 warnings, 3 notes",
         "DOCUMENT_NO_DRAWINGS (error): SCHEMATIC: no drawing set found",
         f"  fix: {info.fix}",
-        "  see: findings-pdf#document_no_drawings",
+        f"  see: {_SITE}{fr.__version__}/guide/findings-pdf/#document_no_drawings",
         "notes: DOCUMENT_EMPTY_LIST 3",
     ]
 
@@ -47,7 +48,7 @@ def test_each_subject_prints_as_an_at_line(monkeypatch):
         "  at: build.py:12 (K1)",
         "  at: build.py:14 (K2)",
         f"  fix: {_codes.BY_CODE['LONE_CELL'].fix}",
-        "  see: findings-render#lone_cell",
+        f"  see: {_SITE}{fr.__version__}/guide/findings-render/#lone_cell",
         "notes: PAGE_UNDERFILLED 1",
     ]
 

@@ -1,5 +1,7 @@
 # Reading a model
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 `fransys.derive` is the read side of a model: every designation, table, row and rating a
 script might need already has a function here, and layout, render and every output call the
 same ones. This page does not restate `fr.derive`'s whole surface. Every function carries its

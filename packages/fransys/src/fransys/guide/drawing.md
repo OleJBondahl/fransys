@@ -1,5 +1,7 @@
 # Drawing well
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Layout draws the structure you author and invents none. This page says what layout reads, how to author a cabinet that draws readably, which numbers change its size, and which findings mean the design lacks structure.
 
 ## How layout reads the model

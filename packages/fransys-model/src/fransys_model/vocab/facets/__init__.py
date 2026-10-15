@@ -18,6 +18,7 @@ from .scaling import ScalingFacet
 from .supply import SupplyFacet
 from .terminal import TerminalFacet
 from .wire import WireFacet
+from .wire_row_hint import RowSpec, WireRowHint
 
 __all__ = [
     "AssignedDesignationFacet",
@@ -41,8 +42,10 @@ __all__ = [
     "PlcRequestFacet",
     "RatingFacet",
     "ReservedDesignationFacet",
+    "RowSpec",
     "ScalingFacet",
     "SupplyFacet",
     "TerminalFacet",
     "WireFacet",
+    "WireRowHint",
 ]

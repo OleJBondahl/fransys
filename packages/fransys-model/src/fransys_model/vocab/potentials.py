@@ -52,3 +52,9 @@ def pe_firsts(model: Model) -> frozenset[Id[Port]]:
         for port in net.ports
     )
     return frozenset(net.ports[0] for net in physical if net is not None)
+
+
+def on_pe_net(model: Model, port: Id[Port]) -> bool:
+    """Whether `port` lies on a physical net holding a port of a `NetClass.PE` net."""
+    physical = net_of(model, port)
+    return physical is not None and physical.ports[0] in pe_firsts(model)

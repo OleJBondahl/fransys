@@ -4,9 +4,8 @@ import dataclasses
 from decimal import Decimal
 from typing import cast
 
+from fransys_kernel import JsonValue, decimal_text, read_json, write_json
 from fransys_model.kernel import SchemaError, SchemaVersionError
-from fransys_model.kernel.encode import JsonValue, decimal_text, write_json
-from fransys_model.kernel.jsonread import read_json
 from fransys_model.vocab.ratings import BreakingPoint, Operating, Rating
 
 from .rows_baseline import (

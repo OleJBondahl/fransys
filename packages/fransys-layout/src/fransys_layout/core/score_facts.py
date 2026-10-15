@@ -1,7 +1,7 @@
 """The placement rules that read facts a scene carries: P1, P3 and P6 (design section 3.1).
 
-A fact is a flag on a box or pin (`Pin.box`, `Box.attached`, `Box.head`, `Box.strip`). The rules
-read the flags and never ask what a symbol is.
+A fact is a flag on a box or pin (`ScenePin.box`, `SceneBox.attached`, `.head` and `.strip`).
+The rules read the flags and never ask what a symbol is.
 """
 
 from collections import Counter, defaultdict
@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from .score_placement import _touching, _vertices
 
 if TYPE_CHECKING:
-    from .scene import Box, Scene
+    from .outputs import Scene, SceneBox
 
 FAN = 3  # symbols on a net that make a fan
 
@@ -26,14 +26,14 @@ def attached_off_pin(scene: Scene) -> list[str]:
     for b in scene.boxes:
         for p in b.pins:
             if b.attached and p.net in spots:
-                key = (b.id, p.name)
+                key = (b.sym, p.pin)
                 ok[key] = ok.get(key, False) or (b.page, p.x) in spots[p.net]
     return sorted(f"{box}.{pin}" for (box, pin), good in ok.items() if not good)
 
 
 def _legs(scene: Scene, net: str, skip: tuple[str, str]) -> Counter[int]:
     return Counter(
-        b.page for b in scene.boxes for p in b.pins if p.net == net and (b.id, p.name) != skip
+        b.page for b in scene.boxes for p in b.pins if p.net == net and (b.sym, p.pin) != skip
     )
 
 
@@ -43,12 +43,12 @@ def _fan_heads(scene: Scene) -> dict[tuple[str, str], tuple[str, set[int]]]:
     for b in scene.boxes:
         for p in b.pins:
             if p.net is not None:
-                sizes[p.net].add(b.id)
+                sizes[p.net].add(b.sym)
     found: dict[tuple[str, str], tuple[str, set[int]]] = {}
     for b in scene.boxes:
         for p in b.pins:
             if b.head and p.net is not None and len(sizes[p.net]) >= FAN:
-                found.setdefault((b.id, p.name), (p.net, set()))[1].add(b.page)
+                found.setdefault((b.sym, p.pin), (p.net, set()))[1].add(b.page)
     return found
 
 
@@ -62,7 +62,7 @@ def head_off_legs(scene: Scene) -> list[str]:
     return sorted(out)
 
 
-def _end(box: Box, vertices: frozenset[tuple[int, int, int]]) -> str | None:
+def _end(box: SceneBox, vertices: frozenset[tuple[int, int, int]]) -> str | None:
     """`head` when the terminal's wire leaves downward, `foot` upward, else no end."""
     sides = {p.side for p in box.pins if (box.page, p.x, p.y) in vertices}
     if "S" in sides and "N" not in sides:
@@ -73,14 +73,14 @@ def _end(box: Box, vertices: frozenset[tuple[int, int, int]]) -> str | None:
 def row_broken(scene: Scene) -> list[str]:
     """P6: terminals of one strip at the same end of their columns on one page off a shared y."""
     vertices = _vertices(scene)
-    groups: dict[tuple[str, int, str], list[Box]] = defaultdict(list)
+    groups: dict[tuple[str, int, str], list[SceneBox]] = defaultdict(list)
     for b in scene.boxes:
         end = _end(b, vertices) if b.strip is not None and _touching(b, vertices) else None
         if end is not None and b.strip is not None:
             groups[b.strip, b.page, end].append(b)
     out = []
     for members in groups.values():
-        rows = Counter(b.y + b.h // 2 for b in members)
+        rows = Counter(b.body.y + b.body.h // 2 for b in members)
         modal = min(rows, key=lambda y: (-rows[y], y))
-        out += [b.id for b in members if b.y + b.h // 2 != modal]
+        out += [b.sym for b in members if b.body.y + b.body.h // 2 != modal]
     return sorted(out)

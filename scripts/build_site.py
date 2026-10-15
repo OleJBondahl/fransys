@@ -20,11 +20,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import findings_guide  # noqa: E402  its page list is the findings pages' one source
 import fransys as fr  # noqa: E402  the home example's own page kinds
 import fransys_pdf  # noqa: E402  the same
 import lean_api  # noqa: E402  scripts/ goes on sys.path first, as the one home of the surface listing
 import pypdfium2  # noqa: E402  the site group's pin; imported here only after sys.path is set
 import site_gallery  # noqa: E402  sibling script, same reason
+import site_markdown  # noqa: E402  the same
+
+from fransys_model.derive.docs_site import OFFLINE_NOTE  # noqa: E402  the offline banner the site drops
 
 STATE = ROOT / ".fransys"
 SRC = STATE / "site-src"
@@ -53,16 +57,28 @@ def _title(path: Path) -> str:
     return path.stem
 
 
+ROW_CODE = re.compile(r"^\| ([A-Z][A-Z0-9_]+) \|", re.MULTILINE)
+
+
+def anchor_rows(text: str) -> str:
+    """Give each findings-table row the anchor `CodeInfo.see` names, its code in lower case (D6)."""
+    return ROW_CODE.sub(lambda m: f'| <a id="{m[1].lower()}"></a>{m[1]} |', text)
+
+
 def stage_guide() -> list[tuple[str, str]]:
-    """Copy the guide's pages unchanged; return `(nav title, page path)` in nav order."""
+    """Copy the guide pages without the offline banner; return `(nav title, page)` in nav order."""
     guide = Path(str(files("fransys").joinpath("guide")))
     (SRC / "guide").mkdir(parents=True)
     entries = []
+    for name in (*guide_pages(), "AGENTS"):
+        text = (guide / f"{name}.md").read_text(encoding="utf-8")
+        text = text.replace(OFFLINE_NOTE + "\n\n", "")
+        if name in findings_guide.page_names():
+            text = anchor_rows(text)
+        (SRC / "guide" / f"{name}.md").write_text(text, encoding="utf-8")
     for name in guide_pages():
-        shutil.copy2(guide / f"{name}.md", SRC / "guide" / f"{name}.md")
         title = "Overview" if name == "index" else _title(guide / f"{name}.md")
         entries.append((title, f"guide/{name}.md"))
-    shutil.copy2(guide / "AGENTS.md", SRC / "guide" / "AGENTS.md")
     entries.append(("For coding agents", "guide/AGENTS.md"))
     return entries
 
@@ -80,27 +96,62 @@ def opening_paragraph(path: Path) -> str:
     return " ".join(paragraph)
 
 
-def llms_txt(entries: list[tuple[str, str]], site_url: str) -> str:
-    """The llmstxt.org file: title, a one-line summary, one line per page of `entries`."""
-    summary = opening_paragraph(SRC / entries[0][1]).split(". ")[0].rstrip(".") + "."
-    lines = ["# Fransys", "", f"> {summary}", "", "## Guide", ""]
-    for title, page in entries:
-        url = f"{site_url}{page.removesuffix('.md').removesuffix('index')}"
-        url += "" if url.endswith("/") else "/"
-        lines.append(f"- [{title}]({url}): {opening_paragraph(SRC / page)}")
-    return "\n".join(lines) + "\n"
+def plain(paragraph: str) -> str:
+    """A paragraph with each `[text](link)` reduced to `text`; a relative link there is dead."""
+    return re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", paragraph)
 
 
-def stage_llms(guide: list[tuple[str, str]]) -> None:
-    """Write `llms.txt` at the site root from the guide pages already staged."""
+def llms_txt(sections: list[tuple[str, list[tuple[str, str]]]], site_url: str, version: str) -> str:
+    """The llmstxt.org file: the version on line 1, a summary, then one list per section of pages.
+
+    `site_url` is this version's root; each link is the page's Markdown copy (D2, D3).
+    """
+    first = sections[0][1][0][1]
+    summary = opening_paragraph(SRC / first).split(". ")[0].rstrip(".") + "."
+    lines = [f"# Fransys {version}", "", f"> {summary}", ""]
+    lines += [
+        f"Version {version}. Everything here is also in one file: {site_url}llms-full.txt.",
+        "",
+    ]
+    for heading, entries in sections:
+        lines += [f"## {heading}", ""]
+        lines += [
+            f"- [{title}]({site_url}{site_markdown.copy_path(page)}): "
+            f"{plain(opening_paragraph(SRC / page))}"
+            for title, page in entries
+        ]
+        lines.append("")
+    return "\n".join(lines)
+
+
+def versioned_url() -> str:
+    """This build's site root: the config's `site_url` plus `<X.Y.Z>/`."""
     config = (WEBSITE / "mkdocs.yml").read_text(encoding="utf-8")
     site_url = re.search(r"^site_url:\s*(\S+)", config, re.MULTILINE)
     if site_url is None:
         msg = "site_url not found in website/mkdocs.yml"
         raise SystemExit(msg)
-    (SRC / "llms.txt").write_text(
-        llms_txt(guide, site_url.group(1).rstrip("/") + "/"), encoding="utf-8"
+    return f"{site_url.group(1).rstrip('/')}/{fr.__version__}/"
+
+
+CONTRACTS = (
+    ("Part file contract", "contracts/part-file.md"),
+    ("Part file connectors", "contracts/part-file-connectors.md"),
+)
+
+
+def stage_llms(guide: list[tuple[str, str]], api: list[tuple[str, str]]) -> None:
+    """Write `llms.txt` and `llms-full.txt` into the staged pages (copied to the site root)."""
+    url = versioned_url()
+    sections = [("Guide", guide), ("Part files", list(CONTRACTS)), ("API", api)]
+    (SRC / "llms.txt").write_text(llms_txt(sections, url, fr.__version__), encoding="utf-8")
+    pages = [page for _, entries in sections for _, page in entries]
+    head = (
+        f"# Fransys {fr.__version__}\n\n"
+        "> The whole guide, the part-file contracts and the API pages in one file.\n"
     )
+    full = site_markdown.llms_full(SRC, STATE, pages, url, head)
+    (SRC / "llms-full.txt").write_text(full, encoding="utf-8")
 
 
 def stage_api() -> list[tuple[str, str]]:
@@ -149,13 +200,7 @@ def nav_sections(
     """The nav entries after Home, in order; a plain path is a page, Roadmap, after Examples."""
     return [
         ("Guide", guide),
-        (
-            "Part files",
-            [
-                ("Part file contract", "contracts/part-file.md"),
-                ("Part file connectors", "contracts/part-file-connectors.md"),
-            ],
-        ),
+        ("Part files", list(CONTRACTS)),
         ("Examples", [("Overview", "examples/index.md"), *gallery]),
         ("Roadmap", "roadmap.md"),
         ("API", api),
@@ -180,25 +225,85 @@ def stage(examples: Path) -> None:
     SRC.mkdir(parents=True)
     stage_home()
     guide = stage_guide()
-    stage_llms(guide)
     (SRC / "contracts").mkdir()
     for name in ("part-file.md", "part-file-connectors.md"):
         shutil.copy2(ROOT / "docs" / "contracts" / name, SRC / "contracts" / name)
     gallery = site_gallery.build_gallery(examples, SRC, SNIPPETS)
     stage_roadmap()
-    sections = nav_sections(guide, gallery, stage_api())
+    api = stage_api()
+    stage_llms(guide, api)
+    sections = nav_sections(guide, gallery, api)
     config = (WEBSITE / "mkdocs.yml").read_text(encoding="utf-8")
+    config = re.sub(r"^site_url:.*$", f"site_url: {versioned_url()}", config, flags=re.MULTILINE)
+    config = re.sub(r"^site_dir:.*$", "site_dir: site-build", config, flags=re.MULTILINE)
+    config += f'copyright: "Fransys {fr.__version__} documentation"\n'
     nav = "\n".join(_nav_lines(sections))
     (STATE / "mkdocs.yml").write_text(config + nav + "\n", encoding="utf-8")
 
 
+def site_root() -> str:
+    """The site's root URL, above every version: the config's `site_url`."""
+    return versioned_url().removesuffix(f"{fr.__version__}/")
+
+
+ROOT_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fransys documentation</title>
+<meta http-equiv="refresh" content="0; url=latest/">
+<link rel="canonical" href="{root}latest/">
+</head>
+<body>
+<p><a href="latest/">Fransys documentation, latest release ({version})</a></p>
+</body>
+</html>
+"""
+
+ROOT_LLMS = """# Fransys
+
+> Fransys is a Python toolkit for electrical cabinet and harness design.
+
+The documentation is versioned. Latest release: {version}.
+
+- Latest: {root}latest/llms.txt (the whole guide in one file: {root}latest/llms-full.txt)
+- A given release: {root}<X.Y.Z>/llms.txt, for example {root}{version}/llms.txt
+- Markdown of any page: its URL plus index.md, under the same version path
+- Pick the version from the installed `fransys.__version__`
+"""
+
+
+def lay_out(built: Path) -> None:
+    """Fill `OUT`: the build at `<X.Y.Z>/` and `latest/`, a root redirect and a root llms.txt.
+
+    A version that is not `X.Y.Z` fails here, so no path is named after a dev build.
+    """
+    version = fr.__version__
+    if re.fullmatch(r"\d+\.\d+\.\d+", version) is None:
+        msg = f"fransys.__version__ {version!r} is not X.Y.Z: the site has no path for it"
+        raise SystemExit(msg)
+    shutil.rmtree(OUT, ignore_errors=True)
+    OUT.mkdir(parents=True)
+    for name in (version, "latest"):
+        shutil.copytree(built, OUT / name)
+    fields = {"root": site_root(), "version": version}
+    (OUT / "index.html").write_text(ROOT_PAGE.format(**fields), encoding="utf-8")
+    (OUT / "llms.txt").write_text(ROOT_LLMS.format(**fields), encoding="utf-8")
+
+
 def build() -> None:
-    """Run Zensical strict from `.fransys/`, the project root of the staged config."""
+    """Build with Zensical strict, add the Markdown copies, check every link, fill `OUT`."""
+    built = STATE / "site-build"
+    shutil.rmtree(built, ignore_errors=True)
     subprocess.run(
         [sys.executable, "-m", "zensical", "build", "--strict", "-f", "mkdocs.yml"],
         cwd=STATE,
         check=True,
     )
+    site_markdown.write_copies(SRC, STATE, built)
+    checked = site_markdown.check_links(built, versioned_url())
+    sys.stdout.write(f"link check: {checked} links, 0 dead\n")
+    lay_out(built)
 
 
 def main() -> None:

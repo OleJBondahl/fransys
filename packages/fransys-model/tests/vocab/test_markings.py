@@ -61,3 +61,10 @@ def test_unlinked_pins_pair_in_port_order_key_order() -> None:
     """Pins given 10, 2, 9, 1 pair 1/2 and 9/10: marking order, pairs of two."""
     poles = unlinked_poles([_port("10"), _port("2"), _port("9"), _port("1")])
     assert _names(poles) == [("1", "2"), ("9", "10")]
+
+
+def test_an_odd_pin_is_a_one_pin_pole_last() -> None:
+    """Pins 3, 1, 2 give (1, 2) then (3, 3): the odd pin is kept, not dropped."""
+    poles = unlinked_poles([_port("3"), _port("1"), _port("2")])
+    assert _names(poles) == [("1", "2"), ("3", "3")]
+    assert poles[-1].line is None

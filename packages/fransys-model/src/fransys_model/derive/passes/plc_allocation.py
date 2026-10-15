@@ -4,6 +4,7 @@ import dataclasses
 from collections import deque
 from typing import TYPE_CHECKING, Final
 
+from fransys_kernel import require_origin
 from fransys_model.derive.lookups import unit_chain
 from fransys_model.derive.order import (
     ChannelTie,
@@ -21,7 +22,6 @@ from fransys_model.derive.passes._plc_wired import (
     wired_requests,
 )
 from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
-from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of, functions, items

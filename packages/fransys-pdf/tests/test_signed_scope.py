@@ -26,7 +26,7 @@ from fransys_pdf._drawings import _cable_runs
 from fransys_pdf._geometry import document_heading, preamble, subject_label
 from fransys_pdf._sizes import sizes_of
 
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind, documents
 
 K = PageKind

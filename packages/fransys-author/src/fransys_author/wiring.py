@@ -6,7 +6,14 @@ from typing import TYPE_CHECKING, Protocol
 lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, make_id
-from fransys_model.vocab import Conductor, ConductorKind, HarnessFacet, WireFacet
+from fransys_model.vocab import (
+    Conductor,
+    ConductorKind,
+    HarnessFacet,
+    RowSpec,
+    WireFacet,
+    WireRowHint,
+)
 
 from ._decimal import as_decimal
 from ._keys import scoped, sorted_pair, spliced
@@ -15,6 +22,8 @@ from .errors import AuthorError
 lazy from .handles import Port, as_port
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from fransys_model.kernel import Origin, Record
 
     from .handles import Group, Item, Location
@@ -26,6 +35,55 @@ class _Recorder(Protocol):
     """What a `Wiring` needs back from the `Design` that made it."""
 
     def _add(self, record: Record, origin: Origin) -> None: ...
+
+
+def _wire_conductor(prefix: AuthoringKey, a: Port, b: Port, n: int | None) -> Conductor:
+    """The `wire` conductor between `a` and `b`, keyed by its ports; a parallel one needs `n=2`."""
+    ends = sorted_pair(a.key, b.key)
+    key = scoped(prefix, "wire", spliced(ends[0]), spliced(ends[1]))
+    if n is not None:
+        key = scoped(key, "n", str(n))
+    return Conductor(
+        id=make_id(Conductor, key), key=key, a=a.id, b=b.id, kind=ConductorKind.WIRE, carrier=None
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class WireHints:
+    """A wire maker for a wire with no row yet: the conductor and a `WireRowHint`, no facet."""
+
+    _recorder: _Recorder
+    _prefix: AuthoringKey
+
+    def __call__(  # noqa: PLR0913 -- the two ports and the hint's table, size, n and label
+        self,
+        a: Port,
+        b: Port,
+        *,
+        rows: Mapping[str, tuple[str, Decimal | None]],
+        size: Decimal | None,
+        n: int | None = None,
+        label: str | None = None,
+    ) -> None:
+        """One wire between `a` and `b`; `resolve_wire_rows` picks its row from the nets."""
+        conductor = _wire_conductor(self._prefix, as_port(a), as_port(b), n)
+        origin = caller_origin()
+        self._recorder._add(conductor, origin)
+        key = scoped(conductor.key, "row_hint")
+        hint = WireRowHint(
+            id=make_id(WireRowHint, key),
+            key=key,
+            subject=conductor.id,
+            rows=frozendict(
+                {
+                    row: RowSpec(colour=colour, gauge_mm2=gauge)
+                    for row, (colour, gauge) in rows.items()
+                }
+            ),
+            gauge_mm2=size,
+            label=label,
+        )
+        self._recorder._add(hint, origin)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,19 +107,8 @@ class Wiring:
         label: str | None = None,
     ) -> None:
         """One wire between `a` and `b`, keyed by its ports; a parallel one needs `n=2`."""
-        a, b = as_port(a), as_port(b)
-        ends = sorted_pair(a.key, b.key)
-        key = scoped(self._prefix, "wire", spliced(ends[0]), spliced(ends[1]))
-        if n is not None:
-            key = scoped(key, "n", str(n))
-        conductor = Conductor(
-            id=make_id(Conductor, key),
-            key=key,
-            a=a.id,
-            b=b.id,
-            kind=ConductorKind.WIRE,
-            carrier=None,
-        )
+        conductor = _wire_conductor(self._prefix, as_port(a), as_port(b), n)
+        key = conductor.key
         origin = caller_origin()
         self._recorder._add(conductor, origin)
         facet_key = scoped(key, "facet")

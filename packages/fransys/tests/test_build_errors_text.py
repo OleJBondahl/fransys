@@ -4,6 +4,13 @@ import fransys as fr
 from fransys._codes import BY_CODE
 from fransys.pipeline import BuildErrors
 
+SITE = "https://olejbondahl.github.io/fransys/"
+
+
+def _row_url(info) -> str:
+    """The independent spelling of the row URL: site, version, page, code anchor."""
+    return f"{SITE}{fr.__version__}/guide/{info.page}/#{info.code.lower()}"
+
 
 def _finding(message: str) -> fr.Finding:
     return fr.Finding(
@@ -23,10 +30,10 @@ def test_a_plain_message_gets_the_same_head() -> None:
     assert text.startswith("UNIT_REVISION_CLASH (error): two releases")
 
 
-def test_an_error_ends_with_its_fix_and_guide_anchor() -> None:
+def test_an_error_ends_with_its_fix_and_findings_row_url() -> None:
     finding = fr.Finding(
         code="EXPORT_NAME_CLASH", severity=fr.Severity.ERROR, subjects=(), message="two subjects"
     )
     info = BY_CODE["EXPORT_NAME_CLASH"]
     lines = str(BuildErrors((finding,))).splitlines()
-    assert lines[-2:] == [f"  fix: {info.fix}", f"  see: {info.see}"]
+    assert lines[-2:] == [f"  fix: {info.fix}", f"  see: {_row_url(info)}"]

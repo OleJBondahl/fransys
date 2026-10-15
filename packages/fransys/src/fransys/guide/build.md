@@ -1,5 +1,7 @@
 # Building a design
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 `fr.build`, `fr.check` and `fr.write` are the three pipeline functions. `build` takes the design
 (and any documents), merges them into a model and runs the passes, the validators, and layout
 when there is a document.
@@ -144,17 +146,18 @@ left with nothing written for this build. No bad export, ever. There is no `allo
 
 `fr.report(result)` returns one text of `fr.check(result)`. Its first line counts the errors,
 warnings and notes. Each `ERROR` and `WARNING` follows with its message, one `at:` line per
-subject (the authoring call's `file:line`), its fix, and its guide anchor. The notes come last,
+subject (the authoring call's `file:line`), its fix, and its row's URL on your version's findings page. The notes come last,
 counted per code on one line.
 
 ```python
 text = fr.report(result)
 assert text.startswith("build: 1 error, 0 warnings, 3 notes\n")
-assert "  see: findings-pdf#document_no_drawings\n" in text
+assert "  see: https://olejbondahl.github.io/fransys/" in text
+assert "/guide/findings-pdf/#document_no_drawings\n" in text
 assert text.endswith("notes: DOCUMENT_EMPTY_LIST 3\n")
 ```
 
-The fix and the anchor come from the code's row in [`findings.md`](findings.md). Print the
+The fix and the URL come from the code's row in [`findings.md`](findings.md). Print the
 report on every build: a warning nobody reads is never fixed.
 
 ## Which route carries which finding
@@ -165,7 +168,7 @@ Each route below carries a different set of findings.
 |---|---|---|
 | `result.findings` | What `fr.build` collected: the PLC and numbering passes, the validators and layout. | After `fr.build`. |
 | `fr.check(result)` | `result.findings` plus the KiCad, PDF and render checks, errors first. | Any time after `fr.build`. |
-| `fr.report(result)` | The text of `fr.check(result)`, with each fix and guide anchor. | Any time after `fr.build`. |
+| `fr.report(result)` | The text of `fr.check(result)`, with each fix and the URL of its findings row. | Any time after `fr.build`. |
 | `fr.BuildErrors.findings` | The `ERROR` findings of the `fr.write` or `fr.release` run that raised. `fr.release` adds its release checks. | When the call raises. |
 
 `fr.build` itself raises `MergeConflict` or `FreezeError` for a structural problem and returns no findings then.

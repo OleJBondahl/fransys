@@ -257,15 +257,9 @@ def _oriented_ends(model: Model, a: Id[Port], b: Id[Port]) -> tuple[Id[Port], Id
     return (a, b) if rank_a <= rank_b else (b, a)
 
 
-def _colour_at(colours: tuple[str, ...], index: int, conductor: Conductor) -> str:
-    """`colours[index - 1]`; an index outside the product is a `SchemaError`."""
-    if not 1 <= index <= len(colours):
-        msg = (
-            f"core {index} is outside its cable product's {len(colours)} core colour(s), "
-            f"so it has no colour"
-        )
-        raise SchemaError(msg, kind="conductor", record_id=conductor.id)
-    return colours[index - 1]
+def _colour_at(colours: tuple[str, ...], index: int) -> str:
+    """`colours[index - 1]`; "" for an index outside the product (`CORE_INDEX_PAST_PRODUCT`)."""
+    return colours[index - 1] if 1 <= index <= len(colours) else ""
 
 
 def core_colour(model: Model, conductor: Id[Conductor]) -> str:
@@ -279,10 +273,10 @@ def core_colour(model: Model, conductor: Id[Conductor]) -> str:
         conductor: The core conductor whose colour to render.
 
     Returns:
-        The core's colour, an IEC 60757 code (or code pair).
+        The core's colour, an IEC 60757 code (or code pair); "" for a core past its product.
 
     Raises:
-        SchemaError: `conductor` is not a core of a cable, or has no `core` facet or product entry.
+        SchemaError: `conductor` is not a core of a cable, or has no `core` facet.
     """
     record = require(conductors(model).get(conductor), "conductor", conductor)
     if record.kind is not ConductorKind.CORE or record.carrier is None:
@@ -290,7 +284,7 @@ def core_colour(model: Model, conductor: Id[Conductor]) -> str:
         raise SchemaError(msg, kind="conductor", record_id=conductor)
     for facet in facets_of(model, CoreFacet).values():
         if facet.subject == conductor:
-            return _colour_at(_product_colours(model, record.carrier), facet.index, record)
+            return _colour_at(_product_colours(model, record.carrier), facet.index)
     msg = "a core with no `core` facet has no index, so no colour"
     raise SchemaError(msg, kind="conductor", record_id=conductor)
 
@@ -331,7 +325,7 @@ def cable_rows(
                 cable=cable,
                 cable_designation=printed_designation(model, cable, unit=unit),
                 index=facet.index,
-                colour=_colour_at(colours, facet.index, conductor),
+                colour=_colour_at(colours, facet.index),
                 conductor=conductor.id,
                 end_a=end_a,
                 end_a_designation=cable_end(end_a),

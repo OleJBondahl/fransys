@@ -1,9 +1,11 @@
 """The text of a finding: its subjects printed as names, and its one `CODE (severity):` head."""
 
+from fransys_model.derive.docs_site import finding_url
 from fransys_model.derive.numbering_pins import subject_text
 from fransys_model.kernel import Finding, Model, describe
 
 from ._codes import BY_CODE
+from ._version import __version__
 
 
 def described(finding: Finding, model: Model) -> str:
@@ -19,9 +21,13 @@ def headed(finding: Finding) -> str:
 
 
 def fix_lines(finding: Finding) -> list[str]:
-    """The code's fix and guide anchor from its `CodeInfo`, as two lines (BUILD-MESSAGES M2).
+    """The code's fix and the URL of its row on this release's findings page, as two lines.
 
-    A code with no registry entry gives none.
+    BUILD-MESSAGES M2, DOCS-FOR-AGENTS D6. A code with no registry entry gives none.
     """
     info = BY_CODE.get(finding.code)
-    return [] if info is None else [f"  fix: {info.fix}", f"  see: {info.see}"]
+    return (
+        []
+        if info is None
+        else [f"  fix: {info.fix}", f"  see: {finding_url(__version__, info.see)}"]
+    )

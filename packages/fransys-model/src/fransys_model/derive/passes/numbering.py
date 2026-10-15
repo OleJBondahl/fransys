@@ -6,6 +6,7 @@ Treats a `facet.reserved_designation` text as taken too (fixed-designations spec
 import dataclasses
 from typing import TYPE_CHECKING, Final
 
+from fransys_kernel import require_origin
 from fransys_model.derive.designation import (
     can_print_designation,
     connector_segment,
@@ -29,7 +30,6 @@ from fransys_model.derive.passes.numbering_units import (
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Model, Severity, evolve
-from fransys_model.kernel.origin import require_origin
 from fransys_model.vocab.bars import bar_items
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet

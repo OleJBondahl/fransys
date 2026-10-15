@@ -15,6 +15,7 @@ from fransys._times import BuildTimes, StepTime
 
 _BUILD_STEPS = [
     "merge and freeze",
+    "wire rows",
     "PLC allocation",
     "numbering",
     "validators",

@@ -1,11 +1,13 @@
 # Parts
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 A part library is a Python data package: TOML files describing parts, and no code. Fransys
 never reads a spreadsheet or a manufacturer's own format directly; every part your design
 uses comes from an installed library written against the part-file contract. This page covers
 starting a design from a library, the typed parts module, class codes, linting and load failures. The
-contract itself is `docs/contracts/part-file.md` in the Fransys repository, at the tag you
-pinned. Read it before you write a library.
+contract itself is the "Part file contract" page of the site, at the version you
+installed. Read it before you write a library.
 
 ## Starting a design
 
@@ -50,6 +52,8 @@ The `part` argument of `d.device` is a string or a generated class. A string is 
 build. Two part names that map to one attribute fail generation, and so do two pins of one function.
 
 A function stands in a `d.series` when its line side is known: a coil's A1 and a contact's odd pin give it, else state `side`.
+
+A pin that sources a wiring row, such as a drive's `U`, `V` and `W` outputs, states it with `source_row = "AC_L1"` (any `WiringRow` name). A `d.series` wire from that pin then takes the row's colour without `wire=`.
 
 The module records the library's digest. `fr.design(P, ...)` compares that digest with the
 library it loads and raises an error naming the command above when the module is stale. A

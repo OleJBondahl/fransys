@@ -10,7 +10,7 @@ from fransys_model.derive.contacts import changeover_throws, link_state, owned_c
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.unused import function_is_unused
-from fransys_model.vocab import function_poles, marking_key, unlinked_poles
+from fransys_model.vocab import function_poles, marking_key
 from fransys_model.vocab.enums import FunctionKind, LinkKind
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
 lazy from fransys_model.kernel import Id, Model
@@ -55,7 +55,7 @@ def contact_entries(model: Model, function: Function) -> tuple[list[Entry], list
         return no, nc
     pairs = _poles(model, function)
     target = nc if function.kind is FunctionKind.CONTACT_NC else no
-    target.extend((_is_main(a, b), _key(a), f"{a}-{b}") for a, b in pairs)
+    target.extend((_is_main(a, b), _key(a), a if a == b else f"{a}-{b}") for a, b in pairs)
     return no, nc
 
 
@@ -81,7 +81,7 @@ def _own_templates(model: Model, function: Function) -> dict[Id[PortTemplate] | 
 
 def _is_main(line: str, load: str) -> bool:
     """A pole is main when both pins are single-digit numbers (IEC 60947-1), else auxiliary."""
-    return len(line) == 1 and len(load) == 1 and line.isdigit() and load.isdigit()
+    return len(line) == 1 and len(load) == 1 and line != load and line.isdigit() and load.isdigit()
 
 
 def _key(name: str) -> int | str:
@@ -90,23 +90,12 @@ def _key(name: str) -> int | str:
 
 
 def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
-    """A contact's printed `(line, load)` pole names; with no pole link, marking order."""
+    """A contact's printed `(line, load)` pole names; a one-pin pole repeats its pin."""
     own = _own_templates(model, function)
     templates = {t: port_templates(model)[t] for t in own if t is not None}
-    found = poles_of(model, function.kind, templates)
-    if found:
-        return [
-            (printed_name(model, own[a.id].id), printed_name(model, own[b.id].id))
-            for a, b in (pole.ends for pole in found)
-        ]
-    digits = {
-        p.template: printed_name(model, p.id)
-        for p in own.values()
-        if p.template is not None and printed_name(model, p.id).isdigit()
-    }
     return [
-        (digits[pole.ends[0].id], digits[pole.ends[1].id])
-        for pole in unlinked_poles(templates[t] for t in digits)
+        (printed_name(model, own[a.id].id), printed_name(model, own[b.id].id))
+        for a, b in (pole.ends for pole in poles_of(model, function.kind, templates))
     ]
 
 

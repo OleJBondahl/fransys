@@ -28,8 +28,7 @@ from _build import (
 from fransys_pdf import check
 
 from fransys_model.derive.cable_drawing import cable_block_key
-from fransys_model.kernel import Severity, make_id
-from fransys_model.kernel.ids import render_id
+from fransys_model.kernel import Severity, make_id, render_id
 from fransys_model.layout import SheetFormat, default_sheet_format
 from fransys_model.vocab import DocumentPreset, PageKind, SignalType
 

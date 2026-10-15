@@ -88,6 +88,7 @@ A `bar` writes one port per screw, role `"pe"`; one cut to length writes none, a
 | `marking` | string | Optional. What a drawing prints on this pin, when it differs from `name`. Omit it to print `name`; write `""` to print nothing |
 | `side` | string | Optional: `"line"` or `"load"`; else the marking fills it (parts-0010). A two-port function that a series passes through needs it when its marking gives no side |
 | `conductor` | string | Optional: `"L1"`, `"L2"`, `"L3"`, `"N"`, `"L+"`, `"L-"`, `"M"`; not `"PE"` (use `role = "pe"`), filled likewise |
+| `source_row` | string | Optional. The wiring row a wire on this pin takes, a `WiringRow` value: `"DC_SUPPLY"`, `"DC_GROUND"`, `"DC_CONTROL"`, `"DC_SIGNAL"`, `"AC_L1"`, `"AC_L2"`, `"AC_L3"`, `"AC_N"`, `"AC_CONTROL"`. Omit it to let the build resolve the row from the pin's net (model-0260); a `wire=` row map overrides it |
 
 `links` entries:
 

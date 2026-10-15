@@ -8,9 +8,8 @@ lazy from collections.abc import Iterable, Sequence
 from fransys_author.errors import AuthorError
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import End, Ends
-from fransys_author.surface._rows import WiringRow, rail_row
 from fransys_author.surface._wire import _port
-from fransys_model.vocab import ConductorMark, Earthing
+from fransys_model.vocab import ConductorMark, Earthing, WiringRow, rail_row
 lazy from fransys_author.handles import Port, Terminal
 lazy from fransys_author.surface._device import Device
 

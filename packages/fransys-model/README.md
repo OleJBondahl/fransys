@@ -23,7 +23,7 @@ model.tables["item"][item_id]        # kind -> id -> record, frozendict all the 
 
 | Layer | Holds |
 |---|---|
-| `kernel/` | Records, typed ids, `Draft` → `freeze()` → `Model`, canonical JSON and digest, merge, diff. Knows no engineering |
+| `kernel/` | A shim: re-exports `fransys_kernel` (records, typed ids, `Draft` → `freeze()` → `Model`, canonical JSON and digest, merge, diff), so `fransys_model.kernel` imports keep working. The code lives in `packages/fransys-kernel` |
 | `vocab/` | A closed set of core kinds: `Part`, `FunctionTemplate`, `PortTemplate`, `InternalLink`, `Item`, `Function`, `Port`, `Net`, `Conductor`, `Mate`, `AspectNode`, `Placement`, `Project`. Plus open typed facets (terminal, PLC, cable, connector, PCB) and validators |
 | `layout/` | The `layout.*` record kinds: authored hints and rule parameters, derived drawing sets, pages, placements, routes, link markers and labels. The engines that write them live in `fransys-layout`, not here |
 | `derive/` | Indexes, net closure, numbering and PLC-allocation passes, and the queries and report rows Fransys formats |

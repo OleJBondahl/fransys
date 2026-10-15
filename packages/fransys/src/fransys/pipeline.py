@@ -51,6 +51,7 @@ from fransys_model.derive import (
     number,
     numbering_pins,
     reference_fragment,
+    resolve_wire_rows,
     terminal_items,
     unit_boards,
     unit_release,
@@ -160,7 +161,7 @@ class BuildErrors(Exception):  # noqa: N818 -- plural on purpose: it carries eve
 
     No escape hatch: there is no `allow_errors`, `force` or `draft` parameter anywhere in
     this package, and none will be added. `findings` holds every `ERROR` of the run that
-    raised; the exception's own message is each finding, then its fix and guide anchor.
+    raised; the exception's own message is each finding, then its fix and findings-row URL.
     `write`'s own findings are resolved through `describe` first (`check`'s own contract);
     `release`'s interface-bump findings are never `describe`d -- their `message` is already
     self-contained, naming the unit, revision and differing sections in plain text.
@@ -374,9 +375,12 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     """
     timer = Timer()
     model = timer.run("merge and freeze", _frozen, drafts)
+    model, row_findings = timer.run("wire rows", resolve_wire_rows, model)
     model, plc_findings = timer.run("PLC allocation", allocate_plc, model)
     model, number_findings = timer.run("numbering", _numbered, model, releases)
-    found = timer.run("validators", _validated, model, (*plc_findings, *number_findings))
+    found = timer.run(
+        "validators", _validated, model, (*row_findings, *plc_findings, *number_findings)
+    )
     if _has_error(found) or not _has_document(model):
         return BuildResult(
             model=model, findings=_by_code_in_reader_order(found, model), times=timer.times()

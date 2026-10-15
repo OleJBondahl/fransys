@@ -15,6 +15,7 @@ lazy from fransys_model.vocab import Function
 from ._coverage import Coverage
 from ._detail import Details
 from ._device import Devices
+from ._pair import Pairs
 from ._rows import IEC, table
 from ._series import Series
 from ._strip import Strips
@@ -24,7 +25,7 @@ lazy from ._potential import Given, PortId
 lazy from ._rows import RowValue, WiringRow
 
 
-class Design(Devices, Details, Strips, Series, Coverage, Units):
+class Design(Devices, Details, Strips, Series, Pairs, Coverage, Units):
     """One circuit under construction, built through one engine `Design`.
 
     Does not start a design: call fr.design.

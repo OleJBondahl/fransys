@@ -1,5 +1,7 @@
 # Examples
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Worked examples of whole circuits, each shown the easy way and the efficient way, and a pointer to
 a full build script outside this repository. All parts are from `demo_parts`.
 

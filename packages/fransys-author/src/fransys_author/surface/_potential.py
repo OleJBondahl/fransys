@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, NamedTuple, cast
 
 from fransys_author.surface._ends import is_bridge
 from fransys_author.surface._pairing import label_of, pair
-from fransys_author.surface._rows import WiringRow, control_of, is_control
 from fransys_author.surface._strip import TerminalStrip
+from fransys_model.vocab import WiringRow, control_of, is_control
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

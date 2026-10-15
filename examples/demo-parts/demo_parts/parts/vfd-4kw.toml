@@ -27,9 +27,9 @@ current_ac_a = "10"
 name = "output"
 kind = "supply"
 ports = [
-    { name = "U", role = "generic", side = "load", conductor = "L1" },
-    { name = "V", role = "generic", side = "load", conductor = "L2" },
-    { name = "W", role = "generic", side = "load", conductor = "L3" },
+    { name = "U", role = "generic", side = "load", conductor = "L1", source_row = "AC_L1" },
+    { name = "V", role = "generic", side = "load", conductor = "L2", source_row = "AC_L2" },
+    { name = "W", role = "generic", side = "load", conductor = "L3", source_row = "AC_L3" },
 ]
 
 [function.operating]

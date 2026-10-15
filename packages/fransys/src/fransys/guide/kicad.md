@@ -1,5 +1,7 @@
 # KiCad
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 Fransys writes a KiCad netlist for each board in your model. This page shows how to import it into a
 KiCad 9 board, which settings to use, and how to start a part file from a KiCad symbol.
 

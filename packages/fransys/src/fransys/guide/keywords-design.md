@@ -1,5 +1,7 @@
 # Keywords of the d calls
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page has one table for each `d.*` and `d.detail.*` call: each named keyword, its default, its effect and an example fragment.
 A call that takes only `*args` has no table, and one sentence says what it takes.
 
@@ -142,7 +144,19 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `wire` | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, or one `(colour, size)`. `None` uses the rows' defaults, and a row with no size raises. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))` |
+| `wire` | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, one `(colour, size)`, or a tuple of them, one per pole in pole order and as long as the series is wide. `None` uses the rows' defaults, and a row with no size is `WIRE_ROW_UNRESOLVED`. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))`; `d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))` |
+
+## `d.pair`
+
+`d.pair(a, cable, b)` joins two ends through a cable pin for pin: core `i` runs from `a`'s pin `i` to `b`'s pin `i`, with no line or load direction. It takes no keyword: the cores are the wires.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `a` | required | The first end: terminals (`x8[1:3]`, their field side) or a function (`b1.sig`, its pins in connector order). | `x8[1:3]` |
+| `cable` | required | The cable between the ends, from `d.cable`. | `w3` |
+| `b` | required | The second end, with as many pins as `a`. A strip, a bare port or a device raises. | `b1.sig` |
+
+Example: `d.pair(x8[1:3], w3, b1.sig)`.
 
 ## `d.parallel`
 
@@ -204,9 +218,19 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `wire` | required | The wire as `(colour, size)`. | `d.detail.wire(x1[1], h1[1], wire=(BU, 0.75))` |
+| `wire` | `None` | The wire as `(colour, size)`, a size, or a table of rows, as `d.series` reads it, except a per-pole tuple. | `d.detail.wire(x1[1], h1[1], wire=(BU, 0.75))` |
 | `label` | `None` | Text printed on the wire. `None` prints none. | `label="L1"` |
 | `n` | `None` | `n=2` draws a second wire in parallel between the same two pins. `None` draws one. | `n=2` |
+
+## `d.detail.star`
+
+`d.detail.star(src, targets, ...)` wires `src` to each of `targets`, a tuple or list: one wire per target, none between targets.
+
+| keyword | default | effect | example |
+|---|---|---|---|
+| `src` | required | The pin every wire starts at. A strip stands for one terminal, shared by all targets. | `d.detail.star(x2[17].outer, (x7[1], x7[4]))` |
+| `targets` | required | A tuple or list of the pins to wire to. One target is `d.detail.wire(src, target)`. | `(x7[1], x7[4], x7[7])` |
+| `wire` | `None` | The wire as `(colour, size)`, a size, or a table of rows, as `d.detail.wire` reads it. | `d.detail.star(x2[17].outer, (x7[1], x7[4]), wire=(BU, 0.75))` |
 
 ## `d.detail.net`
 

@@ -1,5 +1,7 @@
 # Harnesses
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page teaches how to add a harness to a design with `d.harness`, and how its cables and plugs
 print. It follows `authoring.md`, which holds the rest of the authoring calls.
 

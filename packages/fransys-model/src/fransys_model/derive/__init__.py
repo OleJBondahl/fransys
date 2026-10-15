@@ -99,6 +99,11 @@ from .export_names import (
     reference_fragment,
 )
 from .external import external
+from .facts.boundary_pins import unit_boundary_functions, unit_boundary_pins
+from .facts.children import child_items
+from .facts.keep_whole import KeepWhole, keep_whole_sets
+from .facts.mates import mate_port_of, mate_ports
+from .facts.strips import strip_of
 from .harness_line_ends import harness_line_ends
 from .indexes import Indexes, build_indexes
 from .kinds import item_kind, signal_kind
@@ -157,6 +162,7 @@ from .pairing import BoxPair, box_pairs
 from .part_functions import part_function_rows
 from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
+from .passes.wire_rows import resolve_wire_rows
 from .plc_rack import channel_pins
 from .plc_tables import plc_tables
 from .plc_words import plc_list_rows, signal_word
@@ -363,6 +369,7 @@ __all__ = [
     "Item",
     "ItemKind",
     "ItemPage",
+    "KeepWhole",
     "LensChannel",
     "LensModule",
     "LimitRole",
@@ -457,6 +464,7 @@ __all__ = [
     "changeover_throws",
     "channel_pins",
     "check_side_hints",
+    "child_items",
     "column_rows",
     "column_values",
     "conductors",
@@ -529,6 +537,7 @@ __all__ = [
     "item_pages",
     "items",
     "items_at",
+    "keep_whole_sets",
     "lane_head",
     "lead_switch",
     "line_conductors",
@@ -541,6 +550,8 @@ __all__ = [
     "location_fold",
     "location_node_designation",
     "location_place_title",
+    "mate_port_of",
+    "mate_ports",
     "mates",
     "natural_key",
     "net_of",
@@ -610,6 +621,7 @@ __all__ = [
     "reference_fragment",
     "references_off_document",
     "release_order",
+    "resolve_wire_rows",
     "revision_history",
     "revision_text",
     "same_version",
@@ -626,6 +638,7 @@ __all__ = [
     "signal_lens",
     "signal_word",
     "standalone",
+    "strip_of",
     "strip_side_headings",
     "strip_stubs",
     "strip_view",
@@ -643,6 +656,8 @@ __all__ = [
     "top_level_cables",
     "unconnected_ports",
     "unit_boards",
+    "unit_boundary_functions",
+    "unit_boundary_pins",
     "unit_cables",
     "unit_connector_items",
     "unit_items",

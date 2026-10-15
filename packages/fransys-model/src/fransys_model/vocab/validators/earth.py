@@ -8,7 +8,7 @@ from fransys_model.vocab.enums import ConductorKind, PortRole
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.potentials import pe_firsts
+from fransys_model.vocab.potentials import on_pe_net
 from fransys_model.vocab.tables import conductors, facets_of, items, nets, ports
 
 if TYPE_CHECKING:
@@ -24,9 +24,9 @@ PE_PORT_OFF_PE: Final[str] = "PE_PORT_OFF_PE"
 _GNYE: Final[str] = "GNYE"
 
 
-def _on_pe(model: Model, earth: frozenset[Id[Port]], port: Id[Port]) -> bool:
+def _on_declared_net(model: Model, declared: frozenset[Id[Port]], port: Id[Port]) -> bool:
     physical = net_of(model, port)
-    return physical is not None and physical.ports[0] in earth
+    return physical is not None and physical.ports[0] in declared
 
 
 def _core_colours(model: Model) -> dict[Id[Conductor], str]:
@@ -68,15 +68,17 @@ def _gnye_finding(
     return _finding(GNYE_NOT_PE, Severity.WARNING, subjects, text)
 
 
-def _conductor_findings(model: Model, earth: frozenset[Id[Port]]) -> list[Finding]:
+def _conductor_findings(model: Model) -> list[Finding]:
     found = []
     declared = _declared_nets(model)
     for conductor, colour, facet in _coloured(model):
         subjects = (conductor.id,) if facet is None else (conductor.id, facet)
-        on_pe = _on_pe(model, earth, conductor.a)
+        on_pe = on_pe_net(model, conductor.a)
         if colour == _GNYE and not on_pe:
             found.append(
-                _gnye_finding(conductor, subjects, declared=_on_pe(model, declared, conductor.a))
+                _gnye_finding(
+                    conductor, subjects, declared=_on_declared_net(model, declared, conductor.a)
+                )
             )
         single = conductor.kind is ConductorKind.WIRE and conductor.carrier is None
         if single and on_pe and colour not in {"", _GNYE}:
@@ -91,8 +93,13 @@ def _declared_nets(model: Model) -> frozenset[Id[Port]]:
     return frozenset(net.ports[0] for net in physical if net is not None)
 
 
-def _port_findings(model: Model, earth: frozenset[Id[Port]]) -> list[Finding]:
-    declared = _declared_nets(model)
+def _is_wired(model: Model, port: Id[Port]) -> bool:
+    """Whether `port` shares a physical net with another port: a lone port has nothing to flag."""
+    physical = net_of(model, port)
+    return physical is not None and len(physical.ports) > 1
+
+
+def _port_findings(model: Model) -> list[Finding]:
     return [
         _finding(
             PE_PORT_OFF_PE,
@@ -101,14 +108,11 @@ def _port_findings(model: Model, earth: frozenset[Id[Port]]) -> list[Finding]:
             f"port {ref(port)} has role PE but its net is not PE",
         )
         for port in ports(model).values()
-        if port.role is PortRole.PE
-        and _on_pe(model, declared, port.id)
-        and not _on_pe(model, earth, port.id)
+        if port.role is PortRole.PE and _is_wired(model, port.id) and not on_pe_net(model, port.id)
     ]
 
 
 def check_earth(model: Model) -> tuple[Finding, ...]:
     """`GNYE_NOT_PE`, `PE_NOT_GNYE` and `PE_PORT_OFF_PE` over the PE nets `power_kind` reads."""
-    earth = pe_firsts(model)
-    found = _conductor_findings(model, earth) + _port_findings(model, earth)
+    found = _conductor_findings(model) + _port_findings(model)
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

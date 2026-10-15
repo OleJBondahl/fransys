@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Iterable
 
 from fransys_model.derive.accessory_blocks import is_contact_block, items_with_a_function_below
+from fransys_model.derive.facts.strips import strip_of
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed, instance_designation, unit_root
 from fransys_model.derive.lone_cable import printing_item
@@ -325,8 +326,9 @@ def terminal_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None 
     if record is None:
         msg = "the id is not an item of the model"
         raise SchemaError(msg, kind="item", record_id=item)
-    if record.parent is not None and terminal_of(model, item) is not None:
-        strip = item_designation(model, record.parent, unit=unit)
+    parent = strip_of(model, item)
+    if parent is not None:
+        strip = item_designation(model, parent, unit=unit)
         return dashed(f"{strip}:{_own_designation(model, item)}")
     return dashed(item_designation(model, item, unit=unit))
 
@@ -566,9 +568,9 @@ def reference_leaves(model: Model, item: Id[Item]) -> dict[Aspect, AspectNode]:
     Not `effective_placement`, which inherits from any ancestor; numbering asks this too.
     """
     leaves = _own_leaves(model, item)
-    record = items(model).get(item)
-    if record is not None and record.parent is not None and terminal_of(model, item) is not None:
-        for aspect, leaf in _own_leaves(model, record.parent).items():
+    parent = strip_of(model, item)
+    if parent is not None:
+        for aspect, leaf in _own_leaves(model, parent).items():
             leaves.setdefault(aspect, leaf)
     return leaves
 
@@ -617,8 +619,7 @@ def printed_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None =
     Raises:
         SchemaError: as `item_designation`.
     """
-    record = items(model).get(item)
-    if record is not None and record.parent is not None and terminal_of(model, item) is not None:
+    if strip_of(model, item) is not None:
         return terminal_designation(model, item, unit=unit)
     return dashed(item_designation(model, item, unit=unit))
 

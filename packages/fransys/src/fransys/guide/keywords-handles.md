@@ -1,5 +1,7 @@
 # Keywords of the handle methods and layout hints
 
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
 This page has one table for each handle method and each `d.layout.*` hint: each named keyword, its default, its effect and an example fragment.
 A call that takes only `*args` has no table, and one sentence says what it takes.
 
@@ -13,6 +15,10 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 | `signal` | required | The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. | `k1.coil.plc(fr.DO, "pump-run")` |
 | `name` | required | The channel's name. It prints in the PLC lists and on the channel's address. | `k1.coil.plc(fr.DO, "pump-run")` |
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
+
+## `Fn.pole`
+
+`fn.pole(n)` takes one pole number, counted from 1 in pole order, and gives that one pole of the function as a series element: `d.series(s1.main.pole(2), f2.element, wire=(BK, 1.5))`.
 
 ## `Fn.scale`
 

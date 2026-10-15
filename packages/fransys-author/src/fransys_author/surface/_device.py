@@ -84,7 +84,7 @@ class Device:
 
             Does not guess: an unknown name raises an `AttributeError` that lists the functions.
             """
-            if name.startswith("_"):
+            if name.startswith("__") or "_item" not in vars(self):  # copy, unpickle: no recursion
                 raise AttributeError(name)
             for function in self._item.functions:
                 if name in (function.name, identifier(function.name)):

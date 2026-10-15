@@ -14,9 +14,8 @@ Reached as `fransys_model.derive.numbering_pins.<name>`, never re-exported from
 
 from typing import cast
 
+from fransys_kernel import JsonValue, read_json, write_json
 from fransys_model.kernel import AuthoringKey, Id, Model, SchemaError, SchemaVersionError
-from fransys_model.kernel.encode import JsonValue, write_json
-from fransys_model.kernel.jsonread import read_json
 from fransys_model.vocab.numbering_codes import item_class_code
 from fransys_model.vocab.tables import items
 from fransys_model.vocab.tables import units as units_table

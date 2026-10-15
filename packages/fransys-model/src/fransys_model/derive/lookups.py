@@ -37,6 +37,7 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Port, Unit
 lazy from fransys_model.vocab.templates import FunctionTemplate
 
+from .facts.strips import strip_of
 from .indexes import build_indexes
 
 if TYPE_CHECKING:
@@ -50,8 +51,7 @@ if TYPE_CHECKING:
 @digest_cached(DIGEST_CACHE_SIZE)
 def strip_set(model: Model) -> frozenset[Id[Item]]:
     """Every item that is the parent of a terminal: the one strip set."""
-    all_items = items(model)
-    return frozenset(p for t in terminal_items(model) if (p := all_items[t].parent) is not None)
+    return frozenset(s for t in terminal_items(model) if (s := strip_of(model, t)) is not None)
 
 
 __all__ = [
@@ -256,9 +256,7 @@ def item_of_port(model: Model, port: Id[Port]) -> Id[Item]:
 
 def terminal_strip(model: Model, item: Id[Item]) -> Id[Item] | None:
     """`item`'s strip, when it is a terminal with a parent; else None."""
-    if item in terminal_items(model):
-        return items(model)[item].parent
-    return None
+    return strip_of(model, item)
 
 
 def conductors_by_role(

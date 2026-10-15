@@ -16,6 +16,7 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .designation import printed_designation
+from .facts.children import child_items
 from .indexes import build_indexes
 from .lookups import channel_devices, require
 from .order import plc_channel_tie, plc_module_key
@@ -38,10 +39,10 @@ class _Facts:
     devices: frozendict[Id[Function], Id[Function]]
 
 
-def _modules(model: Model, idx: Indexes, rack: Id[Item]) -> list[tuple[Item, Part]]:
+def _modules(model: Model, rack: Id[Item]) -> list[tuple[Item, Part]]:
     """The PLC modules of `rack` with their parts, in rack order."""
     found = []
-    for child in idx.children_by_item.get(rack, ()):
+    for child in child_items(model, rack):
         module = items(model)[child]
         if is_plc_module(model, module):
             found.append(
@@ -131,7 +132,7 @@ def plc_rack_modules(
             position=module.position,
             channels=_channels(model, idx, facts, module, unit),
         )
-        for module, part in _modules(model, idx, rack)
+        for module, part in _modules(model, rack)
     )
 
 

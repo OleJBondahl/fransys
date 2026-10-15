@@ -8,7 +8,7 @@ from fransys_model.derive.block_diagram import (
     DIAGRAM_LOOSE_WIRE,
     diagram_facts,
 )
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import Finding, Severity, render_id
 lazy from fransys_model.kernel import Id, Model
 
 
@@ -45,3 +45,18 @@ _BUILDERS = frozendict(
 def reading_findings(model: Model, unit: Id[Any] | None) -> tuple[Finding, ...]:
     """The findings of `unit`'s diagram, one per fact."""
     return tuple(_BUILDERS[fact.code](fact.subject) for fact in diagram_facts(model, unit))
+
+
+DIAGRAM_COLUMN_TOO_TALL = "DIAGRAM_COLUMN_TOO_TALL"
+
+
+def too_tall_finding(
+    unit: Id[Any] | None, cable: Id[Any], column: int, boxes: int, fit: int
+) -> Finding:
+    """The detail of a diagram that gets no page: its tallest column holds more boxes than fit."""
+    name = "The system diagram" if unit is None else f"The diagram of unit {render_id(unit)}"
+    message = (
+        f"{name} is not drawn: column {column} holds {boxes} boxes and one sheet holds {fit}. "
+        "This is a known limit of the system diagram."
+    )
+    return _make(DIAGRAM_COLUMN_TOO_TALL, Severity.INFO, message, cable)

@@ -1,0 +1,17 @@
+schema = 1
+
+[part]
+mpn = "DEMO-CBL-3X0.34"
+manufacturer = "Demo"
+description = "Sensor cable, 3 cores, 0.34 mm2, M12 socket on one end"
+category = "cable"
+class_code = "W"
+
+[rating]
+voltage_dc_v = "60"
+
+[cable_product]
+core_count = 3
+core_colours = ["BN", "BU", "BK"]
+gauge_mm2 = "0.34"
+shielded = false

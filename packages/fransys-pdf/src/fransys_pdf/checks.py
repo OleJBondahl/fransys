@@ -14,7 +14,7 @@ the `TitleBlockFields` that `schematic_fields`, `harness_run_fields` and `sectio
 build for the pages themselves, so this can never disagree with what the page shows.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
     document_unit,
@@ -228,18 +228,19 @@ def _harness_no_drawings_messages(
     return harness_block_messages(model, record, pages, svgs)
 
 
-def _no_drawings_findings(
+def _no_drawings_findings(  # noqa: PLR0913, PLR0917 -- the tall-diagram cables are one more input
     model: Model,
     subject: _DocId,
     record: Document,
     pages: tuple[PageKind, ...],
     svgs: Mapping[str, str],
+    tall_cables: frozenset[Id[Any]],
 ) -> tuple[Finding, ...]:
     schematic = _schematic_no_drawings_message(model, record, pages, svgs)
     messages = [schematic] if PageKind.SCHEMATIC in pages and schematic is not None else []
     if PageKind.HARNESS_DRAWING in pages:
         messages.extend(_harness_no_drawings_messages(model, record, pages, svgs))
-    messages.extend(diagram_no_drawings_messages(model, record, pages, svgs))
+    messages.extend(diagram_no_drawings_messages(model, record, pages, svgs, tall_cables))
     return tuple(
         Finding(
             code="DOCUMENT_NO_DRAWINGS", severity=Severity.ERROR, subjects=(subject,), message=m
@@ -305,13 +306,23 @@ def _empty_list_findings(
     )
 
 
-def check(model: Model, svgs: Mapping[str, str]) -> tuple[Finding, ...]:
+def _tall_cables(built: tuple[Finding, ...]) -> frozenset[Id[Any]]:
+    """The subjects of the build's `DIAGRAM_COLUMN_TOO_TALL` INFOs."""
+    return frozenset(s for f in built if f.code == "DIAGRAM_COLUMN_TOO_TALL" for s in f.subjects)
+
+
+def check(
+    model: Model, svgs: Mapping[str, str], built: tuple[Finding, ...] = ()
+) -> tuple[Finding, ...]:
     """Every problem `source` cannot draw, for every `Document` record of `model`.
 
     Args:
         model: A laid-out model.
         svgs: Page key to SVG text, the same mapping `source` takes: `check` needs it to
             tell a missing drawing-set page or cable key from one that is present.
+        built: The build's findings; an undrawn diagram whose first line's cable is a subject
+            of a `DIAGRAM_COLUMN_TOO_TALL` among them is named as too tall, any other gets
+            the plain text.
 
     Returns:
         Findings sorted by `(code, subjects, message)`. Pure, never raises.
@@ -327,7 +338,9 @@ def check(model: Model, svgs: Mapping[str, str]) -> tuple[Finding, ...]:
         findings.extend(_unit_identity_findings(model, subject, record))
         findings.extend(cover_overflow_findings(model, subject, record, pages))
         findings.extend(_text_overflow_findings(model, subject, record, pages, svgs))
-        findings.extend(_no_drawings_findings(model, subject, record, pages, svgs))
+        findings.extend(
+            _no_drawings_findings(model, subject, record, pages, svgs, _tall_cables(built))
+        )
         findings.extend(_no_top_level_cables_findings(model, subject, record, pages))
         findings.extend(_replica_only_findings(model, subject, record, pages))
         findings.extend(_empty_list_findings(model, subject, record, pages))

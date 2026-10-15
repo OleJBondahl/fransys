@@ -1,0 +1,36 @@
+schema = 1
+
+[part]
+mpn = "DEMO-ESTOP-STATION"
+manufacturer = "Demo"
+description = "Emergency stop station, mushroom latching, in its own enclosure; two break contacts and one make"
+category = "electromechanical"
+class_code = "S"
+operated_by = "mushroom"
+
+[[function]]
+name = "ch_1"
+kind = "switch"
+ports = [
+    { name = "11", role = "generic", side = "line" },
+    { name = "12", role = "generic", side = "load" },
+]
+links = [{ a = "11", b = "12", kind = "switched", rest = "closed" }]
+
+[[function]]
+name = "ch_2"
+kind = "switch"
+ports = [
+    { name = "21", role = "generic", side = "line" },
+    { name = "22", role = "generic", side = "load" },
+]
+links = [{ a = "21", b = "22", kind = "switched", rest = "closed" }]
+
+[[function]]
+name = "state"
+kind = "switch"
+ports = [
+    { name = "33", role = "generic", side = "line" },
+    { name = "34", role = "generic", side = "load" },
+]
+links = [{ a = "33", b = "34", kind = "switched", rest = "open" }]

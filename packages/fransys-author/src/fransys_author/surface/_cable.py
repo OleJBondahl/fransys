@@ -169,17 +169,17 @@ class Cable:
     def _land_pe(self, design: Design, pe_core: int | None, sides: tuple[_Side, _Side]) -> None:
         """Land the GNYE core on a neighbour's PE port; else mark it spare (CC4, author-0044).
 
-        A load's PE port takes the far end. The near end takes the strip's next free PE terminal,
-        and without one the core stays open there, earthed as `d.earth` earths a pin.
+        A load's PE port takes the far end, the strip's next free PE terminal the near end. A side
+        with none stays open, earthed as `d.earth` earths a pin; with no PE end at all it is spare.
         """
         if pe_core is None or pe_core in self._used:
             return
         series = self._by[pe_core]
-        if not any(ends.pe is not None for _, ends in sides):
-            self.spare(pe_core)
-            return
         found = [self._pe_end(design, element, ends) for element, ends in sides]
         landed = tuple(port for port in found if port is not None)
+        if not landed:
+            self.spare(pe_core)
+            return
         if len(landed) == len(found):
             self.core(pe_core, *landed)
         else:

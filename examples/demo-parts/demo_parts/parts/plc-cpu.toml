@@ -1,0 +1,20 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PLC-CPU"
+manufacturer = "Demo"
+description = "PLC controller, 24 V DC supply, I/O modules on its backplane"
+category = "plc_module"
+class_code = "K"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "24V", role = "generic", side = "line", conductor = "L+" },
+    { name = "0V", role = "generic", side = "load", conductor = "L-" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_current_a = "0.5"

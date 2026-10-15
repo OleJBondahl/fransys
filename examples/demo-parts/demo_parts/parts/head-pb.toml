@@ -1,0 +1,9 @@
+schema = 1
+
+[part]
+mpn = "DEMO-HEAD-PB"
+manufacturer = "Demo"
+description = "Push button head, flush, momentary; contact blocks sold apart"
+category = "electromechanical"
+class_code = "S"
+operated_by = "push"

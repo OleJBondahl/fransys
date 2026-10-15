@@ -42,6 +42,21 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-render",
     ),
     CodeInfo(
+        code="DIAGRAM_COLUMN_TOO_TALL",
+        severities=(Severity.INFO,),
+        stage="render",
+        who="note",
+        cause=(
+            "A block diagram gets no page because its tallest column holds more boxes than one "
+            "sheet holds; the message gives the column, its boxes and how many fit."
+        ),
+        fix=(
+            "A known limit of the system diagram: no setting changes it. "
+            "`DOCUMENT_NO_DRAWINGS` is the error that stops the write."
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="DIAGRAM_LOOSE_WIRE",
         severities=(Severity.INFO,),
         stage="render",

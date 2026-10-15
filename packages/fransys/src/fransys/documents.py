@@ -68,6 +68,14 @@ def _subject_ids(
     raise TypeError(msg)
 
 
+def _document_key(
+    stem: str, preset: DocumentPreset, subject: tuple[object, ...]
+) -> tuple[str, ...]:
+    """The key: cover stem, preset and subject, so documents may share one cover path."""
+    named = [str(one.value if isinstance(one, Id) else one) for one in subject if one is not None]
+    return ("document", stem, preset.name, *named)
+
+
 def document(  # noqa: PLR0913 -- the new `logo` argument
     preset: DocumentPreset,
     subject: object,
@@ -87,7 +95,8 @@ def document(  # noqa: PLR0913 -- the new `logo` argument
     raises); `notice` is the title block's IP notice
     text. Texts are stored in the record. `subject` is what `d.location(...)` returns, a
     `Device`, a unit release name (`str`) or `None` (the `system` preset only);
-    any other value raises `TypeError`. Key: `("document", <cover stem>)`: one stem is one record.
+    any other value raises `TypeError`. Key: the cover stem, preset and subject, so documents
+    may share a cover path.
 
     Does not build, render or read files at render time; has no `notes` argument.
     """
@@ -96,7 +105,7 @@ def document(  # noqa: PLR0913 -- the new `logo` argument
     notes_text = notes_path.read_text(encoding="utf-8") if notes_path.exists() else None
     logo_text = logo.read_text(encoding="utf-8") if logo is not None else None
     location_id, item_id, unit_id, unit_name = _subject_ids(subject)
-    key = ("document", cover.stem)
+    key = _document_key(cover.stem, preset, (location_id, item_id, unit_id, unit_name))
     record = ModelDocument(
         id=make_id(ModelDocument, key),
         key=key,

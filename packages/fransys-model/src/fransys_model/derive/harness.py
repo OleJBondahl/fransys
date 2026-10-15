@@ -24,7 +24,7 @@ from fransys_model.vocab.tables import (
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .cable_end_rank import cable_end_rank
+from .cable_end_rank import cable_end_owner, cable_end_rank
 from .core_pairs import cable_pairs, conductor_count
 from .designation import (
     _own_designation,
@@ -37,11 +37,11 @@ from .designation import (
 )
 from .location_text import product_designation_in
 from .lookups import (
-    cable_end_owner,
     connector_facets,
     item_of_port,
     pin_order,
     require,
+    terminal_strip,
 )
 from .memo import Memo
 from .open_cores import open_core_rows
@@ -86,7 +86,7 @@ def _pin_marking(model: Model, port: Id[Port]) -> str:
     Any other port keeps its raw port name.
     """
     owner = item_of_port(model, port)
-    if cable_end_owner(model, owner) != owner:
+    if terminal_strip(model, owner) is not None:
         return _own_designation(model, owner)
     return ports(model)[port].name
 

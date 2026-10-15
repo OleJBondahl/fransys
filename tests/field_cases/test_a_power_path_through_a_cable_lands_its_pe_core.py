@@ -10,7 +10,7 @@ and a later wire to the load's PE pin built an ERROR (GNYE_NOT_PE) in place of r
 
 Rule (author-0044): the core's far end lands on the load's PE port. Its near end lands on the next
 free PE terminal of the strip before the cable, and otherwise is earthed as `d.earth` earths a pin
-(PE-BAR B0). A cable with no protective core, or a load with no PE port, changes nothing. A later
+(PE-BAR B0). A cable with no protective core, or no PE port at either end, changes nothing. A later
 wire to that core or port raises, naming the series that carried it.
 """
 
@@ -69,9 +69,9 @@ def test_a_path_with_no_strip_earths_the_cores_near_end() -> None:
     assert not [f for f in fr.check(fr.build(d)) if "PE" in f.code or f.severity.name == "ERROR"]
 
 
-def test_a_load_with_no_pe_port_changes_nothing() -> None:
+def test_a_load_and_a_strip_with_no_pe_port_leave_the_core_spare() -> None:
     d = fr.design("demo_parts")
-    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
+    x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
     w1 = d.cable("W1", "DEMO-CBL-4G1.5")
     d.series(dc.plus, x1, w1, d.device("H1", "DEMO-LAMP-24").lamp, dc.minus, wire=(BK, 0.75))
@@ -98,7 +98,7 @@ def test_an_earthed_pe_core_is_not_listed_as_a_spare() -> None:
 
 def test_a_parked_pe_core_is_listed_as_a_spare() -> None:
     d = fr.design("demo_parts")
-    x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
+    x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24"))
     d.series(
         dc.plus,

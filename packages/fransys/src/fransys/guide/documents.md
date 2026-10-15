@@ -9,7 +9,7 @@ the model does the rest at layout and write time.
 `fr.document(preset, subject, cover=..., add=(), remove=(), logo=None, notice="")` takes a
 `fr.DocumentPreset` (`CABINET_SCHEMATIC`, `HARNESS_DRAWING`, `PCB_SCHEMATIC`, `SYSTEM`), which
 fixes the deliverable's default page kinds; `add` and `remove` adjust that set for one document.
-`cover` is a required path to a Markdown file, read verbatim and stored on the model. A
+`cover` is a required path to a Markdown file, read verbatim and stored on the model; any number of documents may share one cover path. A
 missing `cover` is a `FileNotFoundError` naming the path. A file beside it, named the cover's
 stem plus `.notes.md`, is read automatically when present and becomes the document's notes
 page; there is no separate `notes` parameter, and a missing notes file is not an error, it just

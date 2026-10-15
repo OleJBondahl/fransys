@@ -5,9 +5,10 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 `source(model, document, svgs) -> str` returns the complete, self-contained Typst source of
 one document: every drawing SVG is inlined, so the source references no file. The facade
 compiles it (third-party dependency `typst`, pinned per the pdf spec's decision record); this
-package never depends on `typst` itself. `check(model, svgs) -> tuple[Finding, ...]` takes the
+package never depends on `typst` itself. `check(model, svgs, built=()) -> tuple[Finding, ...]` takes the
 same SVG mapping, because it is the only way to tell a missing drawing-set page from one that
-is present. `font_dir()` returns the path to the vendored DejaVu Sans Condensed
+is present. `built` takes the build's own findings, so a missing drawing names the finding
+that caused it, such as DIAGRAM_COLUMN_TOO_TALL. `font_dir()` returns the path to the vendored DejaVu Sans Condensed
 faces, through `importlib.resources`, reading nothing.
 
 `document_pages(model, document)` resolves a document's page list (its preset's pages, plus

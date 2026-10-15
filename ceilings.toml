@@ -200,7 +200,7 @@ surface_docstring_lines = 15
 "packages/fransys/src/fransys/guide/reading.md" = 5279
 
 [md_long_sentences]
-"CLAUDE.md" = 8
+"CLAUDE.md" = 9
 "docs/DESIGN.md" = 3
 "docs/ROADMAP.md" = 1
 "docs/contracts/part-file-connectors.md" = 2

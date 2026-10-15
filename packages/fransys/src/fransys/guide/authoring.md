@@ -110,6 +110,8 @@ and a leading digit gets `P_`, so `24V+` is `P_24V_plus`. `getattr(dev, "24V+")`
 and `X1[3]` takes terminal 3. `pe` names the protective-earth part, and a run labelled exactly `"PE"` (`X1.run("PE", 2)`) takes it; without `pe=` that run raises. A terminal has two sides: wiring
 inside the unit reaches its inner side, a field cable its outer side. A wire or a series enters a
 strip at the right side without you saying so.
+A series that starts on a strip and goes on to a function leaves the strip on its inner side.
+One that goes on to a cable leaves it on the outer side.
 
 With `count`, the strip makes all its terminals at once, so spares exist and count in the lists. A
 terminal joins the function block where it is first taken, and a spare joins the strip's own group.
@@ -384,7 +386,7 @@ d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 
 
 `d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A unit has one `PE` net: each further `d.earth` call in it adds its pins to that net.
 Call d.earth before draft(); a later call raises.
-Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. A single wire to a PE terminal is `d.detail.wire`: see `detail.md`.
+Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. A load with no PE port leaves the far end open, the near end on the strip's PE terminal. A single wire to a PE terminal is `d.detail.wire`: see `detail.md`.
 
 ```python
 import fransys as fr

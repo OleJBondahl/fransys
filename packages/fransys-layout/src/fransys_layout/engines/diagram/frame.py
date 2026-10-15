@@ -25,7 +25,9 @@ from fransys_layout.engines.diagram.frame_values import (
 )
 from fransys_layout.engines.diagram.order import order_columns
 from fransys_layout.engines.diagram.sheets import split_sheets
-from fransys_layout.geometry import Facing
+from fransys_layout.engines.diagram.sizes import ROW_GAP
+from fransys_layout.geometry import PAGE_PAD, Facing
+lazy from fransys_layout.engines.diagram.arrange import RawEnd
 lazy from fransys_layout.engines.diagram.channels import Pair
 lazy from fransys_layout.engines.diagram.frame_values import FrameEnd
 lazy from fransys_layout.engines.diagram.values import DiagramFacts, Ident
@@ -42,8 +44,10 @@ class Stacked:
     ends: Mapping[tuple[Ident, Facing], tuple[FrameEnd, ...]]
 
 
-def _stacked(facts: DiagramFacts) -> Stacked | None:
-    """Columns, orientation, sizes, stacking and ends (rules 1 to 5), or None if too tall."""
+def _columns_heights(
+    facts: DiagramFacts,
+) -> tuple[tuple[tuple[Ident, ...], ...], tuple[Joint, ...], tuple[RawEnd, ...], dict[Ident, int]]:
+    """The columns, joints, raw ends and box heights of a diagram (rules 1 to 4)."""
     ids = tuple(b.box for b in facts.boxes)
     joined = [(line.a, line.b) for line in facts.lines]
     if facts.column:
@@ -53,12 +57,36 @@ def _stacked(facts: DiagramFacts) -> Stacked | None:
     columns = order_columns(stand, joined, {b: i for i, b in enumerate(ids)}, facts.column)
     joints = orient(facts, {b: c for c, col in enumerate(columns) for b in col})
     raw = raw_ends(joints)
-    height = heights(facts, raw)
+    return columns, joints, raw, heights(facts, raw)
+
+
+def _stacked(facts: DiagramFacts) -> Stacked | None:
+    """Columns, orientation, sizes, stacking and ends (rules 1 to 5), or None if too tall."""
+    columns, joints, raw, height = _columns_heights(facts)
     y = stack(columns, height, facts.height)
     if y is None:
         return None
     ends = place_ends(raw, y, height, facts.text_height, nest=facts.nest_same)
     return Stacked(columns=columns, joints=joints, height=height, y=y, ends=ends)
+
+
+def tall_column(facts: DiagramFacts) -> tuple[int, int, int] | None:
+    """The tallest column that overfills the sheet as (column number from 1, boxes, boxes that fit).
+
+    None when the stack fits. The fit counts the column's boxes, top down, that stay in the sheet.
+    """
+    columns, _, _, height = _columns_heights(facts)
+    if stack(columns, height, facts.height) is not None:
+        return None
+    totals = [sum(height[b] for b in col) + ROW_GAP * (len(col) - 1) for col in columns]
+    tallest = totals.index(max(totals))
+    room, used, fit = facts.height - 2 * PAGE_PAD, 0, 0
+    for box in columns[tallest]:
+        used += height[box] + (ROW_GAP if fit else 0)
+        if used > room:
+            break
+        fit += 1
+    return tallest + 1, len(columns[tallest]), fit
 
 
 def _column(c: int, x: int, width: int, facts: DiagramFacts, stacked: Stacked) -> FrameColumn:

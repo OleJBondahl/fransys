@@ -15,7 +15,7 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab import Conductor, Function, Item, Port, Unit
 lazy from fransys_model.vocab.facets.cable import OpenCoreFacet
 
-from .cable_end_rank import cable_end_rank
+from .cable_end_rank import cable_end_owner, cable_end_rank
 from .core_pairs import (
     DrawnPair,
     cable_pairs,
@@ -31,7 +31,7 @@ from .drawn_wires import DrawnWire, block_wires, wire_cores, wire_ends, wire_har
 from .harness import _end_designation, _facts_of, _pin_marking, all_cables, all_unit_cables
 from .indexes import build_indexes
 from .lone_cable import lone_cable_harness
-from .lookups import cable_end_owner, item_of_port, pin_order
+from .lookups import item_of_port, pin_order
 from .open_core_ends import open_core_text
 from .open_drawn import DrawnOpen, drawn_open_cores
 from .order import designation_key, port_designation_key

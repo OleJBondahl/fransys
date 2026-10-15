@@ -1,6 +1,6 @@
 """The BLOCK_DIAGRAM section: one A2 page per `DiagramSheet` of the reading (pdf-0023)."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
     diagram_sheets,
@@ -26,7 +26,7 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.kernel import Model
+    from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Document
 
 
@@ -59,15 +59,29 @@ def diagram_source(model: Model, record: Document, svgs: Mapping[str, str]) -> s
 
 
 def diagram_no_drawings_messages(
-    model: Model, record: Document, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
+    model: Model,
+    record: Document,
+    pages: tuple[PageKind, ...],
+    svgs: Mapping[str, str],
+    tall_cables: frozenset[Id[Any]],
 ) -> list[str]:
-    """Why a kept BLOCK_DIAGRAM page lacks its drawing; none when it is drawn or has no line."""
+    """Why a kept BLOCK_DIAGRAM page lacks its drawing; none when it is drawn or has no line.
+
+    The tall-column pointer appears only when the build named that diagram's column.
+    """
     unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record)
     reading = record.preset is DocumentPreset.SYSTEM or unit is not None
-    if PageKind.BLOCK_DIAGRAM not in pages or not reading or not diagram_lines(model, unit):
+    lines = diagram_lines(model, unit) if reading else ()
+    if PageKind.BLOCK_DIAGRAM not in pages or not lines:
         return []
     found = diagram_sheets(model, record)
     if not found:
-        return ["BLOCK_DIAGRAM: the diagram has lines but could not be drawn"]
+        cause = (
+            "a column taller than one sheet is a known limit of the system diagram, "
+            "see DIAGRAM_COLUMN_TOO_TALL"
+            if lines[0].cable in tall_cables
+            else "no finding names the cause"
+        )
+        return [f"BLOCK_DIAGRAM: the diagram has lines but could not be drawn ({cause})"]
     missing = [render_id(d.id) for d in found if render_id(d.id) not in svgs]
     return [f"BLOCK_DIAGRAM: missing drawing for {', '.join(missing)}"] if missing else []

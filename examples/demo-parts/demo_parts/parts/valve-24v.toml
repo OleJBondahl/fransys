@@ -1,0 +1,21 @@
+schema = 1
+
+[part]
+mpn = "DEMO-VALVE-24"
+manufacturer = "Demo"
+description = "Solenoid valve coil, 24 V DC PELV, plug with pins 1 and 2"
+category = "electromechanical"
+class_code = "MB"
+
+[[function]]
+name = "coil"
+kind = "coil"
+symbol = "operating-device"
+ports = [
+    { name = "1", role = "generic", side = "line", symbol_port = "in" },
+    { name = "2", role = "generic", side = "load", symbol_port = "out" },
+]
+
+[function.operating]
+nominal_voltage_v = "24"
+nominal_current_a = "0.2"

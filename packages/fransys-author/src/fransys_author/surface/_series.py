@@ -73,9 +73,16 @@ def _width(design: Design, elements: tuple[object, ...]) -> int:
     raise AuthorError(msg)
 
 
-def _entered(found: list[Ends], element: object, before: tuple[object, ...]) -> list[Ends]:
-    """A strip after a cable is entered from its field side: its outer ends are the line ends."""
-    if before and is_bridge(before[0]) and getattr(element, "_enters_from_field", False):
+def _entered(found: list[Ends], element: object, around: tuple[object, ...]) -> list[Ends]:
+    """A strip is entered from its field side after a cable: its outer ends are the line ends.
+
+    A strip that starts a series and goes on to a plain element leaves inward (its inner ends are
+    the load ends); one that goes on to a cable keeps the outer side for the field cable.
+    """
+    if not getattr(element, "_enters_from_field", False):
+        return found
+    before, after = around
+    if is_bridge(before) or (before is None and not is_bridge(after)):
         return [Ends(e.load, e.line, e.pe) for e in found]
     return found
 
@@ -101,7 +108,8 @@ def _resolve(design: Design, elements: tuple[object, ...], width: int) -> list[l
             found.append([])
         else:
             _refuse_shorts(element, width, found[i - 1][0] if i and found[i - 1] else None)
-            found.append(_entered(branches(design, element, width), element, elements[i - 1 : i]))
+            around = (elements[i - 1] if i else None, elements[i + 1] if i < last else None)
+            found.append(_entered(branches(design, element, width), element, around))
     return found
 
 

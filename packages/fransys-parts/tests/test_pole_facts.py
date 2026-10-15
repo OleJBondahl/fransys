@@ -90,10 +90,11 @@ def test_the_demo_psu_has_n_and_dc_polarity_from_its_markings():
     assert supply["-"][1] is ConductorMark.L_MINUS
 
 
-def test_the_demo_plc_module_states_its_supply_pins():
+def test_the_demo_plc_modules_state_their_supply_pins():
     model = freeze(fransys_parts.load_path(DEMO))
-    assert _facts(model, "24V")[1] is ConductorMark.L_PLUS
-    assert _facts(model, "0V")[1] is ConductorMark.L_MINUS
+    ports = port_templates(model).values()
+    assert {p.conductor_mark for p in ports if p.name == "24V"} == {ConductorMark.L_PLUS}
+    assert {p.conductor_mark for p in ports if p.name == "0V"} == {ConductorMark.L_MINUS}
 
 
 def test_an_even_marking_not_on_a_pole_link_states_nothing(tmp_path):

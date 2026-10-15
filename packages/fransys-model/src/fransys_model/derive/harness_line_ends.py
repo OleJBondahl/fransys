@@ -10,9 +10,10 @@ from fransys_model.vocab.tables import conductors, functions, items, ports
 from fransys_model.vocab.tables import mates as mates_table
 lazy from fransys_model.vocab.core import Function, Item, Port
 
+from .cable_end_rank import cable_end_owner
 from .designation import connector_designation
 from .harness import harness_cables, reading_cables
-from .lookups import cable_end_owner, item_of_port, require
+from .lookups import item_of_port, require
 from .order import natural_key, port_designation_key
 from .rows import HarnessLineEnd
 from .wire_harness import harness_of_wire

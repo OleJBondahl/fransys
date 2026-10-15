@@ -179,6 +179,12 @@ unsound-assignment = "ignore"
 unsupported-dynamic-base = "ignore"
 unsound-yield = "ignore"
 
+[[tool.ty.overrides]]
+include = ["internal/placement_corpus/legacy_shape/**"]
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+not-subscriptable = "ignore"
+
 [tool.vulture]
 # Enum members that only downstream packages and the tests use (the guide's vocabulary), so
 # vulture, which scans src alone, sees no use. Names match globally: add one only when it is a

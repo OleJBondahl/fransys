@@ -1,0 +1,25 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PROX-PNP"
+manufacturer = "Demo"
+description = "Inductive proximity sensor, PNP make, 3-wire, 24 V DC, M12 plug"
+category = "generic"
+class_code = "B"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "1", role = "generic", side = "line", conductor = "L+" },
+    { name = "3", role = "generic", side = "load", conductor = "L-" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_current_a = "0.01"
+
+[[function]]
+name = "out"
+kind = "sensor"
+ports = [{ name = "4", role = "generic", side = "load" }]

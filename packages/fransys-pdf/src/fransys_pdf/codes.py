@@ -43,7 +43,9 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         cause=(
             "A SCHEMATIC page has no drawing set and the document has no other content page, "
             "or a HARNESS_DRAWING or BLOCK_DIAGRAM page has no cable or diagram, or a drawing "
-            "is missing, too large or not drawable yet: interleaved harness cables."
+            "is missing, too large or not drawable yet: interleaved harness cables, or a block "
+            "diagram whose tallest column is taller than one sheet (a known limit of the system "
+            "diagram; `DIAGRAM_COLUMN_TOO_TALL` names the column)."
         ),
         fix="Add the missing content, remove the page kind or shorten the texts.",
         page="findings-pdf",

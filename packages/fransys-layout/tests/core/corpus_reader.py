@@ -157,7 +157,9 @@ def read_instance(path: Path) -> Instance:
     net_of, rails = _nets(by_kind.get("net", []))
     today = by_kind.get("today", [])
     assert {w[1] for w in today} <= set(syms), path.name
-    number = {k: i for i, k in enumerate(sorted({_key(w) for w in today}))}
+    # a page that holds only routes or markers still gets its number (CORPUS-PANEL-2)
+    keyed = today + by_kind.get("route", []) + by_kind.get("marker", [])
+    number = {k: i for i, k in enumerate(sorted({_key(w) for w in keyed}))}
     ctx = (net_of, _facts(by_kind))
     boxes = [_box(w[1], syms[w[1]], w, number[_key(w)], ctx) for w in today]
     wires = [

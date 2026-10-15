@@ -55,4 +55,4 @@ def test_the_strips_block_series_picks_the_sides_itself():
     the fixed-side case.
     """
     assert _strip_sides(_strips(series=False)) == {"1": "internal", "2": "external"}
-    assert _strip_sides(_strips(series=True)) == {"1": "external", "2": "internal"}
+    assert _strip_sides(_strips(series=True)) == {"1": "internal", "2": "internal"}

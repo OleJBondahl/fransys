@@ -1,0 +1,73 @@
+schema = 1
+
+[part]
+mpn = "DEMO-SAFETY-RLY-24"
+manufacturer = "Demo"
+description = "Safety relay, 24 V DC, two-channel inputs, monitored reset, two safety make contacts and one auxiliary break contact"
+category = "electromechanical"
+class_code = "K"
+
+[[function]]
+name = "power"
+kind = "load"
+ports = [
+    { name = "A1", role = "generic", side = "line", conductor = "L+" },
+    { name = "A2", role = "generic", side = "load", conductor = "L-" },
+]
+
+[function.operating]
+voltage_dc_v = "24"
+nominal_current_a = "0.1"
+
+# An input loop leaves on its pulse output and returns on its input: S11 is the load side, the
+# first pin a series wires out of, and S12 the line side it comes back in on.
+[[function]]
+name = "ch_1"
+kind = "load"
+ports = [
+    { name = "S11", role = "generic", side = "load" },
+    { name = "S12", role = "generic", side = "line" },
+]
+
+[[function]]
+name = "ch_2"
+kind = "load"
+ports = [
+    { name = "S21", role = "generic", side = "load" },
+    { name = "S22", role = "generic", side = "line" },
+]
+
+[[function]]
+name = "reset"
+kind = "load"
+ports = [
+    { name = "S33", role = "generic", side = "load" },
+    { name = "S34", role = "generic", side = "line" },
+]
+
+[[function]]
+name = "safe_1"
+kind = "contact_no"
+ports = [
+    { name = "13", role = "generic", side = "line" },
+    { name = "14", role = "generic", side = "load" },
+]
+links = [{ a = "13", b = "14", kind = "switched" }]
+
+[[function]]
+name = "safe_2"
+kind = "contact_no"
+ports = [
+    { name = "23", role = "generic", side = "line" },
+    { name = "24", role = "generic", side = "load" },
+]
+links = [{ a = "23", b = "24", kind = "switched" }]
+
+[[function]]
+name = "aux"
+kind = "contact_nc"
+ports = [
+    { name = "41", role = "generic", side = "line" },
+    { name = "42", role = "generic", side = "load" },
+]
+links = [{ a = "41", b = "42", kind = "switched" }]

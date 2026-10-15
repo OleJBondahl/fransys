@@ -17,6 +17,7 @@ from fransys_model.vocab.tables import conductors, functions, items, ports
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
 from .cable_drawing import end_by_others, end_label
+from .cable_end_rank import cable_end_owner
 from .designation import printed_designation, unit_list_context
 from .drawing_text import (
     content_extent,
@@ -29,7 +30,7 @@ from .drawing_text import (
 from .harness import reading_cables
 from .indexes import build_indexes
 from .instance_tag import instance_name, instance_tags
-from .lookups import cable_end_owner, item_of_port, unit_chain
+from .lookups import item_of_port, terminal_strip, unit_chain
 from .mate_rows import mate_partners
 from .order import NaturalKey, natural_key
 lazy from .rows import HarnessCable
@@ -156,7 +157,7 @@ def end_box(model: Model, port: Id[Port], unit: Id[Unit] | None) -> BoxEnd | Non
     """
     item = item_of_port(model, port)
     landed = cable_end_owner(model, item)
-    anchored = landed != item or _on_connector(model, port)
+    anchored = terminal_strip(model, item) is not None or _on_connector(model, port)
     if _is_plug(model, item):
         mated = _mated_item(model, item)
         if mated is None:

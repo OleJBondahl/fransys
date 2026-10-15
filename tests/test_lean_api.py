@@ -145,7 +145,8 @@ def test_a_function_prints_a_real_signature():
     output = lean_api.api("fransys_pdf")
     check_line = next(line for line in output.splitlines() if line.startswith("fransys_pdf.check("))
     assert check_line == (
-        "fransys_pdf.check(model: Model, svgs: Mapping[str, str]) -> tuple[Finding, ...]"
+        "fransys_pdf.check(model: Model, svgs: Mapping[str, str], "
+        "built: tuple[Finding, ...]=()) -> tuple[Finding, ...]"
     )
 
 

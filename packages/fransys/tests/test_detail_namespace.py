@@ -22,9 +22,12 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # digest is the pin before it (7449c9999..., checked on a copy of the library at HEAD).
 # CORPUS-BOARD (2026-10-15) adds `rcd-4p.toml` and `mcb-3pn.toml`; with those two files removed the
 # digest is the pin before it (fe7d8f55c..., checked on a copy of the merged library without them).
+# CORPUS-PANEL (2026-10-15) adds ten demo parts; with all
+# seventeen added files (MCC 5, BOARD 2, PANEL 10) removed the digest is the pin before them
+# (7449c9999..., checked on a copy of the merged library).
 # PLC-CHANNEL-ORDER-FIX (2026-10-15) adds `plc-dio-mixed.toml`; with that file removed the digest
 # is the pin before it (d8f37d280..., checked on a copy of the library without it).
-_DIGEST_BEFORE_THE_MOVE = "f8893f3f9a8e3d756c423dc228961e7e64a3460cf4d904e6d061ad5c867c15cf"
+_DIGEST_BEFORE_THE_MOVE = "810ebd7ffc5fa0212596eb3f82922a32adb291547794e84e8b52621acd1e83af"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

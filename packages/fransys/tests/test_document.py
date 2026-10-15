@@ -6,7 +6,7 @@ import fransys as fr
 import fransys_author
 import pytest
 
-from fransys_model.kernel import Id, MergeConflict, merge
+from fransys_model.kernel import Id, merge
 from fransys_model.vocab import Document as ModelDocument
 from fransys_model.vocab import DocumentPreset
 
@@ -101,14 +101,14 @@ def test_a_name_and_a_scope_get_distinct_keys(design, tmp_path):
     assert _only_record(name_doc).key != _only_record(scope_doc).key
 
 
-def test_a_name_and_a_unit_id_with_one_stem_clash(tmp_path):
+def test_a_name_and_a_unit_id_with_one_stem_merge(tmp_path):
     cover = _cover(tmp_path)
     name_doc = fr.document(DocumentPreset.CABINET_SCHEMATIC, "relay-board", cover=cover)
     unit_doc = fr.document(
         DocumentPreset.CABINET_SCHEMATIC, Id(kind="unit", value="demo"), cover=cover
     )
-    with pytest.raises(MergeConflict):
-        merge(name_doc, unit_doc)
+    assert _only_record(name_doc).key != _only_record(unit_doc).key
+    merge(name_doc, unit_doc)
 
 
 def test_a_group_handle_raises_type_error(design, tmp_path):
@@ -167,12 +167,12 @@ def test_missing_logo_names_the_path(tmp_path):
         fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover, logo=logo)
 
 
-def test_key_comes_from_the_cover_stem(tmp_path):
+def test_key_holds_the_cover_stem_the_preset_and_the_subject(tmp_path):
     cover = _cover(tmp_path, name="my-panel.md")
     subject = Id(kind="item", value="demo")
     draft = fr.document(DocumentPreset.CABINET_SCHEMATIC, subject, cover=cover)
     (record,) = draft.records()
-    assert record.key == ("document", "my-panel")
+    assert record.key == ("document", "my-panel", "CABINET_SCHEMATIC", "demo")
 
 
 def test_two_documents_with_one_stem_and_equal_content_dedupe(tmp_path):
@@ -184,12 +184,11 @@ def test_two_documents_with_one_stem_and_equal_content_dedupe(tmp_path):
     assert len(merged.records()) == 1
 
 
-def test_two_documents_with_one_stem_and_different_content_clash(tmp_path):
+def test_two_documents_with_one_stem_and_different_subjects_merge(tmp_path):
     cover = _cover(tmp_path)
     first = fr.document(DocumentPreset.CABINET_SCHEMATIC, Id(kind="item", value="a"), cover=cover)
     second = fr.document(DocumentPreset.CABINET_SCHEMATIC, Id(kind="item", value="b"), cover=cover)
-    with pytest.raises(MergeConflict):
-        merge(first, second)
+    assert len(merge(first, second).records()) == 2
 
 
 def test_notice_defaults_to_empty_and_is_stored(tmp_path):

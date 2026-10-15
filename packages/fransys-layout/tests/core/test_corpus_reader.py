@@ -59,3 +59,15 @@ def test_a_reader_that_ignores_orientation_fails_the_route_check() -> None:
         pins = {(b.page, p.x, p.y) for b in scene.boxes for p in b.pins}
         missed += sum((w.page, *w.points[-1]) not in pins for w in scene.wires)
     assert missed > 0
+
+
+def test_a_marker_on_a_page_with_no_symbol_is_read_with_its_own_page_number(tmp_path) -> None:
+    """machine_panel_large has a marker on a page the symbol lines do not name: not a KeyError."""
+    text = (CORPUS / "p02_strip_to_plc.txt").read_text(encoding="utf-8")
+    line = next(x for x in text.splitlines() if x.startswith("marker "))
+    far = line.replace("page=1 set=2", "page=9 set=9")
+    assert far != line
+    path = tmp_path / "far.txt"
+    path.write_text(text + far + "\n", encoding="utf-8")
+    pages = {m.page for m in read_instance(path).scene.markers}
+    assert len(pages) > len({m.page for m in READ["p02_strip_to_plc"].scene.markers})

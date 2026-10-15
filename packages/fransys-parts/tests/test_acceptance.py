@@ -171,17 +171,21 @@ def test_demo_library_record_counts_and_keys():
     3 symbol choices), `vfd-4kw.toml` (4/10/1, 1 symbol choice) and `motor-11kw-star-delta.toml`
     (2/7/0), so 82 parts, 191 templates, 432 ports, 82 links, 59 symbol choices; CORPUS-BOARD adds
     `rcd-4p.toml` and `mcb-3pn.toml` (1/8/4 each, one symbol choice each), so 84 parts, 193
-    templates, 448 ports, 90 links, 61 symbol choices; PLC-CHANNEL-ORDER-FIX adds
-    `plc-dio-mixed.toml` (5/5/0), so 85 parts, 198 templates, 453 ports)."""
+    templates, 448 ports, 90 links, 61 symbol choices; CORPUS-PANEL adds a safety relay, a PNP
+    sensor, a 3-core cable, a valve,
+    a push-button head, a PLC CPU, powered input and output cards, a class I power supply and
+    an e-stop station, so 94 parts, 243 templates, 516 ports, 96 links, 62 symbol choices;
+    PLC-CHANNEL-ORDER-FIX adds `plc-dio-mixed.toml` (5/5/0), so 95 parts, 248 templates, 521
+    ports, 96 links, 62 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 85
-    assert len(function_templates(model)) == 198
-    assert len(port_templates(model)) == 453
-    assert len(internal_links(model)) == 90
-    assert len(model.tables["layout.symbol_choice"]) == 61
+    assert len(parts(model)) == 95
+    assert len(function_templates(model)) == 248
+    assert len(port_templates(model)) == 521
+    assert len(internal_links(model)) == 96
+    assert len(model.tables["layout.symbol_choice"]) == 62
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")

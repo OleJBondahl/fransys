@@ -48,9 +48,11 @@ def starters(d: fr.Design, live: Handle, rail: Handle) -> list[tuple[Handle, Han
             if s == 0:
                 d.series(q0.element, x3, f.element, q.main, ol.main, mo.motor, wire=POWER)
             else:
-                d.series(x3, f.element, q.main, ol.main, mo.motor, wire=POWER)
+                d.series(f.element, q.main, ol.main, mo.motor, wire=POWER)
                 for pole in (1, 2, 3):  # the row jumpers: each terminal feeds the next row's
                     d.detail.wire(x3[3 * s + pole - 3].inner, x3[3 * s + pole].inner, wire=POWER)
+                    # a series from a strip leaves inner; the fuse is fed from the outer side
+                    d.detail.wire(x3[3 * s + pole].outer, f.element[str(2 * pole - 1)], wire=POWER)
             d.series(live, q.aux, h.lamp, rail, wire=CONTROL)
             d.series(q.coil, rail, wire=CONTROL)
             made.append((q, ol))

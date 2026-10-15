@@ -1,0 +1,34 @@
+schema = 1
+
+[part]
+mpn = "DEMO-PSU-24-PE"
+manufacturer = "Demo"
+description = "Power supply, 24 V DC out, AC in, protection class I"
+category = "generic"
+class_code = "T"
+
+[rating]
+power_loss_w = "12"
+
+[[function]]
+name = "input"
+kind = "load"
+ports = [
+    { name = "L", role = "generic", side = "line" },
+    { name = "N", role = "generic", side = "load" },
+    { name = "PE", role = "pe" },
+]
+
+[function.rating]
+voltage_ac_v = "264"
+
+[[function]]
+name = "output"
+kind = "supply"
+ports = [
+    { name = "+", role = "generic" },
+    { name = "-", role = "generic" },
+]
+
+[function.operating]
+nominal_voltage_v = "24"

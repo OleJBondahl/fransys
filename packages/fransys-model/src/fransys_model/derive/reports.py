@@ -23,7 +23,7 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .cable_end_rank import cable_end_rank
+from .cable_end_rank import cable_end_owner, cable_end_rank
 from .core_pairs import _product_colours
 from .designation import (
     end_outside_nested_unit,
@@ -39,7 +39,6 @@ from .far_ends import end_text
 from .indexes import Indexes, build_indexes
 from .list_cells import CELL_SEPARATOR
 from .lookups import (
-    cable_end_owner,
     channel_devices,
     item_description,
     item_of_port,

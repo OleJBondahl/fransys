@@ -491,7 +491,7 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
     if not _has_error(result.findings):
         raw.extend(_overview(model)[1])
     if not _has_error(result.findings) and _has_document(model):
-        raw.extend(fransys_pdf.check(model, svgs))
+        raw.extend(fransys_pdf.check(model, svgs, result.findings))
         if needs_schematic_layout(model):
             raw.extend(fransys_render.check(model))
     return tuple(raw)

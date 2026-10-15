@@ -55,7 +55,6 @@ def strip_set(model: Model) -> frozenset[Id[Item]]:
 
 
 __all__ = [
-    "cable_end_owner",
     "channel_devices",
     "conductors_by_role",
     "connector_facets",
@@ -74,6 +73,7 @@ __all__ = [
     "require",
     "strip_set",
     "terminal_items",
+    "terminal_strip",
     "unit_chain",
 ]
 
@@ -254,16 +254,11 @@ def item_of_port(model: Model, port: Id[Port]) -> Id[Item]:
     return functions(model)[ports(model)[port].function].item
 
 
-def cable_end_owner(model: Model, item: Id[Item]) -> Id[Item]:
-    """`item`'s strip, when it is a terminal with a parent; else `item`.
-
-    Shared by `derive.harness` and `cable_rows`, so a landing on a terminal resolves to one end.
-    """
+def terminal_strip(model: Model, item: Id[Item]) -> Id[Item] | None:
+    """`item`'s strip, when it is a terminal with a parent; else None."""
     if item in terminal_items(model):
-        parent = items(model)[item].parent
-        if parent is not None:
-            return parent
-    return item
+        return items(model)[item].parent
+    return None
 
 
 def conductors_by_role(

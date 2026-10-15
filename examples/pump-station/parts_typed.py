@@ -9,6 +9,14 @@ LIBRARY_DIGEST = "e05ea95aef8c24af118e2ac3ce67596204db39910ea01ee546c82cf9c0e6e2
 
 
 class P_1085039__port_1(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
+    P_7: Pin
+    P_8: Pin
     if TYPE_CHECKING:
 
         @override
@@ -20,6 +28,14 @@ class P_1085039__port_1(TypedFn):
 class P_1085039(TypedDevice[Literal["port_1"], "P_1085039"]):
     mpn: ClassVar[str] = "1085039"
     port_1: P_1085039__port_1
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
+    P_7: Pin
+    P_8: Pin
     if TYPE_CHECKING:
 
         @override
@@ -37,6 +53,9 @@ class P_1119405(TypedDevice[Never, "P_1119405"]):
 
 
 class P_1757022__x(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -46,6 +65,9 @@ class P_1757022__x(TypedFn):
 class P_1757022(TypedDevice[Literal["x"], "P_1757022"]):
     mpn: ClassVar[str] = "1757022"
     x: P_1757022__x
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -53,6 +75,9 @@ class P_1757022(TypedDevice[Literal["x"], "P_1757022"]):
 
 
 class P_1757255__x(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -62,6 +87,9 @@ class P_1757255__x(TypedFn):
 class P_1757255(TypedDevice[Literal["x"], "P_1757255"]):
     mpn: ClassVar[str] = "1757255"
     x: P_1757255__x
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -153,6 +181,14 @@ class P_2002_1207(TypedDevice[Literal["terminal"], "P_2002_1207"]):
 
 
 class P_21700601__x(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
+    P_7: Pin
+    P_8: Pin
     if TYPE_CHECKING:
 
         @override
@@ -164,6 +200,14 @@ class P_21700601__x(TypedFn):
 class P_21700601(TypedDevice[Literal["x"], "P_21700601"]):
     mpn: ClassVar[str] = "21700601"
     x: P_21700601__x
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
+    P_7: Pin
+    P_8: Pin
     if TYPE_CHECKING:
 
         @override
@@ -177,6 +221,12 @@ class P_2170465(TypedDevice[Never, "P_2170465"]):
 
 
 class P_3LD2054_0TK51__main(TypedFn):
+    P_1L1: Pin
+    P_2T1: Pin
+    P_3L2: Pin
+    P_4T2: Pin
+    P_5L3: Pin
+    P_6T3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -186,6 +236,12 @@ class P_3LD2054_0TK51__main(TypedFn):
 class P_3LD2054_0TK51(TypedDevice[Literal["main"], "P_3LD2054_0TK51"]):
     mpn: ClassVar[str] = "3LD2054-0TK51"
     main: P_3LD2054_0TK51__main
+    P_1L1: Pin
+    P_2T1: Pin
+    P_3L2: Pin
+    P_4T2: Pin
+    P_5L3: Pin
+    P_6T3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -193,6 +249,8 @@ class P_3LD2054_0TK51(TypedDevice[Literal["main"], "P_3LD2054_0TK51"]):
 
 
 class P_3NW7033__pole_1(TypedFn):
+    P_1: Pin
+    P_2: Pin
     if TYPE_CHECKING:
 
         @override
@@ -200,6 +258,8 @@ class P_3NW7033__pole_1(TypedFn):
 
 
 class P_3NW7033__pole_2(TypedFn):
+    P_3: Pin
+    P_4: Pin
     if TYPE_CHECKING:
 
         @override
@@ -207,6 +267,8 @@ class P_3NW7033__pole_2(TypedFn):
 
 
 class P_3NW7033__pole_3(TypedFn):
+    P_5: Pin
+    P_6: Pin
     if TYPE_CHECKING:
 
         @override
@@ -218,6 +280,12 @@ class P_3NW7033(TypedDevice[Literal["pole_1", "pole_2", "pole_3"], "P_3NW7033"])
     pole_1: P_3NW7033__pole_1
     pole_2: P_3NW7033__pole_2
     pole_3: P_3NW7033__pole_3
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
     if TYPE_CHECKING:
 
         @override
@@ -260,6 +328,9 @@ class P_40_61_9_024_1000__coil(TypedFn):
 
 
 class P_40_61_9_024_1000__contact(TypedFn):
+    P_11: Pin
+    P_12: Pin
+    P_14: Pin
     if TYPE_CHECKING:
 
         @override
@@ -272,6 +343,9 @@ class P_40_61_9_024_1000(TypedDevice[Literal["coil", "contact"], "P_40_61_9_024_
     contact: P_40_61_9_024_1000__contact
     A1: Pin
     A2: Pin
+    P_11: Pin
+    P_12: Pin
+    P_14: Pin
     if TYPE_CHECKING:
 
         @override
@@ -279,6 +353,10 @@ class P_40_61_9_024_1000(TypedDevice[Literal["coil", "contact"], "P_40_61_9_024_
 
 
 class P_5SY6506_7__pole(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3_N: Pin
+    N_4: Pin
     if TYPE_CHECKING:
 
         @override
@@ -288,6 +366,10 @@ class P_5SY6506_7__pole(TypedFn):
 class P_5SY6506_7(TypedDevice[Literal["pole"], "P_5SY6506_7"]):
     mpn: ClassVar[str] = "5SY6506-7"
     pole: P_5SY6506_7__pole
+    P_1: Pin
+    P_2: Pin
+    P_3_N: Pin
+    N_4: Pin
     if TYPE_CHECKING:
 
         @override
@@ -327,6 +409,8 @@ class P_750_402__di_4(TypedFn):
 
 
 class P_750_402__power(TypedFn):
+    P_0V: Pin
+    P_24V: Pin
     if TYPE_CHECKING:
 
         @override
@@ -344,6 +428,8 @@ class P_750_402(TypedDevice[Literal["di_1", "di_2", "di_3", "di_4", "power"], "P
     DI2: Pin
     DI3: Pin
     DI4: Pin
+    P_0V: Pin
+    P_24V: Pin
     if TYPE_CHECKING:
 
         @override
@@ -383,6 +469,8 @@ class P_750_504__do_4(TypedFn):
 
 
 class P_750_504__power(TypedFn):
+    P_0V: Pin
+    P_24V: Pin
     if TYPE_CHECKING:
 
         @override
@@ -400,6 +488,8 @@ class P_750_504(TypedDevice[Literal["do_1", "do_2", "do_3", "do_4", "power"], "P
     DO2: Pin
     DO3: Pin
     DO4: Pin
+    P_0V: Pin
+    P_24V: Pin
     if TYPE_CHECKING:
 
         @override
@@ -411,6 +501,8 @@ class P_750_600(TypedDevice[Never, "P_750_600"]):
 
 
 class P_750_8212__field(TypedFn):
+    _plus: Pin
+    _minus: Pin
     if TYPE_CHECKING:
 
         @override
@@ -418,6 +510,8 @@ class P_750_8212__field(TypedFn):
 
 
 class P_750_8212__system(TypedFn):
+    P_0V: Pin
+    P_24_V: Pin
     if TYPE_CHECKING:
 
         @override
@@ -425,6 +519,14 @@ class P_750_8212__system(TypedFn):
 
 
 class P_750_8212__x1(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
+    P_7: Pin
+    P_8: Pin
     if TYPE_CHECKING:
 
         @override
@@ -434,6 +536,14 @@ class P_750_8212__x1(TypedFn):
 
 
 class P_750_8212__x2(TypedFn):
+    P_1: Pin
+    P_2: Pin
+    P_3: Pin
+    P_4: Pin
+    P_5: Pin
+    P_6: Pin
+    P_7: Pin
+    P_8: Pin
     if TYPE_CHECKING:
 
         @override
@@ -448,6 +558,10 @@ class P_750_8212(TypedDevice[Literal["field", "system", "x1", "x2"], "P_750_8212
     system: P_750_8212__system
     x1: P_750_8212__x1
     x2: P_750_8212__x2
+    _plus: Pin
+    _minus: Pin
+    P_0V: Pin
+    P_24_V: Pin
     if TYPE_CHECKING:
 
         @override
@@ -455,6 +569,8 @@ class P_750_8212(TypedDevice[Literal["field", "system", "x1", "x2"], "P_750_8212
 
 
 class LADN11__nc(TypedFn):
+    P_61_NC: Pin
+    P_62: Pin
     if TYPE_CHECKING:
 
         @override
@@ -462,6 +578,8 @@ class LADN11__nc(TypedFn):
 
 
 class LADN11__no(TypedFn):
+    P_53_NO: Pin
+    P_54: Pin
     if TYPE_CHECKING:
 
         @override
@@ -472,6 +590,10 @@ class LADN11(TypedDevice[Literal["nc", "no"], "LADN11"]):
     mpn: ClassVar[str] = "LADN11"
     nc: LADN11__nc
     no: LADN11__no
+    P_61_NC: Pin
+    P_62: Pin
+    P_53_NO: Pin
+    P_54: Pin
     if TYPE_CHECKING:
 
         @override
@@ -479,6 +601,8 @@ class LADN11(TypedDevice[Literal["nc", "no"], "LADN11"]):
 
 
 class LC1D09BD__aux(TypedFn):
+    P_13_NO: Pin
+    P_14: Pin
     if TYPE_CHECKING:
 
         @override
@@ -486,6 +610,8 @@ class LC1D09BD__aux(TypedFn):
 
 
 class LC1D09BD__aux_nc(TypedFn):
+    P_21_NC: Pin
+    P_22: Pin
     if TYPE_CHECKING:
 
         @override
@@ -502,6 +628,12 @@ class LC1D09BD__coil(TypedFn):
 
 
 class LC1D09BD__main(TypedFn):
+    P_1_L1: Pin
+    P_2_T1: Pin
+    P_3_L2: Pin
+    P_4_T2: Pin
+    P_5_L3: Pin
+    P_6_T3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -516,8 +648,18 @@ class LC1D09BD(TypedDevice[Literal["aux", "aux_nc", "coil", "main"], "LC1D09BD"]
     aux_nc: LC1D09BD__aux_nc
     coil: LC1D09BD__coil
     main: LC1D09BD__main
+    P_13_NO: Pin
+    P_14: Pin
+    P_21_NC: Pin
+    P_22: Pin
     A1: Pin
     A2: Pin
+    P_1_L1: Pin
+    P_2_T1: Pin
+    P_3_L2: Pin
+    P_4_T2: Pin
+    P_5_L3: Pin
+    P_6_T3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -543,6 +685,12 @@ class LC1D09BD(TypedDevice[Literal["aux", "aux_nc", "coil", "main"], "LC1D09BD"]
 
 
 class LRD08__main(TypedFn):
+    P_1_L1: Pin
+    P_2_T1: Pin
+    P_3_L2: Pin
+    P_4_T2: Pin
+    P_5_L3: Pin
+    P_6_T3: Pin
     if TYPE_CHECKING:
 
         @override
@@ -552,6 +700,8 @@ class LRD08__main(TypedFn):
 
 
 class LRD08__nc(TypedFn):
+    P_95: Pin
+    P_96: Pin
     if TYPE_CHECKING:
 
         @override
@@ -559,6 +709,8 @@ class LRD08__nc(TypedFn):
 
 
 class LRD08__no(TypedFn):
+    P_97: Pin
+    P_98: Pin
     if TYPE_CHECKING:
 
         @override
@@ -570,6 +722,16 @@ class LRD08(TypedDevice[Literal["main", "nc", "no"], "LRD08"]):
     main: LRD08__main
     nc: LRD08__nc
     no: LRD08__no
+    P_1_L1: Pin
+    P_2_T1: Pin
+    P_3_L2: Pin
+    P_4_T2: Pin
+    P_5_L3: Pin
+    P_6_T3: Pin
+    P_95: Pin
+    P_96: Pin
+    P_97: Pin
+    P_98: Pin
     if TYPE_CHECKING:
 
         @override
@@ -595,6 +757,8 @@ class LRD08(TypedDevice[Literal["main", "nc", "no"], "LRD08"]):
 
 
 class QUINT4_PS_1AC_24DC_2_5_SC__input(TypedFn):
+    L__plus: Pin
+    N__minus: Pin
     if TYPE_CHECKING:
 
         @override
@@ -602,6 +766,8 @@ class QUINT4_PS_1AC_24DC_2_5_SC__input(TypedFn):
 
 
 class QUINT4_PS_1AC_24DC_2_5_SC__output(TypedFn):
+    _plus: Pin
+    _minus: Pin
     if TYPE_CHECKING:
 
         @override
@@ -623,6 +789,10 @@ class QUINT4_PS_1AC_24DC_2_5_SC(
     input: QUINT4_PS_1AC_24DC_2_5_SC__input
     output: QUINT4_PS_1AC_24DC_2_5_SC__output
     signal: QUINT4_PS_1AC_24DC_2_5_SC__signal
+    L__plus: Pin
+    N__minus: Pin
+    _plus: Pin
+    _minus: Pin
     SIG: Pin
     if TYPE_CHECKING:
 

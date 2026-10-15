@@ -31,47 +31,47 @@ units = fr.derive.units
 EXT_ITEMS = {"X0", "M1", "M2", "W1", "W11", "W21", "K1", "W3", "W3-J1", "W3-J2"}
 
 CABINET_FILES = {
-    "pump-cabinet-v1.6-bom.csv",
-    "pump-cabinet-v1.6-cables.csv",
-    "pump-cabinet-v1.6-cores.csv",
+    "data/pump-cabinet-v1.6-bom.csv",
+    "data/pump-cabinet-v1.6-cables.csv",
+    "data/pump-cabinet-v1.6-cores.csv",
     "pump-cabinet-v1.6.pdf",
-    "pump-cabinet-v1.6-designations.csv",
-    "pump-cabinet-v1.6-plc.csv",
-    "pump-cabinet-v1.6-terminals-X01.csv",
-    "pump-cabinet-v1.6-terminals-X1.csv",
-    "pump-cabinet-v1.6-terminals-X2.csv",
-    "pump-cabinet-v1.6-terminals-X3.csv",
-    "pump-cabinet-v1.6-wago-U1.xml",
-    "pump-cabinet-v1.6-wires.csv",
+    "data/pump-cabinet-v1.6-designations.csv",
+    "data/pump-cabinet-v1.6-plc.csv",
+    "data/pump-cabinet-v1.6-terminals-X01.csv",
+    "data/pump-cabinet-v1.6-terminals-X1.csv",
+    "data/pump-cabinet-v1.6-terminals-X2.csv",
+    "data/pump-cabinet-v1.6-terminals-X3.csv",
+    "data/pump-cabinet-v1.6-wago-U1.xml",
+    "data/pump-cabinet-v1.6-wires.csv",
 }
 BOARD_FILES = {
-    "relay-interface-board-v1.3-bom.csv",
-    "relay-interface-board-v1.3-cables.csv",
-    "relay-interface-board-v1.3-cores.csv",
-    "relay-interface-board-v1.3-connectors.csv",
-    "relay-interface-board-v1.3-designations.csv",
-    "relay-interface-board-v1.3-plc.csv",
+    "data/relay-interface-board-v1.3-bom.csv",
+    "data/relay-interface-board-v1.3-cables.csv",
+    "data/relay-interface-board-v1.3-cores.csv",
+    "data/relay-interface-board-v1.3-connectors.csv",
+    "data/relay-interface-board-v1.3-designations.csv",
+    "data/relay-interface-board-v1.3-plc.csv",
     "relay-interface-board-v1.3.pdf",
-    "relay-interface-board-v1.3-wires.csv",
+    "data/relay-interface-board-v1.3-wires.csv",
 }
 ALL_FILES = {
-    "EX-1-v1.3-bom.csv",
+    "data/EX-1-v1.3-bom.csv",
     "pump-cabinet-v1.6.pdf",
-    "EX-1-v1.3-cables.csv",
-    "EX-1-v1.3-cores.csv",
-    "EX-1-v1.3-connectors-PLC-U1-U2.csv",
-    "EX-1-v1.3-designations.csv",
+    "data/EX-1-v1.3-cables.csv",
+    "data/EX-1-v1.3-cores.csv",
+    "data/EX-1-v1.3-connectors-PLC-U1-U2.csv",
+    "data/EX-1-v1.3-designations.csv",
     "EX-1-v1.3-overview.html",
-    "EX-1-v1.3-plc.csv",
+    "data/EX-1-v1.3-plc.csv",
     "relay-interface-board-v1.3.pdf",
     "EX-1-v1.3.pdf",
-    "EX-1-v1.3-terminals-U1-X01.csv",
-    "EX-1-v1.3-terminals-U1-X1.csv",
-    "EX-1-v1.3-terminals-U1-X2.csv",
-    "EX-1-v1.3-terminals-U1-X3.csv",
-    "EX-1-v1.3-terminals-EXT-X0.csv",
-    "EX-1-v1.3-wago-PLC-U1-U1.xml",
-    "EX-1-v1.3-wires.csv",
+    "data/EX-1-v1.3-terminals-U1-X01.csv",
+    "data/EX-1-v1.3-terminals-U1-X1.csv",
+    "data/EX-1-v1.3-terminals-U1-X2.csv",
+    "data/EX-1-v1.3-terminals-U1-X3.csv",
+    "data/EX-1-v1.3-terminals-EXT-X0.csv",
+    "data/EX-1-v1.3-wago-PLC-U1-U1.xml",
+    "data/EX-1-v1.3-wires.csv",
 }
 EXPECTED_FILES = {"cabinet": CABINET_FILES, "board": BOARD_FILES, "all": ALL_FILES}
 
@@ -164,7 +164,7 @@ def test_cabinet_is_unit_pump_cabinet_rev_1_6_with_all_revisions(
         ),
     ]
 
-    with (out_dir / "cabinet" / "pump-cabinet-v1.6-bom.csv").open(
+    with (out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-bom.csv").open(
         newline="", encoding="utf-8"
     ) as handle:
         rows = list(csv.DictReader(handle))

@@ -78,7 +78,9 @@ def test_cable_list_one_row_per_top_level_cable(
 ) -> None:
     """`all/cables.csv`: -W1, -W11, -W21 and the harness cable (-W3), one row each, in natural order, no unit column."""
     _, out_dir, _ = built
-    with (out_dir / "all" / "EX-1-v1.3-cables.csv").open(newline="", encoding="utf-8") as handle:
+    with (out_dir / "all" / "data" / "EX-1-v1.3-cables.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
         rows = list(csv.DictReader(handle))
     assert [row["designation"] for row in rows] == ["-W1", "-W3", "-W11", "-W21"]
     assert not any("unit" in column for column in rows[0])

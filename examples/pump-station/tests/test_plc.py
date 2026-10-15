@@ -145,7 +145,7 @@ def _read_plc_rows(path: Path) -> list[dict[str, str]]:
 
 def test_all_plc_csv_matches_io_list(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    path = out_dir / "all" / "EX-1-v1.3-plc.csv"
+    path = out_dir / "all" / "data" / "EX-1-v1.3-plc.csv"
     rows = _read_plc_rows(path)
     with path.open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
@@ -156,7 +156,7 @@ def test_all_plc_csv_matches_io_list(built: tuple) -> None:
 
 def test_cabinet_plc_csv_matches_io_list(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    path = out_dir / "cabinet" / "pump-cabinet-v1.6-plc.csv"
+    path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-plc.csv"
     rows = _read_plc_rows(path)
     with path.open(newline="", encoding="utf-8") as f:
         header = next(csv.reader(f))
@@ -168,7 +168,7 @@ def test_cabinet_plc_csv_matches_io_list(built: tuple) -> None:
 def test_cabinet_do1_1_wired_to_reads_j1_1(built: tuple) -> None:
     """Acceptance 5: pin `-DO1:DO1` (channel 1) reads `-J1:1` in `cabinet/`, not the relay `-U2-K1`."""
     _result, out_dir, _intermediates = built
-    rows = _read_plc_rows(out_dir / "cabinet" / "pump-cabinet-v1.6-plc.csv")
+    rows = _read_plc_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-plc.csv")
     row = next(r for r in rows if r["pin"] == "-DO1:DO1")
     assert row["channel_name"] == "1", row
     assert row["wired_to"] == "-J1:1", row
@@ -179,7 +179,7 @@ def test_all_do1_1_wired_to_reads_c1_j1_1(built: tuple) -> None:
     (model DESIGN 12), `-U1-J1:1`, as `all/wires.csv` does.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_plc_rows(out_dir / "all" / "EX-1-v1.3-plc.csv")
+    rows = _read_plc_rows(out_dir / "all" / "data" / "EX-1-v1.3-plc.csv")
     row = next(r for r in rows if r["pin"] == "-U1-DO1:DO1")
     assert row["channel_name"] == "1", row
     assert row["wired_to"] == "-U1-J1:1", row

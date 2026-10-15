@@ -1,6 +1,6 @@
 """WAGO export check: `wago-U1.xml` lists 4 DI and 4 DO channels.
 
-Names read from the currently-committed `out/cabinet/wago-U1.xml` before writing
+Names read from the currently-committed `out/cabinet/data/wago-U1.xml` before writing
 this test, per the brief: `Name=` is `{field_device}_{signal_name}` for a wired DI channel
 (`B12_P1_OVERLOAD`, `Q11_P1_RUNNING`, ...), `{field_device_with_underscore}_{signal_name}` for
 a wired DO channel (`U2_K1_P1_RUN`, `U2_K2_P2_RUN`), and `{module}_{Nr}` (WAGO's own zero-based
@@ -24,7 +24,7 @@ EXPECTED_DO_CHANNEL_NAMES = ["U2_K1_P1_RUN", "U2_K2_P2_RUN", "DO1_2", "DO1_3"]
 
 def test_wago_export_lists_di_and_do_modules_and_channels(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    xml_path: Path = out_dir / "cabinet" / "pump-cabinet-v1.6-wago-U1.xml"
+    xml_path: Path = out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-wago-U1.xml"
     root = ET.parse(xml_path).getroot()
 
     modules = root.findall("Module")

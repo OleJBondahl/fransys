@@ -23,7 +23,7 @@ station that joins them. Every export Fransys produces for it is in `out/`.
 | `build.py` | The design script. |
 | `parts/` | The part library: one TOML file per catalogue part. `parts/README.md` lists each with its datasheet. |
 | `parts_typed.py` | The typed parts module, made by `python -m fransys parts-module`. |
-| `out/` | Every export: `all/` for the station, `cabinet/` for the cabinet unit, `board/` for the relay board. |
+| `out/` | Every export: `all/` for the station, `cabinet/` for the cabinet unit, `board/` for the relay board. Each folder keeps its CSV and XML files in `data/`. |
 | `releases/` | Frozen baselines of the two units. A test checks them with `fr.verify`. |
 | `GAPS.md` | What this Fransys release cannot yet say about the station, and the workaround used. |
 | `system.md`, `cabinet.md`, `relay-board.md` | The documents' cover pages. |

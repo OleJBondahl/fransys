@@ -103,3 +103,8 @@ layout warnings of G29.
   CU7 (2026-10-06) the cabinet is a unit with no place, so the instance names none.
 - **G28.** The 3LD2054 part's three links had no `rest` state; at 0.6 that read as three lint
   errors. They now carry `rest = "open"` in the part file.
+- **G30.** At v0.19.1 `check_ratings` warns `RATING_CURRENT_KIND_UNSTATED` (model-0231) fourteen times: the
+  grey 24 V terminals of `-U1-X2` (ten) and `-U1-Q11` and `-U1-Q21` (two each) have a part that states
+  `voltage_ac_v` only and stand on the 24 V DC rail. The datasheet values for `voltage_dc_v` have not been
+  read, so none is guessed (rule 3). `tests/test_unit_identity.py` counts the warning in `KIND_WARNINGS`
+  until a datasheet states the DC rating.

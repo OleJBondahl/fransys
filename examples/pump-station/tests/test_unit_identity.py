@@ -13,8 +13,8 @@ This file pins where that identity shows up:
   tag `U2`; the board's own BOM names the bare board without a designation.
 - Acceptance 5: the system BOM has one line for the cabinet unit (number in `mpn`, title in
   `description`, location in `designations`), in the derived rows and in the system document.
-- Acceptance 8: `fr.check` holds no ERROR and no WARNING, except exactly the six layout warnings
-  of `LAYOUT_WARNINGS` (GAPS.md G29); no `LONE_CELL` is among them.
+- Acceptance 8: `fr.check` holds no ERROR and no WARNING, except exactly the warnings of
+  `EXPECTED_WARNINGS`: the layout ones (GAPS.md G29) and 14 `RATING_CURRENT_KIND_UNSTATED` (G30); no `LONE_CELL` is among them.
 
 Each check function has a twin that runs it on a mutated copy of the real text, files or
 findings and expects an `AssertionError`.
@@ -145,7 +145,7 @@ def test_board_set_never_names_its_own_tag(built: Built) -> None:
 
     board_lines = [
         row
-        for row in read_csv(out_dir / "board" / "relay-interface-board-v1.3-bom.csv")
+        for row in read_csv(out_dir / "board" / "data" / "relay-interface-board-v1.3-bom.csv")
         if row["mpn"] == "SKX-RIB-2"
     ]
     assert len(board_lines) == 1, f"the board's bom.csv lines for SKX-RIB-2: {board_lines}"
@@ -153,12 +153,14 @@ def test_board_set_never_names_its_own_tag(built: Built) -> None:
     assert board_lines[0]["designations"] == "", "the board's own BOM must name no designation"
     designations = {
         row["designation"]
-        for row in read_csv(out_dir / "board" / "relay-interface-board-v1.3-designations.csv")
+        for row in read_csv(
+            out_dir / "board" / "data" / "relay-interface-board-v1.3-designations.csv"
+        )
     }
     assert {"-K1", "-K2", "-J1", "-J2"} <= designations, sorted(designations)
     parent_lines = [
         row
-        for row in read_csv(out_dir / "cabinet" / "pump-cabinet-v1.6-bom.csv")
+        for row in read_csv(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-bom.csv")
         if row["mpn"] == "SKX-RIB-2"
     ]
     assert [row["designations"] for row in parent_lines] == ["-U2"], (
@@ -177,11 +179,11 @@ def test_board_tag_check_fails_on_a_tag_in_a_name_a_file_or_the_document(
         shutil.copytree(out_dir / "board", copy)
         typ = board_typ
         if mutation == "name":
-            (copy / "relay-interface-board-v1.3-bom.csv").rename(
-                copy / "relay-interface-board-v1.3-bom-U2.csv"
+            (copy / "data" / "relay-interface-board-v1.3-bom.csv").rename(
+                copy / "data" / "relay-interface-board-v1.3-bom-U2.csv"
             )
         elif mutation == "csv":
-            with (copy / "relay-interface-board-v1.3-bom.csv").open(
+            with (copy / "data" / "relay-interface-board-v1.3-bom.csv").open(
                 "a", encoding="utf-8"
             ) as handle:
                 handle.write("-U2\n")
@@ -231,13 +233,16 @@ def test_cabinet_unit_line_check_fails_when_the_line_or_the_row_is_missing(built
 # v0.18.2 (layout-0222, intended change): a row of contacts fed from a rail places every power
 # symbol, so the three POWER_SYMBOL_UNPLACED warnings are gone.
 LAYOUT_WARNINGS = {"POWER_SYMBOL_UNPLACED": 0, "SYMBOL_OVERLAP": 0, "JOIN_UNALIGNED": 0}
+# v0.19.1 (model-0231, GAPS.md G30): parts that state an AC rating only stand on the 24 V DC rail.
+KIND_WARNINGS = {"RATING_CURRENT_KIND_UNSTATED": 14}
+EXPECTED_WARNINGS = LAYOUT_WARNINGS | KIND_WARNINGS
 
 
 def assert_no_error_or_warning(findings: tuple[fr.Finding, ...]) -> None:
     bad = [f for f in findings if f.severity in (fr.Severity.ERROR, fr.Severity.WARNING)]
-    counts = {code: sum(f.code == code for f in bad) for code in LAYOUT_WARNINGS}
-    assert counts == LAYOUT_WARNINGS, f"layout warnings: {counts}"
-    other = [f for f in bad if f.code not in LAYOUT_WARNINGS]
+    counts = {code: sum(f.code == code for f in bad) for code in EXPECTED_WARNINGS}
+    assert counts == EXPECTED_WARNINGS, f"expected warnings: {counts}"
+    other = [f for f in bad if f.code not in EXPECTED_WARNINGS]
     assert not other, f"findings above INFO: {[(f.code, f.severity.value) for f in other]}"
 
 
@@ -265,3 +270,15 @@ def test_findings_check_fails_on_another_lone_cell(built: Built) -> None:
     )
     with pytest.raises(AssertionError):
         assert_no_error_or_warning((*fr.check(built[0]), other))
+
+
+def test_findings_check_fails_on_a_fifteenth_kind_warning(built: Built) -> None:
+    """Can-fail proof: one more RATING_CURRENT_KIND_UNSTATED than G30 counts is not allowed."""
+    extra = fr.Finding(
+        code="RATING_CURRENT_KIND_UNSTATED",
+        severity=fr.Severity.WARNING,
+        subjects=(),
+        message="made up",
+    )
+    with pytest.raises(AssertionError):
+        assert_no_error_or_warning((*fr.check(built[0]), extra))

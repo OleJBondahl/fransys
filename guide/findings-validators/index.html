@@ -1,0 +1,2330 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/guide/findings-validators/">
+      
+      
+      
+        <link rel="prev" href="../findings/">
+      
+      
+        <link rel="next" href="../findings-render/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.70">
+    
+    
+      
+        <title>Finding codes: validators, build and release - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Finding codes: validators, build and release
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../detail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Detail calls
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layout-numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Layout numbers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-rows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading: rows, columns and printed texts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading: records, lookups and ratings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords and handles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the d calls
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-handles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the handle methods and layout hints
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.19
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.16-and-0.17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.16 and 0.17
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.15
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.14
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-render/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: layout and render
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-pdf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: PDF
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: part files
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drawing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Drawing well
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../readability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the pages as numbers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The system overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+  
+
+
+<h1 id="finding-codes-validators-build-and-release">Finding codes: validators, build and release</h1>
+<p>Codes the model checks, the build, <code>release</code> and <code>verify</code> and the library load emit. Who acts is explained in <a href="../findings/"><code>findings.md</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Severity</th>
+<th>Stage</th>
+<th>Who acts</th>
+<th>Meaning</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASPECT_CROSS_PARENT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>An aspect node's parent belongs to a different aspect (function, location or product).</td>
+<td>Move the node under a parent of the same aspect, or fix its authored parent.</td>
+</tr>
+<tr>
+<td>ASPECT_CYCLE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>An aspect node's parent chain loops back on itself.</td>
+<td>Correct the parent authored on one of the looping nodes.</td>
+</tr>
+<tr>
+<td>BAR_NOT_PE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A port of a <code>bar</code> function has a role other than <code>pe</code>. A bar carries protective earth only, until the copper bar drawing (owner question) is ruled.</td>
+<td>Set <code>role = "pe"</code> on the port in the part file.</td>
+</tr>
+<tr>
+<td>BASELINE_DIFFERS</td>
+<td>ERROR</td>
+<td>release, verify</td>
+<td>consumer</td>
+<td>A unit instance in the released subtree, or checked by <code>verify</code>, has a listing differing from its released baseline.</td>
+<td>Release the nested unit's new revision, then the containing unit again, or find why its content changed.</td>
+</tr>
+<tr>
+<td>BOUNDARY_NOT_IN_UNIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A unit's boundary function belongs to an item outside that unit's subtree.</td>
+<td>Declare the boundary on a function whose item is in the unit, or fix the item's unit/parent.</td>
+</tr>
+<tr>
+<td>BOUNDARY_UNCONNECTED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A unit's boundary function is not connected across the unit nor declared unused.</td>
+<td>Wire the boundary, or leave it open: <code>unused=</code> on <code>d.add</code> for one instance, on <code>d.device</code> for all. A unit alone in its design never fires it, nor an interface passed up from a nested unit.</td>
+</tr>
+<tr>
+<td>CABLE_CORE_COUNT</td>
+<td>WARNING or ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A cable item's core count differs from its product's core-colour count (WARNING when fewer, ERROR when more).</td>
+<td>Wire the missing cores, mark a core you leave unused with <code>w.spare(colour)</code> (or <code>w.spare()</code> for all the rest), or correct the product's <code>core_colours</code> list. A spare or one-ended screen counts as a core.</td>
+</tr>
+<tr>
+<td>CONDUCTOR_ON_UNINSTALLED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A conductor lands on an item that is not marked installed.</td>
+<td>Mark the item installed, or remove the conductor if it is absent.</td>
+</tr>
+<tr>
+<td>CONNECTOR_WIRED_WITHOUT_MATE</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A conductor from outside a nested unit lands directly on its boundary connector, whose part gender is male or female (neutral or unstated passes).</td>
+<td>Mate a plug to the boundary connector (<code>u.mate(plug, connector)</code>) and wire the plug's pin instead.</td>
+</tr>
+<tr>
+<td>CONTAINMENT_CYCLE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>An item's physical-containment parent chain loops back on itself.</td>
+<td>Correct the parent authored on one of the looping items.</td>
+</tr>
+<tr>
+<td>DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two items or unit instances under one parent print one designation: a tag equal to a sibling's text, or a retired or moved released one.</td>
+<td>Give the item a distinct tag, or none. A tag a released revision reserved needs a new version.</td>
+</tr>
+<tr>
+<td>DESIGNATION_MOVED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>An item or unit instance pinned in the previous release now prints a different designation, written or numbered.</td>
+<td>Restore the released tag; only a new version may change it.</td>
+</tr>
+<tr>
+<td>DESIGNATION_NEW_IN_REVISION</td>
+<td>INFO</td>
+<td>build, release</td>
+<td>note</td>
+<td>A new untagged item or unit instance took the next free number in a later revision.</td>
+<td>Nothing is wrong; tag it if its number must stay fixed.</td>
+</tr>
+<tr>
+<td>DOCUMENT_UNIT_UNRESOLVED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A document's <code>unit_name</code> matches no unit, or more than one.</td>
+<td>Make the unit name unique so <code>unit_name</code> resolves to one instance.</td>
+</tr>
+<tr>
+<td>EXPORT_NAME_CLASH</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two different subjects (documents, items) would write to the same file name in <code>out_dir</code>.</td>
+<td>Give the colliding units, items or documents distinct names (or locations/fragments); two instances of one release name need one document per release.</td>
+</tr>
+<tr>
+<td>FILE_UNREADABLE</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>consumer</td>
+<td>A part-file could not be read (missing file, permission error, or bad encoding).</td>
+<td>Fix the path, permissions or encoding (UTF-8).</td>
+</tr>
+<tr>
+<td>FLOAT_FORBIDDEN</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>consumer</td>
+<td>A part-file has a bare TOML float, which the contract forbids (quote values as strings).</td>
+<td>Quote the numeric value as a string.</td>
+</tr>
+<tr>
+<td>FUNCTION_HALF_CONNECTED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A two-port coil, load, contact, switch, protection or actuator is connected at one port and open at the other.</td>
+<td>Wire the open port, or remove the half-wired function.</td>
+</tr>
+<tr>
+<td>GNYE_NOT_PE</td>
+<td>ERROR or WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A green-yellow conductor is on a net that is not PE: an ERROR on a net a declared net lists, a WARNING on a net none lists (IEC 60445 keeps green-yellow for PE).</td>
+<td>Recolour it, or connect it to the PE net and declare it with <code>d.earth</code>.</td>
+</tr>
+<tr>
+<td>HARNESS_END_AMBIGUOUS</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two or more ends of one cable print the same text in its drawing.</td>
+<td>Place the colliding unit instances at distinct locations, or tag the strips apart.</td>
+</tr>
+<tr>
+<td>HARNESS_HOLDS_PLC_MODULE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A PLC module sits under an item made with <code>d.harness</code>.</td>
+<td>Build the rack with <code>d.rack</code>, so its modules print flat.</td>
+</tr>
+<tr>
+<td>HARNESS_WITHOUT_TAG</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A harness (marked, or with a cable child) has no tag or assigned designation, so it has no label.</td>
+<td>Give it a tag: <code>d.harness(tag=...)</code>, or <code>tag=</code> on the item.</td>
+</tr>
+<tr>
+<td>INTERFACE_NOT_BUMPED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>The previous released revision of this unit (the highest below this one) has the same interface string but a different boundary.</td>
+<td>Bump the interface string if the boundary changed, or restore the previous boundary.</td>
+</tr>
+<tr>
+<td>ITEM_PART_MISMATCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>An item's functions or ports do not match its part's templates (missing, extra, duplicated, or differing in name, kind, role or marking).</td>
+<td>Fix the item's authored functions and ports (or the part's templates) so they agree.</td>
+</tr>
+<tr>
+<td>ITEM_WITHOUT_PART</td>
+<td>INFO</td>
+<td>validators</td>
+<td>note</td>
+<td>A non-external item has no <code>part</code>, so its functions are authored directly, not checked against templates.</td>
+<td>Usually nothing to fix: assign a <code>part</code> to check against templates.</td>
+</tr>
+<tr>
+<td>LOADS_ABOVE_LIMIT</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>The loads one limit bounds sum above it; none is above it alone.</td>
+<td>If they run together, raise the limit or split the loads.</td>
+</tr>
+<tr>
+<td>LOAD_ABOVE_LIMIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A load's stated draw is above the limit that bounds it.</td>
+<td>Lower the draw or raise the limit.</td>
+</tr>
+<tr>
+<td>MATE_NOT_CONNECTOR</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A mate end is not a connector or terminal (a relay coil, say).</td>
+<td>Mate a connector or terminal.</td>
+</tr>
+<tr>
+<td>MATE_PORT_MISMATCH</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A mate's two functions have different port names, so some ports have no counterpart.</td>
+<td>Example: a lettered inlet (L1, L2, L3, N, PE) mated to a numbered plug. Rename the ports to match.</td>
+</tr>
+<tr>
+<td>MULTILINE_STRING</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>consumer</td>
+<td>A part-file string contains a line break, which the contract forbids.</td>
+<td>Use a single-line string, or TOML's escaped <code>\n</code>.</td>
+</tr>
+<tr>
+<td>NET_POTENTIAL_CONFLICT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>One physical net joins two declared nets that are rails of different supply potentials.</td>
+<td>Fix the wiring or net declarations so no net joins two potentials.</td>
+</tr>
+<tr>
+<td>NET_SHORTED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>One physical net joins declared nets of different names.</td>
+<td>Fix the wiring, or give the nets one name if they are one signal (same-name nets join silently).</td>
+</tr>
+<tr>
+<td>NET_UNREALISED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A declared net's ports fall into more than one physical net, and no single board holds them all. Not for the PE net.</td>
+<td>Wire the missing conductors, or remove the ports that should not share the declared net.</td>
+</tr>
+<tr>
+<td>PART_LIBRARY_VERSION_CONFLICT</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>consumer</td>
+<td>Two <code>PartLibrary</code> records share a name but declare different versions.</td>
+<td>Load only one version of each named part library.</td>
+</tr>
+<tr>
+<td>PE_NOT_GNYE</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A single wire on a PE net is not green-yellow (an empty colour is not a finding).</td>
+<td>Colour the wire GNYE.</td>
+</tr>
+<tr>
+<td>PE_PORT_OFF_PE</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A port with role PE is on a net that is not PE. Silent on a net no declared net lists.</td>
+<td>Wire the port to the PE net.</td>
+</tr>
+<tr>
+<td>PLACEMENT_DUPLICATE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>One item is placed more than once in the same aspect (function, location or product).</td>
+<td>Remove the duplicate placement so the item is placed once per aspect.</td>
+</tr>
+<tr>
+<td>PLC_BINDING_SIGNAL_MISMATCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A PLC binding's channel does not have the signal type the request asked for (or is not a declared channel at all). The message names the asked kind, the channel, its kind and both fixes.</td>
+<td>Rewire the request to a channel of the asked kind, or ask for the channel's kind.</td>
+</tr>
+<tr>
+<td>PLC_BINDING_WIRING_MISMATCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A PLC binding disagrees with the wiring: the request or channel function is wired to a different channel or request than its binding.</td>
+<td>Rebind the request/channel to match the wiring, or rewire it to match the binding.</td>
+</tr>
+<tr>
+<td>PLC_CHANNEL_CONTESTED</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two or more PLC requests of the channel's signal are wired to the same channel. The finding names the channel's pins and every request; none of them binds, and none goes to the free queue.</td>
+<td>One channel reads one signal: keep one request, or wire each request to its own channel.</td>
+</tr>
+<tr>
+<td>PLC_REQUEST_AMBIGUOUS</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>A PLC request is wired so that several free channels of its signal tie: its net reaches them all, or all by a direct conductor. It gets no binding.</td>
+<td>Wire the request to one channel directly, or free the other channels.</td>
+</tr>
+<tr>
+<td>PLC_REQUEST_UNSERVABLE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>No free PLC channel of the requested signal type on the request's unit chain (its unit declares none, or every one is taken).</td>
+<td>Add a channel of that signal type to the unit (or a parent unit), or move another request off one.</td>
+</tr>
+<tr>
+<td>PORT_DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two or more ports of one item print the same designation text, so a drawing or list cannot tell them apart.</td>
+<td>Give the part's pin markings distinct names so each port prints a unique text.</td>
+</tr>
+<tr>
+<td>POTENTIAL_IN_TWO_SUPPLIES</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>One potential name is a rail of two differently named supplies.</td>
+<td>Rename one of the potentials, or merge the two supply declarations if they are the same supply.</td>
+</tr>
+<tr>
+<td>POTENTIAL_WITHOUT_SUPPLY</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A net potential no supply declares: its pins get no rank and no power symbol.</td>
+<td>Declare the supply with that rail.</td>
+</tr>
+<tr>
+<td>PRODUCT_DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two items print the same product designation (location plus own label): both at one location or, unplaced, both unnumbered alike in one unit instance.</td>
+<td>Place one item at a distinct location, or tag it.</td>
+</tr>
+<tr>
+<td>RATING_BREAKING_BELOW_FAULT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A protective device breaks less current than the prospective fault at its position.</td>
+<td>Fit a higher-breaking device.</td>
+</tr>
+<tr>
+<td>RATING_BREAKING_NO_DATA</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A device states breaking points, but none covers the circuit voltage or time constant.</td>
+<td>Add a point for that voltage or time constant.</td>
+</tr>
+<tr>
+<td>RATING_CURRENT_BELOW_BRANCH</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A function's rated current is below the current its branch can carry.</td>
+<td>Fit a part rated for the branch's current, or reduce the limit that sets the bound.</td>
+</tr>
+<tr>
+<td>RATING_CURRENT_KIND_UNSTATED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A function's part states a voltage rating for AC or for DC only, and the function stands on rails of the other current kind.</td>
+<td>State the missing voltage rating in the part, or use a part rated for that kind.</td>
+</tr>
+<tr>
+<td>RATING_VOLTAGE_BELOW_CIRCUIT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A function's rated voltage is below the voltage that stands across it.</td>
+<td>Fit a part rated for the circuit's voltage, or change the supply or wiring to lower it.</td>
+</tr>
+<tr>
+<td>REFERENCE_DESIGNATION_DUPLICATE</td>
+<td>ERROR</td>
+<td>build</td>
+<td>consumer</td>
+<td>Two items in the function or location aspect print the same full reference designation (e.g. two unit instances at one location).</td>
+<td>Place one of them at a distinct location so the designations differ.</td>
+</tr>
+<tr>
+<td>RELEASE_FILE_CHANGED</td>
+<td>ERROR</td>
+<td>verify</td>
+<td>consumer</td>
+<td>A released file's hash differs, the folder holds a file its manifest omits, or the manifest does not parse. A CRLF-only change in a text file passes.</td>
+<td>Restore the file from version control; a released revision never changes.</td>
+</tr>
+<tr>
+<td>RELEASE_FILE_MISSING</td>
+<td>ERROR</td>
+<td>verify</td>
+<td>consumer</td>
+<td>A file its manifest lists, or the manifest itself, is gone from a release folder.</td>
+<td>Restore it from version control.</td>
+</tr>
+<tr>
+<td>RELEASE_HISTORY_UNRELEASED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>A history entry after the first released one names a revision with no folder under <code>into</code>, in its own version.</td>
+<td>Remove the entry, or release that revision first. Older entries are free text.</td>
+</tr>
+<tr>
+<td>RELEASE_NESTED_UNRELEASED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>A unit anywhere in the subtree being released (not only direct children) has no baseline folder yet.</td>
+<td>Release that nested unit first, then release the containing unit.</td>
+</tr>
+<tr>
+<td>RELEASE_NO_HISTORY</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>The revision being released has no matching <code>Revision</code> history entry.</td>
+<td>Add the missing entry: <code>history=</code> on <code>@fr.unit</code>, or <code>Design.revision(...)</code> for a system release.</td>
+</tr>
+<tr>
+<td>REVISION_ALREADY_RELEASED</td>
+<td>ERROR</td>
+<td>release</td>
+<td>consumer</td>
+<td>The unit (or system) being released already has a baseline folder whose listing differs from the one to be written.</td>
+<td>Bump the version or revision, or find why a frozen revision changed.</td>
+</tr>
+<tr>
+<td>REVISION_CURRENT_MISSING</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A unit's (or the project's) current revision has no matching <code>Revision</code> history entry, so a title block prints no date.</td>
+<td>Add the missing entry: <code>history=</code> on <code>@fr.unit</code>, or <code>Design.revision(rev, date=, text=, created=)</code>.</td>
+</tr>
+<tr>
+<td>REVISION_DATE_FORMAT</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A revision entry's date is not in <code>YYYY-MM-DD</code> format.</td>
+<td>Rewrite the date as <code>YYYY-MM-DD</code>.</td>
+</tr>
+<tr>
+<td>REVISION_INITIALS_MISSING</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A revision entry has no <code>created</code> (author initials).</td>
+<td>Add the author's initials to the revision entry's <code>created</code> field.</td>
+</tr>
+<tr>
+<td>SIDE_HINT_NO_HARNESS_LINE</td>
+<td>WARNING</td>
+<td>build</td>
+<td>consumer</td>
+<td>A <code>d.layout.side</code> hint names an interface that has no harness line, so the hint does nothing.</td>
+<td>Remove the hint, or connect the interface through a harness line.</td>
+</tr>
+<tr>
+<td>STRIP_WITHOUT_TAG</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A part-less top-level item, usually a floating strip, has no tag and no class code (no terminals, or disagreeing ones).</td>
+<td>Give it a part, a tag, or terminals of one class code.</td>
+</tr>
+<tr>
+<td>SUPPLY_DIFFERS</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>Two declarations of one supply name disagree in current, earthing or rails, or two source declarations in fault current or time constant.</td>
+<td>Make them agree, or give the differing declarations distinct names.</td>
+</tr>
+<tr>
+<td>TOML_INVALID</td>
+<td>ERROR</td>
+<td>library load</td>
+<td>consumer</td>
+<td>A part-file is not valid TOML.</td>
+<td>Fix the TOML syntax error named.</td>
+</tr>
+<tr>
+<td>UNIT_BOUNDARY_BYPASSED</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A conductor or mate crosses out of a unit at a function that is not declared that unit's boundary.</td>
+<td>Declare it the unit's boundary, or route it through an existing boundary function.</td>
+</tr>
+<tr>
+<td>UNIT_CYCLE</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A unit's parent chain loops back on itself.</td>
+<td>Correct the parent authored on one of the looping units.</td>
+</tr>
+<tr>
+<td>UNUSED_CONTRADICTED</td>
+<td>WARNING</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A boundary declared unused names a function that is no unit's boundary, or is connected across the unit the declaration is on.</td>
+<td>Remove <code>unused=</code> if the function is wired, or fix the unit/function it names.</td>
+</tr>
+<tr>
+<td>WIRE_COLOUR_UNKNOWN</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A wire or cable-product core colour is not a recognized IEC 60757 colour code (or combination).</td>
+<td>Use a base code, a combination of two, a base code with a core number, or shield code <code>SH</code>.</td>
+</tr>
+<tr>
+<td>WIRE_ON_TWO_HARNESSES</td>
+<td>ERROR</td>
+<td>validators</td>
+<td>consumer</td>
+<td>A wire joins plugs of two harnesses.</td>
+<td>Wire to a plug of one harness, or use a cable.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+    
+  </body>
+</html>

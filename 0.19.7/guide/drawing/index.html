@@ -1,0 +1,2282 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.7/guide/drawing/">
+      
+      
+      
+        <link rel="prev" href="../moving-to-fransys/">
+      
+      
+        <link rel="next" href="../readability/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/fransys-icon.svg">
+      <meta name="generator" content="zensical-0.0.70">
+    
+    
+      
+        <title>Drawing well - Fransys</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/markdown" href="../../guide/drawing/index.md">
+
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            Beta: the API may change between minor versions until 1.0.0.
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Fransys" class="md-header__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fransys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Drawing well
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fransys" class="md-nav__button md-logo" aria-label="Fransys" data-md-component="logo">
+      
+  <img src="../../assets/fransys-wordmark-white.svg" alt="Fransys">
+
+    </a>
+    Fransys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/OleJBondahl/fransys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Guide
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Parts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../detail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Detail calls
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harnesses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Harnesses
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Units
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading a model
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layout-numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Layout numbers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-rows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading: rows, columns and printed texts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reading-records/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading: records, lookups and ratings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords and handles
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the d calls
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-handles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the handle methods and layout hints
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keywords-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.19/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.19
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.16-and-0.17/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.16 and 0.17
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.15/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.15
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.14/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.14
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-validators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: validators, build and release
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-render/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: layout and render
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-pdf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: PDF
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../findings-parts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Finding codes: part files
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kicad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  KiCad
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to Fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Drawing well
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Drawing well
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-layout-reads-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How layout reads the model
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-checklist-for-a-readable-cabinet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A checklist for a readable cabinet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#printed-sizes-and-grid-pitch" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Printed sizes and grid pitch
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-hint-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Which hint to use
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-overrides-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What overrides what
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-that-mean-missing-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Findings that mean missing structure
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../readability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the pages as numbers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The system overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AGENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  For coding agents
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part files
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Part files
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file contract
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contracts/part-file-connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Part file connectors
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/pump-station/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  pump-station
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Roadmap
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Overview
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/fransys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/derive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  fransys_model.derive
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-layout-reads-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How layout reads the model
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-checklist-for-a-readable-cabinet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A checklist for a readable cabinet
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#printed-sizes-and-grid-pitch" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Printed sizes and grid pitch
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-hint-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Which hint to use
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-overrides-what" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What overrides what
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-that-mean-missing-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Findings that mean missing structure
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+
+                  
+
+  
+  
+
+
+<h1 id="drawing-well">Drawing well</h1>
+<p>Layout draws the structure you author and invents none. This page says what layout reads, how to author a cabinet that draws readably, which numbers change its size, and which findings mean the design lacks structure.</p>
+<h2 id="how-layout-reads-the-model">How layout reads the model</h2>
+<ul>
+<li><strong>Function blocks.</strong> <code>with d.function("P1", "Pump 1"):</code> groups the devices made inside it. Layout packs whole blocks onto pages, left to right, in order, and never reorders them to fill a gap. A block wider than a page is split between columns and reports <code>GROUP_SPLIT</code>. <code>d.layout.order</code>, <code>keep_together</code>, <code>break_before</code> and the profile's <code>group_ranks</code> set the order.</li>
+<li><strong>Page ends.</strong> A page holds the blocks whose widths sum to the content width, 1312 grid units on the house A3 sheet. A column's width is the room it took when placed: symbols, pin labels, link markers and the column gap. In the twelve-relay example below, the first relay blocks each take 176 units, so the first page holds the supply and six relays. A page ends at the first block that does not fit, at a <code>break_before</code>, at a <code>keep_together</code> set that does not fit, or at the end of a drawing set.</li>
+<li><strong>Current paths.</strong> Layout finds a current path where each net between two devices holds exactly two poles. A pole is the pair of pins a symbol passes current through, such as a coil or one contact. The path stands as one column, top to bottom, with straight wires. A net of three or more poles ends a path.</li>
+<li><strong>How to author a path.</strong> Author each path with <code>d.series</code>. Hand-wired <code>d.detail.wire</code> hops form a path only while each net keeps to two poles. <code>d.series(a, b, c, wire=...)</code> wires every hop pole to pole, so its elements form a path. <code>d.layout.chain(...)</code> names a path outright, and a named path wins over discovery.</li>
+<li><strong>Block edges end a path.</strong> A path never crosses from one function block into the next. When the two blocks land on different pages, the wire between them is cut into a marker pair and <code>CHAIN_BROKEN</code> warns. Keep each circuit inside one block. A device with two or more functions can split across blocks, a coil here and a contact there. A function of such a device, written in another block's <code>d.series</code>, draws in that block, and its coil's contact table names that page. <code>d.layout.draw_in</code> overrides this.</li>
+<li><strong>Tall paths.</strong> A path taller than the page continues at the top of the next column, on the same sheet while there is room, then on the next sheet. The wire across each cut becomes a marker pair. The path keeps its order, and nothing runs off the page.</li>
+<li><strong>Coils on PLC channels.</strong> A coil that a PLC channel drives stands under that channel's pin, always, whatever the row spacing. A column too tall for the page continues as tall paths do.</li>
+<li><strong>Box pins in marking order.</strong> A box prints its pins in marking order, whatever order its wired partners stand in, and the columns hung under it follow those pins.</li>
+<li><strong>Device chains.</strong> Some devices draw no symbol of their own, such as modules with an IN and an OUT connector. When such devices in one block are wired hop to hop, each wire alone, they form a chain. Each device then draws as one box with its wired pins only, and the chain stands as one column. A box's top pins face the device above and its bottom pins the device below, so each hop's wires run straight down. A chain starts at its end that sorts first by designation. A ring opens at its device that sorts first, and the wire that closes the ring becomes a marker pair.</li>
+<li><strong>Supplies.</strong> A declared DC supply (<code>d.dc_supply</code>) draws a power symbol at each pin on its rails, with no wire or marker. <code>d.ac_supply</code> keeps AC rails as terminals, drawn at each pin they feed. An undeclared rail is a plain net: wires and link markers.</li>
+<li><strong>Markers.</strong> A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal is drawn at each of its wires instead. A net reference is filled with one of eight colours; every reference of the same net in the PDF has the same colour, and the text is the reference.</li>
+<li><strong>Nothing connected, nothing drawn.</strong> A symbol with nothing connected is not drawn; its list holds it.</li>
+<li><strong>One actuator per device.</strong> With <code>actuator_each_contact=False</code>, a manually operated device draws its actuator once, at its lead contact: the first contact its contact list prints. Its other contacts draw plain, with the device's designation and a reference to the actuator, and a contact list sits under the actuator.</li>
+<li><strong>Flat designs.</strong> A design of devices joined by point-to-point <code>d.detail.wire</code> calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series (see <code>detail.md</code>).</li>
+</ul>
+<p>The <code>draw</code> helper below builds a cabinet and reads its findings. The block after it builds twelve relays on
+one declared 24 V supply.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BU</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cabinet</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="n">Path</span><span class="p">(</span><span class="s2">"cover.md"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"# Cabinet</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+
+<span class="n">built</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">rows</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The rows of a layout table: `Record` values, whose fields are read by name."""</span>
+    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="n">table</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Build one cabinet with a schematic; return its finding codes and its page count."""</span>
+
+    <span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span>
+        <span class="s2">"cab"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-01-01"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"First"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"XX"</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Cabinet"</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="s2">"C-1"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cabinet</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+        <span class="n">body</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Cabinet</span><span class="p">()</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cabinet</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">top</span><span class="p">:</span>
+        <span class="n">top</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="s2">"cab"</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"cover.md"</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+    <span class="n">built</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">model</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fr</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">result</span><span class="p">)],</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s2">"layout.page"</span><span class="p">])</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">relays</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">c</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Relay </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+
+
+<span class="n">declared</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="n">relays</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"OUT_OF_CONTENT_BOX"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">declared</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">coil_x</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s2">"layout.symbol_placement"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">key</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">/K</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"fn"</span><span class="p">))</span>
+
+
+<span class="k">assert</span> <span class="n">coil_x</span><span class="p">(</span><span class="n">built</span><span class="p">[</span><span class="s2">"model"</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">coil_x</span><span class="p">(</span><span class="n">built</span><span class="p">[</span><span class="s2">"model"</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">184</span>
+<span class="k">assert</span> <span class="n">coil_x</span><span class="p">(</span><span class="n">built</span><span class="p">[</span><span class="s2">"model"</span><span class="p">],</span> <span class="mi">7</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">coil_x</span><span class="p">(</span><span class="n">built</span><span class="p">[</span><span class="s2">"model"</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="a-checklist-for-a-readable-cabinet">A checklist for a readable cabinet</h2>
+<p>The pump-station example in the examples repository has this shape.</p>
+<ol>
+<li>One unit per cabinet, and one function block per circuit: incoming supply, control supply, PLC, one block per motor starter.</li>
+<li>Keep every device of a circuit inside its block, so no path crosses a block edge.</li>
+<li>Declare each supply where it starts: <code>d.ac_supply</code> on the incoming terminals, <code>d.dc_supply</code> on the 24 V strip.</li>
+<li>Distribute through terminal strips with named, bridged runs, and give each consumer its own terminal.</li>
+<li>Wire each circuit as a path, source first: supply, protection, switching, load. Layout stands the bands in that order, with the first terminal on top and the last at the bottom.</li>
+<li>Set the page order once with <code>d.layout.profile(group_ranks=...)</code>. A rank map replaces the house one whole, and an unranked block sorts last.</li>
+<li>Set <code>hide_unused_pins=True</code> to leave unwired pins of box-drawn devices off the drawings. The lists keep them.</li>
+<li>A terminal that only the parent wires is left off the unit's own pages; its table lists it.</li>
+<li>Build, then read <code>fr.check(result)</code>. The last part of this page lists the findings that point at a missing item above.</li>
+</ol>
+<p>Take each consumer's terminal inside the consumer's own block, since a terminal joins the block it is first taken in. A terminal shared by blocks adds no marker.</p>
+<h2 id="printed-sizes-and-grid-pitch">Printed sizes and grid pitch</h2>
+<p>Authored numbers live on the sheet and the profile. A unit sets its own in its body, and a unit with none uses the house values. <code>layout-numbers.md</code> lists every sheet number and profile keyword with its house value and effect.</p>
+<ul>
+<li><strong><code>module_mm</code>, on the sheet</strong> (see <code>layout-numbers.md</code>). This is the grid pitch. One grid unit is <code>module_mm / 8</code> millimetres, and symbols and spacing scale with it; text and line widths are fixed in mm. The house value is 2.5. A smaller value fits more on a page, and a larger one fits less. Pitch is the reader's choice, not a fix: content that does not fit is split into function blocks.</li>
+<li><strong><code>text_height_mm</code>, on the profile</strong> (see <code>layout-numbers.md</code>). A style choice: the capital height in mm (ISO 3098) of the smallest text on every page kind, 1.8 in the house profile, which takes 8 <code>G</code>. A larger role prints at its ISO size (2.5, 3.5 or 5 mm) or this height, whichever is larger. Nothing shrinks text to fit. A value past what the symbols leave room for leaves tags without a place.</li>
+<li><strong><code>min_text_height_mm</code>, on the profile.</strong> This is the floor under the text, a capital height in millimetres: <code>Decimal("1.8")</code> in the house profile, the height the house <code>text_height_mm</code> prints. The floor changes no drawing. A profile that prints text under it gets one <code>TEXT_TOO_SMALL</code>.</li>
+<li><strong><code>column_gap</code>, on the profile</strong> (see <code>layout-numbers.md</code>). This is spacing: grid units between columns, 48 in the house profile. Change it to give wires and tags room, not to fit a page.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">circuits</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">module_mm</span><span class="p">,</span> <span class="n">text_height_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1.8"</span><span class="p">)):</span>
+    <span class="n">psu</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">psu</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">34</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">c</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Relay </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">sheet</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">sheet</span><span class="p">(</span>
+        <span class="s2">"A3 compact"</span><span class="p">,</span> <span class="n">width_mm</span><span class="o">=</span><span class="mi">420</span><span class="p">,</span> <span class="n">height_mm</span><span class="o">=</span><span class="mi">297</span><span class="p">,</span> <span class="n">content_x_mm</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">content_y_mm</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">content_width_mm</span><span class="o">=</span><span class="mi">410</span><span class="p">,</span> <span class="n">content_height_mm</span><span class="o">=</span><span class="mi">267</span><span class="p">,</span> <span class="n">frame_columns</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">frame_rows</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">module_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="n">module_mm</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">sheet</span><span class="o">=</span><span class="n">sheet</span><span class="p">,</span> <span class="n">text_height_mm</span><span class="o">=</span><span class="n">text_height_mm</span><span class="p">)</span>
+
+
+<span class="n">_</span><span class="p">,</span> <span class="n">house_pages</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">circuits</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">"2.5"</span><span class="p">))</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">compact_pages</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">circuits</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">"1.5"</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">compact_pages</span> <span class="o">&lt;</span> <span class="n">house_pages</span>
+</code></pre></div>
+<h2 id="which-hint-to-use">Which hint to use</h2>
+<p>Each hint advises the layout and invents nothing. Every name below is a method of <code>d.layout</code>.</p>
+<table>
+<thead>
+<tr>
+<th>You want</th>
+<th>Tool</th>
+<th>What it does to the drawing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>These items in one column</td>
+<td><code>d.layout.chain(a, b, c)</code></td>
+<td>Stands them in one column, top to bottom, source first.</td>
+</tr>
+<tr>
+<td>These groups on one sheet</td>
+<td><code>d.layout.keep_together(g1, g2)</code></td>
+<td>Moves the later groups beside the first, so they share a page when their widths fit.</td>
+</tr>
+<tr>
+<td>This order</td>
+<td><code>d.layout.order(g1, g2)</code></td>
+<td>Moves <code>g2</code> after <code>g1</code>. The other groups keep their places.</td>
+</tr>
+<tr>
+<td>This group starts a new sheet</td>
+<td><code>d.layout.break_before(g)</code></td>
+<td>Starts a new page at <code>g</code>.</td>
+</tr>
+<tr>
+<td>This page title</td>
+<td><code>d.layout.page_title(thing, text)</code></td>
+<td>Prints <code>text</code> as the title of the pages that draw the block, function, device or nested unit.</td>
+</tr>
+</tbody>
+</table>
+<p><code>d.series</code> is a wiring call, not a layout hint, so it has no row.</p>
+<p>The block below applies each row to three relay blocks and reads the result.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">drawn</span><span class="p">(</span><span class="n">body</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Build one cabinet; return the block names on each page, and the x of each named function."""</span>
+    <span class="n">handles</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@fr</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span>
+        <span class="s2">"cab"</span><span class="p">,</span> <span class="n">revision</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interface_version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="s2">"2026-01-01"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"First"</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"XX"</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Cabinet"</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="s2">"C-1"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cabinet</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+        <span class="n">handles</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">body</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Cabinet</span><span class="p">()</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cabinet</span><span class="p">,</span> <span class="s2">"U1"</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">document</span><span class="p">(</span><span class="n">fr</span><span class="o">.</span><span class="n">DocumentPreset</span><span class="o">.</span><span class="n">CABINET_SCHEMATIC</span><span class="p">,</span> <span class="s2">"cab"</span><span class="p">,</span> <span class="n">cover</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"cover.md"</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="n">handle</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">handles</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rows</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"layout.page"</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">drawing_set</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">number</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">{</span><span class="n">names</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">function</span><span class="p">]:</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"layout.symbol_placement"</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">function</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="n">names</span><span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">group</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">groups</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span><span class="p">],</span> <span class="n">x</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">c</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Relay </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="k">as</span> <span class="n">group</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span>
+            <span class="n">feed</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">terminal_strip</span><span class="p">(</span><span class="sa">f</span><span class="s2">"X</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-TB-2.5"</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">feed</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>  <span class="c1"># a symbol with nothing connected is not drawn</span>
+        <span class="n">groups</span><span class="p">[</span><span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span>
+    <span class="k">if</span> <span class="n">hint</span><span class="p">:</span>
+        <span class="n">hint</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">groups</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">coils</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">chain</span><span class="p">):</span>
+    <span class="n">psu</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">psu</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="n">ks</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+    <span class="n">lamp</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"H1"</span><span class="p">,</span> <span class="s2">"DEMO-LAMP-24"</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">coil</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ks</span><span class="p">),</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">ks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">lamp</span><span class="o">.</span><span class="n">lamp</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">ks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">ks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">ks</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">coil</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="n">coil</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}</span>
+
+
+<span class="n">_</span><span class="p">,</span> <span class="n">loose</span> <span class="o">=</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">coils</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">chain</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">chained</span> <span class="o">=</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">coils</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">chain</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">loose</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">&gt;</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">chained</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="n">drawn</span><span class="p">(</span><span class="n">blocks</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"F2"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">]]</span>
+<span class="n">together</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">:</span> <span class="n">hints</span><span class="o">.</span><span class="n">keep_together</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F3"</span><span class="p">])))</span>
+<span class="k">assert</span> <span class="n">together</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">,</span> <span class="s2">"F2"</span><span class="p">]]</span>
+<span class="n">ordered</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">:</span> <span class="n">hints</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F3"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">])))</span>
+<span class="k">assert</span> <span class="n">ordered</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F2"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">,</span> <span class="s2">"F1"</span><span class="p">]]</span>
+<span class="n">broken</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">:</span> <span class="n">hints</span><span class="o">.</span><span class="n">break_before</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F2"</span><span class="p">])))</span>
+<span class="k">assert</span> <span class="n">broken</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"F2"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">]]</span>
+</code></pre></div>
+<h2 id="what-overrides-what">What overrides what</h2>
+<p>The profile sets the numbers and the page order, and the hints then act on that order.</p>
+<ul>
+<li><strong>A sheet needs a profile.</strong> <code>d.layout.sheet(...)</code> changes nothing until <code>d.layout.profile(sheet=...)</code> names it. A profile that leaves <code>sheet</code> out draws on the house A3 sheet.</li>
+<li><strong>A profile reaches only its own unit.</strong> The top design's profile does not reach a unit, and a unit with no profile of its own uses the house numbers. A unit or the top design has at most one profile, and a second one with other numbers raises <code>AuthorError</code>.</li>
+<li><strong>A keyword left out keeps its house value.</strong> A rank map you give replaces the house one whole.</li>
+<li><strong><code>order</code> beats <code>group_ranks</code>.</strong> The ranks sort the blocks first, then each <code>order</code> hint moves blocks from that order.</li>
+<li><strong><code>keep_together</code> beats <code>order</code>.</strong> It runs after the order hints, pulls its groups next to the first, and reports <code>ORDER_HINT_UNDONE</code> when that reverses an <code>order</code> hint.</li>
+<li><strong><code>break_before</code> on a later group of a <code>keep_together</code> set</strong> leaves the set unkept and reports <code>KEEP_TOGETHER_UNMET</code>. On the set's first group it changes nothing.</li>
+<li><strong>Order hints that form a cycle</strong> make the build raise <code>fr.AuthorError</code> naming the cycle.</li>
+<li><strong>A chain names a box-drawn function only at its head or its tail.</strong> A PLC channel or a supply output stands there and anchors the path at its pin. In the middle the build raises <code>fr.AuthorError</code> that says where box-drawn functions may stand.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compact_sheet</span><span class="p">(</span><span class="n">scope</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">scope</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">sheet</span><span class="p">(</span>
+        <span class="s2">"A3 compact"</span><span class="p">,</span> <span class="n">width_mm</span><span class="o">=</span><span class="mi">420</span><span class="p">,</span> <span class="n">height_mm</span><span class="o">=</span><span class="mi">297</span><span class="p">,</span> <span class="n">content_x_mm</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">content_y_mm</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">content_width_mm</span><span class="o">=</span><span class="mi">410</span><span class="p">,</span> <span class="n">content_height_mm</span><span class="o">=</span><span class="mi">267</span><span class="p">,</span> <span class="n">frame_columns</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">frame_rows</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">module_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1.5"</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">numbers</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">34</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">c</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="sa">f</span><span class="s2">"F</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Relay </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">coil</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+
+<span class="k">assert</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="n">numbers</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">sheet</span><span class="o">=</span><span class="n">compact_sheet</span><span class="p">(</span><span class="n">c</span><span class="p">))))[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">house_pages</span>
+
+<span class="n">ranked</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">:</span> <span class="n">hints</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">group_ranks</span><span class="o">=</span><span class="p">{</span><span class="s2">"F3"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"F2"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"F1"</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="k">assert</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ranked</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F3"</span><span class="p">,</span> <span class="s2">"F2"</span><span class="p">,</span> <span class="s2">"F1"</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ranked_then_ordered</span><span class="p">(</span><span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="n">ranked</span><span class="p">(</span><span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F3"</span><span class="p">])</span>
+
+
+<span class="k">assert</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ranked_then_ordered</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F2"</span><span class="p">,</span> <span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">kept_and_ordered</span><span class="p">(</span><span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">keep_together</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F3"</span><span class="p">])</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F2"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F3"</span><span class="p">])</span>
+
+
+<span class="k">assert</span> <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">kept_and_ordered</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">,</span> <span class="s2">"F2"</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">kept_and_broken</span><span class="p">(</span><span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">keep_together</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F2"</span><span class="p">])</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">break_before</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F2"</span><span class="p">])</span>
+
+
+<span class="n">unkept</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">kept_and_broken</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"KEEP_TOGETHER_UNMET"</span> <span class="ow">in</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">unkept</span><span class="p">(</span><span class="n">c</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">drawn</span><span class="p">(</span><span class="n">unkept</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">[[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"F2"</span><span class="p">,</span> <span class="s2">"F3"</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cycle</span><span class="p">(</span><span class="n">hints</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F2"</span><span class="p">])</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="s2">"F2"</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="s2">"F1"</span><span class="p">])</span>
+
+
+<span class="n">top_only</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">numbers</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">top</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">sheet</span><span class="o">=</span><span class="n">compact_sheet</span><span class="p">(</span><span class="n">d</span><span class="p">)))[</span><span class="mi">1</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">top_only</span> <span class="o">==</span> <span class="n">house_pages</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">text_height_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1.8"</span><span class="p">)),</span> <span class="n">c</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">text_height_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"2.0"</span><span class="p">))))</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"AuthorError"</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"a second profile must raise"</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">drawn</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">blocks</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">cycle</span><span class="p">))</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"AuthorError"</span> <span class="ow">and</span> <span class="s2">"cycle"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"an order cycle must raise"</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="findings-that-mean-missing-structure">Findings that mean missing structure</h2>
+<ul>
+<li><strong><code>FUNCTION_UNPLACED_IN_COLUMN</code>.</strong> No current path reaches the function, so it stands alone in a column. A box-drawn device, such as a power supply or a lamp, has no pole of its own. It stands in a path only when a path ends on it. A lamp wired straight across two rails is on none, and wired after a contact it ends that contact's path. Many of these in one unit mean many devices hang on no path.</li>
+<li><strong><code>LABEL_UNPLACED</code>.</strong> A tag, marking or cross-reference found no free place. A <code>text_height_mm</code> above the house value is one cause. Put it back to 1.8.</li>
+<li><strong><code>CHAIN_BROKEN</code>.</strong> A path was cut by a page break between two blocks. Keep the circuit in one block.</li>
+<li><strong><code>PAGE_OVERFULL</code> and <code>OUT_OF_CONTENT_BOX</code>.</strong> A circuit is too big for its page. Declare its supply, wire it as paths, or split it into blocks. Else send the smallest model. <code>PAGE_PAD</code> frames the ink.</li>
+<li><strong>Readability.</strong> Five findings tell you whether the printed pages can be read. <code>TEXT_TOO_SMALL</code> says the profile prints text under <code>min_text_height_mm</code>. <code>PAGE_UNDERFILLED</code> says a page's content covers under half of its content box. <code>TEXT_OVERLAP</code>, <code>WIRE_OVER_LABEL</code> and <code>LABEL_UNPLACED</code> say text collides with text or a wire, or has no place. Those two are INFO: Fransys defects, report with the smallest model.</li>
+</ul>
+<p>The next block counts the first two. Lamps wired across the rails stand alone, lamps after a contact do not, and a text height of 24 leaves tags without a place.</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">lamps</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">after_contact</span><span class="p">):</span>
+    <span class="n">psu</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"G1"</span><span class="p">,</span> <span class="s2">"DEMO-PSU-24"</span><span class="p">)</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">dc_supply</span><span class="p">(</span><span class="s2">"24VDC"</span><span class="p">,</span> <span class="n">psu</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"K</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-RLY-2CO-24"</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"H</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"DEMO-LAMP-24"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">after_contact</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">k</span><span class="o">.</span><span class="n">co_1</span><span class="o">.</span><span class="n">no</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">lamp</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">dc</span><span class="o">.</span><span class="n">plus</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">lamp</span><span class="p">,</span> <span class="n">dc</span><span class="o">.</span><span class="n">minus</span><span class="p">,</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
+
+
+<span class="n">across</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">lamps</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">after_contact</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">after</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">lamps</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">after_contact</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">across</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"FUNCTION_UNPLACED_IN_COLUMN"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">after</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"FUNCTION_UNPLACED_IN_COLUMN"</span><span class="p">)</span>
+
+<span class="n">big_text</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">draw</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">circuits</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">"2.5"</span><span class="p">,</span> <span class="n">text_height_mm</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"5.4"</span><span class="p">)))</span>
+<span class="k">assert</span> <span class="s2">"LABEL_UNPLACED"</span> <span class="ow">in</span> <span class="n">big_text</span>
+</code></pre></div>
+<p>The numbers behind the readability findings are in <code>fr.readability</code>: <code>readability.md</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+<p class="markdown-copy"><a href="../../guide/drawing/index.md">Markdown copy of this page</a></p>
+
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Fransys 0.19.7 documentation
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","search.highlight","content.code.copy"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+    
+  </body>
+</html>

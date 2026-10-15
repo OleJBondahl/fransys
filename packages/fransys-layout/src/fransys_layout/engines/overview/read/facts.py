@@ -1,6 +1,6 @@
 """One view's rows to its `ViewFacts`: the measured diagram facts, the sheet cut turned off."""
 
-lazy from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.diagram.sizes import TEXT_PAD
 from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts

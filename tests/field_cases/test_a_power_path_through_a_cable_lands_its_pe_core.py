@@ -14,6 +14,8 @@ free PE terminal of the strip before the cable, and otherwise is earthed as `d.e
 wire to that core or port raises, naming the series that carried it.
 """
 
+from typing import Any
+
 import fransys as fr
 import pytest
 from fransys.colours import BK, GNYE
@@ -30,7 +32,7 @@ def _build(*, strip: str | None = "pe"):
     m1 = d.device("M1", "DEMO-MOTOR-4KW")
     path: list[object] = [ac, q0.element, q1.main, f1.main]
     if strip is not None:
-        pe = {"pe": "DEMO-TB-PE-2.5"} if strip == "pe" else {}
+        pe: dict[str, Any] = {"pe": "DEMO-TB-PE-2.5"} if strip == "pe" else {}
         path.append(d.terminal_strip("X1", "DEMO-TB-2.5", **pe))
     d.series(*path, w1, m1, wire=(BK, 2.5))
     return d, w1, m1, x0

@@ -51,12 +51,12 @@ Handles are the objects a design returns and the reader holds. A consumer does n
 
 A script written in this guide's spellings type-checks with no `ty: ignore` and no `Any`. Your ty settings need nothing.
 
+- For full checking, generate a parts module (`fr.parts_module`, parts.md) and pass its classes to `d.device`. Each function and pin is a typed attribute, brackets take only the part's pin names, and a misspelt name is a type error.
+- A device made from an MPN string is checked only at run time: a call on it checks nothing. Annotate it `fr.Device` to check the calls on it.
+- On a `fr.Device`, a device-level pin by attribute (`q1.A1`) types as `fr.Fn` and is a ty error where a pin is needed. Write `q1["A1"]`; both run.
 - Every handle in "Handle types" has a name on `fr`, so `fr.Device`, `fr.AcSupply` or `fr.UnitDef[Io]` annotates a parameter or a return.
 - A function of a device is a `fr.Fn`: `k1.coil` and `q1.main` type as `fr.Fn`. A pin by brackets is a `fr.Pin`: `k1.coil["A2"]`, `q1["2"]` and `k1.coil.A1`. `k1.co.no` and `k1.co.nc` are changeover throws.
-- A device from an MPN string is untyped, so a call on it checks nothing. Annotate it `fr.Device` to check the calls on it.
-- On a `fr.Device`, a device-level pin by attribute (`q1.A1`) types as `fr.Fn` and is a ty error where a pin is needed. Write `q1["A1"]`; both run.
 - A wrong function or pin name is a run-time error. It raises and lists the names the part has.
-- A generated parts module (`fr.parts_module`) adds the part's own names. A misspelt function or pin on it is a type error, and the run-time error stays.
 - A unit with build arguments is a factory that returns `fr.UnitDef` (units.md, "Variants and revised copies").
 
 ## Severity

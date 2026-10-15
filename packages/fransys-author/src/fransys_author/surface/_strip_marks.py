@@ -63,7 +63,7 @@ def _ranges(tag: str, count: int | None, bridged: Bridged) -> tuple[tuple[int, i
             raise AuthorError(msg)
         return ((1, count),)
     pairs = (bridged,) if isinstance(bridged[0], int) else bridged
-    return tuple(_one_range(tag, count, pair) for pair in pairs)  # ty: ignore[invalid-argument-type] -- a tuple of pairs here
+    return tuple(_one_range(tag, count, pair) for pair in pairs)
 
 
 def _one_range(tag: str, count: int, pair: tuple[int, int]) -> tuple[int, int]:

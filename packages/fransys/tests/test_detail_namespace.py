@@ -27,7 +27,9 @@ _MOVED = ("wire", "net", "busbar", "rail_bond")
 # (7449c9999..., checked on a copy of the merged library).
 # PLC-CHANNEL-ORDER-FIX (2026-10-15) adds `plc-dio-mixed.toml`; with that file removed the digest
 # is the pin before it (d8f37d280..., checked on a copy of the library without it).
-_DIGEST_BEFORE_THE_MOVE = "810ebd7ffc5fa0212596eb3f82922a32adb291547794e84e8b52621acd1e83af"
+# TYPED-PINS (2026-10-15) adds `contactor-1p-marked.toml` and `psu-24v-marked.toml`; with those two
+# files removed the digest is the pin before them (810ebd7ff..., checked on the library without).
+_DIGEST_BEFORE_THE_MOVE = "8a87748874bc11e709717e8b29b90981fd339ca6e2bdba0d494e8c12b0c6207e"
 
 
 def test_each_moved_call_builds_the_model_it_built_on_d():

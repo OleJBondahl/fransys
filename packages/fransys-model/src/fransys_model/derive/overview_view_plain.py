@@ -6,8 +6,9 @@ The one place a level's boxes and lines meet their stubs and tabs; layout draws 
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
+from fransys_model.kernel import Id
 from fransys_model.layout import BoxKey, OverviewRef, OverviewRefKind
-lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.kernel import Model
 lazy from fransys_model.vocab.core import Unit
 
 from .overview_stub_ends import stub_ends

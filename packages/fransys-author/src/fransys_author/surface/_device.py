@@ -1,13 +1,13 @@
 """Devices: `d.device("Q1", part)` and the checked references on what it returns."""
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, Never, overload, override
 lazy from collections.abc import Mapping
 lazy from types import EllipsisType
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._bar_pe import join_pe
 from fransys_author.surface._box import check_box, with_box
-from fransys_author.surface._handles import Fn, Pin, pick
+from fransys_author.surface._handles import Fn, Pin, attribute_pin, pick
 from fransys_author.surface._tags import bare
 lazy from fransys_author.design import Scope
 lazy from fransys_author.handles import Item, Strip, Terminal
@@ -16,7 +16,7 @@ lazy from fransys_author.surface._joins import fit_leads
 lazy from fransys_author.surface._mount import mount
 lazy from fransys_author.surface._parent import parent_item
 lazy from fransys_model.kernel import Id
-lazy from fransys_model.vocab import FunctionKind, function_identifier
+lazy from fransys_model.vocab import FunctionKind, identifier
 lazy from fransys_model.vocab import Item as ModelItem
 
 if TYPE_CHECKING:
@@ -87,10 +87,12 @@ class Device:
             if name.startswith("_"):
                 raise AttributeError(name)
             for function in self._item.functions:
-                if name in (function.name, function_identifier(function.name)):
+                if name in (function.name, identifier(function.name)):
                     return Fn(self._label, function, self._scope)
-            if any(pin.name == name for _, pin in self._pins()):
-                return self._screw(pick(self._label, name, self._pins()))
+            pins = self._pins()
+            pin_name = attribute_pin(name, pins)
+            if any(pin.name == pin_name for _, pin in pins):
+                return self._screw(pick(self._label, pin_name, pins))
             names = ", ".join(sorted(f.name for f in self._item.functions))
             msg = f"{self._label} has no function or pin {name!r}; functions: {names}"
             raise AuthorAttributeError(msg)
@@ -103,8 +105,17 @@ class TypedFn(Fn):
     """
 
     if TYPE_CHECKING:  # a typed part names its pins: Fn's catch-alls must not hide a typo
-        __getattr__: ClassVar[None]
-        __getitem__: ClassVar[None]
+
+        @override
+        def __getattr__(  # ty: ignore[invalid-method-override] -- narrowed to the names by the stub
+            self, name: Never
+        ) -> Never: ...
+
+        # A valid base for the stub's override: the subclass narrows `m` to its pin names.
+        @override
+        def __getitem__(  # ty: ignore[invalid-method-override] -- narrowed to the pins by the stub
+            self, m: Never
+        ) -> Pin: ...
 
 
 class TypedDevice[N: str = str, S = Any](Device):
@@ -117,8 +128,17 @@ class TypedDevice[N: str = str, S = Any](Device):
     """
 
     if TYPE_CHECKING:  # a typed part names its functions: Device's catch-alls must not hide a typo
-        __getattr__: ClassVar[None]
-        __getitem__: ClassVar[None]
+
+        @override
+        def __getattr__(  # ty: ignore[invalid-method-override] -- narrowed to the names by the stub
+            self, name: Never
+        ) -> Never: ...
+
+        # A valid base for the stub's override: the subclass narrows `m` to its pin names.
+        @override
+        def __getitem__(  # ty: ignore[invalid-method-override] -- narrowed to the pins by the stub
+            self, m: Never
+        ) -> Pin: ...
 
     def __accepts__(self, name: N) -> None:
         """Use `N` contravariantly, so the checker rejects a name outside the part's functions."""

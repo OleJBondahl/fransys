@@ -16,7 +16,7 @@ from fransys_layout.stages import lookups, onepage, pagerun
 from fransys_layout.stages.space import runs_along
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Generator, Sequence
 
 _route = importlib.import_module("fransys_layout.stages._edge_paths")
 engine = importlib.import_module("fransys_layout.engines.schematic.engine")
@@ -75,7 +75,7 @@ def _crossings(
 
 
 @contextmanager
-def metered() -> Iterator[Counter[str]]:
+def metered() -> Generator[Counter[str]]:
     """Count every route, retry, crossing, bend and search of the builds run inside the block."""
     counts: Counter[str] = Counter()
     log: list[tuple[bool, int, bool]] = []

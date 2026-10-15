@@ -36,8 +36,8 @@ def marking_key(marking: str) -> tuple[tuple[int, int, str], ...]:
     return tuple(_token(run) for run in _RUN.findall(marking))
 
 
-def function_identifier(name: str) -> str:
-    """The Python identifier of a part's function `name`: `24V+` is `P_24V_plus`.
+def identifier(name: str) -> str:
+    """The Python identifier of a part's function or pin `name`: `24V+` is `P_24V_plus`.
 
     `+` and `-` become `_plus` and `_minus`, other non-word characters `_`, a leading digit `P_`.
     """

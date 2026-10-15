@@ -3,7 +3,7 @@
 import contextlib
 import dataclasses
 from typing import cast
-lazy from collections.abc import Iterator, Mapping
+lazy from collections.abc import Generator, Mapping
 
 from fransys_author.design import Design as EngineDesign
 from fransys_author.errors import AuthorError
@@ -104,7 +104,7 @@ class Design(Devices, Details, Strips, Series, Coverage, Units):
         return node
 
     @contextlib.contextmanager
-    def function(self, name: str, text: str) -> Iterator[Group]:
+    def function(self, name: str, text: str) -> Generator[Group]:
         """Put the devices made inside the block into function `name` (printed `=name`).
 
         Does not nest; the block yields the handle `d.layout` takes.

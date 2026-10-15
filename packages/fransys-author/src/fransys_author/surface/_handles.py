@@ -14,7 +14,7 @@ lazy from fransys_author.surface import _throws
 lazy from fransys_model.derive import pin_order
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab import Function as ModelFunction
-lazy from fransys_model.vocab import FunctionKind, Operating, Rating, SignalType
+lazy from fransys_model.vocab import FunctionKind, Operating, Rating, SignalType, identifier
 
 Pin = Port
 
@@ -36,6 +36,17 @@ def pick(
         names = ", ".join(sorted({pin.name for _, pin in found})) or "none"
         msg = f"{owner} has no pin {name!r}; pins: {names}"
     raise error(msg)
+
+
+def attribute_pin(name: str, found: Sequence[tuple[str, Pin]]) -> str:
+    """The pin name that attribute `name` stands for: `P_1_L1` for the pin `1/L1`.
+
+    Does not guess: a name that matches no pin, or several, stays as written for `pick` to report.
+    """
+    if any(pin.name == name for _, pin in found):
+        return name
+    named = {pin.name for _, pin in found if identifier(pin.name) == name}
+    return named.pop() if len(named) == 1 else name
 
 
 def fn_label(fn: Fn) -> str:
@@ -98,7 +109,8 @@ class Fn:
             raise AttributeError(name)
         if name in _throws.THROWS and not any(pin.name == name for pin in self._fn.ports):
             return _throws.throw(self._label, self._fn, name)
-        pin = pick(f"{self._label}.{self._fn.name}", name, self._pins(), AuthorAttributeError)
+        owner, pins = f"{self._label}.{self._fn.name}", self._pins()
+        pin = pick(owner, attribute_pin(name, pins), pins, AuthorAttributeError)
         return self._screw(pin)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:

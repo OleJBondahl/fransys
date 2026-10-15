@@ -43,11 +43,18 @@ GOOD = """    d.detail.wire(Q0[2], K1.main[1], wire=(colours.BK, 2.5))
     d.detail.wire(K1.coil.A1, S1.sw["B"], wire=("BU", 0.75))
 """
 ADDED = '    cab = d.add(cab_unit, "CAB")\n    cab.X1\n    cab.L1[1]\n'
+WIRE = '    d.detail.wire({}, {}, wire=("BK", 2.5))\n'
+MARKED = """    k = d.device("K9", P.DEMO_CTR_1P_MARKED)
+    psu = d.device("G9", P.DEMO_PSU_24_MARKED)
+"""
 PLANTS = {
     "good": GOOD,
     "bad_pin": f'{GOOD}    d.detail.wire(Q0[7], K1.main[1], wire=("BK", 2.5))\n',
     "bad_function": f'{GOOD}    d.detail.wire(F1.mian[2], K1[3], wire=("BK", 2.5))\n',
     "bad_part": f'{GOOD}    d.device("Q9", P.MCB_9P)\n',
+    "good_marked_pins": MARKED + WIRE.format("k.main.P_1_L1", "psu.P_24V1"),
+    "bad_marked_pin": MARKED + WIRE.format("k.main.P_1_L2", "psu.P_24V1"),
+    "bad_marked_device_pin": MARKED + WIRE.format("k.main.P_1_L1", "psu.P_24V2"),
     "good_unit": ADDED,
     "bad_field": f"{ADDED}    cab.L11\n",
     "good_interface": (
@@ -85,6 +92,7 @@ def test_a_typed_circuit_on_the_demo_module_passes(errors) -> None:
     assert errors["good"] == 0
     assert errors["good_interface"] == 0
     assert errors["good_unit"] == 0
+    assert errors["good_marked_pins"] == 0  # P_1_L1 for the pin 1/L1, P_24V1 for 24V1
 
 
 def test_a_misspelt_unit_field_gives_one_error(errors) -> None:
@@ -95,6 +103,8 @@ def test_an_interface_name_the_part_lacks_gives_one_error(errors) -> None:
     assert errors["bad_interface"] == 1
 
 
-@pytest.mark.parametrize("name", ["bad_pin", "bad_function", "bad_part"])
+@pytest.mark.parametrize(
+    "name", ["bad_pin", "bad_function", "bad_part", "bad_marked_pin", "bad_marked_device_pin"]
+)
 def test_each_slip_gives_exactly_one_error(errors, name) -> None:
     assert errors[name] == 1

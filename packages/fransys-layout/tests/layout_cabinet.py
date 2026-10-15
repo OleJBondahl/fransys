@@ -49,7 +49,7 @@ from fransys_model.vocab import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
     from fransys_model.kernel import Id, Record
 
@@ -787,7 +787,7 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
 
 
 @contextmanager
-def no_wire_copies() -> Iterator[None]:
+def no_wire_copies() -> Generator[None]:
     """Lay the cabinet out with no terminal drawn as copies (model-0220).
 
     With copies the cabinet's star terminal leaves no star or reference marker, and the tests of

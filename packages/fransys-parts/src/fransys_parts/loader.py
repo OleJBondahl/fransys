@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
 from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, Severity, make_id
 from fransys_model.vocab import (
@@ -60,7 +60,7 @@ def _loaded_libraries() -> list[str]:
 
 
 @contextmanager
-def library_root(package: str) -> Iterator[Path]:
+def library_root(package: str) -> Generator[Path]:
     """The folder of the part library in the installed data package `package`.
 
     Raises `ModuleNotFoundError` that names `package` and the part libraries already imported.

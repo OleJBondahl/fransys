@@ -98,6 +98,23 @@ def test_the_generated_demo_stub_type_checks(findings) -> None:
     assert _of(findings, "demo_typed.py") == []
 
 
+def test_the_generated_demo_stub_type_checks_under_default_rules(tmp_path) -> None:
+    """A consumer's ty has no project config: the stub alone, in a folder with none."""
+    stub = tmp_path / "demo_typed.py"
+    stub.write_text(parts_module("demo_parts"), encoding="utf-8")
+    run = subprocess.run(  # noqa: S603 -- the workspace's pinned ty, fixed arguments
+        [
+            *("uv", "run", "ty", "check", "--project", str(tmp_path)),
+            *("--output-format", "concise", str(stub)),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=ROOT,
+    )
+    assert run.returncode == 0, run.stdout + run.stderr
+
+
 def test_the_gate_sees_a_finding_when_there_is_one(tmp_path) -> None:
     """The check can fail: a planted slip is reported."""
     bad = tmp_path / "bad.py"

@@ -176,16 +176,18 @@ def test_demo_library_record_counts_and_keys():
     a push-button head, a PLC CPU, powered input and output cards, a class I power supply and
     an e-stop station, so 94 parts, 243 templates, 516 ports, 96 links, 62 symbol choices;
     PLC-CHANNEL-ORDER-FIX adds `plc-dio-mixed.toml` (5/5/0), so 95 parts, 248 templates, 521
-    ports, 96 links, 62 symbol choices)."""
+    ports, 96 links, 62 symbol choices; TYPED-PINS adds `contactor-1p-marked.toml` (2/4/1, pins
+    1/L1 and 2/T1) and `psu-24v-marked.toml` (2/4/0, pins 24V1 and 0V1), so 97 parts, 252
+    templates, 529 ports, 97 links, 64 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 95
-    assert len(function_templates(model)) == 248
-    assert len(port_templates(model)) == 521
-    assert len(internal_links(model)) == 96
-    assert len(model.tables["layout.symbol_choice"]) == 62
+    assert len(parts(model)) == 97
+    assert len(function_templates(model)) == 252
+    assert len(port_templates(model)) == 529
+    assert len(internal_links(model)) == 97
+    assert len(model.tables["layout.symbol_choice"]) == 64
 
     relay = next(p for p in parts(model).values() if p.mpn == "DEMO-RLY-2CO-24")
     assert relay.key == ("part", "Demo", "DEMO-RLY-2CO-24")

@@ -101,8 +101,9 @@ marking the part lacks raises and lists the choices. The vocabulary is the elect
 make contact closes when its coil is on, a break contact opens, a line conductor is `L1`.
 
 A printed marking that is not a Python name has two spellings. `dev["XLA+"]` reaches any pin by its
-printed marking. `dev.XLA_plus` reaches a function named `XLA+`: `+` gives `_plus`, `-` gives `_minus`,
-and a leading digit gets `P_`, so `24V+` is `P_24V_plus`. `getattr(dev, "24V+")` reaches the raw name.
+printed marking. `dev.XLA_plus` reaches a function or a pin named `XLA+`: `+` gives `_plus`, `-` gives `_minus`,
+any other non-word character `_`, and a leading digit gets `P_`, so `24V+` is `P_24V_plus` and the pin `1/L1`
+is `P_1_L1`. `getattr(dev, "24V+")` reaches the raw name.
 
 ## Strips and terminals
 

@@ -13,7 +13,7 @@ name orders, and modules order by `position=`, else by their own tag.
 """
 
 import re
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import fransys as fr
 
@@ -40,7 +40,7 @@ def _cabinet(mpns: tuple[str, str], *, positions: bool):
         """A rack item with two PLC modules under it."""
         rack = d.device("A1", "DEMO-PCB-IO", name="rack")
         for index, mpn in enumerate(mpns, start=1):
-            extra = {"position": index} if positions else {}
+            extra: dict[str, Any] = {"position": index} if positions else {}
             d.device(f"A{index + 1}", mpn, parent=rack, name=f"m{index}", **extra)
         return _Rack()
 

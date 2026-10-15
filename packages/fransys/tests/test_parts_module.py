@@ -106,3 +106,45 @@ def test_header_names_sources_and_digest() -> None:
     assert "Generated from demo_parts." in text
     assert "SOURCES = ('demo_parts',)" in text
     assert f"LIBRARY_DIGEST = {library_digest('demo_parts')!r}" in text
+
+
+def test_every_pin_gets_an_attribute_named_by_the_one_identifier_rule() -> None:
+    text = parts_module("demo_parts")
+    assert "class DEMO_CTR_1P_MARKED__main(TypedFn):\n    P_1_L1: Pin\n    P_2_T1: Pin\n" in text
+    assert "    P_24V1: Pin\n" in text  # unique on the device: on DEMO_PSU_24_MARKED itself
+    device = text.split("class DEMO_CTR_1P_MARKED(")[1].split("\n\n")[0]
+    assert "    P_1_L1: Pin\n    P_2_T1: Pin\n" in device  # a unique pin is on the device too
+
+
+def test_two_pins_of_one_function_that_map_to_one_name_stop_the_generator(
+    tmp_path, monkeypatch
+) -> None:
+    text = _part("PIN-CLASH", "1/L1").replace(
+        "]\n\n[function.protection]",
+        '    { name = "1_L1", role = "generic" },\n]\n\n[function.protection]',
+    )
+    name = _plant(tmp_path, monkeypatch, "pin_clash_parts", {"a": text})
+    with pytest.raises(AuthorError, match=r"'1/L1' and '1_L1' map to one name P_1_L1"):
+        parts_module(name)
+
+
+def test_a_marked_pin_is_reached_by_its_attribute_as_by_its_marking() -> None:
+    import fransys as fr
+
+    d = fr.design("demo_parts", place="C1")
+    k = d.device("K1", "DEMO-CTR-1P-MARKED")
+    psu = d.device("G1", "DEMO-PSU-24-MARKED")
+    assert k.main.P_1_L1 is k.main["1/L1"]
+    assert psu.P_24V1 is psu["24V1"]
+    assert k.main.P_1_L1 is k["1/L1"]
+
+
+def test_a_wrong_attribute_still_raises_and_lists_the_part_names() -> None:
+    import fransys as fr
+
+    d = fr.design("demo_parts", place="C1")
+    k = d.device("K1", "DEMO-CTR-1P-MARKED")
+    with pytest.raises(AttributeError, match=r"K1\.main has no pin 'P_1_L2'; pins: 1/L1, 2/T1"):
+        k.main.P_1_L2  # noqa: B018 -- the access is the test
+    with pytest.raises(AttributeError, match=r"K1 has no function or pin 'P_2_T2'"):
+        k.P_2_T2  # noqa: B018 -- the access is the test

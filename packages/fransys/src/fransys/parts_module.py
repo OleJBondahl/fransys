@@ -9,8 +9,8 @@ from fransys_parts import load as parts_load
 from fransys_model.kernel import Model, freeze, merge
 from fransys_model.vocab import (
     Part,
-    function_identifier,
     function_templates,
+    identifier,
     marking_key,
     parts,
     port_templates,
@@ -51,15 +51,16 @@ def _getitem(names: list[str]) -> list[str]:
 
 
 def _function_class(cls: str, fn: str, pins: list[str]) -> list[str]:
-    lines = [f"class {cls}__{function_identifier(fn)}(TypedFn):"]
-    lines += [f"    {pin}: Pin" for pin in pins if pin.isidentifier()]
+    lines = [f"class {cls}__{identifier(fn)}(TypedFn):"]
+    lines += [f"    {identifier(pin)}: Pin" for pin in pins]
     # a bar cut to length writes no pin (PE-BAR amendment 1): its class body is `pass`
     return [*lines, *(_getitem(pins) if pins else ["    pass"]), ""]
 
 
 def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) -> list[str]:
     all_pins = [pin for _, pins in functions for pin in pins]
-    unique = [pin for pin in all_pins if all_pins.count(pin) == 1]
+    all_idents = [identifier(pin) for pin in all_pins]
+    unique = [pin for pin in all_pins if all_idents.count(identifier(pin)) == 1]
     fn_names = {fn for fn, _ in functions}
     names = (
         f"Literal[{', '.join(map(repr, sorted(fn_names, key=marking_key)))}]"
@@ -70,9 +71,9 @@ def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) ->
         f"class {cls}(TypedDevice[{names}, {cls!r}]):",
         f"    mpn: ClassVar[str] = {part.mpn!r}",
     ]
-    idents = [function_identifier(fn) for fn, _ in functions]
+    idents = [identifier(fn) for fn, _ in functions]
     lines += [f"    {ident}: {cls}__{ident}" for ident in idents]
-    lines += [f"    {pin}: Pin" for pin in unique if pin.isidentifier() and pin not in fn_names]
+    lines += [f"    {identifier(pin)}: Pin" for pin in unique if identifier(pin) not in idents]
     return [*lines, *(_getitem(unique) if unique else []), ""]
 
 
@@ -89,15 +90,22 @@ def _functions_of(model: Model) -> dict[object, list[tuple[str, list[str]]]]:
     return {part: sorted(fns, key=lambda fn: marking_key(fn[0])) for part, fns in by_part.items()}
 
 
-def _check_identifiers(mpn: str, functions: list[tuple[str, list[str]]]) -> None:
-    """Raise when two raw function names of one part share a Python identifier."""
+def _check_unique(mpn: str, kind: str, names: list[str]) -> None:
+    """Raise when two raw names of one part or function share a Python identifier."""
     seen: dict[str, str] = {}
-    for fn, _ in functions:
-        ident = function_identifier(fn)
+    for name in names:
+        ident = identifier(name)
         if ident in seen:
-            msg = f"part {mpn!r}: functions {seen[ident]!r} and {fn!r} map to one name {ident}"
+            msg = f"part {mpn!r}: {kind} {seen[ident]!r} and {name!r} map to one name {ident}"
             raise AuthorError(msg)
-        seen[ident] = fn
+        seen[ident] = name
+
+
+def _check_identifiers(mpn: str, functions: list[tuple[str, list[str]]]) -> None:
+    """Raise when two function names, or two pins of one function, share an identifier."""
+    _check_unique(mpn, "functions", [fn for fn, _ in functions])
+    for fn, pins in functions:
+        _check_unique(mpn, f"pins of {fn!r}:", pins)
 
 
 def _named_parts(model: Model) -> list[tuple[str, Part]]:

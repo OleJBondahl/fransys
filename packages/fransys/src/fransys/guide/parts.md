@@ -40,8 +40,14 @@ python -m fransys parts-module demo_parts demo_typed.py
 
 `fr.parts_module("demo_parts")` returns the same module as text, when a script writes the file itself.
 
+The part library generates this module and ships it, and the projects that use the library import it
+rather than generate their own. A pin whose marking is not a Python name gets an attribute by the
+one name rule (authoring.md): the pin `1/L1` is `k.main.P_1_L1` and `24V1` is `psu.P_24V1`, each checked by ty.
+The pin is also `k.main["1/L1"]`. Pass `interface=` a tuple of the part's function names and a
+misspelt name is a ty error.
+
 The `part` argument of `d.device` is a string or a generated class. A string is checked when you
-build. Two part names that map to one attribute fail generation.
+build. Two part names that map to one attribute fail generation, and so do two pins of one function.
 
 A function stands in a `d.series` when its line side is known: a coil's A1 and a contact's odd pin give it, else state `side`.
 

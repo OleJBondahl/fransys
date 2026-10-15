@@ -64,8 +64,8 @@ from .finding_ref import ref
 from .instantiate import PartBundle, instantiate
 from .markings import (
     Pole,
-    function_identifier,
     function_poles,
+    identifier,
     is_pole_link,
     marking_key,
     pole_order,
@@ -217,12 +217,12 @@ __all__ = [
     "effective_rating",
     "facet_subject",
     "facets_of",
-    "function_identifier",
     "function_operating",
     "function_poles",
     "function_rating",
     "function_templates",
     "functions",
+    "identifier",
     "instantiate",
     "internal_links",
     "is_cable",

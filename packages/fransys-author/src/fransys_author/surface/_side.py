@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_author.errors import AuthorError
+from fransys_author.handles import Terminal
 from fransys_author.surface._device import Device
+from fransys_author.surface._handles import Fn
 from fransys_author.surface._strip import TerminalStrip
-lazy from fransys_author.handles import Terminal
-lazy from fransys_author.surface._handles import Fn
 lazy from fransys_model.layout import Side, SideHint
 lazy from fransys_model.vocab import Boundary
 

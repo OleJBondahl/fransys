@@ -57,6 +57,7 @@ A script written in this guide's spellings type-checks with no `ty: ignore` and 
 - On a `fr.Device`, a device-level pin by attribute (`q1.A1`) types as `fr.Fn` and is a ty error where a pin is needed. Write `q1["A1"]`; both run.
 - Every handle in "Handle types" has a name on `fr`, so `fr.Device`, `fr.AcSupply` or `fr.UnitDef[Io]` annotates a parameter or a return.
 - A function of a device is a `fr.Fn`: `k1.coil` and `q1.main` type as `fr.Fn`. A pin by brackets is a `fr.Pin`: `k1.coil["A2"]`, `q1["2"]` and `k1.coil.A1`. `k1.co.no` and `k1.co.nc` are changeover throws (`fr.Throw`); a generated changeover function declares both.
+- A pin chosen by an `int` loop variable is a ty error against a typed part's pin names: loop over `fn.pins`. A computed name, `f"CH {n}"`, is a ty error too.
 - A wrong function or pin name is a run-time error. It raises and lists the names the part has. A pin named `+` or `-` is the attribute `_plus` or `_minus`.
 - A unit with build arguments is a factory that returns `fr.UnitDef` (units.md, "Variants and revised copies").
 

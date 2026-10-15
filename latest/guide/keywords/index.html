@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.7/guide/keywords/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/keywords/">
       
       
       
@@ -1984,6 +1984,7 @@ two digital kinds. Use the full member, <code>fr.SignalType.&lt;NAME&gt;</code>,
 <li>On a <code>fr.Device</code>, a device-level pin by attribute (<code>q1.A1</code>) types as <code>fr.Fn</code> and is a ty error where a pin is needed. Write <code>q1["A1"]</code>; both run.</li>
 <li>Every handle in "Handle types" has a name on <code>fr</code>, so <code>fr.Device</code>, <code>fr.AcSupply</code> or <code>fr.UnitDef[Io]</code> annotates a parameter or a return.</li>
 <li>A function of a device is a <code>fr.Fn</code>: <code>k1.coil</code> and <code>q1.main</code> type as <code>fr.Fn</code>. A pin by brackets is a <code>fr.Pin</code>: <code>k1.coil["A2"]</code>, <code>q1["2"]</code> and <code>k1.coil.A1</code>. <code>k1.co.no</code> and <code>k1.co.nc</code> are changeover throws (<code>fr.Throw</code>); a generated changeover function declares both.</li>
+<li>A pin chosen by an <code>int</code> loop variable is a ty error against a typed part's pin names: loop over <code>fn.pins</code>. A computed name, <code>f"CH {n}"</code>, is a ty error too.</li>
 <li>A wrong function or pin name is a run-time error. It raises and lists the names the part has. A pin named <code>+</code> or <code>-</code> is the attribute <code>_plus</code> or <code>_minus</code>.</li>
 <li>A unit with build arguments is a factory that returns <code>fr.UnitDef</code> (units.md, "Variants and revised copies").</li>
 </ul>
@@ -2060,7 +2061,7 @@ rarely does.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.7 documentation
+      Fransys 0.19.8 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.7/guide/keywords-handles/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/keywords-handles/">
       
       
       
@@ -2156,6 +2156,8 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </table>
 <h2 id="fnpole"><code>Fn.pole</code></h2>
 <p><code>fn.pole(n)</code> takes one pole number, counted from 1 in pole order, and gives that one pole of the function as a series element: <code>d.series(s1.main.pole(2), f2.element, wire=(BK, 1.5))</code>.</p>
+<p>A pin, or a tuple of one device's pins, is a series element at the start or the end only. First, its pins are the load ends: <code>d.series(k1.coil["A1"], a1.di_1, wire=(BK, 1.0))</code> leaves from A1, where <code>d.series(k1.coil, a1.di_1)</code> leaves from A2. Last, they are the line ends. In the middle a pin raises; use <code>d.detail.wire</code>.</p>
+<p><code>fn.pins</code> is the function's pins as a typed tuple in the connector list's order (<code>1, 2, 10, A1</code>): <code>a.pins[i]</code> is the i-th pin from 0, and a loop over it types as <code>fr.Pin</code>.</p>
 <h2 id="fnscale"><code>Fn.scale</code></h2>
 <table>
 <thead>
@@ -2280,6 +2282,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </tr>
 </tbody>
 </table>
+<p><code>TerminalStrip.label</code> is the strip's label as the design printed it (<code>"X5"</code>); <code>Run.label</code> is the run's own label (<code>"PE"</code>). Both are read-only.</p>
 <h2 id="cablecore"><code>Cable.core</code></h2>
 <p>Use <code>d.series</code> through the cable first: it takes the next free core. Use <code>core</code> to choose one core.</p>
 <table>
@@ -2476,7 +2479,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <tr>
 <td><code>port_map</code></td>
 <td><code>None</code></td>
-<td>Maps a model port name to a symbol port name where they differ. A port not listed keeps its name.</td>
+<td>Maps a model port name to a symbol port name where they differ. A port not listed keeps its name. These names are strings, the last place a typed part's pin is still one.</td>
 <td><code>port_map={"13": "1.in"}</code></td>
 </tr>
 </tbody>
@@ -2521,7 +2524,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.7 documentation
+      Fransys 0.19.8 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.7/guide/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/">
       
       
       
@@ -2109,7 +2109,7 @@ and give layout the structure it draws. The detail calls in the table are for th
 </tr>
 </tbody>
 </table>
-<p><code>d.series</code> raises <code>has no poles: its part states no line side</code> when a part does not say which pin is the line
+<p><code>d.series</code> raises <code>has no pole pair: its part states no line side</code> when a part does not say which pin is the line
 side. Fix the part file (<code>side = "line"</code>, parts.md), or wire the pins with <code>d.detail.wire</code>. A real circuit that no
 core call can write is a gap in Fransys: report it with its smallest shape.</p>
 <h2 id="tasks">Tasks</h2>
@@ -2188,6 +2188,11 @@ from <code>fransys.colours</code>.</p>
 <td>a branch across part of a path</td>
 <td>a second <code>d.series(split, ..., join, wire=...)</code></td>
 <td>authoring.md, Branch inside a series</td>
+</tr>
+<tr>
+<td>a series from one pin, or a branch looped at a fuse's line pins</td>
+<td><code>d.series(k1.coil["A1"], a1.di_1)</code>, <code>d.series((f4.element[1], f4.element[3], f4.element[5]), f8.element)</code></td>
+<td>keywords-handles.md</td>
 </tr>
 <tr>
 <td>bridge adjacent plain terminals</td>
@@ -2527,7 +2532,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.7 documentation
+      Fransys 0.19.8 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.7/guide/authoring/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/authoring/">
       
       
       
@@ -2383,7 +2383,9 @@ One that goes on to a cable leaves it on the outer side.</p>
 <p>With <code>count</code>, the strip makes all its terminals at once, so spares exist and count in the lists. A
 terminal joins the function block where it is first taken, and a spare joins the strip's own group.
 There is no <code>group=</code> keyword. A series picks the side itself. <code>x1[1].outer</code> is
-the field side, and <code>W1.core(...)</code> lands there.
+the field side, and <code>W1.core(...)</code> lands there. <code>d.series(x1[3].outer, f1.element)</code> pins the side.
+A series of only fixed terminals takes its width from the first; one terminal is one pole.
+A tuple takes one-terminal runs, <code>(x4.l1[1], x4.l2[1])</code>, and the colours of the net an earlier series made.
 <code>interface=</code> and <code>unused=</code> on <code>d.terminal_strip</code> mark terminals a unit boundary: <code>True</code> marks every
 terminal, and a tuple of numbers, <code>interface=(1, 2)</code>, only those; the others stay inside the unit. On
 a run they take <code>True</code> only: <code>x1.run("24V", 4, bridged=True, interface=True)</code> (see <code>units.md</code>).</p>
@@ -2464,7 +2466,9 @@ series wires S1:NC to K3, K3 to K4 and K4 to the coil K2:A1 in WH 0.5.</p>
 <h3 id="a-changeover-in-a-series">A changeover in a series</h3>
 <p><code>k1.co_1.no</code> and <code>k1.co_1.nc</code> are the two throws of a changeover, each a series element: line at the
 common, load at the throw. The first series that reaches the common wires it once, for both series.
-Passing the whole changeover raises: a changeover is two throws, so use <code>K1.co_1.no</code> or <code>K1.co_1.nc</code>.</p>
+Passing the whole changeover raises: a changeover is two throws, so use <code>K1.co_1.no</code> or <code>K1.co_1.nc</code>.
+Between two fixed terminals a throw is entered and the common leaves: <code>d.series(x6[2], k1.co_1.no, x7[2])</code>.
+After a supply the common is wired to the supply's poles.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
@@ -2535,6 +2539,7 @@ selecting supply A or B for M1:</p>
 <li>A path from a supply with <code>n=</code> joins N only where an element has a pole for it. A path of three poles
   from a three-phase supply leaves N unwired.</li>
 <li>Connectors pair their pins in pin order when they are a series' two ends.</li>
+<li>A tuple of one device's pins, <code>(s1.x1[1], s1.x1[4])</code>, is an element, first or last only; the written order is the pole order. <code>Fn.pins</code> lists them.</li>
 </ul>
 <p>A refusal starts with one of these texts. Each has one fix.</p>
 <table>
@@ -2546,8 +2551,8 @@ selecting supply A or B for M1:</p>
 </thead>
 <tbody>
 <tr>
-<td><code>&lt;fn&gt; has no poles:</code></td>
-<td><code>side</code> in the part, or <code>d.detail.wire</code></td>
+<td><code>&lt;fn&gt; has no pole pair:</code></td>
+<td><code>side</code> in the part, or <code>d.detail.wire</code>; it also fires for over two unmarked pins</td>
 </tr>
 <tr>
 <td><code>&lt;device&gt; has no function of N poles</code></td>
@@ -2574,8 +2579,8 @@ selecting supply A or B for M1:</p>
 <td>give the colour and the size as a tuple, such as <code>("BK", 1.5)</code></td>
 </tr>
 <tr>
-<td><code>a pin is one wire</code></td>
-<td>pass the function or the strip; a fixed pin is <code>d.detail.wire</code>, a fixed terminal is <code>x1[3]</code></td>
+<td><code>a pin or a tuple of pins stands only</code></td>
+<td>put it first or last; else <code>d.detail.wire</code></td>
 </tr>
 <tr>
 <td><code>a changeover is two throws</code></td>
@@ -2593,7 +2598,7 @@ selecting supply A or B for M1:</p>
 </table>
 <h3 id="cables">Cables</h3>
 <p><code>d.cable("W1", part, length_m=)</code> adds a cable. Pass it to a series between two elements: each
-path takes the next free core, coloured by the cable part.
+path takes the next free core, coloured by the cable part, and needs no <code>wire=</code>.
 <code>parent=W5</code> puts the cable in harness <code>W5</code>, as on <code>d.device</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BU</span>
@@ -2689,7 +2694,8 @@ plus the voltage and <code>minus</code> is minus the voltage. <code>names=(plus,
 phase order. Its rails are <code>ac.L1</code>, plus <code>ac.L2</code> and <code>ac.L3</code> for three phases. On three phases <code>voltage</code> is each phase's RMS to the star point: 230 for a 400 V supply. A pin's side and order
 on a rail come from the supply you declare. A rail draws its power symbol only when declared. A fused
 branch or a second source of one voltage is not a supply: make it a strip with a <code>description</code>, or
-wire it point to point.</p>
+wire it point to point. <code>ac_supply</code> on a fuse's pins raises "a fused branch is not a supply".
+A branch from the common feed is a second series; one looped at the line screws starts at its line pins (<code>index.md</code>).</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="s2">"demo_parts"</span><span class="p">)</span>
@@ -2800,7 +2806,7 @@ adds a history line. Both are optional.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.7 documentation
+      Fransys 0.19.8 documentation
     </div>
   
   

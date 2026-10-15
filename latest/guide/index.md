@@ -51,7 +51,7 @@ and give layout the structure it draws. The detail calls in the table are for th
 | `d.detail.net(name, *pins)` | a named net that no wire joins, such as a bus shown by its label |
 | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | a rack's internal jumper; terminals bonded through their rail |
 
-`d.series` raises `has no poles: its part states no line side` when a part does not say which pin is the line
+`d.series` raises `has no pole pair: its part states no line side` when a part does not say which pin is the line
 side. Fix the part file (`side = "line"`, parts.md), or wire the pins with `d.detail.wire`. A real circuit that no
 core call can write is a gap in Fransys: report it with its smallest shape.
 
@@ -75,6 +75,7 @@ from `fransys.colours`.
 | wire along a current path | `d.series(a, b, c, wire=(BU, 0.75))` | authoring.md, wire along a current path |
 | branch inside a series | `d.parallel(a, b)` | authoring.md, branch inside a series |
 | a branch across part of a path | a second `d.series(split, ..., join, wire=...)` | authoring.md, Branch inside a series |
+| a series from one pin, or a branch looped at a fuse's line pins | `d.series(k1.coil["A1"], a1.di_1)`, `d.series((f4.element[1], f4.element[3], f4.element[5]), f8.element)` | keywords-handles.md |
 | bridge adjacent plain terminals | `d.terminal_strip("X4", P.X, 6, bridged=(2, 6))` | authoring.md, Bridges |
 | wire one point to many | `d.detail.star(src, (a, b, c), wire=...)` | detail.md, One point to many |
 | wire two named pins off a path | `d.detail.wire(a, b, wire=(BU, 0.75))` | detail.md, d.detail.wire |

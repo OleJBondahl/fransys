@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.7/guide/units/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/units/">
       
       
       
@@ -1957,7 +1957,8 @@ so the build does not ask for it to be wired. <code>unused=True</code> on a devi
 interface marks it as one too. The tuple the function returns names the devices a
 container can reach: <code>io.X1</code> is the field <code>X1</code>. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector, strip, run or terminal becomes this unit's interface too, one level at a time, and prints its full path. The black box a page draws for a nested unit is the unit directly in the page's unit that holds it. A field that holds a strip, a run or a terminal is
 typed <code>fr.TerminalStrip</code>, <code>fr.Run</code> or <code>fr.Terminal</code>.
-<code>d.series</code> and <code>d.detail.wire</code> from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.</p>
+<code>d.series</code> and <code>d.detail.wire</code> from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
+Carry a strip or a run in the interface when a container wires several terminals in one series, as <code>io.x5[1:5]</code>. Separate <code>fr.Terminal</code> fields cannot be sliced.</p>
 <p>A device with several functions takes the names of the boundary ones: <code>interface=("x1",),
 unused=("x2",)</code>. <code>True</code> takes every function. A name the part lacks raises and lists its
 functions; a part class from <code>fr.parts</code> rejects it when the type checker runs.</p>
@@ -2351,7 +2352,7 @@ documents and lists. A unit's release name is the <code>unit=</code> value. The 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.7 documentation
+      Fransys 0.19.8 documentation
     </div>
   
   

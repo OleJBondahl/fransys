@@ -246,12 +246,27 @@ def _dc_rails(
     return rails
 
 
+def _refuse_branch(design: Design, name: str, pins: tuple[Port, ...]) -> None:
+    """A pin of a fuse or breaker feeds a branch; it is no source (authoring guide, author-0055)."""
+    for pin in pins:
+        if design._pairing_facts.protective(pin):
+            msg = (
+                f"ac_supply {name!r}: pin {pin.name} of {pin.key[0]} belongs to a fuse or "
+                "breaker, and a fused branch is not a supply. Start the branch as a second series "
+                "from the common feed, or wire a branch looped at its line screws with "
+                "d.detail.wire(pin, pin, wire=...), one hop per pole"
+            )
+            raise AuthorError(msg)
+
+
 def _phases(design: Design, name: str, phases: tuple[Port | Terminal, ...]) -> tuple[Port, ...]:
     """The phase pins as ports; only one or three phases make a supply."""
     if len(phases) not in _ONE_OR_THREE:
         msg = f"ac_supply {name!r} takes 1 or 3 phase pins, not {len(phases)}"
         raise AuthorError(msg)
-    return tuple(_port(design, pin) for pin in phases)
+    ports = tuple(_port(design, pin) for pin in phases)
+    _refuse_branch(design, name, ports)
+    return ports
 
 
 def _ac_names(phases: int, names: tuple[str, ...] | None, *, has_n: bool) -> tuple[str, ...]:
@@ -301,8 +316,10 @@ class Supplies:
             for i, ((mark, phase), pin) in enumerate(zip(_AC, pins, strict=False))
         ]
         if n is not None:
+            neutral = _port(self, n)
+            _refuse_branch(self, name, (neutral,))
             rail = SupplyRail(
-                "N", _port(self, n), printed[-1], ConductorMark.N, None, rail_row(ConductorMark.N)
+                "N", neutral, printed[-1], ConductorMark.N, None, rail_row(ConductorMark.N)
             )
             rails.append((rail, "0"))
         _declare(self, name, "ac", rails, earthing, (fault_current_a, None))

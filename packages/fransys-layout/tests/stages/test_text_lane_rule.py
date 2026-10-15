@@ -3,7 +3,8 @@
 The invented plant: function 2 above function 1; function 2's `out` port (x = 104, facing S)
 has its lane at y 48..56. Function 1's `in` port at (104, 80) carries a power symbol whose one
 text, 15 wide by 8, has a single candidate, over that lane. With an unowned text there, the
-router has no exempt lane for `out`, so the wire seals in (ROUTE_FAILED).
+router has no exempt lane for `out`, so the wire crosses the text (layout-0272; it sealed in
+before, ROUTE_FAILED).
 """
 
 from fransys_el import TEXTS
@@ -13,7 +14,6 @@ from samples import PROFILE, SHEET, connection, drawn, hid, placed
 from fransys_layout.geometry import Box, Facing, Point, overlaps, port_page_at
 from fransys_layout.stages import LinkMarker, MarkerSide
 from fransys_layout.stages.labels import SlotFrame, port_lanes
-from fransys_layout.stages.route import ROUTE_FAILED
 from fransys_layout.stages.space import Shape, Space
 from fransys_layout.stages.texts.candidates import TextKind
 from fransys_layout.stages.texts.place_texts import Anchor, TextToPlace, place_texts
@@ -72,11 +72,15 @@ def _route(reserved: tuple[Box, ...]):
     )
 
 
-def test_an_unowned_text_on_the_start_lane_seals_the_route_in() -> None:
-    """The consumer shape on invented values: a 15 by 8 unowned box on the start's lane."""
+def test_an_unowned_text_on_the_start_lane_is_crossed_when_nothing_else_routes() -> None:
+    """The consumer shape on invented values: a 15 by 8 unowned box on the start's lane.
+
+    It sealed the route in (ROUTE_FAILED) until layout-0272: a held label is the last thing the
+    router gives up, so the wire runs through it and the render lint names the crossing.
+    """
     routes, findings = _route((Box(x=97, y=48, width=15, height=8),))
-    assert [one.code for one in findings] == [ROUTE_FAILED]
-    assert routes == ()
+    assert findings == ()
+    assert len(routes) == 1
 
 
 def test_a_power_text_leaves_another_ports_lane_and_the_wire_routes() -> None:

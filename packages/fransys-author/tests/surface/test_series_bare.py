@@ -96,7 +96,7 @@ def test_equal_pin_names_in_different_orders_name_both_orders(lib: Draft) -> Non
 def test_a_sideless_function_in_the_middle_raises(lib: Draft) -> None:
     d = design(lib, place="C1")
     j1, j2, j3 = (d.device(f"J{i}", "TEST-CONN-3") for i in (1, 2, 3))
-    with pytest.raises(AuthorError, match=r"J2\.x has no poles: its part states no line side"):
+    with pytest.raises(AuthorError, match=r"J2\.x has no pole pair: its part states no line side"):
         d.series(j1.x, j2.x, j3.x, wire=WIRE)
 
 
@@ -105,5 +105,5 @@ def test_a_sideless_end_against_a_supply_raises(lib: Draft) -> None:
     psu = d.device("G1", "TEST-PSU-24V")
     dc = d.dc_supply("24VDC", psu.out)
     j1 = d.device("J1", "TEST-CONN-NAMED")
-    with pytest.raises(AuthorError, match=r"J1\.x has no poles: its part states no line side"):
+    with pytest.raises(AuthorError, match=r"J1\.x has no pole pair: its part states no line side"):
         d.series(dc.plus, j1.x, wire=WIRE)

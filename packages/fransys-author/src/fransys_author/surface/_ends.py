@@ -6,17 +6,17 @@ from fransys_author.errors import AuthorError
 from fransys_author.handles import Port, Terminal
 from fransys_author.surface._carrier import carrier_function
 from fransys_author.surface._device import Device
-from fransys_author.surface._fixed import fixed
+from fransys_author.surface._fixed import fixed, side_ends
 from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, SeriesElement, ends_of, poles
 from fransys_author.surface._partless_end import box_ends
+from fransys_author.surface._pin_tuple import is_pin_tuple, pin_tuple
 from fransys_author.surface._throws import whole_changeover
 from fransys_model.vocab import FunctionKind
 
 if TYPE_CHECKING:
     from .design import Design
 
-_PIN = "a pin is one wire: pass its function or strip to the series; a fixed pin is d.detail.wire"
 _ALLOWED = (
     "a device, a function, a supply or rail, a terminal strip, fixed terminals (x1[3], x1[1:4]), "
     "a cable or a parallel"
@@ -62,7 +62,7 @@ def _fn_ends(design: Design, fn: Fn) -> Ends:
         raise whole_changeover(fn._label, fn._fn)
     ends = ends_of(design._pairing_facts, fn._fn, partless_ok=True)
     if not ends.line:
-        msg = f"{fn._label}.{fn._fn.name} has no poles: {NO_SIDE_FIX}"
+        msg = f"{fn._label}.{fn._fn.name} has no pole pair: {NO_SIDE_FIX}"
         raise AuthorError(msg)
     return ends
 
@@ -80,7 +80,9 @@ def _device_ends(design: Design, device: Device, width: int | None) -> Ends:
 
 def _ends_for(design: Design, element: object, width: int | None) -> Ends:
     if isinstance(element, Port):
-        raise AuthorError(_PIN)
+        return side_ends(design, element) or pin_tuple((element,))._series_ends(design, width)
+    if is_pin_tuple(element):
+        return pin_tuple(cast("tuple[Port, ...]", element))._series_ends(design, width)
     if isinstance(element, Terminal | tuple):
         return fixed(element)._series_ends(design, width)
     if isinstance(element, Fn):
@@ -104,6 +106,8 @@ def width_of(design: Design, element: object) -> int | None:
     """The width `element` sets for its series, `None` when it sets none."""
     if isinstance(element, Fn):
         return len(_fn_ends(design, element).line)
+    if is_pin_tuple(element):
+        return pin_tuple(cast("tuple[Port, ...]", element))._series_width()
     if isinstance(element, Terminal | tuple):
         return fixed(element)._series_width()
     probe: Any = getattr(element, "_series_width", None)

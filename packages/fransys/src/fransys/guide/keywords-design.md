@@ -140,11 +140,11 @@ The `fr.*` functions are in `keywords-output.md`, the handle methods and layout 
 
 ## `d.series`
 
-`d.series(*elements, ...)` takes the elements to wire end to end, each one's load to the next one's line.
+`d.series(*elements, ...)` takes the elements to wire end to end, each one's load to the next one's line. A pin or a tuple of one device's pins starts or ends it (`keywords-handles.md`).
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `wire` | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, one `(colour, size)`, or a tuple of them, one per pole in pole order and as long as the series is wide. `None` uses the rows' defaults, and a row with no size is `WIRE_ROW_UNRESOLVED`. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))`; `d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))` |
+| `wire` | `None` | The wire of every pole: a size, a table of rows that replaces only those rows, one `(colour, size)`, or a tuple of them, one per pole in pole order and as long as the series is wide. `None` uses the rows' defaults, and a row with no size is `WIRE_ROW_UNRESOLVED`. A series through a cable whose part has a core table needs no `wire=`. | `d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))`; `d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))` |
 
 ## `d.pair`
 

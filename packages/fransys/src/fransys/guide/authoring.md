@@ -119,7 +119,9 @@ One that goes on to a cable leaves it on the outer side.
 With `count`, the strip makes all its terminals at once, so spares exist and count in the lists. A
 terminal joins the function block where it is first taken, and a spare joins the strip's own group.
 There is no `group=` keyword. A series picks the side itself. `x1[1].outer` is
-the field side, and `W1.core(...)` lands there.
+the field side, and `W1.core(...)` lands there. `d.series(x1[3].outer, f1.element)` pins the side.
+A series of only fixed terminals takes its width from the first; one terminal is one pole.
+A tuple takes one-terminal runs, `(x4.l1[1], x4.l2[1])`, and the colours of the net an earlier series made.
 `interface=` and `unused=` on `d.terminal_strip` mark terminals a unit boundary: `True` marks every
 terminal, and a tuple of numbers, `interface=(1, 2)`, only those; the others stay inside the unit. On
 a run they take `True` only: `x1.run("24V", 4, bridged=True, interface=True)` (see `units.md`).
@@ -223,6 +225,8 @@ d.series(s1.nc, *(k.aux for k in (k3, k4)), k2.coil, wire=(WH, 0.5))
 `k1.co_1.no` and `k1.co_1.nc` are the two throws of a changeover, each a series element: line at the
 common, load at the throw. The first series that reaches the common wires it once, for both series.
 Passing the whole changeover raises: a changeover is two throws, so use `K1.co_1.no` or `K1.co_1.nc`.
+Between two fixed terminals a throw is entered and the common leaves: `d.series(x6[2], k1.co_1.no, x7[2])`.
+After a supply the common is wired to the supply's poles.
 
 ```python
 import fransys as fr
@@ -307,19 +311,20 @@ A series wires each element's load poles to the next element's line poles. The r
 - A path from a supply with `n=` joins N only where an element has a pole for it. A path of three poles
   from a three-phase supply leaves N unwired.
 - Connectors pair their pins in pin order when they are a series' two ends.
+- A tuple of one device's pins, `(s1.x1[1], s1.x1[4])`, is an element, first or last only; the written order is the pole order. `Fn.pins` lists them.
 
 A refusal starts with one of these texts. Each has one fix.
 
 | refusal starts | fix |
 |---|---|
-| `<fn> has no poles:` | `side` in the part, or `d.detail.wire` |
+| `<fn> has no pole pair:` | `side` in the part, or `d.detail.wire`; it also fires for over two unmarked pins |
 | `<device> has no function of N poles` | pass the function, such as `K1.main`, not the device |
 | `<device>: a and b both have poles, say which` | pass the function you mean |
 | `N poles into M: name the pins` | pass elements with equal pole counts |
 | `conductors L1, L2 into L1, L3: name the pins` | pass elements whose conductor marks agree |
 | `<element> has N poles; a path from S takes` | pass the supply's phases, or the phases and N |
 | `row <row> value <n> is a bare number, a size` | give the colour and the size as a tuple, such as `("BK", 1.5)` |
-| `a pin is one wire` | pass the function or the strip; a fixed pin is `d.detail.wire`, a fixed terminal is `x1[3]` |
+| `a pin or a tuple of pins stands only` | put it first or last; else `d.detail.wire` |
 | `a changeover is two throws` | pass `K1.co_1.no` or `K1.co_1.nc` |
 | `a cable sits between two elements that are not cables` | put a plain element on each side of the cable |
 | `<run a> and <run b> both take poles`, `<run> takes poles` | a bridged run in a series, alone or in a parallel, shorts its poles: give each pole its own sized run and take `(x1.run("L1", n, bridged=True)[1], ...)` as a tuple, one terminal per pole |
@@ -327,7 +332,7 @@ A refusal starts with one of these texts. Each has one fix.
 ### Cables
 
 `d.cable("W1", part, length_m=)` adds a cable. Pass it to a series between two elements: each
-path takes the next free core, coloured by the cable part.
+path takes the next free core, coloured by the cable part, and needs no `wire=`.
 `parent=W5` puts the cable in harness `W5`, as on `d.device`.
 
 ```python
@@ -450,7 +455,8 @@ A nested unit's declaration of a supply name its container also declares is not 
 phase order. Its rails are `ac.L1`, plus `ac.L2` and `ac.L3` for three phases. On three phases `voltage` is each phase's RMS to the star point: 230 for a 400 V supply. A pin's side and order
 on a rail come from the supply you declare. A rail draws its power symbol only when declared. A fused
 branch or a second source of one voltage is not a supply: make it a strip with a `description`, or
-wire it point to point.
+wire it point to point. `ac_supply` on a fuse's pins raises "a fused branch is not a supply".
+A branch from the common feed is a second series; one looped at the line screws starts at its line pins (`index.md`).
 
 ```python
 import fransys as fr

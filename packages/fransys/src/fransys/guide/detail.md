@@ -78,7 +78,7 @@ d.detail.wire(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5)
 ### Fixed terminals
 
 `X1[3]` takes terminal 3 and `.inner` or `.outer` names its side. A series enters a strip at the
-right side by itself. Name a side only when the plan fixes it.
+right side by itself. Name a side only when the plan fixes it; `d.series(x1[3].outer, f1.element)` takes it too. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
 
 ```python
 import fransys as fr

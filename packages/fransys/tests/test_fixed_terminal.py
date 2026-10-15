@@ -94,11 +94,11 @@ def test_a_slice_that_names_no_terminals_raises_and_names_the_form(pick, text: s
         pick(x1)
 
 
-def test_a_device_pin_in_a_series_still_raises_a_pin_is_one_wire() -> None:
+def test_a_device_pin_in_the_middle_of_a_series_raises() -> None:
     d = fr.design("demo_parts")
     q1, k1 = d.device("Q1", "DEMO-MCB-3P"), d.device("K1", "DEMO-CTR-3P-24")
-    with pytest.raises(fr.AuthorError, match="a pin is one wire"):
-        d.series(q1.element, k1.main["1"], wire=POWER)
+    with pytest.raises(fr.AuthorError, match="only at the start or the end"):
+        d.series(q1.element, k1.main["1"], k1.main, wire=POWER)
 
 
 def _selector(d):

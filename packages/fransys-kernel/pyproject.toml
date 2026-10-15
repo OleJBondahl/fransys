@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fransys-kernel"
-version = "0.19.7"
+version = "0.19.8"
 requires-python = ">=3.15"
 dependencies = []
 

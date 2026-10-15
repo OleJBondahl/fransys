@@ -82,6 +82,14 @@ class TerminalStrip:
             self._terminal(number)
         bridge_ranges(self, bridged)
 
+    @property
+    def label(self) -> str:
+        """The strip's label, as the design printed it: `X5`.
+
+        Does not carry the `-` prefix or a location.
+        """
+        return self._tag
+
     _grows = False  # a run with no size: its terminals come in order, each bridged to the last
     _group = ""  # the engine group text its terminals count up in; a run sets its label
 
@@ -251,6 +259,15 @@ class Run(TerminalStrip):
             strip._bridge(*(self._terminal(number) for number in numbers))
             if strip._now() is not None:  # outside every block each terminal joins its first block
                 self._claim(*numbers)
+
+    @property
+    @override
+    def label(self) -> str:
+        """The run's label: `PE`, `L1`.
+
+        Does not name the strip: the strip's own `label` does.
+        """
+        return self._group
 
     @override
     def _as_parent(self) -> Strip:

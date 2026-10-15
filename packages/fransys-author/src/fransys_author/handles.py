@@ -102,6 +102,9 @@ class Port:
     key: AuthoringKey
     name: str
     role: PortRole
+    _terminal: Any = field(
+        default=None, init=False, compare=False, repr=False
+    )  # the terminal whose `inner` or `outer` this is; a series reads the side from it
 
 
 @dataclass(frozen=True, slots=True)
@@ -283,7 +286,7 @@ class Terminal:
         Raises:
             AuthorError: this terminal's function has no `internal` port.
         """
-        return _port_by_role(self.function.ports, PortRole.INTERNAL)
+        return _side_of(self, PortRole.INTERNAL)
 
     @property
     def outer(self) -> Port:
@@ -295,7 +298,7 @@ class Terminal:
         Raises:
             AuthorError: this terminal's function has no `external` port.
         """
-        return _port_by_role(self.function.ports, PortRole.EXTERNAL)
+        return _side_of(self, PortRole.EXTERNAL)
 
     def limits(
         self, *, rating: Rating | None = None, operating: Operating | None = None
@@ -511,6 +514,13 @@ def _port_by_marking(ports: Sequence[Port], marking: str, *, owner: str) -> Port
         )
         raise AuthorError(msg)
     return matches[0]
+
+
+def _side_of(terminal: Terminal, role: PortRole) -> Port:
+    """The port of `terminal` with `role`, remembering the terminal it is a side of."""
+    side = replace(_port_by_role(terminal.function.ports, role))
+    object.__setattr__(side, "_terminal", terminal)  # frozen, init=False field
+    return side
 
 
 def _port_by_role(ports: Sequence[Port], role: PortRole) -> Port:

@@ -13,13 +13,16 @@ from fransys_author.surface._carry import series_name
 from fransys_author.surface._channels import take_channels
 from fransys_author.surface._detail_rows import hint_maker, row_wiring
 from fransys_author.surface._ends import Parallel, branches, is_bridge, width_of
+from fransys_author.surface._fixed import fixed_count
 from fransys_author.surface._pairing import Ends, PartFacts
 from fransys_author.surface._partless_end import only_last
+from fransys_author.surface._pin_tuple import refuse_inside
 from fransys_author.surface._poles import Poles, group
 from fransys_author.surface._potential import Given, hops, wire_rows
 from fransys_author.surface._rows import AC_N
 from fransys_author.surface._shorts import refuse_lone_tied_poles, refuse_tied_poles
 from fransys_author.surface._supplies import Supplies, _Rails
+from fransys_author.surface._throws import turn_throws
 from fransys_author.surface._wire import PoleWire, RowWire, WireArg, read_wire
 
 if TYPE_CHECKING:
@@ -67,6 +70,8 @@ def _width(design: Design, elements: tuple[object, ...]) -> int:
         if isinstance(element, _Rails):
             return _supply_width(design, element, elements[i + 1 :])
         return width
+    if (first := next(filter(None, map(fixed_count, elements)), None)) is not None:
+        return first
     msg = "name a supply, a rail or a function with poles to set the width"
     raise AuthorError(msg)
 
@@ -106,6 +111,7 @@ def _resolve(design: Design, elements: tuple[object, ...], width: int) -> list[l
                 raise AuthorError(msg)
             found.append([])
         else:
+            refuse_inside(element, i, last)
             _refuse_shorts(element, width, found[i - 1][0] if i and found[i - 1] else None)
             around = (elements[i - 1] if i else None, elements[i + 1] if i < last else None)
             found.append(_entered(branches(design, element, width), element, around))
@@ -185,7 +191,7 @@ class Series(Supplies, Cables):
         if len(elements) < _MINIMUM:
             msg = f"d.series joins at least {_MINIMUM} elements, got {len(elements)}"
             raise AuthorError(msg)
-        elements = bare_series(self, take_channels(self, elements))
+        elements = turn_throws(bare_series(self, take_channels(self, elements)))
         width = _width(self, elements)
         found = _resolve(self, elements, width)
         commons, joins = _commons(elements), hops(elements, found)

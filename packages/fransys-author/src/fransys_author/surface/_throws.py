@@ -3,9 +3,11 @@
 The throws come from the part's roles and links (`vocab.link_throw`), never from a pin name.
 """
 
+from copy import copy
 from typing import TYPE_CHECKING
 
 from fransys_author.errors import AuthorAttributeError, AuthorError
+from fransys_author.surface._fixed import fixed_count
 from fransys_author.surface._pairing import End, Ends
 from fransys_model.vocab import FunctionKind, PoleSide, PortRole, link_throw, port_order_key
 lazy from fransys_author.handles import Fn as EngineFn
@@ -65,6 +67,7 @@ class Throw:
     def __init__(self, fns: tuple[EngineFn, ...], name: str, *, selector: bool = False) -> None:
         """The throw `name` (`no` or `nc`) of the changeovers `fns`."""
         self._fns, self._role, self._selector = fns, THROWS[name], selector
+        self._turned = False  # entered at the throw, left at the common (`turn_throws`)
         self._commons = tuple(p for fn in fns for p in fn.ports if p.role is PortRole.COMMON)
 
     def _series_width(self) -> int:
@@ -75,7 +78,7 @@ class Throw:
         poles = [pole for fn in self._fns for pole in _poles(facts, fn, self._role)]
         commons = tuple(End(common, facts.mark(common)) for common, _ in poles)
         throws = tuple(End(throw, facts.mark(throw)) for _, throw in poles)
-        if self._selector or _is_selector(facts, poles):
+        if self._selector or self._turned or _is_selector(facts, poles):
             return Ends(throws, commons)
         return Ends(commons, throws)
 
@@ -85,3 +88,21 @@ def throw(label: str, fn: EngineFn, name: str) -> Throw:
     if fn.kind is not FunctionKind.CONTACT_CO:
         raise not_a_changeover(label, fn, name)
     return Throw((fn,), name)
+
+
+def _fixed_at(elements: tuple[object, ...], i: int) -> bool:
+    return 0 <= i < len(elements) and fixed_count(elements[i]) is not None
+
+
+def turn_throws(elements: tuple[object, ...]) -> tuple[object, ...]:
+    """A throw between two fixed terminals is entered at the throw and left at the common (C15).
+
+    Does not turn a throw with a supply, a device or a strip beside it: its common stays the entry.
+    """
+    turned = []
+    for i, element in enumerate(elements):
+        if isinstance(element, Throw) and _fixed_at(elements, i - 1) and _fixed_at(elements, i + 1):
+            element = copy(element)  # noqa: PLW2901 -- the caller's handle is not changed
+            element._turned = True
+        turned.append(element)
+    return tuple(turned)

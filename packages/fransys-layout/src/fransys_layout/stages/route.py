@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.geometry import Box, LayoutError, on_wiring_grid, port_page_at
+from fransys_layout.geometry import Box, LayoutError, Point, on_wiring_grid, port_page_at
 from fransys_model.kernel import Finding, Severity, UnionFind
 
 from . import lookups
@@ -81,12 +81,11 @@ def route(
     for edge in drawn_order(edges, ends, placed_of):
         beside = edge.connection in room.aside
         aim = (edge, None, None) if beside else retarget(edge, joins, ends, placed_of)
-        # layout-0243: off every marker's ink first; a wire no such path holds keeps the old room
-        points = _wired(edge, aim, page_inputs, taken, beside=beside)
-        if points is None:
-            points = _wired(edge, aim, replace(page_inputs, space=plain), taken, beside=beside)
-            if points is not None:  # layout-0247: the old room drops the ink, so say so
-                failures.append(_near_ink(edge, drawing_set, page))
+        points, note = _in_rooms(
+            aim, page_inputs, taken, (placed, room, owner_of, plain), beside=beside
+        )
+        if note:  # layout-0247: the old room drops the ink, so say so
+            failures.append(_near_ink(edge, drawing_set, page))
         if points is None:
             failures.append(
                 Finding(
@@ -114,6 +113,36 @@ def route(
         tuple(sorted(routes, key=lambda one: (one.connection, one.a, one.b))),
         tuple(sorted(failures, key=lambda one: (one.code, one.subjects))),
     )
+
+
+def _in_rooms(
+    aim: tuple[Edge, Join | None, Join | None],
+    page_inputs: _Page,
+    taken: _Taken,
+    rooms: tuple[tuple[PlacedFunction, ...], PageRoom, Mapping[Handle, Handle], Space],
+    *,
+    beside: bool,
+) -> tuple[tuple[Point, ...] | None, bool]:
+    """The wire's points and whether the old room held it: full room, old room, then no labels."""
+    edge = aim[0]
+    placed, room, owner_of, plain = rooms
+    # layout-0243: off every marker's ink first; a wire no such path holds keeps the old room
+    points = _wired(edge, aim, page_inputs, taken, beside=beside)
+    if points is not None:
+        return points, False
+    points = _wired(edge, aim, replace(page_inputs, space=plain), taken, beside=beside)
+    if points is not None:
+        return points, True
+    # layout-0272: past the old room, a wire may cross a held label
+    bare = replace(page_inputs, space=_bare(placed, room, owner_of))
+    return _wired(edge, aim, bare, taken, beside=beside), False
+
+
+def _bare(
+    placed: tuple[PlacedFunction, ...], room: PageRoom, owner_of: Mapping[Handle, Handle]
+) -> Space:
+    """The old room with the held labels left out: a wire that crosses one is a lint note."""
+    return _space(placed, replace(room, reserved=()), owner_of, None)
 
 
 def _near_ink(edge: Edge, drawing_set: int, page: int) -> Finding:

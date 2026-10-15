@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from fransys_author.errors import AuthorError
-from fransys_author.handles import Terminal
+from fransys_author.handles import Port, Terminal
 from fransys_author.surface._pairing import End, Ends
 
 if TYPE_CHECKING:
@@ -11,6 +11,24 @@ if TYPE_CHECKING:
     from fransys_author.surface.design import Design
 
 _MARK = "terminal"
+
+
+def take(design: Design, terminal: Terminal) -> None:
+    """Mark a terminal a container named by number: a whole-strip take skips it."""
+    if terminal._scope is not None and terminal._scope is not design._engine:
+        object.__setattr__(terminal, "_fixed", True)  # frozen, init=False field
+
+
+def side_ends(design: Design, port: Port) -> Ends | None:
+    """The ends of a series element that is one terminal's `.inner` or `.outer`, else `None`.
+
+    The side is pinned: the port stands as both the line and the load end.
+    """
+    if port._terminal is None:
+        return None
+    take(design, port._terminal)
+    end = (End(port, None),)
+    return Ends(line=end, load=end)
 
 
 class FixedTerminals:
@@ -31,8 +49,7 @@ class FixedTerminals:
 
     def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the protocol
         for t in self._terminals:
-            if t._scope is not None and t._scope is not design._engine:  # taken from a container
-                object.__setattr__(t, "_fixed", True)  # frozen, init=False field
+            take(design, t)
         return Ends(
             line=tuple(End(t.inner, None) for t in self._terminals),
             load=tuple(End(t.outer, None) for t in self._terminals),
@@ -107,11 +124,28 @@ def fixed(element: Terminal | tuple[object, ...]) -> FixedTerminals:
     held = tuple(t for t in items if isinstance(t, Terminal))
     if len(held) != len(items):
         other = next(t for t in items if not isinstance(t, Terminal))
-        kind = type(other).__name__
-        msg = f"a tuple in a series holds fixed terminals (x1[3], x2[3]), not {kind}"
+        kind = "a mix of pins and terminals" if isinstance(other, Port) else type(other).__name__
+        msg = (
+            "a tuple in a series holds fixed terminals (x1[3], x2[3]) or the pins of one device "
+            f"(k1.coil.A1, k1.coil.A2), not {kind}"
+        )
         raise AuthorError(msg)
     _refuse_repeat(held)
     if len(held) > 1 and (written := _in_order(held)) is not None:
         msg = f"these terminals run in order on one strip: write {written}"
         raise AuthorError(msg)
     return FixedTerminals(held, "fixed terminals")
+
+
+def fixed_count(element: object) -> int | None:
+    """The terminals a fixed element names (a pinned side is one), `None` for any other element.
+
+    A series of fixed terminals alone takes its width from the first of these.
+    """
+    if isinstance(element, Port):
+        return None if element._terminal is None else 1
+    if isinstance(element, tuple):
+        return len(element)
+    if isinstance(element, Terminal):
+        return 1
+    return len(element._terminals) if isinstance(element, FixedTerminals) else None

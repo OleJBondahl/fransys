@@ -202,14 +202,14 @@ def test_two_functions_of_the_width_name_both(lib: Draft) -> None:
 def test_a_device_without_poles_is_named(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k2 = d.device("Q1", "TEST-MCB-3P"), d.device("K2", "TEST-COIL")
-    with pytest.raises(AuthorError, match=r"K2 has no poles: .*`side`.*d\.detail\.wire"):
+    with pytest.raises(AuthorError, match=r"K2 has no pole pair: .*`side`.*d\.detail\.wire"):
         d.series(q1.main, k2, wire=WIRE)
 
 
 def test_a_function_without_poles_is_named(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k2 = d.device("Q1", "TEST-MCB-3P"), d.device("K2", "TEST-COIL")
-    with pytest.raises(AuthorError, match=r"K2\.coil has no poles: .*`side`.*d\.detail\.wire"):
+    with pytest.raises(AuthorError, match=r"K2\.coil has no pole pair: .*`side`.*d\.detail\.wire"):
         d.series(q1.main, k2.coil, wire=WIRE)
 
 
@@ -231,11 +231,13 @@ def test_a_device_with_no_function_of_the_width_lists_what_it_has(lib: Draft) ->
         d.series(_Source(d, 2), d.device("K1", "TEST-KM-3P"), wire=WIRE)
 
 
-def test_a_pin_in_a_series_raises_use_detail_wire(lib: Draft) -> None:
+def test_a_pin_in_the_middle_of_a_series_raises_use_detail_wire(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(AuthorError, match=r"a pin is one wire: .* a fixed pin is d\.detail\.wire"):
-        d.series(q1.main, k1.main["1"], wire=WIRE)
+    with pytest.raises(
+        AuthorError, match=r"only at the start or the end of a series.*detail\.wire"
+    ):
+        d.series(q1.main, k1.main["1"], k1.main, wire=WIRE)
     assert not _wires(d)
 
 

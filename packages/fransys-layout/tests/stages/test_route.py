@@ -15,6 +15,7 @@ from fransys_layout.geometry import (
 )
 from fransys_layout.stages import NetGroup, PortRef, Role
 from fransys_layout.stages.route import ROUTE_FAILED
+from fransys_layout.stages.space import Blocks, unowned
 from fransys_model.kernel import Severity
 
 
@@ -57,7 +58,7 @@ def test_a_route_leaves_each_port_along_its_facing() -> None:
 
 
 def test_an_enclosed_port_gives_route_failed_and_no_route() -> None:
-    """A port walled in by reserved boxes cannot be reached: a finding, never a diagonal."""
+    """A port walled in by hard blocks cannot be reached: a finding, never a diagonal."""
     wall = (
         Box(x=56, y=113, width=96, height=8),
         Box(x=56, y=96, width=40, height=25),
@@ -68,7 +69,8 @@ def test_an_enclosed_port_gives_route_failed_and_no_route() -> None:
         (),
         (placed(1, x=104, y=96), placed(2, x=104, y=304)),
         (drawn(1), drawn(2)),
-        reserved=wall,
+        reserved=(),
+        blocks=Blocks(hard=unowned(wall)),
         profile=PROFILE,
         sheet=SHEET,
     )
@@ -119,7 +121,8 @@ def _stacked(*, wall: tuple[Box, ...] = (), x: int = 104, page: int = 1):
         (),
         (placed(1, x=104, y=96), placed(2, x=x, y=304, page=page)),
         (drawn(1), drawn(2)),
-        reserved=wall,
+        reserved=(),
+        blocks=Blocks(hard=unowned(wall)),
         profile=PROFILE,
         sheet=SHEET,
     )
@@ -146,10 +149,15 @@ def test_a_failed_net_group_edge_is_named_by_its_net_and_its_two_ports() -> None
         (_net_group(7, ((1, 12), (2, 22))),),
         (placed(1, x=104, y=96), placed(2, x=104, y=304)),
         (drawn(1), drawn(2)),
-        reserved=(
-            Box(x=56, y=113, width=96, height=8),
-            Box(x=56, y=96, width=40, height=25),
-            Box(x=112, y=96, width=40, height=25),
+        reserved=(),
+        blocks=Blocks(
+            hard=unowned(
+                (
+                    Box(x=56, y=113, width=96, height=8),
+                    Box(x=56, y=96, width=40, height=25),
+                    Box(x=112, y=96, width=40, height=25),
+                )
+            )
         ),
         profile=PROFILE,
         sheet=SHEET,
@@ -173,7 +181,8 @@ def test_findings_come_out_sorted_by_code_and_subjects() -> None:
         (),
         (placed(1, x=104, y=96), placed(2, x=104, y=304), placed(3, x=304, y=304, name="b")),
         (drawn(1), drawn(2), drawn(3)),
-        reserved=wall,
+        reserved=(),
+        blocks=Blocks(hard=unowned(wall)),
         profile=PROFILE,
         sheet=SHEET,
     )
@@ -203,3 +212,23 @@ def _sideways_escape(lid: Box):
         profile=PROFILE,
         sheet=SHEET,
     )
+
+
+def test_a_wall_of_held_labels_is_crossed_as_the_last_resort() -> None:
+    """UNDO: stages/route.py, `route`: drop the `_bare` retry; the labels seal the port in again."""
+    wall = (
+        Box(x=56, y=113, width=96, height=8),
+        Box(x=56, y=96, width=40, height=25),
+        Box(x=112, y=96, width=40, height=25),
+    )
+    routes, findings = route(
+        (connection(1, 1, 2),),
+        (),
+        (placed(1, x=104, y=96), placed(2, x=104, y=304)),
+        (drawn(1), drawn(2)),
+        reserved=wall,
+        profile=PROFILE,
+        sheet=SHEET,
+    )
+    assert len(routes) == 1
+    assert findings == ()

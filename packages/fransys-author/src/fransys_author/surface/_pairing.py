@@ -136,6 +136,17 @@ class PartFacts:
         """Whether `fn` belongs to a device made without a part (`template` is `None`)."""
         return cast("Function", self._design.record_of(fn.id)).template is None
 
+    def protective(self, port: Port) -> bool:
+        """Whether the engine `port` is a pin of a function whose part states a protection type.
+
+        A fuse or breaker part states one; a port made without a part is not protective.
+        """
+        record = cast("ModelPort", self._design.record_of(port.id))
+        if record.template is None:
+            return False
+        function = self.templates[record.template].function
+        return self._functions[function].protection_type is not None
+
     def channel(self, fn: Fn) -> PlcChannelFacet | None:
         """The `plc_channel` fact of the function `fn`, `None` when it is no PLC channel.
 

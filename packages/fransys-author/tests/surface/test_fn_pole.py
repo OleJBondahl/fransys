@@ -10,7 +10,7 @@ from ..equivalence.series_parts import series_library  # noqa: TID252 -- importl
 def test_a_function_without_poles_is_named() -> None:
     d = design(series_library(), place="C1")
     q1, k2 = d.device("Q1", "TEST-MCB-3P"), d.device("K2", "TEST-COIL")
-    with pytest.raises(AuthorError, match=r"K2\.coil has no poles: .*`side`"):
+    with pytest.raises(AuthorError, match=r"K2\.coil has no pole pair: .*`side`"):
         d.series(q1.main.pole(1), k2.coil.pole(1), wire=("BK", 2.5))
 
 

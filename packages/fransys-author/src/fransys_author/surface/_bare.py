@@ -65,7 +65,7 @@ def _in_pin_order(
 def bare_series(design: Design, elements: tuple[object, ...]) -> tuple[object, ...]:
     """`elements` with both end functions as pin-order elements when both have no pole.
 
-    Any other function with no pole is left as it is, and raises "has no poles" when the series
+    Any other function with no pole is left as it is, and raises "has no pole pair" when the series
     reads its ends: in the middle, or at one end against a supply, a rail or a function with poles.
     """
     ends = elements[0], elements[-1]

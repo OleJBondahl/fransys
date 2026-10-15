@@ -20,6 +20,10 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 
 `fn.pole(n)` takes one pole number, counted from 1 in pole order, and gives that one pole of the function as a series element: `d.series(s1.main.pole(2), f2.element, wire=(BK, 1.5))`.
 
+A pin, or a tuple of one device's pins, is a series element at the start or the end only. First, its pins are the load ends: `d.series(k1.coil["A1"], a1.di_1, wire=(BK, 1.0))` leaves from A1, where `d.series(k1.coil, a1.di_1)` leaves from A2. Last, they are the line ends. In the middle a pin raises; use `d.detail.wire`.
+
+`fn.pins` is the function's pins as a typed tuple in the connector list's order (`1, 2, 10, A1`): `a.pins[i]` is the i-th pin from 0, and a loop over it types as `fr.Pin`.
+
 ## `Fn.scale`
 
 | keyword | default | effect | example |
@@ -51,6 +55,8 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 | `bridged` | `False` | Bridges the run's terminals with jumpers: `True` bridges all, `(first, last)` bridges a range. | `x1.run("24V", 4, bridged=True)` |
 | `interface` | `False` | Marks the run's terminals as the unit's boundary: `True` marks all, a tuple of terminal numbers marks those. | `x1.run("24V", 4, interface=True)` |
 | `unused` | `False` | Marks the run's terminals as unused: `True` marks all, a tuple marks those. | `x1.run("SPARE", 2, unused=True)` |
+
+`TerminalStrip.label` is the strip's label as the design printed it (`"X5"`); `Run.label` is the run's own label (`"PE"`). Both are read-only.
 
 ## `Cable.core`
 
@@ -119,7 +125,7 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 |---|---|---|---|
 | `target` | required | A function, a device, or a `FunctionKind` such as `FunctionKind.X`, passed as a name. A string raises. | `d.layout.symbol(P.Q, "breaker")` |
 | `symbol` | required | The library symbol to draw. | `d.layout.symbol(P.Q, "breaker")` |
-| `port_map` | `None` | Maps a model port name to a symbol port name where they differ. A port not listed keeps its name. | `port_map={"13": "1.in"}` |
+| `port_map` | `None` | Maps a model port name to a symbol port name where they differ. A port not listed keeps its name. These names are strings, the last place a typed part's pin is still one. | `port_map={"13": "1.in"}` |
 
 ## Keywords a consumer never passes
 

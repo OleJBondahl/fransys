@@ -31,7 +31,7 @@ class FnPole:
             raise whole_changeover(fn._label, fn._fn)
         ends = ends_of(design._pairing_facts, fn._fn)
         if not ends.line:
-            msg = f"{label} has no poles: {NO_SIDE_FIX}"
+            msg = f"{label} has no pole pair: {NO_SIDE_FIX}"
             raise AuthorError(msg)
         if self._n > len(ends.line):
             count = len(ends.line)

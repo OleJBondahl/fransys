@@ -26,6 +26,7 @@ from .lookups import owner_of
 from .middle_fold import middle_bands
 from .onepage import page_wiring
 from .partition import ColumnTables, partition
+from .pin_landing import Power, column_landing, function_landing
 from .references.digits import FLOOR, digits_by_set
 from .references.types import Seat, Seating
 from .replicate import planned_columns
@@ -117,7 +118,8 @@ class PageRun:
 
     texts: TagTexts
     inputs: PageInputs
-    rank_of: dict[Handle, int]
+    # layout-0264: the port ranks and the power maps (`boxes.power_maps`), built once by the arrange
+    landing: Power
     pin_requests: tuple[LabelRequest, ...]
     reserves: dict[tuple[AuthoringKey, Handle], Any]
     # Each drawing set's location path, read from the planned pages (known before `place`)
@@ -125,8 +127,6 @@ class PageRun:
     unit_paths_of: Callable[[tuple[PagePlan, ...]], Mapping[int, UnitPath]]
     # layout-0182: the reserves and the row labels again, for the parts of a cut column
     recut_of: Callable[[tuple[Column, ...]], tuple[dict[Any, Any], tuple[LabelRequest, ...]]]
-    # The power kinds and the item-box sides, by port (`boxes.power_maps`)
-    power: tuple[dict[Handle, str], dict[Handle, str]] = ({}, {})
 
 
 @dataclass(frozen=True)
@@ -181,6 +181,9 @@ def plan_pages(
             ),
             bands=middle_bands(inputs.middle, inputs.profile),
             functions=inputs.functions,
+            landing=column_landing(
+                columns, function_landing(drawn, inputs.connections, run.landing)
+            ),
         ),
         hints=inputs.hints,
         profile=inputs.profile,
@@ -226,7 +229,7 @@ def place_pages(
                 placed_all,
                 drawn,
                 inputs.connections,
-                (run.rank_of, *run.power),
+                run.landing,
                 beside_cells(planned.columns),
             )
             if attempt == 0

@@ -69,8 +69,11 @@ def test_inside_an_item_box_v1_sides_beat_d5() -> None:
     assert _sides(box) == {"p": "s", "m": "n"}
 
 
-def test_an_item_box_pin_keeps_its_side_and_each_side_orders_by_partner_x() -> None:
-    """`c` stays N though its partner is below; S pins wired to x 200 and 0 order `b` first."""
+def test_an_item_box_pin_keeps_its_side_and_each_side_orders_by_marking() -> None:
+    """`c` stays N though its partner is below; S pins `a`, `b` keep marking order (layout-0264).
+
+    Their partners stand at x 200 and 0: partner x would put `b` first.
+    """
     # UNDO: stages/boxes.py:_turned_box, `v1 = item_pins(one.ports, sides)` -> `v1 = {}`
     #     (`c` turns S toward its partner)
     box = _box(("a", "b", "c"))
@@ -93,7 +96,7 @@ def test_an_item_box_pin_keeps_its_side_and_each_side_orders_by_partner_x() -> N
     (turned, *_) = box_sides((at_box, *others), drawn_all, wires, ({}, {}, sides))
 
     assert _sides(turned) == {"a": "s", "b": "s", "c": "n"}
-    assert _x(turned, "b") < _x(turned, "a")
+    assert _x(turned, "a") < _x(turned, "b")
 
 
 _T1 = ("SIG", "L", "N", "+", "-")  # SIG first: it would tie with `+` (the switched DC-OK link)
@@ -107,10 +110,10 @@ def _t1_order(box: DrawnFunction, side: str) -> list[str]:
     return [g.name for g in sorted(on, key=lambda g: g.at.x)]
 
 
-def test_an_item_box_pin_on_a_ranked_potential_keeps_c22_order_before_partner_x() -> None:
+def test_an_item_box_pin_on_a_ranked_potential_keeps_c22_order_before_marking() -> None:
     """V1 S pins `a`, `b` on ranked potentials: `b` (rank 0) stands left, its partner right."""
     # UNDO: stages/boxes.py:_turned_box, `(not v1 or port in rank_of)` -> `not v1`
-    #     (V1 pins order by partner x only: `a` goes left)
+    #     (V1 pins order by marking only: `a` goes left)
     box = _box(("a", "b"))
     sides = {_port(1): "s", _port(2): "s"}
     wires = tuple(

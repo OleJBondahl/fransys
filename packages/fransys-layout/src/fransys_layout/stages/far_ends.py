@@ -147,13 +147,19 @@ def _far_host(
 def _free_entry(mine: DrawnFunction, own: PortRef, far: DrawnFunction, other: PortRef) -> _Entry:
     """layout-0208: at a pin of no fixed side the far end stands unflipped, the pin turns to it.
 
-    Its order key is the pin's place in the box: before the turn two pins share an x.
+    Its order key is the pin's marking rank, the box's pin order (layout-0264).
     """
-    symbol = next(p.symbol_port for p in far.ports if p.port == other.port)
+    pin = next(p for p in far.ports if p.port == other.port)
     own_symbol = next(p.symbol_port for p in mine.ports if p.port == own.port)
     own_facing = next(g.facing for g in mine.geometry.ports if g.name == own_symbol)
-    place = [g.name for g in far.geometry.ports].index(symbol)
-    return (other.function, OPPOSITE[own_facing].value, place, mine.function, symbol, False)
+    return (
+        other.function,
+        OPPOSITE[own_facing].value,
+        pin.order,
+        mine.function,
+        pin.symbol_port,
+        False,
+    )
 
 
 def _lone_end(

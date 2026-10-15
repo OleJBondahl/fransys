@@ -79,6 +79,8 @@ def design() -> tuple[fr.Design, fr.Draft]:
     channels = STARTERS + VALVES
     with d.function("G3", "PLC"):
         di = d.device("DI1", "DEMO-PLC-DI-16")
+        d.device("AI1", "DEMO-PLC-AI-4")  # no wire reaches the analogue cards: they stand loose
+        d.device("AI2", "DEMO-PLC-AI-4")
         dos = [d.device(f"DO{i + 1}", "DEMO-PLC-DO-2") for i in range(math.ceil(channels / 2))]
     chans = [getattr(dos[c // 2], f"do_{c % 2 + 1}") for c in range(channels)]
     relays = valves(d, live, rail, chans)

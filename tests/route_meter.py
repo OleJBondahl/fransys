@@ -135,3 +135,12 @@ def metered() -> Iterator[Counter[str]]:
     finally:
         for mod, name, fn in saved:
             setattr(mod, name, fn)
+
+
+def page_crossings(layout: Any) -> int:
+    """Wire-over-wire crossings of a finished layout's routes, page by page (core lines apart)."""
+    pages = {(r.drawing_set, r.page) for r in layout.routes}
+    return sum(
+        wire_crossings([r for r in layout.routes if (r.drawing_set, r.page) == page])
+        for page in pages
+    )

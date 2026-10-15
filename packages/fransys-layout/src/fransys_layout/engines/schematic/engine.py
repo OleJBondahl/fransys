@@ -141,7 +141,7 @@ def stage_layout(
     )
     boxes, hidden, slot_requests = _boxed_views(model, inputs, drawn)
 
-    inputs, drawn, rank_of, all_columns, columns, column_findings = arranged(model, inputs, drawn)
+    inputs, drawn, landing, all_columns, columns, column_findings = arranged(model, inputs, drawn)
     # a middle unit's line views leave their columns; its lines' conductors are no routes
     inputs, columns, middle, reach = strip_middle(model, inputs, columns)
     inputs, lines = strip_lines(model, inputs)
@@ -158,13 +158,12 @@ def stage_layout(
     run = PageRun(
         texts,
         middle_inputs(_page_inputs(inputs, img.heads), middle, (columns, reach, widths)),
-        rank_of,
+        landing,
         pin_requests,
         reserves,
         partial(location_paths, model),
         partial(unit_paths, model),
         partial(recut_inputs, (inputs, drawn, img), (texts, all_columns, slot_requests)),
-        power,
     )
     # layout-0080: the ports at a unit's boundary that draw nothing, in the markers and the check
     nesting = unit_nesting(model, {spec.unit for spec in inputs.functions})

@@ -168,7 +168,9 @@ PINS = {
     # as a copy at each pin and the reference markers are gone. Re-pinned again after merging
     # main (model-0235 and layout-0235 moved the same canary).
     "canary": "bad8c11998a6e0bab1e164f6fae0198975313f3f9996b57396c8aecac6b71d43",
-    "spare": "6e51043910e2acb84ffd4fa8714fb70bde83870de9a5aa36c3dd20bb1a5e348a",
+    # Re-pinned for layout-0264: supply T1's pins print in marking order, `+ -`, no longer by
+    # their partners' x; its two markers swap places and box Q1 moves one grid right.
+    "spare": "9160ca72868cff6481d8b64854319a058955dc5b107271beb1c24219a1c581fd",
 }
 
 

@@ -293,7 +293,7 @@ class DrawnPort:
     group: int = 0  # Its function's side order in an item box, kept whole on a box side
     channel: bool = False  # A PLC channel's pin
     stand: int = 0  # layout-0132: the width in G of the power symbol and text at the pin
-    order: int = 0  # Its `PortSpec.order`, the tie-break of a box port nobody placed
+    order: int = 0  # Its `PortSpec.order`: a box pin's marking rank, its place (layout-0264)
 
 
 @value

@@ -139,6 +139,9 @@ def page_readability(model: Model, options: LayoutOptions) -> ReadabilityReport:
     loose, leads = Counter(base.loose), Counter(base.leads)
     for units, (_, run) in runs:
         mine = {page: counts for page, (unit, counts) in run.measures.items() if unit in units}
+        stale = {page for page, (unit, _) in base.measures.items() if unit in units} - mine.keys()
+        owned = {page: counts for page, counts in owned.items() if page not in stale}
+        leads = Counter({page: n for page, n in leads.items() if page not in stale})
         owned.update(mine)
         loose = Counter({u: n for u, n in loose.items() if u not in units})
         loose.update({u: n for u, n in run.loose.items() if u in units})

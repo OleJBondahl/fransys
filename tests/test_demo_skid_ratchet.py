@@ -7,7 +7,7 @@ layout change lowers a count, lower the number in the same branch.
 Mapping of the spec's names to the readability fields: markers are `stars` (net references),
 `contact_images` (coil images) and `page_cuts` (the readability reference set), crossings are
 `wire_crossings`, excess bends are `wire_bends`, detour is `wire_length_mm`, pages are the unit's
-`pages`.
+`pages`; `loose_symbols` counts the two unwired analogue cards.
 """
 
 import importlib.util
@@ -29,6 +29,7 @@ RATCHET: dict[str, int | Decimal] = {
     "wire_length_mm": Decimal("2392.5"),
     "pages": 6,
     "page_cuts": 0,
+    "loose_symbols": 2,  # AI1 and AI2: unwired analogue cards (READABILITY-LOOSE)
 }
 
 

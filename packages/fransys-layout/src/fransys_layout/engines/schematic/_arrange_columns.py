@@ -24,6 +24,7 @@ from fransys_layout.stages.far_ends import (
     sheet_fits,
 )
 from fransys_layout.stages.pin_ends import pin_keyed
+from fransys_layout.stages.pin_landing import Power, function_landing, lanes_in_pin_order
 from fransys_layout.stages.references.nets import star_wires
 from fransys_layout.stages.replicate import replicate_boundaries, replicate_terminals
 from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_chains
@@ -171,6 +172,22 @@ def replicated_columns(
     return inputs, drawn, hub_order(columns, inputs.functions, inputs.connections)
 
 
+def _in_pin_order(
+    columns: tuple[Column, ...], drawn: tuple[DrawnFunction, ...], inputs: StageInputs
+) -> tuple[tuple[Column, ...], Power]:
+    """layout-0264: a bundle's strands turn into the order of the box pins they land on.
+
+    A row narrower than the bundle (a coil above it) keeps its lane. Also returns the power
+    tuple it read, which the page run reads again.
+    """
+    landing: Power = (
+        port_ranks(inputs.functions),
+        *power_maps(inputs.power, inputs.item_north, inputs.item_south),
+    )
+    turned = lanes_in_pin_order(columns, function_landing(drawn, inputs.connections, landing))
+    return turned, landing
+
+
 def _terminal_wires(
     inputs: StageInputs,
 ) -> tuple[
@@ -232,7 +249,7 @@ def arranged(
 ) -> tuple[
     StageInputs,
     tuple[DrawnFunction, ...],
-    dict[Any, int],
+    Power,
     tuple[Column, ...],
     tuple[Column, ...],
     tuple[Finding, ...],
@@ -253,8 +270,9 @@ def arranged(
         terminal_chains=chains,
     )
     inputs, drawn, columns = replicated_columns(model, inputs, drawn, all_columns)
+    columns, landing = _in_pin_order(columns, drawn, inputs)
     all_columns, columns = in_key_order(all_columns, columns)
     # layout-0214: a hint on a group whose every copy went names nothing left to draw
     gone = emptied_groups(all_columns, columns) | loose_groups(inputs.loose, columns)
     inputs = replace(inputs, hints=without_groups(inputs.hints, gone))
-    return inputs, drawn, port_ranks(inputs.functions), all_columns, columns, column_findings
+    return inputs, drawn, landing, all_columns, columns, column_findings

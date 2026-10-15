@@ -164,8 +164,8 @@ def _turned_box(
         ranked = rank_of.get(port, 0) if side and (not v1 or port in rank_of) else None
         slot = _slot(side, g.facing.value, ranked, ends, centre)
         placed_at.append((*slot, (read_order.get(g.name, 0), i), g.name, group_of.get(g.name, 0)))
-    # Each side's pin groups whole; inside a group the ranked pins first, then the
-    # partners' x order; ports with no partner keep theirs
+    # Each side's pin groups whole; inside a group the ranked pins first, then marking
+    # order (layout-0264): the partners' x never reorders a box's pins
     ordered = sorted(placed_at, key=lambda p: (p[4], p[1] is None, p[1] or 0, p[2]))
     geometry = generic_box_geometry(
         tuple(p[3] for p in ordered), tuple(p[0] for p in ordered), one.reach, stand=one.stand
@@ -175,14 +175,14 @@ def _turned_box(
 
 def _slot(
     side: str | None, facing: str, ranked: int | None, ends: Sequence[tuple[int, int]], centre: int
-) -> tuple[str, float | None]:
-    """One box port's side (`side`, else partners' turn, else `facing`) and key: rank, x or none."""
+) -> tuple[str, int | None]:
+    """One box port's side (`side`, else partners' turn, else `facing`) and its rank, if any."""
     if ranked is not None:
         # A box's power pins keep their side, highest potential leftmost
         return side or facing, -1000 + ranked
     if ends:
         # An item box's pin keeps its side; any other turns toward its partners
         y = sum(e[1] for e in ends) / len(ends)
-        return side or ("n" if y < centre else "s"), sum(e[0] for e in ends) / len(ends)
+        return side or ("n" if y < centre else "s"), None
     # A port with no placed partner keeps its side (the supply-on-top rule)
     return side or facing, None

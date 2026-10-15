@@ -17,6 +17,7 @@ from ._gather import Bands, gather
 from ._hint_refusal import refusal_message
 from ._ordering import Tables, base_order, buckets, column_order, membership, reorder
 from ._packing import merge, pack, placements, undone_orders
+from .pin_landing import in_pin_order
 from .place import _without_tag
 from .slices import by_key
 from .types import (
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 
     from ._ordering import Bucket
     from ._packing import Placement, Unit
+    from .pin_landing import ColumnLanding
     from .types import (
         Column,
         DrawnFunction,
@@ -109,6 +111,7 @@ class ColumnTables:
     pole_links: tuple[tuple[AuthoringKey, AuthoringKey], ...] = ()
     bands: Bands = field(default_factory=Bands)
     functions: tuple[FunctionSpec, ...] = ()  # layout-0195: names the loop in a hint refusal
+    landing: ColumnLanding = field(default_factory=dict)  # layout-0264
 
 
 def partition(
@@ -141,12 +144,15 @@ def partition(
     for bucket in found:
         number = 1 if bucket.drawing_set != drawing_set else number
         drawing_set = bucket.drawing_set
-        ranked = base_order(
-            bucket,
-            tables,
-            group_ranks=profile.group_ranks,
-            break_before=hints.break_before,
-            pole_links=given.pole_links,
+        ranked = in_pin_order(
+            base_order(
+                bucket,
+                tables,
+                group_ranks=profile.group_ranks,
+                break_before=hints.break_before,
+                pole_links=given.pole_links,
+            ),
+            given.landing,
         )
         packed, bucket_met, undone = _merged(ranked, hints, sheet.inner_width, given, tables)
         met |= bucket_met

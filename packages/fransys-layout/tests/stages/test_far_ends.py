@@ -12,8 +12,14 @@ from samples import PROFILE, SHEET, column, drawn, hid
 
 from fransys_layout.geometry import generic_box_geometry
 from fransys_layout.geometry.symbols import channel_pitch
-from fransys_layout.stages.far_ends import FarInputs, group_map, move_far_ends, sheet_fits
-from fransys_layout.stages.types import Cell, Connection, Home, PortRef, Role
+from fransys_layout.stages.far_ends import (
+    FarInputs,
+    _free_entry,
+    group_map,
+    move_far_ends,
+    sheet_fits,
+)
+from fransys_layout.stages.types import Cell, Connection, DrawnPort, Home, PortRef, Role
 
 if TYPE_CHECKING:
     from fransys_layout.stages.types import Column, DrawnFunction, FunctionSpec
@@ -273,3 +279,21 @@ def test_a_home_moving_within_its_own_column_is_counted_once() -> None:
     drawn_functions = (drawn(1), drawn(5))
 
     assert sheet_fits(drawn_functions, PROFILE, replace(SHEET, content_height=200), 4)(column_of)
+
+
+def test_a_coil_on_a_free_pin_is_keyed_by_the_pins_marking_rank() -> None:
+    """layout-0264: the box lists `di_10` before `di_2`; the hung coil takes `di_2`'s rank 1."""
+    # UNDO: stages/far_ends.py:_free_entry, `pin.order` -> the pin's index in far.geometry.ports
+    names = ("di_1", "di_10", "di_2")
+    ranks = {"di_1": 0, "di_2": 1, "di_10": 2}
+    ports = tuple(
+        DrawnPort(port=hid("port", 100 + i), symbol_port=n, order=ranks[n])
+        for i, n in enumerate(names)
+    )
+    far = replace(drawn(1, kind="plc_channel"), geometry=generic_box_geometry(names), ports=ports)
+    own = _ref(5, "in")
+    entry = _free_entry(
+        drawn(5, kind="coil"), own, far, PortRef(function=far.function, port=ports[2].port)
+    )
+    assert entry[2] == 1
+    assert entry[4] == "di_2"

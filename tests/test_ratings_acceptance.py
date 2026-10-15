@@ -31,7 +31,11 @@ from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.ratings import Operating, Rating
 from fransys_model.vocab.tables import internal_links, parts
 from fransys_model.vocab.validators import ALL_VALIDATORS
-from fransys_model.vocab.validators.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
+from fransys_model.vocab.validators.ratings import (
+    RATING_CURRENT_KIND_UNSTATED,
+    RATING_VOLTAGE_BELOW_CIRCUIT,
+    check_ratings,
+)
 from fransys_model.vocab.validators.supplies import (
     POTENTIAL_IN_TWO_SUPPLIES,
     SUPPLY_DIFFERS,
@@ -206,6 +210,65 @@ def test_an_ac_device_on_one_phase_of_an_it_supply_stands_at_398_volts(
     assert all("398.4" in f.message and "IT" in f.message for f in found)
 
 
+def test_the_demo_lamp_states_24_volts_and_gives_the_error_on_a_230_volt_path() -> None:
+    """C6.6a (parts-0022): the shipped lamp rating is what fires, with no `rated(...)` override."""
+    d, _ = design()
+    lamp = lamp_on(d, "L1", "N")
+    (finding,) = check_ratings(freeze_design(d))
+    assert finding.code == RATING_VOLTAGE_BELOW_CIRCUIT
+    assert finding.subjects == (fn_id(lamp, "lamp"),)
+    assert "24 V AC" in finding.message
+
+
+def _heater_on(*potentials: str, **rating: str):
+    """The unrated demo heater, rated `rating`, whose `+` then `-` is on the given potentials."""
+    d, _ = design()
+    d.supply("24V", current="dc", rails={"+24V": ("24", None)})
+    heater = d.item("DEMO-HEATER-24", name="h1")
+    for port, potential in zip(("+", "-"), potentials, strict=False):
+        d.net(potential, heater[port], cls="power", potential=potential)
+    model = freeze_design(d)
+    return rated(model, "DEMO-HEATER-24", "load", **rating), fn_id(heater, "load")
+
+
+def test_a_dc_only_rating_on_ac_rails_gives_the_kind_warning() -> None:
+    """C6.6b (model-0231): a DC rating alone is silent to the voltage check, and now warned."""
+    model, load = _heater_on("L1", "N", voltage_dc_v="24")
+    (finding,) = check_ratings(model)
+    assert finding.code == RATING_CURRENT_KIND_UNSTATED
+    assert finding.severity is Severity.WARNING
+    assert finding.subjects == (load,)
+    assert finding.message == (
+        f"{ref(load)} states a DC rating only (part or template rating) and stands on AC rails "
+        "L1, N at 230 V: state voltage_ac_v in its part, or use a part rated for AC"
+    )
+
+
+def test_an_ac_only_rating_on_a_dc_rail_gives_the_kind_warning() -> None:
+    model, load = _heater_on("+24V", voltage_ac_v="250")
+    (finding,) = check_ratings(model)
+    assert (finding.code, finding.subjects) == (RATING_CURRENT_KIND_UNSTATED, (load,))
+    assert "AC rating only" in finding.message
+    assert "DC rail +24V at 24 V" in finding.message
+
+
+@pytest.mark.parametrize(
+    ("potentials", "rating"),
+    [
+        (("+24V",), {"voltage_dc_v": "24"}),
+        (("L1", "N"), {"voltage_ac_v": "250"}),
+        (("L1", "N"), {"voltage_ac_v": "250", "voltage_dc_v": "250"}),
+        (("L1", "N"), {"current_dc_a": "2"}),
+    ],
+    ids=["dc-on-dc", "ac-on-ac", "both-kinds", "no-voltage"],
+)
+def test_a_rating_that_fits_its_rails_or_states_no_voltage_gives_no_kind_warning(
+    potentials, rating
+) -> None:
+    model, _ = _heater_on(*potentials, **rating)
+    assert [f for f in check_ratings(model) if f.code == RATING_CURRENT_KIND_UNSTATED] == []
+
+
 # -- 9: supplies and unrated parts ---------------------------------------------------------
 
 
@@ -215,10 +278,12 @@ def _supply_codes(d: Design) -> set[str]:
 
 def test_a_model_with_supplies_and_no_rating_gives_no_finding() -> None:
     d, wire = design()
-    lamp = lamp_on(d, "L1", "N")
+    other = d.item("DEMO-MOTOR-4KW", name="m2")  # an unrated part on mains (the lamp is rated 24 V)
     motor = d.item("DEMO-MOTOR-4KW", name="m1")
+    d.net("L1", other["U"], cls="power", potential="L1")
+    d.net("N", other["V"], cls="power", potential="N")
     d.net("L3", motor["U"], cls="power", potential="L3")
-    wire(lamp["1"], motor["V"])
+    wire(other["W"], motor["V"])
     model = freeze_design(d)
     assert check_ratings(model) == ()
     assert [f for validator in ALL_VALIDATORS for f in validator(model) if "RATING" in f.code] == []
@@ -259,7 +324,7 @@ def test_a_potential_in_two_supplies_gives_potential_in_two_supplies() -> None:
 
 def test_the_facade_reports_a_rating_error_and_write_raises_and_writes_nothing(tmp_path) -> None:
     library = fr.parts("demo_parts")
-    template = template_of(freeze(library), "DEMO-LAMP-24", "lamp")
+    template = template_of(freeze(library), "DEMO-HEATER-24", "load")  # states no rating
     weak = Draft()
     weak.add(
         rating_facet(template, voltage_ac_v="100"),
@@ -267,7 +332,9 @@ def test_the_facade_reports_a_rating_error_and_write_raises_and_writes_nothing(t
     )
     d = fransys_author.Design(library)
     d.supply("400V", current="ac", rails=RAILS)
-    lamp_on(d, "L1", "N")
+    heater = d.item("DEMO-HEATER-24", name="h1")
+    for port, potential in (("+", "L1"), ("-", "N")):
+        d.net(potential, heater[port], cls="power", potential=potential)
     result = fr.build(library, d.draft(), weak)
     errors = [f for f in result.findings if f.code == RATING_VOLTAGE_BELOW_CIRCUIT]
     assert [f.severity for f in errors] == [Severity.ERROR]

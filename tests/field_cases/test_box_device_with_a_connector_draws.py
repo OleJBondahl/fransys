@@ -31,12 +31,12 @@ def _layout():
         m1 = d.device("M1", "DEMO-RED-2IN-NET")
     for n, psu in enumerate(psus, start=1):
         group = getattr(m1, f"in_{n}")
-        d.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
-        d.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
+        d.detail.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
+        d.detail.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
     d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-    d.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
-    d.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
-    d.wire(m1.svc["1"], live[2].outer, wire=(BN, 0.5))
+    d.detail.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
+    d.detail.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
+    d.detail.wire(m1.svc["1"], live[2].outer, wire=(BN, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     model = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)).model

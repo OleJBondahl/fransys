@@ -12,6 +12,7 @@ import re
 
 import pytest
 from _pdf_measure import font_names, stroke_widths, text_objects
+from fransys_el import REF_TINTS
 from fransys_render import pages
 from test_exact_sizes_pdf import _compile, _model
 
@@ -103,7 +104,7 @@ def test_every_symbol_text_names_the_house_face():
     the PDF cannot show a generic `sans-serif`; the SVG the symbol body is drawn into can.
     """
     model, _document = _model(symbols=("motor-3ph",))
-    svg = "".join(str(page) for page in pages(model).values())
+    svg = "".join(str(page) for page in pages(model, tints=REF_TINTS).values())
     texts = re.findall(r"<text [^>]*>([^<]*)</text>", svg)
     assert {"M", "3"} <= set(texts)
     symbol_texts = re.findall(r'<text [^>]*font-family="([^"]*)"[^>]*>[MS3]</text>', svg)

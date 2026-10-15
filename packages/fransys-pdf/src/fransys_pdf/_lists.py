@@ -10,20 +10,15 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import (
     BOM_COLUMNS,
     CABLE_LIST_COLUMNS,
-    CELL_SEPARATOR,
     CONNECTOR_LABELS,
     DESIGNATION_COLUMNS,
     PIN_COLUMNS,
     PLC_COLUMNS,
-    TERMINAL_COLUMNS,
-    TERMINAL_LABELS,
     TOP_LEVEL,
     WIRE_COLUMNS,
     boards,
     bom_lines,
     cable_list_rows,
-    cell_parts,
-    cell_text,
     column_rows,
     connector_items,
     connector_rows,
@@ -31,7 +26,6 @@ from fransys_model.derive import (
     cores_text,
     designation_list,
     document_unit,
-    ends_without_jumpers,
     is_own_unit_root,
     items_at,
     list_context,
@@ -52,14 +46,15 @@ from fransys_model.vocab import (
     items,
 )
 
-from ._bridge import BRIDGE_COLUMN_WIDTH_MM, bridge_cell_typst, bridge_geometry, bridge_lane_x_mm
 from ._flow import GUTTER_PCT, SHARE_PCT, flow_columns
+from ._lists_cells import _cell_typst, _humanise, _kept_columns, _widths
+from ._lists_terminal import _terminal_table
 from ._marks import LIST_HEADING
 from ._tables import table_source
 from ._typst import description_par, literal
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Mapping
 
     from fransys_model.derive import (
         ConnectorRow,
@@ -70,40 +65,6 @@ if TYPE_CHECKING:
     )
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import AspectNode, Document, Item, Unit
-
-
-def _humanise(field: str) -> str:
-    """`field` as a table header: underscores to spaces, first letter upper-cased."""
-    spaced = field.rstrip("_").replace("_", " ")
-    return spaced[0].upper() + spaced[1:]
-
-
-def _cell_typst(value: object) -> str:
-    """`value` as one table cell's Typst markup: tuple items in unbreakable boxes (pdf-0013)."""
-    match value:
-        case tuple():
-            parts = cell_parts(value)
-            if not parts:
-                return f"text({literal('')})"
-            return f" + text({literal(CELL_SEPARATOR)}) + ".join(
-                f"box(text({literal(part)}))" for part in parts
-            )
-        case _:
-            return f"text({literal(cell_text(value))})"
-
-
-def _kept_columns(rows: Iterable[tuple[object, ...]], count: int) -> tuple[int, ...]:
-    """The indexes of the `count` columns with a non-empty `cell_text` in some row (pdf-0011)."""
-    materialised = list(rows)
-    return tuple(i for i in range(count) if any(cell_text(row[i]) for row in materialised))
-
-
-def _widths(wide: list[bool]) -> list[str]:
-    """`1fr` per `True`, else `auto`; the last is `1fr` if none is, to span the page (pdf-0008)."""
-    widths = ["1fr" if flag else "auto" for flag in wide]
-    if widths and "1fr" not in widths:
-        widths[-1] = "1fr"
-    return widths
 
 
 def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor and labels
@@ -277,54 +238,6 @@ def terminal_list_page(model: Model, record: Document) -> str:
     return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
-# -- the Bridge column (pdf-0007) --------------------------------------------------
-
-_TERMINAL_DATA = TERMINAL_COLUMNS[:-1]  # designation, group, index, internal_ends, external_ends
-_TERMINAL_SIDES = ("internal_ends", "external_ends")  # both unbounded text: `1fr` each (pdf-0008)
-
-
-def _terminal_table(
-    model: Model,
-    rows: tuple[TerminalRow, ...],
-    headings: tuple[str, str] = (
-        TERMINAL_LABELS["internal_ends"],
-        TERMINAL_LABELS["external_ends"],
-    ),
-    *,
-    title: str = "",
-    label: str = "",
-) -> str:
-    """The TERMINAL_LIST table: data columns, then a drawn Bridge column (pdf-0007, 0008, 0011)."""
-    if not rows:
-        return ""
-    geometry = bridge_geometry(tuple(row.jumper_group for row in rows))
-    side_label = {"internal_ends": headings[0], "external_ends": headings[1]}
-    values = []
-    for row in rows:
-        ends = dict(
-            zip(("internal_ends", "external_ends"), ends_without_jumpers(model, row), strict=True)
-        )
-        values.append(tuple(ends.get(name, getattr(row, name)) for name in _TERMINAL_DATA))
-    kept = _kept_columns(values, len(_TERMINAL_DATA))  # empty columns are not drawn (pdf-0011)
-    bridge = any(geometry)  # a strip with no jumper group has an all-empty Bridge column
-    if not kept and not bridge:
-        return ""
-    headers = [side_label.get(_TERMINAL_DATA[i]) or _humanise(_TERMINAL_DATA[i]) for i in kept] + (
-        ["Bridge"] if bridge else []
-    )
-    body = []
-    for row_values, row_marks in zip(values, geometry, strict=True):
-        cells = [_cell_typst(row_values[i]) for i in kept]
-        if bridge:
-            cells.append(bridge_cell_typst(row_marks, bridge_lane_x_mm(len(row_marks))))
-        body.append(cells)
-    widths = _widths([_TERMINAL_DATA[i] in _TERMINAL_SIDES for i in kept])
-    if bridge:
-        widths.append(f"{BRIDGE_COLUMN_WIDTH_MM}mm")
-    heads = [f"strong(text({literal(h)}))" for h in headers]
-    return table_source(widths, heads, body, title=title, label=label)
-
-
 def _connector_rows_for_page(model: Model, record: Document) -> tuple[ConnectorRow, ...]:
     """The CONNECTOR_LIST rows: a board document's board, else a unit's own, else the location's."""
     unit = document_unit(model, record)
@@ -342,21 +255,30 @@ def _connector_rows_for_page(model: Model, record: Document) -> tuple[ConnectorR
     return connector_rows_of(model, scope, unit=unit, context=record.location)
 
 
+def _connector_section(row: ConnectorRow, description: str, number: int) -> str:
+    """One connector: heading and table, or with no wired pin its description and one line."""
+    if not any(pin.ends or pin.net is not None for pin in row.pins):  # a wire or a net is wired
+        return description_par(description) + (
+            f"#par(text({literal(f'{row.designation}: no pin wired')}))\n"
+        )
+    return (
+        _list_heading(row.designation)
+        + description_par(description)
+        + _table(
+            PIN_COLUMNS,
+            column_rows(row.pins, PIN_COLUMNS),
+            ("net", "ends"),
+            title=row.designation,
+            label=f"conn{number}",
+            labels=CONNECTOR_LABELS,
+        )
+    )
+
+
 def connector_list_page(model: Model, record: Document) -> str:
     """The CONNECTOR_LIST section: a table per connector, headed by its designation (pdf-0030)."""
-    sections = []
-    for number, row in enumerate(_connector_rows_for_page(model, record)):
-        item = items(model)[functions(model)[row.connector].item]
-        sections.append(
-            _list_heading(row.designation)
-            + description_par(item.description)
-            + _table(
-                PIN_COLUMNS,
-                column_rows(row.pins, PIN_COLUMNS),
-                ("net", "ends"),
-                title=row.designation,
-                label=f"conn{number}",
-                labels=CONNECTOR_LABELS,
-            )
-        )
+    sections = [
+        _connector_section(row, items(model)[functions(model)[row.connector].item].description, n)
+        for n, row in enumerate(_connector_rows_for_page(model, record))
+    ]
     return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)

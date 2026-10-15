@@ -51,8 +51,8 @@ def _skid(u: Any) -> _Io:
 def _top(u: Any) -> _Io:
     skid = u.add(_skid, "U5")
     x9 = u.terminal_strip("X9", "DEMO-TB-2.5", 2, external=True)
-    u.wire(skid.X4[1], x9[1].outer, wire=(BU, 0.5))
-    u.wire(skid.X4[2], x9[2].outer, wire=(BU, 0.5))
+    u.detail.wire(skid.X4[1], x9[1].outer, wire=(BU, 0.5))
+    u.detail.wire(skid.X4[2], x9[2].outer, wire=(BU, 0.5))
     return _Io(x9)
 
 

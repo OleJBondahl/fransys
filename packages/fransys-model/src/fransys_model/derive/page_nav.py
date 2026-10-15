@@ -13,8 +13,9 @@ from fransys_model.vocab import functions
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Item
 
+from .contact_image import cross_reference_text
 from .contact_rows import contact_rows
-from .drawing_text import CONTACT_SLOTS, cross_reference_text, label_text
+from .drawing_text import CONTACT_SLOTS, label_text
 from .kinds import item_kind
 from .marker_box import marker_box
 from .order import designation_key, drawn_on_page

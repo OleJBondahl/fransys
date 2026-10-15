@@ -46,8 +46,8 @@ def _lamps() -> list[str]:
         psu = d.device("T1", "DEMO-PSU-24")
         for tag in ("H10", "H2", "H1"):
             lamp = d.device(tag, "DEMO-LAMP-24")
-            d.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
-            d.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
+            d.detail.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
+            d.detail.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
     return _left_to_right(_build(d), "H1", "H2", "H10")
 
 
@@ -57,7 +57,7 @@ def _terminals() -> list[str]:
     strip = d.terminal_strip("X1", "DEMO-TB-2.5", 12)
     for number in (10, 2, 1):
         lamp = d.device(f"P{number}", "DEMO-LAMP-24")
-        d.wire(strip[number].inner, lamp.lamp["1"], wire=("WH", 0.75))
+        d.detail.wire(strip[number].inner, lamp.lamp["1"], wire=("WH", 0.75))
     return _left_to_right(_build(d), "P1", "P2", "P10")
 
 

@@ -29,6 +29,7 @@ from fransys_layout.geometry import LayoutError, Orientation, library_version
 from fransys_layout.stages import Home, LabelKind, MarkerSide, Role
 from fransys_layout.stages import Route as StageRoute
 from fransys_layout.stages import RoutePoint as StageRoutePoint
+from fransys_layout.stages.wire_copies import WireCopies, copy_map
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import LabelKind as ModelLabelKind
 from fransys_model.layout import MarkerSide as ModelMarkerSide
@@ -483,6 +484,8 @@ def test_a_route_written_from_swapped_ends_equals_the_one_written_from_the_order
     """The model puts `a` and `b` in id order and turns the polyline; the writer adds nothing."""
     model, results, out = _laid_out()
     original = results.layout.routes[0]
+    copies = copy_map(results.copies)  # model-0220: the stage route may end at a copy handle
+    ends = {copies.get(original.a, original.a), copies.get(original.b, original.b)}
     count = len(original.points)
     swapped = StageRoute(
         connection=original.connection,
@@ -498,12 +501,12 @@ def test_a_route_written_from_swapped_ends_equals_the_one_written_from_the_order
     layout = dataclasses.replace(results.layout, routes=(swapped, *results.layout.routes[1:]))
     again = write_layout(model, dataclasses.replace(results, layout=layout), write_keys(model))
     assert _table(again, "route") == _table(out, "route")
-    route = next(r for r in _table(out, "route").values() if (r.a, r.b) == (original.a, original.b))
+    route = next(r for r in _table(out, "route").values() if {r.a, r.b} == ends)
     assert [(p.x, p.y) for p in route.points] == [(p.at.x, p.at.y) for p in original.points]
 
 
 def test_a_terminal_on_two_pages_keeps_its_home_key_and_the_replica_adds_its_group() -> None:
-    """X2:1 is at home in `=SUP` and replicated for `=P1`: two ids, the second ending in `p1`."""
+    """X2:1 is at home in `=SUP` and copied at its wires: the home key, and a copy key per wire."""
     model, _, out = _laid_out()
     (function,) = (f.id for f in model.tables["function"].values() if f.key == _X2)
     found = sorted(
@@ -511,8 +514,15 @@ def test_a_terminal_on_two_pages_keeps_its_home_key_and_the_replica_adds_its_gro
         key=lambda p: p.key,
     )
     base = ("layout", "schematic", "symbol_placement", *_X2)
-    assert [p.key for p in found] == [base, (*base, "p1", "drawing_set", "c1")]
-    assert len({p.id for p in found}) == 2
+    # model-0220: a copy's key adds group, set and the host function it stands at
+    at = ("drawing_set", "c1", "at", "cabinet")
+    assert [p.key for p in found] == [
+        base,
+        (*base, "p1", *at, "s0", "fn", "nc_1"),
+        (*base, "p1", *at, "s1", "fn", "nc_1"),
+        (*base, "p2", *at, "s2", "fn", "nc_1"),
+    ]
+    assert len({p.id for p in found}) == 4
     assert len({p.page for p in found}) == 2
 
 
@@ -520,12 +530,13 @@ def test_a_replica_with_no_group_gets_the_ungrouped_discriminator() -> None:
     """Without one its key would be the home placement's (decision layout-0029)."""
     model, results, _ = _laid_out()
     (function,) = (f.id for f in model.tables["function"].values() if f.key == _X2)
-    # The only replica of the cabinet is attached, a cell of its host's column
+    # The replicas of the cabinet are attached copies (model-0220), cells of their hosts' columns
+    copies = copy_map(results.copies)
     hosting = {
         c.key
         for c in results.columns
         for cell in c.cells
-        if cell.home is Home.ELSEWHERE and cell.function == function
+        if cell.home is Home.ELSEWHERE and copies.get(cell.function, cell.function) == function
     }
     columns = tuple(
         dataclasses.replace(c, group=None) if c.key in hosting else c for c in results.columns
@@ -533,8 +544,8 @@ def test_a_replica_with_no_group_gets_the_ungrouped_discriminator() -> None:
     out = write_layout(model, dataclasses.replace(results, columns=columns), write_keys(model))
     base = ("layout", "schematic", "symbol_placement", *_X2)
     keys = {p.key for p in _table(out, "symbol_placement").values()}
-    assert (*base, "ungrouped", "drawing_set", "c1") in keys
-    assert (*base, "p1", "drawing_set", "c1") not in keys
+    assert (*base, "ungrouped", "drawing_set", "c1", "at", "cabinet", "s0", "fn", "nc_1") in keys
+    assert not {k for k in keys if k[: len(base) + 1] == (*base, "p1")}
 
 
 _SIGNAL = (
@@ -566,9 +577,9 @@ def test_each_marker_points_at_the_other_end_and_the_other_end_points_back() -> 
         assert marker.page != partner.page
 
 
-def test_a_net_of_three_or_more_ports_has_a_reference_marker_and_branch_markers_that_name_it() -> (
-    None
-):
+def test_a_net_of_three_or_more_ports_has_a_reference_marker_and_branch_markers_that_name_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """One marker per port; the reference is the net's single terminal point.
 
     The 24 V rail net has five ports: terminal `-X2:1` (external side) and the contacts and
@@ -579,6 +590,14 @@ def test_a_net_of_three_or_more_ports_has_a_reference_marker_and_branch_markers_
     reference pair, its own ref and branch: it is not this net's and is left out.
     On the wired cabinet: a line drawn from `W1` to `-H1` takes `-H1:1` off the star.
     """
+    # model-0220: with copies a terminal star draws no markers, so the reference stays under test
+    # with copies off
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
     model, results, out = _laid_out(wired=True)
     port_of = {port.key: id_ for id_, port in model.tables["port"].items()}
     rail = port_of["cabinet", "x2", "1", "fn", "terminal", "port", "external"]

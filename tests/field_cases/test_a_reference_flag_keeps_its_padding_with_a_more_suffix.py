@@ -42,15 +42,19 @@ class _Io(NamedTuple):
 def _flags(d: Any) -> _Io:
     x1 = d.terminal_strip("X" + _TAG, "DEMO-TB-2.5", 8, interface=True)
     x2 = d.terminal_strip("Y" + _TAG, "DEMO-TB-2.5", 8)
+    hub: Any = None
     for i in range(12):
         with d.function(f"C{i + 1:02d}", f"Circuit {i + 1}"):
             k = d.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
             h = d.device(f"H{i + 1}", "DEMO-LAMP-24")
-            d.wire(x1[1 + i % 6], k.coil["A1"], wire=("RD", 0.75))
-            d.wire(x1[8], k.coil["A2"], wire=("BK", 0.75))
-            d.wire(x2[1 + i % 6], k.co_1["11"], wire=("RD", 0.75))
-            d.wire(k.co_1["14"], h.lamp[1], wire=("RD", 0.75))
-            d.wire(h.lamp[2], x2[8], wire=("BU", 0.75))
+            d.detail.wire(x1[1 + i % 6], k.coil["A1"], wire=("RD", 0.75))
+            if hub is None:
+                hub = k
+            else:  # model-0220: a device star keeps its flags (a terminal hub is copied)
+                d.detail.wire(hub.coil["A2"], k.coil["A2"], wire=("BK", 0.75))
+            d.detail.wire(x2[1 + i % 6], k.co_1["11"], wire=("RD", 0.75))
+            d.detail.wire(k.co_1["14"], h.lamp[1], wire=("RD", 0.75))
+            d.detail.wire(h.lamp[2], x2[8], wire=("BU", 0.75))
     return _Io(x1)
 
 
@@ -70,7 +74,7 @@ def test_a_reference_flag_keeps_its_padding_with_a_more_suffix() -> None:
     short = []
     for text, marker in suffixed:
         along = marker.height if marker.vertical else marker.width  # a turned box's length
-        needed = text_width(text, height=height) + 2 * padding
+        needed = max(text_width(t, height=height) for t in text.split("\n")) + 2 * padding
         if along < needed:
             short.append((text, along, needed))
     assert short == []

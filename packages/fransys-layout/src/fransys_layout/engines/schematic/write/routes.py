@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.engines.schematic.write.keys import PREFIX
+from fransys_layout.engines.schematic.write.keys import PREFIX, real_id
 from fransys_model.kernel import make_id
 from fransys_model.layout import Route, RoutePoint
 
@@ -34,8 +34,8 @@ def routes(
                 page=page_of[route.drawing_set, route.page].id,
                 conductor=route.connection if is_conductor else None,
                 net=None if is_conductor else route.connection,
-                a=route.a,
-                b=route.b,
+                a=real_id(keys, route.a),
+                b=real_id(keys, route.b),
                 points=tuple(RoutePoint(index=p.index, x=p.at.x, y=p.at.y) for p in route.points),
                 produced_by=stamp,
             )

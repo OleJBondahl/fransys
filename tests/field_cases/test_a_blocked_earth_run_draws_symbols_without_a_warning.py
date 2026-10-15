@@ -39,7 +39,7 @@ def _cabinet(phases: int) -> Any:
             ls = tuple(x1.run(f"L{k}", 1) for k in range(1, phases + 1))
             pe1 = x1.run("PE", 1)
             for k, run in enumerate(ls, 1):
-                u.wire(run[1], u.device(f"H{k}", "DEMO-LAMP-24")["1"], wire=(BU, 0.5))
+                u.detail.wire(run[1], u.device(f"H{k}", "DEMO-LAMP-24")["1"], wire=(BU, 0.5))
         x3 = u.terminal_strip("X3", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", interface=True)
         pe3 = x3.run("PE", 2)
         outgoing = []
@@ -47,7 +47,7 @@ def _cabinet(phases: int) -> Any:
             with u.function(f"P{n}", f"Pump {n}"):
                 outgoing.append(pe3[n])
         for pe in outgoing:
-            u.rail_bond(pe1[1], pe)
+            u.detail.rail_bond(pe1[1], pe)
         u.earth(pe1[1], *outgoing)
         return _Io(ls, pe1, pe3)
 
@@ -63,13 +63,13 @@ def _build(phases: int) -> fr.BuildResult:
     with d.function("IN", "Incoming"):
         x0 = d.terminal_strip("X0", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", external=True)
         for k, run in enumerate(cab.LS, 1):
-            d.wire(x0.run(f"L{k}", 1)[1], run[1], wire=(BU, 0.5))
-        d.wire(x0.run("PE", 1)[1], cab.PE[1], wire=(GNYE, 0.5))
+            d.detail.wire(x0.run(f"L{k}", 1)[1], run[1], wire=(BU, 0.5))
+        d.detail.wire(x0.run("PE", 1)[1], cab.PE[1], wire=(GNYE, 0.5))
     with d.function("OUT", "Outgoing"):
         x9 = d.terminal_strip("X9", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", external=True)
         outs = x9.run("PE", 2)
         for n in (1, 2):
-            d.wire(cab.PE_OUT[n], outs[n], wire=(GNYE, 0.5))
+            d.detail.wire(cab.PE_OUT[n], outs[n], wire=(GNYE, 0.5))
     return fr.build(d, layout_trigger_document())
 
 

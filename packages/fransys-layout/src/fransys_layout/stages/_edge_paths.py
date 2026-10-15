@@ -124,6 +124,7 @@ def _search(
     start, goal = page.ends[located(edge.a)], page.ends[located(edge.b)]
     if start.at == goal.at:
         return (start.at, goal.at)
+    space = _foreign(edge, page.space)
     padded = pad(span(start.at, goal.at), page.profile.route_margin)
     free = frozenset(cell for cell, nets in used.items() if edge.physical_net in nets)
     busy = frozenset(
@@ -147,7 +148,7 @@ def _search(
             Field(
                 region=region,
                 obstacles=(
-                    *page.space.obstacles(_own_ends(edge, page.ends), region),
+                    *space.obstacles(_own_ends(edge, page.ends), region),
                     *foreign_exits,
                 ),
                 free=free,
@@ -161,6 +162,11 @@ def _search(
         if points is not None:
             return points
     return None
+
+
+def _foreign(edge: Edge, space: Space) -> Space:
+    """`space` without the ink of the edge's own net: own-net ink is no obstacle (layout-0243)."""
+    return replace(space, shapes=tuple(s for s in space.shapes if s.net != edge.physical_net))
 
 
 def _own_ends(edge: Edge, ends: Ends) -> dict[Handle, tuple[End, ...]]:

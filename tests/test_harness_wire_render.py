@@ -30,7 +30,7 @@ def laid() -> Any:
         loom = d.harness("ONLY", place="L0")
         near = d.device("J1", _PLUG, parent=loom, place="L0")
         far = d.device("J2", _PLUG, parent=loom, place="L0")
-        d.wire(near[1], far[1], wire=(BU, 0.5))
+        d.detail.wire(near[1], far[1], wire=(BU, 0.5))
     return lay_out_cables(fr.build(d).model)[0]
 
 

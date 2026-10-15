@@ -60,8 +60,8 @@ def _release(profile: dict[str, Any] | None, *, own_sheet: bool = False) -> Any:
             )
         switch = u.device("U9", "DEMO-SW-8P")
         lamp = u.device("P1", "DEMO-LAMP-24")
-        u.wire(switch.p1["1"], lamp["1"], wire=("WH", 0.75))
-        u.wire(switch.p2["1"], lamp.lamp["2"], wire=("WH", 0.75))
+        u.detail.wire(switch.p1["1"], lamp["1"], wire=("WH", 0.75))
+        u.detail.wire(switch.p2["1"], lamp.lamp["2"], wire=("WH", 0.75))
         return _Io(switch)
 
     return box
@@ -83,8 +83,8 @@ def _build(
     if beside:
         first = d.device("P8", "DEMO-LAMP-24", place="C1")
         second = d.device("P9", "DEMO-LAMP-24", place="C1")
-        d.wire(first["1"], second["1"], wire=("WH", 0.75))
-        d.wire(first["2"], second["2"], wire=("WH", 0.75))
+        d.detail.wire(first["1"], second["1"], wire=("WH", 0.75))
+        d.detail.wire(first["2"], second["2"], wire=("WH", 0.75))
     (tmp_path / "own.md").write_text("# Switch box\n", encoding="utf-8")
     (tmp_path / "cab.md").write_text("# Cabinet\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
@@ -180,8 +180,8 @@ def _plc_box(*, hide: bool) -> Any:
             u.layout.profile(hide_unused_pins=True)
         plc = u.device("A1", "DEMO-PLC-DI-4P")
         psu = u.device("G1", "DEMO-PSU-24")
-        u.wire(psu.output["+"], plc.power["24V"], wire=("WH", 0.75))
-        u.wire(psu.output["-"], plc.power["0V"], wire=("WH", 0.75))
+        u.detail.wire(psu.output["+"], plc.power["24V"], wire=("WH", 0.75))
+        u.detail.wire(psu.output["-"], plc.power["0V"], wire=("WH", 0.75))
         return _PlcIo(plc)
 
     return box
@@ -250,8 +250,8 @@ def _edge_box(name: str, profile: dict[str, Any]) -> Any:
         edge = u.device("X1", "DEMO-CONN-2P", interface=True)
         lamp = u.device("P2", "DEMO-LAMP-24")
         other = u.device("P3", "DEMO-LAMP-24")
-        u.wire(lamp["1"], other["1"], wire=("WH", 0.75))
-        u.wire(edge["1"], lamp["2"], wire=("WH", 0.75))
+        u.detail.wire(lamp["1"], other["1"], wire=("WH", 0.75))
+        u.detail.wire(edge["1"], lamp["2"], wire=("WH", 0.75))
         return _EdgeIo(edge)
 
     return box
@@ -264,7 +264,7 @@ def _two_units(
     d = fr.design("demo_parts", place="C1")
     first = d.add(_edge_box("demo-first-box", first_profile), "U1")
     second = d.add(_edge_box("demo-second-box", second_profile), "U2")
-    d.wire(first.edge["2"], second.edge["2"], wire=("WH", 0.75))
+    d.detail.wire(first.edge["2"], second.edge["2"], wire=("WH", 0.75))
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     docs = []
     for name in _BOXES:
@@ -301,9 +301,9 @@ def _star_box() -> Any:
     @fr.unit("demo-star-box", revision=1, interface_version=1, date="2026-01-01", text="x", by="AB")
     def box(u: fr.Design) -> _StarIo:
         lamp, second, third = (u.device(f"P{n}", "DEMO-LAMP-24") for n in (2, 3, 4))
-        u.wire(lamp["1"], second["1"], wire=("WH", 0.75))
-        u.wire(lamp["1"], third["1"], wire=("WH", 0.75))
-        u.wire(lamp["2"], second["2"], wire=("WH", 0.75))
+        u.detail.wire(lamp["1"], second["1"], wire=("WH", 0.75))
+        u.detail.wire(lamp["1"], third["1"], wire=("WH", 0.75))
+        u.detail.wire(lamp["2"], second["2"], wire=("WH", 0.75))
         return _StarIo(lamp)
 
     return box
@@ -318,7 +318,7 @@ def _star_pdf(tmp_path: Path, *, parent_sets: bool) -> bytes:
         for n in range(3):
             far = d.device(f"P{10 + n}", "DEMO-LAMP-24", place="LONGPLACE-LONGER")
             near = d.device(f"P{20 + n}", "DEMO-LAMP-24", place="C1")
-            d.wire(far["1"], near["1"], wire=("WH", 0.75))
+            d.detail.wire(far["1"], near["1"], wire=("WH", 0.75))
     (tmp_path / "star.md").write_text("# Star box\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     result = fr.build(d, fr.document(preset, "demo-star-box", cover=tmp_path / "star.md"))

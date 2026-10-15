@@ -2,6 +2,7 @@
 
 from decimal import Decimal
 
+from fransys_el import REF_TINTS
 from fransys_render import pages
 from fransys_render._numbers import format_decimal, point_mm
 from fransys_render._routes import routes_group, routes_on_page
@@ -167,7 +168,7 @@ def _join(key_part, *, a, b):
 
 
 def _one_svg(model):
-    svgs = pages(model)
+    svgs = pages(model, tints=REF_TINTS)
     assert len(svgs) == _ONE_PAGE
     return next(iter(svgs.values()))
 

@@ -46,7 +46,7 @@ def test_every_public_callable_has_a_does_not_line() -> None:
 def test_the_walk_finds_the_surface_and_the_check_can_fail() -> None:
     found = {name for name, _ in _public_callables()}
     wanted = {"design", "Design.location", "Design.function", "Design.draft"}
-    assert wanted | {"Design.device", "Design.wire", "Design.terminal_strip"} <= found
+    assert wanted | {"Design.device", "Detail.wire", "Design.terminal_strip"} <= found
     assert not has_does_not("Declares a place.\n\nIt places nothing.")
     assert not has_does_not(None)
     assert has_does_not("Declares a place.\nDoes not place anything.")

@@ -145,9 +145,6 @@ At most one per file. Maps to the model's `cable_product` facet (subject: `Part`
 | `pairs` | array of tables, optional | One `{ cores = [a, b], screen = n }` per twisted pair: two core numbers, and its `SH` core if it has one. The drawing labels the pairs P1, P2 (CC8) |
 
 `CABLE_PAIR_INVALID` (ERROR) refuses a core out of range or in two pairs. It also refuses a pair core that is `SH`, and a screen that is not `SH` or is named twice.
-| `pairs` | array of tables, optional | One `{ cores = [a, b], screen = n }` per twisted pair: two core numbers, and its `SH` core if it has one. The drawing labels the pairs P1, P2 (CC8) |
-
-`CABLE_PAIR_INVALID` (ERROR) refuses a core out of range or in two pairs. It also refuses a pair core that is `SH`, and a screen that is not `SH` or is named twice.
 
 ### `[function.protection]`
 
@@ -276,108 +273,7 @@ At most one per file. Maps to the model's `pcb` facet (subject: `Part`); marks a
 
 ## Worked examples
 
-The files below are the start of the demo part library (`examples/demo-parts/`), the worked
-example of this contract and the fixture every test builds on.
-
-`examples/demo-parts/demo_parts/library.toml`:
-
-```toml
-schema = 1
-name = "demo-parts"
-version = "0.1.0"
-description = "Invented parts for Fransys's tests and documentation."
-```
-
-`examples/demo-parts/demo_parts/parts/relay-2co-24vdc.toml`: a relay with a coil function and two
-changeover-contact functions, each contact's `links` marking the switched connectivity inside it:
-
-```toml
-schema = 1
-
-[part]
-mpn = "DEMO-RLY-2CO-24"
-manufacturer = "Demo"
-description = "Relay, 2 changeover contacts, 24 V DC coil"
-category = "electromechanical"
-class_code = "K"
-
-[[function]]
-name = "coil"
-kind = "coil"
-symbol = "operating-device"
-ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", role = "generic", symbol_port = "out" }]
-
-[[function]]
-name = "co_1"
-kind = "contact_co"
-symbol = "change-over-contact"
-ports = [
-    { name = "11", role = "common" },
-    { name = "12", role = "break" },
-    { name = "14", role = "make" },
-]
-links = [{ a = "11", b = "12", kind = "switched" }, { a = "11", b = "14", kind = "switched" }]
-
-[[function]]
-name = "co_2"
-kind = "contact_co"
-symbol = "change-over-contact"
-ports = [
-    { name = "21", role = "common" },
-    { name = "22", role = "break" },
-    { name = "24", role = "make" },
-]
-links = [{ a = "21", b = "22", kind = "switched" }, { a = "21", b = "24", kind = "switched" }]
-
-[[supply]]
-supplier = "Demo Supply"
-supplier_part_number = "DS-0001"
-```
-
-`examples/demo-parts/demo_parts/parts/terminal-feedthrough-2_5.toml`: a feed-through terminal, one
-function with `internal`/`external` ports joined by a `conductive` link, so a wire on either side
-is the same net:
-
-```toml
-schema = 1
-
-[part]
-mpn = "DEMO-TB-2.5"
-manufacturer = "Demo"
-description = "Feed-through terminal block, 2.5 mm2"
-category = "terminal"
-class_code = "X"
-
-[[function]]
-name = "terminal"
-kind = "terminal"
-symbol = "terminal"
-ports = [
-    { name = "internal", role = "internal", symbol_port = "n" },
-    { name = "external", role = "external", symbol_port = "s" },
-]
-links = [{ a = "internal", b = "external", kind = "conductive" }]
-```
-
-`examples/demo-parts/demo_parts/parts/cable-4g1_5.toml`: a cable part with no functions of its own; its
-cores are conductors created when an item is instantiated as a cable, not functions or ports on the part itself:
-
-```toml
-schema = 1
-
-[part]
-mpn = "DEMO-CBL-4G1.5"
-manufacturer = "Demo"
-description = "Control cable, 4 cores including PE, 1.5 mm2"
-category = "cable"
-class_code = "W"
-
-[cable_product]
-core_count = 4
-core_colours = ["BN", "BK", "GY", "GNYE"]
-gauge_mm2 = "1.5"
-shielded = false
-```
+The demo part library, `examples/demo-parts/`, is the worked example of this contract and the fixture every test builds on. Its files are shown in the parts package README, `packages/fransys-parts/README.md`.
 
 ## Packaging and pinning
 

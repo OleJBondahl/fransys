@@ -48,26 +48,32 @@ def _is_selector(facts: PartFacts, poles: list[tuple[Port, Port]]) -> bool:
     return bool(sides) and all(side == (PoleSide.LINE, PoleSide.LOAD) for side in sides)
 
 
-class Throw:
-    """One throw of a changeover in a series: line at the common, load at the throw.
+def states_selector(facts: PartFacts, fn: EngineFn) -> bool:
+    """Whether the part of the changeover `fn` states S8's sides: a selector by its part."""
+    return _is_selector(facts, _poles(facts, fn, PortRole.MAKE))
 
-    A selector (its throws on the line side) is entered at the throws and left at the commons.
+
+class Throw:
+    """One throw of changeovers in a series: line at the common, load at the throw.
+
+    A selector (its throws on the line side, or a `d.poles` group with `selector=True`) is
+    entered at the throws and left at the commons. Several functions are one pole each, in order.
     """
 
-    def __init__(self, fn: EngineFn, name: str) -> None:
-        """The throw `name` (`no` or `nc`) of the changeover `fn`."""
-        self._fn, self._role = fn, THROWS[name]
-        self._commons = tuple(port for port in fn.ports if port.role is PortRole.COMMON)
+    def __init__(self, fns: tuple[EngineFn, ...], name: str, *, selector: bool = False) -> None:
+        """The throw `name` (`no` or `nc`) of the changeovers `fns`."""
+        self._fns, self._role, self._selector = fns, THROWS[name], selector
+        self._commons = tuple(p for fn in fns for p in fn.ports if p.role is PortRole.COMMON)
 
     def _series_width(self) -> int:
         return len(self._commons)
 
     def _series_ends(self, design: Design, width: int | None) -> Ends:  # noqa: ARG002 -- the SeriesElement protocol
         facts = design._pairing_facts
-        poles = _poles(facts, self._fn, self._role)
+        poles = [pole for fn in self._fns for pole in _poles(facts, fn, self._role)]
         commons = tuple(End(common, facts.mark(common)) for common, _ in poles)
         throws = tuple(End(throw, facts.mark(throw)) for _, throw in poles)
-        if _is_selector(facts, poles):
+        if self._selector or _is_selector(facts, poles):
             return Ends(throws, commons)
         return Ends(commons, throws)
 
@@ -76,4 +82,4 @@ def throw(label: str, fn: EngineFn, name: str) -> Throw:
     """The throw `name` of `fn`; a function that is not a changeover raises, naming its kind."""
     if fn.kind is not FunctionKind.CONTACT_CO:
         raise not_a_changeover(label, fn, name)
-    return Throw(fn, name)
+    return Throw((fn,), name)

@@ -111,8 +111,8 @@ def test_a_joined_relay_port_is_connected_and_an_unjoined_one_is_not() -> None:
     m1 = d.device("M1", "DEMO-RELAY-MOD-2")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
     k2 = d.device("K2", "DEMO-RLY-2CO-24")
-    d.wire(k1.coil["A1"], k2.coil["A1"], wire=("BK", 1.0))
-    d.wire(m1.k1["A1"], k1.coil["A1"], wire=("BK", 1.0))  # M1:A2 is open but joined to J1:2
+    d.detail.wire(k1.coil["A1"], k2.coil["A1"], wire=("BK", 1.0))
+    d.detail.wire(m1.k1["A1"], k1.coil["A1"], wire=("BK", 1.0))  # M1:A2 is open but joined to J1:2
     result = fr.build(d)
     model = result.model
     half_open = _half_open(result, model)

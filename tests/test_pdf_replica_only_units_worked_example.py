@@ -13,6 +13,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 from _model_build_cover import layout_trigger_document
+from fransys_el import REF_TINTS
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
@@ -427,7 +428,7 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
     pages_found = schematic_pages(model, record, (PageKind.SCHEMATIC,))
     assert len(pages_found) >= 1
 
-    svgs = dict(render_pages(model))
+    svgs = dict(render_pages(model, tints=REF_TINTS))
     findings = check(model, svgs)
     own_errors = [f for f in findings if io_doc.id in f.subjects and f.severity == Severity.ERROR]
     assert own_errors == []

@@ -27,6 +27,7 @@ from fransys_layout.engines.schematic.read.device_chains import chain_sides, dev
 from fransys_layout.engines.schematic.read.item_sides import pin_sides
 from fransys_layout.engines.schematic.read.labels import LabelText
 from fransys_layout.engines.schematic.read.offstubs import far_maps, off_reads
+from fransys_layout.engines.schematic.read.pole_groups import gang_specs, to_leader
 from fransys_layout.engines.schematic.read.rails import (
     earth_ends,
     mark_boundary_rails,
@@ -142,6 +143,12 @@ def chain_reads(
     return device_chains(specs, refs[0], refs[1], (box_functions(model, specs), wired, apart))
 
 
+def gang_reads(model: Model, specs: Specs, refs: Refs) -> tuple[Specs, Refs]:
+    """layout-0227: each `d.poles` group one spec, and its refs named by its first member."""
+    specs, leader = gang_specs(model, specs)
+    return specs, _remap(lambda ref: to_leader(ref, leader), refs)
+
+
 def pin_reads(
     model: Model,
     specs: Specs,
@@ -172,8 +179,12 @@ def unused_reads(
     )
     # `drawn` keeps its pre-pin-view names, switch on or off: a pin view counts as its connector
     if profile.hide_unused_pins:
-        return specs, spares, {s.pin_function or s.function for s in specs}
-    return specs, spares, drawn - {s.function for s in spares}
+        return (
+            specs,
+            spares,
+            {m for s in specs for m in ((s.pin_function,) if s.pin_function else s.members)},
+        )
+    return specs, spares, drawn - {m for s in spares for m in s.members}
 
 
 def item_reads(

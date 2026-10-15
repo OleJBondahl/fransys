@@ -43,7 +43,7 @@ def _plant(d, arm: tuple) -> None:
         (psu.output["-"], [lamp["2"] for lamp in lamps]),
     ):
         for pin in members:
-            d.wire(rail, pin, wire=(BU, 0.5))
+            d.detail.wire(rail, pin, wire=(BU, 0.5))
 
 
 def _pin_order(tmp_path, arm: tuple) -> list[str]:

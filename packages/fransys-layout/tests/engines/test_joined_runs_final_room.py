@@ -38,6 +38,7 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.stages import _page_place
 from fransys_layout.stages.place import page_stack, place
 from fransys_layout.stages.stacking import JoinedRun, JoinEnd, PageStack, join_y
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.kernel import Model, freeze
 
 if TYPE_CHECKING:
@@ -71,16 +72,34 @@ def _coil_hub() -> None:
     build(parts, d)
 
 
+def _copies_off(build_case: Callable[[], Any]) -> Callable[[], Any]:
+    """`build_case` with a star's terminal drawn once with its reference, as before model-0220."""
+
+    def build_without_copies() -> Any:
+        with mock.patch(
+            "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+            lambda columns, drawn, functions, connections, _: WireCopies(
+                functions, drawn, connections, columns, {}
+            ),
+        ):
+            return build_case()
+
+    return build_without_copies
+
+
 _CASES: dict[str, Callable[[], Any]] = {
     "cabinet": lambda: _laid_out(freeze(build_cabinet())),
     "cabinet_narrow": lambda: _laid_out(narrow_model(158)),
     "cabinet_wired": lambda: _laid_out(freeze(wired_cabinet())),
+    # model-0220: the cases with copies off keep the joins and pushed texts of a star's reference
+    "cabinet_wired_refs": _copies_off(lambda: _laid_out(freeze(wired_cabinet()))),
     "feed_fanning": lambda: three_breakers(daisy=False),
+    "feed_fanning_refs": _copies_off(lambda: three_breakers(daisy=False)),
     "daisy_chain": lambda: three_breakers(daisy=True),
     "terminal_chain": lambda: terminal_chain(8),
     "coil_hub": _coil_hub,
 }
-_JOINING = ("feed_fanning", "daisy_chain", "terminal_chain", "coil_hub")
+_JOINING = ("feed_fanning_refs", "daisy_chain", "terminal_chain", "coil_hub")
 
 
 @cache
@@ -143,9 +162,10 @@ def test_the_texts_change_each_pages_room_alone(case: str) -> None:
 def test_the_cabinets_texts_shrink_a_pages_room() -> None:
     """Premise of the claims above: a pushed first-row text shrinks a cabinet page's room.
 
-    On the wired cabinet: with `W1` drawn as a line, no cabinet page's text pushes a first row.
+    On the wired cabinet, copies off (model-0220): with `W1` drawn as a line, no cabinet page's
+    text pushes a first row.
     """
-    assert any(page.final.room < page.decided.room for page in _pages("cabinet_wired"))
+    assert any(page.final.room < page.decided.room for page in _pages("cabinet_wired_refs"))
 
 
 @pytest.mark.parametrize("case", sorted(_CASES))

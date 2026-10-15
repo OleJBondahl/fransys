@@ -11,6 +11,7 @@ from fransys_layout.stages.content import content_box
 from fransys_layout.stages.line_shapes import FarEnd, LineStub
 from fransys_layout.stages.references.marker_boxes import stub_size
 from fransys_layout.stages.texts.candidates import Candidate, box_of, stub_anchor
+from fransys_layout.stages.texts.power import power_places
 from fransys_model.derive import line_designation, line_stub_line, printed_designation
 from fransys_model.derive.drawing_text import (
     frame_column,
@@ -21,7 +22,7 @@ from fransys_model.derive.drawing_text import (
 from fransys_model.vocab.tables import conductors, ports
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from fransys_layout.stages.line_draw import Stub
     from fransys_layout.stages.types import Profile, SheetFormat
@@ -185,8 +186,17 @@ def widest_stub(
 
 
 def marker_keepouts(
-    model: Model, markers: Sequence[Any]
-) -> tuple[tuple[tuple[int, int], Id[Any], Any], ...]:
-    """Each marker's box by page, owned by its port's function: a line may start beside it."""
+    model: Model, markers: Sequence[Any], copies: Mapping[Id[Any], Id[Any]]
+) -> tuple[tuple[tuple[int, int], Id[Any] | None, Any], ...]:
+    """Each marker's box by page, owned by its port's function: a line may start beside it.
+
+    A marker at a copy's port (model-0220) is owned by the model port's function.
+    A power symbol's body is no one's: a line never touches it (layout-0246).
+    """
     table = ports(model)
-    return tuple(((m.drawing_set, m.page), table[m.port].function, m.box) for m in markers)
+    boxes = tuple(
+        ((m.drawing_set, m.page), table[copies.get(m.port, m.port)].function, m.box)
+        for m in markers
+    )
+    bodies = tuple(((p.drawing_set, p.page), None, p.body) for p in power_places(tuple(markers)))
+    return (*boxes, *bodies)

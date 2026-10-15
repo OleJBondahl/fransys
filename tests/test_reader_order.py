@@ -94,7 +94,7 @@ def _board(salt: str):
     def board(u: fr.Design) -> _Io:
         pcb = u.device("A1", "DEMO-PCB-IO", name=f"{salt}pcb")
         j1 = u.device("J1", "DEMO-CONN-4P-MIXED", parent=pcb, unused=True, name=f"{salt}j1")
-        u.wire(j1["2"], j1["10"], wire=(BK, 0.5))
+        u.detail.wire(j1["2"], j1["10"], wire=(BK, 0.5))
         return _Io(j1.x1)
 
     return board
@@ -112,13 +112,13 @@ def _circuit(d: fr.Design, strips: dict[int, fr.TerminalStrip], n: int, salt: st
     k = d.device(f"K{n}", "DEMO-RLY-2CO-24", place="C1", name=f"{salt}k{n}")
     q = d.device(f"Q{n}", "DEMO-CTR-3P-NC", place="C1", name=f"{salt}q{n}")
     h = d.device(f"H{n}", "DEMO-LAMP-24", place=f"L{n}", name=f"{salt}h{n}")
-    d.wire(strips[1][1].inner, q.coil["A1"], wire=(RD, 0.75))
-    d.wire(q.coil["A2"], k.coil["A1"], wire=(RD, 0.75))
-    d.wire(k.coil["A2"], strips[2][n].inner, wire=(BK, 0.75))
-    d.wire(q.aux_nc["21"], k.co_2["21"], wire=(RD, 0.75))
-    d.wire(q.aux["13"], k.co_1["11"], wire=(RD, 0.75))
-    d.wire(q.main["1"], strips[10][n].inner, wire=(RD, 0.75))
-    d.wire(k.co_1["14"], h[1], wire=(RD, 0.75))
+    d.detail.wire(strips[1][1].inner, q.coil["A1"], wire=(RD, 0.75))
+    d.detail.wire(q.coil["A2"], k.coil["A1"], wire=(RD, 0.75))
+    d.detail.wire(k.coil["A2"], strips[2][n].inner, wire=(BK, 0.75))
+    d.detail.wire(q.aux_nc["21"], k.co_2["21"], wire=(RD, 0.75))
+    d.detail.wire(q.aux["13"], k.co_1["11"], wire=(RD, 0.75))
+    d.detail.wire(q.main["1"], strips[10][n].inner, wire=(RD, 0.75))
+    d.detail.wire(k.co_1["14"], h[1], wire=(RD, 0.75))
     with d.function(f"F{n}", f"Loom {n}"):
         _loom(d, n, salt)
 
@@ -143,8 +143,8 @@ def _design(salt: str) -> tuple[fr.Design, Any]:  # the location handle is not a
     # layout-0218: a box with nothing connected is drawn nowhere; a lamp across pins 1 and 2
     # keeps B1 drawn
     lamp = d.device("P1", "DEMO-LAMP-24", place="C1", name=f"{salt}p1")
-    d.wire(b1["1"], lamp.lamp["1"], wire=(BK, 0.5))
-    d.wire(lamp.lamp["2"], b1["2"], wire=(BK, 0.5))
+    d.detail.wire(b1["1"], lamp.lamp["1"], wire=(BK, 0.5))
+    d.detail.wire(lamp.lamp["2"], b1["2"], wire=(BK, 0.5))
     for n in _NS:
         _circuit(d, strips, n, salt)
     return d, cabinet
@@ -192,7 +192,7 @@ def _run(salt: str, root: Path) -> _Run:
     result = fr.build(d, cabinet_doc, system_doc)
     out, inter = root / "out", root / "inter"
     fr.write(result, out_dir=out, intermediates=inter)
-    exports = sorted(path for path in out.iterdir())
+    exports = sorted(path for path in out.rglob("*") if path.is_file())
     return _Run(
         result=result,
         files={p.name: p.read_bytes() for p in exports if p.suffix != ".pdf"},
@@ -472,9 +472,9 @@ def _variant(salt: str) -> fr.BuildResult:
     d, _ = _design(salt)
     lamps = [d.device(f"P{c}", "DEMO-LAMP-24", place="C1", name=f"{salt}p{c}") for c in "ABCD"]
     d.earth(lamps[0][1], lamps[1][1])
-    d.wire(lamps[0][1], lamps[1][1], wire=(RD, 0.75))
-    d.net("N1", lamps[2][1], lamps[3][1])
-    d.wire(lamps[2][1], lamps[3][1], wire=(GNYE, 0.75))
+    d.detail.wire(lamps[0][1], lamps[1][1], wire=(RD, 0.75))
+    d.detail.net("N1", lamps[2][1], lamps[3][1])
+    d.detail.wire(lamps[2][1], lamps[3][1], wire=(GNYE, 0.75))
     d.terminal_strip(None, "DEMO-TB-2.5", place="C1", name=f"{salt}bare")
     return fr.build(d)
 

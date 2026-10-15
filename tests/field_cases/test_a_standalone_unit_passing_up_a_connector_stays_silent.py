@@ -39,8 +39,8 @@ def _board(u: Any) -> _Board:
     x1 = u.device("X1", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     x2 = u.device("X2", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     k1 = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.wire(x1[1], k1["1"], wire=(BK, 0.5))
-    u.wire(x2[1], k1["2"], wire=(BK, 0.5))
+    u.detail.wire(x1[1], k1["1"], wire=(BK, 0.5))
+    u.detail.wire(x2[1], k1["2"], wire=(BK, 0.5))
     return _Board(x1, x2)
 
 
@@ -51,7 +51,7 @@ def _asm(u: Any) -> _Up:
     p1 = u.device("P1", "DEMO-HSG-4M", parent=w1, contacts="DEMO-CRIMP-M")
     p2 = u.device("P2", "DEMO-HSG-4M", parent=w1, contacts="DEMO-CRIMP-M")
     u.mate(p1, board.X2)
-    u.wire(p1[1], p2[1], wire=(BK, 0.5))
+    u.detail.wire(p1[1], p2[1], wire=(BK, 0.5))
     return _Up(board.X1)
 
 

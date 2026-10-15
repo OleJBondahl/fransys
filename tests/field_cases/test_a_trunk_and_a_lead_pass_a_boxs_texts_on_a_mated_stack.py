@@ -26,7 +26,7 @@ def _built() -> fr.BuildResult:
     j7 = d.device("J7", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     for n in range(1, 5):
         lamp = d.device(f"H{n}", "DEMO-LAMP-24")
-        d.wire(j7[n], lamp["1"], wire=(BK, 0.5))
+        d.detail.wire(j7[n], lamp["1"], wire=(BK, 0.5))
     k1 = d.device("K1", "DEMO-CTR-LEADS")
     j10 = d.device(
         "J10",
@@ -35,15 +35,15 @@ def _built() -> fr.BuildResult:
         contacts="DEMO-CRIMP-F",
         joins={"1": k1.coil["A1"], "2": k1.coil["A2"], "3": k1.aux["13"], "4": k1.aux["14"]},
     )
-    d.wire(k1.coil["A1"], d.device("H5", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
-    d.wire(k1.coil["A2"], d.device("H6", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
+    d.detail.wire(k1.coil["A1"], d.device("H5", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
+    d.detail.wire(k1.coil["A2"], d.device("H6", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
     w17 = d.harness("W17")
     pa = d.device("P17", "DEMO-HSG-4M", parent=w17, contacts="DEMO-CRIMP-M")
     pb = d.device("P18", "DEMO-HSG-4M", parent=w17, contacts="DEMO-CRIMP-M")
     d.mate(pa, j7)
     d.mate(pb, j10)
     for pin in (1, 2, 3, 4):
-        d.wire(pa[pin], pb[pin], wire=(BK, 0.5))
+        d.detail.wire(pa[pin], pb[pin], wire=(BK, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))

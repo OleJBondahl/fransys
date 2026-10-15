@@ -50,9 +50,9 @@ def _control(d: Any) -> _Strips:
     plus = x4.run("24V", bridged=True)
     with d.function("DRV", "Drives"):
         switches = [d.device(f"B{n}", "DEMO-PB-NC").sw for n in range(_SWITCHES)]
-        d.wire(plus, switches[0]["A"], wire=("RD", 0.75))
+        d.detail.wire(plus, switches[0]["A"], wire=("RD", 0.75))
         for above, below in pairwise(switches):
-            d.wire(above["B"], below["A"], wire=("RD", 0.75))
+            d.detail.wire(above["B"], below["A"], wire=("RD", 0.75))
         d.layout.chain(*switches)
     return _Strips(x4)
 

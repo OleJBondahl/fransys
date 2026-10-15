@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from fransys_el import OPTIONS
-from layout_cabinet import build_cabinet
+from layout_cabinet import build_cabinet, no_wire_copies
 
 from fransys_layout.engines import lay_out_schematic
 from fransys_layout.engines.schematic import run_stages
@@ -195,10 +195,14 @@ def test_a_link_marker_key_ends_in_its_port_key_side_and_its_partner_or_placemen
     discriminator, nothing for a home placement and the column's group key for a replica. A
     leaving line's one stub is `line_stub`, its line's item key and `branch` and number.
     """
-    # the second location has stubs and a merged reference; the extra relay cuts a wire (a pair)
+    # the second location has stubs and a merged reference; the extra relay cuts a wire (a pair);
+    # with copies off the star terminal keeps its star markers (model-0220 draws it as copies)
+    with no_wire_copies():
+        starred = lay_out_schematic(freeze(build_cabinet()), OPTIONS)[0]
     models = (
         _across_two_drawing_sets(),
         lay_out_schematic(freeze(build_cabinet(extra_relay=True)), OPTIONS)[0],
+        starred,
     )
     kinds = set()
     for model in models:

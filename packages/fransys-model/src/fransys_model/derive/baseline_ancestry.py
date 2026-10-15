@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from .rows_removed import RemovedAncestry
 
 if TYPE_CHECKING:
-    from .rows import BaselineItem, Change, Listing
+    from .rows_baseline import BaselineItem, Change, Listing
 
 
 def _chain(

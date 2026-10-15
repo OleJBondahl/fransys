@@ -39,7 +39,7 @@ def _unit(u: Any) -> _Io:
     with u.function("JB", "Junction box") as jb:
         x2 = u.terminal_strip("X2", None, 4, external=True, interface=True)
         for n in range(1, 5):
-            u.wire(x2[n].outer, a1.clamps[str(n)], wire=(BU, 0.5))
+            u.detail.wire(x2[n].outer, a1.clamps[str(n)], wire=(BU, 0.5))
     u.layout.order(jb, string)
     for group in (jb, string):
         u.layout.break_before(group)

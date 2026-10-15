@@ -1,6 +1,7 @@
 """Decision model-0129: a generic box's pins stand a channel pitch apart, widened per text row."""
 
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 from fransys_el import OPTIONS
 from wired_cabinet import wired_cabinet
@@ -13,8 +14,12 @@ from fransys_layout.geometry import GENERIC_BOX_KEY, generic_box_geometry, symbo
 from fransys_layout.geometry.box_reach import Reach, Row, extent, spread
 from fransys_layout.geometry.symbols import channel_pitch
 from fransys_layout.stages.box_reach import _with_hung
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.kernel import freeze
 from fransys_model.layout import SymbolPlacement
+
+if TYPE_CHECKING:
+    import pytest
 
 
 def _reach(name: str, *rows: tuple[int, int, int, int]) -> Reach:
@@ -73,11 +78,20 @@ def _written_steps(placement) -> list[int]:
     return [b - a for xs in by_side.values() for a, b in pairwise(xs)]
 
 
-def test_on_the_cabinets_written_box_the_offsets_keep_each_sides_pitch() -> None:
+def test_on_the_cabinets_written_box_the_offsets_keep_each_sides_pitch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Model-0129 acceptance: no two pins of any box side nearer than the channel pitch.
 
     The wired cabinet: the cabinet's `W1` is drawn as a line, and its lamp box is then not widened.
     """
+    # model-0220: terminal copies at the lamp's pins widen nothing; copies off keep the reference
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
     seen = 0
     for model in (freeze(wired_cabinet()),):
         for placement in _box_placements(model):

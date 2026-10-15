@@ -32,7 +32,7 @@ def _unit(bar: str, screw: str | None, hide: bool) -> Any:  # noqa: FBT001 - a t
         c.layout.profile(hide_unused_pins=hide)
         pe = c.device("PE", bar, interface=True)
         motor = c.device("M1", "DEMO-MOTOR-4KW").motor["PE"]
-        c.wire(motor, pe.pe if screw is None else pe[screw], wire=(GNYE, 2.5))
+        c.detail.wire(motor, pe.pe if screw is None else pe[screw], wire=(GNYE, 2.5))
         return _Box(pe)
 
     return make

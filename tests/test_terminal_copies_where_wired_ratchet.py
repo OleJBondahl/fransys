@@ -244,13 +244,20 @@ def test_a_terminal_fanned_out_to_groups_on_one_page_draws_no_reference() -> Non
     assert _terminal_references(_models()["power-text"]) == 0
 
 
-_XFAIL = pytest.mark.xfail(strict=True, reason="layout-0216: a terminal is drawn, not referenced")
-
-
-@_XFAIL
+@pytest.mark.xfail(
+    strict=True,
+    reason="model-0220: cabinet-discovery's X3:1-K1:4, a star wire between cells adjacent in one"
+    " column, keeps its marker pair: the copy goes only where the terminal is not in the column",
+)
 def test_no_marker_stands_on_a_terminals_path() -> None:
     counts = {name: _terminal_references(m) for name, m in _models().items()}
     assert sum(counts.values()) == 0, counts
+
+
+def test_the_markers_on_terminal_paths_stay_at_their_ceiling() -> None:
+    """model-0220 took the count from 30 to 2 (one pair); it may only fall."""
+    counts = {name: _terminal_references(m) for name, m in _models().items()}
+    assert sum(counts.values()) <= 2, counts
 
 
 def test_the_boundary_stub_model_still_has_an_off_stub() -> None:
@@ -268,10 +275,9 @@ def _fan_in() -> Any:
     return _field_unit(module, "_cab", "cab")
 
 
-@_XFAIL
-def test_no_copy_stands_unwired_beside_its_far_end() -> None:
+def _unwired_beside() -> dict[str, int]:
     models = {**_models(), "fan-in": _fan_in()}
-    counts = {
+    return {
         name: sum(
             1
             for page, function, placed in _unmet_copies(m)
@@ -279,4 +285,53 @@ def test_no_copy_stands_unwired_beside_its_far_end() -> None:
         )
         for name, m in models.items()
     }
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="model-0220: fan-in's U1/X1:24V:6, X2:1 and X2:2 stand in U1's black box in the"
+    " top-level set, wired inside U1 only; the cabinet's X4:1 on page 2 ends harness W1's core 2,"
+    " a line this count does not read",
+)
+def test_no_copy_stands_unwired_beside_its_far_end() -> None:
+    counts = _unwired_beside()
+    assert sum(counts.values()) == 0, counts
+
+
+def test_the_unwired_copies_beside_a_far_end_stay_at_their_ceiling() -> None:
+    """The four named in the xfail above; the count may only fall."""
+    counts = _unwired_beside()
+    assert sum(counts.values()) <= 4, counts
+
+
+def _host(model: Any, key: tuple) -> Any:
+    """The function whose key is the longest slice of `key` right after its "at"."""
+    rest = key[key.index("at") + 1 :]
+    hosts = [f for f in functions(model).values() if rest[: len(f.key)] == f.key]
+    return max(hosts, key=lambda f: len(f.key), default=None)
+
+
+def _unrouted_copies(model: Any) -> int:
+    """Copies at a wire with no route on their page joining the terminal to its host."""
+    ports_of = build_indexes(model).ports_by_function
+    routes = list(layout_of(model, Route).values())
+    kinds = functions(model)
+    count = 0
+    for p in layout_of(model, SymbolPlacement).values():
+        if p.function not in kinds or kinds[p.function].kind is not FunctionKind.TERMINAL:
+            continue
+        if "at" not in p.key:
+            continue
+        host, own = _host(model, p.key), set(ports_of.get(p.function, ()))
+        theirs = set(ports_of.get(host.id, ())) if host else set()
+        joined = any(
+            r.page == p.page and ({r.a, r.b} & own) and ({r.a, r.b} & theirs) for r in routes
+        )
+        count += not joined
+    return count
+
+
+def test_every_copy_at_a_wire_is_routed_to_its_host() -> None:
+    models = {**_models(), "fan-in": _fan_in()}
+    counts = {name: _unrouted_copies(m) for name, m in models.items()}
     assert sum(counts.values()) == 0, counts

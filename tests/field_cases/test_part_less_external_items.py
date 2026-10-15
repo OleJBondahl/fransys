@@ -34,8 +34,8 @@ def _plant(d: fr.Design) -> tuple[fr.TerminalStrip, fr.Device]:
     q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
     d.ac_supply("S", 400, q8["L1"], q8["L2"], q8["L3"], n=q8["N"])
     motor = d.device("M1", "DEMO-MOTOR-4KW")
-    d.wire(x8[1].outer, motor["U"], wire=(BK, 1.5))
-    d.wire(q8["PE"], motor["PE"], wire=(BK, 1.5))
+    d.detail.wire(x8[1].outer, motor["U"], wire=(BK, 1.5))
+    d.detail.wire(q8["PE"], motor["PE"], wire=(BK, 1.5))
     return x8, q8
 
 
@@ -127,5 +127,5 @@ def test_a_part_less_device_pins_take_a_dc_supply() -> None:
     d = fr.design("demo_parts", place="CAB")
     q9 = d.device("Q9", None, external=True, pins=("L+", "L-"))
     d.dc_supply("D", plus=q9["L+"], minus=q9["L-"], voltage=24)
-    d.wire(q9["L+"], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
+    d.detail.wire(q9["L+"], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
     assert not [f for f in fr.build(d).findings if f.severity.value == "error"]

@@ -28,7 +28,7 @@ def _box(u: Any) -> _Io:
     psu = u.device("G1", "DEMO-PSU-24-5OUT", interface=True)
     lamp = u.device("H1", "DEMO-LAMP-24")
     other = u.device("P1", "DEMO-LAMP-24")
-    u.wire(lamp["1"], other["1"], wire=("RD", 0.75))
+    u.detail.wire(lamp["1"], other["1"], wire=("RD", 0.75))
     return _Io(psu)
 
 

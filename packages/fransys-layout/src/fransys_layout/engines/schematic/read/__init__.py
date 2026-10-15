@@ -92,6 +92,8 @@ class StageInputs:
     loose: tuple[FunctionSpec, ...] = ()
     # layout-0215: the device chains, each drawn as one column of boxes (LC2)
     device_chains: tuple[DeviceChain, ...] = ()
+    # model-0220: each stage handle of a terminal's copy at a wire, function or port, to its id
+    copies: tuple[tuple[Id[Any], ...], ...] = ()
 
 
 def read_inputs(
@@ -108,8 +110,8 @@ def read_inputs(
     unused_sheets = reading.unused_sheet_formats(model)
     refs, rails, findings, wired = steps.split_reads(model, specs, undrawn, wires, rail_ends)
     # A terminal on no connection, net group or mate is not drawn (terminal list only)
-    specs = without_idle_terminals(model, specs, wired)
-    drawn = {spec.function for spec in specs}
+    specs, refs = steps.gang_reads(model, without_idle_terminals(model, specs, wired), refs)
+    drawn = {member for spec in specs for member in spec.members}
     chains = steps.chain_reads(model, specs, refs, wired) if options.chain_boxes else ()
     boxed = frozenset(member for chain in chains for member in chain.members)
     specs, pin_of, refs, landings = steps.pin_reads(model, specs, wired, refs, boxed)

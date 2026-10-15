@@ -35,12 +35,13 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from fransys_el import OPTIONS
-from layout_cabinet import build_cabinet
+from layout_cabinet import build_cabinet, no_wire_copies
 from samples import built_links
 
 from fransys_layout.engines import lay_out_schematic
 from fransys_layout.engines.schematic import run_stages
 from fransys_layout.engines.schematic.defaults import DEFAULT_RULES
+from fransys_layout.engines.schematic.engine import stage_scene
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.engines.schematic.read.labels import label_requests
@@ -123,21 +124,26 @@ def regenerate(request: pytest.FixtureRequest) -> bool:
 # - TAG 26: one per drawn non-terminal function (F1, H1, K1 x3, K2 x3, K8 x2, Q1, Q2, S0 x2,
 #   S1, S2 = 16) and one per terminal on each page it stands on (X1:1, X1:2, X1:3, X2:1 x2,
 #   X3:1, X3:2, X4:1 x2, X4:2 = 10).
-_EXPECTED_TAG_MARKING_COUNT = 66
+_EXPECTED_TAG_MARKING_COUNT = 68  # model-0220: was 66, each terminal copy has its own tag
 
-# The wide golden's markers and CROSS_REFERENCE labels. Four markers: one line stub and three star
-# markers. `W1` (rails to the lamp `-H1`) is drawn as a line, which leaves page 1 in its one stub
+# The wide golden's markers and CROSS_REFERENCE labels. Three markers (model-0220: `X2:1` is
+# drawn as copies, so six before): one line stub and two star markers.
+# `W1` (rails to the lamp `-H1`) is drawn as a line, which leaves page 1 in its one stub.
 # The 24 V net keeps four ports (`X2:1` external and the three stop-button ports 11): two
-# branches (S0's pin has `X2:1` over it) and the reference on page 1. K1's aux port 13 faces N
-# and its link to `S0:nc_2:22` runs to a device below K1's bottom edge: since layout-0224 that
-# hop is a wire (S0 hangs below K1's pin), no longer a reference pair. Six CROSS_REFERENCE
-# labels: a contact image under each of the three coils and a line under three of the five
-# contacts (K1 aux, K2 main, K8 no_1). The wire puts K1's and K2's aux contacts in the frame row
-# of their main contacts; pole-linked contacts of one row print the leftmost reference only
-# (`one_per_row`, main commit 4e30fd96a), so K1 main and K2 aux print none.
-_EXPECTED_WIDE_MARKER_COUNT = 4
-_EXPECTED_WIDE_REF_MARKER_COUNT = 1
-_EXPECTED_WIDE_CROSS_REFERENCE_COUNT = 6
+# branches (S0's pin has `X2:1` over it) and the reference on page 1; and a
+# turned pair (`references.turned`): K1's aux port 13 faces N and its link to `S0:nc_2:22`
+# runs to a device below K1's bottom edge, so it is a reference pair, `S0:nc_2:22` the
+# reference and K1:aux:13 the branch. Eight CROSS_REFERENCE labels: a line under each of
+# the five contacts (K1 main and aux, K2 main and aux, K8 no_1) and a contact image under each
+# of the three coils.
+_EXPECTED_WIDE_MARKER_COUNT = 1  # was 6: model-0220 copies, layout-0224 wires
+_EXPECTED_WIDE_REF_MARKER_COUNT = 0  # was 2: model-0220 copies, layout-0224 wires
+# The same cabinet with no terminal drawn as copies: the line stub, the reference on page 1 and
+# two branches (layout-0224 alone took the turned pair away from the six it had before).
+_EXPECTED_UNCOPIED_MARKER_COUNT = 4
+_EXPECTED_WIDE_CROSS_REFERENCE_COUNT = (
+    6  # was 8: pole-linked contacts of one row print one (one_per_row)
+)
 
 # The narrow golden's (158 mm) marker counts, checked explicitly for the same reason (spec
 # X5's "never iterated silently"): two severed markers (one cut, K1:14 to K2:13, a marker at
@@ -146,7 +152,7 @@ _EXPECTED_WIDE_CROSS_REFERENCE_COUNT = 6
 # ends are two line stubs). The K1:aux:13 <-> S0:nc_2:22 wire (wire 17) is a wire: K1's aux
 # stands on page 1 (layout-0049) above S0's contact, and S0 hangs below it (layout-0224).
 _EXPECTED_NARROW_SEVERED_MARKER_COUNT = 2
-_EXPECTED_NARROW_MARKER_COUNT = 4
+_EXPECTED_NARROW_MARKER_COUNT = 2  # was 6: model-0220 copies, layout-0224 wires
 _EXPECTED_NARROW_LINE_STUB_COUNT = 2
 # ... and the same eight CROSS_REFERENCE labels as the wide golden.
 _EXPECTED_NARROW_CROSS_REFERENCE_COUNT = 8
@@ -297,10 +303,6 @@ def test_tag_and_marking_label_text_matches_what_the_stage_measured() -> None:
         sum(1 for marker in markers.values() if marker.star is StarKind.REF)
         == _EXPECTED_WIDE_REF_MARKER_COUNT
     )
-    stars = {marker.star for marker in markers.values() if marker.key[3] != "line_stub"}
-    assert stars == {StarKind.REF, StarKind.BRANCH}, (
-        "the wide golden has no cross-page cut: every marker but the line stub is a D9 star"
-    )
     (line_stub,) = (marker for marker in markers.values() if marker.key[3] == "line_stub")
     assert line_stub.star is StarKind.OFF
 
@@ -330,6 +332,20 @@ def test_tag_and_marking_label_text_matches_what_the_stage_measured() -> None:
     _check_contact_references(model, inputs, layout, _SAME_ROW_CONTACTS)
 
 
+def test_the_wide_cabinet_without_copies_draws_its_stars() -> None:
+    """With no terminal drawn as copies (model-0220) the wide cabinet's markers are D9 stars.
+
+    The line stub is the only marker that is not: it has no partner. A star here is a reference
+    or a branch, and the wide cabinet has no cross-page cut.
+    """
+    with no_wire_copies():
+        model = lay_out_schematic(freeze(build_cabinet()), OPTIONS)[0]
+    markers = layout_of(model, LinkMarker)
+    assert len(markers) == _EXPECTED_UNCOPIED_MARKER_COUNT
+    stars = {marker.star for marker in markers.values() if marker.key[3] != "line_stub"}
+    assert stars == {StarKind.REF, StarKind.BRANCH}, "every marker but the line stub is a D9 star"
+
+
 def _narrow_layout(
     normalized: Callable[[Model], Model],
 ) -> tuple[Model, StageInputs, Layout, tuple[Any, ...]]:
@@ -357,7 +373,9 @@ def _narrow_layout(
         "these loops would be checking the wrong layout"
     )
     inputs = read_inputs(model, options=OPTIONS)
-    layout, drawn, _findings = run_stages(model, inputs)
+    # model-0220: the copies rewire the star wires, so the re-run reads the run's own inputs
+    results, scene, _findings = stage_scene(model, inputs)
+    layout, drawn, run_inputs = results.layout, results.drawn, scene.inputs
     location_paths = {
         plan.drawing_set: location_path(model, plan.location)
         for plan in layout.pages
@@ -373,17 +391,17 @@ def _narrow_layout(
     # (the move of `X2:1` to page 2) makes `cuts` cut it, and the re-run no
     # longer reproduces the engine's own markers.
     star_ports = {marker.port for marker in layout.markers if marker.star}
-    connections = tuple(c for c in inputs.connections if not {c.a.port, c.b.port} <= star_ports)
+    connections = tuple(c for c in run_inputs.connections if not {c.a.port, c.b.port} <= star_ports)
     _decisions, markers, references, _link_findings = built_links(
         connections,
-        inputs.net_groups,
+        run_inputs.net_groups,
         layout.placed,
         drawn,
-        sheet=inputs.sheet,
-        profile=inputs.profile,
+        sheet=run_inputs.sheet,
+        profile=run_inputs.profile,
         location_paths=location_paths,
         units=units,
-        function_units={spec.function: spec.unit for spec in inputs.functions},
+        function_units={spec.function: spec.unit for spec in run_inputs.functions},
     )
     assert markers == tuple(marker for marker in layout.markers if not marker.star), (
         "links is not pure: the re-run gave different markers"

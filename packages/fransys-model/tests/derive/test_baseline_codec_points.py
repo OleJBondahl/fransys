@@ -3,7 +3,7 @@
 from decimal import Decimal
 
 from fransys_model.derive.baseline_codec import dumps, loads
-from fransys_model.derive.rows import BaselineBoundary, BaselineUnit, Listing
+from fransys_model.derive.rows_baseline import BaselineBoundary, BaselineUnit, Listing
 from fransys_model.vocab import BreakingPoint, Operating, Rating
 
 

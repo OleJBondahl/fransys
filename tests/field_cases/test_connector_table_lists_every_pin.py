@@ -33,14 +33,14 @@ class _Open(NamedTuple):
 def _cab(u: Any) -> _Open:
     j1 = u.device("J1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     lamp = u.device("H1", "DEMO-LAMP-24")
-    u.wire(j1[1], lamp["1"], wire=(BK, 0.5))
-    u.wire(j1[2], lamp["2"], wire=(BK, 0.5))
+    u.detail.wire(j1[1], lamp["1"], wire=(BK, 0.5))
+    u.detail.wire(j1[2], lamp["2"], wire=(BK, 0.5))
     psu = u.device("T1", "DEMO-PSU-24")
     u.dc_supply("S", psu)
     harness = u.harness("W5")
     plug = u.device("P5", "DEMO-HSG-4M", parent=harness, contacts="DEMO-CRIMP-M")
     u.mate(plug, j1)
-    u.wire(plug[3], psu.output["+"], wire=(BK, 0.5))
+    u.detail.wire(plug[3], psu.output["+"], wire=(BK, 0.5))
     return _Open()
 
 
@@ -89,7 +89,7 @@ class _J8(NamedTuple):
 def _inner(u: Any) -> _J7:
     j7 = u.device("J7", "DEMO-CONN-2P", interface=True)
     lamp = u.device("P1", "DEMO-LAMP-24")
-    u.wire(j7["2"], lamp.lamp["1"], wire=(BK, 0.5))
+    u.detail.wire(j7["2"], lamp.lamp["1"], wire=(BK, 0.5))
     return _J7(j7)
 
 
@@ -97,7 +97,7 @@ def _inner(u: Any) -> _J7:
 def _outer(u: Any) -> _Open:
     inner = u.add(_inner, "U2")
     h1 = u.device("H1", "DEMO-LAMP-24")
-    u.wire(h1.lamp["1"], inner.J7["1"], wire=(BK, 0.5))
+    u.detail.wire(h1.lamp["1"], inner.J7["1"], wire=(BK, 0.5))
     return _Open()
 
 
@@ -105,7 +105,7 @@ def _outer(u: Any) -> _Open:
 def _box(u: Any) -> _J8:
     j8 = u.device("J8", "DEMO-CONN-2P", interface=True)
     lamp = u.device("P2", "DEMO-LAMP-24")
-    u.wire(j8["2"], lamp.lamp["1"], wire=(BK, 0.5))
+    u.detail.wire(j8["2"], lamp.lamp["1"], wire=(BK, 0.5))
     return _J8(j8)
 
 
@@ -118,7 +118,7 @@ def texts() -> dict[str, list[str]]:
     d.add(_outer, "U1")
     box = d.add(_box, "U3", place="C1")
     outside = d.device("H9", "DEMO-LAMP-24", place="C1")
-    d.wire(outside.lamp["1"], box.J8["1"], wire=(BK, 0.5))
+    d.detail.wire(outside.lamp["1"], box.J8["1"], wire=(BK, 0.5))
     names = ("demo-conn-outer", "demo-conn-inner", "demo-conn-box")
     docs = []
     for name in names:

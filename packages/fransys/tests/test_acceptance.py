@@ -180,7 +180,7 @@ def test_no_written_file_has_a_name_windows_forbids(fixture, request, tmp_path, 
     monkeypatch.undo()
     names |= {path.name for path in written}
     _svgs_cache.cache_clear()
-    names |= set(_exports(model, _svgs(model)))
+    names |= {Path(name).name for name in _exports(model, _svgs(model))}
     assert names
     assert [name for name in sorted(names) if _windows_forbidden(name)] == []
 
@@ -228,7 +228,7 @@ def test_stale_exports_are_removed_on_a_successful_write(demo_cabinet, tmp_path)
     names = {p.name for p in out_dir.iterdir()}
     assert "old.pdf" not in names
     assert "bom.csv" not in names
-    assert (out_dir / "DEMO-1-v1.1-bom.csv").read_text(encoding="utf-8") != "stale"
+    assert (out_dir / "data" / "DEMO-1-v1.1-bom.csv").read_text(encoding="utf-8") != "stale"
     assert "notes.txt" in names
     assert (out_dir / "notes.txt").read_text(encoding="utf-8") == "keep me"
     assert "keep" in names
@@ -259,6 +259,8 @@ def test_terminal_export_is_named_from_the_strip_reference(demo_cabinet, tmp_pat
     written = fr.write(result, tmp_path / "out")
     names = {p.name for p in written}
     assert "DEMO-1-v1.1-terminals-C1-X1.csv" in names
+    assert not [p for p in tmp_path.joinpath("out").iterdir() if p.suffix in {".csv", ".xml"}]
+    assert all(p.parent.name == "data" for p in written if p.suffix in {".csv", ".xml"})
 
 
 def test_board_and_rack_exports_are_named_from_their_reference(tmp_path):
@@ -433,7 +435,7 @@ def test_two_writes_of_one_result_give_byte_equal_files(demo_cabinet, tmp_path):
     second = fr.write(result, tmp_path / "out2")
     assert {p.name for p in first} == {p.name for p in second}
     for path in first:
-        twin = tmp_path / "out2" / path.name
+        twin = tmp_path / "out2" / path.relative_to(tmp_path / "out1")
         assert twin.read_bytes() == path.read_bytes()
 
 

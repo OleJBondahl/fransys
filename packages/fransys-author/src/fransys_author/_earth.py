@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab import Port
 
 _WITH_NET = (
-    'd.net("PE", ...) beside d.earth in one scope: d.earth is the scope\'s one PE net, '
+    'd.detail.net("PE", ...) beside d.earth in one scope: d.earth is the scope\'s one PE net, '
     "so join every PE pin with d.earth"
 )
 

@@ -39,16 +39,16 @@ def _build(tmp_path: Path, *, potential: bool = True) -> fr.BuildResult:
         lamps = [d.device(f"P{i}", "DEMO-LAMP-24") for i in range(1, _LAMPS + 1)]
     # one supply per PSU: the solo pair's rails are named apart, the voltages stay 24 V and 0 V
     d.dc_supply("FEED", feed)
-    d.wire(solo.output["+"], lone["1"], wire=_WIRE)
-    d.wire(solo.output["-"], lone["2"], wire=_WIRE)
+    d.detail.wire(solo.output["+"], lone["1"], wire=_WIRE)
+    d.detail.wire(solo.output["-"], lone["2"], wire=_WIRE)
     if potential:
         d.dc_supply("SOLO", solo, names=("SOLO_24", "SOLO_0"))
     else:  # the 24 V net plain, no potential; its 0 V net as plain
-        d.net("SOLO_24", solo.output["+"], lone["1"], kind=fr.GENERIC)
-        d.net("SOLO_0", solo.output["-"], lone["2"], kind=fr.GENERIC)
+        d.detail.net("SOLO_24", solo.output["+"], lone["1"], kind=fr.GENERIC)
+        d.detail.net("SOLO_0", solo.output["-"], lone["2"], kind=fr.GENERIC)
     for pin, source in (("1", feed.output["+"]), ("2", feed.output["-"])):
         for lamp in lamps:
-            d.wire(source, lamp[pin], wire=_WIRE)
+            d.detail.wire(source, lamp[pin], wire=_WIRE)
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

@@ -46,7 +46,7 @@ def _cab(c: Any) -> _Io:
         (k1.co_1["14"], h1.lamp["1"]),
         (h1.lamp["2"], psu.output["-"]),
     ):
-        c.wire(a, b, wire=("RD", 50))
+        c.detail.wire(a, b, wire=("RD", 50))
     return _Io(K1=k1)
 
 

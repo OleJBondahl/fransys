@@ -7,7 +7,7 @@ its text is an ordinary `MARKING` label of its port (`labels.labels`).
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.schematic.write.keys import PREFIX
+from fransys_layout.engines.schematic.write.keys import PREFIX, real_id
 from fransys_layout.stages.lookups import owner_of
 from fransys_layout.stages.texts.power import power_places
 from fransys_model.kernel import make_id
@@ -45,7 +45,7 @@ def power_symbols(
             PowerSymbol(
                 id=make_id(PowerSymbol, key),
                 key=key,
-                port=one.port,
+                port=real_id(keys, one.port),
                 page=page_of[one.drawing_set, one.page].id,
                 symbol=one.symbol,
                 x=one.at.x,

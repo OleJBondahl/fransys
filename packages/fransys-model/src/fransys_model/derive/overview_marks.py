@@ -16,7 +16,8 @@ from .baseline_designation import _cross_function_text, _cross_port_text, unit_d
 from .mate_rows import mates
 from .overview_levels import level_box, overview_level
 from .reports import _conductor_unit
-from .rows import Change, DiffMark, LineRef, ListingDiff, OverviewLevel, OverviewLinkKind
+from .rows import DiffMark, LineRef, OverviewLevel, OverviewLinkKind
+lazy from .rows_baseline import Change, ListingDiff
 
 __all__ = ["diff_marks"]
 

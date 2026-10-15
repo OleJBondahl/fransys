@@ -19,7 +19,8 @@ lazy from fransys_model.vocab.core import Item
 from .indexes import build_indexes
 from .lookups import strip_set
 from .plc_rack import is_plc_module
-from .rows import ItemKind, SignalKind
+from .rows import ItemKind
+from .rows_plc import SignalKind
 
 __all__ = ["item_kind", "signal_kind"]
 

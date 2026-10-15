@@ -35,7 +35,7 @@ def _build(
     strip = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     if page_title:
         lamp = d.device("H1", "DEMO-LAMP-24")
-        d.wire(strip.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
+        d.detail.wire(strip.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
         d.layout.page_title(strip, page_title)
     cover = root / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")

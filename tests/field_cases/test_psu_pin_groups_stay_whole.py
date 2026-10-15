@@ -34,7 +34,7 @@ def _t1_sides(tmp_path) -> dict[str, list[str]]:
     minus = [lamp["2"] for lamp in lamps]
     for rail, members in ((psu.output["+"], plus), (psu.output["-"], minus)):
         for pin in members:
-            d.wire(rail, pin, wire=(BU, 0.5))
+            d.detail.wire(rail, pin, wire=(BU, 0.5))
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

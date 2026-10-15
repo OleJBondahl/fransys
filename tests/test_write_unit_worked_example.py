@@ -320,8 +320,8 @@ def test_write_unit_str_name_writes_the_same_files_as_the_scope(tmp_path):
     by_name = fr.write(result, tmp_path / "by-name", unit="relay-board")
 
     assert {p.name for p in by_scope} == {p.name for p in by_name}
-    assert (tmp_path / "by-scope" / "relay-board-v1.1-bom.csv").read_bytes() == (
-        tmp_path / "by-name" / "relay-board-v1.1-bom.csv"
+    assert (tmp_path / "by-scope" / "data" / "relay-board-v1.1-bom.csv").read_bytes() == (
+        tmp_path / "by-name" / "data" / "relay-board-v1.1-bom.csv"
     ).read_bytes()
 
 

@@ -46,10 +46,10 @@ def _model(*, one_per_device: bool = False, choice: str | None = None) -> tuple[
         d.layout.symbol(second, choice)
     second_id = second.id
     wire = (BU, 0.5)
-    d.wire(strip[1], first["11"], wire=wire)
-    d.wire(first["12"], strip[2], wire=wire)
-    d.wire(strip[3], second["21"], wire=wire)
-    d.wire(second["22"], strip[4], wire=wire)
+    d.detail.wire(strip[1], first["11"], wire=wire)
+    d.detail.wire(first["12"], strip[2], wire=wire)
+    d.detail.wire(strip[3], second["21"], wire=wire)
+    d.detail.wire(second["22"], strip[4], wire=wire)
     return fr.build(d, cabinet_document(cabinet)).model, second_id
 
 

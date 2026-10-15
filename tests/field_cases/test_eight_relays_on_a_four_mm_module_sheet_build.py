@@ -44,8 +44,8 @@ def _bank(u: fr.Design) -> _Io:
     for n in range(1, 9):
         with u.function(f"R{n}", f"Relay {n}"):
             k = u.device(f"K{n}", "DEMO-CO-4P-24")
-            u.wire(feed[(n - 1) % 4 + 1], k.coil["A1"], wire=("WH", 0.75))
-            u.wire(ctl[f"CH{n:02d}-"], k.coil["A2"], wire=("BU", 0.75))
+            u.detail.wire(feed[(n - 1) % 4 + 1], k.coil["A1"], wire=("WH", 0.75))
+            u.detail.wire(ctl[f"CH{n:02d}-"], k.coil["A2"], wire=("BU", 0.75))
     return _Io(feed)
 
 

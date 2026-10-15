@@ -132,7 +132,7 @@ class LinkScope:
             msg = f"{kind!r} is not a valid link kind; valid: {', '.join(_LINK_KINDS)}"
             raise AuthorError(msg)
         if a.id == b.id:
-            msg = f"d.link needs two different ports; got '{'/'.join(a.key)}' twice"
+            msg = f"a link needs two different ports; got '{'/'.join(a.key)}' twice"
             raise AuthorError(msg)
         ends = sorted_pair(a.key, b.key)
         key = scoped(self._prefix, "link", kind, spliced(ends[0]), spliced(ends[1]))

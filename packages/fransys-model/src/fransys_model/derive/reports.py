@@ -48,7 +48,8 @@ from .lookups import (
 )
 from .order import bom_sort_key, natural_key, plc_channel_key, plc_racks
 from .plc_channel_text import channel_pin_designations
-from .rows import CableRow, DesignationRow, PlcChannelRow, WireRow
+from .rows import CableRow, DesignationRow, WireRow
+from .rows_plc import PlcChannelRow
 from .structure import boards
 from .wire_ends import ordered_wire_ends
 from .wiring import terminal_strips

@@ -36,7 +36,7 @@ def _folder(into):
 
 
 def _csv(into):
-    return min(_folder(into).glob("*-bom.csv"))
+    return min((_folder(into) / "data").glob("*-bom.csv"))
 
 
 def _codes(result, into):
@@ -52,14 +52,14 @@ def test_a_changed_byte_in_a_released_csv_gives_release_file_changed(copy):
     into, result = copy
     path = _csv(into)
     path.write_bytes(path.read_bytes() + b"x")
-    assert _codes(result, into) == [("RELEASE_FILE_CHANGED", f"wb-board 1.1: {path.name}")]
+    assert _codes(result, into) == [("RELEASE_FILE_CHANGED", f"wb-board 1.1: data/{path.name}")]
 
 
 def test_a_deleted_released_file_gives_release_file_missing(copy):
     into, result = copy
     path = _csv(into)
     path.unlink()
-    assert _codes(result, into) == [("RELEASE_FILE_MISSING", f"wb-board 1.1: {path.name}")]
+    assert _codes(result, into) == [("RELEASE_FILE_MISSING", f"wb-board 1.1: data/{path.name}")]
 
 
 def test_a_deleted_manifest_gives_release_file_missing(copy):
@@ -120,7 +120,7 @@ def test_a_release_the_model_no_longer_has_is_still_checked(copy):
     other = fr.build(fr.parts("demo_parts"), fransys_author.Design(fr.parts("demo_parts")).draft())
     path = _csv(into)
     path.write_bytes(b"changed")
-    assert _codes(other, into) == [("RELEASE_FILE_CHANGED", f"wb-board 1.1: {path.name}")]
+    assert _codes(other, into) == [("RELEASE_FILE_CHANGED", f"wb-board 1.1: data/{path.name}")]
 
 
 def test_a_folder_with_a_manifest_and_no_listing_is_listed_but_not_a_previous_release(copy):

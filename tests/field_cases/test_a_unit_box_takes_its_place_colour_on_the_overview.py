@@ -33,7 +33,7 @@ def _cab(u: fr.Design) -> _Io:
         x1 = u.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5", interface=True)
         out = x1.run("L1", 1)
         lamp = u.device("H1", "DEMO-LAMP-24")
-        u.wire(out[1], lamp["1"], wire=(BU, 0.5))
+        u.detail.wire(out[1], lamp["1"], wire=(BU, 0.5))
     return _Io(out)
 
 

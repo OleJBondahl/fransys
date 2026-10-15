@@ -12,6 +12,7 @@ from fransys_model.layout import (
     ChainEntry,
     KeepTogether,
     OrderHint,
+    PoleGroup,
     Side,
     SymbolChoice,
 )
@@ -52,8 +53,21 @@ from ._beside import check_beside
 from ._boundary_values import build_boundary_values
 from ._catalogue import build_catalogue
 from ._decimal import ProfileNumber, as_decimal
+from ._design_support import (
+    _PROFILE_DEFAULTS,
+    _PROFILE_REQUIRED,
+    _SHEET_DEFAULTS,
+    _SHEET_REQUIRED,
+    _as_function,
+    _identity,
+    _name_clash_message,
+    _stamped,
+    _strip_text,
+    _validated_fields,
+)
 from ._earth import Earths
 from ._enums import member
+from ._hint_writes import _write_group_hint, _write_side_hint
 from ._keys import scoped, sorted_pair, spliced
 from ._origin import caller_origin
 from ._release import unit_release
@@ -69,85 +83,16 @@ from .handles import (
     Strip,
     Terminal,
     _item_from_stamped,
-    _write_group_hint,
-    _write_side_hint,
 )
 from .wiring import LinkScope, Wiring
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from _typeshed import DataclassInstance
-
 
 _MINIMUM_ORDER_GROUPS = 2
 _MINIMUM_BRIDGE_TERMINALS = 2
 _SYMBOL_CHOICE_FIELDS = {f.name for f in dataclasses.fields(SymbolChoice)}
-
-
-def _required_and_defaults(
-    cls: type[DataclassInstance], *, exclude: set[str]
-) -> tuple[tuple[str, ...], dict[str, Any]]:
-    """The tunable fields of a record `cls`: its required and its defaulted fields."""
-    required: list[str] = []
-    defaults: dict[str, Any] = {}
-    for field_ in dataclasses.fields(cls):
-        if field_.name in exclude:
-            continue
-        if field_.default is not dataclasses.MISSING:
-            defaults[field_.name] = field_.default
-        else:
-            required.append(field_.name)
-    return tuple(required), defaults
-
-
-_SHEET_REQUIRED, _SHEET_DEFAULTS = _required_and_defaults(
-    ModelSheetFormat, exclude={"id", "key", "name", "ext"}
-)
-_PROFILE_REQUIRED, _PROFILE_DEFAULTS = _required_and_defaults(
-    ModelProfile, exclude={"id", "key", "unit", "sheet_format", "ext"}
-)
-
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class _Identity:
-    name: str
-    tag: str | None
-
-
-def _identity(name: str | None, tag: str | None) -> _Identity:
-    """Resolve `name=`/`tag=` into the key segment and the designation."""
-    if name is not None:
-        return _Identity(name=name, tag=tag)
-    if tag is not None:
-        return _Identity(name=tag, tag=tag)
-    msg = "give name=, tag=, or both -- one is required"
-    raise AuthorError(msg)
-
-
-def _as_function(value: Fn | Item | Terminal) -> Fn:
-    if isinstance(value, Fn):
-        return value
-    if isinstance(value, Item):
-        return value.as_function()
-    if isinstance(value, Terminal):
-        return value.function
-    msg = (
-        f"expected a function, an item with one function, or a terminal, not {type(value).__name__}"
-    )
-    raise TypeError(msg)
-
-
-def _stamped(
-    records: tuple[Record, ...], *, unit: Id[ModelUnit] | None, external: bool
-) -> tuple[Record, ...]:
-    """Stamp `unit` and `external` onto the `Item` record `instantiate()` made."""
-    return tuple(
-        dataclasses.replace(record, unit=unit, external=external)
-        if isinstance(record, ModelItem)
-        else record
-        for record in records
-    )
 
 
 class Scope(LinkScope, SupplyScope):
@@ -304,7 +249,7 @@ class Scope(LinkScope, SupplyScope):
         """
         release = self._release
         if release is None:
-            msg = "revision() needs a unit; call s.unit(...) on this scope first"
+            msg = "a unit revision needs a unit: write this scope as a unit with @fr.unit"
             raise AuthorError(msg)
         entry_version = release.version if version is None else version
         key = (*release.key, "revision", str(entry_version), str(revision))
@@ -417,7 +362,7 @@ class Scope(LinkScope, SupplyScope):
                 call writes nothing.
         """
         if self._unit is None:
-            msg = "boundary() needs a unit; call s.unit(...) on this scope first"
+            msg = "a boundary needs a unit: write this scope as a unit with @fr.unit"
             raise AuthorError(msg)
         fn = _as_function(target)
         key = scoped(self._prefix, "boundary", spliced(fn.key))
@@ -668,6 +613,13 @@ class Scope(LinkScope, SupplyScope):
         record = Mate(id=make_id(Mate, key), key=key, a=fn_a.id, b=fn_b.id)
         self._design._add(record, caller_origin())
 
+    def pole_group(self, functions: tuple[Fn, ...], *, selector: bool) -> None:
+        """A `PoleGroup` of one device's one-pole contacts, in pole order (C6.4)."""
+        key = scoped(functions[0].key, "pole_group")
+        ids = tuple(fn.id for fn in functions)
+        record = PoleGroup(id=make_id(PoleGroup, key), key=key, functions=ids, selector=selector)
+        self._design._add(record, caller_origin())
+
     def bridge(self, *terminals: Terminal) -> None:
         """A `jumper` conductor between each consecutive pair of `terminals`.
 
@@ -682,14 +634,15 @@ class Scope(LinkScope, SupplyScope):
         """
         if len(terminals) < _MINIMUM_BRIDGE_TERMINALS:
             msg = (
-                f"d.bridge needs at least {_MINIMUM_BRIDGE_TERMINALS} terminals, "
-                f"got {len(terminals)}"
+                f"a bridge needs at least {_MINIMUM_BRIDGE_TERMINALS} terminals, "
+                f"got {len(terminals)}; "
+                "bridge a strip with d.terminal_strip(bridged=...)"
             )
             raise AuthorError(msg)
         seen: set[Id[ModelItem]] = set()
         for terminal in terminals:
             if terminal.id in seen:
-                msg = f"terminal '{'/'.join(terminal.key)}' is given twice to d.bridge"
+                msg = f"terminal '{'/'.join(terminal.key)}' is given twice to a bridge"
                 raise AuthorError(msg)
             seen.add(terminal.id)
         strip_keys = [self._strip_key(terminal) for terminal in terminals]
@@ -698,7 +651,7 @@ class Scope(LinkScope, SupplyScope):
                 f"'{'/'.join(terminal.key)}' (strip {_strip_text(strip_key)})"
                 for terminal, strip_key in zip(terminals, strip_keys, strict=True)
             )
-            msg = f"d.bridge needs terminals of one strip; got {named}"
+            msg = f"a bridge needs terminals of one strip; got {named}"
             raise AuthorError(msg)
         origin = caller_origin()
         for a, b in itertools.pairwise(terminals):
@@ -759,7 +712,7 @@ class Scope(LinkScope, SupplyScope):
     def order(self, *groups: Group) -> None:
         """Draw each neighbour pair of `groups` in order: one `order_hint` each."""
         if len(groups) < _MINIMUM_ORDER_GROUPS:
-            msg = f"d.order needs at least {_MINIMUM_ORDER_GROUPS} groups, got {len(groups)}"
+            msg = f"d.layout.order needs at least {_MINIMUM_ORDER_GROUPS} groups, got {len(groups)}"
             raise AuthorError(msg)
         origin = caller_origin()
         for before, after in itertools.pairwise(groups):
@@ -886,7 +839,14 @@ class Scope(LinkScope, SupplyScope):
 class Design(Scope):
     """The builder: holds the draft being written and the part catalogue."""
 
-    __slots__ = ("_assumed_version", "_catalogue", "_draft", "_earths", "_project_version")
+    __slots__ = (
+        "_added_units",
+        "_assumed_version",
+        "_catalogue",
+        "_draft",
+        "_earths",
+        "_project_version",
+    )
 
     def __init__(self, parts: Draft) -> None:
         """Read `parts` once into a private index by `(manufacturer, mpn)` and by `mpn`."""
@@ -895,6 +855,8 @@ class Design(Scope):
         self._catalogue = build_catalogue(parts)
         self._project_version: int | None = None
         self._assumed_version = False
+        # What `d.add` returned, by id, with the unit it built: `d.layout.page_title` takes it.
+        self._added_units: dict[int, tuple[object, Id[ModelUnit] | None]] = {}
         super().__init__(self, ())
 
     def project(  # noqa: PLR0913 -- the title-block facts, project()'s own shape
@@ -991,30 +953,3 @@ class Design(Scope):
     def _extend(self, records: Iterable[Record], origin: Origin) -> None:
         for record in records:
             self._add(record, origin)
-
-
-def _validated_fields(
-    given: dict[str, Any], required: tuple[str, ...], defaults: dict[str, Any], *, what: str
-) -> dict[str, Any]:
-    allowed = set(required) | set(defaults)
-    unknown = sorted(set(given) - allowed)
-    if unknown:
-        msg = f"{what}() does not have {', '.join(unknown)}; valid: {', '.join(sorted(allowed))}"
-        raise AuthorError(msg)
-    missing = sorted(set(required) - set(given))
-    if missing:
-        msg = f"{what}() is missing {', '.join(missing)}"
-        raise AuthorError(msg)
-    return {**defaults, **given}
-
-
-def _strip_text(strip_key: AuthoringKey | None) -> str:
-    return "none" if strip_key is None else "'" + "/".join(strip_key) + "'"
-
-
-def _name_clash_message(record: Record) -> str:
-    kind = vars(type(record)).get("__kind__", "record")
-    return (
-        f"'{'/'.join(record.key)}' already names a different {kind} record "
-        "in this scope; use a different name= or tag="
-    )

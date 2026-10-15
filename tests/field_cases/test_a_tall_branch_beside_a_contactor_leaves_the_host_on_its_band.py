@@ -71,7 +71,7 @@ def _dc(d: Any) -> _Strips:
             (k3.main["2"], f3.element["1"], _RED),
             (f3.element["2"], f1.element["2"], _RED),
         ):
-            d.wire(a, b, wire=wire)
+            d.detail.wire(a, b, wire=wire)
     d.layout.chain(x1[1], s1.pole_1, f1.element, k1.main, x2[1])
     d.layout.chain(x1[2], s1.pole_2, f2.element, k2.main, x2[2])
     d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)

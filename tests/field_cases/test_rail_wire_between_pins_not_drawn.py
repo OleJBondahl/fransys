@@ -41,8 +41,8 @@ def _board(tmp_path) -> fr.BuildResult:
         live = [j2.x1["1"], k1.co_1["11"], k2.co_1["11"]]
         zero = [j1.x1["1"], k1.coil["A2"], k2.coil["A2"]]
         for members in (live, zero):
-            d.wire(members[0], members[1], wire=(WH, 0.5))
-            d.wire(members[0], members[2], wire=(WH, 0.5))
+            d.detail.wire(members[0], members[1], wire=(WH, 0.5))
+            d.detail.wire(members[0], members[2], wire=(WH, 0.5))
     return _finish(tmp_path, d, cab)
 
 
@@ -54,7 +54,7 @@ def _pump(tmp_path) -> fr.BuildResult:
         live = d.terminal_strip("X1", "DEMO-TB-2.5", 1)
         zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("G", 2, bridged=True)
         d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-        d.wire(overload.a2["A2"], zero[1].outer, wire=(BU, 0.5))
+        d.detail.wire(overload.a2["A2"], zero[1].outer, wire=(BU, 0.5))
     return _finish(tmp_path, d, cab)
 
 

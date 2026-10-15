@@ -43,7 +43,7 @@ def _unit(profile: dict[str, Any] | None) -> Any:
         if profile:
             u.layout.profile(**profile)
         k1 = u.device("K1", "DEMO-RLY-2CO-24", interface=("coil",))
-        u.wire(k1.co_1["11"], k1.coil["A1"], wire=("RD", 0.75))
+        u.detail.wire(k1.co_1["11"], k1.coil["A1"], wire=("RD", 0.75))
         return _Interface(k1)
 
     return unit

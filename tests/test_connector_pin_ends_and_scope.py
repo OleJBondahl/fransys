@@ -30,13 +30,13 @@ def _inner(u: Any) -> _Open:
 def _outer(u: Any) -> _Open:
     j1 = u.device("J1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     lamp = u.device("H1", "DEMO-LAMP-24")
-    u.wire(j1[1], lamp["1"], wire=(BK, 0.5))
+    u.detail.wire(j1[1], lamp["1"], wire=(BK, 0.5))
     psu = u.device("T1", "DEMO-PSU-24")
     u.dc_supply("S", psu)
     harness = u.harness("W5")
     plug = u.device("P5", "DEMO-HSG-4M", parent=harness, contacts="DEMO-CRIMP-M")
     u.mate(plug, j1)
-    u.wire(plug[3], psu.output["+"], wire=(BK, 0.5))
+    u.detail.wire(plug[3], psu.output["+"], wire=(BK, 0.5))
     u.add(_inner, "U2")
     return _Open()
 

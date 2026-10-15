@@ -15,17 +15,14 @@ from pathlib import Path
 import fransys as fr
 import pytest
 from fransys.colours import BU
+from fransys_el import REF_TINTS
 from fransys_render import pages
 from test_reader_order import _design
 
 from fransys_model.derive import page_destination, text_room_g
+from fransys_model.derive.contact_image import cross_reference_text
 from fransys_model.derive.contact_rows import contact_rows
-from fransys_model.derive.drawing_text import (
-    CONTACT_SLOTS,
-    contact_heading,
-    contact_image,
-    cross_reference_text,
-)
+from fransys_model.derive.drawing_text import CONTACT_SLOTS, contact_heading, contact_image
 from fransys_model.derive.page_nav import reference_links
 from fransys_model.derive.text_width import text_width
 from fransys_model.layout import (
@@ -58,16 +55,16 @@ def spare() -> fr.BuildResult:
     motor = d.device("M1", "DEMO-MOTOR-4KW")
     q = d.device("Q1", "DEMO-CTR-3P-NC")
     blue = (BU, 0.5)
-    d.wire(psu.input["L"], mains["1"], wire=blue)
-    d.wire(psu.input["N"], mains["2"], wire=blue)
-    d.wire(psu.output["+"], q.coil["A1"], wire=blue)
-    d.wire(psu.output["-"], q.coil["A2"], wire=blue)
-    d.wire(psu.output["+"], q.aux["13"], wire=blue)
-    d.wire(q.aux["14"], lamp["1"], wire=blue)
-    d.wire(psu.output["-"], lamp["2"], wire=blue)
+    d.detail.wire(psu.input["L"], mains["1"], wire=blue)
+    d.detail.wire(psu.input["N"], mains["2"], wire=blue)
+    d.detail.wire(psu.output["+"], q.coil["A1"], wire=blue)
+    d.detail.wire(psu.output["-"], q.coil["A2"], wire=blue)
+    d.detail.wire(psu.output["+"], q.aux["13"], wire=blue)
+    d.detail.wire(q.aux["14"], lamp["1"], wire=blue)
+    d.detail.wire(psu.output["-"], lamp["2"], wire=blue)
     for pole, pin in enumerate("UVW"):
-        d.wire(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
-        d.wire(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
+        d.detail.wire(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
+        d.detail.wire(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))
@@ -166,17 +163,18 @@ _ELEMENT = re.compile(r"<text [^>]*>[^<]*</text>|<line [^>]*/>")
 # derive (CR3): a shifted row, heading or rule changes it. A render change elsewhere moves it too.
 PINS = {
     # Re-pinned for layout-0218: the canary's box B1 gained a lamp P1 across two pins, since a
-    # box with nothing connected is no longer drawn. Re-pinned for model-0235 and layout-0235:
-    # three duplicate back references (p3:2B..4B, p3:2C..4C) go, and four star markers name a
-    # terminal on page 4 first.
-    "canary": "d66e3384791d34e89ae86bee0321b689301e11509d738619cd9ea520078239e2",
+    # box with nothing connected is no longer drawn.
+    # Re-pinned for model-0220: terminal X1:1 is wired to every circuit's Q coil, so it is drawn
+    # as a copy at each pin and the reference markers are gone. Re-pinned again after merging
+    # main (model-0235 and layout-0235 moved the same canary).
+    "canary": "bad8c11998a6e0bab1e164f6fae0198975313f3f9996b57396c8aecac6b71d43",
     "spare": "6e51043910e2acb84ffd4fa8714fb70bde83870de9a5aa36c3dd20bb1a5e348a",
 }
 
 
 @pytest.mark.parametrize("name", ["canary", "spare"])
 def test_the_drawn_text_and_rules_of_a_design_are_byte_identical(name, request) -> None:
-    svgs = pages(request.getfixturevalue(name).model)
+    svgs = pages(request.getfixturevalue(name).model, tints=REF_TINTS)
     text = "\n".join(e for key in sorted(svgs) for e in _ELEMENT.findall(svgs[key]))
     assert hashlib.sha256(text.encode()).hexdigest() == PINS[name]
 

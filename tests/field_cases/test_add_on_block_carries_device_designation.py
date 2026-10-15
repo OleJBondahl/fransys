@@ -34,12 +34,12 @@ def _build() -> tuple[fr.Model, fr.Device, fr.Device]:
         block = d.device(None, "DEMO-CTR-BLOCK-1NO1NC", name="block", parent=k1)
         overload = d.device(None, "DEMO-OVERLOAD-A2", name="overload", parent=k1)
     wire = (BU, 0.5)
-    d.wire(feed, k1.coil["A1"], wire=wire)
-    d.wire(k1.coil["A2"], zero, wire=wire)
-    d.wire(feed, block.no["53"], wire=wire)
-    d.wire(block.no["54"], load, wire=wire)
-    d.wire(feed, block.nc["61"], wire=wire)
-    d.wire(block.nc["62"], load, wire=wire)
+    d.detail.wire(feed, k1.coil["A1"], wire=wire)
+    d.detail.wire(k1.coil["A2"], zero, wire=wire)
+    d.detail.wire(feed, block.no["53"], wire=wire)
+    d.detail.wire(block.no["54"], load, wire=wire)
+    d.detail.wire(feed, block.nc["61"], wire=wire)
+    d.detail.wire(block.nc["62"], load, wire=wire)
     return fr.build(d, cabinet_document(_cabinet)).model, block, overload
 
 

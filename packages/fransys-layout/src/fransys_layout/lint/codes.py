@@ -23,7 +23,7 @@ from fransys_layout.stages.references import (
     REFERENCE_BOX_EXCEEDS_ROOM,
 )
 from fransys_layout.stages.resolve import PIN_MAP_INCOMPLETE, SYMBOL_DEFAULTED
-from fransys_layout.stages.route import ROUTE_FAILED
+from fransys_layout.stages.route import ROUTE_FAILED, ROUTE_NEAR_FLAG_STUB
 from fransys_layout.stages.stub_stack import STUBS_NOT_STACKED
 from fransys_layout.stages.texts.place_texts import LABEL_UNPLACED
 from fransys_layout.stages.texts.power_lead import POWER_SYMBOL_UNPLACED
@@ -102,6 +102,7 @@ ALL_CODES: tuple[str, ...] = (
     REDUNDANT_JOG,
     REFERENCE_BOX_EXCEEDS_ROOM,
     ROUTE_FAILED,
+    ROUTE_NEAR_FLAG_STUB,
     ROUTE_SHORTS_NETS,
     ROUTE_WRONG_PORT,
     SHEET_FORMAT_UNUSED,

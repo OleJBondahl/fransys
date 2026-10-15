@@ -51,8 +51,8 @@ def _board(d: fr.Design) -> _Board:
     with d.function("BRD", "I/O board"):
         x1 = d.device("X1", "DEMO-CONN-2P", interface=True)
         bulb = d.device("H2", "DEMO-LAMP-24")
-        d.wire(x1.x1["1"], bulb.lamp["1"], wire=(BU, 0.5))
-        d.wire(x1.x1["2"], bulb.lamp["2"], wire=(BU, 0.5))
+        d.detail.wire(x1.x1["1"], bulb.lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(x1.x1["2"], bulb.lamp["2"], wire=(BU, 0.5))
     return _Board(x1)
 
 
@@ -71,8 +71,8 @@ def _cabinet(d: fr.Design) -> _Open:
         plug = d.device("P1", "DEMO-CONN-2P")
         lamp = d.device("H1", "DEMO-LAMP-24")
         d.dc_supply("S", plus=plug.x1["1"], minus=plug.x1["2"], voltage=24)
-        d.wire(plug.x1["1"], lamp.lamp["1"], wire=(BU, 0.5))
-        d.wire(plug.x1["2"], lamp.lamp["2"], wire=(BU, 0.5))
+        d.detail.wire(plug.x1["1"], lamp.lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(plug.x1["2"], lamp.lamp["2"], wire=(BU, 0.5))
     d.mate(plug, d.add(_board, "IO").X1)
     return _Open()
 

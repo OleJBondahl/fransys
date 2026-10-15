@@ -30,7 +30,7 @@ class _Io(NamedTuple):
 def _box(u: fr.Design) -> _Io:
     lamp = u.device("P1", "DEMO-LAMP-24")
     sig = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True).run("SIG", 1)
-    u.wire(sig[1], lamp.lamp["1"], wire=("WH", 0.75))
+    u.detail.wire(sig[1], lamp.lamp["1"], wire=("WH", 0.75))
     return _Io(sig[1])
 
 
@@ -40,7 +40,7 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     d.location("S1", "Sub", within="R")
     io = d.add(_box, "U1", place="S1")
     lamp = d.device("H1", "DEMO-LAMP-24", place="S1")
-    d.wire(io.out, lamp.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(io.out, lamp.lamp["1"], wire=("WH", 0.75))
     (tmp_path / "r.md").write_text("# Room\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     return fr.build(d, fr.document(preset, room, cover=tmp_path / "r.md"))

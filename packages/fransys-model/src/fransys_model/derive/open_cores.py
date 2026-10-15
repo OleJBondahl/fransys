@@ -4,7 +4,7 @@ from fransys_model.vocab.tables import items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
-from .core_pairs import SCREEN, _product_colours
+from .core_pairs import _product_colours, open_core_is_spare
 from .designation import port_designation, printed_designation, unit_list_context
 from .far_ends import end_text
 from .lookups import require
@@ -50,7 +50,7 @@ def open_core_rows(
                 colour=colour,
                 at=facet.at,
                 at_designation=text,
-                spare=colour != SCREEN,
+                spare=open_core_is_spare(model, colour, facet.at),
             )
         )
     return tuple(rows)

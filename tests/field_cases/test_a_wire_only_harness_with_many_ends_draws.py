@@ -103,7 +103,7 @@ def test_a_plug_to_three_plugs_of_plain_wires_draws(tmp_path: Path) -> None:
     for k, (pins, offset) in enumerate(((4, 0), (4, 4), (2, 8)), start=2):
         far = tags[f"J{k}"] = _plug(d, w1, f"J{k}", pins, f"X{k}")
         for pin in range(1, pins + 1):
-            d.wire(j1[str(offset + pin)], far[str(pin)], wire=(WH, 0.5))
+            d.detail.wire(j1[str(offset + pin)], far[str(pin)], wire=(WH, 0.5))
     assert _drawn(d, w1, tmp_path / "cover.md") == []
     top, bottom, pins = _order(d, w1, tmp_path / "cover.md", tags)
     assert (top, bottom) == (["J1"], ["J2", "J3", "J4"])
@@ -120,8 +120,8 @@ def test_a_plug_fanned_out_to_three_headers_alternating_draws(tmp_path: Path) ->
     tags = {"J1": j1}
     for k, (a, b) in enumerate((("3", "10"), ("4", "11"), ("5", "12")), start=2):
         far = tags[f"X{k}"] = d.device(f"X{k}", "T-HDR-2")
-        d.wire(j1[a], far["1"], wire=(WH, 0.25))
-        d.wire(j1[b], far["2"], wire=(WH, 0.25))
+        d.detail.wire(j1[a], far["1"], wire=(WH, 0.25))
+        d.detail.wire(j1[b], far["2"], wire=(WH, 0.25))
     assert _drawn(d, w1, tmp_path / "cover.md") == []
     _, _, pins = _order(d, w1, tmp_path / "cover.md", tags)
     assert pins["J1"][:6] == ["3", "4", "5", "10", "11", "12"]
@@ -169,7 +169,7 @@ def test_two_groups_of_plain_wires_draw_in_core_order(tmp_path: Path) -> None:
     )
     for near, near_pins, far, far_pins in runs:
         for a, b in zip(near_pins, far_pins, strict=True):
-            d.wire(tags[near][str(a)], tags[far][str(b)], wire=(WH, 0.5))
+            d.detail.wire(tags[near][str(a)], tags[far][str(b)], wire=(WH, 0.5))
     cover = tmp_path / "cover.md"
     assert _drawn(d, w1, cover) == []
     top, bottom, pins = _order(d, w1, cover, tags)

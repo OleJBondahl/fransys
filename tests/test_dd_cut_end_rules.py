@@ -35,7 +35,7 @@ from fransys_layout.engines.schematic import lay_out_schematic, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.stages import LinkCase
 from fransys_model.derive import unit_release
-from fransys_model.derive.drawing_text import off_stub_text
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Severity
 from fransys_model.layout import (
     DrawingSet,

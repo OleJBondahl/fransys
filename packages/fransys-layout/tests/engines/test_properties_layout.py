@@ -15,6 +15,7 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import text_width
 from fransys_layout.stages.references.marker_boxes import reference_box_width
+from fransys_layout.stages.wire_copies import copy_map
 from fransys_model.kernel import Origin, freeze, make_id
 from fransys_model.layout import MarkerSide as ModelMarkerSide
 from fransys_model.layout import Profile, SheetFormat
@@ -93,7 +94,7 @@ def _length(marker: StageLinkMarker) -> int:
 def test_a_terminal_used_from_two_groups_is_placed_once_on_each_page(
     width_mm: int | None, groups: set[str]
 ) -> None:
-    """Every terminal function has one placement per page; a replica's key adds group and set."""
+    """A terminal is placed on each page it is wired on; a copy's key adds group, set and host."""
     model, out, _, results = _run(width_mm)
     functions = _table(model, "function").values()
     terminals = {f.id for f in functions if f.kind.value == "terminal"}
@@ -104,12 +105,20 @@ def test_a_terminal_used_from_two_groups_is_placed_once_on_each_page(
             pages[placement.function].append(placement.page)
             keys[placement.function].add(placement.key)
     assert set(pages) == terminals
+    copies = copy_map(results.copies)
     for function, on in pages.items():
-        assert len(on) == len(set(on))
-        assert len(on) == sum(one.function == function for one in results.layout.placed)
+        stage = sum(
+            copies.get(one.function, one.function) == function for one in results.layout.placed
+        )
+        assert len(on) == stage
     (x2,) = (f.id for f in functions if f.key == _X2)
-    assert len(pages[x2]) == len(groups) + 1
-    assert keys[x2] == {_BASE, *((*_BASE, group, "drawing_set", "c1") for group in groups)}
+    # model-0220: X2:1 has its home placement and a copy at each of its three wires
+    assert len(pages[x2]) == 4
+    assert len(set(pages[x2])) == len(groups) + 1
+    copied = keys[x2] - {_BASE}
+    assert _BASE in keys[x2]
+    assert {k[len(_BASE)] for k in copied} == {"p1", "p2"}
+    assert all(k[len(_BASE) + 1 : len(_BASE) + 4] == ("drawing_set", "c1", "at") for k in copied)
 
 
 _SIGNAL = (

@@ -46,9 +46,9 @@ def lone(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
     d.dc_supply("S", psu)
     j20 = d.device("J20", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.wire(psu.output["+"], j20[1], wire=(BK, 0.5))
-    d.wire(j20[2], lamp["1"], wire=(BK, 0.5))
-    d.wire(lamp["2"], psu.output["-"], wire=(BK, 0.5))
+    d.detail.wire(psu.output["+"], j20[1], wire=(BK, 0.5))
+    d.detail.wire(j20[2], lamp["1"], wire=(BK, 0.5))
+    d.detail.wire(lamp["2"], psu.output["-"], wire=(BK, 0.5))
     cover = tmp_path_factory.mktemp("lone") / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))

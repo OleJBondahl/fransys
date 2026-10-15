@@ -220,6 +220,18 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="RATING_CURRENT_KIND_UNSTATED",
+        severities=(Severity.WARNING,),
+        stage="validators",
+        who="consumer",
+        cause=(
+            "A function's part states a voltage rating for AC or for DC only, and the function "
+            "stands on rails of the other current kind."
+        ),
+        fix="State the missing voltage rating in the part, or use a part rated for that kind.",
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="RATING_VOLTAGE_BELOW_CIRCUIT",
         severities=(Severity.ERROR,),
         stage="validators",

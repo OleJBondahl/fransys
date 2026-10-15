@@ -11,7 +11,7 @@ import fransys_parts
 import fransys_render
 import pytest
 from _model_build_cover import layout_trigger_document
-from fransys_el import OPTIONS
+from fransys_el import OPTIONS, REF_TINTS
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -46,13 +46,15 @@ def schematic_first(numbered):
 
 def test_pages_are_equal_with_the_cable_pass_on_and_off(schematic_first):
     off, on = schematic_first
-    assert len(fransys_render.pages(off)) > 0
+    assert len(fransys_render.pages(off, tints=REF_TINTS)) > 0
     assert len(fransys_render.cable_blocks(on)) > 0
-    assert fransys_render.pages(on) == fransys_render.pages(off)
+    assert fransys_render.pages(on, tints=REF_TINTS) == fransys_render.pages(off, tints=REF_TINTS)
 
 
 def test_pages_are_equal_when_the_cable_pass_runs_first(numbered, schematic_first):
     """The passes touch disjoint record kinds, so their order cannot move a page."""
     cables_first, _ = lay_out_schematic(lay_out_cables(numbered)[0], OPTIONS)
     assert len(fransys_render.cable_blocks(cables_first)) > 0
-    assert fransys_render.pages(cables_first) == fransys_render.pages(schematic_first[0])
+    assert fransys_render.pages(cables_first, tints=REF_TINTS) == fransys_render.pages(
+        schematic_first[0], tints=REF_TINTS
+    )

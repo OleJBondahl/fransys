@@ -46,11 +46,11 @@ def _chain_result() -> fr.BuildResult:
             mods = [d.device(f"D{i}", "DEMO-MODULE-2P-COM4") for i in range(1, _N + 1)]
             lamp = d.device("R1", "DEMO-LAMP-24")
         for a, b in pairwise(mods):
-            d.wire(a.pwr["plus"], b.pwr["minus"], wire=(RD, 1.0))
+            d.detail.wire(a.pwr["plus"], b.pwr["minus"], wire=(RD, 1.0))
             for pin in "1234":
-                d.wire(a.OUT[pin], b.IN[pin], wire=(BK, 0.5))
-        d.wire(mods[0].pwr["minus"], lamp["1"], wire=(BK, 1.0))
-        d.wire(mods[-1].pwr["plus"], lamp["2"], wire=(RD, 1.0))
+                d.detail.wire(a.OUT[pin], b.IN[pin], wire=(BK, 0.5))
+        d.detail.wire(mods[0].pwr["minus"], lamp["1"], wire=(BK, 1.0))
+        d.detail.wire(mods[-1].pwr["plus"], lamp["2"], wire=(RD, 1.0))
         return _Cab()
 
     d = fr.design("demo_parts")
@@ -67,8 +67,8 @@ def _series_result(n: int) -> fr.BuildResult:
             _ = run_a[1], run_b[1]
             fuses = [d.device(f"G{i}", "DEMO-FUSE-DC-160") for i in range(1, n + 1)]
         d.series(*[f.element for f in fuses], wire=(RD, 1.0))
-        d.wire(run_a[1], fuses[0].element["1"], wire=(RD, 1.0))
-        d.wire(fuses[-1].element["2"], run_b[1], wire=(RD, 1.0))
+        d.detail.wire(run_a[1], fuses[0].element["1"], wire=(RD, 1.0))
+        d.detail.wire(fuses[-1].element["2"], run_b[1], wire=(RD, 1.0))
         return _Cab()
 
     d = fr.design("demo_parts")

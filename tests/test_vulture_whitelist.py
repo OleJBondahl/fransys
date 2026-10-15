@@ -70,8 +70,12 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # +3: overview row fields read only by tests until the OVERVIEW Part 3 page reads them; owner
 # 2026-10-07: ceilings may rise; cleanup round lowers
 # +4: OperatedBy members (parts-0020), built by value in the loader, named by tests;
+# +1: d.detail (author-0042) read only by author tests and the guide;
+# +1: ReadabilityReport/ReadabilityUnit.loose_symbols, a public report field (GLASS-BOX,
+# 2026-10-15);
 # owner 2026-10-07: ceilings may rise; cleanup round lowers
-WHITELIST_CEILING = 124
+# 77: CLEANUP-CEILINGS-2 dropped 58 entries a per-package run without the whitelist never flags
+WHITELIST_CEILING = 78
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(

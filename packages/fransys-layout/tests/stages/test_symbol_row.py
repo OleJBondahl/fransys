@@ -62,8 +62,8 @@ def _build(tmp: Path, row_gap: int, *, content_mm: int | None = None) -> fr.Buil
         board = d.device("U1", "DEMO-IO-2X")
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("S", psu)
-    d.wire(module.do_1["1"], plug.x1["1"], wire=(BU, 0.5))
-    d.wire(psu.output["-"], plug.x1["2"], wire=(BU, 0.5))
+    d.detail.wire(module.do_1["1"], plug.x1["1"], wire=(BU, 0.5))
+    d.detail.wire(psu.output["-"], plug.x1["2"], wire=(BU, 0.5))
     d.mate(plug, board.x1)
     cover = tmp / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")

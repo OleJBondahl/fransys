@@ -143,7 +143,7 @@ def test_a_new_floating_relay_warns_and_takes_the_next_free_number(released: Pat
     second = _build(2, relays=("k_a", "k_c"), modules=("m1", "m2"), releases=released)
     (warning,) = _warnings(second)
     assert warning.severity is fr.Severity.INFO
-    assert "k_c" in warning.message
+    assert "-U1-K3" in warning.message  # the printed name, not the key
     assert "K3" in warning.message
     assert _numbers(second) == {"k_a": "-K1", "k_c": "-K3", "m1": "-U1-J1", "m2": "-U2-J1"}
 
@@ -151,7 +151,7 @@ def test_a_new_floating_relay_warns_and_takes_the_next_free_number(released: Pat
 def test_a_new_floating_board_instance_warns_and_takes_the_next_free_number(released: Path) -> None:
     second = _build(2, relays=("k_a", "k_b"), modules=("m1", "m2", "m3"), releases=released)
     (warning,) = _warnings(second)
-    assert "m3" in warning.message
+    assert "unit -U3" in warning.message
     assert "U3" in warning.message
     assert _numbers(second) == {
         "k_a": "-K1",

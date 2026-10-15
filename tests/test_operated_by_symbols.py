@@ -34,8 +34,8 @@ def drawn() -> dict[str, str]:
     pins = [("sel-no", "13", "14"), ("sel-nc", "11", "12"), ("ls", "13", "14")]
     pins += [("ls", "21", "22"), ("pb", "A", "B")]
     for n, (name, a, b) in enumerate(pins):
-        d.wire(strip[2 * n + 1], devices[name][a], wire=(BU, 0.5))
-        d.wire(devices[name][b], strip[2 * n + 2], wire=(BU, 0.5))
+        d.detail.wire(strip[2 * n + 1], devices[name][a], wire=(BU, 0.5))
+        d.detail.wire(devices[name][b], strip[2 * n + 2], wire=(BU, 0.5))
     model = fr.build(d, cabinet_document(cabinet)).model
     names = {device.id: name for name, device in devices.items()}
     found = {}

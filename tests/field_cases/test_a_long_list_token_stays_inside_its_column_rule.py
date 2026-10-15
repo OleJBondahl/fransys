@@ -41,7 +41,7 @@ def _pdf(root: Path) -> Path:
     strip = d.terminal_strip(_STRIP, "DEMO-TB-2.5", 3, place="C1")
     for number in range(1, 4):
         relay = d.device(f"{_DEVICE}-{number}", "DEMO-RLY-2CO-24", place="C1")
-        d.wire(relay["A1"], strip[number].outer, wire=(BU, 0.5))
+        d.detail.wire(relay["A1"], strip[number].outer, wire=(BU, 0.5))
     cover = root / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     document = fr.document(

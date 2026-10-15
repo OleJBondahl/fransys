@@ -457,3 +457,31 @@ def test_the_reserve_measures_the_heading_of_the_set_it_is_drawn_in(monkeypatch)
         return images.rooms({(key, coil): reserve}, (drawn(1),), (unit_plan,), inputs)[key, coil][1]
 
     assert right(plan) > right(replace(plan, unit=None))
+
+
+def test_a_gang_partners_each_member() -> None:
+    """layout-0227: a group of two changeovers drawn as one spec names each member's first port.
+
+    # UNDO: stages/image_refs.py:member_partners, `poles = (None,)` (one partner for the group)
+    """
+    coil = _relay_function(1, "coil", "A1", "A2")
+    ports = tuple(
+        replace(port, pole=index // 3)
+        for index, port in enumerate(
+            _relay_function(2, "contact_co", "11", "12", "14", "21", "22", "24").ports
+        )
+    )
+    group = replace(
+        _relay_function(2, "contact_co"),
+        ports=ports,
+        poles=2,
+        gang=(hid("function", 2), hid("function", 4)),
+    )
+    page = (placed(1, x=0, y=0, name="a"), placed(2, x=200, y=0, name="b"))
+    marks = {hid("function", 2): (["11-14", "21-24"], ["11-12", "21-22"])}
+    inputs = ImageInputs((group, coil), SHEET, PROFILE, marks, no_place="N/A")
+    (found,), _ = contact_images((page_plan(("a", "b")),), [(page, ())], inputs)
+    (label,) = found[1]
+    assert label.partners == tuple(
+        RequestPartner(port=ports[i].port, drawing_set=1, page=1, x=200) for i in (0, 3)
+    )

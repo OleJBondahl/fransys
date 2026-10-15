@@ -13,7 +13,7 @@ from pypdfium2 import raw
 from test_reader_order import _design
 
 from fransys_model.derive import page_destination
-from fransys_model.derive.drawing_text import cross_reference_text
+from fransys_model.derive.contact_image import cross_reference_text
 from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.page_nav import outline_sheets, reference_links
 from fransys_model.derive.sheets import sheets

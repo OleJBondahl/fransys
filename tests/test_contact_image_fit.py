@@ -18,6 +18,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
+from fransys_el import REF_TINTS
 from fransys_render import pages
 
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
@@ -107,7 +108,7 @@ def _drawn_image(tmp_path: Path, names: tuple[str, str, str]) -> tuple[list, dic
         if one.kind is LabelKind.CROSS_REFERENCE and one.slot == "contacts"
     )
     sheet = default_sheet_format()
-    (svg,) = pages(model).values()
+    (svg,) = pages(model, tints=REF_TINTS).values()
 
     def mm_x(g: int) -> Decimal:
         return grid_to_mm(sheet.content_x_mm, g, sheet.module_mm)

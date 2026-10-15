@@ -5,13 +5,7 @@ from typing import TYPE_CHECKING, cast
 from .baseline_codec import _decimal_dict
 from .order import natural_key
 from .revision_text import revision_text
-from .rows import (
-    BaselineBoundary,
-    BaselineItem,
-    BaselineNestedUnit,
-    BaselineUnit,
-    Change,
-)
+from .rows_baseline import BaselineBoundary, BaselineItem, BaselineNestedUnit, BaselineUnit, Change
 
 if TYPE_CHECKING:
     from fransys_model.vocab.ratings import Operating, Rating
@@ -104,6 +98,11 @@ def _item_field_text(field: str, value: object) -> str:
     return "" if value is None else str(value)
 
 
+def _item_detail(row: BaselineItem) -> str:
+    """The part text of an added or removed item: its set `mpn` and `manufacturer`, comma-joined."""
+    return ", ".join(text for text in (row.mpn, row.manufacturer) if text)
+
+
 def _item_changes(
     a_rows: tuple[BaselineItem, ...], b_rows: tuple[BaselineItem, ...], unit_subject: str
 ) -> list[Change]:
@@ -121,7 +120,7 @@ def _item_changes(
                 before="",
                 after="",
                 parts=(designation,),
-                detail=f"{r.mpn}, {r.manufacturer}",
+                detail=_item_detail(r),
             )
         )
     for designation in set(b_index) - set(a_index):
@@ -135,7 +134,7 @@ def _item_changes(
                 before="",
                 after="",
                 parts=(designation,),
-                detail=f"{r.mpn}, {r.manufacturer}",
+                detail=_item_detail(r),
             )
         )
     for designation in set(a_index) & set(b_index):

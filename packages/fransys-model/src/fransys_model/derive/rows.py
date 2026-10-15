@@ -18,17 +18,16 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from fransys_model.kernel import AuthoringKey, Id, register_enum, value
-from fransys_model.layout import OverviewRef, Page
+from fransys_model.kernel import Id, register_enum, value
+from fransys_model.layout import OverviewRef
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit
-from fransys_model.vocab.enums import FunctionKind, Gender, SignalType
-from fransys_model.vocab.ratings import Operating, Rating
+from fransys_model.vocab.enums import FunctionKind, Gender
+from fransys_model.vocab.ratings import Rating
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
 from .rows_cores import OpenCoreRow
-from .rows_removed import RemovedAncestry
 
 
 @value
@@ -76,83 +75,6 @@ class BomLine:
     count: int
     designations: tuple[str, ...]
     revision: str
-
-
-@value
-class PlcChannelRow:
-    """One pin of a PLC channel.
-
-    `pin` is its printed designation (`-A2:5`), `channel_name` the
-    channel's own number, `wired_to` the printed far ends at that port joined with `CELL_SEPARATOR`
-    (`None` for none). The device fields and `signal_name` are `None` for an unbound channel.
-    """
-
-    channel: Id[Function]
-    port: Id[Port]
-    pin: str
-    channel_name: str
-    signal: SignalType
-    wired_to: str | None
-    field_device: Id[Function] | None
-    field_device_designation: str | None
-    signal_name: str | None
-
-
-@value
-class PlcTable:
-    """One table of the PLC list: the channels of one controller or module.
-
-    `item` carries the channels, `designation` is its printed designation, the table's heading;
-    `rows` are its `PlcChannelRow`s in list order, never empty.
-    """
-
-    item: Id[Item]
-    designation: str
-    rows: tuple[PlcChannelRow, ...]
-
-
-@value
-class ChannelScaling:
-    """The `scaling` facet of a field device, projected so a formatter never looks it up."""
-
-    unit: str
-    raw_min: int
-    raw_max: int
-    eng_min: Decimal
-    eng_max: Decimal
-
-
-@value
-class PlcRackChannel:
-    """One channel of a rack module, bound or spare.
-
-    The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
-    `None` for a bound device that carries no `scaling` facet.
-    """
-
-    channel: Id[Function]
-    number: int
-    signal: SignalType
-    field_device: Id[Function] | None
-    field_device_designation: str | None
-    signal_name: str | None
-    scaling: ChannelScaling | None
-
-
-@value
-class PlcRackModule:
-    """One PLC module of a rack with its channels, for an output that walks the rack in order.
-
-    `mpn` and `description` are the `Part`'s, projected as `BomLine` does. `position` is the
-    item's own `position`, `None` when it was never authored.
-    """
-
-    module: Id[Item]
-    designation: str
-    mpn: str
-    description: str
-    position: int | None
-    channels: tuple[PlcRackChannel, ...]
 
 
 @value
@@ -427,16 +349,6 @@ class ItemKind(Enum):
 
 
 @register_enum
-class SignalKind(Enum):
-    """The form and direction of a PLC signal."""
-
-    DIGITAL_IN = "digital_in"
-    DIGITAL_OUT = "digital_out"
-    ANALOGUE_IN = "analogue_in"
-    ANALOGUE_OUT = "analogue_out"
-
-
-@register_enum
 class OverviewLinkKind(Enum):
     """How two items are connected in the overview: the closed set of kinds.
 
@@ -631,31 +543,6 @@ class UnitMatrix:
 
 
 @value
-class LensChannel:
-    """One channel of a PLC module for the Signals lens: its signal kind and field device.
-
-    The device fields are `None` for a spare channel.
-    """
-
-    channel: Id[Function]
-    number: int
-    kind: SignalKind
-    signal_name: str | None
-    device: Id[Function] | None
-    device_item: Id[Item] | None
-    device_designation: str | None
-
-
-@value
-class LensModule:
-    """One PLC module of the Signals lens with its channels in channel order."""
-
-    module: Id[Item]
-    designation: str
-    channels: tuple[LensChannel, ...]
-
-
-@value
 class DiffMark:
     """The drawn boxes and lines one `ListingDiff` row marks on a level.
 
@@ -688,72 +575,6 @@ class ExtUsage:
 
 
 @value
-class BaselineUnit:
-    """The `unit` key of a baseline listing: the listed unit's own release facts."""
-
-    name: str
-    version: int
-    revision: int
-    interface: str
-
-
-@value
-class BaselineItem:
-    """One `items` entry of a baseline listing; `parent` is its parent's designation (0212)."""
-
-    designation: str
-    mpn: str
-    manufacturer: str
-    installed: bool
-    external: bool
-    position: int | None
-    parent: str | None = None
-
-
-@value
-class BaselineNestedUnit(BaselineUnit):
-    """One `units` entry: a unit release directly nested in the listed unit, with its instances.
-
-    `instances` names each instance sharing this `(name, version, revision)` release: the
-    smallest, in sort order, of its own root items' unit designations in the listed unit.
-    """
-
-    instances: tuple[str, ...]
-
-
-@value
-class BaselineBoundary:
-    """One `boundary` entry: a boundary function of the listed unit, with its stated rating."""
-
-    designation: str
-    ports: tuple[str, ...]
-    rating: Rating | None
-    operating: Operating | None
-
-
-@value
-class BaselineConductor:
-    """One `conductors` entry: a conductor belonging to the listed unit."""
-
-    kind: str
-    a: str
-    b: str
-    carrier: str | None
-    colour: str | None
-    gauge_mm2: str | None
-    length_mm: int | None
-    label: str | None
-
-
-@value
-class BaselineMate:
-    """One `mates` entry: a `Mate` with a side on an item of the listed unit itself."""
-
-    a: str
-    b: str
-
-
-@value
 class MateRow:
     """One `Mate` of the model, at any level: its two CONNECTOR or TERMINAL functions, with texts.
 
@@ -767,110 +588,7 @@ class MateRow:
     b_designation: str
 
 
-@value
-class BaselineNet:
-    """One `nets` entry: a `Net` with a member port on an item of the listed unit itself."""
-
-    name: str | None
-    net_class: str
-    potential: str | None
-    ports: tuple[str, ...]
-
-
-@value
-class Listing:
-    """A unit's baseline listing: designation-relative, format-versioned."""
-
-    unit: BaselineUnit
-    items: tuple[BaselineItem, ...]
-    units: tuple[BaselineNestedUnit, ...]
-    boundary: tuple[BaselineBoundary, ...]
-    conductors: tuple[BaselineConductor, ...]
-    mates: tuple[BaselineMate, ...]
-    nets: tuple[BaselineNet, ...]
-
-
-@value
-class Change:
-    """One difference between two listings of the same unit (`derive.baseline.diff`).
-
-    `subject` is the CSV-ready identity text (`Change`'s own `field`/`before`/`after` are
-    always plain `str`, never a bare int or bool — the value already rendered). `parts` is the
-    identity's own rendered pieces with NO backticks and NO joining, for a renderer that needs
-    "between `a` and `b`" or "`instance` (name)" shapes without ever parsing `subject` (reports
-    package rule: never parse a designation). `detail` is a short rendered description for an
-    `added`/`removed` row that needs more than its bare identity to be legible (populated only
-    for `items` and `boundary`, per the worked example -- every other section's
-    `added`/`removed` rows carry `detail=""`; `changed` rows always carry `detail=""` too, since
-    `field`/`before`/`after` already say what changed).
-    """
-
-    section: str
-    change: str
-    subject: str
-    field: str
-    before: str
-    after: str
-    parts: tuple[str, ...]
-    detail: str
-
-
-@value
-class ListingDiff:
-    """The change list from listing `a` to listing `b` (`derive.baseline.diff`)."""
-
-    a: BaselineUnit
-    b: BaselineUnit
-    changes: tuple[Change, ...]
-    ancestry: tuple[RemovedAncestry, ...] = ()
-
-
-CHANGE_COLUMNS = ("section", "change", "subject", "field", "before", "after")
-
-
 # -- numbering pins (`derive.numbering_pins`) ------------------
-
-
-@value
-class NumberingItem:
-    """One `items` entry of a unit's numbering pins: an item that prints a designation.
-
-    `key` is `derive.unit_relative_key`'s. `scope` is the relative key of the board or
-    harness the item's designation reads through, `None` for none. `code` is the item's
-    part's `class_code`, or `None` for a part-less item -- one record, one spelling of
-    absence, matching `scope`'s own `None` (ruling 2026-09-27); `code` never gates
-    reuse, a reserved text is taken by its `text` alone in its group. `text` is the
-    item's OWN label (`derive.designation.own_designation_or_none`), never the full
-    `item_designation` chain -- the release check compares on this field, not the
-    chain. `authored` says whether the engineer wrote it (a tag) or the pass assigned it.
-    """
-
-    key: AuthoringKey
-    scope: AuthoringKey | None
-    code: str | None
-    text: str
-    authored: bool
-
-
-@value
-class NumberingRetired:
-    """One `retired` entry: a designation given out earlier in this version.
-
-    Its item is gone, or has moved to a different group or class code. `code` is `None` for
-    a part-less item, the same spelling `NumberingItem.code` uses.
-    """
-
-    scope: AuthoringKey | None
-    code: str | None
-    text: str
-
-
-@value
-class NumberingPins:
-    """A unit's numbering pins at release: `baseline/numbering.json`'s own shape."""
-
-    items: tuple[NumberingItem, ...]
-    retired: tuple[NumberingRetired, ...]
 
 
 @value
@@ -903,74 +621,3 @@ class HarnessLineEnd:
     plug: Id[Function] | None
     ports: tuple[Id[Port], ...]
     mates: Id[Function] | None
-
-
-@value
-class ReadabilityPage:
-    """What `fr.readability` measures of one schematic page.
-
-    `drawing_set` and `number` are as printed.
-    `text_height_mm` is the profile's capital height of text
-    and `min_text_height_mm` its floor for it. `fill_percent` is the share of the content box the
-    drawn content covers, in whole percent. The four counts are the lint findings' own:
-    `wire_crossings` (two wires of different conductors crossing), `struck_labels`
-    (`WIRE_OVER_LABEL`), `text_overlaps` (`TEXT_OVERLAP`) and `lone_cells` (`LONE_CELL`).
-    The references drawn on the page: contact images with the contacts they list, stars with the
-    branches they name, and page cuts, which name one other page each. `single_*` counts the
-    images with one contact and the stars with one branch; `single_contact_images_other_page` counts
-    the single images whose contact is on another page.
-    """
-
-    page: Id[Page]
-    unit: Id[Unit] | None
-    drawing_set: int
-    number: int
-    text_height_mm: Decimal
-    min_text_height_mm: Decimal
-    fill_percent: int
-    wire_crossings: int
-    struck_labels: int
-    text_overlaps: int
-    lone_cells: int
-    contact_images: int
-    contact_image_targets: int
-    single_contact_images: int
-    single_contact_images_other_page: int
-    stars: int
-    star_branches: int
-    single_branch_stars: int
-    page_cuts: int
-
-
-@value
-class ReadabilityUnit:
-    """One unit's pages together: counts add up, `text_height_mm` and `fill_percent` are the lowest.
-
-    `unit` is `None` for the design's own pages. `min_text_height_mm` is the highest floor of them.
-    """
-
-    unit: Id[Unit] | None
-    pages: int
-    text_height_mm: Decimal
-    min_text_height_mm: Decimal
-    fill_percent: int
-    wire_crossings: int
-    struck_labels: int
-    text_overlaps: int
-    lone_cells: int
-    contact_images: int
-    contact_image_targets: int
-    single_contact_images: int
-    single_contact_images_other_page: int
-    stars: int
-    star_branches: int
-    single_branch_stars: int
-    page_cuts: int
-
-
-@value
-class ReadabilityReport:
-    """What `fr.readability` returns: a row for each schematic page, and for each unit."""
-
-    pages: tuple[ReadabilityPage, ...]
-    units: tuple[ReadabilityUnit, ...]

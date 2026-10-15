@@ -23,11 +23,13 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import cabinet_document, layout_trigger_document
-from fransys_el import OPTIONS
+from fransys_el import OPTIONS, REF_TINTS
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines import lay_out_schematic
-from fransys_model.derive import connector_box_lines, drawing_text, page_title, unit_release
+from fransys_layout.stages.wire_copies import WireCopies
+from fransys_model.derive import connector_box_lines, page_title, unit_release
+from fransys_model.derive import tag_text as tag_text_module
 from fransys_model.derive.closure import net_of
 from fransys_model.derive.designation import (
     item_designation,
@@ -41,10 +43,10 @@ from fransys_model.derive.drawing_text import (
     item_tag_text,
     label_text,
     point_text,
-    run_point_text,
     strip_tag_text,
     unit_tag_text,
 )
+from fransys_model.derive.tag_text import run_point_text
 from fransys_model.kernel import Severity, freeze
 from fransys_model.layout import (
     ConnectorBox,
@@ -453,7 +455,7 @@ def test_the_full_form_in_a_three_phase_row_overlaps_no_text_and_still_collides(
     # UNDO: stages/texts/candidates.py: `_ALONG = (0,)` (a tag at its home or its mirror only):
     #     the row's point texts overlap again (TEXT_OVERLAP)
     monkeypatch.setattr(
-        drawing_text,
+        tag_text_module,
         "run_point_text",
         lambda model, function: terminal_designation(model, functions(model)[function].item),
     )
@@ -473,7 +475,7 @@ def test_the_readability_report_counts_the_wire_over_label_findings_of_each_page
     would prove nothing.
     """
     monkeypatch.setattr(
-        drawing_text,
+        tag_text_module,
         "run_point_text",
         lambda model, function: terminal_designation(model, functions(model)[function].item),
     )
@@ -805,7 +807,7 @@ def test_a_jumper_is_no_schematic_connection_it_is_not_routed_and_has_no_wire_la
 def _grid_of_svg_dots(model, page):
     """The junction dots of `page`'s SVG in grid units, `content_x/y + g * module / 8`, inverted."""
     sheet = default_sheet_format()
-    svg = render_pages(model)[f"{page.id.kind}:{page.id.value}"]
+    svg = render_pages(model, tints=REF_TINTS)[f"{page.id.kind}:{page.id.value}"]
     dots = set()
     for cx, cy in re.findall(r'<circle class="junction" cx="([^"]+)" cy="([^"]+)"', svg):
         gx = (float(cx) - sheet.content_x_mm) * 8 / float(sheet.module_mm)
@@ -940,17 +942,24 @@ def test_routes_of_different_nets_only_cross_straight_and_share_no_track(
 
     The fixture is the discovery cabinet with the extra relay K9 and `attach_replicas` off: its
     three crossings come from the -X2:1 replica standing apart, and layout-0108 draws the replica
-    over its pin, which leaves the cabinet none. The chained cabinet (`discovery=False`) had the
-    same three until the DejaVu widths moved its columns (EXACT-SIZES). No
-    single-line undo is known to fail this: the router avoids sharing a track on cost alone.
-    It fails once both rules go (axes empty AND the profile's `route_crossing_penalty` 0: 2
-    touches, 1 shared track). The other tests carry the can-fail load for the rest of the
-    rule."""
+    over its pin, which leaves the cabinet none; model-0220's copies at each wire go too. The
+    chained cabinet (`discovery=False`) had the same three until the DejaVu widths moved its
+    columns (EXACT-SIZES). No single-line undo is known to fail this: the router avoids
+    sharing a track on cost alone. It fails once both rules go (axes empty AND the profile's
+    `route_crossing_penalty` 0: 2 touches, 1 shared track). The other tests carry the can-fail
+    load for the rest of the rule."""
     # UNDO: (two edits) fransys_layout/stages/route.py: drop the `axes` of foreign nets in
     #   `_draw` (`if foreign:` -> False) AND set `crossing_penalty=0` in its `Field`
     monkeypatch.setattr(
         "fransys_layout.engines.schematic._arrange_columns.attach_replicas",
         lambda columns, *_: columns,
+    )
+    # model-0220 would draw -X2:1 at each wire too, which leaves the cabinet no crossing
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
     )
     model = _cabinet_model()
     crossings, touches, overlaps = _crossings_and_overlaps(model)

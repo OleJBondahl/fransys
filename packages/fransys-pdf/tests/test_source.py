@@ -28,7 +28,7 @@ from _build import (
     wire_facet,
 )
 from fransys_pdf import _lists, source
-from fransys_pdf._drawings import harness_cables_for, schematic_pages
+from fransys_pdf._drawings import _part_line, harness_cables_for, schematic_pages
 from fransys_pdf._geometry import (
     document_heading,
     resolve_sheet_format,
@@ -38,8 +38,16 @@ from fransys_pdf._pages import cover_page
 
 from fransys_model.derive import document_facts, project_facts
 from fransys_model.derive.cable_drawing import cable_block_key
-from fransys_model.kernel.ids import render_id
-from fransys_model.vocab import ConductorKind, DocumentPreset, PageKind, SignalType, documents
+from fransys_model.kernel.ids import make_id, render_id
+from fransys_model.vocab import (
+    ConductorKind,
+    DocumentPreset,
+    Net,
+    NetClass,
+    PageKind,
+    SignalType,
+    documents,
+)
 
 K = PageKind
 _PRESET = DocumentPreset.CABINET_SCHEMATIC
@@ -903,6 +911,7 @@ def _list_pages_model():
     )
     records += (a_item, a_fn, a_port, b_item, b_fn, b_port, wire, label, board_part, board)
     records += (pcb_facet("board1", subject=board_part.id), *conn[:4], *conn[4], *cable_records)
+    records += (conductor("w-conn", a=conn[4][0].id, b=a_port.id),)  # a wired pin: a table
     return model(*records), doc
 
 
@@ -937,22 +946,79 @@ def test_the_cable_list_and_the_bom_stay_full_width(page):
     assert "#columns(" not in text
 
 
-def test_each_board_of_the_connector_list_keeps_its_heading():
-    """B2-1 (pdf-0026): with two boards, each board's section keeps its level-2 heading."""
+def _boards_model(keys, *, on_net):
+    """A cabinet with one board per key, each with one connector pin; `on_net` lists it on a net."""
     c1 = location("C1", "Demo cabinet")
     doc = document(
         "d1", preset=_PRESET, subject=c1, cover="# Cover", notes=None, remove=(K.SCHEMATIC,)
     )
     records = (c1, doc)
-    for key in ("jb1", "jb2"):
+    for key in keys:
         board_part = part(f"{key}-part", description=f"Invented board {key}")
         board = item(key, description=f"Board {key}", part=board_part.id)
         conn = connector(f"j-{key}", item=board.id, name="J1", markings=("1",))
         pcb = pcb_facet(key, subject=board_part.id)
         records += (board_part, board, pcb, place(f"p-{key}", item=board.id, node=c1.id))
         records += (*conn[:4], *conn[4])
+        if on_net:
+            net_key = ("net", key)
+            records += (
+                Net(
+                    id=make_id(Net, net_key),
+                    key=net_key,
+                    name=f"N-{key}",
+                    net_class=NetClass.SIGNAL,
+                    ports=(conn[4][0].id,),
+                ),
+            )
     m = model(*records)
-    text = _lists.connector_list_page(m, documents(m)[doc.id])
+    return _lists.connector_list_page(m, documents(m)[doc.id])
+
+
+def test_each_wired_board_of_the_connector_list_keeps_its_heading():
+    """B2-1 (pdf-0026): with two boards, each wired board's section keeps its level-2 heading."""
+    text = _boards_model(("jb1", "jb2"), on_net=True)
 
     assert '#heading(level: 2, text("-JB1"))' in text
     assert '#heading(level: 2, text("-JB2"))' in text
+
+
+def test_cable_page_part_line_counts_conductor_cores_not_the_screen():
+    """A cable product of four cores and a screen prints `4 x 0.5 mm²` (pdf-0039)."""
+    harness = item("wh1", description="Demo harness")
+    demo_part = part("cab1", description="Invented screened cable")
+    cable = item("w1", description="Cable one", part=demo_part.id, parent=harness.id)
+    product = dataclasses.replace(
+        cable_product_facet("w1", subject=demo_part.id),
+        core_colours=("BN", "BK", "GY", "BU", "SH"),
+    )
+    doc = document(
+        "d1",
+        preset=DocumentPreset.HARNESS_DRAWING,
+        subject=harness,
+        cover="# Cover",
+        notes=None,
+    )
+    m = model(
+        harness, demo_part, cable, cable_facet("w1", subject=cable.id, length_mm=None), product, doc
+    )
+    (found,) = harness_cables_for(m, documents(m)[doc.id], (K.HARNESS_DRAWING,))
+    assert _part_line(found).endswith("4 x 0.5 mm²")
+
+
+def test_connector_with_no_wired_pin_prints_one_line_and_no_heading():
+    """An unwired connector prints `-JB1: no pin wired` once: no table, no heading (pdf-0039)."""
+    text = _boards_model(("jb1",), on_net=False)
+
+    assert text.count("-JB1") == 1
+    assert 'text("-JB1: no pin wired")' in text
+    assert "#heading(" not in text
+    assert "#table(" not in text
+
+
+def test_a_pin_on_a_net_counts_as_wired():
+    """A pin with no wire but listed on a net is wired: heading and table (pdf-0039)."""
+    text = _boards_model(("jb1",), on_net=True)
+
+    assert "no pin wired" not in text
+    assert "#table(" in text

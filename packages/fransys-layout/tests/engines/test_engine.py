@@ -18,7 +18,7 @@ from routing import route
 from samples import NO_HINTS, PROFILE, SHEET, drawn, hid, placed
 from wired_cabinet import wired_cabinet
 
-from fransys_layout.engines.schematic import run_stages
+from fransys_layout.engines.schematic import _arrange_columns, run_stages
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import StageInputs, read_inputs, reading
 from fransys_layout.engines.schematic.read.harness_lines import line_reads
@@ -35,6 +35,7 @@ from fransys_layout.stages import (
 from fransys_layout.stages.pagerun import PageInputs, PageState, finish_page
 from fransys_layout.stages.references import LINK_PARTNER_UNLOCATED
 from fransys_layout.stages.space import crosses
+from fransys_layout.stages.wire_copies import WireCopies, copy_map
 from fransys_model.derive import natural_key
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import Draft, Origin, freeze, make_id
@@ -131,7 +132,12 @@ def _function(inputs: StageInputs, key: tuple[str, ...]):
 
 
 def _pages_of(results: StageResults, function) -> list[tuple[int, int]]:
-    return sorted((p.drawing_set, p.page) for p in results.layout.placed if p.function == function)
+    copies = copy_map(results.copies)  # model-0220: a copy handle stands for its function
+    return sorted(
+        (p.drawing_set, p.page)
+        for p in results.layout.placed
+        if copies.get(p.function, p.function) == function
+    )
 
 
 def _replicas_of(results: StageResults, inputs: StageInputs, key: tuple[str, ...]):
@@ -141,10 +147,14 @@ def _replicas_of(results: StageResults, inputs: StageInputs, key: tuple[str, ...
     (the terminal stands at the head of the column that a wire from it feeds).
     """
     function = _function(inputs, key)
+    copies = copy_map(results.copies)  # model-0220: a copy handle stands for its function
     return [
         c
         for c in results.columns
-        if any(cell.function == function and cell.home is Home.ELSEWHERE for cell in c.cells)
+        if any(
+            copies.get(cell.function, cell.function) == function and cell.home is Home.ELSEWHERE
+            for cell in c.cells
+        )
     ]
 
 
@@ -195,16 +205,18 @@ def test_the_run_does_not_depend_on_authoring_order() -> None:
 
 
 def test_a_terminal_wired_from_two_groups_is_placed_once_on_each_page() -> None:
-    """X2:1 is at home in `=SUP` and replicated for `=P1`: two pages, one placement on each."""
+    """X2:1 is at home in `=SUP` and copied at each wire (model-0220): both pages hold it."""
     inputs, results, _ = _run()
     pages = _pages_of(results, _function(inputs, _X2))
-    assert pages == [(1, 1), (1, 2)]
+    # model-0220: three wire copies on page 1 and the home placement on page 2
+    assert pages == [(1, 1), (1, 1), (1, 1), (1, 2)]
 
 
 def test_a_replica_is_dropped_when_its_page_already_holds_the_terminal() -> None:
-    """`=P1` and `=P2` share a page: the replica for `=P2` is dropped, the one for `=P1` stays."""
+    """`=P1` and `=P2` share a page: each wire to them gets its own copy there (model-0220)."""
     inputs, results, _ = _run()
-    assert len(_replicas_of(results, inputs, _X2)) == 1
+    # model-0220: no replica is dropped, one copy per wire, all on the page of the devices
+    assert len(_replicas_of(results, inputs, _X2)) == 3
 
 
 def test_a_replica_is_kept_on_a_page_that_does_not_hold_the_terminal() -> None:
@@ -215,8 +227,9 @@ def test_a_replica_is_kept_on_a_page_that_does_not_hold_the_terminal() -> None:
     pack onto pages by their measured widths, so 250 mm still gives each pump its own page).
     """
     inputs, results, _ = _run(250)
-    assert len(_replicas_of(results, inputs, _X2)) == 2
-    assert _pages_of(results, _function(inputs, _X2)) == [(1, 1), (1, 2), (1, 3)]
+    # model-0220: one copy per wire, two on page 1, one on page 2, and the home placement on page 3
+    assert len(_replicas_of(results, inputs, _X2)) == 3
+    assert _pages_of(results, _function(inputs, _X2)) == [(1, 1), (1, 1), (1, 2), (1, 3)]
 
 
 def test_a_tag_echo_gets_a_cross_reference_label_on_both_pages() -> None:
@@ -337,7 +350,9 @@ def test_a_severed_signal_has_a_marker_pair_that_no_wire_runs_over(width_mm: int
 
 
 @pytest.mark.parametrize("width_mm", [400, 250, 150, 100])
-def test_no_marker_box_covers_a_sibling_ports_lane(width_mm: int) -> None:
+def test_no_marker_box_covers_a_sibling_ports_lane(
+    width_mm: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Decision layout-0054: an N/S marker box never covers a sibling port's lane.
 
     The vertical lane straight out of every other port of the marker's own function, on the
@@ -349,7 +364,15 @@ def test_no_marker_box_covers_a_sibling_ports_lane(width_mm: int) -> None:
 
     UNDO: in `marker_lanes.clear_of_sibling_lanes` change `found[index] = replace(...)` to `pass`.
     """
-    _, results, _ = _run(width_mm, wired=True)
+    # model-0220: with copies a terminal star draws no marker, so the lanes this test checks
+    # exist only with copies off (the markers of a terminal's star net are the premise)
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
+    _, results, _ = _run.__wrapped__(width_mm, wired=True)  # uncached: copies are off here
     layout = results.layout
     owner = {p.port: d.function for d in results.drawn for p in d.ports}
     checked = 0
@@ -375,8 +398,24 @@ def test_no_marker_box_covers_a_sibling_ports_lane(width_mm: int) -> None:
     assert checked
 
 
+def _routed_connections(width_mm: int, monkeypatch: pytest.MonkeyPatch):
+    """`_run(width_mm)` and the connections as the stages routed them (model-0220 copies)."""
+    seen = []
+    real = _arrange_columns.with_wire_copies
+
+    def record(*args):
+        seen.append(real(*args))
+        return seen[-1]
+
+    monkeypatch.setattr(_arrange_columns, "with_wire_copies", record)
+    inputs, results, _ = _run.__wrapped__(width_mm)
+    return inputs, results, seen[-1].connections
+
+
 @pytest.mark.parametrize("width_mm", [250, 150])
-def test_each_page_routes_against_its_own_boxes_only(width_mm: int) -> None:
+def test_each_page_routes_against_its_own_boxes_only(
+    width_mm: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Routing one page again with that page's boxes gives the same result.
 
     A net of 3 or more ports is drawn as markers, and a severed conductor is a
@@ -384,7 +423,7 @@ def test_each_page_routes_against_its_own_boxes_only(width_mm: int) -> None:
     its line: the page's conductors are the ones the layout drew on it. The positive half is that
     every conductor drawn on no page is one of those three, and `W1`'s cores are a drawn line's.
     """
-    inputs, results, _ = _run(width_mm)
+    inputs, results, connections = _routed_connections(width_mm, monkeypatch)
     layout = results.layout
     routed = {one_route.connection for one_route in layout.routes}
     cut = {d.connection for d in layout.decisions if d.case is LinkCase.SEVERED}
@@ -409,7 +448,7 @@ def test_each_page_routes_against_its_own_boxes_only(width_mm: int) -> None:
         slot_boxes = tuple(x.box for x in labels)
         reserved = slot_boxes
         on_page = {r.connection for r in layout.routes if (r.drawing_set, r.page) == here}
-        drawn_here = tuple(c for c in inputs.connections if c.handle in on_page)
+        drawn_here = tuple(c for c in connections if c.handle in on_page)
         routes, _ = route(
             drawn_here,
             inputs.net_groups,

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Protocol
 lazy from decimal import Decimal
 
 from fransys_model.kernel import AuthoringKey, Id, make_id
-from fransys_model.layout import GroupHint, Side, SideHint
 from fransys_model.vocab import (
     AspectNode,
     Conductor,
@@ -17,7 +16,6 @@ from fransys_model.vocab import (
     Function,
     FunctionKind,
     OpenCoreFacet,
-    Placement,
     PlcRequestFacet,
     PortRole,
     ScalingFacet,
@@ -37,6 +35,7 @@ lazy from fransys_model.vocab import Operating, Rating
 
 from ._decimal import as_decimal
 from ._enums import member
+from ._hint_writes import _write_placement
 from ._keys import scoped
 from ._limits import state_limits
 from ._origin import caller_origin
@@ -298,7 +297,9 @@ class Terminal:
     def limits(
         self, *, rating: Rating | None = None, operating: Operating | None = None
     ) -> Terminal:
-        """State the values a unit says about this terminal's boundary: `X1[1].limits(rating=...)`.
+        """Core: state the values a unit says about this terminal's boundary.
+
+        Example: `X1[1].limits(rating=...)`.
 
         Does not mark the boundary: `interface=True` on the strip does.
 
@@ -466,33 +467,6 @@ class Cable:
             at=None if at is None else as_port(at).id,
         )
         self._recorder._add(facet, caller_origin())
-
-
-def _write_group_hint(recorder: _Recorder, function: Fn, group: Group, origin: Origin) -> None:
-    """Write one `layout.group_hint` for `function` (`d.draw_in`)."""
-    key = scoped(function.key, "group_hint")
-    hint = GroupHint(id=make_id(GroupHint, key), key=key, function=function.id, group=group.id)
-    recorder._add(hint, origin)
-
-
-def _write_side_hint(recorder: _Recorder, function: Fn, side: Side, origin: Origin) -> None:
-    """Write one `layout.side_hint` for the boundary `function` (model-0177, `d.layout.side`)."""
-    key = scoped(function.key, "side_hint")
-    hint = SideHint(id=make_id(SideHint, key), key=key, function=function.id, side=side)
-    recorder._add(hint, origin)
-
-
-def _write_placement(
-    recorder: _Recorder,
-    item_id: Id[ModelItem],
-    item_key: AuthoringKey,
-    node: Location | Group,
-    origin: Origin,
-) -> None:
-    """One `placement` of `item_id` at `node`, a `+` or `=` node (`group=` on an item)."""
-    key = scoped(item_key, "at", *node.key)
-    placement = Placement(id=make_id(Placement, key), key=key, item=item_id, node=node.id)
-    recorder._add(placement, origin)
 
 
 def _item_from_stamped(key: AuthoringKey, stamped: tuple[Record, ...], recorder: _Recorder) -> Item:

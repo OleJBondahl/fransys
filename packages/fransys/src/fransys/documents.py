@@ -78,7 +78,9 @@ def document(  # noqa: PLR0913 -- the new `logo` argument
     logo: Path | None = None,
     notice: str = "",
 ) -> Draft:
-    """Author a document record from a preset, a subject, and a cover file; returns a `Draft`.
+    """Output: author a document record from a preset, a subject and a cover file.
+
+    Returns a `Draft`.
 
     Reads `cover` (a missing file raises `FileNotFoundError`) and the optional `<stem>.notes.md`
     beside it (absent: no notes page); `logo` is an optional SVG for the title block (missing

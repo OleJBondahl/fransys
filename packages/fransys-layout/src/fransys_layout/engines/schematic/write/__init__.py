@@ -8,10 +8,12 @@ from fransys_layout.engines.schematic.defaults import ENGINE_NAME, ENGINE_VERSIO
 # its builder share a name, and the package attribute must stay the module
 from fransys_layout.engines.schematic.write import harness, labels, placements, routes
 from fransys_layout.engines.schematic.write.external import external_outlines
+from fransys_layout.engines.schematic.write.keys import with_copies
 from fransys_layout.engines.schematic.write.markers import link_markers
 from fransys_layout.engines.schematic.write.power import power_symbols
 from fransys_layout.engines.schematic.write.sets import drawing_sets, pages
 from fransys_layout.engines.schematic.write.unique import check_unique
+from fransys_layout.stages.wire_copies import copy_map
 from fransys_model.kernel import Origin, evolve
 from fransys_model.layout import derived_layout_ids
 
@@ -30,6 +32,7 @@ def write_layout(model: Model, results: StageResults, keys: WriteKeys) -> Model:
     """Replace every derived `layout.*` record of `model` with the ones `results` describe."""
     stamp = produced_by()
     layout = results.layout
+    keys = with_copies(keys, copy_map(results.copies))
     sets = drawing_sets(keys, layout.pages, stamp)
     page_of = pages(keys, layout.pages, sets, results.sheet_format, stamp)
     symbols, discriminator = placements.placements(keys, results, page_of, sets, stamp)

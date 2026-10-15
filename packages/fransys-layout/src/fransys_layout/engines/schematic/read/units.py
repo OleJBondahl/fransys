@@ -26,6 +26,11 @@ def function_unit(model: Model, function: Id[Any]) -> Id[Any] | None:
     return items(model)[functions(model)[function].item].unit
 
 
+def item_unit(model: Model, item: Id[Any]) -> Id[Any] | None:
+    """The unit whose own document draws `item`: an item box has no function of its own."""
+    return items(model)[item].unit
+
+
 def boundary_edges(model: Model) -> frozenset[Id[Any]]:
     """The boundary functions of every unit of `model`."""
     return frozenset(f for unit in units_table(model) for f in boundary(model, unit))

@@ -1,4 +1,4 @@
-"""A unit's interface strip seen from a container: `d.series` and `d.wire` reach its terminals.
+"""A unit's interface strip seen from a container: `d.series` and `d.detail.wire` reach it.
 
 The one place that decides it (decision author-0023); the series and the wire both call it.
 """

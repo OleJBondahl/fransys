@@ -5,11 +5,14 @@ product or project. This repo keeps its own fixture until fransys-model's use-ca
 fixtures exist; then this fixture switches to those, extended with chain hints.
 """
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
+from unittest.mock import patch
 
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.layout import Chain, ChainEntry, GroupHint, SymbolChoice, default_sheet_format
 from fransys_model.layout import Profile as ModelProfile
@@ -46,6 +49,8 @@ from fransys_model.vocab import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from fransys_model.kernel import Id, Record
 
 _ORIGIN = Origin(file="tests/layout_cabinet.py", line=1, note="synthetic cabinet")
@@ -779,3 +784,19 @@ def build_cabinet(  # noqa: PLR0913 -- one keyword per fixture variant
     draft = Draft()
     draft.extend(reversed(b.records) if reverse else b.records, origin=_ORIGIN)
     return draft
+
+
+@contextmanager
+def no_wire_copies() -> Iterator[None]:
+    """Lay the cabinet out with no terminal drawn as copies (model-0220).
+
+    With copies the cabinet's star terminal leaves no star or reference marker, and the tests of
+    those markers need one: they lay out inside this.
+    """
+    with patch(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    ):
+        yield

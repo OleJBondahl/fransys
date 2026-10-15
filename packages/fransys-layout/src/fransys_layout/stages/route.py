@@ -1,6 +1,6 @@
 """Stage 7, route: one orthogonal polyline per connection on a page."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import Box, LayoutError, on_wiring_grid, port_page_at
@@ -12,6 +12,7 @@ from ._sides import Edge, drawn_key, drawn_order, joins_of, located, retarget
 from .content import content_box
 from .grid_path import reserve_exits
 from .space import Blocks, End, Shape, Space
+from .stub_runs import ink_boxes
 from .types import Route, RoutePoint
 
 if TYPE_CHECKING:
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
     )
 
 ROUTE_FAILED = "ROUTE_FAILED"
+ROUTE_NEAR_FLAG_STUB = "ROUTE_NEAR_FLAG_STUB"
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,12 +66,13 @@ def route(
     edges, ends = _edges(connections, net_groups, placed_of, drawn_of)
     page_inputs = _Page(
         ends=ends,
-        space=_space(placed, room, owner_of),
+        space=_space(placed, room, owner_of, _net_of_port(edges)),
         content=content_box(room.sheet),
         profile=room.profile,
         wrap_gap=room.wrap_gap,
         soft=room.blocks.soft,
     )
+    plain = _space(placed, room, owner_of, None)
     port_exits, along = _exit_cells(edges, ends)
     taken = _Taken({}, along, port_exits)
     routes = []
@@ -78,7 +81,12 @@ def route(
     for edge in drawn_order(edges, ends, placed_of):
         beside = edge.connection in room.aside
         aim = (edge, None, None) if beside else retarget(edge, joins, ends, placed_of)
+        # layout-0243: off every marker's ink first; a wire no such path holds keeps the old room
         points = _wired(edge, aim, page_inputs, taken, beside=beside)
+        if points is None:
+            points = _wired(edge, aim, replace(page_inputs, space=plain), taken, beside=beside)
+            if points is not None:  # layout-0247: the old room drops the ink, so say so
+                failures.append(_near_ink(edge, drawing_set, page))
         if points is None:
             failures.append(
                 Finding(
@@ -105,6 +113,20 @@ def route(
     return (
         tuple(sorted(routes, key=lambda one: (one.connection, one.a, one.b))),
         tuple(sorted(failures, key=lambda one: (one.code, one.subjects))),
+    )
+
+
+def _near_ink(edge: Edge, drawing_set: int, page: int) -> Finding:
+    """The note for a wire drawn in the old room, off no marker's ink (layout-0247)."""
+    return Finding(
+        code=ROUTE_NEAR_FLAG_STUB,
+        severity=Severity.INFO,
+        subjects=edge.subjects,
+        message=(
+            f"p{drawing_set}.{page}: Fransys could not draw this cleanly; please report it with "
+            "the smallest model. No path kept this wire off a link marker's stub, so it may "
+            "touch another net's marker"
+        ),
     )
 
 
@@ -237,6 +259,7 @@ def _space(
     placed: tuple[PlacedFunction, ...],
     room: PageRoom,
     owner_of: Mapping[Handle, Handle],
+    wired: Mapping[Handle, Handle] | None,
 ) -> Space:
     """The page's obstacles: keep-outs, labels, blocks and markers."""
     return Space(
@@ -245,7 +268,27 @@ def _space(
         + room.blocks.hard
         + room.blocks.soft
         + tuple(
-            Shape(owner=_marker_owner(marker, owner_of), box=marker.box) for marker in room.markers
+            shape for marker in room.markers for shape in _marker_shapes(marker, owner_of, wired)
         ),
         sides=room.blocks.sides,
+    )
+
+
+def _net_of_port(edges: Sequence[Edge]) -> dict[Handle, Handle]:
+    """The physical net of each port a wire ends on: the one home of a marker stub's net."""
+    return {ref.port: edge.physical_net for edge in edges for ref in (edge.a, edge.b)}
+
+
+def _marker_shapes(
+    marker: LinkMarker, owner_of: Mapping[Handle, Handle], wired: Mapping[Handle, Handle] | None
+) -> tuple[Shape, ...]:
+    """A marker's box and its drawn ink, the ink kept clear of other nets (layout-0243)."""
+    owner = _marker_owner(marker, owner_of)
+    if wired is None:  # the old room: the box alone
+        return (Shape(owner=owner, box=marker.box),)
+    net = wired.get(marker.port)
+    ink = ink_boxes(marker, wired=marker.port in wired)
+    return (
+        Shape(owner=owner, box=marker.box),
+        *(Shape(owner=owner, box=box, net=net) for box in ink),
     )

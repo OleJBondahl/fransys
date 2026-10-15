@@ -26,7 +26,7 @@ def built() -> fr.BuildResult:
     for number, (channel, pins) in enumerate(_PINS.items(), start=1):
         header = d.device(f"J{number}", "DEMO-CONN-2P")
         for header_pin, pin in zip(("1", "2"), pins, strict=True):
-            d.wire(header[header_pin], getattr(card, channel)[pin], wire=("WH", 0.5))
+            d.detail.wire(header[header_pin], getattr(card, channel)[pin], wire=("WH", 0.5))
     return fr.build(d)
 
 

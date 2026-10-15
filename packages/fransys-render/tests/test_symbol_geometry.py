@@ -35,27 +35,39 @@ _ORIGIN = Origin(
 # Step 5 (layout-0093): a wire that turns back round its device is a reference pair, so the
 # wide golden holds 8 markers and the narrow one 9.
 # A contact moves under its far pin (layout-0103), so one more wire
-# is drawn whole: 7 and 8. A series hop from a pin hangs as a wire (layout-0224): 4 and 6.
+# is drawn whole: 7 and 8.
+# Model-0220: a terminal wired to several devices is copies at each pin, so its markers went;
+# layout-0224: a series hop from a pin hangs as a wire. The wide golden is left its line stub
+# alone, so the exactly-one-match proof on the wide cabinet moved to the two-location golden,
+# which draws four off stubs at ports.
 _EXPECTED_MARKER_COUNTS = {
-    "cabinet_laid_out": 4,
-    "cabinet_narrow_laid_out": 6,
+    "cabinet_two_location_laid_out": 4,
+    "cabinet_narrow_laid_out": 4,
 }
 # A harness line (layout-0154) leaves its page by an OFF line stub at the end of a
 # 48 G leaving line, not at a port, so these markers are counted but match no port.
-_EXPECTED_LINE_STUB_COUNTS = {"cabinet_laid_out": 1, "cabinet_narrow_laid_out": 2}
+_EXPECTED_LINE_STUB_COUNTS = {
+    "cabinet_two_location_laid_out": 0,
+    "cabinet_narrow_laid_out": 2,
+}  # model-0220: 2 became 1; TNR-SAME-PAGE-FIX: the lost stub is back, 1 became 2
 
 
 def _is_line_stub(marker: LinkMarker) -> bool:
     return "line_stub" in str(marker.key)
 
 
-def _owning_placement(model, marker: LinkMarker) -> SymbolPlacement:
+def _placements_on_page(model, marker: LinkMarker) -> list[SymbolPlacement]:
+    """Every placement of the marker's function on its page: several where a terminal is copied."""
     function = ports(model)[marker.port].function
-    placements = [
+    return [
         p
         for p in layout_of(model, SymbolPlacement).values()
         if p.function == function and p.page == marker.page
     ]
+
+
+def _owning_placement(model, marker: LinkMarker) -> SymbolPlacement:
+    placements = _placements_on_page(model, marker)
     assert len(placements) == 1, (marker.id, placements)
     return placements[0]
 
@@ -84,17 +96,19 @@ def _assert_every_marker_has_exactly_one_matching_port(
     for marker in markers.values():
         if _is_line_stub(marker):
             continue
-        placement = _owning_placement(model, marker)
-        matches = _matching_ports(model, placement, marker)
-        assert len(matches) == 1, (marker.id, placement.symbol, matches)
+        placements = _placements_on_page(model, marker)
+        matches = [m for p in placements for m in _matching_ports(model, p, marker)]
+        assert len(matches) == 1, (marker.id, [p.symbol for p in placements], matches)
 
 
-def test_every_wide_cabinet_marker_has_exactly_one_matching_port(cabinet_laid_out):
-    """The exactly-one-match proof on the wide golden (count asserted non-zero first)."""
+def test_every_two_location_cabinet_marker_has_exactly_one_matching_port(
+    cabinet_two_location_laid_out,
+):
+    """The exactly-one-match proof on the two-location golden (count asserted non-zero first)."""
     _assert_every_marker_has_exactly_one_matching_port(
-        cabinet_laid_out,
-        _EXPECTED_MARKER_COUNTS["cabinet_laid_out"],
-        _EXPECTED_LINE_STUB_COUNTS["cabinet_laid_out"],
+        cabinet_two_location_laid_out,
+        _EXPECTED_MARKER_COUNTS["cabinet_two_location_laid_out"],
+        _EXPECTED_LINE_STUB_COUNTS["cabinet_two_location_laid_out"],
     )
 
 

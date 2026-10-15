@@ -44,14 +44,14 @@ def _make(*, chained: bool):
             x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
             f1 = d.device("F1", "DEMO-FUSE-DC-160")
             f2 = d.device("F2", "DEMO-FUSE-DC-160")
-            d.wire(x1[1], f1.element["1"], wire=WIRE)
-            d.wire(x1[2], f2.element["1"], wire=WIRE)
+            d.detail.wire(x1[1], f1.element["1"], wire=WIRE)
+            d.detail.wire(x1[2], f2.element["1"], wire=WIRE)
         with d.function("B", "String") as b:
             cells = [d.device(f"G{k}", "DEMO-CELL-3V6") for k in range(1, 5)]
-            d.wire(f2.element["2"], cells[0].cell["-"], wire=WIRE)
+            d.detail.wire(f2.element["2"], cells[0].cell["-"], wire=WIRE)
             for lower, upper in pairwise(cells):
-                d.wire(lower.cell["+"], upper.cell["-"], wire=WIRE)
-            d.wire(cells[-1].cell["+"], f1.element["2"], wire=WIRE)
+                d.detail.wire(lower.cell["+"], upper.cell["-"], wire=WIRE)
+            d.detail.wire(cells[-1].cell["+"], f1.element["2"], wire=WIRE)
         d.layout.order(a, b)
         if chained:
             d.layout.chain(x1[1], f1.element)

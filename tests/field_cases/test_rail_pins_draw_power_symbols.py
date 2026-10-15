@@ -35,8 +35,8 @@ def _build(tmp_path) -> fr.BuildResult:
         zero = d.terminal_strip("X2", "DEMO-TB-2.5", _LAMPS).run("L", _LAMPS, bridged=True)
         d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
         for number, lamp in enumerate(lamps, start=1):
-            d.wire(lamp.lamp["1"], live[number].outer, wire=(BU, 0.5))
-            d.wire(lamp.lamp["2"], zero[number].outer, wire=(BU, 0.5))
+            d.detail.wire(lamp.lamp["1"], live[number].outer, wire=(BU, 0.5))
+            d.detail.wire(lamp.lamp["2"], zero[number].outer, wire=(BU, 0.5))
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

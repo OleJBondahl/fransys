@@ -16,8 +16,9 @@ lazy from fransys_model.vocab.core import Item
 lazy from fransys_model.vocab.document import Document
 
 from .black_box import drawing_set_is_replica_only
-from .drawing_text import cell, position_text
+from .drawing_text import position_text
 from .export_names import document_export_name
+from .frame_position import cell
 from .page_destination import page_destination, set_rank
 from .printed_sets import document_drawing_sets
 

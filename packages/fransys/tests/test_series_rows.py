@@ -189,5 +189,7 @@ def test_a_two_pole_first_element_on_a_three_phase_supply_with_n_names_both_coun
     x0 = d.terminal_strip("X0", "DEMO-TB-2.5")
     ac = d.ac_supply("400V", "230", x0[1], x0[2], x0[3], n=x0[4])
     s1, e1 = d.device("S1", "DEMO-SWITCH-DC-2P"), d.device("E1", "DEMO-HEATER-24")
-    with pytest.raises(fr.AuthorError, match=r"S1 has 2 poles; a path from 400V takes 3 .* or 4"):
+    with pytest.raises(
+        fr.AuthorError, match=r"S1 has 2 poles, the path from 400V carries 3 .* or 4 .*d\.series"
+    ):
         d.series(ac, s1.main, e1.load, wire=1.5)

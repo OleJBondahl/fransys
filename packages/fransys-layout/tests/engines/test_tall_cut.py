@@ -41,10 +41,12 @@ def _series_result(n: int, tap: tuple[int, int] | None = None) -> fr.BuildResult
             _ = run_a[1], run_b[1]
             fuses = [d.device(f"G{i}", "DEMO-FUSE-DC-160") for i in range(1, n + 1)]
         d.series(*[f.element for f in fuses], wire=(RD, 1.0))
-        d.wire(run_a[1], fuses[0].element["1"], wire=(RD, 1.0))
-        d.wire(fuses[-1].element["2"], run_b[1], wire=(RD, 1.0))
+        d.detail.wire(run_a[1], fuses[0].element["1"], wire=(RD, 1.0))
+        d.detail.wire(fuses[-1].element["2"], run_b[1], wire=(RD, 1.0))
         if tap is not None:
-            d.wire(fuses[tap[0] - 1].element["2"], fuses[tap[1] - 1].element["1"], wire=(RD, 1.0))
+            d.detail.wire(
+                fuses[tap[0] - 1].element["2"], fuses[tap[1] - 1].element["1"], wire=(RD, 1.0)
+            )
         return _Cab()
 
     d = fr.design("demo_parts")

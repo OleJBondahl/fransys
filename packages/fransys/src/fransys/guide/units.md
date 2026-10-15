@@ -44,7 +44,7 @@ so the build does not ask for it to be wired. `unused=True` on a device that is 
 interface marks it as one too. The tuple the function returns names the devices a
 container can reach: `io.X1` is the field `X1`. A misspelt field is a type-checker error. A field may hold a nested unit's interface field. That connector, strip, run or terminal becomes this unit's interface too, one level at a time, and prints its full path. The black box a page draws for a nested unit is the unit directly in the page's unit that holds it. A field that holds a strip, a run or a terminal is
 typed `fr.TerminalStrip`, `fr.Run` or `fr.Terminal`.
-`d.series` and `d.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
+`d.series` and `d.detail.wire` from a container reach the unit strip's free boundary terminals, the PE core the unit's PE run, and never add one.
 
 A device with several functions takes the names of the boundary ones: `interface=("x1",),
 unused=("x2",)`. `True` takes every function. A name the part lacks raises and lists its

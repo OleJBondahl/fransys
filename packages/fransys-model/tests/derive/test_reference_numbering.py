@@ -11,7 +11,7 @@ import itertools
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from fransys_model.derive import drawing_text as dt
+from fransys_model.derive import marker_targets as dt
 from fransys_model.kernel import Id
 from fransys_model.layout import (
     DrawingSet,

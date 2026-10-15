@@ -81,7 +81,7 @@ def test_a_new_floating_relay_warns_and_takes_the_next_number_after_a_retired_on
     result, cab, _ = _cabinet(2, relays=("k_a", "k_c"), releases=released)
     (warning,) = _warnings(result)
     assert warning.severity is fr.Severity.INFO
-    assert "k_c" in warning.message
+    assert "-U1-K3" in warning.message  # the printed name, not the key
     assert "K3" in warning.message
     assert _texts(fr.release(result, released, unit=cab)) == {
         "k_a": "K1",
@@ -96,7 +96,7 @@ def test_a_new_floating_instance_warns_and_takes_the_next_number_after_a_retired
 ) -> None:
     result, cab, _ = _cabinet(2, boards=("m0", "m2"), releases=released)
     (warning,) = _warnings(result)
-    assert "m0" in warning.message
+    assert "unit -U3" in warning.message
     assert "U3" in warning.message
     assert _texts(fr.release(result, released, unit=cab)) == {
         "k_a": "K1",

@@ -133,7 +133,9 @@ def _header(sources: tuple[str, ...], digest: str) -> list[str]:
 
 
 def parts_module(*sources: str) -> str:
-    """The text of the typed parts module for the libraries `sources` name (`fr.parts` names).
+    """Detail: the text of the typed parts module for the libraries `sources` name.
+
+    For typed part classes in your editor. Try `fr.design(...)` with an MPN string first.
 
     Does not write a file: `python -m fransys parts-module` does.
     """

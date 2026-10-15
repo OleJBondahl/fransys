@@ -249,7 +249,8 @@ _FIELDS: dict[type, set[str]] = {
     layout.KeepTogether: {"groups"},
     layout.BreakBefore: {"group"},
     layout.OrderHint: {"before", "after"},
-    layout.PageTitle: {"text", "block", "function", "item"},
+    layout.PageTitle: {"text", "block", "function", "item", "unit"},
+    layout.PoleGroup: {"functions", "selector"},
     layout.SideHint: {"function", "side"},
     layout.SymbolChoice: {"function", "template", "part", "kind", "symbol", "port_map"},
     layout.SheetFormat: {

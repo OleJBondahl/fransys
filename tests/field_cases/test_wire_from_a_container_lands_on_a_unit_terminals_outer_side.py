@@ -28,7 +28,7 @@ def _make_unit(*, wire_inside: bool = False, count: int = 3):
         x1 = d.terminal_strip("X1", _TB, count, pe=_PE, interface=True)
         x1.run("PE", 1)
         if wire_inside:
-            d.wire(x1[1], d.device("M9", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+            d.detail.wire(x1[1], d.device("M9", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
         return _Io(x1)
 
     return unit
@@ -51,7 +51,7 @@ def _unit_alone() -> fr.BuildResult:
 def test_wire_from_a_container_lands_on_the_outer_side() -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_make_unit(), "U1")
-    d.wire(s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.detail.wire(s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     result = fr.build(d)
     assert _sides(result, "1") == ["external"]
     assert _sides(_unit_alone(), "1") == []
@@ -60,7 +60,7 @@ def test_wire_from_a_container_lands_on_the_outer_side() -> None:
 def test_a_later_series_skips_the_terminal_wired_from_the_container() -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_make_unit(count=4), "U1")
-    d.wire(s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.detail.wire(s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     d.series(
         s.x1,
         d.cable("W1", "DEMO-CBL-4G1.5"),
@@ -92,7 +92,7 @@ def _net_sides(result: fr.BuildResult, name: str) -> list[str]:
 def test_net_from_a_container_lands_on_the_outer_side() -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_make_unit(), "U1")
-    d.net("N1", s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"])
+    d.detail.net("N1", s.x1[1], d.device("M1", "DEMO-MOTOR-4KW")["U"])
     assert _net_sides(fr.build(d), "N1") == ["external"]
 
 

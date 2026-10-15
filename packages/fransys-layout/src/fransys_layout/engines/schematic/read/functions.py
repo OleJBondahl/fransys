@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab.core import Function, Item, Unit
 
 
-def _in_marking_order(specs: Iterable[PortSpec]) -> tuple[PortSpec, ...]:
+def in_marking_order(specs: Iterable[PortSpec]) -> tuple[PortSpec, ...]:
     """`specs` with `order` set to the rank of each name's `marking_key` (`10` after `2`)."""
     ranked = sorted(specs, key=lambda spec: (marking_key(spec.name), spec.name))
     return tuple(dataclasses.replace(spec, order=i) for i, spec in enumerate(ranked))
@@ -73,7 +73,7 @@ def function_spec(
     poles, pole_pairs = poles_and_pairs((pole.ends[0].name, pole.ends[1].name) for pole in found)
     port_ids = indexes.ports_by_function.get(function.id, ())
     thrown = _throws(model, function, found)
-    port_specs = _in_marking_order(
+    port_specs = in_marking_order(
         roles.port_spec(model, indexes, port_id, *thrown.get(port_id, (None, 0)))
         for port_id in port_ids
     )

@@ -30,10 +30,10 @@ def _columns() -> dict[str, int]:
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         d1 = d.device("D1", "DEMO-FUSE-ABAT")
     wire = (BU, 0.5)
-    d.wire(feed[1].outer, k1.coil["A1"], wire=wire)
-    d.wire(k1.coil["A2"], back[1].outer, wire=wire)
-    d.wire(k1.coil["A1"], d1["1"], wire=wire)
-    d.wire(k1.coil["A2"], d1["2"], wire=wire)
+    d.detail.wire(feed[1].outer, k1.coil["A1"], wire=wire)
+    d.detail.wire(k1.coil["A2"], back[1].outer, wire=wire)
+    d.detail.wire(k1.coil["A1"], d1["1"], wire=wire)
+    d.detail.wire(k1.coil["A2"], d1["2"], wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
     return {
         "/".join(functions(model)[p.function].key[:-2]): p.x

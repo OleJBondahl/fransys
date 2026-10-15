@@ -66,7 +66,7 @@ class _Bridge:
     def _series_width(self) -> None:
         return None
 
-    def _series_between(self, _design: Design, before: Any, after: Any) -> None:
+    def _series_between(self, _design: Design, before: Any, after: Any, _series: str) -> None:
         self.seen.append((before, after))
 
 
@@ -171,7 +171,10 @@ def test_a_bridge_needs_a_plain_element_on_each_side(lib: Draft) -> None:
 def test_three_poles_into_one_names_the_counts(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, s1 = d.device("Q1", "TEST-MCB-3P"), d.device("S1", "TEST-BTN-NO")
-    with pytest.raises(AuthorError, match="3 poles into 1: name the pins"):
+    with pytest.raises(
+        AuthorError,
+        match=r"Q1\.main leaves with 3 poles .* S1\.contact takes 1 pole .*d\.detail\.wire",
+    ):
         d.series(q1.main, s1.contact, wire=WIRE)
 
 
@@ -185,36 +188,46 @@ def test_two_functions_of_the_width_name_both(lib: Draft) -> None:
 def test_a_device_without_poles_is_named(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k2 = d.device("Q1", "TEST-MCB-3P"), d.device("K2", "TEST-COIL")
-    with pytest.raises(AuthorError, match="K2 has no poles: name its pins"):
+    with pytest.raises(AuthorError, match=r"K2 has no poles: .*`side`.*d\.detail\.wire"):
         d.series(q1.main, k2, wire=WIRE)
 
 
 def test_a_function_without_poles_is_named(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k2 = d.device("Q1", "TEST-MCB-3P"), d.device("K2", "TEST-COIL")
-    with pytest.raises(AuthorError, match=r"K2\.coil has no poles: name its pins"):
+    with pytest.raises(AuthorError, match=r"K2\.coil has no poles: .*`side`.*d\.detail\.wire"):
         d.series(q1.main, k2.coil, wire=WIRE)
 
 
 def test_a_device_with_no_function_of_the_width_lists_what_it_has(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, s1 = d.device("Q1", "TEST-MCB-3P"), d.device("S1", "TEST-BTN-NO")
-    with pytest.raises(AuthorError, match=r"S1 has no function of 3 poles; it has: contact \(1\)"):
+    with pytest.raises(
+        AuthorError,
+        match=r"S1 has no function of 3 poles; it has: contact \(1\)\. .*d\.detail\.wire",
+    ):
         d.series(q1.main, s1, wire=WIRE)
     with pytest.raises(
         AuthorError,
-        match=r"K1 has no function of 2 poles; it has: aux \(1\), coil \(1\), main \(3\)",
+        match=(
+            r"K1 has no function of 2 poles; it has: aux \(1\), coil \(1\), main \(3\)\. "
+            r".*K1\.aux"
+        ),
     ):
         d.series(_Source(d, 2), d.device("K1", "TEST-KM-3P"), wire=WIRE)
 
 
-def test_a_pin_in_a_series_raises_use_wire(lib: Draft) -> None:
+def test_a_pin_in_a_series_raises_use_detail_wire(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k1 = d.device("Q1", "TEST-MCB-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(AuthorError, match=r"a pin is one wire: use d\.wire"):
+    with pytest.raises(
+        AuthorError, match=r"a pin or terminal is one wire: .* a fixed terminal is d\.detail\.wire"
+    ):
         d.series(q1.main, k1.main["1"], wire=WIRE)
     x1 = d.terminal_strip("X1", "TEST-TERM")
-    with pytest.raises(AuthorError, match=r"a pin is one wire: use d\.wire"):
+    with pytest.raises(
+        AuthorError, match=r"a pin or terminal is one wire: .* a fixed terminal is d\.detail\.wire"
+    ):
         d.series(q1.main, x1[1], wire=WIRE)
     assert not _wires(d)
 

@@ -10,6 +10,8 @@ parametrized cases at all, unlike the modules elsewhere in this suite that build
 `documents.md`'s two builds run a full layout on a real cabinet, which is this module's main cost;
 every other page's blocks are small enough to stay well under 1 s each, `examples.md`'s included
 (it builds a document but keeps its designs tiny).
+`drawing.md` builds 33-relay cabinets (about 2 s each): it builds each size once and reuses its page
+count, and a build is added there only when its assertion needs a new input (CL5.6).
 """
 
 import ast
@@ -26,6 +28,7 @@ GUIDE_PAGES = (
     "index",
     "parts",
     "authoring",
+    "detail",
     "harnesses",
     "units",
     "build",
@@ -35,6 +38,10 @@ GUIDE_PAGES = (
     "reading-rows",
     "reading-records",
     "keywords",
+    "keywords-design",
+    "keywords-handles",
+    "keywords-output",
+    "moving-to-0.19",
     "moving-to-0.16-and-0.17",
     "moving-to-0.15",
     "moving-to-0.14",
@@ -49,6 +56,7 @@ GUIDE_PAGES = (
     "kicad",
     "moving-to-fransys",
     "drawing",
+    "readability",
     "overview",
 )
 

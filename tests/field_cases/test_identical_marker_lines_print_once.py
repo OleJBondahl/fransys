@@ -28,10 +28,10 @@ def _texts() -> dict[str, list[str]]:
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         k2, k3 = (d.device(tag, "DEMO-RLY-2CO-24") for tag in ("K2", "K3"))
         # layout-0218: unwired, K1's coil and aux draw nothing; one wire draws both
-        d.wire(k1.coil["A1"], k1.aux["13"], wire=(BU, 0.5))
+        d.detail.wire(k1.coil["A1"], k1.aux["13"], wire=(BU, 0.5))
     ends = [k1.main[pin] for pin in "135"] + [k2.coil["A2"], k3.coil["A2"]]
     for end in ends[1:]:
-        d.wire(ends[0], end, wire=(BU, 0.5))
+        d.detail.wire(ends[0], end, wire=(BU, 0.5))
     model = fr.build(d, cabinet_document(_cabinet)).model
     return {
         port_designation(model, m.port): marker_text(model, m).split("\n")

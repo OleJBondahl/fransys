@@ -16,7 +16,7 @@ import fransys_parts
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import item_designation
-from fransys_model.derive.drawing_text import off_stub_text
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.layout import (
     DrawingSet,
     HarnessLine,

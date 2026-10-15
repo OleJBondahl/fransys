@@ -6,6 +6,7 @@ Layout owns the rectangle and the title label; render draws the record as it is.
 import re
 from decimal import Decimal
 
+from fransys_el import REF_TINTS
 from fransys_render import pages
 from fransys_render._outlines import _outline_glyph, outlines_group
 
@@ -299,7 +300,7 @@ def _assert_outline_title(key_part, *, title, expected):
     model = _model(drawing_set, sheet, page, release, unit, item, fn, port, label)
 
     assert label_text(model, label) == expected
-    assert f">{expected}</text>" in next(iter(pages(model).values()))
+    assert f">{expected}</text>" in next(iter(pages(model, tints=REF_TINTS).values()))
 
 
 # --- 4. No outline record: `outlines_group` draws nothing, on a fresh model and on every ---------
@@ -347,5 +348,5 @@ def test_real_goldens_render_no_outline(
         _TWO_LOCATION_GOLDEN_PAGE_COUNT
     )
     for model, _expected_page_count in goldens:
-        for svg in pages(model).values():
+        for svg in pages(model, tints=REF_TINTS).values():
             assert 'class="unit-boundary"' not in svg

@@ -40,8 +40,8 @@ class _Supply(NamedTuple):
 def _supply_cab(u: Any) -> _Supply:
     t1 = u.device("T1", "DEMO-PSU-24", interface=("output",))
     lamp = u.device("H2", "DEMO-LAMP-24")
-    u.wire(lamp["1"], t1.output["+"], wire=("WH", 0.5))
-    u.wire(lamp["2"], t1.output["-"], wire=("WH", 0.5))
+    u.detail.wire(lamp["1"], t1.output["+"], wire=("WH", 0.5))
+    u.detail.wire(lamp["2"], t1.output["-"], wire=("WH", 0.5))
     return _Supply(t1)
 
 
@@ -50,8 +50,8 @@ def _design() -> fr.Design:
     def container(c: Any) -> _Open:
         io = c.add(_supply_cab, "U1")
         lamp = c.device("H1", "DEMO-LAMP-24")
-        c.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
-        c.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
+        c.detail.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
+        c.detail.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
         return _Open()
 
     d = fr.design("demo_parts")

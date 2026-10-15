@@ -47,9 +47,9 @@ def built() -> tuple[fr.BuildResult, set[tuple[str, ...]]]:
     d.add(_board, "U2", unused=("spare", "feed"))
     far = d.terminal_strip("X9", _TB, 5)
     for pick, n in ((0, 1), (2, 2), (3, 3)):
-        d.wire(one.spare[pick].outer, far[n].inner, wire=_WIRE)
-    d.wire(one.feed[1].outer, far[4].inner, wire=_WIRE)
-    d.wire(one.feed[2].outer, far[5].inner, wire=_WIRE)
+        d.detail.wire(one.spare[pick].outer, far[n].inner, wire=_WIRE)
+    d.detail.wire(one.feed[1].outer, far[4].inner, wire=_WIRE)
+    d.detail.wire(one.feed[2].outer, far[5].inner, wire=_WIRE)
     result = fr.build(d)
     model = result.model
     by_id = {f.id: f for f in functions(model).values()}

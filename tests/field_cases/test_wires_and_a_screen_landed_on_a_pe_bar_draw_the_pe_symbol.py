@@ -42,7 +42,7 @@ def _cab(c: Any) -> _Unit:
     h1 = c.device("H1", "DEMO-LAMP-24")
     pe1 = c.device("PE1", "DEMO-PEBAR-20").pe
     for name in MOTORS:
-        c.wire(c.device(name, "DEMO-MOTOR-4KW").motor["PE"], pe1, wire=(GNYE, 2.5))
+        c.detail.wire(c.device(name, "DEMO-MOTOR-4KW").motor["PE"], pe1, wire=(GNYE, 2.5))
     w2 = c.cable("W2", "DEMO-CBL-2X2X0.75-SP", length_m=25)
     w2.core(1, x1[2], h1[2])
     w2.core(5, pe1)
@@ -55,7 +55,7 @@ def _cut(c: Any) -> _Unit:
     strip = c.terminal_strip("X1", "DEMO-TB-PE-2.5", LANDINGS)
     pe1 = c.device("PE1", "DEMO-PEBAR-CUT").pe
     for n in range(1, LANDINGS + 1):
-        c.wire(strip[n], pe1, wire=(GNYE, 2.5))
+        c.detail.wire(strip[n], pe1, wire=(GNYE, 2.5))
     return _Unit()
 
 

@@ -6,7 +6,7 @@ greedy and never moves a text it has placed (Room: nothing is shifted after `tex
 """
 
 from typing import TYPE_CHECKING, Any
-lazy from collections.abc import Iterable, Sequence
+lazy from collections.abc import Iterable, Iterator, Sequence
 
 from fransys_layout.geometry import Box, Facing, LayoutError, Point, first_clear, is_clear, overlaps
 from fransys_layout.stages.space import Run, covers, crosses
@@ -42,6 +42,7 @@ class Place:
     box: Box
     stub: tuple[Box, ...] = ()
     fits: bool = True
+    crosses: bool = False  # layout-0244: its stub crosses another marked port's lane
 
 
 @value
@@ -108,12 +109,11 @@ def place_texts(
         foreign = [one.box for one in placed if one.handle != text.handle]
         others = [_run(shape.box) for shape in lanes]
         options = _options(text, table)
-        fitting = (
-            (i, place)
-            for i, (place, fits) in enumerate(options)
-            if fits and not any(overlaps(part, box) for part in place.stub for box in foreign)
-        )
-        found = _first_free(fitting, space, crossing, others, runs)
+        # layout-0244: a stub off other handles' stubs first; a crowded row keeps the old rule
+        inked = [*foreign, *(box for handle, box in stubs if handle != text.handle)]
+        found = _first_free(
+            _fitting(options, inked, strict=True), space, crossing, others, runs
+        ) or _first_free(_fitting(options, foreign, strict=False), space, crossing, others, runs)
         index = 0 if found is None else found[0]
         if found is None:
             findings.append(
@@ -142,6 +142,22 @@ def place_texts(
 def _option_box(option: tuple[int, Place]) -> Box:
     """The box of an `(index, place)` option."""
     return option[1].box
+
+
+def _fitting(
+    options: Sequence[tuple[Place, bool]], foreign: Sequence[Box], *, strict: bool
+) -> Iterator[tuple[int, Place]]:
+    """Each fitting option, with its index, whose stub meets none of `foreign`.
+
+    `strict`: nor crosses another marked port's lane (layout-0244).
+    """
+    return (
+        (i, place)
+        for i, (place, fits) in enumerate(options)
+        if fits
+        and not (strict and place.crosses)
+        and not any(overlaps(part, box) for part in place.stub for box in foreign)
+    )
 
 
 def _first_free(

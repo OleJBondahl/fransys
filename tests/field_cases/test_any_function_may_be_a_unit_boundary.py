@@ -67,20 +67,20 @@ def _skid(u: Any) -> _Plc:
 
 def _wire_plc(c: Any, io: _Plc) -> None:
     field = c.device("J1", "DEMO-CONN-2P")
-    c.wire(field["1"], io.AI1.ai_1["1"], wire=("WH", 0.5))
-    c.wire(field["2"], io.AI1.ai_1["2"], wire=("WH", 0.5))
+    c.detail.wire(field["1"], io.AI1.ai_1["1"], wire=("WH", 0.5))
+    c.detail.wire(field["2"], io.AI1.ai_1["2"], wire=("WH", 0.5))
 
 
 def _wire_relay(c: Any, io: _Relay) -> None:
     field = c.device("J1", "DEMO-CONN-2P")
-    c.wire(field["1"], io.K1.coil["A1"], wire=("WH", 0.5))
-    c.wire(field["2"], io.K1.coil["A2"], wire=("WH", 0.5))
+    c.detail.wire(field["1"], io.K1.coil["A1"], wire=("WH", 0.5))
+    c.detail.wire(field["2"], io.K1.coil["A2"], wire=("WH", 0.5))
 
 
 def _wire_supply(c: Any, io: _Supply) -> None:
     lamp = c.device("H1", "DEMO-LAMP-24")
-    c.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
-    c.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
+    c.detail.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
+    c.detail.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
 
 
 _CASES = {

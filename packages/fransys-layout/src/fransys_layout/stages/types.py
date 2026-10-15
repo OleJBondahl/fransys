@@ -266,10 +266,16 @@ class FunctionSpec:
     switch_group: Id[Any] | None = None
     actuator: bool = True  # layout-0237: False for a grouped switch other than its lead
     home: Home = Home.HERE  # layout-0120: ELSEWHERE for a unit-boundary rail terminal (replicas)
+    gang: tuple[Id[Any], ...] = ()  # layout-0227: a `d.poles` group's functions, pole order
 
     def __post_init__(self) -> None:
         """Sort `ports` by `order`, then name, and `pole_pairs` by index; paths keep their order."""
         _sort(self, ports=lambda p: (p.order, p.name), pole_pairs=lambda p: p.index)
+
+    @property
+    def members(self) -> tuple[Id[Any], ...]:
+        """The model functions this spec draws: its group's (layout-0227), else its own."""
+        return self.gang or (self.function,)
 
     @property
     def drawing_set_key(self) -> tuple[Id[Any] | None, Id[Any] | None]:

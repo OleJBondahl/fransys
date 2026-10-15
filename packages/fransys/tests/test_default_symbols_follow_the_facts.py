@@ -110,7 +110,7 @@ def _built(tmp_path):
             fn = device.sw if tag in {"PB", "ES"} else device.element
             for pin in ("A", "B") if tag in {"PB", "ES"} else ("1", "2"):
                 number += 1
-                d.wire(strip[number], fn[pin], wire=(BU, 0.5))
+                d.detail.wire(strip[number], fn[pin], wire=(BU, 0.5))
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

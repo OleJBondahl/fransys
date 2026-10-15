@@ -71,8 +71,8 @@ def _cabinet(d: fr.Design) -> _Open:
     header = d.add(_header_board, "HDR")
     terminal = d.add(_terminal_board, "TRM")
     feed = d.terminal_strip("X9", "DEMO-TB-2.5", 2)
-    d.wire(feed[1].outer, header.X1[1], wire=(BU, 0.5))
-    d.wire(feed[2].outer, terminal.X2[1].outer, wire=(BU, 0.5))
+    d.detail.wire(feed[1].outer, header.X1[1], wire=(BU, 0.5))
+    d.detail.wire(feed[2].outer, terminal.X2[1].outer, wire=(BU, 0.5))
     return _Open()
 
 
@@ -85,7 +85,7 @@ def findings() -> tuple[fr.Finding, ...]:
 
 
 def test_wire_onto_a_male_header_warns(findings: tuple[fr.Finding, ...]) -> None:
-    fired = [f for f in findings if f.code == _CODE and "CAB/HDR/" in f.message]
+    fired = [f for f in findings if f.code == _CODE and "-CAB-HDR-X1" in f.message]
     assert len(fired) == 1
     assert fired[0].severity is fr.Severity.WARNING
 
@@ -93,4 +93,12 @@ def test_wire_onto_a_male_header_warns(findings: tuple[fr.Finding, ...]) -> None
 def test_wire_onto_a_neutral_terminal_is_silent(findings: tuple[fr.Finding, ...]) -> None:
     fired = [f for f in findings if f.code == _CODE]
     assert fired  # the header's warning is there, so the terminal's silence is told apart
-    assert not [f for f in fired if "CAB/TRM/" in f.message]
+    assert not [f for f in fired if "-CAB-TRM-" in f.message]
+
+
+def test_the_wire_subject_prints_as_its_ends_and_never_as_a_key(
+    findings: tuple[fr.Finding, ...],
+) -> None:
+    (fired,) = (f for f in findings if f.code == _CODE and "-CAB-HDR-X1" in f.message)
+    assert "subject: wire -CAB-X9:1 to -CAB-HDR-X1:1 (" in fired.message
+    assert "/wire/" not in fired.message

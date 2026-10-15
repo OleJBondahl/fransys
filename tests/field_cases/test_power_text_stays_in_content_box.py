@@ -45,9 +45,9 @@ def _build(tmp_path):
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("S", psu)
     for di, lamp in loads:
-        d.wire(psu.output["+"], di.di_1["1"], wire=(BU, 0.5))
-        d.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
-        d.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
+        d.detail.wire(psu.output["+"], di.di_1["1"], wire=(BU, 0.5))
+        d.detail.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

@@ -23,8 +23,8 @@ def test_a_spare_port_of_an_own_device_gives_no_warning() -> None:
     def _spare(d: Any) -> _Cab:
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, interface=True)
         io = d.device("A1", "DEMO-IO-2X")  # x2 stays free
-        d.wire(x1[1], io.x1["1"], wire=(BU, 0.75))
-        d.wire(x1[2], io.x1["2"], wire=(BU, 0.75))
+        d.detail.wire(x1[1], io.x1["1"], wire=(BU, 0.75))
+        d.detail.wire(x1[2], io.x1["2"], wire=(BU, 0.75))
         return _Cab(x1)
 
     d = fr.design("demo_parts")

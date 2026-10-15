@@ -55,7 +55,7 @@ def _cab(u: Any) -> _Cab:
     own = u.device("K2", "DEMO-RLY-2CO-24")
     board.K1.coil.plc(fr.DO, "BOARD_RUN", priority=1)
     own.coil.plc(fr.DO, "OWN_RUN", priority=2)
-    u.wire(plug["1"], own.coil["A1"], wire=(BU, 0.5))
+    u.detail.wire(plug["1"], own.coil["A1"], wire=(BU, 0.5))
     return _Cab(u.device("X1", "DEMO-CONN-2P", interface=True))
 
 

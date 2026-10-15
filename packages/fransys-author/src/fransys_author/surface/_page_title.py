@@ -1,5 +1,6 @@
-"""`d.layout.page_title` names the pages that draw a block, a function or a device."""
+"""`d.layout.page_title` names the pages that draw a block, a function, a device or a unit."""
 
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from fransys_author._keys import scoped
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
     from fransys_author.design import Design as EngineDesign
 
 
-def _thing(target: object) -> tuple[str, Any]:
+def _thing(engine: EngineDesign, target: object) -> tuple[str, Any]:
     """`(field, engine handle)` of the thing `target` names; anything else is a refusal."""
     if isinstance(target, Group):
         return "block", target
@@ -29,7 +30,14 @@ def _thing(target: object) -> tuple[str, Any]:
         return "item", target._strip
     if isinstance(target, Terminal):
         return "item", target
-    msg = f"d.layout.page_title takes a block, a function or a device, got {type(target).__name__}"
+    added = engine._design._added_units.get(id(target))
+    if added is not None and added[0] is target and added[1] is not None:
+        draft = engine._design._draft
+        return "unit", SimpleNamespace(id=added[1], key=draft.key_of(added[1]))
+    msg = (
+        "d.layout.page_title takes a block, a function, a device, a strip or what d.add "
+        f"returned, got {type(target).__name__}"
+    )
     raise AuthorError(msg)
 
 
@@ -38,7 +46,7 @@ def hint_page_title(engine: EngineDesign, target: object, text: str) -> None:
     if not text.strip():
         msg = "d.layout.page_title: the title text is empty"
         raise AuthorError(msg)
-    field, handle = _thing(target)
+    field, handle = _thing(engine, target)
     for record in engine._design._draft.records():
         if isinstance(record, PageTitle) and getattr(record, field) == handle.id:
             msg = "d.layout.page_title: this thing already has a title; a thing takes one"

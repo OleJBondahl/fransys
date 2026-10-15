@@ -16,17 +16,17 @@ def easy(lib: Draft) -> Draft:
     with d.function("SENS", "Sensors"):
         x1 = d.terminal_strip("X1", "TEST-TB")
         b1 = d.device("B1", "TEST-SENSOR")
-        d.wire(b1.sensor.OUT, x1[3], wire=(BU, 0.75))
+        d.detail.wire(b1.sensor.OUT, x1[3], wire=(BU, 0.75))
         b2 = d.device("B2", "TEST-SENSOR")
-        d.wire(b2.sensor.OUT, x1[1], wire=(BU, 0.75))
+        d.detail.wire(b2.sensor.OUT, x1[1], wire=(BU, 0.75))
         b3 = d.device("B3", "TEST-SENSOR")
-        d.wire(b3.sensor.OUT, x1[2], wire=(BU, 0.75))
+        d.detail.wire(b3.sensor.OUT, x1[2], wire=(BU, 0.75))
     return d.draft()
 
 
 def _sensor(d: Design, x1, tag: str, number: int) -> None:
     s = d.device(tag, "TEST-SENSOR")
-    d.wire(s.sensor.OUT, x1[number], wire=(BU, 0.75))
+    d.detail.wire(s.sensor.OUT, x1[number], wire=(BU, 0.75))
 
 
 def efficient(lib: Draft) -> Draft:

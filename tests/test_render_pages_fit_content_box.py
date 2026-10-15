@@ -22,6 +22,7 @@ import fransys_author
 import fransys_parts
 import fransys_render
 from demo_designs import cabinet_design
+from fransys_el import REF_TINTS
 from fransys_pdf import document_pages
 from fransys_pdf._drawings import schematic_pages
 from fransys_pdf._geometry import resolve_sheet_format
@@ -188,7 +189,7 @@ def test_render_pages_fit_the_sheet_and_every_coordinate_lies_in_the_content_box
     record = documents(model)[document_id]
     pages = document_pages(model, document_id)
     sheet = resolve_sheet_format(model, record, pages)
-    svgs = fransys_render.pages(model)
+    svgs = fransys_render.pages(model, tints=REF_TINTS)
 
     schematic = schematic_pages(model, record, pages)
     assert len(schematic) >= _MIN_PAGE_COUNT, "no real schematic page to check"

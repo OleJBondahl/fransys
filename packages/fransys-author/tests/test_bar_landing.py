@@ -20,7 +20,7 @@ def _lands(d, n):
     pe1 = d.device("PE1", "DEMO-PEBAR-20")
     motors = [d.device(f"M{i}", "DEMO-MOTOR-4KW") for i in range(1, n + 1)]
     for m in motors:
-        d.wire(m.motor["PE"], pe1.pe, wire=WIRE)
+        d.detail.wire(m.motor["PE"], pe1.pe, wire=WIRE)
     return pe1, motors
 
 
@@ -52,7 +52,7 @@ def test_the_twenty_first_landing_raises_and_names_the_count(demo):
     pe1, _ = _lands(d, 20)
     m21 = d.device("M21", "DEMO-MOTOR-4KW")
     with pytest.raises(AuthorError, match="20 screws"):
-        d.wire(m21.motor["PE"], pe1.pe, wire=WIRE)
+        d.detail.wire(m21.motor["PE"], pe1.pe, wire=WIRE)
 
 
 def test_a_cut_to_length_bar_takes_twenty_five_landings(demo):
@@ -60,7 +60,7 @@ def test_a_cut_to_length_bar_takes_twenty_five_landings(demo):
     pe1 = d.device("PE1", "DEMO-PEBAR-CUT")
     for i in range(1, 26):
         m = d.device(f"M{i}", "DEMO-MOTOR-4KW")
-        d.wire(m.motor["PE"], pe1.pe, wire=WIRE)
+        d.detail.wire(m.motor["PE"], pe1.pe, wire=WIRE)
     bar_ports = [p for p in _records(d, Port) if p.function == pe1.pe.id]
     assert sorted(p.name for p in bar_ports) == sorted(str(i) for i in range(1, 26))
     assert len({p.id for p in bar_ports}) == 25
@@ -88,7 +88,7 @@ def test_each_taken_screw_is_in_a_pe_net(demo):
 def test_a_cut_bar_screw_is_a_pe_port_with_no_template(demo):
     d = design(demo, place="C1")
     pe1 = d.device("PE1", "DEMO-PEBAR-CUT")
-    d.wire(d.device("M1", "DEMO-MOTOR-4KW").motor["PE"], pe1.pe, wire=WIRE)
+    d.detail.wire(d.device("M1", "DEMO-MOTOR-4KW").motor["PE"], pe1.pe, wire=WIRE)
     (screw,) = [p for p in _records(d, Port) if p.function == pe1.pe.id]
     assert (screw.name, screw.role, screw.template) == ("1", PortRole.PE, None)
 
@@ -105,10 +105,10 @@ def test_a_non_bar_function_or_a_net_of_a_bar_raises(demo):
     d = design(demo, place="C1")
     m1, pe1 = d.device("M1", "DEMO-MOTOR-4KW"), d.device("PE1", "DEMO-PEBAR-20")
     with pytest.raises(AuthorError, match="is a function, not a pin"):
-        d.wire(m1.motor["PE"], m1.motor, wire=WIRE)
+        d.detail.wire(m1.motor["PE"], m1.motor, wire=WIRE)
     with pytest.raises(AuthorError, match="name one pin"):
-        d.net("SIG", m1.motor["PE"], pe1.pe)
-    d.wire(m1.motor["PE"], pe1.pe, wire=WIRE)  # the same bar lands through d.wire
+        d.detail.net("SIG", m1.motor["PE"], pe1.pe)
+    d.detail.wire(m1.motor["PE"], pe1.pe, wire=WIRE)  # the same bar lands through d.wire
     assert len(_records(d, Net)) == 1
 
 
@@ -143,12 +143,12 @@ def test_a_pe_net_after_earth_raises_naming_earth(demo):
     a, b = _earthed(d)
     d.earth(a)
     with pytest.raises(AuthorError, match=r"d\.earth"):
-        d.net("PE", b)
+        d.detail.net("PE", b)
 
 
 def test_earth_after_a_pe_net_raises_naming_earth(demo):
     d = design(demo, place="C1")
     a, b = _earthed(d)
-    d.net("PE", b)
+    d.detail.net("PE", b)
     with pytest.raises(AuthorError, match=r"d\.earth"):
         d.earth(a)

@@ -17,6 +17,7 @@ from layout_cabinet import build_cabinet
 from fransys_layout.engines.schematic import run_stages
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import StageInputs, read_inputs
+from fransys_layout.stages.wire_copies import copy_map
 from fransys_model.kernel import Id, Model, Origin, Severity, freeze, make_id
 from fransys_model.layout import Chain as ModelChain
 from fransys_model.layout import ChainEntry as ModelChainEntry
@@ -71,10 +72,7 @@ def test_the_recovery_table_matches_the_hinted_chains_exactly() -> None:
     `p1/control` runs on through X4:1's cable core to the lamp H1, which the chain discovery
     joins to it (a two-port net with a pole).
     """
-    results, _ = stage_results(_model(discovery=True), _inputs(discovery=True))
-    discovered = {
-        tuple(cell.function for cell in column.cells): column for column in results.columns
-    }
+    discovered = _columns()
     rungs = {
         "sup": (
             ("cabinet", "x1", "1", "fn", "terminal"),
@@ -111,9 +109,16 @@ def test_the_recovery_table_matches_the_hinted_chains_exactly() -> None:
 
 
 def _columns() -> dict[tuple[Id[Any], ...], Any]:
-    """The discovered columns of the discovery cabinet, by their cells' functions in order."""
+    """The discovered columns of the discovery cabinet, by their cells' functions in order.
+
+    A terminal copy cell (model-0220, handle `<id>@<far port>`) is left out: the columns are
+    compared by the chain of real functions.
+    """
     results, _ = stage_results(_model(discovery=True), _inputs(discovery=True))
-    return {tuple(cell.function for cell in column.cells): column for column in results.columns}
+    return {
+        tuple(cell.function for cell in column.cells if "@" not in cell.function.value): column
+        for column in results.columns
+    }
 
 
 def test_supply_and_control_chains_are_found_from_connectivity_alone() -> None:
@@ -233,10 +238,9 @@ def test_the_fork_is_a_star_net_that_ends_three_chains_and_stays_one_level_wire(
     """The net `X7:1.external`, `S10:11`, `S11:11` has three ports, so it links nothing.
 
     `X7:1` is a chain of its own; `S10` and `S11` each head a chain down to their 0V terminal,
-    the contact on top (its port `11` faces N). There is no trunk and no branch column. The three
-    ports stand on one y, so the net is a joined run (same-side ports at one y stay a
-    wire) and gets no star markers: each of its three ports ends a wire that runs along the one
-    level (the topmost y of the routes) shared by all three.
+    the contact on top (its port `11` faces N). There is no trunk and no branch column. The net
+    gets no star markers (model-0220): `X7:1` is drawn again as a copy at each contact's pin,
+    joined to it by a plain wire.
     """
     x7 = _function(_DISCOVERED, ("cabinet", "x7", "1", "fn", "terminal"))
     s10 = _function(_DISCOVERED, ("cabinet", "s10", "fn", "nc_1"))
@@ -248,18 +252,17 @@ def test_the_fork_is_a_star_net_that_ends_three_chains_and_stays_one_level_wire(
     assert (s10, x8_1) in columns
     assert (s11, x8_2) in columns
     layout, _, _ = run_stages(_model(discovery=True), _inputs(discovery=True))
-    ports = (_port_of(x7, "external"), _port_of(s10, "11"), _port_of(s11, "11"))
+    # model-0220: X7 is no longer one terminal with markers; each wire to it ends at a copy of it
+    results, _ = stage_results(_model(discovery=True), _inputs(discovery=True))
+    real = copy_map(results.copies)
+    x7_port = _port_of(x7, "external")
+    ports = (x7_port, _port_of(s10, "11"), _port_of(s11, "11"))
     assert not [marker for marker in layout.markers if marker.port in ports]
-    levels = {
-        port: {
-            min(point.at.y for point in route.points)
-            for route in layout.routes
-            if port in (route.a, route.b)
-        }
-        for port in ports
-    }
-    assert all(len(ys) == 1 for ys in levels.values()), "each port ends a routed wire, on one level"
-    assert len({y for ys in levels.values() for y in ys}) == 1, "all three share the one level"
+    for contact in ports[1:]:
+        (route,) = (r for r in layout.routes if contact in (r.a, r.b))
+        copy = route.b if route.a == contact else route.a
+        assert real[copy] == x7_port, "the contact's wire runs to a copy of X7 at its pin"
+        assert len({point.at.x for point in route.points}) == 1  # a plain straight wire
 
 
 def test_the_parallel_pair_is_one_row_with_a_side_element_and_no_refusal() -> None:

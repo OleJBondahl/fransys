@@ -20,9 +20,15 @@ def image_marks_of(
     model: Model, functions: tuple[FunctionSpec, ...]
 ) -> dict[Id[Any], tuple[list[str], list[str]]]:
     """Each contact function of `functions` -> the marks it lists under NO and under NC."""
-    return {
-        spec.function: contact_marks(model, spec.function) for spec in functions if listed(spec)
-    }
+    found: dict[Id[Any], tuple[list[str], list[str]]] = {}
+    for spec in functions:
+        if listed(spec):  # layout-0227: a group lists each member's marks
+            marks = [contact_marks(model, member) for member in spec.members]
+            found[spec.function] = (
+                [m for no, _ in marks for m in no],
+                [m for _, nc in marks for m in nc],
+            )
+    return found
 
 
 def image_inputs(model: Model, inputs: StageInputs) -> ImageInputs:

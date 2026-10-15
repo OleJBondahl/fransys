@@ -14,6 +14,7 @@ import pytest
 from dd_chain_fixtures import contactor_with_pole_one_wired
 
 from fransys_layout.engines.schematic import engine
+from fransys_layout.stages.wire_copies import WireCopies
 
 
 def _passes() -> list:
@@ -27,6 +28,14 @@ def _passes() -> list:
         return result
 
     with pytest.MonkeyPatch.context() as patch:
+        # model-0220: a terminal star is drawn by copies, so the references this test follows
+        # exist only with copies off
+        patch.setattr(
+            "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+            lambda columns, drawn, functions, connections, _: WireCopies(
+                functions, drawn, connections, columns, {}
+            ),
+        )
         patch.setattr(engine, "place_pages", spy)
         contactor_with_pole_one_wired(relays=True)
     return calls

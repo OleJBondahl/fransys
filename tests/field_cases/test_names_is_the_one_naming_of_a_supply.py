@@ -31,10 +31,10 @@ def _model() -> fr.BuildResult:
         "24V", psu.output, plus=psu.output["P"], minus=psu.output["M"],
         names=("24V", "GND"), earthing=fr.IT,
     )  # fmt: skip
-    d.wire(psu.output["P"], plus[1], wire=wire)
-    d.wire(psu.output["M"], minus[1], wire=("BK", 0.75))
-    d.wire(plus[2], lamp.lamp["1"], wire=wire)
-    d.wire(minus[2], lamp.lamp["2"], wire=("BK", 0.75))
+    d.detail.wire(psu.output["P"], plus[1], wire=wire)
+    d.detail.wire(psu.output["M"], minus[1], wire=("BK", 0.75))
+    d.detail.wire(plus[2], lamp.lamp["1"], wire=wire)
+    d.detail.wire(minus[2], lamp.lamp["2"], wire=("BK", 0.75))
     return fr.build(d, system_document())
 
 

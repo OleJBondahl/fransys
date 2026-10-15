@@ -65,11 +65,11 @@ def _cab(c):
     run = c.terminal_strip("X1", "DEMO-TB-FUSE-2.5", interface=True).run("24V", 6, bridged=True)
     with c.function("V", "Supply"):
         psu = c.device("G1", "DEMO-PSU-24")
-        c.wire(psu.output["+"], run[2], wire=(BU, 0.75))
+        c.detail.wire(psu.output["+"], run[2], wire=(BU, 0.75))
         c.dc_supply("24VDC", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
     with c.function("G", "Group"):
         for k in (1, 2):
-            c.wire(x2[k], run[6].outer, wire=(BU, 0.75))
+            c.detail.wire(x2[k], run[6].outer, wire=(BU, 0.75))
     return _Cab()
 
 
@@ -115,7 +115,11 @@ def test_the_wire_from_the_fuse_terminal_reaches_the_fan_in_without_a_u_turn(
     assert not any(_turns_back([(p.x, p.y) for p in r.points]) for r in routes)
 
 
-@pytest.mark.xfail(strict=True, reason="layout-0216: a terminal is drawn, not referenced")
+@pytest.mark.xfail(
+    strict=True,
+    reason="model-0220: the three stand in U1's black box in the top-level set, wired inside U1"
+    " only; no copy rule draws a box cell's wire in its parent",
+)
 def test_the_top_level_set_draws_no_terminal_that_no_wire_meets(tmp_path: Path) -> None:
     """Decision layout-0216: no terminal stands as a box cell on a top-level page with no route,
     marker or power symbol of that page at its ports (today U1/X1:24V:6, U1/X2:1 and U1/X2:2)."""

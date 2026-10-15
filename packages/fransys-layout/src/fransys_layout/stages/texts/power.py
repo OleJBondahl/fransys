@@ -55,7 +55,7 @@ _ROOM_SLOT = "power_room"  # the slot name of a room box, not of a label (`POWER
 
 @dataclass(frozen=True, slots=True)
 class PowerPlace:
-    """One power symbol on one page: `at` its origin, `pin` its lead's start, `lead` its lead."""
+    """One power symbol on one page: `at` its origin, `pin` its lead start, `grids` its length."""
 
     port: Id[Any]
     drawing_set: int
@@ -68,6 +68,7 @@ class PowerPlace:
     orientation: Orientation
     body: Box
     lead: Box
+    grids: int
 
 
 def _pin_facing(marker: LinkMarker) -> Facing:
@@ -129,6 +130,7 @@ def symbol_place(
         orientation=geometry.orientation,
         body=translate(geometry.body, dx=at.x, dy=at.y),
         lead=corridor(pin, stem),
+        grids=grids,
     )
 
 

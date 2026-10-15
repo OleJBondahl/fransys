@@ -17,7 +17,7 @@ A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is 
 | `content_height_mm` | Height of the content box. | Page capacity down the page, by the same rule. A taller box fits more rows. | A different paper size. |
 | `frame_columns` | Columns of the reference grid printed on the frame. | The content box is divided evenly. Cross references and findings name a position as a column and a row. | Rarely; more columns on a wide sheet. |
 | `frame_rows` | Rows of the reference grid. | The same, for rows. | Rarely. |
-| `module_mm` | Millimetres of one symbol module. Number or `Decimal`. | The grid pitch. Symbol bodies and gaps scale with it; text sizes and line widths do not, they are fixed in mm. A smaller module fits more on a page; a larger one splits sooner. | The first thing to change when a page is too crowded. |
+| `module_mm` | Millimetres of one symbol module. Number or `Decimal`. | The grid pitch. Symbol bodies and gaps scale with it; text sizes and line widths do not, they are fixed in mm. A smaller module fits more on a page; a larger one splits sooner. | The reader's choice of size, not a fix for a crowded page. |
 
 ```python
 from decimal import Decimal
@@ -63,5 +63,5 @@ d.layout.profile(sheet=a4)
 
 ## Grid pitch and printed sizes
 
-`module_mm` sets the grid pitch, not the printed size of text or lines, which are fixed in mm. To make a crowded page fit, make `module_mm` smaller; the page then holds more `G`. A larger one gives more pages.
-`text_height_mm` sets the smallest text on every page, as a capital height in mm. Never use it to make a page fit: a page that is too full needs a smaller `module_mm` or less on the page.
+`module_mm` sets the grid pitch, not the printed size of text or lines, which are fixed in mm. It is the reader's choice of size, never a fix for a crowded page. Split the content into function blocks (`drawing.md`). A well-formed design that still overflows is a Fransys defect: send the smallest model.
+`text_height_mm` sets the smallest text on every page, as a capital height in mm. Never use it to make a page fit: a page that is too full needs less on the page, split into function blocks.

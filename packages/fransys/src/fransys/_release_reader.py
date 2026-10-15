@@ -181,7 +181,9 @@ def release_folders(root: Path) -> tuple[Path, ...]:
 
 
 def releases(root: Path) -> tuple[Release, ...]:
-    """Every release folder under `root`, read from its manifest, in name, version, revision order.
+    """Output: every release folder under `root`, read from its manifest.
+
+    They come in name, version, revision order.
 
     `root` holds `<name>/<version>.<revision>/` folders, as `fr.release` writes them. Versions and
     revisions sort as integers. A folder with no manifest is listed with empty `interface`,

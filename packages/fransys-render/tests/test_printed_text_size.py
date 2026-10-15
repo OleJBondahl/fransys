@@ -52,13 +52,13 @@ def test_a_label_prints_at_the_derived_size(cabinet_laid_out):
 
 
 @pytest.mark.parametrize("vertical", [False, True])
-def test_a_marker_prints_at_the_derived_size(cabinet_laid_out, vertical):
-    _, sheet = _page_and_sheet(cabinet_laid_out)
-    marker = next(
-        m for m in layout_of(cabinet_laid_out, LinkMarker).values() if m.vertical == vertical
-    )
-    facing = marker_facing(cabinet_laid_out, marker)
-    svg = _text_element(sheet, _PROFILE, cabinet_laid_out, marker, facing)
+def test_a_marker_prints_at_the_derived_size(cabinet_narrow_laid_out, vertical):
+    """The narrow golden: the wide one (model-0220, layout-0224) keeps only a horizontal stub."""
+    model = cabinet_narrow_laid_out
+    _, sheet = _page_and_sheet(model)
+    marker = next(m for m in layout_of(model, LinkMarker).values() if m.vertical == vertical)
+    facing = marker_facing(model, marker)
+    svg = _text_element(sheet, _PROFILE, model, marker, facing)
     assert _font_size(svg) == _expected()
 
 

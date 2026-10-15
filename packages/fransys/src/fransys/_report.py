@@ -4,7 +4,7 @@ from collections import Counter
 
 from fransys_model.kernel import Finding, Severity
 
-from ._codes import BY_CODE
+from ._finding_text import fix_lines
 from .pipeline import BuildResult, check
 
 _SUBJECT = "  subject: "
@@ -12,7 +12,9 @@ _NAMES = {Severity.ERROR: "error", Severity.WARNING: "warning", Severity.INFO: "
 
 
 def report(result: BuildResult) -> str:
-    """One text of `fr.check(result)`: a summary line, each ERROR and WARNING, then the notes.
+    """Output: one text of `fr.check(result)`.
+
+    It holds a summary line, each ERROR and WARNING, then the notes.
 
     Each ERROR and WARNING prints its message, then an `at:` line per subject, its fix and its
     guide anchor from the code's registry entry. INFO notes print counted per code on one line.
@@ -43,8 +45,7 @@ def _plural(count: int, name: str) -> str:
 
 
 def _entry(finding: Finding) -> list[str]:
-    info = BY_CODE[finding.code]
     lines = finding.message.splitlines()
     head = [line for line in lines if not line.startswith(_SUBJECT)]
     at = [f"  at: {line.removeprefix(_SUBJECT)}" for line in lines if line.startswith(_SUBJECT)]
-    return [*head, *at, f"  fix: {info.fix}", f"  see: {info.see}"]
+    return [*head, *at, *fix_lines(finding)]

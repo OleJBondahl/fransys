@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import io_board
 
 from fransys_model.derive.baseline import diff, listing
-from fransys_model.derive.rows import (
+from fransys_model.derive.rows_baseline import (
     BaselineBoundary,
     BaselineConductor,
     BaselineItem,

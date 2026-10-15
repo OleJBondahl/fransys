@@ -11,10 +11,15 @@ import ast
 from collections import defaultdict
 from pathlib import Path
 
+from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
-from narrow_cabinet import narrow_results
+from narrow_cabinet import narrow_model
+lazy import pytest
 
+from fransys_layout.engines.schematic.engine import stage_results
+from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.stages import boxes
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.derive.designation import port_designation
 from fransys_model.kernel import freeze
 from fransys_model.vocab.tables import ports
@@ -32,11 +37,27 @@ def _ports_named(*names: str) -> list[set]:
     return [found[name] for name in names]
 
 
-def test_s2_11_to_x2_1_is_a_wire_decided_through_columns_alone() -> None:
-    """The conductor is routed on one page, `-S2:11` carries no marker, `-X2:1` none there."""
+def test_s2_11_to_x2_1_is_a_wire_decided_through_columns_alone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The conductor is routed on one page, `-S2:11` carries no marker, `-X2:1` none there.
+
+    Runs with copies off: production draws `-X2:1` as copies and never as a reference, so the
+    join under test exists only there; `tests/test_terminal_copies_where_wired_ratchet.py`
+    guards the production path.
+    """
     # CAN-FAIL: stages/references/joins.py `wired_beside`,
     #     `abs(x.cell - y.cell) == 1` -> `== 2`: the end becomes a reference and this fails
-    results, _ = narrow_results(_NARROW_WIDTH_MM)
+    # model-0220: a terminal star is drawn by copies, never by a reference, so the join under
+    # test (a reference terminal beside its wire's end) exists only with copies off
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
+    model = narrow_model(_NARROW_WIDTH_MM)
+    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     s2, x2 = _ports_named("-S2:11", "-X2:1")
     (route,) = (r for r in results.layout.routes if {r.a, r.b} & s2 and {r.a, r.b} & x2)
     page = (route.drawing_set, route.page)

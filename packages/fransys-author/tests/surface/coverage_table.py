@@ -3,8 +3,8 @@
 `ROWS` maps "Class.name" (the engine class that defines the name) to a tuple of entries. One
 entry is `("surface", spelling)`, `("pending", order, spelling)` or `("dropped", reason)`. A name
 with several spellings has several entries: build them with the helpers below, join with `+`.
-A spelling is `Class.attr` or `Class.attr(kw=)`: the class is `Design`, `Layout`, `Device`, `Fn`,
-`TerminalStrip` or `Terminal`, and `(kw=)` names a keyword of that call.
+A spelling is `Class.attr` or `Class.attr(kw=)`: the class is `Design`, `Detail`, `Layout`,
+`Device`, `Fn`, `TerminalStrip` or `Terminal`, and `(kw=)` names a keyword of that call.
 """
 
 type Entry = tuple[str, ...]
@@ -49,16 +49,16 @@ ROWS: dict[str, tuple[Entry, ...]] = {
     "Scope.cable": surface("Design.cable") + surface("Design.cable(length_m=)"),
     "Cable.core": surface("Cable.core"),
     "Cable.open_core": surface("Cable.spare"),
-    "Scope.wiring": surface("Design.wire"),
-    "Wiring.__call__": surface("Design.wire(n=)"),
-    "Wiring.run": surface("Design.wire"),
+    "Scope.wiring": surface("Detail.wire"),
+    "Wiring.__call__": surface("Detail.wire(n=)"),
+    "Wiring.run": surface("Detail.wire"),
     "Scope.earth": surface("Design.earth"),
-    "Scope.net": surface("Design.net(kind=)") + dropped(f"net(potential=): {_RAILS}"),
+    "Scope.net": surface("Detail.net(kind=)") + dropped(f"net(potential=): {_RAILS}"),
     "LinkScope.link": (
         surface("Design.device(mounted_on=)")
         + surface("Design.device(joins=)")
-        + surface("Design.busbar")
-        + surface("Design.rail_bond")
+        + surface("Detail.busbar")
+        + surface("Detail.rail_bond")
     ),
     "SupplyScope.supply": surface("Design.ac_supply")
     + surface("Design.dc_supply")
@@ -66,6 +66,7 @@ ROWS: dict[str, tuple[Entry, ...]] = {
         "rails=: ac_supply and dc_supply write the rails, a free rails mapping is no spelling (EA6)"
     ),
     "Scope.mate": surface("Design.mate"),
+    "Scope.pole_group": surface("Design.poles"),
     "Scope.harness": surface("Design.harness"),
     "LinkScope.harness_item": surface("Design.harness"),
     "Scope.unit": surface("Design.add"),

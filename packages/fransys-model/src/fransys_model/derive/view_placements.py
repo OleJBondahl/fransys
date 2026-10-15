@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.layout import PlacementView, SymbolPlacement, layout_of
+from fransys_model.layout import PlacementView, PoleGroup, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
@@ -21,7 +21,8 @@ def placements_by_function_page(
 ) -> Mapping[tuple[Id[Function], Id[Page]], SymbolPlacement]:
     """Every `SymbolPlacement` by function and page, last write winning (a replica adds a second).
 
-    An item view also answers for its item's functions drawn in it (layout-0123).
+    An item view also answers for its item's functions drawn in it (layout-0123), and a pole
+    group's first member for every member (layout-0227).
     """
     table = functions(model)
     placements = list(layout_of(model, SymbolPlacement).values())
@@ -33,4 +34,10 @@ def placements_by_function_page(
         if one.view is PlacementView.ITEM:
             for function in by_item[table[one.function].item]:
                 found.setdefault((function, one.page), one)
+    later = {
+        group.functions[0]: group.functions[1:] for group in layout_of(model, PoleGroup).values()
+    }
+    for (function, page), one in list(found.items()):
+        for member in later.get(function, ()):
+            found.setdefault((member, page), one)
     return found

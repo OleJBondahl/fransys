@@ -9,6 +9,8 @@ from fransys_model.vocab import (
     FunctionTemplate,
     InternalLink,
     LinkKind,
+    PlcChannelFacet,
+    PlcRequestFacet,
     PortRole,
     PortTemplate,
     function_poles,
@@ -27,6 +29,24 @@ if TYPE_CHECKING:
     from .design import Design
 
 _PHASE = tuple(ConductorMark)
+NO_SIDE_FIX = (
+    "its part states no line side. The part's author adds the port key `side` in the part file; "
+    "otherwise wire its pins with d.detail.wire(pin, pin, wire=...)"
+)
+_BY_HAND = "wire the poles one by one with d.detail.wire(pin, pin, wire=...)"
+
+
+def label_of(element: object) -> str:
+    """The printed name of a series element, for a message: `Q1`, `K1.coil`, `X1`, `230V`."""
+    fn = getattr(element, "_fn", None)
+    label = (
+        getattr(element, "_label", None)
+        or getattr(element, "_tag", None)
+        or getattr(element, "_name", None)
+    )
+    if fn is not None and label:
+        return f"{label}.{fn.name}"
+    return str(label or type(element).__name__)
 
 
 class End(NamedTuple):
@@ -73,11 +93,14 @@ class PartFacts:
         self._design = design
         self.templates: dict[Id[PortTemplate], PortTemplate] = {}
         self._functions: dict[Id[FunctionTemplate], FunctionTemplate] = {}
+        self._channels: dict[Id[FunctionTemplate], PlcChannelFacet] = {}
         for record in library.records():
             if isinstance(record, PortTemplate):
                 self.templates[record.id] = record
             elif isinstance(record, FunctionTemplate):
                 self._functions[record.id] = record
+            elif isinstance(record, PlcChannelFacet):
+                self._channels[record.subject] = record
         self._links: dict[Id[FunctionTemplate], list[InternalLink]] = {}
         for record in library.records():
             if isinstance(record, InternalLink):
@@ -100,6 +123,22 @@ class PartFacts:
         record = cast("Function", self._design.record_of(fn.id))
         return self._functions[cast("Id[FunctionTemplate]", record.template)]
 
+    def channel(self, fn: Fn) -> PlcChannelFacet | None:
+        """The `plc_channel` fact of the function `fn`, `None` when it is no PLC channel.
+
+        A function made without a part has no template and is no channel.
+        """
+        record = cast("Function", self._design.record_of(fn.id))
+        return self._channels.get(cast("Id[FunctionTemplate]", record.template))
+
+    def requests(self) -> dict[Id[Function], PlcRequestFacet]:
+        """The PLC request of each function that has one, as the design stands now.
+
+        Does not cache: a request made after the last call counts.
+        """
+        found = (r for r in self._design.records() if isinstance(r, PlcRequestFacet))
+        return {r.subject: r for r in found}
+
     def links(self, fn: Fn) -> list[InternalLink]:
         """The internal links of the function `fn`, in no order.
 
@@ -120,7 +159,7 @@ def _need_sides(fn: Fn, found: tuple[Pole, ...]) -> None:
     for pole in found:
         if pole.line is None:
             a, b = pole.ends
-            msg = f"{fn.name!r} pole {a.name}/{b.name} has no line side: name its pins"
+            msg = f"{fn.name!r} pole {a.name}/{b.name} has no line side: {NO_SIDE_FIX}"
             raise AuthorError(msg)
 
 
@@ -128,7 +167,7 @@ def _phase(end: End) -> int:
     return _PHASE.index(cast("ConductorMark", end.mark))
 
 
-def _marking_order(facts: PartFacts, ports: list[Port]) -> list[Port]:
+def marking_order(facts: PartFacts, ports: list[Port]) -> list[Port]:
     """`ports` in the vocab's marking order: the key `pole_order` sorts a pole's ends by."""
     templates = {port: facts.port_template(port) for port in ports}
     return sorted(ports, key=lambda port: port_order_key(templates[port]))
@@ -156,7 +195,7 @@ def _without_links(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
     if len(ports) == 2 and (pair_ := _line_load(facts, ports)):  # noqa: PLR2004 -- a pole has two ends
         return pair_
     if ports and all(facts.mark(port) is not None for port in ports):
-        return [(port, port) for port in _marking_order(facts, ports)]
+        return [(port, port) for port in marking_order(facts, ports)]
     return []
 
 
@@ -187,24 +226,40 @@ def ends_of(facts: PartFacts, fn: Fn) -> Ends:
     return Ends(line, load, pe)
 
 
-def _by_mark(source: Sequence[End], load: Sequence[End]) -> list[tuple[Port, Port]]:
+def _by_mark(
+    source: Sequence[End], load: Sequence[End], names: tuple[str, str]
+) -> list[tuple[Port, Port]]:
     first, second = sorted(source, key=_phase), sorted(load, key=_phase)
     a, b = [e.mark.value for e in first], [e.mark.value for e in second]  # ty: ignore[unresolved-attribute] -- marks checked by `pair`
     if a != b:
-        msg = f"conductors {', '.join(a)} into {', '.join(b)}: name the pins"
+        msg = (
+            f"{names[0]} carries {', '.join(a)} where {names[1]} takes {', '.join(b)}: "
+            f"conductors pair by name, so {_BY_HAND}"
+        )
         raise AuthorError(msg)
     return [(x.port, y.port) for x, y in zip(first, second, strict=True)]
 
 
-def pair(source: Sequence[End], load: Sequence[End]) -> list[tuple[Port, Port]]:
+def _ends_text(ends: Sequence[End]) -> str:
+    """`2 poles (L1, N)`: the count, then each end's conductor or pin."""
+    named = ", ".join(e.mark.value if e.mark is not None else e.port.name for e in ends)
+    return f"{len(ends)} pole{'' if len(ends) == 1 else 's'} ({named})"
+
+
+def pair(
+    source: Sequence[End], load: Sequence[End], names: tuple[str, str] = ("the source", "the load")
+) -> list[tuple[Port, Port]]:
     """Pair `source` ends with `load` ends: by conductor mark when all have one, else by position.
 
-    Does not pair unequal counts: "3 poles into 1: name the pins".
+    Does not pair unequal counts: the message names both elements, their poles and the call.
     """
     if len(source) != len(load):
-        msg = f"{len(source)} poles into {len(load)}: name the pins"
+        msg = (
+            f"{names[0]} leaves with {_ends_text(source)} but {names[1]} takes "
+            f"{_ends_text(load)}: use a function of {len(source)} poles there, or {_BY_HAND}"
+        )
         raise AuthorError(msg)
     ends = (*source, *load)
     if ends and all(end.mark is not None for end in ends):
-        return _by_mark(source, load)
+        return _by_mark(source, load, names)
     return [(a.port, b.port) for a, b in zip(source, load, strict=True)]

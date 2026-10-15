@@ -55,8 +55,8 @@ def test_a_run_marked_interface_makes_its_terminals_boundary() -> None:
     d = design(pair_library(), place="C1")
     io = d.add(cab, "U1")
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.wire(io.X2[1], lamp.lamp["1"], wire=("BK", 1.5))
-    d.wire(io.X2[2], lamp.lamp["2"], wire=("BK", 1.5))
+    d.detail.wire(io.X2[1], lamp.lamp["1"], wire=("BK", 1.5))
+    d.detail.wire(io.X2[2], lamp.lamp["2"], wire=("BK", 1.5))
     assert not _codes(d) & {"UNIT_BOUNDARY_BYPASSED"}
 
 
@@ -136,7 +136,7 @@ def _codes_wiring_terminal(number: int) -> set[str]:
     d = design(pair_library(), place="C1")
     io = d.add(cab, "U1")
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.wire(io.X2[number], lamp.lamp["1"], wire=("BK", 1.5))
+    d.detail.wire(io.X2[number], lamp.lamp["1"], wire=("BK", 1.5))
     return _codes(d)
 
 

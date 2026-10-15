@@ -27,10 +27,10 @@ def _rows() -> dict[str | None, int]:
     wire = (BU, 0.5)
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("CONTROL", psu)
-    d.wire(psu.output["+"], q2["1"], wire=wire)
-    d.wire(q2["2"], h1["1"], wire=wire)
-    d.wire(h1["2"], q1["2"], wire=wire)
-    d.wire(q1["1"], psu.output["-"], wire=wire)
+    d.detail.wire(psu.output["+"], q2["1"], wire=wire)
+    d.detail.wire(q2["2"], h1["1"], wire=wire)
+    d.detail.wire(h1["2"], q1["2"], wire=wire)
+    d.detail.wire(q1["1"], psu.output["-"], wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
     return {
         items(model)[functions(model)[p.function].item].tag: p.y

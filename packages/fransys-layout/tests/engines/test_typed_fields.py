@@ -6,11 +6,12 @@ nothing (an off stub's text is derived, `off_stub_text`).
 """
 
 import dataclasses
+from contextlib import nullcontext
 from functools import cache
 
 import pytest
 from fransys_el import OPTIONS
-from layout_cabinet import build_cabinet
+from layout_cabinet import build_cabinet, no_wire_copies
 from wired_cabinet import wired_cabinet
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -21,6 +22,7 @@ from fransys_layout.engines.schematic.write.markers import _marker_fields
 from fransys_layout.engines.schematic.write.placements import _placement_fields
 from fransys_layout.geometry import GENERIC_BOX_KEY, Box, Point, generic_box_geometry
 from fransys_layout.stages import MarkerSide
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.kernel import freeze
 from fransys_model.layout import MarkerSide as ModelMarkerSide
 from fransys_model.layout import PlacementView, Side, StarKind
@@ -28,10 +30,15 @@ from fransys_model.vocab.tables import items, ports
 
 
 @cache
-def _laid_out(*, second_location: bool = False, wired: bool = False):
-    """The cabinet laid out; `wired` gives `W1`'s cores as wires, not a line."""
+def _laid_out(*, second_location: bool = False, wired: bool = False, copies: bool = True):
+    """The cabinet laid out; `wired` gives `W1`'s cores as wires, not a line.
+
+    `copies=False` draws no terminal as copies (model-0220), which leaves the cabinet its star
+    markers: with copies the production cabinet has none, and the marker tests need them.
+    """
     model = freeze((wired_cabinet if wired else build_cabinet)(second_location=second_location))
-    results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
+    with nullcontext() if copies else no_wire_copies():
+        results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     return model, results, write_layout(model, results, write_keys(model))
 
 
@@ -98,12 +105,22 @@ def test_a_pin_view_placement_has_the_pin_view() -> None:
     assert PlacementView.ITEM not in views
 
 
-def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawing_order() -> None:
+def test_a_generic_box_with_unsorted_names_carries_its_ports_and_sides_in_drawing_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The generic box of the cabinet (not an item view) writes its own port list.
 
     The wired cabinet's lamp box: drawn as `W1`'s line end, its names are in plain order.
     """
-    _, results, out = _laid_out(wired=True)
+    # model-0220: with copies the lamp's pin 1 faces north and
+    # the box is plain; the line-end box with both pins south exists only with copies off
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
+    _, results, out = _laid_out.__wrapped__(wired=True)  # uncached: copies are off here
     generic = _generic_box(results)
     drawn = sorted(generic.geometry.ports, key=lambda port: (port.at.x, port.facing.value != "n"))
     names, sides, offsets = _placement_fields(generic, PlacementView.FUNCTION)
@@ -123,7 +140,7 @@ def test_a_box_port_standing_north_is_written_before_the_one_south_of_it() -> No
 
 
 def _marker(**changes):
-    _, results, _ = _laid_out()
+    _, results, _ = _laid_out(copies=False)
     base = next(m for m in results.layout.markers if m.star)
     plain = {
         "shared_box": False,
@@ -178,7 +195,7 @@ def _written_markers(model, results, markers):
 
 
 def test_a_star_marker_writes_the_marker_fields_from_its_stage_marker() -> None:
-    model, results, _ = _laid_out()
+    model, results, _ = _laid_out(copies=False)
     stars = [m for m in results.layout.markers if m.star]
     doctored = [
         dataclasses.replace(m, turn=Point(x=5, y=6), shared_box=True, lead=False) for m in stars
@@ -194,7 +211,7 @@ def test_a_star_marker_writes_the_marker_fields_from_its_stage_marker() -> None:
 
 def test_a_pair_marker_writes_the_marker_fields_and_carries_no_ext() -> None:
     """An owner and a user record take box x, lead, stub and via from their stage marker."""
-    model, results, _ = _laid_out()
+    model, results, _ = _laid_out(copies=False)
     base = next(m for m in results.layout.markers if m.star)
     numbers = sorted(p.number for p in results.layout.pages if p.drawing_set == base.drawing_set)
     assert len(numbers) > 1, "a cut needs two pages of one drawing set"
@@ -227,7 +244,7 @@ def test_a_pair_marker_writes_the_marker_fields_and_carries_no_ext() -> None:
 
 
 def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
-    _, results, out = _laid_out(second_location=True)
+    _, results, out = _laid_out(second_location=True, copies=False)
     written = list(dict(out.tables["layout.link_marker"]).values())
     stubs = [m for m in written if m.star is StarKind.OFF]
     assert stubs
@@ -251,7 +268,7 @@ def test_a_star_marker_maps_its_kind_and_carries_no_ext() -> None:
 
 def test_a_cabinet_with_only_reference_and_branch_stars_carries_no_marker_ext() -> None:
     """Besides its line's stubs (`W1` leaves its lamp's page), the cabinet has stars only."""
-    _, results, out = _laid_out()
+    _, results, out = _laid_out(copies=False)
     written = list(dict(out.tables["layout.link_marker"]).values())
     stubs = [m for m in written if _line_stub(m)]
     assert len(stubs) == len(results.lines.stubs) > 0

@@ -42,8 +42,8 @@ def _built() -> fr.BuildResult:
         u.mate(plug, board.j6)
         for k, name in enumerate("ABC"):
             far = u.device(f"X{name}", "FLD-HDR-2")
-            u.wire(plug[str(2 * k + 1)], far["1"], wire=WIRE)
-            u.wire(plug[str(2 * k + 2)], far["2"], wire=WIRE)
+            u.detail.wire(plug[str(2 * k + 1)], far["1"], wire=WIRE)
+            u.detail.wire(plug[str(2 * k + 2)], far["2"], wire=WIRE)
         return _Top()
 
     root = Path(tempfile.mkdtemp())

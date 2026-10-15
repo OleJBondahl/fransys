@@ -43,7 +43,10 @@ def _taker(design: Design | None, fn: Fn) -> Design:
         msg = f"{fn._label}.{fn._fn.name} is a function, not a pin: name one pin of it"
         raise AuthorError(msg)
     if design is None:
-        msg = f"{fn._label}.{fn._fn.name} is a bar: only d.wire or a cable core takes its screw"
+        msg = (
+            f"{fn._label}.{fn._fn.name} is a bar: "
+            "only d.detail.wire or a cable core takes its screw"
+        )
         raise AuthorError(msg)
     return design
 

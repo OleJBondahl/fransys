@@ -11,6 +11,7 @@ serving two pins stood at neither. The one-relay layout already drew the replica
 
 The rule (decision layout-0108): every pin wired to a non-rail terminal shows
 the terminal at the pin, in every group and for any wire count; terminal references go.
+Model-0220 changed the count: the terminal stands at each relay's pin, not once over the first.
 """
 
 import tempfile
@@ -23,6 +24,7 @@ from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
+from fransys_model.layout import SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, items
 
 
@@ -39,11 +41,11 @@ def _feed(d: fr.Design, groups: list[str], *, coils: list[int]) -> dict[int, Any
             if number == 0:
                 switch = d.device("S1", "DEMO-SWITCH-2P")
                 terminal = strip[1]
-                d.wire(switch.sw["B"], terminal.outer, wire=(BU, 0.5))
+                d.detail.wire(switch.sw["B"], terminal.outer, wire=(BU, 0.5))
             for k, at in enumerate(coils, start=1):
                 if at == number:
                     relay = d.device(f"K{k}", "DEMO-RLY-2CO-24")
-                    d.wire(terminal, relay.coil["A1"], wire=(BU, 0.5))
+                    d.detail.wire(terminal, relay.coil["A1"], wire=(BU, 0.5))
     return opened
 
 
@@ -99,20 +101,36 @@ def _assert_drawn_once_over_the_first_pin(model, layout) -> None:
     assert len({(t.drawing_set, t.page) for t in terminals}) == len(terminals)
 
 
+def _assert_drawn_at_each_relays_pin(model, relays: int) -> None:
+    """Model-0220: one terminal per relay on the page, each over its own relay's coil pin."""
+    item_tag = {i.id: i.tag for i in items(model).values()}
+    fn = {f.id: f for f in functions(model).values()}
+    placed = list(layout_of(model, SymbolPlacement).values())
+    terminals = [p for p in placed if fn[p.function].key[-1] == "terminal"]
+    for k in range(1, relays + 1):
+        (coil,) = (
+            p
+            for p in placed
+            if fn[p.function].key[-1] == "coil" and item_tag.get(fn[p.function].item) == f"K{k}"
+        )
+        over = [t for t in terminals if t.page == coil.page and t.x == coil.x and t.y < coil.y]
+        assert len(over) == 1, f"{len(over)} terminals over K{k}'s pin, one is the rule"
+
+
 def test_one_relay_on_a_later_page_has_the_terminal_replica_over_its_pin() -> None:
     """Passes today: the one-wire replica is attached to its host (R7 B8); no reference."""
     model, layout = _built(_one_relay)
     _assert_drawn_once_over_the_first_pin(model, layout)
 
 
-def test_two_relays_of_one_group_have_the_terminal_once_over_the_first_pin() -> None:
-    model, layout = _built(_two_relays_one_group)
-    _assert_drawn_once_over_the_first_pin(model, layout)
+def test_two_relays_of_one_group_have_the_terminal_at_each_relays_pin() -> None:
+    model, _ = _built(_two_relays_one_group)
+    _assert_drawn_at_each_relays_pin(model, 2)
 
 
-def test_two_relays_of_two_groups_on_one_page_have_the_terminal_once_over_the_first_pin() -> None:
-    model, layout = _built(_two_relays_two_groups)
-    _assert_drawn_once_over_the_first_pin(model, layout)
+def test_two_relays_of_two_groups_on_one_page_have_the_terminal_at_each_relays_pin() -> None:
+    model, _ = _built(_two_relays_two_groups)
+    _assert_drawn_at_each_relays_pin(model, 2)
 
 
 def test_two_relays_in_the_terminals_own_group_have_the_terminal_over_the_first_pin() -> None:

@@ -57,11 +57,11 @@ def _shape(d: fr.Design) -> _Io:
         with d.function(f"C{i + 1:02d}", f"Circuit {i + 1}"):
             k = d.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
             h = d.device(f"H{i + 1}", "DEMO-LAMP-24")
-            d.wire(x1[1 + i % _BUS], k.coil["A1"], wire=(RD, 0.75))
-            d.wire(x1[8], k.coil["A2"], wire=(BK, 0.75))
-            d.wire(x2[1 + i % _BUS], k.co_1["11"], wire=(RD, 0.75))
-            d.wire(k.co_1["14"], h.lamp[1], wire=(RD, 0.75))
-            d.wire(h.lamp[2], x2[8], wire=(BU, 0.75))
+            d.detail.wire(x1[1 + i % _BUS], k.coil["A1"], wire=(RD, 0.75))
+            d.detail.wire(x1[8], k.coil["A2"], wire=(BK, 0.75))
+            d.detail.wire(x2[1 + i % _BUS], k.co_1["11"], wire=(RD, 0.75))
+            d.detail.wire(k.co_1["14"], h.lamp[1], wire=(RD, 0.75))
+            d.detail.wire(h.lamp[2], x2[8], wire=(BU, 0.75))
     return _Io(x1)
 
 

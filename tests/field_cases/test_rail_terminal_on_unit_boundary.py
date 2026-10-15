@@ -42,10 +42,10 @@ def _box(u: fr.Design) -> _Io:
     x1 = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True)
     plus, minus = x1.run("24V", 2, bridged=True), x1.run("GND", 2, bridged=True)
     dc = u.dc_supply("24V", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
-    u.wire(dc.plus.pin, plus[1], wire=("RD", 0.75))
-    u.wire(dc.minus.pin, minus[1], wire=("BK", 0.75))
-    u.wire(plus[1], lamp.lamp["1"], wire=("RD", 0.75))
-    u.wire(minus[1], lamp.lamp["2"], wire=("BK", 0.75))
+    u.detail.wire(dc.plus.pin, plus[1], wire=("RD", 0.75))
+    u.detail.wire(dc.minus.pin, minus[1], wire=("BK", 0.75))
+    u.detail.wire(plus[1], lamp.lamp["1"], wire=("RD", 0.75))
+    u.detail.wire(minus[1], lamp.lamp["2"], wire=("BK", 0.75))
     return _Io((plus[1], plus[2], minus[1], minus[2]))
 
 
@@ -56,7 +56,7 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     lamps = (d.device("H1", "DEMO-LAMP-24"), d.device("H2", "DEMO-LAMP-24"))
     for pair, pole in ((io.rail[:2], "1"), (io.rail[2:], "2")):
         for terminal, lamp in zip(pair, lamps, strict=True):
-            d.wire(terminal, lamp.lamp[pole], wire=("RD", 0.75))
+            d.detail.wire(terminal, lamp.lamp[pole], wire=("RD", 0.75))
     (tmp_path / "own.md").write_text("# Rail box\n", encoding="utf-8")
     (tmp_path / "box.md").write_text("# Container\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC

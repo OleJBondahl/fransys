@@ -1,6 +1,6 @@
 {
   "aliases": [],
-  "schema_version": 19,
+  "schema_version": 20,
   "tables": {
     "aspect_node": [
       {

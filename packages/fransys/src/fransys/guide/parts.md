@@ -40,6 +40,9 @@ python -m fransys parts-module demo_parts demo_typed.py
 
 `fr.parts_module("demo_parts")` returns the same module as text, when a script writes the file itself.
 
+The `part` argument of `d.device` is a string or a generated class. A string is checked when you
+build. Two part names that map to one attribute fail generation.
+
 A function stands in a `d.series` when its line side is known: a coil's A1 and a contact's odd pin give it, else state `side`.
 
 The module records the library's digest. `fr.design(P, ...)` compares that digest with the
@@ -228,4 +231,38 @@ import fransys as fr
 
 d = fr.design("demo_parts")
 assert d.rating("DEMO-FUSE-LINK-4A-T").current_dc_a == 4
+```
+
+## Reading a part's rating while authoring
+
+`d.rating(part, function)` and `d.operating(part, function)` read a rating or operating envelope
+from the catalogue. It is a lookup, not a build step. Either gives `None` where the part states nothing.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+part_rating = d.rating("DEMO-TBLK-2P-DUAL")
+terminal_rating = d.rating("DEMO-TBLK-2P-DUAL", "terminal")
+lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
+```
+
+## An accessory in its holder
+
+A part with no function, put in another device with `parent=`, is an accessory. A fuse link in its PCB
+holder is one: the link prints `F1` and has no number or row. An authored tag makes it an ordinary item.
+`parent=` also takes a terminal strip, for a jumper bar on a bridged run.
+
+```python
+import fransys as fr
+
+d = fr.design("demo_parts")
+f1 = d.device("F1", "DEMO-FUSE-HOLDER-PCB")
+link = d.device(None, "DEMO-FUSE-LINK-4A-T", name="link", parent=f1)
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
+x1.run("L", 3, bridged=True)
+bar = d.device(None, "DEMO-JUMPER-BAR-3P", name="bar", parent=x1)
+model = fr.build(d).model
+assert fr.derive.item_designation(model, link.id) == "F1"
+assert fr.derive.item_designation(model, bar.id) == "X1"
 ```

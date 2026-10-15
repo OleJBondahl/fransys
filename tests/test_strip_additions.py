@@ -42,8 +42,8 @@ def test_a_terminal_boundary_rating_below_the_circuit_is_found() -> None:
     psu = d.device("T1", "DEMO-PSU-24")
     d.dc_supply("S", psu)
     io = d.add(_feed, "U1")
-    d.wire(psu.output["+"], io.X1[1].outer, wire=(BU, 0.5))
-    d.wire(psu.output["-"], io.X1[2].outer, wire=(BU, 0.5))
+    d.detail.wire(psu.output["+"], io.X1[1].outer, wire=(BU, 0.5))
+    d.detail.wire(psu.output["-"], io.X1[2].outer, wire=(BU, 0.5))
     found = [f for f in fr.build(d).findings if f.code == "RATING_VOLTAGE_BELOW_CIRCUIT"]
     assert len(found) == 1
     assert "boundary rating of " in found[0].message
@@ -141,8 +141,8 @@ def _landed(model, kind) -> list[tuple[str, str]]:
 def test_a_run_as_a_wire_end_takes_the_next_terminal_each_time_and_a_core_the_outer_side() -> None:
     d, feed = _sizeless()
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.wire(feed, lamp["1"], wire=(BU, 0.5))
-    d.wire(feed, lamp["2"], wire=(BU, 0.5))
+    d.detail.wire(feed, lamp["1"], wire=(BU, 0.5))
+    d.detail.wire(feed, lamp["2"], wire=(BU, 0.5))
     d.cable("W1", "DEMO-CBL-4G1.5", length_m=2).core(1, feed, lamp["1"])
     model = fr.build(d).model
     assert _landed(model, ConductorKind.WIRE) == [("1", "internal"), ("2", "internal")]

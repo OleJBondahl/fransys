@@ -216,8 +216,10 @@ def test_a_strip_and_a_rack_beside_each_other_take_unit_relative_names(tmp_path)
 def test_a_rewrite_removes_stale_bare_and_dashed_exports_and_keeps_other_files(worked, tmp_path):
     result, cabinet, _board = worked
     stale = ("connectors-PLC-C1-U2.csv", "connectors.csv", "terminals.csv", "wago.xml")
+    (tmp_path / "data").mkdir()
     for name in stale:
         (tmp_path / name).write_text("stale", encoding="utf-8")
+        (tmp_path / "data" / name).write_text("stale", encoding="utf-8")
     (tmp_path / "notes.txt").write_text("keep me", encoding="utf-8")
 
     written = _names(fr.write(result, tmp_path, unit=cabinet))
@@ -225,7 +227,10 @@ def test_a_rewrite_removes_stale_bare_and_dashed_exports_and_keeps_other_files(w
     assert not written & set(stale)
     remaining = {p.name for p in tmp_path.iterdir()}
     assert not remaining & set(stale)
-    assert "demo-pump-cabinet-v1.2-terminals-X2.csv" in remaining
+    in_data = {p.name for p in (tmp_path / "data").iterdir()}
+    assert not in_data & set(stale)
+    assert "demo-pump-cabinet-v1.2-terminals-X2.csv" in in_data
+    assert not [name for name in remaining if name.endswith((".csv", ".xml"))]
     assert (tmp_path / "notes.txt").read_text(encoding="utf-8") == "keep me"
 
 
@@ -751,7 +756,7 @@ def test_write_paths_are_out_dir_joined_with_export_names_for_the_whole_build(wo
     result, _cabinet, _board = worked
     names = fr.export_names(result)
     assert fr.write(result, tmp_path) == tuple(sorted(tmp_path / name for name in names.values()))
-    assert names[("bom", None)] == "P-1001-v1.1-bom.csv"
+    assert names[("bom", None)] == "data/P-1001-v1.1-bom.csv"
     assert {kind for kind, _subject in names} >= {"bom", "terminals", "pdf", "overview", "cables"}
 
 

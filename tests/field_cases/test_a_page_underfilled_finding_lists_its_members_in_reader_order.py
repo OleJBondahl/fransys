@@ -28,7 +28,7 @@ def _members(salt: str, tmp_path: Path) -> list[str]:
     strip = d.terminal_strip("X1", "DEMO-TB-2.5", 12, name=f"{salt}x1")
     for n in (10, 1, 11, 2):
         lamp = d.device(f"P{n}", "DEMO-LAMP-24", name=f"{salt}p{n}")
-        d.wire(strip[n].inner, lamp.lamp["1"], wire=("WH", 0.75))
+        d.detail.wire(strip[n].inner, lamp.lamp["1"], wire=("WH", 0.75))
     (tmp_path / "c.md").write_text("# Cabinet\n", encoding="utf-8")
     document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=tmp_path / "c.md")
     (found,) = [f for f in fr.build(d, document).findings if f.code == "PAGE_UNDERFILLED"]

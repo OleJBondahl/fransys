@@ -36,14 +36,14 @@ def _board(d: fr.Design) -> _Io:
         (j["contactors"], 1, 2),
     ]
     for lamp, (conn, a, b) in zip(lamps, ends, strict=False):
-        d.wire(conn[a], lamp["1"], wire=(BK, 0.5))
-        d.wire(conn[b], lamp["2"], wire=(BK, 0.5))
+        d.detail.wire(conn[a], lamp["1"], wire=(BK, 0.5))
+        d.detail.wire(conn[b], lamp["2"], wire=(BK, 0.5))
     for lamp, pin in zip(lamps[6:8], (1, 2), strict=True):  # a lamp chains J2 to J3
-        d.wire(j["plc_io"][pin], lamp["1"], wire=(BK, 0.5))
-        d.wire(j["bus_in"][pin], lamp["2"], wire=(BK, 0.5))
+        d.detail.wire(j["plc_io"][pin], lamp["1"], wire=(BK, 0.5))
+        d.detail.wire(j["bus_in"][pin], lamp["2"], wire=(BK, 0.5))
     for lamp, pin in zip(lamps[5:6] + lamps[8:9], (3, 4), strict=True):  # and J7 to J3
-        d.wire(j["contactors"][pin], lamp["1"], wire=(BK, 0.5))
-        d.wire(j["bus_in"][pin], lamp["2"], wire=(BK, 0.5))
+        d.detail.wire(j["contactors"][pin], lamp["1"], wire=(BK, 0.5))
+        d.detail.wire(j["bus_in"][pin], lamp["2"], wire=(BK, 0.5))
     return _Io(*(j[n] for n in _Io._fields))
 
 
@@ -66,14 +66,14 @@ def build(*, hint: bool = False, plc_above: bool = False) -> fr.BuildResult:
 
     def wires(p: Any, ends: dict[int, tuple[Any, str]]) -> None:
         for pin, (far, colour) in ends.items():
-            d.wire(p[pin], far, wire=(colour, 0.5))
+            d.detail.wire(p[pin], far, wire=(colour, 0.5))
 
     # terminals 1-2: 24 V, 3-4: 0 V, 5-8: e-stop and sensor signals, 9-10: bus, 11: aux feed
-    d.wire(psu.output["+"], x[1].outer, wire=(RD, 0.5))
-    d.wire(psu.output["-"], x[3].outer, wire=(BU, 0.5))
-    d.wire(x[1].outer, x[2].outer, wire=(RD, 0.5))
-    d.wire(x[1].outer, x[11].outer, wire=(RD, 0.5))
-    d.wire(x[3].outer, x[4].outer, wire=(BU, 0.5))
+    d.detail.wire(psu.output["+"], x[1].outer, wire=(RD, 0.5))
+    d.detail.wire(psu.output["-"], x[3].outer, wire=(BU, 0.5))
+    d.detail.wire(x[1].outer, x[2].outer, wire=(RD, 0.5))
+    d.detail.wire(x[1].outer, x[11].outer, wire=(RD, 0.5))
+    d.detail.wire(x[3].outer, x[4].outer, wire=(BU, 0.5))
     wires(
         plug(d.harness("W11"), "P11", io.pwr_estop),
         {1: (x[1].inner, RD), 2: (x[3].inner, BU), 3: (x[5].inner, YE), 4: (x[6].inner, YE)},
@@ -94,8 +94,8 @@ def build(*, hint: bool = False, plc_above: bool = False) -> fr.BuildResult:
     w17 = d.harness("W17")
     pa, pb = plug(w17, "P17", io.contactors), plug(w17, "P18", j10)
     for pin in (1, 2, 3, 4):
-        d.wire(pa[pin], pb[pin], wire=(BK, 0.5))
-    d.wire(pa[1], x[11].inner, wire=(RD, 0.5))
+        d.detail.wire(pa[pin], pb[pin], wire=(BK, 0.5))
+    d.detail.wire(pa[1], x[11].inner, wire=(RD, 0.5))
     a1 = d.device("A1", "DEMO-PLC-DI-2")
     a2 = d.device("A2", "DEMO-PLC-DO-2")
     wires(plug(d.harness("W12"), "P12", io.plc_io), {1: (a1.di_1["1"], GY), 2: (a2.do_1["1"], WH)})

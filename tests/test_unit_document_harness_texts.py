@@ -32,8 +32,8 @@ def _board(u: Any) -> _Io:
     pcb = u.device("U2", "DEMO-PCB-IO")
     j2 = u.device("J2", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     k1 = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.wire(j2[1], k1["1"], wire=(BK, 0.5))
-    u.wire(j2[2], k1["2"], wire=(BK, 0.5))
+    u.detail.wire(j2[1], k1["1"], wire=(BK, 0.5))
+    u.detail.wire(j2[2], k1["2"], wire=(BK, 0.5))
     return _Io(j2)
 
 
@@ -45,8 +45,8 @@ def _cabinet(u: Any) -> _Io:
     harness = u.harness("W5")
     plug = u.device("P5", "DEMO-HSG-4M", parent=harness, contacts="DEMO-CRIMP-M")
     u.mate(plug, board.J2)
-    u.wire(plug[1], psu.output["+"], wire=(BK, 0.5))
-    u.wire(plug[2], psu.output["-"], wire=(BK, 0.5))
+    u.detail.wire(plug[1], psu.output["+"], wire=(BK, 0.5))
+    u.detail.wire(plug[2], psu.output["-"], wire=(BK, 0.5))
     return _Io(board.J2)
 
 

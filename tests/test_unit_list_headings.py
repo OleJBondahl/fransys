@@ -240,6 +240,8 @@ def board_in_board():
         *conn[:4],
         *conn[4],
     )
+    far_item, far_fn, far_port = _build.pin("far", "X1")
+    records += (far_item, far_fn, far_port, _build.conductor("w1", a=conn[4][0].id, b=far_port.id))
     records += tuple(
         _build.place(key, item=item.id, node=c1.id)
         for key, item in (("p-jb1", outer), ("p-jb2", inner))

@@ -20,7 +20,7 @@ def _mixed(u: fr.Design) -> _Open:
     loom = u.harness("A1", place="C1")
     near = u.device("P1", "DEMO-CONN-2P", parent=loom, place="C1")
     far = u.device("P2", "DEMO-CONN-2P", parent=loom, place="C1")
-    u.wire(near[1], far[1], wire=(BU, 0.5))
+    u.detail.wire(near[1], far[1], wire=(BU, 0.5))
     a = u.device("Q1", "DEMO-CONN-2P", place="C1")
     b = u.device("Q2", "DEMO-CONN-2P", place="C1")
     u.cable("Z9", "DEMO-CBL-4G1.5", place="C1").core(1, a[1], b[1])
@@ -52,7 +52,7 @@ def _wires(u: fr.Design) -> _Open:
         loom = u.harness(tag, place="C1")
         near = u.device(f"{tag}A", "DEMO-CONN-2P", parent=loom, place="C1")
         far = u.device(f"{tag}B", "DEMO-CONN-2P", parent=loom, place="C1")
-        u.wire(near[1], far[1], wire=(BU, 0.5))
+        u.detail.wire(near[1], far[1], wire=(BU, 0.5))
     return _Open()
 
 

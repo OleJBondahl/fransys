@@ -34,24 +34,24 @@ def _looms(d: fr.Design) -> None:
         cable = d.cable("MIX", _CABLE, parent=loom, name="cmix", place="L0")
         for pin in (1, 2, 3, 4):
             cable.core(pin, plugs[0][pin], plugs[1][pin])
-        d.wire(plugs[2][1], plugs[3][1], wire=(BU, 0.5), label="SIG")
-        d.wire(plugs[2][2], plugs[3][2], wire=(BU, 1.5))
+        d.detail.wire(plugs[2][1], plugs[3][1], wire=(BU, 0.5), label="SIG")
+        d.detail.wire(plugs[2][2], plugs[3][2], wire=(BU, 1.5))
     with d.function("ONLY", "Wire-only loom"):
         loom = d.harness("ONLY", place="L0")
         near = d.device("J1", _PLUG4, parent=loom, place="L0")
         far = d.device("J2", _PLUG4, parent=loom, place="L0")
-        d.wire(near[1], far[1], wire=(BU, 0.5))
-        d.wire(near[2], far[2], wire=(BU, 1.5))
+        d.detail.wire(near[1], far[1], wire=(BU, 0.5))
+        d.detail.wire(near[2], far[2], wire=(BU, 1.5))
     with d.function("LINK", "Link loom"):
         loom = d.harness("LINK", place="L0")
         plug = d.device("J1", _PLUG2, parent=loom, place="L0")
-        d.wire(plug[1], plug[2], wire=(BU, 0.5))
+        d.detail.wire(plug[1], plug[2], wire=(BU, 0.5))
     with d.function("LINKED", "Wire and link loom"):
         loom = d.harness("LINKED", place="L0")
         near = d.device("J1", _PLUG4, parent=loom, place="L0")
         far = d.device("J2", _PLUG4, parent=loom, place="L0")
-        d.wire(near[1], far[1], wire=(BU, 0.5))
-        d.wire(near[3], near[4], wire=(BU, 0.5))
+        d.detail.wire(near[1], far[1], wire=(BU, 0.5))
+        d.detail.wire(near[3], near[4], wire=(BU, 0.5))
 
 
 @pytest.fixture(scope="module")

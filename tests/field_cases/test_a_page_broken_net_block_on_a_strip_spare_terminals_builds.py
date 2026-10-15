@@ -34,7 +34,7 @@ def _cab(u: fr.Design) -> _Io:
     h1 = u.device("H1", "DEMO-LAMP-24")
     u.series(dc.plus, f1.element, s1.no, u.parallel(k1.coil, h1.lamp), x7, dc.minus, wire=0.75)
     with u.function("F2", "Signal") as grp:
-        u.net("SIG", x7[7], x7[8], kind=fr.SIGNAL)
+        u.detail.net("SIG", x7[7], x7[8], kind=fr.SIGNAL)
     u.layout.break_before(grp)
     return _Io(x1)
 

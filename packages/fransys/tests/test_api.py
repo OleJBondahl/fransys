@@ -36,6 +36,7 @@ _EXPECTED_ALL = [
     "BuildErrors",
     "BuildResult",
     "Design",
+    "Detail",
     "Device",
     "DocumentPreset",
     "Draft",

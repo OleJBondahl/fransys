@@ -47,8 +47,8 @@ def _built() -> fr.BuildResult:
     def container(c: Any) -> _Open:
         io = c.add(_cab, "U1")
         lamp = c.device("H1", "DEMO-LAMP-24")
-        c.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
-        c.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
+        c.detail.wire(lamp["1"], io.T1.output["+"], wire=("WH", 0.5))
+        c.detail.wire(lamp["2"], io.T1.output["-"], wire=("WH", 0.5))
         return _Open()
 
     d = fr.design("demo_parts")

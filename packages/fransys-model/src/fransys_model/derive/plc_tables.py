@@ -8,7 +8,7 @@ lazy from fransys_model.vocab.core import Unit
 
 from .designation import printed_designation
 from .reports import plc_channel_pairs
-from .rows import PlcTable
+from .rows_plc import PlcTable
 
 
 def plc_tables(

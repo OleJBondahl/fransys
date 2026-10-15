@@ -250,3 +250,26 @@ def test_a_coil_on_a_free_pin_stands_on_its_own_terminals_side_unflipped() -> No
     above = replace(_moved(5, 0, 1, "in"), flip=True)
     assert fixed == (replace(columns[0], cells=(above, _cell(1, 1))),)
     assert free == (replace(columns[0], cells=(_cell(1, 0), _moved(5, 1, 1, "in"))),)
+
+
+def test_a_channels_coil_moves_even_when_the_column_does_not_fit() -> None:
+    """layout-0208 R1: `fits` never sends a channel's coil back; a contact it still holds home."""
+    # UNDO: stages/far_ends.py:move_far_ends, drop `facts.drawn_of[...].roles.coil or`
+    wires = (_wire(1, _ref(1, "out"), _ref(5, "in")),)
+    coil_drawn, coil_columns = _pair(near="coil", far_kind="plc_channel")
+    contact_drawn, contact_columns = _pair()
+
+    assert _run(coil_drawn, wires, coil_columns, fits=False) == (
+        replace(coil_columns[0], cells=(_cell(1, 0), _moved(5, 1, 1, "out"))),
+    )
+    assert _run(contact_drawn, wires, contact_columns, fits=False) == contact_columns
+
+
+def test_a_home_moving_within_its_own_column_is_counted_once() -> None:
+    """R1: cell 5 moved under 1 in its own column is counted at its new row, not also its old."""
+    # UNDO: stages/far_ends.py:_fits, drop the `if cell.host is None and ... in moved: continue`
+    own = replace(_cell(5, 2), home=Home.MOVED)
+    column_of = replace(column("pin", (1,)), cells=(_cell(1, 0), _moved(5, 1, 1, "out"), own))
+    drawn_functions = (drawn(1), drawn(5))
+
+    assert sheet_fits(drawn_functions, PROFILE, replace(SHEET, content_height=200), 4)(column_of)

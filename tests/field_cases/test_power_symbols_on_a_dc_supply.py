@@ -14,7 +14,7 @@ turned as needed. An AC supply keeps its references. Owner's A4-A6, 2026-10-02: 
 supply-only text, A5 and A6 confirmed.
 
 Bars: a symbol per cut end and none per joined run, no `#n` and no `CONNECTION_NOT_DRAWN`, the
-member check and the nowhere guard count each symbol as a draw, and AC ends stay references.
+member check and the nowhere guard count each symbol as a draw, and AC ends get no symbol.
 """
 
 import dataclasses
@@ -40,6 +40,7 @@ from fransys_model.layout import (
     Orientation,
     Page,
     PowerSymbol,
+    SymbolPlacement,
     layout_of,
 )
 from fransys_model.vocab.tables import ports
@@ -68,7 +69,7 @@ def _build(tmp_path: Path, plant) -> fr.BuildResult:
 def _hub(d, hub, members) -> None:
     """Every pin of `members` wired to the rail's `hub` pin."""
     for pin in members:
-        d.wire(hub, pin, wire=(BU, 0.5))
+        d.detail.wire(hub, pin, wire=(BU, 0.5))
 
 
 def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-only
@@ -87,11 +88,14 @@ def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-o
     stands on its rails L2 and L3, so the references of an AC supply stay.
     """
 
+    # the AC plant stands its loads on 230 V rails: a 24 V lamp there is the wrong part
+    load_part, load_pins = ("DEMO-HEATER-24", ("+", "-")) if ac else ("DEMO-LAMP-24", ("1", "2"))
+
     def plant(d) -> None:
         with d.function(block, "Group"):
             psu = d.device("T1", "DEMO-PSU-24")
             loads_ = [
-                (d.device(f"K{i}", "DEMO-PLC-DI-2"), d.device(f"P{i}", "DEMO-LAMP-24"))
+                (d.device(f"K{i}", "DEMO-PLC-DI-2"), d.device(f"P{i}", load_part))
                 for i in range(loads)
             ]
             motors = [d.device(f"M{i}", "DEMO-MOTOR-4KW") for i in range(3)]
@@ -109,11 +113,11 @@ def _dc_plant(  # noqa: PLR0913 - one keyword per plant variation, all keyword-o
         members = [psu.output["+"]] if strip is not None else []
         zeros = [psu.output["-"]] if strip is not None else []
         for i, (di, lamp) in enumerate(loads_):
-            members += [di.di_1["1"], lamp["1"]]
+            members += [di.di_1["1"], lamp[load_pins[0]]]
             if other is not None and i % 2:
-                _hub(d, other.output["-"], [lamp["2"]])
+                _hub(d, other.output["-"], [lamp[load_pins[1]]])
             else:
-                zeros.append(lamp["2"])
+                zeros.append(lamp[load_pins[1]])
         if motor_on_24:
             members.append(motors[0].motor["U"])
         _hub(d, plus, members)
@@ -383,12 +387,17 @@ def test_a_negative_dc_rail_is_a_supply_printing_its_name_with_the_sign(tmp_path
     assert _no_error_codes(result) == set()
 
 
-def test_an_ac_supply_keeps_its_references(tmp_path) -> None:
-    """The same plant on L2 and L3 of an AC supply: no symbol, references as before."""
+def test_an_ac_supply_draws_no_power_symbol(tmp_path) -> None:
+    """The same plant on L2 and L3 of an AC supply: no symbol.
+
+    Its rails' hubs are strip terminals, so model-0220 draws each hub at every pin it feeds,
+    where references stood before: no marker is left on the plant.
+    """
     plant = _dc_plant(motor_on_24=True, earth=False, ac=True)
     model = _build(tmp_path, plant).model
     assert _symbols(model) == []
-    assert layout_of(model, LinkMarker)
+    assert not layout_of(model, LinkMarker)
+    assert any("at" in one.key for one in layout_of(model, SymbolPlacement).values())
 
 
 def _shape(model, results) -> dict:

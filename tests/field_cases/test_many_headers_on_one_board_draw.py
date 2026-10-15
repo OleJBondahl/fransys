@@ -44,7 +44,7 @@ def _build(four_pin: int):
     def board_unit(d):
         board = d.device(None, "DEMO-PCB-IO", name="board")
         dev = {tag: d.device(tag, part, parent=board, interface=True) for tag, part in tags}
-        d.net("SIG", dev[tags[0][0]].x1[2], dev[tags[-1][0]].x1[1])
+        d.detail.net("SIG", dev[tags[0][0]].x1[2], dev[tags[-1][0]].x1[1])
         return Interface(dev[tags[0][0]])
 
     design = fr.design("demo_parts")

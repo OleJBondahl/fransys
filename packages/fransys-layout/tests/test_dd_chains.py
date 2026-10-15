@@ -13,7 +13,8 @@ from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic import lay_out_schematic
 from fransys_model.kernel import Severity
-from fransys_model.layout import Orientation
+from fransys_model.layout import Orientation, SymbolPlacement, layout_of
+from fransys_model.vocab.tables import functions
 
 XA1, XA2, XA3, XA4 = (terminal_key("XA", n) for n in (1, 2, 3, 4))
 Q1, Q2, Q3 = (("Q1", "fn", "element"), ("Q2", "fn", "element"), ("Q3", "fn", "element"))
@@ -67,8 +68,8 @@ def test_the_way_most_directed_poles_point_decides_the_whole_chain() -> None:
 def test_a_net_of_three_ports_ends_both_chains_that_reach_it() -> None:
     """Two wires from XA:1's outer port make a net of three, so it links no pole to a pole.
 
-    Each breaker still chains with the terminal on its other side, in a column of its own;
-    XA:1, the net's only other member, stands in a third column.
+    Each breaker still chains with the terminal on its other side, in a column of its own.
+    XA:1, the net's only other member, is drawn atop each breaker's column (model-0220).
     """
     # UNDO: stages/_chain_sides.py `build_nets`, the net union skips the connections
     parts, d, c, g, (t1, t2, t3), wire = _strip_of_terminals(3)
@@ -78,10 +79,16 @@ def test_a_net_of_three_ports_ends_both_chains_that_reach_it() -> None:
     wire(z1["2"], t2.inner)
     wire(z2["2"], t3.inner)
     model = build(parts, d).model
-    x = {key: placed(model, *key).x for key in (XA1, XA2, XA3, Z1, Z2)}
+    x = {key: placed(model, *key).x for key in (XA2, XA3, Z1, Z2)}
     assert x[Z1] == x[XA2]
     assert x[Z2] == x[XA3]
-    assert len({x[Z1], x[Z2], x[XA1]}) == 3
+    assert x[Z1] != x[Z2]
+    tops = [
+        p
+        for p in layout_of(model, SymbolPlacement).values()
+        if functions(model)[p.function].key == XA1
+    ]
+    assert sorted(p.x for p in tops) == sorted((x[Z1], x[Z2]))
 
 
 @pytest.mark.parametrize("wired", ["down", "up"])

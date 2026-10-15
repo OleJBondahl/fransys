@@ -15,6 +15,8 @@ _BASE = ReadabilityPage(
     min_text_height_mm=Decimal("2.5"),
     fill_percent=80,
     wire_crossings=1,
+    wire_bends=13,
+    wire_length_mm=Decimal("100.5"),
     struck_labels=2,
     text_overlaps=3,
     lone_cells=4,
@@ -35,7 +37,7 @@ def _page(number: int, **changes: object) -> ReadabilityPage:
 
 
 def test_the_counts_add_up_and_the_page_count_is_the_pages() -> None:
-    (row,) = readability_units([_page(1), _page(2)])
+    (row,) = readability_units([_page(1), _page(2)], {None: 3})
     assert row.pages == 2
     assert (row.wire_crossings, row.struck_labels, row.text_overlaps, row.lone_cells) == (
         2,
@@ -49,6 +51,7 @@ def test_the_counts_add_up_and_the_page_count_is_the_pages() -> None:
         14,
     )
     assert row.single_contact_images_other_page == 24
+    assert (row.wire_bends, row.wire_length_mm, row.loose_symbols) == (26, Decimal("201.0"), 3)
     assert (row.stars, row.star_branches, row.single_branch_stars, row.page_cuts) == (
         16,
         18,
@@ -62,7 +65,7 @@ def test_the_smallest_text_and_the_emptiest_page_stand_for_the_unit() -> None:
         _page(1, text_height_mm=Decimal("2.5"), fill_percent=80),
         _page(2, text_height_mm=Decimal("1.8"), fill_percent=12),
     ]
-    (row,) = readability_units(pages)
+    (row,) = readability_units(pages, {})
     assert (row.text_height_mm, row.fill_percent) == (Decimal("1.8"), 12)
 
 
@@ -71,14 +74,17 @@ def test_the_floor_of_the_unit_is_the_highest_floor_of_its_pages() -> None:
         _page(1, min_text_height_mm=Decimal("2.0")),
         _page(2, min_text_height_mm=Decimal("2.5")),
     ]
-    (row,) = readability_units(pages)
+    (row,) = readability_units(pages, {})
     assert row.min_text_height_mm == Decimal("2.5")
 
 
 def test_each_unit_has_its_own_row_in_the_order_its_first_page_comes() -> None:
-    rows = readability_units([_page(1, unit=_UNIT), _page(2), _page(3, unit=_UNIT)])
-    assert [(row.unit, row.pages) for row in rows] == [(_UNIT, 2), (None, 1)]
+    rows = readability_units([_page(1, unit=_UNIT), _page(2), _page(3, unit=_UNIT)], {_UNIT: 1})
+    assert [(row.unit, row.pages, row.loose_symbols) for row in rows] == [
+        (_UNIT, 2, 1),
+        (None, 1, 0),
+    ]
 
 
 def test_no_pages_give_no_rows() -> None:
-    assert readability_units([]) == ()
+    assert readability_units([], {}) == ()

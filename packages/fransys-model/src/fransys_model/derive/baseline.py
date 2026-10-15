@@ -26,7 +26,7 @@ from .baseline_designation import unit_designation
 from .baseline_diff import diff
 from .baseline_listing import listing
 from .baseline_subjects import change_subjects
-from .rows import CHANGE_COLUMNS, Change, Listing, ListingDiff
+from .rows_baseline import CHANGE_COLUMNS, Change, Listing, ListingDiff
 from .rows_removed import RemovedAncestry
 
 __all__ = [

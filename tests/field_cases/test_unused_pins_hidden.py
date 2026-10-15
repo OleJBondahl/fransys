@@ -56,17 +56,17 @@ def _psu(d) -> None:
     psu = d.device("T1", "DEMO-PSU-24-OK")
     lamp = d.device("P1", "DEMO-LAMP-24")
     mains = d.device("P2", "DEMO-LAMP-24")
-    d.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
-    d.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
-    d.wire(psu.input["L"], mains["1"], wire=(BU, 0.5))
-    d.wire(psu.input["N"], mains["2"], wire=(BU, 0.5))
+    d.detail.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
+    d.detail.wire(psu.output["-"], lamp["2"], wire=(BU, 0.5))
+    d.detail.wire(psu.input["L"], mains["1"], wire=(BU, 0.5))
+    d.detail.wire(psu.input["N"], mains["2"], wire=(BU, 0.5))
 
 
 def _module(d) -> None:
     module = d.device("K1", "DEMO-PLC-DI-4P")
     for i in range(1, 4):
         switch = d.device(f"S{i}", "DEMO-SWITCH-2P")
-        d.wire(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
+        d.detail.wire(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
 
 
 def test_a_supply_box_leaves_out_its_unwired_signal_contact() -> None:
@@ -90,9 +90,9 @@ def _half_wired_psu(d) -> None:
     psu = d.device("T1", "DEMO-PSU-24-OK")
     lamp = d.device("P1", "DEMO-LAMP-24")
     mains = d.device("P2", "DEMO-LAMP-24")
-    d.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
-    d.wire(psu.input["L"], mains["1"], wire=(BU, 0.5))
-    d.wire(psu.input["N"], mains["2"], wire=(BU, 0.5))
+    d.detail.wire(psu.output["+"], lamp["1"], wire=(BU, 0.5))
+    d.detail.wire(psu.input["L"], mains["1"], wire=(BU, 0.5))
+    d.detail.wire(psu.input["N"], mains["2"], wire=(BU, 0.5))
 
 
 def test_a_half_wired_box_function_keeps_its_wired_pin_and_drops_the_bare_one() -> None:

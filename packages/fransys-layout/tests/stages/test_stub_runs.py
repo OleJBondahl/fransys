@@ -3,11 +3,13 @@
 A south marker at (0, 0) with its box at y 40..48: its stub is the run (0, 0) to (0, 40).
 """
 
+from dataclasses import replace
+
 from samples import hid
 
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages import LinkMarker, MarkerSide
-from fransys_layout.stages.stub_runs import functions_through, solids, stub_runs
+from fransys_layout.stages.stub_runs import functions_through, ink_boxes, solids, stub_runs
 
 _OWN, _FOREIGN = hid("function", 1), hid("function", 2)
 _MARKER = LinkMarker(
@@ -42,3 +44,16 @@ def test_a_stub_over_a_foreign_port_runs_through_its_function() -> None:
 def test_a_south_markers_stub_is_one_run_from_its_port_to_its_box() -> None:
     """UNDO: `_run_to_box` returns `None`, and the stub is no run."""
     assert [(r.x, r.y, r.to_x, r.to_y) for r in stub_runs(_MARKER)] == [(0, 0, 0, 40)]
+
+
+def test_a_stubs_ink_is_its_padded_runs_less_a_wired_ports_own_lane() -> None:
+    """UNDO: `ink_boxes` keeps every run when `wired`, and the wired port's own lane is ink."""
+    assert ink_boxes(_MARKER, wired=False) == (Box(x=-1, y=-1, width=2, height=42),)
+    assert ink_boxes(_MARKER, wired=True) == ()
+
+
+def test_a_turned_markers_ink_keeps_its_branch_though_its_port_is_wired() -> None:
+    """UNDO: `ink_boxes` drops the first run of a turned marker, and its branch is no ink."""
+    turned = replace(_MARKER, turn=Point(x=0, y=20), box=Box(x=12, y=40, width=24, height=8))
+    assert ink_boxes(turned, wired=True) == ink_boxes(turned, wired=False)
+    assert len(ink_boxes(turned, wired=True)) == 2

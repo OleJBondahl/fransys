@@ -26,6 +26,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import typst
+from fransys_el import REF_TINTS
 from fransys_pdf import font_dir, source
 from fransys_render import pages
 
@@ -215,7 +216,7 @@ def _px(mm: float) -> int:
 
 def _compiled_schematic_page():
     model, doc, _page = _model()
-    svgs = pages(model)
+    svgs = pages(model, tints=REF_TINTS)
     assert len(svgs) == 1  # one layout page -> one rendered SVG
     text = source(model, doc.id, svgs)
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC

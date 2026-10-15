@@ -30,7 +30,7 @@ def _fanout(n: int) -> Any:
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
         for i in range(n):
             f = d.device(f"F{i + 1}", "DEMO-MCB-2P")
-            d.wire(x1[1], f.pole_1["1"], wire=(BN, 2.5))
+            d.detail.wire(x1[1], f.pole_1["1"], wire=(BN, 2.5))
         return _Io(x1)
 
     return fanout

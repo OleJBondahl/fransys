@@ -35,23 +35,23 @@ def _built() -> fr.BuildResult:
     with d.function("A", "Control"):
         psu = d.device("G1", "DEMO-PSU-24")
         k1 = d.device("K1", "DEMO-RLY-4CO-24")
-        d.wire(psu.output["+"], k1.coil["A1"], wire=_WIRE)
-        d.wire(k1.coil["A2"], psu.output["-"], wire=_WIRE)
+        d.detail.wire(psu.output["+"], k1.coil["A1"], wire=_WIRE)
+        d.detail.wire(k1.coil["A2"], psu.output["-"], wire=_WIRE)
         for i in range(12):  # enough relays to fill page 1, so the poles stand on page 2
             relay = d.device(f"R{i}", "DEMO-RLY-2CO-24")
-            d.wire(psu.output["+"], relay.coil["A1"], wire=_WIRE)
-            d.wire(relay.coil["A2"], psu.output["-"], wire=_WIRE)
+            d.detail.wire(psu.output["+"], relay.coil["A1"], wire=_WIRE)
+            d.detail.wire(relay.coil["A2"], psu.output["-"], wire=_WIRE)
     with d.function("B", "Load"):
         k2 = d.device("K2", "DEMO-RLY-4CO-24")
-        d.wire(psu.output["+"], k2.coil["A1"], wire=_WIRE)
-        d.wire(k2.coil["A2"], psu.output["-"], wire=_WIRE)
+        d.detail.wire(psu.output["+"], k2.coil["A1"], wire=_WIRE)
+        d.detail.wire(k2.coil["A2"], psu.output["-"], wire=_WIRE)
         lamps = [d.device(f"H{i}", "DEMO-LAMP-24") for i in range(3)]
         for i, (pole, next_pole) in enumerate(
             zip((k1.co_1, k1.co_2, k1.co_3), (k2.co_1, k2.co_2, k2.co_3), strict=True)
         ):
-            d.wire(x1[i + 1], pole[f"{i + 1}1"], wire=_WIRE)
-            d.wire(pole[f"{i + 1}4"], next_pole[f"{i + 1}1"], wire=_WIRE)
-            d.wire(next_pole[f"{i + 1}4"], lamps[i].lamp[1], wire=_WIRE)
+            d.detail.wire(x1[i + 1], pole[f"{i + 1}1"], wire=_WIRE)
+            d.detail.wire(pole[f"{i + 1}4"], next_pole[f"{i + 1}1"], wire=_WIRE)
+            d.detail.wire(next_pole[f"{i + 1}4"], lamps[i].lamp[1], wire=_WIRE)
     return fr.build(d, cabinet_document(cabinet))
 
 

@@ -57,7 +57,7 @@ def _unit(*, block: bool, spacing: int, switch: bool) -> Any:
             (q3.pole_1["2"], f3.element["1"], 16),
             (f3.element["2"], f1.element["2"], 16),
         ]:
-            d.wire(p, q, wire=(RD, w))
+            d.detail.wire(p, q, wire=(RD, w))
         first = (sw.pole_1,) if switch else ()
         d.layout.chain(a[1], *first, f1.element, q1.pole_1, b[1])
         d.layout.chain(r1.lamp, q3.pole_1, f3.element, beside=q1.pole_1)

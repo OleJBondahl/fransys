@@ -30,6 +30,7 @@ _ENGINE = (
     wiring.Wiring,
 )
 _LAYOUT = getattr(importlib.import_module("fransys_author.surface._layout"), "Layout", None)
+_DETAIL = getattr(importlib.import_module("fransys_author.surface._detail"), "Detail", None)
 _CABLE = getattr(importlib.import_module("fransys_author.surface._cable"), "Cable", None)
 _SURFACE = {
     "Design": Design,
@@ -38,6 +39,7 @@ _SURFACE = {
     "TerminalStrip": TerminalStrip,
     "Terminal": handles.Terminal,
     "Layout": _LAYOUT,
+    "Detail": _DETAIL,
     "Cable": _CABLE,
 }
 _SPELLING = re.compile(r"(\w+)\.(\w+)(?:\((\w+)=\))?")

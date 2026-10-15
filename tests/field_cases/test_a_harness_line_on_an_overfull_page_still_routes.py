@@ -179,9 +179,9 @@ def _contactors(u: Any, board: _Board, count: int, deep: int) -> None:
         for pin in range(1, 5):
             if i == 0 and pin == 1 and deep:
                 end = _tail(u, plug["1"], deep, "G")
-                u.wire(end, lead["1"], wire=WIRE)
+                u.detail.wire(end, lead["1"], wire=WIRE)
             else:
-                u.wire(plug[str(4 * i + pin)], lead[str(pin)], wire=WIRE)
+                u.detail.wire(plug[str(4 * i + pin)], lead[str(pin)], wire=WIRE)
 
 
 def _looms(u: Any, board: _Board, chain: int) -> None:
@@ -190,20 +190,20 @@ def _looms(u: Any, board: _Board, chain: int) -> None:
     u.mate(sensor_plug, board.j2)
     sensor = u.device("B1", "FLD-SNR4", parent=sensor_loom)
     for pin in "1234":
-        u.wire(sensor_plug[pin], sensor[pin], wire=WIRE)
+        u.detail.wire(sensor_plug[pin], sensor[pin], wire=WIRE)
     pair_loom = u.harness("M1")
     pair_plug = u.device("J1", "FLD-PLG-2", parent=pair_loom, name="mp")
     u.mate(pair_plug, u.device("E1", "FLD-HDR-2"))
     pair = u.device("B2", "FLD-SNR2", parent=pair_loom)
     for pin in "12":
-        u.wire(pair[pin], pair_plug[pin], wire=WIRE)
+        u.detail.wire(pair[pin], pair_plug[pin], wire=WIRE)
     strip_loom = u.harness("T1")
     strip_plug = u.device("J1", "FLD-PLG-10", parent=strip_loom, name="tp")
     u.mate(strip_plug, board.j6)
     for k, name in enumerate("ABC"):
         far = u.device(f"X{name}", "FLD-HDR-2")
-        u.wire(strip_plug[str(2 * k + 1)], far["1"], wire=WIRE)
-        u.wire(strip_plug[str(2 * k + 2)], far["2"], wire=WIRE)
+        u.detail.wire(strip_plug[str(2 * k + 1)], far["1"], wire=WIRE)
+        u.detail.wire(strip_plug[str(2 * k + 2)], far["2"], wire=WIRE)
         if name == "A":
             _tail(u, far["2"], chain)
 
@@ -212,7 +212,7 @@ def _tail(u: Any, start: Any, count: int, tag: str = "K") -> Any:
     """`count` contactor coils in series after `start`: one tall column; the last coil's X2."""
     for i in range(count):
         coil = u.device(f"{tag}{i + 1}", "FLD-CTR").coil
-        u.wire(start, coil["X1"], wire=WIRE)
+        u.detail.wire(start, coil["X1"], wire=WIRE)
         start = coil["X2"]
     return start
 

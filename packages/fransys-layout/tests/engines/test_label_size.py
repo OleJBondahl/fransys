@@ -19,6 +19,7 @@ from fransys_layout.engines.schematic.write import write_layout
 from fransys_layout.geometry import text_width
 from fransys_layout.stages import pagerun
 from fransys_layout.stages.sizing import label_boxes
+from fransys_layout.stages.wire_copies import copy_map
 from fransys_model.derive.drawing_text import label_text
 from fransys_model.kernel import freeze
 from fransys_model.layout import Label, LabelKind, layout_of
@@ -114,8 +115,9 @@ def test_label_boxes_agree_with_the_written_label_widths() -> None:
         else:
             continue
         written.setdefault(key, set()).add(label.width)
+    copies = copy_map(results.copies)  # model-0220: a copy's box is measured as its function's
     entries = [
-        (function, slot, box)
+        (copies.get(function, function), slot, box)
         for boxes in measured
         for function, slots in boxes.items()
         for slot, box in slots

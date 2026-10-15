@@ -19,6 +19,7 @@ import pytest
 import typst
 from _model_build_cover import system_document
 from _pdf_measure import capital_boxes, font_names, stroke_widths, text_objects
+from fransys_el import REF_TINTS
 from fransys_pdf import font_dir, source
 from fransys_pdf._frame import band_height_mm, title_columns
 from fransys_render import pages
@@ -225,7 +226,7 @@ def _model(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5"):
 
 def _compile(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5") -> bytes:
     model, document = _model(symbols=symbols, module_mm=module_mm)
-    text = source(model, document.id, pages(model))
+    text = source(model, document.id, pages(model, tints=REF_TINTS))
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     pdf = compiler.compile(input=text.encode("utf-8"), format="pdf")
     assert isinstance(pdf, bytes)

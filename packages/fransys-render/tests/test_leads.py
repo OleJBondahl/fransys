@@ -4,6 +4,7 @@ on it; an unbound lead always draws (decision render-0002).
 
 from decimal import Decimal
 
+from fransys_el import REF_TINTS
 from fransys_render import pages
 from fransys_render._leads import _absolute, _route_ends, visible_symbol, wired_local_ports
 from fransys_render._symbol_geometry import oriented_symbol, to_grid
@@ -464,7 +465,7 @@ def test_visible_symbol_keeps_the_unbound_circle_and_every_unwired_lead_out():
 
 def test_both_goldens_still_render_with_leads_wired(cabinet_laid_out, cabinet_narrow_laid_out):
     for model in (cabinet_laid_out, cabinet_narrow_laid_out):
-        svgs = pages(model)
+        svgs = pages(model, tints=REF_TINTS)
         assert len(svgs) > 0
 
 

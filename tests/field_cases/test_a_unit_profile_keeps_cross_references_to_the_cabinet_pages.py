@@ -52,15 +52,15 @@ def _unit(gap: int | None) -> Any:
                 for i, (k, rl) in enumerate(zip(contactors, relays, strict=True)):
                     fuse = u.device(f"F{block}_{i}", "DEMO-FUSE-DC-160")
                     lamp = u.device(f"R{block}_{i}", "DEMO-LAMP-24")
-                    u.wire(strip[1 + i], fuse.element["1"], wire=("RD", 50))
-                    u.wire(fuse.element["2"], k.main["1"], wire=("RD", 50))
-                    u.wire(k.main["2"], lamp["1"], wire=("RD", 50))
-                    u.wire(lamp["2"], rl.co_1["11"], wire=("RD", 50))
-                    u.wire(rl.co_1["14"], rl.co_2["21"], wire=("RD", 50))
+                    u.detail.wire(strip[1 + i], fuse.element["1"], wire=("RD", 50))
+                    u.detail.wire(fuse.element["2"], k.main["1"], wire=("RD", 50))
+                    u.detail.wire(k.main["2"], lamp["1"], wire=("RD", 50))
+                    u.detail.wire(lamp["2"], rl.co_1["11"], wire=("RD", 50))
+                    u.detail.wire(rl.co_1["14"], rl.co_2["21"], wire=("RD", 50))
         with u.function("CTRL", "Control block"):
             for i, (k, rl) in enumerate(zip(contactors, relays, strict=True)):
-                u.wire(strip[_COUNT + 1 + i], k.coil["A1"], wire=("WH", 0.75))
-                u.wire(k.coil["A2"], rl.coil["A1"], wire=("WH", 0.75))
+                u.detail.wire(strip[_COUNT + 1 + i], k.coil["A1"], wire=("WH", 0.75))
+                u.detail.wire(k.coil["A2"], rl.coil["A1"], wire=("WH", 0.75))
         return _Io(strip)
 
     return unit

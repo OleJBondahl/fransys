@@ -44,14 +44,16 @@ _NARROW_GOLDEN = _GOLDEN_DIR / "cabinet_narrow_laid_out.json"
 # `-X2:1` lists the branches first) plus 5 branch and 2 reference markers: layout-0093's turn
 # test makes a wire that turns back round its device a reference pair (4 more than before
 # the turn change, when it was 7); no owner/user pair remains.
-_EXPECTED_TWO_LOCATION_MARKER_COUNT = 6
+_EXPECTED_TWO_LOCATION_MARKER_COUNT = 4  # was 8: model-0220 draws -X2:1 as copies; layout-0224
 _EXPECTED_LOCATION_CROSSING_MARKER_COUNT = 4
 # 7 star markers (3 references and 4 branches, whose lists make them wider; two more than
 # before the turned-back wires) plus the 2 ends of the one conductor cut by a page
 # break. Not 11: the removed pair is the K1:aux:13 <-> S0:nc_2:22 wire (wire 17): K1's aux now
 # stands on page 1 (layout-0049: the aux stands second in =P1), so the wire is drawn on page
 # 1 and is no longer cut.
-_EXPECTED_NARROW_MARKER_COUNT = 6  # was 8: the K1:13 - S0:22 turned pair is a wire (layout-0224)
+_EXPECTED_NARROW_MARKER_COUNT = (
+    4  # was 8: model-0220 copies, and the K1:13 - S0:22 pair is a wire (layout-0224)
+)
 _EXPECTED_NARROW_PAIR_MARKER_COUNT = 2
 _EXPECTED_NARROW_LOCATION_CROSSING_COUNT = 0
 # The fixed reference box width for the house sheet format (`links.reference_box_width`,
@@ -131,7 +133,7 @@ def test_the_location_prefix_and_width_checks_can_fail() -> None:
     assert _location_crossing_count(model) == _EXPECTED_NARROW_LOCATION_CROSSING_COUNT
     assert {_along(marker) for marker in pairs} == {_FIXED_REFERENCE_WIDTH_G}
     # A harness line leaving the page ends in an OFF line stub (layout-0154),
-    # 67 and 107 G long, not a reference; every other marker keeps the fixed reference width.
+    # 107 G long, not a reference; every other marker keeps the fixed reference width.
     line_stubs = [m for m in markers.values() if "line_stub" in str(m.key)]
     assert len(line_stubs) == 2
     assert {_along(marker) for marker in line_stubs} == _LINE_STUB_WIDTHS_G

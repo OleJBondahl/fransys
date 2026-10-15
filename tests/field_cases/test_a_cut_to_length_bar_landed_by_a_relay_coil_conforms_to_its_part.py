@@ -17,6 +17,6 @@ def test_a_cut_bar_landed_from_a_relay_gives_no_part_mismatch() -> None:
     d = fr.design("demo_parts")
     pe1 = d.device("PE1", "DEMO-PEBAR-CUT")
     k1 = d.device("K1", "DEMO-RLY-2CO-24")
-    d.wire(k1.coil["A1"], pe1.pe, wire=(GNYE, 2.5))
-    d.wire(k1.coil["A2"], pe1.pe, wire=(GNYE, 2.5))
+    d.detail.wire(k1.coil["A1"], pe1.pe, wire=(GNYE, 2.5))
+    d.detail.wire(k1.coil["A2"], pe1.pe, wire=(GNYE, 2.5))
     assert [f for f in fr.check(fr.build(d)) if f.code == "ITEM_PART_MISMATCH"] == []

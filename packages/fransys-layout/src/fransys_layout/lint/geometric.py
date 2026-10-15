@@ -25,6 +25,7 @@ from fransys_layout.stages.space import (
     crosses_unless_leaving,
     span,
 )
+from fransys_layout.stages.stub_runs import ink_boxes
 from fransys_model.kernel import Finding
 
 from ._foreign import box_on_symbols, stub_through_symbols
@@ -134,11 +135,17 @@ def _warn(code: str, subjects: tuple[Handle, ...], message: str) -> Finding:
 
 def _space(page: _Page) -> Space:
     """The page's placed shapes, the boxes the router was given; `_wires` and `_jogs` share it."""
+    wired = {end for route in page.routes for end in (route.a, route.b)}
     return Space(
         shapes=(
             *(Shape(owner=one.function, box=box) for one, box in page.boxes),
             *(Shape(owner=None, box=label.box) for label in page.labels),
             *(Shape(owner=marker.port, box=marker.box) for marker in page.markers),
+            *(
+                Shape(owner=marker.port, box=box)
+                for marker in page.markers
+                for box in ink_boxes(marker, wired=marker.port in wired)
+            ),
         )
     )
 

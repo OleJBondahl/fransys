@@ -53,9 +53,10 @@ _GOLDEN_DIR = (
 # iterated silently" pattern): a future golden that adds markers and forgets this dict fails the
 # coverage check below instead of being silently skipped.
 _EXPECTED_MARKER_COUNTS: dict[str, int] = {
-    "cabinet_laid_out.json": 4,
-    "cabinet_narrow_laid_out.json": 6,
-    "cabinet_two_location_laid_out.json": 6,
+    # model-0220: a terminal wired to several devices is copies at each pin, so its markers went
+    "cabinet_laid_out.json": 1,
+    "cabinet_narrow_laid_out.json": 4,
+    "cabinet_two_location_laid_out.json": 4,
 }
 
 
@@ -186,25 +187,27 @@ def test_every_marker_of_every_golden_fits_its_stored_box() -> None:
     # model-0139 took it from 7 to 4: a marker with three or more targets prints one line.
     # layout-0154: W1 is a harness line, not per-core markers; 4 became 6 with the
     # line stubs (one OFF stub per line leaving its page: 1 wide, 2 narrow) and the lost branches.
+    # model-0220: the terminal stars that made the multi-line texts are copies now, so 6 became 0;
+    # a line still ends at each copy of its terminal's pin, so the 3 line stubs stay.
     assert line_stubs == 3, "the goldens' harness lines leave their pages by OFF line stubs"
-    assert multi_line == 6, "LD5 (d)'s symmetric text: every 3+-end net's markers are multi-line"
+    assert multi_line == 0, "model-0220: no golden net is a 3+-end star of markers any more"
 
 
 def test_the_fit_check_can_fail() -> None:
     """A width one G too narrow, and a height off by one, each fail the same `_fits` check.
 
-    In-memory `dataclasses.replace` twins of the two-location golden's two-line marker (the
-    reference merged with its off stub) -- no git discard needed -- each exercising the
+    In-memory `dataclasses.replace` twins of the two-location golden's off stub, each exercising the
     identical `_fits` helper the main test above calls: one twin narrower than its own
     measured-plus-padded widest line needs (the `<=` half), one with the right width but a
     height one G over `lines * text_height + 2 * marker_padding` (the `==` half), and one
-    with the one-line height (a box measured before the merge added its second line). Separate
+    with a box one line short of the text (a box measured before a line was added). Separate
     assertions, so a check that only shrinks `width` cannot leave the height half of `_fits`
     unproven -- a widened width alone or a loosened height comparison would still pass the
     width-only twin.
     """
     model = loads((_GOLDEN_DIR / "cabinet_two_location_laid_out.json").read_text(encoding="utf-8"))
-    marker = next(m for m in layout_of(model, LinkMarker).values() if "\n" in marker_text(model, m))
+    # model-0220: no golden marker has two lines now, so the twins start from a one-line off stub
+    marker = next(m for m in layout_of(model, LinkMarker).values() if m.star is StarKind.OFF)
     text_height, padding = _profile_numbers(model)
     assert _fits(model, marker, text_height=text_height, padding=padding)
     width, height = _measured_size(model, marker, text_height=text_height, padding=padding)
@@ -212,5 +215,5 @@ def test_the_fit_check_can_fail() -> None:
     assert not _fits(model, too_narrow, text_height=text_height, padding=padding)
     wrong_height = _resized(marker, along=width, across=height + 1)
     assert not _fits(model, wrong_height, text_height=text_height, padding=padding)
-    one_line_high = _resized(marker, along=width, across=text_height + 2 * padding)
-    assert not _fits(model, one_line_high, text_height=text_height, padding=padding)
+    one_line_short = _resized(marker, along=width, across=height - text_height)
+    assert not _fits(model, one_line_short, text_height=text_height, padding=padding)

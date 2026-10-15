@@ -5,6 +5,7 @@ the re-faced pins as one row, so the bundle runs straight between the ends.
 """
 
 from dataclasses import replace
+from itertools import combinations, pairwise
 from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import (
@@ -13,6 +14,7 @@ from fransys_layout.geometry import (
     Box,
     Facing,
     Point,
+    boxes_meet,
     contains,
     contains_point,
     pad,
@@ -23,7 +25,7 @@ from fransys_layout.geometry.units import TEXT_GAP
 
 from .harness_route import root
 from .line_trunk import edge, tip
-from .space import End
+from .space import End, span
 from .texts.candidates import Candidate, box_of, stub_anchor
 
 if TYPE_CHECKING:
@@ -126,6 +128,28 @@ def stub_on_wire(end: End, size: tuple[int, int], wires: Sequence[Box]) -> bool:
     )
 
 
+def stub_cover(
+    end: End, size: tuple[int, int], obstacles: Sequence[Obstacle], wires: Sequence[Box]
+) -> int:
+    """The area of the text box of a stub standing at `end` (its tip) that keep-outs cover.
+
+    A routed wire through the box counts the whole box.
+    """
+    box = box_of(Candidate(side=end.facing, offset=0), stub_anchor(end.at), size)
+    covered = sum(_overlap(box, o.box) for o in obstacles)
+    on_wire = any(
+        through((Point(x=w.x, y=w.y), Point(x=w.x + w.width, y=w.y + w.height)), pad(box, TEXT_GAP))
+        for w in wires
+    )
+    return covered + (box.width * box.height if on_wire else 0)
+
+
+def _overlap(one: Box, other: Box) -> int:
+    wide = min(one.x + one.width, other.x + other.width) - max(one.x, other.x)
+    high = min(one.y + one.height, other.y + other.height) - max(one.y, other.y)
+    return max(0, wide) * max(0, high)
+
+
 def _one_line(pins: Sequence[PinAt]) -> bool:
     """Whether the pins stand on one line across their facing, like a coil's two.
 
@@ -173,3 +197,98 @@ def run_on(joint: Sequence[tuple[LineEnd, Fan | None]]) -> list[LineEnd]:
 def _met_on(end: End, onward: Point) -> End:
     """The split met from behind the run that leaves it toward `onward` (as `_row_run` leaves)."""
     return End(end.at, OPPOSITE[aside(end.at, onward, end.facing)])
+
+
+def fan_on_wire(fan: Fan | None, wires: Sequence[Box]) -> bool:
+    """Whether a fan-out's split stands on a routed wire, which its line would then run along."""
+    return fan is not None and any(contains_point(w, fan.at.x, fan.at.y) for w in wires)
+
+
+def clear_column(
+    end: End,
+    box: Box,
+    size: tuple[int, int] | None,
+    wires: Sequence[Box],
+    obstacles: Sequence[Obstacle],
+) -> End:
+    """A box end slid along its edge to the nearest grid column whose run out touches nothing.
+
+    A leaving end's run and stub box, else the end alone, stay off wires and keep-outs but the
+    box; it may take the far edge. No clear column leaves it as it was (layout-0246).
+    """
+    first = box.x + (-box.x) % WIRING_GRID
+    columns = sorted(
+        range(first, box.x + box.width + 1, WIRING_GRID), key=lambda x: abs(x - end.at.x)
+    )
+    others = [o for o in obstacles if not contains(o.box, box)]
+    low, high = box.y - box.y % WIRING_GRID, box.y + box.height
+    far = high + (-high) % WIRING_GRID if end.facing is Facing.N else low
+    sides = [(end.at.y, end.facing)] + ([(far, OPPOSITE[end.facing])] if size else [])
+    options = (End(at=Point(x=x, y=y), facing=face) for y, face in sides for x in columns)
+    return next((one for one in options if _column_clear(one, size, wires, others)), end)
+
+
+def _column_clear(
+    end: End, size: tuple[int, int] | None, wires: Sequence[Box], obstacles: Sequence[Obstacle]
+) -> bool:
+    run = (end.at, edge(end) if size else end.at)
+    body = Box(
+        x=min(p.x for p in run),
+        y=min(p.y for p in run),
+        width=abs(run[0].x - run[1].x),
+        height=abs(run[0].y - run[1].y),
+    )
+    return (
+        not (size and stub_on_wire(end, size, wires))
+        and not any(boxes_meet(body, w, closed=True) for w in wires)
+        and not any(boxes_meet(body, o.box, closed=True) for o in obstacles)
+        and not (
+            size and any(boxes_meet(_stub_box(end, size), o.box, closed=True) for o in obstacles)
+        )
+    )
+
+
+def fan_clear(fan: Fan | None, wires: Sequence[Box], obstacles: Sequence[Obstacle] = ()) -> bool:
+    """Whether a fan-out stands off every wire, its legs share no run and cross no other body.
+
+    A leg that runs through a keep-out holding not its pin, or along another leg, reads as a
+    joined wire (layout-0246); the split on a wire does too.
+    """
+    if fan is None:
+        return True
+    segments = [(leg, pair) for leg in fan.legs for pair in pairwise(leg.points)]
+    return (
+        not fan_on_wire(fan, wires)
+        and not any(
+            boxes_meet(span(*pair), o.box, closed=True)
+            and not contains_point(o.box, leg.points[-1].x, leg.points[-1].y)
+            for leg, pair in segments
+            for o in obstacles
+        )
+        and not any(
+            _shared_run(a, b) for (la, a), (lb, b) in combinations(segments, 2) if la is not lb
+        )
+    )
+
+
+def _shared_run(one: tuple[Point, Point], other: tuple[Point, Point]) -> bool:
+    """Whether two segments lie on one line and overlap by more than a point."""
+    for axis, cross in ((0, 1), (1, 0)):
+        coords = [(p.x, p.y) for p in (*one, *other)]
+        if len({c[cross] for c in coords}) == 1 and one[0] != one[1] and other[0] != other[1]:
+            first = sorted(c[axis] for c in coords[:2])
+            second = sorted(c[axis] for c in coords[2:])
+            return min(first[1], second[1]) > max(first[0], second[0])
+    return False
+
+
+def split_in(fan: Fan | None, obstacles: Sequence[Obstacle]) -> bool:
+    """Whether a fan-out split stands in, or on the edge of, a keep-out holding none of its pins."""
+    if fan is None:
+        return False
+    pins = [leg.points[-1] for leg in fan.legs]
+    return any(
+        contains_point(o.box, fan.at.x, fan.at.y)
+        and not any(contains_point(o.box, p.x, p.y) for p in pins)
+        for o in obstacles
+    )

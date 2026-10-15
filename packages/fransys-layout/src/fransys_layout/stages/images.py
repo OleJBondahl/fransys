@@ -12,6 +12,7 @@ from fransys_model.derive.drawing_text import (
     partner_position_text,
 )
 
+from . import image_refs
 from ._image_foot import table_x
 from ._image_stack import foot_down, headed_width, heads_by_set, settled_tables
 from ._image_widest import widest_places
@@ -29,7 +30,7 @@ from .place import axis_offset
 from .room import grow_keepout
 from .slices import by_key, page_of
 from .texts.power import drawn_shapes
-from .types import Home, LabelKind, LabelRequest, PlacedLabel, RequestPartner
+from .types import Home, LabelKind, LabelRequest, PlacedLabel
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -99,13 +100,6 @@ def _where(
     column = frame_column(sheet.content_width, sheet.frame_columns, target.at.x)
     row = frame_row(sheet.content_height, sheet.frame_rows, target.at.y)
     return partner_position_text(_seat(reader, paths), _seat(target, paths), column, row)
-
-
-def _partner(at: PlacedFunction, spec: FunctionSpec) -> RequestPartner:
-    """The cross-reference partner `spec` makes, placed at `at`."""
-    return RequestPartner(
-        port=spec.ports[0].port, drawing_set=at.drawing_set, page=at.page, x=at.at.x
-    )
 
 
 def _entry_text(mark: str, where: str) -> str:
@@ -368,7 +362,7 @@ def contact_images(
             Box(x=x, y=y, width=width, height=height), here, gap=profile.marker_padding, axis="y"
         )
         # a table of spares alone has no drawn contact: the coil itself is the model's one partner
-        partners = tuple(_partner(home[s.function], s) for s in order) or (_partner(at, coil),)
+        partners = image_refs.table_partners(order, home, coil)
         tables.setdefault((at.drawing_set, at.page), []).append(
             PlacedLabel(
                 kind=LabelKind.CROSS_REFERENCE,

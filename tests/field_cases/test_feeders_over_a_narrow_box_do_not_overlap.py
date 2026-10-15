@@ -39,10 +39,10 @@ def _built(name: str = "T") -> tuple:
         m1 = d.device("M1", "DEMO-RED-2IN")
     for n, psu in enumerate(psus, start=1):
         group = getattr(m1, f"in_{n}")
-        d.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
-        d.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
-    d.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
-    d.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
+        d.detail.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
+        d.detail.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
+    d.detail.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
+    d.detail.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

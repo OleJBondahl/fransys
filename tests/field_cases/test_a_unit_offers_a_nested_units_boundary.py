@@ -39,8 +39,8 @@ def _board_fn(u: Any) -> _Io:
     pcb = u.device("A1", "DEMO-PCB-IO")
     x7 = u.device("X7", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     k1 = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.wire(x7[1], k1["1"], wire=(BK, 0.5))
-    u.wire(x7[2], k1["2"], wire=(BK, 0.5))
+    u.detail.wire(x7[1], k1["1"], wire=(BK, 0.5))
+    u.detail.wire(x7[2], k1["2"], wire=(BK, 0.5))
     return _Io(x7)
 
 
@@ -62,8 +62,8 @@ def _cab(u: Any) -> _Open:
     harness = u.harness("W5")
     plug = u.device("P5", "DEMO-HSG-4M", parent=harness, contacts="DEMO-CRIMP-M")
     u.mate(plug, asm.X7)
-    u.wire(plug[1], psu.output["+"], wire=(BK, 0.5))
-    u.wire(plug[2], psu.output["-"], wire=(BK, 0.5))
+    u.detail.wire(plug[1], psu.output["+"], wire=(BK, 0.5))
+    u.detail.wire(plug[2], psu.output["-"], wire=(BK, 0.5))
     return _Open()
 
 
@@ -169,8 +169,8 @@ def _container(unit: Any, plug_unit_field: str = "X7") -> list[str]:
         harness = u.harness("W5")
         plug = u.device("P5", "DEMO-HSG-4M", parent=harness, contacts="DEMO-CRIMP-M")
         u.mate(plug, getattr(nested, plug_unit_field))
-        u.wire(plug[1], psu.output["+"], wire=(BK, 0.5))
-        u.wire(plug[2], psu.output["-"], wire=(BK, 0.5))
+        u.detail.wire(plug[1], psu.output["+"], wire=(BK, 0.5))
+        u.detail.wire(plug[2], psu.output["-"], wire=(BK, 0.5))
         return _Open()
 
     d = fr.design("demo_parts")
@@ -206,7 +206,7 @@ def test_a_returned_non_boundary_function_still_bypasses() -> None:
         offered = u.add(_offers_lamp, "U3")
         psu = u.device("T1", "DEMO-PSU-24")
         u.dc_supply("S", psu)
-        u.wire(offered.X7["1"], psu.output["+"], wire=(BK, 0.5))
+        u.detail.wire(offered.X7["1"], psu.output["+"], wire=(BK, 0.5))
         return _Open()
 
     d = fr.design("demo_parts")

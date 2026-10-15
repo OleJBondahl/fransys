@@ -50,15 +50,15 @@ def _box_sides(model, layout, tag: str) -> dict[str, str]:
 def _psu(d) -> None:
     psu = d.device("T1", "DEMO-PSU-24")
     lamp = d.device("P1", "DEMO-LAMP-24")
-    d.wire(psu.output["+"], lamp[1], wire=(BU, 0.5))
-    d.wire(psu.output["-"], lamp[2], wire=(BU, 0.5))
+    d.detail.wire(psu.output["+"], lamp[1], wire=(BU, 0.5))
+    d.detail.wire(psu.output["-"], lamp[2], wire=(BU, 0.5))
 
 
 def _module(d) -> None:
     module = d.device("K1", "DEMO-PLC-DI-4P")
     for i in range(1, 5):
         switch = d.device(f"S{i}", "DEMO-SWITCH-2P")
-        d.wire(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
+        d.detail.wire(switch.sw["B"], getattr(module, f"di_{i}")[i], wire=(BU, 0.5))
 
 
 def test_a_power_supply_draws_its_ac_input_on_top_and_its_dc_output_below() -> None:
@@ -85,8 +85,8 @@ def test_a_plc_module_draws_one_box_with_power_on_top_and_its_channels_below() -
 def _module_unwired(d) -> None:
     module = d.device("K1", "DEMO-PLC-DI-4P")
     psu = d.device("T1", "DEMO-PSU-24")
-    d.wire(psu.output["+"], module.power["24V"], wire=(BU, 0.5))
-    d.wire(psu.output["-"], module.power["0V"], wire=(BU, 0.5))
+    d.detail.wire(psu.output["+"], module.power["24V"], wire=(BU, 0.5))
+    d.detail.wire(psu.output["-"], module.power["0V"], wire=(BU, 0.5))
 
 
 def test_a_plc_module_box_takes_v1_sides_for_its_power_and_its_channels() -> None:

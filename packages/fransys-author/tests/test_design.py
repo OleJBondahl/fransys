@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 from fransys_author import AuthorError, Cable, Design, Fn, Item, Location, Port, Strip, Terminal
-from fransys_author.design import _required_and_defaults
+from fransys_author._design_support import _required_and_defaults
 
 from fransys_model.kernel import Draft, Record, Severity, freeze, merge
 from fransys_model.layout import (

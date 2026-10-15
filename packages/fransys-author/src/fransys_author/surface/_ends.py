@@ -7,14 +7,17 @@ from fransys_author.handles import Port, Terminal
 from fransys_author.surface._carrier import carrier_function
 from fransys_author.surface._device import Device
 from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import Ends, SeriesElement, ends_of, poles
+from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, SeriesElement, ends_of, poles
 from fransys_author.surface._throws import whole_changeover
 from fransys_model.vocab import FunctionKind
 
 if TYPE_CHECKING:
     from .design import Design
 
-_PIN = "a pin is one wire: use d.wire"
+_PIN = (
+    "a pin or terminal is one wire: pass its function or strip to the series; "
+    "a fixed terminal is d.detail.wire"
+)
 _ALLOWED = "a device, a function, a supply or rail, a terminal strip, a cable or a parallel"
 
 
@@ -25,7 +28,7 @@ class SeriesBridge(Protocol):
     """
 
     def _series_between(
-        self, design: Design, before: tuple[object, Ends], after: tuple[object, Ends]
+        self, design: Design, before: tuple[object, Ends], after: tuple[object, Ends], series: str
     ) -> None: ...
 
     def _series_width(self) -> None: ...
@@ -57,7 +60,7 @@ def _fn_ends(design: Design, fn: Fn) -> Ends:
         raise whole_changeover(fn._label, fn._fn)
     ends = ends_of(design._pairing_facts, fn._fn)
     if not ends.line:
-        msg = f"{fn._label}.{fn._fn.name} has no poles: name its pins"
+        msg = f"{fn._label}.{fn._fn.name} has no poles: {NO_SIDE_FIX}"
         raise AuthorError(msg)
     return ends
 

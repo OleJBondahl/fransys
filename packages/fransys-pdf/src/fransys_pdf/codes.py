@@ -86,8 +86,11 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
         severities=(Severity.WARNING,),
         stage="pdf",
         who="consumer",
-        cause="The project's `notice` text does not fit the notice cell and would be cut.",
-        fix="Shorten the `notice` text.",
+        cause=(
+            "The `notice` text passed to `fr.document(notice=)` does not fit the notice cell "
+            "and would be cut."
+        ),
+        fix="Shorten the `notice` text in `fr.document(notice=)`.",
         page="findings-pdf",
     ),
     CodeInfo(

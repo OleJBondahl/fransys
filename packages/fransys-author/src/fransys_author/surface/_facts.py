@@ -76,6 +76,7 @@ class Facts:
     ) -> Rating | None:
         """Read the rating of a part, or of one of its function templates.
 
+        Use this before a build to size a part; on a built model use fr.derive.function_rating.
         Does not take a `(manufacturer, mpn)` pair: an MPN made by two makers raises.
         """
         mpn = part_mpn(part)
@@ -85,6 +86,7 @@ class Facts:
     def operating(self: "Design", part: str | type[Device], function: str) -> Operating | None:
         """Read the operating envelope of one function template of a part.
 
+        Use this before a build to size a part; on a built model use fr.derive.function_rating.
         Does not take a `(manufacturer, mpn)` pair: an MPN made by two makers raises.
         """
         mpn = part_mpn(part)

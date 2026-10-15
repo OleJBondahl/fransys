@@ -26,8 +26,8 @@ class _Io(NamedTuple):
 def _cab(c: Any) -> _Io:
     x1 = c.terminal_strip("X1", "DEMO-TB-2.5", 4, interface=(1, 2))  # 3 and 4 stay inside
     io = c.device("A1", "DEMO-IO-2X")
-    c.wire(x1[3], io.x1["1"], wire=(BU, 0.75))
-    c.wire(x1[4], io.x1["2"], wire=(BU, 0.75))
+    c.detail.wire(x1[3], io.x1["1"], wire=(BU, 0.75))
+    c.detail.wire(x1[4], io.x1["2"], wire=(BU, 0.75))
     return _Io(X1=x1)
 
 
@@ -36,10 +36,10 @@ def _findings(*, wire_inside: bool = False, unused: bool = False) -> list[Any]:
     u = d.add(_cab, "U1", unused=("X1",)) if unused else d.add(_cab, "U1")
     lamp = d.device("H1", "DEMO-LAMP-24")
     if not unused:
-        d.wire(u.X1[1], lamp.lamp["1"], wire=(BK, 1.5))
-        d.wire(u.X1[2], lamp.lamp["2"], wire=(BK, 1.5))
+        d.detail.wire(u.X1[1], lamp.lamp["1"], wire=(BK, 1.5))
+        d.detail.wire(u.X1[2], lamp.lamp["2"], wire=(BK, 1.5))
     if wire_inside:
-        d.wire(u.X1[3], d.device("H2", "DEMO-LAMP-24").lamp["1"], wire=(BK, 1.5))
+        d.detail.wire(u.X1[3], d.device("H2", "DEMO-LAMP-24").lamp["1"], wire=(BK, 1.5))
     return list(fr.build(d).findings)
 
 

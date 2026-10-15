@@ -27,9 +27,9 @@ def _board(d: fr.Design) -> _Io:
     j2 = d.device("J2", "DEMO-CONN-4P", interface=True)
     inner_1, inner_2 = d.device("R1", "DEMO-CONN-4P"), d.device("R2", "DEMO-CONN-4P")
     for pin in (1, 2):
-        d.wire(j1[pin], inner_1[pin], wire=(RD, 0.5))
+        d.detail.wire(j1[pin], inner_1[pin], wire=(RD, 0.5))
     for pin in (1, 2, 3, 4):
-        d.wire(j2[pin], inner_2[pin], wire=(RD, 0.5))
+        d.detail.wire(j2[pin], inner_2[pin], wire=(RD, 0.5))
     return _Io(j1, j2)
 
 
@@ -48,8 +48,8 @@ def _reads() -> tuple:
         for pin in (1, 2, 3, 4):
             cable.core(pin, near[pin], far[pin])
         if name == "2":
-            d.wire(far[1], strip[2], wire=(BK, 0.5))
-            d.wire(far[2], strip[2], wire=(BK, 0.5))
+            d.detail.wire(far[1], strip[2], wire=(BK, 0.5))
+            d.detail.wire(far[2], strip[2], wire=(BK, 0.5))
     model = fr.build(d).model
     (unit,) = units(model)
     return model, interface_reads(model, unit)

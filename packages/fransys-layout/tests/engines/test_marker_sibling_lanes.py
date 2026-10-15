@@ -247,7 +247,8 @@ def test_a_marker_box_that_cannot_clear_the_lane_stays_and_is_reported() -> None
 
 
 def test_a_marker_box_another_marker_box_blocks_takes_the_next_free_place() -> None:
-    """Marker 11 stands first (the port nearer the left) at x=90..110, over its own stub's lane
+    """Marker 11 stands first (its port right of 12, so its rail never crosses 12's stub,
+    layout-0244) at x=90..110, over its own stub's lane
     side; marker 12's nearest clear place (x=64..99) meets that box, so the greedy walk takes the
     next free place: the same place one tier out, a box height further down, its stub
     running down the clear x=72. The other box stays.
@@ -255,13 +256,13 @@ def test_a_marker_box_another_marker_box_blocks_takes_the_next_free_place() -> N
     # UNDO: `place_texts` admits a place that overlaps a box already placed (x=64..99 at tier 0)
     """
     marker = _marker(12, Point(x=72, y=72), Box(x=55, y=80, width=35, height=12))
-    other = _marker(11, Point(x=56, y=72), Box(x=90, y=80, width=20, height=12))
+    other = _marker(11, Point(x=112, y=72), Box(x=90, y=80, width=20, height=12))
     found = _run_all(marker, other)
     assert found[1] == other
     assert not overlaps(found[0].box, found[1].box)
     assert found[0].box == Box(x=64, y=92, width=35, height=12)
     assert found[0].stub_extra == marker.stub_extra + marker.box.height  # one tier out
-    assert _clear_of(found[0].box, 56)
+    assert _clear_of(found[0].box, 112)
     assert _stub_over(found[0])
     assert found[0].shared_box
 

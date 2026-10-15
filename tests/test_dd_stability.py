@@ -84,7 +84,13 @@ def test_a_relay_in_the_last_device_group_moves_only_the_pages_of_that_group() -
     assert all(_page_dump(before, page) for page in free)
     added = set(layout_of(after, SymbolPlacement)) - set(layout_of(before, SymbolPlacement))
     assert added
-    assert {layout_of(after, SymbolPlacement)[i].key[3] for i in added} == {"KX"}
+    # model-0220: KX's wire makes X1's F terminal a star; it stands at each relay of =F
+    placed = layout_of(after, SymbolPlacement)
+    copies = {
+        placed[i].key[placed[i].key.index("at") + 1] for i in added if placed[i].key[3] == "X1"
+    }
+    assert {placed[i].key[3] for i in added} == {"KX", "X1"}
+    assert copies == {"KX", "KF"}
     assert {layout_of(after, SymbolPlacement)[i].page for i in added} <= set(
         layout_of(after, Page)
     ) - free

@@ -21,6 +21,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
+from fransys_el import REF_TINTS
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
@@ -195,7 +196,7 @@ def _on_box_edge(box, end) -> bool:
 
 
 def _page_svg(model, page_id):
-    return render_pages(model)[f"{page_id.kind}:{page_id.value}"]
+    return render_pages(model, tints=REF_TINTS)[f"{page_id.kind}:{page_id.value}"]
 
 
 # -- Stub labels ----------------------------------------------------------------------------

@@ -4,6 +4,21 @@ from fransys_model.kernel import CodeInfo, Severity
 
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
+        code="DRAWING_SHORTS_NETS",
+        severities=(Severity.INFO,),
+        stage="render",
+        who="Fransys",
+        cause=(
+            "A page draws two nets joined that the wiring keeps apart: a stub, a wire end or a "
+            "power symbol lies on, or crosses, another net's wire or symbol."
+        ),
+        fix=(
+            "A Fransys defect: send the smallest model that shows it. Check first that no "
+            "authored hint crowds the nets."
+        ),
+        page="findings-render",
+    ),
+    CodeInfo(
         code="LAYOUT_MISSING",
         severities=(Severity.ERROR,),
         stage="render",

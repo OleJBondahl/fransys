@@ -69,14 +69,14 @@ def _bank(module: str | None, count: int, *, one_group: bool = False, lean: bool
                 )
                 with own:
                     relay = u.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
-                    u.wire(feed[1 + i % 4], relay.coil["A1"], wire=("WH", 0.75))
-                    u.wire(controller[_PINS[i % 16]], relay.coil["A2"], wire=("BU", 0.75))
+                    u.detail.wire(feed[1 + i % 4], relay.coil["A1"], wire=("WH", 0.75))
+                    u.detail.wire(controller[_PINS[i % 16]], relay.coil["A2"], wire=("BU", 0.75))
                     if lean:
                         continue
                     lamp = u.device(f"P{i + 1}", "DEMO-LAMP-24")
-                    u.wire(relay.co_1["14"], lamp.lamp[1], wire=("WH", 0.75))
-                    u.wire(back[1 + i % 6], relay.co_1["11"], wire=("WH", 0.75))
-                    u.wire(lamp.lamp[2], back[7], wire=("BU", 0.75))
+                    u.detail.wire(relay.co_1["14"], lamp.lamp[1], wire=("WH", 0.75))
+                    u.detail.wire(back[1 + i % 6], relay.co_1["11"], wire=("WH", 0.75))
+                    u.detail.wire(lamp.lamp[2], back[7], wire=("BU", 0.75))
         return _Io(feed)
 
     return bank
@@ -127,7 +127,8 @@ def test_a_bank_wider_than_the_house_page_leaves_no_box_off_the_page() -> None:
     assert _off_page(None, 10) == 0
 
 
-@pytest.mark.parametrize("count", [8])  # measured 3 vs 2; N=9, 10 are 3 vs 3 (layout-0214)
+# measured 3 vs 2 at N=10; model-0220 drew the strips at their coils and N=8, 9 fit 2 pages
+@pytest.mark.parametrize("count", [10])
 def test_a_larger_module_adds_pages(count: int) -> None:
     """The coarser module lowers capacity, so the same bank takes more pages."""
     assert _pages("3.0", count) > _pages(None, count)
@@ -136,10 +137,9 @@ def test_a_larger_module_adds_pages(count: int) -> None:
 def test_a_bank_inside_one_function_still_reports_the_group_split() -> None:
     """The cut gives no finding, but a function wider than a page is split and says so.
 
-    Nine relays: since layout-0214 the feed strip's home copies stand at their coils only, so
-    eight now fit one page.
+    Ten relays: since model-0220 every strip terminal stands at its coils, so nine fit one page.
     """
-    codes = _codes("3.0", 9, one_group=True)
+    codes = _codes("3.0", 10, one_group=True)
     assert codes.count(_CODE) == 0
     assert codes.count("GROUP_SPLIT") == 1
 

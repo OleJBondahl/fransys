@@ -72,13 +72,14 @@ class LineScene:
     drawn: tuple[DrawnFunction, ...]
     boxes: tuple[PlacedConnectorBox, ...]
     labels: tuple[PlacedLabel, ...]
-    keepouts: tuple[tuple[_Page, Id[Any], Any], ...]  # marker boxes: page, owner, box
+    keepouts: tuple[tuple[_Page, Id[Any] | None, Any], ...]  # marker boxes: page, owner, box
     profile: Profile
     sheet: Any
     hidden: frozenset[Id[Any]] = frozenset()  # layout-0155: boxed pin views, which draw nothing
     units: Mapping[int, Id[Any] | None] = MappingProxyType({})  # each drawing set's unit
     wires: Mapping[_Page, tuple[Any, ...]] = MappingProxyType({})  # each page's wires as spans
     sides: Mapping[_Page, tuple[Box, ...]] = MappingProxyType({})  # the boxes no line runs along
+    copies: Mapping[Id[Any], Id[Any]] = MappingProxyType({})  # model-0220: copy handle to model id
 
 
 @value
@@ -180,12 +181,13 @@ def _route_line(
 def _world(carried: Sequence[Connection], units: Sequence[MiddleUnit], scene: LineScene) -> _World:
     where: dict[Id[Any], dict[_Page, PlacedFunction]] = defaultdict(dict)
     shapes: dict[_Page, list[Shape]] = defaultdict(list)
-    for one in scene.placed:
-        where[one.function][one.drawing_set, one.page] = one
+    # model-0220: a copy of a terminal is the model's terminal on its page, so a line that ends
+    # at it finds the pin there; the terminal standing on that page is seen first and wins
+    for one in sorted(scene.placed, key=lambda one: one.function in scene.copies):
+        owner = scene.copies.get(one.function, one.function)
+        where[owner].setdefault((one.drawing_set, one.page), one)
         if one.function not in scene.hidden:
-            shapes[one.drawing_set, one.page].append(
-                Shape(owner=one.function, box=placed_keepout(one))
-            )
+            shapes[one.drawing_set, one.page].append(Shape(owner=owner, box=placed_keepout(one)))
     boxes: dict[Id[Any], dict[_Page, PlacedConnectorBox]] = defaultdict(dict)
     for box in scene.boxes:
         boxes[box.function][box.drawing_set, box.page] = box
@@ -236,7 +238,7 @@ def _ends_on(
     found: list[EndOnPage] = []
     for end, first_try in first:
         others = [two for other, two in first if two is not None and other is not end]
-        again = first_try is not None and first_try.box is not None and end.plug is None
+        again = first_try is not None and first_try.box is not None and first_try.mate is None
         placed = _end_on(end, page, world, rows_of(others)) if again else first_try
         if placed is not None:
             found.append(placed)
@@ -270,9 +272,7 @@ def _end_on(
         if box is None:
             return _own_sheet(end, mate, world)
         leaving = end.mates in world.leaving
-        return EndOnPage(
-            end.branch, interface, leaving, box.box, mate.box if mate is not None else None
-        )
+        return EndOnPage(end.branch, interface, leaving, box.box, mate and mate.box, toward=toward)
     pins = tuple(_pins(end, page, world))
     if pins:
         return EndOnPage(end.branch, interface, pins=pins)

@@ -18,6 +18,23 @@ default) leaves that cell empty. `notice` is the text of the title block's IP no
 on every page of that document; `""` (the default) leaves the cell empty. On A3 the cell is about 92 mm wide and holds about 370 characters at the label size. A longer notice gives `TITLE_BLOCK_NOTICE_OVERFLOW`. Customer and Author are narrower than with no notice. A unit released alone
 needs no `d.project` for either; its Author cell prints `created` of the unit's current revision, a project document's the project's `author`. `d.project(notice=...)` raises: the notice moved here.
 
+The page kinds each preset holds by default (`add` and `remove` change them).
+
+| page kind | `CABINET_SCHEMATIC` | `HARNESS_DRAWING` | `PCB_SCHEMATIC` | `SYSTEM` |
+|---|---|---|---|---|
+| `COVER` | yes | yes | yes | yes |
+| `NOTES` | yes | yes | yes | yes |
+| `SHEET_INDEX` | yes | yes | yes | yes |
+| `CONTENTS` | no | yes | no | no |
+| `SCHEMATIC` | yes | no | yes | no |
+| `BLOCK_DIAGRAM` | no | no | no | yes |
+| `HARNESS_DRAWING` | no | yes | no | yes |
+| `PLC_LIST` | yes | no | no | no |
+| `TERMINAL_LIST` | yes | no | no | no |
+| `CONNECTOR_LIST` | yes | no | yes | no |
+| `CABLE_LIST` | no | no | no | yes |
+| `BOM` | yes | yes | yes | yes |
+
 Every preset also takes `PageKind.SHEET_INDEX`, a "Sheets" page after the notes that lists each
 sheet (`3`, `2.3`, block diagram sheets `B1`, `B2`) with its title and PDF page. It prints from two
 sheets; `remove=(fr.PageKind.SHEET_INDEX,)` drops it. The PDF is navigable and prints the same.
@@ -50,8 +67,7 @@ class Cabinet(NamedTuple):
 def terminal_cabinet(c):
     x1 = c.terminal_strip("X1", "DEMO-TB-2.5", 2, description="Field strip")
     k1 = c.device("K1", "DEMO-CO-4P-24")
-    c.wire(x1[1], k1.coil["A1"], wire=(BK, 1.5))
-    c.wire(x1[2], k1.coil["A2"], wire=(BK, 1.5))
+    c.series(x1, k1.coil, x1, wire=(BK, 1.5))
     return Cabinet()
 
 
@@ -93,7 +109,6 @@ class Io(NamedTuple):
 @fr.unit("demo-io-board", revision=1, interface_version=1, date="2026-02-02", text="First", by="XX")
 def board(u):
     x1 = u.device("X1", "DEMO-CONN-2P", interface=True)
-    u.wire(x1["1"], u.device("H1", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
     return Io(x1)
 
 

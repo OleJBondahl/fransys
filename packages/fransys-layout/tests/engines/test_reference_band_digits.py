@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 from fransys_el import OPTIONS
-from layout_cabinet import build_cabinet
+from layout_cabinet import build_cabinet, no_wire_copies
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -25,7 +25,10 @@ from fransys_model.kernel import freeze
 
 @cache
 def _run(cabinet: str) -> tuple[dict[int, int], dict[int, int]]:
-    """Per drawing set: the narrowest band `place` reserved, and the width of its drawn box."""
+    """Per drawing set: the narrowest band `place` reserved, and the width of its drawn box.
+
+    Laid out with no terminal copies (model-0220): with them the cabinet draws no reference box.
+    """
     model = freeze(build_cabinet(second_location=cabinet == "two_location"))
     bands: dict[int, list[int]] = defaultdict(list)
     place = import_module("fransys_layout.stages.place")  # `stages.place` names the function
@@ -36,7 +39,7 @@ def _run(cabinet: str) -> tuple[dict[int, int], dict[int, int]]:
         bands[sys._getframe(1).f_locals["plan"].drawing_set].append(band)
         return band
 
-    with patch.object(place, "_reference_band", spy):
+    with patch.object(place, "_reference_band", spy), no_wire_copies():
         results, _ = stage_results(model, read_inputs(model, options=OPTIONS))
     # a reference box stands turned at an N or S port: its long side is the box's width
     widths = {

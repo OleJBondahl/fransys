@@ -10,7 +10,7 @@ from samples import column, drawn, hid, page_plan
 
 from fransys_layout.geometry import Facing, Point, PortGeometry
 from fransys_layout.stages.page_copies import with_page_copies
-from fransys_layout.stages.types import Home, PortRef
+from fransys_layout.stages.types import Cell, Home, PortRef
 
 
 def _ref(number: int, end: str = "in") -> PortRef:
@@ -89,3 +89,32 @@ def test_two_devices_on_a_page_give_one_copy_at_the_first_end_in_port_order() ->
 
     (copy,) = _copies(result)
     assert copy.host == hid("function", 1)
+
+
+def test_a_host_with_an_attached_cell_at_another_pin_still_takes_a_copy() -> None:
+    """model-0220: the guard is per pin; a cell at device 1's `out` leaves its `in` free."""
+    other = Cell(
+        function=hid("function", 7), index=1, host=hid("function", 1), port="out", home=Home.MOVED
+    )
+    terminal, device = column("t", (5,)), column("d", (1,))
+    device = replace(device, cells=(*device.cells, other))
+    plans = (page_plan(("t",), number=1), page_plan(("d",), number=2))
+
+    result = with_page_copies(plans, (terminal, device), (drawn(1), drawn(5)), [(_ref(5), _ref(1))])
+
+    (copy,) = _copies(result)
+    assert (copy.function, copy.host, copy.port) == (hid("function", 5), hid("function", 1), "in")
+
+
+def test_a_pin_that_holds_an_attached_cell_takes_no_copy() -> None:
+    """A cell already attached at device 1's `in` keeps that pin."""
+    other = Cell(
+        function=hid("function", 7), index=1, host=hid("function", 1), port="in", home=Home.MOVED
+    )
+    terminal, device = column("t", (5,)), column("d", (1,))
+    device = replace(device, cells=(*device.cells, other))
+    plans = (page_plan(("t",), number=1), page_plan(("d",), number=2))
+
+    result = with_page_copies(plans, (terminal, device), (drawn(1), drawn(5)), [(_ref(5), _ref(1))])
+
+    assert result == (terminal, device)

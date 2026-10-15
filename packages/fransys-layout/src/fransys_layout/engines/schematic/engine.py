@@ -37,6 +37,7 @@ from fransys_layout.stages.texts.markers import link_markers, placed_world
 from fransys_layout.stages.texts.power import without_power_findings
 from fransys_layout.stages.tidy import clear_of_stubs, shift_pages
 from fransys_layout.stages.wide_columns import cut_wide
+from fransys_layout.stages.wire_copies import copy_map, copy_seen, copy_texts
 from fransys_model.kernel import Finding, Id, value
 
 from ._arrange_columns import arranged
@@ -91,6 +92,7 @@ class StageResults:
     boxes: tuple[PlacedConnectorBox, ...] = ()
     hidden: tuple[Id[Any], ...] = ()
     lines: DrawnPieces = DrawnPieces()
+    copies: tuple[tuple[Id[Any], ...], ...] = ()  # model-0220: copy handles to model ids
 
 
 def run_stages(
@@ -120,7 +122,8 @@ def linted(
 ) -> tuple[Finding, ...]:
     """`found` and the lint of `scene`, named and sorted; look findings skip unprinted sets."""
     lint = lint_findings(scene, printed)
-    named = named_findings(model, scene.inputs.functions, scene.layout, scene.ink, [*found, *lint])
+    seen, found = copy_seen(scene.layout, [*found, *lint], scene.inputs.copies)
+    named = named_findings(model, scene.inputs.functions, seen, scene.ink, found)
     return tuple(sorted(named, key=lambda f: (f.code, f.subjects, f.message)))
 
 
@@ -138,14 +141,17 @@ def stage_layout(
     )
     boxes, hidden, slot_requests = _boxed_views(model, inputs, drawn)
 
-    inputs, all_columns, columns, column_findings = arranged(model, inputs, drawn, rank_of)
+    inputs, drawn, rank_of, all_columns, columns, column_findings = arranged(model, inputs, drawn)
     # a middle unit's line views leave their columns; its lines' conductors are no routes
     inputs, columns, middle, reach = strip_middle(model, inputs, columns)
     inputs, lines = strip_lines(model, inputs)
     columns = box_columns(
         columns, boxes, (*inputs.connections, *inputs.crossing), inputs.net_groups
     )
-    texts = tag_texts(model)
+    # model-0220: a copy at a wire reads its terminal's texts and asks for its labels
+    texts, slot_requests = copy_texts(
+        tag_texts(model), slot_requests, inputs.functions, inputs.copies
+    )
     rowed, pin_requests = row_labels(texts, inputs.functions, all_columns, slot_requests)
     own_set = own_set_texts(texts, boundary_edge_set(model), rowed, inputs.functions)
     drawn, widths, img, reserves = sized(model, inputs, drawn, columns, own_set)
@@ -233,7 +239,7 @@ def stage_layout(
         placed_all,
         moved_shapes(placement.pages, placement.placed_all, placed_all),
     )
-    pages, outlines, external, placed_box, placed_all, markers, blocks = outlined_cells(
+    pages, outlines, external, placed_box, placed_all, markers, blocks, redo = outlined_cells(
         model, inputs, columns, laid, placed_box
     )
     crossings = cross_references(model, inputs, placement, decided, contact_refs)
@@ -251,7 +257,7 @@ def stage_layout(
             blocks,
         ),
     )
-    findings.extend(page_findings)
+    findings = [*redo.over(findings), *page_findings]
     routes = onepage.keep_chosen_edges(routes, inputs.net_groups, at_home)
     # layout-0154: the lines over the finished page, clear of its symbols, boxes and texts
     scene = LineScene(
@@ -259,13 +265,14 @@ def stage_layout(
         drawn,
         placed_box,
         (*labels,),
-        marker_keepouts(model, markers),
+        marker_keepouts(model, markers, copy_map(inputs.copies)),
         inputs.profile,
         inputs.sheet,
         frozenset(hidden),
         {plan.drawing_set: plan.unit for plan in plans},
-        route_spans(routes),
+        route_spans(routes, markers),
         {page: one.sides for page, one in blocks.items()},
+        copy_map(inputs.copies),
     )
     drawn_lines = draw_lines(model, lines, inputs.carried, middle, scene)
 
@@ -295,6 +302,7 @@ def stage_layout(
             boxes=placed_box,
             hidden=tuple(sorted(hidden)),
             lines=drawn_lines,
+            copies=inputs.copies,
         ),
         scene,
         tuple(findings),

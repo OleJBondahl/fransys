@@ -5,5 +5,6 @@ Role contract: data only. `fransys_el` holds our drawing conventions as frozen o
 - `fransys_el.TEXTS`: where each kind of text may stand (rows T1.1 to T1.8, layout-0090): its sides in try-order, the steps along each, and its priority.
 - `fransys_el.OPTIONS`: `LayoutOptions(texts=TEXTS)`, the value the bundle passes.
 - `fransys_el.TEXT_ROW_IDS`: the row ids T1.1 to T1.8, which the layout design map checks against its rule docs.
+- `fransys_el.REF_TINTS`: the eight net-reference fill tints, in link-slot order (el-0001).
 
 Imports: `fransys_model`, `fransys_layout` and `electrical_symbols`, through their top-level surfaces. Decision: `docs/decisions/layout-0192-*.md`.

@@ -9,7 +9,7 @@ lazy from collections.abc import Iterable
 from fransys_model.vocab.enums import SignalType
 
 lazy from .columns import PLC_COLUMNS
-lazy from .rows import PlcChannelRow
+lazy from .rows_plc import PlcChannelRow
 
 __all__ = ["SPARE_WORD", "plc_list_rows", "signal_word"]
 

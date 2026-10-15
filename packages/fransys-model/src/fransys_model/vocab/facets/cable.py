@@ -26,7 +26,8 @@ class CableProductFacet:
 
     Example: the invented 4-core cable example part carries
     `core_colours=("BN", "BK", "GY", "BU")`, `gauge_mm2=Decimal("1.5")`, `shielded=False`.
-    The core count is `len(core_colours)` (SC4, decision model-0082); the part file's own
+    The checked core count is `len(core_colours)`, a screen included (SC4, decision model-0082); the
+    printed count is `derive.conductor_count`, without the screen (pdf-0039); the part file's own
     `core_count` is the author's checksum, compared by the part lint. `core_colours` is
     deliberately ordered: the position is the core index. `pairs` names the twisted pairs and
     their screens (CC8, decision model-0204; empty for a product with none). Guarded by

@@ -35,7 +35,7 @@ def _loom(d: fr.Design, tag: str, *, cable: bool = False, wire: bool = False) ->
                 1, near[1], far[1]
             )
         if wire:
-            d.wire(near[2], far[2], wire=(BU, 0.5))
+            d.detail.wire(near[2], far[2], wire=(BU, 0.5))
     return near, far
 
 
@@ -51,7 +51,7 @@ def built() -> fr.BuildResult:
     with d.function("X", "Loose"):
         a = d.device("A1", _PLUG, place="L0")
         b = d.device("A2", _PLUG, place="L0")
-    d.wire(a[1], b[1], wire=(BU, 0.5))
+    d.detail.wire(a[1], b[1], wire=(BU, 0.5))
     return fr.build(d)
 
 
@@ -89,7 +89,7 @@ def test_a_wire_with_no_end_on_a_harness_has_none(built: fr.BuildResult) -> None
 def test_a_wire_between_plugs_of_two_harnesses_is_an_error(built: fr.BuildResult) -> None:
     d = fr.design("demo_parts")
     d.location("L0", "Workshop")
-    d.wire(_loom(d, "W3")[0][1], _loom(d, "W4")[0][1], wire=(BU, 0.5))
+    d.detail.wire(_loom(d, "W3")[0][1], _loom(d, "W4")[0][1], wire=(BU, 0.5))
     result = fr.build(d)
     (finding,) = [f for f in result.findings if f.code == _TWO]
     wire = next(iter(_wires(result.model).values()))

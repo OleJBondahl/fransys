@@ -7,9 +7,11 @@ a defect, and a reference is the page doing its job. Both read the stage `Layout
 
 from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from fransys_layout.stages import LabelKind
+from fransys_layout.stages.space import run_of
 
 from ._segments import runs_of
 
@@ -17,29 +19,58 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from fransys_layout.stages import LinkMarker, PlacedLabel, Route
+    from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLine
+    from fransys_layout.stages.space import Run
 
 __all__ = ("ReferenceCounts", "reference_counts", "wire_crossings")
 
 
-def wire_crossings(routes: Iterable[Route]) -> int:
-    """How often a wire runs across a wire of another physical net, inside both runs."""
-    flat = [(route.physical_net, run) for route in routes for run in runs_of(route)]
+def _cable_runs(
+    lines: Iterable[DrawnLine], fans: Iterable[DrawnFanOut]
+) -> list[tuple[object, Run, bool]]:
+    """The orthogonal runs of cable core lines (True) and fan legs (False), keyed by the cable."""
+    drawn = [((one.harness, one.branch), one.points, True) for one in lines]
+    drawn += [((fan.harness, fan.branch), leg.points, False) for fan in fans for leg in fan.legs]
+    return [
+        (key, run_of(first, second), is_line)
+        for key, points, is_line in drawn
+        for first, second in pairwise(points)
+        if (first.x == second.x) != (first.y == second.y)
+    ]
+
+
+def wire_crossings(
+    routes: Iterable[Route],
+    lines: Iterable[DrawnLine] = (),
+    fans: Iterable[DrawnFanOut] = (),
+) -> int:
+    """How often a wire runs across a wire of another physical net or across a cable's drawing.
+
+    A route, a core line and a fan leg are wires alike (layout-0258, layout-0260). Two lines never
+    count, and nothing of one cable counts against that cable: it meets itself by design.
+    """
+    flat: list[tuple[object, Run, bool | None]] = [
+        (route.physical_net, run, None) for route in routes for run in runs_of(route)
+    ]
+    flat += _cable_runs(lines, fans)
     across = sorted(
         (
-            (run.y, run.x, run.to_x, net)
-            for net, run in flat
+            (run.y, run.x, run.to_x, net, kind)
+            for net, run, kind in flat
             if run.y == run.to_y and run.x < run.to_x
         ),
         key=lambda one: one[:3],
     )
     rows = [one[0] for one in across]
     found = 0
-    for net, run in flat:
+    for net, run, kind in flat:
         if run.x != run.to_x or run.y == run.to_y:
             continue
         low, high = bisect_right(rows, run.y), bisect_left(rows, run.to_y)
         found += sum(
-            1 for _, left, right, other in across[low:high] if other != net and left < run.x < right
+            1
+            for _, left, right, other, other_kind in across[low:high]
+            if other != net and not (kind and other_kind) and left < run.x < right
         )
     return found
 

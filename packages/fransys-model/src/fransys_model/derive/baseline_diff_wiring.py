@@ -4,12 +4,7 @@ from typing import cast
 
 from .list_cells import CELL_SEPARATOR
 from .order import natural_key
-from .rows import (
-    BaselineConductor,
-    BaselineMate,
-    BaselineNet,
-    Change,
-)
+from .rows_baseline import BaselineConductor, BaselineMate, BaselineNet, Change
 
 
 def _conductor_field_text(field: str, value: object) -> str:

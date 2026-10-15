@@ -104,7 +104,7 @@ def test_memoised_and_unmemoised_writes_give_byte_equal_files(result, tmp_path):
 
     assert {p.name for p in first} == {p.name for p in second}
     for path in first:
-        twin = tmp_path / "out2" / path.name
+        twin = tmp_path / "out2" / path.relative_to(tmp_path / "out1")
         assert twin.read_bytes() == path.read_bytes()
 
 

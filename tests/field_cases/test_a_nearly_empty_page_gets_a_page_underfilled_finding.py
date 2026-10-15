@@ -30,7 +30,7 @@ def _underfilled(tmp_path: Path) -> tuple[fr.BuildResult, list]:
     cabinet = d.location("C1", "Cabinet")
     lamp = d.device("P1", "DEMO-LAMP-24")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
-    d.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
     (tmp_path / "c.md").write_text("# Cabinet\n", encoding="utf-8")
     document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=tmp_path / "c.md")
     result = fr.build(d, document)

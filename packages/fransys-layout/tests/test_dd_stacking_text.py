@@ -23,6 +23,7 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import WIRING_GRID, Orientation, symbol_geometry, text_width
 from fransys_layout.stages.place import _reference_band
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.derive.drawing_text import label_text
 from fransys_model.kernel import freeze
 from fransys_model.layout import (
@@ -56,7 +57,7 @@ def _cabinet() -> Model:
 
 
 def _design(*, second_tag: str = "K2", relays: bool = True, lamp_rails: tuple[str, str] = ("", "")):
-    """Two 2CO relays, each with its own feed terminal, or a lamp between two `lamp_rails` ones."""
+    """Two 2CO relays, each with a feed terminal, or a heater between two `lamp_rails` ones."""
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(**_PROJECT)
@@ -66,9 +67,10 @@ def _design(*, second_tag: str = "K2", relays: bool = True, lamp_rails: tuple[st
     wire = d.wiring(colour="BU", gauge="0.5")
     if not relays:
         a, b = (strip.terminal("DEMO-TB-2.5", group=group) for _ in range(2))
-        lamp = d.item("DEMO-LAMP-24", tag="H1", at=c1, group=group)
-        wire(a.inner, lamp["1"])
-        wire(lamp["2"], b.inner)
+        # a heater: it states no rating, and the lamp (24 V) would stand on 230 V rails
+        lamp = d.item("DEMO-HEATER-24", tag="H1", at=c1, group=group)
+        wire(a.inner, lamp["+"])
+        wire(lamp["-"], b.inner)
         d.supply("AC", current="ac", rails=_AC_RAILS)
         d.supply("DC", current="dc", rails=_DC_RAILS)
         for name, end, rail in (("TOPN", a, lamp_rails[0]), ("BOTN", b, lamp_rails[1])):
@@ -319,6 +321,16 @@ def test_the_engine_puts_the_higher_potential_first(
 # ---- measured text kept at a fixed near edge ---------------------------------------
 
 
+def _copies_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Draw a star's terminal once with reference markers, as before model-0220 drew copies."""
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
+
+
 def _tag_of(model: Model, placement: SymbolPlacement) -> Label:
     """The TAG label of the function `placement` draws."""
     (label,) = (
@@ -329,10 +341,13 @@ def _tag_of(model: Model, placement: SymbolPlacement) -> Label:
     return label
 
 
-def test_a_longer_tag_keeps_its_near_edge_and_pushes_the_column_by_the_width_difference() -> None:
+def test_a_longer_tag_keeps_its_near_edge_and_pushes_the_column_by_the_width_difference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The W tag's right edge stays 20 G off the coil; the pitch grows by the text."""
     # UNDO: stages/place.py `_cells`: keep the fixed tag slot in the keep-out (skip `grow_keepout`
     # and `_without_tag`) or stages/labels.py: centre a W text on its slot.
+    _copies_off(monkeypatch)  # model-0220: with copies other texts, not the tag, set the pitch
     short, long = _design(second_tag="K2"), _design(second_tag="K2LONGTAG")
     edges, pitches, widths = [], [], []
     for model, tag in ((short, "K2"), (long, "K2LONGTAG")):
@@ -347,11 +362,6 @@ def test_a_longer_tag_keeps_its_near_edge_and_pushes_the_column_by_the_width_dif
     grown = widths[1] - widths[0]
     assert grown > 0
     assert grown <= pitches[1] - pitches[0] < grown + WIRING_GRID
-
-
-@cache
-def _relays() -> Model:
-    return _design()
 
 
 def _marker_offsets(model: Model) -> dict:
@@ -383,7 +393,9 @@ def _marker_offsets(model: Model) -> dict:
     return found
 
 
-def test_a_marker_box_keeps_its_near_edge_at_a_fixed_offset_whatever_its_thickness() -> None:
+def test_a_marker_box_keeps_its_near_edge_at_a_fixed_offset_whatever_its_thickness(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Markers of one side and facing sit at one offset from their port at any thickness.
 
     Decision layout-0089: a reference's box length is fixed per sheet format. On an N
@@ -396,7 +408,8 @@ def test_a_marker_box_keeps_its_near_edge_at_a_fixed_offset_whatever_its_thickne
     # `x=one.box.x` (was `one.at.x`). The stored x/y is the port position,
     # so a centred box in stages/references/marker_boxes.py `marker_box` is
     # not seen by this test.
-    groups = _marker_offsets(_relays())
+    _copies_off(monkeypatch)  # model-0220: copies leave no reference marker to vary in width
+    groups = _marker_offsets(_design())
     varied = [g for g in groups.values() if len({width for width, _, _, _ in g}) > 1]
     assert varied, "no marker group has two widths: the fixture stopped exercising D14"
     for group in groups.values():

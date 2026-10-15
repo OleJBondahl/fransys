@@ -35,12 +35,12 @@ def _chain(d: Any, first: int, live: Any, rail: Any, lamps: Any) -> None:
     """Two relays in series from `live` to the rail, each with a contact feeding its lamp."""
     ks = [d.device(f"K{first + i}", "DEMO-RLY-2CO-24") for i in range(2)]
     ps = [d.device(f"P{first + i}", "DEMO-LAMP-24") for i in range(2)]
-    d.wire(live, ks[0].coil["A1"], wire=(BU, 0.5))
-    d.wire(ks[0].coil["A2"], ks[1].coil["A1"], wire=(BU, 0.5))
-    d.wire(ks[1].coil["A2"], rail, wire=(BU, 0.5))
+    d.detail.wire(live, ks[0].coil["A1"], wire=(BU, 0.5))
+    d.detail.wire(ks[0].coil["A2"], ks[1].coil["A1"], wire=(BU, 0.5))
+    d.detail.wire(ks[1].coil["A2"], rail, wire=(BU, 0.5))
     for k, p, end in zip(ks, ps, lamps, strict=True):
-        d.wire(k.co_1["14"], p.lamp["1"], wire=(BU, 0.5))
-        d.wire(p.lamp["2"], end, wire=(BU, 0.5))
+        d.detail.wire(k.co_1["14"], p.lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(p.lamp["2"], end, wire=(BU, 0.5))
 
 
 class _Built:

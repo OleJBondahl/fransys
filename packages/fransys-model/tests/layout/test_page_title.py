@@ -51,3 +51,15 @@ def test_a_title_has_text() -> None:
 def test_a_title_for_a_thing_the_model_lacks_is_refused() -> None:
     with pytest.raises(FreezeError):
         _freeze(_title(function=function_id("z")))
+
+
+def test_a_unit_title_is_one_thing_and_not_two() -> None:
+    unit = Id(kind="unit", value="c" * 32)
+    assert _title(unit=unit).unit == unit
+    with pytest.raises(SchemaError, match="exactly one of block, function, item and unit"):
+        _title(unit=unit, item=drawn_function()[0].id)
+
+
+def test_a_title_for_a_unit_the_model_lacks_is_refused() -> None:
+    with pytest.raises(FreezeError):
+        _freeze(_title(unit=Id(kind="unit", value="c" * 32)))

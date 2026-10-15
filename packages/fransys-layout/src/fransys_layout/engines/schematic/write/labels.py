@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.schematic.write.keys import PREFIX, real_function
+from fransys_layout.engines.schematic.write.keys import PREFIX, real_function, real_id
 from fransys_model.kernel import make_id
 from fransys_model.layout import CrossReferencePartner, Label, Outline
 from fransys_model.layout import LabelKind as ModelLabelKind
@@ -75,7 +75,9 @@ def labels(
         key = (*PREFIX, "label", *tail, kind.value, *slot, *extra)
         partners = tuple(
             CrossReferencePartner(
-                port=partner.port, page=page_of[partner.drawing_set, partner.page].id, x=partner.x
+                port=real_id(keys, partner.port),
+                page=page_of[partner.drawing_set, partner.page].id,
+                x=partner.x,
             )
             for partner in label.partners
         )
@@ -85,7 +87,7 @@ def labels(
                 key=key,
                 page=page_of[label.drawing_set, label.page].id,
                 function=None if marking else real,
-                port=label.subject if marking else None,
+                port=real_id(keys, label.subject) if marking else None,
                 conductor=None,
                 kind=kind,
                 slot=written_slot,

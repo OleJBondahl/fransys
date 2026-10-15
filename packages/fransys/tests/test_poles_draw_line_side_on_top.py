@@ -78,7 +78,7 @@ def _built(tmp_path, marks: tuple[str, str, str, str]):
         device = d.device("K1", "POLES-2")
         strip = d.terminal_strip("X1", "DEMO-TB-2.5", len(marks))
         for number, mark in enumerate(marks, start=1):
-            d.wire(strip[number], device.contacts[mark], wire=(BU, 0.5))
+            d.detail.wire(strip[number], device.contacts[mark], wire=(BU, 0.5))
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

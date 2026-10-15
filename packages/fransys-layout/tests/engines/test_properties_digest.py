@@ -249,11 +249,11 @@ def _groups_sharing_a_page_with_p2(*models: Model) -> set:
 
 
 @pytest.mark.parametrize(
-    ("width_mm", "cut", "replica", "page_lost"),
-    [(_APART_WIDTH, 1, True, False), (_MERGING_WIDTH, 1, False, True), (264, 0, False, False)],
+    ("width_mm", "cut", "page_lost"),
+    [(_APART_WIDTH, 1, False), (_MERGING_WIDTH, 1, True), (264, 0, False)],
 )
 def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_net(
-    *, width_mm: int | None, cut: int, replica: bool, page_lost: bool
+    *, width_mm: int | None, cut: int, page_lost: bool
 ) -> None:
     """A device keeps its id whatever page it moves to; only what the repacking
     or K9's net changes is lost.
@@ -264,9 +264,9 @@ def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_n
     with `=P1`, so the K1:14 to K2:13 wire, the only one across the two, is cut and gets its
     marker pair (links.md 6.6): `cut` is 1 there and 0 on the 264 mm sheet (254 mm no longer
     keeps `=SUP` and `=P2` apart once K9 widens `=P2`), where every group has a
-    page of its own before and after. On the default sheet `=P2` also stands apart from
-    `=SUP`, whose page keeps its key, so `=P2`'s page needs its own replica of the rail terminal
-    `-X2:1` (`replica`), a new placement of `-X2`.
+    page of its own before and after. K9 wires to the 24 V and 0 V rail terminals `-X2:1` and
+    `-X4:n`, so each is drawn again as a copy at K9's pin (model-0220): a new placement of
+    `-X2` and of `-X4` on every sheet.
     """
     _, plain, _ = _run(width_mm=width_mm)
     model, extra, _ = _run(extra_relay=True, width_mm=width_mm)
@@ -279,14 +279,15 @@ def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_n
         for kind in _KINDS
     }
     # a device never changes id when its page does; the new ones are K9 and its terminal X5:1,
-    # and the rail terminal's replica where =P2 no longer shares a page with its home group
+    # and the copies of the two rail terminals at K9's pins (model-0220)
     assert lost["symbol_placement"] == []
     placements = _table(extra, "symbol_placement")
     added = set(placements) - set(_table(plain, "symbol_placement"))
     assert {placements[id_].key[3:5] for id_ in added} == {
         ("cabinet", "k9"),
         ("cabinet", "x5"),
-        *([("cabinet", "x2")] if replica else []),
+        ("cabinet", "x2"),
+        ("cabinet", "x4"),
     }
     # a page is keyed by its first group: only one whose groups now stand with =P2 is lost
     sharing = _groups_sharing_a_page_with_p2(plain, extra)
@@ -294,7 +295,7 @@ def test_a_relay_in_one_group_keeps_every_id_but_a_repacked_page_and_a_redrawn_n
     assert all({entry.group for entry in page.groups} <= sharing for page in lost["page"])
     # a lost route is the cut wire, or a wire of the rail net that K9 grew
     ends = [{port_key[route.a], port_key[route.b]} for route in lost["route"]]
-    assert ends
+    assert bool(ends) is bool(cut)  # model-0220: a rail wire ends at its own copy, so none is lost
     assert all(end == set(_SIGNAL) or _RAIL in end for end in ends)
     assert sum(end == set(_SIGNAL) for end in ends) == cut
     # its wire label goes with it, and only wire labels are lost

@@ -32,9 +32,9 @@ def _ports_drawn(*, hide: bool) -> dict[str, set[str]]:
     with d.function("CH", "Chain"):
         mods = [d.device(f"D{i}", "DEMO-MODULE-2P-COM4") for i in range(1, 4)]
     for a, b in pairwise(mods):
-        d.wire(a.pwr["plus"], b.pwr["minus"], wire=(RD, 1.0))
+        d.detail.wire(a.pwr["plus"], b.pwr["minus"], wire=(RD, 1.0))
         for pin in "1234":
-            d.wire(a.OUT[pin], b.IN[pin], wire=(BK, 0.5))
+            d.detail.wire(a.OUT[pin], b.IN[pin], wire=(BK, 0.5))
     cover = pathlib.Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# cover\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

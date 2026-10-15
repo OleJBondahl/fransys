@@ -29,9 +29,9 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     d.dc_supply("24V", psu)
     rail = d.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 2, bridged=True)
     plain = d.terminal_strip("X2", "DEMO-TB-2.5", 2)
-    d.wire(psu.output["+"], rail[1], wire=("RD", 0.75))
-    d.wire(rail[2], plain[1], wire=("RD", 0.75))
-    d.wire(psu.output["-"], plain[2], wire=("BK", 0.75))
+    d.detail.wire(psu.output["+"], rail[1], wire=("RD", 0.75))
+    d.detail.wire(rail[2], plain[1], wire=("RD", 0.75))
+    d.detail.wire(psu.output["-"], plain[2], wire=("BK", 0.75))
     (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
     return fr.build(
         d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "c.md")
@@ -55,7 +55,7 @@ def test_a_device_pe_pin_wired_to_a_pe_bar_terminal_draws_protective_earth(tmp_p
     cab = d.location("CAB", "Cabinet")
     bar = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True)
     motor = d.device("M1", "DEMO-MOTOR-4KW")
-    d.wire(motor.motor["PE"], bar[1], wire=("GNYE", 2.5))
+    d.detail.wire(motor.motor["PE"], bar[1], wire=("GNYE", 2.5))
     d.earth(motor.motor["PE"], bar[1])
     (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=tmp_path / "c.md")
@@ -69,7 +69,7 @@ def _motor_earth(tmp_path: Path, *, wired: bool) -> fr.BuildResult:
     bar = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5").run("PE", 2, bridged=True)
     motor = d.device("M1", "DEMO-MOTOR-4KW")
     if wired:
-        d.wire(motor.motor["PE"], bar[1], wire=("GNYE", 2.5))
+        d.detail.wire(motor.motor["PE"], bar[1], wire=("GNYE", 2.5))
     d.earth(motor.motor["PE"], bar[1])
     (tmp_path / "c.md").write_text("# C\n", encoding="utf-8")
     return fr.build(

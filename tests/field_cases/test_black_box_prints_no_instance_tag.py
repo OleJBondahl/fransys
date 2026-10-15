@@ -37,7 +37,7 @@ def _container_texts() -> tuple[fr.Model, list[str], list[str]]:
     _cabinet = d.location("C1", "Cabinet")
     board = d.add(_board, "U2")
     lamp = d.device("M1", "DEMO-LAMP-24")
-    d.wire(lamp["1"], board.J1["1"], wire=(BU, 0.5))
+    d.detail.wire(lamp["1"], board.J1["1"], wire=(BU, 0.5))
     model = fr.build(d, cabinet_document(_cabinet)).model
     sets = layout_of(model, DrawingSet)
     pages = layout_of(model, Page)

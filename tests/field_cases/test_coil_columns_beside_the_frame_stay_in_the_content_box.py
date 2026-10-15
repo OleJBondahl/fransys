@@ -44,10 +44,10 @@ def _control(d: Any) -> _Strips:
         for n in range(1, _COLUMNS + 1):
             coil = d.device(f"K{n}", "DEMO-CTR-3P-24").coil
             first, second = (d.device(f"B{n}{m}", "DEMO-PB-NC").sw for m in (1, 2))
-            d.wire(plus, first["A"], wire=("RD", 0.75))
-            d.wire(first["B"], second["A"], wire=("RD", 0.75))
-            d.wire(second["B"], coil["A1"], wire=("RD", 0.75))
-            d.wire(coil["A2"], minus, wire=("BK", 0.75))
+            d.detail.wire(plus, first["A"], wire=("RD", 0.75))
+            d.detail.wire(first["B"], second["A"], wire=("RD", 0.75))
+            d.detail.wire(second["B"], coil["A1"], wire=("RD", 0.75))
+            d.detail.wire(coil["A2"], minus, wire=("BK", 0.75))
             d.layout.chain(first, second, coil)
     return _Strips(x4)
 

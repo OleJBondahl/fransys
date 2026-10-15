@@ -16,6 +16,7 @@ from .hints import (
     KeepTogether,
     OrderHint,
     PageTitle,
+    PoleGroup,
     SideHint,
     SymbolChoice,
 )
@@ -38,6 +39,7 @@ AUTHORED_KINDS: tuple[type, ...] = (
     KeepTogether,
     OrderHint,
     PageTitle,
+    PoleGroup,
     Profile,
     SheetFormat,
     SideHint,

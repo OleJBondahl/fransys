@@ -18,3 +18,7 @@ ports = [
 [function.operating]
 voltage_dc_v = "24"
 nominal_power_w = "2.4"
+
+[function.rating]
+voltage_ac_v = "24"
+voltage_dc_v = "24"

@@ -34,7 +34,7 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages.offstubs import off_ends
 from fransys_layout.stages.references.marker_boxes import stub_size
-from fransys_model.derive.drawing_text import off_stub_text
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import freeze
 from fransys_model.layout import DrawingSet, LinkMarker, Page, Side, StarKind, layout_of
 from fransys_model.vocab.tables import functions, items, ports

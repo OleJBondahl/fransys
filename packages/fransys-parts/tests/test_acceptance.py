@@ -163,15 +163,15 @@ def test_demo_library_record_counts_and_keys():
     templates, 348 ports, 68 links, 55 symbol choices; PE-BAR adds `pe-bar-20.toml` (1/20)
     and `pe-bar-cut.toml` (1/0); BAR-LANDING-STAND adds `pe-bar-3-linked.toml` and
     `pe-bar-2-linked.toml` (1/3 and 1/2, 3 and 1 links); ACTUATOR-ONCE adds
-    `block-1nc-31.toml` (1/2/1), so
-    74 parts, 160 templates, 375 ports, 72 links, 55 symbol choices)."""
+    `block-1nc-31.toml` (1/2/1), so 74 parts; COIL-FAN-PINS adds `plc-do-16ch.toml` (16/16),
+    so 75 parts, 176 templates, 391 ports, 72 links, 55 symbol choices)."""
     from fransys_model.kernel import freeze
     from fransys_model.vocab import function_templates, internal_links, parts, port_templates
 
     model = freeze(fransys_parts.load_path(DEMO))
-    assert len(parts(model)) == 74
-    assert len(function_templates(model)) == 160
-    assert len(port_templates(model)) == 375
+    assert len(parts(model)) == 75
+    assert len(function_templates(model)) == 176
+    assert len(port_templates(model)) == 391
     assert len(internal_links(model)) == 72
     assert len(model.tables["layout.symbol_choice"]) == 55
 
@@ -633,4 +633,4 @@ def test_demo_housings_name_the_parts_they_mate_with():
         "DEMO-HSG-4F": ("DEMO-HSG-4M", "DEMO-CONN-4P"),
         "DEMO-HSG-4M": ("DEMO-HSG-4F",),
     }
-    assert SCHEMA_VERSION == 19
+    assert SCHEMA_VERSION == 20

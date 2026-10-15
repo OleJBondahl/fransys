@@ -29,9 +29,9 @@ def _build(hint: Callable[[Any, Any, Any], None]) -> None:
         psu = d.device("G1", "DEMO-PSU-24")
     with d.function("F2", "Two") as two:
         d.device("K2", "DEMO-RLY-2CO-24")
-    d.wire(di.di_1["1"], k1.co_1["14"], wire=(BU, 0.5))
-    d.wire(k1.co_1["11"], h1.lamp[1], wire=(BU, 0.5))
-    d.wire(h1.lamp[2], psu.output["-"], wire=(BU, 0.5))
+    d.detail.wire(di.di_1["1"], k1.co_1["14"], wire=(BU, 0.5))
+    d.detail.wire(k1.co_1["11"], h1.lamp[1], wire=(BU, 0.5))
+    d.detail.wire(h1.lamp[2], psu.output["-"], wire=(BU, 0.5))
     hint(d, (one, two), (k1, h1, di))
     fr.build(d, cabinet_document(cab))
 

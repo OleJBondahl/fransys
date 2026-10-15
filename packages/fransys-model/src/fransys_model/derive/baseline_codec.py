@@ -9,7 +9,7 @@ from fransys_model.kernel.encode import JsonValue, decimal_text, write_json
 from fransys_model.kernel.jsonread import read_json
 from fransys_model.vocab.ratings import BreakingPoint, Operating, Rating
 
-from .rows import (
+from .rows_baseline import (
     BaselineBoundary,
     BaselineConductor,
     BaselineItem,

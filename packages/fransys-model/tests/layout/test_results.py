@@ -32,6 +32,7 @@ from fransys_model.layout import (
     LabelKind,
     LinkMarker,
     MarkerSide,
+    PoleGroup,
     Route,
     RoutePoint,
     Side,
@@ -202,6 +203,26 @@ def _engineering() -> tuple[Record, ...]:
 def test_a_side_hint_is_above_or_below_only(side: Side) -> None:
     with pytest.raises(SchemaError):
         _side_hint("a", side)
+
+
+def _pole_group(*functions: str) -> PoleGroup:
+    return PoleGroup(
+        id=Id(kind="layout.pole_group", value="d" * 32),
+        key=("examples", "layout", "pole_group"),
+        functions=tuple(function_id(one) for one in functions),
+        selector=True,
+    )
+
+
+def test_a_pole_group_keeps_the_authors_pole_order() -> None:
+    """The order is the pole order (author-0046): it is never sorted."""
+    assert _pole_group("c", "a", "b").functions == tuple(map(function_id, "cab"))
+
+
+@pytest.mark.parametrize("functions", [(), ("a", "a")])
+def test_a_pole_group_lists_one_function_or_more_each_once(functions: tuple[str, ...]) -> None:
+    with pytest.raises(SchemaError, match="each once"):
+        _pole_group(*functions)
 
 
 def test_a_chain_beside_freezes_round_trips_and_needs_its_host() -> None:

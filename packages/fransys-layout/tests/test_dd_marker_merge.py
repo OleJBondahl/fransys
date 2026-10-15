@@ -8,6 +8,7 @@ own text; its box holds every line.
 """
 
 from collections import Counter
+from typing import TYPE_CHECKING
 
 from fransys_el import OPTIONS
 from layout_cabinet import build_cabinet
@@ -17,18 +18,36 @@ from fransys_layout.engines import lay_out_schematic
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import text_width
 from fransys_layout.stages.onepage import _wired_ends
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.derive.drawing_text import marker_text
 from fransys_model.kernel import freeze
 from fransys_model.layout import LinkMarker, StarKind, layout_of
 
+if TYPE_CHECKING:
+    import pytest
 
-def test_a_reference_and_an_off_stub_on_one_port_are_one_marker_reference_list_first() -> None:
-    """One record per (port, page); its lines are the reference's list, then the stub's."""
+
+def test_a_reference_and_an_off_stub_on_one_port_are_one_marker_reference_list_first(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One record per (port, page); its lines are the reference's list, then the stub's.
+
+    Runs with copies off: production draws a star terminal as copies and gives it no reference, so
+    the merge exists only there; `tests/test_terminal_copies_where_wired_ratchet.py` guards the
+    production path.
+    """
     # UNDO: stages/off_markers.py, the `refs={...}` argument of `OffStubs(...)` in
     #     `with_off_markers` -> `refs={}`
     #     draws the stub as a second marker on the port; the one-record count fails
     # UNDO: stages/off_markers.py:_with_off, `width = max(box.width, ...)` -> `width = box.width`
     #     leaves the box narrower than the stub line; the width check fails
+    # model-0220 draws a terminal of a star as copies; copies off keeps the terminal's reference
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
     model, _ = lay_out_schematic(freeze(build_cabinet(second_location=True)), OPTIONS)
     markers = layout_of(model, LinkMarker)
     assert set(Counter((m.port, m.page) for m in markers.values()).values()) == {1}

@@ -30,7 +30,9 @@ from fransys_layout.stages.references.digits import (
 )
 from fransys_layout.stages.references.marker_boxes import reference_box_width
 from fransys_layout.stages.types import LinkMarker, MarkerSide
-from fransys_model.derive.drawing_text import _branches_of, heads_group, reference_number
+from fransys_layout.stages.wire_copies import WireCopies
+from fransys_model.derive.drawing_text import heads_group
+from fransys_model.derive.marker_text import _branches_of, reference_number
 from fransys_model.kernel import Model, freeze
 from fransys_model.layout import DrawingSet, Page, StarKind, layout_of
 from fransys_model.layout import LinkMarker as WrittenMarker
@@ -86,15 +88,29 @@ def test_layout_counts_as_many_reference_groups_per_set_as_derive_numbers(name: 
 
 
 @pytest.mark.parametrize("name", ["house", "two_location", "narrow"])
-def test_no_branch_names_a_pure_off_stub(name: str) -> None:
+def test_no_branch_names_a_pure_off_stub(name: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Derive's `named` can only be true of a merged stub (a stage "ref"), never a pure one.
 
     A pure off stub is its own partner. So layout, which sees a merged stub as a "ref" end that
     heads its group anyway, gives `heads_group` no `named` for an "off" and counts what derive does.
+    The two-location case runs with copies off: production gives a star terminal no reference,
+    so no stub merges there;
+    `tests/test_terminal_copies_where_wired_ratchet.py` guards the production path.
     """
     # CAN-FAIL: derive/drawing_text.py `_branches_of`: `is StarKind.BRANCH` -> `in (BRANCH, OFF)`
     #     (an off stub names itself a hub) fails the pure-stub assert on the two-location cabinet
-    _, written = _laid_out(name)
+    if name == "two_location":
+        # model-0220: the merged stub is a reference and a stub on one terminal port; copies leave
+        # the terminal no reference, so lay the cabinet out with copies off for this case
+        monkeypatch.setattr(
+            "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+            lambda columns, drawn, functions, connections, _: WireCopies(
+                functions, drawn, connections, columns, {}
+            ),
+        )
+        _, written = _laid_out.__wrapped__(name)
+    else:
+        _, written = _laid_out(name)
     hubs = _branches_of(written)
     for one in layout_of(written, WrittenMarker).values():
         if one.star is StarKind.OFF and one.partner == one.id:
@@ -104,16 +120,16 @@ def test_no_branch_names_a_pure_off_stub(name: str) -> None:
 
 
 def test_the_cabinets_have_reference_groups_to_count() -> None:
-    """Guard: the equality above is not vacuous; the narrow cabinet holds two groups.
+    """Guard: the equality above is not vacuous; the narrow cabinet holds one group.
 
-    One severed cut (its owner marker) and one page-group of the rail's star net. A line draws
-    `W1` to `-H1`, so the star's second page-group is gone; the net of two ports whose join
-    turned back is a wire since layout-0224.
+    One severed cut (its owner marker). The rail's star net is drawn as terminal copies
+    (model-0220) and the net of two ports whose join turned back is a wire (layout-0224), so
+    their page-groups are gone.
     """
     markers, _ = _laid_out("narrow")
     kinds = Counter(one.star for one in markers if heads_group(one.star, one.side.value))
-    assert kinds == {"": 1, "ref": 1}
-    assert sum(_counted("narrow").values()) == 2
+    assert kinds == {"": 1}  # model-0220 and layout-0224: was ref 2
+    assert sum(_counted("narrow").values()) == 1
 
 
 def _owner(n: int, drawing_set: int) -> LinkMarker:

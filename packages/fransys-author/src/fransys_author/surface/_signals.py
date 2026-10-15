@@ -1,4 +1,4 @@
-"""Short names for the PLC signal types a function block asks for, and for `d.net`'s kinds (EA).
+"""Short names for the PLC signal types a block asks for, and for `d.detail.net`'s kinds (EA).
 
 `EARTHED` and `IT` are the supplies' earthing systems. `ABOVE` and `BELOW` are the two sides
 `d.layout.side` takes: the model's `Side.N` and `Side.S`, one enum for both (model-0177).

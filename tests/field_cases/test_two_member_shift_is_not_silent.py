@@ -26,10 +26,10 @@ def _build(*, attached: bool) -> fr.BuildResult:
     with d.function("G", "Group"):
         first = d.device("P1", "DEMO-LAMP-24")
         second = d.device("P2", "DEMO-LAMP-24")
-        d.wire(first.lamp["1"], second.lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(first.lamp["1"], second.lamp["1"], wire=(BU, 0.5))
         if attached:
             terminal = d.device("X1", "DEMO-TB-2.5")
-            d.wire(terminal.terminal["external"], second.lamp["1"], wire=(BU, 0.5))
+            d.detail.wire(terminal.terminal["external"], second.lamp["1"], wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
@@ -50,5 +50,5 @@ def test_a_member_under_an_attached_terminal_gives_join_unaligned() -> None:
     found = _unaligned(_build(attached=True))
     assert len(found) == 1
     assert found[0].severity is fr.Severity.INFO
-    assert "P1/fn/lamp/port/1" in found[0].message
-    assert "P2/fn/lamp/port/1" in found[0].message
+    assert "-P1:1" in found[0].message
+    assert "-P2:1" in found[0].message

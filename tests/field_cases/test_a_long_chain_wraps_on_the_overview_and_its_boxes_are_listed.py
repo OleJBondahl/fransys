@@ -41,9 +41,9 @@ def _rs(u: fr.Design) -> _Io:
     with u.function("B2", "Other"):
         lamp = u.device("H1", "DEMO-LAMP-24")
     u.series(*[f.element for f in fuses], wire=(RD, 1.0))
-    u.wire(feed[1], fuses[0].element["1"], wire=(RD, 1.0))
-    u.wire(fuses[-1].element["2"], back[1], wire=(RD, 1.0))
-    u.wire(back[1], lamp["1"], wire=(RD, 1.0))
+    u.detail.wire(feed[1], fuses[0].element["1"], wire=(RD, 1.0))
+    u.detail.wire(fuses[-1].element["2"], back[1], wire=(RD, 1.0))
+    u.detail.wire(back[1], lamp["1"], wire=(RD, 1.0))
     return _Io()
 
 

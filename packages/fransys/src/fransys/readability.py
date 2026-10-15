@@ -3,13 +3,13 @@
 from fransys_el import OPTIONS
 
 from fransys_layout import page_readability
-from fransys_model.derive import ReadabilityReport, readability_units
+lazy from fransys_model.derive import ReadabilityReport
 
 lazy from .pipeline import BuildResult
 
 
 def readability(result: BuildResult) -> ReadabilityReport:
-    """One row for each schematic page of `result`, and one for each unit.
+    """Read: one row for each schematic page of `result`, and one for each unit.
 
     A page row counts what a reader of the print feels: the profile's text height against
     `min_text_height_mm`, how much of the page the drawing fills, wires crossing wires, text struck
@@ -19,5 +19,4 @@ def readability(result: BuildResult) -> ReadabilityReport:
 
     Does not write a file, emit anything from `write`, or raise on findings.
     """
-    pages = page_readability(result.model, OPTIONS)
-    return ReadabilityReport(pages=pages, units=readability_units(pages))
+    return page_readability(result.model, OPTIONS)

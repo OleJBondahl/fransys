@@ -27,7 +27,7 @@ def test_three_coil_requests_on_one_channel_are_contested() -> None:
     di = d.device("A1", "DEMO-PLC-DI-4P", parent=rack)
     for n in (1, 2, 3):
         coil = d.device(f"K{n}", "DEMO-CO-4P-24")
-        d.wire(coil.coil["A1"], di.di_1["1"], wire=(BK, 1.0))
+        d.detail.wire(coil.coil["A1"], di.di_1["1"], wire=(BK, 1.0))
         coil.coil.plc(fr.DI, f"K{n} coil")
     d.device("K4", "DEMO-CO-4P-24").coil.plc(fr.DI, "K4 free")
     findings = [f for f in fr.check(fr.build(d)) if f.code not in INFO_CODES]
@@ -49,7 +49,7 @@ def test_one_request_among_three_coils_on_a_net_binds_the_wired_channel_without_
     di = d.device("A1", "DEMO-PLC-DI-4P", parent=rack)
     coils = [d.device(f"K{n}", "DEMO-CO-4P-24") for n in (1, 2, 3)]
     for coil in coils:
-        d.wire(coil.coil["A1"], di.di_2["2"], wire=(BK, 1.0))
+        d.detail.wire(coil.coil["A1"], di.di_2["2"], wire=(BK, 1.0))
     coils[0].coil.plc(fr.DI, "Contactors closed")
     build = fr.build(d)
     findings = [f for f in fr.check(build) if f.code not in INFO_CODES]

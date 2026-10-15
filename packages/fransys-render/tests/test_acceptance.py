@@ -20,6 +20,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 import pytest
+from fransys_el import REF_TINTS
 from fransys_render import pages
 
 from fransys_model.derive.drawing_text import label_text, marker_text
@@ -64,7 +65,7 @@ def test_every_golden_page_renders_and_parses_as_xml(cabinet_laid_out, cabinet_n
         assert expected_count > 0
         assert len(layout_of(model, Page)) == expected_count
 
-        svgs = pages(model)
+        svgs = pages(model, tints=REF_TINTS)
         assert len(svgs) == expected_count
         for svg in svgs.values():
             ET.fromstring(svg)  # noqa: S314 -- parsing our own generated SVG, not untrusted input
@@ -103,7 +104,7 @@ def test_every_tag_marker_and_wire_text_appears_on_its_page(
     multi-line block `_expected_texts` builds can never appear as one substring past one line.
     """
     for model in _goldens(cabinet_laid_out, cabinet_narrow_laid_out).values():
-        svgs = pages(model)
+        svgs = pages(model, tints=REF_TINTS)
         for page in layout_of(model, Page).values():
             expected = _expected_texts(model, page)
             assert len(expected) > 0
@@ -118,7 +119,7 @@ def test_every_tag_marker_and_wire_text_appears_on_its_page(
 
 def test_two_calls_give_equal_bytes(cabinet_laid_out, cabinet_narrow_laid_out):
     for model in _goldens(cabinet_laid_out, cabinet_narrow_laid_out).values():
-        assert pages(model) == pages(model)
+        assert pages(model, tints=REF_TINTS) == pages(model, tints=REF_TINTS)
 
 
 # --- 4. a model loaded from shuffled JSON gives equal bytes -------------------------------
@@ -143,4 +144,4 @@ def _shuffled(name):
 
 def test_shuffled_json_gives_equal_bytes(cabinet_laid_out, cabinet_narrow_laid_out):
     for name, model in _goldens(cabinet_laid_out, cabinet_narrow_laid_out).items():
-        assert pages(_shuffled(name)) == pages(model)
+        assert pages(_shuffled(name), tints=REF_TINTS) == pages(model, tints=REF_TINTS)

@@ -31,8 +31,8 @@ def _build() -> fr.BuildResult:
         p2 = d.device("P2", "DEMO-HSG-4F", parent=w1, place="C1", contacts="DEMO-CRIMP-F")
         d.mate(p1, j1)
         d.mate(p2, m1.j1)
-        d.wire(p1[1], p2[1], wire=(RD, 0.5))
-        d.wire(p1[2], p2[2], wire=(BK, 0.5))
+        d.detail.wire(p1[1], p2[1], wire=(RD, 0.5))
+        d.detail.wire(p1[2], p2[2], wire=(BK, 0.5))
     return fr.build(d)
 
 

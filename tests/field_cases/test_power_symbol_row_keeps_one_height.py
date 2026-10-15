@@ -44,8 +44,8 @@ def _build(tmp_path: Path) -> fr.BuildResult:
         board = d.device("B1", "DEMO-IO-2X")
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("S", psu)
-    d.wire(plug.x1["1"], module.do_1["1"], wire=(BU, 0.5))
-    d.wire(plug.x1["2"], psu.output["-"], wire=(BU, 0.5))
+    d.detail.wire(plug.x1["1"], module.do_1["1"], wire=(BU, 0.5))
+    d.detail.wire(plug.x1["2"], psu.output["-"], wire=(BU, 0.5))
     d.mate(plug, board.x1)
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")

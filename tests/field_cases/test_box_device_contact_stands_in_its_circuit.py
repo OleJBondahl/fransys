@@ -27,7 +27,8 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.write_keys import write_keys
 from fransys_layout.geometry import overlaps
 from fransys_layout.stages.texts.power import drawn_shapes
-from fransys_model.derive.drawing_text import contact_image, cross_reference_text, tag_text
+from fransys_model.derive.contact_image import cross_reference_text
+from fransys_model.derive.drawing_text import contact_image, tag_text
 from fransys_model.layout import Label, LabelKind, PlacementView, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions, items, ports
 
@@ -46,17 +47,17 @@ def _built(*, rails: bool = True) -> tuple:
         di = d.device("U1", "DEMO-PLC-DI-2")
     for n, psu in enumerate(psus, start=1):
         group = getattr(m1, f"in_{n}")
-        d.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
-        d.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
+        d.detail.wire(psu.output["+"], group[f"{n}+"], wire=(BN, 1.5))
+        d.detail.wire(psu.output["-"], group[f"{n}-"], wire=(BU, 1.5))
     if rails:
         d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-    d.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
-    d.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
-    d.wire(live[2].outer, m1.dc_ok["13"], wire=(BN, 0.5))
-    d.wire(m1.dc_ok["14"], k1.coil["A1"], wire=(BN, 0.5))
-    d.wire(k1.coil["A2"], zero[2].outer, wire=(BU, 0.5))
-    d.wire(live[2].outer, k1.co_1["11"], wire=(BN, 0.5))
-    d.wire(k1.co_1["14"], di["1"], wire=(BN, 0.5))
+    d.detail.wire(m1.out["+"], live[1].outer, wire=(BN, 1.5))
+    d.detail.wire(m1.out["-"], zero[1].outer, wire=(BU, 1.5))
+    d.detail.wire(live[2].outer, m1.dc_ok["13"], wire=(BN, 0.5))
+    d.detail.wire(m1.dc_ok["14"], k1.coil["A1"], wire=(BN, 0.5))
+    d.detail.wire(k1.coil["A2"], zero[2].outer, wire=(BU, 0.5))
+    d.detail.wire(live[2].outer, k1.co_1["11"], wire=(BN, 0.5))
+    d.detail.wire(k1.co_1["14"], di["1"], wire=(BN, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

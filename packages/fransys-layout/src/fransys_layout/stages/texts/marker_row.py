@@ -37,7 +37,7 @@ from fransys_layout.stages.tidy import turned
 
 from .candidates import TextKind
 from .clear_bodies import place_clear_of_bodies
-from .marker_lanes import FAR, Lane, Reach, lanes_of, meets_lane, on_lane, reach_of
+from .marker_lanes import FAR, Lane, Reach, crosses_shut, lanes_of, meets_lane, on_lane, reach_of
 from .markers import wired_points
 from .place_texts import Place, TextToPlace
 from .stand import joined_box, joined_ports, star_turns, start_tier, tier_offset
@@ -66,6 +66,7 @@ class _Page:
     height: int  # its bottom edge
     profile: Profile
     terminals: frozenset[Id[Any]] = frozenset()
+    shut: tuple[Lane, ...] = ()  # lanes of ports that carry a marker: no rail crosses one
     inset: int = 0
 
 
@@ -92,7 +93,9 @@ def place_markers(
     found, findings = dict(enumerate(markers)), ()
     for page, indices in _by_page(markers).items():
         here = tuple(placed[i] for i in on_page.get(page, ()))
-        room = replace(base, lanes=lanes_of(here, model_port))
+        lanes = lanes_of(here, model_port)
+        marked = {markers[i].port for i in indices}
+        room = replace(base, lanes=lanes, shut=tuple(one for one in lanes if one.port in marked))
         decided = _decided(here, drawn, around, page)
         written, page_findings = _place_page(markers, indices, here, room, decided)
         found.update(written)
@@ -278,9 +281,9 @@ def _row(marker: LinkMarker, room: _Page) -> list[tuple[LinkMarker, Place]]:
     if _turns(marker, room):
         # a lane on the pin's own x is its own wire's, whichever port stands there
         lanes = tuple(lane for lane in _lanes_beside(marker, room, south=south) if lane.x != at.x)
-        return [_place(turned(marker, side), reach_of(lanes)) for side in (1, -1)]
+        return [_place(turned(marker, side), reach_of(lanes), shut=room.shut) for side in (1, -1)]
     if marker.shared_box or not (south or north) or not box.x <= at.x <= box.x + box.width:
-        return [_place(marker, ())]
+        return [_place(marker, (), shut=room.shut)]
     lanes = _lanes_beside(marker, room, south=south)
     start = start_tier(star=marker.star, joined=marker.port in room.joined, escaped=False)
     own = next(
@@ -357,9 +360,9 @@ def _tier(
         (x for x in steps if low <= x <= high and x != box.x),
         key=lambda x: (abs(x - box.x), x < box.x),
     )
-    home = _place(base, reach, clear=not home_closed)
+    home = _place(base, reach, clear=not home_closed, shut=room.shut)
     moved = [replace(base, box=replace(box, x=x), shared_box=True, lead=True) for x in xs]
-    return [home, *(_place(one, reach, clear=True) for one in moved)]
+    return [home, *(_place(one, reach, clear=True, shut=room.shut) for one in moved)]
 
 
 def _beyond(
@@ -393,7 +396,7 @@ def _beyond(
         for _, x in sorted(set(found))
         for dy in _closer(first, south=south)
     ]
-    return [_place(one, reach, clear=True) for one in moved]
+    return [_place(one, reach, clear=True, shut=room.shut) for one in moved]
 
 
 def _closer(marker: LinkMarker, *, south: bool) -> range:
@@ -404,8 +407,12 @@ def _closer(marker: LinkMarker, *, south: bool) -> range:
 
 
 def _place(
-    marker: LinkMarker, reach: tuple[Reach, ...], *, clear: bool = True
+    marker: LinkMarker, reach: tuple[Reach, ...], *, clear: bool = True, shut: tuple[Lane, ...] = ()
 ) -> tuple[LinkMarker, Place]:
     """The record and its `Place`: its box, its stub's boxes, and whether it is off every lane."""
+    stub = stub_boxes(marker)
     covered = any(on_lane(marker.box, lane, clear=clear) for lane in reach)
-    return marker, Place(box=marker.box, stub=stub_boxes(marker), fits=not covered)
+    # a lane on the pin's own x is its own wire's, whichever port stands there
+    own_x = tuple(lane for lane in shut if lane.x != marker.at.x)
+    crosses = crosses_shut(stub, marker.port, own_x)  # layout-0244
+    return marker, Place(box=marker.box, stub=stub, fits=not covered, crosses=crosses)

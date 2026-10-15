@@ -6,9 +6,13 @@ lazy from collections.abc import Callable, Mapping
 lazy from decimal import Decimal
 
 from fransys_author.errors import AuthorError
+from fransys_author.surface._bare import bare_series
 from fransys_author.surface._cable import Cables
+from fransys_author.surface._carry import series_name
+from fransys_author.surface._channels import take_channels
 from fransys_author.surface._ends import Parallel, branches, is_bridge, width_of
 from fransys_author.surface._pairing import Ends, PartFacts
+from fransys_author.surface._poles import Poles, group
 from fransys_author.surface._potential import Given, hops, wire_rows
 from fransys_author.surface._rows import AC_N, table
 from fransys_author.surface._supplies import Supplies, _Rails
@@ -44,8 +48,11 @@ def _supply_width(design: Design, supply: _Rails, after: tuple[object, ...]) -> 
             return count
         label = getattr(element, "_label", type(element).__name__)
         msg = (
-            f"{label} has {count} poles; a path from {supply._name} takes "
-            f"{len(phases)} ({', '.join(phases)}) or {total} (with N)"
+            f"{label} has {count} pole{'' if count == 1 else 's'}, the path from {supply._name} "
+            f"carries {len(phases)} ({', '.join(phases)}) or {total} (with N): run each pole "
+            f"between the rails with its own "
+            f"d.series({supply._name}.<rail>, {label}, ..., <rail>), "
+            f"or use a {len(phases)}-pole function"
         )
         raise AuthorError(msg)
     return total
@@ -133,11 +140,12 @@ def _maker(design: Design, wire: WireArg, walked: Walked | None) -> _Maker:
 
 
 def _land_bridges(design: Design, elements: tuple[object, ...], found: list[list[Ends]]) -> None:
-    """Hand each bridge its two neighbours and their ends."""
+    """Hand each bridge its two neighbours and their ends, and the series' name."""
+    series = series_name(elements)
     for i, element in enumerate(elements):
         if is_bridge(element):
             before, after = (elements[i - 1], found[i - 1][0]), (elements[i + 1], found[i + 1][0])
-            element._series_between(design, before, after)
+            element._series_between(design, before, after, series)
 
 
 class Series(Supplies, Cables):
@@ -157,6 +165,8 @@ class Series(Supplies, Cables):
         if len(elements) < _MINIMUM:
             msg = f"d.series joins at least {_MINIMUM} elements, got {len(elements)}"
             raise AuthorError(msg)
+        elements = take_channels(self, elements)
+        elements = bare_series(self, elements)
         found = _resolve(self, elements, _width(self, elements))
         commons, joins = _commons(elements), hops(elements, found)
         walked = wire_rows(elements, found, joins, self._given)
@@ -171,6 +181,14 @@ class Series(Supplies, Cables):
         rows, power = walked or ({}, False)
         for (a, b), row in rows.items():
             self._given[a] = self._given[b] = Given(row, power)
+
+    def poles(self: "Design", *functions: object, selector: bool = False) -> Poles:
+        """Group one-pole contacts of one device, in pole order, as one element drawn multi-pole.
+
+        A changeover group gives `q.no` and `q.nc`; `selector=True` turns its throws to the line.
+        Does not wire anything: a series wires the group.
+        """
+        return group(self, functions, selector=selector)
 
     def parallel(self: "Design", *members: object) -> Parallel:
         """Group `members` so a series puts each between the previous load and the next line.

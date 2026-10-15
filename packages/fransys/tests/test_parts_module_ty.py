@@ -37,16 +37,16 @@ def circuit() -> None:
     F1 = d.device("F1", P.DEMO_OVERLOAD_3P)
     S1 = d.device("S1", P.DEMO_PB_NC)
 """
-GOOD = """    d.wire(Q0[2], K1.main[1], wire=(colours.BK, 2.5))
-    d.wire(F1.main[2], K1[3], wire=("BK", 2.5))
-    d.wire(S1.sw.A, F1.aux[95], wire=("BU", 0.75))
-    d.wire(K1.coil.A1, S1.sw["B"], wire=("BU", 0.75))
+GOOD = """    d.detail.wire(Q0[2], K1.main[1], wire=(colours.BK, 2.5))
+    d.detail.wire(F1.main[2], K1[3], wire=("BK", 2.5))
+    d.detail.wire(S1.sw.A, F1.aux[95], wire=("BU", 0.75))
+    d.detail.wire(K1.coil.A1, S1.sw["B"], wire=("BU", 0.75))
 """
 ADDED = '    cab = d.add(cab_unit, "CAB")\n    cab.X1\n    cab.L1[1]\n'
 PLANTS = {
     "good": GOOD,
-    "bad_pin": f'{GOOD}    d.wire(Q0[7], K1.main[1], wire=("BK", 2.5))\n',
-    "bad_function": f'{GOOD}    d.wire(F1.mian[2], K1[3], wire=("BK", 2.5))\n',
+    "bad_pin": f'{GOOD}    d.detail.wire(Q0[7], K1.main[1], wire=("BK", 2.5))\n',
+    "bad_function": f'{GOOD}    d.detail.wire(F1.mian[2], K1[3], wire=("BK", 2.5))\n',
     "bad_part": f'{GOOD}    d.device("Q9", P.MCB_9P)\n',
     "good_unit": ADDED,
     "bad_field": f"{ADDED}    cab.L11\n",

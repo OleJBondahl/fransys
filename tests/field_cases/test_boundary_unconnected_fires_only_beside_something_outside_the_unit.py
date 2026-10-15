@@ -25,8 +25,8 @@ class _Io(NamedTuple):
 def _switch(u: Any) -> _Io:
     sw = u.device("SW1", "DEMO-SW-8P", interface=True)
     lamp = u.device("H1", "DEMO-LAMP-24")
-    u.wire(sw.p1["1"], lamp["1"], wire=("RD", 50))
-    u.wire(sw.p2["1"], lamp["2"], wire=("BK", 50))
+    u.detail.wire(sw.p1["1"], lamp["1"], wire=("RD", 50))
+    u.detail.wire(sw.p2["1"], lamp["2"], wire=("BK", 50))
     return _Io(sw)
 
 

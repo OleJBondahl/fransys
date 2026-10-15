@@ -32,8 +32,8 @@ def _inner(u: Any) -> _Io:
     second = u.device("P2", "DEMO-LAMP-24")
     third = u.device("P3", "DEMO-LAMP-24")
     for pin in ("1", "2"):
-        u.wire(first[pin], second[pin], wire=("WH", 0.75))
-        u.wire(first[pin], third[pin], wire=("WH", 0.75))
+        u.detail.wire(first[pin], second[pin], wire=("WH", 0.75))
+        u.detail.wire(first[pin], third[pin], wire=("WH", 0.75))
     return _Io(first)
 
 

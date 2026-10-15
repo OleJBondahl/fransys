@@ -34,9 +34,9 @@ def _parent(u: fr.Design) -> _Io:
     x1 = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True)
     plus = x1.run("24V", 2, bridged=True)
     dc = u.dc_supply("24V", plus=psu.output["+"], minus=psu.output["-"], voltage=24)
-    u.wire(dc.plus.pin, plus[1], wire=("RD", 0.75))
+    u.detail.wire(dc.plus.pin, plus[1], wire=("RD", 0.75))
     sub = u.add(_sub, "U2")
-    u.wire(plus[2], sub.pin, wire=("RD", 0.75))
+    u.detail.wire(plus[2], sub.pin, wire=("RD", 0.75))
     return _Io((plus[1], plus[2]))
 
 

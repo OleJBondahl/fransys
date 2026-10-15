@@ -21,6 +21,7 @@ from fransys_layout.geometry import hull
 from fransys_layout.stages.lookups import placed_keepout
 from fransys_layout.stages.pagerun import place_pages
 from fransys_layout.stages.references.digits import FLOOR
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.kernel import freeze
 
 
@@ -50,7 +51,15 @@ def _run() -> tuple[StageResults, dict[str, Any]]:
         seen["passes"].append(widths)
         return found
 
+    # model-0220: copies off, or the rail terminal is drawn as copies and keeps no side reference
+    no_copies = patch(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
     with (
+        no_copies,
         watch("early", sizing),
         watch("page", page_place),
         patch.object(engine, "place_pages", passes),

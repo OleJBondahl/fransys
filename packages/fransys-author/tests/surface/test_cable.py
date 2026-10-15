@@ -8,7 +8,7 @@ from fransys_author.surface import design
 from fransys_author.surface._cable import Cable
 from fransys_author.surface.colours import BK, BN, BU, GNYE
 
-from fransys_model.vocab import CableFacet, Conductor, ConductorKind, CoreFacet
+from fransys_model.vocab import CableFacet, Conductor, ConductorKind, CoreFacet, OpenCoreFacet
 from fransys_model.vocab import Item as ModelItem
 
 from ..equivalence.series_parts import series_library  # noqa: TID252 -- importlib mode puts tests/ on no path
@@ -137,21 +137,28 @@ def test_a_prefixed_tag_and_a_part_without_a_cable_product_raise(lib: Draft) -> 
         design(lib).cable("W1", "TEST-MOTOR-3P")
 
 
-def test_no_pe_part_on_the_strip_raises_the_strips_message(lib: Draft) -> None:
+def _open_at(d: Design) -> dict[int, Any]:
+    """Open core number -> the port it lands on."""
+    return {r.index: r.at for r in d.draft().records() if isinstance(r, OpenCoreFacet)}
+
+
+def test_no_pe_part_on_the_strip_earths_the_cores_near_end(lib: Draft) -> None:
     d = design(lib)
     q1, m1 = d.device("Q1", "TEST-MCB-3P"), d.device("M1", "TEST-MOTOR-3P")
     x1 = d.terminal_strip("X1", "TEST-TERM")
-    with pytest.raises(
-        AuthorError, match=r"X1 has no PE terminal part: terminal_strip\(\.\.\., pe="
-    ):
-        d.series(q1.main, x1, d.cable("W1", FOUR), m1, wire=WIRE)
+    d.series(q1.main, x1, d.cable("W1", FOUR), m1, wire=WIRE)
+    assert sorted(_cores(d)) == [1, 2, 3]
+    assert list(_open_at(d)) == [4]
+    assert len(d._carried) == 1
 
 
-def test_a_gnye_core_with_a_neighbour_that_has_no_pe_raises(lib: Draft) -> None:
+def test_a_gnye_core_with_a_neighbour_that_has_no_pe_earths_the_cores_near_end(
+    lib: Draft,
+) -> None:
     d = design(lib)
     m1, k1 = d.device("M1", "TEST-MOTOR-3P"), d.device("K1", "TEST-KM-3P")
-    with pytest.raises(AuthorError, match="W1 has a GNYE core, but K1 has no PE port"):
-        d.series(k1.main, d.cable("W1", FOUR), m1, wire=WIRE)
+    d.series(k1.main, d.cable("W1", FOUR), m1, wire=WIRE)
+    assert list(_open_at(d)) == [4]
 
 
 def test_no_pe_port_leaves_the_gnye_core_spare(lib: Draft) -> None:
@@ -166,7 +173,7 @@ def test_fewer_cores_than_poles_raises(lib: Draft) -> None:
     q1, m1 = d.device("Q1", "TEST-MCB-3P"), d.device("M1", "TEST-MOTOR-3P")
     two = d._engine.cable(THREE, name="W2", tag="W2")
     two._core_colours = (BN, BU)
-    with pytest.raises(AuthorError, match="W2 has 2 cores for 3 poles"):
+    with pytest.raises(AuthorError, match="W2 has 2 free cores for 3 poles"):
         d.series(q1.main, Cable("W2", two), m1, wire=WIRE)
 
 

@@ -38,6 +38,11 @@ def pick(
     raise error(msg)
 
 
+def fn_label(fn: Fn) -> str:
+    """The text a message names a function by: `K1.coil`."""
+    return f"{fn._label}.{fn._fn.name}"
+
+
 class Fn:
     """One function of a device: `K1.coil`; a pin by `[ ]` (`Q1.main[2]`) or by name (`K1.coil.A1`).
 
@@ -95,7 +100,7 @@ class Fn:
             return self._screw(pin)
 
     def plc(self, signal: SignalType, name: str, priority: int = 0) -> Fn:
-        """Request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.
+        """Core: request a PLC channel of kind `signal` (`DI`, `DO`, `AI`, `AO`) named `name`.
 
         Does not pick a channel: the allocation pass binds the request later.
         """
@@ -105,7 +110,7 @@ class Fn:
     def scale(
         self, unit: str, *, raw: tuple[int, int], eng: tuple[str | Decimal, str | Decimal]
     ) -> Fn:
-        """Scale the raw signal range `raw` to the engineering range `eng` in `unit`.
+        """Core: scale the raw signal range `raw` to the engineering range `eng` in `unit`.
 
         Does not accept a float: write the values as strings or Decimal.
         """
@@ -113,7 +118,9 @@ class Fn:
         return self
 
     def limits(self, *, rating: Rating | None = None, operating: Operating | None = None) -> Fn:
-        """State the values a unit says about this boundary function: `X1.power.limits(rating=...)`.
+        """Core: state the values a unit says about this boundary function.
+
+        Example: `X1.power.limits(rating=...)`.
 
         Does not mark the boundary: interface=True on the device does.
         """

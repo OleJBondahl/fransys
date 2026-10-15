@@ -13,18 +13,18 @@ lazy from fransys_model.kernel import Draft, Id
 lazy from fransys_model.vocab import Function
 
 from ._coverage import Coverage
+from ._detail import Details
 from ._device import Devices
 from ._rows import IEC, table
 from ._series import Series
 from ._strip import Strips
 from ._tags import bare
 from ._units import Units
-from ._wire import Wires
 lazy from ._potential import Given, PortId
 lazy from ._rows import RowValue, WiringRow
 
 
-class Design(Devices, Wires, Strips, Series, Coverage, Units):
+class Design(Devices, Details, Strips, Series, Coverage, Units):
     """One circuit under construction, built through one engine `Design`.
 
     Does not start a design: call fr.design.
@@ -55,6 +55,9 @@ class Design(Devices, Wires, Strips, Series, Coverage, Units):
         self._given: dict[PortId, Given] = {}  # the row a series gave each port (S4)
         self._screws: dict[Id[Function], int] = {}  # screws taken so far on each PE bar
         self._wired_commons: set[PortId] = set()  # changeover commons a series wired (S7)
+        self._carried: dict[PortId, tuple[str, str]] = {}  # a load's PE pin -> (label, series)
+        self._taken_channels: set[Id[Function]] = set()  # PLC channels a series took (C6.5)
+        self._grouped: set[Id[Function]] = set()  # functions in a d.poles group (C6.4)
 
     def location(self, name: str, text: str, *, within: str | None = None) -> Location:
         """Declare the place `name` (printed `+name`) with its `text`.

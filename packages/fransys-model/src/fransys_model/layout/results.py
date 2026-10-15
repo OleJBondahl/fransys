@@ -145,8 +145,8 @@ class SymbolPlacement:
     """One function drawn on one page: where, how turned, and with which symbol.
 
     `x`, `y` is the symbol origin. `symbol` and `library_version` pin the geometry the
-    position was computed against. A terminal function drawn on several pages has one
-    placement per page. `view` says which view of the model the placement draws. `ports`
+    position was computed against. A terminal function may have a placement at each of its
+    wires, several on one page (model-0220). `view` says which view the placement draws. `ports`
     and `sides` are parallel: render draws a generic box's ports (an item view's, or one whose
     names or sides are not the default ones) on the `Side.N` (top) or `Side.S` (bottom)
     side as listed; both are empty for a placement that is no such box. `port_offsets` is the

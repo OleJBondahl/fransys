@@ -39,6 +39,11 @@ KEYS = (
 # Per build, one ceiling per count in the order of KEYS. Baselined on main after TALL-HELD
 # (layout-0234, cd030eb02): the two harness builds took one more crossing and two more bends, one
 # U shape fewer, from the changed placement; replicas crossings fell from 50 to 48.
+# Re-baselined after merging main into TNR-SAME-PAGE (model-0220): a terminal wired to several
+# devices is drawn as a copy at each pin, so each copy is one more short routed wire (one more
+# `_search` call: relay_bank_8 +14, relay_bank_9 +16, relay_bank_10_house +9, cabinet +2) and the
+# long wires to the one terminal are gone (bends fell 36 to 28, 54 to 42, 36 to 28, 20 to 12;
+# cabinet U shapes 9 to 5, one wrap re-search to none). With the copies off the counts are main's.
 CEILING: dict[str, tuple[int, ...]] = {
     "strip_to_plc": (0, 0, 2, 0, 2, 10, 0, 0, 7),
     "harness_overfull": (0, 1, 0, 0, 8, 31, 0, 8, 10),
@@ -46,12 +51,17 @@ CEILING: dict[str, tuple[int, ...]] = {
     "replicas": (0, 0, 0, 0, 48, 54, 0, 0, 26),
     "replicas_contactor": (0, 0, 0, 0, 57, 68, 0, 3, 30),
     "coils_to_channels": (0, 0, 0, 2, 12, 32, 0, 18, 34),
-    "relay_bank_8": (0, 0, 0, 0, 12, 36, 0, 12, 66),
-    "relay_bank_9": (0, 0, 0, 0, 22, 54, 0, 16, 74),
-    "relay_bank_10_house": (0, 0, 0, 0, 18, 36, 0, 12, 41),
+    "relay_bank_8": (0, 0, 0, 0, 12, 28, 0, 12, 80),
+    "relay_bank_9": (0, 0, 0, 0, 22, 42, 0, 16, 90),
+    "relay_bank_10_house": (0, 0, 0, 0, 18, 28, 0, 12, 50),
     # cabinet re-baselined: SAME-PAGE-BRANCH (layout-0224, c000e067c) turns a marker pair
     # into a routed wire
-    "cabinet": (0, 0, 0, 1, 1, 20, 0, 9, 26),
+    "cabinet": (0, 0, 0, 0, 1, 12, 0, 5, 28),
+    # layout-0258: the build the picture shows (hinted chains); its crossings count the core line
+    # `W1.3` too (4 wire-over-wire, 1 wire over the core)
+    # model-0220: the copies add 2 routed wires (search calls 17 to 19), both across `W1.3`
+    # (crossings 5 to 7, core crossings 1 to 3); copies off, the counts are layout-0258's
+    "cabinet_chained": (0, 0, 0, 0, 7, 6, 0, 2, 19),
 }
 
 
@@ -92,6 +102,10 @@ def _builds() -> Iterator[tuple[str, Callable[[], Any]]]:
         "cabinet",
         lambda: lay_out_schematic(freeze(cabinet.build_cabinet(discovery=True)), OPTIONS),
     )
+    yield (
+        "cabinet_chained",
+        lambda: lay_out_schematic(freeze(cabinet.build_cabinet(discovery=False)), OPTIONS),
+    )
 
 
 @pytest.fixture(scope="module")
@@ -124,3 +138,14 @@ def test_the_meter_sees_the_retries_and_the_crossings(counts: dict[str, Counter[
     assert counts["coils_to_channels"]["wrap_search"] > 0
     assert counts["replicas"]["crossings"] > 0
     assert all(c["routes"] > 0 and c["route_failed"] == 0 for c in counts.values())
+
+
+def test_the_cabinet_crossing_of_the_core_line_w1_3_is_counted(
+    counts: dict[str, Counter[str]],
+) -> None:
+    """Layout-0258: a wire across the cable core line `W1.3` is one of the cabinet's crossings.
+
+    # UNDO: lint/page_counts.py, `wire_crossings` reads `lines` as empty (the core crossing goes)
+    """
+    assert counts["cabinet_chained"]["core_crossings"] == 3
+    assert counts["cabinet_chained"]["crossings"] == 7

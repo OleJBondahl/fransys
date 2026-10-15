@@ -35,9 +35,9 @@ def _build() -> fr.BuildResult:
         contactor = d.device("Q1", "DEMO-CTR-3P-24")
         d.device("F1", "DEMO-OVERLOAD-3P", mounted_on=contactor)
         t = [strip[i] for i in range(1, 5)]
-    d.busbar(t[0], t[1])
-    d.rail_bond(t[2], t[3])
-    d.wire(contactor.main["1"], t[0].outer, wire=(BK, 1.5), label=_WIRE_LABEL)
+    d.detail.busbar(t[0], t[1])
+    d.detail.rail_bond(t[2], t[3])
+    d.detail.wire(contactor.main["1"], t[0].outer, wire=(BK, 1.5), label=_WIRE_LABEL)
     return fr.build(d)
 
 

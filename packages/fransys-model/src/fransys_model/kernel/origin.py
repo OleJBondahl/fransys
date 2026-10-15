@@ -57,20 +57,26 @@ class OriginSource(Protocol):
         ...
 
 
-def describe(problem: ModelError | Finding, source: OriginSource) -> str:
+def describe(
+    problem: ModelError | Finding, source: OriginSource, names: dict[Id[Any], str] | None = None
+) -> str:
     """Render `problem` as text with every id it carries shown as its origin (kernel-model.md 5.8).
 
     The only place ids are turned into text for humans. The message is printed verbatim,
     never inspected: one labelled line per id-bearing field follows it. Pure and total: an
     id with no origin or no record falls back to `unknown origin (...)`, and `Id.value` is
     never printed.
+
+    `names` gives a finding's subject its printed name, `name  (file:line)`, and drops the key.
     """
-    return "\n".join(_lines(problem, source))
+    return "\n".join(_lines(problem, source, names or {}))
 
 
-def _lines(problem: ModelError | Finding, source: OriginSource) -> tuple[str, ...]:
+def _lines(
+    problem: ModelError | Finding, source: OriginSource, names: Mapping[Id[Any], str]
+) -> tuple[str, ...]:
     if isinstance(problem, Finding):
-        subjects = (f"  subject: {_render(s, source)}" for s in problem.subjects)
+        subjects = (f"  subject: {_render(s, source, names.get(s))}" for s in problem.subjects)
         return (f"{problem.code} ({problem.severity.value}): {problem.message}", *subjects)
     lines = str(problem).splitlines() or [""]
     lines += _extra_lines(problem, source) or _subject_lines(problem, source)
@@ -81,7 +87,7 @@ def _freeze_lines(problem: FreezeError, source: OriginSource) -> list[str]:
     lines: list[str] = []
     for number, error in enumerate(problem.errors, start=1):
         prefix = f"  {number}. "
-        first, *rest = _lines(error, source)
+        first, *rest = _lines(error, source, {})
         lines += [prefix + first, *(" " * len(prefix) + line for line in rest)]
     return lines
 
@@ -118,10 +124,12 @@ def _holder(record_id: Id[Any] | None, source: OriginSource) -> tuple[str, ...]:
     return () if record_id is None else (f"  record: {_render(record_id, source)}",)
 
 
-def _render(target: Id[Any], source: OriginSource) -> str:
+def _render(target: Id[Any], source: OriginSource, name: str | None = None) -> str:
     origin = source.origin_of(target)
     key = source.key_of(target)
     where = None if origin is None else f"{origin.file}:{origin.line}"
+    if name is not None:
+        return name if where is None else f"{name} ({where})"
     named = None if key is None else "/".join(key)
     if where is not None and named is not None:
         return f"{where} ({named})"

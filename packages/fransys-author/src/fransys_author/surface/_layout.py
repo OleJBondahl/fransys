@@ -1,6 +1,6 @@
 """Layout hints: `d.layout.chain`, `order`, `symbol` and more, through the engine."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 lazy from collections.abc import Mapping
 lazy from decimal import Decimal
 
@@ -99,9 +99,12 @@ class Layout:
         """
         hint_side(self._engine, target, side)
 
-    def page_title(self, thing: Group | Fn | Device | TerminalStrip, text: str) -> None:
+    def page_title(
+        self, thing: Group | Fn | Device | TerminalStrip | NamedTuple, text: str
+    ) -> None:
         """Advise the title of every drawing page that draws a block, a function or a device.
 
+        `thing` may be what `d.add` returned: the pages that draw that nested unit at this level.
         Does not draw anything itself: the page prints this text before its blocks' texts. A
         thing takes one title; an empty text raises `AuthorError`.
         """

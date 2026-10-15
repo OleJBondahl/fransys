@@ -35,7 +35,7 @@ def unit_of(handle: Scope | Id[Any], what: str, instead: str) -> Id[Unit]:
         if handle.unit_id is None:
             msg = (
                 f"{what} needs a unit (a plain Scope, or a bare Design, is not a valid unit); "
-                f"call s.unit(...) on it first, or pass {instead}"
+                f"write it as a unit with @fr.unit, or pass {instead}"
             )
             raise TypeError(msg)
         return handle.unit_id

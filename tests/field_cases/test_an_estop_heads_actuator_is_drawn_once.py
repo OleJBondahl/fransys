@@ -47,8 +47,8 @@ def model() -> Model:
             block = d.device(None, mpn, name=f"block-{number}", parent=head)
         if number == len(_BLOCKS):
             d.layout.break_before(group)
-        d.wire(strip[2 * number - 1], block[first], wire=wire)
-        d.wire(block[str(int(first) + 1)], strip[2 * number], wire=wire)
+        d.detail.wire(strip[2 * number - 1], block[first], wire=wire)
+        d.detail.wire(block[str(int(first) + 1)], strip[2 * number], wire=wire)
     return fr.build(d, cabinet_document(cabinet)).model
 
 

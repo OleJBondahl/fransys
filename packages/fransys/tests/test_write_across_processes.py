@@ -26,7 +26,7 @@ def _write_in_a_fresh_process(work: Path, hash_seed: str) -> tuple[str, dict[str
         path.relative_to(work).as_posix(): path.read_bytes()
         for tree in ("out", "intermediates")
         for path in sorted((work / tree).rglob("*"))
-        if path.is_file()
+        if path.is_file() and path.name != "build-times.json"  # clock readings (decision 0198)
     }
     return (work / "hash-of-a-str.txt").read_text(encoding="utf-8"), files
 

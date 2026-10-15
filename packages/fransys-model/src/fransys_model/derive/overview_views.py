@@ -13,7 +13,8 @@ from .order import plc_racks
 from .overview_field import field_devices
 from .overview_levels import overview_level
 from .plc_rack import plc_rack_modules
-from .rows import LensChannel, LensModule, MatrixCell, UnitMatrix
+from .rows import MatrixCell, UnitMatrix
+from .rows_plc import LensChannel, LensModule
 
 __all__ = ["signal_lens", "unit_matrix"]
 

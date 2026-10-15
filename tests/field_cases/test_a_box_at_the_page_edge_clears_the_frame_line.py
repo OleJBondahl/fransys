@@ -32,8 +32,8 @@ def _placed_boxes() -> tuple:
     with d.function("G", "Group"):
         k = d.device("K1", "DEMO-RLY-2CO-24")
         x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
-        d.wire(x1[1], k.coil["A1"], wire=("WH", 0.75))
-        d.wire(x1[2], k.coil["A2"], wire=("WH", 0.75))
+        d.detail.wire(x1[1], k.coil["A1"], wire=("WH", 0.75))
+        d.detail.wire(x1[2], k.coil["A2"], wire=("WH", 0.75))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

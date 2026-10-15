@@ -2,7 +2,7 @@ Fransys output: laid-out model to SVG pages and cable blocks.
 
 Output contract: pure function of a Model returning str, bytes or a tuple of pages. No file I/O, no clock, no randomness. Same model digest, same bytes.
 
-`pages(model) -> frozendict[str, str]` renders every `layout.page` of a laid-out model to one
+`pages(model, *, tints) -> frozendict[str, str]` renders every `layout.page` of a laid-out model to one
 SVG each, keyed by `render_id(page.id)`: unit outlines (decision layout-0045: one dash-dot
 outline, labelled `<unit title> rev <revision>`, per black-box unit instance on the page), symbols (real library symbols and
 the generic box, drawn through `symdef.to_fragment_mm`; a truly unknown key gets an 8x8
@@ -35,6 +35,7 @@ Page order and groups (`pages`, `_render_page`):
 - A page is a sheet-sized SVG keyed by `render_id(page.id)`, ordered by `(drawing_set.number, page.number)`.
 - Its groups come in a fixed order: unit outlines, symbols, routes, junctions, markers, labels.
 - `pages` is pure: the same model digest gives the same bytes.
+- `tints` is eight `#rrggbb` strings, one per net-reference slot (`reference_slot`), or empty for no fills; any other count raises `ValueError`. A numbered reference's pentagon gets an inline `style="fill:..."`; a shared box, stubs, texts and contact tables stay unfilled (render-0013).
 - Outlines draw first, render's own call, so nothing else's stroke is ever covered by the boundary.
 - A page with no outline record returns `""` for that group.
 - `routes_group`: each route is one `<polyline>`, in `id` order. `.wire` gets its stroke and fill from the `<style>` block, so no element carries its own.

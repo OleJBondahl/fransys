@@ -48,7 +48,7 @@ def _inner(u: Any) -> _Strip:
     run = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True).run("SIG", 1)
     x2 = u.terminal_strip("X2", "DEMO-TB-2.5")
     lamp = u.device("P1", "DEMO-LAMP-24")
-    u.wire(lamp.lamp["1"], x2.run("A", 1)[1], wire=("WH", 0.75))
+    u.detail.wire(lamp.lamp["1"], x2.run("A", 1)[1], wire=("WH", 0.75))
     return _Strip(run)
 
 
@@ -56,7 +56,7 @@ def _inner(u: Any) -> _Strip:
 def _outer(u: Any) -> _Lamp:
     inner = u.add(_inner, "U2")
     h1 = u.device("H1", "DEMO-LAMP-24")
-    u.wire(h1.lamp["1"], inner.X1[1], wire=("WH", 0.75))
+    u.detail.wire(h1.lamp["1"], inner.X1[1], wire=("WH", 0.75))
     return _Lamp(h1)
 
 
@@ -65,7 +65,7 @@ def _box(u: Any) -> _Box:
     run = u.terminal_strip("X4", "DEMO-TB-2.5", interface=True).run("SIG", 1)
     bridged = u.terminal_strip("X5", "DEMO-TB-2.5").run("B", 3, bridged=True)
     lamp = u.device("P2", "DEMO-LAMP-24")
-    u.wire(lamp.lamp["1"], bridged[1], wire=("WH", 0.75))
+    u.detail.wire(lamp.lamp["1"], bridged[1], wire=("WH", 0.75))
     return _Box(run)
 
 
@@ -82,7 +82,7 @@ def written() -> _Written:
     d.add(_outer, "U1")
     box = d.add(_box, "U3", place="C1")
     outside = d.device("H9", "DEMO-LAMP-24", place="C1")
-    d.wire(outside.lamp["1"], box.X4[1], wire=("WH", 0.75))
+    d.detail.wire(outside.lamp["1"], box.X4[1], wire=("WH", 0.75))
     names = ("demo-idle-outer", "demo-idle-inner", "demo-idle-box")
     docs = []
     for name in names:

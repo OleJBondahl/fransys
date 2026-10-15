@@ -23,10 +23,14 @@ _UNGROUPED = ("ungrouped",)
 
 
 def _at(keys: WriteKeys, host: Id[Any] | None) -> AuthoringKey:
-    """layout-0216: a copy drawn at its wire is keyed by the function or item it stands at."""
+    """layout-0216: a copy drawn at its wire is keyed by the function it stands at.
+
+    The host is a stage handle: a function, an item view (the item) or a pin view (the port).
+    """
     if host is None:
         return ()
-    return ("at", *(keys.function[host] if host in keys.function else keys.item[host]))
+    table = next(t for t in (keys.function, keys.item, keys.port) if host in t)
+    return ("at", *table[host])
 
 
 def placements(
@@ -53,7 +57,8 @@ def placements(
         extra: AuthoringKey = ()
         if (placed.function, placed.column) in away:
             group = columns[placed.column].group
-            extra = nodes[group] if group is not None else _UNGROUPED
+            # a copy at a wire (model-0220) may stand in an item's column, keyed by its host
+            extra = nodes.get(group, _UNGROUPED) if group is not None else _UNGROUPED
             extra = (
                 *extra,
                 "drawing_set",

@@ -79,3 +79,15 @@ def on_lane(box: Box, lane: Reach, *, clear: bool) -> bool:
     """`box` on the lane: covering it closed, or within one grid of it when `clear`."""
     near = (box.x - WIRING_GRID * clear, box.x + box.width + WIRING_GRID * clear)
     return meets(near, (lane[0], lane[0]), closed=not clear) and meets_lane(box, lane)
+
+
+def crosses_shut(stub: Sequence[Box], port: Id[Any], shut: Sequence[Lane]) -> bool:
+    """Whether a sideways run of `stub` crosses the lane of another port that has a marker."""
+    return any(
+        lane.port != port
+        and box.x <= lane.x <= box.x + box.width
+        and meets((min(lane.y, lane.end), max(lane.y, lane.end)), (box.y, box.y + box.height))
+        for box in stub
+        if box.width > box.height
+        for lane in shut
+    )

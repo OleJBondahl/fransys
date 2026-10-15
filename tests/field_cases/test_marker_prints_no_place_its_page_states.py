@@ -29,7 +29,7 @@ def _box(u: fr.Design) -> _Io:
     lamp = u.device("P1", "DEMO-LAMP-24")
     x1 = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True)
     sig = x1.run("SIG", 1)
-    u.wire(sig[1], lamp.lamp["1"], wire=("WH", 0.75))
+    u.detail.wire(sig[1], lamp.lamp["1"], wire=("WH", 0.75))
     return _Io(sig[1])
 
 
@@ -38,7 +38,7 @@ def _build(tmp_path: Path) -> fr.BuildResult:
     cabinet = d.location("C1", "Cabinet")
     io = d.add(_box, "U1")
     lamp = d.device("H1", "DEMO-LAMP-24")
-    d.wire(io.out, lamp.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(io.out, lamp.lamp["1"], wire=("WH", 0.75))
     (tmp_path / "own.md").write_text("# Box\n", encoding="utf-8")
     (tmp_path / "c.md").write_text("# Cabinet\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC

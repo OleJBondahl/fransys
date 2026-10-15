@@ -34,15 +34,15 @@ def _built(mpn: str, plus: str, minus: str) -> tuple:
         m1 = d.device("M1", "DEMO-RED-2IN")
         psus = [d.device(f"G{n}", mpn) for n in (1, 2)]
     for n, psu in enumerate(psus, start=1):
-        d.wire(live[n].outer, psu.input["L"], wire=(BN, 1.5))
-        d.wire(neutral[n].outer, psu.input["N"], wire=(BU, 1.5))
+        d.detail.wire(live[n].outer, psu.input["L"], wire=(BN, 1.5))
+        d.detail.wire(neutral[n].outer, psu.input["N"], wire=(BU, 1.5))
         group = getattr(m1, f"in_{n}")
-        d.wire(psu.output[plus], group[f"{n}+"], wire=(BN, 1.5))
-        d.wire(psu.output[minus], group[f"{n}-"], wire=(BU, 1.5))
+        d.detail.wire(psu.output[plus], group[f"{n}+"], wire=(BN, 1.5))
+        d.detail.wire(psu.output[minus], group[f"{n}-"], wire=(BU, 1.5))
     rail = d.terminal_strip("X2", "DEMO-TB-2.5", 2)
     d.dc_supply("S", plus=m1.out["+"], minus=m1.out["-"], voltage=24)
-    d.wire(m1.out["+"], rail.run("P", 2, bridged=True)[1].outer, wire=(BN, 1.5))
-    d.wire(m1.out["-"], rail.run("M", 2, bridged=True)[1].outer, wire=(BU, 1.5))
+    d.detail.wire(m1.out["+"], rail.run("P", 2, bridged=True)[1].outer, wire=(BN, 1.5))
+    d.detail.wire(m1.out["-"], rail.run("M", 2, bridged=True)[1].outer, wire=(BU, 1.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

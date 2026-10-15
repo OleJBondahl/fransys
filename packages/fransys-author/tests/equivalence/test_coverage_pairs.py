@@ -115,9 +115,9 @@ def test_earth_net_busbar_and_rail_bond_pair(library: Draft, same_model) -> None
         k2 = d.device("K2", _RLY)
         x1 = d.terminal_strip("X1", "TEST-TB")
         d.earth(x1[1], k1.coil.A2)
-        d.net("SIG", k1.coil.A1, k2.coil.A1, kind=NetClass.SIGNAL)
-        d.busbar(k1.coil.A1, k2.coil.A1)
-        d.rail_bond(k1.coil.A2, k2.coil.A2)
+        d.detail.net("SIG", k1.coil.A1, k2.coil.A1, kind=NetClass.SIGNAL)
+        d.detail.busbar(k1.coil.A1, k2.coil.A1)
+        d.detail.rail_bond(k1.coil.A2, k2.coil.A2)
         return d.draft()
 
     same_model(library, engine, surface)

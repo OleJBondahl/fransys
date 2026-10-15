@@ -11,11 +11,14 @@ from ._junctions import junctions_group
 from ._labels import labels_group
 from ._markers import markers_group
 from ._outlines import outlines_group
+from ._ref_fill import checked_tints
 from ._routes import routes_group
 from ._style import style_block
 from ._symbols import symbols_group
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from fransys_model.kernel import Model
 
 
@@ -31,7 +34,7 @@ def _ordered_pages(model: Model) -> tuple[Page, ...]:
     )
 
 
-def _render_page(model: Model, page: Page) -> str:
+def _render_page(model: Model, page: Page, tints: Sequence[str]) -> str:
     """One page's SVG: viewBox, style, then the groups in drawing order.
 
     Order: outlines, symbols, routes, harness lines, fan-outs,
@@ -50,13 +53,13 @@ def _render_page(model: Model, page: Page) -> str:
         f"{fan_outs_group(model, page)}"
         f"{connector_boxes_group(model, page)}"
         f"{junctions_group(model, page)}"
-        f"{markers_group(model, page)}"
+        f"{markers_group(model, page, tints)}"
         f"{labels_group(model, page)}"
         "</svg>"
     )
 
 
-def pages(model: Model) -> frozendict[str, str]:
+def pages(model: Model, *, tints: Sequence[str]) -> frozendict[str, str]:
     """Render every schematic page of a laid-out model to SVG.
 
     One page per `layout.page`, keyed by `render_id(page.id)`, ordered by
@@ -65,10 +68,13 @@ def pages(model: Model) -> frozendict[str, str]:
 
     Args:
         model: A laid-out model (its ``layout.*`` records are present).
+        tints: Eight fill colours (``#rrggbb``), one per net-reference slot, or none for
+            no fills. Any other count raises ``ValueError``.
 
     Returns:
         Page key to SVG text.
     """
+    tints = checked_tints(tints)
     return frozendict(
-        {render_id(page.id): _render_page(model, page) for page in _ordered_pages(model)}
+        {render_id(page.id): _render_page(model, page, tints) for page in _ordered_pages(model)}
     )

@@ -28,7 +28,7 @@ def untyped(lib: Draft) -> Draft:
         x1 = d.terminal_strip("X1", "TEST-TB")
         for tag, n in SENSORS.items():
             s = d.device(tag, "TEST-SENSOR")
-            d.wire(s.sensor.OUT, x1[n], wire=(BU, 0.75))
+            d.detail.wire(s.sensor.OUT, x1[n], wire=(BU, 0.75))
     return d.draft()
 
 
@@ -38,7 +38,7 @@ def typed(lib: Draft) -> Draft:
         x1 = d.terminal_strip("X1", "TEST-TB")
         for tag, n in SENSORS.items():
             s = d.device(tag, Sensor)
-            d.wire(s.sensor.OUT, x1[n], wire=(BU, 0.75))
+            d.detail.wire(s.sensor.OUT, x1[n], wire=(BU, 0.75))
     return d.draft()
 
 
@@ -70,7 +70,7 @@ def test_a_sensor_wired_to_the_wrong_terminal_is_another_model(library: Draft, s
             for tag, n in SENSORS.items():
                 traded = {16: 15, 15: 16}.get(n, n)  # the two last sensors trade terminals
                 s = d.device(tag, "TEST-SENSOR")
-                d.wire(s.sensor.OUT, x1[traded], wire=(BU, 0.75))
+                d.detail.wire(s.sensor.OUT, x1[traded], wire=(BU, 0.75))
         return d.draft()
 
     with pytest.raises(pytest.fail.Exception, match=r"script 2 builds another model"):

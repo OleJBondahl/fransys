@@ -13,6 +13,7 @@ Each case builds once (`cache`); the goldens share `narrow_cabinet`'s cached bui
 """
 
 from functools import cache
+from unittest import mock
 
 import pytest
 from dd_chain_fixtures import terminal_chain, three_breakers
@@ -22,6 +23,7 @@ from narrow_cabinet import narrow_results
 
 from fransys_layout.engines.schematic.engine import StageResults, stage_results
 from fransys_layout.engines.schematic.read import read_inputs
+from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.kernel import Model, freeze
 
 
@@ -29,10 +31,21 @@ def _laid_out(model: Model) -> StageResults:
     return stage_results(model, read_inputs(model, options=OPTIONS))[0]
 
 
+def _feed_fanning_with_references() -> StageResults:
+    """The feed fanning laid out with copies off: model-0220 draws its feed as copies, no join."""
+    with mock.patch(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    ):
+        return _laid_out(three_breakers(daisy=False))
+
+
 _CASES = {
     "cabinet": lambda: _laid_out(freeze(build_cabinet())),
     "cabinet_narrow": lambda: narrow_results(158)[0],
-    "feed_fanning": lambda: _laid_out(three_breakers(daisy=False)),
+    "feed_fanning": _feed_fanning_with_references,
     "daisy_chain": lambda: _laid_out(three_breakers(daisy=True)),
     "terminal_chain": lambda: _laid_out(terminal_chain(8)),
 }

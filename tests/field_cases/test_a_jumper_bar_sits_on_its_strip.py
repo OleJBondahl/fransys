@@ -25,7 +25,7 @@ def _design() -> tuple[fr.Design, fr.TerminalStrip]:
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
     run = x1.run("L", 3, bridged=True)
     h1 = d.device("H1", "DEMO-LAMP-24")
-    d.wire(h1[1], run[1], wire=("BK", 1.5))
+    d.detail.wire(h1[1], run[1], wire=("BK", 1.5))
     return d, x1
 
 

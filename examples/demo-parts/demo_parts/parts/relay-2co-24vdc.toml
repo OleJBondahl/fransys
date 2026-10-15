@@ -16,6 +16,7 @@ ports = [{ name = "A1", role = "generic", symbol_port = "in" }, { name = "A2", r
 [function.operating]
 nominal_voltage_v = "24"
 resistance_ohm = "1600"
+nominal_current_a = "0.015"
 
 [[function]]
 name = "co_1"

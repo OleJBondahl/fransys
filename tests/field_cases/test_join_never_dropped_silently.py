@@ -33,10 +33,10 @@ def _build(*, attached: bool) -> fr.BuildResult:
             x1 = d.device("X1", "DEMO-TB-2.5")
     members = [lamp.lamp["1"] for lamp in lamps]
     for member in members[1:]:
-        d.wire(members[0], member, wire=(BU, 0.5))
+        d.detail.wire(members[0], member, wire=(BU, 0.5))
     if x1 is not None:
-        d.wire(x1.terminal["external"], members[2], wire=(BU, 0.5))
-    d.net("SIG", *members)
+        d.detail.wire(x1.terminal["external"], members[2], wire=(BU, 0.5))
+    d.detail.net("SIG", *members)
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

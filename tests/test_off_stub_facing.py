@@ -17,6 +17,7 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from fransys_el import REF_TINTS
 from fransys_render import pages as render_pages
 from fransys_render._markers import (
     _shared_box_glyph,
@@ -27,8 +28,8 @@ from fransys_render._markers import (
 from fransys_render._numbers import format_decimal
 
 from fransys_model.derive import draws_as_line
-from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.derive.grid_mm import grid_to_mm
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Origin, SchemaError, evolve
 from fransys_model.layout import LinkMarker, Page, Side, StarKind, layout_of, sheet_format_of
 
@@ -115,7 +116,7 @@ def _the_stub_line(model, marker) -> str:
 
 def _svg_of(model, marker) -> str:
     page = marker.page
-    return render_pages(model)[f"{page.kind}:{page.value}"]
+    return render_pages(model, tints=REF_TINTS)[f"{page.kind}:{page.value}"]
 
 
 @pytest.mark.parametrize(

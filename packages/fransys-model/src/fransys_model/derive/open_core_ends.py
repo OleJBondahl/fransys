@@ -10,7 +10,7 @@ from fransys_model.vocab.tables import facets_of, ports
 lazy from fransys_model.vocab.core import Item, Unit
 lazy from fransys_model.vocab.enums import PortRole
 
-from .core_pairs import SCREEN, _product_colours
+from .core_pairs import _product_colours, open_core_is_spare
 from .designation import printed_designation
 from .indexes import build_indexes
 lazy from .rows_cores import OpenCoreRow
@@ -62,5 +62,11 @@ def open_ends_at(
                 continue
             colour = colours[facet.index - 1] if 1 <= facet.index <= len(colours) else ""
             designation = printed_designation(model, cable, unit=unit)
-            found.append(_words(designation, colour, "spare" if colour != SCREEN else ""))
+            found.append(
+                _words(
+                    designation,
+                    colour,
+                    "spare" if open_core_is_spare(model, colour, facet.at) else "",
+                )
+            )
     return tuple(found)

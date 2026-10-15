@@ -33,7 +33,7 @@ from .baseline_designation import (
 from .lone_cable import lone_cable
 from .mate_rows import mates
 from .reports import _conductor_unit, _lowest_common_unit
-from .rows import (
+from .rows_baseline import (
     BaselineBoundary,
     BaselineConductor,
     BaselineItem,

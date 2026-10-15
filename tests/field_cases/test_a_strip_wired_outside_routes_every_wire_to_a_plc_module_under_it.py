@@ -37,7 +37,7 @@ def _cab(u: Any) -> _Io:
     x = u.terminal_strip("X", "DEMO-TB-2.5", _COUNT, interface=True)
     k1 = u.device("K1", "DEMO-PLC-DI-16")
     for n in range(1, _COUNT + 1):
-        u.wire(x[n], getattr(k1, f"di_{n}")[str(n)], wire=(BU, 0.5))
+        u.detail.wire(x[n], getattr(k1, f"di_{n}")[str(n)], wire=(BU, 0.5))
     return _Io(x)
 
 
@@ -47,7 +47,7 @@ def _built() -> fr.BuildResult:
     cab = d.add(_cab, "U1")
     field = d.terminal_strip("X9", "DEMO-TB-2.5", _COUNT, external=True)
     for n in range(1, _COUNT + 1):
-        d.wire(cab.X[n], field[n], wire=(BU, 0.5))
+        d.detail.wire(cab.X[n], field[n], wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(

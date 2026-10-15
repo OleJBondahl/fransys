@@ -11,11 +11,7 @@ from .baseline_diff_units import (
     unit_subject_text,
 )
 from .baseline_diff_wiring import _conductor_changes, _mate_changes, _net_changes
-from .rows import (
-    Change,
-    Listing,
-    ListingDiff,
-)
+from .rows_baseline import Change, Listing, ListingDiff
 
 
 def diff(a: Listing, b: Listing) -> ListingDiff:

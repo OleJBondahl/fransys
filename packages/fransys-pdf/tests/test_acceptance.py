@@ -1,4 +1,5 @@
 import pytest
+from fransys_el import REF_TINTS
 from fransys_pdf import document_pages, source
 from fransys_render import pages
 
@@ -14,7 +15,7 @@ _PCB_DOC = Id(kind="document", value="demo-board-schematic")
 
 
 def test_document_source_is_typst(demo_cabinet):
-    typst_source = source(demo_cabinet, _DOC, pages(demo_cabinet))
+    typst_source = source(demo_cabinet, _DOC, pages(demo_cabinet, tints=REF_TINTS))
     assert isinstance(typst_source, str)
 
 

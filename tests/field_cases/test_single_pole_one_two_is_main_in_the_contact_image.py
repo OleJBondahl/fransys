@@ -29,12 +29,12 @@ def _poles() -> list[str]:
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         pole = d.device(None, "DEMO-CONTACTOR-DC", name="pole", parent=k1)
     wire = (BU, 0.5)
-    d.wire(feed, k1.coil["A1"], wire=wire)
-    d.wire(k1.coil["A2"], zero, wire=wire)
-    d.wire(feed, k1.aux["13"], wire=wire)
-    d.wire(k1.aux["14"], load, wire=wire)
-    d.wire(feed, pole["1"], wire=wire)
-    d.wire(pole["2"], load, wire=wire)
+    d.detail.wire(feed, k1.coil["A1"], wire=wire)
+    d.detail.wire(k1.coil["A2"], zero, wire=wire)
+    d.detail.wire(feed, k1.aux["13"], wire=wire)
+    d.detail.wire(k1.aux["14"], load, wire=wire)
+    d.detail.wire(feed, pole["1"], wire=wire)
+    d.detail.wire(pole["2"], load, wire=wire)
     model = fr.build(d, cabinet_document(_cabinet)).model
     (label,) = (
         one

@@ -33,8 +33,8 @@ def _build(cover: Path) -> tuple[fr.BuildResult, dict[str, Any]]:
             with c.function(f"F{i}", f"Relay {i}") as group:
                 k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
                 feed = c.terminal_strip(f"X{i}", "DEMO-TB-2.5", 2)
-                c.wire(feed[1], k.coil["A1"], wire=("BU", 0.75))
-                c.wire(k.coil["A2"], feed[2], wire=("BU", 0.75))
+                c.detail.wire(feed[1], k.coil["A1"], wire=("BU", 0.75))
+                c.detail.wire(k.coil["A2"], feed[2], wire=("BU", 0.75))
             handles[f"F{i}"] = group
         c.layout.order(handles["F2"], handles["F3"])
         c.layout.keep_together(handles["F1"], handles["F3"])

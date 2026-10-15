@@ -47,8 +47,8 @@ def _board(u: Any) -> _Io:
     pcb = u.device("A1", "DEMO-PCB-IO")
     x7 = u.device("X7", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     lamp = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.wire(x7[1], lamp["1"], wire=(BK, 0.5))
-    u.wire(x7[2], lamp["2"], wire=(BK, 0.5))
+    u.detail.wire(x7[1], lamp["1"], wire=(BK, 0.5))
+    u.detail.wire(x7[2], lamp["2"], wire=(BK, 0.5))
     return _Io(x7)
 
 
@@ -57,7 +57,7 @@ def _cab(u: Any) -> _Open:
     board = u.add(_board, "U1")
     j1 = u.device("J1", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
     for n in (1, 2):
-        u.wire(j1[n], u.device(f"H{n}", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
+        u.detail.wire(j1[n], u.device(f"H{n}", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
     cable = u.cable("W1", "DEMO-CBL-4G1.5", length_m=1)
     cable.core(1, board.X7[1], j1[1])
     cable.core(2, board.X7[2], j1[2])

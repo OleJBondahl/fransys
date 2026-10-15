@@ -36,8 +36,8 @@ def _looms(u: fr.Design) -> _Open:
     p2 = u.device("P2", "DEMO-HSG-4F", parent=w1, place="C1", contacts="DEMO-CRIMP-F")
     u.mate(p1, m1.j1)
     u.mate(p2, m2.j1)
-    u.wire(p1[1], p2[1], wire=(RD, 0.5))
-    u.wire(p1[2], p2[2], wire=(BK, 0.5))
+    u.detail.wire(p1[1], p2[1], wire=(RD, 0.5))
+    u.detail.wire(p1[2], p2[2], wire=(BK, 0.5))
     return _Open()
 
 

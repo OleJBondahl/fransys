@@ -36,11 +36,11 @@ def _build(tmp_path: Path) -> fr.BuildResult:
         contactors = {n: d.device(f"K{n}", "DEMO-CTR-3P-NC") for n in (2, 3, 4)}
     d.layout.break_before(group)
     for number, contactor in contactors.items():
-        d.wire(contactor.coil["A1"], lamps[number].lamp["1"], wire=(BU, 0.5))
-        d.wire(contactor.main["1"], lamps[number].lamp["1"], wire=(BU, 0.5))
-        d.wire(psu.output["+"], contactor.aux["13"], wire=(RD, 0.5))
+        d.detail.wire(contactor.coil["A1"], lamps[number].lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(contactor.main["1"], lamps[number].lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(psu.output["+"], contactor.aux["13"], wire=(RD, 0.5))
         channel = getattr(module, f"di_{number - 1}")[str(number - 1)]
-        d.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
+        d.detail.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
     cover = tmp_path / "cabinet.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

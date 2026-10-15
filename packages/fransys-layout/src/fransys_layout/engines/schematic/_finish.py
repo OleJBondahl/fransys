@@ -18,6 +18,7 @@ from fransys_layout.stages.external_outlines import ExternalInputs, external_out
 from fransys_layout.stages.outlines import OutlineInputs, unit_outlines
 from fransys_layout.stages.space import Blocks
 from fransys_layout.stages.texts.echoes import echo_requests
+from fransys_layout.stages.texts.power_moved import PowerFrame, PowerRedo, reset_power
 
 from ._middle import with_middle
 from .read.harness_lines import plug_mates
@@ -155,6 +156,7 @@ def outlined_cells(
     list[PlacedFunction],
     tuple[LinkMarker, ...],
     PageBlocks,
+    PowerRedo,
 ]:
     """`outlined`, then the pin views onto their cells (HL19), then the outlines by others.
 
@@ -163,6 +165,8 @@ def outlined_cells(
     """
     pages, outlines, placed_box = outlined(model, inputs, columns, laid, placed_box)
     pages, placed, markers, blocks = cells_placed(pages, laid.placed, laid.markers, placed_box)
+    power = PowerFrame(inputs.sheet, inputs.profile, inputs.power_slot)
+    pages, markers, redo = reset_power(laid.plans, pages, markers, laid.markers, power)
     by_others = ExternalInputs(
         {spec.function: spec for spec in inputs.functions},
         external_roots(model),
@@ -170,7 +174,7 @@ def outlined_cells(
         external_note_text(),
     )
     pages, external = external_outlines(laid.plans, pages, markers, by_others)
-    return pages, outlines, external, placed_box, placed, markers, _along(blocks, external)
+    return pages, outlines, external, placed_box, placed, markers, _along(blocks, external), redo
 
 
 def _along(blocks: PageBlocks, external: Sequence[PlacedExternalOutline]) -> PageBlocks:

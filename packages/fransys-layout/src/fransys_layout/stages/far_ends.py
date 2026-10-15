@@ -1,8 +1,9 @@
 """Far ends drawn at the pin they serve, the step after `attach_replicas`.
 
 A contact whose one wire, or a coil whose one channel wire (A1 or A2, layout-0208), reaches a
-single pin in another group's column moves its home there, above an N pin or below an S pin, if
-the column still fits.
+single pin in another group's column moves its home there, above an N pin or below an S pin. A
+contact moves if the column still fits; a channel's coil always does, and a column too tall for
+its sheet continues as the next column (LC1, layout-0208 R1).
 """
 
 from functools import partial
@@ -72,7 +73,7 @@ def move_far_ends(
     far: FarInputs,
     fits: Callable[[Column], bool],
 ) -> tuple[Column, ...]:
-    """Move a lone contact or output coil's home to its far pin, unless `fits` says no."""
+    """Move a lone contact's home to its far pin unless `fits` says no; an output coil's always."""
     home_keys = {column.key for column in homes}
     home_of = {
         cell.function: column
@@ -90,7 +91,7 @@ def move_far_ends(
     placed: dict[AuthoringKey, tuple[_Entry, ...]] = {}
     leaving: dict[AuthoringKey, frozenset[Handle]] = {}
     for column in columns:
-        if column.key not in home_keys or column.key in placed:
+        if column.key not in home_keys:
             continue
         for cell in column.cells:
             hosted = _far_host(cell.function, column, home_of, facts)
@@ -98,7 +99,7 @@ def move_far_ends(
                 continue
             host, entry = hosted
             entries = (*placed.get(host.key, ()), entry)
-            if fits(_moved_cells(host, entries)):
+            if facts.drawn_of[cell.function].roles.coil or fits(_moved_cells(host, entries)):
                 placed[host.key] = entries
                 leaving[column.key] = leaving.get(column.key, frozenset()) | {cell.function}
     return own_group_homes(
@@ -190,9 +191,15 @@ def sheet_fits(
 def _fits(
     drawn_of: Mapping[Handle, DrawnFunction], spacing: int, room: int, width: int, column: Column
 ) -> bool:
-    """A column fits: its rows at `spacing` in `room`, its box and contacts in `width`."""
+    """A column fits: its rows at `spacing` in `room`, its box and contacts in `width`.
+
+    A home moving within its own column counts once, at its new row (layout-0208 R1).
+    """
+    moved = {c.function for c in column.cells if c.host is not None and c.home is Home.MOVED}
     heights: dict[int, int] = {}
     for cell in column.cells:
+        if cell.host is None and cell.function in moved:
+            continue
         keepout = drawn_of[cell.function].geometry.keepout
         heights[cell.index] = max(heights.get(cell.index, 0), keepout.height)
     return (

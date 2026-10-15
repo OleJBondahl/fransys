@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.schematic.write.keys import PREFIX
+from fransys_layout.engines.schematic.write.keys import PREFIX, real_id
 from fransys_layout.engines.schematic.write.power import without_power
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages import MarkerSide
@@ -141,7 +141,7 @@ def _common(c: _Ctx, one: StageMarker) -> dict[str, Any]:
     box_x, lead, stub_extra, via_x, via_y = _marker_fields(one)
     return {
         "page": c.page_of[one.drawing_set, one.page].id,
-        "port": one.port,
+        "port": real_id(c.keys, one.port),
         "side": ModelMarkerSide[one.side.name],
         "x": one.at.x,
         "y": one.at.y,

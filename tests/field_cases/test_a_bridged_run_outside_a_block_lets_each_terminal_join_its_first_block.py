@@ -39,12 +39,12 @@ def _designations(*, bridged: bool | tuple[int, int]) -> dict[int, str]:
     def cab(c):
         psu = c.device("G1", "DEMO-PSU-24")
         run = c.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 4, bridged=bridged)
-        c.wire(psu.output["+"], run[1], wire=(BU, 0.75))
+        c.detail.wire(psu.output["+"], run[1], wire=(BU, 0.75))
         for i in (1, 2):
             with c.function(f"F{i}", f"Lamp {i}"):
                 lamp = c.device(f"H{i}", "DEMO-LAMP-24")
-                c.wire(run[i + 1], lamp.lamp["1"], wire=(BU, 0.75))
-            c.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+                c.detail.wire(run[i + 1], lamp.lamp["1"], wire=(BU, 0.75))
+            c.detail.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
         ids[2], ids[3] = run[2].id, run[3].id
         return _Cab()
 

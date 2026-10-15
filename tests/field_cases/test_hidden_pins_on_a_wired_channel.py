@@ -33,8 +33,8 @@ def _build(
     module = d.device("K1", "DEMO-PLC-AI-4", place="C1")
     header = d.device("J1", "DEMO-CONN-2P", place="C1")
     first, second = ("2", "1") if crossed else ("1", "2")
-    d.wire(header["1"], module.ai_1[first], wire=("WH", 0.5))
-    d.wire(header["2"], module.ai_1[second], wire=("WH", 0.5))
+    d.detail.wire(header["1"], module.ai_1[first], wire=("WH", 0.5))
+    d.detail.wire(header["2"], module.ai_1[second], wire=("WH", 0.5))
     cover = tmp_path_factory.mktemp("hp") / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))

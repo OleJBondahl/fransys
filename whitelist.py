@@ -52,36 +52,28 @@ _ = _Whitelist()
 # `@record`/`@value` field read generically via `dataclasses.fields()` for hashing, freezing and
 # canonical JSON (FIELDS, `kernel/schema.py:37`, sufficient alone) -- never within
 # fransys-model/src itself.
-_.nets_by_port  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/roles.py:48
 _.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/steps.py:129
-_.see  # OTHER fransys/src/fransys/_report.py:50
+_.see  # OTHER fransys/src/fransys/_finding_text.py:27
 _.beside  # OTHER fransys-layout/src/fransys_layout/stages/columns.py:80
-_.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists.py:576
+_.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists_terminal.py:53
 _.MOUNT  # OTHER fransys-author/src/fransys_author/wiring.py:95
-_.LINE  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:22
 _.L1  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:15
 _.L2  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:17
 _.L3  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:19
 _.L_PLUS  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:13
 _.L_MINUS  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:14
 _.M  # TESTS fransys-parts/tests/test_pole_facts.py:139
-_.pole_side  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.conductor_mark  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.ancestry  # OTHER fransys-overview/src/fransys_overview/_data_changes.py:88
-_.wired_to  # DICT fransys-model/src/fransys_model/derive/rows.py:765
-_.field_device  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
-_.field_device_designation  # OTHER fransys-wago/src/fransys_wago/modules.py:84
-_.cable_designation  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.footprint_library  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37
 _.footprint_name  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37
 _.mate_port_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.mate_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.from_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
-_.cross_section_mm2  # DICT fransys-model/src/fransys_model/derive/rows.py:165
 _.to_label  # DICT fransys-model/src/fransys_model/derive/rows.py:765
 _.added  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.changed  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
-_.change  # OTHER fransys-reports/src/fransys_reports/changes.py:62
+_.loose_symbols  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.width_mm  # OTHER fransys-render/src/fransys_render/pages.py:48
 _.height_mm  # OTHER fransys-render/src/fransys_render/pages.py:48
 _.content_x_mm  # OTHER fransys-render/src/fransys_render/_symbols.py:64
@@ -90,8 +82,6 @@ _.column_gap  # OTHER fransys-layout/src/fransys_layout/stages/place.py:146
 _.row_gap  # OTHER fransys-layout/src/fransys_layout/stages/place.py:151
 _.row_spacing  # OTHER fransys-layout/src/fransys_layout/stages/place.py:154
 _.route_margin  # OTHER fransys-layout/src/fransys_layout/stages/_edge_paths.py:127
-_.text_height  # OTHER fransys-layout/src/fransys_layout/stages/images.py:72
-_.marker_padding  # OTHER fransys-layout/src/fransys_layout/stages/images.py:73
 _.route_turn_penalty  # OTHER fransys-layout/src/fransys_layout/stages/_edge_paths.py:155
 _.route_crossing_penalty  # OTHER fransys-layout/src/fransys_layout/stages/_edge_paths.py:156
 _.band_ranks  # OTHER fransys-layout/src/fransys_layout/stages/place.py:164
@@ -101,7 +91,6 @@ _.port_map  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/rea
 _.produced_by  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
 _.orientation  # OTHER fransys-render/src/fransys_render/_symbol_geometry.py:87
 _.library_version  # OTHER fransys-render/src/fransys_render/check.py:63
-_.view  # OTHER fransys-render/src/fransys_render/_markers.py:90
 _.cover  # OTHER fransys-pdf/src/fransys_pdf/_cover_checks.py:78
 _.logo  # OTHER fransys-pdf/src/fransys_pdf/document.py:62
 _.supplier  # FIELDS fransys-model/src/fransys_model/kernel/schema.py:37
@@ -151,51 +140,16 @@ _.builds  # TESTS fransys-model/tests/kernel/test_cache.py:40
 # exercised by fransys-author's own tests (most also named by example in the consumer
 # guide, packages/fransys/src/fransys/guide/*.md, though four -- chain, order, profile,
 # plc -- are only named there as a concept, not shown as the DSL call).
-_.unused  # TESTS fransys-author/tests/test_errors.py:482
-_.strip  # TESTS fransys-author/tests/test_origins.py:90
-_.cable  # TESTS fransys-author/tests/test_origins.py:109
 _.harness  # TESTS fransys-author/tests/test_external.py:83
 _.rack  # TESTS fransys-author/tests/surface/test_s4b_handles.py:82
-_.wiring  # TESTS fransys-author/tests/test_errors.py:178
-_.net  # TESTS fransys-author/tests/test_origins.py:150
-_.mate  # TESTS fransys-author/tests/test_origins.py:164
-_.bridge  # TESTS fransys-author/tests/test_errors.py:261
-_.link  # TESTS fransys-author/tests/test_link.py:21
-_.chain  # TESTS fransys-author/tests/test_origins.py:192
-_.keep_together  # TESTS fransys-author/tests/test_design.py:546
-_.break_before  # TESTS fransys-author/tests/test_design.py:554
-_.order  # TESTS fransys-author/tests/test_errors.py:240
-_.project  # TESTS fransys-author/tests/test_design.py:68
-_.profile  # TESTS fransys-author/tests/test_origins.py:236
-_.draft  # TESTS fransys-author/tests/test_origins.py:52
-_.plc  # TESTS fransys-author/tests/test_origins.py:256
-_.outer  # TESTS fransys-author/tests/test_origins.py:121
-_.core  # TESTS fransys-author/tests/test_origins.py:121
-_.run  # TESTS fransys-author/tests/test_errors.py:233
 
 # design.py:833 draw_in, handles.py:161 scale: same fluent DSL shape, exercised only in
 # fransys-author's own tests (plus draw_in's own README example); not named in the guide.
-_.draw_in  # TESTS fransys-author/tests/test_design.py:813
-_.scale  # TESTS fransys-author/tests/test_origins.py:261
 _.page_title  # TESTS fransys-author/tests/surface/test_layout_page_title.py:27
 
 # surface/ (EA-CORE): the engineer surface is off `__all__` until EA-SWAP, so only its own tests
 # call device/terminal_strip and the colour constants.
-_.device  # TESTS fransys-author/tests/surface/test_device.py:24
 _.terminal_strip  # TESTS fransys-author/tests/surface/test_terminal_strip.py:18
-_.BK  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.BN  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.RD  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.OG  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.BU  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.VT  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.GY  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.WH  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.PK  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.GD  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.SR  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.TQ  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
-_.SH  # TESTS fransys-author/src/fransys_author/surface/colours.py:23
 
 # --- fransys-layout --------------------------------------------------------------------
 
@@ -226,13 +180,13 @@ _.WIRE  # TESTS fransys-layout/tests/stages/test_sizing.py:27
 
 # --- EF-B first half: wired by EF-B's second half (P4 resolve, P6 pole order) ---------------------
 # `pole_order` (model-0128) is read through `vocab` by layout and author; tests call it too.
-_.pole_order  # TESTS fransys-model/tests/vocab/test_markings.py:48
 
 # --- fransys_author surface: coverage (EA-COVERAGE) ---------------------------------------
 # Surface calls off `fransys_author.__all__` until EA-SWAP; their tests call them.
 _.layout  # TESTS fransys-author/tests/surface/test_coverage_layout.py:46
 _.busbar  # TESTS fransys-author/tests/equivalence/test_coverage_pairs.py:119
 _.rail_bond  # TESTS fransys-author/tests/equivalence/test_coverage_pairs.py:120
+_.detail  # TESTS fransys-author/tests/surface/test_chain_beside.py:20
 
 # --- fransys_author surface: series, supplies (EA-SERIES) ----------------------------------
 # Surface calls off `fransys_author.__all__` until EA-SWAP; their tests call them.
@@ -272,24 +226,16 @@ _.text_x  # OTHER fransys-render/src/fransys_render/cables.py:109
 _.text_y  # OTHER fransys-render/src/fransys_render/cables.py:109
 _.TOP  # OTHER fransys-render/src/fransys_render/cables.py:62
 _.BOTTOM  # OTHER fransys-render/src/fransys_render/cables.py:62
-_.HARNESS  # OTHER fransys-render/src/fransys_render/cables.py:49
 _.SOLID  # OTHER fransys-render/src/fransys_render/cables.py:61
 _.DASHED  # OTHER fransys-render/src/fransys_render/cables.py:61
 _.BLANK  # OTHER fransys-render/src/fransys_render/cables.py:85
-_.tab_a  # OTHER fransys-render/src/fransys_render/diagram.py:55
-_.tab_b  # OTHER fransys-render/src/fransys_render/diagram.py:56
-_.text_width  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:46
-_.dashed  # OTHER fransys-render/src/fransys_render/_diagram_boxes.py:68
 # OVERVIEW Part 1 rows: read by tests only, until the OVERVIEW Part 3 page reads them
-_.axis  # TESTS ../tests/test_overview_matrix.py:25
-_.device_designation  # TESTS fransys-model/tests/usecases/test_signal_lens.py:20
 _.status  # TESTS fransys-model/tests/derive/test_overview_marks_model.py:34
 # CABLE-CORES: drawn-mark and open-core row fields read in other packages
 _.core_a  # OTHER fransys-render/src/fransys_render/cables.py:143
 _.core_b  # OTHER fransys-render/src/fransys_render/cables.py:143
 _.tick  # OTHER fransys-pdf/src/fransys_pdf/_bridge.py:90
 _.room  # OTHER fransys-layout/src/fransys_layout/engines/cable/read/facts.py:157
-_.at_designation  # TESTS fransys-model/tests/derive/test_cable_open_core_texts.py:76
 _.shorter  # OTHER fransys-pdf/src/fransys_pdf/_sheet_index.py:36
 _.SHEET_INDEX  # OTHER fransys-pdf/src/fransys_pdf/document.py:46
 _.heading  # OTHER fransys-render/src/fransys_render/_labels.py:79

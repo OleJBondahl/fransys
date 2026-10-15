@@ -87,8 +87,8 @@ def test_unit_name_subject_gives_the_same_pdf_and_bom_bytes_as_the_unit_id(tmp_p
     (pdf_a,) = (p for p in written_a if p.name.endswith(".pdf"))
     (pdf_b,) = (p for p in written_b if p.name.endswith(".pdf"))
     assert pdf_a.read_bytes() == pdf_b.read_bytes()
-    assert (tmp_path / "by-id" / "demo-pump-cabinet-v1.2-bom.csv").read_bytes() == (
-        tmp_path / "by-name" / "demo-pump-cabinet-v1.2-bom.csv"
+    assert (tmp_path / "by-id" / "data" / "demo-pump-cabinet-v1.2-bom.csv").read_bytes() == (
+        tmp_path / "by-name" / "data" / "demo-pump-cabinet-v1.2-bom.csv"
     ).read_bytes()
 
 

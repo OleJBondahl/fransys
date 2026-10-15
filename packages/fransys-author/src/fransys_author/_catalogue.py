@@ -56,7 +56,7 @@ class Catalogue:
             manufacturers = ", ".join(sorted(part.manufacturer for part in matches))
             msg = (
                 f"MPN {mpn!r} is ambiguous across manufacturers ({manufacturers}); "
-                f'write d.item(("<manufacturer>", {mpn!r}), ...)'
+                f'write the part as ("<manufacturer>", {mpn!r})'
             )
             raise AuthorError(msg)
         return matches[0]

@@ -1,7 +1,7 @@
 """A change list names a boundary's ports in marking order: `A2` before `A10` (model-0153)."""
 
 from fransys_model.derive.baseline_diff_units import _boundary_changes
-from fransys_model.derive.rows import BaselineBoundary
+from fransys_model.derive.rows_baseline import BaselineBoundary
 
 
 def _boundary(*ports: str) -> BaselineBoundary:

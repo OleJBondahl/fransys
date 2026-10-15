@@ -1,8 +1,8 @@
 # Keywords and handles
 
 This page lists the public names of the facade's handles and signal types, then the keyword
-arguments that a reader of the API may meet. Each keyword is listed under the call that owns it.
-Where two calls share a keyword, each call has its own entry.
+arguments of the record constructors. The keywords of the `d.*` calls are in `keywords-design.md`,
+those of the handle methods and layout hints in `keywords-handles.md`, those of the `fr.*` functions in `keywords-output.md`.
 
 ## Signal types and short names
 
@@ -76,22 +76,3 @@ rarely does.
 - `old` on `Draft.alias`: the id that has been retired. The `new` argument is its replacement. It raises when `old` is `new`, the two are of different kinds, or `old` is already retired in favour of another id. The input decoder and the merge both call it.
 - `target` on `Draft.key_of`, `Draft.origin_of` and `Draft.record_of`: the id to look up. `key_of` returns the record's authoring key, `origin_of` returns its `Origin`, and `record_of` returns the record itself. Each returns `None` when nothing is held. `record_of` does not follow an alias.
 - `target` on `Model.key_of` and `Model.origin_of`: the same lookup on a frozen `Model`. `key_of` returns `None` when no record holds the id. `origin_of` returns the `Origin` or `None`. The `describe` function asks it where an id was written.
-
-## Design calls
-
-These are methods of `Design` and of its handles. They are the consumer's own keywords.
-
-- `definition` on `Design.add`: the unit definition, made by `fr.unit`. The call builds it as instance `tag`, printed with a leading dash. `tag` may be `None`, and then the instance is numbered. It does not take a lowercase tag. The call returns the unit's interface.
-- `unused` on `Design.add`: a tuple of field or function names to leave unused. A field is named, such as `X1`. A function is named with its device, such as `X1.x1`. The default is an empty tuple.
-- `approved` on `Design.revision`: the approval recorded in one history entry. The default is an empty string. The method does not rename or default a field. It is stored in the history entry. A unit's child design refuses `revision` and uses `fr.unit(history=)` instead.
-- `pe_mpn` on `TerminalStrip.__init__`: the part number of the strip's PE terminal. Consumers pass it as `pe=` to `Design.terminal_strip`, not as `pe_mpn`. The default is `None`. A strip without it cannot take a PE terminal, and the error message asks for `pe=`.
-- `signal` on `Fn.plc` and on `TypedFn.plc`: the kind of channel requested, as a `SignalType`. Pass a short name such as `fr.DI` or the full member. The call does not choose a channel. The allocation pass binds the request later.
-- `priority` on `Fn.plc` and on `TypedFn.plc`: a whole number, default 0. The allocation pass serves a lower number first. Equal numbers are ordered by the requesting function's key, then its id. The call does not choose a channel.
-
-## Layout calls
-
-`d.layout` gives a `Layout`. Every hint on it only advises the layout engine. None draws or places anything.
-
-- `engine` on `Layout.__init__`: the design whose drawing hints this layout writes. A consumer never passes it. `d.layout` builds the layout around the design's engine.
-- `target` on `Layout.side`: a field of a unit's interface, such as `u1.bus_in`, or a function, device, terminal or strip. A `side` argument of `fr.ABOVE` or `fr.BELOW` says which edge the interface stands on. An interface with no harness line ignores the target.
-- `target` on `Layout.symbol`: a function, a device, or a `FunctionKind` such as `FunctionKind.X`. Pass a kind as a name, never as a string. A string raises. `symbol` names the library symbol to draw. `port_map` is optional and defaults to `None`.

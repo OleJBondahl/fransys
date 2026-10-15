@@ -30,11 +30,11 @@ def _plant(d, order: tuple[str, str]) -> None:
     live = d.terminal_strip("X1", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
     zero = d.terminal_strip("X2", "DEMO-TB-2.5", 2).run("L", 2, bridged=True)
     d.dc_supply("S", plus=live[1], minus=zero[1], voltage=24)
-    d.wire(module.out["+"], live[1].outer, wire=(BU, 0.5))
-    d.wire(module.out["-"], zero[1].outer, wire=(BU, 0.5))
+    d.detail.wire(module.out["+"], live[1].outer, wire=(BU, 0.5))
+    d.detail.wire(module.out["-"], zero[1].outer, wire=(BU, 0.5))
     for tag, group, n in (("T1", module.in_1, "1"), ("T2", module.in_2, "2")):
-        d.wire(psus[tag].output["+"], group[f"{n}+"], wire=(BU, 0.5))
-        d.wire(psus[tag].output["-"], group[f"{n}-"], wire=(BU, 0.5))
+        d.detail.wire(psus[tag].output["+"], group[f"{n}+"], wire=(BU, 0.5))
+        d.detail.wire(psus[tag].output["-"], group[f"{n}-"], wire=(BU, 0.5))
 
 
 def _built(order: tuple[str, str]) -> tuple:

@@ -6,7 +6,7 @@ never pins a position. `tests/layout/test_authored_kinds.py` enforces it.
 
 from fransys_model.kernel import AuthoringKey, Id, SchemaError, Value, record, value
 from fransys_model.vocab.aspects import AspectNode
-from fransys_model.vocab.core import Function, Item
+from fransys_model.vocab.core import Function, Item, Unit
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
@@ -160,6 +160,30 @@ class SymbolChoice:
             raise SchemaError(msg, kind="layout.symbol_choice", record_id=holder_of(self))
 
 
+@record(kind="layout.pole_group")
+class PoleGroup:
+    """Draw these one-pole contacts of one device as one multi-pole symbol (`d.poles`).
+
+    `functions` is the pole order the author gave, pole 1 first; a function is listed once.
+    With `selector`, the throws of a changeover group face the line (author-0046, layout-0227).
+    """
+
+    id: Id[PoleGroup]
+    key: AuthoringKey
+    functions: tuple[Id[Function], ...]
+    selector: bool = False
+    ext: frozendict[str, Value] = frozendict()
+
+    def __post_init__(self) -> None:
+        """Refuse an empty group and a function listed twice; the order is kept."""
+        functions = self.functions
+        if type(functions) is not tuple or not all(type(one) is Id for one in functions):
+            return
+        if not functions or len(set(functions)) != len(functions):
+            msg = "a pole group lists one function or more, each once"
+            raise SchemaError(msg, kind="layout.pole_group", record_id=holder_of(self))
+
+
 @record(kind="layout.side_hint", subject="function", unique=True)
 class SideHint:
     """Draw this boundary function's interface on that edge of its unit's outline.
@@ -186,9 +210,11 @@ class SideHint:
 class PageTitle:
     """The title every drawing page that draws this block, function or device prints.
 
-    Exactly one of `block` (a `=` group), `function` and `item` (a device) is set; `text` is
-    never empty. A block's pages are those whose groups hold it; a function's or an item's pages
-    are those that draw one of its symbols (a strip's terminals count as the strip's).
+    Exactly one of `block` (a `=` group), `function`, `item` (a device) and `unit` (a nested
+    unit) is set; `text` is never empty. A block's pages are those whose groups hold it; a
+    function's or an item's pages are those that draw one of its symbols (a strip's terminals
+    count as the strip's); a unit's pages are those of another set that draw its boundary, its
+    symbols or its connector boxes (model-0256).
     """
 
     id: Id[PageTitle]
@@ -197,14 +223,16 @@ class PageTitle:
     block: Id[AspectNode] | None = None
     function: Id[Function] | None = None
     item: Id[Item] | None = None
+    unit: Id[Unit] | None = None
     ext: frozendict[str, Value] = frozendict()
 
     def __post_init__(self) -> None:
-        """Refuse an empty text, and a title for none of block/function/item, or several."""
+        """Refuse an empty text, and a title for none of block/function/item/unit, or several."""
         if type(self.text) is str and not self.text.strip():
             msg = "a page title has no text"
             raise SchemaError(msg, kind="layout.page_title", record_id=holder_of(self))
-        chosen = sum(thing is not None for thing in (self.block, self.function, self.item))
+        things = (self.block, self.function, self.item, self.unit)
+        chosen = sum(thing is not None for thing in things)
         if chosen != 1:
-            msg = f"a page title names exactly one of block, function and item, not {chosen}"
+            msg = f"a page title names exactly one of block, function, item and unit, not {chosen}"
             raise SchemaError(msg, kind="layout.page_title", record_id=holder_of(self))

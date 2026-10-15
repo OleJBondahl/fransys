@@ -1442,7 +1442,7 @@ def test_the_first_release_writes_neither_changes_file(released):
     """
     _result, _into, board_target, _cabinet_target, _board_scope, _cabinet_scope = released
     assert not (board_target / "changes.md").exists()
-    assert not (board_target / "changes.csv").exists()
+    assert not (board_target / "data" / "changes.csv").exists()
 
 
 def test_a_second_release_writes_both_change_files_matching_the_independent_diff(
@@ -1458,7 +1458,7 @@ def test_a_second_release_writes_both_change_files_matching_the_independent_diff
     )
     assert expected_diff.changes, "the wire colour change must produce at least one row"
     assert (second_target / "changes.md").read_text(encoding="utf-8") == expected_md
-    assert (second_target / "changes.csv").read_text(encoding="utf-8") == expected_csv
+    assert (second_target / "data" / "changes.csv").read_text(encoding="utf-8") == expected_csv
     assert "colour BU to RD" in expected_md
 
 
@@ -1471,8 +1471,8 @@ def test_the_manifest_lists_both_change_files_with_hashes(second_board_scenario)
         (second_target / "baseline" / "manifest.json").read_text(encoding="utf-8")
     )
     files_by_path = {entry["path"]: entry for entry in manifest["files"]}
-    assert {"changes.md", "changes.csv"} <= set(files_by_path)
-    for name in ("changes.md", "changes.csv"):
+    assert {"changes.md", "data/changes.csv"} <= set(files_by_path)
+    for name in ("changes.md", "data/changes.csv"):
         actual_bytes = (second_target / name).read_bytes()
         assert files_by_path[name]["sha256"] == hashlib.sha256(actual_bytes).hexdigest()
 
@@ -1600,7 +1600,7 @@ def test_a_noop_rerelease_leaves_the_change_files_mtimes_unchanged(second_board_
     """
     parts, into, second_target, _unit, _diff, _md, _csv = second_board_scenario
     md_mtime = (second_target / "changes.md").stat().st_mtime_ns
-    csv_mtime = (second_target / "changes.csv").stat().st_mtime_ns
+    csv_mtime = (second_target / "data" / "changes.csv").stat().st_mtime_ns
 
     design = fransys_author.Design(parts)
     _x1, u = _board_unit(design.scope("brd"), wire_colour="RD", revision=2)
@@ -1611,7 +1611,7 @@ def test_a_noop_rerelease_leaves_the_change_files_mtimes_unchanged(second_board_
     assert returned == second_target
 
     assert (second_target / "changes.md").stat().st_mtime_ns == md_mtime
-    assert (second_target / "changes.csv").stat().st_mtime_ns == csv_mtime
+    assert (second_target / "data" / "changes.csv").stat().st_mtime_ns == csv_mtime
 
 
 # -- L5: fr.verify (decision 0051) -----------------------------------------

@@ -21,12 +21,12 @@ def test_the_mismatch_names_the_kinds_the_channel_and_both_fixes() -> None:
     ai = d.device("A2", "DEMO-PLC-AI-4", parent=rack)
     d.device("A1", "DEMO-PLC-DI-4P", parent=rack)
     motor = d.device("M1", "DEMO-RLY-2CO-24")
-    d.wire(motor.co_1["14"], ai.ai_1["1"], wire=(BK, 1.0))
-    d.wire(motor.co_1["11"], ai.ai_1["2"], wire=(BK, 1.0))
+    d.detail.wire(motor.co_1["14"], ai.ai_1["1"], wire=(BK, 1.0))
+    d.detail.wire(motor.co_1["11"], ai.ai_1["2"], wire=(BK, 1.0))
     motor.co_1.plc(fr.DI, "M1 status")
     (found,) = (f for f in fr.check(fr.build(d)) if f.code == "PLC_BINDING_SIGNAL_MISMATCH")
     assert "asks for di but" in found.message
-    assert "A2/fn/ai_1" in found.message
+    assert "-A2:1" in found.message
     assert "is ai_current" in found.message
     assert "rewire" in found.message
     assert "ask for ai_current" in found.message

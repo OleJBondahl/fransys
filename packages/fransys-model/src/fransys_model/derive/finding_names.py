@@ -17,6 +17,7 @@ from fransys_model.derive.drawing_text import outline_title, release_title, tag_
 from fransys_model.derive.instance_tag import instance_name, unit_tag
 from fransys_model.derive.kinds import item_kind
 from fransys_model.derive.plc_channel_text import plc_channel_text
+from fransys_model.derive.wire_ends import ordered_wire_ends
 from fransys_model.kernel import Finding, Id, Model, Record, SchemaError
 from fransys_model.vocab.finding_ref import REF
 from fransys_model.vocab.tables import conductors, nets, unit_releases
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-__all__ = ["name_findings", "name_of"]
+__all__ = ["name_findings", "name_of", "subject_text"]
 
 
 def _item(model: Model, target: Id[Any]) -> str:
@@ -90,6 +91,22 @@ def name_of(model: Model, target: Id[Record]) -> str:
     """`target` as the drawings print it: its designation, its ends or its tag; else its kind."""
     namer = _NAMERS.get(target.kind)
     return target.kind if namer is None else namer(model, target)
+
+
+def subject_text(model: Model, target: Id[Record]) -> str | None:
+    """A finding subject as a person reads it: `wire -K1:A1 to -X1:3`, `-Q1`, `unit U1`.
+
+    `None` for a record kind with no printed text; the caller then shows the model key.
+    """
+    wire: Id[Any] = target  # the kind test below makes it a conductor id
+    if wire.kind == "conductor" and wire in conductors(model):
+        record = conductors(model)[wire]
+        try:
+            ends = ordered_wire_ends(model, record.a, record.b)
+            return "wire " + " to ".join(port_designation(model, port) for port in ends)
+        except SchemaError:  # an end that prints no designation
+            return f"{record.kind.value} wire"
+    return name_of(model, target) if target.kind in _NAMERS else None
 
 
 def _replace(model: Model, match: re.Match[str]) -> str:

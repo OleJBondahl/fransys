@@ -102,6 +102,8 @@ def _index(model: Model) -> _Index:
 def function_rating(model: Model, function: Id[Function]) -> Rating | None:
     """The rating of `function`: its template's, else its part's; `None` when neither has one.
 
+    Use this on a built model; before a build use d.rating.
+
     The part is the function template's part when the function has a template, else its item's
     part. The template's `Rating` replaces the part's whole (`effective_rating`). A function
     with no template and no part, or an id that is not a function of `model`, gives `None`.
@@ -210,6 +212,8 @@ def states_current(model: Model, function: Id[Function]) -> bool:
 def function_operating(model: Model, function: Id[Function]) -> Operating | None:
     """The operating envelope of `function`'s template; `None` with no template or no facet.
 
+    Use this on a built model; before a build use d.rating.
+
     There is no fallback to the part: operating characteristics are per template.
 
     Args:
@@ -263,6 +267,8 @@ def template_rating(model: Model, template: Id[FunctionTemplate]) -> Rating | No
 
 def part_rating(model: Model, part: Id[Part]) -> Rating | None:
     """The rating of `part` itself, for a part with no function to ask about (a fuse link).
+
+    Use this on a built model; before a build use d.rating.
 
     Args:
         model: The model to read.

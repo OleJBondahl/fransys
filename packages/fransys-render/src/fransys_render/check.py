@@ -8,6 +8,8 @@ from fransys_model.derive.drawing_text import location_path, position_text
 from fransys_model.kernel import Finding, SchemaError, Severity
 from fransys_model.layout import DrawingSet, Page, SymbolPlacement, layout_of
 
+from ._drawn_shorts import drawn_shorts
+from ._ink import page_ink
 from ._symbol_geometry import oriented_symbol
 
 if TYPE_CHECKING:
@@ -16,6 +18,7 @@ if TYPE_CHECKING:
 UNKNOWN_SYMBOL_KEY = "UNKNOWN_SYMBOL_KEY"
 LIBRARY_VERSION_MISMATCH = "LIBRARY_VERSION_MISMATCH"
 LAYOUT_MISSING = "LAYOUT_MISSING"
+DRAWING_SHORTS_NETS = "DRAWING_SHORTS_NETS"
 
 
 def _about(model: Model, placement: SymbolPlacement) -> str:
@@ -87,14 +90,29 @@ def _layout_missing_findings(model: Model) -> tuple[Finding, ...]:
     return ()
 
 
+def _drawing_shorts_nets_findings(model: Model) -> tuple[Finding, ...]:
+    """One `DRAWING_SHORTS_NETS` per pair of nets a page draws joined (render-0012)."""
+    return tuple(
+        Finding(
+            code=DRAWING_SHORTS_NETS,
+            severity=Severity.INFO,  # ERROR once the drawn shorts it finds are fixed
+            subjects=short.subjects,
+            message="the drawing joins two nets: a stub, wire end or symbol lies on other ink",
+        )
+        for page in sorted(layout_of(model, Page).values(), key=lambda one: one.id)
+        for short in drawn_shorts(*page_ink(model, page))
+    )
+
+
 def check(model: Model) -> tuple[Finding, ...]:
     """Check what `pages` cannot draw or drew against a stale library.
 
-    Three checks: a placement's symbol key is not in the installed library
+    Four checks: a placement's symbol key is not in the installed library
     (`UNKNOWN_SYMBOL_KEY`), a placement was laid out against a different library version
     than the one installed (`LIBRARY_VERSION_MISMATCH`, skipped for a placement already
-    reported as unknown), and the model has schematic functions to draw but no laid-out
-    page at all (`LAYOUT_MISSING`). Pure; raises nothing itself.
+    reported as unknown), the model has schematic functions to draw but no laid-out
+    page at all (`LAYOUT_MISSING`), and a page draws two nets joined (`DRAWING_SHORTS_NETS`).
+    Pure; raises nothing itself.
 
     Args:
         model: A laid-out model.
@@ -109,5 +127,6 @@ def check(model: Model) -> tuple[Finding, ...]:
         *_unknown_symbol_key_findings(model, placements),
         *_library_version_mismatch_findings(model, placements),
         *_layout_missing_findings(model),
+        *_drawing_shorts_nets_findings(model),
     )
     return tuple(sorted(findings, key=lambda finding: (finding.subjects, finding.code)))

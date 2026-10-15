@@ -39,9 +39,9 @@ from fransys_model.derive import (
     units,
 )
 from fransys_model.derive.designation import own_designation_or_none
-from fransys_model.derive.drawing_text import off_stub_text
 from fransys_model.derive.passes.numbering import REFERENCE_DESIGNATION_DUPLICATE
 from fransys_model.derive.passes.numbering import number as number_pass
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Draft, Origin, evolve, freeze, make_id, merge
 from fransys_model.layout import (
     BreakBefore,

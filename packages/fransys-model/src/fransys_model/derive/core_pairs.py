@@ -6,8 +6,9 @@ Cores cell each have one function here; layout, render and the lists call them.
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.facets.cable import CableProductFacet
-from fransys_model.vocab.tables import facets_of, items
-lazy from fransys_model.vocab.core import Item
+from fransys_model.vocab.tables import facets_of, items, ports
+lazy from fransys_model.vocab.core import Item, Port
+lazy from fransys_model.vocab.enums import PortRole
 lazy from fransys_model.vocab.facets.cable import CorePair
 lazy from fransys_model.vocab.templates import Part
 
@@ -35,6 +36,15 @@ def _product_colours(model: Model, cable: Id[Item]) -> tuple[str, ...]:
         return ()
     facet = _cable_products_by_part(model).get(part)
     return () if facet is None else facet.core_colours
+
+
+def open_core_is_spare(model: Model, colour: str, at: Id[Port] | None) -> bool:
+    """Whether an open core of `colour` landing at `at` is a spare: not a screen, not earthed.
+
+    A core landing on a PE-role port is a protective core earthed at that port (author-0044).
+    """
+    earthed = at is not None and ports(model)[at].role is PortRole.PE
+    return colour != SCREEN and not earthed
 
 
 @value
@@ -85,6 +95,11 @@ def core_mark(pairs: tuple[DrawnPair, ...], index: int) -> str:
     """The pair word on core `index`'s row: `P1` off a bracket, `screen P1` on a screen, or `""`."""
     bracketed = any(pair.bracket and index in pair.cores for pair in pairs)
     return "" if bracketed else core_pair_word(pairs, index)
+
+
+def conductor_count(colours: tuple[str, ...]) -> int:
+    """The conductor cores among a product's `core_colours`: a screen (`SH`) is not a core."""
+    return sum(colour != SCREEN for colour in colours)
 
 
 def pair_form(pairs: tuple[CorePair, ...], gauge_mm2: object) -> str:

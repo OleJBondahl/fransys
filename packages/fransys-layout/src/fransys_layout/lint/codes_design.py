@@ -64,8 +64,8 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "placed it alone in its own column."
         ),
         fix=(
-            "Wire the function into a current path (`d.series`, or `d.wire` with two poles per "
-            "net), or name the path with `d.layout.chain`; see drawing.md."
+            "Wire the function into a current path (`d.series`, or `d.detail.wire` with two "
+            "poles per net), or name the path with `d.layout.chain`; see drawing.md."
         ),
         page="findings-render",
     ),
@@ -242,6 +242,19 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "Usual causes: a redundant conductor between two points already on one net (rewire "
             "to a point already routed), or crowded geometry around the ports."
         ),
+        page="findings-render",
+    ),
+    CodeInfo(
+        code="ROUTE_NEAR_FLAG_STUB",
+        severities=(Severity.INFO,),
+        stage="render",
+        who="note",
+        cause=(
+            "No path kept a wire off every link marker's stub, rail and branch (layout-0243), so "
+            "it was drawn in the old room, which ignores that ink. It may touch another net's "
+            "marker. The message names the page and the wire."
+        ),
+        fix="Send the smallest model that shows it: Fransys could not draw this cleanly.",
         page="findings-render",
     ),
     CodeInfo(

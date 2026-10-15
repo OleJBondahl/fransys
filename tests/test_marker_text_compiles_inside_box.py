@@ -353,7 +353,7 @@ def _model_and_owner_marker_id():
 def compiled_page():
     """One compile, shared by both tests below (typst compilation is not free)."""
     model, doc, owner_id = _model_and_owner_marker_id()
-    svgs = pages(model)
+    svgs = pages(model, tints=())  # no fills: a light tint reads as ink at threshold 245
     assert len(svgs) == 2  # both real layout pages render, even though only C1's is printed
     text = source(model, doc.id, svgs)
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC: only C1's page, never C2's

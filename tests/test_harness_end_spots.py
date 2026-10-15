@@ -29,8 +29,8 @@ def _board(u: Any) -> _Io:
     pcb = u.device("A1", "DEMO-PCB-IO")
     x7 = u.device("X7", "DEMO-HSG-4F", parent=pcb, interface=True, contacts="DEMO-CRIMP-F")
     lamp = u.device("K1", "DEMO-LAMP-24", parent=pcb)
-    u.wire(x7[1], lamp["1"], wire=(BK, 0.5))
-    u.wire(x7[2], lamp["2"], wire=(BK, 0.5))
+    u.detail.wire(x7[1], lamp["1"], wire=(BK, 0.5))
+    u.detail.wire(x7[2], lamp["2"], wire=(BK, 0.5))
     return _Io(x7)
 
 

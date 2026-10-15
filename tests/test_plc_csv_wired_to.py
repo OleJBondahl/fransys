@@ -55,7 +55,7 @@ def exports(tmp_path_factory):
 
 
 def _rows(out_dir):
-    path = next(out_dir.glob("*plc.csv"))
+    path = next((out_dir / "data").glob("*plc.csv"))
     text = path.read_text(encoding="utf-8")
     return text, list(csv.DictReader(text.splitlines()))
 

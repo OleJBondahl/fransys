@@ -54,12 +54,12 @@ def _bank(count: int):
         for i in range(count):
             with u.function(f"R{i + 1}", f"Relay {i + 1}"):
                 relay = u.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
-                u.wire(feed[1 + i % 4], relay.coil["A1"], wire=("WH", 0.75))
-                u.wire(controller[_PINS[i % 16]], relay.coil["A2"], wire=("BU", 0.75))
+                u.detail.wire(feed[1 + i % 4], relay.coil["A1"], wire=("WH", 0.75))
+                u.detail.wire(controller[_PINS[i % 16]], relay.coil["A2"], wire=("BU", 0.75))
                 lamp = u.device(f"P{i + 1}", "DEMO-LAMP-24")
-                u.wire(relay.co_1["14"], lamp.lamp[1], wire=("WH", 0.75))
-                u.wire(back[1 + i % 6], relay.co_1["11"], wire=("WH", 0.75))
-                u.wire(lamp.lamp[2], back[7], wire=("BU", 0.75))
+                u.detail.wire(relay.co_1["14"], lamp.lamp[1], wire=("WH", 0.75))
+                u.detail.wire(back[1 + i % 6], relay.co_1["11"], wire=("WH", 0.75))
+                u.detail.wire(lamp.lamp[2], back[7], wire=("BU", 0.75))
         return _Io(feed)
 
     return bank

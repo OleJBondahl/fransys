@@ -40,10 +40,10 @@ def _built() -> tuple:
             relay = d.device(f"K{number}", "DEMO-RLY-2CO-24")
             lamp = d.device(f"P{number}", "DEMO-LAMP-24")
             channel = getattr(module, f"do_{number - 1}")[str(number - 1)]
-            d.wire(channel, relay.coil["A1"], wire=(BU, 0.5))
-            d.wire(relay.co_1["14"], lamp.lamp["1"], wire=(BU, 0.5))
-            d.wire(relay.coil["A2"], rail[2 * number - 3].outer, wire=(BU, 0.5))
-            d.wire(lamp.lamp["2"], rail[2 * number - 2].outer, wire=(BU, 0.5))
+            d.detail.wire(channel, relay.coil["A1"], wire=(BU, 0.5))
+            d.detail.wire(relay.co_1["14"], lamp.lamp["1"], wire=(BU, 0.5))
+            d.detail.wire(relay.coil["A2"], rail[2 * number - 3].outer, wire=(BU, 0.5))
+            d.detail.wire(lamp.lamp["2"], rail[2 * number - 2].outer, wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

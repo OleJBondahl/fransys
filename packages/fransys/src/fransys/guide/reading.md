@@ -56,8 +56,8 @@ rail's rank. A pin reached from two rails takes the lower. `fransys.derive.port_
 port)` gives the rail's `Current`, and `None` for PE or no rank.
 
 `fransys.derive.takes_energy(model, function)` is `True` when `function` takes energy in: its part's
-declared `energy` when it has one, else `True` for a `load` and `False` for any other kind. A box draws
-the pins of an energy-in function above those of an energy-out one.
+declared `energy` when it has one, else `True` for a `load`, an `actuator` or a `coil` and `False` for any
+other kind. A box draws the pins of an energy-in function above those of an energy-out one.
 
 `fransys.derive.gives_energy(model, function)` is `True` when `function` gives energy out: its part's
 declared `energy` when it has one, else `True` for a `supply` and `False` for any other kind. A box draws
@@ -160,23 +160,6 @@ connector behind the designation (`+C1-A1-X1`).
 `pairs` is the number of twisted pairs of the cable's product, `None` for a product without pairs,
 and `fransys.derive.cores_text(core_count, pairs)` is the Cores cell: `2x2` for two pairs, else the count.
 
-`fransys.derive.open_core_rows(model, cable, *, unit=None)` returns one `OpenCoreRow` per open core
-of `cable` (a spare, or a screen earthed at one end), by core number. A row holds the core's
-`index`, `colour`, the port it lands on (`at`, `at_designation`; `None` and `""` for none) and
-`spare`, false for an `SH` screen. `HarnessCable.open_cores` holds the same rows.
-
-`fransys.derive.core_list_rows(model, *, unit=None)` returns one `CoreListRow` per core of every cable
-`cable_list_rows` lists, in its order and by core number: the wired cores and the open ones, with the
-ends printed as the cable drawing prints them. A spare parked on a pin has it as `end_a`. `pair` is
-`P1` or `screen P1`, `""` outside a pair, and `note` is `spare` for a spare core.
-`CORE_LIST_COLUMNS` names the fields, in print order. `cores.csv` is this list.
-
-`fransys.derive.contents_rows(cables)` reshapes a tuple of `HarnessCable`s (from
-`harness_cables`, `top_level_cables` or `unit_cables`) into one `ContentsRow` per cable, its
-product facts alongside `ends`: every end's designation, in the cable's own order, joined by an
-en dash, with a blank end dropped along with its dash. `CONTENTS_COLUMNS` names its columns, in
-print order.
-
 ## Designations
 
 `fransys.derive.item_designation(model, item)` renders an item's own printed label, such as
@@ -251,13 +234,10 @@ d = fr.design("demo_parts")
 g1 = d.device("G1", "DEMO-STRING-864V")
 f1 = d.device("F1", "DEMO-FUSE-DC-160")
 k1 = d.device("K1", "DEMO-CONTACTOR-DC")
-x1 = d.device("X1", "DEMO-TB-2.5", external=True)
-x2 = d.device("X2", "DEMO-TB-2.5", external=True)
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 2, external=True)
 dc = d.dc_supply("HV", g1.string)
-d.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
-d.wire(f1[2], k1[1], wire=(BK, 1.5))
-d.wire(k1[2], x1["internal"], wire=(BK, 1.5))
-d.wire(dc.minus.pin, x2["internal"], wire=(BK, 1.5))
+d.series(dc.plus, f1, k1, x1, wire=(BK, 1.5))
+d.series(dc.minus, x1, wire=(BK, 1.5))
 
 result = fr.build(d)
 (finding,) = [f for f in fr.check(result) if f.code == "RATING_CURRENT_BELOW_BRANCH"]
@@ -350,7 +330,8 @@ d.mate(housing, loose)
 
 supply = d.device("G1", "DEMO-PSU-24")
 dc = d.dc_supply("main", supply)
-d.wire(dc.plus.pin, housing[1], wire=(BN, 0.75))
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 1)
+d.series(dc.plus, x1, wire=(BN, 0.75))
 d.add(power_tap, "U1")
 
 result = fr.build(d)  # no document: no layout
@@ -364,9 +345,9 @@ assert release.name == "power-tap"
 (boundary_function,) = fr.derive.boundary(model, unit_id)
 assert fr.derive.functions(model)[boundary_function].kind is fr.derive.FunctionKind.CONNECTOR
 
-assert fr.derive.port_rails(model, housing[1].id) == frozenset({"24V"})
+assert fr.derive.port_rails(model, x1[1].inner.id) == frozenset({"24V"})
 assert fr.derive.nets(model)
-assert len(fr.derive.bom_lines(model)) == 3  # connector, cable, supply
+assert len(fr.derive.bom_lines(model)) == 4  # connector, cable, supply, terminal
 assert len(fr.derive.cable_list_rows(model)) == 1
 assert len(fr.derive.contents_rows(fr.derive.top_level_cables(model))) == 1
 assert fr.derive.printed_designation(model, ids["X11"]) == "-X11"

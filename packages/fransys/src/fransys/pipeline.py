@@ -5,7 +5,6 @@ import glob
 import shutil
 import tempfile
 from functools import partial
-from importlib.resources import as_file, files
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Callable
@@ -13,9 +12,11 @@ lazy from collections.abc import Callable
 import fransys_pdf
 import fransys_render
 import typst
+from fransys_el import REF_TINTS
 from fransys_kicad import check as kicad_check
 from fransys_kicad import netlist as kicad_netlist
 from fransys_overview import html as overview_html
+from fransys_parts import library_root
 from fransys_parts import lint as parts_lint
 from fransys_parts import load as parts_load
 from fransys_reports import (
@@ -41,7 +42,6 @@ from fransys_model.derive import (
     allocate_plc,
     baseline,
     check_side_hints,
-    current_revision,
     document_export_name,
     document_unit,
     export_name,
@@ -51,14 +51,10 @@ from fransys_model.derive import (
     number,
     numbering_pins,
     reference_fragment,
-    release_order,
-    revision_text,
-    same_version,
     terminal_items,
     unit_boards,
     unit_release,
     unit_strips,
-    unit_subtree,
     units,
 )
 from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins, name_findings
@@ -67,7 +63,6 @@ from fransys_model.kernel import (
     Finding,
     Id,
     Severity,
-    describe,
     digest_cached,
     evolve,
     freeze,
@@ -90,20 +85,46 @@ from fransys_model.vocab import (
 lazy from fransys_model.kernel import AuthoringKey, Draft, Model, Origin
 
 from . import _args, _designation_pins, _revision_pins, _subjects
-from ._baseline_cause import sections_text
-from ._history_gate import history_findings
+from ._finding_text import described, fix_lines, headed
 from ._layout_need import lay_out_if_needed, needs_schematic_layout
+from ._release_checks import (
+    _baseline_differs_finding,
+    _changes_since,
+    _l4_findings,
+    _pin_source,
+    _previous_release_listing,
+    _release_target,
+    _ReleaseTarget,
+    _since_listing,
+)
 from ._release_files import release_file_findings
 from ._release_manifest import _manifest
-from ._release_reader import listed_siblings, stored_listing, stored_numbering
+from ._release_reader import stored_listing
+from ._times import TIMES_FILE, BuildTimes, Timer
 from .documents import engine_subject
 
 if TYPE_CHECKING:
-    from fransys_model.derive.baseline import Listing, ListingDiff
+    from fransys_model.derive.baseline import ListingDiff
     from fransys_model.vocab import Item, UnitRelease
     from fransys_model.vocab import Unit as ModelUnit
 
 _SEVERITY_RANK = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
+
+# CSV and XML exports live in `<out_dir>/data/`; PDFs, `overview.html` and `changes.md` stay on top.
+_DATA_DIR = "data"
+_DATA_SUFFIXES = (".csv", ".xml")
+
+
+def _placed(name: str) -> str:
+    """`name` as its path from `out_dir`: CSV and XML go into `data/`, the rest stay (0197)."""
+    return f"{_DATA_DIR}/{name}" if name.endswith(_DATA_SUFFIXES) else name
+
+
+def _put(path: Path, data: bytes) -> None:
+    """Write `data` to `path`, making `data/` when it is the first file there."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+
 
 # Top-level `out_dir` export names `write` owns: everything else is left alone. The
 # three bare names are a unit's own root's exports, beside the `<kind>-*` globs.
@@ -131,6 +152,7 @@ class BuildResult:
 
     model: Model
     findings: tuple[Finding, ...]
+    times: BuildTimes = dataclasses.field(default=BuildTimes(), compare=False, repr=False)
 
 
 class BuildErrors(Exception):  # noqa: N818 -- plural on purpose: it carries every error finding
@@ -138,17 +160,16 @@ class BuildErrors(Exception):  # noqa: N818 -- plural on purpose: it carries eve
 
     No escape hatch: there is no `allow_errors`, `force` or `draft` parameter anywhere in
     this package, and none will be added. `findings` holds every `ERROR` of the run that
-    raised; the exception's own message is one line per finding. `write`'s own findings are
-    resolved through `describe` first (`check`'s own contract); `release`'s interface-bump findings
-    are never `describe`d -- their `message` is already self-contained,
-    naming the unit, revision and differing sections in plain text.
+    raised; the exception's own message is each finding, then its fix and guide anchor.
+    `write`'s own findings are resolved through `describe` first (`check`'s own contract);
+    `release`'s interface-bump findings are never `describe`d -- their `message` is already
+    self-contained, naming the unit, revision and differing sections in plain text.
     """
 
     def __init__(self, findings: tuple[Finding, ...]) -> None:
         """Store every `ERROR` finding of the run that raised, in `check`'s order."""
         self.findings = findings
-        lines = (f"{f.severity.value.upper()} {f.code} {f.message}" for f in findings)
-        super().__init__("\n".join(lines))
+        super().__init__("\n".join("\n".join([headed(f), *fix_lines(f)]) for f in findings))
 
 
 class ExportNameClash(Exception):  # noqa: N818 -- the exact name the contract gives it
@@ -171,11 +192,14 @@ def _export_name_clash(
         subjects=(a, b),
         message=message,
     )
-    return ExportNameClash(describe(finding, model))
+    return ExportNameClash(described(finding, model))
 
 
 def parts(*packages: str) -> Draft:
-    """Load part libraries by import name and merge them into one `Draft`.
+    """Detail: load part libraries by import name and merge them into one `Draft`.
+
+    For a draft that holds only parts, to merge beside other drafts. Try `fr.design(...)` first:
+    it loads its libraries itself.
 
     Each name is an installed part-data package, loaded through `fransys_parts.load`. Zero
     names give an empty Draft. Pass the result to `build` beside other drafts.
@@ -186,7 +210,7 @@ def parts(*packages: str) -> Draft:
 
 
 def lint(*libraries: str) -> tuple[Finding, ...]:
-    """Lint part libraries by import name and return their findings.
+    """Read: lint part libraries by import name and return their findings.
 
     Each root resolves as in `parts`; findings come library by library, in the order given, with
     the part file and line already in the message. Zero libraries give `()`.
@@ -195,7 +219,7 @@ def lint(*libraries: str) -> tuple[Finding, ...]:
     """
     findings: list[Finding] = []
     for library in libraries:
-        with as_file(files(library)) as root:
+        with library_root(library) as root:
             findings.extend(parts_lint(root))
     return tuple(findings)
 
@@ -337,7 +361,7 @@ def _seed_designation_pins(model: Model, sources: dict[Id[ModelUnit], NumberingP
 
 
 def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildResult:
-    """Merge, freeze and lay out drafts or a `Design` into a `BuildResult`.
+    """Output: merge, freeze and lay out drafts or a `Design` into a `BuildResult`.
 
     Runs PLC allocation, numbering, every validator and layout, collecting each pass's findings.
     The schematic lays out only when no `ERROR` was found and a `Document` keeps a SCHEMATIC
@@ -348,21 +372,40 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     Does not write files, run `check` or raise on findings; does not seed pins when `releases`
     is `None`.
     """
-    model = freeze(merge(*_args.drafts_of(drafts)))
-    model, plc_findings = allocate_plc(model)
+    timer = Timer()
+    model = timer.run("merge and freeze", _frozen, drafts)
+    model, plc_findings = timer.run("PLC allocation", allocate_plc, model)
+    model, number_findings = timer.run("numbering", _numbered, model, releases)
+    found = timer.run("validators", _validated, model, (*plc_findings, *number_findings))
+    if _has_error(found) or not _has_document(model):
+        return BuildResult(
+            model=model, findings=_by_code_in_reader_order(found, model), times=timer.times()
+        )
+    model, layout_findings = timer.run("schematic layout", lay_out_if_needed, model)
+    model, cable_findings = timer.run("cable layout", lay_out_cables, model)
+    found = (*found, *layout_findings, *cable_findings)
+    return BuildResult(
+        model=model, findings=_by_code_in_reader_order(found, model), times=timer.times()
+    )
+
+
+def _frozen(drafts: tuple[Draft | _args.Design, ...]) -> Model:
+    """The drafts merged and frozen."""
+    return freeze(merge(*_args.drafts_of(drafts)))
+
+
+def _numbered(model: Model, releases: Path | None) -> tuple[Model, tuple[Finding, ...]]:
+    """`model` numbered with pins seeded from `releases`, and the numbering findings."""
     sources = {} if releases is None else _unit_sources(model, releases)
-    model = _seed_designation_pins(model, sources)
-    model, number_findings = number(model)
-    number_findings = (*number_findings, *_revision_pins.new_findings(model, sources))
-    validator_findings = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
-    validator_findings.extend(check_side_hints(model))
-    findings = name_findings(model, (*plc_findings, *number_findings, *validator_findings))
-    if _has_error(findings) or not _has_document(model):
-        return BuildResult(model=model, findings=_by_code_in_reader_order(findings, model))
-    model, layout_findings = lay_out_if_needed(model)
-    model, cable_findings = lay_out_cables(model)
-    found = (*findings, *layout_findings, *cable_findings)
-    return BuildResult(model=model, findings=_by_code_in_reader_order(found, model))
+    model, findings = number(_seed_designation_pins(model, sources))
+    return model, (*findings, *_revision_pins.new_findings(model, sources))
+
+
+def _validated(model: Model, earlier: tuple[Finding, ...]) -> tuple[Finding, ...]:
+    """`earlier` and every validator's findings, each named."""
+    found = [finding for validator in ALL_VALIDATORS for finding in validator(model)]
+    found.extend(check_side_hints(model))
+    return name_findings(model, (*earlier, *found))
 
 
 def _by_code_in_reader_order(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...]:
@@ -377,7 +420,7 @@ def _by_code_in_reader_order(findings: tuple[Finding, ...], model: Model) -> tup
 
 def _resolved(findings: tuple[Finding, ...], model: Model) -> tuple[Finding, ...]:
     resolved = tuple(
-        dataclasses.replace(finding, message=describe(finding, model)) for finding in findings
+        dataclasses.replace(finding, message=described(finding, model)) for finding in findings
     )
     return tuple(
         sorted(
@@ -400,7 +443,7 @@ def _draw_svgs(model: Model) -> dict[str, str]:
     Built once per write/check, reused by `_check`, `_write_intermediates`, `_exports`.
     """
     pages: dict[str, str] = (
-        dict(fransys_render.pages(model)) if needs_schematic_layout(model) else {}
+        dict(fransys_render.pages(model, tints=REF_TINTS)) if needs_schematic_layout(model) else {}
     )
     return {**pages, **fransys_render.cable_blocks(model), **fransys_render.diagram_sheets(model)}
 
@@ -459,7 +502,9 @@ def _check(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, ...]:
 
 
 def check(result: BuildResult) -> tuple[Finding, ...]:
-    """Collect every finding about a built model: `build`'s, plus the KiCad, PDF and render checks.
+    """Output: collect every finding about a built model.
+
+    They are `build`'s, plus the KiCad, PDF and render checks.
 
     Findings come back ordered `ERROR`, `WARNING`, `INFO`, then by `(code, subjects, message)`,
     each message already run through `describe` so subjects read `file:line (key)`. The PDF and
@@ -504,8 +549,11 @@ class _ExportLedger:
     `export_names` its names, so the naming rule has one home.
     """
 
-    def __init__(self, model: Model, *, names_only: bool = False) -> None:
+    def __init__(
+        self, model: Model, *, names_only: bool = False, timer: Timer | None = None
+    ) -> None:
         self._model = model
+        self._timer = timer or Timer()
         self._names_only = names_only
         self.exports: dict[str, bytes] = {}
         self.names: dict[tuple[str, Id[Any] | None], str] = {}
@@ -520,13 +568,14 @@ class _ExportLedger:
         *,
         hint: str | None = None,
     ) -> None:
+        name = _placed(name)
         held = self._subjects_by_name.get(name)
         if held is not None and subject is not None and held != subject:
             raise _export_name_clash(name, held, subject, self._model, hint=hint)
         self.names[(kind, subject)] = name
         self._subjects_by_name[name] = subject
         if not self._names_only:
-            made = data()
+            made = self._timer.run(name, data)
             self.exports[name] = made.encode("utf-8") if isinstance(made, str) else made
 
 
@@ -666,30 +715,32 @@ def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all key
     names_only: bool = False,
     findings: tuple[Finding, ...] = (),
     changes: ListingDiff | None = None,
+    timer: Timer | None = None,
 ) -> _ExportLedger:
-    ledger = _ExportLedger(model, names_only=names_only)
+    ledger = _ExportLedger(model, names_only=names_only, timer=timer)
     _add_system_exports(ledger, model, unit, findings, changes)
     _add_item_exports(ledger, model, unit)
     _add_document_exports(ledger, model, svgs, unit)
     return ledger
 
 
-def _exports(
+def _exports(  # noqa: PLR0913 -- one keyword per input of the exports, as `_ledger`
     model: Model,
     svgs: dict[str, str],
     *,
     unit: Id[ModelUnit] | None = None,
     findings: tuple[Finding, ...] = (),
     changes: ListingDiff | None = None,
+    timer: Timer | None = None,
 ) -> dict[str, bytes]:
     """Every export of `model` by name: `unit` restricts them to that unit; no netlist."""
-    return _ledger(model, svgs, unit, findings=findings, changes=changes).exports
+    return _ledger(model, svgs, unit, findings=findings, changes=changes, timer=timer).exports
 
 
 def export_names(
     result: BuildResult, *, unit: object = None
 ) -> dict[tuple[str, Id[Any] | None], str]:
-    """The file name `write` gives each export of `result`, by `(kind, subject)`.
+    """Read: the path from out_dir that `write` gives each export of `result`, by `(kind, subject)`.
 
     A kind is `"bom"`, `"plc"`, `"wires"`, `"designations"`, `"overview"`, `"cables"` or `"cores"`
     (subject `None`), `"terminals"`, `"connectors"` or `"wago"` (the strip, board or rack id), or
@@ -710,21 +761,21 @@ def _remove_prefixed(out_dir: Path, name: str) -> None:
 
 
 def _clean_stale_exports(out_dir: Path, model: Model, unit: Id[ModelUnit] | None) -> None:
-    """Delete every top-level file of `out_dir` that a rewrite makes stale; never recurses.
+    """Delete the stale exports of `out_dir` and `out_dir/data`, no deeper.
 
-    `_STALE_EXPORT_PATTERNS` (old bare names, kept one release), then `-v` (any version) globs:
-    the set name, and for a system write each `UnitRelease.name` (unit PDFs sit in `out/all/`).
+    Old bare names, then `-v` globs of the set name and, for a system write, each release name.
+    The top level still gets the CSV and XML patterns: flat files of a write before 0197.
     """
-    for pattern in _STALE_EXPORT_PATTERNS:
-        for path in out_dir.glob(pattern):
-            if path.is_file():
-                path.unlink()
-    set_name = export_set_name(model, unit)
-    if set_name:
-        _remove_prefixed(out_dir, set_name)
+    set_names = {export_set_name(model, unit)} - {""}
     if unit is None:
-        for name in sorted({release.name for release in unit_releases(model).values()}):
-            _remove_prefixed(out_dir, name)
+        set_names |= {release.name for release in unit_releases(model).values()}
+    for folder in (out_dir, out_dir / _DATA_DIR):
+        for pattern in _STALE_EXPORT_PATTERNS:
+            for path in folder.glob(pattern):
+                if path.is_file():
+                    path.unlink()
+        for name in sorted(set_names):
+            _remove_prefixed(folder, name)
 
 
 def write(
@@ -735,7 +786,7 @@ def write(
     intermediates: Path | None = None,
     releases: Path | None = None,
 ) -> tuple[Path, ...]:
-    """Write a built model's exports into `out_dir` and return their paths, sorted.
+    """Output: write a built model's exports into `out_dir` and return their paths, sorted.
 
     Writes CSV reports, WAGO XML, overview HTML and one PDF per document; `unit=` restricts them to
     that unit's own set (no `overview.html`). Intermediates (SVGs, netlists, `.typ`
@@ -760,284 +811,30 @@ def write(
     errors = tuple(finding for finding in findings if finding.severity is Severity.ERROR)
     if errors:
         raise BuildErrors(errors)
+    timer = Timer(result.times.steps)
     exports = _exports(
         model,
         svgs,
         unit=resolved_unit,
         findings=raw,
         changes=_changes_since(model, releases, resolved_unit),
+        timer=timer,
     )
-    written = []
-    for name, data in exports.items():
-        path = out_dir / name
-        path.write_bytes(data)
-        written.append(path)
-    return tuple(sorted(written))
+    if intermediates is not None:
+        _put(intermediates / TIMES_FILE, timer.times().as_json().encode("utf-8"))
+    return _put_all(out_dir, exports)
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
-class _ReleaseTarget:
-    """A unit's, or the system's, release identity and target directory.
-
-    Bundles `_release_target`'s result so `release` and every `_l4_findings` check pass one value.
-    """
-
-    name: str
-    version: int
-    revision: int
-    path: Path
-
-
-def _release_target(model: Model, unit: Id[ModelUnit] | None, into: Path) -> _ReleaseTarget:
-    """A unit's, or the system's, release name, version, revision and target directory.
-
-    The one place `<into>/<name>/<version>.<revision>/` is computed; `release`, `_l4_findings` call.
-    """
-    if unit is not None:
-        release_record = unit_release(model, unit)
-        name = release_record.name
-        version, revision = release_record.version, release_record.revision
-    else:
-        project = next(iter(projects(model).values()))
-        name = project.number
-        version, revision = project.version, project.revision
-    path = into / name / revision_text(version, revision)
-    return _ReleaseTarget(name=name, version=version, revision=revision, path=path)
-
-
-def _revision_already_released_finding(
-    model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget
-) -> Finding | None:
-    """`REVISION_ALREADY_RELEASED`: `release.path` already holds a differing listing.
-
-    Applies to a unit and the system (`unit=None`, `subjects=()`): a released folder never changes.
-    """
-    stored_text = stored_listing(release.path)
-    new_listing = baseline.listing(model, unit)
-    if stored_text is None or baseline.matches(stored_text, new_listing):
-        return None
-    stored = baseline.loads(stored_text)
-    sections = ", ".join(baseline.differing_sections(stored, new_listing))
-    return Finding(
-        code="REVISION_ALREADY_RELEASED",
-        severity=Severity.ERROR,
-        subjects=(unit,) if unit is not None else (),
-        message=(
-            f"{release.name} {revision_text(release.version, release.revision)} is already "
-            f"released and differs in: {sections}"
-        ),
-    )
-
-
-def _baseline_differs_finding(
-    model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget, stored_text: str
-) -> Finding | None:
-    """`BASELINE_DIFFERS` when `stored_text` differs from `unit`'s fresh listing.
-
-    The one comparison `_nested_release_findings` and `verify` share; `stored_text` is not `None`.
-    The caller decides what no stored baseline means; this only answers whether it differs.
-    """
-    new_listing = baseline.listing(model, unit)
-    if baseline.matches(stored_text, new_listing):
-        return None
-    sections = sections_text(baseline.loads(stored_text), new_listing)
-    release_revision_text = revision_text(release.version, release.revision)
-    return Finding(
-        code="BASELINE_DIFFERS",
-        severity=Severity.ERROR,
-        subjects=(unit,) if unit is not None else (),
-        message=(
-            f"{release.name} {release_revision_text} differs from its released baseline in: "
-            f"{sections}"
-        ),
-    )
-
-
-def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> list[Finding]:
-    """`RELEASE_NESTED_UNRELEASED` and `BASELINE_DIFFERS`: the whole subtree, any depth."""
-    nested_ids: tuple[Id[ModelUnit], ...] = (
-        tuple(sorted(units(model)))
-        if unit is None
-        else tuple(sorted(unit_subtree(model, unit) - {unit}))
-    )
-    findings: list[Finding] = []
-    for nested in nested_ids:
-        nested_release = _release_target(model, nested, into)
-        nested_stored_text = stored_listing(nested_release.path)
-        if nested_stored_text is None:
-            nested_revision_text = revision_text(nested_release.version, nested_release.revision)
-            findings.append(
-                Finding(
-                    code="RELEASE_NESTED_UNRELEASED",
-                    severity=Severity.ERROR,
-                    subjects=(nested,),
-                    message=(
-                        f"{nested_release.name} {nested_revision_text}, nested in this "
-                        "release, has not been released"
-                    ),
-                )
-            )
-            continue
-        differs = _baseline_differs_finding(model, nested, nested_release, nested_stored_text)
-        if differs is not None:
-            findings.append(differs)
-    return findings
-
-
-def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
-    """The stored listing of the highest release ordered below this one, or `None`.
-
-    Previous = highest (version, revision) below the one released (`derive.release_order`), across
-    versions (they run in parallel). `INTERFACE_NOT_BUMPED` reads only that candidate.
-    """
-    this_order = release_order(release.version, release.revision)
-    this_folder = revision_text(release.version, release.revision)
-    best: Listing | None = None
-    best_order: tuple[int, int] | None = None
-    for sibling, sibling_text in listed_siblings(release.path.parent):
-        if sibling.name == this_folder:
-            continue
-        sibling_listing = baseline.loads(sibling_text)
-        sibling_order = release_order(sibling_listing.unit.version, sibling_listing.unit.revision)
-        if sibling_order >= this_order:
-            continue
-        if best_order is None or sibling_order > best_order:
-            best_order, best = sibling_order, sibling_listing
-    return best
-
-
-def _since_listing(release: _ReleaseTarget) -> Listing | None:
-    """The release stored at the model's own revision, else the previous one, or `None`."""
-    stored_text = stored_listing(release.path)
-    if stored_text is not None:
-        return baseline.loads(stored_text)
-    return _previous_release_listing(release)
-
-
-def _changes_since(
-    model: Model, releases: Path | None, unit: Id[ModelUnit] | None
-) -> ListingDiff | None:
-    """The system's `ListingDiff` from the release `_since_listing` finds, or `None`."""
-    if releases is None or unit is not None or not projects(model):
-        return None
-    since = _since_listing(_release_target(model, None, releases))
-    return None if since is None else baseline.diff(since, baseline.listing(model, None))
-
-
-def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
-    """The pin source: the highest released revision of the same version at or below this one.
-
-    Reads `<into>/<name>/*/baseline/numbering.json` (`listed_siblings`), else `None`; same version
-    only, unlike `_previous_release_listing`; a re-release may be its own pin source.
-    """
-    this_order = release_order(release.version, release.revision)
-    best: tuple[Path, NumberingPins] | None = None
-    best_order: tuple[int, int] | None = None
-    for sibling, listing_text in listed_siblings(into / release.name):
-        sibling_listing = baseline.loads(listing_text)
-        if not same_version(
-            (sibling_listing.unit.name, sibling_listing.unit.version),
-            (release.name, release.version),
-        ):
-            continue
-        sibling_order = release_order(sibling_listing.unit.version, sibling_listing.unit.revision)
-        if sibling_order > this_order:
-            continue
-        numbering_text = stored_numbering(sibling)
-        if numbering_text is None:
-            continue
-        if best_order is None or sibling_order > best_order:
-            best_order = sibling_order
-            best = (sibling, numbering_pins.loads(numbering_text))
-    return best
-
-
-def _interface_not_bumped_findings(
-    unit: Id[ModelUnit], release: _ReleaseTarget, new_listing: Listing
-) -> list[Finding]:
-    """`INTERFACE_NOT_BUMPED`: the previous release, same interface, different boundary.
-
-    Real units only: `_l4_findings` skips the system (interface `""`, boundary empty, so vacuous).
-    The previous release is `_previous_release_listing`'s ordered lookup, never a scan of siblings.
-    """
-    previous = _previous_release_listing(release)
-    if previous is None:
-        return []
-    if previous.unit.interface != new_listing.unit.interface or previous.boundary == (
-        new_listing.boundary
-    ):
-        return []
-    previous_revision = revision_text(previous.unit.version, previous.unit.revision)
-    return [
-        Finding(
-            code="INTERFACE_NOT_BUMPED",
-            severity=Severity.ERROR,
-            subjects=(unit,),
-            message=(
-                f"{release.name} {previous_revision} already has interface "
-                f"{previous.unit.interface!r} with a different boundary"
-            ),
-        )
-    ]
-
-
-def _release_no_history_finding(
-    model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget
-) -> Finding | None:
-    """`RELEASE_NO_HISTORY`: the revision being released has no `Revision` entry."""
-    release_id = unit_release(model, unit).id if unit is not None else None
-    if current_revision(model, release=release_id) is not None:
-        return None
-    return Finding(
-        code="RELEASE_NO_HISTORY",
-        severity=Severity.ERROR,
-        subjects=(unit,) if unit is not None else (),
-        message=(
-            f"{release.name} {revision_text(release.version, release.revision)} has no "
-            "Revision history entry"
-        ),
-    )
-
-
-def _unit_l4_findings(
-    model: Model, unit: Id[ModelUnit], release: _ReleaseTarget, into: Path
-) -> list[Finding]:
-    """The checks only a real unit has: `INTERFACE_NOT_BUMPED` and the pin findings."""
-    new_listing = baseline.listing(model, unit)
-    return [
-        *_interface_not_bumped_findings(unit, release, new_listing),
-        *_revision_pins.pin_findings(model, unit, _pin_source(release, into)),
-    ]
-
-
-def _l4_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> tuple[Finding, ...]:
-    """The release checks, reading only `<into>` and the model.
-
-    Subject is `unit` or the nested unit; the system has `subjects=()` and skips the unit-only
-    checks. Nested checks walk the whole subtree.
-    """
-    release = _release_target(model, unit, into)
-    findings: list[Finding] = []
-    already_released = _revision_already_released_finding(model, unit, release)
-    if already_released is not None:
-        findings.append(already_released)
-    findings.extend(_nested_release_findings(model, unit, into))
-    if unit is not None:
-        findings.extend(_unit_l4_findings(model, unit, release, into))
-    no_history = _release_no_history_finding(model, unit, release)
-    if no_history is not None:
-        findings.append(no_history)
-    current = (release.version, release.revision)
-    findings.extend(
-        history_findings(
-            model, unit, name=release.name, current=current, parent=release.path.parent
-        )
-    )
-    return tuple(findings)
+def _put_all(out_dir: Path, exports: dict[str, bytes]) -> tuple[Path, ...]:
+    """Write each export under `out_dir`; the paths, sorted."""
+    paths = [out_dir / name for name in exports]
+    for path, data in zip(paths, exports.values(), strict=True):
+        _put(path, data)
+    return tuple(sorted(paths))
 
 
 def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
-    """Release a unit, or the system, as a frozen baseline under `into`.
+    """Output: release a unit, or the system, as a frozen baseline under `into`.
 
     Writes `<into>/<name>/<version>.<revision>/`: the unit's exports as `write` makes them,
     `baseline/` (listing, model, manifest) and, after a first release, `changes.md` and
@@ -1090,7 +887,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     if previous_listing is not None:
         listing_diff = baseline.diff(previous_listing, new_listing)
         baseline_files["changes.md"] = changes_markdown(listing_diff).encode("utf-8")
-        baseline_files["changes.csv"] = changes_csv(listing_diff).encode("utf-8")
+        baseline_files[_placed("changes.csv")] = changes_csv(listing_diff).encode("utf-8")
     manifest_text = _manifest(
         model,
         resolved_unit,
@@ -1105,7 +902,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     try:
         (tmp_dir / "baseline").mkdir()
         for filename, data in (*exports.items(), *baseline_files.items()):
-            (tmp_dir / filename).write_bytes(data)
+            _put(tmp_dir / filename, data)
         (tmp_dir / "baseline" / "manifest.json").write_bytes(manifest_text.encode("utf-8"))
         tmp_dir.rename(target)
         built = True
@@ -1118,7 +915,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
 def diff(
     result: BuildResult, baselines: Path, *, unit: object = None, against: str | None = None
 ) -> str:
-    """Return the Markdown change list from a stored release to the model as it stands now.
+    """Output: return the Markdown change list from a stored release to the model as it stands now.
 
     By default `a` is the release stored at the model's current revision, else the previous
     released revision; `against="1.3"` names a sibling `<version>.<revision>` folder directly.
@@ -1148,7 +945,7 @@ def diff(
 
 
 def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]:
-    """Return one `BASELINE_DIFFERS` `ERROR` per unit instance, or the system, that drifted.
+    """Output: return one `BASELINE_DIFFERS` `ERROR` per unit instance, or the system, that drifted.
 
     Compares the rebuilt listing digest with the stored one under `baselines`, for every unit
     and for the system when the model holds a `Project`. The model digest is never compared.

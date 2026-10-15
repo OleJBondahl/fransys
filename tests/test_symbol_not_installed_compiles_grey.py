@@ -31,6 +31,7 @@ import importlib.util
 from pathlib import Path
 
 import typst
+from fransys_el import REF_TINTS
 from fransys_pdf import source
 from fransys_render import pages
 
@@ -240,7 +241,7 @@ def _document_and_page():
 
 def _compiled_schematic_page():
     m, doc, _page = _document_and_page()
-    svgs = pages(m)
+    svgs = pages(m, tints=REF_TINTS)
     assert len(svgs) == 1  # one layout page -> one rendered SVG
     text = source(m, doc.id, svgs)
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC
@@ -323,7 +324,7 @@ _DASH_TOLERANCE_MM = 3 * (25.4 / _DASH_PPI)  # +/-1 px (antialiasing) per edge, 
 
 def _compiled_schematic_page_at(ppi: float):
     m, doc, _page = _document_and_page()
-    svgs = pages(m)
+    svgs = pages(m, tints=REF_TINTS)
     assert len(svgs) == 1
     text = source(m, doc.id, svgs)
     assert text.count("#pagebreak()") == 1

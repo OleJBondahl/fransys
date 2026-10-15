@@ -43,28 +43,30 @@ def _control(d: Any) -> _Strips:
     x4, x5, x6 = (d.terminal_strip(name, "DEMO-TB-2.5") for name in ("X4", "X5", "X6"))
     plus, minus = x4.run("24V", bridged=True), x5.run("0V", bridged=True)
     ctrl = d.device("U2", "DEMO-CTRL-20P")
-    d.wire(plus, ctrl.supply["+"], wire=("RD", 0.75))
-    d.wire(minus, ctrl.supply["-"], wire=("BK", 0.75))
+    d.detail.wire(plus, ctrl.supply["+"], wire=("RD", 0.75))
+    d.detail.wire(minus, ctrl.supply["-"], wire=("BK", 0.75))
     with d.function("DRV", "Drives"):
         for n in range(1, _SIGNALS + 1):
-            d.wire(getattr(ctrl, f"s{n}")[f"SIGNAL_CHANNEL_{n:02d}"], x6[n], wire=("WH", 0.75))
+            d.detail.wire(
+                getattr(ctrl, f"s{n}")[f"SIGNAL_CHANNEL_{n:02d}"], x6[n], wire=("WH", 0.75)
+            )
     with d.function("CH", "Chains"):
         for n in range(1, _CHAINS + 1):
             coil = d.device(f"KC{n}", "DEMO-CTR-3P-24").coil
             first, second = (d.device(f"B{n}{m}", "DEMO-PB-NC").sw for m in (1, 2))
-            d.wire(plus, first["A"], wire=("RD", 0.75))
-            d.wire(first["B"], second["A"], wire=("RD", 0.75))
-            d.wire(second["B"], coil["A1"], wire=("RD", 0.75))
-            d.wire(coil["A2"], minus, wire=("BK", 0.75))
+            d.detail.wire(plus, first["A"], wire=("RD", 0.75))
+            d.detail.wire(first["B"], second["A"], wire=("RD", 0.75))
+            d.detail.wire(second["B"], coil["A1"], wire=("RD", 0.75))
+            d.detail.wire(coil["A2"], minus, wire=("BK", 0.75))
             d.layout.chain(first, second, coil)
     for n in range(1, _GROUPS + 1):
         with d.function(f"G{n}", f"Group {n}"):
             relay = d.device(f"K{n}", "DEMO-RLY-2CO-24")
             pin = getattr(ctrl, f"s{n}")[f"SIGNAL_CHANNEL_{n:02d}"]
-            d.wire(pin, relay.coil["A1"], wire=("RD", 0.75))
-            d.wire(relay.coil["A2"], minus, wire=("BK", 0.75))
-            d.wire(plus, relay.co_1["11"], wire=("RD", 0.75))
-            d.wire(relay.co_1["14"], x6[n + 20], wire=("RD", 0.75))
+            d.detail.wire(pin, relay.coil["A1"], wire=("RD", 0.75))
+            d.detail.wire(relay.coil["A2"], minus, wire=("BK", 0.75))
+            d.detail.wire(plus, relay.co_1["11"], wire=("RD", 0.75))
+            d.detail.wire(relay.co_1["14"], x6[n + 20], wire=("RD", 0.75))
     return _Strips(x4)
 
 

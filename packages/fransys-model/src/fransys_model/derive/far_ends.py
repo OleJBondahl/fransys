@@ -12,7 +12,7 @@ lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Port, Unit
 
 from .designation import end_outside_nested_unit
-from .drawing_text import port_designation_in
+from .location_text import port_designation_in
 from .lookups import item_of_port
 from .order import natural_key
 

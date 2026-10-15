@@ -9,9 +9,11 @@ blocks (`page_title_groups`); the designations its item labels print, each once,
 lazy from collections.abc import Mapping
 
 from fransys_model.layout import (
+    ConnectorBox,
     DrawingSet,
     Label,
     LabelKind,
+    Outline,
     Page,
     PageTitle,
     SymbolPlacement,
@@ -19,11 +21,13 @@ from fransys_model.layout import (
 )
 from fransys_model.vocab import aspect_nodes, functions, items
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab import AspectNode, Function, Item
+lazy from fransys_model.vocab import AspectNode, Function, Item, Unit
 
 from .designation import terminal_of
 from .drawing_text import label_text, page_title_groups, strip_tag_text, unit_label
+from .lookups import black_box_unit, unit_chain
 from .order import drawn_on_page
+from .unit_nodes import own_nodes_by_unit
 
 _JOIN = ", "
 
@@ -42,6 +46,20 @@ def _item_chains(model: Model, page: Page) -> list[frozenset[Id[Item]]]:
     return chains
 
 
+def _draws_unit(model: Model, page: Page, unit: Id[Unit]) -> bool:
+    """Whether `page`, of another set, draws `unit`: its outline, a symbol or a connector box."""
+    if layout_of(model, DrawingSet)[page.drawing_set].unit == unit:
+        return False
+    if any(outline.unit == unit for outline in drawn_on_page(model, Outline, page)):
+        return True
+    drawn = (
+        *drawn_on_page(model, SymbolPlacement, page),
+        *drawn_on_page(model, ConnectorBox, page),
+    )
+    owners = (items(model)[functions(model)[one.function].item].unit for one in drawn)
+    return any(owner is not None and unit in unit_chain(model, owner) for owner in owners)
+
+
 def _drawn_rank(
     hint: PageTitle,
     blocks: Mapping[Id[AspectNode], int],
@@ -58,7 +76,7 @@ def _drawn_rank(
 
 
 def _hint_entries(model: Model, page: Page) -> tuple[str, ...]:
-    """The texts of the `PageTitle` hints whose thing the page draws: blocks, then drawn order."""
+    """The texts of the `PageTitle` hints whose thing the page draws: blocks, drawn order, units."""
     hints = layout_of(model, PageTitle)
     if not hints:
         return ()
@@ -66,12 +84,17 @@ def _hint_entries(model: Model, page: Page) -> tuple[str, ...]:
     placements = drawn_on_page(model, SymbolPlacement, page)
     drawn = [placement.function for placement in placements]
     chains = _item_chains(model, page)
-    ranked = sorted(
+    ranked = [
         ((*rank, hint.key), hint.text)
         for hint in hints.values()
-        if (rank := _drawn_rank(hint, blocks, drawn, chains)) is not None
-    )
-    return tuple(dict.fromkeys(text for _, text in ranked))
+        if hint.unit is None and (rank := _drawn_rank(hint, blocks, drawn, chains)) is not None
+    ]
+    ranked += [
+        ((2, 0, hint.key), hint.text)
+        for hint in hints.values()
+        if hint.unit is not None and _draws_unit(model, page, hint.unit)
+    ]
+    return tuple(dict.fromkeys(text for _, text in sorted(ranked)))
 
 
 def _designation_entries(model: Model, page: Page) -> tuple[str, ...]:
@@ -93,6 +116,32 @@ def _entry_text(model: Model, label: Label) -> str:
     return label_text(model, label)
 
 
+def _nested_unit(model: Model, set_unit: Id[Unit], node: Id[AspectNode]) -> Id[Unit] | None:
+    """The unit directly in `set_unit` whose nodes hold `node`; `None` when `set_unit` holds it."""
+    owners = [
+        unit
+        for unit, own in own_nodes_by_unit(model).items()
+        if node in own and unit != set_unit and set_unit in unit_chain(model, unit)
+    ]
+    if not owners:
+        return None
+    return black_box_unit(model, max(owners, key=lambda one: len(unit_chain(model, one))), set_unit)
+
+
+def _block_entries(model: Model, page: Page) -> tuple[str, ...]:
+    """The page's block texts; a nested unit's groups print its title once (model-0256)."""
+    nodes = aspect_nodes(model)
+    set_unit = layout_of(model, DrawingSet)[page.drawing_set].unit
+    texts: list[str] = []
+    for group in page_title_groups(model, page):
+        nested = None if set_unit is None else _nested_unit(model, set_unit, group.group)
+        if nested is None:
+            texts.append(nodes[group.group].description)
+        elif (label := unit_label(model, nested)) not in texts:
+            texts.append(label)
+    return tuple(texts)
+
+
 def page_title_entries(model: Model, page: Page) -> tuple[str, ...]:
     """The title's entries (PT2): hint texts, else block texts, else printed designations.
 
@@ -101,8 +150,7 @@ def page_title_entries(model: Model, page: Page) -> tuple[str, ...]:
     """
     if hinted := _hint_entries(model, page):
         return hinted
-    nodes = aspect_nodes(model)
-    blocks = tuple(nodes[group.group].description for group in page_title_groups(model, page))
+    blocks = _block_entries(model, page)
     if blocks or layout_of(model, DrawingSet)[page.drawing_set].unit is not None:
         return blocks
     return _designation_entries(model, page)

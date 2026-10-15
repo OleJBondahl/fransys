@@ -21,8 +21,8 @@ def _loom(d: fr.Design, tag: str, *, wires: bool = True) -> Any:
         near = d.device("J1", _PLUG, parent=loom, place="L0")
         far = d.device("J2", _PLUG, parent=loom, place="L0")
         if wires:
-            d.wire(near[1], far[1], wire=(BU, 0.5), label="SIG")
-            d.wire(near[2], far[2], wire=(BK, 1.5))
+            d.detail.wire(near[1], far[1], wire=(BU, 0.5), label="SIG")
+            d.detail.wire(near[2], far[2], wire=(BK, 1.5))
 
 
 @pytest.fixture(scope="module")
@@ -35,7 +35,7 @@ def model() -> fr.Model:
     with d.function("X", "Loose"):
         a = d.device("A1", _PLUG, place="L0")
         b = d.device("A2", _PLUG, place="L0")
-    d.wire(a[1], b[1], wire=(BU, 0.5))
+    d.detail.wire(a[1], b[1], wire=(BU, 0.5))
     return fr.build(d).model
 
 

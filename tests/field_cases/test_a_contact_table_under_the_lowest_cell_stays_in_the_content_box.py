@@ -152,7 +152,7 @@ def _link(u: Any, name: str, ends: tuple[Any, Any], n: int, plug: str) -> None:
     y = u.device("J2", plug, parent=loom, name=name + "b")
     u.mate(y, ends[1])
     for k in range(1, n + 1):
-        u.wire(x[str(k)], y[str(k)], wire=WIRE)
+        u.detail.wire(x[str(k)], y[str(k)], wire=WIRE)
 
 
 @fr.unit("fld-top", revision=1, interface_version=1, date="2026-10-08", text="t", by="X")
@@ -176,7 +176,7 @@ def _top(u: Any) -> _Top:
             lead = u.device(f"J{i + 2}", "FLD-PLG-4", parent=loom, name=f"lp{i}")
             u.mate(lead, housing)
             for pin in range(1, 5):
-                u.wire(plug[str(4 * i + pin)], lead[str(pin)], wire=WIRE)
+                u.detail.wire(plug[str(4 * i + pin)], lead[str(pin)], wire=WIRE)
     with u.function("OTH", "Other"):
         _link(u, "T1", (board.j3, u.device("H1", "FLD-HDR-14")), 14, "FLD-PLG-14")
         _link(u, "U1", (board.j4, u.device("G1", "FLD-HDR-4")), 4, "FLD-PLG-4")
@@ -184,7 +184,7 @@ def _top(u: Any) -> _Top:
         for i, q in contactors:
             far = u.device(f"X{i + 1}", "FLD-HDR-2")
             for k in "123":
-                u.wire(far["1"], getattr(q, f"main{k}")[f"A{k}"], wire=WIRE)
+                u.detail.wire(far["1"], getattr(q, f"main{k}")[f"A{k}"], wire=WIRE)
     return _Top()
 
 
@@ -288,13 +288,15 @@ def _lug_top(contactors: int, *, low: bool) -> Any:
             board = u.add(_lug_board(low=low), "A1")
             lug = u.device("P1", "FLD-PLG-1", name="lugin")
             u.mate(lug, board.lug_in)
-            u.wire(lug["1"], fuse["2"], wire=("RD", 6))
+            u.detail.wire(lug["1"], fuse["2"], wire=("RD", 6))
             out = u.device("P2", "FLD-PLG-1", name="lugout")
             u.mate(out, board.lug_out)
             if low:
                 low_plug = u.device("P3", "FLD-PLG-1", name="luglow")
                 u.mate(low_plug, board.lug_low)
-                u.wire(low_plug["1"], u.device("F2", "DEMO-FUSE-HOLDER-PCB")["1"], wire=("RD", 6))
+                u.detail.wire(
+                    low_plug["1"], u.device("F2", "DEMO-FUSE-HOLDER-PCB")["1"], wire=("RD", 6)
+                )
             loom = u.harness("W1")
             plug = u.device("J1", "FLD-PLG-14", parent=loom, name="p1")
             u.mate(plug, board.j7)
@@ -316,7 +318,7 @@ def _lug_top(contactors: int, *, low: bool) -> Any:
                 lead = u.device(f"J{i + 2}", "FLD-PLG-4", parent=loom, name=f"lp{i}")
                 u.mate(lead, housing)
                 for pin in range(1, 5):
-                    u.wire(plug[str(4 * i + pin)], lead[str(pin)], wire=WIRE)
+                    u.detail.wire(plug[str(4 * i + pin)], lead[str(pin)], wire=WIRE)
         with u.function("OTH", "Other"):
             _link(u, "T1", (board.j3, u.device("H1", "FLD-HDR-14")), 14, "FLD-PLG-14")
             _link(u, "U1", (board.j4, u.device("G1", "FLD-HDR-4")), 4, "FLD-PLG-4")
@@ -324,10 +326,10 @@ def _lug_top(contactors: int, *, low: bool) -> Any:
             for i, q in qs:
                 far = u.device(f"X{i + 1}", "FLD-HDR-2")
                 for k in "123":
-                    u.wire(far["1"], getattr(q, f"main{k}")[f"A{k}"], wire=WIRE)
+                    u.detail.wire(far["1"], getattr(q, f"main{k}")[f"A{k}"], wire=WIRE)
         with u.function("OUT", "Output"):
             boundary = u.device("X9", "FLD-HDR-2", interface=True)
-            u.wire(out["1"], boundary["1"], wire=("RD", 6))
+            u.detail.wire(out["1"], boundary["1"], wire=("RD", 6))
         return _Top()
 
     return build

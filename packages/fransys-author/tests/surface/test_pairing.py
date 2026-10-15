@@ -104,14 +104,18 @@ def test_ac_marks_pair_in_phase_order_whatever_the_order_given(lib: Draft) -> No
     got = pair([l3, l1, l2], ends_of(facts, motor).line)
     assert _names(got) == [("2", "U"), ("4", "V"), ("6", "W")]
     n = End(l3.port, ConductorMark.N)
-    with pytest.raises(AuthorError, match=r"conductors L1, L2, N into L1, L2, L3"):
+    with pytest.raises(
+        AuthorError, match=r"carries L1, L2, N where the load takes L1, L2, L3: .*d\.detail\.wire"
+    ):
         pair([l1, l2, n], ends_of(facts, motor).line)
 
 
-def test_a_pole_with_a_link_and_no_side_fact_says_name_its_pins(lib: Draft) -> None:
+def test_a_pole_with_a_link_and_no_side_fact_names_the_part_key_and_the_call(lib: Draft) -> None:
     d = design(lib, place="C1")
     facts, q1 = _fn(d, "Q1", "TEST-MCB-NOSIDE", "main")
-    with pytest.raises(AuthorError, match=r"'main' pole 1/2 has no line side: name its pins"):
+    with pytest.raises(
+        AuthorError, match=r"'main' pole 1/2 has no line side: .*`side`.*d\.detail\.wire"
+    ):
         poles(facts, q1)
 
 
@@ -119,7 +123,10 @@ def test_a_count_mismatch_names_both_counts(lib: Draft) -> None:
     d = design(lib, place="C1")
     facts, q1 = _fn(d, "Q1", "TEST-MCB-3P", "main")
     _, coil = _fn(d, "K1", "TEST-KM-3P", "coil")
-    with pytest.raises(AuthorError, match=r"^3 poles into 1: name the pins$"):
+    with pytest.raises(
+        AuthorError,
+        match=r"3 poles \(2, 4, 6\) but the load takes 1 pole \(.*\): .*d\.detail\.wire",
+    ):
         pair(ends_of(facts, q1).load, ends_of(facts, coil).line)
     assert len(pair(ends_of(facts, coil).load, ends_of(facts, coil).line)) == 1
 

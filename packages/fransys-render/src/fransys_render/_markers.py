@@ -31,9 +31,11 @@ from fransys_model.vocab import functions, ports
 
 from ._constants import MARKER_ARROW_DEPTH_G
 from ._numbers import format_decimal, point_mm, printed_font_mm
+from ._ref_fill import ref_fill
 from ._symbol_geometry import oriented_symbol, to_grid
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from decimal import Decimal
 
     from fransys_model.kernel import Id, Model
@@ -184,12 +186,15 @@ def _stub_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> st
     )
 
 
-def _box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> str:
-    """The marker's box outline: one closed `<polyline>`, the arrow shape of `arrow_polygon`."""
+def _box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction, fill: str = "") -> str:
+    """The marker's box outline: one closed `<polyline>`, the arrow shape of `arrow_polygon`.
+
+    `fill` is the net's tint as an inline style, empty for none (render-0013).
+    """
     vertices = arrow_polygon(marker, facing)
     closed = (*vertices, vertices[0])
     points = " ".join(point_mm(sheet, x, y) for x, y in closed)
-    return f'<polyline class="marker" points="{points}"/>'
+    return f'<polyline class="marker" points="{points}"{fill}/>'
 
 
 def _shared_box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction) -> str:
@@ -197,10 +202,10 @@ def _shared_box_glyph(sheet: SheetFormat, marker: LinkMarker, facing: Direction)
     x, y = box_origin(marker, facing)
     w, h = marker.width, marker.height
     ring = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
-    end_x, end_y = stub_end(marker, facing)
-    if facing.dy and not x <= end_x <= x + w:
-        start = ring.index((x if end_x < x else x + w, end_y))
-        corners = [(end_x, end_y), *ring[start:], *ring[:start], ring[start]]
+    corner = rail_corner(marker, facing)
+    if corner is not None:
+        start = ring.index(corner)
+        corners = [stub_end(marker, facing), *ring[start:], *ring[:start], ring[start]]
     else:
         corners = [*ring, ring[0]]
     points = " ".join(point_mm(sheet, cx, cy) for cx, cy in corners)
@@ -260,10 +265,37 @@ def _text_element(  # noqa: PLR0913 -- the full render context (sheet, profile, 
     return "".join(glyphs)
 
 
-def _turned_glyphs(
-    sheet: SheetFormat, profile: Profile, model: Model, marker: LinkMarker, via: tuple[int, int]
+def _turned_glyphs(  # noqa: PLR0913, PLR0917 -- the render context, the marker, its via point and the tints
+    sheet: SheetFormat,
+    profile: Profile,
+    model: Model,
+    marker: LinkMarker,
+    via: tuple[int, int],
+    tints: Sequence[str],
 ) -> str:
     """A branch from the record's `via` on the wire, E or W, then a vertical marker."""
+    at_via, side, at_end, up = turned_parts(marker, via)
+    return (
+        _stub_glyph(sheet, at_via, side)
+        + _stub_glyph(sheet, at_end, up)
+        + _box_glyph(sheet, at_end, up, ref_fill(model, marker, tints))
+        + _text_element(sheet, profile, model, marker, up, at=at_end)
+    )
+
+
+def rail_corner(marker: LinkMarker, facing: Direction) -> tuple[int, int] | None:
+    """The shared box's corner its rail runs to from the stub end, or `None` when it has none."""
+    x, _ = box_origin(marker, facing)
+    end_x, end_y = stub_end(marker, facing)
+    if facing.dy and not x <= end_x <= x + marker.width:
+        return (x if end_x < x else x + marker.width, end_y)
+    return None
+
+
+def turned_parts(
+    marker: LinkMarker, via: tuple[int, int]
+) -> tuple[LinkMarker, Direction, LinkMarker, Direction]:
+    """A turned marker as two plain ones: the branch at `via`, the box end, each with its way."""
     centre = marker.box_x + marker.width // 2 if marker.box_x is not None else via[0]
     side = Direction.E if centre > via[0] else Direction.W
     up = Direction.N if via[1] < marker.y else Direction.S
@@ -285,15 +317,10 @@ def _turned_glyphs(
         **{**base, "stub_extra": abs(centre - via[0]) - WIRING_GRID},
     )
     at_end = dataclasses.replace(marker, x=centre, y=via[1], **base)
-    return (
-        _stub_glyph(sheet, at_via, side)
-        + _stub_glyph(sheet, at_end, up)
-        + _box_glyph(sheet, at_end, up)
-        + _text_element(sheet, profile, model, marker, up, at=at_end)
-    )
+    return at_via, side, at_end, up
 
 
-def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
+def ends_a_line(model: Model, marker: LinkMarker) -> bool:
     """Whether `marker` is the stub a harness line ends in: its carrier's line runs on it.
 
     A per-core stub of a line's carrier stands at its port, off the line, and keeps its stub.
@@ -309,7 +336,7 @@ def _ends_a_line(model: Model, marker: LinkMarker) -> bool:
     )
 
 
-def markers_group(model: Model, page: Page) -> str:
+def markers_group(model: Model, page: Page, tints: Sequence[str] = ()) -> str:
     """Every marker on `page` as one stub + arrow-box + text, in id order."""
     sheet = sheet_format_of(model, page.sheet_format)
     profile = profile_of_page(model, page)
@@ -319,11 +346,13 @@ def markers_group(model: Model, page: Page) -> str:
         if marker.via_x is not None and marker.via_y is not None:  # Leaves its port sideways
             if marker.lead:  # a mate of a shared box draws nothing of its own
                 parts.append(
-                    _turned_glyphs(sheet, profile, model, marker, (marker.via_x, marker.via_y))
+                    _turned_glyphs(
+                        sheet, profile, model, marker, (marker.via_x, marker.via_y), tints
+                    )
                 )
             continue
         facing = marker_facing(model, marker)
-        line_stub = _ends_a_line(model, marker)
+        line_stub = ends_a_line(model, marker)
         stub = (marker.x, marker.y, marker.stub_extra)
         if stub not in stubs and not line_stub:  # a line runs on to its stub's box itself
             stubs.add(stub)
@@ -335,6 +364,6 @@ def markers_group(model: Model, page: Page) -> str:
                 parts.append(_shared_box_glyph(sheet, marker, facing))
                 parts.append(_text_element(sheet, profile, model, marker, facing))
             continue
-        parts.append(_box_glyph(sheet, marker, facing))
+        parts.append(_box_glyph(sheet, marker, facing, ref_fill(model, marker, tints)))
         parts.append(_text_element(sheet, profile, model, marker, facing))
     return "".join(parts)

@@ -44,13 +44,13 @@ def _circuit(d: fr.Design) -> _Open:
         make = field_a.run(f"RUN{pole}", 1)[1]
         brk = field_b.run(f"RUN{pole}", 1)[1]
         fn = getattr(relay, f"co_{pole}")
-        d.wire(brk, fn[f"{pole}2"], wire=(BK, 1.5))  # break throw
-        d.wire(make, fn[f"{pole}4"], wire=(BK, 1.5))  # make throw
+        d.detail.wire(brk, fn[f"{pole}2"], wire=(BK, 1.5))  # break throw
+        d.detail.wire(make, fn[f"{pole}4"], wire=(BK, 1.5))  # make throw
     # layout-0218: an unwired coil is drawn nowhere; its feed from a cabinet strip keeps K1's
     # coil, and so its contact table and the contacts' cross-references, on the page
     feed = d.terminal_strip("X03", _TERMINAL, place="CAB")
-    d.wire(feed[1], relay.coil["A1"], wire=(BK, 0.75))
-    d.wire(feed[2], relay.coil["A2"], wire=(BK, 0.75))
+    d.detail.wire(feed[1], relay.coil["A1"], wire=(BK, 0.75))
+    d.detail.wire(feed[2], relay.coil["A2"], wire=(BK, 0.75))
     return _Open()
 
 

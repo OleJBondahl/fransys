@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 import fransys as fr
 import fransys_author
 import fransys_parts
-import pytest
 from _model_build_cover import layout_trigger_document
 
 from fransys_model.kernel import Severity
@@ -120,24 +119,29 @@ def test_a_nested_boundary_terminal_with_a_replica_builds_with_keys_of_their_own
 
 
 def test_the_black_box_in_the_parent_stands_in_the_terminals_home_group() -> None:
-    """The black box in `outer`'s set takes GA, the terminal's own group, and not GB, the group of
-    the relay beside which the terminal is drawn again in `inner`'s set."""
+    """Model-0220: the black box in `outer`'s set is a copy at K9's pin, so it takes K9's page,
+    which holds no group, and not GA, the terminal's home group, nor GB, the group of K1."""
     # UNDO: stages/replicate.py, `replicate_boundaries`: `for column in homes for
     #     cell` -> `for column in columns for cell` (the black box takes the replica's group)
     model = _build().model
     pages, nodes = layout_of(model, Page), aspect_nodes(model)
-    groups = {
-        unit: {nodes[g.group].key[-1] for g in pages[p.page].groups}
-        for unit, p in _placements(model)
-        if unit is not None and unit[-2:] == ("outer", "unit")
-    }
-    assert groups == {("outer", "unit"): {"GA"}}
+    outer = [(u, p) for u, p in _placements(model) if u is not None and u[-2:] == ("outer", "unit")]
+    fn = functions(model)
+    (k9_coil,) = (
+        p
+        for p in layout_of(model, SymbolPlacement).values()
+        if "K9" in fn[p.function].key and fn[p.function].key[-1] == "coil"
+    )
+    assert [(u, p.page, "at" in p.key) for u, p in outer] == [
+        (("outer", "unit"), k9_coil.page, True)
+    ]
+    groups = {nodes[g.group].key[-1] for g in pages[outer[0][1].page].groups}
+    assert groups == set()
 
 
-@pytest.mark.xfail(strict=True, reason="layout-0216: a terminal is drawn, not referenced")
 def test_the_parents_wire_to_the_black_box_terminal_is_a_route_with_no_marker() -> None:
     """In `outer`'s set the conductor K9:A1 - X1 external port is one route on one page, and no
-    link marker stands at either of its ports there (today a same-page reference pair)."""
+    link marker stands at either of its ports there (a same-page pair before model-0220)."""
     model = _build().model
     sets, pages = layout_of(model, DrawingSet), layout_of(model, Page)
     outer = {uid for uid, u in units(model).items() if u.key[-2:] == ("outer", "unit")}

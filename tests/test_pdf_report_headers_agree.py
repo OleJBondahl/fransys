@@ -8,6 +8,7 @@ copies cannot drift; this file pins that neither module grows its own again, by 
 
 import pytest
 from fransys_pdf import _contents as pdf_contents
+from fransys_pdf import _lists, _lists_cells, _lists_terminal
 from fransys_pdf import _lists as pdf
 from fransys_reports import csv as reports
 
@@ -42,9 +43,17 @@ def _is_derive_object(module: object, name: str) -> bool:
     return getattr(module, name) is getattr(derive, name)
 
 
+def _pdf_object(name: str) -> object:
+    """The pdf list module that holds `name`: the list helpers are split over three modules."""
+    for module in (_lists, _lists_cells, _lists_terminal):
+        if hasattr(module, name):
+            return getattr(module, name)
+    raise AttributeError(name)
+
+
 @pytest.mark.parametrize("name", _PDF_NAMES)
 def test_pdf_lists_use_the_derive_object(name):
-    assert _is_derive_object(pdf, name)
+    assert _pdf_object(name) is getattr(derive, name)
 
 
 @pytest.mark.parametrize("name", _REPORTS_NAMES)
@@ -66,8 +75,8 @@ def test_a_module_holding_its_own_copy_fails_the_identity_check(monkeypatch):
         monkeypatch.setattr(module, "BOM_COLUMNS", copy)
         assert copy == derive.BOM_COLUMNS
         assert not _is_derive_object(module, "BOM_COLUMNS")
-    monkeypatch.setattr(pdf, "TERMINAL_LABELS", dict(derive.TERMINAL_LABELS))
-    assert not _is_derive_object(pdf, "TERMINAL_LABELS")
+    monkeypatch.setattr(_lists_terminal, "TERMINAL_LABELS", dict(derive.TERMINAL_LABELS))
+    assert not _is_derive_object(_lists_terminal, "TERMINAL_LABELS")
     copy = (*derive.CONTENTS_COLUMNS,)
     monkeypatch.setattr(pdf_contents, "CONTENTS_COLUMNS", copy)
     assert copy == derive.CONTENTS_COLUMNS

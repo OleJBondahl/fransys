@@ -30,7 +30,7 @@ class _Unit(NamedTuple):
 def _cab(c: Any) -> _Unit:
     pe1 = c.device("PE1", "DEMO-PEBAR-20").pe
     for name in ("M1", "M2", "M3"):
-        c.wire(c.device(name, "DEMO-MOTOR-4KW").motor["PE"], pe1, wire=(GNYE, 2.5))
+        c.detail.wire(c.device(name, "DEMO-MOTOR-4KW").motor["PE"], pe1, wire=(GNYE, 2.5))
     return _Unit()
 
 

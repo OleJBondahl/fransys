@@ -35,7 +35,7 @@ def _build(tmp_path: Path, **profile: Any) -> list[Any]:
         d.layout.profile(**profile)
     lamp = d.device("P1", "DEMO-LAMP-24")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
-    d.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
     (tmp_path / "c.md").write_text("# Cabinet\n", encoding="utf-8")
     document = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=tmp_path / "c.md")
     return [f for f in fr.build(d, document).findings if f.code == _CODE]
@@ -61,7 +61,7 @@ def test_a_unit_profile_and_the_top_profile_each_get_one(tmp_path: Path) -> None
         u.layout.profile(text_height_mm=Decimal(1))
         lamp = u.device("P1", "DEMO-LAMP-24")
         x1 = u.terminal_strip("X1", "DEMO-TB-2.5")
-        u.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
+        u.detail.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
         return _Io(lamp)
 
     d = fr.design("demo_parts", place="C1")
@@ -70,7 +70,7 @@ def test_a_unit_profile_and_the_top_profile_each_get_one(tmp_path: Path) -> None
     d.add(box, "U1")
     lamp = d.device("P2", "DEMO-LAMP-24", place="C1")
     x1 = d.terminal_strip("X2", "DEMO-TB-2.5", place="C1")
-    d.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(x1.run("SIG", 1)[1], lamp.lamp["1"], wire=("WH", 0.75))
     (tmp_path / "c.md").write_text("# Cabinet\n", encoding="utf-8")
     preset = fr.DocumentPreset.CABINET_SCHEMATIC
     (tmp_path / "own.md").write_text("# Box\n", encoding="utf-8")

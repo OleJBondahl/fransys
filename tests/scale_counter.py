@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import fransys_render
+from fransys_el import REF_TINTS
 from scale_units_fixture import build_scale
 
 from fransys_layout.stages import pagerun
@@ -180,9 +181,11 @@ def count_build(n: int, *, warm: tuple[int, ...] = ()) -> BuildCounts:
 def count_render(n: int, *, warm: tuple[int, ...] = ()) -> BuildCounts:
     """Count `fransys_render.pages` alone on `build_scale(n)`; the build is not monitored."""
     for size in (2, *warm):
-        fransys_render.pages(build_scale(size, with_document=True).model)
+        fransys_render.pages(build_scale(size, with_document=True).model, tints=REF_TINTS)
     model = build_scale(n, with_document=True).model
-    return _counts(_monitored(_RENDER_MARK, None, lambda: fransys_render.pages(model)))
+    return _counts(
+        _monitored(_RENDER_MARK, None, lambda: fransys_render.pages(model, tints=REF_TINTS))
+    )
 
 
 def _child(counter: str, n: int, warm: tuple[int, ...]) -> BuildCounts:

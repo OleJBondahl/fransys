@@ -62,7 +62,7 @@ def _box_marking_order() -> list[str]:
     d = fr.Design(draft, place="CAB")
     cab = d.location("CAB", "Cabinet")
     relay = d.device("K1", "FLD-ESTOP-RELAY")
-    d.wire(relay.coil["A1"], d.device("P1", "DEMO-LAMP-24")[1], wire=(BU, 0.5))
+    d.detail.wire(relay.coil["A1"], d.device("P1", "DEMO-LAMP-24")[1], wire=(BU, 0.5))
     (root / "cover.md").write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=root / "cover.md")
     model = fr.build(d, doc).model

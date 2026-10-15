@@ -47,7 +47,7 @@ def test_the_net_kinds_are_the_model_classes() -> None:
 def test_net_defaults_to_control(parts: Draft) -> None:
     d = design(parts, place="C1")
     k1 = d.device("K1", "TEST-RLY-2CO")
-    d.net("S1", k1.coil["A1"], k1.coil["A2"])
+    d.detail.net("S1", k1.coil["A1"], k1.coil["A2"])
     nets: list[Any] = [r for r in d.draft().records() if type(r).__name__ == "Net"]
     (net,) = nets
     assert net.net_class is NetClass.CONTROL

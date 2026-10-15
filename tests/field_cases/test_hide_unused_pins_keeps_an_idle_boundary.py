@@ -39,7 +39,7 @@ def _box(*, hide: bool) -> Any:
         lamp = u.device("P1", "DEMO-LAMP-24")
         x1 = u.terminal_strip("X1", "DEMO-TB-2.5", interface=True)
         sig = x1.run("SIG", 2)
-        u.wire(sig[1], lamp.lamp["1"], wire=("WH", 0.75))
+        u.detail.wire(sig[1], lamp.lamp["1"], wire=("WH", 0.75))
         return _Io(sig[1], sig[2])
 
     return box

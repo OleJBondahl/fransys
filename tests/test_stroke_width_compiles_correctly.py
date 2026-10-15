@@ -22,6 +22,7 @@ import importlib.util
 from pathlib import Path
 
 import typst
+from fransys_el import REF_TINTS
 from fransys_pdf import font_dir, source
 from fransys_render import pages
 
@@ -229,7 +230,7 @@ def _model_and_doc():
 
 def _compiled_schematic_page():
     model, doc = _model_and_doc()
-    svgs = pages(model)
+    svgs = pages(model, tints=REF_TINTS)
     assert len(svgs) == 1  # one layout page -> one rendered SVG
     assert 'class="wire"' in next(iter(svgs.values()))  # the wire is really there to measure
     text = source(model, doc.id, svgs)

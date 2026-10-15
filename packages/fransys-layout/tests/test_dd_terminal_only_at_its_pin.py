@@ -26,10 +26,10 @@ def _placed() -> dict[str, list[tuple[int, int, int]]]:
     with d.function("GB", "Block B") as block_b:
         switch = d.device("S1", "DEMO-SWITCH-2P")
         into_a, beside = strip[1], strip[2]
-        d.wire(switch.sw["B"], beside.outer, wire=(BU, 0.5))
+        d.detail.wire(switch.sw["B"], beside.outer, wire=(BU, 0.5))
     with d.function("GA", "Block A") as block_a:
         relay = d.device("K1", "DEMO-RLY-2CO-24")
-        d.wire(into_a, relay.coil["A1"], wire=(BU, 0.5))
+        d.detail.wire(into_a, relay.coil["A1"], wire=(BU, 0.5))
     d.layout.break_before(block_b)
     d.layout.break_before(block_a)
     cover = Path(tempfile.mkdtemp()) / "cover.md"

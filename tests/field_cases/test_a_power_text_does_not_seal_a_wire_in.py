@@ -31,20 +31,20 @@ def _shape(d):
     d.ac_supply("MAINS", 230, psu.input["L"], n=psu.input["N"])
     d.dc_supply("24V", psu)
     rail = d.terminal_strip("X3", "DEMO-TB-2.5").run("24V", 2, bridged=True)
-    d.wire(psu.output["+"], rail[1], wire=("RD", 0.75))
+    d.detail.wire(psu.output["+"], rail[1], wire=("RD", 0.75))
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 15, interface=True)
     r17 = d.terminal_strip("X2", "DEMO-TB-2.5").run("17", 1)
     with d.function("IN", "Inputs"):
         plc = d.device("K1", "DEMO-PLC-DI-16")
     for t, ch in ((9, 1), (6, 2), (3, 3), (12, 4), (15, 6), (2, 7)):
-        d.wire(x1[t].inner, plc[str(ch)], wire=("BK", 0.75))
+        d.detail.wire(x1[t].inner, plc[str(ch)], wire=("BK", 0.75))
     for t in (1, 4, 7, 10, 13):
-        d.wire(x1[t].inner, r17[1].inner, wire=("BK", 0.75))
-    d.wire(r17[1].outer, rail[2], wire=("RD", 0.75))
+        d.detail.wire(x1[t].inner, r17[1].inner, wire=("BK", 0.75))
+    d.detail.wire(r17[1].outer, rail[2], wire=("RD", 0.75))
     for i in range(4):
         with d.function(f"S{i}", f"Sig {i}"):
             h = d.device(f"Q{i}", "DEMO-LAMP-24")
-        d.wire(x1[5].outer, h.lamp[1], wire=("BK", 0.75))
+        d.detail.wire(x1[5].outer, h.lamp[1], wire=("BK", 0.75))
     return _Io(x1)
 
 

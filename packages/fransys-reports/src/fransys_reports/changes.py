@@ -27,6 +27,13 @@ def changes_csv(diff: ListingDiff) -> str:
     return _csv(diff.changes, CHANGE_COLUMNS)
 
 
+def _changed_clause(row: Change) -> str:
+    """One changed field: `m A to B`, or `m set to B` when it was empty (reports-0006)."""
+    if not row.before:
+        return f"{row.field} set to {row.after}"
+    return f"{row.field} {row.before} to {row.after}"
+
+
 def _bullet(section: str, rows: list[Change]) -> str:
     """One Markdown bullet for one `(section, subject)` group of `Change` rows (reports-0004)."""
     identity = change_identity(section, rows[0].parts)
@@ -50,9 +57,7 @@ def _bullet(section: str, rows: list[Change]) -> str:
         clauses.append("ports added " + ", ".join(ports_added))
     if ports_removed:
         clauses.append("ports removed " + ", ".join(ports_removed))
-    clauses.extend(
-        f"{row.field} {row.before} to {row.after}" for row in rows if row.change == "changed"
-    )
+    clauses.extend(_changed_clause(row) for row in rows if row.change == "changed")
     return f"- Changed {identity}: {'; '.join(clauses)}."
 
 

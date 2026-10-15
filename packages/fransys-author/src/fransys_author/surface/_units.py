@@ -51,7 +51,9 @@ def unit[R: tuple[Any, ...]](  # noqa: PLR0913 -- the release's own fields
     class_code: str | None = None,
     wiring: Mapping[WiringRow, RowValue] | None = None,
 ) -> Callable[[Callable[..., R]], UnitDef[R]]:
-    """Make a function the unit release `name`; it takes a child design, returns its interface.
+    """Core: make a function the unit release `name`.
+
+    It takes a child design and returns its interface.
 
     The interface is an instance of a `typing.NamedTuple` class, one field per boundary.
 
@@ -137,5 +139,6 @@ class Units:
             )
             raise AuthorError(msg)
         write_boundaries(scope, result)
+        scope._design._added_units[id(result)] = (result, scope._unit)
         mark_unused(self, scope, result, unused)
         return result

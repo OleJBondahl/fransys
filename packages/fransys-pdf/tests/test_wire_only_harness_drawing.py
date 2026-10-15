@@ -25,12 +25,12 @@ def _built(tmp_path: Any, tag: str, *, wires: bool, loose: bool = False) -> tupl
         near = d.device("J1", _PLUG, parent=loom, place="L0")
         far = d.device("J2", _PLUG, parent=loom, place="L0")
         if wires:
-            d.wire(near[1], far[1], wire=(BU, 0.5))
+            d.detail.wire(near[1], far[1], wire=(BU, 0.5))
     if loose:
         with d.function("X", "Loose"):
             a = d.device("A1", _PLUG, place="L0")
             b = d.device("A2", _PLUG, place="L0")
-        d.wire(a[1], b[1], wire=(BU, 0.5))
+        d.detail.wire(a[1], b[1], wire=(BU, 0.5))
     cover = tmp_path / "cover.md"
     cover.write_text("# Cover\n", encoding="utf-8")
     probe = fr.build(d).model

@@ -25,6 +25,7 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint import lint_geometry
 from fransys_layout.lint.codes import OUT_OF_CONTENT_BOX
 from fransys_layout.stages import Layout, LinkMarker
+from fransys_layout.stages.wire_copies import WireCopies
 
 if TYPE_CHECKING:
     import pytest
@@ -38,7 +39,7 @@ _PROJECT: dict[str, Any] = {
 }
 
 
-def _first_row_reference() -> LinkMarker:
+def _first_row_reference(monkeypatch: pytest.MonkeyPatch) -> LinkMarker:
     """The real star reference of a first-row terminal on page 1, its push applied.
 
     Strip `X1` has two terminals of group `G1`. Each is chained to a lamp of `G1` (the lamp stands
@@ -62,6 +63,13 @@ def _first_row_reference() -> LinkMarker:
             wire(terminal.inner, lamp.fn("lamp")["1"])
             if n == 0:
                 d.chain(terminal, lamp)
+    # model-0220 draws a terminal of a star as copies; copies off keeps its reference marker
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
     layout, _, _ = run_stages(model, read_inputs(model, options=OPTIONS))
     refs = [m for m in layout.markers if m.page == 1 and m.star == "ref"]
@@ -91,7 +99,7 @@ def test_the_top_room_holds_a_first_row_reference_with_no_headroom_lane(
     #     holds the reference: with no lane the first row stands at the band alone, and the box
     #     top is y = -10, above the content box)
     monkeypatch.setattr(_inputs, "TOP_HEADROOM_LANES", 0)
-    reference = _first_row_reference()
+    reference = _first_row_reference(monkeypatch)
     assert reference.stub_extra == 16  # premise: the reference stands one push out
     assert reference.box.width < reference.box.height  # a vertical box at an N port
     assert reference.box.y + reference.box.height <= reference.at.y  # above its port

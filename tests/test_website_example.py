@@ -52,10 +52,10 @@ def test_cabinet_bom_holds_no_field_device_and_x1_rows_end_in_pe(tmp_path, monke
     result = runpy.run_path(str(EXAMPLE))["result"]
     out = tmp_path / "unit"
     fr.write(result, out, unit="motor-starter")
-    bom = (out / "motor-starter-v1.1-bom.csv").read_text(encoding="utf-8")
+    bom = (out / "data" / "motor-starter-v1.1-bom.csv").read_text(encoding="utf-8")
     assert "-M1" not in bom
     assert "-W1" not in bom
-    rows = (out / "motor-starter-v1.1-terminals-X1.csv").read_text(encoding="utf-8")
+    rows = (out / "data" / "motor-starter-v1.1-terminals-X1.csv").read_text(encoding="utf-8")
     assert [line.split(",")[0] for line in rows.splitlines()[1:]] == [
         "-X1:1",
         "-X1:2",

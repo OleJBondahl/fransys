@@ -48,6 +48,7 @@ from .hints import (
     KeepTogether,
     OrderHint,
     PageTitle,
+    PoleGroup,
     SideHint,
     SymbolChoice,
 )
@@ -134,6 +135,7 @@ __all__ = [
     "PageTitle",
     "PinCell",
     "PlacementView",
+    "PoleGroup",
     "PowerSymbol",
     "Profile",
     "Route",

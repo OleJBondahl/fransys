@@ -68,10 +68,14 @@ class Obstacle:
 
 @value
 class Shape:
-    """A placed box and the handle whose own lane may cross it."""
+    """A placed box and the handle whose own lane may cross it.
+
+    A `net` marks ink that no wire of that physical net keeps off (layout-0243).
+    """
 
     owner: Id[Any] | None
     box: Box
+    net: Id[Any] | None = None
 
 
 @value

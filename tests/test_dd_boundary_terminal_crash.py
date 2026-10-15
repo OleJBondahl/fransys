@@ -21,7 +21,8 @@ import fransys_parts
 from _model_build_cover import layout_trigger_document
 
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
-from fransys_model.derive.drawing_text import marker_text, off_stub_text
+from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Severity
 from fransys_model.layout import LinkMarker, StarKind, layout_of
 from fransys_model.vocab.tables import functions, ports

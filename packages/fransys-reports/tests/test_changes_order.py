@@ -5,7 +5,7 @@ import dataclasses
 from fransys_reports import changes_markdown
 
 from fransys_model.derive.baseline import diff
-from fransys_model.derive.rows import BaselineBoundary, BaselineUnit, Listing
+from fransys_model.derive.rows_baseline import BaselineBoundary, BaselineUnit, Listing
 
 
 def _x1_boundary_listing(ports):

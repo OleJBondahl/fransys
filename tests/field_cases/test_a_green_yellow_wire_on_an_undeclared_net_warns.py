@@ -14,7 +14,7 @@ from fransys.colours import GNYE
 def _codes(*, earthed: bool) -> list[fr.Finding]:
     d = fr.design("demo_parts")
     a, b = (d.device(tag, "DEMO-LAMP-24") for tag in ("P1", "P2"))
-    d.wire(a[1], b[1], wire=(GNYE, 0.75))
+    d.detail.wire(a[1], b[1], wire=(GNYE, 0.75))
     if earthed:
         d.earth(a[1], b[1])
     return [f for f in fr.build(d).findings if f.code == "GNYE_NOT_PE"]

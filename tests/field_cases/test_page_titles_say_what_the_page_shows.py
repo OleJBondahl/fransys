@@ -40,10 +40,10 @@ def _build(root: Path, *, blocks: int, hint: str | None) -> tuple[fr.BuildResult
         with d.function(f"F{i}", f"Relay and lamp circuit {i}"):
             relays.append(d.device(f"K{i}", "DEMO-RLY-2CO-24"))
     for a, b in pairwise(relays):
-        d.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
+        d.detail.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     h1 = d.device("H1", "DEMO-LAMP-24")
-    d.wire(x1.run("SIG", 1)[1], h1.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(x1.run("SIG", 1)[1], h1.lamp["1"], wire=("WH", 0.75))
     if hint is not None:
         d.layout.page_title(x1, hint)
     cover = root / "cover.md"

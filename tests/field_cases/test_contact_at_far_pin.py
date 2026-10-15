@@ -52,11 +52,13 @@ def _plant(d, *, split: bool = False) -> None:
             contactors[3] = d.device("K3", "DEMO-CTR-3P-NC")
         d.layout.break_before(g2)
     for number, contactor in contactors.items():
-        d.wire(contactor.coil["A1"], lamps[number].lamp["1"], wire=(BU, 0.5))
-        d.wire(contactor.main["1"], lamps[number].lamp["1"], wire=(BU, 0.5))  # layout-0112: wired
+        d.detail.wire(contactor.coil["A1"], lamps[number].lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(
+            contactor.main["1"], lamps[number].lamp["1"], wire=(BU, 0.5)
+        )  # layout-0112: wired
         channel = getattr(module, f"di_{number - 1}")[str(number - 1)]
-        d.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
-    d.wire(contactors[4].aux["13"], lamps[4].lamp["2"], wire=(BU, 0.5))
+        d.detail.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
+    d.detail.wire(contactors[4].aux["13"], lamps[4].lamp["2"], wire=(BU, 0.5))
 
 
 @cache
@@ -192,8 +194,8 @@ def _rail_plant(d) -> None:
         d.dc_supply("S", plus=rail[1], minus=zero[1], voltage=24)
         contactor = d.device("K2", "DEMO-CTR-3P-NC")
     d.layout.break_before(g1)
-    d.wire(contactor.aux["14"], module.di_1["1"], wire=(BU, 0.5))
-    d.wire(contactor.aux["13"], rail[1].outer, wire=(BU, 0.5))
+    d.detail.wire(contactor.aux["14"], module.di_1["1"], wire=(BU, 0.5))
+    d.detail.wire(contactor.aux["13"], rail[1].outer, wire=(BU, 0.5))
 
 
 def test_a_contact_hangs_straight_down_and_its_column_ends_in_a_downward_supply_bar() -> None:
@@ -232,9 +234,9 @@ def _plant_16(d) -> None:
         lamps = [d.device(f"P{n}", "DEMO-LAMP-24") for n in range(1, 17)]
     d.layout.break_before(g1)
     for number, (contactor, lamp) in enumerate(zip(contactors, lamps, strict=True), start=1):
-        d.wire(contactor.coil["A1"], lamp.lamp["1"], wire=(BU, 0.5))
+        d.detail.wire(contactor.coil["A1"], lamp.lamp["1"], wire=(BU, 0.5))
         channel = getattr(module, f"di_{number}")[str(number)]
-        d.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
+        d.detail.wire(contactor.aux["14"], channel, wire=(BU, 0.5))
 
 
 def test_a_sixteen_channel_module_fits_one_page_with_a_contact_under_every_channel() -> None:

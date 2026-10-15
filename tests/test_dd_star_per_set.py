@@ -23,7 +23,8 @@ import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
 
-from fransys_model.derive.drawing_text import marker_text, reference_number
+from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.marker_text import reference_number
 from fransys_model.kernel import Id, Severity
 from fransys_model.layout import (
     DrawingSet,

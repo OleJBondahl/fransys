@@ -9,4 +9,8 @@ Output contract: pure function of a Model returning str, bytes or a tuple of pag
 - The page script is the `_js_*` modules joined by `_app.py`: hand-written ES2020, no framework, no build step, nothing random, no clock, no network. Text from the data goes on the page as `textContent` only. The data is built by `_data.py`; the colours are `_palette.py`.
 - `_template.fill` replaces each `@@NAME@@` token in one pass, so a value that contains token text is never rescanned; the template's tokens and the value names are the same set, else `ValueError`.
 
+## Derive rows (moved from docs/DESIGN.md section 6)
+
+The overview draws `derive`'s rows at `layout.overview_*`; boxes open as GROUP or STRIPS; parts tree `derive.overview_tree` (overview-0002). `check` runs that engine; schematic PDF pages are link targets (0186).
+
 Status: `html` implemented. Tests read the page as text and data. `internal/scripts/overview_smoke.py` drives it in a headless Chromium (outside the gate).

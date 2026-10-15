@@ -4,8 +4,8 @@ from fransys_model.kernel import Id, Model, SchemaError
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .designation import printed_designation
-from .drawing_text import line_stub_line
 from .harness_line_ends import harness_line_ends
+from .stub_text import line_stub_line
 
 _PLAIN_LINE = 2  # a line between two ends carries no branch number
 

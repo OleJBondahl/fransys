@@ -157,6 +157,19 @@ assert text.endswith("notes: DOCUMENT_EMPTY_LIST 3\n")
 The fix and the anchor come from the code's row in [`findings.md`](findings.md). Print the
 report on every build: a warning nobody reads is never fixed.
 
+## Which route carries which finding
+
+Each route below carries a different set of findings.
+
+| route | carries | when you read it |
+|---|---|---|
+| `result.findings` | What `fr.build` collected: the PLC and numbering passes, the validators and layout. | After `fr.build`. |
+| `fr.check(result)` | `result.findings` plus the KiCad, PDF and render checks, errors first. | Any time after `fr.build`. |
+| `fr.report(result)` | The text of `fr.check(result)`, with each fix and guide anchor. | Any time after `fr.build`. |
+| `fr.BuildErrors.findings` | The `ERROR` findings of the `fr.write` or `fr.release` run that raised. `fr.release` adds its release checks. | When the call raises. |
+
+`fr.build` itself raises `MergeConflict` or `FreezeError` for a structural problem and returns no findings then.
+
 ## No document, no layout
 
 Layout exists only to draw documents. A build with no `Document` draft skips layout entirely.
@@ -168,14 +181,14 @@ codes = sorted(f.code for f in fr.check(result))
 assert codes == []
 
 written = fr.write(result, Path("out"))
-assert sorted(p.name for p in written) == [
-    "bom.csv",
-    "cables.csv",
-    "cores.csv",
-    "designations.csv",
+assert sorted(p.relative_to("out").as_posix() for p in written) == [
+    "data/bom.csv",
+    "data/cables.csv",
+    "data/cores.csv",
+    "data/designations.csv",
+    "data/plc.csv",
+    "data/wires.csv",
     "overview.html",
-    "plc.csv",
-    "wires.csv",
 ]
 ```
 
@@ -187,9 +200,9 @@ for a document. `write` names its files through it, so a script never builds a n
 
 ```python
 names = fr.export_names(result)
-assert names[("bom", None)] == "bom.csv"
+assert names[("bom", None)] == "data/bom.csv"
 assert [key for key in names if key[0] == "pdf"] == []  # no document: no ("pdf", id) key
-assert sorted(names.values()) == sorted(p.name for p in written)
+assert sorted(names.values()) == sorted(p.relative_to("out").as_posix() for p in written)
 ```
 
 With no document, `check` never runs the drawing or PDF checks: neither has a layout to read.
@@ -206,9 +219,8 @@ title block or history table. The names are a built-in default with no option or
   system (`unit=None`). The prefix is `<set name>-v<V>.<R>`, the set's name plus its version and
   revision in `derive.revision_text`'s print form. A unit's name is its release name
   (`demo-io-board-v1.1`); the system's is the project's number (`EX-1-v1.1`). A system write of
-  a model with no project record has no prefix, and the system's own files keep their bare names
-  (plain `bom.csv`), which is what the examples above wrote because this guide's design authors
-  no project. A unit's document still takes its unit's prefix there.
+  a model with no project record has no prefix: the system's own files keep their bare names
+  (plain `bom.csv`), as the examples above wrote. A unit's document still takes its unit's prefix.
 - **Prefix, kind, fragment.** A name is `<prefix>[-<kind>][-<fragment>].<ext>`:
   `demo-io-board-v1.1-bom.csv`, per item `demo-io-board-v1.1-terminals-X1.csv`, and for the
   unit's own root the bare kind `demo-io-board-v1.1-terminals.csv`.
@@ -220,13 +232,20 @@ title block or history table. The names are a built-in default with no option or
   name in every write, a system write included, so `out/all/` holds `EX-1-v1.1.pdf` beside
   `cabinet-v2.1.pdf`. Two instances of one release with a document each come to one name and
   raise a name-clash error; keep one document per release.
-- **Stale exports.** `write` first deletes the files that start with the set's name and `-v` for any version, so a
-  work folder reused across
-  revisions keeps only the current ones. A system write also deletes the files that start with
+- **The `data/` folder.** Every CSV and XML export goes into `<out_dir>/data/`, `changes.csv` included;
+  the PDFs, `overview.html` and `changes.md` stay in `out_dir`, so the files you open are not
+  among the lists. The names are unchanged, and `fr.export_names` gives the path from `out_dir`
+  (`data/EX-1-v1.1-bom.csv`).
+- **Stale exports.** `write` first deletes the set's old files in `out_dir` and `data/`. Those are
+  the files whose names start with the set's name and `-v`, so a reused work folder keeps only
+  the current ones. It also removes the flat CSV and XML files a write
+  made before `data/` existed. A system write also deletes the files that start with
   each unit release's name in the model and `-v`, for the unit documents. The old bare-name
   patterns are still cleaned for one more release. Known limit: a unit that leaves the model
   leaves its last PDF behind in `out/all/`.
-- **Releases.** `fr.release` writes the same names, and its manifest lists them.
+- **Build times.** `result.times` holds the CPU and wall seconds of each build step, and `print(result.times)` shows one line per step with its share of the CPU. With `intermediates=`, `write` also saves `build-times.json` there, the build steps then each output; `out_dir` never holds it.
+- **Releases.** `fr.release` writes the same paths, and its manifest lists them (`data/...`).
+  A release stored before `data/` keeps its flat paths in its own manifest and still verifies.
 - **Changes in the overview.** `fr.write(result, out_dir, releases=into)` takes the folder you pass
   to `fr.release`. When it holds a release of the system (the one at the model's revision, else
   the previous one), `overview.html` gains a Changes switch that marks what changed since it.
@@ -244,7 +263,7 @@ the error is about. A half-finished design still draws its schematic pages into
 ## Releasing a frozen baseline
 
 `fr.release(result, into, *, unit=None)` writes one unit's (or the whole system's) frozen
-baseline: its document set, exactly as `write` would write it for that unit, plus a canonical
+baseline: its document set, as `write` would write it for that unit, plus a canonical
 listing, a manifest of file hashes and package/tool versions, and the model itself. The target
 is `<into>/<unit release name>/<version>.<revision>/`, or `<into>/<project number>/<version>.
 <revision>/` for the system (`unit=None`). Every check runs first -- the same gate `write` uses,
@@ -303,12 +322,11 @@ A history entry that names a revision never released is `RELEASE_HISTORY_UNRELEA
 ## Getting the change list
 
 `fr.diff(result, into, *, unit=None, against=None)` gives the Markdown change list from a
-stored release to the model as it stands now, without writing anything -- useful while a
-revision is still being worked on, before deciding to release it. `release()` itself writes
-the same text into `changes.md` (and the same rows as `changes.csv`) once a previous release
-exists to compare against; the first release of a unit gets neither file, since there is
-nothing yet to diff against. The revision text you author stays yours. `changes.md` is the
-detailed evidence beside it, and nothing fills or overwrites the history text.
+stored release to the model as it stands now, without writing anything: use it while a
+revision is in progress. `release()` writes the same text into `changes.md` (and the same rows
+into `data/changes.csv`) once a previous release exists; the first release of a unit gets neither
+file. The revision text you author stays yours: `changes.md` is the evidence beside it, and
+nothing overwrites the history text.
 
 ```python
 second_result = fr.build(board(2, spare="X2"))
@@ -320,21 +338,19 @@ assert "Added `-X2`" in preview
 
 second_target = fr.release(second_result, Path("releases"), unit="demo-io-board")
 assert (second_target / "changes.md").read_text(encoding="utf-8") == preview
-assert (second_target / "changes.csv").exists()
+assert (second_target / "data" / "changes.csv").exists()
 ```
 
-`against=` names a specific released revision's folder (`"1.1"`) to diff against instead of the
-default (the model's own current release if it is already stored, otherwise the previous
-released revision below it, possibly in an earlier version). `fr.diff` raises
-`FileNotFoundError` when no released revision is found either way.
+`against=` names a released revision's folder (`"1.1"`) to diff against. The default is the model's
+own current release if stored, else the previous released revision below it. `fr.diff` raises
+`FileNotFoundError` when it finds neither.
 
 ## Checking a baseline stays true
 
 `fr.verify(result, baselines) -> tuple[Finding, ...]` reruns the same comparison `release`'s own
 `BASELINE_DIFFERS` check does, for every unit instance the model has (and the system, when the
-model has a project) that a stored baseline already exists for. It writes nothing, and
-`fr.write` never calls it -- a consumer runs it wherever they want the check, most often a test
-that guards against an accidental change to a released revision.
+model has a project) with a stored baseline. It writes nothing, and `fr.write` never calls it: run
+it where you want the check, most often a test that guards a released revision.
 
 ```python
 assert fr.verify(second_result, Path("releases")) == ()
@@ -406,3 +422,28 @@ freed by a removed or moved item is never handed to a different item within that
 version. A tag the engineer authors may still equal a pinned or reserved number by mistake;
 that is `DESIGNATION_DUPLICATE` (see `findings-validators.md`), not silently allowed. Releasing without
 `releases=` still catches a moved number, as `DESIGNATION_MOVED`.
+
+## Point a finding past a helper
+
+A finding names the file and line of the call that authored the thing. Set `__tracebackhide__ = True`
+in a helper that builds a repeated circuit, and the finding names the line that called the helper.
+
+```python
+import fransys as fr
+
+
+def lamp_pair(d, first, second):
+    __tracebackhide__ = True
+    return d.device(first, "DEMO-LAMP-24"), d.device(second, "DEMO-LAMP-24")
+
+
+d = fr.design("demo_parts")
+h1, h2 = lamp_pair(d, "H1", "H2")
+result = fr.build(d)
+assert fr.derive.item_designation(result.model, h1.id) == "H1"
+```
+
+## Read a model id
+
+`Q1.id` and `Q1.coil.id` give the model id of a device and a function. Read them after the build, as
+`fr.derive.item_designation(result.model, Q1.id)` does. Ids are for reading, never to wire.

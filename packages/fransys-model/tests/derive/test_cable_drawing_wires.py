@@ -36,8 +36,8 @@ def _mixed(d: fr.Design) -> None:
         near = d.device("J1", _PLUG4, parent=loom, place="L0")
         far = d.device("J2", _PLUG4, parent=loom, place="L0")
         d.cable("MIX", _CABLE, parent=loom, name="cmix", place="L0").core(1, near[1], far[1])
-        d.wire(near[2], far[2], wire=(BU, 0.5), label="SIG")
-        d.wire(near[3], far[3], wire=(BU, 1.5))
+        d.detail.wire(near[2], far[2], wire=(BU, 0.5), label="SIG")
+        d.detail.wire(near[3], far[3], wire=(BU, 1.5))
 
 
 def _only(d: fr.Design) -> None:
@@ -46,11 +46,11 @@ def _only(d: fr.Design) -> None:
         loom = d.harness("ONLY", place="L0")
         near = d.device("J1", _PLUG2, parent=loom, place="L0")
         far = d.device("J2", _PLUG2, parent=loom, place="L0")
-        d.wire(near[1], far[1], wire=(BU, 0.5))
+        d.detail.wire(near[1], far[1], wire=(BU, 0.5))
     with d.function("LINK", "Link loom"):
         loom = d.harness("LINK", place="L0")
         plug = d.device("J1", _PLUG2, parent=loom, place="L0")
-        d.wire(plug[1], plug[2], wire=(BU, 0.5))
+        d.detail.wire(plug[1], plug[2], wire=(BU, 0.5))
 
 
 def _bare(d: fr.Design) -> None:
@@ -63,7 +63,7 @@ def _bare(d: fr.Design) -> None:
     with d.function("LOOSE", "Loose"):
         a = d.device("LA1", _PLUG2, place="L0")
         b = d.device("LA2", _PLUG2, place="L0")
-    d.wire(a[1], b[1], wire=(BU, 0.5))
+    d.detail.wire(a[1], b[1], wire=(BU, 0.5))
 
 
 @pytest.fixture(scope="module")

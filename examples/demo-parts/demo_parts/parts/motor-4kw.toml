@@ -16,3 +16,9 @@ ports = [
     { name = "W", role = "generic" },
     { name = "PE", role = "pe" },
 ]
+
+[function.operating]
+voltage_ac_v = "400"
+nominal_voltage_v = "400"
+nominal_power_w = "4000"
+nominal_current_a = "8"

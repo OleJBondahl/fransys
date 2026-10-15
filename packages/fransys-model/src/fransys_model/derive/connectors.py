@@ -18,9 +18,9 @@ from .designation import (
     end_outside_nested_unit,
     unit_list_context,
 )
-from .drawing_text import port_designation_in, product_designation_in
 from .far_ends import far_ends
 from .indexes import build_indexes
+from .location_text import port_designation_in, product_designation_in
 from .lookups import connector_facets, descendants, net_name, pin_order, require
 from .mate_rows import mate_partners
 from .order import in_designation_order, natural_key

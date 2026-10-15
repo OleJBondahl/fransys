@@ -44,10 +44,10 @@ def _design() -> tuple[fr.Design, object, fr.Device, fr.Device]:
     with d.function("G2", "Stop circuit 2"):
         second = d.device(None, "DEMO-BLOCK-1NC-21", name="block-2", parent=head)
     wire = (BU, 0.5)
-    d.wire(strip[1], first["11"], wire=wire)
-    d.wire(first["12"], strip[2], wire=wire)
-    d.wire(strip[3], second["21"], wire=wire)
-    d.wire(second["22"], strip[4], wire=wire)
+    d.detail.wire(strip[1], first["11"], wire=wire)
+    d.detail.wire(first["12"], strip[2], wire=wire)
+    d.detail.wire(strip[3], second["21"], wire=wire)
+    d.detail.wire(second["22"], strip[4], wire=wire)
     return d, cabinet, first, second
 
 

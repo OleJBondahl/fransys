@@ -1,8 +1,8 @@
 """The two readability counts no finding states: wire crossings and a page's references.
 
-A crossing is one wire running across a wire of another physical net, inside both runs; touching,
-a shared end, a T and an overlap along one line are not crossings. The references of a page are
-its coils' contact images, its star references and its page cuts.
+A crossing is one wire running across a wire of another physical net or a cable core line, inside
+both runs; touching, a shared end, a T and an overlap along one line are not crossings. The
+references of a page are its coils' contact images, its star references and its page cuts.
 """
 
 from samples import hid
@@ -18,6 +18,7 @@ from fransys_layout.stages import (
     Route,
     RoutePoint,
 )
+from fransys_layout.stages.line_shapes import DrawnFanOut, DrawnLeg, DrawnLine
 
 _BOX = Box(x=0, y=0, width=8, height=8)
 
@@ -66,6 +67,70 @@ def test_wires_that_miss_each_other_do_not_cross() -> None:
 def test_a_wire_with_a_bend_counts_each_run() -> None:
     bent = _route(1, (0, 4), (16, 4), (16, 12), (0, 12))
     assert wire_crossings([bent, _route(2, (8, 0), (8, 16))]) == 2
+
+
+def _pts(*points: tuple[int, int]) -> tuple[Point, ...]:
+    return tuple(Point(x=x, y=y) for x, y in points)
+
+
+def _line(harness: int, *points: tuple[int, int]) -> DrawnLine:
+    return DrawnLine(
+        harness=hid("harness", harness),
+        branch=1,
+        drawing_set=1,
+        page=1,
+        points=_pts(*points),
+        text=Point(x=0, y=0),
+        label=_BOX,
+    )
+
+
+def _fan(harness: int, *legs: tuple[tuple[int, int], ...]) -> DrawnFanOut:
+    return DrawnFanOut(
+        harness=hid("harness", harness),
+        branch=1,
+        drawing_set=1,
+        page=1,
+        at=Point(x=0, y=0),
+        legs=tuple(
+            DrawnLeg(conductor=hid("conductor", 50 + i), points=_pts(*leg))
+            for i, leg in enumerate(legs)
+        ),
+    )
+
+
+def test_a_fan_leg_across_a_foreign_wire_is_a_crossing() -> None:
+    """Layout-0260: a leg counts against another net's wire.
+
+    # UNDO: lint/page_counts.py, `wire_crossings` reads `fans` as empty (the leg crossing goes)
+    """
+    fan = _fan(1, ((8, 0), (8, 16)))
+    assert wire_crossings([_route(2, (0, 8), (16, 8))], fans=[fan]) == 1
+
+
+def test_a_fan_leg_across_another_cables_line_is_a_crossing() -> None:
+    fan = _fan(1, ((8, 0), (8, 16)))
+    assert wire_crossings([], [_line(2, (0, 8), (16, 8))], [fan]) == 1
+
+
+def test_legs_of_one_fan_and_its_own_cables_line_do_not_count() -> None:
+    fan = _fan(1, ((8, 0), (8, 16)), ((4, 8), (12, 8)))
+    assert wire_crossings([], [_line(1, (0, 4), (16, 4))], [fan]) == 0
+
+
+def test_legs_of_two_fans_count_one_crossing_each() -> None:
+    """Layout-0260: two fans are two cables, so each crossing of their legs counts.
+
+    # UNDO: lint/page_counts.py, `wire_crossings` skips a leg against a leg again
+    """
+    fans = [_fan(1, ((8, 0), (8, 16))), _fan(2, ((0, 8), (16, 8)))]
+    assert wire_crossings([], fans=fans) == 1
+    more = [_fan(1, ((8, 0), (8, 16)), ((12, 0), (12, 16))), _fan(2, ((0, 8), (16, 8)))]
+    assert wire_crossings([], fans=more) == 2
+
+
+def test_legs_of_one_fan_do_not_count_against_each_other() -> None:
+    assert wire_crossings([], fans=[_fan(1, ((8, 0), (8, 16)), ((0, 8), (16, 8)))]) == 0
 
 
 def _label(
@@ -153,3 +218,27 @@ def test_a_page_cut_is_no_star_and_a_star_is_no_page_cut() -> None:
 
 def test_a_power_end_is_no_reference() -> None:
     assert reference_counts((), (_marker(symbol="ground"),)).page_cuts == 0
+
+
+def _core(branch: int, *points: tuple[int, int]) -> DrawnLine:
+    return DrawnLine(
+        harness=hid("item", 9),
+        branch=branch,
+        drawing_set=1,
+        page=1,
+        points=tuple(Point(x=x, y=y) for x, y in points),
+        text=Point(x=0, y=0),
+        label=_BOX,
+    )
+
+
+def test_a_wire_across_a_cable_core_line_is_a_crossing() -> None:
+    """Layout-0258: a reader sees a core line as a wire; the cabinet's `W1.3` is one."""
+    core = _core(3, (8, 0), (8, 16))
+    assert wire_crossings([_route(1, (0, 8), (16, 8))], [core]) == 1
+    assert wire_crossings([_route(1, (0, 8), (16, 8))]) == 0
+
+
+def test_a_wire_ending_on_a_core_line_or_two_core_lines_are_no_crossing() -> None:
+    assert wire_crossings([_route(1, (0, 8), (8, 8))], [_core(3, (8, 0), (8, 16))]) == 0
+    assert wire_crossings([], [_core(1, (0, 8), (16, 8)), _core(2, (8, 0), (8, 16))]) == 0

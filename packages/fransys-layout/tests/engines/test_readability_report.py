@@ -71,7 +71,7 @@ def _expected_lone(model: Model, findings: tuple[Finding, ...]) -> Counter:
 @pytest.mark.parametrize("discovery", [False, True], ids=["default", "discovery"])
 def test_every_page_row_counts_what_the_findings_count(*, discovery: bool) -> None:
     model, findings = _laid(discovery=discovery)
-    rows = page_readability(model, OPTIONS)
+    rows = page_readability(model, OPTIONS).pages
     assert rows
     struck, lone = _expected_struck(model, findings), _expected_lone(model, findings)
     assert _by_page(rows, "struck_labels") == {
@@ -85,7 +85,7 @@ def test_the_discovery_variant_has_lone_cells_for_the_test_to_count() -> None:
     model, findings = _laid(discovery=True)
     assert sum(1 for f in findings if f.code == "LONE_CELL") == 2
     assert sum(_expected_lone(model, findings).values()) == 0
-    assert sum(_by_page(page_readability(model, OPTIONS), "lone_cells").values()) == 0
+    assert sum(_by_page(page_readability(model, OPTIONS).pages, "lone_cells").values()) == 0
 
 
 @pytest.mark.parametrize("discovery", [False, True], ids=["default", "discovery"])
@@ -94,7 +94,7 @@ def test_a_page_row_prints_the_share_its_page_underfilled_finding_prints(
 ) -> None:
     model, findings = _laid(discovery=discovery)
     messages = [f.message for f in findings if f.code == PAGE_UNDERFILLED]
-    fill = _by_page(page_readability(model, OPTIONS), "fill_percent")
+    fill = _by_page(page_readability(model, OPTIONS).pages, "fill_percent")
     under = {page: share for page, share in fill.items() if share < 50}
     assert under
     assert len(messages) == len(under)
@@ -107,6 +107,17 @@ def test_a_page_row_prints_the_share_its_page_underfilled_finding_prints(
 
 def test_the_rows_are_in_drawing_set_and_page_order_and_name_printed_numbers() -> None:
     model, _ = _laid(discovery=False)
-    rows = page_readability(model, OPTIONS)
+    rows = page_readability(model, OPTIONS).pages
     assert [(r.drawing_set, r.number) for r in rows] == sorted(_printed(model).values())
     assert {r.page for r in rows} == set(_printed(model))
+
+
+def test_the_wire_crossings_row_counts_the_cable_core_line_the_meter_counts() -> None:
+    """Layout-0260: the hinted cabinet shows 7 crossings, one of them a wire across line `W1.3`.
+
+    # UNDO: engines/schematic/readability.py, `lines` and `fans` read as empty
+    """
+    model, _ = _laid(discovery=False)
+    rows = page_readability(model, OPTIONS).pages
+    # 7 with model-0220 copies: two copy wires cross core line W1.3 (layout-0260); 5 with copies off
+    assert sum(row.wire_crossings for row in rows) == 7

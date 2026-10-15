@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import fransys as fr
 
-from fransys_model.derive.drawing_text import cross_reference_text
+from fransys_model.derive.contact_image import cross_reference_text
 from fransys_model.layout import Label, layout_of
 
 if TYPE_CHECKING:

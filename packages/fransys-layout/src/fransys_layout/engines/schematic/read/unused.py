@@ -39,7 +39,7 @@ def without_unused(
         unused = (
             spec.pin_function is None
             and spec.function not in boundaries
-            and function_is_unused(model, spec.function)
+            and all(function_is_unused(model, member) for member in spec.members)
         )
         if unused and (hide or spec.roles.contact):
             spares.append(spec)

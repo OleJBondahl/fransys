@@ -5,6 +5,7 @@ Its names stay off `fransys_author.__all__` until the facade swap.
 
 from fransys_author.handles import Terminal
 
+from ._detail import Detail
 from ._device import Device, TypedDevice, TypedFn
 from ._handles import Fn, Pin
 from ._layout import Layout
@@ -35,6 +36,7 @@ __all__ = [
     "IT",
     "SIGNAL",
     "Design",
+    "Detail",
     "Device",
     "Fn",
     "Layout",

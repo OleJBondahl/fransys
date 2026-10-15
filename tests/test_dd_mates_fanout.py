@@ -16,7 +16,8 @@ from _model_build_cover import layout_trigger_document
 
 from fransys_model.derive import connector_box_lines
 from fransys_model.derive.designation import port_designation
-from fransys_model.derive.drawing_text import marker_text, off_stub_text
+from fransys_model.derive.drawing_text import marker_text
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.layout import (
     ConnectorBox,
     DrawingSet,

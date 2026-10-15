@@ -5,9 +5,15 @@ then on every field lint checked is trusted, so the record-building code below i
 straight-line: no second, weaker validation happens here.
 """
 
+import sys
+from contextlib import contextmanager
 from decimal import Decimal
 from importlib.resources import as_file, files
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, Severity, make_id
 from fransys_model.vocab import (
@@ -26,7 +32,7 @@ from . import _ratings, _toml
 from ._function_build import _build_function, _PartContext
 from .lint import SUPPORTED_SCHEMAS, lint
 
-__all__ = ["SUPPORTED_SCHEMAS", "PartLibraryError", "load", "load_path"]
+__all__ = ["SUPPORTED_SCHEMAS", "PartLibraryError", "library_root", "load", "load_path"]
 
 
 class PartLibraryError(ModelError):
@@ -43,6 +49,36 @@ class PartLibraryError(ModelError):
         self.findings = findings
 
 
+def _loaded_libraries() -> list[str]:
+    """The imported top-level packages that hold a `library.toml`, sorted."""
+    found = []
+    for name, module in sorted(sys.modules.items()):
+        paths = getattr(module, "__path__", None)
+        if "." not in name and paths and any((Path(p) / "library.toml").is_file() for p in paths):
+            found.append(name)
+    return found
+
+
+@contextmanager
+def library_root(package: str) -> Iterator[Path]:
+    """The folder of the part library in the installed data package `package`.
+
+    Raises `ModuleNotFoundError` that names `package` and the part libraries already imported.
+    """
+    try:
+        cm = as_file(files(package))
+    except ModuleNotFoundError as error:
+        loaded = ", ".join(_loaded_libraries()) or "none"
+        msg = (
+            f"no part library {package!r} is installed "
+            f"(import name, as in fr.design({package!r})); "
+            f"part libraries loaded in this process: {loaded}"
+        )
+        raise ModuleNotFoundError(msg, name=package) from error
+    with cm as root:
+        yield root
+
+
 def load(package: str) -> Draft:
     """Load the part library shipped by an installed data package.
 
@@ -53,7 +89,7 @@ def load(package: str) -> Draft:
         A Draft holding the library's part, template, link and facet records. Every record's
         origin names the part file and line it came from.
     """
-    with as_file(files(package)) as root:
+    with library_root(package) as root:
         return load_path(root)
 
 

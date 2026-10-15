@@ -20,7 +20,7 @@ def _draft() -> fr.Design:
         d.device("H2", "DEMO-LAMP-24")
     with d.function("B", "Second"):
         d.device("H3", "DEMO-LAMP-24")
-    d.wire(lamp["1"], d.device("H4", "DEMO-LAMP-24")["1"], wire=("RD", 50))
+    d.detail.wire(lamp["1"], d.device("H4", "DEMO-LAMP-24")["1"], wire=("RD", 50))
     return d
 
 

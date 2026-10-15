@@ -7,17 +7,19 @@ Layout draws the structure you author and invents none. This page says what layo
 - **Function blocks.** `with d.function("P1", "Pump 1"):` groups the devices made inside it. Layout packs whole blocks onto pages, left to right, in order, and never reorders them to fill a gap. A block wider than a page is split between columns and reports `GROUP_SPLIT`. `d.layout.order`, `keep_together`, `break_before` and the profile's `group_ranks` set the order.
 - **Page ends.** A page holds the blocks whose widths sum to the content width, 1312 grid units on the house A3 sheet. A column's width is the room it took when placed: symbols, pin labels, link markers and the column gap. In the twelve-relay example below, the first relay blocks each take 176 units, so the first page holds the supply and six relays. A page ends at the first block that does not fit, at a `break_before`, at a `keep_together` set that does not fit, or at the end of a drawing set.
 - **Current paths.** Layout finds a current path where each net between two devices holds exactly two poles. A pole is the pair of pins a symbol passes current through, such as a coil or one contact. The path stands as one column, top to bottom, with straight wires. A net of three or more poles ends a path.
-- **How to author a path.** Author each path with `d.series`. Hand-wired `d.wire` hops form a path only while each net keeps to two poles. `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path. `d.layout.chain(...)` names a path outright, and a named path wins over discovery.
+- **How to author a path.** Author each path with `d.series`. Hand-wired `d.detail.wire` hops form a path only while each net keeps to two poles. `d.series(a, b, c, wire=...)` wires every hop pole to pole, so its elements form a path. `d.layout.chain(...)` names a path outright, and a named path wins over discovery.
 - **Block edges end a path.** A path never crosses from one function block into the next. When the two blocks land on different pages, the wire between them is cut into a marker pair and `CHAIN_BROKEN` warns. Keep each circuit inside one block.
 - **Tall paths.** A path taller than the page continues at the top of the next column, on the same sheet while there is room, then on the next sheet. The wire across each cut becomes a marker pair. The path keeps its order, and nothing runs off the page.
+- **Coils on PLC channels.** A coil that a PLC channel drives stands under that channel's pin, always, whatever the row spacing. A column too tall for the page continues as tall paths do.
 - **Device chains.** Some devices draw no symbol of their own, such as modules with an IN and an OUT connector. When such devices in one block are wired hop to hop, each wire alone, they form a chain. Each device then draws as one box with its wired pins only, and the chain stands as one column. A box's top pins face the device above and its bottom pins the device below, so each hop's wires run straight down. A chain starts at its end that sorts first by designation. A ring opens at its device that sorts first, and the wire that closes the ring becomes a marker pair.
-- **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals and references. An undeclared rail is a plain net: wires and link markers.
-- **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal drawn on both pages needs none.
+- **Supplies.** A declared DC supply (`d.dc_supply`) draws a power symbol at each pin on its rails, with no wire or marker. `d.ac_supply` keeps AC rails as terminals, drawn at each pin they feed. An undeclared rail is a plain net: wires and link markers.
+- **Markers.** A marker pair stands where one wire's two ends land on different pages. A net of three or more ports that is not drawn as wires gets one marker per port. A terminal is drawn at each of its wires instead. A net reference is filled with one of eight colours; every reference of the same net in the PDF has the same colour, and the text is the reference.
 - **Nothing connected, nothing drawn.** A symbol with nothing connected is not drawn; its list holds it.
 - **One actuator per device.** With `actuator_each_contact=False`, a manually operated device draws its actuator once, at its lead contact: the first contact its contact list prints. Its other contacts draw plain, with the device's designation and a reference to the actuator, and a contact list sits under the actuator.
-- **Flat designs.** A design of devices joined by point-to-point `d.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series.
+- **Flat designs.** A design of devices joined by point-to-point `d.detail.wire` calls is drawn from its nets alone. Circuits that share no net fill pages one after the other. One large connected circuit with no declared supply piles onto a single page and overflows it. Declare the supply and write each path as a series (see `detail.md`).
 
-The two blocks below build the same twelve relays on one 24 V supply. Only the second declares the supply.
+The `draw` helper below builds a cabinet and reads its findings. The block after it builds twelve relays on
+one declared 24 V supply.
 
 ```python
 from decimal import Decimal
@@ -57,20 +59,15 @@ def draw(body, top=None):
 ```
 
 ```python
-def relays(c, declare):
-    psu = c.device("G1", "DEMO-PSU-24")
-    if declare:
-        c.dc_supply("24VDC", psu.output)
+def relays(c):
+    dc = c.dc_supply("24VDC", c.device("G1", "DEMO-PSU-24").output)
     for i in range(1, 13):
         with c.function(f"F{i}", f"Relay {i}"):
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
-        c.wire(psu.output["+"], k.coil["A1"], wire=(BU, 0.75))
-        c.wire(k.coil["A2"], psu.output["-"], wire=(BU, 0.75))
+        c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
 
 
-flat, _ = draw(lambda c: relays(c, declare=False))
-declared, _ = draw(lambda c: relays(c, declare=True))
-assert "OUT_OF_CONTENT_BOX" in flat
+declared, _ = draw(relays)
 assert "OUT_OF_CONTENT_BOX" not in declared
 
 
@@ -96,36 +93,7 @@ The pump-station example in the examples repository has this shape.
 8. A terminal that only the parent wires is left off the unit's own pages; its table lists it.
 9. Build, then read `fr.check(result)`. The last part of this page lists the findings that point at a missing item above.
 
-Take each consumer's terminal inside the consumer's own block, since a terminal joins the block it is first taken in. One terminal shared by blocks on different pages needs a marker pair for each of them.
-
-```python
-def markers(own):
-    """Count the link markers of 30 lamp blocks fed from one 24 V run."""
-
-    @fr.unit(
-        "cab", revision=1, interface_version=1, date="2026-01-01", text="First", by="XX",
-        title="Cabinet", number="C-1",
-    )
-    def cabinet(c):
-        psu = c.device("G1", "DEMO-PSU-24")
-        run = c.terminal_strip("X1", "DEMO-TB-2.5").run("24V", 40, bridged=True)
-        c.wire(psu.output["+"], run[1], wire=(BU, 0.75))
-        for i in range(1, 31):
-            with c.function(f"F{i}", f"Lamp {i}"):
-                lamp = c.device(f"H{i}", "DEMO-LAMP-24")
-                terminal = run[i + 1] if own else run[1]
-                c.wire(terminal, lamp.lamp["1"], wire=(BU, 0.75))
-            c.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
-        return Cabinet()
-
-    d = fr.design("demo_parts")
-    d.add(cabinet, "U1")
-    doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md"))
-    return len(fr.build(d, doc).model.tables["layout.link_marker"])
-
-
-assert markers(own=True) < markers(own=False)
-```
+Take each consumer's terminal inside the consumer's own block, since a terminal joins the block it is first taken in. A terminal shared by blocks adds no marker.
 
 ## Printed sizes and grid pitch
 
@@ -167,7 +135,7 @@ Each hint advises the layout and invents nothing. Every name below is a method o
 | These groups on one sheet | `d.layout.keep_together(g1, g2)` | Moves the later groups beside the first, so they share a page when their widths fit. |
 | This order | `d.layout.order(g1, g2)` | Moves `g2` after `g1`. The other groups keep their places. |
 | This group starts a new sheet | `d.layout.break_before(g)` | Starts a new page at `g`. |
-| This page title | `d.layout.page_title(thing, text)` | Prints `text` as the title of the pages that draw the block, function or device. |
+| This page title | `d.layout.page_title(thing, text)` | Prints `text` as the title of the pages that draw the block, function, device or nested unit. |
 
 `d.series` is a wiring call, not a layout hint, so it has no row.
 
@@ -202,8 +170,7 @@ def blocks(c, hint=None, count=3):
         with c.function(f"F{i}", f"Relay {i}") as group:
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
             feed = c.terminal_strip(f"X{i}", "DEMO-TB-2.5", 2)
-            c.wire(feed[1], k.coil["A1"], wire=(BU, 0.75))  # a symbol with nothing connected
-            c.wire(k.coil["A2"], feed[2], wire=(BU, 0.75))  # is not drawn
+            c.series(feed, k.coil, feed, wire=(BU, 0.75))  # a symbol with nothing connected is not drawn
         groups[f"F{i}"] = group
     if hint:
         hint(c.layout, groups)
@@ -257,19 +224,14 @@ def compact_sheet(scope):
     )
 
 
-def numbers(c, sheet=False):
+def numbers(c):
     dc = c.dc_supply("24VDC", c.device("G1", "DEMO-PSU-24").output)
     for i in range(1, 34):
         with c.function(f"F{i}", f"Relay {i}"):
             k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
             c.series(dc.plus, k.coil, dc.minus, wire=(BU, 0.75))
-    compact = compact_sheet(c)
-    if sheet:
-        c.layout.profile(sheet=compact)
 
-
-assert draw(lambda c: numbers(c, sheet=False))[1] == house_pages
-assert draw(lambda c: numbers(c, sheet=True))[1] < house_pages
+assert draw(lambda c: (numbers(c), c.layout.profile(sheet=compact_sheet(c))))[1] < house_pages
 
 ranked = lambda hints, g: hints.profile(group_ranks={"F3": 1, "F2": 2, "F1": 3})
 assert drawn(lambda c: blocks(c, ranked))[0] == [["F3", "F2", "F1"]]
@@ -337,15 +299,14 @@ The next block counts the first two. Lamps wired across the rails stand alone, l
 ```python
 def lamps(c, after_contact):
     psu = c.device("G1", "DEMO-PSU-24")
+    dc = c.dc_supply("24VDC", psu.output)
     for i in range(1, 6):
         k = c.device(f"K{i}", "DEMO-RLY-2CO-24")
         h = c.device(f"H{i}", "DEMO-LAMP-24")
         if after_contact:
-            c.wire(psu.output["+"], k.co_1["11"], wire=(BU, 0.75))
-            c.wire(k.co_1["14"], h.lamp["1"], wire=(BU, 0.75))
+            c.series(dc.plus, k.co_1.no, h.lamp, dc.minus, wire=(BU, 0.75))
         else:
-            c.wire(psu.output["+"], h.lamp["1"], wire=(BU, 0.75))
-        c.wire(h.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+            c.series(dc.plus, h.lamp, dc.minus, wire=(BU, 0.75))
 
 
 across, _ = draw(lambda c: lamps(c, after_contact=False))
@@ -356,42 +317,4 @@ big_text, _ = draw(lambda c: circuits(c, "2.5", text_height_mm=Decimal("5.4")))
 assert "LABEL_UNPLACED" in big_text
 ```
 
-## Reading the pages as numbers
-
-`fr.readability(result)` returns a `ReadabilityReport` with the numbers behind the findings: one `ReadabilityPage` row for each schematic page in `.pages` and one `ReadabilityUnit` row for each unit in `.units`. The three types are also in `fr.derive`. The same model gives equal rows, so compare a unit between revisions by its rows. It writes no file and `fr.write` does not emit it. It lays the schematic out again. Only a drawing set that some document prints gets rows. The look findings (`PAGE_UNDERFILLED`, `WIRE_OVER_LABEL`, `TEXT_OVERLAP`, `LONE_CELL`) skip the other sets too.
-
-- **`drawing_set`, `number` and `unit`.** The page as printed in the corner, and the unit it belongs to (`None` for the design's own pages).
-- **`text_height_mm` and `min_text_height_mm`.** The smallest printed capital height in mm and its floor. Change nothing when `text_height_mm` is at or over the floor. When under, raise `text_height_mm` on the profile.
-- **`fill_percent`.** The share of the page's content box the drawing covers, in whole percent. A low number is a mostly empty page with small text. Merge its group into the page before it, or drop a `break_before`.
-- **`wire_crossings`.** How often a wire runs across a wire of another net. A high number means a tangled page. Order the groups with `order`, or put the crossing nets on separate pages.
-- **`struck_labels`.** Texts a wire runs through (`WIRE_OVER_LABEL`). It is INFO: report it with the smallest model.
-- **`text_overlaps`.** Texts that overlap each other or a symbol they do not belong to (`TEXT_OVERLAP`).
-- **`lone_cells`.** Symbols standing alone on a page (`LONE_CELL`). Keep the circuit in one block, or wire the symbol.
-- **`contact_images`, `contact_image_targets` and `single_contact_images`.** The coil images on the page, the contacts they list and the images that list one. Many single images mean a relay used for one contact: a plain wire may read better.
-- **`single_contact_images_other_page`.** The single images whose one contact is on another page, a part of `single_contact_images`. Such an image points off the page, so it reads less well than one beside its contact.
-- **`stars`, `star_branches` and `single_branch_stars`.** The net references on the page, the branches they name on other pages and the references that name one. Many on several pages mean the net is cut across pages. Declare the supply so it is drawn once, or keep the net's ends together.
-  A star can also stand on one page, and then it is no cut. A pin with two or more wires takes a reference for each end. One breaker pin feeding two coils gives each of the three ports a marker naming the other two. A wire that would turn back round its own device is a marker pair too. A contact above a box, with both pins wired to the box's top pins, is one. For the first, distribute through a terminal strip with a named, bridged run (checklist item 4). A bridged three-terminal run took one page from 2 stars to 1.
-- **`page_cuts`.** The wires of two ports cut at a page break, each naming one other page. Keep the two ends in one block, or add a terminal where the circuit changes page.
-
-A reference text reads `p<n>:<cell>` for sheet n of the reference's own drawing set. It reads `p<set>.<page>:<cell>` for a sheet of another set. A net reference adds the net's number, `#<n>`, then its first target. That target is a terminal of the net when it has one, else the first other end in reading order. A marker with more than two other ends prints that target and `+k` for the k others. A contact no conductor reaches prints `N/A` in place of a position. Pole-linked contacts of one item in one row print one back reference to the coil. The coil's table lists every contact.
-
-A unit row adds up the counts of its pages and takes the smallest `text_height_mm` and `fill_percent` and the highest `min_text_height_mm`. Its `pages` is the page count.
-
-```python
-@fr.unit(
-    "cab", revision=1, interface_version=1, date="2026-01-01", text="First", by="XX",
-    title="Cabinet", number="C-1",
-)
-def measured(c):
-    lamps(c, after_contact=True)
-    return Cabinet()
-
-
-d = fr.design("demo_parts")
-d.add(measured, "U1")
-doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, "cab", cover=Path("cover.md"))
-report = fr.readability(fr.build(d, doc))
-assert report.pages
-assert all(page.text_height_mm >= page.min_text_height_mm for page in report.pages)
-assert sum(unit.pages for unit in report.units) == len(report.pages)
-```
+The numbers behind the readability findings are in `fr.readability`: `readability.md`.

@@ -9,13 +9,22 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping
 
-from fransys_layout.geometry import Box, Point, meets
+from fransys_layout.geometry import Box, Point, meets, pad
 
 from .cell_index import CellIndex
-from .space import Run, crosses, run_of
+from .space import Run, crosses, run_of, span
 
 if TYPE_CHECKING:
     from fransys_layout.stages import Handle, LinkMarker
+
+
+def ink_boxes(marker: LinkMarker, *, wired: bool) -> tuple[Box, ...]:
+    """The marker's drawn stub runs, padded by one: what a wire keeps off (layout-0243).
+
+    A wired port's own first run is its wire's lane: the wire turns off it where it likes.
+    """
+    runs = stub_runs(marker)[1 if marker.turn is None and wired else 0 :]
+    return tuple(pad(span(Point(x=r.x, y=r.y), Point(x=r.to_x, y=r.to_y)), 1) for r in runs)
 
 
 def stub_runs(marker: LinkMarker) -> tuple[Run, ...]:

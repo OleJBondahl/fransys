@@ -18,8 +18,8 @@ def _plant(d) -> None:
     q = d.device("Q1", "DEMO-CTR-3P-NC")
     d.device("P9", "DEMO-LAMP-24")
     blue = (BU, 0.5)
-    d.wire(psu.output["+"], q.coil["A1"], wire=blue)
-    d.wire(psu.output["-"], q.coil["A2"], wire=blue)
+    d.detail.wire(psu.output["+"], q.coil["A1"], wire=blue)
+    d.detail.wire(psu.output["-"], q.coil["A2"], wire=blue)
 
 
 def _spare_names(*, hide: bool) -> tuple[set[str], set[str]]:

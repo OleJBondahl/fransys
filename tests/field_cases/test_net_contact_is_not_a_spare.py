@@ -33,12 +33,12 @@ def _built_net_contact():
         lamp = d.device("P1", "DEMO-LAMP-24")
         q = d.device("Q1", "DEMO-CTR-3P-NC")
     blue = (BU, 0.5)
-    d.wire(psu.output["+"], q.coil["A1"], wire=blue)
-    d.wire(psu.output["-"], q.coil["A2"], wire=blue)
-    d.wire(psu.output["+"], q.aux["13"], wire=blue)
-    d.wire(q.aux["14"], lamp["1"], wire=blue)
-    d.wire(psu.output["-"], lamp["2"], wire=blue)
-    d.net("SIG", q.aux_nc["21"], lamp["2"])
+    d.detail.wire(psu.output["+"], q.coil["A1"], wire=blue)
+    d.detail.wire(psu.output["-"], q.coil["A2"], wire=blue)
+    d.detail.wire(psu.output["+"], q.aux["13"], wire=blue)
+    d.detail.wire(q.aux["14"], lamp["1"], wire=blue)
+    d.detail.wire(psu.output["-"], lamp["2"], wire=blue)
+    d.detail.net("SIG", q.aux_nc["21"], lamp["2"])
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)
@@ -58,10 +58,10 @@ def _built_block():
         k1 = d.device("K1", "DEMO-CTR-3P-24")
         block = d.device(None, "DEMO-CTR-BLOCK-1NO1NC", name="block", parent=k1)
     blue = (BU, 0.5)
-    d.wire(feed, k1.coil["A1"], wire=blue)
-    d.wire(k1.coil["A2"], zero, wire=blue)
-    d.wire(feed, block.no["53"], wire=blue)
-    d.wire(block.no["54"], load, wire=blue)
+    d.detail.wire(feed, k1.coil["A1"], wire=blue)
+    d.detail.wire(k1.coil["A2"], zero, wire=blue)
+    d.detail.wire(feed, block.no["53"], wire=blue)
+    d.detail.wire(block.no["54"], load, wire=blue)
     return fr.build(d, cabinet_document(_cabinet)).model
 
 

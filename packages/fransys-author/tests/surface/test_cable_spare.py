@@ -86,7 +86,9 @@ def test_wired_then_spare_and_marked_twice_raise(lib: Draft) -> None:
     m1 = d.device("M1", "TEST-MOTOR-3P")
     w1 = d.cable("W1", THREE)
     w1.core(BN, m1.load["U"], m1.load["V"])
-    with pytest.raises(AuthorError, match="core 1 is already wired or marked spare"):
+    with pytest.raises(
+        AuthorError, match=r"core 1 is already wired or marked spare; free cores: .*core\(<number>"
+    ):
         w1.spare(BN)
     w1.spare(BU)
     with pytest.raises(AuthorError, match="core 2 is already wired or marked spare"):

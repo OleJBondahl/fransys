@@ -49,9 +49,9 @@ def _build(chain: _Chain | None, *, box_feeds: str, out: Path | None = None) -> 
         psu = d.device("G7", "DEMO-PSU-24")
     other = "14" if box_feeds == "11" else "11"
     feed = di.di_1["1"] if box_feeds == "14" else psu.output["+"]
-    d.wire(feed, k1.co_1[box_feeds], wire=wire)
-    d.wire(k1.co_1[other], h1.lamp[1], wire=wire)
-    d.wire(h1.lamp[2], psu.output["-"], wire=wire)
+    d.detail.wire(feed, k1.co_1[box_feeds], wire=wire)
+    d.detail.wire(k1.co_1[other], h1.lamp[1], wire=wire)
+    d.detail.wire(h1.lamp[2], psu.output["-"], wire=wire)
     if chain is not None:
         d.layout.chain(*chain(SimpleNamespace(k1=k1, h1=h1, di=di, psu=psu)))
     result = fr.build(d, cabinet_document(cab))
@@ -97,11 +97,11 @@ def test_the_box_of_a_chains_head_keeps_the_column_it_shares_with_its_other_chan
         k1, k2 = d.device("K7", "DEMO-RLY-2CO-24"), d.device("K8", "DEMO-RLY-2CO-24")
         h1, di = d.device("H7", "DEMO-LAMP-24"), d.device("A7", "DEMO-PLC-DI-2")
         psu = d.device("G7", "DEMO-PSU-24")
-    d.wire(di.di_1["1"], k1.co_1["14"], wire=wire)
-    d.wire(k1.co_1["11"], h1.lamp[1], wire=wire)
-    d.wire(h1.lamp[2], psu.output["-"], wire=wire)
-    d.wire(di.di_2["2"], k2.co_1["14"], wire=wire)
-    d.wire(k2.co_1["11"], psu.output["+"], wire=wire)
+    d.detail.wire(di.di_1["1"], k1.co_1["14"], wire=wire)
+    d.detail.wire(k1.co_1["11"], h1.lamp[1], wire=wire)
+    d.detail.wire(h1.lamp[2], psu.output["-"], wire=wire)
+    d.detail.wire(di.di_2["2"], k2.co_1["14"], wire=wire)
+    d.detail.wire(k2.co_1["11"], psu.output["+"], wire=wire)
     d.layout.chain(di.di_1, k1.co_1, h1.lamp)
     model = fr.build(d, cabinet_document(cab)).model
     at = {

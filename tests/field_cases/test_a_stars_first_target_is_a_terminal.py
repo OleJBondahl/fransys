@@ -35,10 +35,9 @@ def _built() -> Model:
         k2, k3 = (d.device(tag, "DEMO-RLY-2CO-24") for tag in ("K2", "K3"))
     with d.function("T", "Feed"):
         lamp = d.device("H1", "DEMO-LAMP-24")
-    d.wire(lamp.lamp[1], x1[1], wire=(BU, 0.5))
-    ends = [k1.main[pin] for pin in "135"] + [k2.coil["A2"], k3.coil["A2"], x1[1]]
+    ends = [lamp.lamp[1], *(k1.main[pin] for pin in "135"), k2.coil["A2"], k3.coil["A2"], x1[1]]
     for end in ends[1:]:
-        d.wire(ends[0], end, wire=(BU, 0.5))
+        d.detail.wire(ends[0], end, wire=(BU, 0.5))
     return fr.build(d, cabinet_document(cabinet)).model
 
 
@@ -56,7 +55,7 @@ def _terminal_cell(model: Model) -> str:
 def test_a_relays_marker_names_the_terminal_first() -> None:
     model = _built()
     cell = _terminal_cell(model)
-    assert cell == "5A"  # the poles stand in 1A and the terminal reads after them
+    assert cell == "4A"  # the poles stand in 1A and the terminal reads after them
     for name in ("-K2:A2", "-K3:A2"):
         text = marker_text(model, _by_port(model)[name])
         assert text.startswith(f"#1-{cell} +")

@@ -97,6 +97,7 @@ def _live() -> list[tuple[str, object]]:
     strip = d.terminal_strip("X1", "DEMO-TB-2.5", 2)
     objects = {
         "Design": d,
+        "Detail": d.detail,
         "UnitDesign": _UNIT_DESIGNS[0],
         "Device": device,
         "Fn": fn,

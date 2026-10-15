@@ -140,10 +140,8 @@ def wired_requests(
 ) -> WiredPick:
     """Which requests bind by wiring (model-0211): W1 candidates, `narrow` (W2, W3), then W4.
 
-    `ranked` maps every channel function to its serving place and signal. One left binds; more
-    than one is ambiguous and binds nothing. W5: a channel picked by two kind-matched requests,
-    binds neither and is reported as contested; two wrong-kind requests bind neither and go to the
-    free queue. A wrong-kind pick yields to a kind-matched pick of the same channel.
+    `ranked` maps each channel to its place and signal; one candidate binds, several bind none.
+    W5: two kind-matched picks of one channel bind neither (contested); wrong-kind picks yield.
     """
     by_function = ports_by_function(model)
     owners = {request.subject for request in requests}

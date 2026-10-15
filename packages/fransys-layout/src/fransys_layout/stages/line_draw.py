@@ -12,6 +12,7 @@ from fransys_layout.geometry.meet import contains_point
 
 from ._row_join import _joined
 from .harness_route import LineEnd, line_paths, root
+from .line_clear import box_end, off_wires
 from .line_shapes import DrawnLeg
 from .line_side import (
     across_by_room,
@@ -19,6 +20,7 @@ from .line_side import (
     crosses_keepout,
     faced,
     run_on,
+    stub_cover,
     stub_in,
     stub_on_wire,
     turned,
@@ -138,7 +140,30 @@ def line_pieces(
     `absent` is the first end's branch off this page; `margin` keeps a fan-out's split inside
     (layout-0158); `trunk` is set when the root is off the page (`line_trunk`).
     """
-    drawn = _all_drawn(ends, absent, _within(grid.region, margin), grid)
+    bounds = _within(grid.region, margin)
+    plain = _all_drawn(ends, absent, bounds, grid)
+    turned = off_wires(
+        plain, grid, FAN_GRIDS, lambda one, turn: _drawn(one, bounds, grid, Way(turn=turn))
+    )
+    pieces = _pieces(turned, absent, grid, trunk)
+    if turned == plain:
+        return pieces
+    # layout-0246: a turn that lands the stub deeper on a symbol, a text or a wire is no turn
+    kept = _pieces(plain, absent, grid, trunk)
+    return kept if _stub_cover(kept, grid) < _stub_cover(pieces, grid) else pieces
+
+
+def _stub_cover(pieces: Pieces, grid: Grid) -> int:
+    """How much the stubs' text boxes lie on keep-outs and wires: the placement's keep-outs."""
+    return sum(stub_cover(s.end, grid.stub, grid.obstacles, grid.wires) for s in pieces.stubs)
+
+
+def _pieces(
+    drawn: Sequence[tuple[EndOnPage, LineEnd, Fan | None]],
+    absent: int | None,
+    grid: Grid,
+    trunk: tuple[Facing, tuple[int, int]] | None,
+) -> Pieces:
     others = [end.branch for _, end, _ in drawn]
     joint = run_on([(end, fan) for one, end, fan in drawn if not one.leaving])
     leave = [end for one, end, _ in drawn if one.leaving]
@@ -284,7 +309,7 @@ def _drawn(
 ) -> tuple[EndOnPage, LineEnd, Fan | None]:
     """The end's `LineEnd`, and its fan-out when it ends in pins (to one side, as `way` says)."""
     if one.box is not None:
-        end = _box_end(one.box, one.mate, one.toward)
+        end = box_end(one, one.box, grid)
         return one, LineEnd(one.branch, end, one.interface), None
     rows = _pin_rows(turned(one.pins, way.turn[0]) if way.turn else faced(one.pins, way.toward))
     facing = rows[0][0].end.facing  # the line ends at the first row's split, out of that row
@@ -338,22 +363,6 @@ def _through_rows(
     for fan in (one for one in fans if one.rows):
         found = [(b, _joined(points, fan, grid)) for b, points in found]
     return Pieces(tuple(found), fans, tuple(stubs))
-
-
-def _box_end(box: Box, mate: Box | None, toward: tuple[int, int] | None = None) -> End:
-    """A plug box's edge middle away from the box it mates, on the grid: up unless it is below.
-
-    A plug-less box (layout-0206) takes the edge facing the rows of the line's other ends.
-    """
-    below = mate is not None and mate.y + mate.height <= box.y
-    if toward is not None:
-        below = toward[0] >= box.y + box.height
-    x = box.x + box.width // 2
-    x -= x % WIRING_GRID
-    if below:
-        y = box.y + box.height
-        return End(at=Point(x=x, y=y + (-y) % WIRING_GRID), facing=Facing.S)
-    return End(at=Point(x=x, y=box.y - box.y % WIRING_GRID), facing=Facing.N)
 
 
 def fan_out(

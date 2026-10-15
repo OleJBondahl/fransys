@@ -46,13 +46,13 @@ def _build() -> fr.BuildResult:
     cab = d.location("C1", "Cabinet")
     for k in range(PAIRS):
         header = d.device(f"J{k}", "DEMO-HSG-4F", contacts="DEMO-CRIMP-F")
-        d.wire(header[1], d.device(f"H{k}", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
+        d.detail.wire(header[1], d.device(f"H{k}", "DEMO-LAMP-24")["1"], wire=(BK, 0.5))
         loom = d.harness(f"W{k}")
         near = d.device(f"P{k}", "DEMO-HSG-4M", parent=loom, contacts="DEMO-CRIMP-M")
         far = d.device(f"Q{k}", "DEMO-HSG-4M", parent=loom, contacts="DEMO-CRIMP-M")
         d.mate(near, header)
         for pin in (1, 2, 3, 4):
-            d.wire(near[pin], far[pin], wire=(BK, 0.5))
+            d.detail.wire(near[pin], far[pin], wire=(BK, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover))

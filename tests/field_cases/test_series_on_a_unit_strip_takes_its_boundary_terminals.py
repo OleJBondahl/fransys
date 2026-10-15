@@ -83,12 +83,12 @@ def test_wire_on_a_unit_strip_takes_its_boundary_terminals() -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_strip_unit(3), "U1")
     for tag in ("M1", "M2", "M3"):
-        d.wire(s.x1, d.device(tag, "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+        d.detail.wire(s.x1, d.device(tag, "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     result = fr.build(d)
     assert len(_terminals(result)) == 4
     assert {k[-1] for k in _landed(result)} == {"1", "2", "3"}
     with pytest.raises(AuthorError, match=r"(?s)X1.*U1"):
-        d.wire(s.x1, d.device("M4", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+        d.detail.wire(s.x1, d.device("M4", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
 
 
 def test_a_pe_conductor_on_a_unit_without_a_pe_run_raises() -> None:
@@ -117,7 +117,7 @@ def test_core_on_a_unit_strip_takes_its_boundary_terminal() -> None:
 def _free_after_wiring(pin_of: Callable[[fr.TerminalStrip], Any]) -> None:
     d = fr.design("demo_parts", place="C1")
     s = d.add(_strip_unit(4), "U1")
-    d.wire(pin_of(s.x1), d.device("M0", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
+    d.detail.wire(pin_of(s.x1), d.device("M0", "DEMO-MOTOR-4KW")["U"], wire=(BK, 2.5))
     d.series(
         s.x1,
         d.cable("W1", "DEMO-CBL-4G1.5"),

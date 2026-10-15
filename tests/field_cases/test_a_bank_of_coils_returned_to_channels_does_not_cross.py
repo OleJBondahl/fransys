@@ -40,8 +40,8 @@ def _built() -> tuple:
     with d.function("B", "Relay bank"):
         for i in range(COUNT):
             relay = d.device(f"K{i + 1}", "DEMO-RLY-2CO-24")
-            d.wire(live[1 + i % 4], relay.coil["A1"], wire=(BU, 0.5))
-            d.wire(plc[PINS[i]], relay.coil["A2"], wire=(BU, 0.5))
+            d.detail.wire(live[1 + i % 4], relay.coil["A1"], wire=(BU, 0.5))
+            d.detail.wire(plc[PINS[i]], relay.coil["A2"], wire=(BU, 0.5))
     cover = Path(tempfile.mkdtemp()) / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cab, cover=cover)

@@ -49,7 +49,7 @@ def _ext(u: Any) -> _Open:
     k1 = u.device("K1", "DEMO-RLY-2CO-24")
     k2 = u.device("K2", "DEMO-RLY-2CO-24")
     x90 = u.terminal_strip("X90", None, 3, external=True)
-    u.wire(x90[1].outer, k1.coil["A1"], wire=("WH", 0.5))
+    u.detail.wire(x90[1].outer, k1.coil["A1"], wire=("WH", 0.5))
     cable = u.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
     cable.core(1, x90[2].outer, k1.coil["A2"])
     cable.core(2, x90[3].outer, k2.coil["A1"])

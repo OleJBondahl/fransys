@@ -18,7 +18,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import layout_trigger_document
-from fransys_el import OPTIONS
+from fransys_el import OPTIONS, REF_TINTS
 from fransys_render import pages as render_pages
 
 from fransys_layout.engines.schematic.engine import stage_results
@@ -26,14 +26,10 @@ from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import WIRING_GRID, Orientation, symbol_geometry
 from fransys_layout.lint.codes import LABEL_UNPLACED
-from fransys_model.derive.drawing_text import (
-    frame_column,
-    frame_row,
-    label_text,
-    marker_text,
-    off_stub_text,
-    reference_number,
-)
+from fransys_layout.stages.wire_copies import WireCopies
+from fransys_model.derive.drawing_text import frame_column, frame_row, label_text, marker_text
+from fransys_model.derive.marker_text import reference_number
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Severity
 from fransys_model.layout import (
     Label,
@@ -271,7 +267,7 @@ def test_a_reference_wired_to_a_member_leaves_its_list_by_a_junction_dot_and_an_
     dx, dy = (nx > px) - (nx < px), (ny > py) - (ny < py)
     dot = (px + dx * WIRING_GRID, py + dy * WIRING_GRID)  # one grid out along the wire
     sheet = default_sheet_format()
-    svg = render_pages(model)[f"{page.id.kind}:{page.id.value}"]
+    svg = render_pages(model, tints=REF_TINTS)[f"{page.id.kind}:{page.id.value}"]
     dots = {
         _grid(sheet, x, y)
         for x, y in re.findall(r'<circle class="junction" cx="([^"]+)" cy="([^"]+)"', svg)
@@ -290,6 +286,18 @@ def test_a_reference_wired_to_a_member_leaves_its_list_by_a_junction_dot_and_an_
     assert end[0] - dot[0] >= WIRING_GRID  # east of the dot by at least one grid
     assert (end[0] - dot[0]) % WIRING_GRID == 0  # and by whole grids
     assert (dot, end) in stubs
+
+
+@pytest.fixture
+def _no_copies(monkeypatch):
+    """Model-0220 draws a 3+ port terminal as copies at each pin, with no reference; these tests
+    keep a terminal reference (the unwired-side rule), so the copies are switched off."""
+    monkeypatch.setattr(
+        "fransys_layout.engines.schematic._arrange_columns.with_wire_copies",
+        lambda columns, drawn, functions, connections, _: WireCopies(
+            functions, drawn, connections, columns, {}
+        ),
+    )
 
 
 def _terminal_hub(*, far: tuple[str, ...] = ()):
@@ -349,6 +357,7 @@ def _x1_reference(model) -> LinkMarker:
     return reference
 
 
+@pytest.mark.usefixtures("_no_copies")
 def test_a_terminal_reference_on_its_unwired_side_needs_no_turn() -> None:
     """layout-0053: X1's wires end at one symbol port, its reference stands at the other one
     (`_free_side`): nothing crosses it, so it keeps its stub and draws no via (a reference
@@ -364,6 +373,7 @@ def test_a_terminal_reference_on_its_unwired_side_needs_no_turn() -> None:
     _stands_apart_from_the_wires(result, reference)
 
 
+@pytest.mark.usefixtures("_no_copies")
 def test_a_terminal_reference_with_an_off_stub_on_its_unwired_side_needs_no_turn() -> None:
     """layout-0053: the merged reference (a stub to another location in its last line) takes the
     same path: still on the unwired side, no via."""
@@ -375,6 +385,7 @@ def test_a_terminal_reference_with_an_off_stub_on_its_unwired_side_needs_no_turn
     _stands_apart_from_the_wires(result, reference)
 
 
+@pytest.mark.usefixtures("_no_copies")
 def test_two_far_ends_on_a_reference_port_are_each_named_and_the_list_stays_apart() -> None:
     """layout-0053/0057: X1 lists K4-K6 and is wired to K1 and K2 in another location. One record
     cannot name two far ends, so the reference keeps its list alone and each far end has a stub
@@ -435,7 +446,9 @@ def test_a_turned_reference_with_an_off_stub_renders_and_prints_the_measured_arr
     far = d.item("DEMO-CONN-2P", tag="Q1", at=d.location("FLD", "Field"), group=grp)["1"]
     d.cable("DEMO-CBL-4G1.5", tag="W1").core(1, hub, far)
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    pages = render_pages(model)  # raises when the turned merged marker cannot be drawn
+    pages = render_pages(
+        model, tints=REF_TINTS
+    )  # raises when the turned merged marker cannot be drawn
     (merged,) = (m for m in layout_of(model, LinkMarker).values() if m.via_x is not None)
     assert merged.star is StarKind.OFF  # one record: the list and the stub
     svg = pages[f"{merged.page.kind}:{merged.page.value}"]
@@ -465,7 +478,9 @@ def test_a_turned_reference_that_carries_a_stub_is_one_merged_record_render_draw
     far = d.item("DEMO-CONN-2P", tag="Q1", at=d.location("FLD", "Field"), group=grp)["1"]
     d.cable("DEMO-CBL-4G1.5", tag="W1").core(1, hub, far)
     model = fr.build(parts, d.draft(), layout_trigger_document()).model
-    pages = render_pages(model)  # raises when the turned merged marker cannot be drawn
+    pages = render_pages(
+        model, tints=REF_TINTS
+    )  # raises when the turned merged marker cannot be drawn
     (merged,) = (m for m in layout_of(model, LinkMarker).values() if m.via_x is not None)
     assert merged.star is StarKind.OFF  # one record: the list and the stub
     assert merged.port == hub.id

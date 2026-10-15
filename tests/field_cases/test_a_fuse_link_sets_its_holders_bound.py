@@ -28,10 +28,10 @@ def _build() -> tuple[fr.BuildResult, fr.Device]:
     x1 = d.device("X1", "DEMO-TB-2.5", external=True)
     x2 = d.device("X2", "DEMO-TB-2.5", external=True)
     dc = d.dc_supply("HV", g1.string)
-    d.wire(dc.plus.pin, f1[1], wire=("BK", 1.5))
-    d.wire(f1[2], s1[1], wire=("BK", 1.5))
-    d.wire(s1[2], x1["internal"], wire=("BK", 1.5))
-    d.wire(dc.minus.pin, x2["internal"], wire=("BK", 1.5))
+    d.detail.wire(dc.plus.pin, f1[1], wire=("BK", 1.5))
+    d.detail.wire(f1[2], s1[1], wire=("BK", 1.5))
+    d.detail.wire(s1[2], x1["internal"], wire=("BK", 1.5))
+    d.detail.wire(dc.minus.pin, x2["internal"], wire=("BK", 1.5))
     return fr.build(d), link
 
 

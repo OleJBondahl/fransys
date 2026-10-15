@@ -72,17 +72,17 @@ def _load(name: str) -> Model:
 
 @pytest.fixture(scope="session")
 def cabinet_laid_out() -> Model:
-    """The wide cabinet: 2 pages, 6 link markers (all star)."""
+    """The wide cabinet: 2 pages, 1 link marker (a line stub; model-0220, layout-0224)."""
     return _load("cabinet_laid_out.json")
 
 
 @pytest.fixture(scope="session")
 def cabinet_narrow_laid_out() -> Model:
-    """The narrow cabinet: 5 pages, 8 link markers (star and plain)."""
+    """The narrow cabinet: 5 pages, 4 link markers (2 line stubs, one severed pair)."""
     return _load("cabinet_narrow_laid_out.json")
 
 
 @pytest.fixture(scope="session")
 def cabinet_two_location_laid_out() -> Model:
-    """The two-location cabinet: 2 pages, 7 link markers (4 of them off stubs)."""
+    """The two-location cabinet: 2 pages, 4 link markers (all off stubs)."""
     return _load("cabinet_two_location_laid_out.json")

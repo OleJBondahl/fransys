@@ -72,8 +72,21 @@ def test_the_guide_names_every_public_name_and_keyword():
     assert not missing, f"{len(missing)} public names lack a backticked guide entry: {missing}"
 
 
+def detail_calls() -> set[str]:
+    """Each `d.detail` call by its full spelling: its bare name also names its old home on `d`."""
+    calls = inspect.getmembers(fr.Detail, inspect.isfunction)
+    return {f"d.detail.{name}" for name, _ in calls if not name.startswith("_")}
+
+
+def test_the_guide_names_every_detail_call_by_its_full_spelling():
+    guide = _guide_text()
+    missing = sorted(n for n in detail_calls() if not mentioned(n, guide))
+    assert not missing, f"detail calls lack a backticked guide entry: {missing}"
+
+
 def test_the_collector_sees_keywords_and_numbers():
     names = public_names()
     assert {"module_mm", "column_gap", "text_height_mm", "build"} <= names
+    assert "d.detail.rail_bond" in detail_calls()
     assert mentioned("a_name", "see `a_name` here")
     assert not mentioned("a_name", "see a_name")

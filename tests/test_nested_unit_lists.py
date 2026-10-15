@@ -16,7 +16,7 @@ import fransys as fr
 import fransys_author
 import fransys_parts
 import pytest
-from fransys_pdf import _lists
+from fransys_pdf import _lists, _lists_terminal
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
@@ -195,7 +195,7 @@ def test_a_nested_units_terminal_row_prints_an_outside_end_as_empty_and_keeps_th
 def test_a_nested_units_terminal_cell_never_prints_a_dangling_separator(nested):
     model, inner, strip = nested
     rows = terminal_rows(model, strip, unit=inner, context=list_context(model, strip))
-    table = _lists._terminal_table(model, rows)
+    table = _lists_terminal._terminal_table(model, rows)
     assert 'text("-P1:1")' in table
     assert "; " not in table
     assert cell_text(rows[0].external_ends) == "-P1:1"

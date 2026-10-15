@@ -26,7 +26,9 @@ def design(
     place: str | None = None,
     wiring: Mapping[WiringRow, RowValue] | None = None,
 ) -> Design:
-    """Start a `Design` from part-library names or generated parts modules, each checked fresh.
+    """Core: start a `Design` from part libraries or generated parts modules.
+
+    Each library is checked fresh.
 
     `place` names the first location, as a bare tag. `wiring` maps rows (`fr.DC_SUPPLY`, ...)
     to a colour or a (colour, size): it replaces those IEC 60204-1 default rows for the design.

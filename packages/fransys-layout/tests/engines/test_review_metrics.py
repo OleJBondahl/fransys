@@ -8,13 +8,14 @@ that are clean stay clean here, and the variants where the engine still draws a 
 pinned as known engine defects.
 """
 
+from contextlib import nullcontext
 from decimal import Decimal
 from functools import cache
 from typing import TYPE_CHECKING
 
 import pytest
 from fransys_el import OPTIONS
-from layout_cabinet import build_cabinet
+from layout_cabinet import build_cabinet, no_wire_copies
 
 from fransys_layout.engines.schematic.engine import stage_results
 from fransys_layout.engines.schematic.read import read_inputs
@@ -67,13 +68,21 @@ def _narrow(draft: Draft, width_mm: int) -> None:
 
 
 @cache
-def _cabinet(*, reverse: bool = False, second_location: bool = False, width_mm: int | None = None):
+def _cabinet(
+    *,
+    reverse: bool = False,
+    second_location: bool = False,
+    width_mm: int | None = None,
+    copies: bool = True,
+):
+    """The cabinet laid out; `copies=False` draws no terminal as copies (model-0220)."""
     draft = build_cabinet(reverse=reverse, second_location=second_location)
     if width_mm is not None:
         _narrow(draft, width_mm)
     model = freeze(draft)
     inputs = read_inputs(model, options=OPTIONS)
-    results, findings = stage_results(model, inputs)
+    with nullcontext() if copies else no_wire_copies():
+        results, findings = stage_results(model, inputs)
     return inputs, results, findings
 
 
@@ -102,9 +111,24 @@ def _review(findings: tuple[Finding, ...]) -> list[str]:
 
 @pytest.mark.parametrize("variant", _VARIANTS[:3])
 def test_the_invented_cabinet_has_none_of_the_five_review_defects(variant: dict) -> None:
-    """All five review codes are findings now, and `_review` reads them all off `findings`.
+    """All five review codes are findings now, and `_review` reads them all off `findings`."""
+    _, _, findings = _cabinet(**variant)
+    assert _review(findings) == []
 
-    Every variant draws link markers, so the marker-shaped checks have something to judge.
+
+@pytest.mark.parametrize(
+    "variant",
+    [
+        pytest.param({"copies": False}, id="default, no copies"),
+        pytest.param({"reverse": True, "copies": False}, id="reversed authoring order, no copies"),
+        pytest.param({"second_location": True}, id="two locations"),
+    ],
+)
+def test_the_marker_shaped_review_checks_have_markers_to_judge_and_find_none(variant: dict) -> None:
+    """With copies the default cabinet draws no link marker (model-0220), so these variants do.
+
+    The star terminal is drawn whole, or the second location cuts a wire: markers stand, and the
+    marker-shaped checks (`WIRE_OVER_LABEL`, `TEXT_OVERLAP`, ...) judge them.
     """
     _, results, findings = _cabinet(**variant)
     assert results.layout.markers

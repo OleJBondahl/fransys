@@ -1,6 +1,7 @@
 """Validator: a function's rated voltage against the voltage across it (decision model-0079).
 
-Codes: `RATING_VOLTAGE_BELOW_CIRCUIT`.
+Codes: `RATING_VOLTAGE_BELOW_CIRCUIT`, and `RATING_CURRENT_KIND_UNSTATED` (`WARNING`): a rating that
+states a voltage for one current kind only, on a function that stands on rails of the other kind.
 """
 
 from fractions import Fraction
@@ -15,6 +16,7 @@ from fransys_model.vocab.rail_reach import (
     ports_by_function,
     rails_by_potential,
     reach_of,
+    voltage_across,
     worst_stand,
 )
 from fransys_model.vocab.rating_readers import function_ratings
@@ -29,6 +31,7 @@ if TYPE_CHECKING:
     from fransys_model.vocab.rating_readers import FunctionRating
 
 RATING_VOLTAGE_BELOW_CIRCUIT: Final[str] = "RATING_VOLTAGE_BELOW_CIRCUIT"
+RATING_CURRENT_KIND_UNSTATED: Final[str] = "RATING_CURRENT_KIND_UNSTATED"
 
 
 def _message(function: Function, limit: Decimal, stand: Stand, source: str) -> str:
@@ -91,6 +94,32 @@ def _source_findings(
     return found
 
 
+def _kind_finding(
+    function: Function, source: FunctionRating, label: str, reach: RailReach
+) -> Finding | None:
+    """A WARNING when the rating states one voltage kind and the function stands on the other."""
+    rating = source.rating
+    stated_ac = rating.voltage_ac_v is not None
+    if stated_ac == (rating.voltage_dc_v is not None):
+        return None
+    stand = voltage_across(reach, ac=not stated_ac)
+    if stand is None or voltage.magnitude(stand.volt) == 0:
+        return None
+    have, other = ("AC", "DC") if stated_ac else ("DC", "AC")
+    names = ", ".join(rail.name for rail in stand.rails)
+    where = f"{other} rail{'s' if len(stand.rails) > 1 else ''} {names}"
+    return Finding(
+        code=RATING_CURRENT_KIND_UNSTATED,
+        severity=Severity.WARNING,
+        subjects=(function.id,),
+        message=(
+            f"{ref(function)} states a {have} rating only ({label}) and stands on {where} at "
+            f"{voltage.show(stand.volt)} V: state voltage_{other.lower()}_v in its part, "
+            f"or use a part rated for {other}"
+        ),
+    )
+
+
 def check_ratings(model: Model) -> tuple[Finding, ...]:
     """Check that no function is rated for less voltage than stands across it.
 
@@ -111,4 +140,7 @@ def check_ratings(model: Model) -> tuple[Finding, ...]:
         for source in sources:
             label = _source_label(source, unit_of)
             found += _source_findings(function, source, label, reach)
+            kind = _kind_finding(function, source, label, reach)
+            if kind is not None:
+                found.append(kind)
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

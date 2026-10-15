@@ -32,17 +32,17 @@ def _coils(*, series: bool, lamp_in_series: bool = False, chain_colour=BU):
     ks = [d.device(f"K{i}", "DEMO-RLY-2CO-24") for i in (1, 2, 3)]
     lamp = d.device("H1", "DEMO-LAMP-24")
     if not series:
-        d.wire(psu.output["+"], ks[0].coil["A1"], wire=(BU, 0.75))
-        d.wire(ks[0].coil["A2"], ks[1].coil["A1"], wire=(BU, 0.75))
-        d.wire(ks[1].coil["A2"], ks[2].coil["A1"], wire=(BU, 0.75))
-        d.wire(ks[2].coil["A2"], psu.output["-"], wire=(BU, 0.75))
+        d.detail.wire(psu.output["+"], ks[0].coil["A1"], wire=(BU, 0.75))
+        d.detail.wire(ks[0].coil["A2"], ks[1].coil["A1"], wire=(BU, 0.75))
+        d.detail.wire(ks[1].coil["A2"], ks[2].coil["A1"], wire=(BU, 0.75))
+        d.detail.wire(ks[2].coil["A2"], psu.output["-"], wire=(BU, 0.75))
     else:
         d.series(dc.plus, *(k.coil for k in ks), dc.minus, wire=(chain_colour, 0.75))
     if lamp_in_series:
         d.series(ks[0].coil, lamp.lamp, dc.minus, wire=(BU, 0.75))
     else:
-        d.wire(ks[0].coil["A2"], lamp.lamp["1"], wire=(BU, 0.75))
-        d.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
+        d.detail.wire(ks[0].coil["A2"], lamp.lamp["1"], wire=(BU, 0.75))
+        d.detail.wire(lamp.lamp["2"], psu.output["-"], wire=(BU, 0.75))
     return d
 
 
@@ -69,9 +69,9 @@ def _fault(*, series: bool):
         d.series(dc.plus, f1.element, x1, wire=(BK, 1.5))
         d.series(dc.minus, x1, wire=(BK, 1.5))
     else:
-        d.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
-        d.wire(f1[2], x1[3], wire=(BK, 1.5))
-        d.wire(dc.minus.pin, x1[4], wire=(BK, 1.5))
+        d.detail.wire(dc.plus.pin, f1[1], wire=(BK, 1.5))
+        d.detail.wire(f1[2], x1[3], wire=(BK, 1.5))
+        d.detail.wire(dc.minus.pin, x1[4], wire=(BK, 1.5))
     return d
 
 
@@ -89,9 +89,9 @@ def _growing_run(*, series: bool):
         if series:
             d.series(dc.plus, feed, lamp, dc.minus, wire=(BU, 0.75))
         else:
-            d.wire(dc.plus.pin, feed, wire=(BU, 0.75))
-            d.wire(feed, lamp["1"], wire=(BU, 0.75))
-            d.wire(lamp["2"], dc.minus.pin, wire=(BU, 0.75))
+            d.detail.wire(dc.plus.pin, feed, wire=(BU, 0.75))
+            d.detail.wire(feed, lamp["1"], wire=(BU, 0.75))
+            d.detail.wire(lamp["2"], dc.minus.pin, wire=(BU, 0.75))
     return d
 
 

@@ -146,7 +146,7 @@ def test_a_mate_outside_the_unit_reads_as_it_does_outside_it_in_the_units_connec
     text taking `None` for the context fails the no-context path assertion.
     """
     from fransys_model.derive import connector_rows, is_sole_unit_root, list_context
-    from fransys_model.derive.drawing_text import port_designation_in
+    from fransys_model.derive.location_text import port_designation_in
     from fransys_model.vocab.tables import items
 
     model = _build_system()[0].model

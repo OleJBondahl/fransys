@@ -30,7 +30,9 @@ def _pdf(root: Path, *, blocks: int) -> pypdfium2.PdfDocument:
         with d.function(f"F{i}", f"Relay and lamp circuit {i}"):
             k = d.device(f"K{i}", "DEMO-RLY-2CO-24")
             lamp = d.device(f"H{i}", "DEMO-LAMP-24")
-            d.wire(k.co_1["14"], lamp[1], wire=("RD", 0.75))  # layout-0218: the circuit is wired
+            d.detail.wire(
+                k.co_1["14"], lamp[1], wire=("RD", 0.75)
+            )  # layout-0218: the circuit is wired
     cover = root / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     notes = root / "cover.notes.md"

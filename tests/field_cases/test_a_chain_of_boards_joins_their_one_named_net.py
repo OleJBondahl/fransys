@@ -1,8 +1,8 @@
 """Field case: two instances of a board unit, each declaring its through-net "BUS", are chained.
 
-The shape: a board unit declares `d.net("BUS", J1[1], J2[1])`. A container adds two instances,
-mates a plug to the first board's J2 and another plug to the second board's J1, and wires the two
-plugs together, so the one bus runs through both boards.
+The shape: a board unit declares `d.detail.net("BUS", J1[1], J2[1])`. A container adds two
+instances, mates a plug to the first board's J2 and another plug to the second board's J1, and
+wires the two plugs together, so the one bus runs through both boards.
 
 The bug (v0.11.1): `NET_SHORTED` fired, "one physical net joins the declared nets BUS, BUS",
 because it errored whenever a physical net held more than one declared net, whatever their names.
@@ -27,7 +27,7 @@ class _Io(NamedTuple):
 def _board(u: fr.Design) -> _Io:
     j1 = u.device("J1", _CONN, interface=True)
     j2 = u.device("J2", _CONN, interface=True)
-    u.net("BUS", j1["1"], j2["1"])
+    u.detail.net("BUS", j1["1"], j2["1"])
     return _Io(j1.x1, j2.x1)
 
 
@@ -37,7 +37,7 @@ def _chain() -> fr.Design:
     p1, p2 = d.device("P1", _CONN), d.device("P2", _CONN)
     d.mate(p1, b1.J2)
     d.mate(p2, b2.J1)
-    d.wire(p1["1"], p2["1"], wire=(BK, 1.5))
+    d.detail.wire(p1["1"], p2["1"], wire=(BK, 1.5))
     return d
 
 
@@ -53,8 +53,8 @@ def test_the_bus_wired_to_a_differently_named_net_is_still_shorted() -> None:
     d = fr.design("demo_parts")
     b1 = d.add(_board, "B1")
     other = d.device("X1", _CONN)
-    d.net("OTHER", other["1"])
+    d.detail.net("OTHER", other["1"])
     plug = d.device("P1", _CONN)
     d.mate(plug, b1.J2)
-    d.wire(plug["1"], other["1"], wire=(BK, 1.5))
+    d.detail.wire(plug["1"], other["1"], wire=(BK, 1.5))
     assert len(_shorted(d)) == 1

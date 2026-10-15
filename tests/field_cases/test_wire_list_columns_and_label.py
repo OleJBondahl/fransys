@@ -44,7 +44,7 @@ def _cabinet(d: fr.Design) -> _Open:
     board = d.device(None, "DEMO-PCB-IO", name="board")
     plug = d.device("X1", "DEMO-CONN-2P", parent=board)
     strip = d.terminal_strip("X9", "DEMO-TB-2.5")
-    d.wire(plug["1"], strip[1].outer, wire=(BU, 0.5))
+    d.detail.wire(plug["1"], strip[1].outer, wire=(BU, 0.5))
     return _Open()
 
 

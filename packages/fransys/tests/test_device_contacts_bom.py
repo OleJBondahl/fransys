@@ -14,7 +14,7 @@ def _contact_line(wired: int) -> fr.derive.BomLine:
     strip = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     p1 = d.device("P1", "DEMO-HSG-4M", contacts="DEMO-CRIMP-M")
     for number in range(1, wired + 1):
-        d.wire(strip[number], p1[str(number)], wire=(BU, 0.5))
+        d.detail.wire(strip[number], p1[str(number)], wire=(BU, 0.5))
     model = fr.build(d).model
     (line,) = (b for b in fr.derive.bom_lines(model) if b.mpn == "DEMO-CRIMP-M")
     return line

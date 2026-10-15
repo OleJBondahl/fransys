@@ -19,9 +19,10 @@ from fransys_author.surface._strip_marks import (
 )
 from fransys_author.surface._tags import floating_name
 from fransys_author.surface._unit_strip import take
+lazy from fransys_author._hint_writes import _write_placement
 lazy from fransys_author._origin import caller_origin
 lazy from fransys_author.design import Scope
-lazy from fransys_author.handles import Group, Strip, Terminal, _write_placement
+lazy from fransys_author.handles import Group, Strip, Terminal
 lazy from fransys_author.surface._pairing import End, Ends
 
 if TYPE_CHECKING:
@@ -69,7 +70,9 @@ class TerminalStrip:
         self._spec, self._boundary_for = (interface, unused), boundary
         self._boundary = None if boundary is None else boundary(interface, unused)
         self._runs: set[str] = set()
-        self._outside: set[int] = set()  # numbers a container took through `d.series` or `d.wire`
+        self._outside: set[int] = (
+            set()
+        )  # numbers a container took through `d.series` or `d.detail.wire`
         self._pe_run: Run | None = None
         self._made: dict[int, Terminal] = {}
         self._used: set[int] = set()
@@ -167,7 +170,7 @@ class TerminalStrip:
         interface: bool = False,
         unused: bool = False,
     ) -> Run:
-        """A named run of `count` terminals that counts inside `label`, bridged when asked.
+        """Core: a named run of `count` terminals that counts inside `label`, bridged when asked.
 
         `bridged=True` jumpers the whole run; `bridged=(first, last)` terminals `first` to `last`.
         With no `count` the run is `bridged=True` and grows, each new terminal bridged to the last.

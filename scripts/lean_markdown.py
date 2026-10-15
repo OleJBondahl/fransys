@@ -26,6 +26,7 @@ _PATTERNS: tuple[str, ...] = (
     "docs/design/*.md",
     "docs/ROADMAP.md",
     "docs/GLOSSARY.md",
+    "docs/LAYOUT-RULES.md",
     "docs/contracts/*.md",
     "CLAUDE.md",
     "packages/*/CLAUDE.md",

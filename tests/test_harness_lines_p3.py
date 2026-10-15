@@ -20,7 +20,7 @@ import ha_study_board
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import WIRING_GRID
 from fransys_model.derive import harness_line_ends, line_conductors, line_designation
-from fransys_model.derive.drawing_text import off_stub_text
+from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.layout import (
     ConnectorBox,
     HarnessFanOut,

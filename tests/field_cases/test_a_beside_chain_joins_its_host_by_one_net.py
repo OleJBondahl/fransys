@@ -49,7 +49,7 @@ def _wire(d: Any, shape: str, parts: tuple[Any, ...], tail: Any) -> None:
             (h1["2"], tail.coil["A1"]),
             (tail.coil["A2"], x1[4]),
         ]:
-            d.wire(a, b, wire=_RED)
+            d.detail.wire(a, b, wire=_RED)
         return
     hung = f2.element["1"] if shape == "up" else f2.element["2"]
     wires = [(x1[1], f1.element["1"]), (f1.element["2"], f2.element["1"]), (hung, h1["1"])]
@@ -60,7 +60,7 @@ def _wire(d: Any, shape: str, parts: tuple[Any, ...], tail: Any) -> None:
     else:
         wires += [(h1["2"], tail.coil["A1"]), (tail.coil["A2"], x1[4])]
     for a, b in wires:
-        d.wire(a, b, wire=_RED)
+        d.detail.wire(a, b, wire=_RED)
 
 
 def _unit(shape: str, *, beside: bool, bottom_up: bool = False) -> Any:

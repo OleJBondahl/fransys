@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import fransys as fr
 import pytest
 
-from fransys_model.derive.drawing_text import cross_reference_text
+from fransys_model.derive.contact_image import cross_reference_text
 from fransys_model.layout import DrawingSet, Label, Page, SymbolPlacement, layout_of
 from fransys_model.vocab.tables import functions
 
@@ -38,11 +38,11 @@ def _cab(c: fr.Design) -> _Io:
     h1 = c.device("H1", "DEMO-LAMP-24")
     psu = c.device("G1", "DEMO-PSU-24")
     wire = ("WH", 0.75)
-    c.wire(psu.output["+"], k1.coil["A1"], wire=wire)
-    c.wire(k1.coil["A2"], psu.output["-"], wire=wire)
-    c.wire(psu.output["+"], k1.co_1["11"], wire=wire)
-    c.wire(k1.co_1["14"], h1.lamp["1"], wire=wire)
-    c.wire(h1.lamp["2"], psu.output["-"], wire=wire)
+    c.detail.wire(psu.output["+"], k1.coil["A1"], wire=wire)
+    c.detail.wire(k1.coil["A2"], psu.output["-"], wire=wire)
+    c.detail.wire(psu.output["+"], k1.co_1["11"], wire=wire)
+    c.detail.wire(k1.co_1["14"], h1.lamp["1"], wire=wire)
+    c.detail.wire(h1.lamp["2"], psu.output["-"], wire=wire)
     return _Io(k1)
 
 

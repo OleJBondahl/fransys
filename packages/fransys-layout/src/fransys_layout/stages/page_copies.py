@@ -33,18 +33,16 @@ def with_page_copies(
     for own, far in sorted(ends, key=lambda pair: (pair[0].port, pair[1].port)):
         for page in sorted(seated):
             host = hosts.get((page, far.function))
-            if (
-                host is None
-                or own.function in seated[page]
-                or (page[0], own.function) not in sets
-                or any(c.host == far.function for c in host.cells)
-            ):
+            if host is None or own.function in seated[page] or (page[0], own.function) not in sets:
                 continue
             flipped = any(c.flip for c in host.cells if c.function == far.function)
             entry = _entry(
                 drawn_of[own.function], own, drawn_of[far.function], far, far_flipped=flipped
             )
-            if entry is not None:
+            # model-0220: a host takes a copy at each pin; a pin holds one attached cell
+            if entry is not None and not any(
+                c.host == far.function and c.port == entry[4] for c in host.cells
+            ):
                 found.setdefault(host.key, []).append(entry)
                 seated[page].add(own.function)
     return tuple(

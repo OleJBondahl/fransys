@@ -119,3 +119,26 @@ def home_placements(
             if rank < tier.get(one.function, 3):  # the first placement of the best tier wins
                 home[one.function], tier[one.function] = one, rank
     return home
+
+
+def member_partners(at: PlacedFunction, spec: FunctionSpec) -> tuple[RequestPartner, ...]:
+    """A contact's table partners at `at`: one per member of a group, its first port (0227)."""
+    firsts = {port.pole: port.port for port in reversed(spec.ports)}
+    poles = range(len(spec.gang)) if spec.gang else (None,)
+    return tuple(
+        RequestPartner(
+            port=spec.ports[0].port if pole is None else firsts[pole],
+            drawing_set=at.drawing_set,
+            page=at.page,
+            x=at.at.x,
+        )
+        for pole in poles
+    )
+
+
+def table_partners(
+    contacts: Sequence[FunctionSpec], home: Mapping[Handle, PlacedFunction], coil: FunctionSpec
+) -> tuple[RequestPartner, ...]:
+    """A contact table's partners, each contact's at its home; with none, the coil's own."""
+    found = tuple(p for s in contacts for p in member_partners(home[s.function], s))
+    return found or member_partners(home[coil.function], coil)

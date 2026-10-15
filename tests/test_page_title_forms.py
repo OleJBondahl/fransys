@@ -28,7 +28,7 @@ def _build(root: Path, *, hint: str) -> Model:
         with d.function(f"F{i}", f"Relay circuit {i}") as group:
             devices.append((group, d.device(f"K{i}", "DEMO-RLY-2CO-24")))
     for (_, a), (_, b) in pairwise(devices):
-        d.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
+        d.detail.wire(a.coil["A2"], b.coil["A1"], wire=("WH", 0.75))
     if hint == "block":
         d.layout.page_title(devices[1][0], "Hinted block")
     if hint == "devices":
@@ -76,7 +76,7 @@ def test_a_page_with_no_block_reads_its_designations_once_each_in_drawn_order(
     cabinet = d.location("C1", "Cabinet")
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     h1 = d.device("H1", "DEMO-LAMP-24")
-    d.wire(x1.run("SIG", 1)[1], h1.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(x1.run("SIG", 1)[1], h1.lamp["1"], wire=("WH", 0.75))
     cover = tmp_path / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     built = fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover))
@@ -89,12 +89,12 @@ def _strip_model(tmp_path: Path, *, strips: int) -> Model:
     x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
     h1 = d.device("H1", "DEMO-LAMP-24")
     sig = x1.run("SIG", 2)
-    d.wire(sig[1], h1.lamp["1"], wire=("WH", 0.75))
+    d.detail.wire(sig[1], h1.lamp["1"], wire=("WH", 0.75))
     if strips == 1:
-        d.wire(sig[2], h1.lamp["2"], wire=("WH", 0.75))
+        d.detail.wire(sig[2], h1.lamp["2"], wire=("WH", 0.75))
     else:
         x2 = d.terminal_strip("X2", "DEMO-TB-2.5", 4)
-        d.wire(sig[2], x2.run("SIG", 1)[1], wire=("WH", 0.75))
+        d.detail.wire(sig[2], x2.run("SIG", 1)[1], wire=("WH", 0.75))
     cover = tmp_path / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover)).model

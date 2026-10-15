@@ -147,7 +147,7 @@ def _top(u: Any) -> _Top:
 
 def _wire_the_board(u: Any, b: Any, p: Any, lp: Any) -> None:
     for pin in range(1, 5):
-        u.wire(p[str(pin)], lp[str(pin)], wire=("WH", 0.5))
+        u.detail.wire(p[str(pin)], lp[str(pin)], wire=("WH", 0.5))
     for tag, part, board_pin, count in (
         ("Y1", "FLD-HDR-10", b.b, 10),
         ("Z1", "FLD-HDR-10", b.c, 2),
@@ -155,7 +155,7 @@ def _wire_the_board(u: Any, b: Any, p: Any, lp: Any) -> None:
     ):
         far = u.device(tag, part)
         for pin in range(1, count + 1):
-            u.wire(board_pin[str(pin)], far[str(pin)], wire=("WH", 0.5))
+            u.detail.wire(board_pin[str(pin)], far[str(pin)], wire=("WH", 0.5))
 
 
 @fr.unit("fld-top-ctr", revision=1, interface_version=1, date="2026-10-08", text="t", by="X")

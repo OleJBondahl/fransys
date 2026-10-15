@@ -36,11 +36,11 @@ def model() -> Model:
     b1 = d.device("B1", "DEMO-LS-1NO1NC")
     wire = (BU, 0.5)
     with d.function("G1", "Run circuit"):
-        d.wire(strip[1], b1.no["13"], wire=wire)
-        d.wire(b1.no["14"], strip[2], wire=wire)
+        d.detail.wire(strip[1], b1.no["13"], wire=wire)
+        d.detail.wire(b1.no["14"], strip[2], wire=wire)
     with d.function("G2", "Alarm circuit"):
-        d.wire(strip[3], b1.nc["21"], wire=wire)
-        d.wire(b1.nc["22"], strip[4], wire=wire)
+        d.detail.wire(strip[3], b1.nc["21"], wire=wire)
+        d.detail.wire(b1.nc["22"], strip[4], wire=wire)
     return fr.build(d, cabinet_document(cabinet)).model
 
 

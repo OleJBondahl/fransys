@@ -32,16 +32,16 @@ def _plant(d) -> None:
     motor = d.device("M1", "DEMO-MOTOR-4KW")
     q = d.device("Q1", "DEMO-CTR-3P-NC")
     blue = (BU, 0.5)
-    d.wire(psu.input["L"], mains["1"], wire=blue)
-    d.wire(psu.input["N"], mains["2"], wire=blue)
-    d.wire(psu.output["+"], q.coil["A1"], wire=blue)
-    d.wire(psu.output["-"], q.coil["A2"], wire=blue)
-    d.wire(psu.output["+"], q.aux["13"], wire=blue)
-    d.wire(q.aux["14"], lamp["1"], wire=blue)
-    d.wire(psu.output["-"], lamp["2"], wire=blue)
+    d.detail.wire(psu.input["L"], mains["1"], wire=blue)
+    d.detail.wire(psu.input["N"], mains["2"], wire=blue)
+    d.detail.wire(psu.output["+"], q.coil["A1"], wire=blue)
+    d.detail.wire(psu.output["-"], q.coil["A2"], wire=blue)
+    d.detail.wire(psu.output["+"], q.aux["13"], wire=blue)
+    d.detail.wire(q.aux["14"], lamp["1"], wire=blue)
+    d.detail.wire(psu.output["-"], lamp["2"], wire=blue)
     for pole, pin in enumerate("UVW"):
-        d.wire(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
-        d.wire(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
+        d.detail.wire(psu.output["+"], q.main[str(2 * pole + 1)], wire=blue)
+        d.detail.wire(q.main[str(2 * pole + 2)], motor.motor[pin], wire=blue)
 
 
 @functools.cache

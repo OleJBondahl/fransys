@@ -34,7 +34,7 @@ def _loom(d: fr.Design) -> Any:
     p2 = d.device("P2", "DEMO-HSG-4F", parent=w1, place="C1", contacts="DEMO-CRIMP-F")
     d.mate(p1, m1.j1)
     d.mate(p2, m2.j1)
-    d.wire(p1[1], p2[1], wire=(RD, 0.5))
+    d.detail.wire(p1[1], p2[1], wire=(RD, 0.5))
     return c1
 
 

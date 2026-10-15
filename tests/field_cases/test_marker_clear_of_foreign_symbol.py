@@ -56,10 +56,10 @@ def _cabinet(u: fr.Design) -> _Open:
         contactor = u.device("K1", "DEMO-RLY-2CO-24", place="C1")
         overload = u.device("F1", "DEMO-OVERLOAD-A2", place="C1")
         relay = u.device("K2", "DEMO-RLY-2CO-24", place="C1")
-    u.wire(contactor.coil["A2"], overload.a2["A2"], wire=("BK2", 1.5))
-    u.wire(overload.a2["A2"], terminal, wire=("BK2", 1.5))
-    u.wire(relay.coil["A1"], contactor.coil["A1"], wire=("BK2", 1.5))
-    u.wire(relay.coil["A2"], contactor.coil["A2"], wire=("BK2", 1.5))
+    u.detail.wire(contactor.coil["A2"], overload.a2["A2"], wire=("BK2", 1.5))
+    u.detail.wire(overload.a2["A2"], terminal, wire=("BK2", 1.5))
+    u.detail.wire(relay.coil["A1"], contactor.coil["A1"], wire=("BK2", 1.5))
+    u.detail.wire(relay.coil["A2"], contactor.coil["A2"], wire=("BK2", 1.5))
     return _Open()
 
 

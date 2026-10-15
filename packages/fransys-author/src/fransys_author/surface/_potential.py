@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, NamedTuple, cast
 
 from fransys_author.surface._ends import is_bridge
-from fransys_author.surface._pairing import pair
+from fransys_author.surface._pairing import label_of, pair
 from fransys_author.surface._rows import WiringRow, control_of, is_control
 from fransys_author.surface._strip import TerminalStrip
 
@@ -70,10 +70,17 @@ def hops(elements: Sequence[object], found: list[list[Ends]]) -> list[Hop]:
         if is_bridge(elements[i]):
             continue
         if is_bridge(elements[i + 1]):
-            pairs = pair(found[i][0].load, found[i + 2][0].line)
+            pairs = pair(
+                found[i][0].load,
+                found[i + 2][0].line,
+                (label_of(elements[i]), label_of(elements[i + 2])),
+            )
             joins.append(Hop(i, i + 2, pairs, made=False))
             continue
-        pairs = [(x, y) for a in found[i] for b in found[i + 1] for x, y in pair(a.load, b.line)]
+        names = (label_of(elements[i]), label_of(elements[i + 1]))
+        pairs = [
+            (x, y) for a in found[i] for b in found[i + 1] for x, y in pair(a.load, b.line, names)
+        ]
         joins.append(Hop(i, i + 1, pairs, made=True))
     return joins
 

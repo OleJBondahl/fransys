@@ -24,9 +24,11 @@ from fransys_layout.stages.far_ends import (
     sheet_fits,
 )
 from fransys_layout.stages.pin_ends import pin_keyed
+from fransys_layout.stages.references.nets import star_wires
 from fransys_layout.stages.replicate import replicate_boundaries, replicate_terminals
 from fransys_layout.stages.terminal_rows import join_terminal_rows, terminal_chains
 from fransys_layout.stages.types import Home
+from fransys_layout.stages.wire_copies import with_wire_copies
 from fransys_layout.stages.wired_copies import (
     emptied_groups,
     loose_groups,
@@ -37,6 +39,7 @@ from fransys_layout.stages.wired_copies import (
 from ._stub_seats import far_set_seats, stub_seats
 from .defaults import HEADROOM_LANES
 from .read.column_places import in_key_order
+from .read.harness_lines import line_reads
 from .read.reading import key_orders, terminal_sort_keys
 from .read.units import boundary_parents, unit_boundaries
 
@@ -130,8 +133,11 @@ def replicated_columns(
     inputs: StageInputs,
     drawn: tuple[DrawnFunction, ...],
     all_columns: tuple[Column, ...],
-) -> tuple[Column, ...]:
-    """The columns with terminal, boundary and attached replicas, far ends moved, hubs ordered."""
+) -> tuple[StageInputs, tuple[DrawnFunction, ...], tuple[Column, ...]]:
+    """The columns with terminal, boundary and attached replicas, far ends moved, hubs ordered.
+
+    The inputs and drawn functions come back with the copies at star wires (model-0220).
+    """
     columns = replicate_terminals(all_columns, inputs.functions, inputs.connections)
     columns = replicate_boundaries(columns, unit_boundaries(model), inputs.functions, all_columns)
     fits = sheet_fits(drawn, inputs.profile, inputs.sheet, HEADROOM_LANES)
@@ -140,12 +146,29 @@ def replicated_columns(
         drawn, inputs.connections, group_map(inputs.functions), free_pins(inputs, drawn)
     )
     columns = move_far_ends(columns, all_columns, far, fits)
+    # model-0220: a star net's terminal stands at each of its wires, its own copy each
+    copied = with_wire_copies(
+        columns,
+        drawn,
+        inputs.functions,
+        inputs.connections,
+        # a harness line's conductor is drawn as the line, never at a copy
+        {c.handle for c in star_wires(inputs.connections, inputs.functions, columns)}
+        - line_reads(model).carried,
+    )
+    columns, drawn = copied.columns, copied.drawn
+    inputs = replace(
+        inputs,
+        functions=copied.functions,
+        connections=copied.connections,
+        copies=tuple(sorted(copied.real.items())),
+    )
     terminals, pairs, kept, stubbed = _terminal_wires(inputs)
     seats = stub_seats(model, inputs, columns, stubbed - kept)
     seats |= far_set_seats(columns, inputs.crossing, stubbed - kept)
     kept |= stubbed - {function for function, _ in seats} - kept
     columns = without_unwired_copies(columns, terminals, pairs, kept, seats)
-    return hub_order(columns, inputs.functions, inputs.connections)
+    return inputs, drawn, hub_order(columns, inputs.functions, inputs.connections)
 
 
 def _terminal_wires(
@@ -160,10 +183,9 @@ def _terminal_wires(
     """
     terminals = frozenset(s.function for s in inputs.functions if s.roles.terminal)
     ends = [(c.a, c.b) for c in inputs.connections] + [(c.b, c.a) for c in inputs.connections]
-    whole = {r.port for c in inputs.carried for r in (c.a, c.b)}
-    whole |= {e.ref.port for e in inputs.rail_ends} | {
-        r.port for g in inputs.net_groups for r in g.ports
-    }
+    wired = {r.port for c in inputs.carried for r in (c.a, c.b)}
+    wired |= {e.ref.port for e in inputs.rail_ends}
+    whole = wired | {r.port for g in inputs.net_groups for r in g.ports}
     stubs = {r.port for c in inputs.crossing for r in (c.a, c.b)} | {
         e.port for e in inputs.off_ends
     }
@@ -171,7 +193,17 @@ def _terminal_wires(
     kept |= {f for mate in inputs.mates for f in (mate.a, mate.b)}
     stubbed = {s.function for s in inputs.functions for p in s.ports if p.port in stubs}
     pairs = tuple((a.function, b.function) for a, b in ends if a.function in terminals)
+    reached = {a.function for a, _ in ends} | {f for mate in inputs.mates for f in (mate.a, mate.b)}
+    reached |= stubbed | {s.function for s in inputs.functions for p in s.ports if p.port in wired}
+    # model-0220: the wires went to copies, so a home no wire reaches is dropped (layout-0214)
+    kept -= _copied_homes(inputs) - reached
     return terminals, pairs, frozenset(kept & terminals), frozenset(stubbed & terminals)
+
+
+def _copied_homes(inputs: StageInputs) -> set[Handle]:
+    """The terminals that have a copy at a wire (`inputs.copies` maps each copy to its home)."""
+    copy_specs = {s.function for s in inputs.functions}
+    return {home for copy, home in inputs.copies if copy in copy_specs and home in copy_specs}
 
 
 def kept_terminals(inputs: StageInputs) -> frozenset[Handle]:
@@ -196,18 +228,21 @@ def free_pins(inputs: StageInputs, drawn: tuple[DrawnFunction, ...]) -> frozense
 
 
 def arranged(
-    model: Model, inputs: StageInputs, drawn: tuple[DrawnFunction, ...], rank_of: Mapping[Any, int]
+    model: Model, inputs: StageInputs, drawn: tuple[DrawnFunction, ...]
 ) -> tuple[
     StageInputs,
+    tuple[DrawnFunction, ...],
+    dict[Any, int],
     tuple[Column, ...],
     tuple[Column, ...],
     tuple[Finding, ...],
 ]:
-    """Stage 2: the columns of the run."""
+    """Stage 2: the columns of the run; the drawn functions and ranks gain the copies at wires."""
     tie_key = terminal_sort_keys(model, inputs.functions)
     # layout-0215: a device chain is one column of its own, out of discovery
     devices = device_columns(inputs.device_chains, inputs.functions)
-    discovered = (*discovered_columns(model, inputs, drawn, rank_of, tie_key), *devices)
+    ranks = port_ranks(inputs.functions)
+    discovered = (*discovered_columns(model, inputs, drawn, ranks, tie_key), *devices)
     crossing = set(inputs.crossing)
     inputs = replace(inputs, connections=tuple(c for c in inputs.connections if c not in crossing))
     chained, column_findings = chained_columns(inputs, drawn, discovered)
@@ -217,9 +252,9 @@ def arranged(
         connections=inline_exits(inputs.connections, all_columns, inputs.functions, drawn),
         terminal_chains=chains,
     )
-    columns = replicated_columns(model, inputs, drawn, all_columns)
+    inputs, drawn, columns = replicated_columns(model, inputs, drawn, all_columns)
     all_columns, columns = in_key_order(all_columns, columns)
     # layout-0214: a hint on a group whose every copy went names nothing left to draw
     gone = emptied_groups(all_columns, columns) | loose_groups(inputs.loose, columns)
     inputs = replace(inputs, hints=without_groups(inputs.hints, gone))
-    return inputs, all_columns, columns, column_findings
+    return inputs, drawn, port_ranks(inputs.functions), all_columns, columns, column_findings

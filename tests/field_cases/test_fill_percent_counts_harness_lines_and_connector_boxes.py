@@ -33,8 +33,8 @@ def _built(tmp_path_factory: pytest.TempPathFactory) -> fr.BuildResult:
     p2 = d.device("P2", "DEMO-HSG-4F", parent=loom, place="C1", contacts="DEMO-CRIMP-F")
     d.mate(p1, m1.j1)
     d.mate(p2, m2.j1)
-    d.wire(p1[1], p2[1], wire=(RD, 0.5))
-    d.wire(p1[2], p2[2], wire=(BK, 0.5))
+    d.detail.wire(p1[1], p2[1], wire=(RD, 0.5))
+    d.detail.wire(p1[2], p2[2], wire=(BK, 0.5))
     cover = tmp_path_factory.mktemp("cover") / "cover.md"
     cover.write_text("# Cabinet\n", encoding="utf-8")
     return fr.build(d, fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=cover))

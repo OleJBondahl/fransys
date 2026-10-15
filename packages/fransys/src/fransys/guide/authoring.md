@@ -4,17 +4,16 @@ This page teaches how to write a design with `fr.design`: places, function block
 strips, wires, cables, supplies, PLC requests and layout advice. Each task has one spelling, shown
 first written out and then with Python around it.
 
-A `Design` is one object with no global state. Every call returns a handle, never a string, and later
-calls take that handle. A design is a draft: `fr.build(d)` freezes it (see `build.md`).
+A `Design` is one object with no global state. Every call returns a handle, never a string, and later calls take it. A design is a draft: `fr.build(d)` freezes it (see `build.md`).
 
 ## Easy and efficient
 
 Each task is shown twice and builds the same model both times. The easy level writes the circuit out,
 one device and one wire per line. The efficient level uses the same calls with Python around them: a
-loop over a table, a function for a circuit that repeats. Neither level has a call the other lacks.
+loop over a table, a function for a circuit that repeats. Both use the same calls.
 
-Tasks on this page: name a function block with devices; wire a terminal strip and a series;
-run a cable. The sections after them list the one-call tasks.
+The pairs below are: a function block with devices, a branched series, and a terminal strip with a series.
+The sections after them list the one-call tasks.
 
 ## Name a place and a function block
 
@@ -25,47 +24,30 @@ such as one pump's or one string's: `with d.function("LAMPS", text):` puts every
 in that block, and a circuit is never a place. Tags are bare: `"HOLD"`, never `"+HOLD"`, and a prefixed
 tag raises.
 
+What `place=` changes, on every call that takes it.
+
+| value | effect |
+|---|---|
+| `...` (the default) | The item takes the design's place, the one `fr.design(place=)` named. With none named, it has no place. |
+| `"HOLD"` | The item stands in that place. Its designation gains the prefix `+HOLD`, or `+HOLD+BATT` in a nested place. The place must exist. |
+| `None` | The item has no place, even when the design names one. |
+
+A place sorts the lists by place and sets the `+` part of the printed designation. It does not move a cell on a drawing: `d.layout.draw_in` does.
+
 `d.device(tag, part, place=, parent=, mounted_on=, joins=, interface=, unused=, name=)` adds one device.
 `joins={1: K1.coil["A1"]}` with `parent=K1` fits a housing on K1's own leads: pin 1 is that pin, no wire.
 A contact block with `parent=` an operator head prints the head's tag, as `-S1:11` (guide `parts.md`).
 `part` is a manufacturer part number such as `"DEMO-LAMP-24"`.
 
-Floating tags: every item call takes `None` for the tag, `d.add` too, and numbers the item from
-its class code. The letter comes from the part file's `class_code`, or from the release's for a unit.
-Pass `name=`, the identity a released number holds to. A floating call with no `name=` raises.
-An accessory takes its holder's designation and uses up no number.
+Floating tags: every item call takes `None` for the tag and numbers the item from its class code.
+Pass `name=`, the identity a released number holds to; a floating call with no `name=` raises.
+An accessory takes its holder's designation, no number of its own.
 
 `external=True` marks an item supplied by others. Every call that makes an item takes it: `d.device`,
 `d.terminal_strip`, `d.cable` and `d.harness`. The item has no BOM line. A strip's terminals are external
 with it; a cable's conductors carry no flag. Every drawing marks it: dashed boxes with "(by others)", dashed outlines round schematic symbols.
 
-An external device or strip may take `None` for its part, when only its terminal names are known. It needs a tag and has no BOM line. A part-less device names its pins with `pins=` and draws as a box. A part-less strip's terminals offer only `.outer`.
-
-```python
-# easy: equipment others supply
-import fransys as fr
-from fransys.colours import BK
-
-d = fr.design("demo_parts")
-x8 = d.terminal_strip("X8", None, 4, external=True)
-q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
-d.ac_supply("S", 400, q8["L1"], q8["L2"], q8["L3"], n=q8["N"])
-d.wire(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5))
-```
-
-```python
-# efficient: equipment others supply
-import fransys as fr
-from fransys.colours import BK
-
-d = fr.design("demo_parts")
-x8 = d.terminal_strip("X8", None, 4, external=True)
-q8 = d.device("Q8", None, external=True, pins=("L1", "L2", "L3", "N", "PE"))
-l1, l2, l3 = (q8[pin] for pin in ("L1", "L2", "L3"))
-d.ac_supply("S", 400, l1, l2, l3, n=q8["N"])
-motor = d.device("M1", "DEMO-MOTOR-4KW")
-d.wire(x8[1].outer, motor["U"], wire=(BK, 1.5))
-```
+An external device or strip may take `None` for its part, when only its terminal names are known. It needs a tag. A part-less device names its pins with `pins=`. A part-less strip offers only `.outer`: see `detail.md`, "Equipment others supply".
 
 ```python
 # easy: function block
@@ -100,7 +82,7 @@ with d.function("RUN", "Pump run"):
 ```
 
 `getattr(dev, f"DI{n}")` is the one spelling for a computed name. A name the device lacks raises an
-error that `hasattr` reads as absent, so `getattr(dev, "nope", None)` is `None`.
+error that `hasattr` reads as absent.
 
 A device with one function and a marked pin is read the short way: `h1[1]`.
 
@@ -110,51 +92,17 @@ A device with one function and a marked pin is read the short way: `h1[1]`.
 `HOLD` must exist already, or the call raises and lists the places. A device placed in `BATT`
 prints `+HOLD+BATT`. Without `within=` a place sits at the root.
 
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-d.location("HOLD", "Hold")
-d.location("BATT", "Battery bay", within="HOLD")
-d.device("Q1", "DEMO-MCB-C6", place="BATT")
-```
-
 ### Read a function or pin
 
 A device has functions, and a function has pins. Both are plain attributes and brackets.
 
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-k1 = d.device("K1", "DEMO-RLY-2CO-24")
-coil = k1.coil          # the function named `coil` in the part file
-a1 = k1.coil["A1"]      # the pin marked A1 on that function
-```
-
 `Q1.coil` is a function by name, `Q1["A1"]` a pin by marking, and `Q1[2]` a pin by number. A name or
 marking the part lacks raises and lists the choices. The vocabulary is the electrotechnical one: a
-make contact closes when its coil is on, a break contact opens, a line conductor is `L1`, a neutral is
-`N`.
+make contact closes when its coil is on, a break contact opens, a line conductor is `L1`.
 
-## Typed or string part
-
-The `part` argument is either a string or a generated class. A string MPN is the data path: it needs
-no extra file and the part is checked when you build. A generated typed part is the checked path:
-`python -m fransys parts-module demo_parts parts_demo.py` writes one class per part, so
-`d.device("K1", P.DEMO_RLY_2CO_24)` makes an editor and a type checker reject an unknown function or
-pin before the script runs.
-
-```bash
-uv run python -m fransys parts-module demo_parts parts_demo.py
-```
-
-A function named `24V+` is the attribute `dev.P_24V_plus`; `-` gives `_minus`. `getattr(dev, "24V+")`
-reaches the raw name. Two names that map to one attribute fail generation.
-
-Pass the module to `fr.design(P)`. A module whose library has since changed raises at
-`fr.design` and tells you to regenerate it. Both spellings build the same model. The rest of this page
-uses strings.
+A printed marking that is not a Python name has two spellings. `dev["XLA+"]` reaches any pin by its
+printed marking. `dev.XLA_plus` reaches a function named `XLA+`: `+` gives `_plus`, `-` gives `_minus`,
+and a leading digit gets `P_`, so `24V+` is `P_24V_plus`. `getattr(dev, "24V+")` reaches the raw name.
 
 ## Strips and terminals
 
@@ -165,7 +113,7 @@ strip at the right side without you saying so.
 
 With `count`, the strip makes all its terminals at once, so spares exist and count in the lists. A
 terminal joins the function block where it is first taken, and a spare joins the strip's own group.
-There is no `group=` keyword. `d.wire(x1[1], lamp[1], ...)` lands on the inner side. `x1[1].outer` is
+There is no `group=` keyword. A series picks the side itself. `x1[1].outer` is
 the field side, and `W1.core(...)` lands there.
 `interface=` and `unused=` on `d.terminal_strip` mark terminals a unit boundary: `True` marks every
 terminal, and a tuple of numbers, `interface=(1, 2)`, only those; the others stay inside the unit. On
@@ -179,8 +127,7 @@ d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
 h1 = d.device("H1", "DEMO-LAMP-24")
 with d.function("FEED", "Lamp feed"):
-    d.wire(x1[1], h1[1], wire=(BU, 0.75))
-d.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
+    d.series(x1, h1.lamp, x1, wire=(BU, 0.75))
 ```
 
 ### Bridges
@@ -199,8 +146,8 @@ makes two bridges, and `bridged=True` bridges them all. A bad range raises and n
 
 `X1.run(label, bridged=True)` takes no size. The run grows as connections take its terminals, and
 each new one is bridged to the one before. `feed[n]` names a terminal already taken; a higher `n`
-raises. A strip or a run is also a pin of `d.wire` and a core's end: each place takes its next free
-terminal, `d.wire` on the inner side and `W1.core` on the outer side.
+raises. A strip or a run is also a core's end: each place takes its next free terminal, a series on the
+inner side and `W1.core` on the outer side.
 
 ```python
 # a growing bridged run fed by d.series
@@ -216,8 +163,8 @@ for tag in ("H1", "H2", "H3"):
 
 ## Wiring and cables
 
-`d.wire` requires `wire=`: a colour code and a cross-section in mm2. `d.series` takes it in three shapes
-(Wire colours).
+`d.series` takes `wire=` in three shapes (Wire colours): a colour code and a cross-section in mm2,
+a size, or a table of rows.
 
 ### Wire along a current path
 
@@ -286,6 +233,25 @@ d.series(k1.co_1.nc, k3.coil, dc.minus, wire=0.75)
 A selector part has its throws on the line side. The series enters it at its throws and draws it
 turned.
 
+### Contacts that switch together
+
+`d.poles(k1.co_1, k1.co_2, k1.co_3)` groups one-pole contacts of one device, in pole order, as one
+element. It draws as one multi-pole symbol, and each contact keeps its place in the coil's table.
+A changeover group gives `.no` and `.nc`. `selector=True` turns its throws to the line, here
+selecting supply A or B for M1:
+
+```python
+d = fr.design("demo_parts")
+xa, xb = d.terminal_strip("XA", "DEMO-TB-2.5"), d.terminal_strip("XB", "DEMO-TB-2.5")
+a = d.ac_supply("A", "230", xa[1], xa[2], xa[3], names=("A_L1", "A_L2", "A_L3"))
+b = d.ac_supply("B", "230", xb[1], xb[2], xb[3], names=("B_L1", "B_L2", "B_L3"))
+qa, qb = d.device("QA", "DEMO-MCB-3P"), d.device("QB", "DEMO-MCB-3P")
+k1, m1 = d.device("K1", "DEMO-RLY-4CO-24"), d.device("M1", "DEMO-MOTOR-4KW")
+q = d.poles(k1.co_1, k1.co_2, k1.co_3, selector=True)
+d.series(a, qa.element, q.no, m1, wire=2.5)
+d.series(b, qb.element, q.nc, wire=2.5)
+```
+
 The pair below feeds a coil from a supply through a bridged run.
 
 ```python
@@ -325,86 +291,49 @@ for tag in ("K1", "K2"):
     feed_coil(tag)
 ```
 
-### Wire two named pins
+### How a series pairs
 
-`d.wire(a, b, wire=(BU, 0.75), label=, n=)` draws one wire; more than two pins draw a daisy chain.
-Use it only off a path: two named pins such as a signal pair, one signal daisy-chained, or a hop
-whose wire differs from the rest of its path. Anything that is a current path is a `d.series`.
+A series wires each element's load poles to the next element's line poles. The rule:
+
+- Poles pair by conductor mark (`L1`, `L2`, `L3`, `N`) when every end has one, else in order.
+- A function is an element when its part names its line side (`side = "line"`, `parts.md`).
+- A strip or a cable takes the next free terminal or core, on the side the path enters.
+- A path from a supply with `n=` joins N only where an element has a pole for it. A path of three poles
+  from a three-phase supply leaves N unwired.
+- Connectors pair their pins in pin order when they are a series' two ends.
+
+A refusal starts with one of these texts. Each has one fix.
+
+| refusal starts | fix |
+|---|---|
+| `<fn> has no poles:` | `side` in the part, or `d.detail.wire` |
+| `<device> has no function of N poles` | pass the function, such as `K1.main`, not the device |
+| `<device>: a and b both have poles, say which` | pass the function you mean |
+| `N poles into M: name the pins` | pass elements with equal pole counts |
+| `conductors L1, L2 into L1, L3: name the pins` | pass elements whose conductor marks agree |
+| `<element> has N poles; a path from S takes` | pass the supply's phases, or the phases and N |
+| `a pin or terminal is one wire` | pass the function or the strip; a fixed terminal is `d.detail.wire` |
+| `a changeover is two throws` | pass `K1.co_1.no` or `K1.co_1.nc` |
+| `a cable sits between two elements that are not cables` | put a plain element on each side of the cable |
 
 ### Cables
 
-`d.cable("W1", part, length_m=)` adds a cable and `W1.core(BN, a, b)` wires one core between two pins,
-named by its colour or its number. The core colours come from the cable part, not from you. A
-green-yellow core goes to a protective-earth pin only. `parent=W5` puts the cable in a harness `W5`,
-as `parent=` does on `d.device`.
+`d.cable("W1", part, length_m=)` adds a cable. Pass it to a series between two elements: each
+path takes the next free core, coloured by the cable part.
+`parent=W5` puts the cable in harness `W5`, as on `d.device`.
 
 ```python
-# easy: cable run
 import fransys as fr
-from fransys.colours import BK, BN, GY
+from fransys.colours import BU
 
 d = fr.design("demo_parts")
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
-h1 = d.device("H1", "DEMO-LAMP-24")
-h2 = d.device("H2", "DEMO-LAMP-24")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
+x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 4)
 w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
-w1.core(BN, x1[1], h1[1])
-w1.core(BK, x1[2], h1[2])
-w1.core(GY, x1[3], h2[1])
+d.series(dc.plus, x1, w1, d.device("H1", "DEMO-LAMP-24").lamp, dc.minus, wire=(BU, 0.75))
 ```
 
-```python
-# efficient: cable run
-import fransys as fr
-from fransys.colours import BK, BN, GY
-
-CORES = ((BN, 1, "H1", 1), (BK, 2, "H1", 2), (GY, 3, "H2", 1))  # colour, terminal, lamp, pin
-
-d = fr.design("demo_parts")
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 3)
-lamps = {tag: d.device(tag, "DEMO-LAMP-24") for tag in ("H1", "H2")}
-w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
-for colour, terminal, lamp, pin in CORES:
-    w1.core(colour, x1[terminal], lamps[lamp][pin])
-```
-
-A core you leave unused is `w1.spare(GY)`, or `w1.spare()` for every core not wired so far. `at=x1[7]`
-parks one on a pin. The cable drawing prints "spare" on its row, and the schematic draws nothing. A
-screen (`SH`) earthed at one end takes one pin: `w2.core(5, pe[1])`. A part with `pairs` in its
-`[cable_product]` table gets a bracket and a P1, P2 label over each pair's rows.
-
-```python
-import fransys as fr
-from fransys.colours import GY
-
-d = fr.design("demo_parts")
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5", 8)
-pe = d.terminal_strip("X2", "DEMO-TB-PE-2.5", 2)
-h1 = d.device("H1", "DEMO-LAMP-24")
-w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=5)
-w1.core(1, x1[1], h1[1])
-w1.spare(GY, at=x1[7])
-w1.spare()
-w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP", length_m=25)
-w2.core(1, x1[2], h1[2])
-w2.core(5, pe[1])
-w2.spare()
-```
-
-`fn.pins` gives a function's pins as a tuple, in the order the connector list prints (`1, 2, 10, A1`),
-never the part file's. To land a cable's cores on two connectors pin by pin, loop over it. The
-pairing rule stays yours.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-a = d.device("J1", "DEMO-CONN-4P")
-b = d.device("J2", "DEMO-CONN-4P")
-w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=2)
-for core, (pin_a, pin_b) in enumerate(zip(a.x1.pins, b.x1.pins, strict=True), start=1):
-    w1.core(core, pin_a, pin_b)
-```
+A core with a fixed colour or number is `W1.core(BN, a, b)`: see `detail.md`.
 
 ## Wire colours
 
@@ -412,31 +341,11 @@ A colour is an IEC 60757 code imported from `fransys.colours`: `BK`, `BN`, `RD`,
 `BU`, `VT`, `GY`, `WH`, `PK`, `GD`, `SR`, `TQ`, and the two-colour `GNYE`. Write `wire=(BU, 0.75)` for
 a blue 0.75 mm2 wire.
 
-A wire spec shared by many wires is a module constant: `CTRL = (BU, 0.75)`, with `BU` imported. Pass it
-as `wire=CTRL` to `d.wire`, and to `d.series` for a whole path. `wire=` stays required on `d.wire` only.
-
-```python
-import fransys as fr
-from fransys.colours import BU
-
-CTRL = (BU, 0.75)  # the control wire spec, written once
-
-d = fr.design("demo_parts")
-psu = d.device("G1", "DEMO-PSU-24")
-dc = d.dc_supply("24VDC", psu.output)
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
-feed = x1.run("coil supply", 3, bridged=True)
-k1 = d.device("K1", "DEMO-CTR-3P-24")
-k2 = d.device("K2", "DEMO-CTR-3P-24")
-d.series(dc.plus, feed, k1.coil, dc.minus, wire=CTRL)
-d.series(dc.plus, feed, k2.coil, dc.minus, wire=CTRL)
-```
-
 ### Colour by what a wire carries
 
 A design has eight wire rows: `fr.DC_SUPPLY`, `fr.DC_GROUND`, `fr.DC_CONTROL`, `fr.AC_L1`, `fr.AC_L2`,
 `fr.AC_L3`, `fr.AC_N` and `fr.AC_CONTROL`. A row's value is a colour, or a colour and a size.
-`d.series` picks each wire's row from what it carries, so you write the colours once.
+`d.series` picks each wire's row from what it carries.
 
 `fr.design(library, wiring={row: value})` sets rows for the design. `@fr.unit(..., wiring={row: value})`
 sets rows for that unit's body. A unit never inherits its parent's rows. With no `wiring=` it draws
@@ -448,14 +357,14 @@ the IEC 60204-1 default: AC phases `BK`, `AC_N` `BU`, `AC_CONTROL` `RD`, every D
 - a table, `wire={fr.DC_CONTROL: (WH, 0.75)}`: replaces only those rows for this series.
 - a spec, `wire=(BU, 0.75)`: every wire gets that colour and size, and the rows are ignored.
 
-A wire whose row has no size, with no size on the series, raises. Name the size in either place.
+A wire whose row has no size and no size on the series raises.
 
 A series that starts on one rail (`dc.plus`, `ac.L1`) is a control path. A wire at the rail's
-potential takes the rail's row. A fuse or a contact ends that potential, so the wires after it take
+potential takes the rail's row. A fuse or a contact ends that potential: the wires after it take
 `DC_CONTROL` or `AC_CONTROL`. A series that starts on a whole supply (`dc`, `ac`) is a power path:
 each pole keeps its conductor's row through every element. On a supply with `n=`, the first
 element with poles decides: as many as the phases leaves N unwired, one more takes N. A series that
-starts on no rail takes the rows the earlier series gave the net it starts on.
+starts on no rail takes the rows the earlier series gave its net.
 
 ```python
 import fransys as fr
@@ -474,7 +383,7 @@ d.series(dc.plus, s1.no, k1.coil, dc.minus, wire=0.75)  # RD, WH, BK, each 0.75 
 
 `d.earth(*pins)` declares the `PE` net; a wire to the PE terminal builds it. A unit has one `PE` net: each further `d.earth` call in it adds its pins to that net.
 Call d.earth before draft(); a later call raises.
-Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row.
+Every pin joined by `d.earth` draws the PE symbol, wired or not. A wire to a PE terminal adds its list row. A series through a cable lands its GNYE core on the load's PE port and the strip's next free PE terminal, else open and earthed. A single wire to a PE terminal is `d.detail.wire`: see `detail.md`.
 
 ```python
 import fransys as fr
@@ -484,13 +393,15 @@ d = fr.design("demo_parts")
 x1 = d.terminal_strip("X1", "DEMO-TB-2.5", pe="DEMO-TB-PE-2.5")
 pe = x1.run("PE", 2, bridged=True)
 m1 = d.device("M1", "DEMO-MOTOR-4KW")
-d.wire(m1.motor["PE"], pe[1], wire=(GNYE, 2.5))
+w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=3)
+w1.core(GNYE, m1.motor["PE"], pe[1])
 d.earth(m1.motor["PE"], pe[1])
 ```
 
 A PE bar takes its landings. Pass the bar's function where a pin goes: it takes its next free screw
 and joins it to the PE net. A bar with every screw taken raises. A bar cut to length from stock writes
-no port, so each landing makes a screw. The bar is never drawn, and each end on it draws the PE symbol.
+no port, so each landing makes a screw. The bar is never drawn; each end on it draws the PE symbol.
+A cable core lands on a screw as on any pin; a single wire is `d.detail.wire`: see `detail.md`.
 
 ```python
 import fransys as fr
@@ -499,48 +410,36 @@ from fransys.colours import GNYE
 d = fr.design("demo_parts")
 pe1 = d.device("PE1", "DEMO-PEBAR-20")
 m1 = d.device("M1", "DEMO-MOTOR-4KW")
+w1 = d.cable("W1", "DEMO-CBL-4G1.5", length_m=3)
 w2 = d.cable("W2", "DEMO-CBL-2X2X0.75-SP")
-d.wire(m1.motor["PE"], pe1.pe, wire=(GNYE, 2.5))  # screw 1
+w1.core(GNYE, m1.motor["PE"], pe1.pe)  # screw 1
 w2.core(5, pe1.pe)  # the one-ended screen, screw 2
 ```
 
-## A named signal net
-
-`d.net(name, *pins, kind=)` names a net of pins that no wire joins, such as a bus shown by its label.
-`kind` is `fr.CONTROL` (the default), `fr.SIGNAL` or `fr.GENERIC`. A `PE` or supply net has its own call.
-
-## A busbar, a rail bond
-
-`d.busbar(a, b)` joins two pins by a rack's internal power jumper. `d.rail_bond(a, b)` joins two
-terminals bonded through their mounting rail. Neither has a wire-list row, colour or gauge, and
-both close the net like a conductor.
-
 ## AC or DC supply and rails
 
-`d.dc_supply(name, source)` declares a DC supply from the L+ and L- pins of a device and its nominal
-voltage; its rails are `dc.plus` and `dc.minus`, and a series starts or ends on them. With no source
-device, such as a 24 V feed on terminals, give the pins:
-`d.dc_supply("24VDC", plus=X1[1], minus=X1[2], voltage=24)`. Then `voltage=` is required. A
-source whose part states a nominal voltage takes no `voltage=`; one without it needs `voltage=`. `mid=` adds a middle conductor, as on a plus and
-minus 15 V supply.
+`d.dc_supply(name, source)` declares a DC supply from the L+ and L- pins of a device; its rails are
+`dc.plus` and `dc.minus`, and a series starts or ends on them. With no source device, such as a 24 V
+feed on terminals, give the pins and `voltage=`: `d.dc_supply("24VDC", plus=X1[1], minus=X1[2], voltage=24)`.
+A source whose part states a nominal voltage takes no `voltage=`. `mid=` adds a middle conductor, as
+on a plus and minus 15 V supply.
 
 Without `mid`, `minus` is 0 V and `plus` carries the voltage. With `mid`, `mid` is 0 V, `plus` is
-plus the voltage and `minus` is minus the voltage. `names=(plus, minus, mid)` renames the potentials. `ac_supply` takes `names=` too: one name per phase pin in order, then one for `n`. A second three-phase supply beside L1, L2, L3 takes, say, `names=("EL1", "EL2", "EL3")`. The rails stay `ac.L1`, `ac.L2`, `ac.L3` and `ac.N`, and phases and wire colours do not change.
+plus the voltage and `minus` is minus the voltage. `names=(plus, minus, mid)` renames the potentials; `ac_supply` takes one name per phase pin, then one for `n`.
 
-`earthing=fr.IT` declares a floating supply on `ac_supply` or `dc_supply`; the default is `fr.EARTHED`.
-Two 0 V rails are two supplies.
+`earthing=fr.IT` declares a floating supply; the default is `fr.EARTHED`. Two 0 V rails are two supplies.
 
-`ac_supply` and `dc_supply` take `fault_current_a=`, the supply's prospective fault current in amps. `dc_supply` also takes
-`fault_time_constant_ms=`. A supply that states a fault current is a source for the breaking-capacity check (`reading.md`). A
-`dc_supply` declared from a `source` device refuses both, since that part states its own fault data.
+`fault_current_a=` is the supply's prospective fault current in amps; `dc_supply` also takes
+`fault_time_constant_ms=`. A supply that states one is a source for the breaking-capacity check
+(`reading.md`). A `dc_supply` declared from a `source` device refuses both.
 
-A nested unit's declaration of a supply name its container also declares is not a source. The container's declaration counts.
+A nested unit's declaration of a supply name its container also declares is not a source.
 
 `d.ac_supply(name, voltage, *phases, n=None, names=None)` declares an AC supply on one or three phase pins in
-phase order. Its rails are `ac.L1`, plus `ac.L2` and `ac.L3` for three phases. On three phases `voltage` is each phase's RMS to the star point: 230 for a 400 V supply. A 230 V line-to-line IT supply is declared 132.79. A pin's side and order
-on a rail come from the supply you declare, never from the rail's name. A rail draws its power symbol
-only when declared. A fused branch or a second source of one voltage is not a supply: make it a strip
-with a `description`, or wire it point to point.
+phase order. Its rails are `ac.L1`, plus `ac.L2` and `ac.L3` for three phases. On three phases `voltage` is each phase's RMS to the star point: 230 for a 400 V supply. A pin's side and order
+on a rail come from the supply you declare. A rail draws its power symbol only when declared. A fused
+branch or a second source of one voltage is not a supply: make it a strip with a `description`, or
+wire it point to point.
 
 ```python
 import fransys as fr
@@ -554,129 +453,67 @@ dc = d.dc_supply("24VDC", plus=x1[1], minus=x1[2], voltage=24)
 
 ## Plug a connector
 
-`d.mate(a, b)` plugs connector `a` into connector `b`. Each is a device with exactly one function
-(see `units.md` for a mate across a unit boundary).
+`d.mate(a, b)` plugs connector `a` into connector `b`, each a device with one function
+(`units.md` covers a mate across a unit boundary).
 
 ## Add a harness
 
 `d.harness("W5")` adds a harness item: see `harnesses.md`.
 
-## Read a model id
-
-`Q1.id` and `Q1.coil.id` give the model id of a device and a function. Read them after the build, as
-`fr.derive.item_designation(result.model, Q1.id)` does. Ids exist for reading only, never to wire.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-h1 = d.device("H1", "DEMO-LAMP-24")
-result = fr.build(d)
-assert fr.derive.item_designation(result.model, h1.id) == "H1"
-```
 
 ## Request a PLC channel
 
 `K1.coil.plc(fr.DO, "Pump run")` asks for a digital output named for the signal, and
-`.scale("bar", raw=(0, 100), eng=("0", "10"))` scales an analogue one. The allocation pass binds the
-request to a channel later; you never pick the channel.
+`.scale("bar", raw=(0, 100), eng=("0", "10"))` scales an analogue one. A series that ends or starts
+at a PLC module binds the request to a channel (next section). A request no series wires keeps the
+build's own allocation.
 `d.rack("U1")` adds the part-less rack the modules sit under with `parent=`; a `d.harness` rack stops with `HARNESS_HOLDS_PLC_MODULE`.
+
+## How channels are numbered
+
+A PLC module passed whole to `d.series` takes its lowest-numbered free channel, as a strip takes
+its next free terminal.
+
+| rule | what happens |
+|---|---|
+| Order | A call takes the lowest free channel when it runs. Calls take channels in the order they run. |
+| Direction | A module that ends a path gives an input. A module that starts a path gives an output. A module in the middle of a path raises. |
+| Kind | The request on a function of the path, `s1.no.plc(fr.DI, name)`, names the kind. With no request, the module's only kind for that direction. Two kinds and no request raises, naming both kinds and the request that settles it. |
+| Fixed | `a1.di_7` is a fixed channel, for one that an existing PLC program or IO list fixes. A fixed channel is taken, and the lowest-free rule skips it. |
+
+Sixteen sensors from a table in IO-list order get channels 1 to 16:
+
+```python
+import fransys as fr
+from fransys.colours import BU
+
+d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
+a1 = d.device("A1", "DEMO-PLC-DI-16")
+io_list = [f"Sensor {n}" for n in range(1, 17)]  # the IO list, in channel order
+for number, name in enumerate(io_list, start=1):
+    sensor = d.device(f"S{number}", "DEMO-PB-NC")
+    sensor.sw.plc(fr.DI, name)
+    d.series(dc.plus, sensor.sw, a1, wire=(BU, 0.75))  # S1 takes -A1:1, S2 takes -A1:2, ...
+```
+
+To reproduce an existing channel map, write the paths in channel order. Use the fixed form for a
+channel that call order cannot reach, such as one after a gap. A program that reads channel 5 after
+channel 1 needs `a1.di_5` for the second path. The paths after it continue from channel 2.
+
+```python
+d = fr.design("demo_parts")
+dc = d.dc_supply("24VDC", d.device("G1", "DEMO-PSU-24").output)
+a1 = d.device("A1", "DEMO-PLC-DI-16")
+start, reset, stop = (d.device(tag, "DEMO-PB-NC") for tag in ("S1", "S2", "S3"))
+d.series(dc.plus, start.sw, a1, wire=(BU, 0.75))      # channel 1
+d.series(dc.plus, reset.sw, a1.di_5, wire=(BU, 0.75))  # fixed: channel 5, after a gap
+d.series(dc.plus, stop.sw, a1, wire=(BU, 0.75))       # channel 2: the lowest free one
+```
 
 ## Title block, revision
 
 `d.project(title=, number=, customer=, ...)` fills the title block and `d.revision(1, date=, text=)`
-adds a history line. Both are optional and appear on the drawings and in the reports.
-
-## Point a finding past a helper
-
-A finding names the file and line of the call that authored the thing. A helper that builds a repeated
-circuit would make every finding name the helper's own line. Set `__tracebackhide__ = True` in the helper,
-as a local or as a module global, and the finding names the line that called the helper instead. It is
-pytest's own convention.
-
-```python
-import fransys as fr
+adds a history line. Both are optional.
 
 
-def lamp_pair(d, first, second):
-    __tracebackhide__ = True
-    return d.device(first, "DEMO-LAMP-24"), d.device(second, "DEMO-LAMP-24")
-
-
-d = fr.design("demo_parts")
-h1, h2 = lamp_pair(d, "H1", "H2")
-```
-
-## An accessory in its holder
-
-A part with no function, put in another device with `parent=`, is an accessory of it. A fuse link in its
-PCB fuse holder is one: the holder carries the pads and the footprint, and the link carries the rated current.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-f1 = d.device("F1", "DEMO-FUSE-HOLDER-PCB")
-link = d.device(None, "DEMO-FUSE-LINK-4A-T", name="link", parent=f1)
-model = fr.build(d).model
-assert fr.derive.item_designation(model, link.id) == fr.derive.item_designation(model, f1.id)
-```
-
-The link prints `F1` and has no number or row of its own. An authored tag makes it an ordinary item. The
-holder's protection function then bounds its branch at the link's rated current. The part page shows the
-link's `[rating]`, and `reading.md` shows the branch check ("Checking a branch's current").
-
-`parent=` also takes a terminal strip. A jumper bar on a bridged run is an accessory of its strip: it prints
-the strip's designation and the BOM counts it. `parent=` refuses a run or a terminal and names its strip.
-You state the bar yourself; the bridge adds none.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-x1 = d.terminal_strip("X1", "DEMO-TB-2.5")
-run = x1.run("L", 3, bridged=True)
-bar = d.device(None, "DEMO-JUMPER-BAR-3P", name="bar", parent=x1)
-model = fr.build(d).model
-assert fr.derive.item_designation(model, bar.id) == "X1"
-```
-
-## Reading a part's rating
-
-`d.rating(part, function)` and `d.operating(part, function)` read a part's or a function's rating or
-operating envelope from the catalogue. It is a lookup, not a build step. Either gives `None` where
-the part file states nothing.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-part_rating = d.rating("DEMO-TBLK-2P-DUAL")
-terminal_rating = d.rating("DEMO-TBLK-2P-DUAL", "terminal")
-lamp_operating = d.operating("DEMO-LAMP-24", "lamp")
-```
-
-## Layout profile
-
-`d.layout` advises the drawing and connects nothing: `chain`, `keep_together`, `break_before`,
-`order`, `symbol`, `draw_in`, `side`, `sheet`, `page_title` and `profile`. `d.layout.side(u1.bus_in, fr.ABOVE)` puts a
-unit's interface above its outline, and `fr.BELOW` below it. It takes a field of the `d.add` tuple.
-An interface with no harness line ignores it. `d.layout.page_title(x1, "Field terminals")` names the pages drawing a block, function or device. `d.layout.profile(hide_unused_pins=True)` hides
-every box-drawn pin with no conductor, and a function with none, on drawings. Every list keeps
-all pins. The house value is off. `min_text_height_mm` is the floor ([Drawing well](drawing.md)).
-The design's profile governs only its pages. A unit sets its own in its body; with none it
-uses the house values, never its parent's.
-
-`d.layout.chain(r1.lamp, k3.main, f3.element, beside=k1.main)` draws the chain beside the element `k1.main`, joined by short unmarked horizontals. Wire first: the chain joins the element by each end net they share, one or two, else `AuthorError` names them. A one-pin box (a PLC channel) may end a chain and joins nothing.
-
-```python
-import fransys as fr
-
-d = fr.design("demo_parts")
-with d.function("RUN", "Pump run") as run:
-    d.device("K1", "DEMO-RLY-2CO-24")
-with d.function("LAMPS", "Lamps") as lamps:
-    d.device("H1", "DEMO-LAMP-24")
-d.layout.order(run, lamps)
-d.layout.profile(hide_unused_pins=True)
-```

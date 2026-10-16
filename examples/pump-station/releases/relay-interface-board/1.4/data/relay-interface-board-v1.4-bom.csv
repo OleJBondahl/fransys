@@ -1,0 +1,4 @@
+mpn,revision,manufacturer,description,count,designations
+1757255,,Phoenix Contact,"PCB header, 3-pin, 5.08 mm pitch",2,-J1; -J2
+40.61.9.024.1000,,Finder,"PCB relay, 1 changeover contact, 16 A, 24 V DC coil",2,-K1; -K2
+SKX-RIB-2,,this repo,"Relay interface board, 2 channels, revision 01",1,

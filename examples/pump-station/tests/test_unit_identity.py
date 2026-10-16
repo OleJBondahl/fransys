@@ -34,13 +34,13 @@ DOCUMENTS = {
     "relay-board.typ": {
         "Title": "Relay interface board",
         "Number": "SKX-RIB-2",
-        "Revision": "1.3",
+        "Revision": "1.4",
         "Customer": "",
     },
     "cabinet.typ": {
         "Title": "Pump cabinet",
         "Number": "SKX-PC-2",
-        "Revision": "1.6",
+        "Revision": "1.7",
         "Customer": "",
     },
     "system.typ": {
@@ -53,16 +53,32 @@ DOCUMENTS = {
 BOARD_TAG = "-U2"
 TEXT_SUFFIXES = {".csv", ".xml", ".html"}  # not .pdf: compressed bytes can hold "-U2" by chance
 CABINET_ROW = (
-    'text("SKX-PC-2"), text("1.6"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
+    'text("SKX-PC-2"), text("1.7"), text(""), text("Pump cabinet"), text("1"), box(text("-U1"))'
+)
+
+
+SVG_TEXT = re.compile(
+    r'<text x=\\"([\d.]+)\\" y=\\"([\d.]+)\\" font-size=\\"([\d.]+)\\"[^>]*>([^<]*)</text>'
+)
+LABEL_SIZE = (
+    2.4691  # the title block's label texts; its values are 3.4293 and sit 3.475 below a label
 )
 
 
 def cell_values(typ_text: str, label: str) -> set[str]:
-    """The values of every title-block cell labelled `label`: `Title` is the big bold cell."""
-    pattern = (
-        rf'text\(size: [\d.]+mm, "{label}"\), text\(size: [\d.]+mm, (?:strong\()?text\("([^"]*)"\)'
-    )
-    return set(re.findall(pattern, typ_text))
+    """The values of every title-block cell labelled `label`: the SVG text 3.475 below the label text."""
+    texts = [(float(x), float(y), float(size), t) for x, y, size, t in SVG_TEXT.findall(typ_text)]
+    values: set[str] = set()
+    for n, (x, y, size, text) in enumerate(texts):
+        if size == LABEL_SIZE and text == label:
+            # every page repeats the block at the same coordinates: take the nearest in file order
+            below = [
+                (abs(m - n), t)
+                for m, (tx, ty, ts, t) in enumerate(texts)
+                if tx == x and abs(ty - y - 3.475) < 1e-6 and ts != LABEL_SIZE
+            ]
+            values.add(min(below)[1] if below else "")
+    return values
 
 
 def assert_title_blocks(typ_text: str, expected: dict[str, str]) -> None:
@@ -97,12 +113,11 @@ def test_every_title_block_carries_the_unit_identity(built: Built, name: str) ->
 def test_title_block_check_fails_on_one_stray_number_cell(built: Built, name: str) -> None:
     """Can-fail proof: one title block with another Number makes the check raise."""
     real = read_typ(built[2], name)
-    cell = f'text(size: 2.46912mm, "Number"), text(size: 3.42934mm, text("{DOCUMENTS[name]["Number"]}"))'
+    number = DOCUMENTS[name]["Number"]
+    cell = f'DejaVu Sans\\">{number}</text>'
     assert cell in real
     with pytest.raises(AssertionError):
-        assert_title_blocks(
-            real.replace(cell, cell.replace(DOCUMENTS[name]["Number"], "X-9"), 1), DOCUMENTS[name]
-        )
+        assert_title_blocks(real.replace(cell, cell.replace(number, "X-9"), 1), DOCUMENTS[name])
     with pytest.raises(AssertionError):
         assert_title_blocks("", DOCUMENTS[name])
 
@@ -145,7 +160,7 @@ def test_board_set_never_names_its_own_tag(built: Built) -> None:
 
     board_lines = [
         row
-        for row in read_csv(out_dir / "board" / "data" / "relay-interface-board-v1.3-bom.csv")
+        for row in read_csv(out_dir / "board" / "data" / "relay-interface-board-v1.4-bom.csv")
         if row["mpn"] == "SKX-RIB-2"
     ]
     assert len(board_lines) == 1, f"the board's bom.csv lines for SKX-RIB-2: {board_lines}"
@@ -154,13 +169,13 @@ def test_board_set_never_names_its_own_tag(built: Built) -> None:
     designations = {
         row["designation"]
         for row in read_csv(
-            out_dir / "board" / "data" / "relay-interface-board-v1.3-designations.csv"
+            out_dir / "board" / "data" / "relay-interface-board-v1.4-designations.csv"
         )
     }
     assert {"-K1", "-K2", "-J1", "-J2"} <= designations, sorted(designations)
     parent_lines = [
         row
-        for row in read_csv(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-bom.csv")
+        for row in read_csv(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-bom.csv")
         if row["mpn"] == "SKX-RIB-2"
     ]
     assert [row["designations"] for row in parent_lines] == ["-U2"], (
@@ -179,11 +194,11 @@ def test_board_tag_check_fails_on_a_tag_in_a_name_a_file_or_the_document(
         shutil.copytree(out_dir / "board", copy)
         typ = board_typ
         if mutation == "name":
-            (copy / "data" / "relay-interface-board-v1.3-bom.csv").rename(
-                copy / "data" / "relay-interface-board-v1.3-bom-U2.csv"
+            (copy / "data" / "relay-interface-board-v1.4-bom.csv").rename(
+                copy / "data" / "relay-interface-board-v1.4-bom-U2.csv"
             )
         elif mutation == "csv":
-            with (copy / "data" / "relay-interface-board-v1.3-bom.csv").open(
+            with (copy / "data" / "relay-interface-board-v1.4-bom.csv").open(
                 "a", encoding="utf-8"
             ) as handle:
                 handle.write("-U2\n")
@@ -201,7 +216,7 @@ def assert_cabinet_unit_line(lines: tuple, system_typ: str) -> None:
         for line in lines
         if line.mpn == "SKX-PC-2"
     ]
-    assert found == [(None, "SKX-PC-2", "1.6", "", "Pump cabinet", 1, ("-U1",))], found
+    assert found == [(None, "SKX-PC-2", "1.7", "", "Pump cabinet", 1, ("-U1",))], found
     assert CABINET_ROW in system_typ, "the system document's BOM lacks the cabinet row"
 
 

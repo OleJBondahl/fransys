@@ -15,4 +15,4 @@ LADN11,,Schneider Electric,"TeSys D front-mount auxiliary contact block, 1 NO + 
 LC1D09BD,,Schneider Electric,"TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil",2,-Q11; -Q21
 LRD08,,Schneider Electric,"TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC",2,-B12; -B22
 QUINT4-PS/1AC/24DC/2.5/SC,,Phoenix Contact,"Power supply, 1-phase, 24 V DC; 2.5 A",1,-T1
-SKX-RIB-2,1.3,,Relay interface board,1,-U2
+SKX-RIB-2,1.4,,Relay interface board,1,-U2

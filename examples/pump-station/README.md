@@ -9,12 +9,18 @@ station that joins them. Every export Fransys produces for it is in `out/`.
 
 ## The station
 
-- A 400 V supply, a main switch, and two pumps, each with its fuses, contactor and overload
-  relay.
-- A 24 V DC control supply and a WAGO 750 PLC rack with digital inputs and outputs.
-- A relay interface board between the PLC outputs and the contactor coils, nested in the cabinet
-  as a unit of its own.
-- Pilot lights, and the field cables to the motors.
+- A 400 V supply, a main switch, and two pumps. Each pump has a 4 A aM, 10x38 fuse, a Schneider
+  LC1D09 contactor and a matching LRD08 overload relay. The main switch isolates, so the fuse
+  has no switch-disconnector.
+- A 24 V DC control supply and a WAGO PFC200 controller (750-82xx) with 750 digital I/O modules.
+  The 0 V of the 24 V supply is GND everywhere, and the PSU's DC output lands only on the rail
+  terminals.
+- A relay interface board between the PLC outputs and the contactor coils: industrial 24 V DC
+  PCB relays with no diode, since the PLC modules handle the coil. It is nested in the cabinet as
+  a unit of its own.
+- Pilot lights, driven by an auxiliary contact on each contactor, and the field cables to the
+  motors.
+- Every part file carries its datasheet rating.
 
 ## What is here
 

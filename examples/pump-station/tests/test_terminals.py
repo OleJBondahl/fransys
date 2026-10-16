@@ -430,21 +430,21 @@ def test_ext_x0_matches_terminal_plan(built: tuple) -> None:
 
 def test_x1_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-terminals-X1.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X1.csv")
     assert len(rows) == 5, f"expected exactly 5 rows on -X1, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X1
 
 
 def test_x01_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-terminals-X01.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X01.csv")
     assert len(rows) == 12, f"expected exactly 12 rows on -X01, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X01
 
 
 def test_x2_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X2.csv")
     assert len(rows) == 17, f"expected exactly 17 rows on -X2, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X2
 
@@ -471,7 +471,7 @@ def test_x2_24v_bridge_joins_every_24v_landing(built: tuple) -> None:
     the terminals carry no `jumper_group`.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X2.csv")
     rail = _x2_group(rows, "24V", 10)
     for designation, landing in (
         ("-X2:24V:1", "-T1:+"),
@@ -496,7 +496,7 @@ def test_x2_gnd_bridge_joins_every_gnd_landing(built: tuple) -> None:
     terminals carry no `jumper_group`.
     """
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-terminals-X2.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X2.csv")
     ground = _x2_group(rows, "GND", 7)
     rail = _x2_group(rows, "24V", 10)
     assert ground["-X2:GND:1"]["jumper_group"] != rail["-X2:24V:1"]["jumper_group"], (
@@ -517,6 +517,6 @@ def test_x2_gnd_bridge_joins_every_gnd_landing(built: tuple) -> None:
 
 def test_x3_matches_terminal_plan(built: tuple) -> None:
     _result, out_dir, _intermediates = built
-    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.6-terminals-X3.csv")
+    rows = _read_rows(out_dir / "cabinet" / "data" / "pump-cabinet-v1.7-terminals-X3.csv")
     assert len(rows) == 8, f"expected exactly 8 rows on -X3, got {len(rows)}: {rows}"
     assert rows == EXPECTED_X3

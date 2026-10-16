@@ -107,10 +107,10 @@ def pump(u, n, *, phases, colours, motor_terminals, v24, gnd, di_overload, di_ru
 
 @fr.unit(
     "relay-interface-board",
-    revision=3,
+    revision=4,
     interface_version=1,
-    date="2026-10-05",
-    text="Unit tag U2, connector pins not drawn when unused",
+    date="2026-10-16",
+    text="Re-cut under fransys 0.19.9, drawings redrawn, no design change",
     by="SK",
     title="Relay interface board",
     number="SKX-RIB-2",
@@ -120,6 +120,12 @@ def pump(u, n, *, phases, colours, motor_terminals, v24, gnd, di_overload, di_ru
             "revision": 2,
             "date": "2026-10-02",
             "text": "Finder 40.61 relays, no flyback diodes",
+            "created": "SK",
+        },
+        {
+            "revision": 3,
+            "date": "2026-10-05",
+            "text": "Unit tag U2, connector pins not drawn when unused",
             "created": "SK",
         },
     ],
@@ -148,14 +154,10 @@ def relay_board(b):
 
 @fr.unit(
     "pump-cabinet",
-    revision=6,
+    revision=7,
     interface_version=1,
-    date="2026-10-06",
-    text=(
-        "Owner ruling 2026-10-06, a cabinet is a unit: the place C1 is gone. The change list "
-        "reads No changes. because the listing drops a place that holds the whole unit, "
-        "baseline L2, kept by design (REL-DIFF-PLACE)"
-    ),
+    date="2026-10-16",
+    text="Re-cut under fransys 0.19.9, drawings redrawn, no design change",
     by="SK",
     title="Pump cabinet",
     number="SKX-PC-2",
@@ -183,6 +185,16 @@ def relay_board(b):
             "revision": 5,
             "date": "2026-10-06",
             "text": "Three phases on four terminals each, pump n on terminal n+2",
+            "created": "SK",
+        },
+        {
+            "revision": 6,
+            "date": "2026-10-06",
+            "text": (
+                "Owner ruling 2026-10-06, a cabinet is a unit: the place C1 is gone. The change "
+                "list reads No changes. because the listing drops a place that holds the whole "
+                "unit, baseline L2, kept by design (REL-DIFF-PLACE)"
+            ),
             "created": "SK",
         },
     ],

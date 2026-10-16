@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import arrow_ends, reserve
 from .constraints import Graph
 from .geometry import cell_footprint, pin_xy
 from .keys import natural_key
 from .pack import cell_node
 from .place_accept import accept
 from .place_align import page_aligns, unmet_mates
+from .place_foreign import clear_foreign
 from .place_levels import Span, trunk_levels
-from .place_trunk import loose_columns, tangled_trunks, trunk_constraints
+from .place_room import Step, crossed_levels, step_rooms
+from .place_trunk import box_at, box_pin_x, loose_columns, tangled_trunks, trunk_constraints
 from .values import Finding
 
 if TYPE_CHECKING:
@@ -21,6 +24,7 @@ if TYPE_CHECKING:
     from .pack import PlacedColumn
     from .place_align import Align
     from .place_env import PageEnv
+    from .place_room import CrossedRooms
     from .values import Attach, Box, Cell, RowPlan
 
 
@@ -41,15 +45,16 @@ def _pin_y(env: PageEnv, cell: Cell, pin: str | None) -> int:
     return 0 if pin is None else pin_xy(env.syms[cell.sym], cell, pin)[1]
 
 
-def _gap(env: PageEnv, above: Cell, below: Cell) -> int:
+def _gap(env: PageEnv, above: Cell, below: Cell, room: int = 0) -> int:
     fa, fb = _footprint(env, above), _footprint(env, below)
     wire = env.options.wire_min
+    pins = max(wire, room)
     by_box = fa.y + fa.h + wire - fb.y
     pa = (
         pin_xy(env.syms[above.sym], above, above.bottom_pin)[1] if above.bottom_pin else fa.y + fa.h
     )
     pb = _pin_y(env, below, below.top_pin) if below.top_pin else fb.y
-    return grid_up(max(by_box, pa + wire - pb), env.options.wiring_grid)
+    return grid_up(max(by_box, pa + pins - pb), env.options.wiring_grid)
 
 
 def _same_symbol(g: Graph, pc: PlacedColumn, lane: int, index: int, cell: Cell) -> None:
@@ -61,12 +66,14 @@ def _same_symbol(g: Graph, pc: PlacedColumn, lane: int, index: int, cell: Cell) 
                 return
 
 
-def stack_constraints(g: Graph, pc: PlacedColumn, env: PageEnv, *, rigid: bool) -> None:
-    """Consecutive cells keep wire_min between footprints and between their pins."""
+def stack_constraints(
+    g: Graph, pc: PlacedColumn, env: PageEnv, rooms: Mapping[Step, int], *, rigid: bool
+) -> None:
+    """Consecutive cells keep wire_min between footprints, `rooms` (else wire_min) between pins."""
     for li, cells in enumerate(pc.lanes):
         for i in range(1, len(cells)):
             a, b = cell_node(pc.id, li, i - 1), cell_node(pc.id, li, i)
-            gap = _gap(env, cells[i - 1], cells[i])
+            gap = _gap(env, cells[i - 1], cells[i], rooms.get((pc.id, li, i - 1), 0))
             if rigid:
                 g.equal(a, b, gap)
             else:
@@ -130,12 +137,14 @@ def _box_y(g: Graph, r: int, env: PageEnv, box: str) -> None:
     g.after(f"box:{box}", f"row:{r + 1}", grid_up(fp.y + fp.h, step) + env.options.row_gap)
 
 
-def _row_graph(g: Graph, r: int, env: PageEnv, loose: AbstractSet[str]) -> None:
+def _row_graph(
+    g: Graph, r: int, env: PageEnv, loose: AbstractSet[str], rooms: Mapping[Step, int]
+) -> None:
     row = env.plan.rows[r]
     _row_constraints(g, r, env)
     for col in row.columns:
         above = col in env.attach and _edge(env, col, row) == "N"
-        stack_constraints(g, env.pcs[col], env, rigid=above and col not in loose)
+        stack_constraints(g, env.pcs[col], env, rooms, rigid=above and col not in loose)
         if col in env.attach:
             _attach_y(g, env.pcs[col], env, above=above)
     for b in row.blocks:
@@ -144,49 +153,61 @@ def _row_graph(g: Graph, r: int, env: PageEnv, loose: AbstractSet[str]) -> None:
 
 
 def _y_graph(
-    env: PageEnv, spans: Sequence[Span], tangled: AbstractSet[str]
-) -> tuple[Graph, frozenset[str]]:
-    """The page graph and the trunks to loosen: a leg refused, or a trunk edge tangled."""
+    env: PageEnv,
+    spans: Sequence[Span],
+    tangled: AbstractSet[str],
+    rooms: Mapping[Step, int],
+    crossed: CrossedRooms,
+) -> tuple[Graph, frozenset[str], frozenset[str]]:
+    """The page graph, the trunks with a leg refused, and the trunks at a level edge."""
     g = Graph()
     loose = loose_columns(env, tangled)
     for r in range(len(env.plan.rows)):
-        _row_graph(g, r, env, loose)
+        _row_graph(g, r, env, loose, rooms)
     join_constraints(g, env)
     refused = frozenset[str]().union(
-        *(trunk_constraints(g, f, env, tangled) for f in env.flow.fans)
+        *(trunk_constraints(g, f, env, tangled, crossed) for f in env.flow.fans)
     )
-    trunk_levels(g, spans, env.options)
-    return g, refused
+    return g, refused, trunk_levels(g, spans, env.options)
 
 
 def _xs(env: PageEnv, x: Mapping[str, int], ends: Sequence[Attach], r: int) -> tuple[int, ...]:
-    return tuple(
-        x[f"col:{a.column}"] + env.pcs[a.column].offsets[a.lane]
-        for a in ends
-        if a.column is not None and a.column in env.pcs and env.pcs[a.column].row == r
-    )
+    """The x of each attachment of a fan standing in row r: a column's lane or a box pin."""
+    out = []
+    for a in ends:
+        if a.column is None:
+            at = box_at(env, a.pin.sym)
+            if at is not None and at[1] == r:
+                out.append(box_pin_x(env, x, a.pin.sym, a.pin.pin))
+        elif a.column in env.pcs and env.pcs[a.column].row == r:
+            out.append(x[f"col:{a.column}"] + env.pcs[a.column].offsets[a.lane])
+    return tuple(out)
 
 
 def _spans(env: PageEnv, x: Mapping[str, int]) -> list[Span]:
-    """Each fan's x span per row, from its column attachments (box pins are not placed yet)."""
+    """Each fan's x span per row, from its column attachments and its box pins."""
     out = []
     for fan in env.flow.fans:
         for r in range(len(env.plan.rows)):
             drivers, legs = _xs(env, x, fan.drivers, r), _xs(env, x, fan.legs, r)
             if drivers or legs:
                 xs = (*drivers, *legs)
-                out.append(Span(fan.id, r, min(xs), max(xs), fan.lanes, fan.side, drivers, legs))
+                left, right = arrow_ends(env.refs, env.plan.page, r, fan.id)
+                lo, hi = min(xs) - reserve(left, env.options), max(xs) + reserve(right, env.options)
+                out.append(Span(fan.id, r, lo, hi, fan.lanes, fan.side, drivers, legs))
     return out
 
 
-def _settle(env: PageEnv, spans: Sequence[Span]) -> tuple[frozenset[str], frozenset[str]]:
+def _settle(
+    env: PageEnv, spans: Sequence[Span], rooms: Mapping[Step, int], crossed: CrossedRooms
+) -> tuple[frozenset[str], frozenset[str]]:
     """Rebuild with each newly found tangled trunk until none is new; (tangled, refused)."""
     tangled: frozenset[str] = frozenset[str]()
     refused: frozenset[str] = frozenset[str]()
     while True:
-        g, round_refused = _y_graph(env, spans, tangled)
+        g, round_refused, lowered = _y_graph(env, spans, tangled, rooms, crossed)
         refused |= round_refused
-        found = round_refused | tangled_trunks(g)
+        found = round_refused | lowered | tangled_trunks(g)
         if found <= tangled:
             return tangled, refused
         tangled |= found
@@ -233,9 +254,10 @@ def place_y(env: PageEnv, x: Mapping[str, int]) -> tuple[dict[str, int], tuple[F
 
     Raises YCycleError (a ValueError) when the stacks and trunks alone are cyclic.
     """
-    spans = _spans(env, x)
-    tangled, refused = _settle(env, spans)
-    base, _ = _y_graph(env, spans, tangled)
+    spans, rooms, crossed = _spans(env, x), step_rooms(env, x), crossed_levels(env, x)
+    tangled, refused = _settle(env, spans, rooms, crossed)
+    base, _, _ = _y_graph(env, spans, tangled, rooms, crossed)
+    clear_foreign(base, env, x, spans)
     result = accept(base, page_aligns(env))
     if result is None:
         raise YCycleError(_cycle_text(env))

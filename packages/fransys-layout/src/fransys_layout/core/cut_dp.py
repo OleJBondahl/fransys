@@ -3,8 +3,9 @@
 Exact for the block order it is given. A row's width is `cut_pack`'s (the width `row_width` gives
 it); its height is an estimate. Rows after a page's first hold only short items (L7); no page is
 under `min_fill` unless it is last or ends at a forced break; a page cut through a two-pin net is
-P2. Nothing is refused: one item, or one whole block, is a row however wide, a page's first row
-however tall (layout-0280); when `min_fill` cannot be met the cut is redone without it.
+P2. Nothing is refused: one item, or one whole block but a wide fan, is a row however wide, a
+page's first row however tall (layout-0280); a fan wider alone than the page wraps at a column
+(layout-0309); when `min_fill` cannot be met the cut is redone without it.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import reserve
 from .cut_costs import cut_cost
 from .values import Finding
 
@@ -50,11 +52,18 @@ class RowState:
 Plan = list[tuple[int, int, RowState]]
 
 
-def splits_block(seq: Sequence[Item], i: int, j: int) -> bool:
-    """True when items i..j cut through a whole block at either end."""
+def wide_fan(cut: Cut, block: str) -> bool:
+    """True for a keep-whole fan wider alone than the page: it wraps at a column (layout-0309)."""
+    b = cut.by_id[block]
+    return cut.options.wrap_wide_fans and b.fan is not None and b.width_est > cut.page_w
+
+
+def splits_block(cut: Cut, i: int, j: int) -> bool:
+    """True when items i..j cut through a whole block at either end; a wide fan may be cut."""
+    seq = cut.seq
     left = i > 0 and seq[i - 1].whole and seq[i - 1].block == seq[i].block
     right = j + 1 < len(seq) and seq[j].whole and seq[j + 1].block == seq[j].block
-    return left or right
+    return (left or right) and not wide_fan(cut, seq[i].block)
 
 
 def row_size(cut: Cut, i: int, j: int) -> tuple[int, int]:
@@ -68,13 +77,16 @@ def row_size(cut: Cut, i: int, j: int) -> tuple[int, int]:
         elif item.block not in seen:
             seen.add(item.block)
             height = max(height, cut.by_id[item.block].height_est)
-    return seq[j].at - seq[i].at + seq[i].lead + seq[j].tail, height
+    lead = reserve(cut.bounds[i - 1].arrows if i > 0 else 0, cut.options)
+    tail = reserve(cut.bounds[j].arrows if j < len(cut.bounds) else 0, cut.options)
+    return seq[j].at - seq[i].at + seq[i].lead + seq[j].tail + lead + tail, height
 
 
 def _unbreakable(cut: Cut, i: int, j: int) -> bool:
     """One item, or the items of one whole block: a row however wide (layout-0280)."""
     first = cut.seq[i]
-    return i == j or (first.whole and all(it.block == first.block for it in cut.seq[i : j + 1]))
+    same = first.whole and all(it.block == first.block for it in cut.seq[i : j + 1])
+    return i == j or (same and not wide_fan(cut, first.block))
 
 
 def rows(cut: Cut, i: int) -> list[dict[int, RowState]]:
@@ -99,7 +111,7 @@ def rows(cut: Cut, i: int) -> list[dict[int, RowState]]:
 
 def _refused(cut: Cut, i: int, s: int, j: int) -> bool:
     """A row through a whole block, a shared lone-card row, or after a first not short (L7)."""
-    if splits_block(cut.seq, s, j) or (j > s and any(it.own_row for it in cut.seq[s : j + 1])):
+    if splits_block(cut, s, j) or (j > s and any(it.own_row for it in cut.seq[s : j + 1])):
         return True
     return s > i and not all(it.short for it in cut.seq[s : j + 1])
 

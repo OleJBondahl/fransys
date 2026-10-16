@@ -272,6 +272,7 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "HintError",
         "LayoutOptions",
         "Side",
+        "SymbolGeometry",
         "SymbolPortError",
         "TextKind",
         "TextPlacement",
@@ -279,13 +280,19 @@ def test_the_two_known_violators_are_closed_and_the_check_holds_them():
         "lay_out_diagrams",
         "lay_out_overview",
         "lay_out_schematic",
+        "generic_box_geometry",
         "page_readability",
+        "symbol_geometry",
     }
     assert "write_json" in {
         entry.name for entry in lean_surface.resolve_surface_names(("fransys_model.kernel",))
     }
     measured = lean_surface_types.measure_surface_types()
-    assert not any(site.startswith("packages/fransys-layout/") for site in measured)
+    # `core/jsonform.py` (to_plain, from_plain) is on the surface since P1-6 and takes `object`
+    # by design; ceilings.toml [surface_types] holds exactly these two keys.
+    jsonform = "packages/fransys-layout/src/fransys_layout/core/jsonform.py"
+    layout = {k: n for k, n in measured.items() if k.startswith("packages/fransys-layout/")}
+    assert layout == {f"{jsonform}::from_plain": 1, f"{jsonform}::to_plain": 2}
     assert not any(site.endswith("kernel/encode.py::write_json") for site in measured)
 
 

@@ -14,10 +14,11 @@ from fransys_model.derive.facts.rail_reach import (
     reach_of,
     voltage_across,
 )
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import voltage
-from fransys_model.vocab.enums import Current, FunctionKind
-from fransys_model.vocab.tables import functions, supply_systems
+from fransys_model.vocab.enums import Current
+from fransys_model.vocab.tables import supply_systems
 
 from .ratings_current import _named
 
@@ -101,13 +102,12 @@ def check_breaking(model: Model) -> tuple[Finding, ...]:
     """
     lookup = rails_by_potential(model)
     ports_of = ports_by_function(model)
-    table = functions(model)
     found: dict[tuple[Id[Function], Current, str], Finding] = {}
     for fault in prospective_fault(model):
         if fault.current_a is None or not (fault.functions or fault.supplies):
             continue  # unknown, or no source counted (0 A): silent here, the other rule's matter
         for function in fault.position.functions:
-            if table[function].kind is not FunctionKind.PROTECTION:
+            if not function_role(model, function).protects:
                 continue
             stand = voltage_across(
                 reach_of(model, function, lookup, ports_of), ac=fault.kind is Current.AC

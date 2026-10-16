@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from fransys_layout.core import Facts, Options, PinRef, place_pages
+from fransys_layout.core import Facts, Options, PinRef
+from fransys_layout.core.place import place_pages
 
 from . import align_fixtures as fx
 from .cut_respell import (

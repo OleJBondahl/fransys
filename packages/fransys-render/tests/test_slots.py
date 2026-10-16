@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from fransys_render._slots import draw_symbol
-from symdef import Fill, Polyline
+from symdef import Fill, InvalidValueError, Polyline, UnknownNameError
 
 from electrical_symbols import LIBRARY
 from fransys_model.kernel import make_id
@@ -85,8 +85,8 @@ def test_a_table_is_drawn_from_n_and_its_head():
     assert text.count("<line") == 6
 
 
-def test_a_slot_text_for_a_missing_slot_raises_symdefs_key_error():
-    with pytest.raises(KeyError, match="nope"):
+def test_a_slot_text_for_a_missing_slot_raises_symdefs_unknown_name_error():
+    with pytest.raises(UnknownNameError, match="nope"):
         draw(lengths={"x": WIDTH_G}, texts={"nope": "x"})
 
 
@@ -97,7 +97,7 @@ def test_a_slot_text_is_drawn_by_symdef():
 
 def test_a_missing_required_slot_raises():
     library = dataclasses.replace(LIBRARY, required_slots=("tag",))
-    with pytest.raises(ValueError, match="tag"):
+    with pytest.raises(InvalidValueError, match="tag"):
         draw("break-contact", library=library, texts={})
 
 

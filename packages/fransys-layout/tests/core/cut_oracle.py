@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import row_width
+from fransys_layout.core.pack_row import row_width
 from fransys_layout.core.rowspec import one_row
 
 if TYPE_CHECKING:

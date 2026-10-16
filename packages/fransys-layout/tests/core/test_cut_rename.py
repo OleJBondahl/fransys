@@ -7,14 +7,10 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import (
-    Hints,
-    Options,
-    PlacementProblem,
-    cut_pages,
-    order_blocks,
-)
+from fransys_layout.core import Hints, Options, PlacementProblem, order_blocks
+from fransys_layout.core.cut import cut_pages
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, box_sym, chain, elem, free, net
 from .cut_respell import (
     back_of,
@@ -27,7 +23,7 @@ from .cut_respell import (
 )
 from .pipeline_fixtures import blocks_of, flow_of
 
-OPTIONS = Options()
+OPTIONS = Options(marker=MARKER_BOX)
 SPELLINGS = ("{}", "{:04d}")  # each keeps the natural order of the ranks, spells it anew
 
 

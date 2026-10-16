@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 
 import pytest
+import symdef
+import symdef.authoring
 from test_one_home import (
     INPUTS,
     LAYOUT_FOR_INPUTS,
@@ -246,6 +248,67 @@ def test_the_third_party_check_can_fail():
         third_party_violations("fransys_model", "from _typeshed import DataclassInstance") == set()
     )
     assert third_party_violations("fransys_reports", "import symdef") == {"symdef"}
+
+
+# --- symdef is reached through its surface only (SB10, decision 0229): `import symdef`,
+# `from symdef import <name in symdef.__all__>` or
+# `from symdef.authoring import <name in its __all__>`.
+SYMDEF_DOORS: dict[str, frozenset[str]] = {
+    "symdef": frozenset(symdef.__all__),
+    "symdef.authoring": frozenset(symdef.authoring.__all__),
+}
+
+
+def _symdef_message(node: ast.stmt, name: str) -> str | None:
+    """The message for one imported name, or None when it comes through a door."""
+    if isinstance(node, ast.Import):
+        return None if name == "symdef" else f"`import {name}`: use `import symdef`"
+    assert isinstance(node, ast.ImportFrom)
+    door = SYMDEF_DOORS.get(node.module or "")
+    if door is None:
+        return f"`from {node.module} import {name}`: use `from symdef import {name}`"
+    if name not in door:
+        return f"`{name}` is not in `{node.module}.__all__`: ask for a symdef release"
+    return None
+
+
+def symdef_path_violations(source: str) -> list[tuple[int, str]]:
+    """(line, message) for each symdef import that is off the doors or names a non-public name."""
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            names = [a.name for a in node.names if a.name.split(".")[0] == "symdef"]
+        elif isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "symdef":
+            names = [a.name for a in node.names]
+        else:
+            continue
+        messages = (_symdef_message(node, name) for name in names)
+        found.extend((node.lineno, m) for m in messages if m)
+    return found
+
+
+def test_symdef_is_reached_through_its_surface_only():
+    """SB10: every symdef import in `packages/*/src` goes through `symdef` or `symdef.authoring`."""
+    sources = sorted(PACKAGES_ROOT.glob("*/src/**/*.py"))
+    assert len(sources) > 100
+    found = [
+        f"{path.relative_to(ROOT)}:{line}: {message}"
+        for path in sources
+        for line, message in symdef_path_violations(path.read_text(encoding="utf-8"))
+    ]
+    assert found == []
+
+
+def test_the_symdef_surface_check_can_fail():
+    assert symdef_path_violations("import symdef\nfrom symdef import Symbol, nodes_of\n") == []
+    assert symdef_path_violations("from symdef.authoring import check\n") == []
+    assert symdef_path_violations("from symdef.model import Symbol\n") == [
+        (1, "`from symdef.model import Symbol`: use `from symdef import Symbol`")
+    ]
+    assert len(symdef_path_violations("from symdef.geometry import Line\n")) == 1
+    assert len(symdef_path_violations("import symdef.model\n")) == 1
+    assert len(symdef_path_violations("from symdef import _private\n")) == 1
+    assert len(symdef_path_violations("from symdef.authoring import _x\n")) == 1
 
 
 # --- The import surface (decision 0046): outside a package, source

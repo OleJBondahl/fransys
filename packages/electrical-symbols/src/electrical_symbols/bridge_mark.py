@@ -7,10 +7,9 @@ tick keeps its size. This only picks the symbol; a piece's room is the union of 
 
 from typing import Literal
 
-lazy from symdef import Symbol
+lazy from symdef import Symbol, slots_box
 
 from electrical_symbols._library import LIBRARY
-from electrical_symbols.sheet import slot_box_mm
 
 type BridgePiece = Literal["line", "tick"]
 
@@ -21,10 +20,6 @@ def bridge_mark(piece: BridgePiece) -> Symbol:
 
 
 def bridge_mark_room(piece: BridgePiece) -> tuple[float, float]:
-    """`piece`'s width and height in mm: the union of its slot boxes, the room its drawing fills."""
-    boxes = [slot_box_mm(symbol, one.id) for symbol in [bridge_mark(piece)] for one in symbol.slots]
-    left = min(x for x, _, _, _ in boxes)
-    top = min(y for _, y, _, _ in boxes)
-    right = max(x + width for x, _, width, _ in boxes)
-    bottom = max(y + height for _, y, _, height in boxes)
-    return right - left, bottom - top
+    """`piece`'s width and height in mm: the box of its slots, the room its drawing fills."""
+    box = slots_box(bridge_mark(piece))
+    return float(box.width), float(box.height)

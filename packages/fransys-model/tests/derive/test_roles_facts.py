@@ -1,7 +1,13 @@
 """Tests: the role readers refine a kind's table row by the facets the one site may read."""
 
-from roles_plants import every_kind_member, function_of, roles_plant
+from decimal import Decimal
 
+from current_plant import device, rate
+from plant import Plant
+from roles_plants import every_kind_member, function_of, roles_plant
+from test_breaking_check import _battery, _fn
+
+from fransys_model.checks.ratings_breaking import check_breaking
 from fransys_model.derive import (
     conductor_role,
     function_role,
@@ -10,6 +16,11 @@ from fransys_model.derive import (
     net_class_role,
     port_role,
 )
+from fransys_model.derive.facts.current.bounds import LimitRole, _limits_of
+from fransys_model.derive.facts.stated_ratings import fitted_link_rating
+from fransys_model.kernel import Id, make_id
+from fransys_model.vocab import BreakingPoint, Rating, RatingFacet
+from fransys_model.vocab.core import Function, Item
 from fransys_model.vocab.enums import (
     ConductorKind,
     FunctionKind,
@@ -20,6 +31,7 @@ from fransys_model.vocab.enums import (
 )
 from fransys_model.vocab.roles import CONDUCTOR_ROLES
 from fransys_model.vocab.tables import conductors, internal_links, nets, ports
+from fransys_model.vocab.templates import FunctionTemplate
 
 MODEL, IDS = roles_plant()
 
@@ -98,3 +110,60 @@ def test_the_wire_flag_is_the_wire_kind_alone() -> None:
     """Oracle: `ConductorRole.wire` equals `kind is WIRE` for every `ConductorKind`."""
     for kind in every_kind_member(ConductorKind):
         assert CONDUCTOR_ROLES[kind].wire is (kind is ConductorKind.WIRE)
+
+
+def _rated(key: str, kind: FunctionKind, *, breaking: bool) -> tuple[Plant, Id[Function]]:
+    """A 400 A device `key` of `kind`, its template stating a breaking point when `breaking`."""
+    plant = Plant()
+    device(plant, key, amps="400", kind=kind, link=LinkKind.CONDUCTIVE)
+    if breaking:
+        point = BreakingPoint(voltage_v=Decimal(250), current_a=Decimal(10000))
+        template = make_id(FunctionTemplate, (key, "f"))
+        facet = RatingFacet(
+            id=make_id(RatingFacet, (key,)),
+            key=(key,),
+            subject=template,
+            rating=Rating(breaking_ac=(point,)),
+        )
+        plant.add(facet)
+    return plant, Plant.function_id(key, "f")
+
+
+def _fit_link(plant: Plant, holder: str) -> None:
+    """Fit a 10 A fuse link in item `holder`."""
+    part = rate(plant, "L", "10")
+    plant.item("L", part=part, parent=make_id(Item, (holder,)))
+
+
+def test_a_fitted_link_is_read_for_a_function_that_protects_not_for_one_that_does_not() -> None:
+    """R1: `fitted_link_rating` follows `protects`; a plain load with a link has none."""
+    plant, fn = _rated("F", FunctionKind.PROTECTION, breaking=False)
+    _fit_link(plant, "F")
+    assert fitted_link_rating(plant.model(), fn) is not None
+    plant, fn = _rated("F", FunctionKind.LOAD, breaking=False)
+    _fit_link(plant, "F")
+    assert fitted_link_rating(plant.model(), fn) is None
+
+
+def test_a_protection_rating_is_a_current_limit_only_for_a_function_that_protects() -> None:
+    """B2: the rating bounds the current when `protects`; a load's rating bounds nothing."""
+    plant, fn = _rated("F", FunctionKind.PROTECTION, breaking=False)
+    assert {b.role for b in _limits_of(plant.model(), fn)} == {LimitRole.PROTECTION}
+    plant, fn = _rated("G", FunctionKind.LOAD, breaking=False)
+    assert _limits_of(plant.model(), fn) == []
+
+
+def test_the_breaking_check_reads_a_function_that_protects() -> None:
+    """Y3: the main fuse, a function that protects, is checked against the prospective fault."""
+    model = _battery(draws=(("2.5",), ("0.8", "0.8", "0.8"))).model()
+    assert {f.subjects for f in check_breaking(model)} == {(_fn("FM"),)}
+
+
+def test_a_protections_conductive_link_is_a_pole_a_loads_is_not() -> None:
+    """`link_role` takes the pole from `protects`: only the protection's conductive link."""
+    for kind, pole in ((FunctionKind.PROTECTION, True), (FunctionKind.LOAD, False)):
+        plant, _ = _rated("F", kind, breaking=False)
+        model = plant.model()
+        (link,) = internal_links(model).values()
+        assert link.kind is LinkKind.CONDUCTIVE
+        assert link_role(model, link.id).pole is pole

@@ -13,8 +13,9 @@ from fransys_model.vocab import (
     PlcRequestFacet,
     PortRole,
     PortTemplate,
-    function_poles,
+    function_role_of,
     pole_order,
+    poles_by_role,
     port_order_key,
 )
 from fransys_model.vocab import Port as ModelPort
@@ -228,13 +229,13 @@ def _without_links(facts: PartFacts, fn: Fn) -> list[tuple[Port, Port]]:
 def poles(facts: PartFacts, fn: Fn, *, partless_ok: bool = False) -> list[tuple[Port, Port]]:
     """The poles of `fn` as (line port, load port), in the model's pole order.
 
-    Layout twin: `fransys_layout.stages.resolve.poles_and_pairs`; the model's `function_poles`.
+    Layout twin: `fransys_layout.stages.resolve.poles_and_pairs`; the model's `poles_by_role`.
     Does not read a name or a marking or guess a side. `partless_ok`: pins are poles, in order.
     """
     if partless_ok and facts.partless(fn):
         return [(port, port) for port in fn.ports if port.role is not PortRole.PE]
     template = facts.function_template(fn)
-    found = function_poles(template.kind, facts.links(fn), facts.templates)
+    found = poles_by_role(function_role_of(template.kind), facts.links(fn), facts.templates)
     if not found:
         return _without_links(facts, fn)
     _need_sides(fn, found)

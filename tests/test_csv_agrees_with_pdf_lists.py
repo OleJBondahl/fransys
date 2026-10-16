@@ -100,7 +100,7 @@ def built():
     )
     records = (c1, ext, u, strip, child, facet, fn, internal, external)
     records += (b12, b12_fn, b12_port, m1, m1_fn, m1_port, w1, w2, *labels)
-    records += (board_part, board, pcb_facet("board1", subject=board_part.id), h1, h2)
+    records += (board_part, board, pcb_facet("board1", subject=board_part.id), h1, h2, doc)
     m = model(*records, *connectors, *mates, *places)
     return m, u.id, doc, strip.id, board.id
 

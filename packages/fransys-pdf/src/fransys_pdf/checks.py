@@ -13,29 +13,30 @@ from typing import TYPE_CHECKING, Any
 from fransys_model.derive import (
     cable_blocks,
     document_page_kinds,
+    document_rows,
     document_unit,
     harness_cables_for,
     location_node_designation,
+    mixed_sheet_groups,
     system_has_no_top_level_cables,
     unit_release,
 )
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import PageKind, documents
+from fransys_model.vocab import PageKind
 
 from ._cable_checks import harness_block_messages
 from ._diagrams import diagram_no_drawings_messages
 from ._drawings import replica_only_sets, schematic_missing_keys, schematic_pages
-from ._geometry import mixed_sheet_formats
 from ._markdown import parse, unsupported
 from ._schematic_yield import _LIST_KINDS, list_rows, schematic_yields
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from fransys_model.derive import AspectNodeId, DocumentId, DocumentRow
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode, Document
 
-    type _DocId = Id[Document]
+    type _DocId = DocumentId
 
 
 def _markdown_findings(subject: _DocId, field: str, text: str) -> tuple[Finding, ...]:
@@ -51,15 +52,14 @@ def _markdown_findings(subject: _DocId, field: str, text: str) -> tuple[Finding,
 
 
 def _mixed_sheet_format_findings(model: Model, subject: _DocId) -> tuple[Finding, ...]:
-    record = documents(model)[subject]
     pages = document_page_kinds(model, subject)
-    groups = mixed_sheet_formats(model, record, pages)
+    groups = mixed_sheet_groups(model, subject, pages)
     if not groups:
         return ()
     named = "; ".join(
-        f"{fmt.name} (page{'s' if len(group) > 1 else ''} "
-        f"{', '.join(str(page.number) for page in group)})"
-        for fmt, group in groups
+        f"{group.name} (page{'s' if len(group.numbers) > 1 else ''} "
+        f"{', '.join(str(number) for number in group.numbers)})"
+        for group in groups
     )
     return (
         Finding(
@@ -71,9 +71,11 @@ def _mixed_sheet_format_findings(model: Model, subject: _DocId) -> tuple[Finding
     )
 
 
-def _unit_identity_findings(model: Model, subject: _DocId, record: Document) -> tuple[Finding, ...]:
+def _unit_identity_findings(
+    model: Model, subject: _DocId, record: DocumentRow
+) -> tuple[Finding, ...]:
     """`TITLE_BLOCK_UNIT_IDENTITY_MISSING` : the unit has no `title` or `number`."""
-    unit = document_unit(model, record)
+    unit = document_unit(model, record.id)
     if unit is None:
         return ()
     release = unit_release(model, unit)
@@ -93,7 +95,7 @@ def _unit_identity_findings(model: Model, subject: _DocId, record: Document) -> 
 
 
 def _schematic_no_drawings_message(
-    model: Model, record: Document, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
+    model: Model, record: DocumentRow, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
 ) -> str | None:
     pages_found = schematic_pages(model, record, pages)
     if not pages_found:
@@ -119,16 +121,16 @@ _LOCATION_DRAWS_NO_HARNESS = (
 
 
 def _harness_no_drawings_messages(
-    model: Model, record: Document, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
+    model: Model, record: DocumentRow, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
 ) -> list[str]:
     """The `HARNESS_DRAWING` messages: "no cable at all", else `harness_block_messages`'s."""
-    cables_found = harness_cables_for(model, record, pages)
-    if not cable_blocks(model, record, cables_found):
-        if system_has_no_top_level_cables(record, cables_found):
+    cables_found = harness_cables_for(model, record.id, pages)
+    if not cable_blocks(model, record.id, cables_found):
+        if system_has_no_top_level_cables(model, record.id, cables_found):
             # STEP 4b addition: the model simply has no top-level cable at all -- the SYSTEM
             # preset's own DOCUMENT_NO_TOP_LEVEL_CABLES INFO covers it below, not this ERROR.
             return []
-        if document_unit(model, record) is not None:
+        if document_unit(model, record.id) is not None:
             return ["HARNESS_DRAWING: the unit has no cable"]
         if record.item is None:
             return [_LOCATION_DRAWS_NO_HARNESS]
@@ -139,7 +141,7 @@ def _harness_no_drawings_messages(
 def _no_drawings_findings(  # noqa: PLR0913, PLR0917 -- the tall-diagram cables are one more input
     model: Model,
     subject: _DocId,
-    record: Document,
+    record: DocumentRow,
     pages: tuple[PageKind, ...],
     svgs: Mapping[str, str],
     tall_cables: frozenset[Id[Any]],
@@ -157,13 +159,13 @@ def _no_drawings_findings(  # noqa: PLR0913, PLR0917 -- the tall-diagram cables 
     )
 
 
-def _set_where(model: Model, location: Id[AspectNode] | None) -> str:
+def _set_where(model: Model, location: AspectNodeId | None) -> str:
     """The location path of a drawing set for a finding message; `(no location)` for `None`."""
     return "(no location)" if location is None else location_node_designation(model, location)
 
 
 def _replica_only_findings(
-    model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...]
+    model: Model, subject: _DocId, record: DocumentRow, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
     """One `DRAWING_SET_REPLICA_ONLY` INFO per matched set the STEP 4 rule dropped."""
     return tuple(
@@ -181,13 +183,13 @@ def _replica_only_findings(
 
 
 def _no_top_level_cables_findings(
-    model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...]
+    model: Model, subject: _DocId, record: DocumentRow, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
     """`DOCUMENT_NO_TOP_LEVEL_CABLES` INFO, not an ERROR, for the `SYSTEM` preset."""
     if PageKind.HARNESS_DRAWING not in pages:
         return ()
-    cables_found = harness_cables_for(model, record, pages)
-    if not system_has_no_top_level_cables(record, cables_found):
+    cables_found = harness_cables_for(model, record.id, pages)
+    if not system_has_no_top_level_cables(model, record.id, cables_found):
         return ()
     return (
         Finding(
@@ -200,7 +202,7 @@ def _no_top_level_cables_findings(
 
 
 def _empty_list_findings(
-    model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...]
+    model: Model, subject: _DocId, record: DocumentRow, pages: tuple[PageKind, ...]
 ) -> tuple[Finding, ...]:
     return tuple(
         Finding(
@@ -236,7 +238,8 @@ def check(
         Findings sorted by `(code, subjects, message)`. Pure, never raises.
     """
     findings: list[Finding] = []
-    for subject, record in documents(model).items():
+    for record in document_rows(model):
+        subject = record.id
         findings.extend(_markdown_findings(subject, "cover", record.cover))
         if record.notes is not None:
             findings.extend(_markdown_findings(subject, "notes", record.notes))

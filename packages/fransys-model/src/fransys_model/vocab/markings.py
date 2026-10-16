@@ -11,6 +11,8 @@ from typing import NamedTuple
 from fransys_model.kernel import Id  # noqa: TC001 -- signature tests resolve hints at runtime
 
 from .enums import FunctionKind, LinkKind, PoleSide
+from .roles import LINK_ROLES, function_role_of
+from .roles_types import FunctionRole  # noqa: TC001 -- signature tests resolve hints at runtime
 from .templates import InternalLink, PortTemplate  # noqa: TC001 -- signature tests resolve hints at runtime
 
 _RUN = re.compile(r"\d+|\D+")
@@ -81,14 +83,18 @@ def pole_order(
     return tuple(sorted(poles, key=lambda pole: min(map(port_order_key, pole.ends))))
 
 
-_POLE_KINDS = frozenset({LinkKind.SWITCHED, LinkKind.PROTECTIVE})
+def is_pole_by_role(role: FunctionRole, link: LinkKind) -> bool:
+    """A pole is a link whose role is `pole`, or a conductive link of a function that protects."""
+    return LINK_ROLES[link].pole or (role.protects and link is LinkKind.CONDUCTIVE)
 
 
-def is_pole_link(function: FunctionKind, link: LinkKind) -> bool:
-    """A pole is a switched or protective link, or a protection function's conductive link."""
-    return link in _POLE_KINDS or (
-        function is FunctionKind.PROTECTION and link is LinkKind.CONDUCTIVE
-    )
+def poles_by_role(
+    role: FunctionRole,
+    links: Iterable[InternalLink],
+    templates: Mapping[Id[PortTemplate], PortTemplate],
+) -> tuple[Pole, ...]:
+    """The poles of a function of `role` from all its links, as `(line, load)` in order."""
+    return pole_order((link for link in links if is_pole_by_role(role, link.kind)), templates)
 
 
 def function_poles(
@@ -96,5 +102,5 @@ def function_poles(
     links: Iterable[InternalLink],
     templates: Mapping[Id[PortTemplate], PortTemplate],
 ) -> tuple[Pole, ...]:
-    """The poles of a `function` of that kind from all its links, as `(line, load)` in order."""
-    return pole_order((link for link in links if is_pole_link(function, link.kind)), templates)
+    """`poles_by_role` at a kind's row: kept for the legacy engine until SCHEMATIC-FLIP."""
+    return poles_by_role(function_role_of(function), links, templates)

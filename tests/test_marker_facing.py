@@ -54,7 +54,7 @@ def test_a_marker_links_the_box_render_draws_to_its_partners_page() -> None:
     for page in pages.values():
         links = {
             (link.x, link.y, link.width, link.height): link.target
-            for link in reference_links(model, page, set(pages))
+            for link in reference_links(model, page.id, set(pages))
         }
         for marker in markers.values():
             if marker.page != page.id or markers[marker.partner].page == page.id:

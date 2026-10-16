@@ -6,18 +6,17 @@ Cached on `model.digest`, like `vocab.closure`; the index holds ids only.
 
 import dataclasses
 from collections import deque
-from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.children import parent_item, unit_parent
 from fransys_model.derive.facts.item_predicates import cable_items
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached, index_ids, parent_chain
 from fransys_model.vocab.facets.pcb import PcbFacet
 from fransys_model.vocab.tables import boundaries, facets_of, items
 from fransys_model.vocab.tables import units as units_table
-
-if TYPE_CHECKING:
-    from fransys_model.kernel import Id
-    from fransys_model.vocab.core import Function, Item, Unit
-    from fransys_model.vocab.templates import Part
+lazy from fransys_model.kernel import Id
+lazy from fransys_model.vocab.core import Function, Item, Unit
+lazy from fransys_model.vocab.templates import Part
+lazy from fransys_model.vocab.units import Boundary
 
 
 def descendants[K](children: frozendict[Id[K], tuple[Id[K], ...]], root: Id[K]) -> list[Id[K]]:
@@ -59,7 +58,7 @@ class UnitIndex:
     boundary_of: frozendict[Id[Unit], tuple[Id[Function], ...]]
 
 
-def _external_items(all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]]:
+def _external_items(model: Model, all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]]:
     """The external items, one memoised `parent` walk per item; a `parent` cycle ends its walk."""
     verdict: dict[Id[Item], bool] = {}
     for start in all_items.values():
@@ -67,7 +66,7 @@ def _external_items(all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]
         result = False
         # A `parent` naming no item ends the walk, as a root does.
         chain = parent_chain(
-            lambda node: all_items[node].parent if all_items[node].parent in all_items else None,
+            lambda node: parent if (parent := parent_item(model, node)) in all_items else None,
             start.id,
         )
         for node_id in chain:
@@ -82,6 +81,21 @@ def _external_items(all_items: frozendict[Id[Item], Item]) -> frozenset[Id[Item]
         for item_id in path:
             verdict[item_id] = result
     return frozenset(item_id for item_id, is_external in verdict.items() if is_external)
+
+
+def _own_roots(
+    model: Model, all_items: frozendict[Id[Item], Item], external: frozenset[Id[Item]]
+) -> dict[Id[Unit], list[Id[Item]]]:
+    """Each unit -> its items whose parent is in no unit or another unit, external ones left out."""
+    roots: dict[Id[Unit], list[Id[Item]]] = {}
+    for record in all_items.values():
+        if record.unit is None:
+            continue
+        parent = parent_item(model, record.id)
+        is_root = parent is None or all_items[parent].unit != record.unit
+        if is_root and record.id not in external:
+            roots.setdefault(record.unit, []).append(record.id)
+    return roots
 
 
 def _containing(
@@ -103,6 +117,11 @@ def _boundary_of(
     return frozendict({unit: grouped.get(unit, ()) for unit in all_units})
 
 
+def boundary_unit(model: Model, boundary: Id[Boundary]) -> Id[Unit]:
+    """The unit `boundary` belongs to: the one reader of `Boundary.unit`."""
+    return boundaries(model)[boundary].unit
+
+
 @digest_cached(DIGEST_CACHE_SIZE)
 def unit_index(model: Model) -> UnitIndex:
     """The `UnitIndex` of `model`, built once per digest and kept for the last few models.
@@ -112,27 +131,20 @@ def unit_index(model: Model) -> UnitIndex:
     all_units = units_table(model)
     all_items = items(model)
     children = index_ids(
-        (unit.parent, unit.id) for unit in all_units.values() if unit.parent is not None
+        (parent, unit) for unit in all_units if (parent := unit_parent(model, unit)) is not None
     )
     subtree_of = {unit: frozenset({unit, *descendants(children, unit)}) for unit in all_units}
 
-    external = _external_items(all_items)
+    external = _external_items(model, all_items)
     by_unit = index_ids(
         (record.unit, record.id) for record in all_items.values() if record.unit is not None
     )
-    roots: dict[Id[Unit], list[Id[Item]]] = {}
-    for record in all_items.values():
-        if record.unit is None:
-            continue
-        is_root = record.parent is None or all_items[record.parent].unit != record.unit
-        if is_root and record.id not in external:
-            roots.setdefault(record.unit, []).append(record.id)
-
+    roots = _own_roots(model, all_items, external)
     cable_items_ = cable_items(model)
     cables = index_ids(
-        (record.parent, record.id)
-        for record in all_items.values()
-        if record.parent is not None and record.id in cable_items_
+        (parent, item)
+        for item in all_items
+        if item in cable_items_ and (parent := parent_item(model, item)) is not None
     )
 
     return UnitIndex(
@@ -150,3 +162,8 @@ def unit_index(model: Model) -> UnitIndex:
         cable_children=cables,
         pcb_parts=frozenset(facet.subject for facet in facets_of(model, PcbFacet).values()),
     )
+
+
+def item_unit(model: Model, item: Id[Item]) -> Id[Unit] | None:
+    """The unit `item` is recorded in by `Item.unit`; `None` for the integrating script's own."""
+    return items(model)[item].unit

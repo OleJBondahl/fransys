@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Final
 from fransys_model.derive.designation import item_label
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.facets.plc import PlcChannelFacet
-from fransys_model.vocab.tables import facets_of, functions, items
+from fransys_model.vocab.tables import facets_of, functions
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -19,7 +19,7 @@ PLC_REQUEST_AMBIGUOUS: Final[str] = "PLC_REQUEST_AMBIGUOUS"
 
 def _label(model: Model, function: Function) -> str:
     """The item's label (`item_label`: numbering has not run yet) and the function's name."""
-    return f"{item_label(model, items(model)[function.item])}/{function.name}"
+    return f"{item_label(model, function.item)}/{function.name}"
 
 
 def ambiguous_findings(
@@ -43,8 +43,7 @@ def ambiguous_findings(
         if channels is None:
             continue
         names = ", ".join(
-            f"{item_label(model, items(model)[all_functions[c].item])}:{number[c]}"
-            for c in channels
+            f"{item_label(model, all_functions[c].item)}:{number[c]}" for c in channels
         )
         found.append(
             Finding(

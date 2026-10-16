@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Box, Options, Wire
+from fransys_layout.core import Box, Options
 from fransys_layout.core.occupancy import Occupancy
+from fransys_layout.core.outputs import Wire
 from fransys_layout.core.route_astar import Leg, astar, simplify
 from fransys_layout.core.route_counts import counts
 

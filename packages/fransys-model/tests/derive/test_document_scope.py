@@ -11,8 +11,11 @@ import fransys as fr
 import pytest
 from fransys.colours import BU
 
-from fransys_model.derive import bom_lines, document_scope
+from fransys_model.derive import bom_lines
 from fransys_model.derive.bom import TOP_LEVEL
+from fransys_model.derive.document_scope import (
+    _document_scope as document_scope,
+)  # probes are not model records
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Document, DocumentPreset
 from fransys_model.vocab.tables import aspect_nodes, items, units

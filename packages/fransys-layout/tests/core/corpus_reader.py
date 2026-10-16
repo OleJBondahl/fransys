@@ -12,19 +12,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from fransys_layout.core import (
-    Box,
-    MarkerKind,
-    Orientation,
-    Scene,
-    SceneBox,
-    SceneMarker,
-    ScenePin,
-    SceneWire,
-    Side,
-    Size,
-)
-from fransys_layout.core.values import RefKind
+from fransys_layout.core import Box, Orientation, Side, Size
+from fransys_layout.core.outputs import Scene, SceneBox, SceneMarker, ScenePin, SceneWire
+from fransys_layout.core.values import MarkerKind, RefKind
 
 CORPUS = Path(__file__).parent.parent / "corpus" / "placement"
 KIND: dict[str, MarkerKind] = {

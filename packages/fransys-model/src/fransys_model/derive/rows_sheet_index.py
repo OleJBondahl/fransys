@@ -2,7 +2,7 @@
 
 from fransys_model.kernel import value
 from fransys_model.layout import DiagramSheet, Page
-lazy from fransys_model.kernel import Model
+lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document, PageKind
 
 from .page_destination import page_destination, sheet_text
@@ -27,10 +27,13 @@ class SheetIndexRow:
 
 
 def sheet_index_rows(
-    model: Model, record: Document, kinds: tuple[PageKind, ...]
+    model: Model, document: Id[Document], kinds: tuple[PageKind, ...]
 ) -> tuple[SheetIndexRow, ...]:
-    """One row per sheet of `sheets`; empty for fewer than two sheets (empty-list rule)."""
-    found = sheets(model, record, kinds)
+    """One row per sheet of `sheets`; empty for fewer than two sheets (empty-list rule).
+
+    `document` is the document's id.
+    """
+    found = sheets(model, document, kinds)
     if len(found) < 2:  # noqa: PLR2004 -- SI2: the index prints from two sheets
         return ()
     return tuple(_row(model, one) for one in found)

@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 lazy from decimal import Decimal
 
 from fransys_model.derive.facts.children import children_index
+from fransys_model.derive.facts.unit_index import boundary_unit
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.rating import (
     BoundaryValuesFacet,
     OperatingFacet,
@@ -38,17 +38,6 @@ if TYPE_CHECKING:
 
     from fransys_model.vocab.core import Unit
     from fransys_model.vocab.templates import FunctionTemplate
-
-
-@dataclasses.dataclass(frozen=True, slots=True)
-class FunctionRating:
-    """One rating a function is checked against, with its source.
-
-    `unit` is `None` for the part or template rating, else the unit whose boundary rating it is.
-    """
-
-    rating: Rating
-    unit: Id[Unit] | None
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -89,7 +78,7 @@ def _link_rank(link: tuple[Id[Item], Rating]) -> tuple[bool, Decimal, Id[Item]]:
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
-def _index(model: Model) -> _Index:
+def rating_index(model: Model) -> _Index:
     of_function: dict[Id[Function], list[Boundary]] = {}
     for boundary in sorted(boundaries(model).values(), key=lambda b: b.id):
         of_function.setdefault(boundary.function, []).append(boundary)
@@ -131,7 +120,7 @@ def function_rating(model: Model, function: Id[Function]) -> Rating | None:
     record = functions(model).get(function)
     if record is None:
         return None
-    index = _index(model)
+    index = rating_index(model)
     part: Id[Part] | None
     if record.template is None:
         item = items(model)[record.item]
@@ -142,39 +131,6 @@ def function_rating(model: Model, function: Id[Function]) -> Rating | None:
         part = template.part
         template_rating = index.template_ratings.get(record.template)
     return effective_rating(template_rating, None if part is None else index.part_ratings.get(part))
-
-
-def fitted_link_rating(model: Model, function: Id[Function]) -> Rating | None:
-    """The rating of the fuse link fitted in a protection `function`'s holder (model-0151).
-
-    The holder item's highest-rated link; `None` for no link or a function other than protection.
-    """
-    record = functions(model).get(function)
-    if record is None or record.kind is not FunctionKind.PROTECTION:
-        return None
-    return _index(model).link_of.get(record.item)
-
-
-def function_ratings(model: Model, function: Id[Function]) -> tuple[FunctionRating, ...]:
-    """Every rating `function` is checked against in `model`, each with its source.
-
-    The part or template rating, then a protection function's highest fuse link (model-0151), then
-    one per `Boundary` in id order stating one. Each boundary has no fallback.
-    """
-    if function not in functions(model):
-        return ()
-    found: list[FunctionRating] = []
-    own = function_rating(model, function)
-    if own is not None:
-        found.append(FunctionRating(own, None))
-    link = fitted_link_rating(model, function)
-    if link is not None:
-        found.append(FunctionRating(link, None))
-    for boundary in _index(model).boundaries_of.get(function, ()):
-        rating = boundary_rating(model, boundary.id)
-        if rating is not None:
-            found.append(FunctionRating(rating, boundary.unit))
-    return tuple(found)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -200,26 +156,11 @@ def function_operatings(model: Model, function: Id[Function]) -> tuple[FunctionO
     own = function_operating(model, function)
     if own is not None:
         found.append(FunctionOperating(own, None))
-    for boundary in _index(model).boundaries_of.get(function, ()):
+    for boundary in rating_index(model).boundaries_of.get(function, ()):
         operating = boundary_operating(model, boundary.id)
         if operating is not None:
-            found.append(FunctionOperating(operating, boundary.unit))
+            found.append(FunctionOperating(operating, boundary_unit(model, boundary.id)))
     return tuple(found)
-
-
-def states_current(model: Model, function: Id[Function]) -> bool:
-    """Whether `function` states any current: a rating's current, or a source's continuous limit.
-
-    The one place of "a rated current path": any `function_ratings` or `function_operatings` source
-    with an AC or DC current or continuous limit set. Voltages alone do not.
-    """
-    return any(
-        r.rating.current_ac_a is not None or r.rating.current_dc_a is not None
-        for r in function_ratings(model, function)
-    ) or any(
-        o.operating.max_current_ac_a is not None or o.operating.max_current_dc_a is not None
-        for o in function_operatings(model, function)
-    )
 
 
 def function_operating(model: Model, function: Id[Function]) -> Operating | None:
@@ -239,7 +180,7 @@ def function_operating(model: Model, function: Id[Function]) -> Operating | None
     record = functions(model).get(function)
     if record is None or record.template is None:
         return None
-    return _index(model).operating.get(record.template)
+    return rating_index(model).operating.get(record.template)
 
 
 def boundary_rating(model: Model, boundary: Id[Boundary]) -> Rating | None:
@@ -255,7 +196,7 @@ def boundary_rating(model: Model, boundary: Id[Boundary]) -> Rating | None:
     Returns:
         The `Rating` `boundary`'s unit states, or `None` with no facet or no rating in it.
     """
-    facet = _index(model).boundary_values.get(boundary)
+    facet = rating_index(model).boundary_values.get(boundary)
     return None if facet is None else facet.rating
 
 
@@ -269,13 +210,13 @@ def boundary_operating(model: Model, boundary: Id[Boundary]) -> Operating | None
     Returns:
         The `Operating` `boundary`'s unit states, or `None` with no facet or none in it.
     """
-    facet = _index(model).boundary_values.get(boundary)
+    facet = rating_index(model).boundary_values.get(boundary)
     return None if facet is None else facet.operating
 
 
 def template_rating(model: Model, template: Id[FunctionTemplate]) -> Rating | None:
     """The rating a function template states itself, with no fallback to its part."""
-    return _index(model).template_ratings.get(template)
+    return rating_index(model).template_ratings.get(template)
 
 
 def part_rating(model: Model, part: Id[Part]) -> Rating | None:
@@ -291,4 +232,4 @@ def part_rating(model: Model, part: Id[Part]) -> Rating | None:
         `part`'s `Rating`, or `None` when it has no rating facet or `part` is not a part of
         `model`.
     """
-    return _index(model).part_ratings.get(part)
+    return rating_index(model).part_ratings.get(part)

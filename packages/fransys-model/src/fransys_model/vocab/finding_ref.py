@@ -8,7 +8,7 @@ authoring key; the pipeline replaces each reference with the thing as the drawin
 import re
 from typing import Final
 
-from fransys_model.kernel import Id, Record
+from fransys_model.kernel import Id, Record, render_id
 
 __all__ = ["REF", "ref"]
 
@@ -19,4 +19,4 @@ REF: Final[re.Pattern[str]] = re.compile("⟨([^:⟩]+):([^⟩]+)⟩")
 def ref(target: Id[Record] | Record) -> str:
     """The reference to a record or an id, for a finding message."""
     one = target if isinstance(target, Id) else target.id
-    return f"⟨{one.kind}:{one.value}⟩"
+    return f"⟨{render_id(one)}⟩"

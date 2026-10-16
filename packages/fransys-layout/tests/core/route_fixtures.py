@@ -9,29 +9,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-from fransys_layout.core import (
-    Attach,
-    Box,
-    Bundle,
-    Column,
-    CrossLink,
-    CutResult,
-    End,
-    Fan,
-    Net,
-    Options,
-    PinRef,
-    PinXY,
-    Placed,
-    Placement,
-    PlacementProblem,
-    Routes,
-    Wire,
-)
-from fransys_layout.core.outputs import PagePlacement, PageRoutes
+from fransys_layout.core import Box, Bundle, Net, Options, PinRef, Placement, PlacementProblem
+from fransys_layout.core.outputs import PagePlacement, PageRoutes, PinXY, Placed, Routes, Wire
 from fransys_layout.core.route import route_page
 from fransys_layout.core.route_env import Drawn, RouteEnv, route_envs
+from fransys_layout.core.values import Attach, Column, CrossLink, CutResult, End, Fan
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, elem
 from .cycle_fixtures import ring_problem
 from .flow_builders import net, poles
@@ -158,7 +142,7 @@ def envs_of(
     prob: PlacementProblem, options: Options | None = None, cut: CutResult | None = None
 ) -> tuple[RouteEnv, ...]:
     """The stage 6 environments of a problem; a test may pass an edited cut (Fan.crossed)."""
-    opts = options or Options()
+    opts = options or Options(marker=MARKER_BOX)
     cut = cut or cut_of(prob, opts)
     return route_envs(placed_from(cut, prob, opts), cut, prob, opts)
 
@@ -190,7 +174,20 @@ def link_env(
         CrossLink(n, tuple(Attach(None, 0, 0, PinRef(s, "p")) for s in ends))
         for n, ends in links.items()
     )
-    return RouteEnv(1, placed, (), {}, {}, {}, (), (), (), cross, frozenset(), options or Options())
+    return RouteEnv(
+        1,
+        placed,
+        (),
+        {},
+        {},
+        {},
+        (),
+        (),
+        (),
+        cross,
+        frozenset(),
+        options or Options(marker=MARKER_BOX),
+    )
 
 
 def row_wrap_env(options: Options | None = None) -> RouteEnv:
@@ -242,7 +239,7 @@ def open_end_env(
     """Coil k2 of a card page with its foot an open end on `pin`; k2 is turned to `orient`."""
     from .place_fixtures import card_with_coils
 
-    env = envs_of(card_with_coils(3), Options(open_stub=open_stub))[0]
+    env = envs_of(card_with_coils(3), Options(marker=MARKER_BOX, open_stub=open_stub))[0]
     col = env.columns[1]
     placed = replace(env.placed["k2"], orient=orient)
     env = replace(env, placed={**env.placed, "k2": placed})

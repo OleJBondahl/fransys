@@ -11,13 +11,10 @@ from dataclasses import replace
 import pytest
 
 from fransys_layout.core import (
-    CutResult,
     Facts,
     Options,
     PinRef,
     PlacementProblem,
-    Ref,
-    RefEnd,
     Unit,
     build_flow,
     order_blocks,
@@ -25,8 +22,9 @@ from fransys_layout.core import (
 from fransys_layout.core.blocks import assign_blocks
 from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_refs import _column_pin
-from fransys_layout.core.values import RefKind
+from fransys_layout.core.values import CutResult, Ref, RefEnd, RefKind
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, box_sym, chain, cut_of, elem, free, net, page_of, refs_of, side
 
 # copies and the P3 check
@@ -239,7 +237,7 @@ def test_the_split_keeps_every_field_of_the_fan_and_block_it_rewrites() -> None:
     ids = [f"k{i:02d}" for i in range(12)]
     syms = [*(elem(i, 40, 96) for i in ids), elem("w"), elem("y")]
     prob = PlacementProblem(AREA, tuple(syms), (*chain(ids), net("tail", "k11.s", "w.n", "y.n")))
-    options = Options()
+    options = Options(marker=MARKER_BOX)
     flow = build_flow(prob, options)
     (tail,) = flow.fans
     flow = replace(flow, fans=(replace(tail, crossed=(("w1", (1, 0)),)),))

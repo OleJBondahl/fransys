@@ -124,6 +124,13 @@ KIND_HOMES = frozenset(
     ]
 )
 LEGACY_LAYOUT = "fransys_layout"
+CORE_PREFIX = "fransys_layout.core"
+
+
+def _in_core(module: str) -> bool:
+    """True for a module of the layout core, which imports the stdlib only (layout-0307)."""
+    return module == CORE_PREFIX or module.startswith(CORE_PREFIX + ".")
+
 
 # A printed literal -> the one module that holds it (root-0212). A literal inside another module's
 # string constant (a docstring excepted) is a site. Left out for want of a home: " mm²" (two
@@ -133,6 +140,8 @@ HOMES = {
     "Block diagram": "fransys_model.derive.page_headings",
     "Own drawing: ": "fransys_model.derive.overview_tree",
     "Field devices (": "fransys_model.derive.overview_field",
+    "electrical-symbols ": "electrical_symbols",
+    "Digital input channel": "fransys_wago.signals",
 }
 
 # A selection function is defined in exactly one module; a compare or dispatch key on these enums
@@ -299,6 +308,8 @@ def field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     A class pattern reads its fields too: by keyword (`case Ref(kind=k)`, root-0215) and by
     position (`case SheetKey(document, kind, ordinal)`, through `__match_args__`).
     """
+    if _in_core(module):
+        return []
     found = []
     skip = _non_fact_receivers(tree)
     for node in ast.walk(tree):
@@ -350,7 +361,7 @@ def _is_tables_subscript(node: ast.AST) -> bool:
 
 def table_walks(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     """Raw record-table reads outside `fransys_model`."""
-    if module.split(".", maxsplit=1)[0] in TABLE_WALK_SKIP:
+    if module.split(".", maxsplit=1)[0] in TABLE_WALK_SKIP or _in_core(module):
         return []
     found = []
     aliases = _aliases(tree)
@@ -394,7 +405,7 @@ def _is_kind_compare(node: ast.AST) -> bool:
 def _kind_reads(tree: ast.AST, module: str, *, legacy: bool) -> list[tuple[str, int]]:
     """Enum-member reads and `.kind` string compares outside the role fact's homes."""
     in_layout = module.split(".", maxsplit=1)[0] == LEGACY_LAYOUT
-    if module in KIND_HOMES or in_layout != legacy:
+    if module in KIND_HOMES or in_layout != legacy or _in_core(module):
         return []
     found = []
     for node in ast.walk(tree):
@@ -1007,6 +1018,16 @@ def test_the_raw_table_gate_can_fail():
     assert scan(table_walks, source, "fransys_model.derive.bom") == {}
     aliased = scan(table_walks, "from m import units as u\nx = u(model)\n", module)
     assert aliased == {f"{module}::units": [2]}
+
+
+def test_core_is_out_of_the_read_scopes():
+    source = "a = x.unit\nb = x.kind == 'a'\nc = ports(model)\nd = model.tables['x']\n"
+    core, other = "fransys_layout.core.cut", "fransys_layout.stages.cut"
+    for scanner in (field_reads, kind_reads_legacy_layout, table_walks):
+        assert scan(scanner, source, core) == {}
+    assert scan(field_reads, source, other) != {}
+    assert scan(kind_reads_legacy_layout, source, other) != {}
+    assert scan(table_walks, source, other) != {}
 
 
 def test_the_kind_gate_can_fail():

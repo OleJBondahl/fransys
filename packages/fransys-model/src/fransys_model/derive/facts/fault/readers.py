@@ -3,13 +3,10 @@
 from typing import TYPE_CHECKING
 lazy from decimal import Decimal
 
-from fransys_model.derive.facts.function_ratings import (
-    fitted_link_rating,
-    function_operatings,
-    function_rating,
-)
-from fransys_model.derive.facts.roles import port_role
-from fransys_model.vocab.enums import Current, PortRole
+from fransys_model.derive.facts.function_ratings import function_operatings, function_rating
+from fransys_model.derive.facts.roles import is_pe_port
+from fransys_model.derive.facts.stated_ratings import fitted_link_rating
+from fransys_model.vocab.enums import Current
 from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
@@ -64,6 +61,6 @@ def conductive_ports(model: Model, function: Id[Function]) -> tuple[Id[Port], ..
     found = (
         port.id
         for port in ports(model).values()
-        if port.function == function and port_role(model, port.id) is not PortRole.PE
+        if port.function == function and not is_pe_port(model, port.id)
     )
     return tuple(sorted(found))

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from fransys_layout.core import Graph, Options, natural_key
+from fransys_layout.core import Options, natural_key
+from fransys_layout.core.constraints import Graph
 from fransys_layout.core.place_levels import EXACT_LIMIT, Span, trunk_levels
 from fransys_layout.core.place_trunk import trunk_node
 

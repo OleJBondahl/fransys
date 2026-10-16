@@ -5,9 +5,9 @@ import json
 import pytest
 from corpus_reader import CORPUS, corpus_names, read_instance, read_score
 
-from fransys_layout.core import Score, score
-from fransys_layout.core.score import placement_flags
+from fransys_layout.core.score import placement_flags, score
 from fransys_layout.core.score_wiring import wiring
+lazy from fransys_layout.core.outputs import Score
 
 NAMES = corpus_names()
 

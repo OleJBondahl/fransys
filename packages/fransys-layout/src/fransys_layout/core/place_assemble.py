@@ -5,6 +5,7 @@ from __future__ import annotations
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import arrow_ends, reserve
 from .geometry import (
     box_reach,
     cell_anchor,
@@ -17,7 +18,7 @@ from .geometry import (
 from .keys import natural_key
 from .outputs import Gap, PagePlacement, PinXY, Placed, Trunk
 from .pack import cell_node
-from .place_trunk import trunk_node
+from .place_trunk import box_pin_x, trunk_node
 from .values import Box, Lane
 
 if TYPE_CHECKING:
@@ -56,12 +57,9 @@ def _box_pins(
 ) -> tuple[PinXY, ...]:
     """Movable pins at their solved x on the edge they are used on; others at their offset."""
     sym = env.syms[box]
-    ox = x[f"box:{box}:L"] - sym.body.x
     edge_y = {"N": sym.body.y, "S": sym.body.y + sym.body.h}
     return tuple(
-        PinXY(
-            p.id, x.get(f"pin:{box}:{p.id}", ox + p.dx), oy + edge_y.get(edges.get(p.id, ""), p.dy)
-        )
+        PinXY(p.id, box_pin_x(env, x, box, p.id), oy + edge_y.get(edges.get(p.id, ""), p.dy))
         for p in sym.pins
     )
 
@@ -118,11 +116,14 @@ def _attach_x(
     env: PageEnv, a: Attach, placed: Mapping[str, Placed], x: Mapping[str, int], row: int
 ) -> int | None:
     """The x of a trunk's attachment in this row: a column's lane wire or a box pin."""
+    here = placed.get(a.pin.sym)
+    pin = next((q.x for q in here.pin_xy if q.pin == a.pin.pin), None) if here else None
     if a.column is None:
-        here = placed.get(a.pin.sym)
-        return next((q.x for q in here.pin_xy if q.pin == a.pin.pin), None) if here else None
+        return pin
     pc = env.pcs.get(a.column)
-    return x[f"col:{pc.id}"] + pc.offsets[a.lane] if pc and pc.row == row else None
+    if pc is None or pc.row != row:
+        return None
+    return pin if pin is not None else x[f"col:{pc.id}"] + pc.offsets[a.lane]
 
 
 def _span(
@@ -158,6 +159,8 @@ def _rows(
         fps = [placed[s].footprint for s in syms if s in placed]
         top, bottom = _row_bounds(env, y, r)
         width = max(f.x + f.w for f in fps) - min(f.x for f in fps) if fps else 0
+        left, right = arrow_ends(env.refs, env.plan.page, r)
+        width += reserve(left, env.options) + reserve(right, env.options)
         out.append((bottom - top, width))
     return tuple(out)
 

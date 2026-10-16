@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from decimal import Decimal
 
-    from symdef.model import Symbol
+    from symdef import Symbol
 
     from fransys_model.kernel import Model
     from fransys_model.layout import Page, Profile, SheetFormat

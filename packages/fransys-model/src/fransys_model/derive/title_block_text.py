@@ -220,7 +220,7 @@ def title_block_overflows(
     """The fields that miss their cell: the six document-level ones, then each checked page's."""
     record = documents(model)[document]
     miss = partial(_misses, rooms=rooms, body_mm=sheets.sizes.body)
-    facts = dict(zip(_DOCUMENT_FIELDS, document_facts(model, record), strict=True))
+    facts = dict(zip(_DOCUMENT_FIELDS, document_facts(model, record.id), strict=True))
     found = [miss(f, (facts[f],), "document") for f in _DOCUMENT_FIELDS]
     seen: set[str] = set()
     for page in (p for p in sheets.pages if p.group):

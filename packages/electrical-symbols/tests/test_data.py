@@ -279,7 +279,10 @@ BROKEN = {
 
 
 def test_library_toml_declares_its_keys_words_and_rules():
-    assert LIBRARY == {
+    """`[grid]` and `[font]` have their own test (`test_library_font_grid.py`)."""
+    declared = {k: v for k, v in LIBRARY.items() if k not in {"grid", "font"}}
+    assert {"grid", "font"} <= set(LIBRARY)
+    assert declared == {
         "standard": "IEC 60617",
         "title": "Electrical graphical symbols",
         "number_pattern": r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$",

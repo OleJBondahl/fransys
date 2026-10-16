@@ -6,13 +6,12 @@ from fransys_model.derive import (
     SheetKey,
     diagram_sheets,
     document_unit,
+    kind_sheet,
     page_destination,
-    sheet_text,
 )
 from fransys_model.derive.block_diagram import diagram_lines
 from fransys_model.derive.page_nav import outline_sheets
 from fransys_model.kernel import render_id
-from fransys_model.layout import sheet_for
 from fransys_model.vocab import DocumentPreset, PageKind
 
 from ._background import page_background
@@ -23,31 +22,31 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import SheetBackground
+    from fransys_model.derive import DocumentRow, SheetBackground
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Document
 
 
 def diagram_source(
     model: Model,
-    record: Document,
+    record: DocumentRow,
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """The section text: an A2 `#page` per sheet that has an SVG, `""` with none (pdf-0023)."""
-    found = diagram_sheets(model, record)
-    sheet = sheet_for(model, PageKind.BLOCK_DIAGRAM)
+    found = diagram_sheets(model, record.id)
+    sheet = kind_sheet(model, PageKind.BLOCK_DIAGRAM)
     size = f"width: {sheet.width_mm}mm, height: {sheet.height_mm}mm"
     pages = []
     outline = {entry.destination: entry for entry in outline_sheets(model, found)}
     for index, diagram in enumerate(found):
         if (svg := svgs.get(render_id(diagram.id))) is None:
             continue
-        mark = sheet_mark(outline[page_destination(model, diagram)])
+        entry = outline[page_destination(model, diagram)]
         image = f'#image(bytes({literal(svg)}), format: "svg")'
         key = SheetKey(record.id, PageKind.BLOCK_DIAGRAM, index)
         back = page_background(model, record, sheets, key)
-        numbering, start = sheet_label(sheet_text(model, diagram))
+        numbering, start = sheet_label(entry.number)
+        mark = sheet_mark(entry)
         pages.append(
             f"#page({size}, margin: 0mm, background: {back}{numbering})[{start}{mark}{image}]"
         )
@@ -56,7 +55,7 @@ def diagram_source(
 
 def diagram_no_drawings_messages(
     model: Model,
-    record: Document,
+    record: DocumentRow,
     pages: tuple[PageKind, ...],
     svgs: Mapping[str, str],
     tall_cables: frozenset[Id[Any]],
@@ -65,12 +64,12 @@ def diagram_no_drawings_messages(
 
     The tall-column pointer appears only when the build named that diagram's column.
     """
-    unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record)
+    unit = None if record.preset is DocumentPreset.SYSTEM else document_unit(model, record.id)
     reading = record.preset is DocumentPreset.SYSTEM or unit is not None
     lines = diagram_lines(model, unit) if reading else ()
     if PageKind.BLOCK_DIAGRAM not in pages or not lines:
         return []
-    found = diagram_sheets(model, record)
+    found = diagram_sheets(model, record.id)
     if not found:
         cause = (
             "a column taller than one sheet is a known limit of the system diagram, "

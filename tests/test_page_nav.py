@@ -42,6 +42,11 @@ def _tag_references(model) -> list[Label]:
     ]
 
 
+def _sheet_ids(found):
+    """The page ids of `found`, a diagram sheet kept as it is (`outline_sheets` takes either)."""
+    return [s.id if isinstance(s, Page) else s for s in found]
+
+
 def test_a_single_partner_label_links_its_whole_text_to_the_partners_page(built) -> None:
     model = built[0].model
     pages = layout_of(model, Page)
@@ -49,7 +54,7 @@ def test_a_single_partner_label_links_its_whole_text_to_the_partners_page(built)
     label = next(ref for ref in _tag_references(model) if ref.partners[0].page != ref.page)
     (link,) = [
         found
-        for found in reference_links(model, pages[label.page], known)
+        for found in reference_links(model, label.page, known)
         if (found.x, found.y) == (label.x, label.y)
     ]
     assert link.target == page_destination(model, pages[label.partners[0].page])
@@ -62,7 +67,7 @@ def test_a_partner_outside_the_pdf_or_on_the_same_page_gets_no_link(built) -> No
     model = built[0].model
     pages = layout_of(model, Page)
     label = next(ref for ref in _tag_references(model) if ref.partners[0].page != ref.page)
-    here = pages[label.page]
+    here = label.page
     others = set(pages) - {label.partners[0].page}
     assert not [
         found
@@ -74,8 +79,8 @@ def test_a_partner_outside_the_pdf_or_on_the_same_page_gets_no_link(built) -> No
 def test_the_outline_has_a_sheet_entry_per_sheet_and_no_terminals_or_pins(built) -> None:
     model = built[0].model
     (record,) = documents(model).values()
-    found = sheets(model, record, (PageKind.SCHEMATIC,))
-    outline = outline_sheets(model, found)
+    found = sheets(model, record.id, (PageKind.SCHEMATIC,))
+    outline = outline_sheets(model, _sheet_ids(found))
     assert [entry.destination for entry in outline] == [page_destination(model, s) for s in found]
     assert all(entry.title.startswith("Sheet ") for entry in outline)
     everything = [name for entry in outline for name in entry.entries]
@@ -85,7 +90,7 @@ def test_the_outline_has_a_sheet_entry_per_sheet_and_no_terminals_or_pins(built)
 
 def test_an_item_on_two_sheets_has_an_entry_under_each_in_designation_order(built) -> None:
     model = built[0].model
-    outline = outline_sheets(model, layout_of(model, Page).values())
+    outline = outline_sheets(model, layout_of(model, Page))
     with_relays = [e for e in outline if {"-K1", "-K2", "-K10"} <= set(e.entries)]
     assert len(with_relays) >= 2
     for entry in with_relays:
@@ -124,7 +129,9 @@ def test_the_pdf_outline_nests_designations_under_each_sheet_and_lands_on_its_pa
     try:
         model = result.model
         (record,) = documents(model).values()
-        expected = outline_sheets(model, sheets(model, record, (PageKind.SCHEMATIC,)))
+        expected = outline_sheets(
+            model, _sheet_ids(sheets(model, record.id, (PageKind.SCHEMATIC,)))
+        )
         toc = _toc(pdf)
         at = [i for i, (_, title, _) in enumerate(toc) if title.startswith("Sheet ")]
         assert len(at) == len(expected)
@@ -169,12 +176,14 @@ def test_each_reference_label_is_a_link_over_its_box_to_the_partners_sheet(tmp_p
     try:
         model = result.model
         (record,) = documents(model).values()
-        printed = [p for p in sheets(model, record, (PageKind.SCHEMATIC,)) if isinstance(p, Page)]
+        printed = [
+            p for p in sheets(model, record.id, (PageKind.SCHEMATIC,)) if isinstance(p, Page)
+        ]
         pages = {page.id: page for page in printed}
         total = 0
         for page in printed:
             sheet = sheet_format_of(model, page.sheet_format)
-            expected = reference_links(model, page, set(pages))
+            expected = reference_links(model, page.id, set(pages))
             actual = _link_annotations(pdf, _landing(pdf, page_destination(model, page)))
             total += len(expected)
             got = sorted(actual)

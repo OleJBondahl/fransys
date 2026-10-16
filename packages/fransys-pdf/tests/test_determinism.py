@@ -3,7 +3,8 @@
 from _build import document, location, model, project, revision_entry
 from fransys_pdf._geometry import document_metadata
 
-from fransys_model.vocab import DocumentPreset, documents
+from fransys_model.derive import document_row
+from fransys_model.vocab import DocumentPreset
 
 
 def _metadata(*records):
@@ -11,7 +12,7 @@ def _metadata(*records):
     c1 = location("C1", "Demo cabinet")
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover")
     m = model(c1, doc, *records)
-    return document_metadata(m, documents(m)[doc.id])
+    return document_metadata(m, document_row(m, doc.id))
 
 
 def test_date_is_the_authored_revision_date_not_auto():

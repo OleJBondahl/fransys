@@ -196,6 +196,19 @@ _.DEFAULT_PROFILE  # TESTS fransys-layout/tests/engines/test_defaults.py:68
 # FIELDS class's own point -- a field's dataclass-generated dunders read it either way.
 _.contact_closed  # FIELDS fransys-layout/src/fransys_layout/stages/types.py:221
 
+# core/ placement names cut from `__all__` (decision 0226): read today by layout's own tests and
+# by internal/ (placement corpus, count tests), wired into the engine at P6.1. `score` is both
+# `core/score.py` score() and the `Scene.score` field.
+_.assign_blocks  # TESTS fransys-layout/tests/core/pipeline_fixtures.py:21
+_.marker_box  # TESTS fransys-layout/tests/core/test_marker_box.py:37
+_.shape_key  # TESTS fransys-layout/tests/core/test_geometry.py:177
+_.outline_hull  # TESTS fransys-layout/tests/core/test_outline.py:10
+_.route_pages  # TESTS fransys-layout/tests/core/pipeline_fixtures.py:52
+_.score  # TESTS fransys-layout/tests/core/test_score_plants.py:171
+_.mark_pages  # TESTS fransys-layout/tests/core/test_text_markers_rename.py:41
+_.widen  # TESTS fransys-layout/tests/core/test_widen_rename.py:88
+_.label_pages  # TESTS fransys-layout/tests/core/test_labels_rename.py:50
+
 # --- fransys-overview -------------------------------------------------------------------
 
 # _vendor_cytoscape.py CYTOSCAPE_VERSION/CYTOSCAPE_SHA256: the vendored-library provenance

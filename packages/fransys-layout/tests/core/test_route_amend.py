@@ -5,15 +5,16 @@ from __future__ import annotations
 from dataclasses import replace
 from itertools import pairwise
 
-from fransys_layout.core import Attach, Box, Fan, Options, PinRef, Wire, route_pages
+from fransys_layout.core import Box, Options, PinRef
 from fransys_layout.core.occupancy import Occupancy, cells_between
-from fransys_layout.core.outputs import Gap, Trunk
-from fransys_layout.core.route import _grid, route_page
+from fransys_layout.core.outputs import Gap, Trunk, Wire
+from fransys_layout.core.route import _grid, route_page, route_pages
 from fransys_layout.core.route_astar import Leg, astar
 from fransys_layout.core.route_counts import collinear, crossings_by_net, demand
 from fransys_layout.core.route_env import route_envs
 from fransys_layout.core.route_tree import rise_wire, search
 from fransys_layout.core.route_trunk import trunk_wires
+from fransys_layout.core.values import Attach, Fan
 
 from .pipeline_fixtures import cut_of, placed_from
 from .route_fixtures import jog_stair, link_env, row_wrap_env

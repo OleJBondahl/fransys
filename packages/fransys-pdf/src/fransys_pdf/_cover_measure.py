@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING
 from fransys_model.kernel import Finding, Severity
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Id
-    from fransys_model.vocab import Document
+    from fransys_model.derive import DocumentId
 
 _PANIC = re.compile(
     r"COVER_OVERFLOW cover=(?P<cover>[\d.]+) table=(?P<table>[\d.]+) available=(?P<avail>[\d.]+)"
@@ -35,7 +34,7 @@ def measuring_block(*, has_table: bool) -> str:
     )
 
 
-def cover_overflow_finding(document: Id[Document], typst_error: str) -> Finding | None:
+def cover_overflow_finding(document: DocumentId, typst_error: str) -> Finding | None:
     """The `COVER_OVERFLOW` ERROR for a Typst panic from `measuring_block`, else `None`."""
     found = _PANIC.search(typst_error)
     if found is None:

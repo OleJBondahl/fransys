@@ -6,19 +6,9 @@ from typing import TypedDict, Unpack
 import pytest
 from scene_fixtures import flow, layout, problem
 
-from fransys_layout.core import (
-    Box,
-    Orientation,
-    Scene,
-    SceneBox,
-    SceneMarker,
-    ScenePin,
-    SceneWire,
-    Size,
-    outputs,
-    score,
-)
-from fransys_layout.core.score import WEIGHTS, placement_flags
+from fransys_layout.core import Box, Orientation, Size, outputs
+from fransys_layout.core.outputs import Scene, SceneBox, SceneMarker, ScenePin, SceneWire
+from fransys_layout.core.score import WEIGHTS, placement_flags, score
 from fransys_layout.core.values import RefKind
 
 

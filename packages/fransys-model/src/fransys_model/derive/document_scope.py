@@ -4,6 +4,7 @@ The unit, location and item branches live here once; the pdf lists and drawings 
 """
 
 from fransys_model.vocab.enums import DocumentPreset
+from fransys_model.vocab.tables import documents
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 lazy from fransys_model.vocab.document import Document
@@ -12,7 +13,7 @@ from .bom import bom_lines
 from .cable_drawing import drawn_blocks
 from .connectors import connector_items, unit_connector_items
 from .document_undrawn import undrawn_items
-from .document_unit import document_unit
+from .document_unit import record_unit
 from .drawn_wires import wire_harness_subjects
 from .harness import harness_cables, reading_cables
 from .memo import Memo
@@ -90,7 +91,7 @@ def _boards(model: Model, document: Document) -> tuple[Id[Item], ...]:
 
 def _document_scope(model: Model, document: Document) -> DocumentScope:
     """What `document` selects from `model`: its unit, cables, harnesses, BOM scope and lists."""
-    unit = document_unit(model, document)
+    unit = record_unit(model, document)
     cables = _cables(model, document, unit)
     harnesses = _harnesses(model, document, unit, cables)
     undrawn = undrawn_items(model, document, unit, harnesses)
@@ -108,10 +109,18 @@ def _document_scope(model: Model, document: Document) -> DocumentScope:
     )
 
 
-document_scope = Memo(_document_scope)
+def _scope_of(model: Model, document: Id[Document]) -> DocumentScope:
+    """What the document `document` (its id) selects from `model`: see `_document_scope`."""
+    return _document_scope(model, documents(model)[document])
 
 
-def document_bom_lines(model: Model, document: Document) -> tuple[BomLine, ...]:
-    """The BOM lines of `document`: its `bom_scope` less the harness items it does not draw."""
+document_scope = Memo(_scope_of)
+
+
+def document_bom_lines(model: Model, document: Id[Document]) -> tuple[BomLine, ...]:
+    """The BOM lines of `document`: its `bom_scope` less the harness items it does not draw.
+
+    `document` is the document's id.
+    """
     scope = document_scope(model, document)
     return bom_lines(model, scope=scope.bom_scope, without=scope.bom_without)

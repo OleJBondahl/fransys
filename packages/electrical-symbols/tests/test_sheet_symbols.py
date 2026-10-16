@@ -10,7 +10,7 @@ from itertools import accumulate
 from typing import Any, NamedTuple
 
 import pytest
-from symdef import Line, Polyline, Weight
+from symdef import InvalidValueError, Line, Polyline, Weight
 
 from electrical_symbols import (
     TITLE_BLOCK_MIN_BAND_MM,
@@ -479,7 +479,7 @@ def test_the_title_block_has_every_value_label_and_the_page_and_logo_boxes():
 
 def test_the_least_band_is_the_authored_one():
     assert (TITLE_BLOCK_MIN_BAND_MM, TITLE_BLOCK_MIN_WIDTH_MM) == (20, 97.5)
-    with pytest.raises(ValueError, match="below the natural extent"):
+    with pytest.raises(InvalidValueError, match="below the natural extent"):
         title_block((5, 272), 390, 19.5, notice=False)
 
 

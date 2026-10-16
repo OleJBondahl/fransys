@@ -1,10 +1,11 @@
-"""The one reader of `Item.parent` as a children list: what hangs below an item."""
+"""The one readers of `Item.parent` (as a children list), `Unit.parent` and `AspectNode.parent`."""
 
 from typing import cast
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, index_ids
-from fransys_model.vocab.tables import items
-lazy from fransys_model.vocab.core import Item
+from fransys_model.vocab.tables import aspect_nodes, items, units
+lazy from fransys_model.vocab.aspects import AspectNode
+lazy from fransys_model.vocab.core import Item, Unit
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -22,3 +23,19 @@ def child_items(model: Model, item: Id[Item]) -> tuple[Id[Item], ...]:
 def parent_item(model: Model, item: Id[Item]) -> Id[Item] | None:
     """The id of `item`'s parent by `Item.parent`; `None` for a root."""
     return items(model)[item].parent
+
+
+def unit_parent(model: Model, unit: Id[Unit]) -> Id[Unit] | None:
+    """The id of `unit`'s parent by `Unit.parent`; `None` for a root."""
+    return units(model)[unit].parent
+
+
+def aspect_parent(model: Model, node: Id[AspectNode]) -> Id[AspectNode] | None:
+    """The id of `node`'s parent by `AspectNode.parent`; `None` for a root."""
+    return aspect_nodes(model)[node].parent
+
+
+def item_parents(model: Model) -> frozendict[Id[Item], Id[Item]]:
+    """Each child item's parent item, in the order the items table gives the parents."""
+    index = children_index(model)
+    return frozendict({c: p for p in items(model) for c in index.get(p, ())})

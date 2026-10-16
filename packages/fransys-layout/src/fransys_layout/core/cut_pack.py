@@ -7,14 +7,15 @@ measure `at[j] - at[i] + lead[i] + tail[j]`, the width `row_width` gives the sam
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING, NamedTuple
 
-from .pack_row import extent, join_gap, row_width, segments
+from .pack_row import extent, join_gap, reserve_extra, row_width, segments
 from .pack_sep import separation
 from .rowspec import one_row
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from .pack_row import RowSpec
     from .values import BlockList, FlowGraph, Options, PlacementProblem
@@ -36,11 +37,20 @@ class Edge(NamedTuple):
 
 
 def left_pack(
-    unit: BlockList, flow: FlowGraph, problem: PlacementProblem, options: Options
+    unit: BlockList,
+    flow: FlowGraph,
+    problem: PlacementProblem,
+    options: Options,
+    reserves: Mapping[tuple[str, str], int] | None = None,
 ) -> dict[str, Pack]:
-    """Pack of every column of the unit's blocks, taken in block order."""
+    """Pack of every column of the unit's blocks, taken in block order.
+
+    reserves (stage 7): a column pair to the tracks its gap holds; each adds its grids.
+    """
     cols = tuple(c for b in unit.blocks for c in b.columns)
-    spec = one_row(cols, unit.blocks, flow, problem, options)
+    spec = replace(
+        one_row(cols, unit.blocks, flow, problem, options), reserves=dict(reserves or {})
+    )
     out: dict[str, Pack] = {}
     edge: Edge | None = None
     for block, here in segments(cols, unit.blocks):
@@ -50,7 +60,10 @@ def left_pack(
         if block is None:
             packs, edge = _run(spec, here, edge)
         else:
-            width = row_width(one_row(here, (block,), flow, problem, options))
+            card = replace(
+                one_row(here, (block,), flow, problem, options), reserves=dict(reserves or {})
+            )
+            width = row_width(card)
             packs, edge = _card(spec, here or [block.anchor or ""], width, edge)
         out.update(packs)
     return out
@@ -70,6 +83,7 @@ def _run(spec: RowSpec, here: Sequence[str], edge: Edge | None) -> tuple[dict[st
     for col in here:
         if prev is not None:
             x += separation(spec.pcs[prev], spec.pcs[col], spec.syms, spec.in_row, spec.options)
+            x += reserve_extra(spec, prev, col)
         lo, hi = extent(spec, col)
         packs[col] = Pack(x, -lo, hi)
         prev = col

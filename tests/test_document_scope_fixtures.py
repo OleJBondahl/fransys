@@ -18,8 +18,11 @@ from _model_build_cover import cabinet_document, system_document
 from demo_designs import cabinet_design, harness_with_board_design
 from test_units_worked_example import _system_design
 
-from fransys_model.derive import bom_lines, document_scope
+from fransys_model.derive import bom_lines
 from fransys_model.derive.bom import TOP_LEVEL
+from fransys_model.derive.document_scope import (
+    _document_scope as document_scope,
+)  # probes are not model records
 from fransys_model.kernel import make_id
 from fransys_model.vocab import Document, DocumentPreset
 from fransys_model.vocab.tables import aspect_nodes, items, units

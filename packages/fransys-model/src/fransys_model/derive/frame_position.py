@@ -2,6 +2,7 @@
 
 lazy from decimal import Decimal
 
+from fransys_model.derive.placement_reads import node_label
 from fransys_model.derive.set_rank import set_rank
 from fransys_model.derive.sheet_forms import set_page_text
 from fransys_model.derive.text_width import G_PER_MODULE
@@ -121,7 +122,9 @@ def location_path(model: Model, node: Id[AspectNode] | None) -> LocationPath:
     node's label kept alongside its id. Every location text is built from it.
     """
     nodes = aspect_nodes(model)
-    return tuple((found, nodes[found].label) for found in reversed(list(chain_up(nodes, node))))
+    return tuple(
+        (found, node_label(model, found)) for found in reversed(list(chain_up(nodes, node)))
+    )
 
 
 def partner_position_text(

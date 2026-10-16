@@ -7,11 +7,13 @@ block's own grid, the one place sheet millimetres become grid units.
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import cable_blocks, harness_cables_for
-from fransys_model.derive import document_sheet_format as resolve_sheet_format
-from fransys_model.derive.cable_drawing import cable_block_key
+from fransys_model.derive import (
+    cable_block_sizes,
+    cable_blocks,
+    document_sheet,
+    harness_cables_for,
+)
 from fransys_model.derive.drawing_text import content_extent
-from fransys_model.layout import CableBlock, layout_of, sheet_format_of
 
 from ._cable_runs import body_size_mm
 from ._drawings import block_missing_keys
@@ -19,14 +21,14 @@ from ._drawings import block_missing_keys
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import CableBlockRef
+    from fransys_model.derive import CableBlockRef, DocumentRow
     from fransys_model.kernel import Model
-    from fransys_model.vocab import Document, PageKind
+    from fransys_model.vocab import PageKind
 
 
 def _too_big_messages(
     model: Model,
-    record: Document,
+    record: DocumentRow,
     pages: tuple[PageKind, ...],
     blocks: tuple[CableBlockRef, ...],
 ) -> list[str]:
@@ -34,18 +36,17 @@ def _too_big_messages(
 
     The block is scaled by its own sheet; the body is the document's sheet minus the run's frame.
     """
-    width_mm, height_mm = body_size_mm(resolve_sheet_format(model, record, pages))
-    laid = {
-        cable_block_key(found.unit, found.subject): found
-        for found in layout_of(model, CableBlock).values()
-    }
+    width_mm, height_mm = body_size_mm(document_sheet(model, record.id, pages))
+    laid = cable_block_sizes(model)
     messages = []
     for block in blocks:
         found = laid.get(block.key)
         if found is None:
             continue
-        module_mm = sheet_format_of(model, found.sheet_format).module_mm
-        room = (content_extent(width_mm, module_mm), content_extent(height_mm, module_mm))
+        room = (
+            content_extent(width_mm, found.module_mm),
+            content_extent(height_mm, found.module_mm),
+        )
         if found.width > room[0] or found.height > room[1]:
             messages.append(
                 f"HARNESS_DRAWING: block {block.key} is {found.width} x {found.height} G, "
@@ -55,10 +56,10 @@ def _too_big_messages(
 
 
 def harness_block_messages(
-    model: Model, record: Document, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
+    model: Model, record: DocumentRow, pages: tuple[PageKind, ...], svgs: Mapping[str, str]
 ) -> list[str]:
     """The `HARNESS_DRAWING` messages of blocks with no SVG or too big for the page body."""
-    blocks = cable_blocks(model, record, harness_cables_for(model, record, pages))
+    blocks = cable_blocks(model, record.id, harness_cables_for(model, record.id, pages))
     messages = []
     if missing := block_missing_keys(blocks, svgs):
         messages.append(f"HARNESS_DRAWING: missing drawing for {', '.join(missing)}")

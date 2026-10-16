@@ -55,15 +55,15 @@ def _keys(listing_version: int, fransys: str) -> bool:
     return rules.item_keys
 
 
-def test_a_listing_carries_item_keys_from_0_20_0_and_its_own_version_says_so():
+def test_a_listing_carries_item_keys_from_0_19_10_and_its_own_version_says_so():
     assert _keys(1, "0.19.8") is False
-    assert _keys(2, "0.20.0") is True
+    assert _keys(2, "0.19.10") is True
     assert _keys(2, "0.19.8") is True
-    assert _keys(1, "0.20.0") is False
-    assert baseline.listing_rules(3, "0.20.0") is None
+    assert _keys(1, "0.19.10") is False
+    assert baseline.listing_rules(3, "0.19.10") is None
 
 
-def test_a_v1_listing_rules_name_0_20_0_as_the_release_that_moved_the_keys():
+def test_a_v1_listing_rules_name_0_19_10_as_the_release_that_moved_the_keys():
     stored = baseline.listing_rules(1, "0.19.8")
     assert stored is not None
-    assert baseline.rules_moved_in(stored) == "0.20.0"
+    assert baseline.rules_moved_in(stored) == "0.19.10"

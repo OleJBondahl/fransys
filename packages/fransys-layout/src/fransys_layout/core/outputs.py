@@ -28,6 +28,8 @@ if TYPE_CHECKING:  # jsonform resolves these names from the module, so no run-ti
 
 @dataclass(frozen=True, slots=True)
 class PinXY:
+    """A pin's name and its absolute x and y on the page."""
+
     pin: str
     x: int
     y: int
@@ -64,6 +66,8 @@ class Gap:
 
 @dataclass(frozen=True, slots=True)
 class Trunk:
+    """A fan's trunk on one page: its span, its lane count and the row it stands in."""
+
     fan: str
     page: int
     y: int
@@ -76,6 +80,8 @@ class Trunk:
 
 @dataclass(frozen=True, slots=True)
 class PagePlacement:
+    """One page's placed symbols, gaps, trunks, row sizes and row bands."""
+
     page: int
     placed: tuple[Placed, ...]
     gaps: tuple[Gap, ...]
@@ -88,6 +94,8 @@ class PagePlacement:
 
 @dataclass(frozen=True, slots=True)
 class Placement:
+    """The placement of every page, with the findings the placer raised."""
+
     pages: tuple[PagePlacement, ...]
     findings: tuple[Finding, ...] = ()
 
@@ -105,12 +113,16 @@ class Wire:
 
 @dataclass(frozen=True, slots=True)
 class Demand:
+    """How many tracks one gap needs for the wires routed through it."""
+
     gap: str
     tracks: int
 
 
 @dataclass(frozen=True, slots=True)
 class Counts:
+    """The crossing, bend, excess, length and detour counts of one page's routes."""
+
     crossings: int
     bends: int
     excess: int
@@ -120,6 +132,8 @@ class Counts:
 
 @dataclass(frozen=True, slots=True)
 class PageRoutes:
+    """The routed wires, gap demand and counts of one page."""
+
     page: int
     wires: tuple[Wire, ...]
     demand: tuple[Demand, ...]
@@ -137,6 +151,8 @@ class Routes:
 
 @dataclass(frozen=True, slots=True)
 class Label:
+    """A label printed at a corner of a box on one page."""
+
     owner: str
     page: int
     box: Box
@@ -145,6 +161,8 @@ class Label:
 
 @dataclass(frozen=True, slots=True)
 class Table:
+    """A contact table printed beside a coil: its cells, box and tier."""
+
     coil: str
     page: int
     cells: tuple[str, ...]
@@ -171,6 +189,8 @@ class Marker:
 
 @dataclass(frozen=True, slots=True)
 class WireLabel:
+    """A net's name printed on a wire, at a box on one page."""
+
     net: str
     page: int
     box: Box
@@ -178,6 +198,8 @@ class WireLabel:
 
 @dataclass(frozen=True, slots=True)
 class Annotations:
+    """The labels, tables, markers and wire labels printed on the pages."""
+
     labels: tuple[Label, ...] = ()
     tables: tuple[Table, ...] = ()
     markers: tuple[Marker, ...] = ()
@@ -186,6 +208,8 @@ class Annotations:
 
 @dataclass(frozen=True, slots=True)
 class Score:
+    """The scorer's result: its penalty terms, page count, page fill and total Q."""
+
     P: tuple[tuple[str, int], ...]
     R: tuple[tuple[str, int], ...]
     X: int
@@ -198,6 +222,8 @@ class Score:
 
 @dataclass(frozen=True, slots=True)
 class CoreLayout:
+    """The placer core's full result: area, pages, placement, routes, text, score, findings."""
+
     area: Size
     pages: tuple[PagePlan, ...]
     placement: Placement
@@ -242,6 +268,8 @@ class SceneBox:
 
 @dataclass(frozen=True, slots=True)
 class SceneWire:
+    """A wire polyline in the scene, with its net, page, lane count and kind."""
+
     net: str
     page: int
     points: tuple[XY, ...]
@@ -266,6 +294,8 @@ class SceneMarker:
 
 @dataclass(frozen=True, slots=True)
 class SceneLabel:
+    """A label in the scene: its owner, page, box and corner."""
+
     owner: str
     page: int
     box: Box
@@ -274,6 +304,8 @@ class SceneLabel:
 
 @dataclass(frozen=True, slots=True)
 class SceneTable:
+    """A contact table in the scene: its coil, page, box, cells and tier."""
+
     coil: str
     page: int
     box: Box

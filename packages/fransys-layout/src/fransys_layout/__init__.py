@@ -5,7 +5,14 @@ from .engines.cable import lay_out_cables
 from .engines.diagram import lay_out_diagrams
 from .engines.overview import lay_out_overview
 from .engines.schematic import lay_out_schematic
-from .geometry import Facing, HintError, SymbolPortError
+from .geometry import (
+    Facing,
+    HintError,
+    SymbolGeometry,
+    SymbolPortError,
+    generic_box_geometry,
+    symbol_geometry,
+)
 from .lint.codes import FINDING_CODES
 from .options import LayoutOptions
 from .stages.texts.candidates import Side, TextKind, TextPlacement
@@ -16,12 +23,15 @@ __all__ = (
     "HintError",
     "LayoutOptions",
     "Side",
+    "SymbolGeometry",
     "SymbolPortError",
     "TextKind",
     "TextPlacement",
+    "generic_box_geometry",
     "lay_out_cables",
     "lay_out_diagrams",
     "lay_out_overview",
     "lay_out_schematic",
     "page_readability",
+    "symbol_geometry",
 )

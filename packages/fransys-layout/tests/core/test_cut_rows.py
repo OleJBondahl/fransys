@@ -11,7 +11,8 @@ from dataclasses import replace
 import pytest
 
 from fransys_layout.core import Box, Hints, Options, PlacementProblem, order_blocks
-from fransys_layout.core.cut_costs import sequence
+from fransys_layout.core.cut_costs import column_items
+from fransys_layout.core.cut_pack import left_pack
 
 from .cut_fixtures import AREA, box_sym, chain, elem, net
 from .cut_oracle import window_misses
@@ -84,7 +85,7 @@ def unit_of(case: str, options: Options = OPTIONS):
 @pytest.mark.parametrize("case", CASES)
 def test_every_window_of_the_sequence_is_as_wide_as_its_row(case: str) -> None:
     prob, flow, unit = unit_of(case)
-    seq = sequence(unit, flow, prob, OPTIONS, PAGE_H)
+    seq = column_items(unit, flow, OPTIONS, left_pack(unit, flow, prob, OPTIONS), PAGE_H)
     checked, bad = window_misses(seq, unit, (flow, prob, OPTIONS))
     assert checked > len({it.block for it in seq})  # windows across blocks are looked at
     assert bad == []
@@ -93,4 +94,5 @@ def test_every_window_of_the_sequence_is_as_wide_as_its_row(case: str) -> None:
 def test_the_cards_plants_hold_a_whole_block() -> None:
     for case in ("card_between", "two_cards"):
         prob, flow, unit = unit_of(case)
-        assert any(it.whole for it in sequence(unit, flow, prob, OPTIONS, PAGE_H))
+        packed = left_pack(unit, flow, prob, OPTIONS)
+        assert any(it.whole for it in column_items(unit, flow, OPTIONS, packed, PAGE_H))

@@ -61,24 +61,6 @@
 "fransys_kernel.ids::kind" = 6
 "fransys_kernel.model::kind" = 1
 "fransys_kernel.origin::kind" = 3
-"fransys_layout.core.blocks::unit" = 3
-"fransys_layout.core.blocks_card::kind" = 1
-"fransys_layout.core.blocks_card::unit" = 1
-"fransys_layout.core.blocks_hints::kind" = 1
-"fransys_layout.core.blocks_members::kind" = 5
-"fransys_layout.core.blocks_members::unit" = 2
-"fransys_layout.core.cut::unit" = 2
-"fransys_layout.core.cut_refs::kind" = 2
-"fransys_layout.core.order::kind" = 2
-"fransys_layout.core.outputs::kind" = 2
-"fransys_layout.core.pack::kind" = 1
-"fransys_layout.core.ref_kind::kind" = 1
-"fransys_layout.core.route_wires::kind" = 1
-"fransys_layout.core.rowspec::unit" = 1
-"fransys_layout.core.scene_facts::kind" = 1
-"fransys_layout.core.score::kind" = 1
-"fransys_layout.core.unionfind::parent" = 9
-"fransys_layout.core.values::kind" = 2
 "fransys_layout.engines.cable.place::unit" = 1
 "fransys_layout.engines.cable.write.records::unit" = 3
 "fransys_layout.engines.diagram.engine::unit" = 1
@@ -206,12 +188,7 @@
 "fransys_layout.stages.wire_copies::kind" = 1
 "fransys_model.checks.part_conformance::kind" = 2
 "fransys_model.checks.part_conformance::role" = 1
-"fransys_model.checks.ratings::unit" = 2
-"fransys_model.checks.ratings_breaking::kind" = 1
-"fransys_model.checks.ratings_current::unit" = 2
-"fransys_model.checks.structure::parent" = 4
 "fransys_model.checks.units::kind" = 1
-"fransys_model.checks.units::unit" = 4
 "fransys_model.derive.accessory_blocks::kind" = 2
 "fransys_model.derive.baseline_ancestry::parent" = 2
 "fransys_model.derive.baseline_codec::kind" = 1
@@ -238,7 +215,7 @@
 "fransys_model.derive.cable_drawing::parent" = 1
 "fransys_model.derive.cable_drawing::unit" = 4
 "fransys_model.derive.connectors::unit" = 1
-"fransys_model.derive.contact_entries::kind" = 2
+"fransys_model.derive.contact_entries::kind" = 1
 "fransys_model.derive.contact_image::unit" = 1
 "fransys_model.derive.contact_lines::kind" = 1
 "fransys_model.derive.core_pairs::core_colours" = 1
@@ -249,20 +226,17 @@
 "fransys_model.derive.document_unit::unit" = 2
 "fransys_model.derive.drawing_text::kind" = 3
 "fransys_model.derive.drawing_text::unit" = 5
+"fransys_model.derive.drawn_sheets::unit" = 1
 "fransys_model.derive.drawn_wires::unit" = 1
 "fransys_model.derive.facade_reads::unit" = 2
 "fransys_model.derive.facts.contacts::kind" = 1
 "fransys_model.derive.facts.contacts::role" = 4
-"fransys_model.derive.facts.current.bounds::kind" = 1
 "fransys_model.derive.facts.current.bounds::role" = 1
 "fransys_model.derive.facts.current.ties::kind" = 1
 "fransys_model.derive.facts.fault.prospective::kind" = 1
-"fransys_model.derive.facts.function_ratings::kind" = 1
-"fransys_model.derive.facts.function_ratings::unit" = 2
 "fransys_model.derive.facts.keep_whole::unit" = 1
 "fransys_model.derive.facts.leads::kind" = 1
-"fransys_model.derive.facts.unit_index::parent" = 8
-"fransys_model.derive.facts.unit_names::parent" = 2
+"fransys_model.derive.facts.stated_ratings::unit" = 1
 "fransys_model.derive.facts.units::unit" = 7
 "fransys_model.derive.finding_names::kind" = 5
 "fransys_model.derive.footprints::kind" = 1
@@ -329,7 +303,6 @@
 "fransys_model.derive.passes.plc_allocation::parent" = 2
 "fransys_model.derive.passes.wire_rows::unit" = 2
 "fransys_model.derive.plc_rack::unit" = 1
-"fransys_model.derive.pole_lists::role" = 1
 "fransys_model.derive.power::parent" = 2
 "fransys_model.derive.printed_sets::unit" = 2
 "fransys_model.derive.readability::unit" = 3
@@ -363,7 +336,6 @@
 "fransys_model.layout.results::kind" = 2
 "fransys_model.layout.tables::unit" = 2
 "fransys_model.vocab.document::unit" = 1
-"fransys_model.vocab.finding_ref::kind" = 1
 "fransys_model.vocab.instantiate::kind" = 1
 "fransys_model.vocab.instantiate::role" = 1
 "fransys_model.vocab.markings::kind" = 1
@@ -375,7 +347,6 @@
 "fransys_overview._data::unit" = 21
 "fransys_overview._data_alt::kind" = 1
 "fransys_overview._data_places::kind" = 2
-"fransys_pdf._cable_checks::unit" = 1
 "fransys_pdf._lists::unit" = 1
 "fransys_pdf._markdown::kind" = 2
 "fransys_render._diagram_boxes::unit" = 2
@@ -390,8 +361,6 @@
 "fransys_wago.modules::unit" = 1
 
 [table_walks]
-"fransys_kicad.check::items" = 1
-"fransys_layout.core.cut::boundaries" = 1
 "fransys_layout.engines.overview.read.readings::units" = 1
 "fransys_layout.engines.schematic.read.boundary_pins::functions" = 1
 "fransys_layout.engines.schematic.read.boundary_pins::units" = 1
@@ -466,10 +435,6 @@
 "fransys_overview._data::items" = 2
 "fransys_overview._data::units" = 1
 "fransys_overview._data_places::aspect_nodes" = 2
-"fransys_pdf._lists::functions" = 1
-"fransys_pdf._lists::items" = 2
-"fransys_pdf.checks::documents" = 2
-"fransys_pdf.document::documents" = 1
 "fransys_render._ink::conductors" = 1
 "fransys_render._labels::functions" = 2
 "fransys_render._labels::ports" = 1
@@ -510,19 +475,13 @@
 "fransys_author.surface._throws::PortRole" = 4
 "fransys_author.wiring::ConductorKind" = 5
 "fransys_kernel.ids::kind==str" = 1
-"fransys_model.checks.bars::PortRole" = 1
-"fransys_model.checks.earth::PortRole" = 1
-"fransys_model.checks.ratings_breaking::FunctionKind" = 1
 "fransys_model.derive.accessory_blocks::FunctionKind" = 1
 "fransys_model.derive.contact_entries::FunctionKind" = 1
 "fransys_model.derive.contact_lines::FunctionKind" = 1
 "fransys_model.derive.facts.contacts::LinkKind" = 1
 "fransys_model.derive.facts.contacts::PortRole" = 7
-"fransys_model.derive.facts.current.bounds::FunctionKind" = 1
 "fransys_model.derive.facts.current.ties::FunctionKind" = 2
 "fransys_model.derive.facts.current.ties::PortRole" = 1
-"fransys_model.derive.facts.fault.readers::PortRole" = 1
-"fransys_model.derive.facts.function_ratings::FunctionKind" = 1
 "fransys_model.derive.facts.leads::ConductorKind" = 1
 "fransys_model.derive.footprints::FunctionKind" = 1
 "fransys_model.derive.kinds::ItemKind" = 9
@@ -542,13 +501,11 @@
 "fransys_model.derive.overview_stubs::ItemKind" = 1
 "fransys_model.derive.overview_tree::ItemKind" = 1
 "fransys_model.derive.overview_view_plain::kind==str" = 2
-"fransys_model.derive.pole_lists::PortRole" = 1
 "fransys_model.derive.reports::ConductorKind" = 4
 "fransys_model.derive.tag_text::kind==str" = 1
 "fransys_model.derive.wiring::PortRole" = 6
 "fransys_model.derive.wiring_ends::PortRole" = 4
-"fransys_model.vocab.markings::FunctionKind" = 1
-"fransys_model.vocab.markings::LinkKind" = 3
+"fransys_model.vocab.markings::LinkKind" = 1
 "fransys_model.vocab.templates::FunctionKind" = 3
 "fransys_model.vocab.templates::LinkKind" = 1
 "fransys_overview._data_places::kind==str" = 1
@@ -557,14 +514,6 @@
 "fransys_render._ink::kind==str" = 1
 
 [kind_reads_legacy_layout]
-"fransys_layout.core.blocks_card::kind==str" = 1
-"fransys_layout.core.blocks_hints::kind==str" = 1
-"fransys_layout.core.blocks_members::kind==str" = 3
-"fransys_layout.core.cut_refs::kind==str" = 2
-"fransys_layout.core.order::kind==str" = 2
-"fransys_layout.core.pack::kind==str" = 1
-"fransys_layout.core.scene_facts::kind==str" = 1
-"fransys_layout.core.values::kind==str" = 2
 "fransys_layout.engines.diagram.write.records::kind==str" = 1
 "fransys_layout.engines.schematic.read.device_chains::kind==str" = 2
 "fransys_layout.engines.schematic.read.harness_lines::FunctionKind" = 1
@@ -587,7 +536,6 @@
 "fransys_model.layout.tables::PageKind" = 1
 "fransys_pdf._diagrams::DocumentPreset" = 2
 "fransys_pdf._diagrams::PageKind" = 1
-"fransys_pdf._geometry::PageKind" = 2
 "fransys_pdf._schematic_yield::PageKind" = 8
 "fransys_pdf.checks::PageKind" = 3
 "fransys_pdf.document::PageKind" = 14
@@ -683,29 +631,26 @@
 "fransys_render._symbols::<rect" = 1
 
 [model_doors]
-"fransys_kicad::fransys_model.vocab" = 3
 "fransys_overview::fransys_model.layout" = 4
 "fransys_overview::fransys_model.vocab" = 4
-"fransys_pdf::fransys_model.layout" = 7
-"fransys_pdf::fransys_model.vocab" = 23
-"fransys_reports::fransys_model.vocab" = 3
-"fransys_wago::fransys_model.vocab" = 2
 
 [vocab_reexports]
 "aspect_nodes" = 2
 "conductors" = 1
 "control_of" = 1
-"documents" = 4
+"documents" = 2
 "effective_rating" = 1
-"function_poles" = 2
-"functions" = 5
+"function_poles" = 1
+"function_role_of" = 2
+"functions" = 4
 "identifier" = 3
 "instantiate" = 2
 "is_control" = 1
-"is_pole_link" = 1
-"items" = 3
-"marking_key" = 4
+"is_pole_by_role" = 1
+"items" = 1
+"marking_key" = 5
 "pole_order" = 3
+"poles_by_role" = 1
 "port_order_key" = 2
 "ports" = 4
 "rail_phase_problem" = 1

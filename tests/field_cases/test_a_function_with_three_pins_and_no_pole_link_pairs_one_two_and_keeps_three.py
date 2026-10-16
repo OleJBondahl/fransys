@@ -17,9 +17,9 @@ import fransys as fr
 import pytest
 from fransys.colours import BU
 
+from fransys_model.derive import series_pairs
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.rows_series_pairs import SeriesPair
-from fransys_model.derive.series_pairs import series_pairs
 from fransys_model.layout import Side
 from fransys_model.vocab.tables import functions, port_templates, ports
 

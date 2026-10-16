@@ -105,14 +105,14 @@ def _own_designation(model: Model, item: Id[Item]) -> str:
     return text
 
 
-def item_label(model: Model, item: Item) -> str:
+def item_label(model: Model, item: Id[Item]) -> str:
     """What an item is called in a message: its own text, else its authoring key joined by `/`.
 
     Reads no holder and no numbering, and never raises, so it serves an item that has no
     designation (`item_designation` raises).
     """
-    text = own_designation_or_none(model, item)
-    return text if text is not None else key_text(item)
+    text = own_designation_or_none(model, record := items(model)[item])
+    return text if text is not None else key_text(record)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

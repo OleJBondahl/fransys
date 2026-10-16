@@ -93,7 +93,7 @@ def unit_owned_ids(model: Model, unit: Id[Unit]) -> frozenset[Id[Record]]:
     item_ids = unit_items(model, unit)
     function_ids = {fid for fid, fn in functions(model).items() if fn.item in item_ids}
     port_ids = {pid for pid, port in ports(model).items() if port.function in function_ids}
-    owned_documents = {i for i, r in documents(model).items() if document_unit(model, r) == unit}
+    owned_documents = {i for i, r in documents(model).items() if document_unit(model, r.id) == unit}
     return (
         frozenset(item_ids) | function_ids | port_ids | unit_subtree(model, unit) | owned_documents
     )

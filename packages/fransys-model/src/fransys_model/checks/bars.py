@@ -3,9 +3,8 @@
 from typing import Final
 
 from fransys_model.derive.facts.bars import is_bar_port
-from fransys_model.derive.facts.roles import port_role
+from fransys_model.derive.facts.roles import is_pe_port
 from fransys_model.kernel import Finding, Model, Severity
-from fransys_model.vocab.enums import PortRole
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import ports
 
@@ -25,6 +24,6 @@ def check_bars(model: Model) -> tuple[Finding, ...]:
             ),
         )
         for port in ports(model).values()
-        if port_role(model, port.id) is not PortRole.PE and is_bar_port(model, port.id)
+        if not is_pe_port(model, port.id) and is_bar_port(model, port.id)
     ]
     return tuple(sorted(found, key=lambda f: (f.subjects, f.message)))

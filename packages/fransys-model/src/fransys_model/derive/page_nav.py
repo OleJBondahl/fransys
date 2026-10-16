@@ -19,7 +19,7 @@ from .drawing_text import CONTACT_SLOTS, label_text
 from .kinds import item_role
 from .marker_box import marker_box
 from .order import designation_key, drawn_on_page
-from .page_destination import page_destination, sheet_title_text
+from .page_destination import page_destination, sheet_text, sheet_title_text
 from .page_headings import DIAGRAM_TITLE
 from .page_titles import page_title
 from .rows_nav import OutlineSheet, ReferenceLink
@@ -35,9 +35,9 @@ def _has_entry(model: Model, item: Id[Item]) -> bool:
 
 
 def reference_links(
-    model: Model, page: Page, known: Collection[Id[Page]]
+    model: Model, page_id: Id[Page], known: Collection[Id[Page]]
 ) -> tuple[ReferenceLink, ...]:
-    """The links on `page`: its link markers' boxes, and one box per partner of each label (NV2).
+    """The links on page `page_id`: its link markers' boxes, and one box per label partner (NV2).
 
     A marker links to the page of its partner marker; a shared box links from its lead only.
     A contact table links each row to the page of its contact (CR4, `_row_links`); a spare row and
@@ -47,6 +47,7 @@ def reference_links(
     box is that text's width (`text_width` at the label's height) from the label's own left edge.
     A partner on `page` itself or outside `known` (the pages of this PDF) gets no link.
     """
+    page = layout_of(model, Page)[page_id]
     links = list(_marker_links(model, page, known))
     for label in drawn_on_page(model, Label, page):
         if label.kind is not LabelKind.CROSS_REFERENCE:
@@ -129,17 +130,24 @@ def _designations(model: Model, page: Page) -> tuple[str, ...]:
     return tuple(sorted(found, key=lambda text: (designation_key(model, found[text]), text)))
 
 
-def outline_sheets(model: Model, sheets: Iterable[Page | DiagramSheet]) -> tuple[OutlineSheet, ...]:
-    """One entry per sheet, in the order given: "Sheet 3: Pump 1" and its designations (NV3)."""
+def outline_sheets(
+    model: Model, sheets: Iterable[Id[Page] | DiagramSheet]
+) -> tuple[OutlineSheet, ...]:
+    """One entry per sheet (a page id or a diagram sheet), in order: "Sheet 3: Pump 1" (NV3).
+
+    `number` is the sheet number it prints (`sheet_text`).
+    """
     out = []
-    for sheet in sheets:
-        if isinstance(sheet, DiagramSheet):
-            title, entries = DIAGRAM_TITLE, ()
+    for given in sheets:
+        if isinstance(given, DiagramSheet):
+            sheet, title, entries = given, DIAGRAM_TITLE, ()
         else:
+            sheet = layout_of(model, Page)[given]
             title, entries = page_title(model, sheet), _designations(model, sheet)
         out.append(
             OutlineSheet(
                 destination=page_destination(model, sheet),
+                number=sheet_text(model, sheet),
                 title=sheet_title_text(model, sheet, title),
                 entries=entries,
             )

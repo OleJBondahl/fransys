@@ -62,12 +62,16 @@ class Box:
 
 @dataclass(frozen=True, slots=True)
 class Size:
+    """A width and height, in G."""
+
     w: int
     h: int
 
 
 @dataclass(frozen=True, slots=True)
 class PinRef:
+    """A pin of one symbol, named by the symbol id and the pin id."""
+
     sym: str
     pin: str
 
@@ -140,6 +144,8 @@ class Bundle:
 
 @dataclass(frozen=True, slots=True)
 class Net:
+    """A net: its id, the pins it joins, and its rail, bundle, unit-crossing and label facts."""
+
     id: str
     pins: tuple[PinRef, ...]
     rail: Rail | None = None
@@ -150,6 +156,8 @@ class Net:
 
 @dataclass(frozen=True, slots=True)
 class Unit:
+    """A unit: its id, its parent unit, and the pins on its boundary."""
+
     id: str
     parent: str | None
     boundary: tuple[PinRef, ...]
@@ -157,6 +165,8 @@ class Unit:
 
 @dataclass(frozen=True, slots=True)
 class Facts:
+    """Problem facts: groups kept whole, units, mated pin pairs and row tags."""
+
     keep_whole: tuple[frozenset[str], ...] = ()
     units: tuple[Unit, ...] = ()
     mates: tuple[tuple[PinRef, PinRef], ...] = ()
@@ -178,6 +188,8 @@ class Hints:
 
 @dataclass(frozen=True, slots=True)
 class PlacementProblem:
+    """The placer's input: the area, the symbols, the nets, the facts and the hints."""
+
     area: Size
     symbols: tuple[Sym, ...]
     nets: tuple[Net, ...]
@@ -224,6 +236,9 @@ class Options:
     wire_label_sides: tuple[str, ...] = ("N", "S")
     open_stub: int = 0
     box_columns: bool = True
+    # layout-0309: a keep-whole fan wider alone than the page may wrap at a column;
+    # False keeps it one row
+    wrap_wide_fans: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -308,12 +323,16 @@ class Fan:
 
 @dataclass(frozen=True, slots=True)
 class CrossLink:
+    """A net that crosses between column ends, given by its attachments."""
+
     net: str
     ends: tuple[Attach, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class Stand:
+    """A supply stand on a pin: its power kind and its rank."""
+
     sym: str
     pin: str
     power: Power
@@ -322,6 +341,8 @@ class Stand:
 
 @dataclass(frozen=True, slots=True)
 class CycleSplit:
+    """How many bundles, ladders and cross links were cut to break cycles in the flow."""
+
     bundles: int
     ladders: int
     cross_links: int
@@ -329,6 +350,8 @@ class CycleSplit:
 
 @dataclass(frozen=True, slots=True)
 class FlowGraph:
+    """The flow after stage 2: columns, fans, cross links, stands, cycle split, drawn symbols."""
+
     columns: tuple[Column, ...]
     fans: tuple[Fan, ...]
     cross_links: tuple[CrossLink, ...]
@@ -370,6 +393,8 @@ class Block:
 
 @dataclass(frozen=True, slots=True)
 class BlockList:
+    """The blocks of one unit, with the findings raised while building them."""
+
     unit: str
     blocks: tuple[Block, ...]
     findings: tuple[Finding, ...] = ()
@@ -377,6 +402,8 @@ class BlockList:
 
 @dataclass(frozen=True, slots=True)
 class RowPlan:
+    """One row of a page plan: its columns, its blocks and its estimated height."""
+
     columns: tuple[str, ...]
     blocks: tuple[str, ...]
     height_est: int
@@ -384,6 +411,8 @@ class RowPlan:
 
 @dataclass(frozen=True, slots=True)
 class PagePlan:
+    """One planned page of a unit: its rows, whether it is forced to end, and its groups."""
+
     page: int
     unit: str
     rows: tuple[RowPlan, ...]
@@ -393,6 +422,8 @@ class PagePlan:
 
 @dataclass(frozen=True, slots=True)
 class RefEnd:
+    """One end of a reference: its page, column, pin and row."""
+
     page: int
     column: str | None
     pin: PinRef | None
@@ -410,6 +441,8 @@ class Ref:
 
 @dataclass(frozen=True, slots=True)
 class Finding:
+    """A finding the placer raised: its code, its text, and optionally its page and subject."""
+
     code: FindingCode
     text: str
     page: int | None = None
@@ -418,6 +451,8 @@ class Finding:
 
 @dataclass(frozen=True, slots=True)
 class PageSpec:
+    """The page plan for all units, with the reference plan and the findings."""
+
     pages: tuple[PagePlan, ...]
     reference_plan: tuple[Ref, ...]
     findings: tuple[Finding, ...] = ()

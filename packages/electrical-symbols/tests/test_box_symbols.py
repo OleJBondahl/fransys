@@ -1,7 +1,7 @@
 """The box symbols (SYMDEF-SLOTS SS5 b): the diagram box, its by-others variant and the card."""
 
 import pytest
-from symdef import Polyline, Style, body_box, stretch
+from symdef import InvalidValueError, Polyline, Style, body_box, stretch
 
 from electrical_symbols import LIBRARY
 
@@ -55,7 +55,7 @@ def test_diagram_box_stretches_on_x_then_y_with_offsets():
 
 def test_offsets_on_the_wrong_edge_raise():
     """An x offset names a west port, which is not on a north or south edge."""
-    with pytest.raises(ValueError, match="w1"):
+    with pytest.raises(InvalidValueError, match="w1"):
         stretch(LIBRARY.get("diagram-box"), "x", 40, {"w1": 2})
 
 

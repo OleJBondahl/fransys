@@ -6,6 +6,7 @@ from collections import defaultdict
 from itertools import combinations, permutations
 from typing import TYPE_CHECKING, NamedTuple
 
+from .intervals import levels
 from .keys import natural_key
 from .place_trunk import trunk_node
 
@@ -32,21 +33,28 @@ class Span(NamedTuple):
     legs: tuple[int, ...] = ()
 
 
-def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> None:
-    """Overlapping trunks of one row and side take distinct levels, in the order that crosses least.
+def trunk_levels(g: Graph, spans: Sequence[Span], options: Options) -> frozenset[str]:
+    """Overlapping trunks of one row and side take distinct levels, the order that crosses least.
 
-    A group overlaps in a chain; its order has the fewest crossings (exact to EXACT_LIMIT, then
-    greedy). A trunk the stacks hold above another stays above it; each pair gets a depth edge.
+    A trunk the stacks hold above another stays above it; each pair gets a depth edge.
+    Returns the trunks at such an edge: their legs hang loose, so a row of terminals can level.
     """
-    below = _below(g)
+    below, lowered = _below(g), set[str]()
     for group in _groups(spans):
         order = _level_order(g, below, group)
+        level = levels([(s.x0, s.x1) for s in order], range(len(order)))
         for i, upper in enumerate(order):
-            for lower in order[i + 1 :]:
-                if upper.x0 <= lower.x1 and lower.x0 <= upper.x1:
-                    a, b = trunk_node(upper.fan, upper.row), trunk_node(lower.fan, lower.row)
+            for j in range(i + 1, len(order)):
+                if level[j] > level[i] and _overlap(upper, order[j]):
+                    a, b = trunk_node(upper.fan, upper.row), trunk_node(order[j].fan, order[j].row)
                     g.after(a, b, options.wiring_grid * upper.lanes)
                     below[g.uf.find(a)[0]].add(g.uf.find(b)[0])
+                    lowered |= {a, b}
+    return frozenset(lowered)
+
+
+def _overlap(a: Span, b: Span) -> bool:
+    return a.x0 <= b.x1 and b.x0 <= a.x1
 
 
 def _groups(spans: Sequence[Span]) -> list[list[Span]]:

@@ -2,13 +2,17 @@
 
 from typing import Any
 
+from plant import Plant
+
 from fransys_model.checks.structure import (
+    ASPECT_CROSS_PARENT,
     ASPECT_CYCLE,
+    UNIT_CYCLE,
     check_structure,
 )
 from fransys_model.kernel import Draft, Finding, Id, Model, Origin, Severity, freeze, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
-from fransys_model.vocab.core import Item
+from fransys_model.vocab.core import Item, Unit
 from fransys_model.vocab.enums import Aspect
 
 _ORIGIN = Origin(file="test_structure_findings.py", line=1, note="fixture")
@@ -69,6 +73,14 @@ def test_two_nodes_that_are_each_others_parent_are_one_error_naming_both() -> No
 # ---- ASPECT_CROSS_PARENT ------------------------------------------------------------------
 
 
+def test_a_node_parented_under_another_aspect_is_one_error_naming_both() -> None:
+    parent = _node("p", Aspect.LOCATION)
+    child = _node("c", Aspect.FUNCTION, parent="p")
+    (finding,) = _of(_freeze(parent, child), ASPECT_CROSS_PARENT)
+    assert finding.subjects == _ids(parent, child)
+    assert "is parented under" in finding.message
+
+
 # ---- PLACEMENT_DUPLICATE ------------------------------------------------------------------
 
 
@@ -92,3 +104,15 @@ def _mixed() -> Model:
         _item("i", parent="j"),
         _item("j", parent="i"),
     )
+
+
+# ---- UNIT_CYCLE ---------------------------------------------------------------------------
+
+
+def test_two_units_that_are_each_others_parent_are_one_error_naming_both() -> None:
+    plant = Plant()
+    plant.unit("a", parent=make_id(Unit, ("b",)))
+    plant.unit("b", parent=make_id(Unit, ("a",)))
+    (finding,) = _of(plant.model(), UNIT_CYCLE)
+    assert finding.subjects == tuple(sorted((make_id(Unit, ("a",)), make_id(Unit, ("b",)))))
+    assert "the parent chain of units" in finding.message

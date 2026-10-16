@@ -7,17 +7,17 @@ from fransys_model.derive import (
     SheetKey,
     cable_blocks,
     cable_runs,
-    has_schematic_subject,
-    sheet_text,
+    schematic_page_ids,
     system_has_no_top_level_cables,
 )
+from fransys_model.derive import replica_only_sets as matched_replica_only_sets
 from fransys_model.derive.page_nav import outline_sheets
 from fransys_model.kernel import render_id
 from fransys_model.vocab import PageKind
 
 from ._background import page_background
 from ._cable_runs import run_page
-from ._geometry import _drawing_set_pages, text_margin, undrawn_replica_only_sets
+from ._geometry import text_margin
 from ._labels import RESTART, sheet_label
 from ._links import page_links
 from ._marks import sheet_mark
@@ -26,53 +26,54 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import HarnessCable, SheetBackground
+    from fransys_model.derive import (
+        DocumentRow,
+        HarnessCable,
+        PageId,
+        ReplicaOnlySet,
+        SheetBackground,
+        SheetRow,
+    )
     from fransys_model.derive.page_nav import OutlineSheet
-    from fransys_model.kernel import Id, Model
-    from fransys_model.layout import DrawingSet, Page, SheetFormat
-    from fransys_model.vocab import Document
+    from fransys_model.kernel import Model
 
 NO_DRAWINGS = '#par(text("No drawings."))'
 
 
 def schematic_pages(
-    model: Model, record: Document, pages: tuple[PageKind, ...]
-) -> tuple[Page, ...]:
+    model: Model, record: DocumentRow, pages: tuple[PageKind, ...]
+) -> tuple[PageId, ...]:
     """The subject's drawing-set pages; empty for an item subject (no `pcb_review` yet)."""
-    if not has_schematic_subject(record):
-        return ()
-    return _drawing_set_pages(model, record, pages)
+    return schematic_page_ids(model, record.id, pages)
 
 
 def replica_only_sets(
-    model: Model, record: Document, pages: tuple[PageKind, ...]
-) -> tuple[DrawingSet, ...]:
+    model: Model, record: DocumentRow, pages: tuple[PageKind, ...]
+) -> tuple[ReplicaOnlySet, ...]:
     """The matched sets skipped as replica-only; empty without a location or unit subject."""
-    if not has_schematic_subject(record):
-        return ()
-    return undrawn_replica_only_sets(model, record, pages)
+    return matched_replica_only_sets(model, record.id, pages)
 
 
 def schematic_missing_keys(
-    pages_found: tuple[Page, ...], svgs: Mapping[str, str]
+    pages_found: tuple[PageId, ...], svgs: Mapping[str, str]
 ) -> tuple[str, ...]:
     """The `render_id`s of `pages_found` that `svgs` has no entry for."""
-    return tuple(render_id(page.id) for page in pages_found if render_id(page.id) not in svgs)
+    return tuple(render_id(page) for page in pages_found if render_id(page) not in svgs)
 
 
 def _sheet_extras(
-    model: Model, sheet: SheetFormat, page: Page, entry: OutlineSheet, known: set[Id[Page]]
+    model: Model, sheet: SheetRow, page: PageId, entry: OutlineSheet, known: set[PageId]
 ) -> tuple[str, str, str]:
     """The page's numbering argument, what precedes its image (label, marks) and its links."""
-    numbering, start = sheet_label(sheet_text(model, page))
+    numbering, start = sheet_label(entry.number)
     return numbering, f"{start}{sheet_mark(entry)}", page_links(model, page, sheet, known)
 
 
 def schematic_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, pages, drawings and backgrounds
     model: Model,
-    record: Document,
-    sheet: SheetFormat,
-    pages_found: tuple[Page, ...],
+    record: DocumentRow,
+    sheet: SheetRow,
+    pages_found: tuple[PageId, ...],
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
@@ -84,9 +85,9 @@ def schematic_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, page
         return f"#page(margin: {margin}, background: {back})[{RESTART}\n{NO_DRAWINGS}]"
     blocks = []
     outline = outline_sheets(model, pages_found)
-    known = {page.id for page in pages_found}
+    known = set(pages_found)
     for index, (page, entry) in enumerate(zip(pages_found, outline, strict=True)):
-        image = f'#image(bytes({literal(svgs[render_id(page.id)])}), format: "svg")'
+        image = f'#image(bytes({literal(svgs[render_id(page)])}), format: "svg")'
         back = page_background(model, record, sheets, SheetKey(record.id, kind, index))
         numbering, before, links = _sheet_extras(model, sheet, page, entry, known)
         blocks.append(f"#page(margin: 0mm, background: {back}{numbering})[{before}{image}{links}]")
@@ -102,8 +103,8 @@ def block_missing_keys(
 
 def _cable_runs(  # noqa: PLR0913, PLR0917 -- the document, its paper, blocks, drawings and backgrounds
     model: Model,
-    record: Document,
-    sheet: SheetFormat,
+    record: DocumentRow,
+    sheet: SheetRow,
     blocks: tuple[CableBlockRef, ...],
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
@@ -129,16 +130,16 @@ def _cable_runs(  # noqa: PLR0913, PLR0917 -- the document, its paper, blocks, d
 
 def harness_drawing_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, cables, drawings and backgrounds
     model: Model,
-    record: Document,
-    sheet: SheetFormat,
+    record: DocumentRow,
+    sheet: SheetRow,
     cables_found: tuple[HarnessCable, ...],
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """Cable block pages, one run per part (pdf-0020, pdf-0022); `""` for SYSTEM with no cable."""
-    if system_has_no_top_level_cables(record, cables_found):
+    if system_has_no_top_level_cables(model, record.id, cables_found):
         return ""
-    blocks = cable_blocks(model, record, cables_found)
+    blocks = cable_blocks(model, record.id, cables_found)
     if not blocks:
         margin = text_margin(sheet)
         key = SheetKey(record.id, PageKind.HARNESS_DRAWING, None)

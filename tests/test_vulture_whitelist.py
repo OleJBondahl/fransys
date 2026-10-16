@@ -83,7 +83,8 @@ _REASONED_ENTRY_RE = re.compile(r"^_\.(\w+)  # (FIELDS|DICT|OTHER|TESTS) (\S+):(
 # +3: DrawnSymbol orient, tint, muted (O3-SCENE), read when render draws the scene
 # +23: EL-2a role-table fields (model-0288), 2026-10-16
 # +4: SignalKind members built by value from SIGNAL_TYPES (EL-3), 2026-10-16; cleanup lowers
-WHITELIST_CEILING = 180
+# +7: core names cut from __all__ (decision 0226), read by layout tests until P6.1; cleanup lowers
+WHITELIST_CEILING = 189
 IGNORE_NAMES_CEILING = 70  # 15 legacy + 51 names + 4 layout-0111 enum members
 
 _LEGACY_IGNORE_NAMES = frozenset(

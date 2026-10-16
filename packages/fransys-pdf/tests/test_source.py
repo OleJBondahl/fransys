@@ -36,6 +36,8 @@ from fransys_pdf._pages import cover_page
 from fransys_model.derive import (
     SheetKey,
     document_facts,
+    document_row,
+    document_rows,
     document_sheets_of,
     harness_cables_for,
     project_facts,
@@ -52,7 +54,6 @@ from fransys_model.vocab import (
     NetClass,
     PageKind,
     SignalType,
-    documents,
 )
 
 K = PageKind
@@ -124,7 +125,7 @@ def test_house_sheet_when_the_document_has_no_drawing_pages():
         remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(c1, doc)
-    sheet = resolve_sheet_format(m, documents(m)[doc.id], (K.COVER,))
+    sheet = resolve_sheet_format(m, doc.id, (K.COVER,))
     assert (sheet.width_mm, sheet.height_mm) == (420, 297)
 
 
@@ -229,9 +230,9 @@ def test_location_document_picks_only_the_unit_none_set_at_its_location():
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, u, ds_nested, ds_top, p_nested, p_top, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     pages = schematic_pages(m, record, (K.SCHEMATIC,))
-    assert [page.id for page in pages] == [p_top.id]
+    assert list(pages) == [p_top.id]
 
 
 def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_order():
@@ -255,10 +256,10 @@ def test_unit_document_gets_pages_from_every_one_of_its_units_sets_in_location_o
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, c2, u, ds1, ds2, p1, p2, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     pages = schematic_pages(m, record, (K.SCHEMATIC,))
     assert len(pages) == _UNIT_DOCUMENT_PAGE_COUNT
-    assert [page.id for page in pages] == [p1.id, p2.id]
+    assert list(pages) == [p1.id, p2.id]
 
 
 def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
@@ -315,8 +316,8 @@ def test_sheet_format_of_the_locations_drawing_set_when_schematic_pages_are_requ
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, fmt, ds, page, doc)
-    record = documents(m)[doc.id]
-    resolved = resolve_sheet_format(m, record, (K.COVER, K.SCHEMATIC))
+    record = document_row(m, doc.id)
+    resolved = resolve_sheet_format(m, record.id, (K.COVER, K.SCHEMATIC))
     assert (resolved.width_mm, resolved.height_mm) == (210, 297)
 
 
@@ -333,8 +334,8 @@ def test_house_sheet_when_the_drawing_sets_first_page_names_no_sheet_format():
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, ds, page, doc)
-    record = documents(m)[doc.id]
-    resolved = resolve_sheet_format(m, record, (K.COVER, K.SCHEMATIC))
+    record = document_row(m, doc.id)
+    resolved = resolve_sheet_format(m, record.id, (K.COVER, K.SCHEMATIC))
     assert (resolved.width_mm, resolved.height_mm) == (420, 297)
 
 
@@ -349,8 +350,8 @@ def test_house_sheet_when_schematic_is_requested_but_the_location_has_no_drawing
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM, K.SHEET_INDEX),
     )
     m = model(c1, doc)
-    record = documents(m)[doc.id]
-    resolved = resolve_sheet_format(m, record, (K.COVER, K.SCHEMATIC))
+    record = document_row(m, doc.id)
+    resolved = resolve_sheet_format(m, record.id, (K.COVER, K.SCHEMATIC))
     assert (resolved.width_mm, resolved.height_mm) == (420, 297)
 
 
@@ -368,8 +369,8 @@ def test_document_facts_for_a_location_document_matches_project_facts():
     p = project()
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover")
     m = model(c1, p, doc)
-    record = documents(m)[doc.id]
-    assert document_facts(m, record) == project_facts(m)
+    record = document_row(m, doc.id)
+    assert document_facts(m, record.id) == project_facts(m)
 
 
 def test_document_facts_for_a_unit_document_uses_the_units_own_current_revision_and_date():
@@ -391,8 +392,8 @@ def test_document_facts_for_a_unit_document_uses_the_units_own_current_revision_
     r2 = revision_entry("r2", unit=u, revision=2, date="2026-09-23", text="Later", created="CD")
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(c1, p, rp, u, r1, r2, doc)
-    record = documents(m)[doc.id]
-    title, number, customer, revision, revision_date, author = document_facts(m, record)
+    record = document_row(m, doc.id)
+    title, number, customer, revision, revision_date, author = document_facts(m, record.id)
     assert (title, number, customer, author) == ("", "", "", "AB")
     assert p.author != "AB"
     assert (revision, revision_date) == ("1.1", "2026-09-01")
@@ -402,8 +403,8 @@ def test_document_facts_revision_date_is_empty_with_no_matching_revision_entry()
     u = unit("u1", name="pump-cabinet", revision=3)
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
-    record = documents(m)[doc.id]
-    _title, _number, _customer, revision, revision_date, _author = document_facts(m, record)
+    record = document_row(m, doc.id)
+    _title, _number, _customer, revision, revision_date, _author = document_facts(m, record.id)
     assert (revision, revision_date) == ("1.3", "")
 
 
@@ -411,8 +412,8 @@ def test_subject_label_for_a_unit_document_is_the_units_name_when_it_has_no_titl
     u = unit("u1", name="pump-cabinet", revision=2)
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
-    record = documents(m)[doc.id]
-    assert subject_label(m, record) == "pump-cabinet"
+    record = document_row(m, doc.id)
+    assert subject_label(m, record.id) == "pump-cabinet"
 
 
 def test_subject_label_for_a_unit_document_is_the_units_title_when_it_has_one():
@@ -420,15 +421,15 @@ def test_subject_label_for_a_unit_document_is_the_units_title_when_it_has_one():
     u = unit("u1", name="pump-cabinet", revision=2, title="Pump cabinet")
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
-    record = documents(m)[doc.id]
-    assert subject_label(m, record) == "Pump cabinet"
+    record = document_row(m, doc.id)
+    assert subject_label(m, record.id) == "Pump cabinet"
 
 
 def test_the_cover_heading_of_a_unit_document_carries_the_units_title():
     u = unit("u1", name="relay-interface-board", title="Relay interface board")
     doc = document("d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     assert document_heading(m, record) == "PCB schematic \N{EM DASH} Relay interface board"
     assert "Relay interface board" in cover_page(m, record)
     assert "relay-interface-board" not in cover_page(m, record)
@@ -438,7 +439,7 @@ def test_the_cover_heading_of_a_unit_document_carries_the_name_when_the_title_is
     u = unit("u1", name="relay-interface-board")
     doc = document("d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=u, cover="# Cover")
     m = model(u, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     assert document_heading(m, record) == "PCB schematic \N{EM DASH} relay-interface-board"
 
 
@@ -470,8 +471,8 @@ def test_the_scope_cell_of_a_unit_document_page_prints_the_title_not_the_name():
 def test_subject_label_and_heading_for_the_system_preset_have_no_dangling_subject():
     doc = document("d1", preset=DocumentPreset.SYSTEM, cover="# Cover")
     m = model(doc)
-    record = documents(m)[doc.id]
-    assert subject_label(m, record) == ""
+    record = document_row(m, doc.id)
+    assert subject_label(m, record.id) == ""
     assert document_heading(m, record) == "System"
 
 
@@ -499,7 +500,7 @@ def test_subject_label_for_an_item_with_a_part_and_no_authored_text_uses_the_par
         "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
     )
     m = model(demo_part, board, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     assert document_heading(m, record) == "PCB schematic — A1 Invented relay"
 
 
@@ -511,7 +512,7 @@ def test_subject_label_for_an_item_with_a_part_and_authored_text_shows_the_autho
         "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
     )
     m = model(demo_part, board, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     heading = document_heading(m, record)
     assert heading == "PCB schematic — A1 Authored relay text"
     assert "Invented relay" not in heading
@@ -523,7 +524,7 @@ def test_subject_label_for_an_item_without_a_part_falls_back_to_its_own_descript
         "d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover", notes=None
     )
     m = model(board, doc)
-    record = documents(m)[doc.id]
+    record = document_row(m, doc.id)
     assert document_heading(m, record) == "PCB schematic — A1 Invented board, no part yet"
 
 
@@ -701,14 +702,14 @@ def test_harness_cables_for_is_empty_for_a_location_subject():
         "d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover", notes=None
     )
     m = model(c1, doc)
-    record = documents(m)[doc.id]
-    assert harness_cables_for(m, record, (K.HARNESS_DRAWING,)) == ()
+    record = document_row(m, doc.id)
+    assert harness_cables_for(m, record.id, (K.HARNESS_DRAWING,)) == ()
 
 
 def test_harness_cables_for_is_empty_when_neither_harness_page_kind_is_requested():
     m, doc, _cable1, _cable2 = _harness_with_two_cables(remove=(K.CONTENTS, K.HARNESS_DRAWING))
-    record = documents(m)[doc.id]
-    assert harness_cables_for(m, record, (K.COVER,)) == ()
+    record = document_row(m, doc.id)
+    assert harness_cables_for(m, record.id, (K.COVER,)) == ()
 
 
 _SYSTEM_CABLE_PAGE_COUNT = 2
@@ -819,7 +820,7 @@ def test_system_preset_with_contents_lists_its_top_level_cables_not_none():
         core_marker,
         doc,
     )
-    found = harness_cables_for(m, documents(m)[doc.id], (K.CONTENTS,))
+    found = harness_cables_for(m, doc.id, (K.CONTENTS,))
     assert {cable.cable for cable in found} == {cable1.id, cable2.id}
     text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m)))
     # Written out from the fixture's tags `W1`, `W2`, `M1`, `X3`, none placed: `-` plus the tag.
@@ -960,7 +961,7 @@ def test_a_list_page_declares_two_columns_of_forty_percent(page):
     """A3 (pdf-0026): the source of each flowing list page is one 100 % block of two columns
     with a 20 % gutter, so each column is 40 % of the content width."""
     m, doc = _list_pages_model()
-    text = getattr(_lists, page)(m, documents(m)[doc.id])
+    text = getattr(_lists, page)(m, document_row(m, doc.id))
     assert text.startswith("#block(width: 100%)[#columns(2, gutter: 20%)[")
     assert text.count("#columns(") == 1
 
@@ -969,7 +970,7 @@ def test_a_list_page_declares_two_columns_of_forty_percent(page):
 def test_every_flowing_list_page_has_content_inside_its_columns(page):
     """A3 (pdf-0026, B1): the page has rows, so the columns block is not vacuously absent."""
     m, doc = _list_pages_model()
-    text = getattr(_lists, page)(m, documents(m)[doc.id])
+    text = getattr(_lists, page)(m, document_row(m, doc.id))
     assert "#table(" in text
 
 
@@ -980,7 +981,7 @@ def test_the_cable_list_and_the_bom_stay_full_width(page):
     The cable list is the system document's: a location document draws no cable (pdf-0042).
     """
     m, _ = _list_pages_model()
-    record = next(r for r in documents(m).values() if r.preset is DocumentPreset.SYSTEM)
+    record = next(r for r in document_rows(m) if r.preset is DocumentPreset.SYSTEM)
     text = getattr(_lists, page)(m, record)
     assert "#table(" in text
     assert "#columns(" not in text
@@ -1012,7 +1013,7 @@ def _boards_model(keys, *, on_net):
                 ),
             )
     m = model(*records)
-    return _lists.connector_list_page(m, documents(m)[doc.id])
+    return _lists.connector_list_page(m, document_row(m, doc.id))
 
 
 def test_each_wired_board_of_the_connector_list_keeps_its_heading():
@@ -1042,7 +1043,7 @@ def test_cable_page_part_line_counts_conductor_cores_not_the_screen():
     m = model(
         harness, demo_part, cable, cable_facet("w1", subject=cable.id, length_mm=None), product, doc
     )
-    (found,) = harness_cables_for(m, documents(m)[doc.id], (K.HARNESS_DRAWING,))
+    (found,) = harness_cables_for(m, doc.id, (K.HARNESS_DRAWING,))
     assert _part_line(found).endswith("4 x 0.5 mm²")
 
 

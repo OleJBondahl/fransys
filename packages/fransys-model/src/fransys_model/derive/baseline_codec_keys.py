@@ -39,6 +39,22 @@ def has_item_keys(listing: Listing) -> bool:
     return all(row.key is not None for row in listing.items)
 
 
+def boundary_changed(previous: Listing, new: Listing) -> bool:
+    """Whether `new`'s boundary differs from `previous`'s, on the fields `previous` carries.
+
+    A version-1 `previous` has no `key` or `pin`, so only designation, ports, rating and operating
+    are compared, in order (model-0307). A version-2 one compares every field.
+    """
+    if has_item_keys(previous):
+        return previous.boundary != new.boundary
+    return _v1_boundary(previous) != _v1_boundary(new)
+
+
+def _v1_boundary(listing: Listing) -> tuple[tuple[object, ...], ...]:
+    """The boundary entries' fields a version-1 listing stores, in order."""
+    return tuple((b.designation, b.ports, b.rating, b.operating) for b in listing.boundary)
+
+
 def keyless_release(listing: Listing) -> str | None:
     """The `name V.R` of a keyless `listing`'s release, else `None` (CHANGES_BY_NAME)."""
     if has_item_keys(listing):

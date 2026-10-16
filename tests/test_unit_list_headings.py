@@ -19,6 +19,7 @@ import fransys_parts
 import pytest
 from fransys_pdf import _lists
 
+from fransys_model.derive import document_rows
 from fransys_model.vocab import DocumentPreset
 from fransys_model.vocab.tables import aspect_nodes, documents
 
@@ -150,7 +151,7 @@ def _terminal_page(tmp_path: Path, markings: dict[str, tuple[str | None, str | N
     document = fr.document(DocumentPreset.CABINET_SCHEMATIC, c1, cover=cover)
     model = fr.build(parts, d.draft(), document).model
     location = next(node.id for node in aspect_nodes(model).values() if node.label == "C1")
-    (record,) = (r for r in documents(model).values() if r.location == location)
+    (record,) = (r for r in document_rows(model) if r.location == location)
     return _lists.terminal_list_page(model, record)
 
 

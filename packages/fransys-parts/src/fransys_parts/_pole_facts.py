@@ -7,7 +7,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fransys_model.vocab import ConductorMark, FunctionKind, LinkKind, PoleSide, is_pole_link
+from fransys_model.vocab import (
+    ConductorMark,
+    FunctionKind,
+    LinkKind,
+    PoleSide,
+    function_role_of,
+    is_pole_by_role,
+)
 
 if TYPE_CHECKING:
     from . import _toml
@@ -29,12 +36,12 @@ _COIL_SIDES = {"A1": PoleSide.LINE, "A2": PoleSide.LOAD}
 
 def _pole_ports(entry: _toml.Table) -> set[str]:
     """The names of the ports on a switched or protective link of this function."""
-    function = FunctionKind(entry["kind"])
+    role = function_role_of(FunctionKind(entry["kind"]))
     links = entry.get("links", ())
     return {
         link[end]
         for link in links
-        if "kind" in link and is_pole_link(function, LinkKind(link["kind"]))
+        if "kind" in link and is_pole_by_role(role, LinkKind(link["kind"]))
         for end in ("a", "b")
     }
 

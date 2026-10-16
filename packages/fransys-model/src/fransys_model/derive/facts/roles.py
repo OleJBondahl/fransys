@@ -13,11 +13,12 @@ from fransys_model.derive.facts.net_facts import net_class_of
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.enums import FunctionKind, LinkKind, LinkRest, PortRole
 from fransys_model.vocab.facets.plc import PlcChannelFacet
+from fransys_model.vocab.markings import is_pole_by_role
 from fransys_model.vocab.roles import (
     CONDUCTOR_ROLES,
-    FUNCTION_ROLES,
     LINK_ROLES,
     NET_CLASS_ROLES,
+    function_role_of,
 )
 from fransys_model.vocab.tables import (
     conductors,
@@ -36,12 +37,12 @@ lazy from fransys_model.vocab.roles_types import (
     LinkRole,
     NetClassRole,
 )
-lazy from fransys_model.vocab.templates import InternalLink, Part
+lazy from fransys_model.vocab.templates import InternalLink, Part, PortTemplate
 
 
 def _refined(model: Model, function: Function, channels: frozenset[Id[Any]]) -> FunctionRole:
     """The row of `function.kind`, refined by its template, its rating and its holder."""
-    role = FUNCTION_ROLES[function.kind]
+    role = function_role_of(function.kind)
     template = None if function.template is None else function_templates(model)[function.template]
     if template is not None and template.energy is not None:
         role = replace(role, energy=template.energy)
@@ -82,11 +83,10 @@ def link_role(model: Model, link: Id[InternalLink]) -> LinkRole:
     record = internal_links(model)[link]
     role = LINK_ROLES[record.kind]
     kind = function_templates(model)[port_templates(model)[record.a].function].kind
-    if kind is FunctionKind.PROTECTION and record.kind is LinkKind.CONDUCTIVE:
-        role = replace(role, pole=True)
+    role = replace(role, pole=is_pole_by_role(function_role_of(kind), record.kind))
     if record.kind is not LinkKind.SWITCHED:
         return role
-    return replace(role, rest=record.rest or FUNCTION_ROLES[kind].rest)
+    return replace(role, rest=record.rest or function_role_of(kind).rest)
 
 
 def link_rest(model: Model, link: Id[InternalLink]) -> LinkRest | None:
@@ -107,6 +107,16 @@ def net_class_role(model: Model, net: Id[Net]) -> NetClassRole:
 def port_role(model: Model, port: Id[Port]) -> PortRole:
     """The `PortRole` of `port`: the one reader of `Port.role`."""
     return ports(model)[port].role
+
+
+def is_pe_port(model: Model, port: Id[Port]) -> bool:
+    """Whether `port` has role PE: the one compare of `PortRole.PE` on a port."""
+    return port_role(model, port) is PortRole.PE
+
+
+def is_pe_pin(model: Model, template: Id[PortTemplate]) -> bool:
+    """Whether the port template `template` has role PE."""
+    return port_templates(model)[template].role is PortRole.PE
 
 
 def changeover_functions(model: Model) -> set[tuple[Id[Part], str]]:

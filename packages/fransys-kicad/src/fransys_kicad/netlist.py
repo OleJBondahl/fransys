@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 from fransys_model.derive import board_netlist, board_pins
 
 if TYPE_CHECKING:
-    from fransys_model.derive import NetlistPart, PinNet
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Item
+    from fransys_model.derive import ItemId, NetlistPart, PinNet
+    from fransys_model.kernel import Model
 
 # Every component timestamp is a `uuid5` of this namespace and the item's id, so one item always
 # gets one timestamp and KiCad keeps its footprint matched when the netlist is regenerated.
@@ -59,7 +58,7 @@ def _section(name: str, blocks: list[str]) -> str:
     return f"  ({name}\n" + "\n".join(blocks) + ")"
 
 
-def netlist(model: Model, board: Id[Item]) -> str:
+def netlist(model: Model, board: ItemId) -> str:
     """Write the KiCad 9.0 s-expression netlist of one board (`kicad-0001`), LF line ends.
 
     Timestamps are `uuid5` of the item id, so footprints stay matched. A comp-less node is

@@ -18,6 +18,7 @@ from fransys_layout.core.place_align import (
 )
 
 from . import align_fixtures as fx
+from .conftest import MARKER_BOX
 from .place_fixtures import row_group_three
 from .test_place_x import env_of
 
@@ -48,7 +49,7 @@ def test_band_ranks_align_across_columns() -> None:
 
 
 def test_band_align_off_gives_no_band() -> None:
-    env = env_of(fx.two_band_columns(), Options(band_align=False))
+    env = env_of(fx.two_band_columns(), Options(marker=MARKER_BOX, band_align=False))
     assert band_aligns(env) == ()
     assert page_aligns(env) == ()
 

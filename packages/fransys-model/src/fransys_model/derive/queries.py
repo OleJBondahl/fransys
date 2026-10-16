@@ -9,7 +9,13 @@ Each query lives in the module of its concern (`wiring`, `reports`, `structure`,
 
 from .black_box import drawing_set_is_replica_only, is_black_box_item
 from .bom import TOP_LEVEL, bom_lines
-from .connectors import connector_items, connector_rows, connector_rows_of, unit_connector_items
+from .connectors import (
+    connector_item,
+    connector_items,
+    connector_rows,
+    connector_rows_of,
+    unit_connector_items,
+)
 from .document_unit import document_unit
 from .harness import (
     cable_list_rows,
@@ -79,6 +85,7 @@ __all__ = [
     "cable_rows",
     "cable_title",
     "conductors_on_item",
+    "connector_item",
     "connector_items",
     "connector_rows",
     "connector_rows_of",

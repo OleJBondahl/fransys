@@ -24,8 +24,8 @@ from .place_fixtures import bundle_fan, card_with_coils, row_group_three
 from .test_place_x import env_of
 
 if TYPE_CHECKING:
-    from fransys_layout.core import Finding
     from fransys_layout.core.place_env import PageEnv
+    from fransys_layout.core.values import Finding
 
 
 def solved(

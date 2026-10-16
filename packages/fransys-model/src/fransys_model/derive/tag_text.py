@@ -19,9 +19,20 @@ lazy from fransys_model.derive.facts.roles import function_role
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
+__all__ = [
+    "external_note",
+    "is_device_terminal",
+    "item_tag_text",
+    "point_text",
+    "run_point_text",
+    "strip_tag_text",
+    "tag_text",
+    "unit_tag_text",
+]
+
 
 def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None) -> str:
-    """A component's tag on a drawing: its item designation only, "-Q11" (layout-0066).
+    """A component's tag on a drawing: its item designation only, "-Q11".
 
     The page states the location, unit and groups, so a tag never carries them, in a unit's
     own set (`unit`, unit-relative) and at top level alike. The one

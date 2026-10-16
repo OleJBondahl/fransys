@@ -6,10 +6,11 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import Column, End, PinRef
+from fransys_layout.core import PinRef
 from fransys_layout.core.route_counts import collinear, counts
 from fransys_layout.core.route_env import Jog, RouteEnv, z_wire
 from fransys_layout.core.route_wires import join_wires, lane_wires, nest_jogs
+from fransys_layout.core.values import Column, End
 
 from .chain_fixtures import facing_chain
 from .place_fixtures import card_with_coils

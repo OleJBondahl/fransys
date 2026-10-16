@@ -9,8 +9,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from fransys_layout.core import Options, place_pages
+from fransys_layout.core import Options
+from fransys_layout.core.place import place_pages
 
+from .conftest import MARKER_BOX
 from .cut_respell import (
     back_of,
     canon_placement,
@@ -28,7 +30,7 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import Placement, PlacementProblem
 
-OPTIONS = Options()
+OPTIONS = Options(marker=MARKER_BOX)
 
 
 def _wide_trunk(pl: Placement) -> bool:

@@ -19,11 +19,18 @@ from fransys_pdf import source
 from fransys_pdf._lists import bom_page
 from fransys_reports import bom_csv
 
-from fransys_model.derive import SheetKey, bom_lines, document_sheets_of, unit_release, units
+from fransys_model.derive import (
+    SheetKey,
+    bom_lines,
+    document_row,
+    document_sheets_of,
+    unit_release,
+    units,
+)
 from fransys_model.derive.drawing_text import label_text
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import Label, Outline, layout_of
-from fransys_model.vocab import Document, DocumentPreset, PageKind, documents
+from fransys_model.vocab import Document, DocumentPreset, PageKind
 
 _ORIGIN = Origin(
     file="tests/test_revision_print_form.py", line=1, note="a revision print-form test origin"
@@ -152,7 +159,7 @@ def test_the_parents_bom_unit_line_prints_2_1():
     assert line.revision not in {"2", "1", "01"}
 
     model, doc = _with_document(model, cabinet, remove=(PageKind.SCHEMATIC,))
-    text = bom_page(model, documents(model)[doc.id])
+    text = bom_page(model, document_row(model, doc.id))
     assert '"Revision"' in text
     assert 'text("2.1")' in text
     assert 'text("01")' not in text  # the padded form; a bare `2` or `1` is also a count cell

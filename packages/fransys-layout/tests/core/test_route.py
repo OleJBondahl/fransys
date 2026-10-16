@@ -7,10 +7,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from fransys_layout.core import Box, Options, Placed, PlacementProblem, Routes, Wire, route_pages
-from fransys_layout.core.route import route_page
+from fransys_layout.core import Box, Options, PlacementProblem
+from fransys_layout.core.outputs import Placed, Routes, Wire
+from fransys_layout.core.route import route_page, route_pages
 from fransys_layout.core.route_counts import collinear, demand
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import elem
 from .cycle_fixtures import ring_problem
 from .pipeline_fixtures import cut_of, placed_of, routed_of
@@ -143,7 +145,9 @@ def ripple(rounds: int) -> RouteEnv:
         "h0": (120, 120, "E"),
         "h1": (264, 120, "W"),
     }
-    opts = replace(Options(), crossing_penalty=100, bend_penalty=1, reroute_rounds=rounds)
+    opts = replace(
+        Options(marker=MARKER_BOX), crossing_penalty=100, bend_penalty=1, reroute_rounds=rounds
+    )
     return link_env(pins, {"v": ("v0", "v1"), "h": ("h0", "h1")}, opts)
 
 
@@ -157,5 +161,5 @@ def test_route_pages_is_the_public_entry_and_matches_the_stage_functions() -> No
     prob = link_across_box()
     cut = cut_of(prob)
     placement = placed_of(prob)
-    routes = route_pages(placement, cut, prob, Options())
+    routes = route_pages(placement, cut, prob, Options(marker=MARKER_BOX))
     assert routes == routed_of(prob)

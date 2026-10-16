@@ -16,9 +16,8 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import SheetBackground, SheetKey
+    from fransys_model.derive import DocumentRow, SheetBackground, SheetKey
     from fransys_model.kernel import Model
-    from fransys_model.vocab import Document
 
 PAGE_COUNTER_LABEL = "fransys-page-counter"
 """The label on the title block's document-counter value, for `typst query`."""
@@ -54,13 +53,13 @@ def sheet_of(sheets: Mapping[SheetKey, SheetBackground], key: SheetKey) -> Sheet
 
 
 def page_background(
-    model: Model, record: Document, sheets: Mapping[SheetKey, SheetBackground], key: SheetKey
+    model: Model, record: DocumentRow, sheets: Mapping[SheetKey, SheetBackground], key: SheetKey
 ) -> str:
     """The `#page` background of page `key`: the sheet SVG, the page counter and the logo."""
     sheet = sheet_of(sheets, key)
     parts = [f'#place(top+left, image(bytes({literal(sheet.svg)}), format: "svg"))']
     if sheet.counter_box is not None:
-        size = font_mm(sizes_of(model, record).body)
+        size = font_mm(sizes_of(model, record.id).body)
         value = f"text(size: {size}, {_PAGE_COUNTER})"
         parts.append(_place(sheet.counter_box, f"[#{value}<{PAGE_COUNTER_LABEL}>]"))
     if sheet.logo_box is not None and record.logo is not None:

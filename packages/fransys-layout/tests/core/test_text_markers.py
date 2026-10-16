@@ -2,23 +2,28 @@
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
 
-from fransys_layout.core import Fan, Options, PinRef, Ref, RefEnd, Size, Trunk, place_pages
+from fransys_layout.core import Options, PinRef, Size
+from fransys_layout.core.geometry import marker_box, marker_box_at, overlaps
+from fransys_layout.core.outputs import Marker, Trunk
+from fransys_layout.core.place import place_pages
 from fransys_layout.core.text_cells import cell_of
-from fransys_layout.core.text_ends import MarkEnv, end_stand, hub_xy, pin_stand
-from fransys_layout.core.text_markers import mark_pages, mark_ref
-from fransys_layout.core.values import Box, RefKind
+from fransys_layout.core.text_ends import MarkEnv, Stand, end_stand, hub_xy, pin_stand
+from fransys_layout.core.text_markers import _cleared, mark_pages, stagger, stand_ref
+from fransys_layout.core.values import Box, Fan, Ref, RefEnd, RefKind
 
 from . import pipeline_fixtures
 from .conftest import MARKER_BOX
-from .text_fixtures import KIND_OF, PLANTS, marker_counts, plan_counts
+from .text_fixtures import KIND_OF, PLANTS, marker_counts, plan_counts, star_two_tied
 
 if TYPE_CHECKING:
-    from fransys_layout.core import CutResult, Marker, Orientation, Placement
+    from fransys_layout.core import Orientation, Placement
+    from fransys_layout.core.values import CutResult
 
 OPTIONS = Options(marker=MARKER_BOX)
 PIN = PinRef("S", "p")
@@ -105,8 +110,11 @@ def test_an_arrow_stands_at_the_right_end_of_the_first_row_and_the_left_end_of_t
     ref = Ref("f", RefKind.ARROW, (RefEnd(1, "c1", PIN, 0), RefEnd(1, "c2", PIN, 1)))
     env = _fan_env()
     first, second = (end_stand(env, ref, e, i) for i, e in enumerate(ref.ends))
-    assert (first.x, first.y, first.end) == (500, 100, PIN)
-    assert (second.x, second.y, second.end) == (60, 300, PIN)
+    assert (first.orient, second.orient) == ("R0", "R180")  # east of x1, west of x0
+    one = marker_box_at(first.x, first.y, OPTIONS, first.orient)
+    two = marker_box_at(second.x, second.y, OPTIONS, second.orient)
+    assert (one.x, one.y + one.h // 2, first.end) == (500, 100, PIN)  # near edge at x1
+    assert (two.x + two.w, two.y + two.h // 2, second.end) == (60, 300, PIN)  # near edge at x0
 
 
 def test_an_arrow_in_a_row_with_no_trunk_of_its_fan_raises() -> None:
@@ -121,16 +129,12 @@ def test_an_arrow_on_a_page_where_its_fan_has_no_trunk_raises() -> None:
         end_stand(_fan_env(), ref, ref.ends[0], 0)
 
 
-def test_a_copy_stands_at_the_start_of_its_fans_first_trunk_on_its_page() -> None:
+def test_a_copy_follows_the_pin_rule_like_a_tag() -> None:
     ref = Ref("fb", RefKind.COPY, (RefEnd(1, "c1", PIN),))
     stand = end_stand(_fan_env(), ref, ref.ends[0], 0)
-    assert (stand.x, stand.y, stand.end) == (40, 100, PIN)
-
-
-def test_a_copy_of_a_net_in_no_fan_raises() -> None:
-    ref = Ref("zz", RefKind.COPY, (RefEnd(1, "c1", PIN),))
-    with pytest.raises(ValueError, match=r"net zz \(copy\) belongs to no fan"):
-        end_stand(_fan_env(), ref, ref.ends[0], 0)
+    want = pin_stand(_fan_env(), PIN, 1, ref)
+    assert (stand.x, stand.y, stand.end, stand.orient) == (want.x, want.y, PIN, want.orient)
+    assert marker_box_at(stand.x, stand.y, OPTIONS, stand.orient).x == 100  # near edge at the pin
 
 
 # the planted problems, through the stages
@@ -230,23 +234,23 @@ def test_an_arrow_end_with_no_row_raises_naming_the_net_and_page() -> None:
         end_stand(_fan_env(), ref, ref.ends[0], 0)
 
 
-def test_an_arrow_end_with_no_row_is_refused_by_mark_ref_with_the_fix() -> None:
+def test_an_arrow_end_with_no_row_is_refused_by_stand_ref_with_the_fix() -> None:
     ref = Ref("f", RefKind.ARROW, (RefEnd(1, "c1", PIN, None),))
     with pytest.raises(
         ValueError,
         match=r"net f \(arrow\) page 1: the end names no row; stage 4 fills RefEnd.row and pin",
     ):
-        mark_ref(_fan_env(), ref)
+        stand_ref(_fan_env(), ref)
 
 
-def test_a_stub_end_with_no_pin_is_refused_by_mark_ref_with_the_fix() -> None:
+def test_a_stub_end_with_no_pin_is_refused_by_stand_ref_with_the_fix() -> None:
     ref = Ref("n", RefKind.STUB, (RefEnd(1, None, None),))
     with pytest.raises(ValueError, match=r"names no pin; stage 4 fills RefEnd.row and pin"):
-        mark_ref(_env("E", "R0"), ref)
+        stand_ref(_env("E", "R0"), ref)
 
 
 def test_a_stub_end_with_no_row_but_a_pin_is_not_refused() -> None:
-    markers = mark_ref(_env("E", "R0"), STUB)
+    markers = stand_ref(_env("E", "R0"), STUB)
     assert len(markers) == 1
 
 
@@ -278,3 +282,98 @@ def test_a_copy_whose_hub_has_no_placed_pin_raises_naming_the_net() -> None:
         r"the placement must place a pin of the fan's hub",
     ):
         hub_xy(replace(_hub_env(1), pins={}), ref, ref.ends[0])
+
+
+# the stagger (I8.7) and the cyclic far end (I8.4)
+
+
+def _box_of(m: Marker):
+    return marker_box(m, OPTIONS)
+
+
+def test_two_spilled_pins_16_g_apart_stand_on_two_levels_and_do_not_overlap(built) -> None:
+    _, _, markers = built["spilled_pair"]
+    pair = [m for m in markers if m.end.sym == "A1"]
+    assert [m.end.pin for m in pair] == ["p18", "p19"]
+    first, second = pair
+    assert first.x + 16 == second.x
+    assert abs(second.y - first.y) == _box_of(first).h  # one box further out
+    assert not overlaps(_box_of(first), _box_of(second))
+
+
+@pytest.mark.parametrize("name", PLANTS)
+def test_no_two_markers_of_a_page_overlap(built, name: str) -> None:
+    markers = built[name][2]
+    for i, a in enumerate(markers):
+        for b in markers[i + 1 :]:
+            assert a.page != b.page or not overlaps(_box_of(a), _box_of(b))
+
+
+def test_the_spilled_pair_overlaps_without_the_levels() -> None:
+    pairs = stand_ref(_pair_env(), _pair_ref())
+    plain = [m for m, _ in pairs]
+    assert overlaps(_box_of(plain[0]), _box_of(plain[1]))
+    staggered = stagger(pairs, OPTIONS)
+    assert not overlaps(_box_of(staggered[0]), _box_of(staggered[1]))
+
+
+def _pair_env() -> MarkEnv:
+    pins = {("S", "p"): (1, 100, 200, "R0"), ("S", "q"): (1, 108, 200, "R0")}
+    sides = {("S", "p"): "N", ("S", "q"): "N"}
+    return replace(_env("N", "R0"), pins=pins, sides=sides)
+
+
+def _pair_ref() -> Ref:
+    return Ref(
+        "n", RefKind.TAG, (RefEnd(1, "c", PinRef("S", "p")), RefEnd(1, "c", PinRef("S", "q")))
+    )
+
+
+def test_a_three_end_star_names_the_next_end_cyclically(built) -> None:
+    markers = built["star_three"][2]
+    area = Size(1312, 854)
+    assert len(markers) == 3
+    for i, m in enumerate(markers):
+        nxt = markers[(i + 1) % 3]
+        assert m.cell == cell_of(nxt.x, nxt.y, area, OPTIONS.cells)
+    assert len({m.cell for m in markers}) == 3  # each end named once
+
+
+def test_a_one_end_reference_names_its_own_cell() -> None:
+    ((m, _),) = stand_ref(_env("E", "R0"), STUB)
+    assert m.cell == cell_of(m.x, m.y, Size(1312, 854), OPTIONS.cells)
+
+
+def test_an_arrow_and_a_copy_of_two_sides_that_meet_are_parted() -> None:
+    arrow = Marker("f", RefKind.ARROW, 1, "1A", 120, 500, PIN, "R180")  # box west of x 120
+    copy = Marker("f", RefKind.COPY, 1, "1A", 96, 500, PIN)  # box east of x 96
+    pairs = [(arrow, Stand(120, 500, PIN, "R180")), (copy, Stand(96, 500, PIN, "R0"))]
+    assert overlaps(_box_of(arrow), _box_of(copy))
+    got = stagger(pairs, OPTIONS)
+    assert not overlaps(_box_of(got[0]), _box_of(got[1]))
+
+
+def test_markers_that_cannot_be_parted_in_the_rounds_raise_and_name_the_fix() -> None:
+    """Six west boxes 8 apart make a wall the later east box cannot clear in its seven rounds."""
+    wall = [
+        Marker(f"w{k}", RefKind.ARROW, 3, "1A", 200 + 56 * k, 500, PIN, "R180") for k in range(6)
+    ]
+    late = Marker("late", RefKind.COPY, 3, "1A", 120, 500, PIN)
+    pairs = [(m, Stand(m.x, m.y, PIN, "R180")) for m in wall] + [(late, Stand(120, 500, PIN, "R0"))]
+    assert not any(overlaps(_box_of(a), _box_of(b)) for a, b in itertools.pairwise(wall))
+    with pytest.raises(
+        ValueError, match=r"marks: page 3: markers w\d at \(\d+, 500\) and late at \(\d+, 500\)"
+    ) as e:
+        _cleared([m for m, _ in pairs], [s for _, s in pairs], OPTIONS)
+    assert "still overlap after 7 rounds" in str(e.value)
+    assert "give the page more room beside them or a smaller Options.marker" in str(e.value)
+
+
+def test_a_two_end_star_tied_in_page_row_and_column_is_ordered_by_the_pin_id() -> None:
+    pins = {("S", "p2"): (1, 100, 200, "R0"), ("S", "p10"): (1, 300, 200, "R0")}
+    env = replace(_env("E", "R0"), pins=pins, sides={("S", "p2"): "E", ("S", "p10"): "E"})
+    pairs = stand_ref(env, star_two_tied())
+    assert [m.end.pin for m, _ in pairs] == ["p2", "p10"]  # natural order, not input or text order
+    first, second = (m for m, _ in pairs)
+    assert first.cell == cell_of(second.x, second.y, Size(1312, 854), OPTIONS.cells)
+    assert second.cell == cell_of(first.x, first.y, Size(1312, 854), OPTIONS.cells)

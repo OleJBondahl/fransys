@@ -45,6 +45,7 @@ from fransys_model.derive import (
     check_side_hints,
     document_sheets_of,
     document_stems,
+    errors_of,
     export_set,
     export_set_name,
     gone_or_moved,
@@ -54,6 +55,7 @@ from fransys_model.derive import (
     number,
     numbering_pins,
     reference_fragment,
+    refuses,
     release_identity,
     release_names,
     resolve_wire_rows,
@@ -202,10 +204,6 @@ def lint(*libraries: str) -> tuple[Finding, ...]:
     return tuple(findings)
 
 
-def _has_error(findings: tuple[Finding, ...]) -> bool:
-    return any(finding.severity is Severity.ERROR for finding in findings)
-
-
 def _has_document(model: Model) -> bool:
     return has_documents(model)
 
@@ -264,7 +262,7 @@ def build(*drafts: Draft | _args.Design, releases: Path | None = None) -> BuildR
     found = timer.run(
         "validators", _validated, model, (*row_findings, *plc_findings, *number_findings)
     )
-    if _has_error(found) or not _has_document(model):
+    if refuses(found) or not _has_document(model):
         return BuildResult(
             model=model, findings=_by_code_in_reader_order(found, model), times=timer.times()
         )
@@ -376,7 +374,7 @@ def _svgs(model: Model) -> dict[str, str]:
 
 def _result_svgs(result: BuildResult) -> dict[str, str]:
     """The drawing of a laid-out `result` (no `ERROR`, a `Document`); `{}` otherwise."""
-    laid_out = not _has_error(result.findings) and _has_document(result.model)
+    laid_out = not refuses(result.findings) and _has_document(result.model)
     return _svgs(result.model) if laid_out else {}
 
 
@@ -390,9 +388,9 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
     raw = list(result.findings)
     for board in _subjects.boards(model):
         raw.extend(kicad_check(model, board))
-    if not _has_error(result.findings):
+    if not refuses(result.findings):
         raw.extend(_overview(model)[1])
-    if not _has_error(result.findings) and _has_document(model):
+    if not refuses(result.findings) and _has_document(model):
         raw.extend(fransys_pdf.check(model, svgs, result.findings))
         raw.extend(fransys_render.sheet_check(model, document_sheets_of(model)))
         if needs_schematic_layout(model):
@@ -666,7 +664,7 @@ def write(
         _write_intermediates(model, svgs, intermediates)
     findings = _resolved(raw := _raw_findings(result, svgs), model)
     _clean_stale_exports(out_dir, model, resolved_unit)
-    errors = tuple(finding for finding in findings if finding.severity is Severity.ERROR)
+    errors = errors_of(findings)
     if errors:
         raise BuildErrors(errors)
     timer = Timer(result.times.steps)
@@ -709,7 +707,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
     l4 = name_findings(model, _l4_findings(model, resolved_unit, into))
     raw_findings = _revision_pins.with_warnings(_raw_findings(result, svgs), l4)
     findings = _resolved(raw_findings, model)
-    errors = tuple(finding for finding in (*findings, *l4) if finding.severity is Severity.ERROR)
+    errors = errors_of((*findings, *l4))
     if errors:
         raise BuildErrors(errors)
 

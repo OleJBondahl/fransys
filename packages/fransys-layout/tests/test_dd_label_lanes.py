@@ -11,6 +11,7 @@ fits nowhere and sits at its slot's home) is left out of the `reserved` boxes ha
 so a wire crossing it is a lint warning, never a ROUTE_FAILED error.
 """
 
+import importlib
 from typing import TYPE_CHECKING
 
 import pytest
@@ -26,7 +27,6 @@ from fransys_layout.stages import (
     place_slot_labels,
 )
 from fransys_layout.stages.labels import SlotFrame
-from fransys_model.derive import tag_text
 from fransys_model.derive.designation import terminal_designation
 from fransys_model.vocab.tables import functions
 
@@ -159,7 +159,7 @@ def test_a_three_phase_feed_through_a_strip_routes_all_three_phases(
     this test keeps the guard exercised with a wide text). All three wires are drawn, whatever the
     strip is called."""
     monkeypatch.setattr(
-        tag_text,
+        importlib.import_module("fransys_model.derive.tag_text"),
         "run_point_text",
         lambda model, function: terminal_designation(model, functions(model)[function].item),
     )

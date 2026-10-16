@@ -5,14 +5,12 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.derive import board_netlist, board_pins, item_label, pin_text
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import items
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from fransys_model.derive import BoardNetlist, NetlistPin, PinNet
+    from fransys_model.derive import BoardNetlist, ItemId, NetlistPin, PinNet
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Item
 
 PART_WITHOUT_FOOTPRINT: Final[str] = "PART_WITHOUT_FOOTPRINT"
 NET_SINGLE_PIN: Final[str] = "NET_SINGLE_PIN"
@@ -41,11 +39,9 @@ def _single_pin(nets: tuple[PinNet, ...]) -> list[Finding]:
 
 
 def _without_footprint(model: Model, rows: BoardNetlist) -> list[Finding]:
-    all_items = items(model)
     found = []
     for item_id in rows.without_footprint:
-        item = all_items[item_id]
-        message = f"part {item_label(model, item)} has no footprint, so the netlist omits it"
+        message = f"part {item_label(model, item_id)} has no footprint, so the netlist omits it"
         found.append(_finding(PART_WITHOUT_FOOTPRINT, Severity.WARNING, (item_id,), message))
     return found
 
@@ -73,7 +69,7 @@ def _without_component(rows: BoardNetlist, nets: tuple[PinNet, ...]) -> list[Fin
 
 
 def _reference_duplicate(rows: BoardNetlist) -> list[Finding]:
-    by_reference: defaultdict[str, list[Id[Item]]] = defaultdict(list)
+    by_reference: defaultdict[str, list[ItemId]] = defaultdict(list)
     for part in rows.parts:
         by_reference[part.designation].append(part.item)
     return [
@@ -129,7 +125,7 @@ def _unconnected_pin(unconnected: tuple[NetlistPin, ...]) -> list[Finding]:
     ]
 
 
-def check(model: Model, board: Id[Item]) -> tuple[Finding, ...]:
+def check(model: Model, board: ItemId) -> tuple[Finding, ...]:
     """Run KiCad's import-time rule checks on one board; findings sorted by code, subjects, text.
 
     The rules read what `netlist` writes and repeat nothing the model's validators report. The

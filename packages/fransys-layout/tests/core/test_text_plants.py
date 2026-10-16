@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from fransys_layout.core import Options, PlacementProblem, RefKind
+from fransys_layout.core import Options, PlacementProblem
+from fransys_layout.core.values import RefKind
 
 from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, net, side

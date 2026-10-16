@@ -18,6 +18,7 @@ from .baseline_codec_keys import (
     key_fields,
     key_kwargs,
 )
+from .baseline_item_order import key_ordered
 from .baseline_rules import KEYED_LISTING_VERSION
 from .rows_baseline import (
     BaselineBoundary,
@@ -340,6 +341,8 @@ def differing_sections(a: Listing, b: Listing) -> tuple[str, ...]:
     `parent` is not compared. Returns `()` when the listings are equal.
     """
     a, b = without_parent(a), without_parent(b)
+    a = dataclasses.replace(a, items=key_ordered(a.items))
+    b = dataclasses.replace(b, items=key_ordered(b.items))
     return tuple(
         field.name
         for field in dataclasses.fields(Listing)

@@ -10,8 +10,7 @@ from typing import TYPE_CHECKING
 
 from symdef import Orientation as LibraryOrientation
 from symdef import UnknownSymbolError as LibraryUnknownSymbolError
-from symdef import body_box, keepout_box, orient, repeat, slot_box
-from symdef.model import nodes_of
+from symdef import body_box, keepout_box, nodes_of, orient, repeat, slot_box
 
 from electrical_symbols import (
     GENERIC_BOX_KEY,

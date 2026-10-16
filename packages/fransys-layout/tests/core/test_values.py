@@ -259,6 +259,7 @@ def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
     o = Options()
     assert o.open_stub == 0
     assert o.box_columns is True
+    assert o.wrap_wide_fans is True
     assert o.cells == (8, 6)
     assert o.wire_label_sides == ("N", "S")
     assert o.marker is None  # layout-0305: symdef data, passed in, never typed in the core

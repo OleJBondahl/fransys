@@ -9,8 +9,10 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 
-from fransys_layout.core import Box, CutResult, Hints, Options, Sym
+from fransys_layout.core import Box, Hints, Options, Sym
+lazy from fransys_layout.core.values import CutResult
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import box_sym, cut_of, elem, net, side
 from .pack_fixtures import card
 
@@ -75,7 +77,12 @@ def test_a_page_cut_through_a_two_pin_net_is_not_taken_when_a_row_cut_holds_it()
 
 def test_the_same_page_cut_wins_when_the_pair_violation_costs_nothing() -> None:
     """Can fail: without the P2 weight the cut between B and C balances the two pages."""
-    result = cut_of(pair_case(200), PAIR_NETS, hints=PAIR_ORDER, options=Options(w_violation=0.0))
+    result = cut_of(
+        pair_case(200),
+        PAIR_NETS,
+        hints=PAIR_ORDER,
+        options=Options(marker=MARKER_BOX, w_violation=0.0),
+    )
     assert rows_of(result) == [[("c:a0", "c:b")], [("c:c", "c:d0")]]
 
 
@@ -111,7 +118,9 @@ def test_a_page_under_the_minimum_fill_is_refused_unless_it_is_the_last() -> Non
         r"the cut kept the block whole; lower min_fill or split the unit",
         text,
     ), text
-    relaxed = cut_of(fill_syms(), FILL_NETS, hints=a_first, options=Options(min_fill=0.0))
+    relaxed = cut_of(
+        fill_syms(), FILL_NETS, hints=a_first, options=Options(marker=MARKER_BOX, min_fill=0.0)
+    )
     assert relaxed.spec.findings == ()  # can fail: only min_fill differs
     assert rows_of(relaxed) == [[("c:a0",)], [("c:b0",)]]
     a_last = cut_of(fill_syms(), FILL_NETS, hints=Hints(group_order=("G2", "G1")))
@@ -162,7 +171,8 @@ def test_neighbours_whose_texts_stagger_pack_at_the_narrow_pitch_but_the_row_cou
     ]
     nets = [net(f"n{i:02d}", f"a{i:02d}.s", f"b{i:02d}.n") for i in range(20)]
     staggered, plain = (
-        cut_of(syms, nets, options=Options(tag_stagger=on)).spec.pages for on in (True, False)
+        cut_of(syms, nets, options=Options(marker=MARKER_BOX, tag_stagger=on)).spec.pages
+        for on in (True, False)
     )
     assert [len(row.columns) for row in staggered[0].rows] == [14, 6]
     assert [len(row.columns) for row in plain[0].rows] == [11, 9]
@@ -191,7 +201,7 @@ def test_a_row_after_the_first_holds_only_short_columns() -> None:
     """L7: y is 350 G tall (not short: 0.4 of the page is 329 G), so it cannot be the second row."""
     syms = [side("x", 700, 300), side("y", 700, 350)]
     nets = [net("m", "x.e", "y.e")]
-    apart = cut_of(syms, nets, options=Options(min_fill=0.0))
+    apart = cut_of(syms, nets, options=Options(marker=MARKER_BOX, min_fill=0.0))
     assert rows_of(apart) == [[("c:x",)], [("c:y",)]]
-    short = cut_of(syms, nets, options=Options(min_fill=0.0, short_height=0.5))
+    short = cut_of(syms, nets, options=Options(marker=MARKER_BOX, min_fill=0.0, short_height=0.5))
     assert rows_of(short) == [[("c:x",), ("c:y",)]]  # y is short at 0.5: it takes a second row

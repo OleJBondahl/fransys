@@ -9,9 +9,11 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import pytest
 
-from fransys_layout.core import Options, place_pages, route_pages
-from fransys_layout.core.route import route_page
+from fransys_layout.core import Options
+from fransys_layout.core.place import place_pages
+from fransys_layout.core.route import route_page, route_pages
 
+from .conftest import MARKER_BOX
 from .cut_respell import back_of, id_sets, make_maps, respell_cut, respell_problem
 from .pipeline_fixtures import cut_of
 from .place_fixtures import two_edge_card
@@ -21,9 +23,11 @@ from .test_cut_rename import SPELLINGS, card_that_wraps
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from fransys_layout.core import CutResult, Placement, PlacementProblem, Routes
+    from fransys_layout.core import Placement, PlacementProblem
+    from fransys_layout.core.outputs import Routes
+    from fransys_layout.core.values import CutResult
 
-OPTIONS = Options()
+OPTIONS = Options(marker=MARKER_BOX)
 STEP = OPTIONS.wiring_grid
 
 

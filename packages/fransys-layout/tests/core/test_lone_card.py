@@ -11,10 +11,12 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import Hints, Options, cut_pages, order_blocks
+from fransys_layout.core import Hints, Options, order_blocks
+from fransys_layout.core.cut import cut_pages
 from fransys_layout.core.cut_guard import unplaced
 
 from .blocks_fixtures import box_sym
+from .conftest import MARKER_BOX
 from .flow_builders import elem, free, net, problem
 from .pipeline_fixtures import blocks_of, cut_of, flow_of, placed_of
 from .test_box_blocks import chain_shape
@@ -49,7 +51,7 @@ def two_fans(ends_a: int, ends_b: int, *, a_first: bool = True) -> PlacementProb
 
 def _seated(prob: PlacementProblem) -> list[str]:
     """Stage 3's block ids for the problem's one unit, in order."""
-    opts = Options()
+    opts = Options(marker=MARKER_BOX)
     lists = order_blocks(blocks_of(prob, opts), flow_of(prob, opts), opts)
     return [b.id for bl in lists for b in bl.blocks]
 
@@ -109,7 +111,9 @@ def test_the_guard_names_a_block_in_no_row() -> None:
     prob = two_fans(1, 2)
     flow = flow_of(prob)
     lists = blocks_of(prob)  # stage 3 not run: the card keeps seat "none"
-    found = unplaced(lists, cut_pages(lists, flow, prob, Options()).spec.pages, flow)
+    found = unplaced(
+        lists, cut_pages(lists, flow, prob, Options(marker=MARKER_BOX)).spec.pages, flow
+    )
     assert [(f.code, f.subject) for f in found] == [("BLOCK_NOT_PLACED", "card:K")]
     assert "stage 4" in found[0].text
 

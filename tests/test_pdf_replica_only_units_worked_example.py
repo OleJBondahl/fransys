@@ -16,7 +16,7 @@ import fransys_parts
 from _model_build_cover import layout_trigger_document
 from fransys_el import REF_TINTS
 
-from fransys_model.derive import document_sheets_of
+from fransys_model.derive import document_row, document_sheets_of
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
@@ -119,9 +119,8 @@ def test_the_worked_examples_top_level_sets_draw_nothing_and_report_nothing():
     set is replica-only, no `DRAWING_SET_REPLICA_ONLY` info is given and no document errs."""
     model, c1_id, c2_id = _build()
     model, docs = _with_documents(model, c1_id, c2_id)
-    records = documents(model)
     for doc in docs:
-        record = records[doc.id]
+        record = document_row(model, doc.id)
         assert schematic_pages(model, record, (PageKind.SCHEMATIC,)) == ()
         assert replica_only_sets(model, record, (PageKind.SCHEMATIC,)) == ()
     codes = [f.code for f in check(model, {})]
@@ -137,8 +136,7 @@ def test_a_real_rewired_boundary_draws_its_set():
     """
     model, c1_id, c2_id = _build(extra_unitless_neighbor=True)
     model, docs = _with_documents(model, c1_id, c2_id)
-    records = documents(model)
-    record_c1, record_c2 = (records[doc.id] for doc in docs)
+    record_c1, record_c2 = (document_row(model, doc.id) for doc in docs)
     assert len(schematic_pages(model, record_c1, (PageKind.SCHEMATIC,))) >= 1
     assert replica_only_sets(model, record_c1, (PageKind.SCHEMATIC,)) == ()
     assert schematic_pages(model, record_c2, (PageKind.SCHEMATIC,)) == ()
@@ -216,14 +214,13 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
         unit=io_unit_id,
     )
     model = evolve(model, put=[io_doc, cabinet_doc, io_second_root], origin=_ORIGIN)
-    records = documents(model)
 
     # The real end-to-end proof: building the unit-subject PCB_SCHEMATIC document's source
     # does not raise (the actual pre-fix crash), and its CONNECTOR_LIST holds exactly the
     # io-board unit's own board, nothing recursed in from anywhere else.
     io_text = source(model, io_doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
     assert io_text.count("#heading(level: 2,") == _IO_BOARD_COUNT
-    assert len(_connector_rows_for_page(model, records[io_doc.id])) == _IO_BOARD_COUNT
+    assert len(_connector_rows_for_page(model, document_row(model, io_doc.id))) == _IO_BOARD_COUNT
 
     # The cabinet unit's own document: its TERMINAL_LIST covers its own strip (X2), but its
     # CONNECTOR_LIST is empty -- the board belongs to the nested `demo-io-board` unit, and
@@ -237,8 +234,8 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
     assert cabinet_text.count("#heading(level: 2,") == _CABINET_OWN_STRIP_COUNT + 1
     assert '#heading(level: 2, text("-WH1-P1"))' in cabinet_text
     assert "X2" in cabinet_text
-    cabinet_record = records[cabinet_doc.id]
-    assert len(document_scope(model, cabinet_record).strips) == _CABINET_OWN_STRIP_COUNT
+    cabinet_record = document_row(model, cabinet_doc.id)
+    assert len(document_scope(model, cabinet_record.id).strips) == _CABINET_OWN_STRIP_COUNT
     (own_connector,) = _connector_rows_for_page(model, cabinet_record)
     assert own_connector.designation == "-WH1-P1"
 
@@ -395,7 +392,7 @@ def test_the_cabinet_units_own_bom_holds_the_board_line_and_no_relay():
         notes=None,
     )
     model = evolve(model, put=[doc], origin=_ORIGIN)
-    record = documents(model)[doc.id]
+    record = document_row(model, doc.id)
     text = bom_page(model, record)
     assert "demo-io-board" in text
     assert "DEMO-RLY-2CO-24" not in text
@@ -426,7 +423,7 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
         notes=None,
     )
     model = evolve(model, put=[io_doc], origin=_ORIGIN)
-    record = documents(model)[io_doc.id]
+    record = document_row(model, io_doc.id)
 
     pages_found = schematic_pages(model, record, (PageKind.SCHEMATIC,))
     assert len(pages_found) >= 1
@@ -441,7 +438,7 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
     coil_fn = next(
         f for f in functions_table(model).values() if f.item == k1_item and f.key[-1] == "coil"
     )
-    page_ids = {page.id for page in pages_found}
+    page_ids = set(pages_found)
     placed_functions = {
         placement.function
         for placement in layout_of_model(model, SymbolPlacement).values()

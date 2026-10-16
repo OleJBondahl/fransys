@@ -12,7 +12,7 @@ from fransys_model.derive.facts.units import item_chain
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.enums import FunctionKind, OperatedBy
-from fransys_model.vocab.roles import FUNCTION_ROLES
+from fransys_model.vocab.roles import function_role_of
 from fransys_model.vocab.tables import functions, items, parts
 lazy from fransys_model.vocab.core import Function, Item
 
@@ -74,7 +74,7 @@ def is_contact_block(model: Model, item: Id[Item], *, held_switches: bool = True
     own = build_indexes(model).functions_by_item.get(item, ())
     if not own or item in items_with_a_function_below(model):
         return False
-    roles = [FUNCTION_ROLES[functions(model)[f].kind] for f in own]
+    roles = [function_role_of(functions(model)[f].kind) for f in own]
     if all(r.plain_contact for r in roles):
         return True
     return (

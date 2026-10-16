@@ -29,7 +29,6 @@ from fransys_render import pages as render_pages
 from fransys_layout.engines import lay_out_schematic
 from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.derive import connector_box_lines, page_title, unit_release
-from fransys_model.derive import tag_text as tag_text_module
 from fransys_model.derive.designation import (
     item_designation,
     own_designation_or_none,
@@ -455,7 +454,7 @@ def test_the_full_form_in_a_three_phase_row_overlaps_no_text_and_still_collides(
     # UNDO: stages/texts/candidates.py: `_ALONG = (0,)` (a tag at its home or its mirror only):
     #     the row's point texts overlap again (TEXT_OVERLAP)
     monkeypatch.setattr(
-        tag_text_module,
+        importlib.import_module("fransys_model.derive.tag_text"),
         "run_point_text",
         lambda model, function: terminal_designation(model, functions(model)[function].item),
     )
@@ -475,7 +474,7 @@ def test_the_readability_report_counts_the_wire_over_label_findings_of_each_page
     would prove nothing.
     """
     monkeypatch.setattr(
-        tag_text_module,
+        importlib.import_module("fransys_model.derive.tag_text"),
         "run_point_text",
         lambda model, function: terminal_designation(model, functions(model)[function].item),
     )

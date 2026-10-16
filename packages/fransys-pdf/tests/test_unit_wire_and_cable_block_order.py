@@ -38,7 +38,7 @@ def test_the_cable_block_comes_before_the_wire_only_block(tmp_path: Any) -> None
     ).model
     ((_, record),) = documents(model).items()
     pages = (PageKind.HARNESS_DRAWING,)
-    blocks = cable_blocks(model, record, harness_cables_for(model, record, pages))
+    blocks = cable_blocks(model, record.id, harness_cables_for(model, record.id, pages))
     by_key = {it.key[-1]: i for i, it in items(model).items()}
     unit = next(u for u in {it.unit for it in items(model).values()} if u is not None)
     expected = [cable_block_key(unit, by_key["Z9"]), cable_block_key(unit, by_key["A1"])]
@@ -67,7 +67,7 @@ def test_wire_only_blocks_print_in_natural_designation_order(tmp_path: Any) -> N
     ).model
     ((_, record),) = documents(model).items()
     pages = (PageKind.HARNESS_DRAWING,)
-    blocks = cable_blocks(model, record, harness_cables_for(model, record, pages))
+    blocks = cable_blocks(model, record.id, harness_cables_for(model, record.id, pages))
     by_key = {it.key[-1]: i for i, it in items(model).items()}
     unit = next(u for u in {it.unit for it in items(model).values()} if u is not None)
     expected = [cable_block_key(unit, by_key[tag]) for tag in ("W1", "W2", "W10")]

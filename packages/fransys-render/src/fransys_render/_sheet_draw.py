@@ -24,7 +24,7 @@ from ._symbols import symbol_body
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from symdef.model import Symbol
+    from symdef import Symbol
 
     from electrical_symbols import TitleBlock
     from fransys_model.derive import SheetFrame, Sizes, TitleBlockStrings

@@ -1,6 +1,6 @@
 """The role tables: one row per kind, as data (M2, M3; EL-2a, model-0288).
 
-`FUNCTION_ROLES[kind]` is a plain lookup: no default row and no `.get`. A kind without a row
+`function_role_of(kind)` is a plain lookup: no default row and no `.get`. A kind without a row
 fails at import (`complete`). Each row's comment names the branch it reproduces.
 """
 
@@ -67,7 +67,16 @@ _FUNCTION_ROWS: frozendict[FunctionKind, FunctionRole] = frozendict(
         _F.BAR: FunctionRole(bar=True),
     }
 )
-FUNCTION_ROLES = complete(_FUNCTION_ROWS, FunctionKind)
+_FUNCTION_ROLES = complete(_FUNCTION_ROWS, FunctionKind)
+
+
+def function_role_of(kind: FunctionKind) -> FunctionRole:
+    """The role row of a function kind: the one protection and contact fact per kind (model-0303).
+
+    Example: `function_role_of(FunctionKind.CONTACT_NO)` has `contact` and `rest=LinkRest.OPEN`.
+    """
+    return _FUNCTION_ROLES[kind]
+
 
 _L = LinkKind
 _LINK_ROWS: frozendict[LinkKind, LinkRole] = frozendict(

@@ -4,6 +4,7 @@ Its one home: `derive.document_unit` and the `DOCUMENT_UNIT_UNRESOLVED` check im
 from here.
 """
 
+from fransys_model.derive.facts.children import unit_parent
 from fransys_model.kernel import Id, Model  # noqa: TC001 -- surface hints resolve at runtime (test_signatures)
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.revision_text import revision_text
@@ -72,10 +73,11 @@ def unit_name_unresolved(model: Model, name: str) -> str:
     for unit_id in matches:
         unit = all_units[unit_id]
         release = releases[unit.release]
-        text = f"{ref(unit)} ({revision_text(release.version, release.revision)})"
-        if unit.parent is not None:
-            text += f" under {ref(all_units[unit.parent])}"
-        instance_texts.append(text)
+        parent = unit_parent(model, unit_id)
+        under = "" if parent is None else f" under {ref(all_units[parent])}"
+        instance_texts.append(
+            f"{ref(unit)} ({revision_text(release.version, release.revision)}){under}"
+        )
     return (
         f"{len(matches)} units are instances of {name!r}: {'; '.join(instance_texts)}. "
         f"{_ADVICE.capitalize()}."

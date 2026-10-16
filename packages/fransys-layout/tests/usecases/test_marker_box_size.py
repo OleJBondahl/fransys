@@ -28,7 +28,7 @@ gives 0.
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.lookups import effective_placement, item_of_port
+from fransys_model.derive import effective_placement, item_of_port
 from fransys_model.kernel import loads
 from fransys_model.layout import DrawingSet, LinkMarker, Page, StarKind, layout_of
 from fransys_model.vocab.enums import Aspect

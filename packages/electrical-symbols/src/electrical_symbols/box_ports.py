@@ -5,13 +5,16 @@ Layout and render both draw the box from these, so a name, a side or a pitch has
 
 from typing import TYPE_CHECKING, Any
 
+from electrical_symbols._library import LIBRARY
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
 # `SymbolGeometry.key` (`fransys_layout`) is the generic box's `reference.number`.
 GENERIC_BOX_KEY = "generic-box"
 
-G_PER_MODULE = 8  # grid units in one module unit (M, DESIGN 6.1): a G is 0.125 M
+# Grid units in one module unit (M, DESIGN 6.1): a read of the library's one home (library.toml).
+G_PER_MODULE = LIBRARY.grid.divisions_per_module
 WIRING_GRID = 8  # G: ports and wire segments sit on multiples of this (the libraries' 1 M grid)
 PORT_PITCH = 2.0  # M: a box's port every PORT_PITCH, and its body's left edge that far from pin 0
 PORT_PITCH_G = int(PORT_PITCH * G_PER_MODULE)

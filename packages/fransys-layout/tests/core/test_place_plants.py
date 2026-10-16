@@ -9,15 +9,10 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import (
-    Fan,
-    FlowGraph,
-    Hints,
-    Options,
-    PlacementProblem,
-    YCycleError,
-    place_pages,
-)
+from fransys_layout.core import Hints, Options, PlacementProblem
+from fransys_layout.core.place import place_pages
+from fransys_layout.core.place_y import YCycleError
+from fransys_layout.core.values import Fan, FlowGraph
 
 from .cut_fixtures import AREA, elem, net
 from .pipeline_fixtures import cut_of

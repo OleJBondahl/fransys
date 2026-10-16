@@ -8,7 +8,7 @@ from fransys_model.derive.revision_text import revision_text
 from fransys_model.derive.revisions import current_revision
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.vocab.tables import projects
-lazy from fransys_model.kernel import Model
+lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.document import Document
 
 __all__ = ["document_facts", "project_facts"]
@@ -31,12 +31,14 @@ def project_facts(model: Model) -> tuple[str, str, str, str, str, str]:
     )
 
 
-def document_facts(model: Model, record: Document) -> tuple[str, str, str, str, str, str]:
+def document_facts(model: Model, document: Id[Document]) -> tuple[str, str, str, str, str, str]:
     """`project_facts`, or for a unit document the unit release's own, customer empty.
 
     A unit document's author is the `created` of the unit's current revision.
+
+    `document` is the document's id.
     """
-    unit = document_unit(model, record)
+    unit = document_unit(model, document)
     if unit is None:
         return project_facts(model)
     release = unit_release(model, unit)

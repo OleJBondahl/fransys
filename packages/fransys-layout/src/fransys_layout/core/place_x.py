@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from .arrow_reserve import arrow_ends, reserve
 from .pack_row import solve_row
 from .rowspec import one_row
 from .values import Finding
@@ -15,16 +17,21 @@ if TYPE_CHECKING:
 
 def row_specs(env: PageEnv) -> tuple[RowSpec, ...]:
     """One RowSpec per planned row, built by the one home of "a row"."""
-    return tuple(
-        one_row(
-            row.columns,
-            [env.blocks[b] for b in row.blocks],
-            env.flow,
-            env.problem,
-            env.options,
+    out = []
+    for index, row in enumerate(env.plan.rows):
+        spec = one_row(
+            row.columns, [env.blocks[b] for b in row.blocks], env.flow, env.problem, env.options
         )
-        for row in env.plan.rows
-    )
+        left, right = arrow_ends(env.refs, env.plan.page, index)
+        out.append(
+            replace(
+                spec,
+                reserves=dict(env.reserves),
+                lead_extra=reserve(left, env.options),
+                tail_extra=reserve(right, env.options),
+            )
+        )
+    return tuple(out)
 
 
 def _wider(env: PageEnv, index: int, overflow: int) -> Finding:

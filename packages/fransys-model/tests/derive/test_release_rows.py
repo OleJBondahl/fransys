@@ -4,7 +4,12 @@ The stored releases are hand-built `Listing`s here; the facade's folder fill is 
 repository root (`tests/test_stored_release.py`).
 """
 
-from fransys_model.derive import pin_source, previous_release
+from fransys_model.derive import (
+    pin_source,
+    pin_source_pins,
+    previous_release,
+    previous_release_listing,
+)
 from fransys_model.derive.baseline import ReleaseIdentity, StoredRelease, StoredReleases
 from fransys_model.derive.numbering_pins import NumberingPins
 from fransys_model.derive.release_rows import _libraries
@@ -36,6 +41,18 @@ def test_previous_release_is_strictly_below_across_versions():
 def test_previous_release_never_picks_its_own_folder():
     stored = StoredReleases(releases=(_stored(1, 1), _stored(1, 2)))
     assert _folder(previous_release(stored, _identity(1, 2))) == "1.1"
+
+
+def test_previous_release_listing_is_the_listing_of_the_previous_release():
+    stored = StoredReleases(releases=(_stored(1, 1), _stored(1, 2)))
+    assert previous_release_listing(stored, _identity(1, 2)) == _stored(1, 1).listing
+    assert previous_release_listing(stored, _identity(1, 1)) is None
+
+
+def test_pin_source_pins_is_the_folder_and_numbering_or_none():
+    stored = StoredReleases(releases=(_stored(1, 1), _stored(1, 2, numbering=False)))
+    assert pin_source_pins(stored, _identity(1, 2)) == ("1.1", _stored(1, 1).numbering)
+    assert pin_source_pins(stored, _identity(3, 1)) is None
 
 
 def test_pin_source_is_same_version_at_or_below_with_numbering():

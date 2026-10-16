@@ -40,21 +40,17 @@ def _headers(output: str) -> list[tuple[str, str]]:
     return _HEADER_RE.findall(output)
 
 
-def test_fransys_pdf_gives_exactly_its_nine_surface_names():
-    """`fransys_pdf`'s `__all__` has 9 names; `api()` prints exactly those 9,
-    including `FINDING_CODES` and `PRESET_PAGES`, plain data values with no signature.
+def test_fransys_pdf_gives_exactly_its_five_surface_names():
+    """`fransys_pdf`'s `__all__` has 5 names; `api()` prints exactly those 5,
+    including `FINDING_CODES`, a plain data value with no signature.
     """
     import fransys_pdf
 
     assert tuple(fransys_pdf.__all__) == (
         "FINDING_CODES",
-        "PRESET_PAGES",
         "check",
         "cover_overflow_finding",
-        "document_pages",
         "font_dir",
-        "page_kinds",
-        "requests_harness_pages",
         "source",
     )
     output = lean_api.api("fransys_pdf")
@@ -135,12 +131,12 @@ def test_unknown_package_fails_with_a_one_line_message():
 
 
 def test_data_value_is_printed_with_no_signature_or_docstring():
-    """`PRESET_PAGES` (a `frozendict`, not a def) prints as a bare header naming its type."""
+    """`FINDING_CODES` (a tuple, not a def) prints as a bare header naming its type."""
     output = lean_api.api("fransys_pdf")
-    preset_line = next(
-        line for line in output.splitlines() if line.startswith("fransys_pdf.PRESET_PAGES")
+    codes_line = next(
+        line for line in output.splitlines() if line.startswith("fransys_pdf.FINDING_CODES")
     )
-    assert preset_line == "fransys_pdf.PRESET_PAGES (frozendict)"
+    assert codes_line == "fransys_pdf.FINDING_CODES (tuple)"
 
 
 def test_a_function_prints_a_real_signature():

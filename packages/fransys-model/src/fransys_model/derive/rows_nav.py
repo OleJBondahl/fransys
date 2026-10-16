@@ -22,9 +22,10 @@ class ReferenceLink:
 
 @value
 class OutlineSheet:
-    """One sheet's outline entry: its `title` and the `entries` beneath it."""
+    """One sheet's outline entry: its `number` as printed, its `title` and the `entries` beneath."""
 
     destination: str
+    number: str
     title: str
     entries: tuple[str, ...]
 

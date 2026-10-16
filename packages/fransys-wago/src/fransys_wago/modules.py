@@ -11,9 +11,8 @@ from .signals import SIGNALS
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from fransys_model.derive import CdpRackModule, ChannelScaling, PlcRackChannel
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Item, Unit
+    from fransys_model.derive import CdpRackModule, ChannelScaling, ItemId, PlcRackChannel, UnitId
+    from fransys_model.kernel import Model
 
 # `escape` does `&`, `<` and `>`; a line break or a tab in an attribute would be read back as a
 # space, so they are written as character references.
@@ -115,7 +114,7 @@ def _module(entry: CdpRackModule) -> list[str]:
     return _element("Module", 1, attributes, channels)
 
 
-def modules_xml(model: Model, rack: Id[Item], *, unit: Id[Unit] | None = None) -> str:
+def modules_xml(model: Model, rack: ItemId, *, unit: UnitId | None = None) -> str:
     """The `<Modules>` fragment of CDP Studio's `WagoPFCIOServer.xml` for `rack`, pure.
 
     Formatted from `rack_modules_for_cdp`; layout, names and escaping: `docs/SPEC.md`.

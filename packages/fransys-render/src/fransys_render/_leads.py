@@ -3,7 +3,7 @@
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from symdef.geometry import Line
+from symdef import Line
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.layout import (
@@ -21,7 +21,7 @@ from fransys_model.vocab import ports
 from ._symbol_geometry import to_grid
 
 if TYPE_CHECKING:
-    from symdef.model import Symbol
+    from symdef import Symbol
 
     from fransys_model.kernel import Id, Model
     from fransys_model.layout import Page, SymbolPlacement

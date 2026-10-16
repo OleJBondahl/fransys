@@ -116,8 +116,7 @@ def _inside(link, label: Label) -> bool:
 
 
 def _links(model, label: Label) -> dict[tuple[int, int, int, int], str]:
-    page = layout_of(model, Page)[label.page]
-    found = reference_links(model, page, set(layout_of(model, Page)))
+    found = reference_links(model, label.page, set(layout_of(model, Page)))
     return {(k.x, k.y, k.width, k.height): k.target for k in found if _inside(k, label)}
 
 

@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.derive.facts.children import parent_item
+from fransys_model.derive.facts.children import aspect_parent, parent_item, unit_parent
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import aspect_nodes, items, placements, units
@@ -54,10 +54,11 @@ def _aspect_findings(model: Model) -> list[Finding]:
             + ", ".join(sorted(nodes[member].label for member in members))
             + " loops",
         )
-        for members in _cycles({node.id: node.parent for node in nodes.values()})
+        for members in _cycles({node.id: aspect_parent(model, node.id) for node in nodes.values()})
     ]
     for node in nodes.values():
-        parent = None if node.parent is None else nodes[node.parent]
+        parent_id = aspect_parent(model, node.id)
+        parent = None if parent_id is None else nodes[parent_id]
         if parent is not None and parent.aspect is not node.aspect:
             message = (
                 f"{node.aspect.value} node {node.label} is parented under "
@@ -110,7 +111,9 @@ def _unit_findings(model: Model) -> list[Finding]:
             + ", ".join(sorted(ref(member) for member in members))
             + " loops",
         )
-        for members in _cycles({unit.id: unit.parent for unit in all_units.values()})
+        for members in _cycles(
+            {unit.id: unit_parent(model, unit.id) for unit in all_units.values()}
+        )
     ]
 
 

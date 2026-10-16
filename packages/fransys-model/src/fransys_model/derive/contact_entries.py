@@ -9,7 +9,7 @@ from fransys_model.derive.contacts import changeover_throws, link_state, owned_c
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.unused import function_is_unused
-from fransys_model.vocab import function_poles, marking_key
+from fransys_model.vocab import marking_key, poles_by_role
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
 lazy from fransys_model.derive.facts.roles import function_role, link_role
@@ -72,7 +72,7 @@ def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list
             or not link_role(model, link.id).switched
         ):
             continue
-        (pole,) = function_poles(function.kind, [link], templates)
+        (pole,) = poles_by_role(function_role(model, function.id), [link], templates)
         a, b = (printed_name(model, own[end.id].id) for end in pole.ends)
         closed = link_state(model, function.id, link.id) == "rest"
         (nc if closed else no).append((_is_main(a, b), _key(a), f"{a}-{b}"))

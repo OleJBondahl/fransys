@@ -6,11 +6,11 @@ Every Sym here has the designation label Size(16, 8): the cut tests do not vary 
 from __future__ import annotations
 
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 from fransys_layout.core import (
     Box,
     BoxSpec,
-    CutResult,
     Facts,
     Hints,
     Net,
@@ -18,12 +18,14 @@ from fransys_layout.core import (
     Pin,
     PinRef,
     PlacementProblem,
-    Ref,
     Size,
     Sym,
 )
 
 from . import pipeline_fixtures
+
+if TYPE_CHECKING:
+    from fransys_layout.core.values import CutResult, Ref
 
 AREA = Size(1312, 854)
 LABEL = Size(16, 8)

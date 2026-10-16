@@ -5,7 +5,8 @@ from __future__ import annotations
 import itertools
 import random
 
-from fransys_layout.core import (
+from fransys_layout.core import Options, PinRef, natural_key, order
+from fransys_layout.core.values import (
     Attach,
     Block,
     BlockKind,
@@ -15,10 +16,6 @@ from fransys_layout.core import (
     End,
     Fan,
     FlowGraph,
-    Options,
-    PinRef,
-    natural_key,
-    order,
 )
 
 OPTIONS = Options()

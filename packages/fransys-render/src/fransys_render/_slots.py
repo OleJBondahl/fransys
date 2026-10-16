@@ -15,8 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from decimal import Decimal
 
-    from symdef import Library
-    from symdef.model import Symbol
+    from symdef import Library, Symbol
 
     from fransys_model.layout import Orientation, SheetFormat
 

@@ -23,9 +23,9 @@ import fransys_parts
 import fransys_render
 from demo_designs import cabinet_design
 from fransys_el import REF_TINTS
-from fransys_pdf import document_pages
 from fransys_pdf._drawings import schematic_pages
 
+from fransys_model.derive import document_page_kinds, document_row
 from fransys_model.derive import document_sheet_format as resolve_sheet_format
 from fransys_model.kernel import render_id
 from fransys_model.vocab import documents
@@ -186,16 +186,16 @@ def _all_coordinates(root: ET.Element) -> tuple[tuple[float, float], ...]:
 def test_render_pages_fit_the_sheet_and_every_coordinate_lies_in_the_content_box(tmp_path):
     model = _built_document_model(tmp_path)
     (document_id,) = documents(model)
-    record = documents(model)[document_id]
-    pages = document_pages(model, document_id)
-    sheet = resolve_sheet_format(model, record, pages)
+    record = document_row(model, document_id)
+    pages = document_page_kinds(model, document_id)
+    sheet = resolve_sheet_format(model, record.id, pages)
     svgs = fransys_render.pages(model, tints=REF_TINTS)
 
     schematic = schematic_pages(model, record, pages)
     assert len(schematic) >= _MIN_PAGE_COUNT, "no real schematic page to check"
 
     page_data = [
-        (page, ET.fromstring(svgs[render_id(page.id)]))  # noqa: S314 -- render's own trusted output
+        (page, ET.fromstring(svgs[render_id(page)]))  # noqa: S314 -- render's own trusted output
         for page in schematic
     ]
     page_coords = [(page, root, _all_coordinates(root)) for page, root in page_data]
@@ -208,7 +208,7 @@ def test_render_pages_fit_the_sheet_and_every_coordinate_lies_in_the_content_box
     content_y1 = content_y0 + float(sheet.content_height_mm)
 
     for page, root, coords in page_coords:
-        key = render_id(page.id)
+        key = render_id(page)
         assert _mm_attr(root.attrib["width"]) == float(sheet.width_mm), key
         assert _mm_attr(root.attrib["height"]) == float(sheet.height_mm), key
         assert root.attrib["viewBox"] == f"0 0 {sheet.width_mm} {sheet.height_mm}", key

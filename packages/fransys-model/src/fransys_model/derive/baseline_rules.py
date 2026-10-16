@@ -19,7 +19,7 @@ class ListingRules:
 
     `holder_designation`: a contact block prints its holder's designation (model-0222, 0.18.2).
     `bar_end_without_screw`: a bar end prints the bar alone, with no screw (model-0227, 0.18.4).
-    `item_keys`: every row that names an item carries its key, version 2 (model-0300, 0.20.0).
+    `item_keys`: every row that names an item carries its key, version 2 (model-0300, 0.19.10).
     """
 
     holder_designation: bool = True
@@ -45,7 +45,7 @@ RULES_BY_RELEASE: tuple[RuleRow, ...] = (
     ),
     RuleRow("0.18.2", ListingRules(bar_end_without_screw=False, item_keys=False)),
     RuleRow("0.18.4", ListingRules(item_keys=False)),
-    RuleRow("0.20.0", CURRENT),
+    RuleRow("0.19.10", CURRENT),
 )
 
 

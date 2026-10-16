@@ -116,6 +116,12 @@ def _mate_key(pair: Mate) -> tuple[tuple[tuple[tuple[int, int | str], ...], ...]
     return tuple((natural_key(p.sym), natural_key(p.pin)) for p in pair)
 
 
+def _canonical(pair: Mate) -> Mate:
+    """The pair with its halves in natural (sym, pin) order, whatever order they arrived in."""
+    a, b = sorted(pair, key=lambda p: (natural_key(p.sym), natural_key(p.pin)))
+    return a, b
+
+
 def _level(env: PageEnv, where: Where, pair: Mate) -> Align | None:
     """The Align of a mate whose halves are cells of one row, else None."""
     a, b = pair
@@ -135,7 +141,7 @@ def _mates(env: PageEnv) -> tuple[list[Align], list[Mate]]:
     here = set(where) | {env.blocks[b].anchor for r in env.plan.rows for b in r.blocks}
     levelled: list[Align] = []
     unmet: list[Mate] = []
-    for pair in sorted(env.problem.facts.mates, key=_mate_key):
+    for pair in sorted((_canonical(m) for m in env.problem.facts.mates), key=_mate_key):
         if pair[0].sym in here and pair[1].sym in here:
             align = _level(env, where, pair)
             if align is None:

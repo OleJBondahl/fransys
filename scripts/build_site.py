@@ -22,12 +22,12 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import findings_guide  # noqa: E402  its page list is the findings pages' one source
 import fransys as fr  # noqa: E402  the home example's own page kinds
-import fransys_pdf  # noqa: E402  the same
 import lean_api  # noqa: E402  scripts/ goes on sys.path first, as the one home of the surface listing
 import pypdfium2  # noqa: E402  the site group's pin; imported here only after sys.path is set
 import site_gallery  # noqa: E402  sibling script, same reason
 import site_markdown  # noqa: E402  the same
 
+from fransys_model.derive import page_kinds  # noqa: E402  the home example's own page kinds
 from fransys_model.derive.docs_site import OFFLINE_NOTE  # noqa: E402  the offline banner the site drops
 
 STATE = ROOT / ".fransys"
@@ -174,11 +174,7 @@ def stage_home() -> None:
     shutil.copytree(WEBSITE / "overrides", STATE / "overrides", dirs_exist_ok=True)
     SNIPPETS.mkdir(parents=True, exist_ok=True)
     shutil.copy2(WEBSITE / "example.py", SNIPPETS / "example.py")
-    kinds = [
-        k.value
-        for k in fransys_pdf.page_kinds(fr.DocumentPreset.CABINET_SCHEMATIC)
-        if k.value != "notes"
-    ]
+    kinds = [k.value for k in page_kinds(fr.DocumentPreset.CABINET_SCHEMATIC) if k.value != "notes"]
     with tempfile.TemporaryDirectory() as work:
         subprocess.run([sys.executable, str(WEBSITE / "example.py")], cwd=work, check=True)  # noqa: S603  our own script, no outside input
         (pdf,) = Path(work, "out").glob("*.pdf")

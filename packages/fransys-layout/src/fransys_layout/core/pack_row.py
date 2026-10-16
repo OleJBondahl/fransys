@@ -41,6 +41,8 @@ class RowSpec:
     attach: Attached
     reserves: dict[tuple[str, str], int] = field(default_factory=dict)
     more_pins: LanePins = field(default_factory=dict)
+    lead_extra: int = 0  # x kept free before the first column (an arrow at the row's left end)
+    tail_extra: int = 0  # x kept free after the last column (an arrow at the right end)
 
 
 def segments(
@@ -76,6 +78,11 @@ def _sep(spec: RowSpec, a: str, b: str) -> int:
     return separation(spec.pcs[a], spec.pcs[b], spec.syms, spec.in_row, spec.options)
 
 
+def reserve_extra(spec: RowSpec, a: str, b: str) -> int:
+    """The one home of what a reserved pair adds to its separation: a grid per track past one."""
+    return spec.options.wiring_grid * max(spec.reserves.get((a, b), 1) - 1, 0)
+
+
 def join_gap(prev_reach: int, left_reach: int, options: Options, extra: int = 0) -> int:
     """The one join of two segments: the reach past the left one, into the right one, a gap."""
     return prev_reach + left_reach + options.column_gap_min + extra
@@ -91,7 +98,7 @@ def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
         gap = (
             join_gap(prev[1], left[1], spec.options, extra)
             if prev
-            else spec.options.margin.w + left[1]
+            else spec.options.margin.w + left[1] + spec.lead_extra
         )
         if prev:
             g.after(prev[0], left[0], gap)
@@ -128,7 +135,7 @@ def _reserve(g: Graph, spec: RowSpec, extra: int) -> None:
             g.after(
                 f"col:{a}",
                 f"col:{b}",
-                _sep(spec, a, b) + extra + spec.options.wiring_grid * (tracks - 1),
+                _sep(spec, a, b) + extra + reserve_extra(spec, a, b),
             )
 
 
@@ -201,7 +208,7 @@ def _solve(spec: RowSpec, extra: int) -> tuple[dict[str, int], int] | None:
     x = g.solve()
     if x is None:
         return None
-    return x, max(x[node] + reach for node, reach in rights)
+    return x, max(x[node] + reach for node, reach in rights) + spec.tail_extra
 
 
 def row_width(spec: RowSpec) -> int:

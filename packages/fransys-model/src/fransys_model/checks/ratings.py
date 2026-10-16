@@ -7,7 +7,6 @@ states a voltage for one current kind only, on a function that stands on rails o
 from fractions import Fraction
 from typing import TYPE_CHECKING, Final
 
-from fransys_model.derive.facts.function_ratings import function_ratings
 from fransys_model.derive.facts.rail_reach import (
     RailReach,
     Stand,
@@ -17,18 +16,18 @@ from fransys_model.derive.facts.rail_reach import (
     voltage_across,
     worst_stand,
 )
+from fransys_model.derive.facts.stated_ratings import function_ratings, rating_source_label
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import voltage
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import functions, units
+from fransys_model.vocab.tables import functions
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from decimal import Decimal
 
-    from fransys_model.derive.facts.function_ratings import FunctionRating
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function, Unit
+    from fransys_model.derive.facts.stated_ratings import FunctionRating
+    from fransys_model.kernel import Model
+    from fransys_model.vocab.core import Function
 
 RATING_VOLTAGE_BELOW_CIRCUIT: Final[str] = "RATING_VOLTAGE_BELOW_CIRCUIT"
 RATING_CURRENT_KIND_UNSTATED: Final[str] = "RATING_CURRENT_KIND_UNSTATED"
@@ -67,12 +66,6 @@ def _finding(
         subjects=(function.id,),
         message=_message(function, limit, worst, source),
     )
-
-
-def _source_label(source: FunctionRating, unit_of: Mapping[Id[Unit], Unit]) -> str:
-    if source.unit is None:
-        return "part or template rating"
-    return f"boundary rating of {ref(unit_of[source.unit])}"
 
 
 def _source_findings(
@@ -130,7 +123,6 @@ def check_ratings(model: Model) -> tuple[Finding, ...]:
     if not lookup:
         return ()
     ports_of = ports_by_function(model)
-    unit_of = units(model)
     found: list[Finding] = []
     for function in functions(model).values():
         sources = function_ratings(model, function.id)
@@ -138,7 +130,7 @@ def check_ratings(model: Model) -> tuple[Finding, ...]:
             continue
         reach = reach_of(model, function.id, lookup, ports_of)
         for source in sources:
-            label = _source_label(source, unit_of)
+            label = rating_source_label(model, source)
             found += _source_findings(function, source, label, reach)
             kind = _kind_finding(function, source, label, reach)
             if kind is not None:

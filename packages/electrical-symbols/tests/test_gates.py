@@ -5,7 +5,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from symdef import Arc, Circle, Line, Polyline, check, load_library
+from symdef import Arc, Circle, Line, Polyline, load_library
+from symdef.authoring import check
 
 from electrical_symbols import LIBRARY
 

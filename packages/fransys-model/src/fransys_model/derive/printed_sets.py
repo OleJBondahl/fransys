@@ -7,7 +7,7 @@ sets unit-then-location (layout-0045), so sorting by `number` gives "in location
 
 from fransys_model.layout import DrawingSet, layout_of
 from fransys_model.vocab.tables import documents
-lazy from fransys_model.kernel import Model
+lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.document import Document
 
 from .document_unit import document_unit
@@ -15,12 +15,16 @@ from .document_unit import document_unit
 __all__ = ["document_drawing_sets", "printed_drawing_sets"]
 
 
-def document_drawing_sets(model: Model, record: Document) -> tuple[DrawingSet, ...]:
-    """`record`'s drawing sets by `number`: a location's top-level set, a unit's sets."""
+def document_drawing_sets(model: Model, document: Id[Document]) -> tuple[DrawingSet, ...]:
+    """The drawing sets of `document` by `number`: a location's top-level set, a unit's sets.
+
+    `document` is the document's id.
+    """
+    record = documents(model)[document]
     all_sets = layout_of(model, DrawingSet).values()
     if record.location is not None:
         matching = [s for s in all_sets if s.location == record.location and s.unit is None]
-    elif (unit := document_unit(model, record)) is not None:
+    elif (unit := document_unit(model, document)) is not None:
         matching = [s for s in all_sets if s.unit == unit]
     else:
         matching = []
@@ -30,6 +34,6 @@ def document_drawing_sets(model: Model, record: Document) -> tuple[DrawingSet, .
 def printed_drawing_sets(model: Model) -> tuple[DrawingSet, ...]:
     """The sets some document of `model` prints, by `number`; none that no document prints."""
     printed = {
-        s.id: s for doc in documents(model).values() for s in document_drawing_sets(model, doc)
+        s.id: s for doc in documents(model).values() for s in document_drawing_sets(model, doc.id)
     }
     return tuple(sorted(printed.values(), key=lambda found: found.number))

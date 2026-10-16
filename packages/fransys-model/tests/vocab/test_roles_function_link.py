@@ -8,15 +8,16 @@ from plant import Plant
 
 from fransys_model.derive.facts.energy_flow import gives_energy, takes_energy
 from fransys_model.vocab.enums import Energy, FunctionKind, LinkKind, LinkRest
-from fransys_model.vocab.roles import FUNCTION_ROLES, LINK_ROLES
+from fransys_model.vocab.roles import LINK_ROLES, function_role_of
 from fransys_model.vocab.roles_types import FunctionRole, LinkRole, complete
 
+_ROWS = {kind: function_role_of(kind) for kind in FunctionKind}
 _CONTACTS = (FunctionKind.CONTACT_NO, FunctionKind.CONTACT_NC, FunctionKind.CONTACT_CO)
 
 
 def test_every_function_kind_has_a_row() -> None:
     """Each member of `FunctionKind` is a key of the table."""
-    assert set(FUNCTION_ROLES) == set(FunctionKind)
+    assert all(isinstance(function_role_of(kind), FunctionRole) for kind in FunctionKind)
 
 
 def test_every_link_kind_has_a_row() -> None:
@@ -26,7 +27,7 @@ def test_every_link_kind_has_a_row() -> None:
 
 def test_rows_are_frozen_and_slotted() -> None:
     """A row refuses an assignment and has no `__dict__`."""
-    for row in (*FUNCTION_ROLES.values(), *LINK_ROLES.values()):
+    for row in (*_ROWS.values(), *LINK_ROLES.values()):
         assert not hasattr(row, "__dict__")
         with pytest.raises(dataclasses.FrozenInstanceError):
             row.__setattr__("pole", True)
@@ -35,19 +36,19 @@ def test_rows_are_frozen_and_slotted() -> None:
 def test_contact_kinds_are_contacts_and_only_the_changeover_changes_over() -> None:
     """NO, NC, CO and SWITCH are contacts; `plain_contact` leaves `SWITCH` out."""
     for kind in _CONTACTS:
-        assert FUNCTION_ROLES[kind].contact
-        assert FUNCTION_ROLES[kind].plain_contact
-    assert FUNCTION_ROLES[FunctionKind.SWITCH].contact
-    assert not FUNCTION_ROLES[FunctionKind.SWITCH].plain_contact
-    changing = {kind for kind, row in FUNCTION_ROLES.items() if row.changeover}
+        assert function_role_of(kind).contact
+        assert function_role_of(kind).plain_contact
+    assert function_role_of(FunctionKind.SWITCH).contact
+    assert not function_role_of(FunctionKind.SWITCH).plain_contact
+    changing = {kind for kind, row in _ROWS.items() if row.changeover}
     assert changing == {FunctionKind.CONTACT_CO}
 
 
 def test_a_contact_kind_implies_its_rest_state() -> None:
     """A normally open contact rests open, a normally closed one closed, the rest imply none."""
-    assert FUNCTION_ROLES[FunctionKind.CONTACT_NO].rest is LinkRest.OPEN
-    assert FUNCTION_ROLES[FunctionKind.CONTACT_NC].rest is LinkRest.CLOSED
-    others = {k for k, row in FUNCTION_ROLES.items() if row.rest is not None}
+    assert function_role_of(FunctionKind.CONTACT_NO).rest is LinkRest.OPEN
+    assert function_role_of(FunctionKind.CONTACT_NC).rest is LinkRest.CLOSED
+    others = {k for k, row in _ROWS.items() if row.rest is not None}
     assert others == {FunctionKind.CONTACT_NO, FunctionKind.CONTACT_NC}
 
 
@@ -63,7 +64,7 @@ def test_one_role_flag_per_structural_kind() -> None:
     }
     for kind, flag in flags.items():
         for name in ("terminal", "pin_group", "channel", "bar", "protects", "operator"):
-            assert getattr(FUNCTION_ROLES[kind], name) is (name == flag)
+            assert getattr(function_role_of(kind), name) is (name == flag)
 
 
 def test_energy_matches_the_energy_flow_oracle_for_every_kind() -> None:
@@ -72,7 +73,7 @@ def test_energy_matches_the_energy_flow_oracle_for_every_kind() -> None:
     item = plant.item("device")
     made = {kind: plant.function(item, kind.value, kind=kind) for kind in FunctionKind}
     model = plant.model()
-    for kind, row in FUNCTION_ROLES.items():
+    for kind, row in _ROWS.items():
         assert takes_energy(model, made[kind]) is (row.energy is Energy.IN)
         assert gives_energy(model, made[kind]) is (row.energy is Energy.OUT)
 
@@ -91,3 +92,11 @@ def test_a_kind_added_without_a_row_fails_at_import() -> None:
     wider = Enum("wider", [(k.name, k.value) for k in FunctionKind] + [("NEW", "new")])
     with pytest.raises(RuntimeError, match="wider has no role row for: NEW"):
         complete({member: FunctionRole() for member in wider if member.name != "NEW"}, wider)
+
+
+def test_function_role_of_returns_the_row_of_the_kind() -> None:
+    """The kind-taking fact gives each kind its own row, not a neighbour's."""
+    assert function_role_of(FunctionKind.PROTECTION).protects
+    assert function_role_of(FunctionKind.CONTACT_NO).rest is LinkRest.OPEN
+    assert function_role_of(FunctionKind.TERMINAL).terminal
+    assert not function_role_of(FunctionKind.GENERIC).protects

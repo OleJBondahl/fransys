@@ -7,10 +7,11 @@ from fransys_model.derive import (
     PAGE_HEADINGS,
     SheetKey,
     document_page_kinds,
+    document_row,
+    document_sheet,
     harness_cables_for,
 )
-from fransys_model.derive import document_sheet_format as resolve_sheet_format
-from fransys_model.vocab import PageKind, documents
+from fransys_model.vocab import PageKind
 
 from ._background import page_background
 from ._contents import contents_page
@@ -36,18 +37,22 @@ from ._sizes import sizes_of
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from fransys_model.derive import BridgePiece, SheetBackground
-    from fransys_model.kernel import Id, Model
-    from fransys_model.layout import SheetFormat
-    from fransys_model.vocab import Document
+    from fransys_model.derive import (
+        BridgePiece,
+        DocumentId,
+        DocumentRow,
+        SheetBackground,
+        SheetRow,
+    )
+    from fransys_model.kernel import Model
 
 _SELF_FRAMED = (PageKind.BLOCK_DIAGRAM, PageKind.SCHEMATIC, PageKind.HARNESS_DRAWING)
 
 
 def _section_prefix(
     model: Model,
-    record: Document,
-    sheet: SheetFormat,
+    record: DocumentRow,
+    sheet: SheetRow,
     kind: PageKind,
     sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
@@ -71,7 +76,7 @@ def _list_pages(bridges: Mapping[str, BridgePiece] | None) -> dict[PageKind, Cal
 def _text_page(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheets` and `bridges`
     kind: PageKind,
     model: Model,
-    record: Document,
+    record: DocumentRow,
     pages: tuple[PageKind, ...],
     sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePiece] | None,
@@ -93,10 +98,10 @@ def _text_page(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sh
 def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sheet` and `sheets` for the page background
     kind: PageKind,
     model: Model,
-    record: Document,
+    record: DocumentRow,
     svgs: Mapping[str, str],
     pages: tuple[PageKind, ...],
-    sheet: SheetFormat,
+    sheet: SheetRow,
     sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePiece] | None,
 ) -> str:
@@ -107,7 +112,7 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
         found = schematic_pages(model, record, pages)
         return schematic_source(model, record, sheet, found, svgs, sheets)
     if kind is PageKind.HARNESS_DRAWING:
-        cables = harness_cables_for(model, record, pages)
+        cables = harness_cables_for(model, record.id, pages)
         return harness_drawing_source(model, record, sheet, cables, svgs, sheets)
     if kind is PageKind.BLOCK_DIAGRAM:
         return diagram_source(model, record, svgs, sheets)
@@ -116,7 +121,7 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
 
 def source(
     model: Model,
-    document: Id[Document],
+    document: DocumentId,
     svgs: Mapping[str, str],
     sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePiece] | None = None,
@@ -125,7 +130,7 @@ def source(
 
     Args:
         model: A laid-out model.
-        document: Id of the authored `Document` record.
+        document: Id of the document.
         svgs: Page key to SVG text (``fransys_render.pages``): each `SCHEMATIC` SVG is inlined as
             an `image`; a `HARNESS_DRAWING` page reads one per cable block (`cable_block_key`).
         sheets: Page key to its background (``fransys_render.sheets``): frame, grid and title
@@ -136,9 +141,9 @@ def source(
         The Typst source, pure in `model`, `svgs` and `sheets`; each page's background is its
         sheet. An empty section body is skipped, not joined as a bare `#pagebreak()`.
     """
-    record = documents(model)[document]
+    record = document_row(model, document)
     pages = document_page_kinds(model, document)
-    sheet = resolve_sheet_format(model, record, pages)
+    sheet = document_sheet(model, record.id, pages)
     page_bodies = []
     for kind in pages:
         body = _page_source(kind, model, record, svgs, pages, sheet, sheets, bridges)
@@ -147,6 +152,6 @@ def source(
         if kind not in _SELF_FRAMED:
             body = _section_prefix(model, record, sheet, kind, sheets) + "\n" + body
         page_bodies.append(body)
-    head = document_metadata(model, record) + "\n" + preamble(sizes_of(model, record), sheet)
+    head = document_metadata(model, record) + "\n" + preamble(sizes_of(model, record.id), sheet)
     body = "\n#pagebreak()\n".join(page_bodies)
     return f"{head}\n{body}\n#metadata(none) <{LAST_PAGE}>\n"

@@ -24,8 +24,8 @@ from _build import (
 )
 from fransys_pdf._geometry import document_heading
 
-from fransys_model.derive import SheetKey, document_sheets_of, subject_label
-from fransys_model.vocab import DocumentPreset, PageKind, documents
+from fransys_model.derive import SheetKey, document_row, document_sheets_of, subject_label
+from fransys_model.vocab import DocumentPreset, PageKind
 
 K = PageKind
 
@@ -58,8 +58,8 @@ def test_a_location_documents_subject_label_is_the_bare_label():
     c1 = location("C1", "Demo cabinet")
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=c1, cover="# Cover")
     m = model(c1, doc)
-    record = documents(m)[doc.id]
-    assert subject_label(m, record) == "C1 Demo cabinet"
+    record = document_row(m, doc.id)
+    assert subject_label(m, record.id) == "C1 Demo cabinet"
     assert document_heading(m, record).endswith("— C1 Demo cabinet")
 
 
@@ -67,7 +67,7 @@ def test_a_nested_locations_subject_label_stays_as_main_printed_it():
     room, cabinet = _nested_cabinet()
     doc = document("d1", preset=DocumentPreset.CABINET_SCHEMATIC, subject=cabinet, cover="# Cover")
     m = model(room, cabinet, doc)
-    assert subject_label(m, documents(m)[doc.id]) == "C1 Demo cabinet"
+    assert subject_label(m, doc.id) == "C1 Demo cabinet"
 
 
 def test_an_item_documents_subject_label_has_no_sign():
@@ -75,7 +75,7 @@ def test_an_item_documents_subject_label_has_no_sign():
     board = item("a1", description="", part=demo_part.id)
     doc = document("d1", preset=DocumentPreset.PCB_SCHEMATIC, subject=board, cover="# Cover")
     m = model(demo_part, board, doc)
-    assert subject_label(m, documents(m)[doc.id]) == "A1 Invented relay"
+    assert subject_label(m, doc.id) == "A1 Invented relay"
 
 
 def test_a_drawing_pages_scope_cell_reads_the_signed_location_path():

@@ -11,6 +11,7 @@ from fransys_model.derive.facts.bars import is_bar_port
 from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.facts.unit_index import descendants
 from fransys_model.derive.facts.units import item_chain, require
+from fransys_model.derive.placement_reads import node_label
 from fransys_model.kernel import (
     DIGEST_CACHE_SIZE,
     Id,
@@ -201,7 +202,7 @@ def location_label(model: Model, item: Id[Item]) -> str | None:
     of its own reads its nearest placed ancestor's.
     """
     node = effective_placement(model, item, Aspect.LOCATION)
-    return None if node is None else aspect_nodes(model)[node].label
+    return None if node is None else node_label(model, node)
 
 
 def position_rank(module: Item) -> tuple[int, int]:

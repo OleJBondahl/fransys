@@ -9,7 +9,15 @@ from dataclasses import replace
 
 from fransys_model.kernel import Id
 from fransys_model.vocab.enums import FunctionKind, LinkKind, PoleSide, PortRole
-from fransys_model.vocab.markings import function_poles, pole_order, unlinked_poles
+from fransys_model.vocab.markings import (
+    function_poles,
+    is_pole_by_role,
+    pole_order,
+    poles_by_role,
+    unlinked_poles,
+)
+from fransys_model.vocab.roles import function_role_of
+from fransys_model.vocab.roles_types import FunctionRole
 from fransys_model.vocab.templates import InternalLink, PortTemplate
 
 _FUNCTION = Id(kind="function_template", value="1" * 32)
@@ -68,3 +76,23 @@ def test_an_odd_pin_is_a_one_pin_pole_last() -> None:
     poles = unlinked_poles([_port("3"), _port("1"), _port("2")])
     assert _names(poles) == [("1", "2"), ("3", "3")]
     assert poles[-1].line is None
+
+
+def test_a_conductive_link_is_a_pole_by_the_protects_flag_not_by_the_kind() -> None:
+    """`is_pole_by_role`: a role that protects makes its conductive link a pole; no other does."""
+    protects = FunctionRole(protects=True)
+    assert is_pole_by_role(protects, LinkKind.CONDUCTIVE)
+    assert not is_pole_by_role(FunctionRole(), LinkKind.CONDUCTIVE)
+    assert is_pole_by_role(FunctionRole(), LinkKind.SWITCHED)
+    assert is_pole_by_role(FunctionRole(), LinkKind.PROTECTIVE)
+
+
+def test_the_kind_wrappers_equal_the_role_form_for_every_kind() -> None:
+    """`function_poles` is `poles_by_role` read at the kind's row."""
+    a, b = _port("1"), _port("2")
+    ports = {a.id: a, b.id: b}
+    for kind in FunctionKind:
+        role = function_role_of(kind)
+        for link in LinkKind:
+            links = [replace(_link(a, b), kind=link)]
+            assert function_poles(kind, links, ports) == poles_by_role(role, links, ports)

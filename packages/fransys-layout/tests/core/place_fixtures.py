@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Box, Bundle, PagePlacement, Placement, PlacementProblem
+from fransys_layout.core import Box, Bundle, Placement, PlacementProblem
+lazy from fransys_layout.core.outputs import PagePlacement
 
 from .cut_fixtures import AREA, box_sym, elem, free
 from .flow_builders import net, poles

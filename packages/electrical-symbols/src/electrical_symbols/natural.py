@@ -6,10 +6,9 @@ The builder reads it and passes sizes in, so layout's core needs no symdef (SYMD
 from dataclasses import dataclass
 from typing import Literal
 
-from symdef import body_box, keepout_box
+from symdef import body_box, keepout_box, to_divisions
 
 from electrical_symbols._library import LIBRARY
-from electrical_symbols.box_ports import G_PER_MODULE
 
 Axis = Literal["x", "y"]
 
@@ -41,7 +40,7 @@ class Natural:
 
 
 def _g(modules: float) -> int:
-    return round(modules * G_PER_MODULE)
+    return to_divisions(LIBRARY.grid, modules)
 
 
 def natural(key: str) -> Natural:

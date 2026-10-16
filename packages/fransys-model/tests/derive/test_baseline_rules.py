@@ -39,8 +39,8 @@ def test_0_18_4_and_later_lack_only_the_item_keys() -> None:
     assert listing_rules(1, "0.19.8") == ListingRules(item_keys=False)
 
 
-def test_0_20_0_and_later_are_todays_rules() -> None:
-    assert listing_rules(2, "0.20.0") == ListingRules()
+def test_0_19_10_and_later_are_todays_rules() -> None:
+    assert listing_rules(2, "0.19.10") == ListingRules()
 
 
 @pytest.mark.parametrize("version", ["0.13.7", "0.9.0", "", "unreadable"])
@@ -61,10 +61,10 @@ def test_another_listing_version_has_no_rules() -> None:
 @pytest.mark.parametrize(
     ("version", "moved"),
     [
-        ("0.13.8", "0.18.2 and 0.18.4 and 0.20.0"),
-        ("0.18.1", "0.18.2 and 0.18.4 and 0.20.0"),
-        ("0.18.3", "0.18.4 and 0.20.0"),
-        ("0.18.4", "0.20.0"),
+        ("0.13.8", "0.18.2 and 0.18.4 and 0.19.10"),
+        ("0.18.1", "0.18.2 and 0.18.4 and 0.19.10"),
+        ("0.18.3", "0.18.4 and 0.19.10"),
+        ("0.18.4", "0.19.10"),
     ],
 )
 def test_the_release_that_moved_each_rule_is_named(version: str, moved: str) -> None:

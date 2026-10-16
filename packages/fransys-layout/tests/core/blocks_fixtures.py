@@ -10,24 +10,18 @@ from __future__ import annotations
 from dataclasses import replace
 lazy from collections.abc import Sequence
 
-from fransys_layout.core import (
+from fransys_layout.core import Box, Hints, Options, PinRef, PlacementProblem, Size, Sym
+from fransys_layout.core.values import (
     Attach,
     Block,
     BlockList,
-    Box,
     Cell,
     Column,
     CycleSplit,
     End,
     Fan,
     FlowGraph,
-    Hints,
     Lane,
-    Options,
-    PinRef,
-    PlacementProblem,
-    Size,
-    Sym,
 )
 
 from .pack_fixtures import card as card_sym

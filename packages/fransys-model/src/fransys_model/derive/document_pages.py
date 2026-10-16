@@ -88,9 +88,12 @@ def ordered_pages(model: Model, *, include_replica_only: bool = True) -> tuple[P
     return tuple(sorted(pages, key=lambda p: page_order_key(sets[p.drawing_set].number, p)))
 
 
-def drawn_pages(model: Model, record: Document) -> tuple[Page, ...]:
-    """`record`'s drawn pages in set then page order, replica-only sets skipped."""
-    sets = document_drawing_sets(model, record)
+def drawn_pages(model: Model, document: Id[Document]) -> tuple[Page, ...]:
+    """The drawn pages of `document` in set then page order, replica-only sets skipped.
+
+    `document` is the document's id.
+    """
+    sets = document_drawing_sets(model, document)
     sets = [s for s in sets if not is_replica_only_undrawn(model, s)]
     order = {s.id: s.number for s in sets}
     found = [p for p in layout_of(model, Page).values() if p.drawing_set in order]
@@ -110,7 +113,7 @@ def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:
     funcs = functions(model)
     for record in documents(model).values():
         name = document_export_name(model, None, record)
-        for page in drawn_pages(model, record):
+        for page in drawn_pages(model, record.id):
             destination = page_destination(model, page)
             for placement in sorted(by_page[page.id], key=lambda p: (p.y, p.x)):
                 column, row = cell(model, page, placement.x, placement.y)

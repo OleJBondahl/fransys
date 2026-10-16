@@ -3,6 +3,7 @@
 from collections import Counter
 
 from hypothesis import given, settings
+from hypothesis.internal.conjecture import providers
 from laws_checks import EvolveCase, MergeCase, evolve_cases, evolve_plan, merge_cases
 from laws_pool import Pool, pools
 
@@ -84,3 +85,8 @@ def test_cases_exercise_overlap_put_remove_replace_and_alias() -> None:
     probe()
     assert min(seen.values()) > 0, seen
     assert len(seen) == 7
+
+
+def test_draws_do_not_see_the_literals_of_loaded_modules() -> None:
+    """The conftest hides local-module literals from Hypothesis (draws ignore imports)."""
+    assert len(providers._get_local_constants()) == 0

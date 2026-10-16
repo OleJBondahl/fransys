@@ -10,7 +10,7 @@ from fransys_model.derive.facts.roles import function_role
 from fransys_model.vocab.tables import functions, items, nets, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
-lazy from fransys_model.vocab.core import Item, Unit
+lazy from fransys_model.vocab.core import Function, Item, Unit
 
 from .designation import (
     connector_designation,
@@ -30,7 +30,7 @@ from .unit_nodes import outside_unit
 
 if TYPE_CHECKING:
     from fransys_model.vocab.connectivity import Net
-    from fransys_model.vocab.core import Function, Port
+    from fransys_model.vocab.core import Port
     from fransys_model.vocab.facets.connector import ConnectorFacet
 
     from .indexes import Indexes
@@ -78,6 +78,15 @@ def connector_items(model: Model) -> tuple[Id[Item], ...]:
         and function.template in shapes
     }
     return in_designation_order(model, found)
+
+
+def connector_item(model: Model, connector: Id[Function]) -> Id[Item]:
+    """The item that owns the connector function `connector`.
+
+    Raises:
+        SchemaError: `connector` is not a function of `model`.
+    """
+    return require(functions(model).get(connector), "function", connector).item
 
 
 def unit_connector_items(model: Model, unit: Id[Unit]) -> tuple[Id[Item], ...]:

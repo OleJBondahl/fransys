@@ -6,8 +6,9 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import PinRef, Ref, RefEnd, RefKind
+from fransys_layout.core import PinRef
 from fransys_layout.core.outputs import Counts, PageRoutes
+from fransys_layout.core.values import Ref, RefEnd, RefKind
 
 from .pipeline_fixtures import cut_of, placed_of, routed_of
 from .route_fixtures import by_bundle, env_view, oracle_on, row_wrap_env, three_end_env

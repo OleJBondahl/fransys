@@ -7,9 +7,9 @@ import fransys_author
 import fransys_render
 import typst
 from demo_designs import cabinet_design
-from fransys_pdf import document_pages, source
+from fransys_pdf import source
 
-from fransys_model.derive import document_sheets_of
+from fransys_model.derive import document_page_kinds, document_sheets_of
 from fransys_model.kernel import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab import documents
@@ -70,13 +70,13 @@ def test_author_build_write_produces_the_cabinet_exports(tmp_path):
 def test_document_pdf_has_the_expected_pages_and_embedded_font(demo_cabinet_document, tmp_path):
     """The demo cabinet document's PDF has one page per resolved `PageKind` and embeds the font.
 
-    The acceptance bullet: "a page count equal to `document_pages` expanded
+    The acceptance bullet: "a page count equal to `document_page_kinds` expanded
     ... the DejaVu Sans family name in the bytes ... `<stem>.typ` in the intermediates
     that compiles on its own." Byte-equality on a second write is the separate test below.
     """
     model = demo_cabinet_document.model
     (document_id,) = documents(model)
-    pages = document_pages(model, document_id)
+    pages = document_page_kinds(model, document_id)
 
     intermediates = tmp_path / "intermediates"
     written = fr.write(demo_cabinet_document, tmp_path / "out", intermediates=intermediates)
@@ -166,7 +166,7 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
     result = fr.build(parts, design.draft(), document_draft)
     model = result.model
     (document_id,) = documents(model)
-    pages = document_pages(model, document_id)
+    pages = document_page_kinds(model, document_id)
     assert fr.PageKind.SCHEMATIC in pages
 
     drawing_set = next(ds for ds in layout_of(model, DrawingSet).values() if ds.location == c1.id)

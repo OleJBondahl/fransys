@@ -9,6 +9,7 @@ from fransys_layout.core import build_flow
 from fransys_layout.core.values import Bundle, Options, Rail
 
 from .chain_fixtures import facing_chain
+from .conftest import MARKER_BOX
 from .flow_builders import elem, net, poles, problem
 
 if TYPE_CHECKING:
@@ -54,7 +55,7 @@ def _mixed_flow() -> PlacementProblem:
 
 
 def _run_flow(prob: PlacementProblem) -> object:
-    return build_flow(prob, Options())
+    return build_flow(prob, Options(marker=MARKER_BOX))
 
 
 def _chain_flow() -> PlacementProblem:

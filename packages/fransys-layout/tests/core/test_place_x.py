@@ -5,12 +5,14 @@ from __future__ import annotations
 from dataclasses import fields
 from itertools import pairwise
 
-from fransys_layout.core import Lane, Options, PlacementProblem
+from fransys_layout.core import Options, PlacementProblem
 from fransys_layout.core.geometry import column_extent
 from fransys_layout.core.pack_row import RowSpec, row_width, solve_row
 from fransys_layout.core.place_env import PageEnv, page_envs
 from fransys_layout.core.place_x import place_x, row_specs
+from fransys_layout.core.values import Lane
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, elem, net
 from .pipeline_fixtures import cut_of
 from .place_fixtures import card_with_coils, two_edge_card, wide_row
@@ -18,7 +20,7 @@ from .place_fixtures import card_with_coils, two_edge_card, wide_row
 
 def env_of(prob: PlacementProblem, options: Options | None = None) -> PageEnv:
     """The env of the first page of a problem."""
-    opts = options or Options()
+    opts = options or Options(marker=MARKER_BOX)
     return page_envs(cut_of(prob, opts), prob, opts)[0]
 
 
@@ -79,12 +81,12 @@ def test_justify_lays_columns_out_to_the_page_margin() -> None:
     """Justified, the row ends within one wiring grid of the right margin; packed it falls short."""
     ends = {}
     for justify in (True, False):
-        env = env_of(_four_columns(), Options(justify=justify))
+        env = env_of(_four_columns(), Options(marker=MARKER_BOX, justify=justify))
         spec = row_specs(env)[0]
         assert len(spec.cols) == 4
         ends[justify] = _reach(spec, place_x(env)[0])
-    limit = AREA.w - Options().margin.w
-    assert limit - Options().wiring_grid < ends[True] <= limit
+    limit = AREA.w - Options(marker=MARKER_BOX).margin.w
+    assert limit - Options(marker=MARKER_BOX).wiring_grid < ends[True] <= limit
     assert ends[False] < limit - 100
 
 
@@ -102,7 +104,7 @@ def test_a_row_wider_than_the_page_is_left_packed_and_named() -> None:
     for word in (f"page {env.plan.page}", "row 0", f"{overflow} G", "short_height"):
         assert word in finding.text
     left = column_extent(spec.syms, (Lane(spec.pcs["c:e"].lanes[0], 0),), spec.in_row)[0]
-    assert x["col:c:e"] + left == Options().margin.w
+    assert x["col:c:e"] + left == Options(marker=MARKER_BOX).margin.w
     assert place_x(env_of(card_with_coils()))[1] == ()
 
 
@@ -115,7 +117,7 @@ def test_stage_5_never_raises_for_width() -> None:
 
 def test_fixed_box_pins_chain_at_the_pitch() -> None:
     """Fixed pins stand exactly a pitch apart and leave the wide coils off their pins."""
-    fixed = Options(box_pins="fixed")
+    fixed = Options(marker=MARKER_BOX, box_pins="fixed")
     env = env_of(card_with_coils(4, 84), fixed)
     x, _ = place_x(env)
     pitch = fixed.box_pin_pitch_min

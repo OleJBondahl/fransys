@@ -34,7 +34,7 @@ def _documents_of_sets(model: Model) -> dict[Id[DrawingSet], set[Id[Any]]]:
     """The documents that print each drawing set; a set no document prints has none."""
     found: dict[Id[DrawingSet], set[Id[Any]]] = {s: set() for s in layout_of(model, DrawingSet)}
     for doc_id, record in documents(model).items():
-        for printed in document_drawing_sets(model, record):
+        for printed in document_drawing_sets(model, record.id):
             found[printed.id].add(doc_id)
     return found
 

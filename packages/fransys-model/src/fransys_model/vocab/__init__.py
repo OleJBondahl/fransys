@@ -66,15 +66,17 @@ from .markings import (
     Pole,
     function_poles,
     identifier,
-    is_pole_link,
+    is_pole_by_role,
     marking_key,
     pole_order,
+    poles_by_role,
     port_order_key,
     unlinked_poles,
 )
 from .project import Project
 from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
+from .roles import function_role_of
 from .schema_version import SCHEMA_VERSION
 from .supply_system import Rail, SupplySystem, rail_phase_problem, supply_rail_row
 from .tables import (
@@ -205,13 +207,14 @@ __all__ = [
     "facet_subject",
     "facets_of",
     "function_poles",
+    "function_role_of",
     "function_templates",
     "functions",
     "identifier",
     "instantiate",
     "internal_links",
     "is_control",
-    "is_pole_link",
+    "is_pole_by_role",
     "items",
     "marking_key",
     "mates",
@@ -220,6 +223,7 @@ __all__ = [
     "parts",
     "placements",
     "pole_order",
+    "poles_by_role",
     "port_order_key",
     "port_templates",
     "ports",

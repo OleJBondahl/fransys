@@ -107,12 +107,12 @@ def _document_rows(model: Model, unit: Id[Unit] | None) -> list[ExportRow]:
     """
     entries = documents(model).items()
     if unit is not None:
-        entries = [(i, r) for i, r in entries if document_unit(model, r) == unit]
+        entries = [(i, r) for i, r in entries if document_unit(model, r.id) == unit]
     release_by_name: dict[str, Id[Any]] = {}
     rows = []
     for document_id, record in entries:
         name = document_export_name(model, unit, record)
-        own_unit = document_unit(model, record)
+        own_unit = document_unit(model, record.id)
         hint = _clash_hint(model, own_unit, name, release_by_name)
         rows.append(
             ExportRow(export_kind="pdf", extension="pdf", subject=document_id, name=name, hint=hint)

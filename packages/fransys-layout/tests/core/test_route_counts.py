@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from fransys_layout.core import Gap, Wire
-from fransys_layout.core.outputs import SceneWire
+from fransys_layout.core.outputs import Gap, SceneWire, Wire
 from fransys_layout.core.route_counts import collinear, counts, demand
 from fransys_layout.core.score_wiring import wiring
 

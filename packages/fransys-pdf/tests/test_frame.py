@@ -24,7 +24,7 @@ from fransys_model.derive import SheetKey, document_sheets_of, harness_cables_fo
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.kernel import make_id, render_id
 from fransys_model.layout import SheetFormat, default_sheet_format
-from fransys_model.vocab import DocumentPreset, PageKind, documents
+from fransys_model.vocab import DocumentPreset, PageKind
 
 K = PageKind
 _SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm"></svg>'
@@ -197,7 +197,7 @@ def test_harness_table_page_keeps_the_content_box_margin():
     assert f"#page(margin: {{ let m = {margin};" in text
     assert 'fit: "contain"' not in text  # no image anywhere on this page any more
     # The page body is the cable's block image; the per-cable heading line is gone (pdf-0022).
-    (found,) = harness_cables_for(m, documents(m)[doc.id], (K.HARNESS_DRAWING,))
+    (found,) = harness_cables_for(m, doc.id, (K.HARNESS_DRAWING,))
     assert found.cable == cable.id
     assert "<svg>block</svg>" in text
     assert "#strong(text(" not in text

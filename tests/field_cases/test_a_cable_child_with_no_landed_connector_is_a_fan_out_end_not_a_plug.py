@@ -14,9 +14,8 @@ for both readers, and the mate is the first `mate_partners` entry (model-0266, G
 import fransys as fr
 import pytest
 
-from fransys_model.derive import harness_line_ends
+from fransys_model.derive import harness_line_ends, item_of_port
 from fransys_model.derive.block_diagram import end_box
-from fransys_model.derive.lookups import item_of_port
 from fransys_model.vocab.tables import items, ports
 
 

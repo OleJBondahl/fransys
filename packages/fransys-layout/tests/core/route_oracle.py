@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from fransys_layout.core import Net, Placement, Ref, Routes
-    from fransys_layout.core.outputs import Wire
+    from fransys_layout.core import Net, Placement
+    from fransys_layout.core.outputs import Routes, Wire
+    from fransys_layout.core.values import Ref
 
 XY = tuple[int, int]
 

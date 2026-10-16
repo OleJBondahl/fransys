@@ -9,20 +9,10 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import (
-    Cell,
-    Column,
-    CycleSplit,
-    End,
-    FlowGraph,
-    Hints,
-    Lane,
-    Options,
-    PlacementProblem,
-    assign_blocks,
-    cut_pages,
-    order_blocks,
-)
+from fransys_layout.core import Hints, Options, PlacementProblem, order_blocks
+from fransys_layout.core.blocks import assign_blocks
+from fransys_layout.core.cut import cut_pages
+from fransys_layout.core.values import Cell, Column, CycleSplit, End, FlowGraph, Lane
 
 from .blocks_fixtures import AREA
 from .cut_fixtures import cut_of, elem, net

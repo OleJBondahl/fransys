@@ -11,10 +11,9 @@ is present. `built` takes the build's own findings, so a missing drawing names t
 that caused it, such as DIAGRAM_COLUMN_TOO_TALL. `font_dir()` returns the path to the vendored DejaVu Sans Condensed
 faces, through `importlib.resources`, reading nothing.
 
-`document_pages(model, document)` resolves a document's page list (its preset's pages, plus
-`add`, minus `remove`, in canonical order; the notes page dropped when there is no notes
-text). `PRESET_PAGES` maps each preset to its default pages, and `page_kinds(preset, add=, remove=)`
-resolves a page list from a preset.
+The page list is `derive.document_page_kinds(model, document)` in `fransys_model`: its preset's
+pages, plus `add`, minus `remove`, in canonical order, the notes page dropped when there is no
+notes text. This package calls it and holds no copy.
 
 Unit documents (decisions pdf-0012, pdf-0014, model-0061). A document whose `unit` is set names
 the unit, not the project: its title block prints `Unit.title` and `Unit.number` with an empty
@@ -28,7 +27,7 @@ table.
 
 Harness pages (decisions pdf-0015 to pdf-0018). CONTENTS's rows are
 `derive.rows.ContentsRow` (model-0106): this package holds no copy of the row shape or the ends
-join. `requests_harness_pages(pages)` is true when a
+join. `derive.requests_harness_pages(pages)` is true when a
 page list holds `CONTENTS` or `HARNESS_DRAWING`, the kinds that show cables; the cable choice
 reads it. A `HARNESS_DRAWING` page is a run of pages per cable part (pdf-0020). Each page places
 the cable block SVGs the facade hands in, one per block (pdf-0022). Its page header is the part

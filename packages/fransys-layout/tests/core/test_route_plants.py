@@ -9,12 +9,14 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import Options, build_flow, route_pages
+from fransys_layout.core import Options, build_flow
+from fransys_layout.core.route import route_pages
 
+from .conftest import MARKER_BOX
 from .pipeline_fixtures import cut_of, placed_from
 from .route_fixtures import jog_stair, reversing_pair, with_crossed
 
-OPTIONS = Options()
+OPTIONS = Options(marker=MARKER_BOX)
 
 
 @pytest.mark.xfail(
@@ -25,9 +27,6 @@ def test_stage_one_marks_the_reversed_pole_order_of_a_reversing_pair() -> None:
     assert {f.id: f.crossed for f in flow.fans}["f:bL"] == (("K2", (2, 1, 0)),)
 
 
-@pytest.mark.xfail(
-    strict=True, reason="stage 5 leaves no y room under a crossed trunk for its levels"
-)
 def test_a_crossed_trunk_routes_without_a_finding_on_the_placement_as_stage_five_made_it() -> None:
     prob = reversing_pair((2, 1, 0))
     cut = with_crossed(cut_of(prob), "f:bL", (("K2", (2, 1, 0)),))

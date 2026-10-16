@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Any, Final
 from fransys_model.derive.facts.closure import net_of
 from fransys_model.derive.facts.cores import core_colour_at
 from fransys_model.derive.facts.potentials import on_pe_net
-from fransys_model.derive.facts.roles import conductor_role, port_role
+from fransys_model.derive.facts.roles import conductor_role, is_pe_port
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab.enums import PortRole
 from fransys_model.vocab.facets.cable import CableProductFacet, CoreFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.finding_ref import ref
@@ -111,7 +110,7 @@ def _port_findings(model: Model) -> list[Finding]:
             f"port {ref(port)} has role PE but its net is not PE",
         )
         for port in ports(model).values()
-        if port_role(model, port.id) is PortRole.PE
+        if is_pe_port(model, port.id)
         and _is_wired(model, port.id)
         and not on_pe_net(model, port.id)
     ]

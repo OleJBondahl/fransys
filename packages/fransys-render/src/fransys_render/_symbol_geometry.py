@@ -21,7 +21,7 @@ from fransys_model.layout import PlacementView
 from fransys_model.vocab import functions, marking_key, ports
 
 if TYPE_CHECKING:
-    from symdef.model import Symbol
+    from symdef import Symbol
 
     from fransys_model.kernel import Model
     from fransys_model.layout import Orientation, PowerSymbol, SymbolPlacement

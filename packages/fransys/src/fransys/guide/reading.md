@@ -40,7 +40,7 @@ its root items' own location, or their nearest common ancestor; `None` when no r
 `fransys.derive.project_facts(model)` returns the title block's six facts of the project, as
 `(title, number, customer, revision, revision_date, author)`; all are empty with no `Project`.
 
-`fransys.derive.document_facts(model, document)` returns the same six facts for one `Document`:
+`fransys.derive.document_facts(model, document)` takes the document id and returns the same six facts:
 a unit document's are its unit release's own, with `customer` empty and `author` the `created`
 of the unit's current revision. Any other document's are the project's.
 
@@ -180,7 +180,7 @@ dash-prefixed, product part only, with no location segment.
 Each of these takes further keyword-only options (an inner board to render relative to, a unit
 to render for that unit's own document); their docstrings cover the exact rules.
 
-`fransys.derive.item_label(model, item)` is `item_designation`'s no-raise twin: an item's own
+`fransys.derive.item_label(model, item)` takes the item's id and is `item_designation`'s no-raise twin: an item's own
 text, or its authoring key joined by `/` when it has none yet.
 
 `fransys.derive.node_designation(model, node)` renders a node's signed

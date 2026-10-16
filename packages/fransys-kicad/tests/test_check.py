@@ -6,7 +6,6 @@ from fransys_model.derive import board_netlist
 from fransys_model.derive.designation import item_designation, item_label
 from fransys_model.derive.passes.numbering import number
 from fransys_model.kernel import SchemaError, Severity
-from fransys_model.vocab.tables import items
 
 
 def _codes(findings):
@@ -279,10 +278,10 @@ def test_a_numbered_untagged_part_without_a_footprint_is_named_by_its_number(new
     design, board, part = _board_with(new_design, {"main": ("1",)})
     stray = design.item(part, "jb1-stray", None, parent=board)
     unnumbered = design.freeze()
-    assert item_label(unnumbered, items(unnumbered)[stray.item]) == "jb1-stray"
+    assert item_label(unnumbered, stray.item) == "jb1-stray"
 
     model, _ = number(unnumbered)
-    assert item_label(model, items(model)[stray.item]) == "U1"
+    assert item_label(model, stray.item) == "U1"
     finding = _only(check(model, board.item), "PART_WITHOUT_FOOTPRINT")
     assert finding.subjects == (stray.item,)
     assert finding.message == "part U1 has no footprint, so the netlist omits it"

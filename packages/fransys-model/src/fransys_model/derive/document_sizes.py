@@ -3,7 +3,7 @@
 lazy from decimal import Decimal
 
 from fransys_model.layout import profile_of
-lazy from fransys_model.kernel import Model
+lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document
 
 from .document_unit import document_unit
@@ -18,9 +18,12 @@ def _font_mm(role: TextRole, text_height_mm: Decimal) -> float:
     return float(font_size_mm(role_height_mm(role, text_height_mm)))
 
 
-def sizes_of(model: Model, record: Document) -> Sizes:
-    """The font sizes of a document's pages: its unit's profile (the top's) sets the smallest."""
-    height = profile_of(model, document_unit(model, record)).text_height_mm
+def sizes_of(model: Model, document: Id[Document]) -> Sizes:
+    """The font sizes of a document's pages: its unit's profile (the top's) sets the smallest.
+
+    `document` is the document's id.
+    """
+    height = profile_of(model, document_unit(model, document)).text_height_mm
     label, body = _font_mm(TextRole.LABEL, height), _font_mm(TextRole.BODY, height)
     return Sizes(
         label=label,

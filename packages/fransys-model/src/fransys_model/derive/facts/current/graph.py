@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 from fransys_model.derive.facts.current.blocks import blocks
 from fransys_model.derive.facts.current.bounds import CurrentBound, Tie, block_bounds, tie_of
 from fransys_model.derive.facts.current.ties import Joint, open_ends, pairs, two_ports
-from fransys_model.derive.facts.function_ratings import states_current
 from fransys_model.derive.facts.joins import port_joins
+from fransys_model.derive.facts.stated_ratings import states_current
 from fransys_model.kernel import Id, UnionFind
 from fransys_model.vocab.core import Port
 from fransys_model.vocab.tables import conductors, functions

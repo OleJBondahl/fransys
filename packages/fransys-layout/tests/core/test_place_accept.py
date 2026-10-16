@@ -6,14 +6,16 @@ from dataclasses import replace
 
 import pytest
 
-from fransys_layout.core import Options, YCycleError, place_pages
+from fransys_layout.core import Options
 from fransys_layout.core.constraints import Graph
+from fransys_layout.core.place import place_pages
 from fransys_layout.core.place_accept import accept, trial
 from fransys_layout.core.place_align import Align, page_aligns
 from fransys_layout.core.place_x import place_x
-from fransys_layout.core.place_y import _settle, _spans, _y_graph
+from fransys_layout.core.place_y import YCycleError, _settle, _spans, _y_graph
 
 from . import align_fixtures as fx
+from .conftest import MARKER_BOX
 from .pipeline_fixtures import cut_of
 from .test_place_plants import lamp_ring, ring_fan
 from .test_place_x import env_of
@@ -24,8 +26,8 @@ def _base(prob: object) -> tuple[Graph, tuple[Align, ...]]:
     env = env_of(prob)  # ty: ignore[invalid-argument-type] - a PlacementProblem
     x, _ = place_x(env)
     spans = _spans(env, x)
-    tangled, _ = _settle(env, spans)
-    return _y_graph(env, spans, tangled)[0], tuple(page_aligns(env))
+    tangled, _ = _settle(env, spans, {}, {})
+    return _y_graph(env, spans, tangled, {}, {})[0], tuple(page_aligns(env))
 
 
 def test_all_aligns_that_hold_solve_in_one_pass() -> None:
@@ -102,7 +104,7 @@ def test_classes_drop_in_priority_order() -> None:
 
 def test_each_class_that_contradicts_is_dropped_with_its_finding_in_keep_order() -> None:
     assert _findings(fx.all_three_contradict()) == [
-        ("ALIGN_DROPPED", "p.s/gp.n"),
+        ("ALIGN_DROPPED", "gp.n/p.s"),
         ("ALIGN_DROPPED", "R1"),
         ("ALIGN_DROPPED", "rank 1, row 0"),
     ]
@@ -119,7 +121,7 @@ def test_a_page_the_stacks_and_trunks_contradict_alone_still_raises_ycycleerror(
     cut = cut_of(prob)
     ring = replace(cut.flow, fans=(ring_fan(cut.flow),), cross_links=())
     with pytest.raises(YCycleError):
-        place_pages(replace(cut, flow=ring), prob, Options())
+        place_pages(replace(cut, flow=ring), prob, Options(marker=MARKER_BOX))
 
 
 def test_one_finding_per_dropped_item_names_it() -> None:

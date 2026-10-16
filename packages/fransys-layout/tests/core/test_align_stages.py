@@ -8,13 +8,14 @@ from typing import TYPE_CHECKING
 from fransys_layout.core import Facts, Options
 
 from . import align_fixtures as fx
+from .conftest import MARKER_BOX
 from .pipeline_fixtures import placed_of
 from .place_fixtures import all_pins
 
 if TYPE_CHECKING:
     from fransys_layout.core import Placement
 
-GRID = Options().wiring_grid
+GRID = Options(marker=MARKER_BOX).wiring_grid
 
 
 def _origins(pl: Placement) -> dict[str, int]:
@@ -24,7 +25,7 @@ def _origins(pl: Placement) -> dict[str, int]:
 def test_bands_align_through_the_stages() -> None:
     """Rank 1 and rank 2 cells of the two columns stand at one y each; unheld, they do not."""
     prob = fx.two_band_columns()
-    held, free = placed_of(prob), placed_of(prob, Options(band_align=False))
+    held, free = placed_of(prob), placed_of(prob, Options(marker=MARKER_BOX, band_align=False))
     y, y_free = _origins(held), _origins(free)
     assert held.findings == ()
     assert y["a1"] == y["b1"]

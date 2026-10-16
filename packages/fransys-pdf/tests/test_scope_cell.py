@@ -28,11 +28,11 @@ def test_scope_path_of_a_sub_place_is_the_path_alone():
     doc = _doc(cabinet)
     m = model(room, cabinet, doc)
     record = documents(m)[doc.id]
-    assert scope_path(m, record) == "+ER+C1"
+    assert scope_path(m, record.id) == "+ER+C1"
 
 
 def test_scope_path_of_a_top_level_place_is_exactly_its_label():
     room = location("ER", "Electrical room")
     doc = _doc(room)
     m = model(room, doc)
-    assert scope_path(m, documents(m)[doc.id]) == "+ER"
+    assert scope_path(m, doc.id) == "+ER"

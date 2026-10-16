@@ -14,18 +14,9 @@ from fransys_layout.core import natural_key
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from fransys_layout.core import (
-        Attach,
-        Block,
-        BlockList,
-        CutResult,
-        End,
-        FlowGraph,
-        PagePlacement,
-        PinRef,
-        Placement,
-        PlacementProblem,
-    )
+    from fransys_layout.core import PinRef, Placement, PlacementProblem
+    from fransys_layout.core.outputs import PagePlacement
+    from fransys_layout.core.values import Attach, Block, BlockList, CutResult, End, FlowGraph
 
 Maps = dict[str, str]
 Canon = tuple[tuple[Any, ...], tuple[Any, ...], tuple[Any, ...]]

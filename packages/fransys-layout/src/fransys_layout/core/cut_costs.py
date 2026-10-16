@@ -5,13 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .cut_pack import left_pack
-
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .cut_pack import Pack
-    from .values import Block, BlockList, Column, Fan, FlowGraph, Options, PlacementProblem, Seat
+    from .values import Block, BlockList, Column, Fan, FlowGraph, Options, Seat
 
 HEIGHT_WIRES = 3  # grids a column's estimated height holds beyond its cells
 TWO_ENDS = 2  # a trunk with two attachments is a two-pin net
@@ -59,17 +57,21 @@ class Boundary:
     copies: int = 0
 
 
+def with_wires(height: int, grid: int) -> int:
+    """The one home of the wires margin a column's height holds beyond its cells."""
+    return height + HEIGHT_WIRES * grid
+
+
 def item_height(column: Column, options: Options) -> int:
     """The one home of a column's row height: its cells and the wires round them."""
-    return column.height + HEIGHT_WIRES * options.wiring_grid
+    return with_wires(column.height, options.wiring_grid)
 
 
-def sequence(
-    unit: BlockList, flow: FlowGraph, problem: PlacementProblem, options: Options, page_h: int
+def column_items(
+    unit: BlockList, flow: FlowGraph, options: Options, packed: Mapping[str, Pack], page_h: int
 ) -> tuple[Item, ...]:
-    """The unit's columns in block order, each with its pack and its height."""
+    """The unit's items over a given pack: stage 4's, or the pack stage 7 widened."""
     columns = {c.id: c for c in flow.columns}
-    packed = left_pack(unit, flow, problem, options)
     limit = options.short_height * page_h
     out: list[Item] = []
     for b in unit.blocks:

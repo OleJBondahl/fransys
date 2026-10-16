@@ -16,9 +16,10 @@ lazy from decimal import Decimal
 
 from fransys_model.derive.facts.current.blocks import blocks
 from fransys_model.derive.facts.energy_flow import gives_energy
-from fransys_model.derive.facts.function_ratings import function_operatings, function_ratings
-from fransys_model.vocab.enums import Current, FunctionKind
-from fransys_model.vocab.tables import functions
+from fransys_model.derive.facts.function_ratings import function_operatings
+from fransys_model.derive.facts.roles import function_role
+from fransys_model.derive.facts.stated_ratings import function_ratings
+from fransys_model.vocab.enums import Current
 lazy from fransys_model.derive.facts.contacts import LinkState
 lazy from fransys_model.kernel import Id
 lazy from fransys_model.vocab.core import Function, Item, Port
@@ -81,7 +82,7 @@ def _limits_of(
     # Partial-range is a fact of the function: one rating with a minimum breaking current
     # (part, template or a unit's boundary) makes all of its rating currents bound nothing.
     partial = any(rating.min_breaking_current_a is not None for rating in ratings)
-    if functions(model)[function].kind is FunctionKind.PROTECTION and not partial:
+    if function_role(model, function).protects and not partial:
         for rating in ratings:
             found += _bounds(
                 function, LimitRole.PROTECTION, rating.current_ac_a, rating.current_dc_a, ports

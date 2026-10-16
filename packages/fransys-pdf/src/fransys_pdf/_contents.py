@@ -15,13 +15,14 @@ from ._sizes import RULE
 from ._typst import literal
 
 if TYPE_CHECKING:
+    from fransys_model.derive import DocumentRow
     from fransys_model.kernel import Model
-    from fransys_model.vocab import Document, PageKind
+    from fransys_model.vocab import PageKind
 
 
-def contents_page(model: Model, record: Document, pages: tuple[PageKind, ...]) -> str:
+def contents_page(model: Model, record: DocumentRow, pages: tuple[PageKind, ...]) -> str:
     """The CONTENTS table (rows `ContentsRow`, model-0106, pdf-0016); `""` if no cable."""
-    cables = harness_cables_for(model, record, pages)
+    cables = harness_cables_for(model, record.id, pages)
     if not cables:
         return ""
     header = (

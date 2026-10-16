@@ -9,18 +9,10 @@ from __future__ import annotations
 from collections import Counter
 from typing import TYPE_CHECKING
 
-from fransys_layout.core import (
-    CutResult,
-    Facts,
-    Hints,
-    Marker,
-    Net,
-    Options,
-    PinRef,
-    PlacementProblem,
-    Unit,
-    place_pages,
-)
+from fransys_layout.core import Facts, Hints, Net, Options, PinRef, PlacementProblem, Unit
+from fransys_layout.core.place import place_pages
+from fransys_layout.core.values import CutResult, Ref, RefEnd, RefKind
+lazy from fransys_layout.core.outputs import Marker
 
 from . import pipeline_fixtures
 from .conftest import MARKER_BOX
@@ -117,6 +109,42 @@ def spilled_tags() -> PlacementProblem:
     return PlacementProblem(AREA, tuple(syms), nets)
 
 
+def spilled_pair() -> PlacementProblem:
+    """A 37-pin box whose first 19 pins carry a column: pins 18 and 19 leave the north edge.
+
+    The pins past 19 carry no column, so the south edge has nothing to spill. Each spilled column
+    gets one tag pair; the two box-side tags stand in one row, 16 G apart.
+    """
+    syms = [box_sym(37), *(elem(f"k{i}", 64, 32, "CH") for i in range(1, 20))]
+    nets = tuple(net(f"n{i}", f"A1.p{i}", f"k{i}.n") for i in range(1, 20))
+    return PlacementProblem(AREA, tuple(syms), nets)
+
+
+def star_three() -> PlacementProblem:
+    """Net m joins three 40 G elements x, y, z on one page, all three pins at the unit boundary.
+
+    No planner in the cut makes a star (RefKind.STAR is read, never planned), so this plants the
+    stub the boundary pins plan: one reference, three ends on one page, in one row.
+    """
+    ids = ("x", "y", "z")
+    pins = tuple(PinRef(i, "n") for i in ids)
+    facts = Facts(units=(Unit("U1", None, pins),))
+    nets = (Net("m", pins, crosses_unit=True),)
+    return PlacementProblem(AREA, tuple(elem(i, 40, 32) for i in ids), nets, facts)
+
+
+def star_two_tied() -> Ref:
+    """A star of exactly two ends in one page, one row and one column, listed in reverse id order.
+
+    Nothing but the pin's id parts them, so the id's natural order (p2 before p10) decides.
+    """
+    return Ref(
+        "m",
+        RefKind.STAR,
+        (RefEnd(1, "c", PinRef("S", "p10"), 0), RefEnd(1, "c", PinRef("S", "p2"), 0)),
+    )
+
+
 PLANTS: dict[str, Callable[[], PlacementProblem]] = {
     "tag_chain": tag_chain,
     "row_wrapped_fan": row_wrapped_fan,
@@ -125,6 +153,8 @@ PLANTS: dict[str, Callable[[], PlacementProblem]] = {
     "copied_hub": copied_hub,
     "stubs_in_a_row": stubs_in_a_row,
     "spilled_tags": spilled_tags,
+    "spilled_pair": spilled_pair,
+    "star_three": star_three,
 }
 
 KIND_OF: dict[str, str] = {
@@ -135,6 +165,8 @@ KIND_OF: dict[str, str] = {
     "copied_hub": "copy",
     "stubs_in_a_row": "stub",
     "spilled_tags": "tag",
+    "spilled_pair": "tag",
+    "star_three": "stub",
 }
 
 

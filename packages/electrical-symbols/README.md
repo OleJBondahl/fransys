@@ -12,7 +12,7 @@ Status: alpha, under construction, a package of the Fransys workspace
 
 - `symbols/`: one TOML file per symbol. The file stem is the symbol's slug, which is also its
   `reference.number` and the name other symbols use to compose it.
-- `library.toml`: the library's settings.
+- `library.toml`: the library's settings, and its `[grid]` and `[font]`, the one home of the drawing grid and the Regular text font (es-0069).
 - `src/electrical_symbols/`: a thin Python package exposing `LIBRARY`, loaded from the bundled
   `bundle.json`; `generic_box(port_names)` and `GENERIC_BOX_KEY`, the labelled-box placeholder
   layout draws for a function with no symbol; and `library_version()` /

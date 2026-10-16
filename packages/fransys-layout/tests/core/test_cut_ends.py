@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from fransys_layout.core import PinRef, RefEnd, RefKind
+from fransys_layout.core import PinRef
 from fransys_layout.core.cut_ends import end_at
+from fransys_layout.core.values import RefEnd, RefKind
 
 from .cut_fixtures import cut_of, elem, free, net, refs_of, side
 

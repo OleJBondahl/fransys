@@ -6,8 +6,7 @@ renderer never parses a subject text to find the item, unit, conductor or functi
 
 from typing import Any
 
-from fransys_model.derive.facts.boundary_pins import unit_boundary_functions
-from fransys_model.derive.facts.units import is_sole_unit_root, unit_own_roots
+from fransys_model.derive.facts.units import boundary, is_sole_unit_root, unit_own_roots
 from fransys_model.vocab.tables import conductors, functions, items, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
@@ -47,7 +46,7 @@ def _unit_subjects(model: Model, unit: Id[Unit] | None) -> Subjects:
 
 def _wire_subjects(model: Model, unit: Id[Unit] | None) -> Subjects:
     found: Subjects = {}
-    for function in unit_boundary_functions(model, unit):
+    for function in () if unit is None else boundary(model, unit):
         fn = functions(model)[function]
         found.setdefault(("boundary", function_text(model, unit, fn)), fn.id)
     for conductor in conductors(model).values():

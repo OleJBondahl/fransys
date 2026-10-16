@@ -63,7 +63,7 @@ def _page_cells(pdf: pdfium.PdfDocument) -> list[int]:
 def test_every_page_cell_is_the_page_its_sheet_is_on_when_notes_overflow():
     m, doc, pages = _fixture(_NOTES)
     pdf = _compile(m, doc, pages)
-    rows = sheet_index_rows(m, doc, (PageKind.SCHEMATIC,))
+    rows = sheet_index_rows(m, doc.id, (PageKind.SCHEMATIC,))
     expected = [_destination_page(pdf, row.destination) for row in rows]
     assert len(pdf) > 10  # the notes overflow pushes every later page
     assert _page_cells(pdf) == expected
@@ -92,7 +92,7 @@ def _index_page(pdf: pdfium.PdfDocument) -> int:
 def test_every_cell_of_a_row_links_to_its_sheets_page():
     m, doc, pages = _fixture(_NOTES)
     pdf = _compile(m, doc, pages)
-    rows = sheet_index_rows(m, doc, (PageKind.SCHEMATIC,))
+    rows = sheet_index_rows(m, doc.id, (PageKind.SCHEMATIC,))
     page = pdf[_index_page(pdf)]
     targets = []
     for n in range(pdfium_raw.FPDFPage_GetAnnotCount(page.raw)):

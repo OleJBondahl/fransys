@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import revision_history, revision_text
+from fransys_model.derive import revision_rows, revision_text
 
 from ._cover_measure import measuring_block
 from ._geometry import document_heading, document_release
@@ -11,8 +11,8 @@ from ._sizes import RULE
 from ._typst import literal
 
 if TYPE_CHECKING:
+    from fransys_model.derive import DocumentRow, RevisionRow
     from fransys_model.kernel import Model
-    from fransys_model.vocab import Document, Revision
 
     from ._markdown import Element
 
@@ -40,7 +40,7 @@ def _flatten_lists(elements: tuple[Element, ...]) -> tuple[Element, ...]:
     return tuple(flat)
 
 
-def _revision_row(entry: Revision) -> tuple[str, str, str, str, str, str]:
+def _revision_row(entry: RevisionRow) -> tuple[str, str, str, str, str, str]:
     return (
         revision_text(entry.version, entry.revision),
         entry.date,
@@ -51,7 +51,7 @@ def _revision_row(entry: Revision) -> tuple[str, str, str, str, str, str]:
     )
 
 
-def _revision_table(entries: tuple[Revision, ...]) -> str:
+def _revision_table(entries: tuple[RevisionRow, ...]) -> str:
     """The revision-history table, `""` if empty; description capped at 120 mm, wrapping."""
     if not entries:
         return ""
@@ -67,7 +67,7 @@ def _revision_table(entries: tuple[Revision, ...]) -> str:
     return f"#table(columns: {columns}, stroke: {RULE}, " + ", ".join(cells) + ")"
 
 
-def cover_page(model: Model, record: Document) -> str:
+def cover_page(model: Model, record: DocumentRow) -> str:
     """The cover page; Typst measures it and panics on an overlap (`COVER_OVERFLOW`, pdf-0047)."""
     heading = f"#heading(level: 1, text({literal(document_heading(model, record))}))"
     body = to_typst(_flatten_lists(parse(record.cover)))
@@ -81,7 +81,7 @@ def cover_page(model: Model, record: Document) -> str:
     # page top, and it lands about 9 mm lower (confirmed by compiling that too).
     # The table stands on the margin box's foot, 5 mm above the title block (pdf-0027).
     parts = [f"#let fr-cover = align(center, [\n{heading}\n{body}\n])", "#fr-cover"]
-    table = _revision_table(revision_history(model, document_release(model, record)))
+    table = _revision_table(revision_rows(model, document_release(model, record)))
     if table:
         parts.append(f"#let fr-table = {table[1:]}")
         parts.append("#place(bottom + center, fr-table)")
@@ -89,7 +89,7 @@ def cover_page(model: Model, record: Document) -> str:
     return "\n".join(parts)
 
 
-def notes_page(record: Document) -> str:
+def notes_page(record: DocumentRow) -> str:
     """The notes page: heading `Notes`, then the notes text."""
     notes = record.notes
     assert notes is not None  # noqa: S101 -- document_pages excludes NOTES when there is no notes text

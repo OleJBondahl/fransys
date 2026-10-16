@@ -15,7 +15,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, Severity, make_id
+from fransys_model.derive import error_count, refuses
+from fransys_model.kernel import Draft, Finding, Id, ModelError, Origin, make_id
 from fransys_model.vocab import (
     CableProductFacet,
     CorePair,
@@ -44,7 +45,7 @@ class PartLibraryError(ModelError):
 
     def __init__(self, findings: tuple[Finding, ...]) -> None:
         """Store every finding `lint` returned, in its own order."""
-        errors = sum(1 for f in findings if f.severity is Severity.ERROR)
+        errors = error_count(findings)
         super().__init__(f"{errors} error(s) in the part library")
         self.findings = findings
 
@@ -104,7 +105,7 @@ def load_path(root: Path) -> Draft:
     """
     root = Path(root)
     findings = lint(root)
-    if any(f.severity is Severity.ERROR for f in findings):
+    if refuses(findings):
         raise PartLibraryError(findings)
 
     draft = Draft()

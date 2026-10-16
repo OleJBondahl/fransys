@@ -33,9 +33,8 @@ from fransys_model.derive import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from fransys_model.derive import TopLevelScope
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode, Item, Unit
+    from fransys_model.derive import AspectNodeId, ItemId, TopLevelScope, UnitId
+    from fransys_model.kernel import Model
 
 
 def _write(columns: tuple[str, ...], lines: Iterable[Iterable[object]]) -> str:
@@ -60,10 +59,10 @@ def _csv(
 
 def terminal_csv(
     model: Model,
-    strip: Id[Item],
+    strip: ItemId,
     *,
-    unit: Id[Unit] | None = None,
-    context: Id[AspectNode] | None = None,
+    unit: UnitId | None = None,
+    context: AspectNodeId | None = None,
 ) -> str:
     """Write the terminal connection list of one strip as CSV.
 
@@ -85,7 +84,7 @@ def terminal_csv(
 
 
 def plc_csv(
-    model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
+    model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None
 ) -> str:
     """Write the PLC channel report as CSV.
 
@@ -105,7 +104,7 @@ def plc_csv(
 
 
 def bom_csv(
-    model: Model, scope: Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None = None
+    model: Model, scope: ItemId | AspectNodeId | UnitId | TopLevelScope | None = None
 ) -> str:
     """Write the bill of materials as CSV.
 
@@ -126,7 +125,7 @@ def bom_csv(
 
 
 def wires_csv(
-    model: Model, *, unit: Id[Unit] | None = None, context: Id[AspectNode] | None = None
+    model: Model, *, unit: UnitId | None = None, context: AspectNodeId | None = None
 ) -> str:
     """Write the wire list as CSV.
 
@@ -145,7 +144,7 @@ def wires_csv(
     return _csv(wire_rows(model, unit=unit, context=context), WIRE_COLUMNS, WIRE_LABELS)
 
 
-def designations_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
+def designations_csv(model: Model, *, unit: UnitId | None = None) -> str:
     """Write the designation (tag) list as CSV.
 
     Formats ``fransys_model.derive.queries.designation_list``, one row per item,
@@ -163,10 +162,10 @@ def designations_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
 
 def connectors_csv(
     model: Model,
-    board: Id[Item],
+    board: ItemId,
     *,
-    unit: Id[Unit] | None = None,
-    context: Id[AspectNode] | None = None,
+    unit: UnitId | None = None,
+    context: AspectNodeId | None = None,
 ) -> str:
     """Write the connector pinout list of one board as CSV.
 
@@ -189,7 +188,7 @@ def connectors_csv(
     )
 
 
-def cables_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
+def cables_csv(model: Model, *, unit: UnitId | None = None) -> str:
     """Write the cable list as CSV (root decision 0016).
 
     Formats ``fransys_model.derive.queries.cable_list_rows``, one row per cable of `unit`
@@ -205,7 +204,7 @@ def cables_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
     return _csv(cable_list_rows(model, unit=unit), CABLE_LIST_COLUMNS)
 
 
-def cores_csv(model: Model, *, unit: Id[Unit] | None = None) -> str:
+def cores_csv(model: Model, *, unit: UnitId | None = None) -> str:
     """Write the core list as CSV (reports-0005).
 
     Formats ``fransys_model.derive.core_list_rows``, one row per core of every cable

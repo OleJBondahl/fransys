@@ -4,7 +4,7 @@ Library boxes arrive as plain values. The tag slot is 48 G wide whatever the des
 standalone footprint widens it to the measured tag; a strip row's shared tag is printed once.
 """
 
-from typing import TYPE_CHECKING
+lazy from collections.abc import Iterable, Mapping
 
 from fransys_model.derive.contact_image import contact_marks
 from fransys_model.derive.contact_rows import table_geometry
@@ -15,12 +15,8 @@ from fransys_model.derive.text_width import text_width
 from fransys_model.layout import Side
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
-
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab.core import Function
+lazy from fransys_model.kernel import Id, Model
+lazy from fransys_model.vocab.core import Function
 
 __all__ = ["footprints"]
 

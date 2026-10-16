@@ -18,6 +18,7 @@ from fransys_model.derive import (
     cable_list_rows_of,
     column_label,
     column_rows,
+    connector_item,
     connector_rows,
     connector_rows_of,
     cores_text,
@@ -26,6 +27,7 @@ from fransys_model.derive import (
     document_scope,
     document_unit,
     is_own_unit_root,
+    item_description,
     list_context,
     plc_channel_rows,
     plc_list_rows,
@@ -34,10 +36,6 @@ from fransys_model.derive import (
     strip_side_headings,
     terminal_rows,
     wire_rows,
-)
-from fransys_model.vocab import (
-    functions,
-    items,
 )
 
 from ._flow import GUTTER_PCT, SHARE_PCT, flow_columns
@@ -51,15 +49,18 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive import (
+        AspectNodeId,
         BridgePiece,
         CableListRow,
         ConnectorRow,
+        DocumentRow,
+        ItemId,
         PlcChannelRow,
         TerminalRow,
+        UnitId,
         WireRow,
     )
-    from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode, Document, Item, Unit
+    from fransys_model.kernel import Model
 
 
 def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor and labels
@@ -90,14 +91,14 @@ def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor 
     return table_source(widths, names, body, title=title, label=label)
 
 
-def plc_channel_rows_for(model: Model, record: Document) -> tuple[PlcChannelRow, ...]:
+def plc_channel_rows_for(model: Model, record: DocumentRow) -> tuple[PlcChannelRow, ...]:
     """The PLC_LIST rows of `record`'s unit, ends in its location's context (none: full paths)."""
-    return plc_channel_rows(model, unit=document_unit(model, record), context=record.location)
+    return plc_channel_rows(model, unit=document_unit(model, record.id), context=record.location)
 
 
-def plc_list_page(model: Model, record: Document) -> str:
+def plc_list_page(model: Model, record: DocumentRow) -> str:
     """The PLC_LIST: a headed table per `plc_tables` entry in two columns, scoped to the unit."""
-    unit = document_unit(model, record)
+    unit = document_unit(model, record.id)
     sections = []
     for number, table in enumerate(plc_tables(model, unit=unit, context=record.location)):
         title = _list_title(model, table.item, unit, table.designation)
@@ -111,31 +112,39 @@ def plc_list_page(model: Model, record: Document) -> str:
     return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
-def _list_context(model: Model, record: Document, subject: Id[Item]) -> Id[AspectNode] | None:
+def _list_context(model: Model, record: DocumentRow, subject: ItemId) -> AspectNodeId | None:
     """The location a list's ends print short against (model-0054 s4, `derive.list_context`)."""
     return list_context(model, subject, location=record.location)
 
 
-def terminal_rows_for(model: Model, record: Document, strip: Id[Item]) -> tuple[TerminalRow, ...]:
+def terminal_rows_for(model: Model, record: DocumentRow, strip: ItemId) -> tuple[TerminalRow, ...]:
     """`strip`'s `terminal_rows`, printed in `record`'s context (`_list_context`)."""
     return terminal_rows(
-        model, strip, unit=document_unit(model, record), context=_list_context(model, record, strip)
+        model,
+        strip,
+        unit=document_unit(model, record.id),
+        context=_list_context(model, record, strip),
     )
 
 
-def connector_rows_for(model: Model, record: Document, board: Id[Item]) -> tuple[ConnectorRow, ...]:
+def connector_rows_for(
+    model: Model, record: DocumentRow, board: ItemId
+) -> tuple[ConnectorRow, ...]:
     """`board`'s `connector_rows`, printed in `record`'s context (`_list_context`)."""
     return connector_rows(
-        model, board, unit=document_unit(model, record), context=_list_context(model, record, board)
+        model,
+        board,
+        unit=document_unit(model, record.id),
+        context=_list_context(model, record, board),
     )
 
 
-def wire_rows_for(model: Model, record: Document) -> tuple[WireRow, ...]:
+def wire_rows_for(model: Model, record: DocumentRow) -> tuple[WireRow, ...]:
     """The WIRE_LABEL_LIST rows of `record`'s unit, ends printed in its location's context."""
-    return wire_rows(model, unit=document_unit(model, record), context=record.location)
+    return wire_rows(model, unit=document_unit(model, record.id), context=record.location)
 
 
-def wire_label_list_page(model: Model, record: Document) -> str:
+def wire_label_list_page(model: Model, record: DocumentRow) -> str:
     """The WIRE_LABEL_LIST table: every `wire`-faceted conductor, scoped to the unit."""
     table = _table(
         WIRE_COLUMNS,
@@ -145,25 +154,25 @@ def wire_label_list_page(model: Model, record: Document) -> str:
     return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
-def designation_list_page(model: Model, record: Document) -> str:
+def designation_list_page(model: Model, record: DocumentRow) -> str:
     """The DESIGNATION_LIST table: every item's designation, scoped to the unit."""
     table = _table(
         DESIGNATION_COLUMNS,
         column_rows(
-            designation_list(model, unit=document_unit(model, record)), DESIGNATION_COLUMNS
+            designation_list(model, unit=document_unit(model, record.id)), DESIGNATION_COLUMNS
         ),
         ("description",),
     )
     return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
-def document_cable_rows(model: Model, record: Document) -> tuple[CableListRow, ...]:
+def document_cable_rows(model: Model, record: DocumentRow) -> tuple[CableListRow, ...]:
     """The cable list's rows: the cables the document's drawings draw, `scope.cables` (pdf-0042)."""
-    scope = document_scope(model, record)
+    scope = document_scope(model, record.id)
     return cable_list_rows_of(model, {cable.cable for cable in scope.cables})
 
 
-def cable_list_page(model: Model, record: Document) -> str:
+def cable_list_page(model: Model, record: DocumentRow) -> str:
     """The CABLE_LIST table: one row per cable the document's drawings draw (pdf-0042)."""
     columns = tuple(name for name in CABLE_LIST_COLUMNS if name != "pairs")
     rows = [
@@ -176,14 +185,14 @@ def cable_list_page(model: Model, record: Document) -> str:
     return _table(columns, rows, ("description", "from_label", "to_label"))
 
 
-def bom_page(model: Model, record: Document) -> str:
+def bom_page(model: Model, record: DocumentRow) -> str:
     """The BOM table, scoped by `DocumentScope.bom_scope`."""
-    rows = column_rows(document_bom_lines(model, record), BOM_COLUMNS)
+    rows = column_rows(document_bom_lines(model, record.id), BOM_COLUMNS)
     return _table(BOM_COLUMNS, rows, ("description", "designations"))
 
 
 def _list_title(
-    model: Model, item: Id[Item], unit: Id[Unit] | None, designation: str | None = None
+    model: Model, item: ItemId, unit: UnitId | None, designation: str | None = None
 ) -> str:
     """A section's heading text, unit-relative; `""` for a unit's own root (model-0061).
 
@@ -200,18 +209,18 @@ def _list_heading(title: str) -> str:
 
 
 def terminal_list_page(
-    model: Model, record: Document, bridges: Mapping[str, BridgePiece] | None = None
+    model: Model, record: DocumentRow, bridges: Mapping[str, BridgePiece] | None = None
 ) -> str:
     """The TERMINAL_LIST section: a headed table per strip; unit-relative (pdf-0012)."""
-    unit = document_unit(model, record)
+    unit = document_unit(model, record.id)
     sections = []
-    for number, strip in enumerate(document_scope(model, record).strips):
+    for number, strip in enumerate(document_scope(model, record.id).strips):
         if not (rows := terminal_rows_for(model, record, strip)):  # no rows, no page
             continue
         title = _list_title(model, strip, unit)
         sections.append(
             _list_heading(title)
-            + description_par(items(model)[strip].description)  # author-0013
+            + description_par(item_description(model, strip))  # author-0013
             + _terminal_table(
                 model,
                 rows,
@@ -224,9 +233,9 @@ def terminal_list_page(
     return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
-def _connector_rows_for_page(model: Model, record: Document) -> tuple[ConnectorRow, ...]:
+def _connector_rows_for_page(model: Model, record: DocumentRow) -> tuple[ConnectorRow, ...]:
     """The CONNECTOR_LIST rows: a board document's board, else a unit's own, else the location's."""
-    scope = document_scope(model, record)
+    scope = document_scope(model, record.id)
     if record.item is not None:
         return tuple(
             row for board in scope.boards for row in connector_rows_for(model, record, board)
@@ -254,10 +263,10 @@ def _connector_section(row: ConnectorRow, description: str, number: int) -> str:
     )
 
 
-def connector_list_page(model: Model, record: Document) -> str:
+def connector_list_page(model: Model, record: DocumentRow) -> str:
     """The CONNECTOR_LIST section: a table per connector, headed by its designation (pdf-0030)."""
     sections = [
-        _connector_section(row, items(model)[functions(model)[row.connector].item].description, n)
+        _connector_section(row, item_description(model, connector_item(model, row.connector)), n)
         for n, row in enumerate(_connector_rows_for_page(model, record))
     ]
     return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)

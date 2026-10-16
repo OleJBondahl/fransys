@@ -14,8 +14,8 @@ from fransys_model.derive import (
     listing_interface,
     listing_revision_text,
     nested_units,
-    pin_source,
-    previous_release,
+    pin_source_pins,
+    previous_release_listing,
     release_identity,
     revision_text,
     unit_release,
@@ -122,13 +122,12 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
 
 
 def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
-    """The stored listing of the previous release (`derive.previous_release`), or `None`.
+    """The stored listing of the previous release (`derive.previous_release_listing`), or `None`.
 
     `INTERFACE_NOT_BUMPED` and `changes.md` read only that candidate.
     """
     stored = read_stored(release.path.parent)
-    previous = previous_release(stored, release.identity)
-    return None if previous is None else previous.listing
+    return previous_release_listing(stored, release.identity)
 
 
 def _since_listing(release: _ReleaseTarget) -> Listing | None:
@@ -178,11 +177,9 @@ def changes_by_name_findings(model: Model, releases: Path | None) -> list[Findin
 
 
 def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
-    """The pin source (`derive.pin_source`) as its folder and numbering, or `None`."""
-    source = pin_source(read_stored(into / release.name), release.identity)
-    if source is None or source.numbering is None:
-        return None
-    return into / release.name / source.folder, source.numbering
+    """The pin source (`derive.pin_source_pins`) as its folder and numbering, or `None`."""
+    source = pin_source_pins(read_stored(into / release.name), release.identity)
+    return None if source is None else (into / release.name / source[0], source[1])
 
 
 def _interface_not_bumped_findings(
@@ -196,8 +193,8 @@ def _interface_not_bumped_findings(
     previous = _previous_release_listing(release)
     if previous is None:
         return []
-    if listing_interface(previous) != listing_interface(new_listing) or previous.boundary == (
-        new_listing.boundary
+    if listing_interface(previous) != listing_interface(new_listing) or not (
+        baseline.boundary_changed(previous, new_listing)
     ):
         return []
     previous_revision = listing_revision_text(previous)

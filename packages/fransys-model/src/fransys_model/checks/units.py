@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from fransys_model.checks._natural_join import natural_join
 from fransys_model.derive.facts.roles import function_role
-from fransys_model.derive.facts.unit_index import unit_index
+from fransys_model.derive.facts.unit_index import boundary_unit, unit_index
 from fransys_model.derive.facts.units import declared_unit
 from fransys_model.derive.facts.units import standalone as unit_standalone
 from fransys_model.derive.facts.units import units as unit_ids
@@ -239,7 +239,9 @@ def _declared_at(plant: _Plant, unused: UnusedBoundary, owners: list[Id[Unit]]) 
 def _unused_contradicted(plant: _Plant) -> list[Finding]:
     boundary_units_of: dict[Id[Function], list[Id[Unit]]] = {}
     for boundary in plant.boundaries.values():
-        boundary_units_of.setdefault(boundary.function, []).append(boundary.unit)
+        boundary_units_of.setdefault(boundary.function, []).append(
+            boundary_unit(plant.model, boundary.id)
+        )
     found = []
     for unused in plant.unused.values():
         function = unused.function
@@ -264,12 +266,12 @@ def _boundary_membership(plant: _Plant) -> list[Finding]:
     for boundary in plant.boundaries.values():
         function = plant.functions[boundary.function]
         item_unit = declared_unit(plant.items[function.item])
-        if item_unit not in plant.subtree_of[boundary.unit]:
+        unit = boundary_unit(plant.model, boundary.id)
+        if item_unit not in plant.subtree_of[unit]:
             message = (
-                f"boundary function {ref(function)}'s item does not belong to "
-                f"{ref(boundary.unit)}'s subtree"
+                f"boundary function {ref(function)}'s item does not belong to {ref(unit)}'s subtree"
             )
-            subjects = (boundary.unit, boundary.function)
+            subjects = (unit, boundary.function)
             found.append(_finding(BOUNDARY_NOT_IN_UNIT, Severity.ERROR, subjects, message))
     return found
 

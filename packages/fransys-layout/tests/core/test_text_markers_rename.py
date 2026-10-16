@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from fransys_layout.core import Options, mark_pages, place_pages
+from fransys_layout.core import Options
+from fransys_layout.core.place import place_pages
+from fransys_layout.core.text_markers import mark_pages
 
 from . import pipeline_fixtures
 from .conftest import MARKER_BOX
@@ -19,7 +21,7 @@ from .text_fixtures import PLANTS
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from fransys_layout.core import Marker
+    from fransys_layout.core.outputs import Marker
 
 OPTIONS = Options(marker=MARKER_BOX)
 

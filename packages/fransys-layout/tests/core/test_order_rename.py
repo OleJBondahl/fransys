@@ -4,19 +4,17 @@ tuples changes nothing."""
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
 import pytest
 
-from fransys_layout.core import (
-    Attach,
-    Block,
-    End,
-    FlowGraph,
-    natural_key,
-    order_columns,
-)
+from fransys_layout.core import natural_key
+from fransys_layout.core.order import order_columns
 
 from .order_fixtures import OPTIONS, block, box_column, comb, flow
+
+if TYPE_CHECKING:
+    from fransys_layout.core.values import Attach, Block, End, FlowGraph
 
 # (column id format, symbol id format): both keep the natural order of the ids, each spells it anew
 SPELLINGS = (("C{}", "=Y{}"), ("Q{:04d}", "=Z{:04d}"))

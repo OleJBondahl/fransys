@@ -19,6 +19,7 @@ from fransys_layout.stages.resolve import poles_and_pairs
 from fransys_model.derive import (
     actuated_group,
     actuator_each_contact,
+    connector_facets,
     effective_placement,
     lead_switch,
     operated_by,
@@ -26,7 +27,6 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.designation import reference_designation
 from fransys_model.derive.drawing_text import point_text, strip_tag_text
-from fransys_model.derive.lookups import connector_facets
 from fransys_model.kernel import SchemaError, parent_chain
 from fransys_model.vocab import function_poles, marking_key, pole_order
 from fransys_model.vocab.enums import Aspect

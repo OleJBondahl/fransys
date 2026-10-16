@@ -73,7 +73,7 @@ def _port(model, unit_scope):
 
 def _document_of(model, unit_scope):
     (found,) = [
-        i for i, r in documents(model).items() if document_unit(model, r) == unit_scope.unit_id
+        i for i, r in documents(model).items() if document_unit(model, r.id) == unit_scope.unit_id
     ]
     return found
 

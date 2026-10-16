@@ -7,28 +7,21 @@ from itertools import permutations
 
 import pytest
 
-from fransys_layout.core import (
-    Attach,
-    Box,
-    Fan,
-    Options,
-    PinRef,
-    PinXY,
-    Placed,
-    Trunk,
-    Wire,
-)
+from fransys_layout.core import Box, Options, PinRef
+from fransys_layout.core.outputs import PinXY, Placed, Trunk, Wire
 from fransys_layout.core.route_counts import collinear, counts
 from fransys_layout.core.route_env import RouteEnv
 from fransys_layout.core.route_trunk import drop_kind, trunk_wires
 from fransys_layout.core.score_wiring import bundles
+from fransys_layout.core.values import Attach, Fan
 
+from .conftest import MARKER_BOX
 from .cycle_fixtures import acyclic_problem
 from .pipeline_fixtures import cut_of
 from .place_fixtures import all_pins, bundle_fan
 from .route_fixtures import envs_of, inherent, overlaps, own_crossings, reversing_pair, with_crossed
 
-STEP = Options().wiring_grid
+STEP = Options(marker=MARKER_BOX).wiring_grid
 FULL = (2, 1, 0)
 
 
@@ -52,7 +45,8 @@ def far_ends(env: RouteEnv, wires: list[Wire]) -> dict[tuple[str, str], int]:
 
 
 def placement_of(env: RouteEnv):
-    from fransys_layout.core import PagePlacement, Placement
+    from fransys_layout.core import Placement
+    from fransys_layout.core.outputs import PagePlacement
 
     page = PagePlacement(env.page, tuple(env.placed.values()), env.gaps, env.trunks, (), env.bands)
     return Placement((page,))
@@ -132,7 +126,7 @@ def synthetic(
         (band,),
         (),
         frozenset(),
-        replace(Options(), wiring_grid=grid),
+        replace(Options(marker=MARKER_BOX), wiring_grid=grid),
     )
     return env, trunk, pin_y
 
@@ -170,14 +164,14 @@ def test_every_permutation_draws_square_without_overlap_and_crosses_only_where_i
 
 
 def own_crossings_of(wires: list[Wire]) -> int:
-    from fransys_layout.core import Counts, PageRoutes, Routes
+    from fransys_layout.core.outputs import Counts, PageRoutes, Routes
 
     page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0, 0))
     return own_crossings(Routes((page,)))
 
 
 def overlaps_of(wires: list[Wire]) -> list:
-    from fransys_layout.core import Counts, PageRoutes, Routes
+    from fransys_layout.core.outputs import Counts, PageRoutes, Routes
 
     page = PageRoutes(1, tuple(wires), (), Counts(0, 0, 0, 0, 0))
     return overlaps(Routes((page,)))
@@ -221,7 +215,8 @@ def test_a_reversing_pair_through_the_stages_draws_its_inherent_crossings() -> N
 
 
 def test_a_crossed_trunk_with_no_room_for_its_levels_is_a_finding_and_draws_nothing() -> None:
-    env, trunk = crossed_env(lower=0)
+    """Stage 5 now leaves grid * (3 + 2); K2 raised by two steps leaves the lanes' share only."""
+    env, trunk = crossed_env(lower=-2 * STEP)
     drawn = trunk_wires(env, trunk)
     (finding,) = drawn.findings
     assert (finding.code, finding.subject) == ("ROUTE_FAILED", "K2")

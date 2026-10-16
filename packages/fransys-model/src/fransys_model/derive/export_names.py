@@ -107,7 +107,7 @@ def document_export_name(model: Model, unit: Id[Unit] | None, record: Document) 
     Unit subject (`record.unit`, or `record.unit_name` via `document_unit`): its own prefix.
     Location, item, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>.pdf` here.
     """
-    document_own_unit = document_unit(model, record)
+    document_own_unit = document_unit(model, record.id)
     if document_own_unit is not None:
         kind = "harness" if record.preset is DocumentPreset.HARNESS_DRAWING else None
         return export_name(model, document_own_unit, "pdf", kind=kind)

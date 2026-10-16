@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from hypothesis import settings
+from hypothesis.internal.conjecture import providers
+from hypothesis.internal.constants_ast import Constants
 
 from fransys_kernel import AuthoringKey, Id, Model, Origin, Record, Value, record, registry, value
 
@@ -110,3 +112,17 @@ def _restore_kind_registry() -> Iterator[None]:
     registry._records_by_name.update(by_name)
     registry._value_classes.clear()
     registry._value_classes.update(values)
+
+
+@pytest.fixture(autouse=True)
+def _draws_ignore_loaded_modules(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Make a derandomized draw the same whichever modules the process has loaded.
+
+    Hypothesis offers the literals of every imported local module as draw values, so which
+    workspace packages share the process moved the draw (`test_laws_meta` saw 7 aliases alone,
+    0 in the gate). No public setting turns it off, hence the private hook.
+    """
+    monkeypatch.setattr(providers, "_get_local_constants", Constants)
+    providers.CONSTANTS_CACHE.cache.clear()
+    yield
+    providers.CONSTANTS_CACHE.cache.clear()

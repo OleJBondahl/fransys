@@ -9,10 +9,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .cut_costs import boundaries, positions, sequence
+from .cut_costs import boundaries, column_items, positions
 from .cut_dp import Cut, cut_unit, page_findings
 from .cut_ends import ref_pins
 from .cut_guard import unplaced
+from .cut_measured import Measured, measured_blocks
+from .cut_pack import left_pack
 from .cut_refs import (
     copies,
     copyable_fans,
@@ -48,13 +50,17 @@ def cut_pages(
     flow: FlowGraph,
     problem: PlacementProblem,
     options: Options,
+    measured: Measured | None = None,
 ) -> CutResult:
-    """The page plans of every unit, the planned references and the findings."""
+    """The page plans of every unit, the planned references and the findings.
+
+    measured (stage 7): reserves and block heights read off a placement, in place of estimates.
+    """
     flow, blocks, folds = split_tall(flow, blocks, problem, options)
     copyable = copyable_fans(flow, problem)
     done = Done([], [], [], {})
     for unit in blocks:
-        _cut_unit(unit, (flow, problem, options), copyable, done)
+        _cut_unit(unit, (flow, problem, options), copyable, done, measured)
     for c in flow.columns:
         for cell in (cell for lane in c.lanes for cell in lane.cells):
             done.where.setdefault(cell.sym, done.where[c.id])
@@ -78,13 +84,19 @@ def plan_unit(
     unit: BlockList,
     env: tuple[FlowGraph, PlacementProblem, Options],
     copyable: frozenset[str],
+    measured: Measured | None = None,
 ) -> tuple[Cut, Plan, bool]:
     """The unit's DP input, its page plan, and whether min_fill was given up."""
     flow, problem, options = env
     page_w = problem.area.w - 2 * options.margin.w
     page_h = problem.area.h - 2 * options.margin.h
-    seq = sequence(unit, flow, problem, options, page_h)
+    reserves = measured.reserves if measured else None
+    seq = column_items(
+        unit, flow, options, left_pack(unit, flow, problem, options, reserves), page_h
+    )
     by_id = {b.id: b for b in unit.blocks}
+    if measured:
+        seq, by_id = measured_blocks(seq, by_id, measured, options.short_height * page_h)
     cut = Cut(seq, boundaries(seq, flow, by_id, copyable), by_id, page_w, page_h, options)
     plan, relaxed = cut_unit(cut)
     return cut, plan, relaxed
@@ -95,8 +107,9 @@ def _cut_unit(
     env: tuple[FlowGraph, PlacementProblem, Options],
     copyable: frozenset[str],
     done: Done,
+    measured: Measured | None = None,
 ) -> None:
-    cut, plan, relaxed = plan_unit(unit, env, copyable)
+    cut, plan, relaxed = plan_unit(unit, env, copyable, measured)
     first = len(done.pages) + 1
     page_of = {q: first + p for p, (i, k, _) in enumerate(plan) for q in range(i, k + 1)}
     done.pages.extend(_page_plans(unit, cut, plan, first))

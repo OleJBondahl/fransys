@@ -8,11 +8,11 @@ from fransys_model.derive.page_nav import reference_links
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from fransys_model.kernel import Id, Model
-    from fransys_model.layout import Page, SheetFormat
+    from fransys_model.derive import PageId, SheetRow
+    from fransys_model.kernel import Model
 
 
-def page_links(model: Model, page: Page, sheet: SheetFormat, known: Collection[Id[Page]]) -> str:
+def page_links(model: Model, page: PageId, sheet: SheetRow, known: Collection[PageId]) -> str:
     """Typst placing one empty linked box per reference on `page`, in the drawing's own mm.
 
     The same transform as the drawing's: `grid_to_mm` from the content origin. Nothing prints.

@@ -29,6 +29,7 @@ from .baseline_designation import (
     net_port_end,
     unit_designation,
 )
+from .baseline_item_order import item_order, num_key
 from .baseline_keys import listing_key
 from .baseline_rules import CURRENT, ListingRules
 from .facts.net_facts import net_class_name, net_potential
@@ -60,10 +61,6 @@ def _opt_key(value: str | None) -> tuple[bool, str]:
     return (value is None, value or "")
 
 
-def _num_key(value: int | None) -> tuple[bool, int]:
-    return (value is None, value or 0)
-
-
 def _repr_key(value: object) -> tuple[bool, str]:
     """A None-safe sort key for a nested, non-orderable `@value` (`Rating`, `Operating`)."""
     return (value is None, "" if value is None else repr(value))
@@ -89,31 +86,21 @@ def _item_rows(
             continue
         designation = _listing_designation(model, unit, item.id, rules)
         part = None if item.part is None else parts_table[item.part]
-        rows.append(
-            BaselineItem(
-                designation=designation,
-                mpn="" if part is None else part.mpn,
-                manufacturer="" if part is None else part.manufacturer,
-                installed=item.installed,
-                external=external(model, item.id),
-                position=item.position,
-                parent=None
-                if item.parent is None
-                else _listing_designation(model, unit, item.parent, rules),
-                key=listing_key(model, item.id) if rules.item_keys else None,
-            )
+        row = BaselineItem(
+            designation=designation,
+            mpn="" if part is None else part.mpn,
+            manufacturer="" if part is None else part.manufacturer,
+            installed=item.installed,
+            external=external(model, item.id),
+            position=item.position,
+            parent=None
+            if item.parent is None
+            else _listing_designation(model, unit, item.parent, rules),
+            key=listing_key(model, item.id) if rules.item_keys else None,
         )
-    rows.sort(
-        key=lambda r: (
-            r.designation,
-            r.mpn,
-            r.manufacturer,
-            r.installed,
-            r.external,
-            _num_key(r.position),
-        )
-    )
-    return tuple(rows)
+        rows.append((row, listing_key(model, item.id)))
+    rows.sort(key=item_order)
+    return tuple(row for row, _ in rows)
 
 
 def _end_keys(a: BaselineEnd, b: BaselineEnd, rules: ListingRules) -> dict[str, str]:
@@ -225,7 +212,7 @@ def _conductor_rows(
             _opt_key(r.carrier),
             _opt_key(r.colour),
             _opt_key(r.gauge_mm2),
-            _num_key(r.length_mm),
+            num_key(r.length_mm),
             _opt_key(r.label),
         )
     )

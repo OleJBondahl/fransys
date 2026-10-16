@@ -16,7 +16,7 @@ from .enums import Energy, LinkRest
 class FunctionRole:
     """What a `FunctionKind` is for; each field reproduces one kind branch (comment on its row).
 
-    Example: `FUNCTION_ROLES[FunctionKind.CONTACT_NO]` has `contact` and `rest=LinkRest.OPEN`.
+    Example: `function_role_of(FunctionKind.CONTACT_NO)` has `contact` and `rest=LinkRest.OPEN`.
     `plain_contact` leaves out `SWITCH`. `band` is a `Profile.band_ranks` key (a string, M8).
     """
 
@@ -29,6 +29,7 @@ class FunctionRole:
     pin_group: bool = False
     channel: bool = False
     bar: bool = False
+    # protects: an overcurrent protective device: it carries a protection rating and clears faults
     protects: bool = False
     through: bool = False
     energy: Energy | None = None

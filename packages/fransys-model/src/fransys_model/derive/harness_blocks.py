@@ -1,7 +1,7 @@
 """The cable blocks a harness document draws: its cables, and the block each draws at (pdf-0015)."""
 
 from fransys_model.vocab import DocumentPreset, PageKind
-from fransys_model.vocab.tables import items, parts
+from fransys_model.vocab.tables import documents, items, parts
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Document, Item
 
@@ -28,19 +28,25 @@ def requests_harness_pages(pages: tuple[PageKind, ...]) -> bool:
 
 
 def harness_cables_for(
-    model: Model, record: Document, pages: tuple[PageKind, ...]
+    model: Model, document: Id[Document], pages: tuple[PageKind, ...]
 ) -> tuple[HarnessCable, ...]:
-    """The subject's cables: SYSTEM all top-level, a unit its own only."""
+    """The subject's cables: SYSTEM all top-level, a unit its own only.
+
+    `document` is the document's id.
+    """
     if not requests_harness_pages(pages):
         return ()
-    return document_scope(model, record).cables
+    return document_scope(model, document).cables
 
 
 def system_has_no_top_level_cables(
-    record: Document, cables_found: tuple[HarnessCable, ...]
+    model: Model, document: Id[Document], cables_found: tuple[HarnessCable, ...]
 ) -> bool:
-    """A SYSTEM document whose model has no top-level cable at all."""
-    return record.preset is DocumentPreset.SYSTEM and not cables_found
+    """A SYSTEM document whose model has no top-level cable at all.
+
+    `document` is the document's id.
+    """
+    return documents(model)[document].preset is DocumentPreset.SYSTEM and not cables_found
 
 
 def _part_line(cable: HarnessCable) -> str:
@@ -66,14 +72,16 @@ def _harness_block(model: Model, subject: Id[Item], key: str) -> CableBlockRef:
 
 
 def cable_blocks(
-    model: Model, record: Document, cables: tuple[HarnessCable, ...]
+    model: Model, document: Id[Document], cables: tuple[HarnessCable, ...]
 ) -> tuple[CableBlockRef, ...]:
     """The document's blocks, one per `cable_subject`, each at its first cable's place.
 
     A document reads absolutely unless it is a unit document, whose reading is its unit. A
     harness with wires gets its one block too (`DocumentScope.harnesses`), after the cable blocks.
+
+    `document` is the document's id.
     """
-    scope = document_scope(model, record)
+    scope = document_scope(model, document)
     unit = scope.unit
     blocks: dict[str, CableBlockRef] = {}
     for cable in cables:

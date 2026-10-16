@@ -18,24 +18,23 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import SheetBackground
+    from fransys_model.derive import DocumentRow, SheetBackground
     from fransys_model.kernel import Model
-    from fransys_model.vocab import Document
 
 _COLUMNS = ("Sheet", "Title", "Page")
 
 
 def sheet_index_page(
     model: Model,
-    record: Document,
+    record: DocumentRow,
     kinds: tuple[PageKind, ...],
     sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """The two-column index table, `""` for fewer than two sheets (empty-list rule)."""
-    rows = sheet_index_rows(model, record, kinds)
+    rows = sheet_index_rows(model, record.id, kinds)
     if not rows:
         return ""
-    sizes = sizes_of(model, record)
+    sizes = sizes_of(model, record.id)
     room = sheet_of(sheets, SheetKey(record.id, PageKind.SHEET_INDEX, 0)).title_room_mm
     cells = ["table.header(" + ", ".join(f"strong(text({literal(c)}))" for c in _COLUMNS) + ")"]
     for row in rows:

@@ -12,16 +12,8 @@ from typing import TYPE_CHECKING, ClassVar
 
 import pytest
 
-from fransys_layout.core import (
-    Block,
-    BlockList,
-    Fan,
-    Finding,
-    FlowGraph,
-    Options,
-    order,
-    order_search,
-)
+from fransys_layout.core import Options, order, order_search
+from fransys_layout.core.values import Block, BlockList, Fan, Finding, FlowGraph
 
 from .order_fixtures import (
     OPTIONS,

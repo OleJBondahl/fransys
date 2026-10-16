@@ -9,12 +9,11 @@ from fransys_model.checks._natural_join import natural_join
 from fransys_model.derive.facts.current.bounds import CurrentBound, LimitRole, highest
 from fransys_model.derive.facts.current.chains import chains_unordered
 from fransys_model.derive.facts.current.load_limits import LoadLimit, load_limits
-from fransys_model.derive.facts.function_ratings import function_ratings
 from fransys_model.derive.facts.rail_reach import rails_by_potential, reached_kinds
+from fransys_model.derive.facts.stated_ratings import function_ratings, rating_source_label
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.enums import Current
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.tables import units
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
@@ -71,7 +70,6 @@ def check_ratings_current(model: Model) -> tuple[Finding, ...]:
         return ()
     bounds = _worst_bounds(model)
     reached = reached_kinds(model)
-    unit_of = units(model)
     found: list[Finding] = []
     for (function, kind), bound in bounds.items():
         if kind not in reached.get(function, ()):
@@ -80,11 +78,7 @@ def check_ratings_current(model: Model) -> tuple[Finding, ...]:
             rated = source.rating.current_ac_a if kind is Current.AC else source.rating.current_dc_a
             if rated is None or rated >= bound.value:
                 continue
-            label = (
-                "part or template rating"
-                if source.unit is None
-                else f"boundary rating of {ref(unit_of[source.unit])}"
-            )
+            label = rating_source_label(model, source)
             found.append(
                 Finding(
                     code=RATING_CURRENT_BELOW_BRANCH,

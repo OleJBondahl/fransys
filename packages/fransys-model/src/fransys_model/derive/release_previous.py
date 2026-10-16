@@ -2,10 +2,11 @@
 
 from .release_order import release_order, same_version
 from .revision_text import revision_text
+lazy from .numbering_pins import NumberingPins
 lazy from .release_order import ReleaseOrder
-lazy from .rows_baseline import ReleaseIdentity, StoredRelease, StoredReleases
+lazy from .rows_baseline import Listing, ReleaseIdentity, StoredRelease, StoredReleases
 
-__all__ = ["pin_source", "previous_release"]
+__all__ = ["pin_source", "pin_source_pins", "previous_release", "previous_release_listing"]
 
 
 def _highest(
@@ -42,3 +43,19 @@ def pin_source(stored: StoredReleases, identity: ReleaseIdentity) -> StoredRelea
         and same_version((r.identity.name, r.identity.version), (identity.name, identity.version))
     )
     return _highest(same, release_order(identity.version, identity.revision), inclusive=True)
+
+
+def previous_release_listing(stored: StoredReleases, identity: ReleaseIdentity) -> Listing | None:
+    """The listing of `previous_release`, or `None` when there is no previous release."""
+    previous = previous_release(stored, identity)
+    return None if previous is None else previous.listing
+
+
+def pin_source_pins(
+    stored: StoredReleases, identity: ReleaseIdentity
+) -> tuple[str, NumberingPins] | None:
+    """The folder name and numbering of `pin_source`, or `None` when it has no numbering."""
+    source = pin_source(stored, identity)
+    if source is None or source.numbering is None:
+        return None
+    return source.folder, source.numbering

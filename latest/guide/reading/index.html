@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/reading/">
       
       
       
@@ -2029,7 +2029,7 @@ instance is of. It is the one reader of a unit's release facts.</p>
 its root items' own location, or their nearest common ancestor; <code>None</code> when no root is placed.</p>
 <p><code>fransys.derive.project_facts(model)</code> returns the title block's six facts of the project, as
 <code>(title, number, customer, revision, revision_date, author)</code>; all are empty with no <code>Project</code>.</p>
-<p><code>fransys.derive.document_facts(model, document)</code> returns the same six facts for one <code>Document</code>:
+<p><code>fransys.derive.document_facts(model, document)</code> takes the document id and returns the same six facts:
 a unit document's are its unit release's own, with <code>customer</code> empty and <code>author</code> the <code>created</code>
 of the unit's current revision. Any other document's are the project's.</p>
 <h2 id="rails-boundaries-and-function-kinds">Rails, boundaries and function kinds</h2>
@@ -2135,7 +2135,7 @@ location and its product designation together (<code>+C1-K1</code>).</p>
 dash-prefixed, product part only, with no location segment.</p>
 <p>Each of these takes further keyword-only options (an inner board to render relative to, a unit
 to render for that unit's own document); their docstrings cover the exact rules.</p>
-<p><code>fransys.derive.item_label(model, item)</code> is <code>item_designation</code>'s no-raise twin: an item's own
+<p><code>fransys.derive.item_label(model, item)</code> takes the item's id and is <code>item_designation</code>'s no-raise twin: an item's own
 text, or its authoring key joined by <code>/</code> when it has none yet.</p>
 <p><code>fransys.derive.node_designation(model, node)</code> renders a node's signed
 designation by aspect: <code>+C1</code> for a location, <code>=G1</code> for a group. It is the segment
@@ -2320,7 +2320,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.10 documentation
+      Fransys 0.20.0 documentation
     </div>
   
   

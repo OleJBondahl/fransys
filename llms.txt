@@ -2,9 +2,9 @@
 
 > Fransys is a Python toolkit for electrical cabinet and harness design.
 
-The documentation is versioned. Latest release: 0.19.10.
+The documentation is versioned. Latest release: 0.20.0.
 
 - Latest: https://olejbondahl.github.io/fransys/latest/llms.txt (the whole guide in one file: https://olejbondahl.github.io/fransys/latest/llms-full.txt)
-- A given release: https://olejbondahl.github.io/fransys/<X.Y.Z>/llms.txt, for example https://olejbondahl.github.io/fransys/0.19.10/llms.txt
+- A given release: https://olejbondahl.github.io/fransys/<X.Y.Z>/llms.txt, for example https://olejbondahl.github.io/fransys/0.20.0/llms.txt
 - Markdown of any page: its URL plus index.md, under the same version path
 - Pick the version from the installed `fransys.__version__`

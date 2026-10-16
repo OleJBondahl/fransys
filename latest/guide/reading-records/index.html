@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/reading-records/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.20.0/guide/reading-records/">
       
       
       
@@ -723,6 +723,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Lookups
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#id-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Id aliases
       </span>
     </span>
   </a>
@@ -1833,6 +1844,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#id-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Id aliases
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ratings-and-currents" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1896,6 +1918,8 @@ reached as <code>fr.derive.NAME</code>.</p>
 <li><code>revision_history</code> takes a model and an optional release. It returns the <code>Revision</code> records of a release, in date order, then by version and revision as numbers, so revision 2 comes before revision 10. With <code>release=None</code> it returns the project's own history. It raises <code>SchemaError</code> when <code>release</code> is not <code>None</code> and is not a release of the model.</li>
 </ul>
 <p>Use <code>item_location</code> when a list needs an item's place and the place may be inherited. Use <code>items_at</code> when you need everything in a cabinet or on a board, including the items under it.</p>
+<h2 id="id-aliases">Id aliases</h2>
+<p><code>fransys_model.derive</code> exports <code>UnitId</code>, <code>ItemId</code>, <code>FunctionId</code>, <code>PortId</code>, <code>DocumentId</code>, <code>NetId</code>, <code>ConductorId</code>, <code>AspectNodeId</code> and <code>UnitReleaseId</code>. Each is <code>Id[...]</code> of its record class. Annotate a value with the alias, so a module that only reads ids imports no record class. An output package reads sheets, documents and connector items through <code>DocumentRow</code>, <code>SheetRow</code>, <code>document_row</code>, <code>document_sheet</code>, <code>kind_sheet</code>, <code>schematic_page_ids</code> and <code>connector_item</code> of the same module, never through a record. <code>fr.derive</code> does not re-export them.</p>
 <h2 id="ratings-and-currents">Ratings and currents</h2>
 <ul>
 <li><code>Rating</code> says what a function or a part is rated for. Its fields are <code>voltage_ac_v</code>, <code>voltage_dc_v</code>, <code>current_ac_a</code>, <code>current_dc_a</code>, <code>min_breaking_current_a</code>, <code>power_loss_w</code>, <code>breaking_ac</code> and <code>breaking_dc</code>. A field is <code>None</code> when the datasheet gives no value. AC voltages are RMS, and DC voltages are the highest permissible potential. Currents are continuous ratings, except <code>min_breaking_current_a</code>, which is the lowest current a partial-range fuse breaks. The model checks the types only; comparing a rating with the plant is a check's job.</li>
@@ -1939,7 +1963,7 @@ reached as <code>fr.derive.NAME</code>.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.10 documentation
+      Fransys 0.20.0 documentation
     </div>
   
   

@@ -267,16 +267,34 @@ return the identical `Indexes` object, so a caller never has to thread it throug
 The digest ignores origins and aliases, which no index reads, and an `Indexes` holds only
 ids, so equal digests mean equal results. Identity is guaranteed within one thread.
 
+### bundle_of
+
+```python
+def bundle_of(model: Model, port: Id[Port]) -> tuple[Id[Port], int] | None
+```
+
+The `(bundle id, pole index)` of the physical net of `port`, or `None` when in no bundle.
+
+### cable_block_sizes
+
+```python
+def cable_block_sizes(model: Model) -> dict[str, CableBlockSize]
+```
+
+Each laid-out cable block's size in G and sheet module, by `cable_block_key`.
+
 ### cable_blocks
 
 ```python
-def cable_blocks(model: Model, record: Document, cables: tuple[HarnessCable, ...]) -> tuple[CableBlockRef, ...]
+def cable_blocks(model: Model, document: Id[Document], cables: tuple[HarnessCable, ...]) -> tuple[CableBlockRef, ...]
 ```
 
 The document's blocks, one per `cable_subject`, each at its first cable's place.
 
 A document reads absolutely unless it is a unit document, whose reading is its unit. A
 harness with wires gets its one block too (`DocumentScope.harnesses`), after the cable blocks.
+
+`document` is the document's id.
 
 ### cable_items
 
@@ -567,6 +585,17 @@ def connector_facets(model: Model) -> frozendict[Id[FunctionTemplate], Connector
 ```
 
 Every `connector` facet by the function template it describes.
+
+### connector_item
+
+```python
+def connector_item(model: Model, connector: Id[Function]) -> Id[Item]
+```
+
+The item that owns the connector function `connector`.
+
+Raises:
+    SchemaError: `connector` is not a function of `model`.
 
 ### connector_items
 
@@ -862,10 +891,12 @@ Sort key of a sheet: its reading's render id (`""` for the absolute one), then n
 ### diagram_sheets
 
 ```python
-def diagram_sheets(model: Model, record: Document) -> tuple[DiagramSheet, ...]
+def diagram_sheets(model: Model, document: Id[Document]) -> tuple[DiagramSheet, ...]
 ```
 
 The diagram sheets of the document's reading, by number: SYSTEM's absolute or its unit's.
+
+`document` is the document's id.
 
 ### diff_marks
 
@@ -889,18 +920,22 @@ The rows no view marked, once per kind and subject: removed, then added, then ch
 ### document_bom_lines
 
 ```python
-def document_bom_lines(model: Model, document: Document) -> tuple[BomLine, ...]
+def document_bom_lines(model: Model, document: Id[Document]) -> tuple[BomLine, ...]
 ```
 
 The BOM lines of `document`: its `bom_scope` less the harness items it does not draw.
 
+`document` is the document's id.
+
 ### document_drawing_sets
 
 ```python
-def document_drawing_sets(model: Model, record: Document) -> tuple[DrawingSet, ...]
+def document_drawing_sets(model: Model, document: Id[Document]) -> tuple[DrawingSet, ...]
 ```
 
-`record`'s drawing sets by `number`: a location's top-level set, a unit's sets.
+The drawing sets of `document` by `number`: a location's top-level set, a unit's sets.
+
+`document` is the document's id.
 
 ### document_export_name
 
@@ -916,12 +951,14 @@ Location, item, SYSTEM: the write scope's; empty prefix gives bare `<cover-stem>
 ### document_facts
 
 ```python
-def document_facts(model: Model, record: Document) -> tuple[str, str, str, str, str, str]
+def document_facts(model: Model, document: Id[Document]) -> tuple[str, str, str, str, str, str]
 ```
 
 `project_facts`, or for a unit document the unit release's own, customer empty.
 
 A unit document's author is the `created` of the unit's current revision.
+
+`document` is the document's id.
 
 ### document_ids
 
@@ -942,23 +979,49 @@ The pages one document will contain, in order.
 `page_kinds` of the document record's preset, additions and removals, with NOTES dropped
 when the record has no notes text. `fransys_pdf.source` assembles exactly these pages.
 
+### document_row
+
+```python
+def document_row(model: Model, document: Id[Document]) -> DocumentRow
+```
+
+The row of `document`; raises `KeyError` when the id names no document of `model`.
+
+### document_rows
+
+```python
+def document_rows(model: Model) -> tuple[DocumentRow, ...]
+```
+
+One row per document, in `documents(model)` order.
+
 ### document_scope
 
 ```python
-def document_scope(model: Model, document: Document) -> DocumentScope
+def document_scope(model: Model, document: Id[Document]) -> DocumentScope
 ```
 
-What `document` selects from `model`: its unit, cables, harnesses, BOM scope and lists.
+What the document `document` (its id) selects from `model`: see `_document_scope`.
+
+### document_sheet
+
+```python
+def document_sheet(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> SheetRow
+```
+
+The paper of every page of `document`: `document_sheet_format` as a `SheetRow`.
 
 ### document_sheet_format
 
 ```python
-def document_sheet_format(model: Model, record: Document, pages: tuple[PageKind, ...]) -> SheetFormat
+def document_sheet_format(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> SheetFormat
 ```
 
 The paper of every page: the first drawing-set page's format, else the top profile's sheet.
 
 A system document has none, so it takes the top profile's sheet, else the house one.
+
+`document` is the document's id.
 
 ### document_sheets
 
@@ -987,19 +1050,19 @@ Each document id with its name (the second part of its key), in table order.
 ### document_unit
 
 ```python
-def document_unit(model: Model, document: Document) -> Id[Unit] | None
+def document_unit(model: Model, document_id: Id[Document]) -> Id[Unit] | None
 ```
 
-The unit `document` is about: `document.unit` when set, else its resolved `unit_name`.
+The unit of the document `document_id`: its `unit` when set, else its resolved `unit_name`.
 
-`document.unit` wins when set. Else, for a `unit_name`, the one id `units_named` finds;
+The document's `unit` wins when set. Else, for a `unit_name`, the one id `units_named` finds;
 `None` for zero or several matches (silently: a pure reader, never a validator) and `None`
 when the document has neither field set. Never re-derives the match: `derive.facts.unit_names`
 is its only home.
 
-Example: `document_unit(model, Document(unit_name="relay-board", ...))` returns the id of
-the one `Unit` instance of a release named `"relay-board"`, or `None` if that name matches
-zero or several units.
+Example: `document_unit(model, document_id)` for a `Document(unit_name="relay-board", ...)`
+returns the id of the one `Unit` instance of a release named `"relay-board"`, or `None` if
+that name matches zero or several units.
 
 ### drawing_set_is_replica_only
 
@@ -1021,10 +1084,12 @@ Raises:
 ### drawn_pages
 
 ```python
-def drawn_pages(model: Model, record: Document) -> tuple[Page, ...]
+def drawn_pages(model: Model, document: Id[Document]) -> tuple[Page, ...]
 ```
 
-`record`'s drawn pages in set then page order, replica-only sets skipped.
+The drawn pages of `document` in set then page order, replica-only sets skipped.
+
+`document` is the document's id.
 
 ### draws_as_line
 
@@ -1085,6 +1150,22 @@ def ends_without_jumpers(model: Model, row: TerminalRow) -> tuple[tuple[str, ...
 ```
 
 `row`'s (internal, external) ends without jumper partners, which the Bridge shows.
+
+### error_count
+
+```python
+def error_count(findings: Iterable[Finding]) -> int
+```
+
+How many of `findings` are `ERROR`.
+
+### errors_of
+
+```python
+def errors_of(findings: Iterable[Finding]) -> tuple[Finding, ...]
+```
+
+The `ERROR` findings of `findings`, in their own order.
 
 ### export_fragment
 
@@ -1281,6 +1362,17 @@ devices, strips see-through (the all-devices view, O16). A `strip` of the level 
 stands as its terminals; the groups view opens none.
 Raises `SchemaError` for a group or strips box the unit does not hold, or a `strip` it lacks.
 
+### footprints
+
+```python
+def footprints(model: Model, function: Id[Function], *, body: Extent, slots: Mapping[str, Extent], tag_side: Side, text_height: int, step: int, pad: int, tiers: int=2, place_text: str='/99.99') -> Footprints
+```
+
+A function's footprint alone and in a strip row, in G, in the frame of its symbol's body.
+
+Alone: body and slots, the tag slot as wide as the tag text, plus a coil's contact table
+tiers below. In a strip row: body and the slots but the tag, which the strip prints once.
+
 ### frame_labels
 
 ```python
@@ -1344,6 +1436,14 @@ Whether `function` is hidden as unused: every one of its ports is unused (`port_
 `hide_unused_pins` leaves such a function off the page, and a contact among them is listed as
 a spare in its coil's contact table.
 
+### function_item
+
+```python
+def function_item(model: Model, function: Id[Function]) -> Id[Item]
+```
+
+The item `function` belongs to.
+
 ### function_operating
 
 ```python
@@ -1362,6 +1462,14 @@ Args:
 
 Returns:
     `function`'s template `Operating`, or `None` when it has no template or no facet.
+
+### function_ports
+
+```python
+def function_ports(model: Model, function: Id[Function]) -> tuple[Id[Port], ...]
+```
+
+The ports of `function`, in table order.
 
 ### function_rating
 
@@ -1457,10 +1565,12 @@ Raises:
 ### harness_cables_for
 
 ```python
-def harness_cables_for(model: Model, record: Document, pages: tuple[PageKind, ...]) -> tuple[HarnessCable, ...]
+def harness_cables_for(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[HarnessCable, ...]
 ```
 
 The subject's cables: SYSTEM all top-level, a unit its own only.
+
+`document` is the document's id.
 
 ### harness_line_ends
 
@@ -1509,6 +1619,14 @@ def has_documents(model: Model) -> bool
 
 Whether the model holds a document.
 
+### has_function
+
+```python
+def has_function(model: Model, function: Id[Function]) -> bool
+```
+
+Whether `function` is a function of the model.
+
 ### has_project
 
 ```python
@@ -1520,10 +1638,12 @@ Whether the model holds a project.
 ### has_schematic_subject
 
 ```python
-def has_schematic_subject(record: Document) -> bool
+def has_schematic_subject(model: Model, document: Id[Document]) -> bool
 ```
 
 True for a location or unit document; an item or SYSTEM document draws no schematic.
+
+`document` is the document's id.
 
 ### is_bar_port
 
@@ -1691,6 +1811,14 @@ Returns:
 Raises:
     SchemaError: `designation_refusal` of the same arguments is not `None`.
 
+### item_functions
+
+```python
+def item_functions(model: Model) -> frozendict[Id[Item], frozenset[Id[Function]]]
+```
+
+Each item that has functions, with the set of its functions.
+
 ### item_installed
 
 ```python
@@ -1717,7 +1845,7 @@ Raises:
 ### item_label
 
 ```python
-def item_label(model: Model, item: Item) -> str
+def item_label(model: Model, item: Id[Item]) -> str
 ```
 
 What an item is called in a message: its own text, else its authoring key joined by `/`.
@@ -1765,6 +1893,14 @@ Every item with each drawing page of a whole-system write that draws one of its 
 The file is the one `write` names the document's PDF; the text is `position_text` of the
 page and the frame cell of the first placement on it. Empty when the model has no document.
 
+### item_parents
+
+```python
+def item_parents(model: Model) -> frozendict[Id[Item], Id[Item]]
+```
+
+Each child item's parent item, in the order the items table gives the parents.
+
 ### item_role
 
 ```python
@@ -1774,6 +1910,26 @@ def item_role(model: Model, item: Id[Item]) -> ItemRole
 The role of `item`: its `item_kind` row plus the rack, external, accessory, root flags.
 
 Lives beside `item_kind` so `facts/roles` never imports it back.
+
+### item_tag_text
+
+```python
+def item_tag_text(model: Model, item: Id[Item], *, unit: Id[Unit] | None=None) -> str
+```
+
+A component's tag on a drawing: its item designation only, "-Q11".
+
+The page states the location, unit and groups, so a tag never carries them, in a unit's
+own set (`unit`, unit-relative) and at top level alike. The one
+function every component and strip tag on a drawing is built from.
+
+### item_unit
+
+```python
+def item_unit(model: Model, item: Id[Item]) -> Id[Unit] | None
+```
+
+The unit `item` is recorded in by `Item.unit`; `None` for the integrating script's own.
 
 ### items
 
@@ -1837,6 +1993,14 @@ The `KeepWhole` sets of `model`: add-on item boxes, pole groups and units with a
 
 An item box is today approximated by "an item with children": the generic-box test lives in
 layout (`read/views.box_drawn`, needs the symbol rules) until EL-2 gives `function_role.box`.
+
+### kind_sheet
+
+```python
+def kind_sheet(model: Model, kind: PageKind, unit: Id[Unit] | None=None) -> SheetRow
+```
+
+The sheet a page of `kind` of `unit` is on (`layout.sheet_for`) as a `SheetRow`.
 
 ### lane_head
 
@@ -2069,6 +2233,14 @@ prints at system level. Reach an item through the function.
 Raises:
     SchemaError: a mated function is not of `model`, or its item has no designation.
 
+### mixed_sheet_groups
+
+```python
+def mixed_sheet_groups(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[SheetGroup, ...]
+```
+
+Each sheet format the drawn pages name with its page numbers; empty unless more than one.
+
 ### moved_findings
 
 ```python
@@ -2150,6 +2322,14 @@ def no_conductor_at(model: Model, port: Id[Port]) -> bool
 Whether no conductor (wire, jumper, cable core or link) ends at `port`.
 
 Unlike `unconnected_ports`, a mate or a declared net does not count.
+
+### node_label
+
+```python
+def node_label(model: Model, node: Id[AspectNode]) -> str
+```
+
+The label of aspect node `node`.
 
 ### notice_line_count
 
@@ -2686,6 +2866,14 @@ The stored release of the same version at or below `identity`'s revision, with n
 
 Same name and version only, unlike `previous_release`; a re-release may be its own source.
 
+### pin_source_pins
+
+```python
+def pin_source_pins(stored: StoredReleases, identity: ReleaseIdentity) -> tuple[str, NumberingPins] | None
+```
+
+The folder name and numbering of `pin_source`, or `None` when it has no numbering.
+
 ### pin_text
 
 ```python
@@ -2827,6 +3015,14 @@ Whether no conductor (wire, jumper, cable core or link) ends at `port` and no ne
 A mate does not count. This is the one test of an unused port; a function is unused when all
 its ports are (`function_is_unused`).
 
+### port_name
+
+```python
+def port_name(model: Model, port: Id[Port]) -> str
+```
+
+The raw name of `port` on its function, not the printed one (`printed_port_name`).
+
 ### port_potential_current
 
 ```python
@@ -2959,6 +3155,14 @@ def previous_release(stored: StoredReleases, identity: ReleaseIdentity) -> Store
 The stored release with the highest order strictly below `identity`'s, or `None`.
 
 Across versions (they run in parallel); the folder of `identity` itself is never a candidate.
+
+### previous_release_listing
+
+```python
+def previous_release_listing(stored: StoredReleases, identity: ReleaseIdentity) -> Listing | None
+```
+
+The listing of `previous_release`, or `None` when there is no previous release.
 
 ### printed_designation
 
@@ -3138,6 +3342,14 @@ A reference is a cross-reference label with partners, or a link marker with its 
 is off the document when no document prints both its page's drawing set and its target's.
 Its text names the other document when it prints a location path (`location_prefix`).
 
+### refuses
+
+```python
+def refuses(findings: Iterable[Finding]) -> bool
+```
+
+True when `findings` holds an `ERROR`: the build writes nothing, a library does not load.
+
 ### release_identity
 
 ```python
@@ -3168,6 +3380,16 @@ def release_order(version: int, revision: int) -> ReleaseOrder
 The plain pair of two ints, never the printed text: `(1, 9) < (1, 10) < (2, 1)`, where the
 text `"1.10"` would sort before `"1.9"`. Every later pin-source and previous-release
 selection calls this function and never compares revisions again.
+
+### replica_only_sets
+
+```python
+def replica_only_sets(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[ReplicaOnlySet, ...]
+```
+
+The matched drawing sets of `document` that its SCHEMATIC skips as replica-only.
+
+Empty on the same terms as `schematic_page_ids`.
 
 ### requests_harness_pages
 
@@ -3214,6 +3436,14 @@ Every instance of a release shares the release's history. "Revision order" sorts
 Raises:
     SchemaError: `release` is not `None` and names no `UnitRelease` of `model`.
 
+### revision_rows
+
+```python
+def revision_rows(model: Model, release: Id[UnitRelease] | None=None) -> tuple[RevisionRow, ...]
+```
+
+`revision_history` as rows: date order, then version and revision order.
+
 ### revision_text
 
 ```python
@@ -3225,6 +3455,17 @@ The revision as printed: `f"{version}.{revision}"`, `1.1`, `2.1`, `1.10`.
 The one home of the print form: a title block's Rev cell, a revision history row, a unit
 line's BOM `Revision` column, a black box title and a message naming a revision all call it.
 Nothing else formats the pair.
+
+### run_point_text
+
+```python
+def run_point_text(model: Model, function: Id[Function]) -> str
+```
+
+A strip terminal's point text in a run, "L2:1".
+
+The terminal's own `group:index`, the strip's designation left out (`strip_tag_text` prints it).
+A terminal that is no part of a run prints `terminal_designation`, never this.
 
 ### same_version
 
@@ -3259,15 +3500,27 @@ Args:
 Returns:
     Every drawn function's id, sorted.
 
+### schematic_page_ids
+
+```python
+def schematic_page_ids(model: Model, document: Id[Document], pages: tuple[PageKind, ...]) -> tuple[Id[Page], ...]
+```
+
+The ids of the SCHEMATIC pages of `document` in set then page order.
+
+Empty when `pages` has no SCHEMATIC or `document` has no location or unit subject.
+
 ### scope_path
 
 ```python
-def scope_path(model: Model, record: Document) -> str
+def scope_path(model: Model, document: Id[Document]) -> str
 ```
 
 The title block's Scope cell: a place's full `+R+S1` path, else the subject.
 
 The path stands alone; the page title and the heading carry the place's description.
+
+`document` is the document's id.
 
 ### seed_pins
 
@@ -3279,6 +3532,14 @@ The assigned items, assigned instances and reserved texts `source` seeds into `u
 
 A pin seeds only a thing it still matches in key, scope and code that carries no written tag.
 Reserved texts are every pin gone or moved, plus the source's own `retired`.
+
+### series_pairs
+
+```python
+def series_pairs(model: Model, function: Id[Function], sides: Mapping[Id[Port], Side]) -> tuple[SeriesPair, ...]
+```
+
+Each pole of `function` with one wired N pin and one wired S pin, in pole order.
 
 ### set_page_text
 
@@ -3309,10 +3570,12 @@ The band is the border's bottom part under the content box; the square logo cell
 ### sheet_index_rows
 
 ```python
-def sheet_index_rows(model: Model, record: Document, kinds: tuple[PageKind, ...]) -> tuple[SheetIndexRow, ...]
+def sheet_index_rows(model: Model, document: Id[Document], kinds: tuple[PageKind, ...]) -> tuple[SheetIndexRow, ...]
 ```
 
 One row per sheet of `sheets`; empty for fewer than two sheets (empty-list rule).
+
+`document` is the document's id.
 
 ### sheet_key_text
 
@@ -3343,7 +3606,7 @@ def sheet_title_text(model: Model, sheet: Page | DiagramSheet, title: str) -> st
 ### sheets
 
 ```python
-def sheets(model: Model, record: Document, kinds: tuple[PageKind, ...]) -> tuple[DiagramSheet | Page, ...]
+def sheets(model: Model, document: Id[Document], kinds: tuple[PageKind, ...]) -> tuple[DiagramSheet | Page, ...]
 ```
 
 Block diagram sheets in number order, then schematic pages in set then page order.
@@ -3409,10 +3672,12 @@ A relay output prints `DO (relay)`.
 ### sizes_of
 
 ```python
-def sizes_of(model: Model, record: Document) -> Sizes
+def sizes_of(model: Model, document: Id[Document]) -> Sizes
 ```
 
 The font sizes of a document's pages: its unit's profile (the top's) sets the smallest.
+
+`document` is the document's id.
 
 ### stale_patterns
 
@@ -3437,6 +3702,16 @@ and no item of another unit that is not in `unit`'s own subtree.
 
 Raises:
     SchemaError: `unit` is not a unit of `model`.
+
+### stands
+
+```python
+def stands(model: Model) -> frozendict[Id[Port], PowerKind]
+```
+
+Each port of a rail net, mapped to the net's `PowerKind`; a wire or a signal is absent.
+
+Built on `power.port_power_kind`, the one rail rule, so a two-port net is never a stand.
 
 ### strip_of
 
@@ -3510,10 +3785,12 @@ The kind text of `subject`'s handle (`"net"`, `"item"`, ...), as an error names 
 ### subject_label
 
 ```python
-def subject_label(model: Model, record: Document) -> str
+def subject_label(model: Model, document: Id[Document]) -> str
 ```
 
 The heading's subject: location, unit or item label; "" for SYSTEM.
+
+`document` is the document's id.
 
 ### subject_marks
 
@@ -3595,10 +3872,23 @@ The `PortTemplate` of `function`'s template named `port_name`, else its `Part`, 
 ### system_has_no_top_level_cables
 
 ```python
-def system_has_no_top_level_cables(record: Document, cables_found: tuple[HarnessCable, ...]) -> bool
+def system_has_no_top_level_cables(model: Model, document: Id[Document], cables_found: tuple[HarnessCable, ...]) -> bool
 ```
 
 A SYSTEM document whose model has no top-level cable at all.
+
+`document` is the document's id.
+
+### tag_text
+
+```python
+def tag_text(model: Model, function: Id[Function]) -> str
+```
+
+A TAG label's text: the designation the layout engine used.
+
+A terminal function's tag is the designation of its lowest-handle port; every other
+function's tag is its item's `item_tag_text`.
 
 ### takes_energy
 
@@ -3777,17 +4067,6 @@ The boards `unit` owns directly, in designation order, never a nested unit's.
 
 The boards of `boards` whose `item.unit` is `unit`; the one test of a unit's own boards.
 
-### unit_boundary_functions
-
-```python
-def unit_boundary_functions(model: Model, unit: Id[Unit] | None) -> tuple[Id[Function], ...]
-```
-
-The functions that are a boundary of `unit`, in `Id` order; empty for no unit.
-
-A pass-through function is a `Boundary` of each unit that offers it, so it
-is listed for the nested and the enclosing unit alike.
-
 ### unit_boundary_pins
 
 ```python
@@ -3816,6 +4095,16 @@ Returns:
 
 Raises:
     SchemaError: `unit` is not a unit, or a cable or core end has no designation.
+
+### unit_chain
+
+```python
+def unit_chain(model: Model, unit: Id[Unit]) -> list[Id[Unit]]
+```
+
+`unit`, its parent, its parent's parent, ... up to the top-level ancestor.
+
+Cycle-safe: a repeat ends the walk (`UNIT_CYCLE` is the validator's, not this query's).
 
 ### unit_chain_below
 
@@ -4183,6 +4472,14 @@ class CableBlockRef
 
 One cable block of a run: its `svgs` key, its run's part number and that run's part line.
 
+### CableBlockSize
+
+```python
+class CableBlockSize
+```
+
+A laid-out cable block's `width` and `height` in G, and the `module_mm` of its sheet.
+
 ### CableListRow
 
 ```python
@@ -4401,6 +4698,17 @@ The marks one view takes from a diff: boxes then lines by index, and the rows th
 
 `shown` holds the indexes in `ListingDiff.changes` of the rows that marked a box or line.
 
+### DocumentRow
+
+```python
+class DocumentRow
+```
+
+The fields of one `Document` an output reads.
+
+`location` and `item` are the subject's ids (the `SYSTEM` preset has neither), `cover` and
+`notes` the Markdown texts (`notes` is `None` when dropped) and `logo` the title block's SVG.
+
 ### DocumentScope
 
 ```python
@@ -4453,6 +4761,14 @@ One `(kind, key)` pair still stored in some record's escape-hatch `ext` field.
 Not a Fransys output format: read by whoever maintains this repo to decide what
 to promote to a real field next, keeping `ext` honest (kernel-records.md 5.3 and
 derive-queries-structure.md).
+
+### Extent
+
+```python
+class Extent
+```
+
+A box in G, in the frame of the symbol's body: top-left `x`, `y` and its size.
 
 ### FieldFold
 
@@ -4551,6 +4867,14 @@ prints it; `end` is the same far end as a reference (a group, a box's own, a uni
 the far item). `kind` and `via` are the line's: a stub folds per kind, and `via` is set only
 for `END`. `count` is the connections. `members` are the single stubs it opens to:
 those of an outside fold, the stub itself for `END`, empty inside the unit.
+
+### Footprints
+
+```python
+class Footprints
+```
+
+The room a symbol takes: `standalone`, and `in_strip_row` without the strip's shared tag.
 
 ### FrameLabels
 
@@ -5269,6 +5593,22 @@ One unit's pages together: counts add up, `text_height_mm` and `fill_percent` ar
 `unit` is `None` for the design's own pages. `min_text_height_mm` is the highest floor of them.
 `loose_symbols` is the count of the unit's own loose symbols.
 
+### ReplicaOnlySet
+
+```python
+class ReplicaOnlySet
+```
+
+A drawing set dropped as holding only black-box replicas: its id and its `location`.
+
+### RevisionRow
+
+```python
+class RevisionRow
+```
+
+One revision-history entry, as the revision table prints it.
+
 ### SeedRows
 
 ```python
@@ -5302,6 +5642,14 @@ A sheet's frame in mm from the page corner: border, reference strips and title-b
 `border` is x, y, width and height. The band is `band` high from `band_top`; the title block
 is `title_width` wide from the border's left, and the square logo cell starts at `logo_x`.
 
+### SheetGroup
+
+```python
+class SheetGroup
+```
+
+One sheet format a document's drawn pages name: its `name` and its pages' `numbers`.
+
 ### SheetIndexRow
 
 ```python
@@ -5334,6 +5682,14 @@ One page background: its key, paper and title-block fields (render draws it, pdf
 
 `group` and `where` name the page in a `TITLE_BLOCK_TEXT_OVERFLOW` message; `group` is `""`
 for a page whose page-level fields are not checked (a diagram sheet, a no-drawings page).
+
+### SheetRow
+
+```python
+class SheetRow
+```
+
+A sheet's paper and content box in mm, and its grid `module_mm`: what a page is set on.
 
 ### SidelessPins
 
@@ -5642,6 +5998,12 @@ One wire of the wire list: its two ends, colour, cross-section and printed label
 ALL_VALIDATORS: tuple
 ```
 
+### AspectNodeId
+
+```python
+AspectNodeId: TypeAliasType
+```
+
 ### BOM_COLUMNS
 
 ```python
@@ -5702,6 +6064,12 @@ CONTENTS_LABELS: tuple
 CORE_LIST_COLUMNS: tuple
 ```
 
+### ConductorId
+
+```python
+ConductorId: TypeAliasType
+```
+
 ### DESIGNATION_COLUMNS
 
 ```python
@@ -5714,10 +6082,28 @@ DESIGNATION_COLUMNS: tuple
 DIAGRAM_TITLE: str
 ```
 
+### DocumentId
+
+```python
+DocumentId: TypeAliasType
+```
+
+### FunctionId
+
+```python
+FunctionId: TypeAliasType
+```
+
 ### HARNESS_DRAWING_TITLE
 
 ```python
 HARNESS_DRAWING_TITLE: str
+```
+
+### ItemId
+
+```python
+ItemId: TypeAliasType
 ```
 
 ### LinkState
@@ -5736,6 +6122,12 @@ NO_PART: str
 
 ```python
 NO_PLACE: str
+```
+
+### NetId
+
+```python
+NetId: TypeAliasType
 ```
 
 ### PAGE_HEADINGS
@@ -5768,6 +6160,18 @@ PRESET_HEADINGS: dict
 PRESET_PAGES: frozendict
 ```
 
+### PageId
+
+```python
+PageId: TypeAliasType
+```
+
+### PortId
+
+```python
+PortId: TypeAliasType
+```
+
 ### SCHEMATIC_TITLE
 
 ```python
@@ -5796,6 +6200,18 @@ TITLE_BLOCK_LABELS: frozendict
 
 ```python
 TOP_LEVEL: TopLevelScope
+```
+
+### UnitId
+
+```python
+UnitId: TypeAliasType
+```
+
+### UnitReleaseId
+
+```python
+UnitReleaseId: TypeAliasType
 ```
 
 ### WIRE_COLUMNS

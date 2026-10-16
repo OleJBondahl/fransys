@@ -33,6 +33,10 @@ reached as `fr.derive.NAME`.
 
 Use `item_location` when a list needs an item's place and the place may be inherited. Use `items_at` when you need everything in a cabinet or on a board, including the items under it.
 
+## Id aliases
+
+`fransys_model.derive` exports `UnitId`, `ItemId`, `FunctionId`, `PortId`, `DocumentId`, `NetId`, `ConductorId`, `AspectNodeId` and `UnitReleaseId`. Each is `Id[...]` of its record class. Annotate a value with the alias, so a module that only reads ids imports no record class. An output package reads sheets, documents and connector items through `DocumentRow`, `SheetRow`, `document_row`, `document_sheet`, `kind_sheet`, `schematic_page_ids` and `connector_item` of the same module, never through a record. `fr.derive` does not re-export them.
+
 ## Ratings and currents
 
 - `Rating` says what a function or a part is rated for. Its fields are `voltage_ac_v`, `voltage_dc_v`, `current_ac_a`, `current_dc_a`, `min_breaking_current_a`, `power_loss_w`, `breaking_ac` and `breaking_dc`. A field is `None` when the datasheet gives no value. AC voltages are RMS, and DC voltages are the highest permissible potential. Currents are continuous ratings, except `min_breaking_current_a`, which is the lowest current a partial-range fuse breaks. The model checks the types only; comparing a rating with the plant is a check's job.

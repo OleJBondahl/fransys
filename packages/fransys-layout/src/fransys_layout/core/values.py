@@ -5,20 +5,38 @@ jsonform.py gives every value here a JSON form. Lengths are in G; x grows right,
 """
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Literal
 
 XY = tuple[int, int]
 
 Side = Literal["N", "E", "S", "W"]
 Power = Literal["SUPPLY", "GROUND", "PE", "NONE"]
-Orientation = Literal["R0", "R90", "R180", "R270"]
+Orientation = Literal["R0", "R90", "R180", "R270", "MR0", "MR90", "MR180", "MR270"]
 EndKind = Literal["stand", "boxpin", "boundary", "fan", "crosslink", "join", "open"]
 BlockKind = Literal["card", "fan", "column", "blackbox"]
-RefKind = Literal["tag", "arrow", "star", "stub", "copy"]
+Seat = Literal["none", "beside", "alone"]
+
+
+class RefKind(StrEnum):
+    """What a reference is; read through `ref_kind.kind_of`, the one reader (layout-0292)."""
+
+    TAG = "tag"
+    ARROW = "arrow"
+    STAR = "star"
+    STUB = "stub"
+    COPY = "copy"
+
+
 MarkerKind = RefKind
 WireKind = Literal["straight", "drop", "riser", "trunk", "routed", "join"]
 FindingCode = Literal[
     "CARD_OVERFULL",
+    "NO_CELL",
+    "NO_BLOCK",
+    "BLOCK_NOT_PLACED",
+    "CHAIN_NOT_DRAWN",
+    "CHAIN_REFUSED",
     "ORDER_HINT_UNMET",
     "KEEP_TOGETHER_UNMET",
     "HEAD_OFF_LEGS",
@@ -80,15 +98,14 @@ class BoxSpec:
 class Sym:
     """T1 to T3: row_group members at one column end in one row share y and use row_footprint.
 
-    text is the designation to print and text_w its measured width in G; the builder folds
-    text_w into footprint.
+    label is the size of the designation symbol and table the size of the contact-table symbol
+    (layout-0274); the builder measures both and folds them into footprint. Text is the builder's.
     """
 
     id: str
     group: str | None
     unit: str
-    text: str
-    text_w: int
+    label: Size
     body: Box
     keepout: Box
     footprint: Box
@@ -101,7 +118,7 @@ class Sym:
     band: int | None = None
     item: str | None = None
     child_of: str | None = None
-    table_rows: int = 0
+    table: Size | None = None
     boundary_of: str | None = None
 
 
@@ -128,6 +145,7 @@ class Net:
     rail: Rail | None = None
     bundle: Bundle | None = None
     crosses_unit: bool = False
+    label: Size | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +160,7 @@ class Facts:
     keep_whole: tuple[frozenset[str], ...] = ()
     units: tuple[Unit, ...] = ()
     mates: tuple[tuple[PinRef, PinRef], ...] = ()
+    row_tags: tuple[tuple[str, Size], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,7 +174,6 @@ class Hints:
     chains: tuple[tuple[str, ...], ...] = ()
     draw_in: tuple[tuple[str, str], ...] = ()
     sides: tuple[tuple[PinRef, str], ...] = ()
-    page_titles: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,7 +215,11 @@ class Options:
     reroute_rounds: int = 3
     corner_order: tuple[str, ...] = ("KL", "KR", "BL", "TL", "BR", "TR")
     slack: tuple[int, ...] = (0, 8, 16)
-    colours: int = 8
+    marker: Size = field(default_factory=lambda: Size(24, 8))
+    cells: tuple[int, int] = (8, 6)
+    wire_label_sides: tuple[str, ...] = ("N", "S")
+    open_stub: int = 0
+    box_columns: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,6 +254,11 @@ class End:
     fan: str | None = None
     lane: int | None = None
 
+    @property
+    def is_join(self) -> bool:
+        """The one place that asks whether an end is a folded member's join."""
+        return self.kind == "join"
+
 
 @dataclass(frozen=True, slots=True)
 class Column:
@@ -243,6 +270,12 @@ class Column:
     feet: tuple[End, ...]
     height: int
     width: int
+    hops: tuple[tuple[str, ...], ...] = ()
+
+    @property
+    def is_chain(self) -> bool:
+        """The one place that asks whether a column is a chain of boxes."""
+        return bool(self.hops)
 
 
 @dataclass(frozen=True, slots=True)
@@ -298,11 +331,16 @@ class FlowGraph:
     stands: tuple[Stand, ...]
     cycle_split: CycleSplit
     drawn: tuple[str, ...]
+    findings: tuple[Finding, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
 class Block:
-    """pin_edges maps a card's pin to the edge it uses; id is opaque, read kind and anchor."""
+    """pin_edges maps a card's pin to the edge it uses; id is opaque, read kind and anchor.
+
+    seat: "beside" a column-less card stage 3 put after a fan block, "alone" one stage 3 gave a row
+    of its own, "none" every other block (layout-0288); stage 4 cuts no other column-less card.
+    """
 
     id: str
     kind: BlockKind
@@ -316,8 +354,14 @@ class Block:
     short: bool
     keep_whole: bool
     forced_break_before: bool
+    seat: Seat
     pin_edges: tuple[tuple[str, str], ...] = ()
     fixed_order: bool = False
+
+    @property
+    def is_card(self) -> bool:
+        """The one place that asks whether a block is a card box."""
+        return self.kind == "card"
 
 
 @dataclass(frozen=True, slots=True)
@@ -340,7 +384,7 @@ class PagePlan:
     unit: str
     rows: tuple[RowPlan, ...]
     forced_end: bool
-    title: str
+    groups: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)

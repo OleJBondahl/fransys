@@ -8,9 +8,9 @@ Decision 0027; all built on the same per-cable facts and end discovery.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.kernel import Id, Model, SchemaError
 from fransys_model.vocab.cables import cable_items
-from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.membership import cable_children, in_reading
@@ -119,7 +119,7 @@ def _end(model: Model, item: Id[Item], landed: list[Id[Port]], facts: _Facts) ->
         (
             function
             for function in landed_on
-            if all_functions[function].kind is FunctionKind.CONNECTOR
+            if function_role(model, function).pin_group
             and all_functions[function].template in shapes
             and prints_connector_label(model, function)
         ),
@@ -219,8 +219,13 @@ def _cable_ids_of_unit(model: Model, unit: Id[Unit] | None) -> set[Id[Item]]:
 
     The one selection rule behind `top_level_cables`, `cable_list_rows` and `unit_cables`.
     """
+    return {cable for cable, own in _cable_units(model).items() if own == unit}
+
+
+def _cable_units(model: Model) -> dict[Id[Item], Id[Unit] | None]:
+    """Every cable item (`is_cable`) with its own `Item.unit`."""
     all_items = items(model)
-    return {item for item in cable_items(model) if all_items[item].unit == unit}
+    return {item: all_items[item].unit for item in cable_items(model)}
 
 
 def _top_level_cable_ids(model: Model) -> set[Id[Item]]:
@@ -383,6 +388,29 @@ def end_text(model: Model, end: HarnessEnd) -> str:
     return end.designation + connector_segment(model, end.connector)
 
 
+def _list_row(model: Model, cable: Id[Item], facts: _Facts) -> CableListRow:
+    """The cable's `CableListRow`, read with `facts`."""
+    cable_facts = _cable_facts(model, cable, facts)
+    kept = cable_facts.ends
+    return CableListRow(
+        cable=cable,
+        designation=cable_facts.designation,
+        mpn=cable_facts.mpn,
+        description=cable_facts.description,
+        core_count=cable_facts.core_count,
+        gauge_mm2=cable_facts.gauge_mm2,
+        length_mm=cable_facts.length_mm,
+        from_label=end_text(model, kept[0]) if kept else "",
+        to_label=", ".join(end_text(model, end) for end in kept[1:]),
+        pairs=len(cable_pairs(model, cable)) or None,
+    )
+
+
+def _sorted_rows(rows: Iterable[CableListRow]) -> tuple[CableListRow, ...]:
+    """The cable list's one order: `(natural designation, id)`."""
+    return tuple(sorted(rows, key=lambda row: (natural_key(row.designation), row.cable)))
+
+
 def cable_list_rows(model: Model, *, unit: Id[Unit] | None = None) -> tuple[CableListRow, ...]:
     """One `CableListRow` per cable of one reading: `unit`'s own, or the top-level ones.
 
@@ -400,25 +428,20 @@ def cable_list_rows(model: Model, *, unit: Id[Unit] | None = None) -> tuple[Cabl
     if unit is not None:
         require(units_table(model).get(unit), "unit", unit)
     facts = _facts_of(model, unit)
-    found = []
-    for cable in _cable_ids_of_unit(model, unit):
-        cable_facts = _cable_facts(model, cable, facts)
-        kept = cable_facts.ends
-        found.append(
-            CableListRow(
-                cable=cable,
-                designation=cable_facts.designation,
-                mpn=cable_facts.mpn,
-                description=cable_facts.description,
-                core_count=cable_facts.core_count,
-                gauge_mm2=cable_facts.gauge_mm2,
-                length_mm=cable_facts.length_mm,
-                from_label=end_text(model, kept[0]) if kept else "",
-                to_label=", ".join(end_text(model, end) for end in kept[1:]),
-                pairs=len(cable_pairs(model, cable)) or None,
-            )
-        )
-    return tuple(sorted(found, key=lambda row: (natural_key(row.designation), row.cable)))
+    return _sorted_rows(_list_row(model, cable, facts) for cable in _cable_ids_of_unit(model, unit))
+
+
+def cable_list_rows_of(model: Model, cables: set[Id[Item]]) -> tuple[CableListRow, ...]:
+    """The `CableListRow`s of exactly `cables`, each read in its own unit, in list order."""
+    units = _cable_units(model)
+    facts_by_unit: dict[Id[Unit] | None, _Facts] = {}
+    rows = []
+    for cable in cables:
+        unit = units[cable]
+        if unit not in facts_by_unit:
+            facts_by_unit[unit] = _facts_of(model, unit)
+        rows.append(_list_row(model, cable, facts_by_unit[unit]))
+    return _sorted_rows(rows)
 
 
 def contents_rows(cables: tuple[HarnessCable, ...]) -> tuple[ContentsRow, ...]:

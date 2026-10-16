@@ -39,6 +39,7 @@ def marking_key(marking: str) -> tuple[tuple[int, int, str], ...]:
 def identifier(name: str) -> str:
     """The Python identifier of a part's function or pin `name`: `24V+` is `P_24V_plus`.
 
+    In a pin or function name `-` is a sign (`24V-` is `P_24V_minus`), unlike a part number's.
     `+` and `-` become `_plus` and `_minus`, other non-word characters `_`, a leading digit `P_`.
     """
     text = re.sub(r"\W", "_", name.replace("+", "_plus").replace("-", "_minus"))

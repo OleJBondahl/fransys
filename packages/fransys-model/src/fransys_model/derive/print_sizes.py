@@ -8,13 +8,20 @@ bundled font's capital ratio, so no package keeps a ratio of its own.
 from decimal import Decimal
 from enum import Enum
 
-from fransys_model.derive._text_widths import ASCENT_UNITS, CAP_HEIGHT_UNITS, UNITS_PER_EM
+from fransys_model.derive._text_widths import (
+    ASCENT_UNITS,
+    CAP_HEIGHT_UNITS,
+    DESCENT_UNITS,
+    UNITS_PER_EM,
+)
 
 __all__ = [
     "ASCENT_RATIO",
     "CAPITAL_RATIO",
     "DASH_GAP_MM",
     "DASH_LONG_MM",
+    "DESCENDER_RATIO",
+    "HOUSE_TEXT_HEIGHT_MM",
     "JUNCTION_DOT_MM",
     "LINE_RULE_MM",
     "LINE_THICK_MM",
@@ -30,6 +37,9 @@ __all__ = [
 # Exact: UNITS_PER_EM is 2**11, so each ratio has a finite decimal form.
 CAPITAL_RATIO = Decimal(CAP_HEIGHT_UNITS) / Decimal(UNITS_PER_EM)
 ASCENT_RATIO = Decimal(ASCENT_UNITS) / Decimal(UNITS_PER_EM)
+# How far the regular face's descenders (p, g, y, j) reach below the baseline per font size:
+# DejaVu Sans Condensed glyf yMin of "p", 426 units, read by write_text_widths.py (model-0287).
+DESCENDER_RATIO = Decimal(DESCENT_UNITS) / Decimal(UNITS_PER_EM)
 
 
 class TextRole(Enum):
@@ -48,6 +58,10 @@ _ROLE_HEIGHT_MM = {
     TextRole.HEADING_2: Decimal("3.5"),
     TextRole.HEADING_1: Decimal(5),
 }
+
+# The house text height: the label prints at it (E10), and the other roles' heights above are
+# the house sizes the title-block stack is proportioned to.
+HOUSE_TEXT_HEIGHT_MM = _ROLE_HEIGHT_MM[TextRole.LABEL]
 
 # Line roles: stroke widths.
 LINE_THIN_MM = Decimal("0.25")

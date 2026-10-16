@@ -6,8 +6,9 @@ import pytest
 from scene_fixtures import flow, layout, problem
 
 from fransys_layout.core import outputs
-from fransys_layout.core.outputs import Annotations, PinXY, Placed
-from fransys_layout.core.values import Cell, Column, End, FlowGraph, Lane, PinRef
+from fransys_layout.core.outputs import PinXY, Placed
+from fransys_layout.core.scene_facts import turn_side
+from fransys_layout.core.values import Box, Cell, Column, End, FlowGraph, Lane, PinRef
 
 SCENE = outputs.scene(layout(), problem(), flow())
 BOXES = {b.sym: b for b in SCENE.boxes}
@@ -48,7 +49,7 @@ def test_a_column_hung_on_a_box_pin_marks_its_head_cell_attached():
 
 
 def test_a_fan_hub_is_marked_head():
-    assert {b.sym for b in SCENE.boxes if b.head} == {"F"}
+    assert {b.sym for b in SCENE.boxes if any(p.head for p in b.pins)} == {"F"}
 
 
 def test_rails_are_the_nets_with_a_declared_supply():
@@ -64,11 +65,28 @@ def test_a_marker_stands_at_the_pin_its_end_names():
     assert (m.net, m.kind, m.page, m.x, m.y, m.box, m.pin) == ("n1", "tag", 2, 40, 46, "A", "in")
 
 
-def test_a_marker_with_no_end_is_refused():
-    bare = dataclasses.replace(layout().annotations.markers[0], end=None)
-    bad = dataclasses.replace(layout(), annotations=Annotations(markers=(bare,)))
-    with pytest.raises(ValueError, match="names no pin"):
-        outputs.scene(bad, problem(), flow())
+def test_a_marker_carries_its_cell_and_the_turned_side_of_its_pin():
+    m = SCENE.markers[0]
+    assert m.cell == layout().annotations.markers[0].cell == "C3"
+    assert m.side == turn_side("N", "R180") == "S"
+
+
+def test_a_box_carries_the_orient_it_was_placed_with():
+    assert {b.sym: b.orient for b in SCENE.boxes} == {
+        "K": "R0",
+        "F": "R0",
+        "A": "R180",
+        "T": "R0",
+    }
+
+
+def test_a_wire_carries_its_kind():
+    assert [w.kind for w in SCENE.wires] == ["riser"]
+
+
+def test_labels_and_tables_are_flattened_from_the_annotations():
+    assert SCENE.labels == (outputs.SceneLabel("K", 1, Box(1, 2, 3, 4), "BR"),)
+    assert SCENE.tables == (outputs.SceneTable("K", 1, Box(5, 6, 7, 8), ("3C", "2:3C"), 2),)
 
 
 def test_a_placed_pin_the_problem_does_not_know_is_refused():
@@ -83,15 +101,16 @@ def test_a_placed_pin_the_problem_does_not_know_is_refused():
         outputs.scene(bad, problem(), flow())
 
 
-def test_a_quarter_turn_is_refused_until_it_has_a_side_map():
+@pytest.mark.parametrize("orient", ["R90", "MR90"])
+def test_a_quarter_turn_is_refused_until_it_has_a_side_map(orient):
     lay = layout()
     page = lay.placement.pages[0]
-    turned: Placed = dataclasses.replace(page.placed[0], orient="R90")
+    turned: Placed = dataclasses.replace(page.placed[0], orient=orient)
     page = dataclasses.replace(page, placed=(turned, *page.placed[1:]))
     bad = dataclasses.replace(
         lay, placement=dataclasses.replace(lay.placement, pages=(page, *lay.placement.pages[1:]))
     )
-    with pytest.raises(ValueError, match="R90"):
+    with pytest.raises(ValueError, match=orient):
         outputs.scene(bad, problem(), flow())
 
 
@@ -120,3 +139,26 @@ def test_a_head_end_with_a_lane_marks_only_that_lanes_cell_attached():
 def test_a_multi_lane_head_end_marks_only_the_lane_on_the_pin():
     """Stage 1 writes no lane today, so every lane's cell is marked; only lane 0 hangs on K.c1."""
     assert _attached_syms(End("boxpin", "n1", PinRef("K", "c1"))) == {"A"}
+
+
+@pytest.mark.parametrize(
+    ("cls", "field"),
+    [
+        (outputs.SceneBox, "orient"),
+        (outputs.SceneWire, "kind"),
+        (outputs.SceneMarker, "side"),
+        (outputs.Scene, "tables"),
+    ],
+)
+def test_a_new_scene_field_has_no_default(cls, field):
+    given = {f.name: None for f in dataclasses.fields(cls) if f.name != field}
+    with pytest.raises(TypeError, match=field):
+        cls(**given)
+
+
+@pytest.mark.parametrize(
+    ("orient", "side", "turned"),
+    [("MR0", "E", "W"), ("MR0", "N", "N"), ("MR180", "E", "E"), ("MR180", "N", "S")],
+)
+def test_the_mirror_swaps_east_and_west_before_the_turn(orient, side, turned):
+    assert turn_side(side, orient) == turned

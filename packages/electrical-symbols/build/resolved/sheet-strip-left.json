@@ -1,0 +1,88 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "between": true,
+      "line": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "kind": "element",
+  "name": "Sheet strip cell (left)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "sheet-strip-left",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "label": {
+      "at": [
+        0.5,
+        0.5
+      ],
+      "box": [
+        1,
+        0.5
+      ],
+      "side": "C"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 0.5,
+      "axis": "x"
+    },
+    {
+      "at": 0.5,
+      "axis": "y"
+    }
+  ]
+}

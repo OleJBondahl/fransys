@@ -34,7 +34,7 @@ section 8) passed on 2026-09-21 with KiCad 9.0.6.
 
 ## Rules moved from docstrings
 
-- `pin_of`: the reference is the designation `board_netlist` holds for the port's item, and the pad is `Port.name`. An item with no part row still names its item, board-relative (model-0040). A board-internal net's own item is `K1`, not `A1-K1`, since a board's netlist is read on its own terms.
+- `derive.board_pins`: the reference is the designation `board_netlist` holds for the port's item, and the pad is `Port.name`. An item with no part row still names its item, board-relative (model-0040). A board-internal net's own item is `K1`, not `A1-K1`, since a board's netlist is read on its own terms.
 - `_pin`: `marking` is the pin's own KiCad name, carried over as the printed marking. It is `None` when KiCad records no name (`"~"`), which leaves the part-file default of printing the port's name.
 - `parse_sexpr` and the `_sexpr` module: `.kicad_sym` files and netlist exports share one lexer. Parentheses nest lists, a quoted string may escape `\\` and `"`, and anything else is a bare atom. A quoted string and a bare atom both become a `str`. `bootstrap.py` gives the tree meaning.
 - `part_file_skeleton`: the skeleton is ready to be filled in and committed to a part library. `ValueError` is raised for text that does not parse as a `kicad_symbol_lib` or has no such symbol.

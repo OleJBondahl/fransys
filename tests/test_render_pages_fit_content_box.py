@@ -25,8 +25,8 @@ from demo_designs import cabinet_design
 from fransys_el import REF_TINTS
 from fransys_pdf import document_pages
 from fransys_pdf._drawings import schematic_pages
-from fransys_pdf._geometry import resolve_sheet_format
 
+from fransys_model.derive import document_sheet_format as resolve_sheet_format
 from fransys_model.kernel import render_id
 from fransys_model.vocab import documents
 

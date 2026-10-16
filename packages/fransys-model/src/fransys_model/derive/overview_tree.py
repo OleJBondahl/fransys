@@ -6,6 +6,7 @@ nests the rows; it computes no name. Reached as `derive.overview_tree`.
 
 from typing import Any
 
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.tables import items, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
@@ -16,10 +17,10 @@ from .kinds import item_kind
 from .order import natural_key
 from .overview import overview_graph
 from .overview_levels import level_box_lines
-from .rows import ItemKind, OverviewNode
 from .rows_overview import TreeRow
+lazy from .rows import OverviewNode
 
-__all__ = ["overview_tree", "unit_own_drawing", "unit_system_designation"]
+__all__ = ["overview_tree", "own_drawing_line", "unit_own_drawing", "unit_system_designation"]
 
 type _Key = tuple[str, Id[Any]]
 
@@ -33,6 +34,11 @@ def unit_own_drawing(model: Model, unit: Id[Unit]) -> str:
     """The drawing set of a unit's own panel line: its box text, then "in" and its release."""
     lines = level_box_lines(model, unit, units(model)[unit].parent)
     return f"{lines[0]} in {' '.join(lines[1:])}"
+
+
+def own_drawing_line(model: Model, unit: Id[Unit]) -> str:
+    """The panel line naming the drawing set `unit` has: its printed label and its release."""
+    return f"Own drawing: {unit_own_drawing(model, unit)}"
 
 
 def unit_system_designation(model: Model, unit: Id[Unit]) -> str | None:

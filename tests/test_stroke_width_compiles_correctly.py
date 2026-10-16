@@ -21,11 +21,13 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import fransys_render
 import typst
 from fransys_el import REF_TINTS
 from fransys_pdf import font_dir, source
 from fransys_render import pages
 
+from fransys_model.derive import document_sheets_of
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import DrawingSet, Page, PageRole, Route, RoutePoint
 from fransys_model.vocab import (
@@ -233,7 +235,7 @@ def _compiled_schematic_page():
     svgs = pages(model, tints=REF_TINTS)
     assert len(svgs) == 1  # one layout page -> one rendered SVG
     assert 'class="wire"' in next(iter(svgs.values()))  # the wire is really there to measure
-    text = source(model, doc.id, svgs)
+    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     pngs = compiler.compile(input=text.encode("utf-8"), format="png", ppi=PPI)

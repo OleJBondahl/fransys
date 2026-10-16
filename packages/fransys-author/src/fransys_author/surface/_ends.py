@@ -8,9 +8,9 @@ from fransys_author.surface._carrier import carrier_function
 from fransys_author.surface._device import Device
 from fransys_author.surface._fixed import fixed, side_ends
 from fransys_author.surface._handles import Fn
-from fransys_author.surface._pairing import NO_SIDE_FIX, Ends, SeriesElement, ends_of, poles
+from fransys_author.surface._pairing import End, Ends, SeriesElement, ends_of, poles
 from fransys_author.surface._partless_end import box_ends
-from fransys_author.surface._pin_tuple import is_pin_tuple, pin_tuple
+from fransys_author.surface._pin_tuple import is_mixed_tuple, is_pin_tuple, pin_tuple
 from fransys_author.surface._throws import whole_changeover
 from fransys_model.vocab import FunctionKind
 
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from .design import Design
 
 _ALLOWED = (
-    "a device, a function, a supply or rail, a terminal strip, fixed terminals (x1[3], x1[1:4]), "
-    "a cable or a parallel"
+    "a device, a function, a pin or a tuple of pins, a supply or rail, a terminal strip, "
+    "fixed terminals (x1[3], x1[1:4]), a cable or a parallel"
 )
 
 
@@ -62,7 +62,35 @@ def _fn_ends(design: Design, fn: Fn) -> Ends:
         raise whole_changeover(fn._label, fn._fn)
     ends = ends_of(design._pairing_facts, fn._fn, partless_ok=True)
     if not ends.line:
-        msg = f"{fn._label}.{fn._fn.name} has no pole pair: {NO_SIDE_FIX}"
+        where = f"{fn._label}.{fn._fn.name}"
+        msg = (
+            f"{where} has no line/load pole pair, so a bare function end cannot pair its pins by "
+            f"position: name them with `{where.lower()}.pins` (connector order, or a slice of "
+            f"it), or wire them with d.detail.wire(pin, pin, wire=...)"
+        )
+        raise AuthorError(msg)
+    return ends
+
+
+def _mixed_ends(design: Design, items: tuple[Fn | Port, ...]) -> Ends:
+    """The ends of `(L, N)`: a one-pole function gives its pole pair, a pin stands as both."""
+    found = [_one_pole(design, item) if isinstance(item, Fn) else _pin(item) for item in items]
+    return Ends(tuple(e.line[0] for e in found), tuple(e.load[0] for e in found))
+
+
+def _pin(pin: Port) -> Ends:
+    end = (End(pin, None),)
+    return Ends(end, end)
+
+
+def _one_pole(design: Design, fn: Fn) -> Ends:
+    ends = _fn_ends(design, fn)
+    if len(ends.line) != 1:
+        where = f"{fn._label}.{fn._fn.name}"
+        msg = (
+            f"a tuple in a series takes one-pole functions and pins; {where} has "
+            f"{len(ends.line)} poles: put it alone, or name its poles with {where.lower()}.pole(n)"
+        )
         raise AuthorError(msg)
     return ends
 
@@ -78,13 +106,20 @@ def _device_ends(design: Design, device: Device, width: int | None) -> Ends:
     return ends_of(facts, fn)
 
 
+def _tuple_ends(design: Design, element: Terminal | tuple[Any, ...], width: int | None) -> Ends:
+    """The ends of a terminal or a tuple: pins, functions and pins, or fixed terminals."""
+    if is_pin_tuple(element):
+        return pin_tuple(cast("tuple[Port, ...]", element))._series_ends(design, width)
+    if is_mixed_tuple(element):
+        return _mixed_ends(design, cast("tuple[Fn | Port, ...]", element))
+    return fixed(element)._series_ends(design, width)
+
+
 def _ends_for(design: Design, element: object, width: int | None) -> Ends:
     if isinstance(element, Port):
         return side_ends(design, element) or pin_tuple((element,))._series_ends(design, width)
-    if is_pin_tuple(element):
-        return pin_tuple(cast("tuple[Port, ...]", element))._series_ends(design, width)
     if isinstance(element, Terminal | tuple):
-        return fixed(element)._series_ends(design, width)
+        return _tuple_ends(design, element, width)
     if isinstance(element, Fn):
         return _fn_ends(design, element)
     if isinstance(element, Device):
@@ -108,6 +143,8 @@ def width_of(design: Design, element: object) -> int | None:
         return len(_fn_ends(design, element).line)
     if is_pin_tuple(element):
         return pin_tuple(cast("tuple[Port, ...]", element))._series_width()
+    if is_mixed_tuple(element):
+        return len(cast("tuple[object, ...]", element))
     if isinstance(element, Terminal | tuple):
         return fixed(element)._series_width()
     probe: Any = getattr(element, "_series_width", None)

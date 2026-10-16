@@ -1,24 +1,25 @@
 """The release manifest (`baseline/manifest.json`): its fields and its text."""
 
+import dataclasses
 import hashlib
 import importlib.metadata
 from typing import TYPE_CHECKING, Any, cast
 
 from fransys_model.derive import (
     baseline,
-    current_revision,
     document_unit,
     function_designation,
+    manifest_rows,
     numbering_pins,
     port_designation,
     unit_items,
-    unit_release,
     unit_subtree,
     units,
 )
 from fransys_model.kernel import Finding, Id, JsonValue, Severity, key_text, write_json
-from fransys_model.vocab import documents, functions, items, part_libraries, ports, projects
-from fransys_model.vocab import parts as model_parts
+from fransys_model.vocab import documents, functions, ports
+
+from ._release_reader import BASELINE_FILES
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Model
@@ -135,91 +136,9 @@ def _package_versions() -> list[JsonValue]:
     ]
 
 
-def _part_library_versions(model: Model, unit: Id[ModelUnit] | None) -> list[JsonValue]:
-    """The distinct `(name, version)` of every part library behind `unit`'s items.
-
-    `None` is every item. A unit uses the whole subtree (`unit_items`), broader than the listing.
-    """
-    item_ids = items(model).keys() if unit is None else unit_items(model, unit)
-    all_items = items(model)
-    all_parts = model_parts(model)
-    all_libraries = part_libraries(model)
-    found = set()
-    for item_id in item_ids:
-        part_id = all_items[item_id].part
-        if part_id is None:
-            continue
-        library_id = all_parts[part_id].library
-        if library_id is None:
-            continue
-        library = all_libraries[library_id]
-        found.add((library.name, library.version))
-    return [{"name": name, "version": version} for name, version in sorted(found)]
-
-
 def _tool_versions() -> dict[str, JsonValue]:
     """`typst`'s own version; no release spawns Graphviz or `wireviz` any more."""
     return {"typst": importlib.metadata.version("typst")}
-
-
-def _nested_entries(model: Model, unit: Id[ModelUnit] | None) -> list[JsonValue]:
-    """Every release nested in `unit`'s subtree (`None`: every unit in the model), one row each.
-
-    Two instances of one release give the same listing digest, so rows dedupe by
-    `(name, version, revision, listing_digest)`.
-    """
-    nested_ids: tuple[Id[ModelUnit], ...] = (
-        tuple(sorted(units(model)))
-        if unit is None
-        else tuple(sorted(unit_subtree(model, unit) - {unit}))
-    )
-    found = set()
-    for nested_id in nested_ids:
-        release = unit_release(model, nested_id)
-        digest = hashlib.sha256(
-            baseline.dumps(baseline.listing(model, nested_id)).encode("utf-8")
-        ).hexdigest()
-        found.add((release.name, release.version, release.revision, digest))
-    return [
-        {"name": name, "version": version, "revision": revision, "listing_digest": digest}
-        for name, version, revision, digest in sorted(found)
-    ]
-
-
-def _unit_manifest_fields(
-    model: Model, unit: Id[ModelUnit] | None
-) -> tuple[dict[str, JsonValue], dict[str, JsonValue] | None]:
-    """`(unit, history)` of the manifest: the release's or the project's own facts."""
-    if unit is not None:
-        release_record = unit_release(model, unit)
-        unit_dict: dict[str, JsonValue] = {
-            "name": release_record.name,
-            "version": release_record.version,
-            "revision": release_record.revision,
-            "interface": release_record.interface,
-        }
-        entry = current_revision(model, release=release_record.id)
-    else:
-        project = next(iter(projects(model).values()))
-        unit_dict = {
-            "name": project.number,
-            "version": project.version,
-            "revision": project.revision,
-            "interface": "",
-        }
-        entry = current_revision(model, release=None)
-    history: dict[str, JsonValue] | None = (
-        None
-        if entry is None
-        else {
-            "date": entry.date,
-            "text": entry.text,
-            "created": entry.created,
-            "checked": entry.checked,
-            "approved": entry.approved,
-        }
-    )
-    return unit_dict, history
 
 
 def _manifest(
@@ -235,8 +154,8 @@ def _manifest(
     `baseline_files` holds the other baseline files (`listing.json`, `model.json`, and for a unit
     `numbering.json`, `changes.md`, `changes.csv`); their paths and hashes join `files`.
     """
-    unit_dict, history = _unit_manifest_fields(model, unit)
-    listing_digest = hashlib.sha256(baseline_files["baseline/listing.json"]).hexdigest()
+    rows = manifest_rows(model, unit)
+    listing_digest = hashlib.sha256(baseline_files[BASELINE_FILES["listing"]]).hexdigest()
     files_entries: list[JsonValue] = [
         {"path": name, "sha256": hashlib.sha256(data).hexdigest()}
         for name, data in sorted((*exports.items(), *baseline_files.items()), key=lambda f: f[0])
@@ -244,13 +163,13 @@ def _manifest(
     data: dict[str, JsonValue] = {
         "listing_digest": listing_digest,
         "model_digest": model.digest,
-        "unit": unit_dict,
-        "history": history,
+        "unit": dataclasses.asdict(rows.identity),
+        "history": None if rows.entry is None else dataclasses.asdict(rows.entry),
         "packages": _package_versions(),
-        "part_libraries": _part_library_versions(model, unit),
+        "part_libraries": [dataclasses.asdict(r) for r in rows.part_libraries],
         "tool_versions": _tool_versions(),
         "warnings": _warning_entries(model, unit, raw_findings),
-        "nested": _nested_entries(model, unit),
+        "nested": [dataclasses.asdict(r) for r in rows.nested],
         "files": files_entries,
     }
     return write_json(data, compact=True) + "\n"

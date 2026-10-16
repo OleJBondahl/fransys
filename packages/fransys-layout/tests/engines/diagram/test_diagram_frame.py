@@ -6,22 +6,22 @@ from functools import cache
 
 from diagram_models import station
 
-from fransys_layout.engines.diagram.channels import _apart
-from fransys_layout.engines.diagram.frame import build_frame
-from fransys_layout.engines.diagram.frame_values import FrameTrack
 from fransys_layout.engines.diagram.read import read_diagrams
-from fransys_layout.engines.diagram.sizes import (
+from fransys_layout.engines.overview.lanes.diagram_channels import _apart
+from fransys_layout.engines.overview.lanes.diagram_frame import build_frame
+from fransys_layout.engines.overview.lanes.frame_values import FrameTrack
+from fransys_layout.engines.overview.lanes.plan_channel import plan_channel
+from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
+from fransys_layout.engines.overview.sizes import (
     MARKER_W,
     TRACK_PITCH,
     attach_pitch,
     label_room,
     tab_reach,
 )
-from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing, snap_up
-from fransys_layout.stages.channel import plan_channel
 from fransys_model.kernel import Id
-lazy from fransys_layout.engines.diagram.frame_values import Frame
+lazy from fransys_layout.engines.overview.lanes.frame_values import Frame
 
 TH = 8
 

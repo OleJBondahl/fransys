@@ -2,12 +2,10 @@
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab import (
-    ConductorKind,
     Current,
     Item,
     LinkKind,
     Net,
-    NetClass,
     Port,
     PowerKind,
 )
@@ -15,6 +13,8 @@ from fransys_model.vocab.closure import link_groups, net_of, physical_nets
 from fransys_model.vocab.potentials import pe_firsts, physical_potentials
 from fransys_model.vocab.tables import conductors, items, nets, supply_of_potential
 
+from .facts.conductor_facts import is_bonded
+from .facts.net_facts import is_earth_net, net_potential
 from .indexes import build_indexes
 from .lookups import item_of_port, terminal_items
 from .order import NaturalKey, natural_key
@@ -72,7 +72,7 @@ def power_kind(model: Model, net: Id[Net]) -> PowerKind:
         KeyError: `net` is not a declared `Net` of `model`.
     """
     declared = nets(model)[net]
-    if declared.net_class is NetClass.PE:
+    if is_earth_net(model, net):
         return PowerKind.PE
     kinds = {port_power_kind(model, port) for port in declared.ports}
     return kinds.pop() if len(kinds) == 1 else PowerKind.NONE
@@ -87,19 +87,19 @@ def power_text(model: Model, net: Id[Net]) -> str | None:
     if power_kind(model, net) is not PowerKind.SUPPLY:
         return None
     declared = nets(model)[net]
-    return declared.name if declared.name is not None else declared.potential
+    return declared.name if declared.name is not None else net_potential(model, net)
 
 
-def _text_order(net: Net) -> tuple[NaturalKey, Id[Net]]:
+def _text_order(model: Model, net: Net) -> tuple[NaturalKey, Id[Net]]:
     """First-wins order of declared nets: printed name or potential, naturally, then id."""
-    return natural_key(net.name or net.potential or ""), net.id
+    return natural_key(net.name or net_potential(model, net.id) or ""), net.id
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
 def _texts(model: Model) -> frozendict[Id[Port], str | None]:
     """Each power physical net's text by its first port: the first declared net's, by net id."""
     texts: dict[Id[Port], str | None] = {}
-    for net in sorted(nets(model).values(), key=_text_order):
+    for net in sorted(nets(model).values(), key=lambda n: _text_order(model, n)):
         if power_kind(model, net.id) is PowerKind.NONE:
             continue
         for port in net.ports:
@@ -123,7 +123,7 @@ def _bridged(model: Model) -> frozenset[Id[Item]]:
     terminals = terminal_items(model)
     found: set[Id[Item]] = set()
     for conductor in conductors(model).values():
-        if conductor.kind not in (ConductorKind.JUMPER, ConductorKind.RAIL):
+        if not is_bonded(model, conductor.id):
             continue
         a, b = item_of_port(model, conductor.a), item_of_port(model, conductor.b)
         if a != b and {a, b} <= terminals and items(model)[a].parent == items(model)[b].parent:

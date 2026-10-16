@@ -8,8 +8,9 @@ copies cannot drift; this file pins that neither module grows its own again, by 
 
 import pytest
 from fransys_pdf import _contents as pdf_contents
-from fransys_pdf import _lists, _lists_cells, _lists_terminal
+from fransys_pdf import _diagrams, _drawings, _geometry, _lists, _lists_cells, _lists_terminal
 from fransys_pdf import _lists as pdf
+from fransys_pdf import document as pdf_document
 from fransys_reports import csv as reports
 
 from fransys_model import derive
@@ -101,15 +102,39 @@ def _first_label_mismatch(pdf_labels: dict[str, str], csv_labels: dict[str, str]
     )
 
 
+def _csv_labels() -> dict[str, str]:
+    """The terminal CSV's header per field, as `fransys_reports.csv` derives it."""
+    return {field: derive.csv_name(label) for field, label in derive.TERMINAL_LABELS.items()}
+
+
 def test_terminal_labels_agree():
-    assert _first_label_mismatch(derive.TERMINAL_LABELS, reports._TERMINAL_LABELS) is None
-    assert reports._TERMINAL_LABELS == {"internal_ends": "side_a", "external_ends": "side_b"}
+    assert _first_label_mismatch(derive.TERMINAL_LABELS, _csv_labels()) is None
+    assert _csv_labels() == {"internal_ends": "side_a", "external_ends": "side_b"}
     assert set(derive.TERMINAL_LABELS) <= set(derive.TERMINAL_COLUMNS)  # they label real fields
+    assert not hasattr(reports, "_TERMINAL_LABELS")  # pdf-0044: no second table
+    assert not hasattr(_lists_cells, "_humanise")
+    assert not hasattr(pdf_contents, "_HEADERS")
+    assert pdf_contents.CONTENTS_LABELS is derive.CONTENTS_LABELS
 
 
 def test_first_label_mismatch_names_the_one_differing_field():
     """Can-fail twin: a drifted label is named, and so is a field only one side labels."""
-    drifted = {**reports._TERMINAL_LABELS, "external_ends": "side_c"}
+    drifted = {**_csv_labels(), "external_ends": "side_c"}
     assert _first_label_mismatch(derive.TERMINAL_LABELS, drifted) == "external_ends"
-    extra = {**reports._TERMINAL_LABELS, "index": "position"}
+    extra = {**_csv_labels(), "index": "position"}
     assert _first_label_mismatch(derive.TERMINAL_LABELS, extra) == "index"
+
+
+def test_pdf_holds_no_second_heading_table():
+    """pdf-0044: the page and preset words and the drawing titles are derive's, by identity."""
+    assert not hasattr(pdf_document, "_HEADING_WORDS")
+    assert not hasattr(_geometry, "_PRESET_WORDS")
+    assert pdf_document.PAGE_HEADINGS is derive.PAGE_HEADINGS
+    assert _geometry.PRESET_HEADINGS is derive.PRESET_HEADINGS
+    # the drawing titles reach pdf only inside render's title block (pdf-0046): pdf names none
+    for module, name in (
+        (_diagrams, "DIAGRAM_TITLE"),
+        (_drawings, "SCHEMATIC_TITLE"),
+        (_drawings, "HARNESS_DRAWING_TITLE"),
+    ):
+        assert not hasattr(module, name)

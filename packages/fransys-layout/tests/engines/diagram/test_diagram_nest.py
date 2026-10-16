@@ -1,7 +1,7 @@
 """Same-column lines nest (layout-0201): the order of their ends and the order of their tracks."""
 
-from fransys_layout.engines.diagram.arrange import RawEnd, place_ends
-from fransys_layout.engines.diagram.channels import same_tracks
+from fransys_layout.engines.overview.lanes.arrange import RawEnd, place_ends
+from fransys_layout.engines.overview.lanes.diagram_channels import same_tracks
 from fransys_layout.geometry import Facing
 from fransys_model.kernel import Id
 

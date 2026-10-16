@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="5mm" height="7.5mm" viewBox="-1 -1 2 3">
+<title>Title block notice line</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="0" y1="0" x2="0" y2="1" stroke-width="0.2"/>
+</g>
+</svg>

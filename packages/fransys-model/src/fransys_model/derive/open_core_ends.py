@@ -6,12 +6,13 @@ importing `reports`.
 
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.facets.cable import OpenCoreFacet
-from fransys_model.vocab.tables import facets_of, ports
+from fransys_model.vocab.tables import facets_of
 lazy from fransys_model.vocab.core import Item, Unit
 lazy from fransys_model.vocab.enums import PortRole
 
 from .core_pairs import _product_colours, open_core_is_spare
 from .designation import printed_designation
+from .facts.roles import port_role
 from .indexes import build_indexes
 lazy from .rows_cores import OpenCoreRow
 
@@ -52,7 +53,7 @@ def open_ends_at(
         port
         for function in idx.functions_by_item.get(terminal, ())
         for port in idx.ports_by_function.get(function, ())
-        if ports(model)[port].role is role
+        if port_role(model, port) is role
     }
     found = []
     for cable, facets in sorted(_open_by_cable(model).items()):

@@ -11,10 +11,10 @@ import pytest
 from test_block_diagram_worked_examples import _station
 from test_units_worked_example import _build_cabinet_own
 
-from fransys_layout.engines.diagram.sizes import tab_height, tab_reach
 from fransys_layout.engines.overview import lay_out_overview
 from fransys_layout.engines.overview.place import place_view, view_scene
 from fransys_layout.engines.overview.read import read_views
+from fransys_layout.engines.overview.sizes import tab_height, tab_reach
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.lint import lint_diagram
 from fransys_layout.lint.codes import DIAGRAM_BOX_OVERLAP, DIAGRAM_LINE_THROUGH_BOX
@@ -27,7 +27,6 @@ from fransys_model.derive import (
     strip_stubs,
     strip_view,
 )
-from fransys_model.derive.rows import ItemKind
 from fransys_model.layout import (
     AUTHORED_KINDS,
     CABLE_KINDS,
@@ -42,6 +41,7 @@ from fransys_model.layout import (
     OverviewView,
     layout_of,
 )
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.tables import units
 
 NAMES = ("station", "cabinet")

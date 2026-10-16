@@ -15,6 +15,7 @@ from typing import cast
 from fransys_layout.core import (
     Box,
     MarkerKind,
+    Orientation,
     Scene,
     SceneBox,
     SceneMarker,
@@ -23,9 +24,15 @@ from fransys_layout.core import (
     Side,
     Size,
 )
+from fransys_layout.core.values import RefKind
 
 CORPUS = Path(__file__).parent.parent / "corpus" / "placement"
-KIND: dict[str, MarkerKind] = {"-": "tag", "REF": "star", "BRANCH": "star", "OFF": "stub"}
+KIND: dict[str, MarkerKind] = {
+    "-": RefKind.TAG,
+    "REF": RefKind.STAR,
+    "BRANCH": RefKind.STAR,
+    "OFF": RefKind.STUB,
+}
 TURN = {"R0": (1, 1), "R180": (-1, -1), "MR180": (1, -1)}  # orientation -> (sx, sy) on R0 offsets
 
 
@@ -44,6 +51,17 @@ class Sym:
 
 def _kv(tokens: list[str]) -> dict[str, str]:
     return dict(t.split("=", 1) for t in tokens if "=" in t)
+
+
+SCENE_ORIENT: dict[str, Orientation] = {"R0": "R0", "R180": "R180", "MR180": "MR180"}
+
+
+def _scene_orient(words: list[str]) -> Orientation:
+    name = _kv(words)["orient"]
+    if name not in SCENE_ORIENT:
+        msg = f"corpus: unknown orient {name!r}"
+        raise ValueError(msg)
+    return SCENE_ORIENT[name]
 
 
 def _ints(text: str) -> tuple[int, ...]:
@@ -137,6 +155,7 @@ def _pin(
         node,
         "stand" in kv,
         ref in facts.boxpin,
+        sid in facts.head,
     )
 
 
@@ -157,8 +176,8 @@ def _box(sid: str, sym: Sym, words: list[str], page: int, ctx: tuple) -> SceneBo
         body,
         pins,
         sid in facts.attached,
-        sid in facts.head,
         facts.strip.get(sid),
+        _scene_orient(words),
     )
 
 
@@ -185,14 +204,16 @@ def read_text(text: str, name: str) -> Instance:
     ctx = (net_of, _facts(by_kind))
     boxes = [_box(w[1], syms[w[1]], w, number[_key(w)], ctx) for w in today]
     wires = [
-        SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])))
+        SceneWire(w[1], number[_key(w)], tuple((x, y) for x, y in map(_ints, w[6:])), 1, "straight")
         for w in by_kind.get("route", [])
     ]
     markers = []
     for w in by_kind.get("marker", []):
         sid, pin = _owner(w[2], syms)
         x, y = _ints(_kv(w)["at"])
-        markers.append(SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin))
+        markers.append(
+            SceneMarker(w[1], KIND[_kv(w)["star"]], number[_key(w)], x, y, sid, pin, "", "N")
+        )
     pages: dict[str, set[int]] = {}
     for b in boxes:
         pages.setdefault(b.sym, set()).add(b.page)
@@ -205,6 +226,10 @@ def read_text(text: str, name: str) -> Instance:
         tuple(wires),
         tuple(markers),
         frozenset(rails),
+        (),
+        (),
+        (),
+        (),  # a dump of today's engine has no rows: a page is one row
     )
     return Instance(scene, pages, unplaced)
 

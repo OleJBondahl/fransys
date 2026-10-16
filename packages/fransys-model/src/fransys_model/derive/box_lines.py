@@ -1,6 +1,6 @@
 """The text lines of a connector's box: designation, part number, landed pins."""
 
-from fransys_model.vocab.enums import FunctionKind
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.vocab.tables import boundaries, functions, items, parts
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Unit
@@ -16,7 +16,7 @@ def _part_line(model: Model, function: Id[Function]) -> str | None:
     item = items(model)[functions(model)[function].item]
     siblings = build_indexes(model).functions_by_item.get(item.id, ())
     if item.part is None or any(
-        functions(model)[sibling].kind is not FunctionKind.CONNECTOR for sibling in siblings
+        not function_role(model, sibling).pin_group for sibling in siblings
     ):
         return None
     return parts(model)[item.part].mpn

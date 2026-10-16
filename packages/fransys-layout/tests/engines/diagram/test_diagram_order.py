@@ -1,6 +1,6 @@
 """Row order in the stage columns: one pass down, one pass up, on abstract graphs."""
 
-from fransys_layout.engines.diagram.order import order_columns
+from fransys_layout.engines.overview.order import order_columns
 
 
 def _rank(*columns: tuple[str, ...]) -> dict[str, int]:

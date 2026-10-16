@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from fransys_layout.engines.diagram.values import DiagramFacts
+from fransys_layout.engines.overview.sheet_values import DiagramFacts
 from fransys_model.kernel import Id, value
 from fransys_model.layout import BoxKey, OverviewMode, OverviewRef
 from fransys_model.vocab.core import Unit

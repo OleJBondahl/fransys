@@ -3,15 +3,15 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
+    PRESET_HEADINGS,
     document_drawing_sets,
     document_facts,
     document_unit,
     is_replica_only_undrawn,
-    item_description,
-    item_designation,
+    page_order_key,
+    subject_label,
     unit_release,
 )
-from fransys_model.derive.drawing_text import unit_label
 from fransys_model.layout import (
     DrawingSet,
     Page,
@@ -19,7 +19,7 @@ from fransys_model.layout import (
     layout_of,
     sheet_format_of,
 )
-from fransys_model.vocab import DocumentPreset, PageKind, aspect_nodes
+from fransys_model.vocab import PageKind
 
 from ._labels import ROMAN
 from ._sizes import Sizes, font_mm
@@ -27,14 +27,7 @@ from ._typst import literal
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import AspectNode, Document, UnitRelease
-
-_PRESET_WORDS: dict[DocumentPreset, str] = {
-    DocumentPreset.CABINET_SCHEMATIC: "Cabinet schematic",
-    DocumentPreset.HARNESS_DRAWING: "Harness drawing",
-    DocumentPreset.PCB_SCHEMATIC: "PCB schematic",
-    DocumentPreset.SYSTEM: "System",
-}
+    from fransys_model.vocab import Document, UnitRelease
 
 
 def _drawing_set_pages(
@@ -54,7 +47,9 @@ def _drawing_set_pages(
     if not order:
         return ()
     on_these_sets = [page for page in layout_of(model, Page).values() if page.drawing_set in order]
-    return tuple(sorted(on_these_sets, key=lambda page: (order[page.drawing_set], page.number)))
+    return tuple(
+        sorted(on_these_sets, key=lambda page: page_order_key(order[page.drawing_set], page))
+    )
 
 
 def undrawn_replica_only_sets(
@@ -68,14 +63,6 @@ def undrawn_replica_only_sets(
         for drawing_set in document_drawing_sets(model, record)
         if is_replica_only_undrawn(model, drawing_set)
     )
-
-
-def resolve_sheet_format(
-    model: Model, record: Document, pages: tuple[PageKind, ...]
-) -> SheetFormat:
-    """The paper of every page: the first drawing-set page's format, else the house sheet."""
-    set_pages = _drawing_set_pages(model, record, pages)
-    return sheet_format_of(model, set_pages[0].sheet_format if set_pages else None)
 
 
 def mixed_sheet_formats(
@@ -110,29 +97,9 @@ def document_release(model: Model, record: Document) -> Id[UnitRelease] | None:
     return unit_release(model, unit).id
 
 
-def subject_label(model: Model, record: Document) -> str:
-    """The heading's subject: location, unit or item label (model-0066); "" for SYSTEM."""
-    if record.location is not None:
-        node = aspect_nodes(model)[record.location]
-        return f"{node.label} {node.description}"
-    unit = document_unit(model, record)
-    if unit is not None:
-        return unit_label(model, unit)
-    if record.preset is DocumentPreset.SYSTEM:
-        return ""
-    item_id = record.item
-    assert item_id is not None  # noqa: S101 -- Document.__post_init__ requires one of the three, or SYSTEM
-    return f"{item_designation(model, item_id)} {item_description(model, item_id)}"
-
-
-def location_label(model: Model, location: Id[AspectNode]) -> str:
-    """`location`'s short code alone (e.g. `C1`), for a drawing page's scope cell."""
-    return aspect_nodes(model)[location].label
-
-
 def document_heading(model: Model, record: Document) -> str:
     """`<preset words> — <subject label>`, the words alone when the label is empty."""
-    words = _PRESET_WORDS[record.preset]
+    words = PRESET_HEADINGS[record.preset]
     subject = subject_label(model, record)
     if not subject:
         return words
@@ -151,3 +118,15 @@ def preamble(sizes: Sizes, sheet: SheetFormat) -> str:
             f"#show table: set text(size: {font_mm(sizes.label)})",
         ]
     )
+
+
+PADDING_MM = 5  # non-drawing pages' inner padding inside the content box
+
+
+def text_margin(sheet: SheetFormat) -> str:
+    """A `#set page(margin: ...)`: content box plus 5 mm padding; harness too (pdf-0009)."""
+    left = sheet.content_x_mm + PADDING_MM
+    top = sheet.content_y_mm + PADDING_MM
+    right = (sheet.width_mm - sheet.content_x_mm - sheet.content_width_mm) + PADDING_MM
+    bottom = (sheet.height_mm - sheet.content_y_mm - sheet.content_height_mm) + PADDING_MM
+    return f"(left: {left}mm, top: {top}mm, right: {right}mm, bottom: {bottom}mm)"

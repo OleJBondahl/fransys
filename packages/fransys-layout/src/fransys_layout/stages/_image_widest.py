@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.geometry import text_width
 from fransys_model.derive.drawing_text import partner_position_text, row_letter
+from fransys_model.derive.set_rank import set_ranks
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -15,18 +16,27 @@ if TYPE_CHECKING:
 type Cross = tuple[int, LocationPath]
 
 
-def _partner_seats(pages: int, cross: Cross | None) -> list[tuple[int, int, LocationPath]]:
+def _partner_seats(
+    pages: int, cross: Cross | None
+) -> list[tuple[tuple[int, int, LocationPath], bool]]:
     """Every seat a partner can stand in: the reader's set, and with `cross` another set twice.
 
     Another set is seated once with the longest path (the prefix form) and once with the
     reader's own (the set-number form).
     """
-    seats: list[tuple[int, int, LocationPath]] = [(1, page, ()) for page in range(1, pages + 1)]
+    seats: list[tuple[tuple[int, int, LocationPath], bool]] = [
+        ((1, page, ()), True) for page in range(1, pages + 1)
+    ]
     if cross:
-        set_number, longest = cross
+        rank, longest = cross
         for page in range(1, pages + 1):
-            seats += [(set_number, page, longest), (set_number, page, ())]
+            seats += [((rank, page, longest), False), ((rank, page, ()), False)]
     return seats
+
+
+def plan_ranks(plans: Sequence[PagePlan]) -> dict[int, int]:
+    """Each planned drawing set's rank among the sets of its own unit: derive's one rule."""
+    return set_ranks({plan.drawing_set: plan.unit for plan in plans})
 
 
 def widest_where(
@@ -34,14 +44,14 @@ def widest_where(
 ) -> str:
     """The widest place text over pages 1 to `pages` and every cell of the sheet.
 
-    `cross` is (the highest set number, the longest location path) of a model with several
+    `cross` is (the highest set rank, the longest location path) of a model with several
     sets. Every text is `partner_position_text`'s, so a form it gains is measured here.
     """
     own = (1, 0, ())
     return max(
         (
-            partner_position_text(own, seat, column, row_letter(row))
-            for seat in _partner_seats(pages, cross)
+            partner_position_text(own, seat, column, row_letter(row), same_set=same)
+            for seat, same in _partner_seats(pages, cross)
             for column in range(1, 1 + sheet.frame_columns)
             for row in range(sheet.frame_rows)
         ),
@@ -66,7 +76,7 @@ def cross_form(plans: Sequence[PagePlan], paths: Mapping[int, LocationPath]) -> 
     longest = max(
         paths.values(), key=lambda path: len("".join(label for _, label in path)), default=()
     )
-    return max(sets), longest
+    return max(plan_ranks(plans).values()), longest
 
 
 def widest_places(plans: tuple[PagePlan, ...], inputs: PageInputs) -> tuple[str, str]:

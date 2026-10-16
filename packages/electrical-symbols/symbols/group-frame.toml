@@ -1,0 +1,20 @@
+schema = 1
+name = "Group frame"
+kind = "element"
+status = "unverified"
+# our own frame: the frame around a page's group of items. Stretch on x and y (two calls) sets its size; the label slot stays at the
+# top-left corner inside the frame
+reference = { standard = "IEC 60617", number = "group-frame" }
+
+elements = [
+  { polyline = [[0, 0], [8, 0], [8, 6], [0, 6]], closed = true },
+]
+
+stretch = [{ axis = "x", at = 4 }, { axis = "y", at = 3 }]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the label text box does not rotate and is wider than the frame is tall once rotated; the frame is drawn unrotated and the text stays inside the outline" },
+]
+
+[slots]
+label = { at = [0.25, 0.75], side = "E", box = [6, 1] }

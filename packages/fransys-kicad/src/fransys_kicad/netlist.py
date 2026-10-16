@@ -3,14 +3,12 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import board_netlist
-
-from ._pins import pin_of
+from fransys_model.derive import board_netlist, board_pins
 
 if TYPE_CHECKING:
-    from fransys_model.derive import NetlistNet, NetlistPart
+    from fransys_model.derive import NetlistPart, PinNet
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Item, Port
+    from fransys_model.vocab import Item
 
 # Every component timestamp is a `uuid5` of this namespace and the item's id, so one item always
 # gets one timestamp and KiCad keeps its footprint matched when the netlist is regenerated.
@@ -48,15 +46,10 @@ def _comp(part: NetlistPart) -> str:
     )
 
 
-def _node(model: Model, designations: dict[Id[Item], str], port: Id[Port], board: Id[Item]) -> str:
-    ref, pad = pin_of(model, designations, port, board)
-    return f"      (node (ref {_quote(ref)}) (pin {_quote(pad)}))"
-
-
-def _net(
-    model: Model, designations: dict[Id[Item], str], code: int, net: NetlistNet, board: Id[Item]
-) -> str:
-    nodes = "\n".join(_node(model, designations, port, board) for port in net.pins)
+def _net(code: int, net: PinNet) -> str:
+    nodes = "\n".join(
+        f"      (node (ref {_quote(pin.ref)}) (pin {_quote(pin.pad)}))" for pin in net.pins
+    )
     return f'    (net (code "{code}") (name {_quote(net.name)})\n{nodes})'
 
 
@@ -83,16 +76,13 @@ def netlist(model: Model, board: Id[Item]) -> str:
         SchemaError: as `board_netlist` (`board` unknown, or an item has no designation).
     """
     rows = board_netlist(model, board)
-    designations = {part.item: part.designation for part in rows.parts}
+    pins = board_pins(model, board)
     sections = [
         _header(rows.board_designation),
         _section("components", [_comp(part) for part in rows.parts]),
         _section(
             "nets",
-            [
-                _net(model, designations, code, net, board)
-                for code, net in enumerate(rows.nets, start=1)
-            ],
+            [_net(code, net) for code, net in enumerate(pins.nets, start=1)],
         ),
     ]
     return "\n".join(sections) + ")\n"

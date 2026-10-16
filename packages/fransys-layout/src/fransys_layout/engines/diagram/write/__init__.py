@@ -8,7 +8,7 @@ from fransys_model.kernel import Origin, evolve
 from fransys_model.layout import DIAGRAM_KINDS, derived_layout_ids
 
 if TYPE_CHECKING:
-    from fransys_layout.engines.diagram.values import PlacedDiagram
+    from fransys_layout.engines.overview.sheet_values import PlacedDiagram
     from fransys_model.kernel import Model
 
 

@@ -19,10 +19,18 @@ from .black_box import drawing_set_is_replica_only
 from .drawing_text import position_text
 from .export_names import document_export_name
 from .frame_position import cell
-from .page_destination import page_destination, set_rank
+from .page_destination import page_destination
 from .printed_sets import document_drawing_sets
+from .set_rank import set_rank
 
-__all__ = ["ItemPage", "drawn_pages", "is_replica_only_undrawn", "item_pages"]
+__all__ = [
+    "ItemPage",
+    "drawn_pages",
+    "is_replica_only_undrawn",
+    "item_pages",
+    "ordered_pages",
+    "page_order_key",
+]
 
 
 def is_replica_only_undrawn(model: Model, drawing_set: DrawingSet) -> bool:
@@ -63,13 +71,30 @@ class ItemPage:
     text: str
 
 
+def page_order_key(set_number: int, page: Page) -> tuple[int, int]:
+    """The one page order: the page's drawing-set number, then its own number."""
+    return (set_number, page.number)
+
+
+def ordered_pages(model: Model, *, include_replica_only: bool = True) -> tuple[Page, ...]:
+    """Every `layout.page` in set then page order; replica-only sets drop out when asked."""
+    sets = layout_of(model, DrawingSet)
+    skipped = (
+        set()
+        if include_replica_only
+        else {s.id for s in sets.values() if is_replica_only_undrawn(model, s)}
+    )
+    pages = [p for p in layout_of(model, Page).values() if p.drawing_set not in skipped]
+    return tuple(sorted(pages, key=lambda p: page_order_key(sets[p.drawing_set].number, p)))
+
+
 def drawn_pages(model: Model, record: Document) -> tuple[Page, ...]:
     """`record`'s drawn pages in set then page order, replica-only sets skipped."""
     sets = document_drawing_sets(model, record)
     sets = [s for s in sets if not is_replica_only_undrawn(model, s)]
     order = {s.id: s.number for s in sets}
     found = [p for p in layout_of(model, Page).values() if p.drawing_set in order]
-    return tuple(sorted(found, key=lambda p: (order[p.drawing_set], p.number)))
+    return tuple(sorted(found, key=lambda p: page_order_key(order[p.drawing_set], p)))
 
 
 def item_pages(model: Model) -> dict[Id[Item], tuple[ItemPage, ...]]:

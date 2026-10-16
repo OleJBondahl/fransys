@@ -1,0 +1,114 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      0
+    ],
+    [
+      3,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -3,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "port": "pin",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -1,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          -1,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -3,
+      0
+    ],
+    [
+      3,
+      2
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+      "rule": "slot-overlap-body"
+    },
+    {
+      "reason": "a pin cell ends its circuit at the table; no path of this symbol continues it",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Pin cell (table row)",
+  "nodes": [
+    {
+      "ports": [
+        "pin"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        -3,
+        1
+      ],
+      "description": "wire side",
+      "dir": "W",
+      "id": "pin"
+    }
+  ],
+  "reference": {
+    "number": "pin-cell",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.pin": {
+      "at": [
+        -0.75,
+        1
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

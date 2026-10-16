@@ -8,8 +8,10 @@ reference's fixed box (`references.marker_boxes.reference_box_width`).
 """
 
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_layout.stages.lookups import set_rank
 from fransys_layout.stages.types import LabelKind, LabelRequest, RequestPartner
 from fransys_model.derive.drawing_text import (
     frame_column,
@@ -33,13 +35,21 @@ if TYPE_CHECKING:
     from .markers import LinkEnd, PlacedWorld
 
 
+@dataclass(frozen=True, slots=True)
+class SetNames:
+    """What a reference says of a drawing set: its location path and its rank among its unit's."""
+
+    paths: Mapping[int, LocationPath]
+    ranks: Mapping[int, int]
+
+
 def echo_requests(
     echoes: tuple[Cut, ...],
     placed: tuple[PlacedFunction, ...],
     drawn: tuple[DrawnFunction, ...],
     *,
     sheet: SheetFormat,
-    location_paths: Mapping[int, LocationPath],
+    sets: SetNames,
 ) -> tuple[LabelRequest, ...]:
     """One `CROSS_REFERENCE` request per function of a tag echo, naming its partners ."""
     world = placed_world(placed, drawn)
@@ -54,7 +64,7 @@ def echo_requests(
                     partner.page[0],
                     partner.page[1],
                     column,
-                    _tag_echo_text(end, partner, sheet, location_paths, world),
+                    _tag_echo_text(end, partner, sheet, sets, world),
                 )
             )
             partners[end.ref.function].add(
@@ -79,15 +89,16 @@ def _tag_echo_text(
     end: LinkEnd,
     partner: LinkEnd,
     sheet: SheetFormat,
-    location_paths: Mapping[int, LocationPath],
+    sets: SetNames,
     world: PlacedWorld,
 ) -> str:
     """What `end`'s tag-echo `CROSS_REFERENCE` says about `partner` (layout-0089)."""
     column = frame_column(sheet.content_width, sheet.frame_columns, partner.at.x)
     placement_y = world.where[partner.ref.function][partner.page].at.y
     row = frame_row(sheet.content_height, sheet.frame_rows, placement_y)
-    seats = (
-        (end.page[0], end.page[1], location_paths.get(end.page[0], ())),
-        (partner.page[0], partner.page[1], location_paths.get(partner.page[0], ())),
+    seats = tuple(
+        (set_rank(sets.ranks, one.page[0]), one.page[1], sets.paths.get(one.page[0], ()))
+        for one in (end, partner)
     )
-    return partner_position_text(*seats, column, row)  # The text render prints
+    same = end.page[0] == partner.page[0]
+    return partner_position_text(*seats, column, row, same_set=same)  # The text render prints

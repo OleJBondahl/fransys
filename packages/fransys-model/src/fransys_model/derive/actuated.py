@@ -11,7 +11,6 @@ from fransys_model.derive.contact_entries import contact_list_key
 from fransys_model.derive.unused import function_is_unused
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.layout import profile_of
-from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions
 lazy from fransys_model.vocab.core import Function, Item, Unit
 
@@ -20,8 +19,8 @@ lazy from fransys_model.vocab.core import Function, Item, Unit
 def _groups(model: Model) -> dict[Id[Item], tuple[Id[Function], ...]]:
     """Each operating item's switch functions in contact-list order."""
     found: dict[Id[Item], list[Id[Function]]] = defaultdict(list)
-    for function, record in functions(model).items():
-        if record.kind is FunctionKind.SWITCH and (item := operating_item(model, function)):
+    for function in functions(model):
+        if item := operating_item(model, function):  # None unless a switch
             found[item].append(function)
     return {
         item: tuple(sorted(group, key=lambda f: (contact_list_key(model, f), f)))

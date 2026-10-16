@@ -30,6 +30,7 @@ import importlib.util
 import re
 from pathlib import Path
 
+import fransys_render
 import pytest
 import typst
 from fransys_pdf import font_dir, source
@@ -39,6 +40,7 @@ from fransys_render._constants import MARKER_ARROW_DEPTH_G
 from electrical_symbols import GENERIC_BOX_KEY
 from fransys_layout.engines.schematic.read.house import DEFAULT_PROFILE
 from fransys_layout.geometry import text_width
+from fransys_model.derive import document_sheets_of
 from fransys_model.derive.drawing_text import frame_column, frame_row, marker_text, position_text
 from fransys_model.kernel import Draft, Origin, freeze, make_id, render_id
 from fransys_model.layout import (
@@ -354,7 +356,7 @@ def compiled_page():
     model, doc, owner_id = _model_and_owner_marker_id()
     svgs = pages(model, tints=())  # no fills: a light tint reads as ink at threshold 245
     assert len(svgs) == 2  # both real layout pages render, even though only C1's is printed
-    text = source(model, doc.id, svgs)
+    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC: only C1's page, never C2's
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     pngs = compiler.compile(input=text.encode("utf-8"), format="png", ppi=PPI)

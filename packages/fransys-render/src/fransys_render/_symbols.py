@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from symdef import Weight, to_fragment_mm
 
+from fransys_model.derive import item_installed
 from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.derive.print_sizes import (
@@ -22,7 +23,7 @@ from fransys_model.layout import (
     profile_of_page,
     sheet_format_of,
 )
-from fransys_model.vocab import functions, items
+from fransys_model.vocab import functions
 
 from ._leads import visible_symbol
 from ._markers import text_glyph
@@ -31,12 +32,15 @@ from ._style import FONT_NAME
 from ._symbol_geometry import oriented_power_symbol, oriented_symbol, to_grid
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
     from decimal import Decimal
 
     from symdef.model import Symbol
 
     from fransys_model.kernel import Model
     from fransys_model.layout import Page, Profile, SheetFormat
+
+CAP_RATIO = float(CAPITAL_RATIO)  # the capital height per font size every drawn text uses
 
 # The placeholder rectangle is 8x8 G, centred on the placement's origin (last
 # paragraph): from (x-4, y-4) to (x+4, y+4). This mirrors how a real symbol's ports sit
@@ -72,12 +76,6 @@ def _text_glyph(sheet: SheetFormat, profile: Profile, placement: SymbolPlacement
     return text_glyph(placement.symbol, x_mm, baseline_mm, font)
 
 
-def _not_installed(model: Model, placement: SymbolPlacement) -> bool:
-    """Whether `placement`'s function's item has `installed=False`."""
-    function = functions(model)[placement.function]
-    return not items(model)[function.item].installed
-
-
 def power_symbols_on_page(model: Model, page: Page) -> tuple[PowerSymbol, ...]:
     """Every `layout.power_symbol` on `page`, top-down, left to right (`by_place`)."""
     return drawn_on_page(model, PowerSymbol, page)
@@ -107,16 +105,33 @@ def _power_lead(sheet: SheetFormat, power: PowerSymbol, symbol: Symbol) -> str:
     )
 
 
-def symbol_body(symbol: Symbol, module_mm: Decimal, font_mm: Decimal) -> str:
-    """`symbol` drawn by the toolkit in mm at its own origin, with the drawing's pens and font."""
+def symbol_body(  # noqa: PLR0913 -- the toolkit's keywords, forwarded
+    symbol: Symbol,
+    module_mm: Decimal,
+    font_mm: Decimal,
+    tint: str | None = None,
+    *,
+    texts: Mapping[str, str] | None = None,
+    required_slots: Sequence[str] = (),
+    weights_mm: Mapping[Weight, float] | None = None,
+) -> str:
+    """`symbol` drawn by the toolkit in mm at its own origin, with the drawing's pens and font.
+
+    `texts` (slot id to string) and `required_slots` go to symdef, which draws and checks them;
+    `weights_mm` replaces the symbol pens (the Bridge marks draw with the table rule).
+    """
     return to_fragment_mm(
         symbol,
         module_mm=float(module_mm),
-        weights_mm={Weight.NORMAL: float(LINE_THIN_MM), Weight.THICK: float(LINE_THICK_MM)},
+        weights_mm=weights_mm
+        or {Weight.NORMAL: float(LINE_THIN_MM), Weight.THICK: float(LINE_THICK_MM)},
         dash_mm=(float(SYMBOL_DASH_MM), float(SYMBOL_DASH_GAP_MM)),
         font_family=FONT_NAME,
         font_mm=float(font_mm),
-        cap_ratio=float(CAPITAL_RATIO),
+        cap_ratio=CAP_RATIO,
+        tint=tint,
+        texts=texts,
+        required_slots=required_slots,
     )
 
 
@@ -150,7 +165,7 @@ def symbols_group(model: Model, page: Page) -> str:
             parts.append(_text_glyph(sheet, profile, placement))
         else:
             symbol = visible_symbol(model, page, placement, symbol)
-            not_installed = _not_installed(model, placement)
+            not_installed = not item_installed(model, functions(model)[placement.function].item)
             parts.append(
                 _symbol_fragment(sheet, profile, placement, symbol, not_installed=not_installed)
             )

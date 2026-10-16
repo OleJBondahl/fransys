@@ -14,8 +14,8 @@ from fransys_layout.engines.overview.lanes.plan import make_plan
 from fransys_layout.engines.overview.lanes.route import Room, column_xs, sheet
 
 if TYPE_CHECKING:
-    from fransys_layout.engines.diagram.values import PlacedSheet
     from fransys_layout.engines.overview.read.values import ViewFacts
+    from fransys_layout.engines.overview.sheet_values import PlacedSheet
 
 
 def place_lanes(facts: ViewFacts) -> PlacedSheet:

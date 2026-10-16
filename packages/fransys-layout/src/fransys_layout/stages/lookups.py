@@ -6,7 +6,7 @@ from fransys_layout.geometry import Box, LayoutError, translate
 from fransys_model.kernel import UnionFind
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from .types import DrawnFunction, Handle, PlacedFunction
 
@@ -85,3 +85,11 @@ def device_turns(against: Iterable[bool]) -> bool:
 def turn_mirrors(*, terminal: bool) -> bool:
     """The form of a turned pole: a strip terminal turns at R180, every other one at MR180."""
     return not terminal
+
+
+def set_rank(ranks: Mapping[int, int], drawing_set: int) -> int:
+    """The rank of `drawing_set` in its unit; a set with none is a caller bug (decision 0201)."""
+    if drawing_set not in ranks:
+        msg = f"drawing set {drawing_set} has no rank: pass derive.set_ranks of the plans"
+        raise ValueError(msg)
+    return ranks[drawing_set]

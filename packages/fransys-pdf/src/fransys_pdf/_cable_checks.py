@@ -7,23 +7,28 @@ block's own grid, the one place sheet millimetres become grid units.
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import cable_blocks, harness_cables_for
+from fransys_model.derive import document_sheet_format as resolve_sheet_format
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.layout import CableBlock, layout_of, sheet_format_of
 
-from ._cable_runs import Block, body_size_mm
-from ._drawings import block_missing_keys, cable_blocks, harness_cables_for
-from ._geometry import resolve_sheet_format
+from ._cable_runs import body_size_mm
+from ._drawings import block_missing_keys
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from fransys_model.derive import CableBlockRef
     from fransys_model.kernel import Model
     from fransys_model.vocab import Document, PageKind
 
 
 def _too_big_messages(
-    model: Model, record: Document, pages: tuple[PageKind, ...], blocks: tuple[Block, ...]
+    model: Model,
+    record: Document,
+    pages: tuple[PageKind, ...],
+    blocks: tuple[CableBlockRef, ...],
 ) -> list[str]:
     """One message per block wider or taller than the document's page body.
 

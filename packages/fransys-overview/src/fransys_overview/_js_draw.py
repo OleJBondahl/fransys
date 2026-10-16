@@ -53,8 +53,8 @@ const boxNode = (box, i) => ({
 const tabNodes = (box, i) => box.tabs.map((tab, j) => ({
   group: 'nodes',
   data: { id: 't' + i + '_' + j, role: 'tab', box: i, label: tab[3] ?? '',
-    w: (tab[2] + th) * K, h: (th * 2) * K },
-  position: { x: (tab[0] + (tab[2] + th) / 2) * K, y: (tab[1] + th) * K },
+    w: tab[4] * K, h: tab[5] * K },
+  position: { x: (tab[0] + tab[4] / 2) * K, y: (tab[1] + tab[5] / 2) * K },
 }));
 const lineNodes = (line, i) => {
   const nodes = line.pts.map((p, k) => ({

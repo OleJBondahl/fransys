@@ -4,10 +4,12 @@ import re
 
 import fransys as fr
 import fransys_author
+import fransys_render
 import typst
 from demo_designs import cabinet_design
 from fransys_pdf import document_pages, source
 
+from fransys_model.derive import document_sheets_of
 from fransys_model.kernel import render_id
 from fransys_model.layout import DrawingSet, Page, layout_of
 from fransys_model.vocab import documents
@@ -174,15 +176,16 @@ def test_every_page_carries_the_frame_including_a_drawing_page(tmp_path):
     assert drawing_pages  # the cabinet design places symbols at C1, so layout drew a page
     svgs = {render_id(page.id): _STUB_DRAWING_SVG for page in drawing_pages}
 
-    text = source(model, document_id, svgs)
+    text = source(model, document_id, svgs, fransys_render.sheets(document_sheets_of(model)))
     typst.compile(input=text.encode())  # compiles on its own: proves it's a real document
 
-    assert '"DEMO-1"' in text  # the project number (project.number, authored by `cabinet_design`)
+    number = ">DEMO-1</text>"  # the project number (project.number), drawn in the title block
+    assert number in text
 
     blocks = text.split("\n#pagebreak()\n")
     assert len(blocks) == 3  # COVER, SCHEMATIC (one page), NOTES
-    drawing_blocks = [block for block in blocks if 'format: "svg"' in block]
+    drawing_blocks = [block for block in blocks if "#image(bytes(" in block]
     assert len(drawing_blocks) == 1  # covers a drawing page specifically, not only list pages
     for index, block in enumerate(blocks, start=1):
-        assert '"DEMO-1"' in block, f"page {index} carries no project number"
+        assert number in block, f"page {index} carries no project number"
         assert "<fransys-page-counter>" in block, f"page {index} carries no document counter"

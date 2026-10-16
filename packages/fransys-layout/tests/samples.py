@@ -43,7 +43,7 @@ from fransys_layout.stages import (
 from fransys_layout.stages.references import CutLocations, links
 from fransys_layout.stages.references.types import MarkerScene
 from fransys_layout.stages.stacking import StackedPort
-from fransys_layout.stages.texts.echoes import echo_requests
+from fransys_layout.stages.texts.echoes import SetNames, echo_requests
 from fransys_layout.stages.texts.markers import link_markers, placed_world
 from fransys_model.kernel import Id
 
@@ -245,7 +245,10 @@ def built_links(connections, net_groups, placed_functions, drawn_functions, **op
         placed_functions,
         drawn_functions,
         sheet=options["sheet"],
-        location_paths=options["location_paths"],
+        sets=SetNames(
+            options["location_paths"],
+            options.get("ranks", {p.drawing_set: p.drawing_set for p in placed_functions}),
+        ),
     )
     return decisions, built, requests, findings
 

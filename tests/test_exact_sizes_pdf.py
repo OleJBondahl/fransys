@@ -15,17 +15,19 @@ from decimal import Decimal
 import fransys as fr
 import fransys_author
 import fransys_parts
+import fransys_render
 import pytest
 import typst
 from _model_build_cover import system_document
 from _pdf_measure import capital_boxes, font_names, stroke_widths, text_objects
 from fransys_el import REF_TINTS
 from fransys_pdf import font_dir, source
-from fransys_pdf._frame import band_height_mm, title_columns
 from fransys_render import pages
+from symdef import Line, Polyline
 from test_units_worked_example import _system_design
 
-from fransys_model.derive import unit_release
+from electrical_symbols import title_block, title_logo
+from fransys_model.derive import document_sheets_of, sheet_frame, unit_release
 from fransys_model.derive.print_sizes import (
     LINE_RULE_MM,
     LINE_THICK_MM,
@@ -226,7 +228,12 @@ def _model(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5"):
 
 def _compile(*, symbols: tuple[str, ...] = (), module_mm: str = "2.5") -> bytes:
     model, document = _model(symbols=symbols, module_mm=module_mm)
-    text = source(model, document.id, pages(model, tints=REF_TINTS))
+    text = source(
+        model,
+        document.id,
+        pages(model, tints=REF_TINTS),
+        fransys_render.sheets(document_sheets_of(model)),
+    )
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     pdf = compiler.compile(input=text.encode("utf-8"), format="pdf")
     assert isinstance(pdf, bytes)
@@ -374,13 +381,33 @@ _PROFILE_MM = 2.5
 _NOTICE = "Property of Demo Co. Do not copy."
 
 
-def _profile_design():
-    """One invented design at `text_height_mm` 2.5: a schematic page, a motor cable."""
+def _sheet_with_a_22_mm_band(d):
+    """The house A3 sheet with a 22 mm title-block band (content height 265)."""
+    return d.sheet(
+        "A3-band-22",
+        width_mm=420,
+        height_mm=297,
+        content_x_mm=5,
+        content_y_mm=5,
+        content_width_mm=410,
+        content_height_mm=265,
+        frame_columns=8,
+        frame_rows=6,
+        module_mm=Decimal("2.5"),
+    )
+
+
+def _profile_design(*, tall_band: bool = True):
+    """One invented design at `text_height_mm` 2.5: a schematic page, a motor cable.
+
+    2.5 mm text needs a 21.5262 mm band, so by default the sheet has a 22 mm one.
+    """
     parts = fransys_parts.load("demo_parts")
     d = fransys_author.Design(parts)
     d.project(title="Invented", number="X-1", customer="Demo", revision=1, author="d")
     d.revision(1, date="2026-10-13", text="First issue", created="XX")
-    d.profile(text_height_mm=Decimal(str(_PROFILE_MM)))
+    sheet = _sheet_with_a_22_mm_band(d) if tall_band else None
+    d.profile(text_height_mm=Decimal(str(_PROFILE_MM)), sheet=sheet)
     c1 = d.location("C1", "Demo cabinet")
     supply, field = d.group("SUP", "Supply"), d.group("EXT", "Field")
     q1 = d.item("DEMO-MCB-C6", tag="Q1", at=c1, group=supply)
@@ -412,6 +439,33 @@ def profile_pdfs(tmp_path_factory) -> list[tuple[bytes, object]]:
     return [(path.read_bytes(), result.model) for path in written if path.suffix == ".pdf"]
 
 
+def _build_both(tmp_path, *, tall_band: bool):
+    parts, draft, c1 = _profile_design(tall_band=tall_band)
+    (tmp_path / "c.md").write_text("# C\n\n## Sub\n\nBody.\n", encoding="utf-8")
+    return fr.build(
+        parts,
+        draft,
+        fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, c1, cover=tmp_path / "c.md"),
+        fr.document(fr.DocumentPreset.SYSTEM, None, cover=tmp_path / "c.md"),
+    )
+
+
+def test_a_system_document_takes_the_profiles_22_mm_sheet_at_2_5_mm_text(tmp_path):
+    """A system document has no schematic page: it takes the profile's sheet, so 2.5 mm builds."""
+    result = _build_both(tmp_path, tall_band=True)
+    written = fr.write(result, tmp_path / "out")
+    assert len([p for p in written if p.suffix == ".pdf"]) == 2
+
+
+def test_text_of_2_5_mm_on_the_20_mm_a3_band_is_an_error_naming_the_height(tmp_path):
+    """The house A3 band of 20 mm is under the 21.5262 mm that 2.5 mm text needs."""
+    result = _build_both(tmp_path, tall_band=False)
+    with pytest.raises(fr.BuildErrors) as raised:
+        fr.write(result, tmp_path / "out")
+    assert {f.code for f in raised.value.findings} == {"TITLE_BLOCK_STACK_OVERLAP"}
+    assert "needs at least 21.5262 mm" in str(raised.value)
+
+
 def test_a_profile_text_height_is_the_smallest_text_of_every_page_kind(profile_pdfs):
     """A3: nothing prints under 2.5 mm capitals, on a schematic page, a block diagram, a cable
     drawing's core labels, the lists, the cover, the notes and every title block; the 3.5 and 5
@@ -424,13 +478,24 @@ def test_a_profile_text_height_is_the_smallest_text_of_every_page_kind(profile_p
 
 
 def _title_block_cells(sheet):
-    """The title block's cells, `(left, bottom, right, top)` mm with y up, as `_title_block` sets
-    them: row 1 is a three-column title then four columns, row 2 six columns, the notice and the
-    logo each span both rows."""
-    cols = title_columns(sheet, notice=True)  # this test's documents all carry a notice
-    edge = [sheet.content_x_mm + sum(cols[:i]) for i in range(len(cols) + 1)]
-    low, mid = sheet.content_y_mm, sheet.content_y_mm + band_height_mm(sheet) / 2
-    high = sheet.content_y_mm + band_height_mm(sheet)
+    """The title block's cells, `(left, bottom, right, top)` mm with y up, from its symbol.
+
+    Row 1 is a three-column title then four columns, row 2 six columns, the notice and the logo
+    each span both rows."""
+    frame = sheet_frame(sheet)
+    corner = (frame.border[0], frame.band_top)
+    block = title_block(corner, frame.title_width, frame.band, notice=True)  # all carry a notice
+    logo = title_logo((frame.logo_x, frame.band_top), frame.band)
+    points = [
+        p
+        for e in (*block.lines.elements, *logo.elements)
+        if isinstance(e, Polyline | Line)
+        for p in (e.points if isinstance(e, Polyline) else (e.start, e.end))
+    ]
+    edge = sorted({round(p.x, 9) for p in points})  # the nine column edges, c1 to the logo
+    band = frame.band
+    low, mid = sheet.content_y_mm, sheet.content_y_mm + band / 2
+    high = sheet.content_y_mm + band
     row1 = [(edge[0], edge[3])] + [(edge[i], edge[i + 1]) for i in (3, 4, 5)]
     row2 = [(edge[i], edge[i + 1]) for i in range(6)]
     spans = [(edge[6], edge[7]), (edge[7], edge[8])]
@@ -442,8 +507,10 @@ def _title_block_cells(sheet):
 
 
 def _page_sheet(model, width_mm):
-    house = default_sheet_format()
-    return house if abs(width_mm - house.width_mm) < 1 else sheet_for(model, PageKind.BLOCK_DIAGRAM)
+    profile_sheet = sheet_for(model, PageKind.COVER)
+    if abs(width_mm - profile_sheet.width_mm) < 1:
+        return profile_sheet
+    return sheet_for(model, PageKind.BLOCK_DIAGRAM)
 
 
 def test_every_title_block_text_stays_inside_its_cell_at_a_larger_profile(profile_pdfs):
@@ -456,7 +523,7 @@ def test_every_title_block_text_stays_inside_its_cell_at_a_larger_profile(profil
             left, bottom, right, top = o.bounds_mm
             cx, cy = (left + right) / 2, (bottom + top) / 2
             low = sheet.content_y_mm
-            if not (low < cy < low + band_height_mm(sheet) and sheet.content_x_mm < cx):
+            if not (low < cy < low + sheet_frame(sheet).band and sheet.content_x_mm < cx):
                 continue
             if cx > sheet.width_mm - sheet.content_x_mm:
                 continue

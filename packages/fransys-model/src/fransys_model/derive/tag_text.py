@@ -14,8 +14,8 @@ from fransys_model.derive.designation import (
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.instance_tag import dashed
 from fransys_model.derive.port_marking import port_marking
-from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions, items, ports
+lazy from fransys_model.derive.facts.roles import function_role
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
@@ -37,7 +37,7 @@ def tag_text(model: Model, function: Id[Function]) -> str:
     function's tag is its item's `item_tag_text`.
     """
     record = functions(model)[function]
-    if record.kind is FunctionKind.TERMINAL:
+    if function_role(model, function).terminal:
         return port_designation(model, min(build_indexes(model).ports_by_function[function]))
     return item_tag_text(model, record.item)
 
@@ -66,7 +66,7 @@ def is_device_terminal(model: Model, function: Id[Function]) -> bool:
     overload relay's A2.
     """
     record = functions(model)[function]
-    return record.kind is FunctionKind.TERMINAL and terminal_of(model, record.item) is None
+    return function_role(model, function).terminal and terminal_of(model, record.item) is None
 
 
 def run_point_text(model: Model, function: Id[Function]) -> str:
@@ -95,7 +95,7 @@ def _unit_port_tag_text(
     """`unit_tag_text` for a port handle: a terminal's point, or a pin view's connector or pin."""
     # a terminal's point "X2:0V:3", or a pin view's pin (tag.pin) as outside a unit set, less the
     # unit's root; a pin view's connector (tag.conn) is the one other form
-    if slot == "tag.conn" and functions(model)[port.function].kind is not FunctionKind.TERMINAL:
+    if slot == "tag.conn" and not function_role(model, port.function).terminal:
         return connector_designation(model, port.function, unit=unit)
     return port_designation(model, handle, unit=unit)
 
@@ -123,7 +123,7 @@ def unit_tag_text(
         return short(_strip_item(model, function))
     if slot == "tag.point":  # a run's point text, unit-independent, and a device's marking
         return None
-    if record.kind is FunctionKind.TERMINAL:
+    if function_role(model, function).terminal:
         # a terminal outside a run prints its full form in the unit's own strip form; a
         # device terminal keeps its ordinary text
         return (

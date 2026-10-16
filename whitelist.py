@@ -52,8 +52,11 @@ _ = _Whitelist()
 # `@record`/`@value` field read generically via `dataclasses.fields()` for hashing, freezing and
 # canonical JSON (FIELDS, `fransys_kernel/schema.py:37`, sufficient alone) -- never within
 # fransys-model/src itself.
+_.name_stem  # OTHER fransys-wago/src/fransys_wago/modules.py:85
+_.single_signal  # OTHER fransys-wago/src/fransys_wago/modules.py:101
 _.hide_unused_pins  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/steps.py:129
 _.see  # OTHER fransys/src/fransys/_finding_text.py:27
+_.unconnected  # OTHER fransys-kicad/src/fransys_kicad/check.py:158
 _.beside  # OTHER fransys-layout/src/fransys_layout/stages/columns.py:80
 _.jumper_group  # OTHER fransys-pdf/src/fransys_pdf/_lists_terminal.py:53
 _.MOUNT  # OTHER fransys-author/src/fransys_author/wiring.py:95
@@ -64,7 +67,6 @@ _.L_PLUS  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:13
 _.L_MINUS  # OTHER fransys-parts/src/fransys_parts/_pole_facts.py:14
 _.M  # TESTS fransys-parts/tests/test_pole_facts.py:139
 _.conductor_mark  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
-_.ancestry  # OTHER fransys-overview/src/fransys_overview/_data_changes.py:88
 _.footprint_library  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37
 _.footprint_name  # OTHER fransys-kicad/src/fransys_kicad/netlist.py:37
 _.mate_port_designation  # DICT fransys-model/src/fransys_model/derive/rows.py:765
@@ -91,13 +93,11 @@ _.port_map  # OTHER fransys-layout/src/fransys_layout/engines/schematic/read/rea
 _.produced_by  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.orientation  # OTHER fransys-render/src/fransys_render/_symbol_geometry.py:87
 _.library_version  # OTHER fransys-render/src/fransys_render/check.py:63
-_.cover  # OTHER fransys-pdf/src/fransys_pdf/_cover_checks.py:78
-_.logo  # OTHER fransys-pdf/src/fransys_pdf/document.py:62
+_.cover  # OTHER fransys-pdf/src/fransys_pdf/checks.py:240
 _.supplier  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.supplier_part_number  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.customer  # OTHER fransys-model/src/fransys_model/derive/title_block.py:27
 _.author  # OTHER fransys-pdf/src/fransys_pdf/_geometry.py:221
-_.notice  # OTHER fransys-pdf/src/fransys_pdf/checks.py:361
 _.nominal_voltage_v  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.max_voltage_v  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
 _.min_voltage_v  # FIELDS fransys-kernel/src/fransys_kernel/schema.py:37
@@ -137,6 +137,32 @@ _.builds  # TESTS fransys-kernel/tests/test_cache.py:40
 _.item_boxes  # TESTS fransys-model/tests/derive/test_keep_whole_sets.py:27
 _.pole_groups  # TESTS fransys-model/tests/derive/test_keep_whole_sets.py:41
 _.line_units  # TESTS fransys-model/tests/derive/test_keep_whole_sets.py:86
+# EL-2a role-table fields (model-0288): FIELDS are `@record` fields; TESTS are read by tests only.
+_.is_unit_boundary  # TESTS fransys-model/tests/derive/test_typed_accessors.py:16
+_.band_rank  # TESTS fransys-model/tests/derive/test_typed_accessors.py:23
+_.PORT  # TESTS fransys-model/tests/derive/test_typed_accessors.py:37
+_.ASPECT_NODE  # DICT fransys-model/src/fransys_model/derive/facts/subjects.py:15
+_.plain_contact  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:25
+_.changeover  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:27
+_.operator  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:28
+_.pin_group  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:30
+_.bar  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:32
+_.protects  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:33
+_.joins_net  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:48
+_.switched  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:49
+_.protective  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:50
+_.bar_holder  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:75
+_.plc_module  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:79
+_.accessory  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:82
+_.connector_housing  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:83
+_.carries  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:95
+_.lands  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:96
+_.bridge  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:98
+_.rail_link  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:99
+_.mount  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:100
+_.power  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:108
+_.control  # FIELDS fransys-model/src/fransys_model/vocab/roles_types.py:109
+
 
 # --- fransys-author --------------------------------------------------------------------
 
@@ -232,11 +258,10 @@ _.text_x  # OTHER fransys-render/src/fransys_render/cables.py:109
 _.text_y  # OTHER fransys-render/src/fransys_render/cables.py:109
 _.TOP  # OTHER fransys-render/src/fransys_render/cables.py:62
 _.BOTTOM  # OTHER fransys-render/src/fransys_render/cables.py:62
+_.status  # OTHER fransys-overview/src/fransys_overview/_data_changes.py:20
 _.SOLID  # OTHER fransys-render/src/fransys_render/cables.py:61
 _.DASHED  # OTHER fransys-render/src/fransys_render/cables.py:61
 _.BLANK  # OTHER fransys-render/src/fransys_render/cables.py:85
-# OVERVIEW Part 1 rows: read by tests only, until the OVERVIEW Part 3 page reads them
-_.status  # TESTS fransys-model/tests/derive/test_overview_marks_model.py:34
 # CABLE-CORES: drawn-mark and open-core row fields read in other packages
 _.core_a  # OTHER fransys-render/src/fransys_render/cables.py:143
 _.core_b  # OTHER fransys-render/src/fransys_render/cables.py:143
@@ -244,8 +269,28 @@ _.tick  # OTHER fransys-pdf/src/fransys_pdf/_bridge.py:90
 _.room  # OTHER fransys-layout/src/fransys_layout/engines/cable/read/facts.py:157
 _.shorter  # OTHER fransys-pdf/src/fransys_pdf/_sheet_index.py:36
 _.SHEET_INDEX  # OTHER fransys-pdf/src/fransys_pdf/document.py:46
+_.heading_1  # OTHER fransys-pdf/src/fransys_pdf/_geometry.py:115
+_.heading_2  # OTHER fransys-pdf/src/fransys_pdf/_geometry.py:116
+_.svg  # OTHER fransys-pdf/src/fransys_pdf/_background.py:59
+_.counter_box  # OTHER fransys-pdf/src/fransys_pdf/_background.py:60
+_.logo_box  # OTHER fransys-pdf/src/fransys_pdf/_background.py:64
+_.title_room_mm  # OTHER fransys-pdf/src/fransys_pdf/_sheet_index.py:39
+# `fransys_model/derive/rows_sheet_pages.py`: `SheetFrame` and `FrameStrip` values, read by
+# `fransys_render._sheet_draw` (render-0019).
+_.cell_width  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:44
+_.cell_height  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:44
+_.border  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:41
+_.band_top  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:53
+_.title_width  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:54
+_.logo_x  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:59
+# `electrical_symbols/sheet_title.py`: the `TitleBlock` font layers, read by
+# `fransys_render._sheet_draw` (render-0019).
+_.bold  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:78
+_.labels  # OTHER fransys-render/src/fransys_render/_sheet_draw.py:84
 _.heading  # OTHER fransys-render/src/fransys_render/_labels.py:79
 _.titles  # OTHER fransys-render/src/fransys_render/_labels.py:80
+_.export_kind  # OTHER fransys/src/fransys/pipeline.py:551
+_.title_band_mm  # OTHER fransys-render/src/fransys_render/sheet_check.py:44
 # PLACEMENT-FACTS: read by the problem builder later
 _.in_strip_row  # FIELDS fransys-model/src/fransys_model/derive/rows_footprints.py:23
 # CORE-WAVE0: contract fields the stages read later; jsonform walks them with dataclasses.fields()
@@ -284,20 +329,19 @@ _.ladders  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.min_fill  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.min_pitch  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.natural_edge  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
+_.open_stub  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.order_pairs  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.orientations  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
-_.page_titles  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.pin_edges  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.reference_plan  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.reroute_rounds  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.row_footprint  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.row_group  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
+_.row_tags  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.short  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.short_height  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.slack  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
-_.table_rows  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.tag_stagger  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
-_.text_w  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.top_pin  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.trunks  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.w_arrow  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
@@ -308,5 +352,20 @@ _.w_row  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.w_tag  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.w_violation  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.width_est  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
+_.wire_label_sides  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
+_.wire_labels  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.wire_min  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
 _.wiring_grid  # FIELDS fransys-layout/src/fransys_layout/core/jsonform.py:33
+_.order_cost  # FIELDS fransys-layout/src/fransys_layout/core/order.py:54
+_.collinear  # FIELDS fransys-layout/src/fransys_layout/core/route_counts.py:43
+
+# `electrical_symbols/natural.py`: `Natural` fields, read by the builder of the first engine
+# switch (SYMDEF-SLOTS SS6); until then only its own tests read them.
+_.keepout  # TESTS electrical-symbols/tests/test_natural.py:48
+_.cut_x  # TESTS electrical-symbols/tests/test_natural.py:75
+_.cut_y  # TESTS electrical-symbols/tests/test_natural.py:75
+# `fransys_model/layout/drawn_results.py`: `DrawnSymbol` orient, tint and muted, read by render
+# once it draws the scene through symdef (REVIEW-OUTPUTS O3, layout-0278).
+_.orient  # FIELDS packages/fransys-model/src/fransys_model/layout/drawn_results.py:40
+_.tint  # FIELDS packages/fransys-model/src/fransys_model/layout/drawn_results.py:47
+_.muted  # FIELDS packages/fransys-model/src/fransys_model/layout/drawn_results.py:48

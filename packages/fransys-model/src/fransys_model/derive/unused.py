@@ -3,8 +3,8 @@
 Layout and the contact table both call these, so a drawn contact is never listed as a spare.
 """
 
+from fransys_model.derive.facts.conductor_facts import is_bridge
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.joins import joined_ports
 from fransys_model.vocab.membership import in_unit_subtree
 from fransys_model.vocab.tables import conductors, functions, items, ports, units
@@ -62,7 +62,7 @@ def port_is_reached(model: Model, port: Id[Port]) -> bool:
     scope = None if unit is None or units(model)[unit].parent is None else unit  # None: any wire
     for conductor in indexes.conductors_by_port.get(port, ()):
         record = conductors(model)[conductor]
-        if record.kind is ConductorKind.JUMPER:
+        if is_bridge(model, conductor):
             continue
         far = record.b if record.a == port else record.a
         far_item = functions(model)[ports(model)[far].function].item

@@ -2,10 +2,11 @@
 
 from decimal import Decimal
 
+from fransys_model.derive.facts.net_facts import is_earth_net, net_potential
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.closure import net_of, port_rails
-from fransys_model.vocab.enums import Current, NetClass
+from fransys_model.vocab.enums import Current
 from fransys_model.vocab.tables import nets, supply_systems
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Port
@@ -32,9 +33,9 @@ def _ranked(model: Model) -> frozendict[str, tuple[int, Current | None]]:
     for supply in supply_systems(model).values():
         for potential, rail in supply.rails.items():
             found.setdefault(potential, (_order_key(supply.current, rail), supply.current))
-    for net in nets(model).values():
-        if net.net_class is NetClass.PE and net.potential is not None:
-            found[net.potential] = (_PE_KEY, None)
+    for net in nets(model):
+        if is_earth_net(model, net) and (potential := net_potential(model, net)) is not None:
+            found[potential] = (_PE_KEY, None)
     order = sorted(found, key=lambda potential: (found[potential][0], potential))
     return frozendict({p: (index, found[p][1]) for index, p in enumerate(order)})
 
@@ -43,18 +44,19 @@ def _ranked(model: Model) -> frozendict[str, tuple[int, Current | None]]:
 def _earthed(model: Model) -> frozendict[Id[Port], str]:
     """Each port on the physical net of a PE net, with that net's potential (earth is no rail)."""
     found: dict[Id[Port], str] = {}
-    for net in nets(model).values():
-        if net.net_class is NetClass.PE and net.potential is not None:
-            for port in net.ports:
+    for net, declared in nets(model).items():
+        potential = net_potential(model, net)
+        if is_earth_net(model, net) and potential is not None:
+            for port in declared.ports:
                 physical = net_of(model, port)
-                found.update(dict.fromkeys(physical.ports, net.potential) if physical else {})
+                found.update(dict.fromkeys(physical.ports, potential) if physical else {})
     return frozendict(found)
 
 
 def _carried(model: Model, port: Id[Port]) -> str | None:
     """The ranked potential `port` carries: its own net's, else the closure's, else earth's."""
     ranked = _ranked(model)
-    own = {nets(model)[net].potential for net in build_indexes(model).nets_by_port.get(port, ())}
+    own = {net_potential(model, net) for net in build_indexes(model).nets_by_port.get(port, ())}
     reached = {*port_rails(model, port), _earthed(model).get(port)}
     for pick in (own, reached):
         found = [p for p in pick if p is not None and p in ranked]

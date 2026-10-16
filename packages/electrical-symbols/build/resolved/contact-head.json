@@ -1,0 +1,79 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      -2
+    ],
+    [
+      8,
+      0
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          -2
+        ],
+        [
+          8,
+          -2
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      -2
+    ],
+    [
+      8,
+      0
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Contact head (contact table)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "contact-head",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "heading": {
+      "at": [
+        0.25,
+        -1
+      ],
+      "box": [
+        7.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

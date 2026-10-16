@@ -77,7 +77,7 @@ def test_the_poles_are_one_two_and_three(planted: fr.Model) -> None:
     own = [p.template for p in ports(planted).values() if p.function == aux.id and p.template]
     names = [
         tuple(port_templates(planted)[t.id].name for t in pole.ends)
-        for pole in poles_of(planted, aux.kind, own)
+        for pole in poles_of(planted, own)
     ]
     assert names == [("1", "2"), ("3", "3")]
 

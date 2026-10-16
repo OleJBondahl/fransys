@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
+from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.geometry import text_width
 from fransys_model.derive import text_room_g
 from fransys_model.derive.block_diagram import box_dashed, box_lines, box_order, diagram_lines

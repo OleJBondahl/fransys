@@ -1,12 +1,13 @@
 """The SHEET_INDEX page: every Page cell equals the PDF page its sheet is on (SI3, SI4)."""
 
+import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import typst
 from _build import document, drawing_set, layout_page, location, model, unit
 from fransys_pdf import font_dir, source
 
-from fransys_model.derive import sheet_index_rows
+from fransys_model.derive import document_sheets_of, sheet_index_rows
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind
 
@@ -36,7 +37,9 @@ def _fixture(notes: str | None):
 def _compile(m, doc, pages) -> pdfium.PdfDocument:
     svgs = {render_id(page.id): _SVG for page in pages}
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(input=source(m, doc.id, svgs).encode("utf-8"))
+    compiled = compiler.compile(
+        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m))).encode("utf-8")
+    )
     assert isinstance(compiled, bytes)
     return pdfium.PdfDocument(compiled)
 
@@ -50,7 +53,7 @@ def _page_cells(pdf: pdfium.PdfDocument) -> list[int]:
     """The Page cell of each row, read from the index page's text after its `Sheet Title Page`."""
     for index in range(len(pdf)):
         text = pdf[index].get_textpage().get_text_bounded()
-        if "Page title\r\nSheets" in text:
+        if "Sheet Title Page\r\n" in text:
             rows = text.rsplit("Sheet Title Page\r\n", 1)[1].splitlines()
             return [int(row.split()[-1]) for row in rows]
     message = "no index page"
@@ -73,12 +76,14 @@ def test_every_page_cell_is_the_page_its_sheet_is_on_when_notes_overflow():
 def test_the_same_model_gives_the_same_bytes_twice():
     m, doc, pages = _fixture("Short notes.")
     svgs = {render_id(page.id): _SVG for page in pages}
-    assert source(m, doc.id, svgs) == source(m, doc.id, svgs)
+    assert source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m))) == source(
+        m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m))
+    )
 
 
 def _index_page(pdf: pdfium.PdfDocument) -> int:
     for index in range(len(pdf)):
-        if "Page title\r\nSheets" in pdf[index].get_textpage().get_text_bounded():
+        if "Sheet Title Page\r\n" in pdf[index].get_textpage().get_text_bounded():
             return index
     message = "no index page"
     raise AssertionError(message)

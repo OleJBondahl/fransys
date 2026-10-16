@@ -15,7 +15,7 @@ from fransys_model.derive.drawing_text import (
 from . import image_refs
 from ._image_foot import table_x
 from ._image_stack import foot_down, headed_width, heads_by_set, settled_tables
-from ._image_widest import widest_places
+from ._image_widest import plan_ranks, widest_places
 from .image_refs import (
     by_owner,
     holds_list,
@@ -25,7 +25,7 @@ from .image_refs import (
     one_per_row,
     unplaced_coil_owners,
 )
-from .lookups import placed_keepout
+from .lookups import placed_keepout, set_rank
 from .place import axis_offset
 from .room import grow_keepout
 from .slices import by_key, page_of
@@ -85,21 +85,26 @@ def _image_marks(
     return no, nc
 
 
-def _seat(one: PlacedFunction, paths: Mapping[int, LocationPath]) -> tuple[int, int, LocationPath]:
-    """`one`'s drawing set, page and location path, as `partner_position_text` reads them."""
-    return one.drawing_set, one.page, paths.get(one.drawing_set, ())
+def _seat(
+    one: PlacedFunction, paths: Mapping[int, LocationPath], ranks: Mapping[int, int]
+) -> tuple[int, int, LocationPath]:
+    """`one`'s set rank, page and location path, as `partner_position_text` reads them."""
+    return set_rank(ranks, one.drawing_set), one.page, paths.get(one.drawing_set, ())
 
 
 def _where(
     sheet: SheetFormat,
     paths: Mapping[int, LocationPath],
+    ranks: Mapping[int, int],
     target: PlacedFunction,
     reader: PlacedFunction,
 ) -> str:
     """`target`'s place exactly as render prints it for `reader` (derive's one text)."""
     column = frame_column(sheet.content_width, sheet.frame_columns, target.at.x)
     row = frame_row(sheet.content_height, sheet.frame_rows, target.at.y)
-    return partner_position_text(_seat(reader, paths), _seat(target, paths), column, row)
+    seats = _seat(reader, paths, ranks), _seat(target, paths, ranks)
+    same = reader.drawing_set == target.drawing_set
+    return partner_position_text(*seats, column, row, same_set=same)
 
 
 def _entry_text(mark: str, where: str) -> str:
@@ -320,7 +325,7 @@ def contact_images(
     coil_unplaced = unplaced_coil_owners(inputs.functions, inputs.owners, home)
     spare_of = by_owner([s for s in inputs.spares if s.roles.contact], inputs.owners)
 
-    where = partial(_where, sheet, paths or {})
+    where = partial(_where, sheet, paths or {}, plan_ranks(plans))
     holding = _page_holding(pages)
     marker_boxes = _page_marker_boxes(markers)
     tables: dict[tuple[int, int], list[PlacedLabel]] = {}

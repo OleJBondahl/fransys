@@ -106,13 +106,14 @@ template it describes, as a `frozendict[Id[FunctionTemplate], ConnectorFacet]`.
 
 ## Rows
 
-`fransys.derive.bom_lines(model, scope=None)` returns the parts list, one `BomLine` per
+`fransys.derive.bom_lines(model, scope=None, *, without=())` returns the parts list, one `BomLine` per
 installed, non-external part (by mpn, revision and part), or one line per nested unit when
 `scope` is a unit. `scope` narrows what is counted: `None` for the whole model, an item id for
 that item's subtree, an aspect-node id for what is placed there, a unit id for that unit's
 own items and its directly nested units, or `fransys.derive.TOP_LEVEL` for items with no
-unit plus one line per top-level unit. `TOP_LEVEL`'s type, `fransys.derive.TopLevelScope`,
-is exported only so a script can annotate a variable that holds it.
+unit plus one line per top-level unit. `without=` names items that an item, aspect-node or
+whole-model scope leaves out; a unit or `TOP_LEVEL` scope ignores it. `TOP_LEVEL`'s type,
+`fransys.derive.TopLevelScope`, is exported only so a script can annotate a variable that holds it.
 
 `fransys.derive.NO_PLACE` is the text "N/A" a coil's contact table prints after the mark of a
 contact that no conductor reaches, in place of a page position.
@@ -184,8 +185,8 @@ text, or its authoring key joined by `/` when it has none yet.
 
 `fransys.derive.node_designation(model, node)` renders a node's signed
 designation by aspect: `+C1` for a location, `=G1` for a group. It is the segment
-`reference_designation` prints for an item there. Caution: not for a title block's scope cell, which deliberately keeps
-the bare label.
+`reference_designation` prints for an item there. A title block's scope cell prints a location's full path,
+such as `+R+S1`.
 
 
 `fransys.derive.item_of_port(model, port)` returns the item whose function owns `port`, the

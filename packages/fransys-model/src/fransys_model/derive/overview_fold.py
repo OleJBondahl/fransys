@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from fransys_model.kernel import SchemaError
 from fransys_model.layout import OverviewRef, OverviewRefKind
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.membership import require
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -27,8 +28,8 @@ from .overview_groups import (
 )
 from .overview_levels import level_box, overview_level
 from .overview_stubs import RawStub, fold_stubs, outside_stub
-from .rows import ItemKind, OverviewBox
 from .rows_overview import FoldBox, FoldLevel
+lazy from .rows import OverviewBox
 
 __all__ = ["fold_level"]
 

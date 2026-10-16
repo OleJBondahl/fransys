@@ -8,11 +8,14 @@ supply rails. Each is read once here and never asked of a symbol kind.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .fan_head import fan_head
+
 if TYPE_CHECKING:
     from .outputs import CoreLayout
     from .values import Column, End, FlowGraph, Orientation, PlacementProblem, Side, Sym
 
 SUPPLIES = frozenset({"SUPPLY", "GROUND", "PE"})
+MIRRORED: frozendict[str, str] = frozendict({"N": "N", "S": "S", "E": "W", "W": "E"})
 TURNED: frozendict[str, str] = frozendict({"N": "S", "S": "N", "E": "W", "W": "E"})
 
 
@@ -29,16 +32,18 @@ class PinFact:
 class SceneFacts:
     pins: dict[tuple[str, str], PinFact]
     attached: frozenset[str]
-    heads: frozenset[str]
+    heads: frozenset[tuple[str, str]]
     strips: dict[str, str]
     rails: frozenset[str]
 
 
 def turn_side(side: Side, orient: Orientation) -> Side:
-    """The side a wire leaves after the symbol is turned; only R0 and R180 are placed so far."""
-    if orient == "R0":
+    """The side a wire leaves after the symbol is turned; the mirror swaps E and W first."""
+    if orient in ("MR0", "MR180"):
+        side = MIRRORED[side]  # ty: ignore[invalid-assignment] -- MIRRORED maps N E S W onto N E S W
+    if orient in ("R0", "MR0"):
         return side
-    if orient == "R180":
+    if orient in ("R180", "MR180"):
         return TURNED[side]  # ty: ignore[invalid-return-type] -- TURNED maps N E S W onto N E S W
     msg = f"scene: orientation {orient} has no side map yet"
     raise ValueError(msg)
@@ -81,7 +86,7 @@ def scene_facts(problem: PlacementProblem, flow: FlowGraph) -> SceneFacts:
     return SceneFacts(
         pins,
         _attached(flow),
-        frozenset(f.hub for f in flow.fans if f.hub is not None),
+        frozenset((h.pin.sym, h.pin.pin) for f in flow.fans if (h := fan_head(f)) is not None),
         {s.id: s.row_group for s in problem.symbols if s.row_group is not None},
         frozenset(n.id for n in problem.nets if n.rail is not None and n.rail.power in SUPPLIES),
     )

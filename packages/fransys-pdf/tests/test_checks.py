@@ -1,9 +1,7 @@
 """`check`: `MARKDOWN_UNSUPPORTED`, `DOCUMENT_MIXED_SHEET_FORMATS`, `DOCUMENT_NO_DRAWINGS`,
-`DOCUMENT_EMPTY_LIST`, `TITLE_BLOCK_NO_ROOM` (page-frame R6) and
+`DOCUMENT_EMPTY_LIST` and
 `DOCUMENT_NO_TOP_LEVEL_CABLES` (decision pdf-0006).
 """
-
-from decimal import Decimal
 
 from _build import (
     cable_facet,
@@ -28,8 +26,8 @@ from _build import (
 from fransys_pdf import check
 
 from fransys_model.derive.cable_drawing import cable_block_key
-from fransys_model.kernel import Severity, make_id, render_id
-from fransys_model.layout import SheetFormat, default_sheet_format
+from fransys_model.kernel import Severity, render_id
+from fransys_model.layout import default_sheet_format
 from fransys_model.vocab import DocumentPreset, PageKind, SignalType
 
 _PRESET = DocumentPreset.CABINET_SCHEMATIC
@@ -454,17 +452,15 @@ def test_no_empty_list_finding_for_designation_list_when_an_item_exists():
 
 
 def test_no_empty_list_finding_for_cable_list_when_a_cable_exists():
-    """The clean twin: one cable item with a `cable` facet reports nothing for `CABLE_LIST`
-    (`checks._list_rows`'s `CABLE_LIST` branch)."""
+    """The clean twin: a system document over one cable item reports nothing for `CABLE_LIST`
+    (`checks._list_rows`'s `CABLE_LIST` branch); a location document draws no cable (pdf-0042)."""
     c1 = location("C1", "Demo cabinet")
     doc = document(
         "d1",
-        preset=_PRESET,
-        subject=c1,
+        preset=DocumentPreset.SYSTEM,
         cover="# Cover",
         notes=None,
-        add=(K.CABLE_LIST,),
-        remove=(K.SCHEMATIC, K.PLC_LIST, K.TERMINAL_LIST, K.CONNECTOR_LIST, K.BOM),
+        remove=(K.BLOCK_DIAGRAM, K.HARNESS_DRAWING, K.BOM),
     )
     cable_part = part("w1", description="Cable one part")
     cable_product = cable_product_facet("w1", subject=cable_part.id, core_count=0)
@@ -497,38 +493,6 @@ def test_no_empty_list_finding_for_bom_when_a_part_linked_item_is_placed():
     assert findings == []
 
 
-def test_title_block_no_room_absent_for_the_house_sheets_exact_20mm_band():
-    """The boundary: `default_sheet_format()`'s 20mm band exactly fits."""
-    m, _doc = _cabinet_with_pages(formats=(None,))
-    findings = [f for f in check(m, {}) if f.code == "TITLE_BLOCK_NO_ROOM"]
-    assert findings == []
-
-
-def test_title_block_no_room_is_a_warning_naming_the_sheet_format_and_its_band_height():
-    key = ("sheet_format", "tight12")
-    tight = SheetFormat(
-        id=make_id(SheetFormat, key),
-        key=key,
-        name="tight12",
-        width_mm=420,
-        height_mm=297,
-        content_x_mm=10,
-        content_y_mm=10,
-        content_width_mm=400,
-        content_height_mm=265,  # band = (297-10) - (10+265) = 12
-        frame_columns=6,
-        frame_rows=4,
-        module_mm=Decimal("2.5"),
-    )
-    m, doc = _cabinet_with_pages(formats=(tight,))
-    findings = [f for f in check(m, {}) if f.code == "TITLE_BLOCK_NO_ROOM"]
-    (finding,) = findings
-    assert finding.severity is Severity.WARNING
-    assert finding.subjects == (doc.id,)
-    assert "tight12" in finding.message
-    assert "12" in finding.message
-
-
 def test_empty_list_finding_for_wire_label_list_and_designation_list_added_with_no_rows():
     c1 = location("C1", "Demo cabinet")
     doc = document(
@@ -545,24 +509,6 @@ def test_empty_list_finding_for_wire_label_list_and_designation_list_added_with_
     messages = {f.message for f in findings}
     assert any("WIRE_LABEL_LIST" in message for message in messages)
     assert any("DESIGNATION_LIST" in message for message in messages)
-
-
-def test_notice_overflow_names_the_document_and_where_the_notice_is_authored():
-    """pdf-0036: the finding reads `Document.notice`, needs no `Project`, and its fix text names
-    `fr.document(notice=...)`."""
-    c1 = location("C1", "Demo cabinet")
-    doc = document(
-        "d1",
-        preset=_PRESET,
-        subject=c1,
-        cover="# Cover",
-        remove=_NO_SCHEMATIC_OR_LISTS,
-        notice="Property of Demo Co. " * 40,
-    )
-    findings = check(model(c1, doc), {})
-    (finding,) = [f for f in findings if f.code == "TITLE_BLOCK_NOTICE_OVERFLOW"]
-    assert finding.subjects == (doc.id,)
-    assert "fr.document(notice=" in finding.message
 
 
 def test_a_notice_that_fits_raises_no_overflow_finding():

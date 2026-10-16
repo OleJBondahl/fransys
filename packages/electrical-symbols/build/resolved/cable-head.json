@@ -1,0 +1,85 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -2,
+      -5
+    ],
+    [
+      2,
+      -3
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -2,
+          -5
+        ],
+        [
+          2,
+          -5
+        ],
+        [
+          2,
+          -3
+        ],
+        [
+          -2,
+          -3
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -2,
+      -5
+    ],
+    [
+      2,
+      -3
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Cable head (heading of a cable box)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "cable-head",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "heading": {
+      "at": [
+        -1.75,
+        -4
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 0,
+      "axis": "x"
+    }
+  ]
+}

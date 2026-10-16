@@ -677,6 +677,385 @@
       },
       "status": "unverified"
     },
+    "bridge-line": {
+      "anchors": [],
+      "body_box": [
+        [
+          1.5,
+          0
+        ],
+        [
+          1.5,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              1.5,
+              0
+            ],
+            [
+              1.5,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Bridge mark line",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "bridge-line",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "left": {
+          "at": [
+            0,
+            0.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "right": {
+          "at": [
+            3,
+            0.5
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "bridge-tick": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0.5
+        ],
+        [
+          2,
+          0.5
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              0.5
+            ],
+            [
+              2,
+              0.5
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Bridge mark tick",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "bridge-tick",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "above": {
+          "at": [
+            1,
+            0.5
+          ],
+          "box": [
+            2,
+            0.5
+          ],
+          "side": "N"
+        },
+        "below": {
+          "at": [
+            1,
+            0.5
+          ],
+          "box": [
+            2,
+            0.5
+          ],
+          "side": "S"
+        }
+      },
+      "status": "unverified"
+    },
+    "cable-column": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          -3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              -3
+            ],
+            [
+              0,
+              -2
+            ]
+          ],
+          "port": "top",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "port": "bottom",
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -2,
+          -3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the turned core text box is taller than the column is wide; a column is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Cable column (core)",
+      "nodes": [
+        {
+          "ports": [
+            "top"
+          ]
+        },
+        {
+          "ports": [
+            "bottom"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "top",
+          "kind": "conductor",
+          "through": true,
+          "to": "bottom"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            0,
+            -3
+          ],
+          "description": "",
+          "dir": "N",
+          "id": "top"
+        },
+        {
+          "at": [
+            0,
+            3
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "bottom"
+        }
+      ],
+      "reference": {
+        "number": "cable-column",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "core": {
+          "at": [
+            -0.5,
+            -1.75
+          ],
+          "box": [
+            1,
+            3.5
+          ],
+          "side": "S"
+        }
+      },
+      "status": "unverified"
+    },
+    "cable-head": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          -5
+        ],
+        [
+          2,
+          -3
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -2,
+              -5
+            ],
+            [
+              2,
+              -5
+            ],
+            [
+              2,
+              -3
+            ],
+            [
+              -2,
+              -3
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -2,
+          -5
+        ],
+        [
+          2,
+          -3
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Cable head (heading of a cable box)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "cable-head",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "heading": {
+          "at": [
+            -1.75,
+            -4
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0,
+          "axis": "x"
+        }
+      ]
+    },
     "capacitor": {
       "anchors": [],
       "body_box": [
@@ -840,6 +1219,261 @@
         }
       },
       "status": "unverified"
+    },
+    "card": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          32,
+          8
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              32,
+              0
+            ],
+            [
+              32,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              8
+            ]
+          ],
+          "port": "c1",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              12,
+              6
+            ],
+            [
+              12,
+              8
+            ]
+          ],
+          "port": "c2",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              20,
+              6
+            ],
+            [
+              20,
+              8
+            ]
+          ],
+          "port": "c3",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              28,
+              6
+            ],
+            [
+              28,
+              8
+            ]
+          ],
+          "port": "c4",
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          32,
+          8
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a box has no through path: its connections end at the box and none continues across it",
+          "rule": "through-missing"
+        },
+        {
+          "reason": "a card ends its channel circuits at the module; no path of this symbol joins two channels",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Card (module with channels)",
+      "nodes": [
+        {
+          "ports": [
+            "c1"
+          ]
+        },
+        {
+          "ports": [
+            "c2"
+          ]
+        },
+        {
+          "ports": [
+            "c3"
+          ]
+        },
+        {
+          "ports": [
+            "c4"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            4,
+            8
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "c1"
+        },
+        {
+          "at": [
+            12,
+            8
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "c2"
+        },
+        {
+          "at": [
+            20,
+            8
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "c3"
+        },
+        {
+          "at": [
+            28,
+            8
+          ],
+          "description": "",
+          "dir": "S",
+          "id": "c4"
+        }
+      ],
+      "reference": {
+        "number": "card",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.c1": {
+          "at": [
+            4.25,
+            5
+          ],
+          "box": [
+            3,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.c2": {
+          "at": [
+            12.25,
+            5
+          ],
+          "box": [
+            3,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.c3": {
+          "at": [
+            20.25,
+            5
+          ],
+          "box": [
+            3,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.c4": {
+          "at": [
+            28.25,
+            5
+          ],
+          "box": [
+            3,
+            1
+          ],
+          "side": "E"
+        },
+        "tag": {
+          "at": [
+            1,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 16,
+          "axis": "x"
+        }
+      ]
     },
     "change-over-contact": {
       "anchors": [
@@ -1933,6 +2567,85 @@
       },
       "status": "unverified"
     },
+    "contact-head": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          -2
+        ],
+        [
+          8,
+          0
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              -2
+            ],
+            [
+              8,
+              -2
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          -2
+        ],
+        [
+          8,
+          0
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Contact head (contact table)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "contact-head",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "heading": {
+          "at": [
+            0.25,
+            -1
+          ],
+          "box": [
+            7.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
+    },
     "contact-male": {
       "anchors": [],
       "body_box": [
@@ -2049,6 +2762,131 @@
             1
           ],
           "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "contact-row": {
+      "anchors": [],
+      "body_box": [
+        [
+          -2,
+          0
+        ],
+        [
+          8,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -2,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "port": "ref",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -2,
+          0
+        ],
+        [
+          8,
+          2
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a contact row ends its circuit at the table; no path of this symbol continues it",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Contact row (contact table)",
+      "nodes": [
+        {
+          "ports": [
+            "ref"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            -2,
+            1
+          ],
+          "description": "cross-reference side",
+          "dir": "W",
+          "id": "ref"
+        }
+      ],
+      "reference": {
+        "number": "contact-row",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.ref": {
+          "at": [
+            0.25,
+            1
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
+        },
+        "place": {
+          "at": [
+            2,
+            1
+          ],
+          "box": [
+            5.5,
+            1
+          ],
+          "side": "E"
         }
       },
       "status": "unverified"
@@ -2593,6 +3431,615 @@
         }
       },
       "status": "unverified"
+    },
+    "cut-marker": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          -1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              6,
+              -1
+            ],
+            [
+              6,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          -1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Cut marker (partner page reference)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "cut-marker",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "partner": {
+          "at": [
+            1.25,
+            0
+          ],
+          "box": [
+            4.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
+    },
+    "diagram-box": {
+      "anchors": [],
+      "body_box": [
+        [
+          -4,
+          0
+        ],
+        [
+          12,
+          6
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -4,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "port": "w1",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -4,
+              4
+            ],
+            [
+              0,
+              4
+            ]
+          ],
+          "port": "w2",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              8,
+              2
+            ],
+            [
+              12,
+              2
+            ]
+          ],
+          "port": "e1",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              8,
+              4
+            ],
+            [
+              12,
+              4
+            ]
+          ],
+          "port": "e2",
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -4,
+          0
+        ],
+        [
+          12,
+          6
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "two marking boxes of one side are wider than their 2 M spacing allows once rotated; the box is drawn unrotated",
+          "rule": "slot-overlap-slot"
+        },
+        {
+          "reason": "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a box has no through path: its connections end at the box and none continues across it",
+          "rule": "through-missing"
+        },
+        {
+          "reason": "a diagram box ends its connections at the block; no path of this symbol joins two of them",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Diagram box (block diagram)",
+      "nodes": [
+        {
+          "ports": [
+            "w1"
+          ]
+        },
+        {
+          "ports": [
+            "w2"
+          ]
+        },
+        {
+          "ports": [
+            "e1"
+          ]
+        },
+        {
+          "ports": [
+            "e2"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            -4,
+            2
+          ],
+          "description": "",
+          "dir": "W",
+          "id": "w1"
+        },
+        {
+          "at": [
+            -4,
+            4
+          ],
+          "description": "",
+          "dir": "W",
+          "id": "w2"
+        },
+        {
+          "at": [
+            12,
+            2
+          ],
+          "description": "",
+          "dir": "E",
+          "id": "e1"
+        },
+        {
+          "at": [
+            12,
+            4
+          ],
+          "description": "",
+          "dir": "E",
+          "id": "e2"
+        }
+      ],
+      "reference": {
+        "number": "diagram-box",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.e1": {
+          "at": [
+            8.25,
+            1.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.e2": {
+          "at": [
+            8.25,
+            3.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.w1": {
+          "at": [
+            -0.25,
+            1.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "W"
+        },
+        "marking.w2": {
+          "at": [
+            -0.25,
+            3.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "W"
+        },
+        "tag": {
+          "at": [
+            1,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 4,
+          "axis": "x"
+        },
+        {
+          "at": 3,
+          "axis": "y"
+        }
+      ]
+    },
+    "diagram-box-by-others": {
+      "anchors": [],
+      "body_box": [
+        [
+          -4,
+          0
+        ],
+        [
+          12,
+          6
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -4,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "port": "w1",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              -4,
+              4
+            ],
+            [
+              0,
+              4
+            ]
+          ],
+          "port": "w2",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "dashed",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              8,
+              2
+            ],
+            [
+              12,
+              2
+            ]
+          ],
+          "port": "e1",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              8,
+              4
+            ],
+            [
+              12,
+              4
+            ]
+          ],
+          "port": "e2",
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -4,
+          0
+        ],
+        [
+          12,
+          6
+        ]
+      ],
+      "kind": "symbol",
+      "lint_allow": [
+        {
+          "reason": "two marking boxes of one side are wider than their 2 M spacing allows once rotated; the box is drawn unrotated",
+          "rule": "slot-overlap-slot"
+        },
+        {
+          "reason": "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a box has no through path: its connections end at the box and none continues across it",
+          "rule": "through-missing"
+        },
+        {
+          "reason": "a diagram box ends its connections at the block; no path of this symbol joins two of them",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Diagram box, by others (block diagram)",
+      "nodes": [
+        {
+          "ports": [
+            "w1"
+          ]
+        },
+        {
+          "ports": [
+            "w2"
+          ]
+        },
+        {
+          "ports": [
+            "e1"
+          ]
+        },
+        {
+          "ports": [
+            "e2"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            -4,
+            2
+          ],
+          "description": "",
+          "dir": "W",
+          "id": "w1"
+        },
+        {
+          "at": [
+            -4,
+            4
+          ],
+          "description": "",
+          "dir": "W",
+          "id": "w2"
+        },
+        {
+          "at": [
+            12,
+            2
+          ],
+          "description": "",
+          "dir": "E",
+          "id": "e1"
+        },
+        {
+          "at": [
+            12,
+            4
+          ],
+          "description": "",
+          "dir": "E",
+          "id": "e2"
+        }
+      ],
+      "reference": {
+        "number": "diagram-box-by-others",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.e1": {
+          "at": [
+            8.25,
+            1.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.e2": {
+          "at": [
+            8.25,
+            3.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        },
+        "marking.w1": {
+          "at": [
+            -0.25,
+            1.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "W"
+        },
+        "marking.w2": {
+          "at": [
+            -0.25,
+            3.5
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "W"
+        },
+        "tag": {
+          "at": [
+            1,
+            1
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 4,
+          "axis": "x"
+        },
+        {
+          "at": 3,
+          "axis": "y"
+        }
+      ]
     },
     "diode": {
       "anchors": [],
@@ -3528,6 +4975,230 @@
           "side": "W"
         }
       },
+      "status": "unverified"
+    },
+    "group-frame": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the label text box does not rotate and is wider than the frame is tall once rotated; the frame is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Group frame",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "group-frame",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.25,
+            0.75
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 4,
+          "axis": "x"
+        },
+        {
+          "at": 3,
+          "axis": "y"
+        }
+      ]
+    },
+    "harness-frame": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the label text box does not rotate and is wider than the frame is tall once rotated; the frame is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Harness frame",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "harness-frame",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.25,
+            0.75
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 4,
+          "axis": "x"
+        },
+        {
+          "at": 3,
+          "axis": "y"
+        }
+      ]
+    },
+    "junction-dot": {
+      "anchors": [],
+      "body_box": [
+        [
+          -0.25,
+          -0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ],
+      "elements": [
+        {
+          "circle": [
+            0,
+            0
+          ],
+          "fill": "solid",
+          "r": 0.25,
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -0.25,
+          -0.25
+        ],
+        [
+          0.25,
+          0.25
+        ]
+      ],
+      "kind": "element",
+      "name": "Junction dot",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "junction-dot",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
       "status": "unverified"
     },
     "lamp": {
@@ -4973,6 +6644,271 @@
             1
           ],
           "side": "W"
+        }
+      },
+      "status": "unverified"
+    },
+    "pin-cell": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          0
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -3,
+              1
+            ],
+            [
+              -1,
+              1
+            ]
+          ],
+          "port": "pin",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              0
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              -1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -3,
+          0
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a pin cell ends its circuit at the table; no path of this symbol continues it",
+          "rule": "port-isolated"
+        }
+      ],
+      "name": "Pin cell (table row)",
+      "nodes": [
+        {
+          "ports": [
+            "pin"
+          ]
+        }
+      ],
+      "paths": [],
+      "ports": [
+        {
+          "at": [
+            -3,
+            1
+          ],
+          "description": "wire side",
+          "dir": "W",
+          "id": "pin"
+        }
+      ],
+      "reference": {
+        "number": "pin-cell",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.pin": {
+          "at": [
+            -0.75,
+            1
+          ],
+          "box": [
+            3.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
+    },
+    "pin-cell-wide": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          0
+        ],
+        [
+          7,
+          2
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              -3,
+              1
+            ],
+            [
+              -1,
+              1
+            ]
+          ],
+          "port": "w",
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -1,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              -1,
+              2
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        },
+        {
+          "line": [
+            [
+              5,
+              1
+            ],
+            [
+              7,
+              1
+            ]
+          ],
+          "port": "e",
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -3,
+          0
+        ],
+        [
+          7,
+          2
+        ]
+      ],
+      "kind": "element",
+      "name": "Pin cell, wide (table row)",
+      "nodes": [
+        {
+          "ports": [
+            "w"
+          ]
+        },
+        {
+          "ports": [
+            "e"
+          ]
+        }
+      ],
+      "paths": [
+        {
+          "from": "w",
+          "kind": "conductor",
+          "through": false,
+          "to": "e"
+        }
+      ],
+      "ports": [
+        {
+          "at": [
+            -3,
+            1
+          ],
+          "description": "west wire side",
+          "dir": "W",
+          "id": "w"
+        },
+        {
+          "at": [
+            7,
+            1
+          ],
+          "description": "east wire side",
+          "dir": "E",
+          "id": "e"
+        }
+      ],
+      "reference": {
+        "number": "pin-cell-wide",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "marking.e": {
+          "at": [
+            4.75,
+            1
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "W"
+        },
+        "marking.w": {
+          "at": [
+            -0.75,
+            1
+          ],
+          "box": [
+            1.5,
+            1
+          ],
+          "side": "E"
         }
       },
       "status": "unverified"
@@ -7436,6 +9372,89 @@
       },
       "status": "unverified"
     },
+    "reference-marker": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          -1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              6,
+              -1
+            ],
+            [
+              6,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          -1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Reference marker (continuation flag)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "reference-marker",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "ref": {
+          "at": [
+            1.25,
+            0
+          ],
+          "box": [
+            4.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
+    },
     "residual-current-core": {
       "anchors": [],
       "body_box": [
@@ -8110,6 +10129,429 @@
       },
       "status": "unverified"
     },
+    "sheet-frame": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Sheet frame",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "sheet-frame",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {},
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0.5,
+          "axis": "x"
+        },
+        {
+          "at": 0.5,
+          "axis": "y"
+        }
+      ]
+    },
+    "sheet-strip-bottom": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "between": true,
+          "line": [
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Sheet strip cell (bottom)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "sheet-strip-bottom",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.5,
+            0.5
+          ],
+          "box": [
+            1,
+            0.5
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0.5,
+          "axis": "x"
+        },
+        {
+          "at": 0.5,
+          "axis": "y"
+        }
+      ]
+    },
+    "sheet-strip-left": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "between": true,
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Sheet strip cell (left)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "sheet-strip-left",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.5,
+            0.5
+          ],
+          "box": [
+            1,
+            0.5
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0.5,
+          "axis": "x"
+        },
+        {
+          "at": 0.5,
+          "axis": "y"
+        }
+      ]
+    },
+    "sheet-strip-right": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "between": true,
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Sheet strip cell (right)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "sheet-strip-right",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.5,
+            0.5
+          ],
+          "box": [
+            1,
+            0.5
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0.5,
+          "axis": "x"
+        },
+        {
+          "at": 0.5,
+          "axis": "y"
+        }
+      ]
+    },
+    "sheet-strip-top": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "between": true,
+          "line": [
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Sheet strip cell (top)",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "sheet-strip-top",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.5,
+            0.5
+          ],
+          "box": [
+            1,
+            0.5
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0.5,
+          "axis": "x"
+        },
+        {
+          "at": 0.5,
+          "axis": "y"
+        }
+      ]
+    },
     "terminal": {
       "anchors": [],
       "body_box": [
@@ -8464,6 +10906,1108 @@
       },
       "status": "unverified"
     },
+    "title-block": {
+      "anchors": [
+        {
+          "at": [
+            86.25,
+            1
+          ],
+          "dir": "E",
+          "id": "notice"
+        }
+      ],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          97.5,
+          20
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              97.5,
+              0
+            ],
+            [
+              97.5,
+              20
+            ],
+            [
+              0,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              0,
+              10
+            ],
+            [
+              86.25,
+              10
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              55,
+              0
+            ],
+            [
+              55,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              68.75,
+              0
+            ],
+            [
+              68.75,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              77.5,
+              0
+            ],
+            [
+              77.5,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              86.25,
+              0
+            ],
+            [
+              86.25,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              15,
+              10
+            ],
+            [
+              15,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              30,
+              10
+            ],
+            [
+              30,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          97.5,
+          20
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "a title block is never turned; turned, its unturned text boxes would cross the cell lines",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a title block is never turned; turned, a cell's unturned label and value boxes would cross",
+          "rule": "slot-overlap-slot"
+        }
+      ],
+      "name": "Title block",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "title-block",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "author": {
+          "at": [
+            22.5,
+            16.375
+          ],
+          "box": [
+            13,
+            2.5
+          ],
+          "side": "C"
+        },
+        "customer": {
+          "at": [
+            7.5,
+            16.375
+          ],
+          "box": [
+            13,
+            2.5
+          ],
+          "side": "C"
+        },
+        "label.author": {
+          "at": [
+            22.5,
+            13.25
+          ],
+          "box": [
+            13,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.customer": {
+          "at": [
+            7.5,
+            13.25
+          ],
+          "box": [
+            13,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.number": {
+          "at": [
+            61.875,
+            3.25
+          ],
+          "box": [
+            11.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.page": {
+          "at": [
+            81.875,
+            13.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.page_title": {
+          "at": [
+            42.5,
+            13.25
+          ],
+          "box": [
+            23,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.revision": {
+          "at": [
+            73.125,
+            3.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.revision_date": {
+          "at": [
+            81.875,
+            3.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.scope": {
+          "at": [
+            61.875,
+            13.25
+          ],
+          "box": [
+            11.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.sheet": {
+          "at": [
+            73.125,
+            13.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.title": {
+          "at": [
+            27.5,
+            3.25
+          ],
+          "box": [
+            53,
+            1.75
+          ],
+          "side": "C"
+        },
+        "notice": {
+          "at": [
+            91.875,
+            10
+          ],
+          "box": [
+            9.25,
+            18
+          ],
+          "side": "C"
+        },
+        "number": {
+          "at": [
+            61.875,
+            6.375
+          ],
+          "box": [
+            11.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "page": {
+          "at": [
+            81.875,
+            16.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "page_title": {
+          "at": [
+            42.5,
+            16.375
+          ],
+          "box": [
+            23,
+            2.5
+          ],
+          "side": "C"
+        },
+        "revision": {
+          "at": [
+            73.125,
+            6.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "revision_date": {
+          "at": [
+            81.875,
+            6.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "scope": {
+          "at": [
+            61.875,
+            16.375
+          ],
+          "box": [
+            11.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "sheet": {
+          "at": [
+            73.125,
+            16.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "title": {
+          "at": [
+            27.5,
+            6.375
+          ],
+          "box": [
+            53,
+            2.5
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 7.5,
+          "axis": "x",
+          "weight": 15
+        },
+        {
+          "at": 22.5,
+          "axis": "x",
+          "weight": 15
+        },
+        {
+          "at": 42.5,
+          "axis": "x",
+          "weight": 25
+        },
+        {
+          "at": 61.875,
+          "axis": "x",
+          "weight": 13.75
+        },
+        {
+          "at": 73.125,
+          "axis": "x",
+          "weight": 8.75
+        },
+        {
+          "at": 81.875,
+          "axis": "x",
+          "weight": 8.75
+        },
+        {
+          "at": 91.875,
+          "axis": "x",
+          "weight": 11.25
+        },
+        {
+          "at": 1.5,
+          "axis": "y"
+        },
+        {
+          "at": 4.625,
+          "axis": "y",
+          "weight": 4
+        },
+        {
+          "at": 8.5,
+          "axis": "y"
+        },
+        {
+          "at": 11.5,
+          "axis": "y"
+        },
+        {
+          "at": 14.625,
+          "axis": "y",
+          "weight": 4
+        },
+        {
+          "at": 18.5,
+          "axis": "y"
+        }
+      ]
+    },
+    "title-block-logo": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          20,
+          20
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              20,
+              0
+            ],
+            [
+              20,
+              20
+            ],
+            [
+              0,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          20,
+          20
+        ]
+      ],
+      "kind": "element",
+      "name": "Title block logo cell",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "title-block-logo",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "logo": {
+          "at": [
+            10,
+            10
+          ],
+          "box": [
+            20,
+            20
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 10,
+          "axis": "x"
+        },
+        {
+          "at": 10,
+          "axis": "y"
+        }
+      ]
+    },
+    "title-block-notice": {
+      "anchors": [
+        {
+          "at": [
+            74,
+            1
+          ],
+          "dir": "E",
+          "id": "notice"
+        }
+      ],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          97.5,
+          20
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              97.5,
+              0
+            ],
+            [
+              97.5,
+              20
+            ],
+            [
+              0,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              0,
+              10
+            ],
+            [
+              74,
+              10
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              42.75,
+              0
+            ],
+            [
+              42.75,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              56.5,
+              0
+            ],
+            [
+              56.5,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              65.25,
+              0
+            ],
+            [
+              65.25,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              74,
+              0
+            ],
+            [
+              74,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              11.25,
+              10
+            ],
+            [
+              11.25,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        },
+        {
+          "line": [
+            [
+              17.75,
+              10
+            ],
+            [
+              17.75,
+              20
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          97.5,
+          20
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "a title block is never turned; turned, its unturned text boxes would cross the cell lines",
+          "rule": "slot-overlap-body"
+        },
+        {
+          "reason": "a title block is never turned; turned, a cell's unturned label and value boxes would cross",
+          "rule": "slot-overlap-slot"
+        }
+      ],
+      "name": "Title block with notice",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "title-block-notice",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "author": {
+          "at": [
+            14.5,
+            16.375
+          ],
+          "box": [
+            4.5,
+            2.5
+          ],
+          "side": "C"
+        },
+        "customer": {
+          "at": [
+            5.625,
+            16.375
+          ],
+          "box": [
+            9.25,
+            2.5
+          ],
+          "side": "C"
+        },
+        "label.author": {
+          "at": [
+            14.5,
+            13.25
+          ],
+          "box": [
+            4.5,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.customer": {
+          "at": [
+            5.625,
+            13.25
+          ],
+          "box": [
+            9.25,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.number": {
+          "at": [
+            49.625,
+            3.25
+          ],
+          "box": [
+            11.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.page": {
+          "at": [
+            69.625,
+            13.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.page_title": {
+          "at": [
+            30.25,
+            13.25
+          ],
+          "box": [
+            23,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.revision": {
+          "at": [
+            60.875,
+            3.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.revision_date": {
+          "at": [
+            69.625,
+            3.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.scope": {
+          "at": [
+            49.625,
+            13.25
+          ],
+          "box": [
+            11.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.sheet": {
+          "at": [
+            60.875,
+            13.25
+          ],
+          "box": [
+            6.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "label.title": {
+          "at": [
+            21.375,
+            3.25
+          ],
+          "box": [
+            40.75,
+            1.75
+          ],
+          "side": "C"
+        },
+        "notice": {
+          "at": [
+            85.75,
+            10
+          ],
+          "box": [
+            21.5,
+            18
+          ],
+          "side": "C"
+        },
+        "number": {
+          "at": [
+            49.625,
+            6.375
+          ],
+          "box": [
+            11.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "page": {
+          "at": [
+            69.625,
+            16.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "page_title": {
+          "at": [
+            30.25,
+            16.375
+          ],
+          "box": [
+            23,
+            2.5
+          ],
+          "side": "C"
+        },
+        "revision": {
+          "at": [
+            60.875,
+            6.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "revision_date": {
+          "at": [
+            69.625,
+            6.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "scope": {
+          "at": [
+            49.625,
+            16.375
+          ],
+          "box": [
+            11.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "sheet": {
+          "at": [
+            60.875,
+            16.375
+          ],
+          "box": [
+            6.75,
+            2.5
+          ],
+          "side": "C"
+        },
+        "title": {
+          "at": [
+            21.375,
+            6.375
+          ],
+          "box": [
+            40.75,
+            2.5
+          ],
+          "side": "C"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 5.625,
+          "axis": "x",
+          "weight": 11.25
+        },
+        {
+          "at": 14.5,
+          "axis": "x",
+          "weight": 6.5
+        },
+        {
+          "at": 30.25,
+          "axis": "x",
+          "weight": 25
+        },
+        {
+          "at": 49.625,
+          "axis": "x",
+          "weight": 13.75
+        },
+        {
+          "at": 60.875,
+          "axis": "x",
+          "weight": 8.75
+        },
+        {
+          "at": 69.625,
+          "axis": "x",
+          "weight": 8.75
+        },
+        {
+          "at": 85.75,
+          "axis": "x",
+          "weight": 23.5
+        },
+        {
+          "at": 1.5,
+          "axis": "y"
+        },
+        {
+          "at": 4.625,
+          "axis": "y",
+          "weight": 4
+        },
+        {
+          "at": 8.5,
+          "axis": "y"
+        },
+        {
+          "at": 11.5,
+          "axis": "y"
+        },
+        {
+          "at": 14.625,
+          "axis": "y",
+          "weight": 4
+        },
+        {
+          "at": 18.5,
+          "axis": "y"
+        }
+      ]
+    },
+    "title-block-notice-line": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "elements": [
+        {
+          "line": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "style": "solid",
+          "weight": "thick"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "kind": "element",
+      "name": "Title block notice line",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "title-block-notice-line",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "line": {
+          "at": [
+            1,
+            0.5
+          ],
+          "box": [
+            1,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 0.25,
+          "axis": "y"
+        },
+        {
+          "at": 0.75,
+          "axis": "y"
+        }
+      ]
+    },
     "transformer": {
       "anchors": [],
       "body_box": [
@@ -8721,6 +12265,196 @@
         }
       },
       "status": "unverified"
+    },
+    "unit-outline": {
+      "anchors": [],
+      "body_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              0
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              0,
+              6
+            ]
+          ],
+          "style": "dash_dot",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the label text box does not rotate and is wider than the frame is tall once rotated; the frame is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Unit outline",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "unit-outline",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            0.25,
+            0.75
+          ],
+          "box": [
+            6,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified",
+      "stretch": [
+        {
+          "at": 4,
+          "axis": "x"
+        },
+        {
+          "at": 3,
+          "axis": "y"
+        }
+      ]
+    },
+    "wire-label-frame": {
+      "anchors": [],
+      "body_box": [
+        [
+          -3,
+          -0.75
+        ],
+        [
+          3,
+          0.75
+        ]
+      ],
+      "elements": [
+        {
+          "closed": true,
+          "fill": "none",
+          "polyline": [
+            [
+              -3,
+              -0.75
+            ],
+            [
+              3,
+              -0.75
+            ],
+            [
+              3,
+              0.75
+            ],
+            [
+              -3,
+              0.75
+            ]
+          ],
+          "style": "solid",
+          "weight": "normal"
+        }
+      ],
+      "keepout_box": [
+        [
+          -3,
+          -0.75
+        ],
+        [
+          3,
+          0.75
+        ]
+      ],
+      "kind": "element",
+      "lint_allow": [
+        {
+          "reason": "the label text box does not rotate and is wider than the frame is tall; the frame is drawn unrotated and the text stays inside the outline",
+          "rule": "slot-overlap-body"
+        }
+      ],
+      "name": "Wire label frame",
+      "nodes": [],
+      "paths": [],
+      "ports": [],
+      "reference": {
+        "number": "wire-label-frame",
+        "standard": "IEC 60617"
+      },
+      "schema": 1,
+      "slots": {
+        "label": {
+          "at": [
+            -2.75,
+            0
+          ],
+          "box": [
+            5.5,
+            1
+          ],
+          "side": "E"
+        }
+      },
+      "status": "unverified"
     }
-  }
+  },
+  "wires": [
+    {
+      "id": "wire",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "id": "trunk",
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "id": "link",
+      "style": "dashed",
+      "weight": "normal"
+    },
+    {
+      "id": "by_others",
+      "style": "dashed",
+      "weight": "normal"
+    }
+  ]
 }

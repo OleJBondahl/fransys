@@ -56,6 +56,41 @@ class FunctionKind(Enum):
 
 
 @register_enum
+class ItemKind(Enum):
+    """What an item is, as the overview colours and filters it.
+
+    One value per item. `TERMINAL` is a strip's terminal, `STRIP` the item holding terminals.
+    `DEVICE` is everything the other eight do not name.
+    """
+
+    TERMINAL = "terminal"
+    STRIP = "strip"
+    CONNECTOR = "connector"
+    PLC_MODULE = "plc_module"
+    CABLE = "cable"
+    HARNESS = "harness"
+    BOARD = "board"
+    BAR = "bar"
+    DEVICE = "device"
+
+
+@register_enum
+class SubjectKind(Enum):
+    """What a handle (`Id`) names, for the readers that branch on the kind text of one.
+
+    Example: the id of an item is `ITEM`; the id of a net, mate or any other record is `OTHER`.
+    """
+
+    ITEM = "item"
+    PORT = "port"
+    FUNCTION = "function"
+    CONDUCTOR = "conductor"
+    UNIT = "unit"
+    ASPECT_NODE = "aspect_node"
+    OTHER = "other"
+
+
+@register_enum
 class PortRole(Enum):
     """What a `Port` is for.
 
@@ -159,9 +194,10 @@ class ConductorKind(Enum):
 
     Example: a panel wire is `WIRE`; one core of the invented cable `W012` example
     is `CORE`; a bridge between two terminals is `JUMPER`.
-    `MOUNT`, `BUSBAR`, `RAIL` and `LEAD` are links: plug-on contacts, a rack's power
-    jumper, terminals bonded through their rail, a device's own lead ending in a pin of a
-    fitted connector. A link closes its net and is never a wire: it has no `WireFacet`.
+    `JUMPER`, `MOUNT`, `BUSBAR`, `RAIL` and `LEAD` are links: a bridge between terminals,
+    plug-on contacts, a rack's power jumper, terminals bonded through their rail, a device's own
+    lead ending in a pin of a fitted connector. A link joins its net and is never a wire: it has
+    no `WireFacet`.
     """
 
     WIRE = "wire"

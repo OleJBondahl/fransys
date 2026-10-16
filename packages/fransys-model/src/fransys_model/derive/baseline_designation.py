@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, cast
 
+from fransys_model.kernel import SchemaError
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.membership import boundary, unit_own_roots
 from fransys_model.vocab.tables import (
@@ -13,6 +14,8 @@ from fransys_model.vocab.tables import (
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .baseline_rules import CURRENT, ListingRules
+from .baseline_unchecked import UNPRINTABLE
 from .designation import (
     _own_designation,
     _segment,
@@ -90,7 +93,9 @@ def _location_keep(
     return frozenset(keep)
 
 
-def unit_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str:
+def unit_designation(
+    model: Model, unit: Id[Unit] | None, item: Id[Item], rules: ListingRules = CURRENT
+) -> str:
     """`item`'s designation relative to `unit`.
 
     `reference_designation`'s rule, except the `+` (location) segment drops `unit`'s own common
@@ -101,6 +106,7 @@ def unit_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str
         model: The frozen model to read.
         unit: The unit the text is relative to; `None` for the system listing.
         item: The item to name.
+        rules: The listing rules the text is cut under; today's by default.
 
     Returns:
         The designation text.
@@ -117,13 +123,28 @@ def unit_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str
             continue
         keep = _location_keep(nodes, leaf.id, common) if aspect is Aspect.LOCATION else None
         segments.append(_segment(nodes, leaf, sign, keep=keep))
-    return "".join(segments) + printed_designation(model, item, unit=unit)
+    return "".join(segments) + _printed(model, item, unit, rules)
+
+
+def _printed(model: Model, item: Id[Item], unit: Id[Unit] | None, rules: ListingRules) -> str:
+    """`item`'s printed designation; `UNPRINTABLE` where the old holder rule cannot print it.
+
+    A contact block numbered before 0.18.2 has no number in today's model (`leave_out` reads it).
+    """
+    try:
+        return printed_designation(model, item, unit=unit, held_switches=rules.holder_designation)
+    except SchemaError:
+        if rules.holder_designation:
+            raise
+        return UNPRINTABLE
 
 
 # -- cross-unit rendering (a mate or conductor end on a nested unit's boundary) --------------
 
 
-def _instance_prefix(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit]) -> str:
+def _instance_prefix(
+    model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit], rules: ListingRules
+) -> str:
     """`"<instance name>/"` for the unit `owner_unit`, an instance nested somewhere in `unit`.
 
     The instance name is the smallest, in sort order, of its own root items' `unit_designation`
@@ -132,29 +153,35 @@ def _instance_prefix(model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit]) 
     if tags := instance_tags(model, owner_unit, unit):
         return f"{instance_name(tags)}/"
     roots = unit_own_roots(model, owner_unit)
-    name = min(unit_designation(model, unit, root) for root in roots)
+    name = min(unit_designation(model, unit, root, rules) for root in roots)
     return f"{name}/"
 
 
-def function_text(model: Model, unit: Id[Unit] | None, function: Function) -> str:
+def function_text(
+    model: Model, unit: Id[Unit] | None, function: Function, rules: ListingRules = CURRENT
+) -> str:
     """A function's baseline text in `unit`'s listing: its item's designation, `:`, its name."""
-    return f"{unit_designation(model, unit, function.item)}:{function.name}"
+    return f"{unit_designation(model, unit, function.item, rules)}:{function.name}"
 
 
-def _plain_port_text(model: Model, render_unit: Id[Unit] | None, port_id: Id[Port]) -> str:
+def _plain_port_text(
+    model: Model, render_unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
+) -> str:
     """`port_id` rendered relative to `render_unit`: a plain port, or a terminal's bare text."""
     record = ports(model)[port_id]
     fn = functions(model)[record.function]
     owner = items(model)[fn.item]
     if owner.parent is not None and terminal_of(model, owner.id) is not None:
-        strip_text = unit_designation(model, render_unit, owner.parent)
+        strip_text = unit_designation(model, render_unit, owner.parent, rules)
         return f"{strip_text}:{_own_designation(model, owner.id)}"
-    text = unit_designation(model, render_unit, owner.id)
-    name = printed_port_name(model, port_id)
+    text = unit_designation(model, render_unit, owner.id, rules)
+    name = printed_port_name(model, port_id, bar_screw=not rules.bar_end_without_screw)
     return f"{text}:{name}" if name else text
 
 
-def _cross_port_text(model: Model, unit: Id[Unit] | None, port_id: Id[Port]) -> str:
+def _cross_port_text(
+    model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
+) -> str:
     """`port_id`'s baseline text for `unit`'s own listing (conductor ends).
 
     Plain against `unit` when its owner item is `unit`'s own; else against the owner's unit,
@@ -164,28 +191,34 @@ def _cross_port_text(model: Model, unit: Id[Unit] | None, port_id: Id[Port]) -> 
     fn = functions(model)[record.function]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return _plain_port_text(model, unit, port_id)
+        return _plain_port_text(model, unit, port_id, rules)
     # `_conductor_unit`'s rule (or, for `unit=None`, the `owner.unit == unit` branch above)
     # guarantees `owner.unit` is a real unit here.
     owner_unit = cast("Id[Unit]", owner.unit)
-    prefix = _instance_prefix(model, unit, owner_unit)
-    return f"{prefix}{_plain_port_text(model, owner_unit, port_id)}"
+    prefix = _instance_prefix(model, unit, owner_unit, rules)
+    return f"{prefix}{_plain_port_text(model, owner_unit, port_id, rules)}"
 
 
-def _cross_function_text(model: Model, unit: Id[Unit] | None, function_id: Id[Function]) -> str:
+def _cross_function_text(
+    model: Model, unit: Id[Unit] | None, function_id: Id[Function], rules: ListingRules
+) -> str:
     """`function_id`'s baseline text for `unit`'s own listing (mate ends)."""
     fn = functions(model)[function_id]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return function_text(model, unit, fn)
+        return function_text(model, unit, fn, rules)
     # `_lowest_common_unit` (or, for `unit=None`, the branch above) guarantees a real unit.
     owner_unit = cast("Id[Unit]", owner.unit)
-    prefix = _instance_prefix(model, unit, owner_unit)
-    return f"{prefix}{function_text(model, owner_unit, fn)}"
+    prefix = _instance_prefix(model, unit, owner_unit, rules)
+    return f"{prefix}{function_text(model, owner_unit, fn, rules)}"
 
 
 def _net_port_text(
-    model: Model, unit: Id[Unit] | None, direct_nested: frozenset[Id[Unit]], port_id: Id[Port]
+    model: Model,
+    unit: Id[Unit] | None,
+    direct_nested: frozenset[Id[Unit]],
+    port_id: Id[Port],
+    rules: ListingRules,
 ) -> str | None:
     """`port_id`'s baseline text for a `nets` row, `None` when it is not a member port of `unit`.
 
@@ -196,8 +229,8 @@ def _net_port_text(
     fn = functions(model)[record.function]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return _plain_port_text(model, unit, port_id)
+        return _plain_port_text(model, unit, port_id, rules)
     if owner.unit in direct_nested and record.function in boundary(model, owner.unit):
-        prefix = _instance_prefix(model, unit, owner.unit)
-        return f"{prefix}{_plain_port_text(model, owner.unit, port_id)}"
+        prefix = _instance_prefix(model, unit, owner.unit, rules)
+        return f"{prefix}{_plain_port_text(model, owner.unit, port_id, rules)}"
     return None

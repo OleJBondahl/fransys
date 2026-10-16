@@ -30,6 +30,7 @@ def library_digest(*sources: str) -> str:
 
 
 def _ident(text: str) -> str:
+    """A part class name from a part number, where `-` separates: `LC1D09-BD` is `LC1D09_BD`."""
     name = re.sub(r"\W", "_", text)
     return f"P_{name}" if name[0].isdigit() else name
 

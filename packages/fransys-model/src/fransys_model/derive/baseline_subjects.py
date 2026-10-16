@@ -15,6 +15,7 @@ lazy from fransys_model.vocab.core import Unit
 from .baseline_designation import _cross_port_text, function_text, unit_designation
 from .baseline_diff_units import unit_subject_text
 from .baseline_listing import _listing_unit
+from .baseline_rules import CURRENT
 from .lone_cable import lone_cable
 from .reports import _conductor_unit
 from .unit_release import unit_release
@@ -53,8 +54,8 @@ def _wire_subjects(model: Model, unit: Id[Unit] | None) -> Subjects:
         if _conductor_unit(model, conductor) == unit:
             a_text, b_text = sorted(
                 (
-                    _cross_port_text(model, unit, conductor.a),
-                    _cross_port_text(model, unit, conductor.b),
+                    _cross_port_text(model, unit, conductor.a, CURRENT),
+                    _cross_port_text(model, unit, conductor.b, CURRENT),
                 )
             )
             found.setdefault(("conductors", f"{a_text} {b_text}"), conductor.id)

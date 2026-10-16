@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from layout_examples import sheet_format
 
+from fransys_model.derive import text_room, text_room_g
 from fransys_model.kernel import Draft, Id, Model, Origin, Record, freeze, make_id
 from fransys_model.layout import Profile, default_profile, profile_of
 from fransys_model.vocab.core import Unit, UnitRelease
@@ -76,3 +77,14 @@ def test_min_text_height_mm_defaults_to_the_house_size_and_an_authored_one_survi
     authored = dataclasses.replace(_profile("a"), min_text_height_mm=Decimal("2.5"))
     model = _freeze(sheet_format(), release, unit, authored)
     assert profile_of(model).min_text_height_mm == Decimal("2.5")
+
+
+def test_text_room_reads_the_unit_profile_and_its_sheet_not_the_tops() -> None:
+    """RO-12: `text_room(model, unit)` uses that unit's own height, never the top's."""
+    release, unit = _board_unit()
+    own = dataclasses.replace(_profile("b"), unit=unit.id, text_height_mm=Decimal("3.5"))
+    sheet = sheet_format()
+    model = _freeze(sheet, release, unit, _profile("a"), own)
+    assert text_room(model) == text_room_g(Decimal("1.8"), sheet.module_mm)
+    assert text_room(model, unit.id) == text_room_g(Decimal("3.5"), sheet.module_mm)
+    assert text_room(model) != text_room(model, unit.id)

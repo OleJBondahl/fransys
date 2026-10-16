@@ -1,0 +1,25 @@
+schema = 1
+name = "Pin cell, wide (table row)"
+kind = "element"
+status = "unverified"
+# our own table cell: one cell with a wire on each side (west and east), for a pin that passes through
+reference = { standard = "IEC 60617", number = "pin-cell-wide" }
+
+ports = [
+  { id = "w", at = [-3, 1], dir = "W", description = "west wire side" },
+  { id = "e", at = [7, 1], dir = "E", description = "east wire side" },
+]
+
+paths = [
+  { from = "w", to = "e", kind = "conductor" },
+]
+
+elements = [
+  { line = [[-3, 1], [-1, 1]], port = "w" },
+  { polyline = [[-1, 0], [5, 0], [5, 2], [-1, 2]], closed = true },
+  { line = [[5, 1], [7, 1]], port = "e" },
+]
+
+[slots]
+"marking.w" = { at = [-0.75, 1], side = "E", box = [1.5, 1] }
+"marking.e" = { at = [4.75, 1], side = "W", box = [1.5, 1] }

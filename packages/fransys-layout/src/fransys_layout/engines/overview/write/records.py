@@ -18,8 +18,8 @@ from fransys_model.layout import (
 lazy from fransys_layout.lint._diagram_scene import Scene
 
 if TYPE_CHECKING:
-    from fransys_layout.engines.diagram.values import PlacedBox, PlacedSheet
     from fransys_layout.engines.overview.read.values import BoxSpec, LineSpec, ViewFacts
+    from fransys_layout.engines.overview.sheet_values import PlacedBox, PlacedSheet
 
 
 @dataclass(frozen=True)
@@ -39,7 +39,7 @@ def _tabs(placed: PlacedBox, scene: Scene) -> tuple[OverviewTab, ...]:
     """The tabs outside the box edge, in the order placed, as the lint scene measured them."""
     rects = next(b.tabs for b in scene.boxes if b.box == placed.box)
     return tuple(
-        OverviewTab(index=i, x=r.x, y=r.y, text_width=t.text_width)
+        OverviewTab(index=i, x=r.x, y=r.y, text_width=t.text_width, width=r.width, height=r.height)
         for i, (r, t) in enumerate(zip(rects, placed.tabs, strict=True))
     )
 

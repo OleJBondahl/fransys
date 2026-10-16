@@ -1,11 +1,12 @@
 """Layout: which kinds are authored hints and which are derived results (layout-namespace.md).
 
-A new kind goes into exactly one of the four tuples: the tests and `derived_layout_ids` go
+A new kind goes into exactly one of the tuples: the tests and `derived_layout_ids` go
 by them. Each pass removes only its own tuple's kinds (CT5, Q3).
 """
 
 from .cable_results import CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire
 from .diagram_results import DiagramBox, DiagramLine, DiagramMarker, DiagramSheet
+from .drawn_results import DrawnPage, DrawnSymbol, DrawnWire
 from .external_results import ExternalOutline
 from .formats import Profile, SheetFormat
 from .harness_results import ConnectorBox, HarnessFanOut, HarnessLine, StubEnd
@@ -63,3 +64,4 @@ DERIVED_KINDS: tuple[type, ...] = (
 CABLE_KINDS: tuple[type, ...] = (CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire)
 DIAGRAM_KINDS: tuple[type, ...] = (DiagramSheet, DiagramBox, DiagramLine, DiagramMarker)
 OVERVIEW_KINDS: tuple[type, ...] = (OverviewView, OverviewBox, OverviewLine)
+DRAWN_KINDS: tuple[type, ...] = (DrawnPage, DrawnSymbol, DrawnWire)

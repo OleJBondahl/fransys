@@ -3,24 +3,20 @@
 from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
-    bom_lines,
-    cable_list_rows,
+    cable_blocks,
     designation_list,
     diagram_sheets,
+    document_bom_lines,
+    document_scope,
     document_unit,
+    harness_cables_for,
 )
 from fransys_model.vocab import PageKind
 
-from ._drawings import (
-    cable_blocks,
-    harness_cables_for,
-    replica_only_sets,
-    schematic_pages,
-)
+from ._drawings import replica_only_sets, schematic_pages
 from ._lists import (
-    _bom_scope,
     _connector_rows_for_page,
-    _terminal_strips_for,
+    document_cable_rows,
     plc_channel_rows_for,
     terminal_rows_for,
     wire_rows_for,
@@ -51,7 +47,7 @@ def list_rows(  # noqa: PLR0911 -- one branch per list `PageKind`, as `document.
     if kind is PageKind.TERMINAL_LIST:
         return tuple(
             row
-            for strip in _terminal_strips_for(model, record)
+            for strip in document_scope(model, record).strips
             for row in terminal_rows_for(model, record, strip)
         )
     if kind is PageKind.CONNECTOR_LIST:
@@ -61,10 +57,8 @@ def list_rows(  # noqa: PLR0911 -- one branch per list `PageKind`, as `document.
     if kind is PageKind.DESIGNATION_LIST:
         return tuple(designation_list(model, unit=document_unit(model, record)))
     if kind is PageKind.CABLE_LIST:
-        return tuple(cable_list_rows(model, unit=document_unit(model, record)))
-    return tuple(
-        bom_lines(model, scope=_bom_scope(model, record))
-    )  # kind is PageKind.BOM: the last one
+        return document_cable_rows(model, record)
+    return document_bom_lines(model, record)  # kind is PageKind.BOM: the last one
 
 
 def has_other_content_page(model: Model, record: Document, pages: tuple[PageKind, ...]) -> bool:

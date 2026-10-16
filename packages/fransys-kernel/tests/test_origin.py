@@ -6,14 +6,17 @@ import pytest
 
 from fransys_kernel import (
     AuthoringKey,
+    Finding,
     Id,
     MergeConflict,
     ModelError,
     Origin,
     SchemaError,
     SchemaVersionError,
+    Severity,
     ValueTypeError,
     describe,
+    describe_parts,
 )
 
 _HOLDER = Id(kind="thing", value="a" * 32)
@@ -102,3 +105,18 @@ def test_describe_shows_the_subjects_of_an_error_that_carries_them() -> None:
         "  subject: pumps.py:12 (aux/pumps/pump1)",
         f"  subject: unknown origin (kind {_MISSING.kind})",
     ]
+
+
+def test_describe_parts_keeps_the_head_and_each_subject_apart() -> None:
+    finding = Finding(
+        code="DEMO",
+        severity=Severity.WARNING,
+        subjects=(_HOLDER, _MISSING),
+        message="two lines\nof text",
+    )
+    parts = describe_parts(finding, _holder_source(), {_HOLDER: "pump 1"})
+    assert parts.head == "DEMO (warning): two lines\nof text"
+    assert parts.subjects == ("pump 1 (pumps.py:12)", f"unknown origin (kind {_MISSING.kind})")
+    assert describe(finding, _holder_source(), {_HOLDER: "pump 1"}) == "\n".join(
+        [parts.head, *(f"  subject: {text}" for text in parts.subjects)]
+    )

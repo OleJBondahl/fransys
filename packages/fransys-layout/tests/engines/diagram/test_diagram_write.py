@@ -7,7 +7,8 @@ from diagram_models import station
 
 from fransys_layout import lay_out_cables
 from fransys_layout.engines.diagram.read import read_diagrams
-from fransys_layout.engines.diagram.values import (
+from fransys_layout.engines.diagram.write import write_diagrams
+from fransys_layout.engines.overview.sheet_values import (
     PlacedBox,
     PlacedDiagram,
     PlacedLine,
@@ -15,7 +16,6 @@ from fransys_layout.engines.diagram.values import (
     PlacedSheet,
     PlacedTab,
 )
-from fransys_layout.engines.diagram.write import write_diagrams
 from fransys_layout.geometry import Facing, LayoutError, Point
 from fransys_model.kernel import make_id, render_id
 from fransys_model.layout import (

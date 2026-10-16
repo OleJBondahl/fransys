@@ -7,11 +7,22 @@ listing and numbering (universal newlines, so a CRLF checkout reads like LF) and
 import dataclasses
 import json
 import re
-from pathlib import Path
 from typing import Any, cast
+lazy from pathlib import Path
+
+from fransys_model.derive import baseline, numbering_pins
+from fransys_model.derive.baseline import StoredRelease, StoredReleases
 
 _REVISION_DIR_RE = re.compile(r"[0-9]+\.[0-9]+")
-_MANIFEST = Path("baseline") / "manifest.json"
+# Every file a release folder holds beside its exports, by role, as its path in the folder (R07).
+BASELINE_FILES = {
+    "listing": "baseline/listing.json",
+    "model": "baseline/model.json",
+    "numbering": "baseline/numbering.json",
+    "manifest": "baseline/manifest.json",
+    "changes_md": "changes.md",
+    "changes_csv": "changes.csv",
+}
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -58,7 +69,7 @@ def _folder_order(folder: Path) -> tuple[int, int]:
 
 def manifest_path(folder: Path) -> Path:
     """Where `folder`'s manifest is, whether or not it exists."""
-    return folder / _MANIFEST
+    return folder / BASELINE_FILES["manifest"]
 
 
 def has_manifest(folder: Path) -> bool:
@@ -72,12 +83,12 @@ def _text(path: Path) -> str | None:
 
 def stored_listing(folder: Path) -> str | None:
     """`folder`'s stored `baseline/listing.json` text, or `None` when it has none."""
-    return _text(folder / "baseline" / "listing.json")
+    return _text(folder / BASELINE_FILES["listing"])
 
 
 def stored_numbering(folder: Path) -> str | None:
     """`folder`'s stored `baseline/numbering.json` text, or `None` when it has none."""
-    return _text(folder / "baseline" / "numbering.json")
+    return _text(folder / BASELINE_FILES["numbering"])
 
 
 def listed_siblings(parent: Path) -> tuple[tuple[Path, str], ...]:
@@ -129,6 +140,55 @@ def _file_pair(folder: Path, row: Any) -> tuple[str, str]:  # noqa: ANN401 -- a 
         return _typed(row["path"], str), _typed(row["sha256"], str)
     except (KeyError, TypeError) as error:
         raise _broken(folder, f"a files entry is malformed ({error!r})") from error
+
+
+def manifest_data(folder: Path) -> dict[str, Any]:
+    """`folder`'s manifest, parsed whole.
+
+    Raises `ValueError` naming the manifest when it is missing or does not parse to an object.
+    """
+    try:
+        data = json.loads(manifest_path(folder).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise _broken(folder, f"cannot be read ({error!r})") from error
+    if not isinstance(data, dict):
+        raise _broken(folder, "is not a JSON object")
+    return data
+
+
+def manifest_readable(folder: Path) -> bool:
+    """Whether `folder` has a manifest that parses to a JSON object."""
+    try:
+        manifest_data(folder)
+    except ValueError:
+        return False
+    return True
+
+
+def _recut_by(data: dict[str, Any]) -> str | None:
+    """The `cut_by` of the last `rebaselined` record that re-cut the listing, else `None`."""
+    for record in reversed(data.get("rebaselined", [])):
+        cut_by = record.get("cut_by")
+        if record.get("reason") == "rules" and isinstance(cut_by, str):
+            return cut_by
+    return None
+
+
+def stored_fransys_version(folder: Path) -> str | None:
+    """The `fransys` whose rules `folder`'s listing holds: its last re-cut, else `packages`' entry.
+
+    `None` when the manifest is missing, broken or names no `fransys`.
+    """
+    if not has_manifest(folder):
+        return None
+    try:
+        data = manifest_data(folder)
+        if (recut := _recut_by(data)) is not None:
+            return recut
+        rows = data["packages"]
+        return next(_typed(r["version"], str) for r in rows if r["name"] == "fransys")
+    except ValueError, KeyError, TypeError, StopIteration, AttributeError:
+        return None
 
 
 def manifest_fields(
@@ -195,3 +255,22 @@ def releases(root: Path) -> tuple[Release, ...]:
     Does not write files, check a file's hash or read any model.
     """
     return tuple(read_release(folder) for folder in release_folders(root))
+
+
+def read_stored(parent: Path) -> StoredReleases:
+    """Every release folder of `parent` (`<into>/<name>/`) that has a stored listing, read once.
+
+    The one fill of `StoredReleases`: derive chooses the previous release and the pin source.
+    """
+    stored = []
+    for folder, listing_text in listed_siblings(parent):
+        numbering_text = stored_numbering(folder)
+        numbering = None if numbering_text is None else numbering_pins.loads(numbering_text)
+        stored.append(
+            StoredRelease(
+                folder=folder.name,
+                listing=baseline.loads(listing_text),
+                numbering=numbering,
+            )
+        )
+    return StoredReleases(releases=tuple(stored))

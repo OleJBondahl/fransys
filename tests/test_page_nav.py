@@ -104,9 +104,11 @@ def _landing(pdf: pypdfium2.PdfDocument, name: str) -> int:
 
 def _written(root: Path, cover_pages: int) -> tuple[fr.BuildResult, pypdfium2.PdfDocument]:
     d, cabinet = _design("a-")
-    (root / "c.md").write_text(
-        "# c\n\n" + "\n\n".join("Cover line. " * 120 for _ in range(cover_pages)), encoding="utf-8"
-    )
+    # A cover taller than its page is COVER_OVERFLOW (pdf-0047): the extra pages are notes pages.
+    (root / "c.md").write_text("# c\n", encoding="utf-8")
+    if cover_pages:
+        notes = "\n\n".join("Notes line. " * 120 for _ in range(cover_pages))
+        (root / "c.notes.md").write_text(notes, encoding="utf-8")
     doc = fr.document(fr.DocumentPreset.CABINET_SCHEMATIC, cabinet, cover=root / "c.md")
     result = fr.build(d, doc)
     fr.write(result, out_dir=root / "out", intermediates=root / "inter")
@@ -248,4 +250,6 @@ def test_a_list_pages_designations_sit_under_that_pages_title_never_under_a_shee
     finally:
         pdf.close()
     assert _parent(toc, "-X1") == "Terminal list"
-    assert _parent(toc, "-WH1-J1") == "Connector list"
+    # the canary's only connectors at C1 are a harness's plugs, which no location document draws
+    # (pdf-0043), so it has no connector list
+    assert "Connector list" not in {title for level, title, _ in toc if level == 0}

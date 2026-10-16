@@ -9,9 +9,9 @@ Results are `tuple`s (or one `frozendict`), sorted by an explicit key so inserti
 from typing import TYPE_CHECKING
 
 from fransys_model.kernel import Id, Model, UnionFind
-from fransys_model.vocab.enums import ConductorKind, PortRole
+from fransys_model.vocab.enums import PortRole
 from fransys_model.vocab.facets.terminal import TerminalFacet
-from fransys_model.vocab.tables import conductors, facets_of, items, nets, ports
+from fransys_model.vocab.tables import conductors, facets_of, items, nets
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor, Net
 lazy from fransys_model.vocab.core import Item, Port, Unit
@@ -19,6 +19,8 @@ lazy from fransys_model.vocab.core import Item, Port, Unit
 from .closure import physical_nets
 from .designation import terminal_designation, unit_list_context
 from .facts.children import child_items
+from .facts.conductor_facts import is_bridge
+from .facts.roles import port_role
 from .far_ends import far_ends
 from .indexes import build_indexes
 from .lookups import conductors_by_role, item_of_port, require, strip_set, terminal_items
@@ -71,7 +73,7 @@ def _jumper_groups(model: Model, rows: list[Id[Item]]) -> dict[Id[Item], int]:
     members = set(rows)
     sets = UnionFind(rows)
     for conductor in conductors(model).values():
-        if conductor.kind is not ConductorKind.JUMPER:
+        if not is_bridge(model, conductor.id):
             continue
         ends = (item_of_port(model, conductor.a), item_of_port(model, conductor.b))
         if ends[0] in members and ends[1] in members:
@@ -109,7 +111,7 @@ def _far_ends(  # noqa: PLR0913 -- one end's lookups, its unit and the list's co
         port
         for function in idx.functions_by_item.get(terminal, ())
         for port in idx.ports_by_function.get(function, ())
-        if ports(model)[port].role is role
+        if port_role(model, port) is role
     }
     return far_ends(model, near, landed, unit=unit, context=context)
 

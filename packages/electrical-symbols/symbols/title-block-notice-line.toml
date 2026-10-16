@@ -1,0 +1,17 @@
+schema = 1
+name = "Title block notice line"
+kind = "element"
+status = "unverified"
+# our own table row: one line of the title block's notice, in mm. Stretched on y to the line
+# pitch, then `table(row, n, "y")` at the block's `notice` anchor. The thick edge is the notice
+# column's boundary segment the line stands on; the text starts 1 mm inside it.
+reference = { standard = "IEC 60617", number = "title-block-notice-line" }
+
+elements = [
+  { line = [[0, 0], [0, 1]], weight = "thick" },
+]
+
+stretch = [{ axis = "y", at = 0.25 }, { axis = "y", at = 0.75 }]
+
+[slots]
+line = { at = [1, 0.5], side = "E", box = [1, 1] }

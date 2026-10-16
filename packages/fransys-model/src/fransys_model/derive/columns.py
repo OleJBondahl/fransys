@@ -29,3 +29,17 @@ _CABLE_FIELDS = ("designation", "mpn", "description", "core_count", "gauge_mm2",
 CABLE_LIST_COLUMNS = (*_CABLE_FIELDS, "from_label", "to_label", "pairs")
 CONTENTS_COLUMNS = (*_CABLE_FIELDS, "ends")
 CORE_LIST_COLUMNS = ("cable", "core", "colour", "pair", "end_a", "end_b", "note")
+# The CONTENTS table's headings, in the order of `CONTENTS_COLUMNS` (pdf-0044). They differ from a
+# generic column label in three places: MPN, Cores, Gauge.
+CONTENTS_LABELS = ("Designation", "MPN", "Description", "Cores", "Gauge", "Length mm", "Ends")
+
+
+def column_label(field: str) -> str:
+    """`field` as a table header: underscores to spaces, first letter upper-cased."""
+    spaced = field.rstrip("_").replace("_", " ")
+    return spaced[0].upper() + spaced[1:]
+
+
+def csv_name(label: str) -> str:
+    """A heading as its CSV header: spaces to `_`, lower-cased (`Side A` is `side_a`)."""
+    return label.replace(" ", "_").lower()

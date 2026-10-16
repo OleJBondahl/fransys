@@ -273,10 +273,10 @@ def conductors_by_role(
     return by_role
 
 
-def printed_port_name(model: Model, port: Id[Port]) -> str:
+def printed_port_name(model: Model, port: Id[Port], *, bar_screw: bool = False) -> str:
     """The port name a list prints after its item's designation; `""` for a bar's port (PE-BAR B4).
 
     A bar's screw is no part of the wiring, so a bar end prints the bar alone (`-PE1`). Overview
-    and the release listing read this; `port_designation` reads it too.
+    and the release listing read this. `bar_screw=True`: the rule before 0.18.4 (screw printed).
     """
-    return "" if is_bar_port(model, port) else ports(model)[port].name
+    return "" if is_bar_port(model, port) and not bar_screw else ports(model)[port].name

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="25mm" height="10mm" viewBox="-1 -3 10 4">
+<title>Contact head (contact table)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<polygon points="0,-2 8,-2 8,0 0,0" stroke-width="0.1"/>
+</g>
+<g class="annotation">
+<circle class="grid" cx="-1" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="4" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="5" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="6" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="7" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="8" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="9" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="4" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="5" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="6" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="7" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="8" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="9" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="4" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="5" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="6" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="7" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="8" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="9" cy="-1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="4" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="5" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="6" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="7" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="8" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="9" cy="0" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="4" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="5" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="6" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="7" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="8" cy="1" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="9" cy="1" r="0.06" fill="#888" stroke="none"/>
+<rect class="body-box" x="0" y="-2" width="8" height="2" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
+<rect class="keepout-box" x="0" y="-2" width="8" height="2" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+<rect class="slot-box" x="0.25" y="-1.5" width="7.5" height="1" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
+<text class="slot-id" x="0.25" y="-1.6" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">heading</text>
+</g>
+</svg>

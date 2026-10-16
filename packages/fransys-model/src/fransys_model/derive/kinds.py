@@ -8,7 +8,7 @@ lazy from collections.abc import Callable
 
 from fransys_model.vocab.bars import bar_items
 from fransys_model.vocab.cables import is_cable
-from fransys_model.vocab.enums import FunctionKind, SignalType
+from fransys_model.vocab.enums import FunctionKind, ItemKind, SignalType
 from fransys_model.vocab.membership import is_harness, require
 from fransys_model.vocab.tables import functions, items
 from fransys_model.vocab.terminals import terminal_items
@@ -19,7 +19,6 @@ lazy from fransys_model.vocab.core import Item
 from .indexes import build_indexes
 from .lookups import strip_set
 from .plc_rack import is_plc_module
-from .rows import ItemKind
 from .rows_plc import SignalKind
 
 __all__ = ["item_kind", "signal_kind"]

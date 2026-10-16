@@ -1,21 +1,18 @@
 """KiCad-side ERC, reported as findings."""
 
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
-from fransys_model.derive import board_netlist, build_indexes, item_label, item_of_port
+from fransys_model.derive import board_netlist, board_pins, item_label, pin_text
 from fransys_model.kernel import Finding, Severity
-from fransys_model.vocab import items, ports
-
-from ._pins import pin_of
+from fransys_model.vocab import items
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from fransys_model.derive import BoardNetlist
+    from fransys_model.derive import BoardNetlist, NetlistPin, PinNet
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Item, Port
+    from fransys_model.vocab import Item
 
 PART_WITHOUT_FOOTPRINT: Final[str] = "PART_WITHOUT_FOOTPRINT"
 NET_SINGLE_PIN: Final[str] = "NET_SINGLE_PIN"
@@ -26,37 +23,17 @@ PAD_ON_MULTIPLE_NETS: Final[str] = "PAD_ON_MULTIPLE_NETS"
 UNCONNECTED_PIN: Final[str] = "UNCONNECTED_PIN"
 
 
-@dataclass(frozen=True, slots=True)
-class _Pin:
-    """One net pin as the netlist writes it."""
-
-    port: Id[Port]
-    item: Id[Item]
-    ref: str
-    pad: str
-
-    @property
-    def label(self) -> str:
-        return f"{self.ref}:{self.pad}"
-
-
-@dataclass(frozen=True, slots=True)
-class _Net:
-    name: str
-    pins: tuple[_Pin, ...]
-
-
 def _finding(code: str, severity: Severity, subjects: Iterable[Id[Any]], message: str) -> Finding:
     return Finding(code=code, severity=severity, subjects=tuple(subjects), message=message)
 
 
-def _single_pin(nets: tuple[_Net, ...]) -> list[Finding]:
+def _single_pin(nets: tuple[PinNet, ...]) -> list[Finding]:
     return [
         _finding(
             NET_SINGLE_PIN,
             Severity.INFO,
             (net.pins[0].port,),
-            f"net {net.name} has one pin, {net.pins[0].label}",
+            f"net {net.name} has one pin, {pin_text(net.pins[0])}",
         )
         for net in nets
         if len(net.pins) == 1
@@ -73,21 +50,22 @@ def _without_footprint(model: Model, rows: BoardNetlist) -> list[Finding]:
     return found
 
 
-def _without_component(rows: BoardNetlist, nets: tuple[_Net, ...]) -> list[Finding]:
+def _without_component(rows: BoardNetlist, nets: tuple[PinNet, ...]) -> list[Finding]:
     comps = {part.item for part in rows.parts}
     lonely = {pin.port: pin for net in nets for pin in net.pins if pin.item not in comps}
     found = []
     for pin in lonely.values():
         if pin.item == rows.board:
             message = (
-                f"pin {pin.label} is a pin of the board itself, which is not a KiCad footprint, "
+                f"pin {pin_text(pin)} is a pin of the board itself, "
+                "which is not a KiCad footprint, "
                 "so KiCad drops it on import; a board connector that needs a pad in KiCad is "
                 "modelled as a child item with a part that has a footprint, not as a function "
                 "of the bare board"
             )
         else:
             message = (
-                f"pin {pin.label} belongs to an item with no footprint, so it has no component "
+                f"pin {pin_text(pin)} belongs to an item with no footprint, so it has no component "
                 "in the netlist and KiCad drops it on import"
             )
         found.append(_finding(NODE_WITHOUT_COMPONENT, Severity.WARNING, (pin.port,), message))
@@ -110,8 +88,8 @@ def _reference_duplicate(rows: BoardNetlist) -> list[Finding]:
     ]
 
 
-def _net_name_duplicate(nets: tuple[_Net, ...]) -> list[Finding]:
-    by_name: defaultdict[str, list[_Net]] = defaultdict(list)
+def _net_name_duplicate(nets: tuple[PinNet, ...]) -> list[Finding]:
+    by_name: defaultdict[str, list[PinNet]] = defaultdict(list)
     for net in nets:
         by_name[net.name].append(net)
     return [
@@ -126,56 +104,29 @@ def _net_name_duplicate(nets: tuple[_Net, ...]) -> list[Finding]:
     ]
 
 
-def _pad_on_multiple_nets(nets: tuple[_Net, ...]) -> list[Finding]:
-    uses: defaultdict[tuple[str, str], list[tuple[int, Id[Port]]]] = defaultdict(list)
+def _pad_on_multiple_nets(nets: tuple[PinNet, ...]) -> list[Finding]:
+    uses: defaultdict[tuple[str, str], list[tuple[int, NetlistPin]]] = defaultdict(list)
     for index, net in enumerate(nets):
         for pin in net.pins:
-            uses[pin.ref, pin.pad].append((index, pin.port))
+            uses[pin.ref, pin.pad].append((index, pin))
     return [
         _finding(
             PAD_ON_MULTIPLE_NETS,
             Severity.ERROR,
-            (port for _, port in pad_uses),
-            f"pad {ref}:{pad} is in {len({index for index, _ in pad_uses})} nets, "
+            (pin.port for _, pin in pad_uses),
+            f"pad {pin_text(pad_uses[0][1])} is in {len({index for index, _ in pad_uses})} nets, "
             "and KiCad puts a pad in one",
         )
-        for (ref, pad), pad_uses in uses.items()
+        for pad_uses in uses.values()
         if len({index for index, _ in pad_uses}) > 1
     ]
 
 
-def _unconnected_pin(model: Model, rows: BoardNetlist, nets: tuple[_Net, ...]) -> list[Finding]:
-    connected = {(pin.ref, pin.pad) for net in nets for pin in net.pins}
-    idx = build_indexes(model)
-    all_ports = ports(model)
+def _unconnected_pin(unconnected: tuple[NetlistPin, ...]) -> list[Finding]:
     return [
-        _finding(
-            UNCONNECTED_PIN,
-            Severity.INFO,
-            (port,),
-            f"pin {part.designation}:{all_ports[port].name} is in no net",
-        )
-        for part in rows.parts
-        for function in idx.functions_by_item.get(part.item, ())
-        for port in idx.ports_by_function.get(function, ())
-        if (part.designation, all_ports[port].name) not in connected
+        _finding(UNCONNECTED_PIN, Severity.INFO, (pin.port,), f"pin {pin_text(pin)} is in no net")
+        for pin in unconnected
     ]
-
-
-def _net(
-    model: Model,
-    designations: dict[Id[Item], str],
-    name: str,
-    pins: Iterable[Id[Port]],
-    board: Id[Item],
-) -> _Net:
-    return _Net(
-        name=name,
-        pins=tuple(
-            _Pin(port, item_of_port(model, port), *pin_of(model, designations, port, board))
-            for port in pins
-        ),
-    )
 
 
 def check(model: Model, board: Id[Item]) -> tuple[Finding, ...]:
@@ -195,8 +146,8 @@ def check(model: Model, board: Id[Item]) -> tuple[Finding, ...]:
         SchemaError: as `board_netlist` (`board` unknown, or an item has no designation).
     """
     rows = board_netlist(model, board)
-    designations = {part.item: part.designation for part in rows.parts}
-    nets = tuple(_net(model, designations, net.name, net.pins, board) for net in rows.nets)
+    pins = board_pins(model, board)
+    nets = pins.nets
     found = [
         *_without_footprint(model, rows),
         *_single_pin(nets),
@@ -204,6 +155,6 @@ def check(model: Model, board: Id[Item]) -> tuple[Finding, ...]:
         *_reference_duplicate(rows),
         *_net_name_duplicate(nets),
         *_pad_on_multiple_nets(nets),
-        *_unconnected_pin(model, rows, nets),
+        *_unconnected_pin(pins.unconnected),
     ]
     return tuple(sorted(found, key=lambda f: (f.code, f.subjects, f.message)))

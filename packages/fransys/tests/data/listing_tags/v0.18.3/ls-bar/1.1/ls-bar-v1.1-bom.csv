@@ -1,0 +1,3 @@
+mpn,revision,manufacturer,description,count,designations
+DEMO-MOTOR-4KW,,Demo,"Three-phase motor, 4 kW",3,-M1; -M2; -M3
+DEMO-PEBAR-20,,Demo,"PE bar, 20 screws (invented)",1,-PE1

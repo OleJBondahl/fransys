@@ -18,6 +18,7 @@ from fransys_layout.engines.schematic.read.box_split import split_box
 from fransys_layout.engines.schematic.read.item_sides import function_groups, view_port_order
 from fransys_layout.engines.schematic.read.reading import symbol_choices
 from fransys_layout.engines.schematic.read.text_or_empty import text_or_empty
+from fransys_layout.engines.schematic.read.units import function_unit, is_nested
 from fransys_layout.geometry import box_port_name
 from fransys_layout.lint.chains import mate_map
 from fransys_layout.stages import FunctionSpec, PortRef, SymbolChoice
@@ -29,6 +30,7 @@ from fransys_model.derive import (
     function_is_reached,
     is_sole_unit_root,
     port_is_reached,
+    unit_subtree,
 )
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import item_tag_text
@@ -206,7 +208,9 @@ def without_idle_pins(
     A boundary pin no wire inside reaches (`port_is_reached`, itself or its mate) is kept for the
     parent's black box with `Home.ELSEWHERE`.
     """
-    mate_of = mate_map(pin_mates(model, pin_of))
+    mates = pin_mates(model, pin_of)
+    mate_of = mate_map(mates)
+    own_mate_of = mate_map(tuple(pair for pair in mates if _own_mate(model, pin_of, pair)))
     kept = {port for port in pin_of if port in used or mate_of.get(port) in used}
     live = {pin_of[port] for port in kept}
     edges = {f for unit in unit_ids(model) for f in boundary(model, unit)}
@@ -215,7 +219,7 @@ def without_idle_pins(
         port
         for port, f in pin_of.items()
         if f in edges
-        and not (port_is_reached(model, port) or _mate_reached(model, mate_of.get(port)))
+        and not (port_is_reached(model, port) or _mate_reached(model, own_mate_of.get(port)))
     }
     kept |= {port for port, f in pin_of.items() if f in edges and f not in live}
     return (
@@ -226,6 +230,23 @@ def without_idle_pins(
         ),
         {port: function for port, function in pin_of.items() if port in kept},
     )
+
+
+def _knows(model: Model, document: Id[Any] | None, other: Id[Any] | None) -> bool:
+    """Whether the document of unit `document` knows a thing in unit `other`.
+
+    A nested unit's document knows only its own subtree; a top-level unit's and the system's know
+    every unit, since their leaving wires draw as stubs.
+    """
+    return (
+        document is None or not is_nested(model, document) or other in unit_subtree(model, document)
+    )
+
+
+def _own_mate(model: Model, pin_of: Mapping[Id[Any], Id[Any]], pair: MatedFunctions) -> bool:
+    """Whether both pins' documents know the mate: a nested unit's knows none from outside it."""
+    one, other = function_unit(model, pin_of[pair.a]), function_unit(model, pin_of[pair.b])
+    return _knows(model, one, other) and _knows(model, other, one)
 
 
 def _mate_reached(model: Model, mate: Id[Any] | None) -> bool:

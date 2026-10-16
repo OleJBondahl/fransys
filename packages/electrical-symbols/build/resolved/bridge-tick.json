@@ -1,0 +1,74 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0.5
+    ],
+    [
+      2,
+      0.5
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          0.5
+        ],
+        [
+          2,
+          0.5
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "kind": "element",
+  "name": "Bridge mark tick",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "bridge-tick",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "above": {
+      "at": [
+        1,
+        0.5
+      ],
+      "box": [
+        2,
+        0.5
+      ],
+      "side": "N"
+    },
+    "below": {
+      "at": [
+        1,
+        0.5
+      ],
+      "box": [
+        2,
+        0.5
+      ],
+      "side": "S"
+    }
+  },
+  "status": "unverified"
+}

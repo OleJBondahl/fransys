@@ -43,6 +43,22 @@ class FixedTerminals:
         """Hold `terminals`; `x1[a:b]` and a series' tuple make these."""
         self._terminals, self._label = terminals, label
 
+    @property
+    def outer(self) -> tuple[Port, ...]:
+        """The field-side port of each terminal, in order: a series element pinned to that side.
+
+        Does not change the terminals taken: it is the slice's `.outer`, as one terminal has.
+        """
+        return tuple(t.outer for t in self._terminals)
+
+    @property
+    def inner(self) -> tuple[Port, ...]:
+        """The internal-side port of each terminal, in order: a series element pinned to that side.
+
+        Does not change the terminals taken: it is the slice's `.inner`, as one terminal has.
+        """
+        return tuple(t.inner for t in self._terminals)
+
     def _series_width(self) -> int | None:
         """One terminal takes the series' width; several set it."""
         return len(self._terminals) if len(self._terminals) > 1 else None
@@ -78,16 +94,21 @@ def _bounds_refusal(strip: TerminalStrip, first: int, end: int) -> str | None:
     return None
 
 
-def span(strip: TerminalStrip, picked: slice) -> FixedTerminals:
-    """`strip[a:b]`: terminals `a` up to but not including `b`; each one counts as taken."""
+def numbers(strip: TerminalStrip, picked: slice) -> range:
+    """The terminal numbers `picked` takes from `strip`; raises the slice's refusal."""
     why = _form_refusal(strip._tag, picked)
     if why is None:
         why = _bounds_refusal(strip, picked.start, picked.stop)
     if why is not None:
         raise AuthorError(why)
-    first, end = picked.start, picked.stop
-    terminals = tuple(strip[number] for number in range(first, end))
-    return FixedTerminals(terminals, f"{strip._tag}[{first}:{end}]")
+    return range(picked.start, picked.stop)
+
+
+def span(strip: TerminalStrip, picked: slice) -> FixedTerminals:
+    """`strip[a:b]`: terminals `a` up to but not including `b`; each one counts as taken."""
+    taken = numbers(strip, picked)
+    terminals = tuple(strip[number] for number in taken)
+    return FixedTerminals(terminals, f"{strip._tag}[{taken.start}:{taken.stop}]")
 
 
 def _where(terminal: Terminal) -> tuple[tuple[str, ...], int] | None:

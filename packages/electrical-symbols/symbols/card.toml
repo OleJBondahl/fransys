@@ -1,0 +1,37 @@
+schema = 1
+name = "Card (module with channels)"
+kind = "symbol"
+status = "unverified"
+# our own PLC card as data (the generic box of a card): four channels on the south side, the
+# width stretches on x (cut at x = 16) and the channel ports are set by offsets
+reference = { standard = "IEC 60617", number = "card" }
+
+ports = [
+  { id = "c1", at = [4, 8], dir = "S" },
+  { id = "c2", at = [12, 8], dir = "S" },
+  { id = "c3", at = [20, 8], dir = "S" },
+  { id = "c4", at = [28, 8], dir = "S" },
+]
+
+elements = [
+  { polyline = [[0, 0], [32, 0], [32, 6], [0, 6]], closed = true },
+  { line = [[4, 6], [4, 8]], port = "c1" },
+  { line = [[12, 6], [12, 8]], port = "c2" },
+  { line = [[20, 6], [20, 8]], port = "c3" },
+  { line = [[28, 6], [28, 8]], port = "c4" },
+]
+
+stretch = [{ axis = "x", at = 16 }]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated" },
+  { rule = "through-missing", reason = "a box has no through path: its connections end at the box and none continues across it" },
+  { rule = "port-isolated", reason = "a card ends its channel circuits at the module; no path of this symbol joins two channels" },
+]
+
+[slots]
+tag         = { at = [1, 1], side = "E", box = [6, 1] }
+"marking.c1" = { at = [4.25, 5], side = "E", box = [3, 1] }
+"marking.c2" = { at = [12.25, 5], side = "E", box = [3, 1] }
+"marking.c3" = { at = [20.25, 5], side = "E", box = [3, 1] }
+"marking.c4" = { at = [28.25, 5], side = "E", box = [3, 1] }

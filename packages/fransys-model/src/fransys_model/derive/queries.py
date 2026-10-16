@@ -13,6 +13,7 @@ from .connectors import connector_items, connector_rows, connector_rows_of, unit
 from .document_unit import document_unit
 from .harness import (
     cable_list_rows,
+    cable_list_rows_of,
     cable_title,
     contents_rows,
     harness_cables,
@@ -74,6 +75,7 @@ __all__ = [
     "bom_lines",
     "boundary",
     "cable_list_rows",
+    "cable_list_rows_of",
     "cable_rows",
     "cable_title",
     "conductors_on_item",

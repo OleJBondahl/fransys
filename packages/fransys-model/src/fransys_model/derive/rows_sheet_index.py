@@ -6,10 +6,9 @@ lazy from fransys_model.kernel import Model
 lazy from fransys_model.vocab import Document, PageKind
 
 from .page_destination import page_destination, sheet_text
+from .page_headings import DIAGRAM_TITLE
 from .page_titles import page_title_forms
 from .sheets import sheets
-
-DIAGRAM_TITLE = "Block diagram"
 
 
 @value

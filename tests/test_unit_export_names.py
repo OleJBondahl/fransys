@@ -17,7 +17,7 @@ import fransys_author
 import fransys_parts
 import pytest
 from _model_build_cover import system_document
-from fransys.pipeline import BuildResult, ExportNameClash, export_name
+from fransys.pipeline import BuildResult, ExportNameClash, _placed
 
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by name.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -29,7 +29,13 @@ from test_write_unit_worked_example import (
     _unit_id,
 )
 
-from fransys_model.derive import export_prefix, export_set_name
+from fransys_model.derive import (
+    export_name,
+    export_prefix,
+    export_set,
+    export_set_name,
+    stale_patterns,
+)
 from fransys_model.kernel import Draft, Origin, freeze, make_id, merge
 from fransys_model.vocab import (
     Document,
@@ -773,3 +779,52 @@ def test_export_names_refuses_a_bad_unit_like_write(worked):
     result, _cabinet, _board = worked
     with pytest.raises(ValueError, match="no-such-unit"):
         fr.export_names(result, unit="no-such-unit")
+
+
+# -- RO-8 (model-0283): `derive.export_set` is the one table behind write and the stale sweep
+
+
+def test_the_stale_patterns_are_the_exports_a_write_owns():
+    assert set(stale_patterns()) == {
+        "*.pdf",
+        "bom.csv",
+        "plc.csv",
+        "wire*.csv",
+        "designations.csv",
+        "cables.csv",
+        "cores.csv",
+        "terminals-*.csv",
+        "connectors-*.csv",
+        "wago-*.xml",
+        "terminals.csv",
+        "connectors.csv",
+        "wago.xml",
+        "overview.html",
+    }
+
+
+def test_export_set_rows_are_the_names_write_gives_and_the_overview_is_whole_model_only(worked):
+    result, cabinet, _board = worked
+    model = result.model
+    for unit in (None, cabinet):
+        rows = export_set(model, unit)
+        names = fr.export_names(result, unit=unit)
+        assert {(r.export_kind, r.subject): _placed(r.name) for r in rows} == names
+    system = export_set(model, None)
+    assert [r.export_kind for r in system[:7]] == [
+        "bom",
+        "plc",
+        "wires",
+        "designations",
+        "cables",
+        "cores",
+        "overview",
+    ]
+    assert system[0].name == "P-1001-v1.1-bom.csv"
+    assert "overview" not in {r.export_kind for r in export_set(model, cabinet)}
+
+
+def test_two_units_of_one_release_give_the_second_document_the_keep_one_hint():
+    model, _units, release_name = _two_units_of_one_release()
+    rows = [r for r in export_set(model, None) if r.export_kind == "pdf"]
+    assert [r.hint for r in rows] == [None, release_name]

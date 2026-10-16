@@ -42,8 +42,8 @@ from fransys_layout.engines.cable.values import (
     PlacedEnd,
     PlacedWire,
 )
+from fransys_layout.engines.overview.lanes.plan_channel import Plan, plan_channel, rise
 from fransys_layout.geometry import PORT_PITCH_G, WIRING_GRID, Box, LayoutError, Point, snap_up
-from fransys_layout.stages.channel import Plan, plan_channel, rise
 from fransys_layout.stages.space import Obstacle
 
 G = WIRING_GRID

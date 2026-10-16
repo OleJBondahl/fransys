@@ -6,28 +6,16 @@ from the top, then the next column to the right, then a new page; a block always
 A block taller than the page body never reaches the flow: `check` stops it first (pdf-0022).
 """
 
-from collections import defaultdict
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
-from ._frame import PADDING_MM, text_margin
+from ._geometry import PADDING_MM, text_margin
 from ._labels import RESTART
 from ._typst import literal
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from fransys_model.layout import SheetFormat
 
-NO_PART = "No part number"
 _HEADER_MM = 11  # extra top margin: the part line and a 4 mm gap below it (pdf-0021)
-
-
-class Block(NamedTuple):
-    """One cable block of a run: its `svgs` key, its run's part number and that run's part line."""
-
-    key: str
-    mpn: str
-    line: str
 
 
 def body_size_mm(sheet: SheetFormat) -> tuple[int, int]:
@@ -36,18 +24,6 @@ def body_size_mm(sheet: SheetFormat) -> tuple[int, int]:
         sheet.content_width_mm - 2 * PADDING_MM,
         sheet.content_height_mm - 2 * PADDING_MM - _HEADER_MM,
     )
-
-
-def part_groups(blocks: Iterable[Block]) -> list[tuple[str, list[Block]]]:
-    """`blocks` grouped by part number, parts sorted by it, blocks in their given order.
-
-    Blocks with no part number form the last group, headed `NO_PART`.
-    """
-    groups: defaultdict[str, list[Block]] = defaultdict(list)
-    for block in blocks:
-        groups[block.mpn].append(block)
-    ordered = [*sorted(key for key in groups if key), *([""] if "" in groups else [])]
-    return [(key or NO_PART, groups[key]) for key in ordered]
 
 
 _FLOW = """

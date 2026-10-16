@@ -1,0 +1,30 @@
+schema = 1
+name = "Cable column (core)"
+kind = "element"
+status = "unverified"
+# our own table row: one core of a cable box; wires enter on top and leave at the bottom.
+# The core text runs turned along the column: its slot box is tall and narrow, and the
+# builder turns the text (a slot cannot carry a rotation).
+reference = { standard = "IEC 60617", number = "cable-column" }
+
+ports = [
+  { id = "top", at = [0, -3], dir = "N" },
+  { id = "bottom", at = [0, 3], dir = "S" },
+]
+
+paths = [
+  { from = "top", to = "bottom", kind = "conductor", through = true },
+]
+
+elements = [
+  { line = [[0, -3], [0, -2]], port = "top" },
+  { polyline = [[-2, -2], [2, -2], [2, 2], [-2, 2]], closed = true },
+  { line = [[0, 2], [0, 3]], port = "bottom" },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the turned core text box is taller than the column is wide; a column is drawn unrotated and its text stays inside the outline" },
+]
+
+[slots]
+core = { at = [-0.5, -1.75], side = "S", box = [1, 3.5] }

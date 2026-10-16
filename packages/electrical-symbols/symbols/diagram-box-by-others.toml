@@ -1,0 +1,38 @@
+schema = 1
+name = "Diagram box, by others (block diagram)"
+kind = "symbol"
+status = "unverified"
+# our own block-diagram box for a part supplied by others, drawn dashed: wires leave on the west and east sides; its height stretches on y
+# (the pin edge, ports set by offsets) and its width on x (the text width)
+reference = { standard = "IEC 60617", number = "diagram-box-by-others" }
+
+ports = [
+  { id = "w1", at = [-4, 2], dir = "W" },
+  { id = "w2", at = [-4, 4], dir = "W" },
+  { id = "e1", at = [12, 2], dir = "E" },
+  { id = "e2", at = [12, 4], dir = "E" },
+]
+
+elements = [
+  { line = [[-4, 2], [0, 2]], port = "w1" },
+  { line = [[-4, 4], [0, 4]], port = "w2" },
+  { polyline = [[0, 0], [8, 0], [8, 6], [0, 6]], closed = true, style = "dashed" },
+  { line = [[8, 2], [12, 2]], port = "e1" },
+  { line = [[8, 4], [12, 4]], port = "e2" },
+]
+
+stretch = [{ axis = "x", at = 4 }, { axis = "y", at = 3 }]
+
+lint_allow = [
+  { rule = "slot-overlap-slot", reason = "two marking boxes of one side are wider than their 2 M spacing allows once rotated; the box is drawn unrotated" },
+  { rule = "slot-overlap-body", reason = "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated" },
+  { rule = "through-missing", reason = "a box has no through path: its connections end at the box and none continues across it" },
+  { rule = "port-isolated", reason = "a diagram box ends its connections at the block; no path of this symbol joins two of them" },
+]
+
+[slots]
+tag            = { at = [1, 1], side = "E", box = [6, 1] }
+"marking.w1"   = { at = [-0.25, 1.5], side = "W", box = [3.5, 1] }
+"marking.w2"   = { at = [-0.25, 3.5], side = "W", box = [3.5, 1] }
+"marking.e1"   = { at = [8.25, 1.5], side = "E", box = [3.5, 1] }
+"marking.e2"   = { at = [8.25, 3.5], side = "E", box = [3.5, 1] }

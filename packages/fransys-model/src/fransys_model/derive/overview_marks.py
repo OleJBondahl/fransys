@@ -1,144 +1,91 @@
-"""Which drawn box or line each row of a `ListingDiff` marks (OVERVIEW O19, model-0197).
+"""Which drawn box or line of a view each row of a `ListingDiff` marks (overview-0011, O19).
 
-A row names its subject as the listing prints it. The listing's own text functions are run over
-the model, and a row marks what prints the same text; no text is parsed.
+The diff names the system's own items, units, boundary functions and conductors. The roll-up
+of a subject onto a view is `view_rollup`'s. A removed item marks, as changed, the first of its
+earlier ancestors drawn on the view (overview-0005).
 """
 
-from dataclasses import dataclass
 from typing import Any
+lazy from collections.abc import Sequence
 
-from fransys_model.vocab.membership import unit_own_roots
-from fransys_model.vocab.tables import conductors, functions, items, units
 lazy from fransys_model.kernel import Id, Model
-lazy from fransys_model.vocab.core import Unit
 
-from .baseline_designation import _cross_function_text, _cross_port_text, unit_designation
-from .mate_rows import mates
-from .overview_levels import level_box, overview_level
-from .reports import _conductor_unit
-from .rows import DiffMark, LineRef, OverviewLevel, OverviewLinkKind
+from .baseline_subjects import change_subjects
+from .rows_marks import DiffMark, DiffRest, DiffViewMarks
+from .view_rollup import subject_marks, view_lookup
 lazy from .rows_baseline import Change, ListingDiff
+lazy from .rows_overview_view import ViewRows
 
-__all__ = ["diff_marks"]
+__all__ = ["diff_marks", "diff_rest"]
 
-
-def _boxes_of(
-    model: Model, unit: Id[Unit] | None, texts: dict[str, list[Id[Any]]], text: str
-) -> tuple[Id[Any], ...]:
-    """The level boxes holding the items printed as `text`."""
-    found = {level_box(model, item, unit) for item in texts.get(text, ())}
-    return tuple(sorted((box for box in found if box is not None), key=str))
+_REMOVED = "removed"
+_ADDED = "added"
+_CHANGED = "changed"
 
 
-def _item_texts(model: Model, unit: Id[Unit] | None) -> dict[str, list[Id[Any]]]:
-    """Each item of the model by the listing designation it prints in `unit`'s listing."""
-    found: dict[str, list[Id[Any]]] = {}
-    for item in items(model):
-        found.setdefault(unit_designation(model, unit, item), []).append(item)
+def _is_gone(change: Change) -> bool:
+    return change.change == _REMOVED and change.field == ""
+
+
+def _kind(change: Change) -> str:
+    """A row about one field of a thing that stays, or a removed item's ancestor, is a change."""
+    return change.change if change.field == "" and change.change != _REMOVED else _CHANGED
+
+
+def _candidates(model: Model, diff: ListingDiff) -> list[tuple[int, list[Id[Any]]]]:
+    """Per row, the subjects it can mark: its own; a removed item's earlier ancestors."""
+    subjects = change_subjects(model, None)
+    changes = diff.changes
+    found: list[tuple[int, list[Id[Any]]]] = [
+        (at, [s])
+        for at, c in enumerate(changes)
+        if not _is_gone(c) and (s := subjects.get((c.section, c.subject))) is not None
+    ]
+    for ancestry in sorted(diff.ancestry, key=lambda a: a.change):
+        if _is_gone(changes[ancestry.change]):
+            ancestors = [s for t in ancestry.ancestors if (s := subjects.get(("items", t)))]
+            found.append((ancestry.change, ancestors))
     return found
 
 
-def _unit_texts(model: Model, unit: Id[Unit] | None) -> dict[str, list[Id[Any]]]:
-    """Each nested unit by the instance text the `units` section prints (its smallest root)."""
-    found: dict[str, list[Id[Any]]] = {}
-    for record in units(model).values():
-        if record.parent == unit and (roots := unit_own_roots(model, record.id)):
-            text = min(unit_designation(model, unit, root) for root in roots)
-            found.setdefault(text, []).append(record.id)
-    return found
+def _put(marks: dict[int, str], at: int, kind: str) -> None:
+    if marks.get(at) != _ADDED:
+        marks[at] = kind
 
 
-def _conductor_lines(
-    model: Model, unit: Id[Unit] | None, level: OverviewLevel
-) -> dict[tuple[str, ...], list[LineRef]]:
-    """The level lines carrying each conductor, by its sorted end texts."""
-    found: dict[tuple[str, ...], list[LineRef]] = {}
-    for conductor in conductors(model).values():
-        if _conductor_unit(model, conductor) != unit:
-            continue
-        ends = tuple(
-            sorted(
-                (
-                    _cross_port_text(model, unit, conductor.a),
-                    _cross_port_text(model, unit, conductor.b),
-                )
-            )
-        )
-        found.setdefault(ends, []).extend(
-            line.ref for line in level.lines if conductor.id in line.conductors
-        )
-    return found
+def diff_marks(model: Model, rows: ViewRows, diff: ListingDiff) -> DiffViewMarks:
+    """The boxes and lines of the view `rows` that `diff` marks, and which rows marked.
 
-
-def _mate_lines(
-    model: Model, unit: Id[Unit] | None, level: OverviewLevel
-) -> dict[tuple[str, ...], list[LineRef]]:
-    """The level mate lines for each mate, by its sorted end texts."""
-    found: dict[tuple[str, ...], list[LineRef]] = {}
-    mate_lines = [line.ref for line in level.lines if line.ref.kind is OverviewLinkKind.MATE]
-    for row in mates(model):
-        ends = tuple(
-            sorted(
-                (_cross_function_text(model, unit, row.a), _cross_function_text(model, unit, row.b))
-            )
-        )
-        joined = {level_box(model, functions(model)[f].item, unit) for f in (row.a, row.b)}
-        found.setdefault(ends, []).extend(ref for ref in mate_lines if {ref.a, ref.b} == joined)
-    return found
-
-
-@dataclass(frozen=True)
-class _Texts:
-    """What the listing's texts name on one level."""
-
-    items: dict[str, list[Id[Any]]]
-    units: dict[str, list[Id[Any]]]
-    wires: dict[tuple[str, ...], list[LineRef]]
-    mates: dict[tuple[str, ...], list[LineRef]]
-
-
-def _marked(
-    model: Model, unit: Id[Unit] | None, texts: _Texts, change: Change
-) -> tuple[tuple[Id[Any], ...], list[LineRef]]:
-    """The boxes and lines one change row marks."""
-    parts = change.parts
-    match change.section:
-        case "items":
-            return _boxes_of(model, unit, texts.items, parts[0]), []
-        case "boundary":
-            return _boxes_of(model, unit, texts.items, parts[0].rsplit(":", 1)[0]), []
-        case "units":
-            return tuple(texts.units.get(parts[0], ())), []
-        case "conductors":
-            return (), texts.wires.get((parts[0], parts[1]), [])
-        case "mates":
-            return (), texts.mates.get((parts[0], parts[1]), [])
-    return (), []
-
-
-def diff_marks(model: Model, unit: Id[Unit] | None, diff: ListingDiff) -> tuple[DiffMark, ...]:
-    """One `DiffMark` per row of `diff`, on `unit`'s level: the boxes and lines it marks.
-
-    `unit` is the listed unit, `None` for the system. An `items` or `boundary` row marks the box
-    holding its item, a `units` row the nested unit's box, a `conductors` row the lines carrying
-    that conductor and a `mates` row the mate line between its two boxes. A row of a removed
-    thing, or of `nets`, marks nothing: the new model has nothing to point at.
+    A subject not drawn counts on its nearest drawn ancestor box. A line wins over a box for one
+    row; an added mark is never turned into a changed one. Boxes come first, by index.
     """
-    level = overview_level(model, unit)
-    texts = _Texts(
-        items=_item_texts(model, unit),
-        units=_unit_texts(model, unit),
-        wires=_conductor_lines(model, unit, level),
-        mates=_mate_lines(model, unit, level),
+    lookup = view_lookup(model, rows)
+    boxes: dict[int, str] = {}
+    lines: dict[int, str] = {}
+    shown: set[int] = set()
+    for at, candidates in _candidates(model, diff):
+        for subject in candidates:
+            on_boxes, on_lines = subject_marks(model, rows, lookup, subject)
+            for one in on_lines or on_boxes:
+                _put(lines if on_lines else boxes, one, _kind(diff.changes[at]))
+                shown.add(at)
+            if on_lines or on_boxes:
+                break
+    marks = [DiffMark(on_line=False, at=a, status=k) for a, k in sorted(boxes.items())]
+    marks += [DiffMark(on_line=True, at=a, status=k) for a, k in sorted(lines.items())]
+    return DiffViewMarks(marks=tuple(marks), shown=tuple(sorted(shown)))
+
+
+def diff_rest(diff: ListingDiff, views: Sequence[DiffViewMarks]) -> tuple[DiffRest, ...]:
+    """The rows no view marked, once per kind and subject: removed, then added, then changed."""
+    marked = {at for view in views for at in view.shown}
+    rows = [
+        (_REMOVED if _is_gone(c) else _kind(c), c.subject)
+        for at, c in enumerate(diff.changes)
+        if at not in marked
+    ]
+    order = {_REMOVED: 0, _ADDED: 1, _CHANGED: 2}
+    return tuple(
+        DiffRest(status=k, text=t)
+        for k, t in sorted(dict.fromkeys(rows), key=lambda r: order[r[0]])
     )
-    marks = []
-    for index, change in enumerate(diff.changes):
-        boxes, refs = (
-            ((), []) if change.change == "removed" else _marked(model, unit, texts, change)
-        )
-        marks.append(
-            DiffMark(
-                change=index, status=change.change, boxes=boxes, lines=tuple(dict.fromkeys(refs))
-            )
-        )
-    return tuple(marks)

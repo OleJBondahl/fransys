@@ -42,7 +42,6 @@ if TYPE_CHECKING:
 _NS = (10, 1, 11, 2)
 _NATURAL = ["1", "2", "10", "11"]
 _TAG = re.compile(r"[-+=]([A-Z]+)(\d+)(?![0-9])")
-_PAGE_TITLE = re.compile(r"Page title\r?\n(?!Scope)([^\r\n]+)")
 _ITEM_ID = re.compile(r"item:[0-9a-f]{32}")
 _CSVS = (
     "bom",
@@ -53,11 +52,12 @@ _CSVS = (
     *(f"connectors-U{n}" for n in _NS),
     *(f"terminals-C1-X{n}" for n in _NS),
 )
-_SHARED = ("Designation list", "Cable list", "BOM")
+_SHARED = ("Designation list", "BOM")
 _NOT_LISTS = ("Cover", "Contents", "schematic")
 _PAGES = {
+    # C1 is a location document: it draws no cable, so it has no cable list page (pdf-0042)
     "C1.pdf": ("Cover", "schematic", "Terminal list", "Wire label list", *_SHARED),
-    "v1.1.pdf": ("Cover", "Contents", "Wire label list", *_SHARED),
+    "v1.1.pdf": ("Cover", "Contents", "Wire label list", "Cable list", *_SHARED),
 }
 
 
@@ -244,10 +244,16 @@ _LIST_TITLES = {t for titles in _PAGES.values() for t in titles} - {"schematic"}
 
 
 def _title(page: str) -> str:
-    """The page's list title; any other title (a schematic page's own) groups as "schematic"."""
-    found = _PAGE_TITLE.search(page)
-    title = found.group(1).strip() if found else ""
-    return title if title in _LIST_TITLES else "schematic"
+    """The page's list title; any other title (a schematic page's own) groups as "schematic".
+
+    The title block is a drawn SVG: its values come before its label run, and pdfium may break a
+    busy page into one line per character, so the head is read with no whitespace.
+    """
+    head = re.sub(r"\s+", "", page).partition("CustomerAuthor")[0]
+    return next(
+        (t for t in sorted(_LIST_TITLES, key=len, reverse=True) if t.replace(" ", "") in head),
+        "schematic",
+    )
 
 
 def _by_title(pages: tuple[_Page, ...]) -> dict[str, list[_Page]]:

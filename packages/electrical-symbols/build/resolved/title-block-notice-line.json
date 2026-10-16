@@ -1,0 +1,73 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "kind": "element",
+  "name": "Title block notice line",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "title-block-notice-line",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "line": {
+      "at": [
+        1,
+        0.5
+      ],
+      "box": [
+        1,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 0.25,
+      "axis": "y"
+    },
+    {
+      "at": 0.75,
+      "axis": "y"
+    }
+  ]
+}

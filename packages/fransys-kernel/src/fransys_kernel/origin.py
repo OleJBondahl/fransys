@@ -57,6 +57,32 @@ class OriginSource(Protocol):
         ...
 
 
+@value
+class DescribedFinding:
+    """A finding's printed text in two parts (model-0273): its head, and one text per subject.
+
+    The head is `CODE (severity): message`. A subject text is the origin, or the given name,
+    without the `  subject: ` label that `describe` puts in front of it.
+    """
+
+    head: str
+    subjects: tuple[str, ...]
+
+
+def describe_parts[K](
+    finding: Finding, source: OriginSource, names: Mapping[Id[K], str] | None = None
+) -> DescribedFinding:
+    """`finding` with every subject shown as its origin, kept as head and subjects.
+
+    `names` gives a subject its printed name, `name  (file:line)`, and drops the key.
+    """
+    given = names or {}
+    return DescribedFinding(
+        head=f"{finding.code} ({finding.severity.value}): {finding.message}",
+        subjects=tuple(_render(s, source, given.get(s)) for s in finding.subjects),
+    )
+
+
 def describe(
     problem: ModelError | Finding, source: OriginSource, names: dict[Id[Any], str] | None = None
 ) -> str:
@@ -76,8 +102,8 @@ def _lines(
     problem: ModelError | Finding, source: OriginSource, names: Mapping[Id[Any], str]
 ) -> tuple[str, ...]:
     if isinstance(problem, Finding):
-        subjects = (f"  subject: {_render(s, source, names.get(s))}" for s in problem.subjects)
-        return (f"{problem.code} ({problem.severity.value}): {problem.message}", *subjects)
+        parts = describe_parts(problem, source, names)
+        return (parts.head, *(f"  subject: {text}" for text in parts.subjects))
     lines = str(problem).splitlines() or [""]
     lines += _extra_lines(problem, source) or _subject_lines(problem, source)
     return tuple(lines)

@@ -1,4 +1,4 @@
-"""Baseline listing acceptance (`docs/specs/2026-09-23-baseline.md`, L2, step 1).
+"""Baseline listing acceptance (`docs/archive/specs/2026-09-23-baseline.md`, L2, step 1).
 
 Root test: built through the public API (`import fransys as fr`), which
 `packages/fransys-model/tests` cannot reach without a layering exception (the same reason
@@ -83,7 +83,7 @@ def two_cabinet_system():
 
 
 def test_board_own_listing_matches_the_worked_example_text():
-    """The board's own listing matches `docs/specs/2026-09-23-baseline.md`'s worked example,
+    """The board's own listing matches `docs/archive/specs/2026-09-23-baseline.md`'s worked example,
     corrected as the spec's own note allows: `items` entries carry `external` (the
     external-items amendment folded into L2 after the example was written). `boundary`'s
     key is `function` -- the ruling table's prose describes the field's content, not its

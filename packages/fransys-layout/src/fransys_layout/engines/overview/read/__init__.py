@@ -5,9 +5,9 @@ The only place, with `write/`, where the overview engine meets the model vocabul
 
 from typing import Any
 
-from fransys_layout.engines.diagram.read.readings import readings
 from fransys_layout.engines.overview.read.facts import view_facts
 from fransys_layout.engines.overview.read.lanes import lane_plan
+from fransys_layout.engines.overview.read.readings import readings
 from fransys_layout.engines.overview.read.values import BoxSpec, LanePlan, LineSpec, box_ident
 from fransys_model.derive import overview_view_rows
 from fransys_model.layout import BoxKey, OverviewMode

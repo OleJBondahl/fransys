@@ -17,7 +17,6 @@ from fransys_model.vocab.tables import (
     nets,
     parts,
     ports,
-    projects,
 )
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.kernel import Id, Model
@@ -30,8 +29,11 @@ from .baseline_designation import (
     function_text,
     unit_designation,
 )
+from .baseline_rules import CURRENT, ListingRules
+from .facts.net_facts import net_class_name, net_potential
 from .lone_cable import lone_cable
 from .mate_rows import mates
+from .release_identity import release_identity
 from .reports import _conductor_unit, _lowest_common_unit
 from .rows_baseline import (
     BaselineBoundary,
@@ -68,18 +70,22 @@ def _repr_key(value: object) -> tuple[bool, str]:
 # -- listing(model, unit) -------------------------------------------------
 
 
-def _listing_designation(model: Model, unit: Id[Unit] | None, item: Id[Item]) -> str:
+def _listing_designation(
+    model: Model, unit: Id[Unit] | None, item: Id[Item], rules: ListingRules
+) -> str:
     """The `designation` the `items` section prints for `item`: `""` for a unit's sole root."""
-    return "" if is_sole_unit_root(model, item) else unit_designation(model, unit, item)
+    return "" if is_sole_unit_root(model, item) else unit_designation(model, unit, item, rules)
 
 
-def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
+def _item_rows(
+    model: Model, unit: Id[Unit] | None, rules: ListingRules
+) -> tuple[BaselineItem, ...]:
     parts_table = parts(model)
     rows = []
     for item in items(model).values():
         if item.unit != unit or lone_cable(model, item.id) is not None:  # model-0150
             continue
-        designation = _listing_designation(model, unit, item.id)
+        designation = _listing_designation(model, unit, item.id, rules)
         part = None if item.part is None else parts_table[item.part]
         rows.append(
             BaselineItem(
@@ -91,7 +97,7 @@ def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
                 position=item.position,
                 parent=None
                 if item.parent is None
-                else _listing_designation(model, unit, item.parent),
+                else _listing_designation(model, unit, item.parent, rules),
             )
         )
     rows.sort(
@@ -107,7 +113,9 @@ def _item_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineItem, ...]:
     return tuple(rows)
 
 
-def _nested_unit_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNestedUnit, ...]:
+def _nested_unit_rows(
+    model: Model, unit: Id[Unit] | None, rules: ListingRules
+) -> tuple[BaselineNestedUnit, ...]:
     groups: dict[tuple[str, int, int], list[Id[Unit]]] = {}
     for record in units_table(model).values():
         if record.parent != unit:
@@ -119,7 +127,10 @@ def _nested_unit_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNest
         release = unit_release(model, nested_ids[0])
         instances = tuple(
             sorted(
-                min(unit_designation(model, unit, root) for root in unit_own_roots(model, nested))
+                min(
+                    unit_designation(model, unit, root, rules)
+                    for root in unit_own_roots(model, nested)
+                )
                 for nested in nested_ids
             )
         )
@@ -136,13 +147,15 @@ def _nested_unit_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNest
     return tuple(rows)
 
 
-def _boundary_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineBoundary, ...]:
+def _boundary_rows(
+    model: Model, unit: Id[Unit] | None, rules: ListingRules
+) -> tuple[BaselineBoundary, ...]:
     rows = []
     for record in boundaries_table(model).values():
         if record.unit != unit:
             continue
         fn = functions(model)[record.function]
-        designation = function_text(model, unit, fn)
+        designation = function_text(model, unit, fn, rules)
         port_names = tuple(
             sorted(p.name for p in ports(model).values() if p.function == record.function)
         )
@@ -158,17 +171,24 @@ def _boundary_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineBoundar
     return tuple(rows)
 
 
-def _conductor_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineConductor, ...]:
+def _conductor_rows(
+    model: Model, unit: Id[Unit] | None, rules: ListingRules
+) -> tuple[BaselineConductor, ...]:
     wire_facets = {f.subject: f for f in facets_of(model, WireFacet).values()}
     rows = []
     for conductor in conductors(model).values():
         if _conductor_unit(model, conductor) != unit:
             continue
         a_text, b_text = sorted(
-            (_cross_port_text(model, unit, conductor.a), _cross_port_text(model, unit, conductor.b))
+            (
+                _cross_port_text(model, unit, conductor.a, rules),
+                _cross_port_text(model, unit, conductor.b, rules),
+            )
         )
         carrier = (
-            None if conductor.carrier is None else unit_designation(model, unit, conductor.carrier)
+            None
+            if conductor.carrier is None
+            else unit_designation(model, unit, conductor.carrier, rules)
         )
         facet = wire_facets.get(conductor.id)
         rows.append(
@@ -198,7 +218,9 @@ def _conductor_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineConduc
     return tuple(rows)
 
 
-def _mate_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineMate, ...]:
+def _mate_rows(
+    model: Model, unit: Id[Unit] | None, rules: ListingRules
+) -> tuple[BaselineMate, ...]:
     all_items = items(model)
     rows = []
     for record in mates(model):
@@ -208,8 +230,8 @@ def _mate_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineMate, ...]:
             continue
         a_text, b_text = sorted(
             (
-                _cross_function_text(model, unit, record.a),
-                _cross_function_text(model, unit, record.b),
+                _cross_function_text(model, unit, record.a, rules),
+                _cross_function_text(model, unit, record.b, rules),
             )
         )
         rows.append(BaselineMate(a=a_text, b=b_text))
@@ -235,7 +257,7 @@ def _net_unit(model: Model, port_ids: tuple[Id[Port], ...]) -> Id[Unit] | None:
     return owner
 
 
-def _net_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNet, ...]:
+def _net_rows(model: Model, unit: Id[Unit] | None, rules: ListingRules) -> tuple[BaselineNet, ...]:
     direct_nested = frozenset(u.id for u in units_table(model).values() if u.parent == unit)
     rows = []
     for record in nets(model).values():
@@ -245,14 +267,14 @@ def _net_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNet, ...]:
             sorted(
                 text
                 for p in record.ports
-                if (text := _net_port_text(model, unit, direct_nested, p)) is not None
+                if (text := _net_port_text(model, unit, direct_nested, p, rules)) is not None
             )
         )
         rows.append(
             BaselineNet(
                 name=record.name,
-                net_class=record.net_class.value,
-                potential=record.potential,
+                net_class=net_class_name(model, record.id),
+                potential=net_potential(model, record.id),
                 ports=port_texts,
             )
         )
@@ -262,42 +284,37 @@ def _net_rows(model: Model, unit: Id[Unit] | None) -> tuple[BaselineNet, ...]:
 
 def _listing_unit(model: Model, unit: Id[Unit] | None) -> BaselineUnit:
     """The `unit` key: a real unit's own release, or, for `unit=None`, the `Project`'s."""
-    if unit is None:
-        project = next(iter(projects(model).values()))
-        return BaselineUnit(
-            name=project.number, version=project.version, revision=project.revision, interface=""
-        )
-    release = unit_release(model, unit)
+    identity = release_identity(model, unit)
     return BaselineUnit(
-        name=release.name,
-        version=release.version,
-        revision=release.revision,
-        interface=release.interface,
+        name=identity.name,
+        version=identity.version,
+        revision=identity.revision,
+        interface=identity.interface,
     )
 
 
-def listing(model: Model, unit: Id[Unit] | None) -> Listing:
+def listing(model: Model, unit: Id[Unit] | None, rules: ListingRules = CURRENT) -> Listing:
     """`unit`'s baseline listing: every section, sorted, designation-relative.
 
     `unit=None` is the system listing: `unit` comes from the model's one `Project`, `items`
     are the items of no unit, `units` the top-level units, and `boundary` is always empty (no
-    `Boundary` ever names `unit=None`). Every other section reuses the same helper as a real
-    unit's: `unit_designation`'s common location is `None` for `unit=None` by construction, so
-    every rendered text is the ordinary, full model-relative one, with no truncation.
+    `Boundary` ever names `unit=None`). Every other section reuses a real unit's helper, and
+    `unit_designation`'s common location is `None` for it, so no text is truncated.
 
     Args:
         model: The frozen model to read.
         unit: The unit to list, or `None` for the system listing.
+        rules: The listing rules to cut under (`ListingRules`); today's by default.
 
     Returns:
         The unit's `Listing`.
     """
     return Listing(
         unit=_listing_unit(model, unit),
-        items=_item_rows(model, unit),
-        units=_nested_unit_rows(model, unit),
-        boundary=_boundary_rows(model, unit),
-        conductors=_conductor_rows(model, unit),
-        mates=_mate_rows(model, unit),
-        nets=_net_rows(model, unit),
+        items=_item_rows(model, unit, rules),
+        units=_nested_unit_rows(model, unit, rules),
+        boundary=_boundary_rows(model, unit, rules),
+        conductors=_conductor_rows(model, unit, rules),
+        mates=_mate_rows(model, unit, rules),
+        nets=_net_rows(model, unit, rules),
     )

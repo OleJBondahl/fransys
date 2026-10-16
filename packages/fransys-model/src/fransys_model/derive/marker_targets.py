@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
 
 from fransys_model.derive.kinds import item_kind
-from fransys_model.derive.rows import ItemKind
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.tables import functions, ports
 
 if TYPE_CHECKING:

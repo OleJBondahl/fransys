@@ -6,14 +6,27 @@ never cross each other, and routes of one net that share a trunk count once (bas
 
 from collections import defaultdict
 from itertools import pairwise
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from .outputs import SceneWire
     from .values import XY
 
 
 MIN_POINTS = 2  # a polyline needs two vertices to be a wire
+
+
+class Polyline(Protocol):
+    """What the counters read of a wire; `Wire` and `SceneWire` both meet it."""
+
+    @property
+    def net(self) -> str: ...
+    @property
+    def page(self) -> int: ...
+    @property
+    def points(self) -> tuple[XY, ...]: ...
 
 
 def _heading(a: XY, b: XY) -> tuple[int, int]:
@@ -33,7 +46,7 @@ def shape(points: tuple[XY, ...]) -> tuple[int, int, int, int]:
     return bends, max(0, bends - need), length, abs(x1 - x0) + abs(y1 - y0)
 
 
-def crossings_on_page(wires: tuple[SceneWire, ...]) -> int:
+def crossings_on_page(wires: Sequence[Polyline]) -> int:
     """Distinct (point, horizontal net, vertical net) where a run passes straight across another."""
     horizontal, vertical = [], []
     for wire in wires:

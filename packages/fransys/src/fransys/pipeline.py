@@ -4,9 +4,9 @@ import dataclasses
 import glob
 import shutil
 import tempfile
-from functools import partial
+from functools import cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 lazy from collections.abc import Callable
 
 import fransys_pdf
@@ -42,23 +42,22 @@ from fransys_model.derive import (
     allocate_plc,
     baseline,
     check_side_hints,
-    document_export_name,
-    document_unit,
-    export_name,
-    export_ref,
+    document_sheets_of,
+    export_set,
     export_set_name,
+    gone_or_moved,
     list_context,
     number,
     numbering_pins,
     reference_fragment,
+    release_identity,
     resolve_wire_rows,
-    terminal_items,
-    unit_boards,
+    seed_pins,
+    stale_patterns,
     unit_release,
-    unit_strips,
     units,
 )
-from fransys_model.derive.numbering_pins import NumberingItem, NumberingPins, name_findings
+from fransys_model.derive.numbering_pins import NumberingPins, name_findings
 from fransys_model.derive.order import finding_order_key, findings_in_order
 from fransys_model.kernel import (
     Finding,
@@ -67,29 +66,26 @@ from fransys_model.kernel import (
     digest_cached,
     evolve,
     freeze,
-    make_id,
     merge,
-    require_origin,
 )
 from fransys_model.kernel import dumps as model_dumps
 from fransys_model.vocab import (
     ALL_VALIDATORS,
-    AssignedDesignationFacet,
-    ReservedDesignationFacet,
     documents,
-    items,
     projects,
     unit_name_unresolved,
     unit_releases,
     units_named,
 )
-lazy from fransys_model.kernel import AuthoringKey, Draft, Model, Origin
+lazy from fransys_model.kernel import Draft, Model, Origin
+lazy from fransys_model.vocab import Unit as ModelUnit
 
-from . import _args, _designation_pins, _revision_pins, _subjects
+from . import _args, _revision_pins, _subjects
+from ._baseline_findings import baseline_findings
 from ._finding_text import described, fix_lines, headed
 from ._layout_need import lay_out_if_needed, needs_schematic_layout
+from ._rebaseline import plan_rebaseline, write_plan
 from ._release_checks import (
-    _baseline_differs_finding,
     _changes_since,
     _l4_findings,
     _pin_source,
@@ -100,14 +96,15 @@ from ._release_checks import (
 )
 from ._release_files import release_file_findings
 from ._release_manifest import _manifest
-from ._release_reader import stored_listing
+from ._release_reader import BASELINE_FILES, stored_listing
+from ._seed_facets import assigned_facets, reserved_facets, tag_facets
 from ._times import TIMES_FILE, BuildTimes, Timer
 from .documents import engine_subject
 
 if TYPE_CHECKING:
+    from fransys_model.derive import SheetBackground
     from fransys_model.derive.baseline import ListingDiff
-    from fransys_model.vocab import Item, UnitRelease
-    from fransys_model.vocab import Unit as ModelUnit
+    from fransys_model.vocab import UnitRelease
 
 _SEVERITY_RANK = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
 
@@ -125,26 +122,6 @@ def _put(path: Path, data: bytes) -> None:
     """Write `data` to `path`, making `data/` when it is the first file there."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)
-
-
-# Top-level `out_dir` export names `write` owns: everything else is left alone. The
-# three bare names are a unit's own root's exports, beside the `<kind>-*` globs.
-_STALE_EXPORT_PATTERNS = (
-    "*.pdf",
-    "bom.csv",
-    "plc.csv",
-    "wire*.csv",
-    "designations.csv",
-    "cables.csv",
-    "cores.csv",
-    "terminals-*.csv",
-    "connectors-*.csv",
-    "wago-*.xml",
-    "terminals.csv",
-    "connectors.csv",
-    "wago.xml",
-    "overview.html",
-)
 
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
@@ -233,101 +210,11 @@ def _has_document(model: Model) -> bool:
     return bool(documents(model))
 
 
-def _current_item_positions(
-    model: Model, unit: Id[ModelUnit]
-) -> tuple[dict[AuthoringKey, Id[Item]], NumberingPins]:
-    """`unit`'s non-terminal items' structural `(key, scope, code)`, before numbering.
-
-    Built for every item, not gated on `own_designation_or_none`: seeding runs before `number()`.
-    `text`/`authored` are dummies: `gone_or_moved` reads only key, scope and code.
-    """
-    terminals = terminal_items(model)
-    key_to_item: dict[AuthoringKey, Id[Item]] = {}
-    rows = []
-    for item in items(model).values():
-        if item.unit != unit or item.id in terminals:
-            continue
-        key, scope, code = numbering_pins.item_position(model, item.id)
-        key_to_item[key] = item.id
-        rows.append(NumberingItem(key=key, scope=scope, code=code, text="", authored=False))
-    rows.extend(_revision_pins.instance_rows(model, unit))
-    rows.sort(key=lambda row: row.key)
-    return key_to_item, NumberingPins(items=tuple(rows), retired=())
-
-
-def _seed_assigned_for_unit(
-    model: Model,
-    source_pins: NumberingPins,
-    key_to_item: dict[AuthoringKey, Id[Item]],
-    origins: dict[Id[Any], Origin],
-) -> list[AssignedDesignationFacet]:
-    """One `assigned_designation` facet per unauthored item whose pin still matches its position.
-
-    A pin's key, scope and code must equal the item's current structural position.
-    One unit instance's half of `_seed_designation_pins`.
-    """
-    seeded: list[AssignedDesignationFacet] = []
-    for pin_item in source_pins.items:
-        if pin_item.authored:
-            continue
-        item_id = key_to_item.get(pin_item.key)
-        if item_id is None:
-            continue
-        item_record = items(model)[item_id]
-        if item_record.tag is not None:
-            continue
-        _key, scope, code = numbering_pins.item_position(model, item_id)
-        if scope != pin_item.scope or code != pin_item.code:
-            continue
-        facet_key = (*item_record.key, "assigned_designation")
-        facet_id = make_id(AssignedDesignationFacet, facet_key)
-        seeded.append(
-            AssignedDesignationFacet(
-                id=facet_id, key=facet_key, subject=item_id, text=pin_item.text
-            )
-        )
-        origins[facet_id] = require_origin(model.origins, item_id)
-    return seeded
-
-
-def _seed_reserved_for_release(
-    model: Model,
-    release_record: UnitRelease,
-    source_pins: NumberingPins,
-    structural_current: NumberingPins,
-    origins: dict[Id[Any], Origin],
-) -> list[ReservedDesignationFacet]:
-    """One `reserved_designation` facet per pin gone or moved, once per distinct release.
-
-    `_designation_pins.gone_or_moved` is `release()`'s own detection, reused, not copied.
-    """
-    seeded: list[ReservedDesignationFacet] = []
-    retired = _designation_pins.gone_or_moved(source_pins, structural_current)
-    for index, entry in enumerate(retired):
-        reserved_key = ("reserved_designation", str(release_record.id), str(index))
-        reserved_id = make_id(ReservedDesignationFacet, reserved_key)
-        seeded.append(
-            ReservedDesignationFacet(
-                id=reserved_id,
-                key=reserved_key,
-                subject=release_record.id,
-                scope=entry.scope,
-                code=entry.code,
-                text=entry.text,
-            )
-        )
-        origins[reserved_id] = require_origin(model.origins, release_record.id)
-    return seeded
-
-
 def _unit_sources(model: Model, releases: Path) -> dict[Id[ModelUnit], NumberingPins]:
     """Each unit instance's pin source (`_pin_source`), for those that have one."""
     found: dict[Id[ModelUnit], NumberingPins] = {}
     for unit in sorted(units(model)):
-        record = unit_release(model, unit)
-        target = _ReleaseTarget(
-            name=record.name, version=record.version, revision=record.revision, path=Path()
-        )
+        target = _ReleaseTarget(identity=release_identity(model, unit), path=Path())
         if (source := _pin_source(target, releases)) is not None:
             found[unit] = source[1]
     return found
@@ -343,17 +230,13 @@ def _seed_designation_pins(model: Model, sources: dict[Id[ModelUnit], NumberingP
     origins: dict[Id[Any], Origin] = {}
     seeded_releases: set[Id[UnitRelease]] = set()
     for unit, source_pins in sources.items():
+        seeded = seed_pins(model, unit, source_pins)
+        new_facets.extend(assigned_facets(model, seeded.assigned, origins))
+        new_facets.extend(tag_facets(model, seeded.tags, origins))
         release_record = unit_release(model, unit)
-        key_to_item, structural_current = _current_item_positions(model, unit)
-        new_facets.extend(_seed_assigned_for_unit(model, source_pins, key_to_item, origins))
-        new_facets.extend(_revision_pins.seed_tags(model, unit, source_pins, origins))
         if release_record.id not in seeded_releases:
             seeded_releases.add(release_record.id)
-            new_facets.extend(
-                _seed_reserved_for_release(
-                    model, release_record, source_pins, structural_current, origins
-                )
-            )
+            new_facets.extend(reserved_facets(model, release_record, seeded.reserved, origins))
     if not new_facets:
         return model
     evolved = evolve(model, put=new_facets, origin=origins[new_facets[0].id])
@@ -465,6 +348,17 @@ _svgs_cache = digest_cached(1)(_draw_svgs)
 # The overview engine's one pure call, shared by `check` (its findings) and `write` (the page's
 # model), as `_svgs` is (OVERVIEW O25). `build` never runs it: no document, no layout.
 _overview = digest_cached(1)(lay_out_overview)
+# Every page background (frame, grid, title block) of every document, drawn once per model and
+# read by each document's `source` (render-0019).
+
+
+def _draw_sheets(model: Model) -> frozendict[str, SheetBackground]:
+    """`fransys_render.sheets` of the model's `document_sheets_of`."""
+    return fransys_render.sheets(document_sheets_of(model))
+
+
+_sheets = digest_cached(1)(_draw_sheets)
+_bridges = cache(fransys_render.bridge_pieces)  # the same two drawings for every model
 
 
 def _svgs(model: Model) -> dict[str, str]:
@@ -496,6 +390,7 @@ def _raw_findings(result: BuildResult, svgs: dict[str, str]) -> tuple[Finding, .
         raw.extend(_overview(model)[1])
     if not _has_error(result.findings) and _has_document(model):
         raw.extend(fransys_pdf.check(model, svgs, result.findings))
+        raw.extend(fransys_render.sheet_check(model, document_sheets_of(model)))
         if needs_schematic_layout(model):
             raw.extend(fransys_render.check(model))
     return tuple(raw)
@@ -542,7 +437,7 @@ def _write_intermediates(model: Model, svgs: dict[str, str], intermediates: Path
             text.encode("utf-8")
         )
     for document_id, record in documents(model).items():
-        source_text = fransys_pdf.source(model, document_id, svgs)
+        source_text = fransys_pdf.source(model, document_id, svgs, _sheets(model), _bridges())
         (intermediates / f"{record.key[1]}.typ").write_bytes(source_text.encode("utf-8"))
 
 
@@ -589,9 +484,15 @@ def _compile_pdf(model: Model, document_id: Id[Any], svgs: dict[str, str]) -> by
     Touches font files, so only here, never in pure `fransys_pdf`; passes no `timestamp=`:
     the date is the source's `#set document(date: ...)`; Typst reads one only for `auto` (0030).
     """
-    source_text = fransys_pdf.source(model, document_id, svgs)
+    source_text = fransys_pdf.source(model, document_id, svgs, _sheets(model), _bridges())
     compiler = typst.Compiler(font_paths=[fransys_pdf.font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(input=source_text.encode("utf-8"))
+    try:
+        compiled = compiler.compile(input=source_text.encode("utf-8"))
+    except typst.TypstError as error:
+        overflow = fransys_pdf.cover_overflow_finding(document_id, str(error))
+        if overflow is None:
+            raise
+        raise BuildErrors(_resolved((overflow,), model)) from error
     # typst.Compiler.compile's stub types every call `bytes | list[bytes] | None` because the
     # union also covers `output=<path>` (writes to disk, returns `None`) and multi-file input
     # (returns `list[bytes]`); this call passes neither, so it always returns `bytes` (confirmed
@@ -619,96 +520,39 @@ def _resolve_unit(model: Model, unit: object) -> Id[ModelUnit] | None:
     raise TypeError(msg)
 
 
-def _add_system_exports(
-    ledger: _ExportLedger,
-    model: Model,
-    unit: Id[ModelUnit] | None,
-    findings: tuple[Finding, ...] = (),
-    changes: ListingDiff | None = None,
-) -> None:
-    """The CSV reports, and with `unit=None` the two whole-system views."""
-    made: dict[str, tuple[str, Callable[[], str]]] = {
-        "bom": ("csv", partial(bom_csv, model, unit)),
-        "plc": ("csv", partial(plc_csv, model, unit=unit)),
-        "wires": ("csv", partial(wires_csv, model, unit=unit)),
-        "designations": ("csv", partial(designations_csv, model, unit=unit)),
-        "cables": ("csv", partial(cables_csv, model, unit=unit)),
-        "cores": ("csv", partial(cores_csv, model, unit=unit)),
-    }
-    if unit is None:
-        made["overview"] = (
-            "html",
-            partial(overview_html, _overview(model)[0], findings=findings, changes=changes),
-        )
-    for kind, (extension, produce) in made.items():
-        ledger.add(kind, export_name(model, unit, extension, kind=kind), None, produce)
-
-
 def _list_context(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) -> Id[Any] | None:
     """The list context a CSV prints its ends in (model-0054 section 4); none in `out/all/`."""
     return None if unit is None else list_context(model, subject)
 
 
-def _item_subjects(
-    model: Model, unit: Id[ModelUnit] | None
-) -> tuple[tuple[Id[Any], ...], tuple[Id[Any], ...], tuple[Id[Any], ...]]:
-    """The strips, boards and racks of `unit` (all of them with `unit=None`)."""
-    strips, boards, racks = _subjects.strips(model), _subjects.boards(model), _subjects.racks(model)
-    if unit is None:
-        return strips, boards, racks
-    all_items = items(model)
-    return (
-        unit_strips(model, unit),
-        unit_boards(model, unit),
-        tuple(r for r in racks if all_items[r].unit == unit),
-    )
+def _produce(make: Callable[[Id[Any]], Callable[[], str | bytes]], subject: Id[Any]) -> str | bytes:
+    return make(subject)()
 
 
-def _add_item_exports(ledger: _ExportLedger, model: Model, unit: Id[ModelUnit] | None) -> None:
-    """One terminal CSV per strip, one connector CSV per board, one WAGO XML per rack."""
-    strips, boards, racks = _item_subjects(model, unit)
-    for strip in strips:
-        fragment = export_ref(model, strip, unit)
-        name = export_name(model, unit, "csv", kind="terminals", fragment=fragment)
-        context = _list_context(model, unit, strip)
-        produce = partial(terminal_csv_of, model, strip, unit=unit, context=context)
-        ledger.add("terminals", name, strip, produce)
-    for board in boards:
-        fragment = export_ref(model, board, unit)
-        name = export_name(model, unit, "csv", kind="connectors", fragment=fragment)
-        context = _list_context(model, unit, board)
-        produce = partial(connectors_csv_of, model, board, unit=unit, context=context)
-        ledger.add("connectors", name, board, produce)
-    for rack in racks:
-        fragment = export_ref(model, rack, unit)
-        name = export_name(model, unit, "xml", kind="wago", fragment=fragment)
-        ledger.add("wago", name, rack, partial(modules_xml_of, model, rack, unit=unit))
-
-
-def _add_document_exports(
-    ledger: _ExportLedger, model: Model, svgs: dict[str, str], unit: Id[ModelUnit] | None
-) -> None:
-    """One PDF per document of `unit` (every document with `unit=None`), by `document_id`."""
-    # The "keep one document per release" hint fires only when the already-held name also came
-    # from a unit-subject document of the SAME release (`Unit.release` id, never a name-string
-    # compare), not for an ordinary clash that merely shares a `UnitRelease.name`-shaped string.
-    document_entries = documents(model).items()
-    if unit is not None:
-        document_entries = [(i, r) for i, r in document_entries if document_unit(model, r) == unit]
-    all_units = units(model)
-    release_by_name: dict[str, Id[Any]] = {}
-    for document_id, record in document_entries:
-        name = document_export_name(model, unit, record)
-        hint = None
-        document_own_unit = document_unit(model, record)
-        if document_own_unit is not None:
-            release_id = all_units[document_own_unit].release
-            if release_by_name.get(name) == release_id:
-                hint = export_set_name(model, document_own_unit)
-            release_by_name[name] = release_id
-        ledger.add(
-            "pdf", name, document_id, partial(_compile_pdf, model, document_id, svgs), hint=hint
-        )
+def _producers(
+    model: Model,
+    svgs: dict[str, str],
+    unit: Id[ModelUnit] | None,
+    findings: tuple[Finding, ...],
+    changes: ListingDiff | None,
+) -> dict[str, Callable[[Id[Any]], Callable[[], str | bytes]]]:
+    """The bytes' producer of each kind of `export_set`, by the row's subject."""
+    context = partial(_list_context, model, unit)
+    return {
+        "bom": lambda _s: partial(bom_csv, model, unit),
+        "plc": lambda _s: partial(plc_csv, model, unit=unit),
+        "wires": lambda _s: partial(wires_csv, model, unit=unit),
+        "designations": lambda _s: partial(designations_csv, model, unit=unit),
+        "cables": lambda _s: partial(cables_csv, model, unit=unit),
+        "cores": lambda _s: partial(cores_csv, model, unit=unit),
+        "overview": lambda _s: partial(
+            overview_html, _overview(model)[0], findings=findings, changes=changes
+        ),
+        "terminals": lambda s: partial(terminal_csv_of, model, s, unit=unit, context=context(s)),
+        "connectors": lambda s: partial(connectors_csv_of, model, s, unit=unit, context=context(s)),
+        "wago": lambda s: partial(modules_xml_of, model, s, unit=unit),
+        "pdf": lambda s: partial(_compile_pdf, model, s, svgs),
+    }
 
 
 def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all keyword
@@ -722,9 +566,15 @@ def _ledger(  # noqa: PLR0913 -- one parameter per input of the exports, all key
     timer: Timer | None = None,
 ) -> _ExportLedger:
     ledger = _ExportLedger(model, names_only=names_only, timer=timer)
-    _add_system_exports(ledger, model, unit, findings, changes)
-    _add_item_exports(ledger, model, unit)
-    _add_document_exports(ledger, model, svgs, unit)
+    made = _producers(model, svgs, unit, findings, changes)
+    for row in export_set(model, unit):
+        ledger.add(
+            row.export_kind,
+            row.name,
+            row.subject,
+            partial(_produce, made[row.export_kind], cast("Id[Any]", row.subject)),
+            hint=row.hint,
+        )
     return ledger
 
 
@@ -774,7 +624,7 @@ def _clean_stale_exports(out_dir: Path, model: Model, unit: Id[ModelUnit] | None
     if unit is None:
         set_names |= {release.name for release in unit_releases(model).values()}
     for folder in (out_dir, out_dir / _DATA_DIR):
-        for pattern in _STALE_EXPORT_PATTERNS:
+        for pattern in stale_patterns():
             for path in folder.glob(pattern):
                 if path.is_file():
                     path.unlink()
@@ -872,26 +722,28 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
 
     exports = _exports(model, svgs, unit=resolved_unit)
     baseline_files = {
-        "baseline/listing.json": new_listing_text.encode("utf-8"),
-        "baseline/model.json": model_dumps(model).encode("utf-8"),
+        BASELINE_FILES["listing"]: new_listing_text.encode("utf-8"),
+        BASELINE_FILES["model"]: model_dumps(model).encode("utf-8"),
     }
     if resolved_unit is not None:
         current_numbering = numbering_pins.pins(model, resolved_unit)
         pin_source = _pin_source(target_info, into)
         retired = (
-            ()
-            if pin_source is None
-            else _designation_pins.gone_or_moved(pin_source[1], current_numbering)
+            () if pin_source is None else gone_or_moved(pin_source[1], current_numbering.items)
         )
         numbering_text = numbering_pins.dumps(
             dataclasses.replace(current_numbering, retired=retired)
         )
-        baseline_files["baseline/numbering.json"] = numbering_text.encode("utf-8")
+        baseline_files[BASELINE_FILES["numbering"]] = numbering_text.encode("utf-8")
     previous_listing = _previous_release_listing(target_info)
     if previous_listing is not None:
         listing_diff = baseline.diff(previous_listing, new_listing)
-        baseline_files["changes.md"] = changes_markdown(listing_diff).encode("utf-8")
-        baseline_files[_placed("changes.csv")] = changes_csv(listing_diff).encode("utf-8")
+        baseline_files[BASELINE_FILES["changes_md"]] = changes_markdown(listing_diff).encode(
+            "utf-8"
+        )
+        baseline_files[_placed(BASELINE_FILES["changes_csv"])] = changes_csv(listing_diff).encode(
+            "utf-8"
+        )
     manifest_text = _manifest(
         model,
         resolved_unit,
@@ -907,7 +759,7 @@ def release(result: BuildResult, into: Path, *, unit: object = None) -> Path:
         (tmp_dir / "baseline").mkdir()
         for filename, data in (*exports.items(), *baseline_files.items()):
             _put(tmp_dir / filename, data)
-        (tmp_dir / "baseline" / "manifest.json").write_bytes(manifest_text.encode("utf-8"))
+        (tmp_dir / BASELINE_FILES["manifest"]).write_bytes(manifest_text.encode("utf-8"))
         tmp_dir.rename(target)
         built = True
     finally:
@@ -951,8 +803,10 @@ def diff(
 def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]:
     """Output: return one `BASELINE_DIFFERS` `ERROR` per unit instance, or the system, that drifted.
 
-    Compares the rebuilt listing digest with the stored one under `baselines`, for every unit
-    and for the system when the model holds a `Project`. The model digest is never compared.
+    Compares the rebuilt listing with the stored one under `baselines`, for every unit and for the
+    system when the model holds a `Project`, under the rules of the `fransys` that cut it: a rule
+    that moved since gives `BASELINE_RULES_MOVED` (INFO), one too old to know `BASELINE_TOO_OLD`.
+    The model digest is never compared.
     Also re-hashes every release file: `RELEASE_FILE_CHANGED`, `RELEASE_FILE_MISSING`.
     Meant for a consumer's test, wherever they want it.
 
@@ -969,8 +823,28 @@ def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]:
         stored_text = stored_listing(target.path)
         if stored_text is None:
             continue
-        differs = _baseline_differs_finding(model, unit, target, stored_text)
-        if differs is not None:
-            findings.append(differs)
+        findings.extend(baseline_findings(model, unit, target, stored_text, nested=False))
     findings.extend(release_file_findings(baselines))
     return tuple(findings)
+
+
+def rebaseline(
+    result: BuildResult, baselines: Path, *, unit: str | Id[ModelUnit] | None = None
+) -> tuple[Path, ...]:
+    """Output: re-cut every stored baseline the current rules print differently, once.
+
+    Rewrites `baseline/listing.json` and `baseline/manifest.json` of each release under
+    `baselines` that `verify` notes with `BASELINE_RULES_MOVED` or `BASELINE_ROWS_UNCHECKED`,
+    children before parents, and returns those folders (`()` when nothing moved). The manifest
+    keeps the old digest, listing version and `fransys` in a `rebaselined` record. `unit=None`
+    covers every unit and the system with a stored baseline; a unit covers it and the units below.
+    Raises `BuildErrors` and writes nothing when a real row changed (`BASELINE_DIFFERS`), a
+    baseline is too old, or a release file is not as released.
+
+    Does not write an export, `model.json` or `numbering.json`.
+    """
+    model = result.model
+    plan = plan_rebaseline(model, baselines, _resolve_unit(model, unit))
+    if plan.findings:
+        raise BuildErrors(_resolved(plan.findings, model))
+    return write_plan(plan)

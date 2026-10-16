@@ -1,0 +1,15 @@
+# Moving to 0.20
+
+> Offline copy. Read the official docs for your version at https://olejbondahl.github.io/fransys/X.Y.Z/ (X.Y.Z is `fransys.__version__`), or https://olejbondahl.github.io/fransys/X.Y.Z/llms.txt. Use this copy only offline.
+
+This page lists each call that 0.20 adds or changes, with the old spelling and the new one.
+
+## A baseline cut by an older fransys
+
+`fr.verify` compares a stored listing under the rules of the `fransys` that cut it. When a later
+release printed a rule differently, it gives `BASELINE_RULES_MOVED` (INFO) for that release, and
+`fr.release` refuses over it. `fr.rebaseline` is the new call that clears it: it re-cuts the stored
+`listing.json` and the manifest under today's rules and leaves every export as it was.
+
+Run `fr.rebaseline(result, Path("releases"))` once and commit the rewritten files. The worked example
+is in `build.md`, after "Checking a baseline stays true".

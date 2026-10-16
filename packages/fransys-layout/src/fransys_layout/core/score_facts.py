@@ -1,15 +1,19 @@
 """The placement rules that read facts a scene carries: P1, P3 and P6 (design section 3.1).
 
-A fact is a flag on a box or pin (`ScenePin.box`, `SceneBox.attached`, `.head` and `.strip`).
+A fact is a flag on a box or pin (`ScenePin.box` and `.head`, `SceneBox.attached` and `.strip`).
 The rules read the flags and never ask what a symbol is.
 """
 
+from bisect import bisect_right
 from collections import Counter, defaultdict
 from typing import TYPE_CHECKING
 
+from .fan_head import head_short
 from .score_placement import _touching, _vertices
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from .outputs import Scene, SceneBox
 
 FAN = 3  # symbols on a net that make a fan
@@ -47,7 +51,7 @@ def _fan_heads(scene: Scene) -> dict[tuple[str, str], tuple[str, set[int]]]:
     found: dict[tuple[str, str], tuple[str, set[int]]] = {}
     for b in scene.boxes:
         for p in b.pins:
-            if b.head and p.net is not None and len(sizes[p.net]) >= FAN:
+            if p.head and p.net is not None and len(sizes[p.net]) >= FAN:
                 found.setdefault((b.sym, p.pin), (p.net, set()))[1].add(b.page)
     return found
 
@@ -57,7 +61,7 @@ def head_off_legs(scene: Scene) -> list[str]:
     out = []
     for key, (net, mine) in _fan_heads(scene).items():
         legs = _legs(scene, net, key)
-        if legs and max(legs[page] for page in mine) < max(legs.values()):
+        if head_short(mine, legs.elements()) is not None:
             out.append(f"{key[0]}.{key[1]}")
     return sorted(out)
 
@@ -70,14 +74,20 @@ def _end(box: SceneBox, vertices: frozenset[tuple[int, int, int]]) -> str | None
     return "foot" if "N" in sides and "S" not in sides else None
 
 
+def _row(tops: Mapping[int, Sequence[int]], b: SceneBox) -> int:
+    """The row a box stands in: the last band of its page that starts at or above its centre."""
+    return max(bisect_right(tops.get(b.page, []), b.body.y + b.body.h // 2) - 1, 0)
+
+
 def row_broken(scene: Scene) -> list[str]:
-    """P6: terminals of one strip at the same end of their columns on one page off a shared y."""
+    """P6: terminals of one strip at the same end of their columns in one row off a shared y."""
     vertices = _vertices(scene)
-    groups: dict[tuple[str, int, str], list[SceneBox]] = defaultdict(list)
+    tops = {page: [top for top, _ in bands] for page, bands in scene.bands}
+    groups: dict[tuple[str, int, int, str], list[SceneBox]] = defaultdict(list)
     for b in scene.boxes:
         end = _end(b, vertices) if b.strip is not None and _touching(b, vertices) else None
         if end is not None and b.strip is not None:
-            groups[b.strip, b.page, end].append(b)
+            groups[b.strip, b.page, _row(tops, b), end].append(b)
     out = []
     for members in groups.values():
         rows = Counter(b.body.y + b.body.h // 2 for b in members)

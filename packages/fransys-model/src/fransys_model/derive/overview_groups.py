@@ -8,7 +8,7 @@ with a group folds into it; the strips with none form one box, "Terminal strips 
 from typing import Any
 
 from fransys_model.layout import OverviewRef, OverviewRefKind
-from fransys_model.vocab.enums import Aspect
+from fransys_model.vocab.enums import Aspect, ItemKind
 from fransys_model.vocab.membership import unit_items
 from fransys_model.vocab.tables import aspect_nodes
 lazy from fransys_model.kernel import Id, Model
@@ -20,9 +20,9 @@ from .lookups import effective_placement
 from .order import natural_key
 from .overview_levels import level_box
 from .overview_names import node_lines
-from .rows import ItemKind, OverviewBox
 from .rows_overview import FoldBox
 from .unit_nodes import chain_up
+lazy from .rows import OverviewBox
 
 __all__ = [
     "box_groups",

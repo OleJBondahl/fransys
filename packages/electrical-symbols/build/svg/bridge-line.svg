@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="5mm" height="7.5mm" viewBox="0.5 -1 2 3">
+<title>Bridge mark line</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="1.5" y1="0" x2="1.5" y2="1" stroke-width="0.1"/>
+</g>
+</svg>

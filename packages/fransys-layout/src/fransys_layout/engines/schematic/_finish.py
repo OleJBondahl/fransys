@@ -22,7 +22,7 @@ from fransys_layout.stages.texts.power_moved import PowerFrame, PowerRedo, reset
 
 from ._middle import with_middle
 from .read.harness_lines import plug_mates
-from .read.location_paths import location_paths
+from .read.location_paths import set_names
 from .read.outline_texts import outline_titles
 from .read.units import black_boxes, external_note_text, external_roots
 
@@ -136,7 +136,7 @@ def cross_references(
         placement.placed_all,
         placement.drawn,
         sheet=inputs.sheet,
-        location_paths=location_paths(model, placement.plans),
+        sets=set_names(model, placement.plans),
     )
     taken = {(r.subject, r.slot) for r in held}
     return (*held, *(r for r in contact_refs if (r.subject, r.slot) not in taken))

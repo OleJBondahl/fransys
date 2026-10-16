@@ -158,3 +158,19 @@ def test_every_removed_row_reaches_the_page_and_nothing_caps_the_list() -> None:
     assert "CHANGE_LIST_MAX" not in APP_JS
     assert ".slice(0," not in APP_JS.split("const drawRemoved")[1].split("};")[0]
     assert "name + ' (' + group.length + ')'" in APP_JS
+
+
+def _marked_kinds(mode: str) -> dict[str, str]:
+    """Each marked box of the system view in `mode`, by reference kind and first text line."""
+    data = _marks()
+    for v, view in enumerate(data["views"]):
+        if view["unit"] is None and view["mode"] == mode:
+            boxes = view["boxes"]
+            return {boxes[b]["lines"][0]: kind for b, kind in data["changes"]["views"][v][0]}
+    raise AssertionError(mode)
+
+
+def test_a_place_box_and_a_field_box_take_the_mark_of_the_items_they_hold() -> None:
+    """Breaks if `diff_marks` cannot name a `place:` or `fields:` box (overview-0011)."""
+    assert _marked_kinds("location") == {"+FLD": "added"}
+    assert _marked_kinds("fields")["Field devices (1)"] == "added"

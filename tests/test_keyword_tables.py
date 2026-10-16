@@ -19,6 +19,72 @@ PAGES = ("keywords-design.md", "keywords-handles.md", "keywords-output.md")
 EXEMPT = {"d.layout.profile", "d.layout.sheet"}
 NAMED = (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
 _HEAD = re.compile(r"^## `([^`]+)`$")
+_LINK = re.compile(r"^\[(`[^`]+`)\]\(([\w.-]+\.md)#([\w-]+)\)$")
+# Rows with no guide heading that explains the keyword (KEYWORD-LINKS): the set only shrinks.
+NO_HOME = frozenset(
+    {
+        ("d.device", "tag"),
+        ("d.device", "name"),
+        ("d.device", "mounted_on"),
+        ("d.device", "description"),
+        ("d.device", "position"),
+        ("d.device", "installed"),
+        ("d.terminal_strip", "tag"),
+        ("d.terminal_strip", "part"),
+        ("d.terminal_strip", "name"),
+        ("d.terminal_strip", "description"),
+        ("d.cable", "tag"),
+        ("d.cable", "part"),
+        ("d.cable", "length_m"),
+        ("d.cable", "name"),
+        ("d.cable", "external"),
+        ("d.add", "definition"),
+        ("d.add", "tag"),
+        ("d.add", "name"),
+        ("d.ac_supply", "name"),
+        ("d.dc_supply", "name"),
+        ("d.harness", "name"),
+        ("d.harness", "external"),
+        ("d.rack", "tag"),
+        ("d.rack", "name"),
+        ("d.rack", "external"),
+        ("d.project", "revision"),
+        ("d.project", "version"),
+        ("d.revision", "checked"),
+        ("d.revision", "approved"),
+        ("d.rating", "part"),
+        ("d.rating", "function"),
+        ("d.operating", "part"),
+        ("d.operating", "function"),
+        ("Fn.plc", "priority"),
+        ("Fn.scale", "unit"),
+        ("Cable.spare", "at"),
+        ("d.layout.break_before", "group"),
+        ("d.layout.draw_in", "function"),
+        ("d.layout.draw_in", "group"),
+        ("d.layout.symbol", "target"),
+        ("d.layout.symbol", "symbol"),
+        ("d.layout.symbol", "port_map"),
+        ("fr.unit", "name"),
+        ("fr.unit", "interface_version"),
+        ("fr.unit", "title"),
+        ("fr.unit", "number"),
+        ("fr.readability", "result"),
+        ("fr.check", "result"),
+        ("fr.report", "result"),
+        ("fr.write", "result"),
+        ("fr.export_names", "result"),
+        ("fr.release", "result"),
+        ("fr.diff", "result"),
+        ("fr.diff", "baselines"),
+        ("fr.diff", "unit"),
+        ("fr.diff", "against"),
+        ("fr.verify", "result"),
+        ("fr.rebaseline", "result"),
+        ("fr.rebaseline", "baselines"),
+        ("fr.rebaseline", "unit"),
+    }
+)
 
 
 def calls() -> dict[str, object]:
@@ -57,8 +123,51 @@ def sections() -> dict[str, list[list[str]]]:
                 assert current not in found, f"two sections for {current}"
                 found[current] = []
             elif current and line.startswith("| ") and not line.startswith("| keyword"):
-                found[current].append([c.strip() for c in line.strip().strip("|").split(" | ")])
+                cells = [c.strip() for c in line.strip().strip("|").split(" | ")]
+                cells[0] = _LINK.sub(r"\1", cells[0])
+                found[current].append(cells)
     return found
+
+
+def slug(heading: str) -> str:
+    """Python-Markdown's default toc id of a heading."""
+    plain = re.sub(r"[^\w\s-]", "", heading.strip()).strip().lower()
+    return re.sub(r"[-\s]+", "-", plain)
+
+
+def anchors(page: str) -> set[str]:
+    lines = (GUIDE / page).read_text().splitlines()
+    return {slug(m.group(1)) for line in lines if (m := re.match(r"#{1,6} (.+)$", line))}
+
+
+def first_cells() -> list[tuple[str, str]]:
+    """Each (call, raw first cell) of every table row."""
+    out = []
+    for page in PAGES:
+        current = None
+        for line in (GUIDE / page).read_text().splitlines():
+            head = _HEAD.match(line)
+            current = head.group(1) if head else current
+            if current and line.startswith("| ") and not line.startswith("| keyword"):
+                out.append((current, line.strip().strip("|").split(" | ")[0].strip()))
+    return out
+
+
+def link_problems() -> list[str]:
+    bad = []
+    for call, cell in first_cells():
+        link = _LINK.match(cell)
+        key = (call, cell.strip("`"))
+        if not link:
+            if key not in NO_HOME:
+                bad.append(f"{call} {cell}: no link and not in NO_HOME")
+        elif (call, link[1].strip("`")) in NO_HOME:
+            bad.append(f"{call} {cell}: linked but still in NO_HOME")
+        elif not (GUIDE / link[2]).is_file():
+            bad.append(f"{call} {cell}: page {link[2]} does not exist")
+        elif link[3] not in anchors(link[2]):
+            bad.append(f"{call} {cell}: {link[2]} has no anchor #{link[3]}")
+    return bad
 
 
 def test_every_public_call_has_a_section_and_no_other_section_exists():
@@ -94,3 +203,7 @@ def test_every_row_has_an_effect_and_an_example():
 def test_the_collector_sees_calls():
     assert {"fr.build", "d.device", "d.layout.symbol", "Cable.core"} <= set(calls())
     assert "d.layout.profile" not in calls()
+
+
+def test_every_keyword_row_links_to_an_existing_page_and_anchor():
+    assert not link_problems(), link_problems()

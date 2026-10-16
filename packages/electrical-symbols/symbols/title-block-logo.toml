@@ -1,0 +1,16 @@
+schema = 1
+name = "Title block logo cell"
+kind = "element"
+status = "unverified"
+# our own title-block cell: the square logo cell at the block's right end, in mm. Stretched to
+# the band on both axes; pdf places the logo in the `logo` slot's box.
+reference = { standard = "IEC 60617", number = "title-block-logo" }
+
+elements = [
+  { polyline = [[0, 0], [20, 0], [20, 20], [0, 20]], closed = true, weight = "thick" },
+]
+
+stretch = [{ axis = "x", at = 10 }, { axis = "y", at = 10 }]
+
+[slots]
+logo = { at = [10, 10], side = "C", box = [20, 20] }

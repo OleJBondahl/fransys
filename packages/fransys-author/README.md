@@ -5,7 +5,7 @@ and is internal.
 Input contract: produces a Draft. Every record carries an Origin (file, line). An input never calls freeze().
 
 Two layers:
-- The surface is the engineer API of ENGINEER-API (`docs/specs/2026-10-02-engineer-api.md`).
+- The surface is the engineer API of ENGINEER-API (`docs/archive/specs/2026-10-02-engineer-api.md`).
   Its worked example is the consumer guide's "The shape of a build script"
   (`packages/fransys/src/fransys/guide/index.md`), whose code runs as a test.
 - The engine builds the Draft. The surface builds only through it.

@@ -229,18 +229,16 @@ def _own_set_stubs(model, unit):
 
 
 def test_a_nested_units_boundary_pin_mated_to_a_top_level_harness_draws_no_stub() -> None:
-    """The nested unit's own set ends at the pin: no off-stub for the mate's cable.
-    layout-0155: X1 is at the harness line's end, so it is drawn there as one box."""
+    """The nested unit's own set holds nothing of the mate: no stub, and no pin only the harness
+    wires (layout-0295). The parent's page draws them (the test below)."""
     # UNDO: engine.py `_off_inputs`: `outward = black_box_sets(...)` becomes `outward = {}` (the
     #   stub "-W3 <- +FLD-P2:1 2" is drawn in the nested unit's own set)
     model, unit = _build_boundary_mated_to_top_level_harness(nested=True)
     pages = _pages_of(model, unit)
-    assert pages  # positive half: the nested unit has a set of its own
+    # On purpose: the pin only the harness wires is ELSEWHERE, so the own document is empty.
+    assert pages == []
     page_ids = {p.id for p in pages}
-    (x1_box,) = _boxes_of_unit_items(model, unit, page_ids)  # X1 is drawn there, as a box
-    assert "X1" in functions(model)[x1_box.function].key
-    assert len(x1_box.texts) == len(connector_box_lines(model, x1_box.function, unit=unit))
-    assert x1_box.cells == ()  # a unit interface box has no cells
+    assert _boxes_of_unit_items(model, unit, page_ids) == []
     assert _own_set_stubs(model, unit) == []
 
 

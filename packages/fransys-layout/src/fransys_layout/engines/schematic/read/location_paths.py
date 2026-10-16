@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING, Any
 
+from fransys_layout.stages._image_widest import plan_ranks
+from fransys_layout.stages.texts.echoes import SetNames
 from fransys_model.kernel import parent_chain
 from fransys_model.vocab.tables import units
 
@@ -19,6 +21,11 @@ def location_paths(model: Model, plans: tuple[PagePlan, ...]) -> dict[int, tuple
         for plan in plans
         if plan.location is not None
     }
+
+
+def set_names(model: Model, plans: tuple[PagePlan, ...]) -> SetNames:
+    """Each drawing set's location path and its rank among its own unit's sets."""
+    return SetNames(location_paths(model, plans), plan_ranks(plans))
 
 
 def unit_paths(model: Model, plans: tuple[PagePlan, ...]) -> dict[int, tuple[Any, ...]]:

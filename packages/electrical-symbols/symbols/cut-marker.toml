@@ -1,0 +1,17 @@
+schema = 1
+name = "Cut marker (partner page reference)"
+kind = "element"
+status = "unverified"
+# the arrow flag of a cut wire, its tip on the origin, one text slot for the partner page reference (example text: p2:3C)
+reference = { standard = "IEC 60617", number = "cut-marker" }
+
+elements = [
+  { polyline = [[0, 0], [1, -1], [6, -1], [6, 1], [1, 1]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline" },
+]
+
+[slots]
+partner = { at = [1.25, 0], side = "E", box = [4.5, 1] }

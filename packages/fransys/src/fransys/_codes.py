@@ -26,6 +26,47 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="BASELINE_RULES_MOVED",
+        severities=(Severity.INFO, Severity.ERROR),
+        stage="release, verify",
+        who="consumer",
+        cause=(
+            "A stored baseline's content is unchanged, but a later fransys prints its listing "
+            "differently. `verify` notes it (INFO); `release` of a unit nesting it refuses (ERROR)."
+        ),
+        fix="Run `fr.rebaseline(result, baselines)`, which re-cuts it under today's rules.",
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="BASELINE_ROWS_UNCHECKED",
+        severities=(Severity.INFO, Severity.ERROR),
+        stage="release, verify",
+        who="consumer",
+        cause=(
+            "A stored baseline cut before fransys 0.18.2 holds rows for a contact block that "
+            "today's numbering cannot print. Every other row is unchanged, and those rows were "
+            "left out of the comparison. `verify` notes it (INFO); `release` of a unit nesting "
+            "it refuses (ERROR)."
+        ),
+        fix="Run `fr.rebaseline(result, baselines)`, which records them under today's rules.",
+        page="findings-validators",
+    ),
+    CodeInfo(
+        code="BASELINE_TOO_OLD",
+        severities=(Severity.ERROR,),
+        stage="release, verify",
+        who="consumer",
+        cause=(
+            "A stored baseline was cut by a fransys older than the oldest release whose listing "
+            "rules this build knows, or its manifest records no fransys version."
+        ),
+        fix=(
+            "verify with the fransys release that cut this baseline, or release a new revision "
+            "of the unit, which stores a baseline under today's rules."
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="DESIGNATION_MOVED",
         severities=(Severity.ERROR,),
         stage="release",

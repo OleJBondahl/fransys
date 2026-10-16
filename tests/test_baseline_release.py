@@ -1,4 +1,4 @@
-"""Facade `release` (baseline spec `docs/specs/2026-09-23-baseline.md`, L1, L3, L4).
+"""Facade `release` (baseline spec `docs/archive/specs/2026-09-23-baseline.md`, L1, L3, L4).
 
 Builds one small design once (root CLAUDE.md's speed-work rule, a module fixture): a board
 unit with its own boundary connector and internal wiring (`_board_unit`, similar shape to the
@@ -157,78 +157,6 @@ def test_release_manifest_has_the_l3_shape(released):
     listing_bytes = (board_target / "baseline" / "listing.json").read_bytes()
 
     assert manifest["listing_digest"] == hashlib.sha256(listing_bytes).hexdigest()
-
-
-def test_part_library_versions_skips_a_part_authored_in_python():
-    """`_part_library_versions` (manifest `part_libraries`, L3): a `Part` with no `library` --
-    `Part.library`'s own docstring: `None` for one "authored in Python", never sourced from a
-    loaded part-file library, a shape `fransys_author` itself never produces today but the
-    model schema allows and this reader must still handle -- contributes no entry, while a
-    real, library-sourced part's does. Hand-built model (no `fr.build`/`fransys_author`, the same
-    pattern `tests/test_units_worked_example.py`'s cross-unit probe uses): this is the only
-    way to construct a `Part` with `library=None` at all.
-    """
-    from fransys._release_manifest import _part_library_versions
-
-    from fransys_model.kernel import Draft, Origin, freeze, make_id
-    from fransys_model.vocab.core import Item
-    from fransys_model.vocab.enums import PartCategory
-    from fransys_model.vocab.templates import Part, PartLibrary
-
-    library_key = ("part_library", "demo-parts")
-    library = PartLibrary(
-        id=make_id(PartLibrary, library_key), key=library_key, name="demo-parts", version="0.1.0"
-    )
-    with_lib_key = ("part", "Demo", "WITH-LIB")
-    with_lib = Part(
-        id=make_id(Part, with_lib_key),
-        key=with_lib_key,
-        mpn="WITH-LIB",
-        manufacturer="Demo",
-        description="a library-sourced part",
-        category=PartCategory.GENERIC,
-        class_code="Z",
-        library=library.id,
-    )
-    no_lib_key = ("part", "Demo", "NO-LIB")
-    no_lib = Part(
-        id=make_id(Part, no_lib_key),
-        key=no_lib_key,
-        mpn="NO-LIB",
-        manufacturer="Demo",
-        description="a part authored in Python, no library",
-        category=PartCategory.GENERIC,
-        class_code="Z",
-        library=None,
-    )
-    with_lib_item_key = ("item", "z1")
-    with_lib_item = Item(
-        id=make_id(Item, with_lib_item_key),
-        key=with_lib_item_key,
-        part=with_lib.id,
-        parent=None,
-        position=None,
-        tag="Z1",
-        description="",
-    )
-    no_lib_item_key = ("item", "z2")
-    no_lib_item = Item(
-        id=make_id(Item, no_lib_item_key),
-        key=no_lib_item_key,
-        part=no_lib.id,
-        parent=None,
-        position=None,
-        tag="Z2",
-        description="",
-    )
-    draft = Draft()
-    draft.extend(
-        (library, with_lib, no_lib, with_lib_item, no_lib_item),
-        origin=Origin(file="<probe>", line=1, note="Part.library=None"),
-    )
-    model = freeze(draft)
-
-    assert _part_library_versions(model, None) == [{"name": "demo-parts", "version": "0.1.0"}]
 
 
 def test_the_cabinets_manifest_names_the_nested_board_release(released):
@@ -852,7 +780,7 @@ def test_a_deep_board_change_gives_baseline_differs_for_the_board_not_the_module
 
 
 # -- DESIGNATION_MOVED ----------------------------
-# `_pin_source`/`_designation_moved_findings` (pipeline.py) and `_designation_pins.py`'s pure
+# `_pin_source`/`_designation_moved_findings` (pipeline.py) and `derive.numbering_moves`'s pure
 # joins over two `NumberingPins`. No document is authored in any of these fixtures (`release`
 # needs none): the point is the numbering pins alone.
 
@@ -1014,7 +942,7 @@ def test_a_partless_tagged_items_changed_tag_gives_designation_moved(tmp_path_fa
 
 
 def test_a_retirement_carries_forward_to_the_next_release(tmp_path_factory):
-    """The `retired` carry-forward (`_designation_pins.gone_or_moved`): once `coil-b`'s own
+    """The `retired` carry-forward (`gone_or_moved`): once `coil-b`'s own
     designation retires at revision `1.2` (it is dropped from `relay-board`), the NEXT release,
     `1.3`, still lists it in `baseline/numbering.json`'s own `retired` even though nothing
     changes between `1.2` and `1.3` -- `gone_or_moved` must fold the pin source's own `retired`
@@ -1110,7 +1038,7 @@ def _mixed_partless_and_coded(parts, *, revision, keep_both):
 def test_retiring_a_part_less_and_a_coded_item_together_does_not_crash_the_sort(
     tmp_path_factory,
 ):
-    """CAN-FAIL: before `_designation_pins.gone_or_moved`'s sort key guarded `code is None`
+    """CAN-FAIL: before `gone_or_moved`'s sort key guarded `code is None`
     the same way it guards `scope is None`, this raised `TypeError` (`'<' not supported
     between instances of 'str' and 'NoneType'`) the moment one release's `retired` list held
     both a part-less entry (`code=None`) and a coded one (`code="K"`) -- exactly this scenario.
@@ -1301,8 +1229,8 @@ def test_an_authored_pin_is_never_auto_seeded_onto_a_now_untagged_item(tmp_path_
 
 
 def test_seeding_skips_an_item_outside_the_unit_and_one_already_tagged(tmp_path_factory):
-    """Coverage: `_current_item_positions`'s own-unit-only filter, exercised by a top-level
-    item that belongs to no unit at all (`item.unit != unit`), and `_seed_assigned_for_unit`'s
+    """Coverage: `derive.pin_positions`'s own-unit-only filter, exercised by a top-level
+    item that belongs to no unit at all (`item.unit != unit`), and `seed_pins`'s already-tagged
     guard, exercised by a current item that has since become independently tagged (`coil`
     itself, `item_record.tag is not None`) -- neither is seeded, and this build still succeeds.
     """

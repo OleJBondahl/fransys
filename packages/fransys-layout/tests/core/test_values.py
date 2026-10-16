@@ -1,6 +1,8 @@
 """The values contract (P1.1, C3): frozen plain data, a versioned JSON form, closed vocabularies."""
 
+import ast
 import dataclasses
+import pathlib
 import re
 import typing
 from typing import Any
@@ -12,6 +14,7 @@ from fransys_layout.core.keys import natural_key
 from fransys_layout.core.outputs import CoreLayout
 from fransys_layout.core.values import Block, Cell, End, Options, PlacementProblem
 
+from . import values_fixtures
 from .values_fixtures import all_values, layout, problem
 
 CLASSES = [
@@ -205,7 +208,8 @@ def test_the_unread_options_are_gone(name):
 
 def test_c3_contract_shape():
     names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
-    assert {"text", "text_w"} <= names["Sym"]
+    assert {"label", "table"} <= names["Sym"]
+    assert not {"text", "text_w", "table_rows"} & names["Sym"]
     assert "failed" in names["Routes"]
     assert "row" in names["RefEnd"]
     assert {"stand", "fan"} <= names["End"]
@@ -249,3 +253,64 @@ def test_the_scene_values_reject_an_unknown_string_naming_the_field():
 
 def test_the_marker_names_the_pin_it_stands_at():
     assert layout().annotations.markers[0].end == values.PinRef("K1", "1")
+
+
+def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
+    o = Options()
+    assert o.open_stub == 0
+    assert o.box_columns is True
+    assert o.cells == (8, 6)
+    assert o.wire_label_sides == ("N", "S")
+    assert o.marker == values.Size(24, 8)
+    assert "colours" not in {f.name for f in dataclasses.fields(Options)}
+
+
+def test_the_new_size_fields_default_to_none_or_empty():
+    assert values.Net("N", ()).label is None
+    assert values.Facts().row_tags == ()
+    names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
+    assert "page_titles" not in names["Hints"]
+    assert "groups" in names["PagePlan"]
+    assert "title" not in names["PagePlan"]
+
+
+def test_a_label_has_no_text_and_a_table_has_cells_not_rows():
+    names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
+    assert "text" not in names["Label"]
+    assert "cells" in names["Table"]
+    assert "rows" not in names["Table"]
+
+
+def test_a_marker_has_no_text_and_no_colour():
+    names = {c.__name__: {f.name for f in dataclasses.fields(c)} for c in CLASSES}
+    assert not {"text", "colour"} & names["Marker"]
+    assert "cell" in names["Marker"]
+
+
+def test_annotations_hold_wire_labels():
+    assert outputs.Annotations().wire_labels == ()
+    assert layout().annotations.wire_labels[0].net == "N1"
+
+
+def test_no_core_value_carries_a_string_to_print():
+    banned = {"text", "colour", "title", "page_titles"}
+    for cls in CLASSES:
+        if cls is values.Finding:
+            continue
+        assert not banned & {f.name for f in dataclasses.fields(cls)}, cls.__name__
+
+
+def test_no_stage_ties_by_a_designation():
+    """Attribute half; the behaviour half is test_stage_ties.py."""
+    core = pathlib.Path(values.__file__).parent
+    for path in core.glob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.Attribute) and node.attr in {"text", "text_w", "colour"}:
+                msg = f"{path.name}:{node.lineno} reads .{node.attr}"
+                raise AssertionError(msg)
+
+
+@pytest.mark.parametrize("orient", typing.get_args(values.Orientation))
+def test_every_orientation_has_a_json_form_that_reads_back(orient):
+    box = dataclasses.replace(values_fixtures.scene_value().boxes[0], orient=orient)
+    assert jsonform.from_plain(type(box), plain_of(box)) == box

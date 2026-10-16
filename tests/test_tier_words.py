@@ -21,6 +21,7 @@ OUTPUT = tuple(
         "releases",
         "diff",
         "verify",
+        "rebaseline",
     ]
 )
 TIERS = {

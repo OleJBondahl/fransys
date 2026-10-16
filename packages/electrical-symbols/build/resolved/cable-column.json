@@ -1,0 +1,146 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -2,
+      -3
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          0,
+          -3
+        ],
+        [
+          0,
+          -2
+        ]
+      ],
+      "port": "top",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -2,
+          -2
+        ],
+        [
+          2,
+          -2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          -2,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "port": "bottom",
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -2,
+      -3
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the turned core text box is taller than the column is wide; a column is drawn unrotated and its text stays inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Cable column (core)",
+  "nodes": [
+    {
+      "ports": [
+        "top"
+      ]
+    },
+    {
+      "ports": [
+        "bottom"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "top",
+      "kind": "conductor",
+      "through": true,
+      "to": "bottom"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        0,
+        -3
+      ],
+      "description": "",
+      "dir": "N",
+      "id": "top"
+    },
+    {
+      "at": [
+        0,
+        3
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "bottom"
+    }
+  ],
+  "reference": {
+    "number": "cable-column",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "core": {
+      "at": [
+        -0.5,
+        -1.75
+      ],
+      "box": [
+        1,
+        3.5
+      ],
+      "side": "S"
+    }
+  },
+  "status": "unverified"
+}

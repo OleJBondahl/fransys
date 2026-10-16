@@ -7,7 +7,7 @@ A gap is in grid units `G`; eight `G` make one symbol module. A sheet number is 
 
 ## Sheet numbers
 
-`d.layout.sheet(name, **numbers)` records a sheet format and returns its handle. Pass the handle to `d.layout.profile(sheet=handle)`. A profile with no `sheet` uses the house sheet: A3 landscape, 420 by 297 mm, content box 410 by 267 mm at (5, 5), an 8 by 6 frame, `module_mm` 2.5. A sheet takes all nine numbers and has no defaults. A missing number or an unknown one raises `AuthorError`.
+`d.layout.sheet(name, **numbers)` records a sheet format and returns its handle. Pass the handle to `d.layout.profile(sheet=handle)`. A profile with no `sheet` uses the house sheet: A3 landscape, 420 by 297 mm, content box 410 by 267 mm at (5, 5), an 8 by 6 frame, `module_mm` 2.5. A sheet takes all nine numbers and has no defaults. A missing number or an unknown one raises `AuthorError`. The title-block band is the sheet's height minus twice `content_y_mm` minus `content_height_mm`: 20 mm on the house sheet. A smaller `content_height_mm` gives a taller band. Text of 2.5 mm or more needs a band over 20 mm. A document with no schematic page takes the profile's sheet too.
 
 | number | what it is | effect on the drawing | when to change it |
 |---|---|---|---|

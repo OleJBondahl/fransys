@@ -4,7 +4,7 @@ from collections import Counter
 from typing import TYPE_CHECKING
 from xml.sax.saxutils import escape
 
-from fransys_model.derive import text_room_g
+from fransys_model.derive import item_installed, text_room_g
 from fransys_model.derive.contact_rows import (
     column_split,
     column_x,
@@ -20,14 +20,13 @@ from fransys_model.derive.grid_mm import grid_to_mm
 from fransys_model.derive.order import drawn_on_page
 from fransys_model.derive.print_sizes import ASCENT_RATIO
 from fransys_model.layout import Label, profile_of_page, sheet_format_of
-from fransys_model.vocab import functions, items, ports
+from fransys_model.vocab import functions, ports
 
 from ._numbers import format_decimal, printed_font_mm
 
 if TYPE_CHECKING:
-    from fransys_model.kernel import Id, Model
+    from fransys_model.kernel import Model
     from fransys_model.layout import Page, Profile, SheetFormat
-    from fransys_model.vocab import Item
 
 
 def labels_on_page(model: Model, page: Page) -> tuple[Label, ...]:
@@ -35,18 +34,15 @@ def labels_on_page(model: Model, page: Page) -> tuple[Label, ...]:
     return drawn_on_page(model, Label, page)
 
 
-def _item_installed(model: Model, item: Id[Item]) -> bool:
-    return items(model)[item].installed
-
-
-def _not_installed(model: Model, label: Label) -> bool:
-    """A label whose subject's item has `installed=False`."""
+def _label_class(model: Model, label: Label) -> str:
+    """`label not-installed` when the label's subject's item has `installed=False`."""
     if label.function is not None:
-        return not _item_installed(model, functions(model)[label.function].item)
-    if label.port is not None:
-        function = functions(model)[ports(model)[label.port].function]
-        return not _item_installed(model, function.item)
-    return False
+        item = functions(model)[label.function].item
+    elif label.port is not None:
+        item = functions(model)[ports(model)[label.port].function].item
+    else:
+        return "label"
+    return "label" if item_installed(model, item) else "label not-installed"
 
 
 def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: Label) -> str:
@@ -54,7 +50,7 @@ def _contact_image(model: Model, sheet: SheetFormat, profile: Profile, label: La
     step = text_room_g(profile.text_height_mm, sheet.module_mm)
     pad = profile.marker_padding
     font_mm = printed_font_mm(profile.text_height_mm)
-    css_class = "label not-installed" if _not_installed(model, label) else "label"
+    css_class = _label_class(model, label)
 
     def mm_x(x: int):  # noqa: ANN202 -- one-line closure returning `format_decimal`'s own `-> str`, restating it adds nothing
         return format_decimal(grid_to_mm(sheet.content_x_mm, x, sheet.module_mm))
@@ -100,7 +96,7 @@ def _label_element(model: Model, sheet: SheetFormat, profile: Profile, label: La
     font_mm = printed_font_mm(profile.text_height_mm)
     baseline_mm = top_mm + font_mm * ASCENT_RATIO
     x_mm = grid_to_mm(sheet.content_x_mm, label.x, sheet.module_mm)
-    css_class = "label not-installed" if _not_installed(model, label) else "label"
+    css_class = _label_class(model, label)
     return (
         f'<text class="{css_class}" x="{format_decimal(x_mm)}" y="{format_decimal(baseline_mm)}" '
         f'font-size="{format_decimal(font_mm)}">'

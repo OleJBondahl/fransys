@@ -1,6 +1,6 @@
 """Diagram line labels: a label stands clear of other lines' runs and of taken boxes."""
 
-from fransys_layout.engines.diagram.labels import label_at, label_box, label_clear
+from fransys_layout.engines.overview.lanes.labels import label_at, label_box, label_clear
 from fransys_layout.geometry import Box, Point
 from fransys_layout.stages.space import run_of
 

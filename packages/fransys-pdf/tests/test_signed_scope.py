@@ -1,4 +1,4 @@
-"""The title block's subject label keeps the BARE label (pdf-0005 item 4).
+"""The subject label keeps the BARE label (pdf-0005 item 4); the Scope cell differs (model-0301).
 
 Owner ruling: "the subject label keeps the bare location label: C1 Demo cabinet, no +". A
 follow-up asked for a signed scope (`+C1 Demo cabinet`); it was retracted as an error
@@ -9,7 +9,10 @@ Scope cell and the document heading, and each test fails if a sign is added.
 
 from dataclasses import replace
 
+import fransys_render
 from _build import (
+    cable_facet,
+    cable_product_facet,
     document,
     drawing_set,
     item,
@@ -18,15 +21,10 @@ from _build import (
     model,
     part,
     project,
-    sheet_format,
 )
-from fransys_pdf import source
-from fransys_pdf._cable_runs import Block
-from fransys_pdf._drawings import _cable_runs
-from fransys_pdf._geometry import document_heading, preamble, subject_label
-from fransys_pdf._sizes import sizes_of
+from fransys_pdf._geometry import document_heading
 
-from fransys_model.kernel import render_id
+from fransys_model.derive import document_sheets_of, sheet_key, subject_label
 from fransys_model.vocab import DocumentPreset, PageKind, documents
 
 K = PageKind
@@ -39,8 +37,8 @@ def _nested_cabinet():
     return room, cabinet
 
 
-def _schematic_source(*nodes):
-    """`source` of a cabinet schematic at the last node of `nodes`, with one drawing page."""
+def _schematic_background(*nodes):
+    """The first drawing page's background SVG of a cabinet schematic at the last of `nodes`."""
     subject = nodes[-1]
     ds = drawing_set("ds1", location=subject)
     page = layout_page("p1", drawing_set=ds, number=1)
@@ -53,7 +51,7 @@ def _schematic_source(*nodes):
         remove=(K.PLC_LIST, K.TERMINAL_LIST, K.BOM),
     )
     m = model(*nodes, project(), ds, page, doc)
-    return source(m, doc.id, {render_id(page.id): "<svg>one</svg>"})
+    return fransys_render.sheets(document_sheets_of(m))[sheet_key(doc.id, K.SCHEMATIC, 0)].svg
 
 
 def test_a_location_documents_subject_label_is_the_bare_label():
@@ -80,19 +78,21 @@ def test_an_item_documents_subject_label_has_no_sign():
     assert subject_label(m, documents(m)[doc.id]) == "A1 Invented relay"
 
 
-def test_a_drawing_pages_scope_cell_reads_the_bare_location():
+def test_a_drawing_pages_scope_cell_reads_the_signed_location_path():
     c1 = location("C1", "Demo cabinet")
-    text = _schematic_source(c1)
-    assert 'text(size: 2.46912mm, "Scope"), text(size: 3.42934mm, text("C1"))' in text
-    assert '"+C1"' not in text
+    svg = _schematic_background(c1)
+    assert ">Scope</text>" in svg
+    assert ">+C1</text>" in svg
 
 
 def test_a_harness_drawing_pages_scope_cell_reads_the_bare_harness():
     harness = item("h1", description="Harness one")
+    demo_part = part("cab1", description="Invented 4-core cable")
+    product = cable_product_facet("cab1", subject=demo_part.id, core_count=0)
+    cable = item("w1", description="Cable one", part=demo_part.id, parent=harness.id)
+    facet = cable_facet("w1", subject=cable.id, length_mm=1500)
     doc = document("d1", preset=DocumentPreset.HARNESS_DRAWING, subject=harness, cover="# Cover")
-    m = model(project(), harness, doc)
-    sheet = sheet_format("wide", width_mm=150, height_mm=200, frame_columns=1, frame_rows=1)
-    block = Block("k", "", "")
-    runs = _cable_runs(m, documents(m)[doc.id], sheet, (block,), {"k": "<svg>block</svg>"})
-    text = preamble(sizes_of(m, documents(m)[doc.id]), sheet) + runs
-    assert 'text(size: 2.46912mm, "Scope"), text(size: 3.42934mm, text("H1"))' in text
+    m = model(project(), harness, demo_part, product, cable, facet, doc)
+    svg = fransys_render.sheets(document_sheets_of(m))[sheet_key(doc.id, K.HARNESS_DRAWING, 0)].svg
+    assert ">Scope</text>" in svg
+    assert ">H1</text>" in svg

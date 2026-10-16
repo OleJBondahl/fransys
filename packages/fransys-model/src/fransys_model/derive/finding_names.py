@@ -14,11 +14,13 @@ from fransys_model.derive.designation import (
     printed_designation,
 )
 from fransys_model.derive.drawing_text import outline_title, release_title, tag_text, wire_text
+from fransys_model.derive.facts.subjects import subject_kind
 from fransys_model.derive.instance_tag import instance_name, unit_tag
 from fransys_model.derive.kinds import item_kind
 from fransys_model.derive.plc_channel_text import plc_channel_text
 from fransys_model.derive.wire_ends import ordered_wire_ends
 from fransys_model.kernel import Finding, Id, Model, Record, SchemaError
+from fransys_model.vocab.enums import SubjectKind
 from fransys_model.vocab.finding_ref import REF
 from fransys_model.vocab.tables import conductors, nets, unit_releases
 from fransys_model.vocab.tables import units as units_table
@@ -99,7 +101,7 @@ def subject_text(model: Model, target: Id[Record]) -> str | None:
     `None` for a record kind with no printed text; the caller then shows the model key.
     """
     wire: Id[Any] = target  # the kind test below makes it a conductor id
-    if wire.kind == "conductor" and wire in conductors(model):
+    if subject_kind(wire) is SubjectKind.CONDUCTOR and wire in conductors(model):
         record = conductors(model)[wire]
         try:
             ends = ordered_wire_ends(model, record.a, record.b)

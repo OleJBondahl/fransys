@@ -6,6 +6,7 @@ from pathlib import Path
 from fransys_model.kernel import Finding, Severity
 
 from ._release_reader import (
+    BASELINE_FILES,
     file_bytes,
     folder_files,
     has_manifest,
@@ -40,15 +41,15 @@ def _manifest_finding(folder: Path) -> Finding | None:
     """The finding for a missing or broken manifest, else `None`."""
     name = folder.parent.name
     if not has_manifest(folder):
-        return _finding("RELEASE_FILE_MISSING", name, folder, "baseline/manifest.json")
+        return _finding("RELEASE_FILE_MISSING", name, folder, BASELINE_FILES["manifest"])
     try:
         manifest_fields(folder)
     except ValueError:
-        return _finding("RELEASE_FILE_CHANGED", name, folder, "baseline/manifest.json")
+        return _finding("RELEASE_FILE_CHANGED", name, folder, BASELINE_FILES["manifest"])
     return None
 
 
-def _folder_findings(folder: Path) -> list[Finding]:
+def folder_findings(folder: Path) -> list[Finding]:
     """Every missing, changed and unlisted file of one release folder."""
     bad_manifest = _manifest_finding(folder)
     if bad_manifest is not None:
@@ -61,7 +62,7 @@ def _folder_findings(folder: Path) -> list[Finding]:
             findings.append(_finding("RELEASE_FILE_MISSING", release.name, folder, relative))
         elif not _same(data, relative, expected):
             findings.append(_finding("RELEASE_FILE_CHANGED", release.name, folder, relative))
-    listed = {relative for relative, _ in release.files} | {"baseline/manifest.json"}
+    listed = {relative for relative, _ in release.files} | {BASELINE_FILES["manifest"]}
     for relative in sorted(folder_files(folder) - listed):
         detail = f"{relative} (not in the manifest)"
         findings.append(_finding("RELEASE_FILE_CHANGED", release.name, folder, detail))
@@ -70,4 +71,4 @@ def _folder_findings(folder: Path) -> list[Finding]:
 
 def release_file_findings(baselines: Path) -> tuple[Finding, ...]:
     """`RELEASE_FILE_CHANGED` and `RELEASE_FILE_MISSING` over every release under `baselines`."""
-    return tuple(f for folder in release_folders(baselines) for f in _folder_findings(folder))
+    return tuple(f for folder in release_folders(baselines) for f in folder_findings(folder))

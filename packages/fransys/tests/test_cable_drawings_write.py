@@ -100,9 +100,9 @@ def test_write_embeds_the_cable_block_svg_in_the_typst_source(good_written):
     assert any(p.suffix == ".pdf" for p in paths)
     sources = [p.read_text(encoding="utf-8") for p in sorted(inter.glob("*.typ"))]
     assert len(sources) == 1
-    assert 'format: "svg"' in sources[0]
+    assert "#image(bytes(" in sources[0]
     # The cable block and the SYSTEM block diagram sheet: one SVG each.
-    assert sources[0].count('format: "svg"') == 2
+    assert sources[0].count("#image(bytes(") == 2
     assert "-W1, 5000 mm" in sources[0]  # the block's heading, inside the SVG literal
     assert 'strong(text("Core"))' not in sources[0]  # the old core table's header cell
 

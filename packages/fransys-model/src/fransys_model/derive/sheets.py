@@ -9,6 +9,7 @@ from fransys_model.vocab import DocumentPreset, PageKind
 lazy from fransys_model.kernel import Model
 lazy from fransys_model.vocab import Document
 
+from .diagram_sheet_order import diagram_sheet_order_key
 from .document_pages import drawn_pages
 from .document_unit import document_unit
 
@@ -22,7 +23,7 @@ def diagram_sheets(model: Model, record: Document) -> tuple[DiagramSheet, ...]:
     elif (unit := document_unit(model, record)) is None:
         return ()
     found = (sheet for sheet in layout_of(model, DiagramSheet).values() if sheet.unit == unit)
-    return tuple(sorted(found, key=lambda sheet: sheet.number))
+    return tuple(sorted(found, key=diagram_sheet_order_key))
 
 
 def sheets(

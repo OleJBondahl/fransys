@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="10mm" viewBox="-3 -1 12 4">
+<title>Contact row (contact table)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="-2" y1="1" x2="0" y2="1" stroke-width="0.1"/>
+<polygon points="0,0 8,0 8,2 0,2" stroke-width="0.1"/>
+</g>
+</svg>

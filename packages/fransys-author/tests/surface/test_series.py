@@ -209,7 +209,7 @@ def test_a_device_without_poles_is_named(lib: Draft) -> None:
 def test_a_function_without_poles_is_named(lib: Draft) -> None:
     d = design(lib, place="C1")
     q1, k2 = d.device("Q1", "TEST-MCB-3P"), d.device("K2", "TEST-COIL")
-    with pytest.raises(AuthorError, match=r"K2\.coil has no pole pair: .*`side`.*d\.detail\.wire"):
+    with pytest.raises(AuthorError, match=r"K2\.coil has no line/load pole pair.*k2\.coil\.pins"):
         d.series(q1.main, k2.coil, wire=WIRE)
 
 

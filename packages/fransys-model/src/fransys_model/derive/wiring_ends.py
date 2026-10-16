@@ -6,14 +6,16 @@ calls them, and the CSV keeps the jumper ends and the fixed labels.
 
 from itertools import product
 
-from fransys_model.vocab.enums import ConductorKind, PortRole
-from fransys_model.vocab.tables import conductors, ports
+from fransys_model.vocab.enums import PortRole
+from fransys_model.vocab.tables import ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item
 
 from .columns import TERMINAL_LABELS
 from .facts.children import child_items
+from .facts.conductor_facts import is_bridge
+from .facts.roles import port_role
 from .indexes import build_indexes
 from .lookups import terminal_items
 lazy from .rows import TerminalRow
@@ -33,9 +35,9 @@ def _marking_pairs(model: Model, strip: Id[Item]) -> set[tuple[str | None, str |
         }
         for function in idx.functions_by_item.get(child, ()):
             for port in idx.ports_by_function.get(function, ()):
-                record = ports(model)[port]
-                if record.role in markings:
-                    markings[record.role].add(record.marking)
+                role = port_role(model, port)
+                if role in markings:
+                    markings[role].add(ports(model)[port].marking)
         pairs.update(
             product(markings[PortRole.INTERNAL] or {None}, markings[PortRole.EXTERNAL] or {None})
         )
@@ -54,11 +56,8 @@ def strip_side_headings(model: Model, strip: Id[Item]) -> tuple[str, str]:
 
 def _kept(model: Model, ids: tuple[Id[Conductor], ...], ends: tuple[str, ...]) -> tuple[str, ...]:
     """`ends` without the jumper conductors' ends; the open cores come after the conductors'."""
-    all_conductors = conductors(model)
     wired = tuple(
-        end
-        for conductor, end in zip(ids, ends, strict=False)
-        if all_conductors[conductor].kind is not ConductorKind.JUMPER
+        end for conductor, end in zip(ids, ends, strict=False) if not is_bridge(model, conductor)
     )
     return (*wired, *ends[len(ids) :])
 

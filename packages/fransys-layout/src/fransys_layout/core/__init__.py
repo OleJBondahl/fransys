@@ -1,6 +1,8 @@
 """The placement core: plain values in, plain values out. It imports nothing outside the stdlib."""
 
+from .blocks import assign_blocks
 from .constraints import Graph
+from .cut import cut_pages
 from .geometry import (
     cell_anchor,
     cell_footprint,
@@ -10,10 +12,12 @@ from .geometry import (
     rotate_box,
     rotate_side,
     rotate_xy,
+    shape_key,
     stack_lane,
 )
 from .jsonform import FORMAT, from_plain, to_plain
 from .keys import natural_key
+from .order import order_blocks, order_columns
 from .outputs import (
     Annotations,
     CoreLayout,
@@ -30,19 +34,28 @@ from .outputs import (
     Routes,
     Scene,
     SceneBox,
+    SceneLabel,
     SceneMarker,
     ScenePin,
+    SceneTable,
     SceneWire,
     Score,
     Table,
     Trunk,
     Wire,
+    WireLabel,
     scene,
 )
 from .pack import PlacedColumn, attachments, cell_node, flip_column, placed_columns
 from .pack_row import RowSpec, row_width, solve_row
 from .pack_sep import separation
+from .place import place_pages
+from .place_y import YCycleError
+from .route import route_pages
+from .rowspec import one_row
 from .score import score
+from .text_markers import mark_pages
+from .topology import build_flow
 from .unionfind import UnionFind
 from .values import (
     XY,
@@ -147,8 +160,10 @@ __all__ = (
     "RowSpec",
     "Scene",
     "SceneBox",
+    "SceneLabel",
     "SceneMarker",
     "ScenePin",
+    "SceneTable",
     "SceneWire",
     "Score",
     "Side",
@@ -161,24 +176,36 @@ __all__ = (
     "Unit",
     "Wire",
     "WireKind",
+    "WireLabel",
+    "YCycleError",
+    "assign_blocks",
     "attachments",
+    "build_flow",
     "cell_anchor",
     "cell_footprint",
     "cell_node",
     "column_extent",
+    "cut_pages",
     "flip_column",
     "from_plain",
     "lane_extent",
+    "mark_pages",
     "natural_key",
+    "one_row",
+    "order_blocks",
+    "order_columns",
     "pin_xy",
+    "place_pages",
     "placed_columns",
     "rotate_box",
     "rotate_side",
     "rotate_xy",
+    "route_pages",
     "row_width",
     "scene",
     "score",
     "separation",
+    "shape_key",
     "solve_row",
     "stack_lane",
     "to_plain",

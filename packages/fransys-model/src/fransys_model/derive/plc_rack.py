@@ -51,44 +51,80 @@ def _modules(model: Model, rack: Id[Item]) -> list[tuple[Item, Part]]:
     return sorted(found, key=lambda pair: plc_module_key(pair[0]))
 
 
+def _channel(
+    model: Model,
+    facts: _Facts,
+    spare_stem: str,
+    pair: tuple[Id[Function], PlcChannelFacet],
+    unit: Id[Unit] | None,
+) -> PlcRackChannel:
+    """One channel; `spare_stem` is its stem when no bound device and signal name give one."""
+    function_id, facet = pair
+    all_functions = functions(model)
+    device = facts.devices.get(function_id)
+    request = None if device is None else facts.requests.get(device)
+    scaling = None if device is None else facts.scalings.get(device)
+    designation = (
+        None
+        if device is None
+        else printed_designation(model, all_functions[device].item, unit=unit)
+    )
+    signal_name = None if request is None else request.signal_name
+    return PlcRackChannel(
+        channel=function_id,
+        number=facet.channel,
+        signal=facet.signal,
+        field_device=device,
+        field_device_designation=designation,
+        signal_name=signal_name,
+        scaling=None
+        if scaling is None
+        else ChannelScaling(
+            unit=scaling.unit,
+            raw_min=scaling.raw_min,
+            raw_max=scaling.raw_max,
+            eng_min=scaling.eng_min,
+            eng_max=scaling.eng_max,
+        ),
+        name_stem=(
+            f"{designation}_{signal_name}"
+            if designation is not None and signal_name is not None
+            else spare_stem
+        ),
+    )
+
+
 def _channels(
     model: Model, idx: Indexes, facts: _Facts, module: Item, unit: Id[Unit] | None
 ) -> tuple[PlcRackChannel, ...]:
+    """The module's channels in `plc_channel_tie` order, each built once with its stem."""
     all_functions = functions(model)
-    channels, ties = [], {}
+    found = []
     for function_id in idx.functions_by_item.get(module.id, ()):
         template = all_functions[function_id].template
         facet = None if template is None else facts.channel_of.get(template)
-        if facet is None:
-            continue
-        ties[function_id] = plc_channel_tie(facet.channel, all_functions[function_id])
-        device = facts.devices.get(function_id)
-        request = None if device is None else facts.requests.get(device)
-        scaling = None if device is None else facts.scalings.get(device)
-        channels.append(
-            PlcRackChannel(
-                channel=function_id,
-                number=facet.channel,
-                signal=facet.signal,
-                field_device=device,
-                field_device_designation=(
-                    None
-                    if device is None
-                    else printed_designation(model, all_functions[device].item, unit=unit)
-                ),
-                signal_name=None if request is None else request.signal_name,
-                scaling=None
-                if scaling is None
-                else ChannelScaling(
-                    unit=scaling.unit,
-                    raw_min=scaling.raw_min,
-                    raw_max=scaling.raw_max,
-                    eng_min=scaling.eng_min,
-                    eng_max=scaling.eng_max,
-                ),
-            )
-        )
-    return tuple(sorted(channels, key=lambda channel: ties[channel.channel]))
+        if facet is not None:
+            found.append((function_id, facet))
+    found.sort(key=lambda pair: plc_channel_tie(pair[1].channel, all_functions[pair[0]]))
+    head = printed_designation(model, module.id, unit=unit)
+    return tuple(
+        _channel(model, facts, f"{head}_{nr}", pair, unit) for nr, pair in enumerate(found)
+    )
+
+
+def _rack_module(
+    model: Model, idx: Indexes, facts: _Facts, found: tuple[Item, Part], unit: Id[Unit] | None
+) -> PlcRackModule:
+    module, part = found
+    designation = printed_designation(model, module.id, unit=unit)
+    return PlcRackModule(
+        module=module.id,
+        designation=designation,
+        mpn=part.mpn,
+        description=part.description,
+        position=module.position,
+        channels=_channels(model, idx, facts, module, unit),
+    )
 
 
 def plc_rack_modules(
@@ -123,17 +159,7 @@ def plc_rack_modules(
         ),
         devices=frozendict(channel_devices(model)),
     )
-    return tuple(
-        PlcRackModule(
-            module=module.id,
-            designation=printed_designation(model, module.id, unit=unit),
-            mpn=part.mpn,
-            description=part.description,
-            position=module.position,
-            channels=_channels(model, idx, facts, module, unit),
-        )
-        for module, part in _modules(model, rack)
-    )
+    return tuple(_rack_module(model, idx, facts, found, unit) for found in _modules(model, rack))
 
 
 @digest_cached(DIGEST_CACHE_SIZE)

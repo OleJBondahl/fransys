@@ -20,6 +20,7 @@ lazy from fransys_model.vocab import FunctionKind, identifier
 lazy from fransys_model.vocab import Item as ModelItem
 
 if TYPE_CHECKING:
+    from fransys_author.surface._box_device import BoxDevice
     from fransys_author.surface._strip import TerminalStrip
     from fransys_author.surface.design import Design
 
@@ -54,6 +55,13 @@ class Device:
 
     def _pins(self) -> list[tuple[str, Pin]]:
         return [(f.name, pin) for f in self._item.functions for pin in f.ports]
+
+    @override
+    def __dir__(self) -> list[str]:
+        """The attribute names, and for a part-less box its pins too, so completion lists them."""
+        boxed = all(f.name == "box" for f in self._item.functions)
+        pins = {identifier(pin.name) for _, pin in self._pins()} if boxed else set()
+        return sorted({*super().__dir__(), *pins})
 
     def _screw(self, pin: Pin) -> Pin:
         """`pin`, joined to the PE net when its function is a bar: a named screw is PE too."""
@@ -289,7 +297,7 @@ class Devices:
         name: str | None = None,
         description: str = "",
         position: int | None = None,
-    ) -> Any: ...  # noqa: ANN401 -- a box's pins are named at the call, so untyped like a string MPN
+    ) -> BoxDevice: ...
     @overload
     def device(
         self: "Design",

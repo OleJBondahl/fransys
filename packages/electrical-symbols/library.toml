@@ -10,3 +10,24 @@ links = ["mechanical_link"]
 
 [rules]
 required_slots = ["tag", "marking.<port>"]
+
+# wire styles (SYMDEF-SLOTS SS8): layout names a style id and its points, never a weight or a dash
+[[wire]]
+id = "wire"
+weight = "normal"
+style = "solid"
+
+[[wire]]
+id = "trunk"
+weight = "thick"
+style = "solid"
+
+[[wire]]
+id = "link"
+weight = "normal"
+style = "dashed"
+
+[[wire]]
+id = "by_others"
+weight = "normal"
+style = "dashed"

@@ -55,7 +55,7 @@ def _horizontal_rules(pdf: Path) -> tuple[float, list[Box], float]:
             for obj in page.get_objects()
             if obj.type == raw.FPDF_PAGEOBJ_PATH
             and (bounds := obj.get_bounds())[2] - bounds[0] > 20
-            and bounds[3] - bounds[1] < 4
+            and bounds[3] - bounds[1] < 70  # a table rule, or the title block's outline
         ]
         return width, rules, header_left
     finally:
@@ -65,17 +65,17 @@ def _horizontal_rules(pdf: Path) -> tuple[float, list[Box], float]:
 def test_the_revision_table_ends_two_millimetres_above_the_title_block(tmp_path: Path) -> None:
     """The gap from the table's bottom rule up to the title block's top rule is at least 2 mm."""
     width, rules, header_left = _horizontal_rules(_pdf(tmp_path))
-    # the title block's top rule is the highest rule that spans the page's frame
-    spanning = [rule for rule in rules if rule[2] - rule[0] > 0.95 * width and rule[3] < width / 4]
+    # the title block's top edge is the highest outline or rule that spans most of the page's
+    # frame: the title block's outline (the square logo cell is its own outline) or a band rule
+    spanning = [rule for rule in rules if rule[2] - rule[0] > 0.9 * width and rule[3] < width / 4]
     title_top = max(rule[3] for rule in spanning)
-    title_top_bottom = max(rule[1] for rule in spanning)
     # the table's rules cross its header column and lie at or above the title block's top rule
     table = [
         rule
         for rule in rules
         if rule[0] <= header_left <= rule[2]
         and rule[2] - rule[0] < 0.9 * width
-        and rule[1] > title_top_bottom - 3
+        and rule[1] > title_top
     ]
     assert table
     gap_mm = (min(rule[1] for rule in table) - title_top) / _POINTS_PER_MM

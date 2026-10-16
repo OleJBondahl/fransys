@@ -15,7 +15,8 @@ from fransys_model.derive import (
     overview_tree,
     overview_units,
     overview_view_rows,
-    text_room_g,
+    own_drawing_line,
+    text_room,
 )
 from fransys_model.kernel import make_id
 from fransys_model.layout import (
@@ -28,8 +29,6 @@ from fransys_model.layout import (
     box_key,
     layout_of,
     line_key,
-    profile_of,
-    sheet_format_of,
     view_key,
 )
 from fransys_model.vocab import Aspect, aspect_nodes, items, units
@@ -42,7 +41,6 @@ from ._data_order import reading_order
 from ._data_places import (
     holds_of,
     location_texts,
-    own_drawing,
     place_label,
     place_title,
     unit_place_label,
@@ -65,9 +63,7 @@ class _Tables:
 
     def __init__(self, model: Model) -> None:
         self.model = model
-        profile = profile_of(model)
-        sheet = sheet_format_of(model, profile.sheet_format)
-        self.text_height = text_room_g(profile.text_height_mm, sheet.module_mm)
+        self.text_height = text_room(model)
         graph = overview_graph(model)
         self.nodes = graph.nodes
         self.pages = item_pages(model)
@@ -152,7 +148,10 @@ def _box(
             {"lines": list(m.lines), "ref": tables.ref(m.ref), "text": m.text} for m in box.members
         ],
         "ref": tables.ref(box.key.ref),
-        "tabs": [[t.x, t.y, t.text_width, texts.get((index, t.index))] for t in record.tabs],
+        "tabs": [
+            [t.x, t.y, t.text_width, texts.get((index, t.index)), t.width, t.height]
+            for t in record.tabs
+        ],
         "w": record.width,
         "x": record.x,
         "y": record.y,
@@ -260,7 +259,7 @@ def page_data(
         "text_height": tables.text_height,
         "tree": _tree(tables),
         "unit_parents": [_unit_parent(tables, u) for u in tables.unit_ix],
-        "own_drawings": [own_drawing(model, u) for u in tables.unit_ix],
+        "own_drawings": [own_drawing_line(model, u) for u in tables.unit_ix],
         "unit_systems": [
             unit_system_label(model, u, one) for u, one in zip(tables.unit_ix, labels, strict=True)
         ],

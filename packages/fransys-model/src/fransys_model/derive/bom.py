@@ -1,8 +1,10 @@
 """The BOM query: `bom_lines`, its unit scope and `TOP_LEVEL`."""
 
 from typing import TYPE_CHECKING, Final, cast
+lazy from collections.abc import Collection
 
 from fransys_model.kernel import Id, Model, SchemaError
+from fransys_model.vocab.enums import SubjectKind
 from fransys_model.vocab.membership import unit_own_roots
 from fransys_model.vocab.tables import items, parts
 from fransys_model.vocab.tables import units as units_table
@@ -18,6 +20,7 @@ from .designation import (
     takes_parents_designation,
 )
 from .external import external
+from .facts.subjects import subject_kind
 from .indexes import Indexes, build_indexes
 from .instance_tag import instance_name, unit_tag
 from .lookups import descendants, require
@@ -48,16 +51,30 @@ Distinct from `None`, which counts the whole model with no unit lines at all.
 
 
 def _in_scope(
+    model: Model,
+    idx: Indexes,
+    scope: Id[Item] | Id[AspectNode] | None,
+    without: frozenset[Id[Item]],
+) -> frozenset[Id[Item]] | None:
+    """The items a BOM scope covers less `without`, or `None` for the whole model."""
+    covered = _scope_items(model, idx, scope)
+    if not without:
+        return covered
+    return (frozenset(items(model)) if covered is None else covered) - without
+
+
+def _scope_items(
     model: Model, idx: Indexes, scope: Id[Item] | Id[AspectNode] | None
 ) -> frozenset[Id[Item]] | None:
     """The items a BOM scope covers, or `None` for the whole model."""
     if scope is None:
         return None
-    if scope.kind == "item":
+    kind = subject_kind(scope)
+    if kind is SubjectKind.ITEM:
         root = cast("Id[Item]", scope)
         require(items(model).get(root), "item", root)
         return frozenset({root, *descendants(idx.children_by_item, root)})
-    if scope.kind == "aspect_node":
+    if kind is SubjectKind.ASPECT_NODE:
         return frozenset(items_at(model, cast("Id[AspectNode]", scope)))
     msg = "a BOM scope is an item or a location node of the model"
     raise SchemaError(msg, kind=scope.kind, record_id=scope)
@@ -193,7 +210,10 @@ def _contact_lines(
 
 
 def bom_lines(
-    model: Model, scope: Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None = None
+    model: Model,
+    scope: Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None = None,
+    *,
+    without: Collection[Id[Item]] = (),
 ) -> tuple[BomLine, ...]:
     """One `BomLine` per `Part` of an installed, not external item, by `(mpn, revision, part)`.
 
@@ -202,9 +222,9 @@ def bom_lines(
 
     - `None` (default): every installed item of the model, no unit lines.
     - `Id[Item]`: that item and its descendants; `Id[AspectNode]`: the items at or below it.
-    - `Id[Unit]`: that unit's own items, plus one `part=None` line per unit instance nested in it.
-      The unit's sole root keeps its line but prints no designation (`is_own_unit_root`).
+    - `Id[Unit]`: its own items and a `part=None` line per nested unit; its sole root prints none.
     - `TOP_LEVEL`: items with no unit, plus one line per top-level unit, the same way.
+    - `without`: items the `None`, item and node scopes leave out (a document's undrawn harness).
 
     Raises:
         SchemaError: `scope` is none of the above kinds, names a unit the model does not hold,
@@ -216,13 +236,15 @@ def bom_lines(
     own_unit = None  # A unit's own BOM names its items as its own drawing does
     if isinstance(scope, TopLevelScope):
         covered, unit_children = _unit_scope(model, None)
-    elif scope is not None and scope.kind == "unit":
+    elif scope is not None and subject_kind(scope) is SubjectKind.UNIT:
         target = cast("Id[Unit]", scope)
         require(units_table(model).get(target), "unit", target)
         covered, unit_children = _unit_scope(model, target)
         own_unit = target
     else:
-        covered = _in_scope(model, idx, cast("Id[Item] | Id[AspectNode] | None", scope))
+        covered = _in_scope(
+            model, idx, cast("Id[Item] | Id[AspectNode] | None", scope), frozenset(without)
+        )
 
     lines: list[tuple[ReleaseOrder, BomLine]] = []
     for part_id in idx.items_by_part:

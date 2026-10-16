@@ -1,0 +1,17 @@
+schema = 1
+name = "Reference marker (continuation flag)"
+kind = "element"
+status = "unverified"
+# our own marker at a wire end: an arrow-shaped flag, its tip on the origin, one text slot
+reference = { standard = "IEC 60617", number = "reference-marker" }
+
+elements = [
+  { polyline = [[0, 0], [1, -1], [6, -1], [6, 1], [1, 1]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline" },
+]
+
+[slots]
+ref = { at = [1.25, 0], side = "E", box = [4.5, 1] }

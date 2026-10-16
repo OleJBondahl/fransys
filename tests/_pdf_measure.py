@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ctypes
 import math
+import re
 from collections import Counter
 from dataclasses import dataclass
 
@@ -204,3 +205,13 @@ def text_objects(pdf_bytes: bytes) -> list[TextObject]:
                 )
             )
     return found
+
+
+def has_page_title(text: str, title: str) -> bool:
+    """Whether a page's title block shows page title `title`, whitespace ignored.
+
+    pdfium breaks a busy page's drawn title block into one line per character, so the check
+    reads the text with no whitespace and needs the block's label run beside the title.
+    """
+    squeezed = re.sub(r"\s+", "", text)
+    return "CustomerAuthor" in squeezed and title.replace(" ", "") in squeezed

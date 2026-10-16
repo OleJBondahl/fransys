@@ -6,6 +6,14 @@ import sys
 from pathlib import Path
 
 import pytest
+from test_one_home import (
+    compare,
+    gate,
+    render_derive_imports,
+    render_model_imports,
+    render_svg_literals,
+    scan,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = ROOT / "packages"
@@ -726,3 +734,135 @@ def test_the_model_copy_of_g_per_module_matches_its_home():
 
     assert text_width.G_PER_MODULE == electrical_symbols.G_PER_MODULE
     assert frame_position.G_PER_MODULE is text_width.G_PER_MODULE
+
+
+# Gate 2 (root-0212): render calls no derive function except the title-block-text names, and may
+# read derive's row types and constants. The scanners and the counts (`one-home.toml`
+# `[render_derive_imports]`, `[render_svg_literals]`) belong to `test_one_home.py`; the counts
+# only fall, and reach zero at the last family switch.
+RENDER_SRC = PACKAGES_ROOT / "fransys-render" / "src"
+
+
+def test_render_imports_only_layout_vocab_kernel_and_derive_of_the_model():
+    found = {
+        f"{path.relative_to(PACKAGES_ROOT)}: {name}"
+        for path in RENDER_SRC.rglob("*.py")
+        for name in render_model_imports(path.read_text(encoding="utf-8"))
+    }
+    assert found == set(), "render imports fransys_model.layout, .vocab, .kernel or .derive only"
+
+
+def test_render_calls_no_derive_function_beyond_its_allowlist():
+    assert gate("render_derive_imports") == []
+
+
+def test_render_holds_no_svg_element_literal_beyond_its_allowlist():
+    assert gate("render_svg_literals") == []
+
+
+def test_the_render_derive_gate_can_fail():
+    module = "fransys_render.x"
+    source = (
+        "from fransys_model.derive import title_block_strings, grid_to_mm, SheetBackground\n"
+        "from fransys_model.derive.print_sizes import CAPITAL_RATIO, font_size_mm\n"
+        "if TYPE_CHECKING:\n    from fransys_model.derive import notice_unfit\n"
+    )
+    sites = scan(render_derive_imports, source, module)
+    assert {k.split("::")[1]: v for k, v in sites.items()} == {
+        "grid_to_mm": [1],
+        "font_size_mm": [2],
+    }
+    assert f"{module}:1" in " ".join(compare(sites, {}))
+    assert compare(sites, {f"{module}::grid_to_mm": 2, f"{module}::font_size_mm": 1}) == [
+        f"{module}::grid_to_mm read 1 times, allowed 2: lower the allowlist"
+    ]
+    assert scan(render_derive_imports, source, "fransys_pdf.x") == {}
+    assert render_model_imports("from fransys_model.layout import Placement\n") == set()
+    assert render_model_imports("from fransys_model.records import Item\n") == {
+        "fransys_model.records"
+    }
+    assert render_model_imports("import fransys_model.vocab\n") == set()
+    assert render_model_imports("import fransys_model\n") == {"fransys_model"}
+
+
+def test_the_render_svg_literal_gate_can_fail():
+    module = "fransys_render.x"
+    source = (
+        "a = '<rect x=\"1\"/>'\nb = f'  <text x=\"{x}\">'\nc = '<svg viewBox=\"0\">'\n"
+        "d = '<g id=\"a\">'\ne = 'no <rect' \nf = '<polyline points=\"\"/>'\n"
+    )
+    sites = scan(render_svg_literals, source, module)
+    assert {k.split("::")[1]: v for k, v in sites.items()} == {
+        "<rect": [1],
+        "<text": [2],
+        "<polyline": [6],
+    }
+    assert f"{module}:1" in " ".join(compare(sites, {}))
+    assert compare(sites, {f"{module}::<rect": 2}) != []
+    assert scan(render_svg_literals, source, "fransys_pdf.x") == {}
+
+
+# Gate 3 (root-0212): an output defines no row type. A dataclass, NamedTuple or TypedDict in pdf,
+# reports, kicad, wago, overview or render is a violation unless (module path, class) is here.
+# The set only shrinks: an entry whose class is gone fails "lower the allowlist".
+ROW_OUTPUT_PACKAGES = ("pdf", "reports", "kicad", "wago", "overview", "render")
+ROW_EXEMPT: frozenset[tuple[str, str]] = frozenset(
+    {
+        # The Markdown element tree of the notes page: a parse result, not a model row.
+        ("fransys-pdf/src/fransys_pdf/_markdown.py", "Run"),
+        ("fransys-pdf/src/fransys_pdf/_markdown.py", "Heading"),
+        ("fransys-pdf/src/fransys_pdf/_markdown.py", "Paragraph"),
+        ("fransys-pdf/src/fransys_pdf/_markdown.py", "BulletList"),
+        ("fransys-pdf/src/fransys_pdf/_markdown.py", "NumberedList"),
+        ("fransys-pdf/src/fransys_pdf/_markdown.py", "Unsupported"),
+        # A helper value of the bridge drawing of the page frame, not a model row.
+        ("fransys-pdf/src/fransys_pdf/_bridge.py", "_BridgeMark"),
+        # The signal-format option of the WAGO export: a setting, not a model row.
+        ("fransys-wago/src/fransys_wago/signals.py", "SignalFormat"),
+        # Geometry values of the shorts check and a pen: strokes, not rows about a model thing.
+        ("fransys-render/src/fransys_render/_cable_pen.py", "Pen"),
+        ("fransys-render/src/fransys_render/_drawn_shorts.py", "Stroke"),
+        ("fransys-render/src/fransys_render/_drawn_shorts.py", "Body"),
+        ("fransys-render/src/fransys_render/_drawn_shorts.py", "Short"),
+        # A search result local to the block diagram drawing.
+        ("fransys-render/src/fransys_render/diagram.py", "_Found"),
+    }
+)
+ROW_BASES = frozenset({"NamedTuple", "TypedDict"})
+
+
+def row_types(source: str) -> set[str]:
+    """Names of the classes in `source` that are a dataclass, a NamedTuple or a TypedDict."""
+    found = set()
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        decorated = any("dataclass" in ast.unparse(d) for d in node.decorator_list)
+        based = any(ast.unparse(b).split(".")[-1] in ROW_BASES for b in node.bases)
+        if decorated or based:
+            found.add(node.name)
+    return found
+
+
+def _output_row_types() -> set[tuple[str, str]]:
+    return {
+        (path.relative_to(PACKAGES_ROOT).as_posix(), name)
+        for package in ROW_OUTPUT_PACKAGES
+        for path in sorted((PACKAGES_ROOT / f"fransys-{package}" / "src").rglob("*.py"))
+        for name in row_types(path.read_text(encoding="utf-8"))
+    }
+
+
+def test_an_output_defines_no_row_type():
+    found = _output_row_types()
+    assert found - ROW_EXEMPT == set(), "a row shape goes in fransys_model.derive.rows (model-0199)"
+    assert ROW_EXEMPT - found == set(), "lower the allowlist: drop the class from ROW_EXEMPT"
+
+
+def test_the_row_type_gate_can_fail():
+    source = (
+        "@dataclass(frozen=True)\nclass A: ...\nclass B(NamedTuple): ...\n"
+        "class C(typing.TypedDict): ...\nclass D: ...\n@functools.cache\nclass E: ...\n"
+    )
+    assert row_types(source) == {"A", "B", "C"}
+    assert row_types("class P(Protocol): ...\n") == set()

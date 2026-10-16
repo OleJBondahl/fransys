@@ -297,6 +297,12 @@ def test_library_toml_declares_its_keys_words_and_rules():
             "links": ["mechanical_link"],
         },
         "rules": {"required_slots": ["tag", "marking.<port>"]},
+        "wire": [
+            {"id": "wire", "weight": "normal", "style": "solid"},
+            {"id": "trunk", "weight": "thick", "style": "solid"},
+            {"id": "link", "weight": "normal", "style": "dashed"},
+            {"id": "by_others", "weight": "normal", "style": "dashed"},
+        ],
     }
 
 

@@ -2,8 +2,9 @@
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import ordered_pages
 from fransys_model.kernel import render_id
-from fransys_model.layout import DrawingSet, Page, layout_of, sheet_format_of
+from fransys_model.layout import Page, sheet_format_of
 
 from ._fan_outs import fan_outs_group
 from ._harness import connector_boxes_group, harness_lines_group
@@ -20,18 +21,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from fransys_model.kernel import Model
-
-
-def _ordered_pages(model: Model) -> tuple[Page, ...]:
-    """Every `layout.page` of `model`, ordered `(drawing_set.number, page.number)`."""
-    drawing_sets = layout_of(model, DrawingSet)
-    pages_by_id = layout_of(model, Page)
-    return tuple(
-        sorted(
-            pages_by_id.values(),
-            key=lambda page: (drawing_sets[page.drawing_set].number, page.number),
-        )
-    )
 
 
 def _render_page(model: Model, page: Page, tints: Sequence[str]) -> str:
@@ -76,5 +65,5 @@ def pages(model: Model, *, tints: Sequence[str]) -> frozendict[str, str]:
     """
     tints = checked_tints(tints)
     return frozendict(
-        {render_id(page.id): _render_page(model, page, tints) for page in _ordered_pages(model)}
+        {render_id(page.id): _render_page(model, page, tints) for page in ordered_pages(model)}
     )

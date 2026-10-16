@@ -1,8 +1,8 @@
 """`tall_column` and `too_tall_finding`: the column that overfills the sheet, and its INFO."""
 
-from fransys_layout.engines.diagram.frame import tall_column
 from fransys_layout.engines.diagram.read.findings import DIAGRAM_COLUMN_TOO_TALL, too_tall_finding
-from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
+from fransys_layout.engines.overview.lanes.diagram_frame import tall_column
+from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
 from fransys_model.kernel import Id, Severity
 
 

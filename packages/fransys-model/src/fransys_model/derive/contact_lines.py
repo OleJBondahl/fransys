@@ -1,15 +1,14 @@
 """Crimp contacts: a connector item's used pins and the contact parts fitted in them."""
 
-from fransys_model.vocab.enums import ConductorKind, FunctionKind
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.facets import ContactsFacet
-from fransys_model.vocab.tables import conductors, facets_of, functions, ports
+from fransys_model.vocab.tables import facets_of, functions, ports
+lazy from fransys_model.derive.facts.roles import conductor_role
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Port
 lazy from fransys_model.vocab.templates import Part
 
 from .indexes import build_indexes
-
-_LANDING = frozenset({ConductorKind.WIRE, ConductorKind.CORE, ConductorKind.LEAD})
 
 
 def used_pins(model: Model, item: Id[Item]) -> tuple[Id[Port], ...]:
@@ -18,13 +17,12 @@ def used_pins(model: Model, item: Id[Item]) -> tuple[Id[Port], ...]:
     The one definition of a used pin: a contact is crimped on the end of a wire, core or lead.
     """
     idx = build_indexes(model)
-    table = conductors(model)
     return tuple(
         port
         for function in idx.functions_by_item.get(item, ())
         if functions(model)[function].kind is FunctionKind.CONNECTOR
         for port in idx.ports_by_function.get(function, ())
-        if any(table[c].kind in _LANDING for c in idx.conductors_by_port.get(port, ()))
+        if any(conductor_role(model, c).lands for c in idx.conductors_by_port.get(port, ()))
     )
 
 

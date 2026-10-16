@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15mm" height="10mm" viewBox="-3 -6 6 4">
+<title>Cable head (heading of a cable box)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<polygon points="-2,-5 2,-5 2,-3 -2,-3" stroke-width="0.1"/>
+</g>
+<g class="annotation">
+<circle class="grid" cx="-3" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-6" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-3" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-5" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-3" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-4" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-3" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-3" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-3" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-2" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="-1" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="0" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="1" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="2" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<circle class="grid" cx="3" cy="-2" r="0.06" fill="#888" stroke="none"/>
+<rect class="body-box" x="-2" y="-5" width="4" height="2" fill="none" stroke="#0a0" stroke-width="0.05" stroke-dasharray="0.2 0.2"/>
+<rect class="keepout-box" x="-2" y="-5" width="4" height="2" fill="none" stroke="#a0a" stroke-width="0.05" stroke-dasharray="0.2 0.2" stroke-dashoffset="0.2"/>
+<rect class="slot-box" x="-1.75" y="-4.5" width="3.5" height="1" fill="#06c" fill-opacity="0.12" stroke="#06c" stroke-width="0.03"/>
+<text class="slot-id" x="-1.75" y="-4.6" font-size="0.3" text-anchor="start" fill="#06c" stroke="none" font-family="sans-serif">heading</text>
+</g>
+</svg>

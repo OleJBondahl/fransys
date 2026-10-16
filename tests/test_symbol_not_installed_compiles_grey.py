@@ -30,11 +30,13 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import fransys_render
 import typst
 from fransys_el import REF_TINTS
 from fransys_pdf import source
 from fransys_render import pages
 
+from fransys_model.derive import document_sheets_of
 from fransys_model.kernel import Draft, Origin, freeze, make_id
 from fransys_model.layout import (
     DrawingSet,
@@ -243,7 +245,7 @@ def _compiled_schematic_page():
     m, doc, _page = _document_and_page()
     svgs = pages(m, tints=REF_TINTS)
     assert len(svgs) == 1  # one layout page -> one rendered SVG
-    text = source(m, doc.id, svgs)
+    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m)))
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC
     pngs = typst.Compiler(text.encode("utf-8")).compile(format="png", ppi=PPI)
     assert isinstance(pngs, list)
@@ -326,7 +328,7 @@ def _compiled_schematic_page_at(ppi: float):
     m, doc, _page = _document_and_page()
     svgs = pages(m, tints=REF_TINTS)
     assert len(svgs) == 1
-    text = source(m, doc.id, svgs)
+    text = source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m)))
     assert text.count("#pagebreak()") == 1
     pngs = typst.Compiler(text.encode("utf-8")).compile(format="png", ppi=ppi)
     assert isinstance(pngs, list)

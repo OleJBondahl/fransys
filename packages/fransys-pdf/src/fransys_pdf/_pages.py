@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import revision_history, revision_text
 
+from ._cover_measure import measuring_block
 from ._geometry import document_heading, document_release
 from ._markdown import BulletList, NumberedList, Paragraph, Run, parse, to_typst
 from ._sizes import RULE
@@ -19,11 +20,6 @@ _NOTES_HEADING = literal("Notes")
 
 _REVISION_COLUMNS = ("Revision", "Date", "Description", "Created", "Checked", "Approved")
 DESCRIPTION_WIDTH_MM = 120  # Amended 2026-09-24: the one capped, wrapping column
-
-# `_cover_checks.py`'s own `COVER_OVERFLOW` estimate of the header row: the table text's font
-# size (`_geometry.preamble`'s label size) plus the cell insets, 6.0 mm at the house size. The
-# table's real rows are auto ("sized to its content"), so a wrapped description grows its row.
-TABLE_INSET_MM = 3.53
 
 
 def _flatten_lists(elements: tuple[Element, ...]) -> tuple[Element, ...]:
@@ -72,7 +68,7 @@ def _revision_table(entries: tuple[Revision, ...]) -> str:
 
 
 def cover_page(model: Model, record: Document) -> str:
-    """The cover page; an overlap with the table is `COVER_OVERFLOW`."""
+    """The cover page; Typst measures it and panics on an overlap (`COVER_OVERFLOW`, pdf-0047)."""
     heading = f"#heading(level: 1, text({literal(document_heading(model, record))}))"
     body = to_typst(_flatten_lists(parse(record.cover)))
     # `align(center, [...])`, the two-argument call, not the `align(center)[...]` trailing-block
@@ -84,10 +80,12 @@ def cover_page(model: Model, record: Document) -> str:
     # nested container, so the heading's own default spacing no longer collapses against the
     # page top, and it lands about 9 mm lower (confirmed by compiling that too).
     # The table stands on the margin box's foot, 5 mm above the title block (pdf-0027).
-    parts = [f"#align(center, [\n{heading}\n{body}\n])"]
+    parts = [f"#let fr-cover = align(center, [\n{heading}\n{body}\n])", "#fr-cover"]
     table = _revision_table(revision_history(model, document_release(model, record)))
     if table:
-        parts.append(f"#place(bottom + center)[{table}]")
+        parts.append(f"#let fr-table = {table[1:]}")
+        parts.append("#place(bottom + center, fr-table)")
+    parts.append(measuring_block(has_table=bool(table)))
     return "\n".join(parts)
 
 

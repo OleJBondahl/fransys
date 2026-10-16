@@ -8,6 +8,7 @@ or similar is not a missing feature; it reintroduces the exact bug this model re
 """
 
 import contextlib
+from functools import partial
 from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Iterable
 
@@ -123,7 +124,7 @@ def _items_with_a_function_at_or_below(model: Model) -> frozenset[Id[Item]]:
     return items_with_a_function_below(model) | frozenset(build_indexes(model).functions_by_item)
 
 
-def takes_parents_designation(model: Model, item: Id[Item]) -> bool:
+def takes_parents_designation(model: Model, item: Id[Item], *, held_switches: bool = True) -> bool:
     """Whether `item` is an accessory: it prints its parent's designation, having none of its own.
 
     True for a part-bearing item with no own text, terminal facet, board or harness role, whose
@@ -134,6 +135,7 @@ def takes_parents_designation(model: Model, item: Id[Item]) -> bool:
     Args:
         model: The frozen model to read.
         item: The item to classify.
+        held_switches: `False`: no contact block of held switches (before 0.18.2).
 
     Returns:
         `True` if `item` is an accessory that prints its parent's designation.
@@ -152,7 +154,9 @@ def takes_parents_designation(model: Model, item: Id[Item]) -> bool:
         return False
     if footprint_facet(model, record.part) is not None:
         return False
-    if item in _items_with_a_function_at_or_below(model) and not is_contact_block(model, item):
+    if item in _items_with_a_function_at_or_below(model) and not is_contact_block(
+        model, item, held_switches=held_switches
+    ):
         return False
     parent = all_items.get(record.parent)
     if (
@@ -168,7 +172,7 @@ def takes_parents_designation(model: Model, item: Id[Item]) -> bool:
     )
 
 
-def designation_holder(model: Model, item: Id[Item]) -> Id[Item]:
+def designation_holder(model: Model, item: Id[Item], *, held_switches: bool = True) -> Id[Item]:
     """The item whose own label `item` prints: `item` itself, or the top of its accessory chain.
 
     Walks `parent` while `takes_parents_designation` holds; a parent cycle ends the walk.
@@ -176,13 +180,14 @@ def designation_holder(model: Model, item: Id[Item]) -> Id[Item]:
     Args:
         model: The frozen model to read.
         item: The item whose label holder to find.
+        held_switches: as `takes_parents_designation`.
 
     Returns:
         `item` itself, or the topmost accessory ancestor whose label `item` prints.
     """
     holder = item
     for holder in item_chain(model, item):
-        if not takes_parents_designation(model, holder):
+        if not takes_parents_designation(model, holder, held_switches=held_switches):
             break
     return holder
 
@@ -210,6 +215,7 @@ def _render_item_designation(
     *,
     relative_to: Id[Item] | None = None,
     unit: Id[Unit] | None = None,
+    held_switches: bool = True,
 ) -> str:
     """Render `item`'s label: enclosing boards' and harnesses' labels dash-joined, outermost first.
 
@@ -221,7 +227,11 @@ def _render_item_designation(
     ) is not None:
         raise refusal
     if tagged := instance_designation(
-        model, item, relative_to=relative_to, unit=unit, own=_render_item_designation
+        model,
+        item,
+        relative_to=relative_to,
+        unit=unit,
+        own=partial(_render_item_designation, held_switches=held_switches),
     ):
         return tagged  # the instance tags in front
     if unit is not None and relative_to is None:  # printed in `unit`'s own document
@@ -234,7 +244,9 @@ def _render_item_designation(
     if relative_to is not None and relative_to in ancestors and relative_to in boards:
         ancestors = ancestors[ancestors.index(relative_to) + 1 :]
     labels = [_ancestor_label(model, node, is_board=node in boards) for node in ancestors]
-    labels.append(_own_designation(model, designation_holder(model, item)))
+    labels.append(
+        _own_designation(model, designation_holder(model, item, held_switches=held_switches))
+    )
     return "-".join(labels)
 
 
@@ -258,6 +270,7 @@ def item_designation(
     *,
     relative_to: Id[Item] | None = None,
     unit: Id[Unit] | None = None,
+    held_switches: bool = True,
 ) -> str:
     """Render `item`'s label: a terminal's `group:index`, else its text, behind its chain (`A1-K1`).
 
@@ -266,6 +279,7 @@ def item_designation(
         item: The item to render.
         relative_to: An enclosing board: drops it and every ancestor outside it; `None` keeps all.
         unit: The unit whose own document is printed; drops its root's tag. `None`: whole model.
+        held_switches: as `takes_parents_designation`.
 
     Returns:
         `item`'s printed label; an accessory's is its holder's.
@@ -273,11 +287,13 @@ def item_designation(
     Raises:
         SchemaError: `designation_refusal` of the same arguments is not `None`.
     """
-    if relative_to is None and unit is None:
+    if relative_to is None and unit is None and held_switches:
         cached = _plain_item_designations(model).get(item)
         if cached is not None:
             return cached
-    return _render_item_designation(model, item, relative_to=relative_to, unit=unit)
+    return _render_item_designation(
+        model, item, relative_to=relative_to, unit=unit, held_switches=held_switches
+    )
 
 
 def designation_refusal(
@@ -603,15 +619,16 @@ def reference_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None
     return "".join(segments) + product
 
 
-def printed_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None = None) -> str:
-    """Render `item` as a list prints it: always behind its product-aspect sign (`-K1`, `-X1:L1:1`).
-
-    A terminal with a parent: `terminal_designation`; any other item: `-` plus `item_designation`.
+def printed_designation(
+    model: Model, item: Id[Item], *, unit: Id[Unit] | None = None, held_switches: bool = True
+) -> str:
+    """Render `item` as a list prints it: behind its product-aspect sign (`-K1`, `-X1:L1:1`).
 
     Args:
         model: The frozen model to read.
         item: The item to render.
-        unit: The unit whose own document is printed, for `item_designation`; `None`: whole model.
+        unit: The unit whose own document is printed; `None`: whole model.
+        held_switches: as `item_designation`.
 
     Returns:
         `item`'s printed designation, dash-prefixed.
@@ -621,7 +638,7 @@ def printed_designation(model: Model, item: Id[Item], *, unit: Id[Unit] | None =
     """
     if strip_of(model, item) is not None:
         return terminal_designation(model, item, unit=unit)
-    return dashed(item_designation(model, item, unit=unit))
+    return dashed(item_designation(model, item, unit=unit, held_switches=held_switches))
 
 
 def end_outside_nested_unit(model: Model, item: Id[Item], unit: Id[Unit] | None) -> bool:
@@ -687,9 +704,8 @@ def location_node_designation(model: Model, node: Id[AspectNode]) -> str:
     """Render an aspect node's signed path, root to leaf (`+C1`, nested `+ER+C1`, a group `=G1`).
 
     The node's own aspect gives the sign, repeated at every level: for a location, exactly the
-    segment `location_designation` renders for an item placed at `node`. Caution: not for a title
-    block's scope cell, which deliberately keeps the bare label; only `location_designation`
-    calls it there.
+    segment `location_designation` renders for an item placed at `node`. `scope_path` calls it too,
+    so a title block's scope cell prints the same full path (`+R+S1`).
     """
     nodes = aspect_nodes(model)
     return _segment(nodes, nodes[node], SIGNS[nodes[node].aspect])

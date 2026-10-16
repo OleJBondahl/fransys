@@ -49,6 +49,7 @@ MODEL_KERNEL = "fransys_model.kernel"
 # as off-limits outside `engines` as any other `fransys_model.derive` name.
 DRAWING_TEXT_MODULE = "fransys_model.derive.drawing_text"
 TEXT_WIDTH_MODULE = "fransys_model.derive.text_width"  # model-0190: pure, takes only values
+SET_RANK_MODULE = "fransys_model.derive.set_rank"  # model-0282: `set_ranks` takes only values
 DRAWING_TEXT_FORMATTERS = frozenset(
     {
         "frame_column",
@@ -157,6 +158,7 @@ def _beyond_kernel(imported: set[str]) -> set[str]:
         and not _under(m, MODEL_KERNEL)
         and not _under(m, DRAWING_TEXT_MODULE)
         and not _under(m, TEXT_WIDTH_MODULE)
+        and not _under(m, SET_RANK_MODULE)
     }
 
 

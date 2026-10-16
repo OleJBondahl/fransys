@@ -1,0 +1,71 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ]
+  ],
+  "kind": "element",
+  "name": "Sheet frame",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "sheet-frame",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {},
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 0.5,
+      "axis": "x"
+    },
+    {
+      "at": 0.5,
+      "axis": "y"
+    }
+  ]
+}

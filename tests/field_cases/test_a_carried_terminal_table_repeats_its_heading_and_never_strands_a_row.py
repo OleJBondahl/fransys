@@ -18,6 +18,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _pdf_measure import has_page_title
 
 _HEADING = re.compile(r"^-X(\d+)( \(cont\.\))?$")
 _ROW = re.compile(r"^-X(\d+):\d+\b")
@@ -62,7 +63,7 @@ def _fragments(pdf: Path) -> dict[int, list[_Fragment]]:
         for page in document:
             text = page.get_textpage()
             full = text.get_text_range()
-            if "Page title\r\nTerminal list" not in full:
+            if not has_page_title(full, "Terminal list"):
                 continue
             width, _ = page.get_size()
             places: dict[tuple[int, int], _Fragment] = {}

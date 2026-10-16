@@ -1,17 +1,27 @@
 """The text of a finding: its subjects printed as names, and its one `CODE (severity):` head."""
 
+from typing import Any
+
 from fransys_model.derive.docs_site import finding_url
 from fransys_model.derive.numbering_pins import subject_text
-from fransys_model.kernel import Finding, Model, describe
+from fransys_model.kernel import DescribedFinding, Finding, Id, Model, describe, describe_parts
 
 from ._codes import BY_CODE
 from ._version import __version__
 
 
+def _names(finding: Finding, model: Model) -> dict[Id[Any], str]:
+    return {s: text for s in finding.subjects if (text := subject_text(model, s)) is not None}
+
+
 def described(finding: Finding, model: Model) -> str:
     """`describe` with each subject printed by `subject_text` (BUILD-MESSAGES M5)."""
-    names = {s: text for s in finding.subjects if (text := subject_text(model, s)) is not None}
-    return describe(finding, model, names)
+    return describe(finding, model, _names(finding, model))
+
+
+def described_parts(finding: Finding, model: Model) -> DescribedFinding:
+    """`described` kept as its head and subject texts, so no caller splits the joined text."""
+    return describe_parts(finding, model, _names(finding, model))
 
 
 def headed(finding: Finding) -> str:

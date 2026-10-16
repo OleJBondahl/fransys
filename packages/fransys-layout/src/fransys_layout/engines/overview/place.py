@@ -1,12 +1,12 @@
 """One view's placement: the diagram placer with no sheet limit, then the shared lint."""
 
-from fransys_layout.engines.diagram.pieces import place_packed
-from fransys_layout.engines.diagram.scene import scene_of
 from fransys_layout.engines.overview.defaults import PACK_SHAPE
 from fransys_layout.engines.overview.lanes import place_lanes
+from fransys_layout.engines.overview.pieces import place_packed
+from fransys_layout.engines.overview.scene import scene_of
 from fransys_layout.lint import lint_diagram
-lazy from fransys_layout.engines.diagram.values import PlacedSheet
 lazy from fransys_layout.engines.overview.read.values import ViewFacts
+lazy from fransys_layout.engines.overview.sheet_values import PlacedSheet
 lazy from fransys_layout.lint._diagram_scene import Scene
 lazy from fransys_model.kernel import Finding
 

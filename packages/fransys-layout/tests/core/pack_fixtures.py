@@ -12,6 +12,7 @@ from fransys_layout.core.values import (
     Pin,
     PinRef,
     RowPlan,
+    Size,
     Sym,
 )
 
@@ -30,8 +31,7 @@ def elem(
         sym_id,
         None,
         "",
-        sym_id,
-        0,
+        Size(0, 0),
         box,
         keepout or box,
         footprint or box,
@@ -50,8 +50,7 @@ def card(sym_id: str, pin_count: int, pitch: int = 16) -> Sym:
         sym_id,
         None,
         "",
-        sym_id,
-        0,
+        Size(0, 0),
         body,
         body,
         body,
@@ -93,6 +92,7 @@ def card_block(
         short=False,
         keep_whole=False,
         forced_break_before=False,
+        seat="none",
         pin_edges=edges,
     )
 
@@ -111,6 +111,7 @@ def free_block(block_id: str, columns: tuple[str, ...]) -> Block:
         short=False,
         keep_whole=False,
         forced_break_before=False,
+        seat="none",
     )
 
 

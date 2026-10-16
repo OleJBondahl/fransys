@@ -1,6 +1,7 @@
 """The `supply_system` core kind: `SupplySystem`, `Rail`, `Current`, `Earthing`.
 
-Decision model-0075; `docs/specs/2026-09-25-model-review.md` Q2, Storage. Invented data only.
+Decision model-0075; `docs/archive/specs/2026-09-25-model-review.md` Q2, Storage.
+Invented data only.
 """
 
 from decimal import Decimal

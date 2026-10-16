@@ -11,8 +11,9 @@ from fransys_model.kernel import Id, register_enum, value
 from fransys_model.layout import OverviewRef
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.core import Item, Unit
+from fransys_model.vocab.enums import ItemKind
 
-from .rows import ItemKind, LineRef, OverviewLinkKind, OverviewStub
+from .rows import LineRef, OverviewLinkKind, OverviewStub
 
 
 @value

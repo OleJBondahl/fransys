@@ -10,6 +10,7 @@ lazy from collections.abc import Collection, Iterable
 
 from fransys_model.layout import DiagramSheet, Label, LabelKind, LinkMarker, Page, layout_of
 from fransys_model.vocab import functions
+from fransys_model.vocab.enums import ItemKind
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Item
 
@@ -20,14 +21,13 @@ from .kinds import item_kind
 from .marker_box import marker_box
 from .order import designation_key, drawn_on_page
 from .page_destination import page_destination, sheet_title_text
+from .page_headings import DIAGRAM_TITLE
 from .page_titles import page_title
-from .rows import ItemKind
 from .rows_nav import OutlineSheet, ReferenceLink
 from .text_width import text_width
 
 __all__ = ["OutlineSheet", "ReferenceLink", "outline_sheets", "reference_links"]
 
-DIAGRAM_TITLE = "Block diagram"
 _NO_ENTRY = (ItemKind.TERMINAL, ItemKind.CONNECTOR)  # NV3: terminals and pins get none
 
 

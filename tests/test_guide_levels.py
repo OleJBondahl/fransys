@@ -14,8 +14,8 @@ import pytest
 
 _FENCE = re.compile(r"```python\n(.*?)```", re.DOTALL)
 _LEVEL = re.compile(r"\A# (easy|efficient): (.+)\n")
-_PAGES = ("authoring", "units", "examples", "parts", "index")
-_MIN_TASKS = {"authoring": 3, "units": 1, "examples": 1}
+_PAGES = ("authoring", "series", "units", "examples", "parts", "index")
+_MIN_TASKS = {"authoring": 1, "series": 2, "units": 1, "examples": 1}
 
 
 def tasks_of(markdown: str) -> dict[str, dict[str, str]]:

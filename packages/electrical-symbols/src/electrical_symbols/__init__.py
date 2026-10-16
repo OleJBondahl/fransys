@@ -1,10 +1,8 @@
 """Electrical graphical symbols as data, drawn after the conventions of IEC 60617."""
 
-from pathlib import Path
-
 from symdef import LIBRARY_VERSION as _SYMDEF_LIBRARY_VERSION
-from symdef import Library, load_bundle
 
+from electrical_symbols._library import LIBRARY
 from electrical_symbols._version import LIBRARY_VERSION
 from electrical_symbols.box_ports import (
     G_PER_MODULE,
@@ -21,7 +19,25 @@ from electrical_symbols.box_ports import (
     draw_order,
     is_generic_box,
 )
+from electrical_symbols.bridge_mark import BridgePiece, bridge_mark, bridge_mark_room
 from electrical_symbols.generic_box import box_pitch, generic_box
+from electrical_symbols.natural import Natural, natural
+from electrical_symbols.sheet import (
+    frame_border,
+    frame_strip,
+    slot_box_mm,
+    slot_room,
+    slot_widths,
+)
+from electrical_symbols.sheet_svg import bold_layer, sheet_svg
+from electrical_symbols.sheet_title import (
+    TITLE_BLOCK_MIN_BAND_MM,
+    TITLE_BLOCK_MIN_WIDTH_MM,
+    TitleBlock,
+    notice_table,
+    title_block,
+    title_logo,
+)
 
 __all__ = [
     "GENERIC_BOX_KEY",
@@ -32,19 +48,35 @@ __all__ = [
     "PORT_PITCH",
     "PORT_PITCH_G",
     "SOUTH",
+    "TITLE_BLOCK_MIN_BAND_MM",
+    "TITLE_BLOCK_MIN_WIDTH_MM",
     "WIRING_GRID",
+    "BridgePiece",
+    "Natural",
+    "TitleBlock",
+    "bold_layer",
     "box_pitch",
     "box_port_marking",
     "box_port_name",
+    "bridge_mark",
+    "bridge_mark_room",
     "default_order",
     "default_sides",
     "draw_order",
+    "frame_border",
+    "frame_strip",
     "generic_box",
     "is_generic_box",
     "library_version",
+    "natural",
+    "notice_table",
+    "sheet_svg",
+    "slot_box_mm",
+    "slot_room",
+    "slot_widths",
+    "title_block",
+    "title_logo",
 ]
-
-LIBRARY: Library = load_bundle(Path(__file__).parent / "bundle.json")
 
 
 def library_version() -> str:

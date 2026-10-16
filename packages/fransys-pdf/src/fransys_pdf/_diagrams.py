@@ -4,10 +4,9 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
     diagram_sheets,
-    document_facts,
     document_unit,
     page_destination,
-    sheet_counter_text,
+    sheet_key,
     sheet_text,
 )
 from fransys_model.derive.block_diagram import diagram_lines
@@ -16,41 +15,38 @@ from fransys_model.kernel import render_id
 from fransys_model.layout import sheet_for
 from fransys_model.vocab import DocumentPreset, PageKind
 
-from ._frame import TitleBlockFields, background
-from ._geometry import subject_label
+from ._background import page_background
 from ._labels import sheet_label
 from ._marks import sheet_mark
-from ._sizes import sizes_of
 from ._typst import literal
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from fransys_model.derive import SheetBackground
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import Document
 
 
-def diagram_source(model: Model, record: Document, svgs: Mapping[str, str]) -> str:
+def diagram_source(
+    model: Model,
+    record: Document,
+    svgs: Mapping[str, str],
+    sheets: Mapping[str, SheetBackground],
+) -> str:
     """The section text: an A2 `#page` per sheet that has an SVG, `""` with none (pdf-0023)."""
     found = diagram_sheets(model, record)
     sheet = sheet_for(model, PageKind.BLOCK_DIAGRAM)
     size = f"width: {sheet.width_mm}mm, height: {sheet.height_mm}mm"
     pages = []
     outline = {entry.destination: entry for entry in outline_sheets(model, found)}
-    for diagram in found:
+    for index, diagram in enumerate(found):
         if (svg := svgs.get(render_id(diagram.id))) is None:
             continue
-        fields = TitleBlockFields(
-            *document_facts(model, record),
-            page_title="Block diagram",
-            scope=subject_label(model, record),
-            sheet_counter=sheet_counter_text(diagram, len(found)),
-            notice=record.notice,
-            logo=record.logo,
-        )
         mark = sheet_mark(outline[page_destination(model, diagram)])
         image = f'#image(bytes({literal(svg)}), format: "svg")'
-        back = background(sheet, fields, sizes_of(model, record))
+        key = sheet_key(record.id, PageKind.BLOCK_DIAGRAM, index)
+        back = page_background(model, record, sheets, key)
         numbering, start = sheet_label(sheet_text(model, diagram))
         pages.append(
             f"#page({size}, margin: 0mm, background: {back}{numbering})[{start}{mark}{image}]"

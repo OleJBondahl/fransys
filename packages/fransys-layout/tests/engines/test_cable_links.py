@@ -14,9 +14,9 @@ from cable_models import l1_picture, ring
 
 from fransys_layout.engines.cable.place import place_block
 from fransys_layout.engines.cable.read import read_blocks
+from fransys_layout.engines.overview.lanes.plan_channel import plan_channel, rise
 from fransys_layout.engines.schematic.read.reading import profile_and_sheet
 from fransys_layout.geometry import WIRING_GRID, text_width
-from fransys_layout.stages.channel import plan_channel, rise
 from fransys_model.derive.cable_drawing import block_cables, cable_heading, core_text, row_links
 from fransys_model.derive.cable_drawing import end_label as label_of
 from fransys_model.layout import (

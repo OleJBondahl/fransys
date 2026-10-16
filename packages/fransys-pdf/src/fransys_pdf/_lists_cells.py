@@ -10,12 +10,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-def _humanise(field: str) -> str:
-    """`field` as a table header: underscores to spaces, first letter upper-cased."""
-    spaced = field.rstrip("_").replace("_", " ")
-    return spaced[0].upper() + spaced[1:]
-
-
 def _cell_typst(value: object) -> str:
     """`value` as one table cell's Typst markup: tuple items in unbreakable boxes (pdf-0013)."""
     match value:

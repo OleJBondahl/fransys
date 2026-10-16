@@ -4,8 +4,8 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 from fransys.colours import BU
-from fransys_pdf._drawings import cable_blocks, harness_cables_for
 
+from fransys_model.derive import cable_blocks, harness_cables_for
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.vocab import DocumentPreset, PageKind, documents, items
 

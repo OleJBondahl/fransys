@@ -7,6 +7,7 @@ names of values.py and outputs.py (outputs.py imports its value types for the ch
 
 import annotationlib
 import dataclasses
+import enum
 import types
 import typing
 from collections.abc import Mapping
@@ -59,11 +60,16 @@ def _read(cls: object, data: object, where: str) -> object:
         return cls(**kwargs)
     origin = typing.get_origin(cls)
     if origin is None:
-        return _scalar(cls, data)
+        return _scalar(cls, data, where)
     return _generic(cls, origin, data, where)
 
 
-def _scalar(cls: object, data: object) -> object:
+def _scalar(cls: object, data: object, where: str) -> object:
+    if isinstance(cls, type) and issubclass(cls, enum.Enum):
+        if data not in [m.value for m in cls]:
+            msg = f"{where}: {data!r} is not one of {', '.join(m.value for m in cls)}"
+            raise ValueError(msg)
+        return cls(data)
     if cls is float and isinstance(data, int):
         return float(data)
     if isinstance(cls, type) and isinstance(data, cls):

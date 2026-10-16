@@ -7,13 +7,15 @@ from query_builders import make_pin, make_terminal
 
 from fransys_model.kernel import Id, Model, make_id
 from fransys_model.vocab.core import Item, Unit
+from fransys_model.vocab.project import Project
 
 
-def unit_plant() -> tuple[Model, Id[Unit], Id[Unit]]:
+def unit_plant(*, project: bool = False) -> tuple[Model, Id[Unit], Id[Unit]]:
     """Unit `u` holds strip X1 (L1, L2), K1 and K2; nested `n` holds Z1; B1 is outside `u`.
 
     K1 has two wires to X1 (to L1 and to L2), K2 one, and two wires join K1 and K2; X1's L1
     external goes to B1; K1 to Z1; a jumper joins L1 to L2 inside the strip.
+    `project=True` adds the `Project` the system listing needs.
     """
     plant = Plant()
     outer = plant.unit("u", name="cab", tag="U1")
@@ -40,6 +42,18 @@ def unit_plant() -> tuple[Model, Id[Unit], Id[Unit]]:
         else r
         for r in plant.records
     ]
+    if project:
+        plant.add(
+            Project(
+                id=make_id(Project, ("p",)),
+                key=("p",),
+                title="T",
+                number="P-1",
+                customer="C",
+                revision=1,
+                author="A",
+            )
+        )
     return plant.model(), outer, nested
 
 

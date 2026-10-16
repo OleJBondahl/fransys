@@ -7,6 +7,7 @@ Labels and frame text are read back from the compiled PDF with pypdfium2. The fr
 import ctypes
 import re
 
+import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import typst
@@ -14,7 +15,7 @@ from _build import document, drawing_set, layout_page, location, model, unit
 from fransys_pdf import font_dir, source
 from fransys_pdf._labels import sheet_label
 
-from fransys_model.derive import page_destination, sheet_text
+from fransys_model.derive import document_sheets_of, page_destination, sheet_text
 from fransys_model.kernel import make_id, render_id
 from fransys_model.layout import DiagramSheet
 from fransys_model.vocab import DocumentPreset, PageKind
@@ -69,7 +70,9 @@ def _fixture():
 def _compile(m, doc, sheets) -> bytes:
     svgs = {render_id(sheet.id): _SVG for sheet in sheets}
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(input=source(m, doc.id, svgs).encode("utf-8"))
+    compiled = compiler.compile(
+        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m))).encode("utf-8")
+    )
     assert isinstance(compiled, bytes)
     return compiled
 

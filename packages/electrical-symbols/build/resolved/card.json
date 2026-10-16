@@ -1,0 +1,255 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      32,
+      8
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          32,
+          0
+        ],
+        [
+          32,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          8
+        ]
+      ],
+      "port": "c1",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          12,
+          6
+        ],
+        [
+          12,
+          8
+        ]
+      ],
+      "port": "c2",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          20,
+          6
+        ],
+        [
+          20,
+          8
+        ]
+      ],
+      "port": "c3",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          28,
+          6
+        ],
+        [
+          28,
+          8
+        ]
+      ],
+      "port": "c4",
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      32,
+      8
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated",
+      "rule": "slot-overlap-body"
+    },
+    {
+      "reason": "a box has no through path: its connections end at the box and none continues across it",
+      "rule": "through-missing"
+    },
+    {
+      "reason": "a card ends its channel circuits at the module; no path of this symbol joins two channels",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Card (module with channels)",
+  "nodes": [
+    {
+      "ports": [
+        "c1"
+      ]
+    },
+    {
+      "ports": [
+        "c2"
+      ]
+    },
+    {
+      "ports": [
+        "c3"
+      ]
+    },
+    {
+      "ports": [
+        "c4"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        4,
+        8
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "c1"
+    },
+    {
+      "at": [
+        12,
+        8
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "c2"
+    },
+    {
+      "at": [
+        20,
+        8
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "c3"
+    },
+    {
+      "at": [
+        28,
+        8
+      ],
+      "description": "",
+      "dir": "S",
+      "id": "c4"
+    }
+  ],
+  "reference": {
+    "number": "card",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.c1": {
+      "at": [
+        4.25,
+        5
+      ],
+      "box": [
+        3,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.c2": {
+      "at": [
+        12.25,
+        5
+      ],
+      "box": [
+        3,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.c3": {
+      "at": [
+        20.25,
+        5
+      ],
+      "box": [
+        3,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.c4": {
+      "at": [
+        28.25,
+        5
+      ],
+      "box": [
+        3,
+        1
+      ],
+      "side": "E"
+    },
+    "tag": {
+      "at": [
+        1,
+        1
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 16,
+      "axis": "x"
+    }
+  ]
+}

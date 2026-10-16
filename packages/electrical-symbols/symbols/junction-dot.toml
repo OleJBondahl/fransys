@@ -1,0 +1,10 @@
+schema = 1
+name = "Junction dot"
+kind = "element"
+status = "unverified"
+# our own dot at a point layout computes (connection-point is the same dot with its four ports)
+reference = { standard = "IEC 60617", number = "junction-dot" }
+
+elements = [
+  { circle = [0, 0], r = 0.25, fill = "solid" },
+]

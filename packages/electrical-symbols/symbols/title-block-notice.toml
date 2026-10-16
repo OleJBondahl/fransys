@@ -1,0 +1,73 @@
+schema = 1
+name = "Title block with notice"
+kind = "element"
+status = "unverified"
+# our own title block, in mm (one module per mm), at a quarter of the house column widths
+# (45, 26, 100, 55, 35, 35, 94 mm on A3) and the house band of 20 mm, with the notice in a wider seventh column.
+# Stretch on x to the sheet's title width: each column has a cut at its middle weighted by
+# its width, so every column scales by the same factor. Stretch on y to the band: three cuts
+# per row (weights 1, 4, 1: above the label, between label and value, below the value), so each
+# row grows by half and the label-value gap by 4/12 of the band's growth: gap(band) = 3.125 +
+# (band - 20) * 4 / 12, which derive's `title_band_need` inverts. The slots are centred; their
+# boxes keep 1 mm clear of each side.
+# The house stack (label cap 1.8, a 1 mm gap, value cap 2.5) is set on the 0.125 grid.
+reference = { standard = "IEC 60617", number = "title-block-notice" }
+
+elements = [
+  { polyline = [[0, 0], [97.5, 0], [97.5, 20], [0, 20]], closed = true, weight = "thick" },
+  { line = [[0, 10], [74, 10]], weight = "thick" },
+  { line = [[42.75, 0], [42.75, 20]], weight = "thick" },
+  { line = [[56.5, 0], [56.5, 20]], weight = "thick" },
+  { line = [[65.25, 0], [65.25, 20]], weight = "thick" },
+  { line = [[74, 0], [74, 20]], weight = "thick" },
+  { line = [[11.25, 10], [11.25, 20]], weight = "thick" },
+  { line = [[17.75, 10], [17.75, 20]], weight = "thick" },
+]
+
+stretch = [
+  { axis = "x", at = 5.625, weight = 11.25 },
+  { axis = "x", at = 14.5, weight = 6.5 },
+  { axis = "x", at = 30.25, weight = 25 },
+  { axis = "x", at = 49.625, weight = 13.75 },
+  { axis = "x", at = 60.875, weight = 8.75 },
+  { axis = "x", at = 69.625, weight = 8.75 },
+  { axis = "x", at = 85.75, weight = 23.5 },
+  { axis = "y", at = 1.5 },
+  { axis = "y", at = 4.625, weight = 4 },
+  { axis = "y", at = 8.5 },
+  { axis = "y", at = 11.5 },
+  { axis = "y", at = 14.625, weight = 4 },
+  { axis = "y", at = 18.5 },
+]
+
+anchors = [
+  { id = "notice", at = [74, 1], dir = "E" },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "a title block is never turned; turned, its unturned text boxes would cross the cell lines" },
+  { rule = "slot-overlap-slot", reason = "a title block is never turned; turned, a cell's unturned label and value boxes would cross" },
+]
+
+[slots]
+"label.title" = { at = [21.375, 3.25], side = "C", box = [40.75, 1.75] }
+title = { at = [21.375, 6.375], side = "C", box = [40.75, 2.5] }
+"label.number" = { at = [49.625, 3.25], side = "C", box = [11.75, 1.75] }
+number = { at = [49.625, 6.375], side = "C", box = [11.75, 2.5] }
+"label.revision" = { at = [60.875, 3.25], side = "C", box = [6.75, 1.75] }
+revision = { at = [60.875, 6.375], side = "C", box = [6.75, 2.5] }
+"label.revision_date" = { at = [69.625, 3.25], side = "C", box = [6.75, 1.75] }
+revision_date = { at = [69.625, 6.375], side = "C", box = [6.75, 2.5] }
+"label.customer" = { at = [5.625, 13.25], side = "C", box = [9.25, 1.75] }
+customer = { at = [5.625, 16.375], side = "C", box = [9.25, 2.5] }
+"label.author" = { at = [14.5, 13.25], side = "C", box = [4.5, 1.75] }
+author = { at = [14.5, 16.375], side = "C", box = [4.5, 2.5] }
+"label.page_title" = { at = [30.25, 13.25], side = "C", box = [23, 1.75] }
+page_title = { at = [30.25, 16.375], side = "C", box = [23, 2.5] }
+"label.scope" = { at = [49.625, 13.25], side = "C", box = [11.75, 1.75] }
+scope = { at = [49.625, 16.375], side = "C", box = [11.75, 2.5] }
+"label.sheet" = { at = [60.875, 13.25], side = "C", box = [6.75, 1.75] }
+sheet = { at = [60.875, 16.375], side = "C", box = [6.75, 2.5] }
+"label.page" = { at = [69.625, 13.25], side = "C", box = [6.75, 1.75] }
+page = { at = [69.625, 16.375], side = "C", box = [6.75, 2.5] }
+notice = { at = [85.75, 10], side = "C", box = [21.5, 18] }

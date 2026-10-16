@@ -10,14 +10,14 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
-from fransys_layout.engines.diagram.arrange import place_ends
-from fransys_layout.engines.diagram.sizes import TRACK_PITCH, label_room, tab_reach
+from fransys_layout.engines.overview.lanes.arrange import place_ends
+from fransys_layout.engines.overview.lanes.plan_channel import plan_channel
+from fransys_layout.engines.overview.sizes import TRACK_PITCH, label_room, tab_reach
 from fransys_layout.geometry import PAGE_PAD, WIRING_GRID, Facing
-from fransys_layout.stages.channel import plan_channel
 
 if TYPE_CHECKING:
-    from fransys_layout.engines.diagram.arrange import RawEnd
-    from fransys_layout.engines.diagram.frame_values import FrameEnd
+    from fransys_layout.engines.overview.lanes.arrange import RawEnd
+    from fransys_layout.engines.overview.lanes.frame_values import FrameEnd
     from fransys_layout.engines.overview.lanes.plan import Plan
     from fransys_layout.engines.overview.read.values import Ident, ViewFacts
 

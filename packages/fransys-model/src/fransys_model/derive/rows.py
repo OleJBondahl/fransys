@@ -23,7 +23,7 @@ from fransys_model.layout import OverviewRef
 from fransys_model.vocab.aspects import AspectNode
 from fransys_model.vocab.connectivity import Conductor
 from fransys_model.vocab.core import Function, Item, Port, Unit
-from fransys_model.vocab.enums import FunctionKind, Gender
+from fransys_model.vocab.enums import FunctionKind, Gender, ItemKind
 from fransys_model.vocab.ratings import Rating
 from fransys_model.vocab.templates import FunctionTemplate, Part
 
@@ -330,25 +330,6 @@ class ContentsRow(_CableFacts):
 
 
 @register_enum
-class ItemKind(Enum):
-    """What an item is, as the overview colours and filters it.
-
-    One value per item. `TERMINAL` is a strip's terminal, `STRIP` the item holding terminals.
-    `DEVICE` is everything the other eight do not name.
-    """
-
-    TERMINAL = "terminal"
-    STRIP = "strip"
-    CONNECTOR = "connector"
-    PLC_MODULE = "plc_module"
-    CABLE = "cable"
-    HARNESS = "harness"
-    BOARD = "board"
-    BAR = "bar"
-    DEVICE = "device"
-
-
-@register_enum
 class OverviewLinkKind(Enum):
     """How two items are connected in the overview: the closed set of kinds.
 
@@ -540,20 +521,6 @@ class UnitMatrix:
 
     axis: tuple[OverviewBox, ...]
     cells: tuple[MatrixCell, ...]
-
-
-@value
-class DiffMark:
-    """The drawn boxes and lines one `ListingDiff` row marks on a level.
-
-    `change` indexes `ListingDiff.changes`; `status` is that row's `added`, `removed` or `changed`.
-    A removed row, or one of a section nothing draws, marks nothing.
-    """
-
-    change: int
-    status: str
-    boxes: tuple[Id[Any], ...]
-    lines: tuple[LineRef, ...]
 
 
 @value

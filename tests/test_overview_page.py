@@ -71,8 +71,8 @@ def test_the_page_holds_each_recorded_position() -> None:
     assert sorted((b["x"], b["y"], b["w"], b["h"]) for b in page_boxes) == sorted(
         (b.x, b.y, b.width, b.height) for b in boxes
     )
-    assert sorted((t[0], t[1], t[2]) for b in page_boxes for t in b["tabs"]) == sorted(
-        (t.x, t.y, t.text_width) for b in boxes for t in b.tabs
+    assert sorted((t[0], t[1], t[2], t[4], t[5]) for b in page_boxes for t in b["tabs"]) == sorted(
+        (t.x, t.y, t.text_width, t.width, t.height) for b in boxes for t in b.tabs
     )
     assert sorted(map(tuple, (p for ln in page_lines for p in ln["pts"]))) == sorted(
         (p.x, p.y) for ln in lines for p in ln.points

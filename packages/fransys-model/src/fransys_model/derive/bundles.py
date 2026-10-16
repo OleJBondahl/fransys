@@ -11,7 +11,7 @@ from collections import defaultdict
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 from fransys_model.vocab import Function, Port, PortTemplate
 from fransys_model.vocab.closure import net_of, physical_nets
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.vocab.tables import ports
 
 from .pole_lists import poles_of
 from .rows_bundles import Bundle, BundleCross, BundleNet, BundlePole
@@ -27,7 +27,7 @@ def _function_ends(
     model: Model, function: Id[Function], own: dict[Id[PortTemplate], Port]
 ) -> dict[Id[Port], _PoleEnd]:
     """Each port of `function` by pole end; empty for one pole or a port that sits on two poles."""
-    found = poles_of(model, functions(model)[function].kind, own)
+    found = poles_of(model, own)
     ends = {
         own[template.id].id: ((function, end), index)
         for index, pole in enumerate(found)

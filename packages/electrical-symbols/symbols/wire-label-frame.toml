@@ -1,0 +1,17 @@
+schema = 1
+name = "Wire label frame"
+kind = "element"
+status = "unverified"
+# our own frame around a wire's name, centred on the origin, one text slot
+reference = { standard = "IEC 60617", number = "wire-label-frame" }
+
+elements = [
+  { polyline = [[-3, -0.75], [3, -0.75], [3, 0.75], [-3, 0.75]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the label text box does not rotate and is wider than the frame is tall; the frame is drawn unrotated and the text stays inside the outline" },
+]
+
+[slots]
+label = { at = [-2.75, 0], side = "E", box = [5.5, 1] }

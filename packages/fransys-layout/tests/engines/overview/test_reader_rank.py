@@ -1,9 +1,9 @@
 """layout-0230: the overview's reader order has one home, `reader_rank`; its two readers use it."""
 
-from fransys_layout.engines.diagram.values import DiagramFacts
 from fransys_layout.engines.overview.lanes.plan import make_plan
 from fransys_layout.engines.overview.read.lanes import inner_keys, reader_rank
 from fransys_layout.engines.overview.read.values import BoxSpec, ViewFacts, box_ident
+from fransys_layout.engines.overview.sheet_values import DiagramFacts
 from fransys_model.derive import ViewBox
 from fransys_model.kernel import Id
 from fransys_model.layout import BoxKey, OverviewMode, OverviewRef, OverviewRefKind

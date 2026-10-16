@@ -5,9 +5,9 @@ Each test names what breaks it. The sheets are rows of boxes `PITCH` apart, join
 
 from typing import Any
 
-from fransys_layout.engines.diagram.values import PlacedBox, PlacedLine, PlacedSheet
-from fransys_layout.engines.diagram.wrap import extent, wrapped
-from fransys_layout.engines.diagram.wrap_route import clear
+from fransys_layout.engines.overview.sheet_values import PlacedBox, PlacedLine, PlacedSheet
+from fransys_layout.engines.overview.wrap import extent, wrapped
+from fransys_layout.engines.overview.wrap_route import clear
 from fransys_layout.geometry import Point
 from fransys_model.kernel import make_id
 from fransys_model.layout import DiagramBox

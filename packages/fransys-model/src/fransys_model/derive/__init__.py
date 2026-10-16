@@ -31,6 +31,7 @@ from fransys_model.vocab import (
 )
 from fransys_model.vocab.bars import bar_items, is_bar_port
 from fransys_model.vocab.energy_flow import gives_energy, takes_energy
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.load_limits import LoadLimit, load_limits
 from fransys_model.vocab.prospective_fault import ProspectiveFault, prospective_fault
 from fransys_model.vocab.tables import (
@@ -51,6 +52,7 @@ from .accessory_blocks import operated_by, operating_item
 from .actuated import actuated_group, actuator_each_contact, lead_switch
 from .bom import TopLevelScope
 from .box_lines import connector_box_lines
+from .cable_runs import NO_PART, cable_runs
 from .closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
 from .columns import (
     BOM_COLUMNS,
@@ -58,6 +60,7 @@ from .columns import (
     CONNECTOR_COLUMNS,
     CONNECTOR_LABELS,
     CONTENTS_COLUMNS,
+    CONTENTS_LABELS,
     CORE_LIST_COLUMNS,
     DESIGNATION_COLUMNS,
     PIN_COLUMNS,
@@ -66,6 +69,8 @@ from .columns import (
     TERMINAL_LABELS,
     WIRE_COLUMNS,
     WIRE_LABELS,
+    column_label,
+    csv_name,
 )
 from .contact_entries import NO_PLACE, contact_list_key
 from .contacts import LinkState, Throws, changeover_throws, link_state, owned_contacts
@@ -88,7 +93,24 @@ from .designation import (
     takes_parents_designation,
     unit_location,
 )
-from .document_pages import ItemPage, is_replica_only_undrawn, item_pages
+from .diagram_sheet_order import diagram_sheet_order_key
+from .document_pages import (
+    ItemPage,
+    drawn_pages,
+    is_replica_only_undrawn,
+    item_pages,
+    ordered_pages,
+    page_order_key,
+)
+from .document_scope import document_bom_lines, document_scope
+from .document_sheets import (
+    document_sheet_format,
+    document_sheets,
+    document_sheets_of,
+    sheet_key,
+)
+from .document_sizes import sizes_of
+from .document_subject import scope_path, subject_label
 from .export_names import (
     document_export_name,
     export_fragment,
@@ -98,14 +120,40 @@ from .export_names import (
     export_set_name,
     reference_fragment,
 )
+from .export_set import export_set, stale_patterns
 from .external import external
 from .facts.boundary_pins import unit_boundary_functions, unit_boundary_pins
 from .facts.children import child_items
 from .facts.keep_whole import KeepWhole, keep_whole_sets
 from .facts.mates import mate_port_of, mate_ports
+from .facts.roles import (
+    conductor_role,
+    function_role,
+    item_role,
+    link_role,
+    net_class_role,
+    port_role,
+)
 from .facts.strips import strip_of
+from .finding_marks import finding_marks
+from .frame_labels import frame_labels
+from .harness_blocks import (
+    cable_blocks,
+    harness_cables_for,
+    requests_harness_pages,
+    system_has_no_top_level_cables,
+)
 from .harness_line_ends import harness_line_ends
 from .indexes import Indexes, build_indexes
+from .item_installed import item_installed
+from .jumper_lanes import (
+    BRIDGE_PIECE_KEYS,
+    BRIDGE_PIECES,
+    bridge_piece_key,
+    first_fit_lanes,
+    jumper_lane_count,
+    jumper_lanes,
+)
 from .kinds import item_kind, signal_kind
 from .line_end_fact import connector_at_line_end
 from .line_fact import draws_as_line, line_conductors
@@ -121,6 +169,10 @@ from .list_cells import (
 from .lookups import black_box_unit, connector_facets, item_of_port, pin_order, terminal_items
 from .loose import function_is_loose
 from .mate_rows import mates
+from .netlist_pins import board_pins, pin_text
+from .numbering_moves import designation_moves, gone_or_moved
+from .numbering_revision import moved_findings, new_in_revision_findings, revision_findings
+from .numbering_seed import pin_positions, seed_pins
 from .open_cores import open_core_rows
 from .order import bom_sort_key, natural_key
 from .overview_field import field_devices, field_fold
@@ -134,7 +186,7 @@ from .overview_lanes import (
 )
 from .overview_levels import open_strips, overview_level, strip_view
 from .overview_location import location_fold, location_place_title
-from .overview_marks import diff_marks
+from .overview_marks import diff_marks, diff_rest
 from .overview_strip_stubs import strip_stubs
 from .overview_stub_ends import StubBox, StubLine, stub_ends
 from .overview_stubs import overview_stub_west
@@ -151,10 +203,24 @@ from .overview_text import (
     overview_stub_lines,
     overview_stub_text,
 )
-from .overview_tree import overview_tree, unit_own_drawing, unit_system_designation
+from .overview_tree import (
+    overview_tree,
+    own_drawing_line,
+    unit_own_drawing,
+    unit_system_designation,
+)
 from .overview_view_rows import overview_units, overview_view_rows
 from .overview_views import signal_lens, unit_matrix
 from .page_destination import page_destination, sheet_text, sheet_title_text
+from .page_headings import (
+    DIAGRAM_TITLE,
+    HARNESS_DRAWING_TITLE,
+    PAGE_HEADINGS,
+    PRESET_HEADINGS,
+    SCHEMATIC_TITLE,
+)
+from .page_presets import PRESET_PAGES, document_page_kinds, page_kinds
+from .page_reference_text import page_reference_text
 from .page_references import contacts_not_drawn, references_off_document
 from .page_titles import page_title, page_title_forms, short_title
 from .page_wires import page_wires
@@ -164,6 +230,7 @@ from .passes.numbering import number
 from .passes.plc_allocation import allocate_plc
 from .passes.wire_rows import resolve_wire_rows
 from .plc_rack import channel_pins
+from .plc_rack_cdp import rack_modules_for_cdp
 from .plc_tables import plc_tables
 from .plc_words import plc_list_rows, signal_word
 from .potential import port_potential_current, port_potential_rank
@@ -176,6 +243,7 @@ from .queries import (
     bom_lines,
     boundary,
     cable_list_rows,
+    cable_list_rows_of,
     cable_rows,
     cable_title,
     conductors_on_item,
@@ -228,6 +296,9 @@ from .queries import (
     wire_rows,
 )
 from .readability import readability_units
+from .release_identity import release_identity
+from .release_previous import pin_source, previous_release
+from .release_rows import manifest_rows, nested_units, rebaseline_subjects
 from .rows import (
     BoardNetlist,
     BomLine,
@@ -237,14 +308,12 @@ from .rows import (
     ConnectorRow,
     ContentsRow,
     DesignationRow,
-    DiffMark,
     ExtUsage,
     HarnessCable,
     HarnessCore,
     HarnessEnd,
     HarnessLineEnd,
     HarnessPin,
-    ItemKind,
     LineRef,
     MateRow,
     MatrixCell,
@@ -267,7 +336,14 @@ from .rows import (
     UnitMatrix,
     WireRow,
 )
+from .rows_cable_run import CableBlockRef, CableRun
 from .rows_cores import CoreListRow, OpenCoreRow
+from .rows_document import DocumentScope
+from .rows_export_set import ExportRow
+from .rows_jumper_lanes import BridgePiece, JumperLane, JumperLanes
+from .rows_marks import DiffMark, DiffRest, DiffViewMarks, FindingHold, FindingMark
+from .rows_netlist import BoardPins, NetlistPin, PinNet
+from .rows_numbering import AssignedSeed, DesignationMove, PinPosition, SeedRows, UnitTagSeed
 from .rows_overview import (
     FieldFold,
     FieldJoin,
@@ -287,6 +363,7 @@ from .rows_overview import (
 )
 from .rows_overview_view import ViewBox, ViewLine, ViewMember, ViewRows
 from .rows_plc import (
+    CdpRackModule,
     ChannelScaling,
     LensChannel,
     LensModule,
@@ -303,42 +380,88 @@ from .rows_readability import (
     ReadabilityReport,
     ReadabilityUnit,
 )
+from .rows_sheet import FieldOverflow, FrameLabels, Sizes, TitleBlockFields, TitleBlockStrings
 from .rows_sheet_index import SheetIndexRow, sheet_index_rows
+from .rows_sheet_pages import (
+    DocumentSheets,
+    FrameStrip,
+    SheetBackground,
+    SheetFrame,
+    SheetPage,
+    TitleBlockOverflow,
+)
+from .schematic_subject import has_schematic_subject
 from .sheet_forms import set_page_text, sheet_counter_text
+from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets, sheets
 from .side_hint_findings import check_side_hints
 from .sideless_pins import SidelessPins, sideless_pins
 from .supply_share import supply_share
-from .text_size import text_room_g, text_under_floor
+from .symbol_port_subject import symbol_port_subject
+from .text_size import text_room, text_room_g, text_under_floor
 from .title_block import document_facts, project_facts
+from .title_block_text import (
+    TITLE_BLOCK_LABELS,
+    cut_to_width,
+    field_printed,
+    fits,
+    notice_line_count,
+    notice_lines,
+    notice_pitch_mm,
+    notice_room_chars,
+    notice_unfit,
+    one_line_field,
+    text_width_mm,
+    title_block_overflows,
+    title_block_strings,
+)
+from .unit_racks import unit_racks
 from .unused import function_is_reached, function_is_unused, port_is_reached, port_is_unused
+from .view_rollup import place_members, subject_marks, view_lookup
 from .wiring_ends import ends_without_jumpers, strip_side_headings
 
 __all__ = [
     "BOM_COLUMNS",
+    "BRIDGE_PIECES",
+    "BRIDGE_PIECE_KEYS",
     "CABLE_LIST_COLUMNS",
     "CELL_SEPARATOR",
     "CONNECTOR_COLUMNS",
     "CONNECTOR_LABELS",
     "CONTENTS_COLUMNS",
+    "CONTENTS_LABELS",
     "CORE_LIST_COLUMNS",
     "DESIGNATION_COLUMNS",
+    "DIAGRAM_TITLE",
+    "HARNESS_DRAWING_TITLE",
+    "NO_PART",
     "NO_PLACE",
+    "PAGE_HEADINGS",
     "PIN_COLUMNS",
     "PLC_COLUMNS",
+    "PRESET_HEADINGS",
+    "PRESET_PAGES",
+    "SCHEMATIC_TITLE",
     "TERMINAL_COLUMNS",
     "TERMINAL_LABELS",
+    "TITLE_BLOCK_LABELS",
     "TOP_LEVEL",
     "WIRE_COLUMNS",
     "WIRE_LABELS",
     "Aspect",
     "AspectNode",
+    "AssignedSeed",
     "BoardNetlist",
+    "BoardPins",
     "BomLine",
     "Boundary",
     "BoxPair",
+    "BridgePiece",
+    "CableBlockRef",
     "CableListRow",
     "CableRow",
+    "CableRun",
+    "CdpRackModule",
     "ChannelScaling",
     "Conductor",
     "ConductorKind",
@@ -349,15 +472,26 @@ __all__ = [
     "CurrentBound",
     "CurrentChain",
     "CurrentPosition",
+    "DesignationMove",
     "DesignationRow",
     "DiffMark",
+    "DiffRest",
+    "DiffViewMarks",
+    "DocumentScope",
+    "DocumentSheets",
+    "ExportRow",
     "ExtUsage",
     "FieldFold",
     "FieldJoin",
+    "FieldOverflow",
+    "FindingHold",
+    "FindingMark",
     "FoldBox",
     "FoldLevel",
     "FoldLine",
     "FoldStub",
+    "FrameLabels",
+    "FrameStrip",
     "Function",
     "FunctionKind",
     "HarnessCable",
@@ -369,6 +503,8 @@ __all__ = [
     "Item",
     "ItemKind",
     "ItemPage",
+    "JumperLane",
+    "JumperLanes",
     "KeepWhole",
     "LensChannel",
     "LensModule",
@@ -386,6 +522,7 @@ __all__ = [
     "NetClass",
     "NetlistNet",
     "NetlistPart",
+    "NetlistPin",
     "OffDocumentReference",
     "OpenCoreRow",
     "Operating",
@@ -402,6 +539,8 @@ __all__ = [
     "PageWires",
     "PartFunctionRow",
     "PhysicalNet",
+    "PinNet",
+    "PinPosition",
     "Placement",
     "PlcChannelRow",
     "PlcRackChannel",
@@ -415,9 +554,14 @@ __all__ = [
     "ReadabilityPage",
     "ReadabilityReport",
     "ReadabilityUnit",
+    "SeedRows",
+    "SheetBackground",
+    "SheetFrame",
     "SheetIndexRow",
+    "SheetPage",
     "SidelessPins",
     "SignalKind",
+    "Sizes",
     "StripNote",
     "StripTerminal",
     "StripView",
@@ -429,11 +573,15 @@ __all__ = [
     "TerminalRow",
     "TerminalStubs",
     "Throws",
+    "TitleBlockFields",
+    "TitleBlockOverflow",
+    "TitleBlockStrings",
     "TopLevelScope",
     "TreeRow",
     "Unit",
     "UnitMatrix",
     "UnitRelease",
+    "UnitTagSeed",
     "ViewBox",
     "ViewLine",
     "ViewMember",
@@ -446,6 +594,7 @@ __all__ = [
     "bar_items",
     "black_box_unit",
     "board_netlist",
+    "board_pins",
     "boards",
     "bom_lines",
     "bom_sort_key",
@@ -454,10 +603,14 @@ __all__ = [
     "boundary_operating",
     "boundary_rating",
     "box_pairs",
+    "bridge_piece_key",
     "build_indexes",
+    "cable_blocks",
     "cable_items",
     "cable_list_rows",
+    "cable_list_rows_of",
     "cable_rows",
+    "cable_runs",
     "cable_title",
     "cell_parts",
     "cell_text",
@@ -465,8 +618,10 @@ __all__ = [
     "channel_pins",
     "check_side_hints",
     "child_items",
+    "column_label",
     "column_rows",
     "column_values",
+    "conductor_role",
     "conductors",
     "conductors_on_item",
     "connector_at_line_end",
@@ -483,17 +638,29 @@ __all__ = [
     "core_colour",
     "core_list_rows",
     "cores_text",
+    "csv_name",
     "current_chains",
     "current_revision",
+    "cut_to_width",
     "designation_holder",
     "designation_list",
+    "designation_moves",
+    "diagram_sheet_order_key",
     "diagram_sheets",
     "diff_marks",
+    "diff_rest",
+    "document_bom_lines",
     "document_drawing_sets",
     "document_export_name",
     "document_facts",
+    "document_page_kinds",
+    "document_scope",
+    "document_sheet_format",
+    "document_sheets",
+    "document_sheets_of",
     "document_unit",
     "drawing_set_is_replica_only",
+    "drawn_pages",
     "draws_as_line",
     "effective_placement",
     "enclosing_boards",
@@ -502,24 +669,34 @@ __all__ = [
     "export_name",
     "export_prefix",
     "export_ref",
+    "export_set",
     "export_set_name",
     "ext_usage",
     "external",
     "field_devices",
     "field_fold",
+    "field_printed",
+    "finding_marks",
+    "first_fit_lanes",
     "first_leg",
+    "fits",
     "fold_level",
+    "frame_labels",
     "function_designation",
     "function_is_loose",
     "function_is_reached",
     "function_is_unused",
     "function_operating",
     "function_rating",
+    "function_role",
     "functions",
     "gives_energy",
+    "gone_or_moved",
     "harness_cables",
+    "harness_cables_for",
     "harness_line_ends",
     "harness_wires",
+    "has_schematic_subject",
     "is_bar_port",
     "is_black_box_item",
     "is_cable",
@@ -530,13 +707,17 @@ __all__ = [
     "is_sole_unit_root",
     "item_description",
     "item_designation",
+    "item_installed",
     "item_kind",
     "item_label",
     "item_location",
     "item_of_port",
     "item_pages",
+    "item_role",
     "items",
     "items_at",
+    "jumper_lane_count",
+    "jumper_lanes",
     "keep_whole_sets",
     "lane_head",
     "lead_switch",
@@ -544,24 +725,37 @@ __all__ = [
     "line_designation",
     "line_stub_line",
     "line_tabs",
+    "link_role",
     "link_state",
     "list_context",
     "load_limits",
     "location_fold",
     "location_node_designation",
     "location_place_title",
+    "manifest_rows",
     "mate_port_of",
     "mate_ports",
     "mates",
+    "moved_findings",
     "natural_key",
+    "nested_units",
+    "net_class_role",
     "net_of",
     "nets",
+    "new_in_revision_findings",
     "no_conductor_at",
+    "notice_line_count",
+    "notice_lines",
+    "notice_pitch_mm",
+    "notice_room_chars",
+    "notice_unfit",
     "number",
+    "one_line_field",
     "open_core_rows",
     "open_strips",
     "operated_by",
     "operating_item",
+    "ordered_pages",
     "overview_end_text",
     "overview_field_join_text",
     "overview_fold_line_text",
@@ -582,9 +776,13 @@ __all__ = [
     "overview_tree",
     "overview_units",
     "overview_view_rows",
+    "own_drawing_line",
     "own_nodes",
     "owned_contacts",
     "page_destination",
+    "page_kinds",
+    "page_order_key",
+    "page_reference_text",
     "page_title",
     "page_title_forms",
     "page_wires",
@@ -593,6 +791,10 @@ __all__ = [
     "physical_nets",
     "pin_lines",
     "pin_order",
+    "pin_positions",
+    "pin_source",
+    "pin_text",
+    "place_members",
     "placements",
     "plc_channel_rows",
     "plc_list_rows",
@@ -606,29 +808,40 @@ __all__ = [
     "port_power_kind",
     "port_power_text",
     "port_rails",
+    "port_role",
     "ports",
     "power_kind",
     "power_text",
+    "previous_release",
     "printed_designation",
     "printed_drawing_sets",
     "profile_of",
     "project_facts",
     "prospective_fault",
+    "rack_modules_for_cdp",
     "rail_pairs",
     "readability_units",
     "reading_cables",
+    "rebaseline_subjects",
     "reference_designation",
     "reference_fragment",
     "references_off_document",
+    "release_identity",
     "release_order",
+    "requests_harness_pages",
     "resolve_wire_rows",
+    "revision_findings",
     "revision_history",
     "revision_text",
     "same_version",
     "schematic_functions",
+    "scope_path",
+    "seed_pins",
     "set_page_text",
     "sheet_counter_text",
+    "sheet_frame",
     "sheet_index_rows",
+    "sheet_key",
     "sheet_text",
     "sheet_title_text",
     "sheets",
@@ -637,22 +850,32 @@ __all__ = [
     "signal_kind",
     "signal_lens",
     "signal_word",
+    "sizes_of",
+    "stale_patterns",
     "standalone",
     "strip_of",
     "strip_side_headings",
     "strip_stubs",
     "strip_view",
     "stub_ends",
+    "subject_label",
+    "subject_marks",
     "subtree",
     "supply_share",
     "supply_systems",
+    "symbol_port_subject",
+    "system_has_no_top_level_cables",
     "takes_energy",
     "takes_parents_designation",
     "terminal_items",
     "terminal_rows",
     "terminal_strips",
+    "text_room",
     "text_room_g",
     "text_under_floor",
+    "text_width_mm",
+    "title_block_overflows",
+    "title_block_strings",
     "top_level_cables",
     "unconnected_ports",
     "unit_boards",
@@ -664,6 +887,7 @@ __all__ = [
     "unit_location",
     "unit_matrix",
     "unit_own_drawing",
+    "unit_racks",
     "unit_release",
     "unit_releases",
     "unit_strips",
@@ -671,5 +895,6 @@ __all__ = [
     "unit_system_designation",
     "units",
     "unused_terminals",
+    "view_lookup",
     "wire_rows",
 ]

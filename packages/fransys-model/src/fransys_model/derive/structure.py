@@ -9,8 +9,8 @@ read them, and a layer imports only the layers to its right.
 
 from typing import TYPE_CHECKING, Any
 
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.vocab import is_cable
-from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.membership import (
     boundary,
     enclosing_boards,
@@ -198,11 +198,11 @@ def schematic_functions(model: Model) -> tuple[Id[Function], ...]:
         Every drawn function's id, sorted.
     """
 
-    def excluded(item_id: Id[Item], kind: FunctionKind) -> bool:
+    def excluded(item_id: Id[Item], function: Id[Function]) -> bool:
         if is_cable(model, item_id):
             return True
         board_chain = enclosing_boards(model, item_id)
-        if not board_chain or kind is FunctionKind.CONNECTOR:
+        if not board_chain or function_role(model, function).pin_group:
             return False
         return not is_sole_unit_root(model, board_chain[-1])
 
@@ -210,7 +210,7 @@ def schematic_functions(model: Model) -> tuple[Id[Function], ...]:
         sorted(
             function.id
             for function in functions(model).values()
-            if not excluded(function.item, function.kind)
+            if not excluded(function.item, function.id)
         )
     )
 

@@ -4,6 +4,7 @@ A notes text of many pages pushes the sheets down; each entry must still land on
 The PDF is read back with pypdfium2, not the Typst source.
 """
 
+import fransys_render
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_raw
 import pytest
@@ -11,7 +12,7 @@ import typst
 from _build import document, drawing_set, layout_page, location, model, unit
 from fransys_pdf import font_dir, source
 
-from fransys_model.derive import page_destination
+from fransys_model.derive import document_sheets_of, page_destination
 from fransys_model.kernel import render_id
 from fransys_model.vocab import DocumentPreset, PageKind
 
@@ -40,7 +41,9 @@ def _compiled(notes: str | None) -> tuple[bytes, list[str]]:
     m = model(cabinet, u, ds1, *pages, doc)
     svgs = {render_id(page.id): _SVG for page in pages}
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
-    compiled = compiler.compile(input=source(m, doc.id, svgs).encode("utf-8"))
+    compiled = compiler.compile(
+        input=source(m, doc.id, svgs, fransys_render.sheets(document_sheets_of(m))).encode("utf-8")
+    )
     assert isinstance(compiled, bytes)
     return compiled, [page_destination(m, page) for page in pages]
 

@@ -11,14 +11,14 @@ from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from .constraints import Graph
-from .geometry import column_extent
+from .geometry import box_reach, column_extent
 from .pack_sep import separation
 from .values import Lane
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from .pack import Attached, PlacedColumn
+    from .pack import Attached, LanePins, PlacedColumn
     from .values import Block, Options, Sym
 
 Reach = tuple[str, int]
@@ -28,8 +28,8 @@ Reach = tuple[str, int]
 class RowSpec:
     """One row: its columns, blocks and placed columns, with what the x graph reads.
 
-    attach maps an attached column to (box, pin, lane offset); reserves maps a (left, right)
-    column pair to the tracks its gap must hold (stage 7).
+    attach: column to (box, pin, lane offset); more_pins: its further box pins; reserves: a
+    (left, right) pair to the tracks its gap must hold (stage 7).
     """
 
     cols: tuple[str, ...]
@@ -40,6 +40,7 @@ class RowSpec:
     options: Options
     attach: Attached
     reserves: dict[tuple[str, str], int] = field(default_factory=dict)
+    more_pins: LanePins = field(default_factory=dict)
 
 
 def segments(
@@ -50,7 +51,7 @@ def segments(
     out: list[tuple[Block | None, list[str]]] = []
     for b in blocks:
         here = [c for c in cols if block_of.get(c) is b]
-        if b.kind == "card":
+        if b.is_card:
             out.append((b, here))
         elif here and out and out[-1][0] is None:
             out[-1][1].extend(here)
@@ -59,7 +60,7 @@ def segments(
     return out
 
 
-def _extent(spec: RowSpec, col: str) -> tuple[int, int]:
+def extent(spec: RowSpec, col: str) -> tuple[int, int]:
     pc = spec.pcs[col]
     lanes = tuple(Lane(cells, off) for cells, off in zip(pc.lanes, pc.offsets, strict=True))
     return column_extent(spec.syms, lanes, spec.in_row)
@@ -75,6 +76,11 @@ def _sep(spec: RowSpec, a: str, b: str) -> int:
     return separation(spec.pcs[a], spec.pcs[b], spec.syms, spec.in_row, spec.options)
 
 
+def join_gap(prev_reach: int, left_reach: int, options: Options, extra: int = 0) -> int:
+    """The one join of two segments: the reach past the left one, into the right one, a gap."""
+    return prev_reach + left_reach + options.column_gap_min + extra
+
+
 def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
     """Segments left to right; extra widens every gap and pitch (justify); returns right reaches."""
     g = Graph()
@@ -83,7 +89,7 @@ def build_row_graph(spec: RowSpec, extra: int) -> tuple[Graph, list[Reach]]:
     for block, here in segments(spec.cols, spec.blocks):
         left, right = _segment(g, spec, block, here, extra)
         gap = (
-            prev[1] + left[1] + spec.options.column_gap_min + extra
+            join_gap(prev[1], left[1], spec.options, extra)
             if prev
             else spec.options.margin.w + left[1]
         )
@@ -105,9 +111,9 @@ def _segment(
         _card(g, spec, block, here, extra)
         return (f"slot:{block.id}:L", 0), (f"slot:{block.id}:R", 0)
     _run(g, spec, here, extra)
-    return (f"col:{here[0]}", -_extent(spec, here[0])[0]), (
+    return (f"col:{here[0]}", -extent(spec, here[0])[0]), (
         f"col:{here[-1]}",
-        _extent(spec, here[-1])[1],
+        extent(spec, here[-1])[1],
     )
 
 
@@ -144,8 +150,9 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int
             extra,
         )
     _card_columns(g, spec, block.id, box, cols)
-    g.after(f"slot:{block.id}:L", f"box:{box}:L", 0)
-    g.after(f"box:{box}:R", f"slot:{block.id}:R", 0)
+    lead, tail = box_reach(spec.syms[box])
+    g.after(f"slot:{block.id}:L", f"box:{box}:L", lead)
+    g.after(f"box:{box}:R", f"slot:{block.id}:R", tail)
     g.after(
         f"box:{box}:L", f"box:{box}:R", 2 * _margin(spec, box) if cols else spec.syms[box].body.w
     )
@@ -153,17 +160,36 @@ def _card(g: Graph, spec: RowSpec, block: Block, cols: Sequence[str], extra: int
 
 def _card_columns(g: Graph, spec: RowSpec, block: str, box: str, cols: Sequence[str]) -> None:
     for c in cols:
-        if c in spec.attach:
+        if c in spec.attach and spec.options.box_pins != "fixed":
             g.equal(f"col:{c}", f"pin:{box}:{spec.attach[c][1]}", spec.attach[c][2])
-        lo, hi = _extent(spec, c)
+            for pin, offset in spec.more_pins.get(c, ()):
+                g.equal(f"col:{c}", f"pin:{box}:{pin}", offset)
+        lo, hi = extent(spec, c)
         g.after(f"slot:{block}:L", f"col:{c}", -lo)
         g.after(f"col:{c}", f"slot:{block}:R", hi)
 
 
+def _one_column(spec: RowSpec, a: str, b: str) -> bool:
+    """Two pins one column stands on: the lane offset sets their distance, no pitch edge."""
+    if spec.options.box_pins == "fixed":
+        return False
+    for col, (_, first, _) in spec.attach.items():
+        pins = {first, *(p for p, _ in spec.more_pins.get(col, ()))}
+        if a in pins and b in pins:
+            return True
+    return False
+
+
 def _pin_chain(g: Graph, spec: RowSpec, box: str, pins: Sequence[str], extra: int) -> None:
     margin = _margin(spec, box)
+    pitch = spec.options.box_pin_pitch_min
     for a, b in pairwise(pins):
-        g.after(f"pin:{box}:{a}", f"pin:{box}:{b}", spec.options.box_pin_pitch_min + extra)
+        if _one_column(spec, a, b):
+            continue
+        if spec.options.box_pins == "fixed":
+            g.equal(f"pin:{box}:{a}", f"pin:{box}:{b}", pitch)
+        else:
+            g.after(f"pin:{box}:{a}", f"pin:{box}:{b}", pitch + extra)
     if pins:
         g.after(f"box:{box}:L", f"pin:{box}:{pins[0]}", margin)
         g.after(f"pin:{box}:{pins[-1]}", f"box:{box}:R", margin)

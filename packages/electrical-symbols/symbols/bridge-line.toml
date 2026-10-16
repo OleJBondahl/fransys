@@ -1,0 +1,16 @@
+schema = 1
+name = "Bridge mark line"
+kind = "element"
+status = "unverified"
+# our own terminal-list Bridge mark: one jumper lane's vertical line, in mm, one lane wide (the
+# lane gap is the width of its two slots, one each side of the line). It is 1 mm tall as authored: pdf stretches the drawn image on y only
+# to the part of the row it covers, so the pen width (across the line) holds at any row height.
+reference = { standard = "IEC 60617", number = "bridge-line" }
+
+elements = [
+  { line = [[1.5, 0], [1.5, 1]] },
+]
+
+[slots]
+left = { at = [0, 0.5], side = "E", box = [1.5, 1] }
+right = { at = [3, 0.5], side = "W", box = [1.5, 1] }

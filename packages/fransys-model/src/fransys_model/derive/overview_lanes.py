@@ -7,7 +7,7 @@ with no group have no group lane. Stub boxes are not here: they take their host'
 from typing import Any
 
 from fransys_model.layout import BoxKey
-from fransys_model.vocab.enums import Current
+from fransys_model.vocab.enums import Current, ItemKind
 from fransys_model.vocab.tables import conductors
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -19,7 +19,6 @@ from .overview_levels import level_box, open_strips, overview_level, strip_view,
 from .overview_names import node_lines
 from .overview_view_plain import ref_of
 from .potential import port_potential_current
-from .rows import ItemKind
 
 __all__ = [
     "lane_head",

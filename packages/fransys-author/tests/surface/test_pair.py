@@ -72,11 +72,11 @@ def test_unequal_pin_counts_raise_naming_both_ends() -> None:
         d.pair(x8[1:4], w3, b1.sig)
 
 
-@pytest.mark.parametrize("bad", ["strip", "device", "port"])
-def test_a_strip_a_device_or_a_port_as_an_end_raises(bad: str) -> None:
+@pytest.mark.parametrize("bad", ["strip", "device"])
+def test_a_strip_or_a_device_as_an_end_raises(bad: str) -> None:
     d, x8, w3, b1 = _parts()
-    end = {"strip": x8, "device": b1, "port": b1.sig.pins[0]}[bad]
-    with pytest.raises(AuthorError, match=r"takes terminals or a function.*x8\[1:3\]"):
+    end = {"strip": x8, "device": b1}[bad]
+    with pytest.raises(AuthorError, match=r"takes terminals, a function or pins.*x8\[1:3\]"):
         d.pair(end, w3, b1.sig)
 
 

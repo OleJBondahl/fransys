@@ -1,0 +1,18 @@
+schema = 1
+name = "Contact head (contact table)"
+kind = "element"
+status = "unverified"
+# our own head of a contact table, authored in the row's frame: it sits before the first
+# row on the table's axis (y), its lower edge on the row's upper edge (y = 0)
+reference = { standard = "IEC 60617", number = "contact-head" }
+
+elements = [
+  { polyline = [[0, -2], [8, -2], [8, 0], [0, 0]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
+]
+
+[slots]
+heading = { at = [0.25, -1], side = "E", box = [7.5, 1] }

@@ -18,8 +18,8 @@ from .designation import (
     reference_designation,
 )
 from .document_unit import document_unit
+from .release_identity import release_identity
 from .revision_text import revision_text
-from .unit_release import unit_release
 
 __all__ = [
     "document_export_name",
@@ -67,13 +67,9 @@ def export_set_name(model: Model, unit: Id[Unit] | None) -> str:
     A unit's set is its release's name, the same for every instance; a system write with no Project
     has no prefix, which keeps today's names.
     """
-    if unit is not None:
-        return unit_release(model, unit).name
-    project_table = projects(model)
-    if not project_table:
+    if unit is None and not projects(model):
         return ""
-    (project,) = project_table.values()
-    return project.number
+    return release_identity(model, unit).name
 
 
 def export_prefix(model: Model, unit: Id[Unit] | None) -> str:
@@ -85,13 +81,8 @@ def export_prefix(model: Model, unit: Id[Unit] | None) -> str:
     set_name = export_set_name(model, unit)
     if not set_name:
         return ""
-    if unit is not None:
-        release = unit_release(model, unit)
-        version, revision = release.version, release.revision
-    else:
-        (project,) = projects(model).values()
-        version, revision = project.version, project.revision
-    return f"{set_name}-v{revision_text(version, revision)}"
+    identity = release_identity(model, unit)
+    return f"{set_name}-v{revision_text(identity.version, identity.revision)}"
 
 
 def export_name(

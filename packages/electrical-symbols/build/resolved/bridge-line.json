@@ -1,0 +1,74 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      1.5,
+      0
+    ],
+    [
+      1.5,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          1.5,
+          0
+        ],
+        [
+          1.5,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      3,
+      1
+    ]
+  ],
+  "kind": "element",
+  "name": "Bridge mark line",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "bridge-line",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "left": {
+      "at": [
+        0,
+        0.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "right": {
+      "at": [
+        3,
+        0.5
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "W"
+    }
+  },
+  "status": "unverified"
+}

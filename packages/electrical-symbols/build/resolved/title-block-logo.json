@@ -1,0 +1,83 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      20,
+      20
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          20,
+          0
+        ],
+        [
+          20,
+          20
+        ],
+        [
+          0,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      20,
+      20
+    ]
+  ],
+  "kind": "element",
+  "name": "Title block logo cell",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "title-block-logo",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "logo": {
+      "at": [
+        10,
+        10
+      ],
+      "box": [
+        20,
+        20
+      ],
+      "side": "C"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 10,
+      "axis": "x"
+    },
+    {
+      "at": 10,
+      "axis": "y"
+    }
+  ]
+}

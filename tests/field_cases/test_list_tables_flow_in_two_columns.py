@@ -13,9 +13,9 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _pdf_measure import has_page_title
 
 _HEADING = re.compile(r"X\d+\r\n")
-_TITLE = re.compile(r"Page title\s+Terminal list")
 _FOOT = 0.14  # the title block's share of the page height, from the bottom
 _SIDE = 30  # the frame's side letters and top numbers, in points
 
@@ -56,7 +56,7 @@ def _list_pages(pdf: Path) -> list[tuple[float, list[tuple[float, float, str]], 
                 for left, bottom, _, _ in [text.get_charbox(i)]
                 if _SIDE < left < width - _SIDE and _FOOT * height < bottom < height - _SIDE
             ]
-            if _TITLE.search(text.get_text_range()):
+            if has_page_title(text.get_text_range(), "Terminal list"):
                 found.append((width, body, text.get_text_range()))
         return found
     finally:
@@ -68,7 +68,11 @@ def _heading_places(pdf: Path) -> list[tuple[int, float, float]]:
     document = pypdfium2.PdfDocument(pdf)
     try:
         places = []
-        pages = [p for p in document if _TITLE.search(p.get_textpage().get_text_range())]
+        pages = [
+            p
+            for p in document
+            if has_page_title(p.get_textpage().get_text_range(), "Terminal list")
+        ]
         for number, page in enumerate(pages):
             text = page.get_textpage()
             for found in _HEADING.finditer(text.get_text_range()):

@@ -1,0 +1,125 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -2,
+      0
+    ],
+    [
+      8,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -2,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "port": "ref",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -2,
+      0
+    ],
+    [
+      8,
+      2
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline",
+      "rule": "slot-overlap-body"
+    },
+    {
+      "reason": "a contact row ends its circuit at the table; no path of this symbol continues it",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Contact row (contact table)",
+  "nodes": [
+    {
+      "ports": [
+        "ref"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        -2,
+        1
+      ],
+      "description": "cross-reference side",
+      "dir": "W",
+      "id": "ref"
+    }
+  ],
+  "reference": {
+    "number": "contact-row",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.ref": {
+      "at": [
+        0.25,
+        1
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    },
+    "place": {
+      "at": [
+        2,
+        1
+      ],
+      "box": [
+        5.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

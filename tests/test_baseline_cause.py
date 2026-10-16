@@ -28,7 +28,7 @@ def test_a_moved_child_is_named_right_after_units_and_before_later_sections(rele
     result, _scope = build_cabinet(board_revision=3, extra_wire=True)
     expected = (
         "wb-cabinet 1.1 differs from its released baseline in: "
-        "items, units (wb-board 1.1 → 1.3), conductors"
+        "items, units (wb-board revision 1.1 to 1.3), conductors"
     )
     assert _messages(result, released) == [expected]
 
@@ -51,3 +51,15 @@ def test_a_container_whose_units_did_not_change_keeps_todays_text(released):
     result, _scope = build_cabinet(extra_wire=True)
     (message,) = _messages(result, released)
     assert message == ("wb-cabinet 1.1 differs from its released baseline in: items, conductors")
+
+
+def test_the_change_note_names_a_moved_child_revision(released):
+    result, _scope = build_cabinet(board_revision=3)
+    note = fr.diff(result, released, unit="wb-cabinet")
+    assert "- Changed `=BRD-U1` (wb-board): revision 1.1 to 1.3." in note
+
+
+def test_the_cause_names_a_moved_child_revision_without_an_arrow(released):
+    result, _scope = build_cabinet(board_revision=3)
+    (message,) = _messages(result, released)
+    assert "units (wb-board revision 1.1 to 1.3)" in message

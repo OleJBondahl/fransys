@@ -1,0 +1,13 @@
+schema = 1
+name = "Sheet frame"
+kind = "element"
+status = "unverified"
+# our own page frame: the border around a sheet's content and title block, in mm (drawn at one
+# module per mm). Stretch on x and y (two calls) sets it to the sheet's border.
+reference = { standard = "IEC 60617", number = "sheet-frame" }
+
+elements = [
+  { polyline = [[0, 0], [1, 0], [1, 1], [0, 1]], closed = true, weight = "thick" },
+]
+
+stretch = [{ axis = "x", at = 0.5 }, { axis = "y", at = 0.5 }]

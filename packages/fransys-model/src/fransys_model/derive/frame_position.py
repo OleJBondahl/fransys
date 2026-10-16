@@ -2,6 +2,7 @@
 
 lazy from decimal import Decimal
 
+from fransys_model.derive.set_rank import set_rank
 from fransys_model.derive.sheet_forms import set_page_text
 from fransys_model.derive.text_width import G_PER_MODULE
 from fransys_model.derive.unit_nodes import chain_up
@@ -123,29 +124,34 @@ def location_path(model: Model, node: Id[AspectNode] | None) -> LocationPath:
     return tuple((found, nodes[found].label) for found in reversed(list(chain_up(nodes, node))))
 
 
-def partner_position_text(own: Seat, partner: Seat, column: int, row: str) -> str:
+def partner_position_text(
+    own: Seat, partner: Seat, column: int, row: str, *, same_set: bool | None = None
+) -> str:
     """A partner's position as `own` reads it, on plain values.
 
     A seat is (set number, page, location path). The same set prints the cell, `own`'s page
     kept (model-0136); another adds the prefix below the common ancestor, else its set
-    number. The one place that text is built.
+    number. The one place that text is built. `same_set` says it when the seats hold ranks,
+    which two sets of different units share.
     """
     (own_set, own_page, own_path), (set_number, page, path) = own, partner
-    if own_set == set_number:
+    if own_set == set_number if same_set is None else same_set:
         return position_text(page, column, row, (), own_page=own_page)
     return position_text(page, column, row, location_prefix(own_path, path), set_number)
 
 
 def _seat(model: Model, page: Page) -> Seat:
-    """`page` as a `Seat`: its drawing set's number, its number and its location path."""
+    """`page` as a `Seat`: its drawing set's rank, its number and its location path."""
     drawing_set = layout_of(model, DrawingSet)[page.drawing_set]
-    return drawing_set.number, page.number, location_path(model, drawing_set.location)
+    return set_rank(model, page), page.number, location_path(model, drawing_set.location)
 
 
 def position_between(model: Model, own_page: Page, partner_page: Page, x: int, row: str) -> str:
     """The position at `x`/`row` on `partner_page`, read from `own_page`: the lookups."""
     column = cell(model, partner_page, x, 0)[0]
-    return partner_position_text(_seat(model, own_page), _seat(model, partner_page), column, row)
+    same = own_page.drawing_set == partner_page.drawing_set
+    seats = _seat(model, own_page), _seat(model, partner_page)
+    return partner_position_text(*seats, column, row, same_set=same)
 
 
 def place_text(model: Model, own_page: Page, partner_page: Page, x: int, y: int) -> str:

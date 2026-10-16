@@ -1,0 +1,21 @@
+schema = 1
+name = "Cable head (heading of a cable box)"
+kind = "element"
+status = "unverified"
+# our own head of a cable column table, authored in the column's frame: it sits above the
+# column's body box (its lower edge is the column's upper edge, y = -3) and starts at the
+# column's left edge (x = -2). Stretched on x it spans the n columns of table().
+reference = { standard = "IEC 60617", number = "cable-head" }
+
+elements = [
+  { polyline = [[-2, -5], [2, -5], [2, -3], [-2, -3]], closed = true },
+]
+
+stretch = [{ axis = "x", at = 0 }]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
+]
+
+[slots]
+heading = { at = [-1.75, -4], side = "E", box = [3.5, 1] }

@@ -1,0 +1,79 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      -0.75
+    ],
+    [
+      3,
+      0.75
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -3,
+          -0.75
+        ],
+        [
+          3,
+          -0.75
+        ],
+        [
+          3,
+          0.75
+        ],
+        [
+          -3,
+          0.75
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -3,
+      -0.75
+    ],
+    [
+      3,
+      0.75
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the label text box does not rotate and is wider than the frame is tall; the frame is drawn unrotated and the text stays inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Wire label frame",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "wire-label-frame",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "label": {
+      "at": [
+        -2.75,
+        0
+      ],
+      "box": [
+        5.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

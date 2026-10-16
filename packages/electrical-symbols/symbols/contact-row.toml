@@ -1,0 +1,24 @@
+schema = 1
+name = "Contact row (contact table)"
+kind = "element"
+status = "unverified"
+# our own table row: one contact of a device, its marking and the place it is used
+reference = { standard = "IEC 60617", number = "contact-row" }
+
+ports = [
+  { id = "ref", at = [-2, 1], dir = "W", description = "cross-reference side" },
+]
+
+elements = [
+  { line = [[-2, 1], [0, 1]], port = "ref" },
+  { polyline = [[0, 0], [8, 0], [8, 2], [0, 2]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
+  { rule = "port-isolated", reason = "a contact row ends its circuit at the table; no path of this symbol continues it" },
+]
+
+[slots]
+"marking.ref" = { at = [0.25, 1], side = "E", box = [1.5, 1] }
+place = { at = [2, 1], side = "E", box = [5.5, 1] }

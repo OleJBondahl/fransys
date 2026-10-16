@@ -19,7 +19,7 @@ from test_block_diagram_worked_examples import _station  # noqa: E402 -- ditto
 from test_units_worked_example import _build_cabinet_own  # noqa: E402 -- ditto
 
 from fransys_layout import lay_out_diagrams  # noqa: E402 -- ditto
-from fransys_layout.engines.diagram import sizes  # noqa: E402 -- pins render's own constants
+from fransys_layout.engines.overview import sizes  # noqa: E402 -- pins render's own constants
 from fransys_model.kernel import Origin, evolve  # noqa: E402 -- ditto
 from fransys_model.layout import DiagramBox, layout_of  # noqa: E402 -- ditto
 

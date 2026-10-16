@@ -110,7 +110,7 @@ class Units:
         """Build the unit `definition` as instance `tag` (printed `-tag`), `None` to be numbered.
 
         Does not take a lowercase tag. Returns the unit function's result; `name=` as in `device`.
-        `unused=` names fields (`"X1"`, a terminal, run or strip) or functions (`"X1.x1"`).
+        `unused=` names fields (`"X1"`) or functions (`"X1.x1"`); a strip: `"X3[3:5]"`.
         """
         check_history(definition)
         key = self._claim(

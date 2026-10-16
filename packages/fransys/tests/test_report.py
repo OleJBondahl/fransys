@@ -2,9 +2,10 @@
 
 import fransys as fr
 from fransys import _codes, _report
+from fransys._finding_text import described_parts
 
 _SITE = "https://olejbondahl.github.io/fransys/"
-_PATCHED = fr.build(fr.design("demo_parts"))  # an empty build; check is patched over it
+_PATCHED = fr.build(fr.design("demo_parts"))  # an empty build; the raw findings are patched over it
 
 
 def _built_with_a_document(tmp_path) -> fr.BuildResult:
@@ -33,20 +34,27 @@ def test_a_report_gives_the_summary_each_error_and_the_notes(tmp_path):
 
 
 def test_each_subject_prints_as_an_at_line(monkeypatch):
+    """The subjects come from the kernel's structured description, not from the joined text."""
+    d = fr.design("demo_parts")
+    d.device("X1", "DEMO-CONN-2P")
+    d.device("X2", "DEMO-CONN-2P")
+    result = fr.build(d)
+    subjects = tuple(result.model.origins)[:2]
     warning = fr.Finding(
         code="LONE_CELL",
         severity=fr.Severity.WARNING,
-        subjects=(),
-        message="LONE_CELL (warning): a symbol has no drawn conductor at all (p1.1: -K1)\n"
-        "  subject: build.py:12 (K1)\n  subject: build.py:14 (K2)",
+        subjects=subjects,
+        message="a symbol has no drawn conductor at all (p1.1: -K1)",
     )
     note = fr.Finding(code="PAGE_UNDERFILLED", severity=fr.Severity.INFO, subjects=(), message="")
-    monkeypatch.setattr(_report, "check", lambda _result: (warning, note))
-    assert fr.report(_PATCHED).splitlines() == [
+    monkeypatch.setattr(_report, "_raw_findings", lambda _result, _svgs: (warning, note))
+    lines = fr.report(result).splitlines()
+    assert lines[:2] == [
         "build: 0 errors, 1 warning, 1 note",
         "LONE_CELL (warning): a symbol has no drawn conductor at all (p1.1: -K1)",
-        "  at: build.py:12 (K1)",
-        "  at: build.py:14 (K2)",
+    ]
+    assert lines[2:4] == [f"  at: {s}" for s in described_parts(warning, result.model).subjects]
+    assert lines[4:] == [
         f"  fix: {_codes.BY_CODE['LONE_CELL'].fix}",
         f"  see: {_SITE}{fr.__version__}/guide/findings-render/#lone_cell",
         "notes: PAGE_UNDERFILLED 1",
@@ -54,5 +62,5 @@ def test_each_subject_prints_as_an_at_line(monkeypatch):
 
 
 def test_a_clean_build_reports_no_notes_line(monkeypatch):
-    monkeypatch.setattr(_report, "check", lambda _result: ())
+    monkeypatch.setattr(_report, "_raw_findings", lambda _result, _svgs: ())
     assert fr.report(_PATCHED) == "build: 0 errors, 0 warnings, 0 notes\n"

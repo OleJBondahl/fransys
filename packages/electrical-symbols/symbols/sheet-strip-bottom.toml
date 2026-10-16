@@ -1,0 +1,18 @@
+schema = 1
+name = "Sheet strip cell (bottom)"
+kind = "element"
+status = "unverified"
+# our own reference strip cell: one column of the frame's bottom strip, in mm. Stretched to the grid
+# pitch and the strip depth, then `table(cell, n, "x")`. The thick edge is the frame border's
+# segment this cell stands on; the tick closes the cell and is drawn only between cells.
+reference = { standard = "IEC 60617", number = "sheet-strip-bottom" }
+
+elements = [
+  { line = [[0, 0], [1, 0]], weight = "thick" },
+  { line = [[1, 0], [1, 1]], between = true },
+]
+
+stretch = [{ axis = "x", at = 0.5 }, { axis = "y", at = 0.5 }]
+
+[slots]
+label = { at = [0.5, 0.5], side = "C", box = [1, 0.5] }

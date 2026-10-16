@@ -46,6 +46,7 @@ def test_a_wrong_symbol_is_a_symbol_port_missing_finding(tmp_path, whole_item):
     raw = [f for f in result.findings if f.code == "SYMBOL_PORT_MISSING"]
     assert len(raw) == 1
     assert raw[0].severity is Severity.ERROR
+    assert [s.kind for s in raw[0].subjects] == ["port_template"]  # the template port named (R92)
     assert "part 'DEMO-RLY-2CO-24'" in raw[0].message
     assert "symbol 'psu'" in raw[0].message
 

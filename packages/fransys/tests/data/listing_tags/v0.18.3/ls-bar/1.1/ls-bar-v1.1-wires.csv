@@ -1,0 +1,3 @@
+from,to,colour,cross_section_mm2,label
+-M1:PE,-PE1,GNYE,2.5,-M1:PE -PE1
+-M2:PE,-PE1,GNYE,2.5,-M2:PE -PE1

@@ -22,6 +22,7 @@ from fransys_model.derive import (
     column_rows,
     connector_rows,
     core_list_rows,
+    csv_name,
     designation_list,
     pin_lines,
     plc_channel_rows,
@@ -35,13 +36,6 @@ if TYPE_CHECKING:
     from fransys_model.derive import TopLevelScope
     from fransys_model.kernel import Id, Model
     from fransys_model.vocab import AspectNode, Item, Unit
-
-# The two terminal ends columns are the terminal's port roles, internal then external (owner
-# ruling 2026-09-24): their CSV headers are the derive labels ("Side A", "Side B") in this
-# file's snake_case (`side_a`, `side_b`), not the row's field names.
-_TERMINAL_LABELS = {
-    field: label.replace(" ", "_").lower() for field, label in TERMINAL_LABELS.items()
-}
 
 
 def _write(columns: tuple[str, ...], lines: Iterable[Iterable[object]]) -> str:
@@ -86,9 +80,8 @@ def terminal_csv(
     Returns:
         The CSV text. Same model digest, same bytes.
     """
-    return _csv(
-        terminal_rows(model, strip, unit=unit, context=context), TERMINAL_COLUMNS, _TERMINAL_LABELS
-    )
+    labels = {field: csv_name(label) for field, label in TERMINAL_LABELS.items()}
+    return _csv(terminal_rows(model, strip, unit=unit, context=context), TERMINAL_COLUMNS, labels)
 
 
 def plc_csv(

@@ -14,20 +14,18 @@ from fransys_model.derive import (
     DESIGNATION_COLUMNS,
     PIN_COLUMNS,
     PLC_COLUMNS,
-    TOP_LEVEL,
     WIRE_COLUMNS,
-    boards,
-    bom_lines,
-    cable_list_rows,
+    cable_list_rows_of,
+    column_label,
     column_rows,
-    connector_items,
     connector_rows,
     connector_rows_of,
     cores_text,
     designation_list,
+    document_bom_lines,
+    document_scope,
     document_unit,
     is_own_unit_root,
-    items_at,
     list_context,
     plc_channel_rows,
     plc_list_rows,
@@ -35,19 +33,15 @@ from fransys_model.derive import (
     printed_designation,
     strip_side_headings,
     terminal_rows,
-    terminal_strips,
-    unit_connector_items,
-    unit_strips,
     wire_rows,
 )
 from fransys_model.vocab import (
-    DocumentPreset,
     functions,
     items,
 )
 
 from ._flow import GUTTER_PCT, SHARE_PCT, flow_columns
-from ._lists_cells import _cell_typst, _humanise, _kept_columns, _widths
+from ._lists_cells import _cell_typst, _kept_columns, _widths
 from ._lists_terminal import _terminal_table
 from ._marks import LIST_HEADING
 from ._tables import table_source
@@ -57,10 +51,11 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from fransys_model.derive import (
+        BridgePiece,
+        CableListRow,
         ConnectorRow,
         PlcChannelRow,
         TerminalRow,
-        TopLevelScope,
         WireRow,
     )
     from fransys_model.kernel import Id, Model
@@ -88,7 +83,7 @@ def _table(  # noqa: PLR0913 -- the list, its wide columns, its heading, anchor 
         return ""
     shown = labels or {}
     names = [
-        f"strong(text({literal(shown.get(headers[i]) or _humanise(headers[i]))}))" for i in kept
+        f"strong(text({literal(shown.get(headers[i]) or column_label(headers[i]))}))" for i in kept
     ]
     body = [[_cell_typst(row[i]) for i in kept] for row in rows]
     widths = _widths([headers[i] in wide for i in kept])
@@ -162,45 +157,29 @@ def designation_list_page(model: Model, record: Document) -> str:
     return flow_columns([table], share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
 
 
+def document_cable_rows(model: Model, record: Document) -> tuple[CableListRow, ...]:
+    """The cable list's rows: the cables the document's drawings draw, `scope.cables` (pdf-0042)."""
+    scope = document_scope(model, record)
+    return cable_list_rows_of(model, {cable.cable for cable in scope.cables})
+
+
 def cable_list_page(model: Model, record: Document) -> str:
-    """The CABLE_LIST table: one row per cable of the document's unit; top-level for the system."""
+    """The CABLE_LIST table: one row per cable the document's drawings draw (pdf-0042)."""
     columns = tuple(name for name in CABLE_LIST_COLUMNS if name != "pairs")
     rows = [
         tuple(
             cores_text(row.core_count, row.pairs) if n == "core_count" else getattr(row, n)
             for n in columns
         )
-        for row in cable_list_rows(model, unit=document_unit(model, record))
+        for row in document_cable_rows(model, record)
     ]
     return _table(columns, rows, ("description", "from_label", "to_label"))
 
 
-def _bom_scope(
-    model: Model, record: Document
-) -> Id[Item] | Id[AspectNode] | Id[Unit] | TopLevelScope | None:
-    """The BOM scope: the unit, else `TOP_LEVEL` for `SYSTEM`, else location or item."""
-    unit = document_unit(model, record)
-    if unit is not None:
-        return unit
-    if record.preset is DocumentPreset.SYSTEM:
-        return TOP_LEVEL
-    return record.location if record.location is not None else record.item
-
-
 def bom_page(model: Model, record: Document) -> str:
-    """The BOM table, scoped by `_bom_scope`."""
-    rows = column_rows(bom_lines(model, scope=_bom_scope(model, record)), BOM_COLUMNS)
+    """The BOM table, scoped by `DocumentScope.bom_scope`."""
+    rows = column_rows(document_bom_lines(model, record), BOM_COLUMNS)
     return _table(BOM_COLUMNS, rows, ("description", "designations"))
-
-
-def _terminal_strips_for(model: Model, record: Document) -> tuple[Id[Item], ...]:
-    """The TERMINAL_LIST strips: a unit's own, never a nested unit's, else the location's."""
-    if (unit := document_unit(model, record)) is not None:
-        return unit_strips(model, unit)
-    if record.location is None:
-        return ()
-    at_location = set(items_at(model, record.location))
-    return tuple(strip for strip in terminal_strips(model) if strip in at_location)
 
 
 def _list_title(
@@ -220,11 +199,13 @@ def _list_heading(title: str) -> str:
     return f"{LIST_HEADING}text({literal(title)}))\n" if title else ""
 
 
-def terminal_list_page(model: Model, record: Document) -> str:
+def terminal_list_page(
+    model: Model, record: Document, bridges: Mapping[str, BridgePiece] | None = None
+) -> str:
     """The TERMINAL_LIST section: a headed table per strip; unit-relative (pdf-0012)."""
     unit = document_unit(model, record)
     sections = []
-    for number, strip in enumerate(_terminal_strips_for(model, record)):
+    for number, strip in enumerate(document_scope(model, record).strips):
         if not (rows := terminal_rows_for(model, record, strip)):  # no rows, no page
             continue
         title = _list_title(model, strip, unit)
@@ -232,7 +213,12 @@ def terminal_list_page(model: Model, record: Document) -> str:
             _list_heading(title)
             + description_par(items(model)[strip].description)  # author-0013
             + _terminal_table(
-                model, rows, strip_side_headings(model, strip), title=title, label=f"term{number}"
+                model,
+                rows,
+                strip_side_headings(model, strip),
+                title=title,
+                label=f"term{number}",
+                bridges=bridges,
             )
         )
     return flow_columns(sections, share_pct=SHARE_PCT, gutter_pct=GUTTER_PCT)
@@ -240,19 +226,12 @@ def terminal_list_page(model: Model, record: Document) -> str:
 
 def _connector_rows_for_page(model: Model, record: Document) -> tuple[ConnectorRow, ...]:
     """The CONNECTOR_LIST rows: a board document's board, else a unit's own, else the location's."""
-    unit = document_unit(model, record)
+    scope = document_scope(model, record)
     if record.item is not None:
-        return (
-            connector_rows_for(model, record, record.item) if record.item in boards(model) else ()
+        return tuple(
+            row for board in scope.boards for row in connector_rows_for(model, record, board)
         )
-    if unit is not None:
-        scope = unit_connector_items(model, unit)
-    elif record.location is not None:
-        at_location = set(items_at(model, record.location))
-        scope = tuple(item for item in connector_items(model) if item in at_location)
-    else:
-        return ()
-    return connector_rows_of(model, scope, unit=unit, context=record.location)
+    return connector_rows_of(model, scope.connector_items, unit=scope.unit, context=record.location)
 
 
 def _connector_section(row: ConnectorRow, description: str, number: int) -> str:

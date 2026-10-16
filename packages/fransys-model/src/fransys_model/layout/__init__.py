@@ -5,12 +5,13 @@ for every kind here: it may reference `core` and `facet` ids and nothing referen
 back; an authored kind (hint, rule parameter) has no coordinate or page-number field; a
 derived kind (page, placement, route) is written only by a pass and carries
 `produced_by`. A new kind goes into `AUTHORED_KINDS`, `DERIVED_KINDS`, `CABLE_KINDS` or
-`DIAGRAM_KINDS` or `OVERVIEW_KINDS`, which
+`DIAGRAM_KINDS`, `OVERVIEW_KINDS` or `DRAWN_KINDS`, which
 is what the tests and `derived_layout_ids` go by.
 """
 
 from .cable_results import CableBlock, CableBox, CoreWire, EndBox, OpenCoreWire, PinCell
 from .diagram_results import BoxRef, DiagramBox, DiagramLine, DiagramMarker, DiagramSheet, TabCell
+from .drawn_results import DrawnPage, DrawnPoint, DrawnSymbol, DrawnWire
 from .enums import (
     BlockRow,
     BoxKind,
@@ -52,7 +53,14 @@ from .hints import (
     SideHint,
     SymbolChoice,
 )
-from .kinds import AUTHORED_KINDS, CABLE_KINDS, DERIVED_KINDS, DIAGRAM_KINDS, OVERVIEW_KINDS
+from .kinds import (
+    AUTHORED_KINDS,
+    CABLE_KINDS,
+    DERIVED_KINDS,
+    DIAGRAM_KINDS,
+    DRAWN_KINDS,
+    OVERVIEW_KINDS,
+)
 from .overview_keys import BoxKey, box_key, line_key, ref_token, view_key
 from .overview_ref import OverviewMode, OverviewRef, OverviewRefKind
 from .overview_results import OverviewBox, OverviewLine, OverviewTab, OverviewView
@@ -85,6 +93,7 @@ __all__ = [
     "CABLE_KINDS",
     "DERIVED_KINDS",
     "DIAGRAM_KINDS",
+    "DRAWN_KINDS",
     "OVERVIEW_KINDS",
     "POWER_SLOT",
     "BlockRow",
@@ -106,6 +115,10 @@ __all__ = [
     "DiagramMarker",
     "DiagramSheet",
     "DrawingSet",
+    "DrawnPage",
+    "DrawnPoint",
+    "DrawnSymbol",
+    "DrawnWire",
     "EndBox",
     "EndStyle",
     "ExternalOutline",

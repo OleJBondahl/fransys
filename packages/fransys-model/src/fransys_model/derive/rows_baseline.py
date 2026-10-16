@@ -6,6 +6,7 @@ Row shapes beside `rows.py` (model-0199); they import nothing from it.
 from fransys_model.kernel import AuthoringKey, value
 from fransys_model.vocab.ratings import Operating, Rating
 
+from .release_order import ReleaseOrder, release_order
 from .rows_removed import RemovedAncestry
 
 
@@ -176,3 +177,102 @@ class NumberingPins:
 
     items: tuple[NumberingItem, ...]
     retired: tuple[NumberingRetired, ...]
+
+
+@value
+class ChangeSection:
+    """One printed section of a change note: its name and its rows grouped by subject.
+
+    `groups` are runs of consecutive `Change` rows with one `subject` (`derive.change_sections`).
+    """
+
+    section: str
+    groups: tuple[tuple[Change, ...], ...]
+
+
+@value
+class ReleaseIdentity:
+    """A release's identity (model-0280): name, version, revision, interface."""
+
+    name: str
+    version: int
+    revision: int
+    interface: str
+
+
+@value
+class StoredRelease:
+    """One stored release folder, as the facade reads it (model-0267; pattern of `ListingDiff`).
+
+    `folder` is the `<version>.<revision>` folder name, `listing` its `baseline/listing.json` and
+    `numbering` its `baseline/numbering.json` (`None` when it has none). `identity` and `order`
+    read off the listing's own unit. The manifest joins when a second reader needs its keys.
+    """
+
+    folder: str
+    listing: Listing
+    numbering: NumberingPins | None
+
+    @property
+    def identity(self) -> ReleaseIdentity:
+        """The listed unit's name, version, revision and interface."""
+        unit = self.listing.unit
+        return ReleaseIdentity(
+            name=unit.name, version=unit.version, revision=unit.revision, interface=unit.interface
+        )
+
+    @property
+    def order(self) -> ReleaseOrder:
+        """The folder's `release_order` key, from its listing."""
+        identity = self.identity
+        return release_order(identity.version, identity.revision)
+
+
+@value
+class StoredReleases:
+    """Every stored release below `<into>/<name>/` that has a listing, in folder order."""
+
+    releases: tuple[StoredRelease, ...]
+
+
+@value
+class ManifestHistory:
+    """The `history` entry of a manifest: the release's current revision entry."""
+
+    date: str
+    text: str
+    created: str
+    checked: str
+    approved: str
+
+
+@value
+class ManifestLibrary:
+    """One `part_libraries` entry of a manifest: a part library name and version in use."""
+
+    name: str
+    version: str
+
+
+@value
+class ManifestNested:
+    """One `nested` entry of a manifest: a nested release with its listing's sha256 hex digest."""
+
+    name: str
+    version: int
+    revision: int
+    listing_digest: str
+
+
+@value
+class ManifestRows:
+    """The manifest facts that come from the model and print no designation (model-0267).
+
+    `identity` is the release's; `entry` its current revision entry (the manifest's
+    `history`), `None` when it has none; `part_libraries` and `nested` come sorted.
+    """
+
+    identity: ReleaseIdentity
+    entry: ManifestHistory | None
+    part_libraries: tuple[ManifestLibrary, ...]
+    nested: tuple[ManifestNested, ...]

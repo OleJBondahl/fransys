@@ -77,6 +77,7 @@ _EXPECTED_ALL = [
     "parts",
     "parts_module",
     "readability",
+    "rebaseline",
     "release",
     "releases",
     "report",

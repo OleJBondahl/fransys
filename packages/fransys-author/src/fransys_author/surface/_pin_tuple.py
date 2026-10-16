@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, cast
 from fransys_author.errors import AuthorError
 from fransys_author.handles import Port
 from fransys_author.surface._fixed import take
+from fransys_author.surface._handles import Fn
 from fransys_author.surface._pairing import End, Ends
 
 if TYPE_CHECKING:
@@ -43,9 +44,13 @@ def is_lone_pin(element: object) -> bool:
 
 def is_free_pins(element: object) -> bool:
     """Whether `element` is a lone pin or a pin tuple, which stands at an end of a series only."""
-    return is_lone_pin(element) or (
-        is_pin_tuple(element)
-        and all(pin._terminal is None for pin in cast("tuple[Port, ...]", element))
+    return (
+        is_lone_pin(element)
+        or is_mixed_tuple(element)
+        or (
+            is_pin_tuple(element)
+            and all(pin._terminal is None for pin in cast("tuple[Port, ...]", element))
+        )
     )
 
 
@@ -58,6 +63,15 @@ def refuse_inside(element: object, index: int, last: int) -> None:
             "d.detail.wire(pin, pin, wire=...)"
         )
         raise AuthorError(msg)
+
+
+def is_mixed_tuple(element: object) -> bool:
+    """Whether `element` is a tuple of functions and free pins, with a function among them."""
+    return (
+        isinstance(element, tuple)
+        and any(isinstance(item, Fn) for item in element)
+        and all(isinstance(item, Fn) or is_lone_pin(item) for item in element)
+    )
 
 
 def is_pin_tuple(element: object) -> bool:

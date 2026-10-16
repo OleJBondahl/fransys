@@ -7,8 +7,9 @@ from fransys_author import AuthorError
 from fransys_el import OPTIONS
 
 from fransys_layout import HintError, SymbolPortError, lay_out_diagrams, lay_out_schematic
+from fransys_model.derive import symbol_port_subject
 from fransys_model.kernel import Finding, Severity, describe
-from fransys_model.vocab import PageKind, documents, functions, items, port_templates
+from fransys_model.vocab import PageKind, documents, functions, items
 from fransys_model.vocab import parts as model_parts
 
 if TYPE_CHECKING:
@@ -73,31 +74,12 @@ def symbol_port_missing_finding(model: Model, error: SymbolPortError) -> Finding
     Message: part mpn + `error`'s text; origin: PortTemplate, else Part, else `error.function`.
     """
     if error.function.kind == "item":
-        function = None
         item = items(model)[cast("Id[Item]", error.function)]
     else:
-        function = functions(model)[cast("Id[Function]", error.function)]
-        item = items(model)[function.item]
+        item = items(model)[functions(model)[cast("Id[Function]", error.function)].item]
     part = model_parts(model).get(item.part) if item.part is not None else None
     mpn = part.mpn if part is not None else "no part"
-    port_template = (
-        next(
-            (
-                candidate
-                for candidate in port_templates(model).values()
-                if candidate.function == function.template and candidate.name == error.port_name
-            ),
-            None,
-        )
-        if function is not None and function.template is not None
-        else None
-    )
-    if port_template is not None:
-        subject = port_template.id
-    elif part is not None:
-        subject = part.id
-    else:
-        subject = error.function
+    subject = symbol_port_subject(model, cast("Id[Function]", error.function), error.port_name)
     return Finding(
         code="SYMBOL_PORT_MISSING",
         severity=Severity.ERROR,

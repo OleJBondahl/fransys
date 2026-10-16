@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from .values import Box, Cell, Lane, Options, Pin, Sym
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+
+
+def _no_rule(func: str, orient: str) -> NoReturn:
+    """Raise for an orientation a rotation function has no rule for."""
+    msg = f"{func}: orientation {orient} has no rule; core cells take R0, R90, R180 or R270"
+    raise ValueError(msg)
 
 
 def rotate_xy(dx: int, dy: int, orient: str) -> tuple[int, int]:
@@ -18,7 +24,9 @@ def rotate_xy(dx: int, dy: int, orient: str) -> tuple[int, int]:
         return -dy, dx
     if orient == "R270":
         return dy, -dx
-    return dx, dy
+    if orient == "R0":
+        return dx, dy
+    _no_rule("rotate_xy", orient)
 
 
 def rotate_box(box: Box, orient: str) -> Box:
@@ -29,12 +37,16 @@ def rotate_box(box: Box, orient: str) -> Box:
         x0, y0 = rotate_xy(box.x, box.y, orient)
         x1, y1 = rotate_xy(box.x + box.w, box.y + box.h, orient)
         return Box(min(x0, x1), min(y0, y1), box.w, box.h)
-    return box
+    if orient == "R0":
+        return box
+    _no_rule("rotate_box", orient)
 
 
 def rotate_side(side: str, orient: str) -> str:
     """The side a pin faces after the cell turns to orient (N E S W clockwise)."""
-    turns = {"R0": 0, "R90": 1, "R180": 2, "R270": 3}[orient]
+    turns = {"R0": 0, "R90": 1, "R180": 2, "R270": 3}.get(orient)
+    if turns is None:
+        _no_rule("rotate_side", orient)
     order = "NESW"
     return order[(order.index(side) + turns) % 4]
 
@@ -125,4 +137,31 @@ def column_extent(
         a, b = lane_extent(syms, lane.cells, in_row)
         left = min(left, lane.offset + a)
         right = max(right, lane.offset + b)
+    return left, right
+
+
+def shape_key(syms: Mapping[str, Sym], lanes: tuple[Lane, ...]) -> str:
+    """Columns with equal shapes are like: the stagger rule applies between them.
+
+    A documented exception to "P1.2 is done"; topology's port reads it from here.
+    """
+    return "|".join(
+        ",".join(f"{syms[c.sym].body}{syms[c.sym].keepout}{c.orient}" for c in lane.cells)
+        for lane in lanes
+    )
+
+
+def box_reach(sym: Sym) -> tuple[int, int]:
+    """How far a box's footprint reaches past its body, left and right (its label); never negative.
+
+    The one home of footprint minus body for a card (layout-0287): stages 2, 4 and 5 read it.
+    """
+    if sym.box is None:
+        msg = f"{sym.id} has no box spec, so it has no card reach"
+        raise ValueError(msg)
+    fp, body = sym.footprint, sym.body
+    left, right = body.x - fp.x, fp.x + fp.w - body.x - body.w
+    if left < 0 or right < 0:
+        msg = f"{sym.id}: footprint {fp} lies inside body {body}; a card's footprint holds its body"
+        raise ValueError(msg)
     return left, right

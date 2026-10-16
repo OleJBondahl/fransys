@@ -4,7 +4,7 @@ A stage code is defined in the stage that emits it, because `stages` may not imp
 `lint`; it is re-exported here so this module is the complete list. Codes are stable.
 """
 
-from fransys_layout.lint import codes_defects, codes_design
+from fransys_layout.lint import codes_blocks, codes_defects, codes_design
 from fransys_layout.stages.columns import (
     FUNCTION_UNPLACED_IN_COLUMN,
 )
@@ -142,4 +142,8 @@ def severity_of(code: str) -> Severity:
     return Severity.INFO if code in UNCLEARABLE else Severity.WARNING
 
 
-FINDING_CODES = (*codes_defects.FINDING_CODES, *codes_design.FINDING_CODES)
+FINDING_CODES = (
+    *codes_blocks.FINDING_CODES,
+    *codes_defects.FINDING_CODES,
+    *codes_design.FINDING_CODES,
+)

@@ -6,13 +6,13 @@ from electrical_symbols import library_version
 from fransys_model.derive import (
     function_designation,
     function_is_loose,
+    page_reference_text,
     port_designation,
     references_off_document,
     schematic_functions,
 )
-from fransys_model.derive.drawing_text import location_path, position_text
 from fransys_model.kernel import Finding, SchemaError, Severity
-from fransys_model.layout import DrawingSet, Label, LinkMarker, Page, SymbolPlacement, layout_of
+from fransys_model.layout import Label, LinkMarker, Page, SymbolPlacement, layout_of
 
 from ._drawn_shorts import drawn_shorts
 from ._ink import page_ink
@@ -32,11 +32,7 @@ REFERENCE_OFF_DOCUMENT = "REFERENCE_OFF_DOCUMENT"
 def _about(model: Model, placement: SymbolPlacement) -> str:
     """` (p3: H1:lamp)`: the placement's page as a reference prints it, then its function."""
     page = layout_of(model, Page)[placement.page]
-    drawing_set = layout_of(model, DrawingSet)[page.drawing_set]
-    path = () if drawing_set.location is None else location_path(model, drawing_set.location)
-    where = position_text(
-        page.number, None, None, tuple(label for _, label in path), drawing_set.number
-    )
+    where = page_reference_text(model, page, with_location=True)
     try:
         return f" ({where}: {function_designation(model, placement.function)})"
     except SchemaError:
@@ -114,9 +110,7 @@ def _drawing_shorts_nets_findings(model: Model) -> tuple[Finding, ...]:
 
 def _page_text(model: Model, page: Page) -> str:
     """`p3`, or `p2.3` for page 3 of set 2: the page as a reference prints it."""
-    return position_text(
-        page.number, None, None, (), layout_of(model, DrawingSet)[page.drawing_set].number
-    )
+    return page_reference_text(model, page)
 
 
 def _reference_name(model: Model, subject: Id[Any]) -> str:

@@ -74,20 +74,20 @@ from `fransys.colours`.
 | add a terminal strip, take a terminal | `d.terminal_strip("X1", P.X, n)`, `X1[3]` | authoring.md, Strips and terminals |
 | a named, bridged run on a strip | `X1.run(label, n, bridged=True)` | authoring.md, Bridges |
 | bridge a set of auto-numbered terminals | `X1.run(label, bridged=True)`, then the run passed to each `d.series` | authoring.md, Bridges |
-| wire along a current path | `d.series(a, b, c, wire=(BU, 0.75))` | authoring.md, wire along a current path |
-| branch inside a series | `d.parallel(a, b)` | authoring.md, branch inside a series |
-| a branch across part of a path | a second `d.series(split, ..., join, wire=...)` | authoring.md, Branch inside a series |
+| wire along a current path | `d.series(a, b, c, wire=(BU, 0.75))` | series.md, wire along a current path |
+| branch inside a series | `d.parallel(a, b)` | series.md, branch inside a series |
+| a branch across part of a path | a second `d.series(split, ..., join, wire=...)` | series.md, Branch inside a series |
 | a series from one pin, or a branch looped at a fuse's line pins | `d.series(k1.coil["A1"], a1.di_1)`, `d.series((f4.element[1], f4.element[3], f4.element[5]), f8.element)` | keywords-handles.md |
 | bridge adjacent plain terminals | `d.terminal_strip("X4", P.X, 6, bridged=(2, 6))` | authoring.md, Bridges |
 | wire one point to many | `d.detail.star(src, (a, b, c), wire=...)` | detail.md, One point to many |
 | wire two named pins off a path | `d.detail.wire(a, b, wire=(BU, 0.75))` | detail.md, d.detail.wire |
-| add a cable | `d.cable("W1", P.X, length_m=)` in a `d.series`, which takes the next free core | authoring.md, Cables |
+| add a cable | `d.cable("W1", P.X, length_m=)` in a `d.series`, which takes the next free core | series.md, Cables |
 | a signal pair through a cable, pin for pin | `d.pair(a, cable, b)` | keywords-design.md, d.pair |
 | choose one core of a cable | `W1.core(BN, a, b)` | detail.md, W1.core |
-| name a wire colour | `from fransys.colours import BU`, then `wire=(BU, 0.75)` | authoring.md, Wire colours |
-| colour wires by what they carry | `fr.design(..., wiring=)`, `@fr.unit(wiring=)` or `wire={row: ...}` | authoring.md, Wire colours |
-| a changeover throw in a series | `k1.co_1.no`, `.nc` | authoring.md, A changeover in a series |
-| earth pins | `d.earth(*pins)` | authoring.md, earth pins |
+| name a wire colour | `from fransys.colours import BU`, then `wire=(BU, 0.75)` | series.md, Wire colours |
+| colour wires by what they carry | `fr.design(..., wiring=)`, `@fr.unit(wiring=)` or `wire={row: ...}` | series.md, Wire colours |
+| a changeover throw in a series | `k1.co_1.no`, `.nc` | series.md, A changeover in a series |
+| earth pins | `d.earth(*pins)` | series.md, earth pins |
 | a named signal net | `d.detail.net(name, *pins, kind=)` | detail.md |
 | a busbar, a rail bond | `d.detail.busbar(a, b)`, `d.detail.rail_bond(a, b)` | detail.md |
 | AC or DC supply and rails | `d.ac_supply(...)`, `d.dc_supply(...)` | authoring.md, AC or DC supply and rails |
@@ -180,7 +180,8 @@ fr.write(result, Path("out"))
 ### Writing a project
 
 - `parts.md`: loading and linting a part library, the typed parts module, and a part's rating.
-- `authoring.md`: places, functions, devices, strips, series, cables, colours and supplies.
+- `authoring.md`: places, functions, devices, strips, bridges, supplies and channels.
+- `series.md`: series, branches, changeovers, cables, wire colours and earth pins.
 - `units.md`: a unit's boundary, its revisions, and nesting one unit inside another.
 - `harnesses.md`: adding a harness, and how its cables and plugs print.
 - `documents.md`: presets, covers, subjects, and one PDF per drawing.
@@ -214,6 +215,7 @@ fr.write(result, Path("out"))
 
 ### Moving from an older release
 
+- `moving-to-0.20.md`: the new `fr.rebaseline` call for baselines cut by an older release.
 - `moving-to-0.19.md`: the detail calls that moved to `d.detail`, and the rewrite from `d.wire` to `d.series`.
 - `moving-to-0.16-and-0.17.md`: what may newly stop a 0.15 or 0.16 build, the changed outputs and the new names.
 - `moving-to-0.15.md`: each renamed profile and readability name, the new `releases=` keyword and the system overview's Changes switch.

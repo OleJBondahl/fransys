@@ -2,7 +2,7 @@
 
 import itertools
 
-from fransys_layout.engines.diagram.columns import assign_columns
+from fransys_layout.engines.overview.columns import assign_columns
 
 
 def test_star_centre_first_leaves_in_text_order() -> None:

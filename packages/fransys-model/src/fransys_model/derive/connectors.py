@@ -6,7 +6,7 @@ See vocabulary.md 6 and derive-queries-structure.md.
 from typing import TYPE_CHECKING
 lazy from collections.abc import Collection
 
-from fransys_model.vocab.enums import FunctionKind
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.vocab.tables import functions, items, nets, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -73,7 +73,7 @@ def connector_items(model: Model) -> tuple[Id[Item], ...]:
     found = {
         function.item
         for function in functions(model).values()
-        if function.kind is FunctionKind.CONNECTOR
+        if function_role(model, function.id).pin_group
         and function.template is not None
         and function.template in shapes
     }
@@ -102,7 +102,7 @@ def _connectors_on(model: Model, on_board: set[Id[Item]]) -> list[tuple[Function
         shape = None if function.template is None else shapes.get(function.template)
         if (
             shape is not None
-            and function.kind is FunctionKind.CONNECTOR
+            and function_role(model, function.id).pin_group
             and function.item in on_board
         ):
             found.append((function, shape))

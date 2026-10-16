@@ -134,6 +134,13 @@ class TerminalStrip:
         """
         if isinstance(number, slice):
             return span(self, number)
+        terminal = self._numbered(number)
+        self._used.add(number)
+        self._claim(number)
+        return terminal
+
+    def _numbered(self, number: int) -> Terminal:
+        """Terminal `number` with its range checks and no use mark: `[n]` and `unused=` share it."""
         if isinstance(number, bool) or not isinstance(number, int) or number < 1:
             msg = f"{self._tag}[{number!r}]: a terminal number is an integer from 1"
             raise AuthorError(msg)
@@ -143,10 +150,7 @@ class TerminalStrip:
         if self._grows and number not in self._made:
             msg = f"{self._tag} has {len(self._made)} so far; give the run a size for {number}"
             raise AuthorError(msg)
-        self._used.add(number)
-        terminal = self._terminal(number)
-        self._claim(number)
-        return terminal
+        return self._terminal(number)
 
     def _free(self, count: int) -> list[int]:
         """The `count` lowest numbers not used; raise when `count` strip terminals run out."""

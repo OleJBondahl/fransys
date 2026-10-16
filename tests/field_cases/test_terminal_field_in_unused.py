@@ -4,7 +4,8 @@ whole tuple and the run open.
 
 The bug (v0.8.0): `unused=` on `d.add` took only devices and functions, so a field of
 `fr.Terminal`, `fr.Run` or `fr.TerminalStrip` raised "not a device or a function", though the unit
-guide lets a unit return those. Fixing decision: author-0021 (amends author-0020).
+guide lets a unit return those. Fixing decisions: author-0021 (amends author-0020), then
+author-0062 (a subscript means the handle's).
 """
 
 from typing import NamedTuple
@@ -86,7 +87,10 @@ def test_a_function_suffix_on_a_terminal_raises() -> None:
         d.add(_board, "U1", unused=("spare[1].f",))
 
 
-def test_an_index_on_a_run_says_not_a_tuple() -> None:
+def test_an_index_on_a_run_is_the_runs_terminal_from_one() -> None:
+    """author-0062: a run is a strip, so `feed[1]` is its first terminal, as `run[1]` is."""
     d = fr.design("demo_parts", place="C1")
-    with pytest.raises(AuthorError, match=r"not a tuple$"):
-        d.add(_board, "U1", unused=("feed[1]",))
+    d.add(_board, "U1", unused=("feed[1]",))
+    assert sum(type(r).__name__ == "UnusedBoundary" for r in d.draft().records()) == 1
+    with pytest.raises(AuthorError, match=r"has 2 terminals; 3 is past the last"):
+        d.add(_board, "U2", unused=("feed[3]",))

@@ -9,7 +9,7 @@ from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.rows_series_pairs import SeriesPair
 from fransys_model.layout import Side
 from fransys_model.vocab.closure import net_of
-from fransys_model.vocab.tables import functions, ports
+from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -37,7 +37,7 @@ def _poles(model: Model, function: Id[Function]) -> tuple[tuple[Id[Port], ...], 
     """The function's ports by pole, in pole order; a function with no poles is one pole."""
     mine = [p for p in ports(model).values() if p.function == function]
     own = {p.template: p.id for p in mine if p.template is not None}
-    found = poles_of(model, functions(model)[function].kind, own)
+    found = poles_of(model, own)
     if not found:
         return (tuple(p.id for p in mine),)
     return tuple((own[pole.ends[0].id], own[pole.ends[1].id]) for pole in found)

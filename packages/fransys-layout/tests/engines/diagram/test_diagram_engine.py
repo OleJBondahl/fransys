@@ -7,9 +7,9 @@ import pytest
 from diagram_models import chain, fanout, loose, one_box, station
 
 from fransys_layout import lay_out_diagrams
-from fransys_layout.engines.diagram.place import place_diagram
 from fransys_layout.engines.diagram.read import read_diagrams
-from fransys_layout.engines.diagram.scene import scene_of
+from fransys_layout.engines.overview.compose import place_diagram
+from fransys_layout.engines.overview.scene import scene_of
 from fransys_layout.geometry import WIRING_GRID, Point
 from fransys_layout.lint import lint_diagram
 from fransys_layout.lint.codes import (

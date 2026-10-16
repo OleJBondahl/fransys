@@ -290,7 +290,7 @@ def loads(text: str) -> Listing:
     )
 
 
-def _without_parent(listing: Listing) -> Listing:
+def without_parent(listing: Listing) -> Listing:
     """`listing` with every item's `parent` dropped: parent is never compared (model-0212)."""
     items = tuple(dataclasses.replace(row, parent=None) for row in listing.items)
     return dataclasses.replace(listing, items=items)
@@ -311,7 +311,7 @@ def differing_sections(a: Listing, b: Listing) -> tuple[str, ...]:
 
     `parent` is not compared. Returns `()` when the listings are equal.
     """
-    a, b = _without_parent(a), _without_parent(b)
+    a, b = without_parent(a), without_parent(b)
     return tuple(
         field.name
         for field in dataclasses.fields(Listing)

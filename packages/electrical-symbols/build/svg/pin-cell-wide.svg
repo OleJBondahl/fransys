@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="10mm" viewBox="-4 -1 12 4">
+<title>Pin cell, wide (table row)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<line x1="-3" y1="1" x2="-1" y2="1" stroke-width="0.1"/>
+<polygon points="-1,0 5,0 5,2 -1,2" stroke-width="0.1"/>
+<line x1="5" y1="1" x2="7" y2="1" stroke-width="0.1"/>
+</g>
+</svg>

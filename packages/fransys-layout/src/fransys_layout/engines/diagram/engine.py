@@ -1,11 +1,11 @@
 """The diagram engine: one pass from a model to its block diagram records."""
 
-from fransys_layout.engines.diagram.frame import tall_column
-from fransys_layout.engines.diagram.place import place_diagram
 from fransys_layout.engines.diagram.read import read_diagrams, read_findings
 from fransys_layout.engines.diagram.read.findings import too_tall_finding
-from fransys_layout.engines.diagram.scene import scene_of
 from fransys_layout.engines.diagram.write import write_diagrams
+from fransys_layout.engines.overview.compose import place_diagram
+from fransys_layout.engines.overview.lanes.diagram_frame import tall_column
+from fransys_layout.engines.overview.scene import scene_of
 from fransys_layout.lint import lint_diagram
 lazy from fransys_model.kernel import Finding, Model
 

@@ -1,0 +1,263 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -4,
+      0
+    ],
+    [
+      12,
+      6
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -4,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "port": "w1",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          -4,
+          4
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "port": "w2",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "style": "dashed",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          8,
+          2
+        ],
+        [
+          12,
+          2
+        ]
+      ],
+      "port": "e1",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          8,
+          4
+        ],
+        [
+          12,
+          4
+        ]
+      ],
+      "port": "e2",
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -4,
+      0
+    ],
+    [
+      12,
+      6
+    ]
+  ],
+  "kind": "symbol",
+  "lint_allow": [
+    {
+      "reason": "two marking boxes of one side are wider than their 2 M spacing allows once rotated; the box is drawn unrotated",
+      "rule": "slot-overlap-slot"
+    },
+    {
+      "reason": "the marking and tag text boxes do not rotate and are wider than their offset from the leads, so in a rotated orientation they cross a lead or the outline; the box is drawn unrotated",
+      "rule": "slot-overlap-body"
+    },
+    {
+      "reason": "a box has no through path: its connections end at the box and none continues across it",
+      "rule": "through-missing"
+    },
+    {
+      "reason": "a diagram box ends its connections at the block; no path of this symbol joins two of them",
+      "rule": "port-isolated"
+    }
+  ],
+  "name": "Diagram box, by others (block diagram)",
+  "nodes": [
+    {
+      "ports": [
+        "w1"
+      ]
+    },
+    {
+      "ports": [
+        "w2"
+      ]
+    },
+    {
+      "ports": [
+        "e1"
+      ]
+    },
+    {
+      "ports": [
+        "e2"
+      ]
+    }
+  ],
+  "paths": [],
+  "ports": [
+    {
+      "at": [
+        -4,
+        2
+      ],
+      "description": "",
+      "dir": "W",
+      "id": "w1"
+    },
+    {
+      "at": [
+        -4,
+        4
+      ],
+      "description": "",
+      "dir": "W",
+      "id": "w2"
+    },
+    {
+      "at": [
+        12,
+        2
+      ],
+      "description": "",
+      "dir": "E",
+      "id": "e1"
+    },
+    {
+      "at": [
+        12,
+        4
+      ],
+      "description": "",
+      "dir": "E",
+      "id": "e2"
+    }
+  ],
+  "reference": {
+    "number": "diagram-box-by-others",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.e1": {
+      "at": [
+        8.25,
+        1.5
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.e2": {
+      "at": [
+        8.25,
+        3.5
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "E"
+    },
+    "marking.w1": {
+      "at": [
+        -0.25,
+        1.5
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "W"
+    },
+    "marking.w2": {
+      "at": [
+        -0.25,
+        3.5
+      ],
+      "box": [
+        3.5,
+        1
+      ],
+      "side": "W"
+    },
+    "tag": {
+      "at": [
+        1,
+        1
+      ],
+      "box": [
+        6,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 4,
+      "axis": "x"
+    },
+    {
+      "at": 3,
+      "axis": "y"
+    }
+  ]
+}

@@ -5,13 +5,14 @@ from fransys_model.kernel import CodeInfo, Severity
 FINDING_CODES: tuple[CodeInfo, ...] = (
     CodeInfo(
         code="COVER_OVERFLOW",
-        severities=(Severity.WARNING,),
-        stage="pdf",
+        severities=(Severity.ERROR,),
+        stage="write, release",
         who="consumer",
         cause=(
-            "A document's cover text plus revision table are estimated taller than the content box."
+            "A document's cover text plus revision table, measured by Typst at write, are taller "
+            "than the content box; the write raises and writes nothing."
         ),
-        fix="Shorten the cover or revision text.",
+        fix="Shorten the cover or the revision text.",
         page="findings-pdf",
     ),
     CodeInfo(
@@ -81,39 +82,6 @@ FINDING_CODES: tuple[CodeInfo, ...] = (
             "not support."
         ),
         fix="Rewrite it using only the supported Markdown subset.",
-        page="findings-pdf",
-    ),
-    CodeInfo(
-        code="TITLE_BLOCK_NOTICE_OVERFLOW",
-        severities=(Severity.WARNING,),
-        stage="pdf",
-        who="consumer",
-        cause=(
-            "The `notice` text passed to `fr.document(notice=)` does not fit the notice cell "
-            "and would be cut."
-        ),
-        fix="Shorten the `notice` text in `fr.document(notice=)`.",
-        page="findings-pdf",
-    ),
-    CodeInfo(
-        code="TITLE_BLOCK_NO_ROOM",
-        severities=(Severity.WARNING,),
-        stage="pdf",
-        who="consumer",
-        cause="The sheet format's title-block band is under the required 20mm.",
-        fix="Use a sheet format with a taller title-block band.",
-        page="findings-pdf",
-    ),
-    CodeInfo(
-        code="TITLE_BLOCK_TEXT_OVERFLOW",
-        severities=(Severity.WARNING,),
-        stage="pdf",
-        who="consumer",
-        cause=(
-            "A one-line title-block field (title, number, customer, revision, date, author, "
-            "page title, scope or sheet counter) does not fit its cell."
-        ),
-        fix="Shorten the text; for a page title, set a shorter one with `d.layout.page_title`.",
         page="findings-pdf",
     ),
     CodeInfo(

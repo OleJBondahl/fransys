@@ -1,0 +1,151 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      -3,
+      0
+    ],
+    [
+      7,
+      2
+    ]
+  ],
+  "elements": [
+    {
+      "line": [
+        [
+          -3,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "port": "w",
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          -1,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          -1,
+          2
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    },
+    {
+      "line": [
+        [
+          5,
+          1
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "port": "e",
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      -3,
+      0
+    ],
+    [
+      7,
+      2
+    ]
+  ],
+  "kind": "element",
+  "name": "Pin cell, wide (table row)",
+  "nodes": [
+    {
+      "ports": [
+        "w"
+      ]
+    },
+    {
+      "ports": [
+        "e"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "from": "w",
+      "kind": "conductor",
+      "through": false,
+      "to": "e"
+    }
+  ],
+  "ports": [
+    {
+      "at": [
+        -3,
+        1
+      ],
+      "description": "west wire side",
+      "dir": "W",
+      "id": "w"
+    },
+    {
+      "at": [
+        7,
+        1
+      ],
+      "description": "east wire side",
+      "dir": "E",
+      "id": "e"
+    }
+  ],
+  "reference": {
+    "number": "pin-cell-wide",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "marking.e": {
+      "at": [
+        4.75,
+        1
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "W"
+    },
+    "marking.w": {
+      "at": [
+        -0.75,
+        1
+      ],
+      "box": [
+        1.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

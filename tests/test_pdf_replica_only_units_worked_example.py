@@ -5,6 +5,7 @@ shape: a box cell the top does not wire is not drawn, so its set draws nothing; 
 author-level rewiring still draws a set, both on `fr.build`'s own output.
 """
 
+import re
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -15,18 +16,21 @@ import fransys_parts
 from _model_build_cover import layout_trigger_document
 from fransys_el import REF_TINTS
 
+from fransys_model.derive import document_sheets_of
+
 # `test_declared_dependencies.py`'s own pattern for importing a sibling root test module by
 # name: `--import-mode=importlib` (root pyproject.toml) never puts `tests/` on `sys.path`.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import fransys_render
 from fransys_pdf import check, source
 from fransys_pdf._drawings import replica_only_sets, schematic_pages
-from fransys_pdf._lists import _connector_rows_for_page, _terminal_strips_for, bom_page
+from fransys_pdf._lists import _connector_rows_for_page, bom_page
 from fransys_render import cable_blocks as render_cable_blocks
 from fransys_render import pages as render_pages
 from test_units_worked_example import _PROJECT, io_board
 
 from fransys_layout import lay_out_cables
-from fransys_model.derive import unit_release, units
+from fransys_model.derive import document_scope, sheet_key, unit_release, units
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import SymbolPlacement
 from fransys_model.layout import layout_of as layout_of_model
@@ -158,7 +162,7 @@ def _unit_by_name_and_prefix(model, *, name, prefix):
 
 
 def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
-    """`fransys_pdf._lists._connector_rows_for_page`/`_terminal_strips_for` (decision
+    """`fransys_pdf._lists._connector_rows_for_page`/`DocumentScope.strips` (decision
     pdf-0006), proven on the worked example's real, facade-built geometry: a unit document's
     TERMINAL_LIST/CONNECTOR_LIST cover only items whose own `Item.unit` is that unit,
     directly -- never the recursive subtree.
@@ -217,14 +221,16 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
     # The real end-to-end proof: building the unit-subject PCB_SCHEMATIC document's source
     # does not raise (the actual pre-fix crash), and its CONNECTOR_LIST holds exactly the
     # io-board unit's own board, nothing recursed in from anywhere else.
-    io_text = source(model, io_doc.id, {})
+    io_text = source(model, io_doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
     assert io_text.count("#heading(level: 2,") == _IO_BOARD_COUNT
     assert len(_connector_rows_for_page(model, records[io_doc.id])) == _IO_BOARD_COUNT
 
     # The cabinet unit's own document: its TERMINAL_LIST covers its own strip (X2), but its
     # CONNECTOR_LIST is empty -- the board belongs to the nested `demo-io-board` unit, and
     # direct membership never recurses into a nested unit's own items.
-    cabinet_text = source(model, cabinet_doc.id, {})
+    cabinet_text = source(
+        model, cabinet_doc.id, {}, fransys_render.sheets(document_sheets_of(model))
+    )
     # Two level-2 headings: TERMINAL_LIST's own X2 section and CONNECTOR_LIST's one table, for
     # the cabinet's own plug `-WH1-P1` (pdf-0030). A regression to the recursive subtree would
     # pull in the nested io-board's connectors too.
@@ -232,7 +238,7 @@ def test_a_units_own_documents_scope_their_lists_to_that_unit_directly():
     assert '#heading(level: 2, text("-WH1-P1"))' in cabinet_text
     assert "X2" in cabinet_text
     cabinet_record = records[cabinet_doc.id]
-    assert len(_terminal_strips_for(model, cabinet_record)) == _CABINET_OWN_STRIP_COUNT
+    assert len(document_scope(model, cabinet_record).strips) == _CABINET_OWN_STRIP_COUNT
     (own_connector,) = _connector_rows_for_page(model, cabinet_record)
     assert own_connector.designation == "-WH1-P1"
 
@@ -261,14 +267,11 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
         notes=None,
     )
     model_with_doc = evolve(model, put=[doc], origin=_ORIGIN)
-    text = source(model_with_doc, doc.id, {})
-    assert (
-        'text(size: 2.46912mm, "Scope"), text(size: 3.42934mm, text("demo-pump-cabinet"))' in text
-    )
-    assert 'text(size: 2.46912mm, "Revision"), text(size: 3.42934mm, text("1.2"))' in text
-    assert (
-        'text(size: 2.46912mm, "Revision date"), text(size: 3.42934mm, text("2026-01-01"))' in text
-    )
+    svg = fransys_render.sheets(document_sheets_of(model_with_doc))[
+        sheet_key(doc.id, PageKind.COVER, 0)
+    ].svg
+    values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
+    assert {"demo-pump-cabinet", "1.2", "2026-01-01"} <= set(values)
 
 
 def _system_document(id_suffix: str) -> Document:
@@ -303,7 +306,7 @@ def test_the_worked_examples_system_document_has_no_top_level_cable_and_gives_th
     (info,) = [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"]
     assert info.severity is Severity.INFO
 
-    text = source(model, doc.id, {})
+    text = source(model, doc.id, {}, fransys_render.sheets(document_sheets_of(model)))
     assert '#par(text("No drawings."))' not in text
 
 
@@ -362,9 +365,9 @@ def test_adding_one_top_level_cable_draws_the_section_and_clears_the_info():
     own_findings = [f for f in findings if doc.id in f.subjects]
     assert [f for f in own_findings if f.code == "DOCUMENT_NO_TOP_LEVEL_CABLES"] == []
 
-    text = source(model, doc.id, svgs)
+    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
     # The cable is one drawn block, its SVG from `render.cable_blocks`.
-    assert text.count('format: "svg"') == 1
+    assert text.count("#image(bytes(") == 1
     assert '#par(text("No drawings."))' not in text
 
 
@@ -446,5 +449,5 @@ def test_a_board_unit_documents_schematic_section_now_draws_its_own_content():
     }
     assert coil_fn.id in placed_functions, "K1's coil is actually on the board's own page"
 
-    text = source(model, io_doc.id, svgs)
+    text = source(model, io_doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
     assert '#par(text("No drawings."))' not in text

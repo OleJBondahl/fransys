@@ -4,16 +4,19 @@ from fransys_layout.core.outputs import (
     Annotations,
     CoreLayout,
     Counts,
+    Label,
     PagePlacement,
     PageRoutes,
     PinXY,
     Placed,
     Placement,
     Routes,
+    Table,
     Wire,
 )
 from fransys_layout.core.outputs import Marker as OutMarker
 from fransys_layout.core.values import (
+    Attach,
     Box,
     BoxSpec,
     Cell,
@@ -29,6 +32,7 @@ from fransys_layout.core.values import (
     PinRef,
     PlacementProblem,
     Rail,
+    RefKind,
     Side,
     Size,
     Sym,
@@ -42,8 +46,7 @@ def sym(sid: str, pins: tuple[Pin, ...], **kw: object) -> Sym:
         sid,
         None,
         "U1",
-        sid,
-        8,
+        Size(8, 8),
         BODY,
         BODY,
         BODY,
@@ -84,7 +87,7 @@ def flow() -> FlowGraph:
         32,
         16,
     )
-    fan = Fan("F1", ("n2",), (), (), "F", 1, "E")
+    fan = Fan("F1", ("n2",), (Attach(None, 0, 0, PinRef("F", "out")),), (), "F", 1, "E")
     return FlowGraph((column,), (fan,), (), (), CycleSplit(0, 0, 0), ("K", "A", "F", "T"))
 
 
@@ -94,7 +97,7 @@ def _placed(sid: str, page: int, x: int, y: int, orient: str, *pins: PinXY) -> P
 
 
 def layout() -> CoreLayout:
-    plans = tuple(PagePlan(i, "U1", (), forced_end=False, title="") for i in (1, 2))
+    plans = tuple(PagePlan(i, "U1", (), forced_end=False, groups=()) for i in (1, 2))
     page1 = PagePlacement(
         1,
         (
@@ -104,6 +107,7 @@ def layout() -> CoreLayout:
         (),
         (),
         ((20, 50),),
+        ((0, 30),),
     )
     page2 = PagePlacement(
         2,
@@ -114,15 +118,18 @@ def layout() -> CoreLayout:
         (),
         (),
         (),
+        (),
     )
-    wire = Wire("n2", 2, ((40, 14), (40, 4)), "straight", 1)
+    wire = Wire("n2", 2, ((40, 14), (40, 4)), "riser", 1)
     return CoreLayout(
         Size(100, 100),
         plans,
         Placement((page1, page2)),
         Routes((PageRoutes(2, (wire,), (), Counts(0, 0, 0, 10, 0)),)),
         Annotations(
-            markers=(OutMarker("n1", "tag", 2, "A", "K.c1", 0, 40, 46, PinRef("A", "in")),)
+            labels=(Label("K", 1, Box(1, 2, 3, 4), "BR"),),
+            tables=(Table("K", 1, ("3C", "2:3C"), Box(5, 6, 7, 8), 2),),
+            markers=(OutMarker("n1", RefKind.TAG, 2, "C3", 40, 46, PinRef("A", "in")),),
         ),
         (),
     )

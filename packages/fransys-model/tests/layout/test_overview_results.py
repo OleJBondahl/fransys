@@ -194,8 +194,8 @@ def test_a_view_opens_only_a_group_or_the_strips_box_as_its_level() -> None:
 def test_box_tabs_are_stored_in_index_order() -> None:
     """Removing the `by_index` call in `OverviewBox.__post_init__` leaves tabs as written."""
     tabs = (
-        OverviewTab(index=1, x=0, y=3, text_width=4),
-        OverviewTab(index=0, x=0, y=1, text_width=4),
+        OverviewTab(index=1, x=0, y=3, text_width=4, width=5, height=3),
+        OverviewTab(index=0, x=0, y=1, text_width=4, width=5, height=3),
     )
     box = _box(_view(), _item("W1"), tabs=tabs)
     assert [tab.index for tab in box.tabs] == [0, 1]
@@ -205,8 +205,8 @@ def test_a_repeated_tab_index_is_refused() -> None:
     """Two tabs with one `index` have no defined order, so the box is refused, naming it."""
     view = _view()
     tabs = (
-        OverviewTab(index=0, x=0, y=1, text_width=4),
-        OverviewTab(index=0, x=0, y=3, text_width=4),
+        OverviewTab(index=0, x=0, y=1, text_width=4, width=5, height=3),
+        OverviewTab(index=0, x=0, y=3, text_width=4, width=5, height=3),
     )
     with pytest.raises(SchemaError, match="share the index 0") as excinfo:
         _box(view, _item("W1"), tabs=tabs)

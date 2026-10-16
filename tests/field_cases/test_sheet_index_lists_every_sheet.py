@@ -17,6 +17,7 @@ lazy from pathlib import Path
 
 import fransys as fr
 import pypdfium2
+from _pdf_measure import has_page_title
 
 _ROW = re.compile(r"^(\d+) (.+) (\d+)$")
 
@@ -47,7 +48,7 @@ def _pdf(root: Path, *, blocks: int) -> pypdfium2.PdfDocument:
 def _index_rows(pdf: pypdfium2.PdfDocument) -> tuple[int, list[tuple[str, str, int]]]:
     for number, page in enumerate(pdf, start=1):
         text = page.get_textpage().get_text_range()
-        if "Page title\r\nSheets" in text:
+        if has_page_title(text, "Sheets"):
             lines = text.rsplit("Sheet Title Page\r\n", 1)[1].splitlines()
             return number, [(m[1], m[2], int(m[3])) for line in lines if (m := _ROW.match(line))]
     return 0, []

@@ -25,11 +25,13 @@ import importlib.util
 from decimal import Decimal
 from pathlib import Path
 
+import fransys_render
 import typst
 from fransys_el import REF_TINTS
 from fransys_pdf import font_dir, source
 from fransys_render import pages
 
+from fransys_model.derive import document_sheets_of
 from fransys_model.derive.print_sizes import (
     ASCENT_RATIO,
     TextRole,
@@ -218,7 +220,7 @@ def _compiled_schematic_page():
     model, doc, _page = _model()
     svgs = pages(model, tints=REF_TINTS)
     assert len(svgs) == 1  # one layout page -> one rendered SVG
-    text = source(model, doc.id, svgs)
+    text = source(model, doc.id, svgs, fransys_render.sheets(document_sheets_of(model)))
     assert text.count("#pagebreak()") == 1  # COVER | SCHEMATIC
     compiler = typst.Compiler(font_paths=[font_dir()], ignore_system_fonts=True)
     pngs = compiler.compile(input=text.encode("utf-8"), format="png", ppi=PPI)

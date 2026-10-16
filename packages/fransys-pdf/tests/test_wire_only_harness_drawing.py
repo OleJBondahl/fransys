@@ -6,9 +6,11 @@ Before, a HARNESS_DRAWING document on such a harness stopped with "the harness h
 from typing import Any
 
 import fransys as fr
+import fransys_render
 from fransys.colours import BU
 from fransys_pdf import check, source
 
+from fransys_model.derive import document_sheets_of
 from fransys_model.derive.cable_drawing import cable_block_key
 from fransys_model.vocab import DocumentPreset, documents, items
 
@@ -60,7 +62,9 @@ def test_a_wire_only_harness_with_its_svg_is_clean_and_embeds_it(tmp_path):
     model, (harness, doc_id) = _built(tmp_path, "W1", wires=True)
     svgs = {cable_block_key(None, harness): "<svg>wire-only-marker</svg>"}
     assert [f for f in check(model, svgs) if f.code == _NO_DRAWINGS] == []
-    assert "wire-only-marker" in source(model, doc_id, svgs)
+    assert "wire-only-marker" in source(
+        model, doc_id, svgs, fransys_render.sheets(document_sheets_of(model))
+    )
 
 
 def test_a_harness_with_neither_cable_nor_wire_still_has_no_cable(tmp_path):

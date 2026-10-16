@@ -60,7 +60,9 @@ class PlcRackChannel:
     """One channel of a rack module, bound or spare.
 
     The field fields are `None` for a spare channel, as in `PlcChannelRow`; `scaling` is also
-    `None` for a bound device that carries no `scaling` facet.
+    `None` for a bound device that carries no `scaling` facet. `name_stem` is the text an output
+    names the channel after, before its own character set: the field device and its signal name,
+    else the module's designation and the channel's index in the module.
     """
 
     channel: Id[Function]
@@ -70,6 +72,7 @@ class PlcRackChannel:
     field_device_designation: str | None
     signal_name: str | None
     scaling: ChannelScaling | None
+    name_stem: str
 
 
 @value
@@ -86,6 +89,19 @@ class PlcRackModule:
     description: str
     position: int | None
     channels: tuple[PlcRackChannel, ...]
+
+
+@value
+class CdpRackModule:
+    """A channel-bearing rack module with what CDP's module name is made of.
+
+    `ordinal` counts the channel-bearing modules of the same `mpn`, in rack order, from 0.
+    `single_signal` is the one `SignalType` all its channels share, `None` when they differ.
+    """
+
+    module: PlcRackModule
+    ordinal: int
+    single_signal: SignalType | None
 
 
 @register_enum

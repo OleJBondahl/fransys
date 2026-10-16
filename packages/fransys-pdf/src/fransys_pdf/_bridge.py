@@ -1,12 +1,22 @@
-"""The terminal list's Bridge column: jumper groups as lanes of lines and ticks (pdf-0007)."""
+"""The terminal list's Bridge column: jumper lanes of placed Bridge mark images (pdf-0049).
+
+render draws the `line` and the `tick` (render-0021); pdf places them in a row's cell and draws no
+line of its own. `%` of the cell height is the row's own because the cell is `breakable: false`.
+"""
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from ._sizes import RULE
+from fransys_model.derive import bridge_piece_key, jumper_lane_count
+
+from ._typst import literal
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from fransys_model.derive import BridgePiece, JumperLanes
 
 BRIDGE_COLUMN_WIDTH_MM = 15  # fixed column width
-_BRIDGE_LANE_GAP_MM = 3  # lanes centred in the column, this far apart
-_BRIDGE_TICK_HALF_WIDTH_MM = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,88 +28,75 @@ class _BridgeMark:
     tick: bool
 
 
-def _bridge_spans(groups: tuple[int | None, ...]) -> dict[int, tuple[int, int]]:
-    """Each jumper group's (first, last) row index in `groups`, 0-based."""
-    first: dict[int, int] = {}
-    last: dict[int, int] = {}
-    for index, group in enumerate(groups):
-        if group is None:
-            continue
-        first.setdefault(group, index)
-        last[group] = index
-    return {group: (first[group], last[group]) for group in first}
-
-
-def _bridge_lanes(spans: dict[int, tuple[int, int]]) -> dict[int, int]:
-    """Each group's lane in group-number order; overlapping row spans never share one."""
-    lane_ends: list[int] = []  # lane_ends[lane] is the last row index that lane is used through
-    lanes: dict[int, int] = {}
-    for group in sorted(spans):
-        first, last = spans[group]
-        lane = next((i for i, end in enumerate(lane_ends) if end < first), None)
-        if lane is None:
-            lane = len(lane_ends)
-            lane_ends.append(last)
-        else:
-            lane_ends[lane] = last
-        lanes[group] = lane
-    return lanes
-
-
-def bridge_geometry(groups: tuple[int | None, ...]) -> tuple[tuple[_BridgeMark | None, ...], ...]:
+def bridge_geometry(
+    groups: tuple[int | None, ...], lanes: JumperLanes
+) -> tuple[tuple[_BridgeMark | None, ...], ...]:
     """One entry per row, a mark (or `None`) per lane; an empty tuple with no group."""
-    spans = _bridge_spans(groups)
-    lanes = _bridge_lanes(spans)
-    lane_count = len(set(lanes.values()))  # distinct lanes used, not `len(lanes)` (one per group)
-    rows: list[list[_BridgeMark | None]] = [[None] * lane_count for _ in groups]
-    for group, (first, last) in spans.items():
-        lane = lanes[group]
-        for index in range(first, last + 1):
-            rows[index][lane] = _BridgeMark(
-                top=index != first, bottom=index != last, tick=groups[index] == group
+    rows: list[list[_BridgeMark | None]] = [[None] * jumper_lane_count(lanes) for _ in groups]
+    for span in lanes.lanes:
+        for index in range(span.first, span.last + 1):
+            rows[index][span.lane] = _BridgeMark(
+                top=index != span.first,
+                bottom=index != span.last,
+                tick=groups[index] == span.group,
             )
     return tuple(tuple(row) for row in rows)
 
 
-def bridge_lane_x_mm(lane_count: int) -> tuple[float, ...]:
-    """Each lane's x offset (mm): centred in the Bridge column, `_BRIDGE_LANE_GAP_MM` apart."""
+def bridge_lane_x_mm(lane_count: int, gap_mm: float) -> tuple[float, ...]:
+    """Each lane's x offset (mm): centred in the Bridge column, `gap_mm` (a line's width) apart."""
     centre = BRIDGE_COLUMN_WIDTH_MM / 2
     offset = (lane_count - 1) / 2
-    return tuple(centre + (index - offset) * _BRIDGE_LANE_GAP_MM for index in range(lane_count))
+    return tuple(centre + (index - offset) * gap_mm for index in range(lane_count))
 
 
-def _mm(value: float) -> str:
-    """`value` as a Typst mm length: `10` not `10.0`, deterministic (source purity)."""
-    return f"{value:g}"
+def piece_of(pieces: Mapping[str, BridgePiece] | None, piece: str) -> BridgePiece:
+    """The Bridge mark `piece` render drew; a missing one is a caller error, never a blank."""
+    key = bridge_piece_key(piece)
+    if pieces is None or key not in pieces:
+        msg = (
+            f"no Bridge mark piece {key!r}: pass `fransys_render.bridge_pieces()` "
+            "as `bridges` to `fransys_pdf.source`"
+        )
+        raise KeyError(msg)
+    return pieces[key]
 
 
-def _bridge_mark_typst(mark: _BridgeMark | None, x_mm: float) -> str:
-    """One lane's marks for one row as `#place(...)` lines; `y` is % of the cell."""
+def _image(piece: BridgePiece, extent: str) -> str:
+    return f'image(bytes({literal(piece.svg)}), format: "svg", {extent}, fit: "stretch")'
+
+
+def _place(dx_mm: float, dy: str, image: str) -> str:
+    return f"#place(top+left, dx: {dx_mm:g}mm, dy: {dy}, {image})\n"
+
+
+def _bridge_mark_typst(
+    mark: _BridgeMark | None, x_mm: float, line: BridgePiece, tick: BridgePiece
+) -> str:
+    """One lane's marks for one row as placed images; line `y` and height are % of the cell."""
     if mark is None:
         return ""
-    x = _mm(x_mm)
-    segments = []
-    if mark.top:
-        segments.append(
-            f"place(top+left, line(start: ({x}mm, 0%), end: ({x}mm, 50%), stroke: {RULE}))"
-        )
-    if mark.bottom:
-        segments.append(
-            f"place(top+left, line(start: ({x}mm, 50%), end: ({x}mm, 100%), stroke: {RULE}))"
-        )
+    parts = []
+    if mark.top or mark.bottom:
+        top, bottom = (0 if mark.top else 50), (100 if mark.bottom else 50)
+        extent = f"width: {line.width_mm:g}mm, height: {bottom - top}%"
+        parts.append(_place(x_mm - line.width_mm / 2, f"{top}%", _image(line, extent)))
     if mark.tick:
-        left, right = _mm(x_mm - _BRIDGE_TICK_HALF_WIDTH_MM), _mm(x_mm + _BRIDGE_TICK_HALF_WIDTH_MM)
-        segments.append(
-            f"place(top+left, line(start: ({left}mm, 50%), end: ({right}mm, 50%), stroke: {RULE}))"
-        )
-    return "".join(f"#{segment}\n" for segment in segments)
+        extent = f"width: {tick.width_mm:g}mm, height: {tick.height_mm:g}mm"
+        dy = f"50% - {tick.height_mm / 2:g}mm"
+        parts.append(_place(x_mm - tick.width_mm / 2, dy, _image(tick, extent)))
+    return "".join(parts)
 
 
-def bridge_cell_typst(row_marks: tuple[_BridgeMark | None, ...], lane_xs: tuple[float, ...]) -> str:
-    """One row's Bridge cell (pdf-0007): `breakable: false` scopes `%` to the row; `inset: 0pt`."""
+def bridge_cell_typst(
+    row_marks: tuple[_BridgeMark | None, ...], pieces: Mapping[str, BridgePiece] | None
+) -> str:
+    """One row's Bridge cell (pdf-0007, 0049): `breakable: false` scopes `%` to the row."""
     if not row_marks:
         return 'table.cell(inset: 0pt, text(""))'
+    line, tick = piece_of(pieces, "line"), piece_of(pieces, "tick")
+    xs = bridge_lane_x_mm(len(row_marks), line.width_mm)
     content = "".join(
-        _bridge_mark_typst(mark, x) for mark, x in zip(row_marks, lane_xs, strict=True)
+        _bridge_mark_typst(mark, x, line, tick) for mark, x in zip(row_marks, xs, strict=True)
     )
     return f"table.cell(inset: 0pt, breakable: false)[{content}]"

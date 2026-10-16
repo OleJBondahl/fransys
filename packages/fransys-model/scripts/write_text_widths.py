@@ -4,7 +4,8 @@ Usage: `uv run python packages/fransys-model/scripts/write_text_widths.py`. Buil
 reads the two fonts under `fransys-pdf` with fontTools (a dev dependency) and writes the tracked
 module of advance widths, in font units, for ASCII, Latin-1 and the few symbols drawings print,
 with the capital height (the glyph H's top: the font's OS/2 table is version 1, so it has no
-`sCapHeight`) and the typographic ascent (`sTypoAscender`), both in font units.
+`sCapHeight`) and the typographic ascent (`sTypoAscender`), and the descender depth (the glyph
+p's bottom), all in font units.
 """
 
 import hashlib
@@ -40,6 +41,7 @@ sha256 Bold    {bold}
 UNITS_PER_EM = {upem}
 CAP_HEIGHT_UNITS = {cap}
 ASCENT_UNITS = {ascent}
+DESCENT_UNITS = {descent}
 
 '''
 
@@ -68,8 +70,14 @@ def main() -> None:
     regular = fonts["Regular"]
     cap = cast("Any", regular["glyf"])[cast("Any", regular.getBestCmap())[ord("H")]].yMax
     ascent = cast("Any", regular["OS/2"]).sTypoAscender
+    descent = -cast("Any", regular["glyf"])[cast("Any", regular.getBestCmap())[ord("p")]].yMin
     text = _HEADER.format(
-        regular=sha["Regular"], bold=sha["Bold"], upem=upems.pop(), cap=cap, ascent=ascent
+        regular=sha["Regular"],
+        bold=sha["Bold"],
+        upem=upems.pop(),
+        cap=cap,
+        ascent=ascent,
+        descent=descent,
     )
     text += _literal("REGULAR_PAIRS", _pairs(fonts["Regular"]))
     text += _literal("BOLD_PAIRS", _pairs(fonts["Bold"]))

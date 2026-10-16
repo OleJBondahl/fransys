@@ -16,7 +16,7 @@ from fransys_model.layout import (
 )
 
 if TYPE_CHECKING:
-    from fransys_layout.engines.diagram.values import (
+    from fransys_layout.engines.overview.sheet_values import (
         Ident,
         PlacedBox,
         PlacedLine,

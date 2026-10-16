@@ -20,7 +20,7 @@ the can-fail proof of this. The module's channel content (a `FunctionTemplate` +
 level fixture only needs to prove the naming and routing, which a channel-less module still
 does (`fransys_wago.modules.modules_xml`'s own `if not module.channels: continue` skips
 the module's `<Module>` element but the rack still writes a `wago-R1.xml`, and
-`fransys._subjects.racks` finds `R1` by its module's `PartCategory.PLC_MODULE`, never by
+`derive.unit_racks` finds `R1` by its module's `PartCategory.PLC_MODULE`, never by
 any `Function`).
 """
 

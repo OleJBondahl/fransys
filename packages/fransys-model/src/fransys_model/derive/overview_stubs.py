@@ -9,6 +9,7 @@ from dataclasses import replace
 from typing import NamedTuple, cast
 
 from fransys_model.layout import OverviewRef, OverviewRefKind
+from fransys_model.vocab.enums import ItemKind
 from fransys_model.vocab.tables import items, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Port, Unit
@@ -22,7 +23,7 @@ from .overview_field import field_devices
 from .overview_levels import level_box, level_box_lines, merge_stubs, stub_far_root
 from .overview_location import top_place_of
 from .overview_names import display_unit
-from .rows import ItemKind, OverviewLinkKind, OverviewStub
+from .rows import OverviewLinkKind, OverviewStub
 from .rows_overview import FoldStub, StubPlace, StubWire
 lazy from .overview_conns import Conn
 

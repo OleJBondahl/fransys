@@ -366,7 +366,7 @@ without anyone calling `release` again. A unit or the system with no stored base
 not reported.
 
 When a child moved release, `BASELINE_DIFFERS` names it right after `units`, as in
-`demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board 1.1 → 1.3)`.
+`demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board revision 1.1 to 1.3)`.
 It names direct children only. A grandchild's move shows in its parent's own finding.
 
 `verify` also re-hashes every file of every release under `baselines`, with no model needed.
@@ -374,6 +374,15 @@ It names direct children only. A grandchild's move shows in its parent's own fin
 not list, or the manifest does not parse. `RELEASE_FILE_MISSING` means a listed file, or the manifest, is gone.
 A text file (`.csv`, `.json`, `.md`, `.xml`, `.html`, `.txt`) whose bytes differ only by CRLF line ends passes,
 so a Windows checkout does not fail it. `verify` returns findings and blocks nothing.
+
+After an upgrade that moved a printing rule, `fr.verify` gives `BASELINE_RULES_MOVED` (INFO) for each release cut by an older Fransys and `fr.release` refuses over one. Run `fr.rebaseline(result, Path("releases"))` once and commit the rewritten `listing.json` and `manifest.json`; the exports are untouched, and `fr.verify` is clean again.
+
+```python
+found = fr.verify(second_result, Path("releases"))
+if any(f.code in ("BASELINE_RULES_MOVED", "BASELINE_ROWS_UNCHECKED") for f in found):
+    fr.rebaseline(second_result, Path("releases"))  # commit the rewritten baseline files
+assert fr.verify(second_result, Path("releases")) == ()
+```
 
 ## Listing the releases
 

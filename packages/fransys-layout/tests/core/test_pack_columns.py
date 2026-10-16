@@ -9,7 +9,7 @@ SYMS = {s.id: s for s in (card("box", 2), elem("a"), elem("b"))}
 
 
 def plan_of(row_columns: tuple[str, ...], blocks: tuple[str, ...]) -> PagePlan:
-    return PagePlan(1, "u", (row_of(row_columns, blocks),), forced_end=False, title="t")
+    return PagePlan(1, "u", (row_of(row_columns, blocks),), forced_end=False, groups=())
 
 
 def test_flip_reverses_a_lane_turns_each_cell_and_negates_offsets() -> None:

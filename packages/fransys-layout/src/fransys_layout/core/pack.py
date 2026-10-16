@@ -12,11 +12,12 @@ from .geometry import pin_of
 from .values import Cell
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterator, Mapping
 
     from .values import Block, Column, PagePlan, Sym
 
 Attached = dict[str, tuple[str, str, int]]
+LanePins = dict[str, tuple[tuple[str, int], ...]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,17 +57,40 @@ def attachments(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> Attach
 
     Only a column a card block lists: a spilled column (CARD_OVERFULL) places as a free column.
     """
-    holder = {c: b.anchor for b in blocks.values() if b.kind == "card" for c in b.columns}
+    holder = {c: b.anchor for b in blocks.values() if b.is_card for c in b.columns}
     out: Attached = {}
     for c in cols:
-        for lane, end in enumerate((*c.heads, *c.feet)):
-            if (
-                end.kind == "boxpin"
-                and end.pin is not None
-                and c.id not in out
-                and holder.get(c.id) == end.pin.sym
-            ):
-                out[c.id] = (end.pin.sym, end.pin.pin, c.lanes[lane % len(c.lanes)].offset)
+        first = next(_boxpin_ends(c, holder), None)
+        if first is not None:
+            out[c.id] = first
+    return out
+
+
+def _boxpin_ends(c: Column, holder: Mapping[str, str | None]) -> Iterator[tuple[str, str, int]]:
+    """(box, pin, lane offset) of each box-pin end of a column on its holding card."""
+    for lane, end in enumerate((*c.heads, *c.feet)):
+        if end.kind == "boxpin" and end.pin is not None and holder.get(c.id) == end.pin.sym:
+            yield end.pin.sym, end.pin.pin, c.lanes[lane % len(c.lanes)].offset
+
+
+def lane_pins(cols: tuple[Column, ...], blocks: Mapping[str, Block]) -> LanePins:
+    """The further box pins a column's other lanes stand on, past the one `attachments` names.
+
+    A two-lane column (a symbol with two pins on one card) stands on both pins, so the card's
+    pin pitch between them is the lane offset.
+    """
+    holder = {c: b.anchor for b in blocks.values() if b.is_card for c in b.columns}
+    out: LanePins = {}
+    for c in cols:
+        ends = list(_boxpin_ends(c, holder))
+        seen = {ends[0][1]} if ends else set()
+        more = []
+        for _, pin, off in ends[1:]:
+            if pin not in seen:
+                seen.add(pin)
+                more.append((pin, off))
+        if more:
+            out[c.id] = tuple(more)
     return out
 
 

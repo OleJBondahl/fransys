@@ -3,11 +3,11 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.kernel import Id, Model, SchemaError
 from fransys_model.vocab.cables import is_cable
-from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.membership import is_harness
-from fransys_model.vocab.tables import conductors, functions, items, ports
+from fransys_model.vocab.tables import conductors, items, ports
 lazy from fransys_model.vocab.core import Function, Item, Port
 
 from .cable_end_rank import cable_end_owner
@@ -57,8 +57,7 @@ def _wire_ends(model: Model, subject: Id[Item]) -> list[_End]:
         if harness_of_wire(model, conductor.id) == subject:
             for port in (conductor.a, conductor.b):
                 function = ports(model)[port].function
-                kind = functions(model)[function].kind
-                connector = function if kind is FunctionKind.CONNECTOR else None
+                connector = function if function_role(model, function).pin_group else None
                 found.append(
                     _End(cable_end_owner(model, item_of_port(model, port)), connector, (port,))
                 )

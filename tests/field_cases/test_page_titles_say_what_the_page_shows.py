@@ -26,7 +26,8 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
-_TITLE = re.compile(r"Page title\r\n(.+?)\r\nScope", re.DOTALL)
+# the drawn title block reads its values in slot-id order: ... number, page title, revision, ...
+_TITLE = re.compile(r"CAB-1\r\n(.+?)\r\n1\.1", re.DOTALL)
 
 
 def _build(root: Path, *, blocks: int, hint: str | None) -> tuple[fr.BuildResult, list[str]]:

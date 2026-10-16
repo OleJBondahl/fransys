@@ -8,6 +8,7 @@ unit, ends at a stub on the box it leaves. Reached through `derive.fold_level`.
 from typing import Any, NamedTuple, cast
 
 from fransys_model.layout import OverviewRef, OverviewRefKind
+from fransys_model.vocab.enums import ItemKind
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit
@@ -20,8 +21,8 @@ from .overview_levels import level_box
 from .overview_strip_level import freed, terminal_boxes
 from .overview_stubs import RawStub, inner_stub, outside_stub, shared_stubs
 from .overview_text import overview_lifted_text
-from .rows import ItemKind, OverviewBox
 from .rows_overview import FoldBox, FoldLevel, FoldLine, StripNote, StubPlace
+lazy from .rows import OverviewBox
 
 __all__ = ["Lifted", "Scope", "merged_lines", "open_group", "strip_notes"]
 

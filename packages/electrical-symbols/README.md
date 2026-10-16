@@ -45,7 +45,12 @@ copied from the standard.
 | `actuator-turn` | Actuator (operated by turning) | qualifier |
 | `break-contact` | Break contact | symbol |
 | `break-contact-positive-opening` | Break contact with positive opening operation | symbol |
+| `bridge-line` | Bridge mark line | element |
+| `bridge-tick` | Bridge mark tick | element |
+| `cable-column` | Cable column (core) | element |
+| `cable-head` | Cable head (heading of a cable box) | element |
 | `capacitor` | Capacitor, general symbol | symbol |
+| `card` | Card (module with channels) | symbol |
 | `change-over-contact` | Change-over break before make contact | symbol |
 | `circuit-breaker-function` | Circuit breaker function | qualifier |
 | `circuit-breaker` | Circuit breaker | symbol |
@@ -54,14 +59,22 @@ copied from the standard.
 | `connector-fixed` | Connector, fixed portion of an assembly | symbol |
 | `contact` | Connector contact, no stated gender | symbol |
 | `contact-female` | Connector contact, female (socket) | symbol |
+| `contact-head` | Contact head (contact table) | element |
 | `contact-male` | Connector contact, male (plug) | symbol |
+| `contact-row` | Contact row (contact table) | element |
 | `converter-dc-dc` | DC/DC converter | symbol |
 | `current-transformer` | Current transformer, general symbol | symbol |
+| `cut-marker` | Cut marker (partner page reference) | element |
+| `diagram-box` | Diagram box (block diagram) | symbol |
+| `diagram-box-by-others` | Diagram box, by others (block diagram) | symbol |
 | `diode` | Semiconductor diode, general symbol | symbol |
 | `earth` | Earth, general symbol | symbol |
 | `emergency-stop` | Emergency stop, mushroom push-button with latching break contact | symbol |
 | `fuse` | Fuse | symbol |
 | `ground` | Ground, reference (0 V) symbol | symbol |
+| `group-frame` | Group frame | element |
+| `harness-frame` | Harness frame | element |
+| `junction-dot` | Junction dot | element |
 | `lamp` | Lamp, general symbol | symbol |
 | `make-contact` | Make contact, general symbol | symbol |
 | `motor-1ph-pe` | Induction motor, single-phase, squirrel-cage, with protective earth terminal | symbol |
@@ -69,6 +82,8 @@ copied from the standard.
 | `motor-3ph-pe` | Induction motor, three-phase, squirrel cage, with protective earth terminal | symbol |
 | `motor-3ph` | Induction motor, three-phase, squirrel cage | symbol |
 | `operating-device` | Operating device, general symbol; relay coil, general symbol | symbol |
+| `pin-cell` | Pin cell (table row) | element |
+| `pin-cell-wide` | Pin cell, wide (table row) | element |
 | `plc-channel` | PLC channel (column end) | symbol |
 | `position-switch-break` | Position switch, break contact | symbol |
 | `position-switch-make` | Position switch, make contact | symbol |
@@ -81,13 +96,25 @@ copied from the standard.
 | `rcd` | Residual current operated circuit breaker | symbol |
 | `rectifier-pe` | Rectifier, with protective earth terminal | symbol |
 | `rectifier` | Rectifier | symbol |
+| `reference-marker` | Reference marker (continuation flag) | element |
 | `residual-current-core` | Residual current sensing core | qualifier |
 | `resistor` | Resistor, general symbol | symbol |
 | `selector-break` | Switch, manually operated, turning, with stay-put, break contact | symbol |
 | `selector-make` | Switch, manually operated, turning, with stay-put, make contact | symbol |
+| `sheet-frame` | Sheet frame | element |
+| `sheet-strip-bottom` | Sheet strip cell (bottom) | element |
+| `sheet-strip-left` | Sheet strip cell (left) | element |
+| `sheet-strip-right` | Sheet strip cell (right) | element |
+| `sheet-strip-top` | Sheet strip cell (top) | element |
 | `terminal` | Terminal | symbol |
 | `thermal-overload` | Thermal overload relay, thermally operated release | symbol |
+| `title-block` | Title block | element |
+| `title-block-logo` | Title block logo cell | element |
+| `title-block-notice` | Title block with notice | element |
+| `title-block-notice-line` | Title block notice line | element |
 | `transformer` | Transformer with two windings, general symbol | symbol |
+| `unit-outline` | Unit outline | element |
+| `wire-label-frame` | Wire label frame | element |
 
 The `-pe` files are our own variants with a protective earth terminal. The two qualifiers are composed
 into `push-button` and `circuit-breaker`.

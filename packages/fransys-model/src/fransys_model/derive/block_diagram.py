@@ -11,7 +11,7 @@ from fransys_kernel import render_id
 from fransys_model.kernel import Id, Model, value
 from fransys_model.layout import DiagramMarker, DiagramSheet, layout_of, sheet_for
 from fransys_model.vocab.cables import is_cable
-from fransys_model.vocab.enums import FunctionKind, PageKind
+from fransys_model.vocab.enums import PageKind
 from fransys_model.vocab.membership import is_harness, item_chain, unit_own_roots
 from fransys_model.vocab.tables import conductors, functions, items, ports
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
@@ -27,6 +27,8 @@ from .drawing_text import (
     partner_position_text,
     product_location,
 )
+from .facts.roles import function_role
+from .facts.subjects import is_unit_boundary
 from .harness import reading_cables
 from .harness_line_ends import mate_of, plug_of
 from .instance_tag import instance_name, instance_tags
@@ -105,7 +107,7 @@ class DiagramFact:
 def _connector_of(model: Model, port: Id[Port]) -> Id[Function] | None:
     """The connector-kind function `port` belongs to, else `None`."""
     function = ports(model)[port].function
-    return function if functions(model)[function].kind is FunctionKind.CONNECTOR else None
+    return function if function_role(model, function).pin_group else None
 
 
 def box_of(model: Model, landed: Id[Item], unit: Id[Unit] | None) -> BoxKey | None:
@@ -183,7 +185,7 @@ def _tab(model: Model, box: Id[Any], ends: list[BoxEnd], unit: Id[Unit] | None) 
     landed = {end.landed for end in ends}
     if len(landed) != 1 or not all(end.anchored for end in ends) or box in landed:
         return None
-    reading = box if box.kind == "unit" and instance_tags(model, box, unit) else unit
+    reading = box if is_unit_boundary(box) and instance_tags(model, box, unit) else unit
     return printed_designation(model, landed.pop(), unit=reading)
 
 
@@ -228,7 +230,7 @@ def box_lines(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[str, ..
     A unit instance: line 1, the location its items print then its tag (`-U1`), left out when both
     are empty; line 2, `outline_title`. An item: its `end_label`, one line.
     """
-    if box.kind != "unit":
+    if not is_unit_boundary(box):
         return (end_label(model, cast("Id[Item]", box), unit),)
     instance = cast("Id[Unit]", box)
     tags = instance_tags(model, instance, unit)
@@ -241,7 +243,7 @@ def box_lines(model: Model, box: BoxKey, unit: Id[Unit] | None) -> tuple[str, ..
 
 def box_dashed(model: Model, box: BoxKey, unit: Id[Unit] | None) -> bool:  # noqa: ARG001 - the reading no longer decides; callers keep one signature
     """Whether the box is drawn dashed: an item whose end is by others."""
-    return box.kind != "unit" and end_by_others(model, cast("Id[Item]", box))
+    return not is_unit_boundary(box) and end_by_others(model, cast("Id[Item]", box))
 
 
 def _cable_facts(model: Model, unit: Id[Unit] | None) -> tuple[DiagramFact, ...]:

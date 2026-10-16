@@ -2,12 +2,11 @@
 
 from collections import Counter
 
-from fransys_model.kernel import Finding, Severity
+from fransys_model.kernel import DescribedFinding, Finding, Severity
 
-from ._finding_text import fix_lines
-from .pipeline import BuildResult, check
+from ._finding_text import described, described_parts, fix_lines
+from .pipeline import BuildResult, _raw_findings, _resolved, _result_svgs
 
-_SUBJECT = "  subject: "
 _NAMES = {Severity.ERROR: "error", Severity.WARNING: "warning", Severity.INFO: "note"}
 
 
@@ -22,12 +21,13 @@ def report(result: BuildResult) -> str:
 
     Does not write files, raise on an ERROR, or drop a finding.
     """
-    findings = check(result)
+    entries = _described(result)
+    findings = [finding for finding, _ in entries]
     counts = Counter(f.severity for f in findings)
     lines = [_summary(counts)]
-    for finding in findings:
+    for finding, parts in entries:
         if finding.severity is not Severity.INFO:
-            lines.extend(_entry(finding))
+            lines.extend(_entry(finding, parts))
     notes = Counter(f.code for f in findings if f.severity is Severity.INFO)
     if notes:
         ranked = sorted(notes.items(), key=lambda pair: (-pair[1], pair[0]))
@@ -44,8 +44,14 @@ def _plural(count: int, name: str) -> str:
     return f"{count} {name}" if count == 1 else f"{count} {name}s"
 
 
-def _entry(finding: Finding) -> list[str]:
-    lines = finding.message.splitlines()
-    head = [line for line in lines if not line.startswith(_SUBJECT)]
-    at = [f"  at: {line.removeprefix(_SUBJECT)}" for line in lines if line.startswith(_SUBJECT)]
-    return [*head, *at, *fix_lines(finding)]
+def _described(result: BuildResult) -> list[tuple[Finding, DescribedFinding]]:
+    """`check(result)`, each finding with its text kept as head and subjects (model-0273)."""
+    model = result.model
+    raw = _raw_findings(result, _result_svgs(result))
+    parts = {(f.code, f.subjects, described(f, model)): described_parts(f, model) for f in raw}
+    return [(f, parts[f.code, f.subjects, f.message]) for f in _resolved(raw, model)]
+
+
+def _entry(finding: Finding, parts: DescribedFinding) -> list[str]:
+    at = [f"  at: {subject}" for subject in parts.subjects]
+    return [*parts.head.splitlines(), *at, *fix_lines(finding)]

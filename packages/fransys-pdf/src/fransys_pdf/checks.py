@@ -1,60 +1,33 @@
 """What `fransys_pdf.source` cannot draw.
 
 `MARKDOWN_UNSUPPORTED`, `DOCUMENT_MIXED_SHEET_FORMATS`, `DOCUMENT_NO_DRAWINGS`,
-`DOCUMENT_EMPTY_LIST`, `TITLE_BLOCK_NO_ROOM`, `DRAWING_SET_REPLICA_ONLY`,
-`DOCUMENT_NO_TOP_LEVEL_CABLES` (decision pdf-0006), `TITLE_BLOCK_NOTICE_OVERFLOW` and
-`TITLE_BLOCK_TEXT_OVERFLOW` and `TITLE_BLOCK_UNIT_IDENTITY_MISSING` (a unit document whose unit has
-an empty `title` or `number`, one WARNING per document).
-
-`TITLE_BLOCK_TEXT_OVERFLOW` covers all nine one-line fields ("every field except the
-notice"): the six document-level ones (`title`, `number`, `customer`, `revision`,
-`revision_date`, `author`, from `_geometry.document_facts`, the same reader `_title_block`
-itself cuts) and the three page-level ones (`page_title`, `scope`, `sheet_counter`), read from
-the `TitleBlockFields` that `schematic_fields`, `harness_run_fields` and `section_fields`
-build for the pages themselves, so this can never disagree with what the page shows.
+`DOCUMENT_EMPTY_LIST`, `DRAWING_SET_REPLICA_ONLY`, `DOCUMENT_NO_TOP_LEVEL_CABLES` (decision
+pdf-0006) and `TITLE_BLOCK_UNIT_IDENTITY_MISSING` (a unit document whose unit has an empty
+`title` or `number`, one WARNING per document). The three other title-block findings
+(`TITLE_BLOCK_NO_ROOM`, `TITLE_BLOCK_TEXT_OVERFLOW`, `TITLE_BLOCK_NOTICE_OVERFLOW`) are
+`fransys_render.sheet_check`'s: render draws the title block (render-0019).
 """
 
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
+    cable_blocks,
+    document_page_kinds,
     document_unit,
+    harness_cables_for,
     location_node_designation,
+    system_has_no_top_level_cables,
     unit_release,
 )
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab import PageKind, documents
 
 from ._cable_checks import harness_block_messages
-from ._checks_overflow import (
-    _document_level_overflow_findings,
-    _FieldTarget,
-    _page_overflow_findings,
-)
-from ._cover_checks import cover_overflow_findings
 from ._diagrams import diagram_no_drawings_messages
-from ._drawings import (
-    cable_blocks,
-    harness_cables_for,
-    replica_only_sets,
-    schematic_missing_keys,
-    schematic_pages,
-    system_has_no_top_level_cables,
-)
-from ._frame import (
-    band_height_mm,
-    notice_cell_size_mm,
-    notice_fits,
-    notice_room_chars,
-    title_block_fits,
-)
-from ._geometry import (
-    mixed_sheet_formats,
-    resolve_sheet_format,
-)
+from ._drawings import replica_only_sets, schematic_missing_keys, schematic_pages
+from ._geometry import mixed_sheet_formats
 from ._markdown import parse, unsupported
 from ._schematic_yield import _LIST_KINDS, list_rows, schematic_yields
-from ._sizes import sizes_of
-from .document import document_pages
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -79,7 +52,7 @@ def _markdown_findings(subject: _DocId, field: str, text: str) -> tuple[Finding,
 
 def _mixed_sheet_format_findings(model: Model, subject: _DocId) -> tuple[Finding, ...]:
     record = documents(model)[subject]
-    pages = document_pages(model, subject)
+    pages = document_page_kinds(model, subject)
     groups = mixed_sheet_formats(model, record, pages)
     if not groups:
         return ()
@@ -96,71 +69,6 @@ def _mixed_sheet_format_findings(model: Model, subject: _DocId) -> tuple[Finding
             message=f"mixed sheet formats: {named}",
         ),
     )
-
-
-def _title_block_no_room_findings(
-    model: Model, subject: _DocId, record: Document, pages: tuple[PageKind, ...]
-) -> tuple[Finding, ...]:
-    sheet = resolve_sheet_format(model, record, pages)
-    if title_block_fits(sheet):
-        return ()
-    return (
-        Finding(
-            code="TITLE_BLOCK_NO_ROOM",
-            severity=Severity.WARNING,
-            subjects=(subject,),
-            message=(
-                f"sheet format {sheet.name!r}: title-block band {band_height_mm(sheet)}mm, "
-                "under the required 20mm"
-            ),
-        ),
-    )
-
-
-def _text_overflow_findings(
-    model: Model,
-    subject: _DocId,
-    record: Document,
-    pages: tuple[PageKind, ...],
-    svgs: Mapping[str, str],
-) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_TEXT_OVERFLOW` for every one-line field but the notice."""
-    sheet = resolve_sheet_format(model, record, pages)
-    if not title_block_fits(sheet):
-        return ()
-    target = _FieldTarget(
-        subject=subject, sheet=sheet, sizes=sizes_of(model, record), notice=bool(record.notice)
-    )
-    return _document_level_overflow_findings(model, subject, record, sheet) + (
-        _page_overflow_findings(model, target, record, pages, svgs)
-    )
-
-
-def _notice_overflow_findings(model: Model) -> tuple[Finding, ...]:
-    """`TITLE_BLOCK_NOTICE_OVERFLOW`: one finding if a `Document.notice` misses its cell."""
-    for subject, record in documents(model).items():
-        if not record.notice:
-            continue
-        pages = document_pages(model, subject)
-        sheet = resolve_sheet_format(model, record, pages)
-        if not title_block_fits(sheet):
-            continue
-        width_mm, height_mm = notice_cell_size_mm(sheet)
-        sizes = sizes_of(model, record)
-        if not notice_fits(record.notice, sizes, width_mm=width_mm, height_mm=height_mm):
-            return (
-                Finding(
-                    code="TITLE_BLOCK_NOTICE_OVERFLOW",
-                    severity=Severity.WARNING,
-                    subjects=(record.id,),
-                    message=(
-                        "the notice does not fit the title block's notice cell, cut; "
-                        f"the cell holds about {notice_room_chars(sheet, sizes)} characters; "
-                        "shorten fr.document(notice=...)"
-                    ),
-                ),
-            )
-    return ()
 
 
 def _unit_identity_findings(model: Model, subject: _DocId, record: Document) -> tuple[Finding, ...]:
@@ -333,16 +241,12 @@ def check(
         if record.notes is not None:
             findings.extend(_markdown_findings(subject, "notes", record.notes))
         findings.extend(_mixed_sheet_format_findings(model, subject))
-        pages = document_pages(model, subject)
-        findings.extend(_title_block_no_room_findings(model, subject, record, pages))
+        pages = document_page_kinds(model, subject)
         findings.extend(_unit_identity_findings(model, subject, record))
-        findings.extend(cover_overflow_findings(model, subject, record, pages))
-        findings.extend(_text_overflow_findings(model, subject, record, pages, svgs))
         findings.extend(
             _no_drawings_findings(model, subject, record, pages, svgs, _tall_cables(built))
         )
         findings.extend(_no_top_level_cables_findings(model, subject, record, pages))
         findings.extend(_replica_only_findings(model, subject, record, pages))
         findings.extend(_empty_list_findings(model, subject, record, pages))
-    findings.extend(_notice_overflow_findings(model))
     return tuple(sorted(findings, key=lambda found: (found.code, found.subjects, found.message)))

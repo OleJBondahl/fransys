@@ -1,0 +1,473 @@
+{
+  "anchors": [
+    {
+      "at": [
+        74,
+        1
+      ],
+      "dir": "E",
+      "id": "notice"
+    }
+  ],
+  "body_box": [
+    [
+      0,
+      0
+    ],
+    [
+      97.5,
+      20
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          97.5,
+          0
+        ],
+        [
+          97.5,
+          20
+        ],
+        [
+          0,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          0,
+          10
+        ],
+        [
+          74,
+          10
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          42.75,
+          0
+        ],
+        [
+          42.75,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          56.5,
+          0
+        ],
+        [
+          56.5,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          65.25,
+          0
+        ],
+        [
+          65.25,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          74,
+          0
+        ],
+        [
+          74,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          11.25,
+          10
+        ],
+        [
+          11.25,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "line": [
+        [
+          17.75,
+          10
+        ],
+        [
+          17.75,
+          20
+        ]
+      ],
+      "style": "solid",
+      "weight": "thick"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      0
+    ],
+    [
+      97.5,
+      20
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "a title block is never turned; turned, its unturned text boxes would cross the cell lines",
+      "rule": "slot-overlap-body"
+    },
+    {
+      "reason": "a title block is never turned; turned, a cell's unturned label and value boxes would cross",
+      "rule": "slot-overlap-slot"
+    }
+  ],
+  "name": "Title block with notice",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "title-block-notice",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "author": {
+      "at": [
+        14.5,
+        16.375
+      ],
+      "box": [
+        4.5,
+        2.5
+      ],
+      "side": "C"
+    },
+    "customer": {
+      "at": [
+        5.625,
+        16.375
+      ],
+      "box": [
+        9.25,
+        2.5
+      ],
+      "side": "C"
+    },
+    "label.author": {
+      "at": [
+        14.5,
+        13.25
+      ],
+      "box": [
+        4.5,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.customer": {
+      "at": [
+        5.625,
+        13.25
+      ],
+      "box": [
+        9.25,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.number": {
+      "at": [
+        49.625,
+        3.25
+      ],
+      "box": [
+        11.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.page": {
+      "at": [
+        69.625,
+        13.25
+      ],
+      "box": [
+        6.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.page_title": {
+      "at": [
+        30.25,
+        13.25
+      ],
+      "box": [
+        23,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.revision": {
+      "at": [
+        60.875,
+        3.25
+      ],
+      "box": [
+        6.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.revision_date": {
+      "at": [
+        69.625,
+        3.25
+      ],
+      "box": [
+        6.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.scope": {
+      "at": [
+        49.625,
+        13.25
+      ],
+      "box": [
+        11.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.sheet": {
+      "at": [
+        60.875,
+        13.25
+      ],
+      "box": [
+        6.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "label.title": {
+      "at": [
+        21.375,
+        3.25
+      ],
+      "box": [
+        40.75,
+        1.75
+      ],
+      "side": "C"
+    },
+    "notice": {
+      "at": [
+        85.75,
+        10
+      ],
+      "box": [
+        21.5,
+        18
+      ],
+      "side": "C"
+    },
+    "number": {
+      "at": [
+        49.625,
+        6.375
+      ],
+      "box": [
+        11.75,
+        2.5
+      ],
+      "side": "C"
+    },
+    "page": {
+      "at": [
+        69.625,
+        16.375
+      ],
+      "box": [
+        6.75,
+        2.5
+      ],
+      "side": "C"
+    },
+    "page_title": {
+      "at": [
+        30.25,
+        16.375
+      ],
+      "box": [
+        23,
+        2.5
+      ],
+      "side": "C"
+    },
+    "revision": {
+      "at": [
+        60.875,
+        6.375
+      ],
+      "box": [
+        6.75,
+        2.5
+      ],
+      "side": "C"
+    },
+    "revision_date": {
+      "at": [
+        69.625,
+        6.375
+      ],
+      "box": [
+        6.75,
+        2.5
+      ],
+      "side": "C"
+    },
+    "scope": {
+      "at": [
+        49.625,
+        16.375
+      ],
+      "box": [
+        11.75,
+        2.5
+      ],
+      "side": "C"
+    },
+    "sheet": {
+      "at": [
+        60.875,
+        16.375
+      ],
+      "box": [
+        6.75,
+        2.5
+      ],
+      "side": "C"
+    },
+    "title": {
+      "at": [
+        21.375,
+        6.375
+      ],
+      "box": [
+        40.75,
+        2.5
+      ],
+      "side": "C"
+    }
+  },
+  "status": "unverified",
+  "stretch": [
+    {
+      "at": 5.625,
+      "axis": "x",
+      "weight": 11.25
+    },
+    {
+      "at": 14.5,
+      "axis": "x",
+      "weight": 6.5
+    },
+    {
+      "at": 30.25,
+      "axis": "x",
+      "weight": 25
+    },
+    {
+      "at": 49.625,
+      "axis": "x",
+      "weight": 13.75
+    },
+    {
+      "at": 60.875,
+      "axis": "x",
+      "weight": 8.75
+    },
+    {
+      "at": 69.625,
+      "axis": "x",
+      "weight": 8.75
+    },
+    {
+      "at": 85.75,
+      "axis": "x",
+      "weight": 23.5
+    },
+    {
+      "at": 1.5,
+      "axis": "y"
+    },
+    {
+      "at": 4.625,
+      "axis": "y",
+      "weight": 4
+    },
+    {
+      "at": 8.5,
+      "axis": "y"
+    },
+    {
+      "at": 11.5,
+      "axis": "y"
+    },
+    {
+      "at": 14.625,
+      "axis": "y",
+      "weight": 4
+    },
+    {
+      "at": 18.5,
+      "axis": "y"
+    }
+  ]
+}

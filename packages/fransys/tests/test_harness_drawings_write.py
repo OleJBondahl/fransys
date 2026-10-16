@@ -57,7 +57,7 @@ def test_a_two_cable_harness_writes_one_block_with_a_dashed_box(written):
     paths, inter, built = written()
     assert any(p.suffix == ".pdf" for p in paths)
     (source,) = [p.read_text(encoding="utf-8") for p in sorted(inter.glob("*.typ"))]
-    assert source.count('format: "svg"') == 1
+    assert source.count("#image(bytes(") == 1
     assert "stroke-dasharray" in source  # the harness box (and nothing else is dashed here)
     for text in ("-WH1", "-WH1-W1, 5000 mm", "-WH1-W2"):
         assert text in source, text

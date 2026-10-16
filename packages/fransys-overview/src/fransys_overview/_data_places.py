@@ -6,11 +6,10 @@ They come from `derive.location_fold`: the page lists them and recomputes no pla
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
-    location_fold,
     location_node_designation,
     location_place_title,
+    place_members,
     unit_location,
-    unit_own_drawing,
     unit_system_designation,
 )
 from fransys_model.layout import OverviewRefKind
@@ -25,12 +24,8 @@ if TYPE_CHECKING:
 
 def holds_of(tables: _Tables, box: ViewBox) -> list[list[Any]] | None:
     """`[[ref, label]]` per member of a place box, `ref` `['unit'|'item', ix]`, else `None`."""
-    ref = box.key.ref
-    fold = location_fold(tables.model)
-    if ref.kind is not OverviewRefKind.PLACE or box.key.at is not None or fold is None:
-        return None
-    place = next(b for b in fold.boxes if b.place == ref.node)
-    return [_member(tables, member) for member in place.boxes]
+    members = place_members(tables.model, box)
+    return None if members is None else [_member(tables, member) for member in members]
 
 
 def _member(tables: _Tables, member: Id[Any]) -> list[Any]:
@@ -66,11 +61,6 @@ def location_texts(model: Model) -> dict[str, str]:
         if node.aspect is Aspect.LOCATION:
             texts.setdefault(node.label, location_node_designation(model, node.id))
     return texts
-
-
-def own_drawing(model: Model, unit: Id[Any]) -> str:
-    """The panel line naming the drawing set `unit` has: its printed label and its release."""
-    return f"Own drawing: {unit_own_drawing(model, unit)}"
 
 
 def unit_system_label(model: Model, unit: Id[Any], label: str) -> str | None:

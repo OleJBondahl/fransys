@@ -168,6 +168,14 @@ class Cable:
             return take_pe(element, design).outer
         return None
 
+    @staticmethod
+    def _offers_pe(*sides: _Side) -> bool:
+        """Whether a neighbour has a PE port or a PE terminal for a protective core."""
+        return any(
+            ends.pe is not None or (isinstance(element, TerminalStrip) and element._pe_mpn)
+            for element, ends in sides
+        )
+
     def _land_pe(self, design: Design, pe_core: int | None, sides: tuple[_Side, _Side]) -> None:
         """Land the GNYE core on a neighbour's PE port; else mark it spare (CC4, author-0044).
 
@@ -199,6 +207,16 @@ class Cable:
             if ends.pe is not None and port is not None:
                 design._carried[port.id] = (f"{element_name(element)}:{port.name}", series)
 
+    def _refuse_without_pe(self, before: _Side, after: _Side, poles: int) -> None:
+        """GNYE never carries a pole: no PE end and too few other cores refuses the series."""
+        free = len(self._colours) - len(self._used) - 1
+        if free < poles and not self._offers_pe(before, after):
+            msg = (
+                f"{self._label} has {free} non-earth cores for {poles} poles and no PE end "
+                f"for the GNYE core: pick a cable with {poles} non-earth cores"
+            )
+            raise AuthorError(msg)
+
     def _series_between(
         self, design: Design, before: _Side, after: _Side, series: str = "a series"
     ) -> None:
@@ -209,6 +227,8 @@ class Cable:
         """
         pairs = pair(before[1].load, after[1].line, (label_of(before[0]), label_of(after[0])))
         pe_core = next((i for i, c in enumerate(self._colours, 1) if c == GNYE), None)
+        if pe_core is not None:
+            self._refuse_without_pe(before, after, len(pairs))
         taken = self._used | {pe_core}
         plain = [i for i in range(1, len(self._colours) + 1) if i not in taken]
         if len(plain) < len(pairs):

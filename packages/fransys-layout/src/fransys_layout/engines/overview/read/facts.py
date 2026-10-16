@@ -2,8 +2,6 @@
 
 from typing import TYPE_CHECKING, Any
 
-from fransys_layout.engines.diagram.sizes import TEXT_PAD
-from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.engines.overview.read.column import open_column
 from fransys_layout.engines.overview.read.values import (
     BoxSpec,
@@ -12,6 +10,8 @@ from fransys_layout.engines.overview.read.values import (
     LineSpec,
     ViewFacts,
 )
+from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
+from fransys_layout.engines.overview.sizes import TEXT_PAD
 from fransys_layout.geometry import snap_up, text_width
 from fransys_model.derive import text_room_g
 from fransys_model.layout.tables import profile_of, sheet_format_of

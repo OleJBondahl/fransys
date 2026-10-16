@@ -15,6 +15,7 @@ from fransys_layout.stages.lookups import (
     owner_of,
     placed_keepout,
     placed_of,
+    set_rank,
     turn_mirrors,
 )
 
@@ -107,3 +108,9 @@ def test_device_turns_needs_a_wired_pole_and_every_vote_against() -> None:
     assert device_turns([True, True]) is True
     assert device_turns([True, False]) is False
     assert device_turns([]) is False
+
+
+def test_set_rank_reads_the_rank_and_raises_naming_the_set_and_the_fix() -> None:
+    assert set_rank({2: 1}, 2) == 1
+    with pytest.raises(ValueError, match=r"drawing set 3 has no rank: pass derive\.set_ranks"):
+        set_rank({2: 1}, 3)

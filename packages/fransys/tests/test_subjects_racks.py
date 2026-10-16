@@ -1,9 +1,9 @@
-"""`_subjects.racks` is the parents of `derive.is_plc_module` children only."""
+"""`derive.unit_racks` is the parents of `derive.is_plc_module` children only."""
 
 import fransys as fr
 from _model_build_cover import layout_trigger_document
-from fransys import _subjects
 
+from fransys_model.derive import unit_racks
 from fransys_model.kernel import Draft, Origin, make_id
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import PartCategory
@@ -46,4 +46,4 @@ def test_only_the_parent_of_a_plc_module_is_a_rack() -> None:
     draft = Draft()
     draft.extend([module_part, other_part, rack, cabinet, module, relay], origin=_ORIGIN)
     model = fr.build(draft, layout_trigger_document()).model
-    assert _subjects.racks(model) == (rack.id,)
+    assert unit_racks(model, None) == (rack.id,)

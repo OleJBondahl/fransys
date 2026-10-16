@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="10mm" viewBox="-1 -2 8 4">
+<title>Reference marker (continuation flag)</title>
+<g fill="none" stroke="#000" stroke-linecap="butt" stroke-linejoin="miter">
+<polygon points="0,0 1,-1 6,-1 6,1 1,1" stroke-width="0.1"/>
+</g>
+</svg>

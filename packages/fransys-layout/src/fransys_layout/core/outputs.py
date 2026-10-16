@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 from .scene_facts import SceneFacts, page_fill, scene_facts, turn_side
 
 if TYPE_CHECKING:  # jsonform resolves these names from the module, so no run-time import
+    from collections.abc import Mapping
+
     from .values import (
         XY,
         Box,
@@ -67,6 +69,8 @@ class Trunk:
     x0: int
     x1: int
     lanes: int
+    row: int
+    """Index of the row its trunk stands in."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +81,8 @@ class PagePlacement:
     trunks: tuple[Trunk, ...]
     rows: tuple[tuple[int, int], ...]
     """(height, width) of each row, in G."""
+    bands: tuple[tuple[int, int], ...]
+    """(top, bottom) of each row in grid units, in row order."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,7 +138,6 @@ class Routes:
 class Label:
     owner: str
     page: int
-    text: str
     box: Box
     corner: str
 
@@ -141,7 +146,7 @@ class Label:
 class Table:
     coil: str
     page: int
-    rows: tuple[str, ...]
+    cells: tuple[str, ...]
     box: Box
     tier: int
 
@@ -150,18 +155,23 @@ class Table:
 class Marker:
     """A reference at (x, y) on page, naming the far end.
 
-    end is the pin the marker stands at: stage 8b copies it from the RefEnd it draws.
+    end is the pin the marker names: stage 4 fills it on the RefEnd, stage 8a copies it here.
     """
 
     net: str
     kind: MarkerKind
     page: int
     cell: str
-    text: str
-    colour: int
     x: int
     y: int
-    end: PinRef | None = None
+    end: PinRef
+
+
+@dataclass(frozen=True, slots=True)
+class WireLabel:
+    net: str
+    page: int
+    box: Box
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,6 +179,7 @@ class Annotations:
     labels: tuple[Label, ...] = ()
     tables: tuple[Table, ...] = ()
     markers: tuple[Marker, ...] = ()
+    wire_labels: tuple[WireLabel, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,24 +217,25 @@ class ScenePin:
     x: int
     y: int
     side: Side
-    net: str | None = None
-    node: int | None = None
-    stand: bool = False
-    box: bool = False
+    net: str | None
+    node: int | None
+    stand: bool
+    box: bool
+    head: bool
 
 
 @dataclass(frozen=True, slots=True)
 class SceneBox:
-    """attached: heads a column hung on a box pin. head: heads a fan. strip: its terminal strip."""
+    """attached: heads a column hung on a box pin. strip: its strip."""
 
     sym: str
     page: int
     body: Box
     footprint: Box
     pins: tuple[ScenePin, ...]
-    attached: bool = False
-    head: bool = False
-    strip: str | None = None
+    attached: bool
+    strip: str | None
+    orient: Orientation
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,7 +243,8 @@ class SceneWire:
     net: str
     page: int
     points: tuple[XY, ...]
-    lanes: int = 1
+    lanes: int
+    kind: WireKind
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,6 +258,25 @@ class SceneMarker:
     y: int
     box: str
     pin: str
+    cell: str
+    side: Side
+
+
+@dataclass(frozen=True, slots=True)
+class SceneLabel:
+    owner: str
+    page: int
+    box: Box
+    corner: str
+
+
+@dataclass(frozen=True, slots=True)
+class SceneTable:
+    coil: str
+    page: int
+    box: Box
+    cells: tuple[str, ...]
+    tier: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -258,10 +290,17 @@ class Scene:
     area: Size
     pages: int
     boxes: tuple[SceneBox, ...]
-    wires: tuple[SceneWire, ...] = ()
-    markers: tuple[SceneMarker, ...] = ()
-    rails: frozenset[str] = frozenset()
-    fill: tuple[float, ...] = ()
+    wires: tuple[SceneWire, ...]
+    markers: tuple[SceneMarker, ...]
+    rails: frozenset[str]
+    fill: tuple[float, ...]
+    labels: tuple[SceneLabel, ...]
+    tables: tuple[SceneTable, ...]
+    bands: tuple[tuple[int, tuple[tuple[int, int], ...]], ...]
+    """(page, the (top, bottom) of each of its rows): P6 reads the row of a box here (layout-0294).
+
+    A source that has no rows (a dump of today's engine) passes `()`: a page is one row.
+    """
 
 
 def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
@@ -272,7 +311,8 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
             msg = f"scene: {p.sym}.{xy.pin} is not a pin of the problem"
             raise ValueError(msg)
         side = turn_side(f.side, p.orient)
-        pins.append(ScenePin(xy.pin, xy.x, xy.y, side, f.net, f.node, f.stand, f.box))
+        head = (p.sym, xy.pin) in facts.heads
+        pins.append(ScenePin(xy.pin, xy.x, xy.y, side, f.net, f.node, f.stand, f.box, head))
     return SceneBox(
         p.sym,
         p.page,
@@ -280,16 +320,14 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
         p.footprint,
         tuple(pins),
         p.sym in facts.attached,
-        p.sym in facts.heads,
         facts.strips.get(p.sym),
+        p.orient,
     )
 
 
-def _scene_marker(m: Marker) -> SceneMarker:
-    if m.end is None:
-        msg = f"scene: the marker of net {m.net} on page {m.page} names no pin"
-        raise ValueError(msg)
-    return SceneMarker(m.net, m.kind, m.page, m.x, m.y, m.end.sym, m.end.pin)
+def _scene_marker(m: Marker, facts: SceneFacts, orient: Mapping[str, Orientation]) -> SceneMarker:
+    side = turn_side(facts.pins[(m.end.sym, m.end.pin)].side, orient[m.end.sym])
+    return SceneMarker(m.net, m.kind, m.page, m.x, m.y, m.end.sym, m.end.pin, m.cell, side)
 
 
 def scene(layout: CoreLayout, problem: PlacementProblem, flow: FlowGraph) -> Scene:
@@ -297,9 +335,25 @@ def scene(layout: CoreLayout, problem: PlacementProblem, flow: FlowGraph) -> Sce
     facts = scene_facts(problem, flow)
     boxes = tuple(_scene_box(p, facts) for pg in layout.placement.pages for p in pg.placed)
     wires = tuple(
-        SceneWire(w.net, w.page, w.points, w.lanes) for pg in layout.routes.pages for w in pg.wires
+        SceneWire(w.net, w.page, w.points, w.lanes, w.kind)
+        for pg in layout.routes.pages
+        for w in pg.wires
     )
-    markers = tuple(_scene_marker(m) for m in layout.annotations.markers)
+    orient = {b.sym: b.orient for b in boxes}
+    markers = tuple(_scene_marker(m, facts, orient) for m in layout.annotations.markers)
+    labels = tuple(SceneLabel(a.owner, a.page, a.box, a.corner) for a in layout.annotations.labels)
+    tables = tuple(
+        SceneTable(t.coil, t.page, t.box, t.cells, t.tier) for t in layout.annotations.tables
+    )
     return Scene(
-        layout.area, len(layout.pages), boxes, wires, markers, facts.rails, page_fill(layout)
+        layout.area,
+        len(layout.pages),
+        boxes,
+        wires,
+        markers,
+        facts.rails,
+        page_fill(layout),
+        labels,
+        tables,
+        tuple((pg.page, pg.bands) for pg in layout.placement.pages),
     )

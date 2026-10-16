@@ -7,12 +7,12 @@ from itertools import pairwise
 from diagram_models import chain
 
 from fransys_layout import lay_out_cables
-from fransys_layout.engines.diagram.frame import build_frame
-from fransys_layout.engines.diagram.place import place_diagram
 from fransys_layout.engines.diagram.read import read_diagrams
-from fransys_layout.engines.diagram.sizes import MARKER_W, TEXT_LEAD, tab_reach
-from fransys_layout.engines.diagram.values import BoxFacts, DiagramFacts, LineFacts
 from fransys_layout.engines.diagram.write import write_diagrams
+from fransys_layout.engines.overview.compose import place_diagram
+from fransys_layout.engines.overview.lanes.diagram_frame import build_frame
+from fransys_layout.engines.overview.sheet_values import BoxFacts, DiagramFacts, LineFacts
+from fransys_layout.engines.overview.sizes import MARKER_W, TEXT_LEAD, tab_reach
 from fransys_layout.geometry import WIRING_GRID, Facing
 from fransys_model.kernel import Id
 from fransys_model.layout import DiagramLine, DiagramMarker, layout_of

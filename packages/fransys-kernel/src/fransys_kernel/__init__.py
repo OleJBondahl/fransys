@@ -23,7 +23,7 @@ from .ids import AuthoringKey, Id, make_id, render_id
 from .jsonread import read_json
 from .merge import merge
 from .model import Model
-from .origin import Origin, OriginSource, describe, require_origin
+from .origin import DescribedFinding, Origin, OriginSource, describe, describe_parts, require_origin
 from .parents import parent_chain
 from .record import FieldSpec, Record, field_specs, key_text, record, value
 from .registry import (
@@ -42,6 +42,7 @@ __all__ = [
     "AuthoringKey",
     "ByDigest",
     "CodeInfo",
+    "DescribedFinding",
     "Draft",
     "FieldSpec",
     "Finding",
@@ -65,6 +66,7 @@ __all__ = [
     "check_value",
     "decimal_text",
     "describe",
+    "describe_parts",
     "diff",
     "digest_cached",
     "dumps",

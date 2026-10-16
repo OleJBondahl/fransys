@@ -13,8 +13,8 @@ lazy from collections.abc import Mapping, Sequence
 
 from fransys_layout.engines.cable.place_rows import landing_map
 from fransys_layout.engines.cable.values import BlockFacts, CoreFacts, PlacedEnd, PlacedWire
+from fransys_layout.engines.overview.lanes.plan_channel import plan_links
 from fransys_layout.geometry import WIRING_GRID, Point
-from fransys_layout.stages.channel import plan_links
 
 G = WIRING_GRID
 

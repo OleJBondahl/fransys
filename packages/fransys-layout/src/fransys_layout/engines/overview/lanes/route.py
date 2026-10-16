@@ -5,21 +5,21 @@ from itertools import accumulate
 from typing import TYPE_CHECKING
 lazy from collections.abc import Mapping, Sequence
 
-from fransys_layout.engines.diagram.labels import label_lines
-from fransys_layout.engines.diagram.route import tidy
-from fransys_layout.engines.diagram.sizes import TRACK_PITCH, tab_reach
-from fransys_layout.engines.diagram.values import (
+from fransys_layout.engines.overview.lanes.diagram_route import tidy
+from fransys_layout.engines.overview.lanes.labels import label_lines
+from fransys_layout.engines.overview.sheet_values import (
     PlacedBox,
     PlacedSheet,
     PlacedTab,
     PlacedText,
 )
+from fransys_layout.engines.overview.sizes import TRACK_PITCH, tab_reach
 from fransys_layout.geometry import PAGE_PAD, Box, Facing, Point
 from fransys_layout.stages.corridor import LONG
 lazy from fransys_layout.engines.overview.lanes.channels import Channel
 
 if TYPE_CHECKING:
-    from fransys_layout.engines.diagram.frame_values import FrameEnd
+    from fransys_layout.engines.overview.lanes.frame_values import FrameEnd
     from fransys_layout.engines.overview.lanes.plan import Plan
     from fransys_layout.engines.overview.read.values import Ident, ViewFacts
 

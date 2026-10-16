@@ -5,14 +5,14 @@
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.accessory_blocks import CONTACT_KINDS
 from fransys_model.derive.contacts import changeover_throws, link_state, owned_contacts
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.unused import function_is_unused
 from fransys_model.vocab import function_poles, marking_key
-from fransys_model.vocab.enums import FunctionKind, LinkKind
+from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.tables import functions, internal_links, port_templates, ports
+lazy from fransys_model.derive.facts.roles import function_role, link_role
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Port
 
@@ -40,11 +40,12 @@ type ListKey = tuple[bool, EntryOrder | tuple[()]]
 def contact_entries(model: Model, function: Function) -> tuple[list[Entry], list[Entry]]:
     """One contact function's NO and NC entries as `(main, key, mark)`, see `image_order`."""
     no, nc = list[Entry](), list[Entry]()
-    if function.kind is FunctionKind.SWITCH:
+    role = function_role(model, function.id)
+    if role.contact and not role.plain_contact:  # a switch
         return _switch_entries(model, function)
-    if function.kind not in CONTACT_KINDS:  # a spares-only table's lone partner is its coil
+    if not role.plain_contact:  # a spares-only table's lone partner is its coil
         return no, nc
-    if function.kind is FunctionKind.CONTACT_CO:
+    if role.changeover:
         # a changeover in both columns, by the part's throw roles: the common with each
         # make port (NO) and with each break port (NC), the names as the part prints them
         for throws in changeover_throws(model, function.id):
@@ -65,7 +66,11 @@ def _switch_entries(model: Model, function: Function) -> tuple[list[Entry], list
     own = _own_templates(model, function)
     templates = {t: port_templates(model)[t] for t in own if t is not None}
     for link in internal_links(model).values():
-        if link.a not in templates or link.b not in templates or link.kind is not LinkKind.SWITCHED:
+        if (
+            link.a not in templates
+            or link.b not in templates
+            or not link_role(model, link.id).switched
+        ):
             continue
         (pole,) = function_poles(function.kind, [link], templates)
         a, b = (printed_name(model, own[end.id].id) for end in pole.ends)
@@ -95,7 +100,7 @@ def _poles(model: Model, function: Function) -> list[tuple[str, str]]:
     templates = {t: port_templates(model)[t] for t in own if t is not None}
     return [
         (printed_name(model, own[a.id].id), printed_name(model, own[b.id].id))
-        for a, b in (pole.ends for pole in poles_of(model, function.kind, templates))
+        for a, b in (pole.ends for pole in poles_of(model, templates))
     ]
 
 

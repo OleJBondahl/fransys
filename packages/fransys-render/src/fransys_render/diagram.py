@@ -3,6 +3,7 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING, NamedTuple
 
+from fransys_model.derive import diagram_sheet_order_key
 from fransys_model.derive.block_diagram import box_lines, diagram_lines
 from fransys_model.kernel import render_id
 from fransys_model.layout import (
@@ -32,11 +33,6 @@ class _Found(NamedTuple):
     boxes: dict[Id[DiagramSheet], tuple[DiagramBox, ...]]
     lines: dict[Id[DiagramSheet], tuple[DiagramLine, ...]]
     markers: dict[Id[DiagramSheet], tuple[DiagramMarker, ...]]
-
-
-def _order(sheet: DiagramSheet) -> tuple[str, int]:
-    """Sheets by reading (the absolute one first), then number."""
-    return ("" if sheet.unit is None else render_id(sheet.unit), sheet.number)
 
 
 def _by_sheet[R: (DiagramBox, DiagramLine, DiagramMarker)](
@@ -89,5 +85,5 @@ def diagram_sheets(model: Model) -> frozendict[str, str]:
     found = _Found(
         _by_sheet(model, DiagramBox), _by_sheet(model, DiagramLine), _by_sheet(model, DiagramMarker)
     )
-    sheets = sorted(layout_of(model, DiagramSheet).values(), key=_order)
+    sheets = sorted(layout_of(model, DiagramSheet).values(), key=diagram_sheet_order_key)
     return frozendict({render_id(sheet.id): _render_sheet(model, sheet, found) for sheet in sheets})

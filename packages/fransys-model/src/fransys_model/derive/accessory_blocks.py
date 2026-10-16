@@ -12,12 +12,9 @@ from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.enums import FunctionKind, OperatedBy
 from fransys_model.vocab.membership import item_chain
+from fransys_model.vocab.roles import FUNCTION_ROLES
 from fransys_model.vocab.tables import functions, items, parts
 lazy from fransys_model.vocab.core import Function, Item
-
-CONTACT_KINDS = frozenset(
-    {FunctionKind.CONTACT_NO, FunctionKind.CONTACT_NC, FunctionKind.CONTACT_CO}
-)
 
 
 @digest_cached(DIGEST_CACHE_SIZE)
@@ -69,16 +66,20 @@ def operated_by(model: Model, function: Id[Function]) -> OperatedBy | None:
     return None if item is None else _stated(model, item)
 
 
-def is_contact_block(model: Model, item: Id[Item]) -> bool:
-    """Whether `item` is a block: no function below it, and only contacts or held switches."""
+def is_contact_block(model: Model, item: Id[Item], *, held_switches: bool = True) -> bool:
+    """Whether `item` is a block: no function below it, and only contacts or held switches.
+
+    `held_switches=False` is the rule before 0.18.2 (a stored listing's): contacts only.
+    """
     own = build_indexes(model).functions_by_item.get(item, ())
     if not own or item in items_with_a_function_below(model):
         return False
-    kinds = {functions(model)[f].kind for f in own}
-    if kinds <= CONTACT_KINDS:
+    roles = [FUNCTION_ROLES[functions(model)[f].kind] for f in own]
+    if all(r.plain_contact for r in roles):
         return True
     return (
-        kinds == {FunctionKind.SWITCH}
+        held_switches
+        and all(r.contact and not r.plain_contact for r in roles)
         and _stated(model, item) is None
         and _holder_stating(model, item) is not None
     )

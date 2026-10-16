@@ -43,13 +43,16 @@ class OverviewTab:
     """One tab outside a box edge, where a cable line ends; `index` is its place in the box's tabs.
 
     `x`, `y` is the top-left corner of the tab from the view's corner, `text_width` the width of
-    its text. A line ends on the tab its last point touches; the text is the one `line_tabs` gives.
+    its text, `width` and `height` the tab's size as placed.
+    A line ends on the tab its last point touches; the text is the one `line_tabs` gives.
     """
 
     index: int
     x: int
     y: int
     text_width: int
+    width: int
+    height: int
 
 
 @record(kind="layout.overview_box")

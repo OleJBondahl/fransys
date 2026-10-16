@@ -39,15 +39,6 @@ def test_norwegian_letters_are_measured_with_the_ttf_width(weight):
         assert text_units(letter, bold=weight == "Bold") == hmtx[cmap[ord(letter)]][0], letter
 
 
-def test_cover_line_estimate_follows_the_measured_width():
-    from fransys_pdf._cover_checks import _line_count
-
-    assert _line_count("W" * 60, width_mm=50, size_mm=10) > _line_count(
-        "i" * 60, width_mm=50, size_mm=10
-    )
-    assert _line_count("", width_mm=50, size_mm=10) == 1
-
-
 def test_capital_ratio_and_ascent_equal_the_regular_ttf():
     """A5 (E4): derive's ratios are the glyph H's top and `sTypoAscender` over unitsPerEm.
 

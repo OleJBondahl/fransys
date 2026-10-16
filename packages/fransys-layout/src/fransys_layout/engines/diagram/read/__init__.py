@@ -5,8 +5,8 @@ The only place, with `write/`, where the diagram engine meets the model vocabula
 
 from fransys_layout.engines.diagram.read.facts import diagram_reading
 from fransys_layout.engines.diagram.read.findings import reading_findings
-from fransys_layout.engines.diagram.read.readings import readings
-lazy from fransys_layout.engines.diagram.values import DiagramFacts
+from fransys_layout.engines.overview.read.readings import readings
+lazy from fransys_layout.engines.overview.sheet_values import DiagramFacts
 lazy from fransys_model.kernel import Finding, Model
 
 __all__ = ("read_diagrams", "read_findings")

@@ -187,3 +187,28 @@ def test_the_kernel_check_fails_on_a_synthetic_import(tmp_path: Path) -> None:
         f"{root / 'bad.py'}: imports fransys_model.vocab",
         f"{root / 'bad.py'}: imports fransys_model.vocab.core",
     ]
+
+
+def _role_import_problems(module_name: str, source: str) -> list[str]:
+    """The `fransys_model` imports of a role module that are outside `vocab` and the kernel."""
+    imported = _imported_modules(module_name, source, is_init=False)
+    bad = _violates(imported, ("fransys_model",)) - {"fransys_model"}
+    return sorted(bad - _violates(bad, ("fransys_model.vocab", "fransys_model.kernel")))
+
+
+def test_vocab_roles_imports_only_vocab_and_kernel() -> None:
+    """The role tables are data: `vocab/roles*.py` imports `vocab` and the kernel only (EL-2a)."""
+    paths = sorted((SRC_ROOT / "vocab").glob("roles*.py"))
+    assert len(paths) >= 2
+    for path in paths:
+        name, _ = _module_name(path)
+        assert _role_import_problems(name, path.read_text(encoding="utf-8")) == []
+
+
+def test_the_role_module_check_fails_on_a_derive_import() -> None:
+    """The same scan flags a role module that imports a `derive` fact."""
+    source = "from fransys_model.derive.facts import children\n"
+    assert _role_import_problems("fransys_model.vocab.roles_bad", source) == [
+        "fransys_model.derive.facts",
+        "fransys_model.derive.facts.children",
+    ]

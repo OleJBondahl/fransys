@@ -7,11 +7,11 @@ as the level draws any other. Reached through `derive.fold_level`.
 from typing import TYPE_CHECKING
 
 from fransys_model.layout import OverviewRef, OverviewRefKind
+from fransys_model.vocab.enums import ItemKind
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .overview_levels import strip_view
-from .rows import ItemKind
 from .rows_overview import FoldBox
 
 if TYPE_CHECKING:

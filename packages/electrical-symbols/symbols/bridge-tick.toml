@@ -1,0 +1,16 @@
+schema = 1
+name = "Bridge mark tick"
+kind = "element"
+status = "unverified"
+# our own terminal-list Bridge mark: the short bar on a jumper group's member row, in mm. It is
+# 2 mm wide and 1 mm tall (the two slots' room) with the bar on the middle: pdf draws it at its own size, never
+# stretched, centred on the row.
+reference = { standard = "IEC 60617", number = "bridge-tick" }
+
+elements = [
+  { line = [[0, 0.5], [2, 0.5]] },
+]
+
+[slots]
+above = { at = [1, 0.5], side = "N", box = [2, 0.5] }
+below = { at = [1, 0.5], side = "S", box = [2, 0.5] }

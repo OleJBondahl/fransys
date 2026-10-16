@@ -1,0 +1,83 @@
+{
+  "anchors": [],
+  "body_box": [
+    [
+      0,
+      -1
+    ],
+    [
+      6,
+      1
+    ]
+  ],
+  "elements": [
+    {
+      "closed": true,
+      "fill": "none",
+      "polyline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          6,
+          -1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "style": "solid",
+      "weight": "normal"
+    }
+  ],
+  "keepout_box": [
+    [
+      0,
+      -1
+    ],
+    [
+      6,
+      1
+    ]
+  ],
+  "kind": "element",
+  "lint_allow": [
+    {
+      "reason": "the reference text box does not rotate and is wider than the flag is tall; the marker is drawn unrotated and the text stays inside the outline",
+      "rule": "slot-overlap-body"
+    }
+  ],
+  "name": "Reference marker (continuation flag)",
+  "nodes": [],
+  "paths": [],
+  "ports": [],
+  "reference": {
+    "number": "reference-marker",
+    "standard": "IEC 60617"
+  },
+  "schema": 1,
+  "slots": {
+    "ref": {
+      "at": [
+        1.25,
+        0
+      ],
+      "box": [
+        4.5,
+        1
+      ],
+      "side": "E"
+    }
+  },
+  "status": "unverified"
+}

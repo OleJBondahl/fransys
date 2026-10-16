@@ -17,6 +17,7 @@ from typing import Any, NamedTuple
 
 import fransys as fr
 
+from fransys_model.derive import cable_list_rows_of
 from fransys_model.vocab.tables import units as units_table
 
 
@@ -68,3 +69,12 @@ def test_the_units_cables_csv_has_the_units_cable(tmp_path: Path) -> None:
     written = fr.write(_built(), tmp_path, unit="demo-cab")
     (csv,) = [p for p in written if p.name.endswith("cables.csv")]
     assert "W1" in csv.read_text(encoding="utf-8")
+
+
+def test_cable_list_rows_of_gives_the_listed_row_in_its_own_unit() -> None:
+    """`cable_list_rows_of(model, {W1})` equals the unit list's row for W1."""
+    model = _built().model
+    (unit,) = units_table(model)
+    listed = fr.derive.cable_list_rows(model, unit=unit)
+    assert cable_list_rows_of(model, {row.cable for row in listed}) == listed
+    assert cable_list_rows_of(model, set()) == ()

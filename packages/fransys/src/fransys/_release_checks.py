@@ -10,25 +10,25 @@ lazy from pathlib import Path
 from fransys_model.derive import (
     baseline,
     current_revision,
-    numbering_pins,
-    release_order,
+    nested_units,
+    pin_source,
+    previous_release,
+    release_identity,
     revision_text,
-    same_version,
     unit_release,
-    unit_subtree,
-    units,
 )
 from fransys_model.kernel import Finding, Id, Severity
 from fransys_model.vocab import projects
 lazy from fransys_model.derive.numbering_pins import NumberingPins
 
 from . import _revision_pins
-from ._baseline_cause import sections_text
+from ._baseline_findings import baseline_findings
 from ._history_gate import history_findings
-from ._release_reader import listed_siblings, stored_listing, stored_numbering
+from ._release_files import folder_findings
+from ._release_reader import manifest_readable, read_stored, stored_listing
 
 if TYPE_CHECKING:
-    from fransys_model.derive.baseline import Listing, ListingDiff
+    from fransys_model.derive.baseline import Listing, ListingDiff, ReleaseIdentity
     from fransys_model.kernel import Model
     from fransys_model.vocab import Unit as ModelUnit
 
@@ -40,10 +40,20 @@ class _ReleaseTarget:
     Bundles `_release_target`'s result so `release` and every `_l4_findings` check pass one value.
     """
 
-    name: str
-    version: int
-    revision: int
+    identity: ReleaseIdentity
     path: Path
+
+    @property
+    def name(self) -> str:
+        return self.identity.name
+
+    @property
+    def version(self) -> int:
+        return self.identity.version
+
+    @property
+    def revision(self) -> int:
+        return self.identity.revision
 
 
 def _release_target(model: Model, unit: Id[ModelUnit] | None, into: Path) -> _ReleaseTarget:
@@ -51,16 +61,9 @@ def _release_target(model: Model, unit: Id[ModelUnit] | None, into: Path) -> _Re
 
     The one place `<into>/<name>/<version>.<revision>/` is computed; `release`, `_l4_findings` call.
     """
-    if unit is not None:
-        release_record = unit_release(model, unit)
-        name = release_record.name
-        version, revision = release_record.version, release_record.revision
-    else:
-        project = next(iter(projects(model).values()))
-        name = project.number
-        version, revision = project.version, project.revision
-    path = into / name / revision_text(version, revision)
-    return _ReleaseTarget(name=name, version=version, revision=revision, path=path)
+    identity = release_identity(model, unit)
+    path = into / identity.name / revision_text(identity.version, identity.revision)
+    return _ReleaseTarget(identity=identity, path=path)
 
 
 def _revision_already_released_finding(
@@ -87,39 +90,10 @@ def _revision_already_released_finding(
     )
 
 
-def _baseline_differs_finding(
-    model: Model, unit: Id[ModelUnit] | None, release: _ReleaseTarget, stored_text: str
-) -> Finding | None:
-    """`BASELINE_DIFFERS` when `stored_text` differs from `unit`'s fresh listing.
-
-    The one comparison `_nested_release_findings` and `verify` share; `stored_text` is not `None`.
-    The caller decides what no stored baseline means; this only answers whether it differs.
-    """
-    new_listing = baseline.listing(model, unit)
-    if baseline.matches(stored_text, new_listing):
-        return None
-    sections = sections_text(baseline.loads(stored_text), new_listing)
-    release_revision_text = revision_text(release.version, release.revision)
-    return Finding(
-        code="BASELINE_DIFFERS",
-        severity=Severity.ERROR,
-        subjects=(unit,) if unit is not None else (),
-        message=(
-            f"{release.name} {release_revision_text} differs from its released baseline in: "
-            f"{sections}"
-        ),
-    )
-
-
 def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Path) -> list[Finding]:
-    """`RELEASE_NESTED_UNRELEASED` and `BASELINE_DIFFERS`: the whole subtree, any depth."""
-    nested_ids: tuple[Id[ModelUnit], ...] = (
-        tuple(sorted(units(model)))
-        if unit is None
-        else tuple(sorted(unit_subtree(model, unit) - {unit}))
-    )
+    """`RELEASE_NESTED_UNRELEASED` and the `baseline_findings`: the whole subtree, any depth."""
     findings: list[Finding] = []
-    for nested in nested_ids:
+    for nested in nested_units(model, unit):
         nested_release = _release_target(model, nested, into)
         nested_stored_text = stored_listing(nested_release.path)
         if nested_stored_text is None:
@@ -136,32 +110,23 @@ def _nested_release_findings(model: Model, unit: Id[ModelUnit] | None, into: Pat
                 )
             )
             continue
-        differs = _baseline_differs_finding(model, nested, nested_release, nested_stored_text)
-        if differs is not None:
-            findings.append(differs)
+        if not manifest_readable(nested_release.path):
+            findings.extend(folder_findings(nested_release.path))
+            continue
+        findings.extend(
+            baseline_findings(model, nested, nested_release, nested_stored_text, nested=True)
+        )
     return findings
 
 
 def _previous_release_listing(release: _ReleaseTarget) -> Listing | None:
-    """The stored listing of the highest release ordered below this one, or `None`.
+    """The stored listing of the previous release (`derive.previous_release`), or `None`.
 
-    Previous = highest (version, revision) below the one released (`derive.release_order`), across
-    versions (they run in parallel). `INTERFACE_NOT_BUMPED` reads only that candidate.
+    `INTERFACE_NOT_BUMPED` and `changes.md` read only that candidate.
     """
-    this_order = release_order(release.version, release.revision)
-    this_folder = revision_text(release.version, release.revision)
-    best: Listing | None = None
-    best_order: tuple[int, int] | None = None
-    for sibling, sibling_text in listed_siblings(release.path.parent):
-        if sibling.name == this_folder:
-            continue
-        sibling_listing = baseline.loads(sibling_text)
-        sibling_order = release_order(sibling_listing.unit.version, sibling_listing.unit.revision)
-        if sibling_order >= this_order:
-            continue
-        if best_order is None or sibling_order > best_order:
-            best_order, best = sibling_order, sibling_listing
-    return best
+    stored = read_stored(release.path.parent)
+    previous = previous_release(stored, release.identity)
+    return None if previous is None else previous.listing
 
 
 def _since_listing(release: _ReleaseTarget) -> Listing | None:
@@ -183,31 +148,11 @@ def _changes_since(
 
 
 def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
-    """The pin source: the highest released revision of the same version at or below this one.
-
-    Reads `<into>/<name>/*/baseline/numbering.json` (`listed_siblings`), else `None`; same version
-    only, unlike `_previous_release_listing`; a re-release may be its own pin source.
-    """
-    this_order = release_order(release.version, release.revision)
-    best: tuple[Path, NumberingPins] | None = None
-    best_order: tuple[int, int] | None = None
-    for sibling, listing_text in listed_siblings(into / release.name):
-        sibling_listing = baseline.loads(listing_text)
-        if not same_version(
-            (sibling_listing.unit.name, sibling_listing.unit.version),
-            (release.name, release.version),
-        ):
-            continue
-        sibling_order = release_order(sibling_listing.unit.version, sibling_listing.unit.revision)
-        if sibling_order > this_order:
-            continue
-        numbering_text = stored_numbering(sibling)
-        if numbering_text is None:
-            continue
-        if best_order is None or sibling_order > best_order:
-            best_order = sibling_order
-            best = (sibling, numbering_pins.loads(numbering_text))
-    return best
+    """The pin source (`derive.pin_source`) as its folder and numbering, or `None`."""
+    source = pin_source(read_stored(into / release.name), release.identity)
+    if source is None or source.numbering is None:
+        return None
+    return into / release.name / source.folder, source.numbering
 
 
 def _interface_not_bumped_findings(

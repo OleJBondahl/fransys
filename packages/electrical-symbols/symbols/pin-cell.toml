@@ -1,0 +1,23 @@
+schema = 1
+name = "Pin cell (table row)"
+kind = "element"
+status = "unverified"
+# our own table cell: one pin of a connector or terminal table, its wire on the west side
+reference = { standard = "IEC 60617", number = "pin-cell" }
+
+ports = [
+  { id = "pin", at = [-3, 1], dir = "W", description = "wire side" },
+]
+
+elements = [
+  { line = [[-3, 1], [-1, 1]], port = "pin" },
+  { polyline = [[-1, 0], [3, 0], [3, 2], [-1, 2]], closed = true },
+]
+
+lint_allow = [
+  { rule = "slot-overlap-body", reason = "the text box is wider than the cell is tall; a table cell is drawn unrotated and its text stays inside the outline" },
+  { rule = "port-isolated", reason = "a pin cell ends its circuit at the table; no path of this symbol continues it" },
+]
+
+[slots]
+"marking.pin" = { at = [-0.75, 1], side = "E", box = [3.5, 1] }

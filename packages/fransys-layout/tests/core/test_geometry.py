@@ -1,5 +1,7 @@
 """Tests for core/geometry.py: rotation, footprints, anchors and lane stacking."""
 
+import pytest
+
 from fransys_layout.core.geometry import (
     cell_anchor,
     cell_footprint,
@@ -9,9 +11,10 @@ from fransys_layout.core.geometry import (
     rotate_box,
     rotate_side,
     rotate_xy,
+    shape_key,
     stack_lane,
 )
-from fransys_layout.core.values import Box, Cell, Lane, Options, Orientation, Pin, Sym
+from fransys_layout.core.values import Box, Cell, Lane, Options, Orientation, Pin, Size, Sym
 
 R0_TO_R270 = ("R0", "R90", "R180", "R270")
 
@@ -31,8 +34,7 @@ def make_sym(
         id=sym_id,
         group=None,
         unit="u",
-        text=sym_id,
-        text_w=0,
+        label=Size(0, 0),
         body=Box(-8, -8, 16, 16),
         keepout=Box(-8, -16, 16, 32),
         footprint=footprint,
@@ -121,3 +123,31 @@ def test_cell_anchor_uses_top_pin_else_bottom_pin() -> None:
     assert cell_anchor(sym, make_cell(top="A", bottom="B")) == (4, -8)
     assert cell_anchor(sym, make_cell(bottom="B")) == (-4, 8)
     assert cell_anchor(sym, make_cell()) == (0, 0)
+
+
+def test_shape_key_is_equal_for_equal_shapes_and_differs_on_orientation() -> None:
+    """Two lanes of equal body, keepout and orientation share a key; a turned cell does not."""
+    syms = {"U1": make_sym("U1"), "U2": make_sym("U2")}
+    plain = (Lane((make_cell("U1"),), 0),)
+    twin = (Lane((make_cell("U2"),), 8),)
+    turned = (Lane((make_cell("U1", "R90"),), 0),)
+    assert shape_key(syms, plain) == shape_key(syms, twin)
+    assert shape_key(syms, plain) != shape_key(syms, turned)
+
+
+def test_rotate_xy_raises_for_a_mirrored_orient() -> None:
+    """A mirrored orient has no offset rule; it raises instead of returning the R0 offsets."""
+    with pytest.raises(ValueError, match="rotate_xy: orientation MR180"):
+        rotate_xy(16, -8, "MR180")
+
+
+def test_rotate_box_raises_for_a_mirrored_orient() -> None:
+    """A mirrored orient has no box rule; it raises instead of returning the unrotated box."""
+    with pytest.raises(ValueError, match="rotate_box: orientation MR180"):
+        rotate_box(Box(2, 4, 10, 6), "MR180")
+
+
+def test_rotate_side_raises_for_a_mirrored_orient() -> None:
+    """A mirrored orient has no side rule; it raises a ValueError naming it, not a bare KeyError."""
+    with pytest.raises(ValueError, match="rotate_side: orientation MR180"):
+        rotate_side("N", "MR180")

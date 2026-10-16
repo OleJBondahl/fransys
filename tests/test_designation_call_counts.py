@@ -45,10 +45,10 @@ from fransys import pipeline  # noqa: E402
 from scale_units_fixture import build_scale  # noqa: E402
 
 from fransys_model.derive import designation  # noqa: E402
+from fransys_model.derive.facts.unit_index import descendants  # noqa: E402
 from fransys_model.derive.passes import numbering  # noqa: E402
 from fransys_model.kernel import make_id  # noqa: E402
 from fransys_model.vocab.core import Item  # noqa: E402
-from fransys_model.vocab.unit_index import descendants  # noqa: E402
 
 if TYPE_CHECKING:
     from types import CodeType

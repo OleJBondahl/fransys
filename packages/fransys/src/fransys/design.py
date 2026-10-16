@@ -7,8 +7,8 @@ from fransys_author import AuthorError
 from fransys_author.surface import Design
 lazy from fransys_author import RowValue, WiringRow
 
+from fransys import pipeline
 from fransys.parts_module import library_digest
-from fransys.pipeline import parts
 
 
 def _check_fresh(module: ModuleType) -> None:
@@ -42,4 +42,4 @@ def design(
             continue
         _check_fresh(item)
         sources.extend(item.SOURCES)
-    return Design(parts(*sources), place=place, wiring=wiring)
+    return Design(pipeline.parts(*sources), place=place, wiring=wiring)

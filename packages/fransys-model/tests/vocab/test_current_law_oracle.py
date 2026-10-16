@@ -43,11 +43,12 @@ from hypothesis import strategies as st
 from plant import Plant
 
 from fransys_model.derive import current_chains
+from fransys_model.derive.facts.current import chains as chains_module
+from fransys_model.derive.facts.current import states as current_states
+from fransys_model.derive.facts.current.bounds import LimitRole, _limits_of
 from fransys_model.kernel import make_id
-from fransys_model.vocab import Operating, Rating, current_states
-from fransys_model.vocab import current_chains as chains_module
+from fransys_model.vocab import Operating, Rating
 from fransys_model.vocab.core import Item
-from fransys_model.vocab.current_bounds import LimitRole, _limits_of
 from fransys_model.vocab.enums import Current, FunctionKind, LinkKind, PortRole
 from fransys_model.vocab.facets.rating import BoundaryValuesFacet, RatingFacet
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate

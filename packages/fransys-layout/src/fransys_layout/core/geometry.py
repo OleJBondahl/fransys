@@ -2,58 +2,86 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING
 
-from .values import Box, Cell, Lane, Options, Pin, Sym
+from .sides import CLOCKWISE, opposite
+from .values import Box, Cell, Lane, Options, Orientation, Pin, Side, Sym
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from .outputs import Marker
 
-def _no_rule(func: str, orient: str) -> NoReturn:
-    """Raise for an orientation a rotation function has no rule for."""
-    msg = f"{func}: orientation {orient} has no rule; core cells take R0, R90, R180 or R270"
-    raise ValueError(msg)
+
+# Orientation to (mirror in x first, clockwise quarter turns), as symdef's `orient` reads it.
+_TURNS: Mapping[str, tuple[bool, int]] = frozendict(
+    {
+        "R0": (False, 0),
+        "R90": (False, 1),
+        "R180": (False, 2),
+        "R270": (False, 3),
+        "MR0": (True, 0),
+        "MR90": (True, 1),
+        "MR180": (True, 2),
+        "MR270": (True, 3),
+    }
+)
+
+
+def _turns(func: str, orient: str) -> tuple[bool, int]:
+    """The mirror flag and quarter turns of orient; any other string is a ValueError."""
+    if orient not in _TURNS:
+        msg = f"{func}: orientation {orient} is not one of the eight"
+        raise ValueError(msg)
+    return _TURNS[orient]
 
 
 def rotate_xy(dx: int, dy: int, orient: str) -> tuple[int, int]:
-    """Pin offsets at orient; R180 turns both signs, R90 and R270 turn a quarter."""
-    if orient == "R180":
-        return -dx, -dy
-    if orient == "R90":
-        return -dy, dx
-    if orient == "R270":
-        return dy, -dx
-    if orient == "R0":
-        return dx, dy
-    _no_rule("rotate_xy", orient)
+    """Offsets at orient: x negated first for an MR, then turned clockwise (y grows down)."""
+    mirror, turns = _turns("rotate_xy", orient)
+    if mirror:
+        dx = -dx
+    for _ in range(turns):
+        dx, dy = -dy, dx
+    return dx, dy
 
 
 def rotate_box(box: Box, orient: str) -> Box:
-    """The box at orient; width and height are kept, corners are mapped."""
-    if orient == "R180":
-        return Box(-box.x - box.w, -box.y - box.h, box.w, box.h)
-    if orient in ("R90", "R270"):
-        x0, y0 = rotate_xy(box.x, box.y, orient)
-        x1, y1 = rotate_xy(box.x + box.w, box.y + box.h, orient)
-        return Box(min(x0, x1), min(y0, y1), box.w, box.h)
-    if orient == "R0":
-        return box
-    _no_rule("rotate_box", orient)
+    """The box turned about the symbol origin as symdef's `orient` does; w and h swap on R90."""
+    _turns("rotate_box", orient)
+    x0, y0 = rotate_xy(box.x, box.y, orient)
+    x1, y1 = rotate_xy(box.x + box.w, box.y + box.h, orient)
+    return Box(min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
 
 
-def rotate_side(side: str, orient: str) -> str:
-    """The side a pin faces after the cell turns to orient (N E S W clockwise)."""
-    turns = {"R0": 0, "R90": 1, "R180": 2, "R270": 3}.get(orient)
-    if turns is None:
-        _no_rule("rotate_side", orient)
-    order = "NESW"
-    return order[(order.index(side) + turns) % 4]
+def rotate_side(side: Side, orient: Orientation) -> Side:
+    """The side a pin faces after the cell is mirrored (E and W swap) and turned clockwise."""
+    mirror, turns = _turns("rotate_side", orient)
+    if mirror and side in ("E", "W"):
+        side = opposite(side)
+    return CLOCKWISE[(CLOCKWISE.index(side) + turns) % 4]
 
 
 def shift(box: Box, x: int, y: int) -> Box:
     """The box moved by (x, y)."""
     return Box(box.x + x, box.y + y, box.w, box.h)
+
+
+def marker_box_at(x: int, y: int, options: Options, orient: Orientation = "R0") -> Box:
+    """A marker's footprint: `Options.marker`, turned to orient, moved to the symbol origin (x, y).
+
+    The origin is the point the drawing hands symdef (layout-0305); no anchor rule is added here.
+    `rotate_box` turns the box about the origin as symdef's `orient` does (layout-0306).
+    """
+    if options.marker is None:
+        msg = "Options.marker is unset; fransys_el passes the reference-marker symbol's keepout box"
+        raise ValueError(msg)
+    return shift(rotate_box(options.marker, orient), x, y)
+
+
+def marker_box(marker: Marker, options: Options) -> Box:
+    """The one home of a marker's footprint: `marker_box_at` its origin and orientation."""
+    return marker_box_at(marker.x, marker.y, options, marker.orient)
 
 
 def union(a: Box, b: Box) -> Box:

@@ -13,8 +13,12 @@ from fransys_layout.core import (
     Attach,
     Box,
     Bundle,
+    Column,
     CrossLink,
     CutResult,
+    End,
+    Fan,
+    Net,
     Options,
     PinRef,
     PinXY,
@@ -24,7 +28,9 @@ from fransys_layout.core import (
     Routes,
     Wire,
 )
-from fransys_layout.core.route_env import RouteEnv, route_envs
+from fransys_layout.core.outputs import PagePlacement, PageRoutes
+from fransys_layout.core.route import route_page
+from fransys_layout.core.route_env import Drawn, RouteEnv, route_envs
 
 from .cut_fixtures import AREA, elem
 from .cycle_fixtures import ring_problem
@@ -185,3 +191,80 @@ def link_env(
         for n, ends in links.items()
     )
     return RouteEnv(1, placed, (), {}, {}, {}, (), (), (), cross, frozenset(), options or Options())
+
+
+def row_wrap_env(options: Options | None = None) -> RouteEnv:
+    """L1: a two-pin net x across two rows of one page, with no planned Ref and no trunk.
+
+    Symbol `a` stands in row 0 (y 16 to 56) and `z` in row 1 (y 88 to 136), both with their wire
+    leaving north; the fan has one driver and one leg, one in each row.
+    """
+    env = link_env({"a": (40, 40, "N"), "z": (104, 120, "N")}, {}, options)
+    ends = tuple(Attach(None, 0, 0, PinRef(s, "p")) for s in ("a", "z"))
+    fan = Fan("f:x", ("x",), ends[:1], ends[1:], None, 1, "S")
+    return replace(
+        env,
+        net_of={PinRef("a", "p"): "x", PinRef("z", "p"): "x"},
+        net_pins={"x": (PinRef("a", "p"), PinRef("z", "p"))},
+        fans={"f:x": fan},
+        bands=((16, 56), (88, 136)),
+    )
+
+
+def three_end_env(options: Options | None = None) -> RouteEnv:
+    """A cross-link t with three ends in one row, the third off to the side of the first two."""
+    pins = {"a": (40, 40, "S"), "b": (200, 40, "S"), "c": (120, 40, "S")}
+    env = link_env(pins, {"t": ("a", "b", "c")}, options)
+    return replace(env, bands=((16, 64),))
+
+
+def env_view(env: RouteEnv, page: PageRoutes, net_id: str) -> tuple[Routes, Placement, Net]:
+    """A hand-built env's routes and placement as the oracle reads them, and net `net_id` on it."""
+    pins = tuple(PinRef(sym, "p") for sym in env.placed)
+    placed = PagePlacement(
+        env.page, tuple(env.placed.values()), env.gaps, env.trunks, (), env.bands
+    )
+    return Routes((page,)), Placement((placed,)), Net(net_id, pins)
+
+
+def oracle_on(env: RouteEnv, net_id: str) -> bool:
+    """Route a hand-built page and ask the oracle whether net `net_id` is drawn whole on it."""
+    from .route_oracle import connected_or_referenced
+
+    page = route_page(env)[0]
+    routes, placement, net = env_view(env, page, net_id)
+    return connected_or_referenced(routes, placement, (), net, env.page)
+
+
+def open_end_env(
+    orient: str = "R0", open_stub: int = 8, *, has_pin: bool = True
+) -> tuple[RouteEnv, Column]:
+    """Coil k2 of a card page with its foot an open end on `pin`; k2 is turned to `orient`."""
+    from .place_fixtures import card_with_coils
+
+    env = envs_of(card_with_coils(3), Options(open_stub=open_stub))[0]
+    col = env.columns[1]
+    placed = replace(env.placed["k2"], orient=orient)
+    env = replace(env, placed={**env.placed, "k2": placed})
+    return env, replace(
+        col, feet=(End("open", "dangling", PinRef("k2", "s")) if has_pin else End("open"),)
+    )
+
+
+def stub_of(drawn: Drawn) -> tuple[Wire, ...]:
+    """The wires of the one-pin net dangling in a Drawn."""
+    return tuple(w for w in drawn.wires if w.net == "dangling")
+
+
+def by_bundle(routes: Routes, problem: PlacementProblem) -> Routes:
+    """Routes with each bundle member's wires renamed to the bundle's fan id `f:<bundle>`.
+
+    Stage 1 does not fill Fan.crossed (layout-0275), so a reversing plant is drawn plain and a
+    pole's drop lands on another member's line: the plants check connection per bundle.
+    """
+    fan_of = {n.id: f"f:{n.bundle.id}" for n in problem.nets if n.bundle}
+    pages = tuple(
+        replace(pg, wires=tuple(replace(w, net=fan_of.get(w.net, w.net)) for w in pg.wires))
+        for pg in routes.pages
+    )
+    return replace(routes, pages=pages)

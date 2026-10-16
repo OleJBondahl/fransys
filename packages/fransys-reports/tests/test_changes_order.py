@@ -37,6 +37,6 @@ def test_the_unit_rows_print_as_the_interface_line_and_never_as_a_section():
     before = dataclasses.replace(_x1_boundary_listing(("1",)), unit=_unit("1"))
     after = dataclasses.replace(_x1_boundary_listing(("1", "2")), unit=_unit("2"))
     md = changes_markdown(diff(before, after))
-    assert "Interface 1 to 2." in md
+    assert "Interface 1 \u2192 2." in md
     assert "## Unit\n" not in md
     assert "## Boundary" in md

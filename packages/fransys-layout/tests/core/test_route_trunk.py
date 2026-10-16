@@ -18,8 +18,10 @@ from fransys_layout.core import (
     Trunk,
     Wire,
 )
+from fransys_layout.core.route_counts import collinear, counts
 from fransys_layout.core.route_env import RouteEnv
 from fransys_layout.core.route_trunk import drop_kind, trunk_wires
+from fransys_layout.core.score_wiring import bundles
 
 from .cycle_fixtures import acyclic_problem
 from .pipeline_fixtures import cut_of
@@ -230,3 +232,41 @@ def test_a_crossed_trunk_with_no_room_for_its_levels_is_a_finding_and_draws_noth
 
 def k2_pins(env: RouteEnv) -> set[tuple[int, int]]:
     return {(q.x, q.y) for q in env.placed["K2"].pin_xy}
+
+
+def drawn_with_trunk(
+    perm: tuple[int, ...], xs: list[int], *, above: bool
+) -> tuple[RouteEnv, list[Wire]]:
+    """The whole bundle of `synthetic` (trunk line and drops) and the env it came from."""
+    env, trunk, _ = synthetic(perm, xs, above=above)
+    return env, list(trunk_wires(env, trunk).wires)
+
+
+def test_a_bundle_trunk_of_k_lanes_with_k_drops_counts_no_crossing_and_no_collinear_run() -> None:
+    for k in (2, 3, 4):
+        xs = [100 + 24 * p for p in range(k)]
+        for above in (False, True):
+            env, wires = drawn_with_trunk(tuple(range(k)), xs, above=above)
+            member_drops = [w for w in wires if w.kind != "trunk"]
+            assert {w.net for w in member_drops} <= {f"L{p}" for p in range(k)}
+            assert counts(wires, bundles(env.fans.values())).crossings == 0, (k, above)
+            assert collinear(wires) == 0, (k, above)
+
+
+def test_two_drops_of_one_bundle_that_cross_count_one_crossing() -> None:
+    xs = [100, 124]
+    env, wires = drawn_with_trunk((1, 0), xs, above=False)
+    drops = [w for w in wires if w.kind != "trunk"]
+    assert {w.net for w in drops} == {"L0", "L1"}
+    assert counts(drops, bundles(env.fans.values())).crossings == 1
+
+
+def test_a_drop_never_counts_against_its_own_trunk_but_counts_against_a_foreign_one() -> None:
+    xs = [100, 124, 148]
+    env, wires = drawn_with_trunk((0, 1, 2), xs, above=True)
+    own = bundles(env.fans.values())
+    assert counts(wires, own).crossings == 0
+    assert counts(wires, None).crossings > 0
+    foreign = Wire("G", 1, ((xs[0] - 8, 100), (xs[-1] + 8, 100)), "trunk")
+    drops = [w for w in wires if w.kind != "trunk"]
+    assert counts([*drops, foreign], own).crossings == len(xs) - 1

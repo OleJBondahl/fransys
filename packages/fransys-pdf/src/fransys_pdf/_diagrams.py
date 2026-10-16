@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING, Any
 
 from fransys_model.derive import (
+    SheetKey,
     diagram_sheets,
     document_unit,
     page_destination,
-    sheet_key,
     sheet_text,
 )
 from fransys_model.derive.block_diagram import diagram_lines
@@ -32,7 +32,7 @@ def diagram_source(
     model: Model,
     record: Document,
     svgs: Mapping[str, str],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """The section text: an A2 `#page` per sheet that has an SVG, `""` with none (pdf-0023)."""
     found = diagram_sheets(model, record)
@@ -45,7 +45,7 @@ def diagram_source(
             continue
         mark = sheet_mark(outline[page_destination(model, diagram)])
         image = f'#image(bytes({literal(svg)}), format: "svg")'
-        key = sheet_key(record.id, PageKind.BLOCK_DIAGRAM, index)
+        key = SheetKey(record.id, PageKind.BLOCK_DIAGRAM, index)
         back = page_background(model, record, sheets, key)
         numbering, start = sheet_label(sheet_text(model, diagram))
         pages.append(

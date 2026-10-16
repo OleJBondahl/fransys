@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING, Final, cast
 lazy from collections.abc import Collection
 
+from fransys_model.derive.facts.units import unit_own_roots
 from fransys_model.kernel import Id, Model, SchemaError
 from fransys_model.vocab.enums import SubjectKind
-from fransys_model.vocab.membership import unit_own_roots
 from fransys_model.vocab.tables import items, parts
 from fransys_model.vocab.tables import units as units_table
 lazy from fransys_model.vocab.aspects import AspectNode
@@ -96,7 +96,7 @@ def _instance_designations(model: Model, unit: Id[Unit]) -> list[str]:
     """One unit instance's BOM designations: a sole root's, else its locations, else its roots'.
 
     A location entry stands for the whole instance: roots without a location add nothing beside it.
-    The roots are `vocab.membership.unit_own_roots`, external items left out.
+    The roots are `derive.facts.units.unit_own_roots`, external items left out.
     """
     if (tag := unit_tag(model, unit)) is not None:
         return [instance_name((tag,))]  # The instance is named by its tag

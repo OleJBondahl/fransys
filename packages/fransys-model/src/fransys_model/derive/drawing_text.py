@@ -33,6 +33,7 @@ from fransys_model.derive.designation import (
     own_nodes,
     port_designation,
 )
+from fransys_model.derive.facts.units import unit_items
 from fransys_model.derive.frame_position import (
     content_extent,
     frame_column,
@@ -80,7 +81,6 @@ from fransys_model.layout import (
     PageGroup,
     layout_of,
 )
-from fransys_model.vocab.membership import unit_items
 from fransys_model.vocab.tables import conductors, functions, items, ports
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Function, Port, Unit, UnitRelease

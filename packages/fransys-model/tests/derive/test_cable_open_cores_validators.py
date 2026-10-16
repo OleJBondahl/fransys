@@ -6,6 +6,13 @@ from typing import Any
 from plant import Plant
 from query_builders import make_part, make_pin
 
+from fransys_model.checks.cables import (
+    CABLE_CORE_COUNT,
+    CORE_INDEX_PAST_PRODUCT,
+    check_cables,
+)
+from fransys_model.checks.connectivity import FUNCTION_HALF_CONNECTED, check_connectivity
+from fransys_model.checks.earth import PE_PORT_OFF_PE, check_earth
 from fransys_model.derive.core_pairs import open_core_is_spare
 from fransys_model.kernel import Id, Severity, make_id
 from fransys_model.vocab.core import Item, Port
@@ -17,13 +24,6 @@ from fransys_model.vocab.facets.cable import (
     CorePair,
     OpenCoreFacet,
 )
-from fransys_model.vocab.validators.cables import (
-    CABLE_CORE_COUNT,
-    CORE_INDEX_PAST_PRODUCT,
-    check_cables,
-)
-from fransys_model.vocab.validators.connectivity import FUNCTION_HALF_CONNECTED, check_connectivity
-from fransys_model.vocab.validators.earth import PE_PORT_OFF_PE, check_earth
 
 
 def _plant(pairs: tuple[CorePair, ...] = ()) -> tuple[Plant, Id[Port]]:

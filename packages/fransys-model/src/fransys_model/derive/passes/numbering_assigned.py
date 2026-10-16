@@ -7,10 +7,10 @@ from fransys_model.derive.designation import (
     own_designation_or_none,
     takes_parents_designation,
 )
+from fransys_model.derive.facts.item_predicates import item_class_code
 from fransys_model.derive.passes.numbering_units import instance_tags_in
 from fransys_model.kernel import Model, make_id
 from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
-from fransys_model.vocab.numbering_codes import item_class_code
 
 if TYPE_CHECKING:
     from fransys_model.vocab.core import Item

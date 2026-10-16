@@ -7,9 +7,10 @@ function that governs the text: this module copies no rule.
 """
 
 import re
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 
 OLDEST_VERIFIABLE = "0.13.8"
+KEYED_LISTING_VERSION = 2  # the listing version that carries item keys (model-0300)
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,10 +19,12 @@ class ListingRules:
 
     `holder_designation`: a contact block prints its holder's designation (model-0222, 0.18.2).
     `bar_end_without_screw`: a bar end prints the bar alone, with no screw (model-0227, 0.18.4).
+    `item_keys`: every row that names an item carries its key, version 2 (model-0300, 0.20.0).
     """
 
     holder_designation: bool = True
     bar_end_without_screw: bool = True
+    item_keys: bool = True
 
 
 CURRENT = ListingRules()
@@ -36,9 +39,13 @@ class RuleRow:
 
 
 RULES_BY_RELEASE: tuple[RuleRow, ...] = (
-    RuleRow(OLDEST_VERIFIABLE, ListingRules(holder_designation=False, bar_end_without_screw=False)),
-    RuleRow("0.18.2", ListingRules(bar_end_without_screw=False)),
-    RuleRow("0.18.4", CURRENT),
+    RuleRow(
+        OLDEST_VERIFIABLE,
+        ListingRules(holder_designation=False, bar_end_without_screw=False, item_keys=False),
+    ),
+    RuleRow("0.18.2", ListingRules(bar_end_without_screw=False, item_keys=False)),
+    RuleRow("0.18.4", ListingRules(item_keys=False)),
+    RuleRow("0.20.0", CURRENT),
 )
 
 
@@ -51,16 +58,21 @@ def listing_rules(listing_version: int, fransys_version: str) -> ListingRules | 
     """The rules a version-`listing_version` listing cut by `fransys_version` was written under.
 
     `None` when no row covers it: a release older than `OLDEST_VERIFIABLE`, an unreadable
-    version, or a listing version the table does not know. Never the current rules by default.
+    version, or a listing version the table does not know. The listing's own version says whether
+    it carries item keys (2) or not (1). Never the current rules by default.
     """
     key = version_key(fransys_version)
-    if listing_version != 1 or not key or key < version_key(OLDEST_VERIFIABLE):
+    if (
+        listing_version not in (1, KEYED_LISTING_VERSION)
+        or not key
+        or key < version_key(OLDEST_VERIFIABLE)
+    ):
         return None
     found = RULES_BY_RELEASE[0].rules
     for row in RULES_BY_RELEASE:
         if version_key(row.first) <= key:
             found = row.rules
-    return found
+    return replace(found, item_keys=listing_version == KEYED_LISTING_VERSION)
 
 
 def rules_moved_in(stored: ListingRules) -> str:

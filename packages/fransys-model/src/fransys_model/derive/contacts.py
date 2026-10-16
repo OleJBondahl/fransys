@@ -1,17 +1,22 @@
-"""Changeover throws and link states re-exported from `vocab.contacts`, and `owned_contacts`.
+"""Changeover throws and link states re-exported from `facts.contacts`, and `owned_contacts`.
 
-Decision 0019 (CONTACT-STATES CS2). The throws and states live in `vocab` because `vocab.closure`
-reads them and `vocab` never imports `derive`. `owned_contacts` is the one answer to "which
-contacts does a designation holder own" (model-0119).
+Decision 0019 (CONTACT-STATES CS2). `owned_contacts` is the one answer to "which contacts does a
+designation holder own" (model-0119).
 """
 
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from fransys_model.derive.designation import designation_holder
+from fransys_model.derive.facts.contacts import (
+    LinkState,
+    Throws,
+    changeover_throws,
+    link_state,
+    link_throw,
+)
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.contacts import LinkState, Throws, changeover_throws, link_state
 lazy from fransys_model.derive.facts.roles import function_role
 lazy from fransys_model.vocab.core import Function, Item
 
@@ -39,4 +44,11 @@ def owned_contacts(model: Model, device: Id[Item]) -> tuple[Id[Function], ...]:
     return _contacts_by_device(model).get(device, ())
 
 
-__all__ = ["LinkState", "Throws", "changeover_throws", "link_state", "owned_contacts"]
+__all__ = [
+    "LinkState",
+    "Throws",
+    "changeover_throws",
+    "link_state",
+    "link_throw",
+    "owned_contacts",
+]

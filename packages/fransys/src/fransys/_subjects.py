@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 from fransys_author import Scope
 
-from fransys_model.derive import boards, terminal_strips
+from fransys_model.derive import boards, subject_kind, subject_kind_text, terminal_strips
+from fransys_model.vocab import SubjectKind
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id
@@ -36,7 +37,7 @@ def unit_of(handle: Scope | Id[Any], what: str, instead: str) -> Id[Unit]:
             )
             raise TypeError(msg)
         return handle.unit_id
-    if handle.kind != "unit":
-        msg = f"{what} must be a unit id, not a {handle.kind!r} id"
+    if subject_kind(handle) is not SubjectKind.UNIT:
+        msg = f"{what} must be a unit id, not a {subject_kind_text(handle)!r} id"
         raise TypeError(msg)
     return cast("Id[Unit]", handle)  # the kind check above is the runtime proof

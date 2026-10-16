@@ -1,6 +1,6 @@
 """Changeover throws in a series (SERIES-GAPS S7, S8): `k1.co_1.no` and `k1.co_1.nc`.
 
-The throws come from the part's roles and links (`vocab.link_throw`), never from a pin name.
+The throws come from the part's roles and links (`derive.link_throw`), never from a pin name.
 """
 
 from copy import copy
@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 from fransys_author.errors import AuthorAttributeError, AuthorError
 from fransys_author.surface._fixed import fixed_count
 from fransys_author.surface._pairing import End, Ends
-from fransys_model.vocab import FunctionKind, PoleSide, PortRole, link_throw, port_order_key
+from fransys_model.derive import link_throw
+from fransys_model.vocab import FunctionKind, PoleSide, PortRole, port_order_key
 lazy from fransys_author.handles import Fn as EngineFn
 
 if TYPE_CHECKING:

@@ -9,9 +9,9 @@ unit and the units below it. Nothing resolved is a `WIRE_ROW_UNRESOLVED` `ERROR`
 import dataclasses
 from typing import TYPE_CHECKING, Final
 
+from fransys_model.derive.facts.closure import net_of, port_rails
 from fransys_model.derive.lookups import item_of_port, unit_chain
 from fransys_model.kernel import Finding, Model, Severity, evolve, make_id
-from fransys_model.vocab.closure import net_of, port_rails
 from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.plc import PlcChannelFacet
 from fransys_model.vocab.facets.wire import WireFacet

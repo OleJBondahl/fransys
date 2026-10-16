@@ -16,12 +16,13 @@ from plant import Plant
 from rating_plant import AC_400, rated, supply
 from test_rail_pairs import _GENERIC, _NO, _load, _Relay
 
+from fransys_model.checks.ratings import check_ratings
+from fransys_model.derive import rail_pairs
 from fransys_model.kernel import make_id
-from fransys_model.vocab import PartRatingFacet, rail_pairs
+from fransys_model.vocab import PartRatingFacet
 from fransys_model.vocab.enums import Earthing, FunctionKind
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.templates import Part
-from fransys_model.vocab.validators.ratings import check_ratings
 
 _PROTECTION = (
     "prot",

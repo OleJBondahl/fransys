@@ -7,6 +7,7 @@ import pytest
 from fransys_author import AuthorError, Cable, Design, Fn, Item, Location, Port, Strip, Terminal
 from fransys_author._design_support import _required_and_defaults
 
+from fransys_model.checks.revisions import REVISION_CURRENT_MISSING, check_revisions
 from fransys_model.kernel import Draft, Record, Severity, freeze, merge
 from fransys_model.layout import (
     BreakBefore,
@@ -40,7 +41,6 @@ from fransys_model.vocab import (
 )
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.tables import revisions, units
-from fransys_model.vocab.validators.revisions import REVISION_CURRENT_MISSING, check_revisions
 
 
 def _only[R: Record](draft: Draft, cls: type[R]) -> tuple[R, ...]:

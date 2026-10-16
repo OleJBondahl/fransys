@@ -4,9 +4,9 @@ The pair label (`P1`), the mark on a core's row, the heading's pair form and the
 Cores cell each have one function here; layout, render and the lists call them.
 """
 
+from fransys_model.derive.facts.potentials import on_pe_net
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached, value
 from fransys_model.vocab.facets.cable import CableProductFacet
-from fransys_model.vocab.potentials import on_pe_net
 from fransys_model.vocab.tables import facets_of, items
 lazy from fransys_model.vocab.core import Item, Port
 lazy from fransys_model.vocab.facets.cable import CorePair

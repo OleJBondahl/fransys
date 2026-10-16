@@ -19,7 +19,7 @@ from fransys_pdf import source
 from fransys_pdf._lists import bom_page
 from fransys_reports import bom_csv
 
-from fransys_model.derive import bom_lines, document_sheets_of, sheet_key, unit_release, units
+from fransys_model.derive import SheetKey, bom_lines, document_sheets_of, unit_release, units
 from fransys_model.derive.drawing_text import label_text
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import Label, Outline, layout_of
@@ -117,7 +117,7 @@ def test_the_unit_documents_title_block_revision_cell_prints_2_1():
         _unit_id(_build(), _BOARD),
         remove=(PageKind.SCHEMATIC, PageKind.CONNECTOR_LIST, PageKind.BOM),
     )
-    svg = fransys_render.sheets(document_sheets_of(model))[sheet_key(doc.id, PageKind.COVER, 0)].svg
+    svg = fransys_render.sheets(document_sheets_of(model))[SheetKey(doc.id, PageKind.COVER, 0)].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert "2.1" in values
     for old in ("2", "1", "01", "1.1"):

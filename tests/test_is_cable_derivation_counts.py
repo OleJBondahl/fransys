@@ -1,4 +1,4 @@
-"""Speed guard: `vocab.cables`'s `cable_items` builds once per digest (model-0108).
+"""Speed guard: `derive.facts.item_predicates`'s `cable_items` builds once per digest (model-0108).
 
 `is_cable(model, item)` reads `cable_items(model)` for every item it is asked about; the whole
 point is that the underlying `digest_cached` builder runs once per model digest, not once per
@@ -32,7 +32,7 @@ if str(_TESTS_DIR) not in sys.path:
 
 from scale_units_fixture import build_scale  # noqa: E402
 
-from fransys_model.vocab.cables import cable_items, is_cable  # noqa: E402
+from fransys_model.derive.facts.item_predicates import cable_items, is_cable  # noqa: E402
 from fransys_model.vocab.tables import items  # noqa: E402
 
 if TYPE_CHECKING:

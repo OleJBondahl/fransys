@@ -6,6 +6,11 @@ from typing import Any
 import pytest
 from examples import bundle_records, relay_part_bundle
 
+from fransys_model.checks.part_conformance import (
+    ITEM_PART_MISMATCH,
+    ITEM_WITHOUT_PART,
+    check_part_conformance,
+)
 from fransys_model.kernel import (
     Draft,
     Finding,
@@ -19,11 +24,6 @@ from fransys_model.kernel import (
 )
 from fransys_model.vocab.core import Item, Port
 from fransys_model.vocab.instantiate import PartBundle, instantiate
-from fransys_model.vocab.validators.part_conformance import (
-    ITEM_PART_MISMATCH,
-    ITEM_WITHOUT_PART,
-    check_part_conformance,
-)
 
 _KEY = ("examples", "relay-1")
 

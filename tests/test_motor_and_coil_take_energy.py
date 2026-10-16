@@ -10,9 +10,9 @@ import fransys_parts
 from fransys_author import Design
 from ratings_fixtures import freeze_design, line_motor
 
-from fransys_model.vocab.energy_flow import takes_energy
+from fransys_model.derive import load_limits
+from fransys_model.derive.facts.energy_flow import takes_energy
 from fransys_model.vocab.enums import Current
-from fransys_model.vocab.load_limits import load_limits
 
 
 def test_a_motor_on_the_mains_is_in_the_load_sum_with_its_stated_current() -> None:

@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 from test_one_home import (
+    INPUTS,
+    LAYOUT_FOR_INPUTS,
     compare,
     gate,
     render_derive_imports,
@@ -151,6 +153,53 @@ def test_the_check_can_fail():
     }
     assert violations("fransys_render", "from fransys_model.kernel import Model") == set()
     assert violations("fransys_pdf", "from . import presets\nimport tomllib") == set()
+
+
+def extra_layout_names(source: str) -> list[tuple[int, str]]:
+    """`(line, name)` of every `fransys_model.layout` import beyond `LAYOUT_FOR_INPUTS`."""
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom) and not node.level:
+            if node.module == "fransys_model.layout":
+                found.extend((node.lineno, a.name) for a in node.names)
+            elif node.module == "fransys_model":
+                found.extend((node.lineno, a.name) for a in node.names if a.name == "layout")
+        elif isinstance(node, ast.Import):
+            found.extend(
+                (node.lineno, a.name)
+                for a in node.names
+                if a.name.startswith("fransys_model.layout")
+            )
+    return [(line, name) for line, name in found if name not in LAYOUT_FOR_INPUTS]
+
+
+def test_inputs_import_no_layout_name_beyond_the_frozen_list():
+    files = [
+        path
+        for package in sorted(INPUTS)
+        for path in sorted((PACKAGES_ROOT / package.replace("_", "-") / "src").rglob("*.py"))
+    ]
+    assert files, "the input source walk found no file"
+    extra = [
+        f"{path.relative_to(ROOT)}:{line} {name}"
+        for path in files
+        for line, name in extra_layout_names(path.read_text(encoding="utf-8"))
+    ]
+    assert extra == [], "an input imports no `layout` name beyond the 13 frozen ones (M10)"
+
+
+def test_the_frozen_layout_list_check_can_fail():
+    assert len(LAYOUT_FOR_INPUTS) == 13
+    ok = "from fransys_model.layout import Side, Chain\n"
+    assert extra_layout_names(ok) == []
+    bad = "x = 1\nfrom fransys_model.layout import Side, Page\n"
+    assert extra_layout_names(bad) == [(2, "Page")]
+    assert extra_layout_names("from fransys_model.layout import *\n") == [(1, "*")]
+    assert extra_layout_names("from fransys_model import layout\n") == [(1, "layout")]
+    assert extra_layout_names("import fransys_model.layout as lay\n") == [
+        (1, "fransys_model.layout")
+    ]
+    assert extra_layout_names("from fransys_model.vocab import Page\n") == []
 
 
 def test_layout_and_render_never_import_fransys_el():

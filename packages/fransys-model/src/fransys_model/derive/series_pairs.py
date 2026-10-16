@@ -5,10 +5,10 @@ The caller maps each pin's symbol facing onto `sides`; a port missing from it is
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.closure import net_of
 from fransys_model.derive.pole_lists import poles_of
 from fransys_model.derive.rows_series_pairs import SeriesPair
 from fransys_model.layout import Side
-from fransys_model.vocab.closure import net_of
 from fransys_model.vocab.tables import ports
 
 if TYPE_CHECKING:

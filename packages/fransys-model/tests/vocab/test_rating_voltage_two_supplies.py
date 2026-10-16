@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 from plant import Plant
 from rating_plant import load, rail, rated, supply
 
+from fransys_model.checks.ratings import check_ratings
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.validators.ratings import check_ratings
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding

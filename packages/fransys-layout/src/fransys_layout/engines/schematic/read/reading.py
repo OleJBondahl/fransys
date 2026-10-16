@@ -39,6 +39,7 @@ from fransys_model.derive import (
     natural_key,
     schematic_functions,
 )
+from fransys_model.derive import unit_ids as units
 from fransys_model.derive.designation import unit_location
 from fransys_model.derive.drawing_text import content_extent
 from fransys_model.derive.drawing_text import location_path as model_location_path
@@ -53,7 +54,6 @@ from fransys_model.layout import SheetFormat as ModelSheetFormat
 from fransys_model.layout import SymbolChoice as ModelSymbolChoice
 from fransys_model.layout import layout_of, profile_of
 from fransys_model.vocab.enums import Aspect, ConductorKind
-from fransys_model.vocab.membership import units
 from fransys_model.vocab.tables import (
     aspect_nodes,
     conductors,

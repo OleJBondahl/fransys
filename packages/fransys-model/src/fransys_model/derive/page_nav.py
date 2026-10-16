@@ -10,14 +10,13 @@ lazy from collections.abc import Collection, Iterable
 
 from fransys_model.layout import DiagramSheet, Label, LabelKind, LinkMarker, Page, layout_of
 from fransys_model.vocab import functions
-from fransys_model.vocab.enums import ItemKind
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab import Item
 
 from .contact_image import cross_reference_text
 from .contact_rows import contact_rows
 from .drawing_text import CONTACT_SLOTS, label_text
-from .kinds import item_kind
+from .kinds import item_role
 from .marker_box import marker_box
 from .order import designation_key, drawn_on_page
 from .page_destination import page_destination, sheet_title_text
@@ -28,7 +27,11 @@ from .text_width import text_width
 
 __all__ = ["OutlineSheet", "ReferenceLink", "outline_sheets", "reference_links"]
 
-_NO_ENTRY = (ItemKind.TERMINAL, ItemKind.CONNECTOR)  # NV3: terminals and pins get none
+
+def _has_entry(model: Model, item: Id[Item]) -> bool:
+    """Whether the outline lists `item`: NV3, a terminal or a connector housing (pins) gets none."""
+    role = item_role(model, item)
+    return not (role.terminal or role.connector_housing)
 
 
 def reference_links(
@@ -120,7 +123,7 @@ def _designations(model: Model, page: Page) -> tuple[str, ...]:
         ):
             continue
         record = records[label.function]
-        if item_kind(model, record.item) in _NO_ENTRY or not (text := label_text(model, label)):
+        if not _has_entry(model, record.item) or not (text := label_text(model, label)):
             continue
         found.setdefault(text, record.item)
     return tuple(sorted(found, key=lambda text: (designation_key(model, found[text]), text)))

@@ -12,11 +12,9 @@ from .fan_head import fan_head
 
 if TYPE_CHECKING:
     from .outputs import CoreLayout
-    from .values import Column, End, FlowGraph, Orientation, PlacementProblem, Side, Sym
+    from .values import Column, End, FlowGraph, PlacementProblem, Side, Sym
 
 SUPPLIES = frozenset({"SUPPLY", "GROUND", "PE"})
-MIRRORED: frozendict[str, str] = frozendict({"N": "N", "S": "S", "E": "W", "W": "E"})
-TURNED: frozendict[str, str] = frozendict({"N": "S", "S": "N", "E": "W", "W": "E"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,18 +33,6 @@ class SceneFacts:
     heads: frozenset[tuple[str, str]]
     strips: dict[str, str]
     rails: frozenset[str]
-
-
-def turn_side(side: Side, orient: Orientation) -> Side:
-    """The side a wire leaves after the symbol is turned; the mirror swaps E and W first."""
-    if orient in ("MR0", "MR180"):
-        side = MIRRORED[side]  # ty: ignore[invalid-assignment] -- MIRRORED maps N E S W onto N E S W
-    if orient in ("R0", "MR0"):
-        return side
-    if orient in ("R180", "MR180"):
-        return TURNED[side]  # ty: ignore[invalid-return-type] -- TURNED maps N E S W onto N E S W
-    msg = f"scene: orientation {orient} has no side map yet"
-    raise ValueError(msg)
 
 
 def _pin_facts(sym: Sym, nets: frozendict[tuple[str, str], str]) -> dict[tuple[str, str], PinFact]:

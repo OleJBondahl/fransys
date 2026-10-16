@@ -8,20 +8,14 @@ from dataclasses import replace
 from typing import Any
 
 from fransys_model.derive.accessory_blocks import operating_item
-from fransys_model.derive.designation import takes_parents_designation
-from fransys_model.derive.facts.children import child_items
+from fransys_model.derive.facts.function_ratings import function_rating
 from fransys_model.derive.facts.net_facts import net_class_of
-from fransys_model.derive.kinds import item_kind
-from fransys_model.derive.plc_rack import is_plc_module
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
-from fransys_model.vocab.enums import FunctionKind, LinkKind, PortRole
+from fransys_model.vocab.enums import FunctionKind, LinkKind, LinkRest, PortRole
 from fransys_model.vocab.facets.plc import PlcChannelFacet
-from fransys_model.vocab.membership import external
-from fransys_model.vocab.rating_readers import function_rating
 from fransys_model.vocab.roles import (
     CONDUCTOR_ROLES,
     FUNCTION_ROLES,
-    ITEM_ROLES,
     LINK_ROLES,
     NET_CLASS_ROLES,
 )
@@ -31,21 +25,18 @@ from fransys_model.vocab.tables import (
     function_templates,
     functions,
     internal_links,
-    items,
     port_templates,
     ports,
 )
-from fransys_model.vocab.unit_index import unit_index
 lazy from fransys_model.vocab.connectivity import Conductor, Net
-lazy from fransys_model.vocab.core import Function, Item, Port
+lazy from fransys_model.vocab.core import Function, Port
 lazy from fransys_model.vocab.roles_types import (
     ConductorRole,
     FunctionRole,
-    ItemRole,
     LinkRole,
     NetClassRole,
 )
-lazy from fransys_model.vocab.templates import InternalLink
+lazy from fransys_model.vocab.templates import InternalLink, Part
 
 
 def _refined(model: Model, function: Function, channels: frozenset[Id[Any]]) -> FunctionRole:
@@ -82,21 +73,6 @@ def function_role(model: Model, function: Id[Function]) -> FunctionRole:
     return _function_roles(model)[function]
 
 
-def item_role(model: Model, item: Id[Item]) -> ItemRole:
-    """The role of `item`: its `item_kind` row plus the rack, external, accessory, root flags."""
-    record = items(model)[item]
-    role = ITEM_ROLES[item_kind(model, item)]
-    rack = any(is_plc_module(model, items(model)[c]) for c in child_items(model, item))
-    root = any(item in roots for roots in unit_index(model).own_roots.values())
-    return replace(
-        role,
-        rack=rack,
-        external=external(model, item),
-        accessory=takes_parents_designation(model, record.id),
-        unit_root=root,
-    )
-
-
 def link_role(model: Model, link: Id[InternalLink]) -> LinkRole:
     """The role of an internal link: its kind's row, with the pole and rest the function adds.
 
@@ -113,6 +89,11 @@ def link_role(model: Model, link: Id[InternalLink]) -> LinkRole:
     return replace(role, rest=record.rest or FUNCTION_ROLES[kind].rest)
 
 
+def link_rest(model: Model, link: Id[InternalLink]) -> LinkRest | None:
+    """The state at rest of an internal link: as declared, else its function's kind implies."""
+    return link_role(model, link).rest
+
+
 def conductor_role(model: Model, conductor: Id[Conductor]) -> ConductorRole:
     """The role of a conductor: its kind's row."""
     return CONDUCTOR_ROLES[conductors(model)[conductor].kind]
@@ -126,3 +107,12 @@ def net_class_role(model: Model, net: Id[Net]) -> NetClassRole:
 def port_role(model: Model, port: Id[Port]) -> PortRole:
     """The `PortRole` of `port`: the one reader of `Port.role`."""
     return ports(model)[port].role
+
+
+def changeover_functions(model: Model) -> set[tuple[Id[Part], str]]:
+    """The (part, name) of every changeover function template (its kind is the one fact)."""
+    return {
+        (template.part, template.name)
+        for template in function_templates(model).values()
+        if template.kind is FunctionKind.CONTACT_CO
+    }

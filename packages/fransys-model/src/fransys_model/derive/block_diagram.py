@@ -8,11 +8,11 @@ does. A diagram belongs to a reading: `unit=None` is the system, a unit its own.
 from typing import Any, cast
 
 from fransys_kernel import render_id
+from fransys_model.derive.facts.item_predicates import is_cable
+from fransys_model.derive.facts.units import is_harness, item_chain, unit_own_roots
 from fransys_model.kernel import Id, Model, value
 from fransys_model.layout import DiagramMarker, DiagramSheet, layout_of, sheet_for
-from fransys_model.vocab.cables import is_cable
 from fransys_model.vocab.enums import PageKind
-from fransys_model.vocab.membership import is_harness, item_chain, unit_own_roots
 from fransys_model.vocab.tables import conductors, functions, items, ports
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 

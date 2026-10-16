@@ -21,6 +21,7 @@ __all__ = ["diff_marks", "diff_rest"]
 _REMOVED = "removed"
 _ADDED = "added"
 _CHANGED = "changed"
+_RENAMED = "renamed"
 
 
 def _is_gone(change: Change) -> bool:
@@ -28,8 +29,9 @@ def _is_gone(change: Change) -> bool:
 
 
 def _kind(change: Change) -> str:
-    """A row about one field of a thing that stays, or a removed item's ancestor, is a change."""
-    return change.change if change.field == "" and change.change != _REMOVED else _CHANGED
+    """A row about one field, a rename, or a removed item's ancestor is a change."""
+    plain = change.field == "" and change.change not in (_REMOVED, _RENAMED)
+    return change.change if plain else _CHANGED
 
 
 def _candidates(model: Model, diff: ListingDiff) -> list[tuple[int, list[Id[Any]]]]:

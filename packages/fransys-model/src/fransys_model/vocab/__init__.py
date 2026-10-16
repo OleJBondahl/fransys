@@ -1,14 +1,11 @@
-"""Domain layer: record kinds, facets, validators, built on kernel."""
+"""Domain layer: record kinds, facets, built on kernel."""
 
 from fransys_model.kernel import register_namespaces, register_schema_version
 
 from .aspects import AspectNode, Placement
-from .cables import cable_items, is_cable
-from .closure import rail_pairs
 from .codes import FINDING_CODES
 from .colours import BASE_COLOURS, COLOUR_GRAMMAR, RESERVED_COLOURS, split_colour
 from .connectivity import Conductor, Mate, Net
-from .contacts import LinkState, Throws, changeover_throws, link_state, link_throw
 from .core import Function, Item, Port, Unit, UnitRelease
 from .document import Document
 from .enums import (
@@ -32,6 +29,7 @@ from .enums import (
     PowerKind,
     ProtectionType,
     SignalType,
+    SubjectKind,
 )
 from .facets import (
     AssignedDesignationFacet,
@@ -74,15 +72,7 @@ from .markings import (
     port_order_key,
     unlinked_poles,
 )
-from .membership import crosses_unit
 from .project import Project
-from .rating_readers import (
-    boundary_operating,
-    boundary_rating,
-    function_operating,
-    function_rating,
-    part_rating,
-)
 from .ratings import BreakingPoint, Operating, Rating, effective_rating
 from .revision import Revision
 from .schema_version import SCHEMA_VERSION
@@ -115,9 +105,6 @@ from .tables import (
     unused_boundaries,
 )
 from .templates import FunctionTemplate, InternalLink, Part, PartLibrary, PortTemplate
-from .unit_by_name import unit_name_unresolved, units_named
-from .unit_index import unit_index
-from .validators import ALL_VALIDATORS
 from .wiring_rows import WiringRow, control_of, is_control, rail_row
 
 # The kernel knows only `core`; the layers above name the rest, once, in this order. A
@@ -128,7 +115,6 @@ register_namespaces("facet", "layout")
 register_schema_version(SCHEMA_VERSION)
 
 __all__ = [
-    "ALL_VALIDATORS",
     "BASE_COLOURS",
     "COLOUR_GRAMMAR",
     "FINDING_CODES",
@@ -166,7 +152,6 @@ __all__ = [
     "Item",
     "LinkKind",
     "LinkRest",
-    "LinkState",
     "Mate",
     "Net",
     "NetClass",
@@ -201,10 +186,10 @@ __all__ = [
     "RowSpec",
     "ScalingFacet",
     "SignalType",
+    "SubjectKind",
     "SupplyFacet",
     "SupplySystem",
     "TerminalFacet",
-    "Throws",
     "Unit",
     "UnitRelease",
     "UnusedBoundary",
@@ -213,36 +198,25 @@ __all__ = [
     "WiringRow",
     "aspect_nodes",
     "boundaries",
-    "boundary_operating",
-    "boundary_rating",
-    "cable_items",
-    "changeover_throws",
     "conductors",
     "control_of",
-    "crosses_unit",
     "documents",
     "effective_rating",
     "facet_subject",
     "facets_of",
-    "function_operating",
     "function_poles",
-    "function_rating",
     "function_templates",
     "functions",
     "identifier",
     "instantiate",
     "internal_links",
-    "is_cable",
     "is_control",
     "is_pole_link",
     "items",
-    "link_state",
-    "link_throw",
     "marking_key",
     "mates",
     "nets",
     "part_libraries",
-    "part_rating",
     "parts",
     "placements",
     "pole_order",
@@ -250,7 +224,6 @@ __all__ = [
     "port_templates",
     "ports",
     "projects",
-    "rail_pairs",
     "rail_phase_problem",
     "rail_row",
     "ref",
@@ -258,11 +231,8 @@ __all__ = [
     "split_colour",
     "supply_rail_row",
     "supply_systems",
-    "unit_index",
-    "unit_name_unresolved",
     "unit_releases",
     "units",
-    "units_named",
     "unlinked_poles",
     "unused_boundaries",
 ]

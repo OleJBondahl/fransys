@@ -61,7 +61,7 @@ def test_a_conductor_marks_the_line_joining_its_ends_and_no_box() -> None:
 
 def _removed(model_full):
     model, full = model_full
-    ghost = dataclasses.replace(full.items[0], designation=_GHOST, parent="-B1")
+    ghost = dataclasses.replace(full.items[0], designation=_GHOST, parent="-B1", key="ghost")
     old = dataclasses.replace(full, items=(*full.items, ghost))
     return model, baseline.diff(old, full)
 
@@ -87,7 +87,7 @@ def test_the_rest_lists_removed_then_added_then_changed_once_each() -> None:
     _model, full = _full()
     item = full.items[0]
     changed = dataclasses.replace(item, mpn="NEW")
-    ghost = dataclasses.replace(item, designation=_GHOST)
+    ghost = dataclasses.replace(item, designation=_GHOST, key="ghost")
     old = dataclasses.replace(full, items=(item, ghost), units=(), conductors=())
     new = dataclasses.replace(full, items=(changed,))
     diff = baseline.diff(old, new)

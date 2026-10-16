@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from plant import Plant
 
-from fransys_model.vocab import closure as vocab_closure
+from fransys_model.derive.facts import closure as vocab_closure
 from fransys_model.vocab.enums import LinkKind
 lazy from fransys_model.vocab.core import Port
 
@@ -31,8 +31,23 @@ def test_condition_needs_nothing_for_a_both_link() -> None:
     """A switched link of a non-contact function is `link_state` `"both"`: no condition."""
     plant, _ports = _fuse(LinkKind.SWITCHED, "g1")
     model = plant.model()
-    (group,) = vocab_closure.link_groups(model, frozenset({LinkKind.SWITCHED}))
+    (group,) = vocab_closure.link_groups(model, lambda role: role.switched)
     assert vocab_closure._condition(model, group) == vocab_closure._ALWAYS
+
+
+def test_only_a_conductive_link_joins_the_physical_net() -> None:
+    """A conductive link makes its two pins one net; a switched or protective one leaves two."""
+    for kind, joined in (
+        (LinkKind.CONDUCTIVE, True),
+        (LinkKind.SWITCHED, False),
+        (LinkKind.PROTECTIVE, False),
+    ):
+        plant, ports = _fuse(kind, "g1")
+        model = plant.model()
+        first, second = ports["g1"]
+        net = vocab_closure.net_of(model, first)
+        assert net is not None
+        assert (second in net.ports) is joined
 
 
 # ---- the shape of the result -------------------------------------------------------------

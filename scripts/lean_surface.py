@@ -18,6 +18,7 @@ import dataclasses
 import functools
 import importlib
 import inspect
+import sys
 import tomllib
 import types
 from pathlib import Path
@@ -27,13 +28,15 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
+SNAPSHOT = ROOT / "surface.toml"
 
-#: `fransys_model`'s own fourteen surface modules (amended 2026-09-27 to add
+#: `fransys_model`'s own seventeen surface modules (amended 2026-09-27 to add
 #: `derive.numbering_pins`, and by model-0159 to add
 #: `derive.cable_drawing`, model-0167 to add `derive.block_diagram`, model-0190 to add
 #: `derive.text_width`, EXACT-SIZES E10 to add `derive.print_sizes`, model-0261 to add
-#: `derive.docs_site`): not its top-level package, which is excluded from the surface entirely --
-#: only these fourteen dotted paths are read by other packages.
+#: `derive.docs_site`): not its top-level package, which is
+#: excluded from the surface entirely --
+#: only these seventeen dotted paths are read by other packages.
 _MODEL_MODULES: tuple[str, ...] = (
     "fransys_model.kernel",
     "fransys_model.vocab",
@@ -93,7 +96,7 @@ def surface_modules() -> tuple[str, ...]:
     """Every dotted module path that defines part of the workspace's API surface.
 
     MS1, MS2, MS6, MS8 combined: each `packages/*` workspace member's own top-level module
-    (`fransys_model` excepted), `fransys_model`'s own fourteen named modules (MS1),
+    (`fransys_model` excepted), `fransys_model`'s own seventeen named modules (MS1),
     `fransys.colours` and the author package's surface modules (MS8). Sorted, so stable.
     """
     top_level = _workspace_top_level_modules(ROOT)
@@ -222,3 +225,33 @@ def docstring_line_count(constant: ast.Constant) -> int:
     """Lines from the docstring's opening triple-quote line to its closing one, inclusive."""
     end = constant.end_lineno
     return 1 if end is None else end - constant.lineno + 1
+
+
+_SNAPSHOT_HEADER = """\
+# The API surface by name: each surface module and the sorted names in its `__all__`.
+# tests/test_surface.py fails on any difference; an order names the surface move.
+# Regenerate by hand, in a commit that an order names:
+#   uv run python scripts/lean_surface.py --write
+"""
+
+
+def write_snapshot(path: Path = SNAPSHOT) -> None:
+    """Write `surface.toml`: header, then `[modules]` with each module's sorted `__all__`."""
+    lines = [_SNAPSHOT_HEADER, "[modules]"]
+    for module, names in sorted(surface_names().items()):
+        items = ", ".join(f'"{name}"' for name in sorted(names))
+        lines.append(f'"{module}" = [{items}]')
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def main(argv: list[str]) -> int:
+    """`--write` rewrites the snapshot; anything else prints usage and fails."""
+    if argv == ["--write"]:
+        write_snapshot()
+        return 0
+    sys.stderr.write("usage: uv run python scripts/lean_surface.py --write\n")
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

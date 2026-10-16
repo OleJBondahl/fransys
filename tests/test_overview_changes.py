@@ -34,7 +34,7 @@ def _previous() -> Any:
     now = listing(model, None)
     rows = [r for r in now.items if r.designation != _ADDED]
     rows = [dataclasses.replace(r, mpn="OLD") if r.designation == _CHANGED else r for r in rows]
-    rows.append(dataclasses.replace(now.items[0], designation=_GHOST))
+    rows.append(dataclasses.replace(now.items[0], designation=_GHOST, key="ghost"))
     return dataclasses.replace(now, items=tuple(rows), conductors=now.conductors[1:])
 
 
@@ -152,7 +152,9 @@ def test_every_removed_row_reaches_the_page_and_nothing_caps_the_list() -> None:
     """Breaks if the removed list is cut at a size (it was 40) or loses its count heading."""
     model = _laid()[0]
     now = listing(model, None)
-    ghosts = [dataclasses.replace(now.items[0], designation=f"-ZZ{n}") for n in range(45)]
+    ghosts = [
+        dataclasses.replace(now.items[0], designation=f"-ZZ{n}", key=f"ghost{n}") for n in range(45)
+    ]
     data = _page(diff(dataclasses.replace(now, items=(*now.items, *ghosts)), now))
     assert len(data["changes"]["rest"]) == 45
     assert "CHANGE_LIST_MAX" not in APP_JS

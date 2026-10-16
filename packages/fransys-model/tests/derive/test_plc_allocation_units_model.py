@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from plant import Plant
 
+from fransys_model.checks.plc import check_plc, check_plc_wiring
 from fransys_model.derive import plc_channel_rows
 from fransys_model.derive.passes.plc_allocation import PLC_REQUEST_UNSERVABLE, allocate_plc
 from fransys_model.kernel import Model, make_id
@@ -21,7 +22,6 @@ from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcChannelFacet, Plc
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import facets_of, functions
 from fransys_model.vocab.templates import FunctionTemplate, Part
-from fransys_model.vocab.validators.plc import check_plc, check_plc_wiring
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id

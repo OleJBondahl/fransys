@@ -13,7 +13,7 @@ unfinished default. A future change to it is a design change, not a routine rege
 from _build import document, location, model, project, revision_entry
 from fransys_pdf import source
 
-from fransys_model.derive import SheetBackground, sheet_key
+from fransys_model.derive import SheetBackground, SheetKey
 from fransys_model.vocab import DocumentPreset, PageKind
 
 _MEASURE = (
@@ -86,7 +86,7 @@ def _demo_document():
 def _stub_sheets(doc):
     """A fixed background per page, so the golden pins pdf's own text and not render's drawing."""
     stub = SheetBackground("<svg/>", (300.0, 282.0, 30.0, 2.5), (390.0, 267.0, 20.0, 20.0), 90.0)
-    return {sheet_key(doc.id, kind, 0): stub for kind in (PageKind.COVER, PageKind.NOTES)}
+    return {SheetKey(doc.id, kind, 0): stub for kind in (PageKind.COVER, PageKind.NOTES)}
 
 
 def test_source_matches_the_golden_string():

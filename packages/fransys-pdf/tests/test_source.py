@@ -34,11 +34,11 @@ from fransys_pdf._geometry import document_heading
 from fransys_pdf._pages import cover_page
 
 from fransys_model.derive import (
+    SheetKey,
     document_facts,
     document_sheets_of,
     harness_cables_for,
     project_facts,
-    sheet_key,
     subject_label,
 )
 from fransys_model.derive import document_sheet_format as resolve_sheet_format
@@ -153,8 +153,8 @@ def test_schematic_pages_are_inlined_in_number_order_when_every_key_is_present()
     # The sheet counter (`n / N` within the drawing set) is its own number, not the document
     # counter: page 1's cell reads "1 / 2", page 2's reads "2 / 2", each in its own block.
     sheets = fransys_render.sheets(document_sheets_of(m))
-    assert ">1 / 2</text>" in sheets[sheet_key(doc.id, K.SCHEMATIC, 0)].svg
-    assert ">2 / 2</text>" in sheets[sheet_key(doc.id, K.SCHEMATIC, 1)].svg
+    assert ">1 / 2</text>" in sheets[SheetKey(doc.id, K.SCHEMATIC, 0)].svg
+    assert ">2 / 2</text>" in sheets[SheetKey(doc.id, K.SCHEMATIC, 1)].svg
 
 
 def test_schematic_pages_fall_back_to_no_drawings_when_one_key_is_missing():
@@ -292,7 +292,7 @@ def test_unit_document_source_wires_title_block_scope_and_per_set_counter():
     svgs = {render_id(page1.id): "<svg>one</svg>", render_id(page2.id): "<svg>two</svg>"}
     sheets = fransys_render.sheets(document_sheets_of(m))
     text = source(m, doc.id, svgs, sheets)
-    first, second = (sheets[sheet_key(doc.id, K.SCHEMATIC, i)].svg for i in (0, 1))
+    first, second = (sheets[SheetKey(doc.id, K.SCHEMATIC, i)].svg for i in (0, 1))
     assert ">2026-09-01</text>" in first  # the unit's own current revision date
     assert "2020-01-01" not in first + second + text  # never Project's
     assert ">1 / 1</text>" in first  # each page's own set, not the document-wide total
@@ -489,7 +489,7 @@ def test_source_does_not_crash_with_no_project_record():
     sheets = fransys_render.sheets(document_sheets_of(m))
     text = source(m, doc.id, {}, sheets)
     assert '#set document(title: ""' in text  # the empty title, in the metadata
-    assert ">Title</text>" in sheets[sheet_key(doc.id, K.COVER, 0)].svg  # the cell still prints
+    assert ">Title</text>" in sheets[SheetKey(doc.id, K.COVER, 0)].svg  # the cell still prints
 
 
 def test_subject_label_for_an_item_with_a_part_and_no_authored_text_uses_the_parts_description():
@@ -752,7 +752,7 @@ def test_system_preset_with_no_top_level_cable_contributes_no_harness_drawing_pa
     text = source(m, doc.id, {}, fransys_render.sheets(document_sheets_of(m)))
     assert '#par(text("No drawings."))' not in text
     assert not any(
-        "HARNESS_DRAWING" in key for key in fransys_render.sheets(document_sheets_of(m))
+        key.kind is K.HARNESS_DRAWING for key in fransys_render.sheets(document_sheets_of(m))
     )  # no page, no cell
 
 
@@ -867,7 +867,7 @@ def test_schematic_no_drawings_page_sets_its_own_title_block_after_a_notes_page(
     assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
     # Proves the page carries its OWN title cell, not the NOTES page's: pre-fix, the bare
     # paragraph set no title block, so the page title "Schematic" was nowhere.
-    svg = fransys_render.sheets(document_sheets_of(m))[sheet_key(doc.id, K.SCHEMATIC, "none")].svg
+    svg = fransys_render.sheets(document_sheets_of(m))[SheetKey(doc.id, K.SCHEMATIC, None)].svg
     assert ">Schematic</text>" in svg
 
 
@@ -893,7 +893,7 @@ def test_harness_drawing_no_drawings_page_sets_its_own_title_block_after_a_notes
     assert text.count('#par(text("No drawings."))') == 1
     assert "#page(margin: " in text  # the body is wrapped in its own page, not bare
     svg = fransys_render.sheets(document_sheets_of(m))[
-        sheet_key(doc.id, K.HARNESS_DRAWING, "none")
+        SheetKey(doc.id, K.HARNESS_DRAWING, None)
     ].svg
     assert ">Harness drawing</text>" in svg
 

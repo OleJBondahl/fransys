@@ -1,8 +1,8 @@
 """Whether a cable or harness draws as a harness line: layout-0154's one test (model-0180)."""
 
+from fransys_model.derive.facts.units import is_harness
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.enums import ConductorKind
-from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.tables import conductors, items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor

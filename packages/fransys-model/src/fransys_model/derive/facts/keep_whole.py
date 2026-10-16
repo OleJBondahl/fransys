@@ -3,12 +3,12 @@
 import dataclasses
 
 from fransys_model.derive.facts.children import children_index
+from fransys_model.derive.facts.unit_index import unit_index
+from fransys_model.derive.facts.units import is_harness
 from fransys_model.derive.line_fact import line_conductors
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.layout import PoleGroup, layout_of
-from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.tables import items
-from fransys_model.vocab.unit_index import unit_index
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item
 

@@ -10,7 +10,7 @@ from fransys_layout.engines.schematic.read.power import port_stand
 from fransys_layout.geometry import LayoutError
 from fransys_layout.stages import ROLE_ORDER, PortSpec, Role
 from fransys_model.derive import changeover_throws, port_potential_current, port_potential_rank
-from fransys_model.derive.closure import net_of
+from fransys_model.derive.facts.closure import net_of
 from fransys_model.vocab.enums import FunctionKind, NetClass, PoleSide, PortRole
 from fransys_model.vocab.tables import nets, port_templates, ports
 

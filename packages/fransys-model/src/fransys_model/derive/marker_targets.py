@@ -9,8 +9,7 @@ The first of them is a terminal of the net when it has one (`target_order`, mode
 from typing import TYPE_CHECKING
 lazy from collections.abc import Sequence
 
-from fransys_model.derive.kinds import item_kind
-from fransys_model.vocab.enums import ItemKind
+from fransys_model.derive.kinds import item_role
 from fransys_model.vocab.tables import functions, ports
 
 if TYPE_CHECKING:
@@ -56,7 +55,6 @@ def target_order(model: Model, marker: LinkMarker, ends: Sequence[LinkMarker]) -
     terminals = [
         one
         for one in others
-        if item_kind(model, functions(model)[ports(model)[one.port].function].item)
-        is ItemKind.TERMINAL
+        if item_role(model, functions(model)[ports(model)[one.port].function].item).terminal
     ]
     return [*terminals[:1], *(one for one in others if one not in terminals[:1])]

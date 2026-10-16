@@ -2,27 +2,28 @@
 
 from typing import TYPE_CHECKING, cast
 
-import fransys_pdf
 from fransys_author import AuthorError
 from fransys_el import OPTIONS
 
 from fransys_layout import HintError, SymbolPortError, lay_out_diagrams, lay_out_schematic
-from fransys_model.derive import symbol_port_subject
+from fransys_model.derive import (
+    document_ids,
+    document_page_kinds,
+    subject_part_mpn,
+    symbol_port_subject,
+)
 from fransys_model.kernel import Finding, Severity, describe
-from fransys_model.vocab import PageKind, documents, functions, items
-from fransys_model.vocab import parts as model_parts
+from fransys_model.vocab import PageKind
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model
-    from fransys_model.vocab import Function, Item
+    from fransys_model.vocab import Function
 
 
 def kept_page_kinds(model: Model) -> frozenset[PageKind]:
     """The page kinds some document keeps: the one place that reads every document's pages."""
     return frozenset(
-        kind
-        for document in documents(model)
-        for kind in fransys_pdf.document_pages(model, document)
+        kind for document in document_ids(model) for kind in document_page_kinds(model, document)
     )
 
 
@@ -73,12 +74,9 @@ def symbol_port_missing_finding(model: Model, error: SymbolPortError) -> Finding
     `error.function` is a Function of this model, or the whole Item of a one-view draw.
     Message: part mpn + `error`'s text; origin: PortTemplate, else Part, else `error.function`.
     """
-    if error.function.kind == "item":
-        item = items(model)[cast("Id[Item]", error.function)]
-    else:
-        item = items(model)[functions(model)[cast("Id[Function]", error.function)].item]
-    part = model_parts(model).get(item.part) if item.part is not None else None
-    mpn = part.mpn if part is not None else "no part"
+    mpn = subject_part_mpn(model, error.function)
+    if mpn is None:
+        mpn = "no part"
     subject = symbol_port_subject(model, cast("Id[Function]", error.function), error.port_name)
     return Finding(
         code="SYMBOL_PORT_MISSING",

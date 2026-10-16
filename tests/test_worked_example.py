@@ -10,9 +10,9 @@ from fransys_author import Design
 from fransys_el import OPTIONS
 
 from fransys_layout.engines.schematic import lay_out_schematic
+from fransys_model.checks import ALL_VALIDATORS
 from fransys_model.derive import allocate_plc, number
 from fransys_model.kernel import Severity, freeze, merge
-from fransys_model.vocab import ALL_VALIDATORS
 
 
 def test_the_worked_example_runs_freezes_numbers_allocates_and_lays_out():

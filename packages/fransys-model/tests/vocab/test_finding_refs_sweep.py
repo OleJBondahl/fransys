@@ -4,20 +4,20 @@ import dataclasses
 
 from plant import Plant
 
+from fransys_model.checks.potential_without_supply import (
+    POTENTIAL_WITHOUT_SUPPLY,
+    check_potential_without_supply,
+)
+from fransys_model.checks.revisions import (
+    REVISION_INITIALS_MISSING,
+    check_revisions,
+)
+from fransys_model.checks.structure import CONTAINMENT_CYCLE, check_structure
+from fransys_model.checks.units import MATE_NOT_CONNECTOR, check_units
 from fransys_model.kernel import make_id
 from fransys_model.vocab.enums import FunctionKind
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.revision import Revision
-from fransys_model.vocab.validators.potential_without_supply import (
-    POTENTIAL_WITHOUT_SUPPLY,
-    check_potential_without_supply,
-)
-from fransys_model.vocab.validators.revisions import (
-    REVISION_INITIALS_MISSING,
-    check_revisions,
-)
-from fransys_model.vocab.validators.structure import CONTAINMENT_CYCLE, check_structure
-from fransys_model.vocab.validators.units import MATE_NOT_CONNECTOR, check_units
 
 
 def test_a_mate_to_a_coil_names_the_mate_and_the_function_by_reference() -> None:

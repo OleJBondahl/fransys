@@ -18,12 +18,12 @@ from pathlib import Path
 import fransys_parts
 from fransys_author import Design, Item
 
-from fransys_model.kernel import Model, freeze, merge
-from fransys_model.vocab import Operating, Rating
-from fransys_model.vocab.validators.ratings_current import (
+from fransys_model.checks.ratings_current import (
     RATING_CURRENT_BELOW_BRANCH,
     check_ratings_current,
 )
+from fransys_model.kernel import Model, freeze, merge
+from fransys_model.vocab import Operating, Rating
 
 DEMO = Path(__file__).resolve().parents[1] / "examples" / "demo-parts" / "demo_parts"
 _CONTACTOR = ("parts/contactor-dc.toml", 'current_dc_a = "150"')

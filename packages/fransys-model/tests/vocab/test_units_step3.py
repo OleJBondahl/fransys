@@ -5,12 +5,12 @@
 
 from plant import Plant
 
+from fransys_model.checks.units import (
+    check_units,
+)
 from fransys_model.derive import boundary as unit_boundary
 from fransys_model.kernel import Severity
 from fransys_model.vocab.enums import FunctionKind
-from fransys_model.vocab.validators.units import (
-    check_units,
-)
 
 # ---- BOUNDARY_UNCONNECTED ---------------------------------------------------------------------
 

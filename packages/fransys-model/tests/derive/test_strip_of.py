@@ -2,12 +2,12 @@
 
 from plant import Plant
 
+from fransys_model.derive.facts.item_predicates import terminal_items
 from fransys_model.derive.facts.strips import strip_of
 from fransys_model.derive.lookups import strip_set
 from fransys_model.kernel import Id, make_id
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.facets.terminal import TerminalFacet
-from fransys_model.vocab.terminals import terminal_items
 
 
 def _terminal(plant: Plant, strip: Id[Item] | None, name: str, group: str, index: int) -> Id[Item]:

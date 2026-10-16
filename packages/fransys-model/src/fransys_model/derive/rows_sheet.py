@@ -2,9 +2,20 @@
 
 from dataclasses import dataclass
 
+from fransys_kernel import render_id
 from fransys_model.kernel import value
+lazy from fransys_model.kernel import Id
+lazy from fransys_model.vocab import Document, PageKind
 
-__all__ = ["FieldOverflow", "FrameLabels", "Sizes", "TitleBlockFields", "TitleBlockStrings"]
+__all__ = [
+    "FieldOverflow",
+    "FrameLabels",
+    "SheetKey",
+    "Sizes",
+    "TitleBlockFields",
+    "TitleBlockStrings",
+    "sheet_key_text",
+]
 
 
 @dataclass(frozen=True)  # plain: the closed value set bans float
@@ -69,3 +80,22 @@ class FrameLabels:
 
     columns: tuple[str, ...]
     rows: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SheetKey:
+    """One page background's place: the document, the page kind and the page's ordinal in it.
+
+    `ordinal` is `None` for a document's no-drawings fallback page.
+    """
+
+    document: Id[Document]
+    kind: PageKind
+    ordinal: int | None
+
+
+def sheet_key_text(key: SheetKey) -> str:
+    """The printed form of a `SheetKey`, for a message: `<document>#<KIND>#<ordinal or none>`."""
+    match key:  # SheetKey is a value type; its `kind` is a PageKind, not a record kind
+        case SheetKey(document, kind, ordinal):
+            return f"{render_id(document)}#{kind.name}#{'none' if ordinal is None else ordinal}"

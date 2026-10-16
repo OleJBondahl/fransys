@@ -9,11 +9,11 @@ from functools import cache
 from typing import Any, cast
 lazy from collections.abc import Callable
 
+from fransys_model.derive.facts.item_predicates import terminal_items
+from fransys_model.derive.facts.units import boundary, item_chain, unit_items
 from fransys_model.layout import OverviewRef, OverviewRefKind
 from fransys_model.vocab.enums import Aspect, FunctionKind
-from fransys_model.vocab.membership import boundary, item_chain, unit_items
 from fransys_model.vocab.tables import conductors, functions, units
-from fransys_model.vocab.terminals import terminal_items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Unit
 

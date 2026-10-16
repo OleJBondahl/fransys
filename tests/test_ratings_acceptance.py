@@ -24,23 +24,23 @@ import fransys_parts
 import pytest
 from fransys_author import Design
 
-from fransys_model.kernel import Draft, Origin, Severity, evolve, freeze
-from fransys_model.vocab import function_operating, function_rating, part_rating
-from fransys_model.vocab.enums import LinkKind
-from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.ratings import Operating, Rating
-from fransys_model.vocab.tables import internal_links, parts
-from fransys_model.vocab.validators import ALL_VALIDATORS
-from fransys_model.vocab.validators.ratings import (
+from fransys_model.checks import ALL_VALIDATORS
+from fransys_model.checks.ratings import (
     RATING_CURRENT_KIND_UNSTATED,
     RATING_VOLTAGE_BELOW_CIRCUIT,
     check_ratings,
 )
-from fransys_model.vocab.validators.supplies import (
+from fransys_model.checks.supplies import (
     POTENTIAL_IN_TWO_SUPPLIES,
     SUPPLY_DIFFERS,
     check_supplies,
 )
+from fransys_model.derive import function_operating, function_rating, part_rating
+from fransys_model.kernel import Draft, Origin, Severity, evolve, freeze
+from fransys_model.vocab.enums import LinkKind
+from fransys_model.vocab.finding_ref import ref
+from fransys_model.vocab.ratings import Operating, Rating
+from fransys_model.vocab.tables import internal_links, parts
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:

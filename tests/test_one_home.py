@@ -10,11 +10,18 @@ render gates (derive imports, SVG literals) are tested in `tests/test_boundaries
 """
 
 import ast
+import builtins
+import functools
+import importlib
+import importlib.util
+import pkgutil
 import sys
 import tomllib
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_ROOT = ROOT / "packages"
@@ -37,8 +44,12 @@ HEADER = """\
 # (a row type or a constant is free; the title-block-text names are exempt). Ends at none.
 # [render_svg_literals]: "module::<tag" = a string constant that opens an SVG element (render
 # draws nothing itself; `symdef` and `electrical_symbols` do). Ends at none.
-# [facade_field_reads]: "module::name" = `.unit`, `.parent`, `.kind` or `.installed` read by
-# `fransys` outside the handle check `_subjects.py`.
+# `facade_field_reads` has no table: the facade reads no `.unit`, `.parent`, `.kind` or
+# `.installed` (decision 0221), so its gate allows none and a table here would be a failure.
+# [model_doors]: "package::fransys_model.door" = imports of a model door the package may not use
+# (an output: any `vocab` name beyond four). Layout is exempt until P7.7. Only falls (root-0220).
+# [vocab_reexports]: "name" = reads of a lowercase `vocab` name outside `fransys_model`. Only
+# falls; a name at zero can leave `vocab` (VOCAB-CLOSE, after P7.7; root-0220).
 """
 
 # Record field -> the one module that may read it (design 7.1). The home modules do not exist
@@ -54,7 +65,7 @@ FACT_FIELDS = {
     "internal_link.rest": "fransys_model.derive.facts.roles",
     "cable_product.core_colours": "fransys_model.derive.facts.cores",
     "item.parent": "fransys_model.derive.facts.children",
-    "item.unit": "fransys_model.derive.facts.units",
+    "item.unit": "fransys_model.derive.facts.unit_index",
 }
 HOME_OF_ATTR = {name.split(".")[1]: home for name, home in FACT_FIELDS.items()}
 
@@ -147,12 +158,59 @@ RENDER_PACKAGE = "fransys_render"
 RENDER_MODEL_OK = frozenset(["layout", "vocab", "kernel", "derive"])
 SVG_TAGS = ("<text", "<rect", "<line", "<polyline", "<circle", "<path")
 
-# Gate 4: the fact fields the facade does not read, and the one module that checks a handle.
+# Gate 4: the fact fields the facade does not read, and the names of the `pathlib.Path` values
+# whose `.parent` is a folder, not a model fact. The set only shrinks.
 FACADE = "fransys"
 FACADE_FIELDS = frozenset(["unit", "parent", "kind", "installed"])
-FACADE_HANDLE = "fransys._subjects"
+PATH_RECEIVERS = frozenset(["path", "target", "folder"])
 
-Sites = dict[str, list[int]]
+# Gate 5 (MODEL-DOORS, EL-MODEL amendment 3): which of the model's four doors a package may use.
+# A package outside the table is unknown and raises; a `fransys_model` module outside the four
+# doors raises. Counts only fall; the five outputs may import only four `vocab` names.
+ALL_DOORS = frozenset(["kernel", "vocab", "layout", "derive"])
+INPUT_DOORS = ALL_DOORS
+OUTPUT_DOORS = frozenset(["kernel", "derive"])
+OUTPUT_VOCAB_NAMES = frozenset(["PageKind", "DocumentPreset", "SignalType", "Aspect"])
+OUTPUTS = frozenset(
+    ["fransys_reports", "fransys_pdf", "fransys_kicad", "fransys_wago", "fransys_overview"]
+)
+MODEL_DOORS: dict[str, frozenset[str]] = {
+    "fransys_author": INPUT_DOORS,
+    "fransys_parts": INPUT_DOORS,
+    "fransys_el": INPUT_DOORS,
+    **dict.fromkeys(OUTPUTS, OUTPUT_DOORS | {"vocab"}),
+    # Render keeps all four doors until P7.9 (EL-MODEL M10, 2026-10-16), when it drops `layout`.
+    "fransys_render": ALL_DOORS,
+    "fransys": ALL_DOORS,
+}
+# Exempt, named, with the order that ends each: layout until P7.7 (2026-10-16).
+MODEL_DOORS_EXEMPT = {"fransys_layout": "P7.7"}
+# Not scanned: the model itself, and the two packages that import no model door.
+MODEL_DOORS_UNSCANNED = frozenset(["fransys_model", "fransys_kernel", "electrical_symbols"])
+# The `layout` names `fransys_author` and `fransys_parts` import today, frozen (measured
+# 2026-10-16): an input imports no other. The test is in `tests/test_boundaries.py`.
+LAYOUT_FOR_INPUTS = frozenset(
+    [
+        "Side",
+        "SheetFormat",
+        "Profile",
+        "GroupHint",
+        "SideHint",
+        "BreakBefore",
+        "Chain",
+        "ChainEntry",
+        "KeepTogether",
+        "OrderHint",
+        "PoleGroup",
+        "SymbolChoice",
+        "PageTitle",
+    ]
+)
+INPUTS = frozenset(["fransys_author", "fransys_parts"])
+MODEL = "fransys_model"
+VOCAB_MODULE = "fransys_model.vocab"
+
+Sites = dict[str, list[int | str]]
 Scanner = Callable[[ast.AST, str], list[tuple[str, int]]]
 
 
@@ -173,7 +231,10 @@ def scan(scanner: Scanner, source: str, module: str) -> Sites:
     """The `(name, line)` pairs `scanner` finds in `source`, grouped as `module::name`."""
     sites: Sites = defaultdict(list)
     for name, line in scanner(ast.parse(source), module):
-        sites[f"{module}::{name}"].append(line)
+        if scanner in GROUPERS:
+            sites[GROUPERS[scanner](module, name)].append(f"{module}:{line}")
+        else:
+            sites[f"{module}::{name}"].append(line)
     return dict(sites)
 
 
@@ -183,7 +244,8 @@ def scan_tree(scanner: Scanner) -> Sites:
     assert files, "the source walk found no file"
     sites: Sites = {}
     for module, path in files:
-        sites.update(scan(scanner, path.read_text(encoding="utf-8"), module))
+        for key, lines in scan(scanner, path.read_text(encoding="utf-8"), module).items():
+            sites.setdefault(key, []).extend(lines)
     return sites
 
 
@@ -203,10 +265,39 @@ def _is_non_fact_value(node: ast.Attribute, receivers: frozenset[str]) -> bool:
     )
 
 
+def _model_match_args() -> dict[str, tuple[str, ...]]:
+    """Class name -> `__match_args__` for every class `fransys_model` defines, by a module walk."""
+    import fransys_model
+
+    found: dict[str, tuple[str, ...]] = {}
+    for info in pkgutil.walk_packages(fransys_model.__path__, "fransys_model."):
+        for name, obj in vars(importlib.import_module(info.name)).items():
+            args = getattr(obj, "__match_args__", None)
+            if isinstance(obj, type) and obj.__module__ == info.name and args is not None:
+                found[name] = tuple(args)
+    return found
+
+
+def _positional_fields(node: ast.MatchClass, module: str) -> list[str]:
+    """The field names a positional class pattern reads; a class that cannot be resolved fails."""
+    name = ast.unparse(node.cls)
+    if not node.patterns or hasattr(builtins, name):
+        return []
+    fields = _model_match_args().get(name)
+    if fields is None or len(node.patterns) > len(fields):
+        message = (
+            f"{module}:{node.lineno}: positional class pattern `{name}(...)` cannot be resolved "
+            "to a fransys_model class's __match_args__; use a keyword pattern"
+        )
+        raise AssertionError(message)
+    return list(fields[: len(node.patterns)])
+
+
 def field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
     """Loads of a fact-owned field name, outside the module that owns it.
 
-    A keyword of a class pattern (`case Ref(kind=k)`) reads that field too (root-0215).
+    A class pattern reads its fields too: by keyword (`case Ref(kind=k)`, root-0215) and by
+    position (`case SheetKey(document, kind, ordinal)`, through `__match_args__`).
     """
     found = []
     skip = _non_fact_receivers(tree)
@@ -216,6 +307,7 @@ def field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
                 found.append((node.attr, node.lineno))
         elif isinstance(node, ast.MatchClass):
             found.extend((kw, node.lineno) for kw in node.kwd_attrs)
+            found.extend((f, node.lineno) for f in _positional_fields(node, module))
     return [(name, line) for name, line in found if HOME_OF_ATTR.get(name, module) != module]
 
 
@@ -643,8 +735,8 @@ def render_svg_literals(tree: ast.AST, module: str) -> list[tuple[str, int]]:
 
 
 def facade_field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
-    """Loads of `.unit`, `.parent`, `.kind` or `.installed` in the facade, bar its handle check."""
-    if module.split(".", maxsplit=1)[0] != FACADE or module == FACADE_HANDLE:
+    """Loads of `.unit`, `.parent`, `.kind` or `.installed` in the facade, bar a Path's parent."""
+    if module.split(".", maxsplit=1)[0] != FACADE:
         return []
     return [
         (node.attr, node.lineno)
@@ -652,7 +744,125 @@ def facade_field_reads(tree: ast.AST, module: str) -> list[tuple[str, int]]:
         if isinstance(node, ast.Attribute)
         and isinstance(node.ctx, ast.Load)
         and node.attr in FACADE_FIELDS
+        and not _is_path_parent(node)
     ]
+
+
+def _is_path_parent(node: ast.Attribute) -> bool:
+    """True for `.parent` of a receiver named in `PATH_RECEIVERS` (`path`, `release.path`)."""
+    base = node.value
+    name = base.id if isinstance(base, ast.Name) else getattr(base, "attr", None)
+    return node.attr == "parent" and name in PATH_RECEIVERS
+
+
+def _model_door_imports(tree: ast.AST, module: str) -> list[tuple[str, list[str], int]]:
+    """`(door, names, line)` for every `fransys_model` import; `*` stands for a whole module."""
+    found = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and not node.level and node.module:
+            top, _, rest = node.module.partition(".")
+            if top != MODEL:
+                continue
+            if not rest:
+                found.extend((a.name, ["*"], node.lineno) for a in node.names)
+            else:
+                found.append((rest.split(".")[0], [a.name for a in node.names], node.lineno))
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                top, _, rest = alias.name.partition(".")
+                if top == MODEL:
+                    found.append((rest.split(".")[0], ["*"], node.lineno))
+    for door, _, line in found:
+        if door not in ALL_DOORS:
+            where = f"{module}:{line} imports fransys_model.{door}, not one of {sorted(ALL_DOORS)}"
+            msg = f"{where}: add the door to MODEL_DOORS or fix the import"
+            raise ValueError(msg)
+    return found
+
+
+def model_doors(tree: ast.AST, module: str) -> list[tuple[str, int]]:
+    """A `fransys_model` door the package may not use; for an output, a `vocab` name too."""
+    package = module.split(".", maxsplit=1)[0]
+    if package in MODEL_DOORS_UNSCANNED or package in MODEL_DOORS_EXEMPT:
+        return []
+    if package not in MODEL_DOORS:
+        msg = f"{module}: {package} is not in MODEL_DOORS: add its row or an exemption"
+        raise ValueError(msg)
+    found = []
+    for door, names, line in _model_door_imports(tree, module):
+        if door not in MODEL_DOORS[package]:
+            found.append((f"{MODEL}.{door}", line))
+        elif door == "vocab" and package in OUTPUTS:
+            found.extend(
+                (f"{MODEL}.vocab", line) for name in names if name not in OUTPUT_VOCAB_NAMES
+            )
+    return found
+
+
+def _package_key(module: str, name: str) -> str:
+    return f"{module.split('.', maxsplit=1)[0]}::{name}"
+
+
+def _vocab_aliases(tree: ast.AST) -> set[str]:
+    """Local names bound to the `fransys_model.vocab` module."""
+    aliases = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == MODEL and not node.level:
+            aliases |= {a.asname or a.name for a in node.names if a.name == "vocab"}
+        elif isinstance(node, ast.Import):
+            aliases |= {a.asname for a in node.names if a.asname and a.name == VOCAB_MODULE}
+    return aliases
+
+
+@functools.cache
+def vocab_reexport_names() -> frozenset[str]:
+    """The lowercase names in `fransys_model.vocab.__all__`, read from `lean_surface`."""
+    spec = importlib.util.spec_from_file_location(
+        "fransys_lean_surface", ROOT / "scripts" / "lean_surface.py"
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    lean_surface = sys.modules.get(spec.name) or importlib.util.module_from_spec(spec)
+    if spec.name not in sys.modules:
+        sys.modules[spec.name] = lean_surface
+        spec.loader.exec_module(lean_surface)
+    names = lean_surface.surface_names([VOCAB_MODULE])[VOCAB_MODULE]
+    return frozenset(n for n in names if n[:1].islower())
+
+
+def vocab_reexports(tree: ast.AST, module: str) -> list[tuple[str, int]]:
+    """Reads of a lowercase `vocab` name outside `fransys_model`: an import or `vocab.name`."""
+    if module.split(".", maxsplit=1)[0] == MODEL:
+        return []
+    names = vocab_reexport_names()
+    aliases = _vocab_aliases(tree)
+    found = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == VOCAB_MODULE and not node.level:
+            found.extend((a.name, node.lineno) for a in node.names if a.name in names)
+        elif (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.ctx, ast.Load)
+            and node.attr in names
+            and (
+                (isinstance(node.value, ast.Name) and node.value.id in aliases)
+                or ast.unparse(node.value) == VOCAB_MODULE
+            )
+        ):
+            found.append((node.attr, node.lineno))
+    return found
+
+
+def _name_key(_module: str, name: str) -> str:
+    return name
+
+
+# A scanner listed here keys its sites by this function of (module, name), not `module::name`,
+# and records each site as `module:line`.
+GROUPERS: dict[Scanner, Callable[[str, str], str]] = {
+    model_doors: _package_key,
+    vocab_reexports: _name_key,
+}
 
 
 SCANNERS: dict[str, Scanner] = {
@@ -664,7 +874,8 @@ SCANNERS: dict[str, Scanner] = {
     "selection_branches": selection_branches,
     "render_derive_imports": render_derive_imports,
     "render_svg_literals": render_svg_literals,
-    "facade_field_reads": facade_field_reads,
+    "model_doors": model_doors,
+    "vocab_reexports": vocab_reexports,
 }
 
 
@@ -673,14 +884,14 @@ def load_allowlist() -> dict[str, dict[str, int]]:
     return tomllib.loads(ALLOWLIST.read_text(encoding="utf-8"))
 
 
-def compare(sites: Sites, allowed: dict[str, int]) -> list[str]:
+def compare(sites: Mapping[str, Sequence[int | str]], allowed: dict[str, int]) -> list[str]:
     """One problem line per site over its count (naming `module:line`) or under it."""
     problems = []
     for key in sorted(sites.keys() | allowed.keys()):
         lines, limit = sites.get(key, []), allowed.get(key, 0)
         module = key.split("::")[0]
         if len(lines) > limit:
-            where = ", ".join(f"{module}:{line}" for line in lines)
+            where = ", ".join(s if isinstance(s, str) else f"{module}:{s}" for s in lines)
             problems.append(f"{key} read {len(lines)} times, allowed {limit}: {where}")
         elif len(lines) < limit:
             problems.append(f"{key} read {len(lines)} times, allowed {limit}: lower the allowlist")
@@ -740,13 +951,26 @@ def test_the_field_gate_counts_class_pattern_keywords():
     module = "fransys_model.derive.bom"
     source = (
         "match x:\n    case Ref(kind=k, role=r):\n        pass\n"
-        "    case Other(plain):\n        pass\n"
+        "    case int(plain):\n        pass\n"
     )
     sites = scan(field_reads, source, module)
     assert {k: len(v) for k, v in sites.items()} == {f"{module}::kind": 1, f"{module}::role": 1}
     assert compare(sites, {}) != []
     home_sites = scan(field_reads, source, FACT_FIELDS["function.kind"])
     assert not any(key.endswith("::kind") for key in home_sites)
+
+
+def test_the_field_gate_counts_positional_class_patterns():
+    module = "fransys_model.derive.bom"
+    source = "match x:\n    case SheetKey(document, kind, ordinal):\n        pass\n"
+    sites = scan(field_reads, source, module)
+    assert {k: len(v) for k, v in sites.items()} == {f"{module}::kind": 1}
+
+
+def test_an_unresolvable_positional_class_pattern_fails_with_the_fix():
+    source = "match x:\n    case NoSuchRecord(a):\n        pass\n"
+    with pytest.raises(AssertionError, match=r"x\.y:2: .*NoSuchRecord.*use a keyword pattern"):
+        scan(field_reads, source, "x.y")
 
 
 def test_the_kind_gate_skips_current_and_limit_role_values():
@@ -828,8 +1052,9 @@ def test_no_preset_or_page_kind_branch_outside_derive():
     assert gate("selection_branches") == []
 
 
-def test_the_facade_reads_no_fact_field_outside_its_handle_check():
-    assert gate("facade_field_reads") == []
+def test_the_facade_reads_no_record_field():
+    assert compare(scan_tree(facade_field_reads), {}) == []
+    assert "facade_field_reads" not in load_allowlist()
 
 
 def test_the_literal_gate_can_fail():
@@ -869,7 +1094,7 @@ def test_the_selection_gate_can_fail():
     assert definitions({"c": "x = 1"})["drawn_pages"] == []
 
 
-def _enum_sites(source: str) -> dict[str, list[int]]:
+def _enum_sites(source: str) -> dict[str, list[int | str]]:
     sites = scan(selection_branches, source, "fransys_pdf.x")
     return {k.split("::")[1]: sorted(v) for k, v in sites.items()}
 
@@ -918,8 +1143,11 @@ def test_the_facade_gate_can_fail():
     assert compare({"fransys.pipeline::unit": [1]}, {"fransys.pipeline::unit": 2}) == [
         "fransys.pipeline::unit read 1 times, allowed 2: lower the allowlist"
     ]
-    assert scan(facade_field_reads, source, FACADE_HANDLE) == {}
+    assert scan(facade_field_reads, source, "fransys._subjects") != {}
     assert scan(facade_field_reads, source, "fransys_layout.x") == {}
+    paths = "a = path.parent\nb = release.path.parent\nc = folder.parent\nd = record.parent\n"
+    sites = scan(facade_field_reads, paths, "fransys.pipeline")
+    assert {k.split("::")[1]: v for k, v in sites.items()} == {"parent": [4]}
 
 
 PLANTED = {
@@ -1005,6 +1233,96 @@ def test_a_derive_module_alias_use_is_flagged():
 def test_a_camel_case_derive_function_is_flagged():
     assert _flagged("from fransys_model.derive import CamelFn, lower_class\n") == [("CamelFn", 1)]
     assert _flagged("from fransys_model.derive import lower_class, lower_const\n") == []
+
+
+def test_no_package_uses_a_model_door_it_may_not():
+    assert gate("model_doors") == []
+
+
+def test_no_vocab_reexport_gains_a_reader():
+    msg = "a name read 0 times can leave vocab (VOCAB-CLOSE, after P7.7)"
+    assert gate("vocab_reexports") == [], msg
+
+
+def _door_sites(source: str, module: str = "fransys_reports.x") -> dict[str, list[int | str]]:
+    return scan(model_doors, source, module)
+
+
+def test_the_model_door_gate_can_fail():
+    allowed = "from fransys_model.derive.bom import f\nfrom fransys_model.kernel import k\n"
+    assert _door_sites(allowed) == {}
+    forbidden = "x = 1\nfrom fransys_model.layout import Page\n"
+    sites = _door_sites(forbidden)
+    assert sites == {"fransys_reports::fransys_model.layout": ["fransys_reports.x:2"]}
+    assert "fransys_reports.x:2" in compare(sites, {})[0]
+    assert compare(sites, {"fransys_reports::fransys_model.layout": 2}) == [
+        "fransys_reports::fransys_model.layout read 1 times, allowed 2: lower the allowlist"
+    ]
+    assert _door_sites("import fransys_model.layout.pages\n") == {
+        "fransys_reports::fransys_model.layout": ["fransys_reports.x:1"]
+    }
+
+
+def test_a_derive_submodule_counts_as_the_derive_door(monkeypatch):
+    monkeypatch.setitem(MODEL_DOORS, "fransys_reports", frozenset(["kernel", "vocab"]))
+    sites = _door_sites(
+        "from fransys_model.derive.bom import f\nfrom fransys_model import derive\n"
+    )
+    assert sites == {
+        "fransys_reports::fransys_model.derive": ["fransys_reports.x:1", "fransys_reports.x:2"]
+    }
+
+
+def test_a_type_checking_model_import_counts():
+    source = "if TYPE_CHECKING:\n    from fransys_model.layout import Page\n"
+    assert list(_door_sites(source)) == ["fransys_reports::fransys_model.layout"]
+
+
+def test_an_output_may_import_four_vocab_names_only():
+    assert _door_sites("from fransys_model.vocab import PageKind, Aspect, SignalType\n") == {}
+    sites = _door_sites("from fransys_model.vocab import PageKind, items, ports\n")
+    assert sites == {
+        "fransys_reports::fransys_model.vocab": ["fransys_reports.x:1", "fransys_reports.x:1"]
+    }
+    inputs = scan(model_doors, "from fransys_model.vocab import items\n", "fransys_author.x")
+    assert inputs == {}
+
+
+def test_the_door_scanner_names_what_it_cannot_judge():
+    with pytest.raises(ValueError, match="not in MODEL_DOORS"):
+        _door_sites("x = 1\n", "new_package.x")
+    with pytest.raises(ValueError, match=r"fransys_reports\.x:1 imports fransys_model\.oops"):
+        _door_sites("from fransys_model.oops import a\n")
+    assert _door_sites("from fransys_model.layout import Page\n", "fransys_layout.x") == {}
+    assert scan(model_doors, "from fransys_model.layout import Page\n", "fransys_model.x") == {}
+
+
+def _reads(source: str, module: str = "fransys_pdf.x") -> dict[str, list[int | str]]:
+    return scan(vocab_reexports, source, module)
+
+
+def test_the_vocab_reexport_count_can_fail():
+    source = (
+        "from fransys_model.vocab import ports, items, Aspect\n"
+        "from fransys_model import vocab as v\n"
+        "y = v.units(m)\n"
+        "z = Page.ports\n"
+    )
+    sites = _reads(source)
+    assert sites == {
+        "ports": ["fransys_pdf.x:1"],
+        "items": ["fransys_pdf.x:1"],
+        "units": ["fransys_pdf.x:3"],
+    }
+    assert "fransys_pdf.x:1" in compare(sites, {})[0]
+    assert compare(sites, {"ports": 1, "items": 1, "units": 2}) == [
+        "units read 1 times, allowed 2: lower the allowlist"
+    ]
+    assert _reads(source, "fransys_model.derive.x") == {}
+    assert _reads("import fransys_model.vocab as v\nv.parts\n") == {"parts": ["fransys_pdf.x:2"]}
+    assert _reads("import fransys_model.vocab\nfransys_model.vocab.nets\n") == {
+        "nets": ["fransys_pdf.x:2"]
+    }
 
 
 if __name__ == "__main__":

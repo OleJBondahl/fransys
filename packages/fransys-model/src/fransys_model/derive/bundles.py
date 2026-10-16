@@ -8,9 +8,9 @@ carries the permutation. The line side and the load side of a device are two tru
 
 from collections import defaultdict
 
+from fransys_model.derive.facts.closure import net_of, physical_nets
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, UnionFind, digest_cached
 from fransys_model.vocab import Function, Port, PortTemplate
-from fransys_model.vocab.closure import net_of, physical_nets
 from fransys_model.vocab.tables import ports
 
 from .pole_lists import poles_of

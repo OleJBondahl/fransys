@@ -35,9 +35,6 @@ def test_a_crossed_trunk_routes_without_a_finding_on_the_placement_as_stage_five
     assert routes.findings == ()
 
 
-@pytest.mark.xfail(
-    strict=True, reason="stage 5 puts jog end levels one grid apart: no turn level between them"
-)
 def test_a_jog_stair_as_stage_five_placed_it_has_room_for_every_turn() -> None:
     """Shifted sideways only (as a column gap would), the stair's pins stay one grid apart."""
     prob = jog_stair()

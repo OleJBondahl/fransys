@@ -1,6 +1,6 @@
 """Current chains, their positions in path order from the supply end (decision model-0137).
 
-The reduction lives in `vocab` because `vocab.validators.ratings_current` reads it and `vocab`
+The reduction lives in `vocab` because `checks.ratings_current` reads it and `vocab`
 never imports `derive` (the precedent of `derive.closure`, decision 0019). The order needs the
 potential rank, which is `derive`'s, so it is applied here and `vocab` keeps the bare chains.
 """
@@ -8,14 +8,14 @@ potential rank, which is `derive`'s, so it is applied here and `vocab` keeps the
 from collections import defaultdict
 
 from fransys_model.derive.designation import can_print_designation, port_designation
-from fransys_model.derive.potential import port_potential_rank
-from fransys_model.vocab.current_bounds import CurrentBound, LimitRole
-from fransys_model.vocab.current_chains import (
+from fransys_model.derive.facts.current.bounds import CurrentBound, LimitRole
+from fransys_model.derive.facts.current.chains import (
     CurrentChain,
     CurrentPosition,
     PositionEnds,
     chain_blocks,
 )
+from fransys_model.derive.potential import port_potential_rank
 from fransys_model.vocab.tables import functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Port
@@ -95,7 +95,7 @@ def _walk(model: Model, ends: tuple[PositionEnds, ...]) -> list[int]:
 def current_chains(model: Model) -> tuple[CurrentChain, ...]:
     """The rated current paths of `model` grouped by loop, and what bounds each.
 
-    The result is `vocab.current_chains.chains_unordered`, whose module docstring holds the graph
+    The result is `facts.current.chains.chains_unordered`, whose module docstring holds the graph
     and the law, with each chain's positions run in path order from its supply end.
     A chain's positions are edges of a block; its end ports are the nodes one
     position touches. The supply end is the end with the best `port_potential_rank`; with no

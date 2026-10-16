@@ -6,8 +6,8 @@ Layout reads it to stand a box over the pin group it feeds (CONVENTIONS-V06 V1).
 import dataclasses
 lazy from collections.abc import Collection
 
+from fransys_model.derive.facts.closure import physical_nets
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.vocab.closure import physical_nets
 from fransys_model.vocab.tables import functions, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Item, Port

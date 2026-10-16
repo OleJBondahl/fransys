@@ -44,4 +44,4 @@ def test_sole_device_unit_diff_names_the_unit(tmp_path: Path) -> None:
     fr.release(first, baselines, unit=_NAME)
     text = fr.diff(_build("DEMO-CONN-2P"), baselines, unit=_NAME)
     assert "- Changed ``" not in text
-    assert f"- Changed `{_NAME} 1.1`: mpn DEMO-LAMP-24 to DEMO-CONN-2P." in text
+    assert f"- Changed `{_NAME} 1.1`: mpn DEMO-LAMP-24 → DEMO-CONN-2P." in text

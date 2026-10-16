@@ -5,18 +5,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .outputs import Wire
 from .values import Finding
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
     from .outputs import Gap, PagePlacement, Placed, Placement, Trunk
     from .values import (
         XY,
+        Box,
         Column,
         CrossLink,
         CutResult,
@@ -24,30 +25,60 @@ if TYPE_CHECKING:
         Options,
         PinRef,
         PlacementProblem,
+        Side,
         WireKind,
     )
 
 
 @dataclass(frozen=True, slots=True)
 class Jog:
-    """A pin-to-pin wire whose ends differ in x: top end, bottom end, and its net."""
+    """A pin-to-pin wire whose ends differ in x: top end, bottom end, and its net.
+
+    `source_top` says which end is the source E6 orders by: the top pin of a jog, the joined
+    lane's pin of a join.
+    """
 
     net: str
     top: XY
     bottom: XY
+    drawn_as: WireKind = "straight"
+    source_top: bool = True
+
+    @property
+    def source_x(self) -> int:
+        return (self.top if self.source_top else self.bottom)[0]
+
+    @property
+    def dest_x(self) -> int:
+        return (self.bottom if self.source_top else self.top)[0]
+
+
+@dataclass(frozen=True, slots=True)
+class Rise:
+    """A drop or riser whose straight vertical passes a foreign body: A* routes it to `target`."""
+
+    net: str
+    sym: str
+    start: XY
+    target: XY
+    drawn_as: WireKind
 
 
 @dataclass(frozen=True, slots=True)
 class Drawn:
-    """Wires, jogs still to be nested, and the findings of what could not be drawn."""
+    """Wires, jogs still to be nested, the findings of what could not be drawn, and the rises."""
 
     wires: tuple[Wire, ...] = ()
     jogs: tuple[Jog, ...] = ()
     findings: tuple[Finding, ...] = ()
+    rises: tuple[Rise, ...] = ()
 
     def __add__(self, other: Drawn) -> Drawn:
         return Drawn(
-            self.wires + other.wires, self.jogs + other.jogs, self.findings + other.findings
+            self.wires + other.wires,
+            self.jogs + other.jogs,
+            self.findings + other.findings,
+            self.rises + other.rises,
         )
 
 
@@ -67,6 +98,8 @@ class RouteEnv:
     cross_links: tuple[CrossLink, ...]
     cut_nets: frozenset[str]
     options: Options
+    obstacles: tuple[Box, ...] = ()
+    sides: Mapping[tuple[str, str], Side] = field(default_factory=dict)
 
 
 def failed(env: RouteEnv, subject: str, text: str) -> Finding:
@@ -93,8 +126,17 @@ def _page_columns(cut: CutResult, page: int) -> tuple[Column, ...]:
     return tuple(c for c in cut.flow.columns if c.id in named)
 
 
+def pin_sides(problem: PlacementProblem) -> dict[tuple[str, str], Side]:
+    """The turned side of every pin, keyed by (symbol id, pin id)."""
+    return {(s.id, p.id): p.side for s in problem.symbols for p in s.pins}
+
+
 def _page_env(
-    pg: PagePlacement, cut: CutResult, problem: PlacementProblem, options: Options
+    pg: PagePlacement,
+    cut: CutResult,
+    problem: PlacementProblem,
+    options: Options,
+    obstacles: Sequence[Box],
 ) -> RouteEnv:
     net_of = {ref: n.id for n in problem.nets for ref in n.pins}
     net_pins = {n.id: n.pins for n in problem.nets}
@@ -113,27 +155,30 @@ def _page_env(
         cut.flow.cross_links,
         cut_nets,
         options,
+        tuple(obstacles),
+        pin_sides(problem),
     )
 
 
 def route_envs(
-    placement: Placement, cut: CutResult, problem: PlacementProblem, options: Options
+    placement: Placement,
+    cut: CutResult,
+    problem: PlacementProblem,
+    options: Options,
+    obstacles: Sequence[Box] = (),
 ) -> tuple[RouteEnv, ...]:
-    """One env per placed page, in the placement's order."""
-    return tuple(_page_env(pg, cut, problem, options) for pg in placement.pages)
+    """One env per placed page, in the placement's order; `obstacles` block cells on every page."""
+    return tuple(_page_env(pg, cut, problem, options, obstacles) for pg in placement.pages)
 
 
-def z_points(a: XY, b: XY, level: int, *, horizontal_first: bool = False) -> tuple[XY, ...]:
-    """The one Z: a to `level`, across to b, on to b. Vertical first puts level in y, else in x."""
-    if horizontal_first:
-        pts = (a, (level, a[1]), (level, b[1]), b)
-    else:
-        pts = (a, (a[0], level), (b[0], level), b)
+def z_points(a: XY, b: XY, level: int) -> tuple[XY, ...]:
+    """The one Z: a down to `level` in y, across to b's x, on to b."""
+    pts = (a, (a[0], level), (b[0], level), b)
     return tuple(p for i, p in enumerate(pts) if i == 0 or p != pts[i - 1])
 
 
 def z_wire(
     net: str, page: int, ends: tuple[XY, XY], level: int, kind: WireKind = "straight"
 ) -> Wire:
-    """A jog, a drop of a crossed bundle: pin down to `level` in y, across to x, on to the pin."""
+    """A jog, a join, a drop of a crossed bundle: pin to `level` in y, across, on to the pin."""
     return Wire(net, page, z_points(ends[0], ends[1], level), kind)

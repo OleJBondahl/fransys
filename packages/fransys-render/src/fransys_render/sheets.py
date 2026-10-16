@@ -27,7 +27,7 @@ from ._sheet_draw import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import DocumentSheets, SheetPage
+    from fransys_model.derive import DocumentSheets, SheetKey, SheetPage
     from fransys_model.kernel import Id
     from fransys_model.vocab import Document
 
@@ -62,14 +62,16 @@ def _background(
     )
 
 
-def sheets(listings: Mapping[Id[Document], DocumentSheets]) -> frozendict[str, SheetBackground]:
-    """The background of every page of every `Document`, by `derive.sheet_key`.
+def sheets(
+    listings: Mapping[Id[Document], DocumentSheets],
+) -> frozendict[SheetKey, SheetBackground]:
+    """The background of every page of every `Document`, by `SheetPage.key`.
 
     Args:
         listings: `derive.document_sheets_of(model)`: each document's paper, sizes and pages.
 
     Returns:
-        Page key to its SVG (frame, grid, title block) and the two boxes pdf fills. Pure.
+        `SheetKey` to its SVG (frame, grid, title block) and the two boxes pdf fills. Pure.
     """
     frames: dict[tuple[object, object], str] = {}
     found = {}

@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .scene_facts import SceneFacts, page_fill, scene_facts, turn_side
+from .geometry import rotate_side
+from .scene_facts import SceneFacts, page_fill, scene_facts
 
 if TYPE_CHECKING:  # jsonform resolves these names from the module, so no run-time import
     from collections.abc import Mapping
@@ -165,6 +166,7 @@ class Marker:
     x: int
     y: int
     end: PinRef
+    orient: Orientation = "R0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,7 +312,7 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
         if f is None:
             msg = f"scene: {p.sym}.{xy.pin} is not a pin of the problem"
             raise ValueError(msg)
-        side = turn_side(f.side, p.orient)
+        side = rotate_side(f.side, p.orient)
         head = (p.sym, xy.pin) in facts.heads
         pins.append(ScenePin(xy.pin, xy.x, xy.y, side, f.net, f.node, f.stand, f.box, head))
     return SceneBox(
@@ -326,7 +328,7 @@ def _scene_box(p: Placed, facts: SceneFacts) -> SceneBox:
 
 
 def _scene_marker(m: Marker, facts: SceneFacts, orient: Mapping[str, Orientation]) -> SceneMarker:
-    side = turn_side(facts.pins[(m.end.sym, m.end.pin)].side, orient[m.end.sym])
+    side = rotate_side(facts.pins[(m.end.sym, m.end.pin)].side, orient[m.end.sym])
     return SceneMarker(m.net, m.kind, m.page, m.x, m.y, m.end.sym, m.end.pin, m.cell, side)
 
 

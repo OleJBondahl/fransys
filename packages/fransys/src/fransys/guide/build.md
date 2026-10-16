@@ -339,7 +339,7 @@ assert (second_target / "data" / "changes.csv").exists()
 
 `against=` names a released revision's folder (`"1.1"`) to diff against. The default is the model's
 own current release if stored, else the previous released revision below it. `fr.diff` raises
-`FileNotFoundError` when it finds neither.
+`FileNotFoundError` when it finds neither. A renamed item shows as one `Renamed` line; `moving-to-0.20.md` has the rule.
 
 ## Checking a baseline stays true
 
@@ -366,7 +366,7 @@ without anyone calling `release` again. A unit or the system with no stored base
 not reported.
 
 When a child moved release, `BASELINE_DIFFERS` names it right after `units`, as in
-`demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board revision 1.1 to 1.3)`.
+`demo-cabinet 1.1 differs from its released baseline in: units (demo-io-board revision 1.1 → 1.3)`.
 It names direct children only. A grandchild's move shows in its parent's own finding.
 
 `verify` also re-hashes every file of every release under `baselines`, with no model needed.

@@ -20,13 +20,13 @@ from current_plant import (
 from plant import Plant
 from rating_plant import rail, supply
 
+from fransys_model.checks.ratings_current import (
+    check_ratings_current,
+)
 from fransys_model.kernel import make_id
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import Current
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.validators.ratings_current import (
-    check_ratings_current,
-)
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Finding

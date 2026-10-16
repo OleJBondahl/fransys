@@ -4,7 +4,7 @@ Reached as `fransys_model.derive.wire_harness.<name>`, not re-exported from `der
 `Conductor.carrier` stays `None` for a wire; the plugs' harness is the one fact.
 """
 
-from fransys_model.vocab.wire_harness import wire_harnesses
+from fransys_model.derive.facts.harness_wires import wire_harnesses
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item

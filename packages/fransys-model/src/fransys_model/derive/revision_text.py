@@ -1,6 +1,6 @@
 """The printed form of a revision, re-exported from `vocab.revision_text`.
 
-The function lives in `vocab` because `vocab.validators.revisions` names a revision in its
+The function lives in `vocab` because `checks.revisions` names a revision in its
 messages and `vocab` never imports `derive`; callers keep importing it from here.
 """
 

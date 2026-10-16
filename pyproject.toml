@@ -11,9 +11,10 @@ dev = [
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
     "pytest-testmon==2.2.0",
+    "pytest-timeout==2.4.0",
     "pytest-xdist==3.8.0",
     "ruff==0.17.1",
-    "ty==0.0.88",
+    "ty==0.0.89",
     "fonttools==4.67.0",
     "typst==0.15.0",
     "vulture==2.16",
@@ -151,6 +152,10 @@ runtime-evaluated-decorators = [
 testpaths = ["tests", "packages", "internal"]
 addopts = "-ra --strict-markers --import-mode=importlib"
 markers = ["wp(name): the work package that implements this acceptance test"]
+# A hung test stops itself (decision 0222): 180 s is over 5x the slowest gate entry (34.43 s setup, 18.22 s slowest call).
+timeout = 180
+# The cap charges the test function only, so a module fixture's build is not charged; a hung fixture is not covered.
+timeout_func_only = true
 
 [tool.ty.src]
 # The public repo carries the examples export here (PM5); it has its own gate.

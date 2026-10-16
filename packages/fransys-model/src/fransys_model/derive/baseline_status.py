@@ -10,7 +10,7 @@ from typing import Literal
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
 
-from .baseline_codec import differing_sections, loads, matches
+from .baseline_codec import differing_sections, loads, matches, stored_version
 from .baseline_listing import listing
 from .baseline_rules import CURRENT, holder_rule_release, listing_rules, rules_moved_in
 from .baseline_unchecked import leave_out
@@ -43,7 +43,7 @@ def listing_status(
     stored_text: str, model: Model, unit: Id[Unit] | None, fransys_version: str
 ) -> ListingStatus:
     """`stored_text` against `unit`'s listing, under the rules `fransys_version` cut it by."""
-    rules = listing_rules(1, fransys_version)
+    rules = listing_rules(stored_version(stored_text), fransys_version)
     if rules is None:
         return ListingStatus("too_old")
     fresh = listing(model, unit)

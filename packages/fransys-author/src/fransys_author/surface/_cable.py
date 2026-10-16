@@ -104,6 +104,8 @@ class Cable:
                 f"free cores: {', '.join(free) or 'none'}, "
                 "so wire core(<number>, a, b) with one of them"
             )
+            if index in self._by and self._colours[index - 1] == GNYE:
+                msg += ": a GNYE core is wired with core(GNYE, a, b) before the series"
             raise AuthorError(msg)
         self._used.add(index)
 
@@ -209,11 +211,13 @@ class Cable:
 
     def _refuse_without_pe(self, before: _Side, after: _Side, poles: int) -> None:
         """GNYE never carries a pole: no PE end and too few other cores refuses the series."""
-        free = len(self._colours) - len(self._used) - 1
+        pe_core = self._colours.index(GNYE) + 1
+        free = len(self._colours) - len(self._used - {pe_core}) - 1
         if free < poles and not self._offers_pe(before, after):
             msg = (
                 f"{self._label} has {free} non-earth cores for {poles} poles and no PE end "
-                f"for the GNYE core: pick a cable with {poles} non-earth cores"
+                f"for the GNYE core: pick a cable with {poles} non-earth cores, or wire the "
+                "earth end with core(GNYE, a, b) before the series and leave it out of the poles"
             )
             raise AuthorError(msg)
 

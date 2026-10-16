@@ -14,20 +14,17 @@
 # (a row type or a constant is free; the title-block-text names are exempt). Ends at none.
 # [render_svg_literals]: "module::<tag" = a string constant that opens an SVG element (render
 # draws nothing itself; `symdef` and `electrical_symbols` do). Ends at none.
-# [facade_field_reads]: "module::name" = `.unit`, `.parent`, `.kind` or `.installed` read by
-# `fransys` outside the handle check `_subjects.py`.
+# `facade_field_reads` has no table: the facade reads no `.unit`, `.parent`, `.kind` or
+# `.installed` (decision 0221), so its gate allows none and a table here would be a failure.
+# [model_doors]: "package::fransys_model.door" = imports of a model door the package may not use
+# (an output: any `vocab` name beyond four). Layout is exempt until P7.7. Only falls (root-0220).
+# [vocab_reexports]: "name" = reads of a lowercase `vocab` name outside `fransys_model`. Only
+# falls; a name at zero can leave `vocab` (VOCAB-CLOSE, after P7.7; root-0220).
 
 [field_reads]
-"fransys._layout_need::kind" = 1
 "fransys._release_checks::parent" = 2
-"fransys._release_checks::unit" = 5
 "fransys._release_files::parent" = 1
-"fransys._release_manifest::kind" = 6
-"fransys._release_manifest::parent" = 1
 "fransys._release_reader::parent" = 1
-"fransys._subjects::kind" = 2
-"fransys.documents::kind" = 4
-"fransys.parts_module::kind" = 1
 "fransys.pipeline::parent" = 4
 "fransys_author.design::core_colours" = 1
 "fransys_author.design::parent" = 2
@@ -76,8 +73,8 @@
 "fransys_layout.core.outputs::kind" = 2
 "fransys_layout.core.pack::kind" = 1
 "fransys_layout.core.ref_kind::kind" = 1
-"fransys_layout.core.rowspec::unit" = 1
 "fransys_layout.core.route_wires::kind" = 1
+"fransys_layout.core.rowspec::unit" = 1
 "fransys_layout.core.scene_facts::kind" = 1
 "fransys_layout.core.score::kind" = 1
 "fransys_layout.core.unionfind::parent" = 9
@@ -207,6 +204,14 @@
 "fransys_layout.stages.tidy::kind" = 1
 "fransys_layout.stages.types::unit" = 2
 "fransys_layout.stages.wire_copies::kind" = 1
+"fransys_model.checks.part_conformance::kind" = 2
+"fransys_model.checks.part_conformance::role" = 1
+"fransys_model.checks.ratings::unit" = 2
+"fransys_model.checks.ratings_breaking::kind" = 1
+"fransys_model.checks.ratings_current::unit" = 2
+"fransys_model.checks.structure::parent" = 4
+"fransys_model.checks.units::kind" = 1
+"fransys_model.checks.units::unit" = 4
 "fransys_model.derive.accessory_blocks::kind" = 2
 "fransys_model.derive.baseline_ancestry::parent" = 2
 "fransys_model.derive.baseline_codec::kind" = 1
@@ -214,9 +219,10 @@
 "fransys_model.derive.baseline_codec::parent" = 2
 "fransys_model.derive.baseline_codec::potential" = 1
 "fransys_model.derive.baseline_codec::unit" = 1
+"fransys_model.derive.baseline_codec_keys::unit" = 1
 "fransys_model.derive.baseline_designation::parent" = 2
 "fransys_model.derive.baseline_designation::unit" = 10
-"fransys_model.derive.baseline_diff::unit" = 9
+"fransys_model.derive.baseline_diff::unit" = 2
 "fransys_model.derive.baseline_listing::kind" = 2
 "fransys_model.derive.baseline_listing::net_class" = 1
 "fransys_model.derive.baseline_listing::parent" = 4
@@ -236,7 +242,6 @@
 "fransys_model.derive.contact_image::unit" = 1
 "fransys_model.derive.contact_lines::kind" = 1
 "fransys_model.derive.core_pairs::core_colours" = 1
-"fransys_model.derive.designation::kind" = 1
 "fransys_model.derive.designation::parent" = 3
 "fransys_model.derive.designation::unit" = 2
 "fransys_model.derive.diagram_sheet_order::unit" = 2
@@ -245,7 +250,20 @@
 "fransys_model.derive.drawing_text::kind" = 3
 "fransys_model.derive.drawing_text::unit" = 5
 "fransys_model.derive.drawn_wires::unit" = 1
+"fransys_model.derive.facade_reads::unit" = 2
+"fransys_model.derive.facts.contacts::kind" = 1
+"fransys_model.derive.facts.contacts::role" = 4
+"fransys_model.derive.facts.current.bounds::kind" = 1
+"fransys_model.derive.facts.current.bounds::role" = 1
+"fransys_model.derive.facts.current.ties::kind" = 1
+"fransys_model.derive.facts.fault.prospective::kind" = 1
+"fransys_model.derive.facts.function_ratings::kind" = 1
+"fransys_model.derive.facts.function_ratings::unit" = 2
 "fransys_model.derive.facts.keep_whole::unit" = 1
+"fransys_model.derive.facts.leads::kind" = 1
+"fransys_model.derive.facts.unit_index::parent" = 8
+"fransys_model.derive.facts.unit_names::parent" = 2
+"fransys_model.derive.facts.units::unit" = 7
 "fransys_model.derive.finding_names::kind" = 5
 "fransys_model.derive.footprints::kind" = 1
 "fransys_model.derive.harness::core_colours" = 1
@@ -255,12 +273,10 @@
 "fransys_model.derive.harness_line_ends::unit" = 1
 "fransys_model.derive.indexes::parent" = 2
 "fransys_model.derive.instance_tag::unit" = 3
-"fransys_model.derive.kinds::kind" = 1
 "fransys_model.derive.line_fact::kind" = 1
 "fransys_model.derive.line_fact::parent" = 1
 "fransys_model.derive.lone_cable::parent" = 3
 "fransys_model.derive.lookups::parent" = 2
-"fransys_model.derive.lookups::role" = 1
 "fransys_model.derive.loose::kind" = 2
 "fransys_model.derive.numbering_pins::parent" = 3
 "fransys_model.derive.numbering_pins::unit" = 1
@@ -321,6 +337,7 @@
 "fransys_model.derive.reports::unit" = 5
 "fransys_model.derive.rows_baseline::unit" = 1
 "fransys_model.derive.rows_document::unit" = 2
+"fransys_model.derive.rows_sheet::kind" = 1
 "fransys_model.derive.schematic_subject::unit" = 1
 "fransys_model.derive.set_rank::unit" = 1
 "fransys_model.derive.sheets::unit" = 1
@@ -345,65 +362,14 @@
 "fransys_model.layout.overview_results::unit" = 1
 "fransys_model.layout.results::kind" = 2
 "fransys_model.layout.tables::unit" = 2
-"fransys_model.vocab.bars::kind" = 3
-"fransys_model.vocab.closure::kind" = 1
-"fransys_model.vocab.closure::potential" = 3
-"fransys_model.vocab.contacts::kind" = 4
-"fransys_model.vocab.contacts::rest" = 2
-"fransys_model.vocab.contacts::role" = 4
-"fransys_model.vocab.current_bounds::kind" = 1
-"fransys_model.vocab.current_bounds::role" = 1
-"fransys_model.vocab.current_ties::kind" = 1
-"fransys_model.vocab.current_ties::role" = 1
 "fransys_model.vocab.document::unit" = 1
-"fransys_model.vocab.energy_flow::kind" = 1
-"fransys_model.vocab.fault_readers::role" = 1
 "fransys_model.vocab.finding_ref::kind" = 1
 "fransys_model.vocab.instantiate::kind" = 1
 "fransys_model.vocab.instantiate::role" = 1
-"fransys_model.vocab.leads::kind" = 1
-"fransys_model.vocab.leads::parent" = 1
 "fransys_model.vocab.markings::kind" = 1
-"fransys_model.vocab.membership::parent" = 2
-"fransys_model.vocab.membership::unit" = 6
-"fransys_model.vocab.numbering_codes::parent" = 1
-"fransys_model.vocab.potentials::net_class" = 1
-"fransys_model.vocab.potentials::potential" = 2
-"fransys_model.vocab.prospective_fault::kind" = 2
-"fransys_model.vocab.rail_reach::net_class" = 1
-"fransys_model.vocab.rail_reach::potential" = 2
-"fransys_model.vocab.rating_readers::kind" = 1
-"fransys_model.vocab.rating_readers::parent" = 2
-"fransys_model.vocab.rating_readers::unit" = 2
-"fransys_model.vocab.supply_sources::unit" = 6
 "fransys_model.vocab.tables::kind" = 1
 "fransys_model.vocab.templates::kind" = 3
 "fransys_model.vocab.templates::rest" = 1
-"fransys_model.vocab.unit_by_name::parent" = 2
-"fransys_model.vocab.unit_index::parent" = 8
-"fransys_model.vocab.unit_index::unit" = 7
-"fransys_model.vocab.validators.bars::role" = 1
-"fransys_model.vocab.validators.cables::core_colours" = 3
-"fransys_model.vocab.validators.cables::kind" = 1
-"fransys_model.vocab.validators.colours::core_colours" = 1
-"fransys_model.vocab.validators.colours::kind" = 1
-"fransys_model.vocab.validators.connectivity::kind" = 1
-"fransys_model.vocab.validators.connectivity::net_class" = 1
-"fransys_model.vocab.validators.earth::core_colours" = 2
-"fransys_model.vocab.validators.earth::kind" = 1
-"fransys_model.vocab.validators.earth::role" = 1
-"fransys_model.vocab.validators.harness_holds_plc_module::parent" = 3
-"fransys_model.vocab.validators.part_conformance::kind" = 2
-"fransys_model.vocab.validators.part_conformance::role" = 2
-"fransys_model.vocab.validators.potential_without_supply::potential" = 1
-"fransys_model.vocab.validators.ratings::unit" = 2
-"fransys_model.vocab.validators.ratings_breaking::kind" = 1
-"fransys_model.vocab.validators.ratings_current::unit" = 2
-"fransys_model.vocab.validators.strip_without_tag::parent" = 1
-"fransys_model.vocab.validators.structure::parent" = 5
-"fransys_model.vocab.validators.units::kind" = 2
-"fransys_model.vocab.validators.units::unit" = 6
-"fransys_model.vocab.wire_harness::kind" = 1
 "fransys_overview._data::kind" = 10
 "fransys_overview._data::parent" = 4
 "fransys_overview._data::unit" = 21
@@ -424,24 +390,6 @@
 "fransys_wago.modules::unit" = 1
 
 [table_walks]
-"fransys._layout_need::documents" = 1
-"fransys._layout_need::functions" = 1
-"fransys._layout_need::items" = 2
-"fransys._layout_need::parts" = 1
-"fransys._release_checks::projects" = 1
-"fransys._release_manifest::documents" = 1
-"fransys._release_manifest::functions" = 1
-"fransys._release_manifest::ports" = 1
-"fransys._release_manifest::tables[]" = 1
-"fransys._release_manifest::units" = 3
-"fransys.design::parts" = 1
-"fransys.parts_module::function_templates" = 2
-"fransys.parts_module::parts" = 1
-"fransys.parts_module::port_templates" = 1
-"fransys.pipeline::documents" = 2
-"fransys.pipeline::projects" = 1
-"fransys.pipeline::unit_releases" = 1
-"fransys.pipeline::units" = 2
 "fransys_kicad.check::items" = 1
 "fransys_layout.core.cut::boundaries" = 1
 "fransys_layout.engines.overview.read.readings::units" = 1
@@ -496,7 +444,6 @@
 "fransys_layout.engines.schematic.read.roles::port_templates" = 1
 "fransys_layout.engines.schematic.read.roles::ports" = 1
 "fransys_layout.engines.schematic.read.steps::mates" = 1
-"fransys_layout.engines.schematic.read.steps::units" = 1
 "fransys_layout.engines.schematic.read.stub_places::ports" = 1
 "fransys_layout.engines.schematic.read.units::functions" = 1
 "fransys_layout.engines.schematic.read.units::items" = 3
@@ -506,7 +453,6 @@
 "fransys_layout.engines.schematic.read.views::items" = 3
 "fransys_layout.engines.schematic.read.views::mates" = 2
 "fransys_layout.engines.schematic.read.views::ports" = 1
-"fransys_layout.engines.schematic.read.views::units" = 2
 "fransys_layout.engines.schematic.read.views::unused_boundaries" = 1
 "fransys_layout.engines.schematic.read.write_keys::aspect_nodes" = 1
 "fransys_layout.engines.schematic.read.write_keys::conductors" = 1
@@ -536,11 +482,6 @@
 "fransys_render.sheet_check::documents" = 1
 
 [kind_reads]
-"fransys._layout_need::kind==str" = 1
-"fransys._release_manifest::kind==str" = 4
-"fransys._subjects::kind==str" = 1
-"fransys.documents::kind==str" = 3
-"fransys.parts_module::FunctionKind" = 1
 "fransys_author._earth::NetClass" = 1
 "fransys_author._partless::FunctionKind" = 2
 "fransys_author._partless::PortRole" = 2
@@ -569,15 +510,23 @@
 "fransys_author.surface._throws::PortRole" = 4
 "fransys_author.wiring::ConductorKind" = 5
 "fransys_kernel.ids::kind==str" = 1
+"fransys_model.checks.bars::PortRole" = 1
+"fransys_model.checks.earth::PortRole" = 1
+"fransys_model.checks.ratings_breaking::FunctionKind" = 1
 "fransys_model.derive.accessory_blocks::FunctionKind" = 1
 "fransys_model.derive.contact_entries::FunctionKind" = 1
 "fransys_model.derive.contact_lines::FunctionKind" = 1
-"fransys_model.derive.designation::FunctionKind" = 1
+"fransys_model.derive.facts.contacts::LinkKind" = 1
+"fransys_model.derive.facts.contacts::PortRole" = 7
+"fransys_model.derive.facts.current.bounds::FunctionKind" = 1
+"fransys_model.derive.facts.current.ties::FunctionKind" = 2
+"fransys_model.derive.facts.current.ties::PortRole" = 1
+"fransys_model.derive.facts.fault.readers::PortRole" = 1
+"fransys_model.derive.facts.function_ratings::FunctionKind" = 1
+"fransys_model.derive.facts.leads::ConductorKind" = 1
 "fransys_model.derive.footprints::FunctionKind" = 1
-"fransys_model.derive.kinds::FunctionKind" = 1
 "fransys_model.derive.kinds::ItemKind" = 9
 "fransys_model.derive.line_fact::ConductorKind" = 1
-"fransys_model.derive.marker_targets::ItemKind" = 1
 "fransys_model.derive.overview_conns::ConductorKind" = 2
 "fransys_model.derive.overview_field::kind==str" = 1
 "fransys_model.derive.overview_fold::ItemKind" = 4
@@ -593,42 +542,15 @@
 "fransys_model.derive.overview_stubs::ItemKind" = 1
 "fransys_model.derive.overview_tree::ItemKind" = 1
 "fransys_model.derive.overview_view_plain::kind==str" = 2
-"fransys_model.derive.page_nav::ItemKind" = 2
 "fransys_model.derive.pole_lists::PortRole" = 1
-"fransys_model.derive.power::LinkKind" = 1
 "fransys_model.derive.reports::ConductorKind" = 4
 "fransys_model.derive.tag_text::kind==str" = 1
 "fransys_model.derive.wiring::PortRole" = 6
 "fransys_model.derive.wiring_ends::PortRole" = 4
-"fransys_model.vocab.bars::FunctionKind" = 3
-"fransys_model.vocab.closure::LinkKind" = 4
-"fransys_model.vocab.contacts::FunctionKind" = 4
-"fransys_model.vocab.contacts::LinkKind" = 2
-"fransys_model.vocab.contacts::PortRole" = 7
-"fransys_model.vocab.current_bounds::FunctionKind" = 1
-"fransys_model.vocab.current_ties::FunctionKind" = 2
-"fransys_model.vocab.current_ties::PortRole" = 1
-"fransys_model.vocab.energy_flow::FunctionKind" = 4
-"fransys_model.vocab.fault_readers::PortRole" = 1
-"fransys_model.vocab.leads::ConductorKind" = 1
 "fransys_model.vocab.markings::FunctionKind" = 1
 "fransys_model.vocab.markings::LinkKind" = 3
-"fransys_model.vocab.potentials::NetClass" = 1
-"fransys_model.vocab.prospective_fault::FunctionKind" = 1
-"fransys_model.vocab.rail_reach::NetClass" = 1
-"fransys_model.vocab.rating_readers::FunctionKind" = 1
 "fransys_model.vocab.templates::FunctionKind" = 3
 "fransys_model.vocab.templates::LinkKind" = 1
-"fransys_model.vocab.validators.bars::PortRole" = 1
-"fransys_model.vocab.validators.cables::ConductorKind" = 1
-"fransys_model.vocab.validators.colours::ConductorKind" = 1
-"fransys_model.vocab.validators.connectivity::FunctionKind" = 7
-"fransys_model.vocab.validators.connectivity::NetClass" = 1
-"fransys_model.vocab.validators.earth::ConductorKind" = 1
-"fransys_model.vocab.validators.earth::PortRole" = 1
-"fransys_model.vocab.validators.ratings_breaking::FunctionKind" = 1
-"fransys_model.vocab.validators.units::FunctionKind" = 2
-"fransys_model.vocab.wire_harness::ConductorKind" = 1
 "fransys_overview._data_places::kind==str" = 1
 "fransys_pdf._markdown::kind==str" = 2
 "fransys_render._drawn_shorts::kind==str" = 1
@@ -641,7 +563,6 @@
 "fransys_layout.core.cut_refs::kind==str" = 2
 "fransys_layout.core.order::kind==str" = 2
 "fransys_layout.core.pack::kind==str" = 1
-"fransys_layout.core.route_wires::kind==str" = 1
 "fransys_layout.core.scene_facts::kind==str" = 1
 "fransys_layout.core.values::kind==str" = 2
 "fransys_layout.engines.diagram.write.records::kind==str" = 1
@@ -761,14 +682,33 @@
 "fransys_render._symbols::<line" = 1
 "fransys_render._symbols::<rect" = 1
 
-[facade_field_reads]
-"fransys._layout_need::kind" = 1
-"fransys._release_checks::parent" = 2
-"fransys._release_checks::unit" = 5
-"fransys._release_files::parent" = 1
-"fransys._release_manifest::kind" = 6
-"fransys._release_manifest::parent" = 1
-"fransys._release_reader::parent" = 1
-"fransys.documents::kind" = 4
-"fransys.parts_module::kind" = 1
-"fransys.pipeline::parent" = 4
+[model_doors]
+"fransys_kicad::fransys_model.vocab" = 3
+"fransys_overview::fransys_model.layout" = 4
+"fransys_overview::fransys_model.vocab" = 4
+"fransys_pdf::fransys_model.layout" = 7
+"fransys_pdf::fransys_model.vocab" = 23
+"fransys_reports::fransys_model.vocab" = 3
+"fransys_wago::fransys_model.vocab" = 2
+
+[vocab_reexports]
+"aspect_nodes" = 2
+"conductors" = 1
+"control_of" = 1
+"documents" = 4
+"effective_rating" = 1
+"function_poles" = 2
+"functions" = 5
+"identifier" = 3
+"instantiate" = 2
+"is_control" = 1
+"is_pole_link" = 1
+"items" = 3
+"marking_key" = 4
+"pole_order" = 3
+"port_order_key" = 2
+"ports" = 4
+"rail_phase_problem" = 1
+"rail_row" = 1
+"split_colour" = 2
+"units" = 1

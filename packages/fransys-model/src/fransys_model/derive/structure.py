@@ -1,17 +1,15 @@
 """Board netlists, aspect trees, units and `ext` usage (design/derive-queries-structure.md).
 
 `boundary`, `standalone`, `unit_items`, `unit_subtree` and `units`, and
-`enclosing_boards` (decision model-0040), are re-exported from `vocab.membership`, the same
-shape `derive.closure` already uses for `vocab.closure` (decision 0019): they live in `vocab`
-because `vocab.validators.units` (U5) and `vocab.validators.connectivity` (design/connectivity.md)
-read them, and a layer imports only the layers to its right.
+`enclosing_boards` (decision model-0040), are re-exported from `derive.facts.units`, their home.
 """
 
 from typing import TYPE_CHECKING, Any
 
+from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.derive.facts.roles import function_role
-from fransys_model.vocab import is_cable
-from fransys_model.vocab.membership import (
+from fransys_model.derive.facts.unit_index import unit_index
+from fransys_model.derive.facts.units import (
     boundary,
     enclosing_boards,
     is_sole_unit_root,
@@ -30,13 +28,12 @@ from fransys_model.vocab.tables import (
     placements,
     ports,
 )
-from fransys_model.vocab.unit_index import unit_index
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Function, Item
 
-from .closure import port_groups
 from .designation import footprint_facet, item_designation, takes_parents_designation
+from .facts.closure import port_groups
 from .indexes import build_indexes
 from .lookups import descendants, effective_placement, item_of_port, net_name, require
 from .order import in_designation_order, natural_key

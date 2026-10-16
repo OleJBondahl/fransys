@@ -6,7 +6,8 @@ boundary rating names the unit and stands wherever the unit sits: beside the sup
 it, or in a build that holds no supply, where nothing is checked.
 
 Can-fail probes, each one Edit, run and undone: `function_ratings` skipping the boundaries
-(`vocab/rating_readers.py`) fails the boundary-rating tests; `voltage.common_reference` true for
+(`derive/facts/function_ratings.py`) fails the boundary-rating tests;
+`voltage.common_reference` true for
 two earthed AC supplies fails the two-supplies test.
 """
 
@@ -16,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
+from fransys_model.checks.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
 from fransys_model.kernel import Severity
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.ratings import Operating
-from fransys_model.vocab.validators.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:

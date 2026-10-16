@@ -3,9 +3,9 @@
 Reached as `fransys_model.derive.lone_cable.<name>`, not re-exported from `derive/__init__.py`.
 """
 
-from fransys_model.vocab.membership import cable_children
+from fransys_model.derive.facts.harness_wires import harnesses_with_wires
+from fransys_model.derive.facts.units import cable_children
 from fransys_model.vocab.tables import items
-from fransys_model.vocab.wire_harness import harnesses_with_wires
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 

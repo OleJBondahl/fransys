@@ -4,10 +4,10 @@ Built from `examples/demo-parts` only. A rail spreads from its declared nets thr
 mates, `conductive`, `switched` (every contact closed) and `protective` links (a fuse closed in
 service), and never enters another declared net.
 
-Can-fail probes, each one Edit in `vocab/closure.py`, run and undone: `_RAIL_LINKS` without
-`SWITCHED` fails the contactor and motor tests; `_blocks` returning `False` fails the reversing
-starter test; dropping `net.potential in supplied` from `_rails` fails the unsupplied
-potential test.
+Can-fail probes, each one Edit in `derive/facts/closure.py`, run and undone: a rail that skips a
+`switched` link (`passes_rail` false) fails the contactor and motor tests;
+`_blocks` returning `False` fails the reversing starter test; dropping
+`net.potential in supplied` from `_rails` fails the unsupplied potential test.
 """
 
 import dataclasses
@@ -19,8 +19,9 @@ import pytest
 from fransys_author import Design, Port
 
 from fransys_model.derive import PhysicalNet, net_of, physical_nets, port_rails
+from fransys_model.derive.facts import closure
 from fransys_model.kernel import Id, Model, evolve, freeze, merge
-from fransys_model.vocab import LinkKind, closure
+from fransys_model.vocab import LinkKind
 from fransys_model.vocab import Port as ModelPort
 from fransys_model.vocab.tables import conductors, internal_links, ports
 

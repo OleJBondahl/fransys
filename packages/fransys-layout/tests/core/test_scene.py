@@ -6,8 +6,8 @@ import pytest
 from scene_fixtures import flow, layout, problem
 
 from fransys_layout.core import outputs
+from fransys_layout.core.geometry import rotate_side
 from fransys_layout.core.outputs import PinXY, Placed
-from fransys_layout.core.scene_facts import turn_side
 from fransys_layout.core.values import Box, Cell, Column, End, FlowGraph, Lane, PinRef
 
 SCENE = outputs.scene(layout(), problem(), flow())
@@ -68,7 +68,7 @@ def test_a_marker_stands_at_the_pin_its_end_names():
 def test_a_marker_carries_its_cell_and_the_turned_side_of_its_pin():
     m = SCENE.markers[0]
     assert m.cell == layout().annotations.markers[0].cell == "C3"
-    assert m.side == turn_side("N", "R180") == "S"
+    assert m.side == rotate_side("N", "R180") == "S"
 
 
 def test_a_box_carries_the_orient_it_was_placed_with():
@@ -102,7 +102,8 @@ def test_a_placed_pin_the_problem_does_not_know_is_refused():
 
 
 @pytest.mark.parametrize("orient", ["R90", "MR90"])
-def test_a_quarter_turn_is_refused_until_it_has_a_side_map(orient):
+def test_a_quarter_turn_is_scened_with_its_turned_side(orient):
+    """All eight orientations have a side rule (layout-0306): the scene carries the orient."""
     lay = layout()
     page = lay.placement.pages[0]
     turned: Placed = dataclasses.replace(page.placed[0], orient=orient)
@@ -110,8 +111,8 @@ def test_a_quarter_turn_is_refused_until_it_has_a_side_map(orient):
     bad = dataclasses.replace(
         lay, placement=dataclasses.replace(lay.placement, pages=(page, *lay.placement.pages[1:]))
     )
-    with pytest.raises(ValueError, match=orient):
-        outputs.scene(bad, problem(), flow())
+    scened = outputs.scene(bad, problem(), flow())
+    assert {b.sym: b.orient for b in scened.boxes}[turned.sym] == orient
 
 
 def _three_lane_flow(head: End) -> FlowGraph:
@@ -161,4 +162,4 @@ def test_a_new_scene_field_has_no_default(cls, field):
     [("MR0", "E", "W"), ("MR0", "N", "N"), ("MR180", "E", "E"), ("MR180", "N", "S")],
 )
 def test_the_mirror_swaps_east_and_west_before_the_turn(orient, side, turned):
-    assert turn_side(side, orient) == turned
+    assert rotate_side(side, orient) == turned

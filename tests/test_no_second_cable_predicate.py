@@ -1,7 +1,7 @@
 """The "one place" ruling (decision model-0108):
-every reader switches to `is_cable`/`cable_items` (`fransys_model.vocab.cables`), and none
-keeps its own copy of the old test, checked with stdlib `ast` the way `tests/test_boundaries.py`
-checks import layering.
+every reader switches to `is_cable`/`cable_items` (`fransys_model.derive.facts.item_predicates`),
+and none keeps its own copy of the old test, checked with stdlib `ast` the way
+`tests/test_boundaries.py` checks import layering.
 
 The old test was a full scan, `facets_of(model, CableFacet)`, used to decide "is this item a
 cable." The one place that scan is still legitimate is `derive/harness.py`'s `_facts_of`: it

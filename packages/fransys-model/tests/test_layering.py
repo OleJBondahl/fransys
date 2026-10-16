@@ -12,8 +12,7 @@ SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "fransys_model"
 KERNEL_SRC = Path(__file__).resolve().parents[2] / "fransys-kernel" / "src" / "fransys_kernel"
 
 # layer directory (under src/fransys_model) -> the modules it must not import (design 1.2).
-# A row whose directory is absent is skipped: `derive/facts`, `checks`, `derive/texts` and
-# `derive/rows` hold no directory yet.
+# A row whose directory is absent is skipped (none is absent since EL-3).
 FORBIDDEN: dict[str, tuple[str, ...]] = {
     "kernel": (
         "fransys_model.vocab",

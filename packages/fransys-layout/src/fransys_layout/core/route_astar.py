@@ -5,11 +5,11 @@ along the axis another net already uses it on, and costs `crossing_penalty` acro
 """
 
 import heapq
-from dataclasses import dataclass, field
-from itertools import pairwise
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .values import XY, Box, Options
+lazy from .occupancy import Occupancy
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -20,50 +20,20 @@ MOVES = ((1, 0, "h"), (-1, 0, "h"), (0, 1, "v"), (0, -1, "v"))
 State = tuple[XY, str]
 
 
-@dataclass(slots=True)
-class GridMap:
-    """Cells blocked by footprints and cells used by wires, per net and axis."""
-
-    cols: int
-    rows: int
-    step: int
-    blocked: set[XY] = field(default_factory=set)
-    used: dict[XY, list[tuple[str, str]]] = field(default_factory=dict)
-
-    def block_box(self, box: Box) -> None:
-        lo, hi = box.x // self.step, -(-(box.x + box.w) // self.step)
-        top, bottom = box.y // self.step, -(-(box.y + box.h) // self.step)
-        self.blocked.update((i, j) for i in range(lo, hi) for j in range(top, bottom))
-
-    def add_wire(self, net: str, points: Sequence[XY]) -> None:
-        for a, b in pairwise(points):
-            axis = "h" if a[1] == b[1] else "v"
-            for cell in cells_between(a, b, self.step):
-                self.used.setdefault(cell, []).append((net, axis))
-
-    def remove_net(self, net: str) -> None:
-        for cell in list(self.used):
-            self.used[cell] = [u for u in self.used[cell] if u[0] != net]
-            if not self.used[cell]:
-                del self.used[cell]
-
-
 @dataclass(frozen=True, slots=True)
 class Leg:
-    """One search: net, start and goal cells; `free` cells are enterable though blocked."""
+    """One search: net, start and goal cells; `free` cells are enterable though blocked.
+
+    `targets` are further goal cells (the cells the net's tree holds); `window` is the inclusive
+    cell box (x0, y0, x1, y1) the search stays in, None for the whole page.
+    """
 
     net: str
     start: XY
     goal: XY
     free: AbstractSet[XY] = frozenset()
-
-
-def cells_between(a: XY, b: XY, step: int) -> list[XY]:
-    """The grid cells a straight run from a to b covers, both ends included."""
-    (x0, y0), (x1, y1) = a, b
-    if y0 == y1:
-        return [(i, y0 // step) for i in range(min(x0, x1) // step, max(x0, x1) // step + 1)]
-    return [(x0 // step, j) for j in range(min(y0, y1) // step, max(y0, y1) // step + 1)]
+    targets: AbstractSet[XY] = frozenset()
+    window: tuple[int, int, int, int] | None = None
 
 
 def tidy(points: Sequence[XY]) -> tuple[XY, ...]:
@@ -104,25 +74,25 @@ def anchor(pin: XY, fp: Box, step: int) -> tuple[XY, ...]:
     return tidy((pin, corner, (gx, gy)))
 
 
-def _step_cost(grid: GridMap, net: str, cell: XY, axis: str, options: Options) -> int | None:
+def _step_cost(grid: Occupancy, net: str, cell: XY, axis: str, options: Options) -> int | None:
     """None when the cell is blocked or carries another net along the same axis."""
-    if cell in grid.blocked:
+    if grid.blocked(cell, axis, net):
         return None
-    cost = grid.step
-    for other, other_axis in grid.used.get(cell, ()):
-        if other == net:
-            continue
-        if other_axis == axis:
-            return None
-        cost += options.crossing_penalty
-    return cost
+    return grid.step + options.crossing_penalty * grid.crossing(cell, axis, net)
 
 
-def _moves(grid: GridMap, leg: Leg, cell: XY, options: Options) -> list[tuple[XY, str, int]]:
+def _inside(grid: Occupancy, leg: Leg, cell: XY) -> bool:
+    x0, y0, x1, y1 = leg.window or (0, 0, grid.cols - 1, grid.rows - 1)
+    return max(0, x0) <= cell[0] <= min(grid.cols - 1, x1) and max(0, y0) <= cell[1] <= min(
+        grid.rows - 1, y1
+    )
+
+
+def _moves(grid: Occupancy, leg: Leg, cell: XY, options: Options) -> list[tuple[XY, str, int]]:
     out = []
     for dx, dy, axis in MOVES:
         nxt = (cell[0] + dx, cell[1] + dy)
-        if not (0 <= nxt[0] < grid.cols and 0 <= nxt[1] < grid.rows):
+        if not _inside(grid, leg, nxt):
             continue
         cost = grid.step if nxt in leg.free else _step_cost(grid, leg.net, nxt, axis, options)
         if cost is not None:
@@ -130,13 +100,14 @@ def _moves(grid: GridMap, leg: Leg, cell: XY, options: Options) -> list[tuple[XY
     return out
 
 
-def astar(grid: GridMap, leg: Leg, options: Options) -> tuple[XY, ...] | None:
+def astar(grid: Occupancy, leg: Leg, options: Options) -> tuple[XY, ...] | None:
     """Grid cells from start to goal, or None when no path exists."""
     best: dict[State, int] = {}
+    goals = {leg.goal, *leg.targets}
     heap: list[tuple[int, int, XY, str, tuple[XY, ...]]] = [(0, 0, leg.start, "", (leg.start,))]
     while heap:
         _, g, cell, axis, path = heapq.heappop(heap)
-        if cell == leg.goal:
+        if cell in goals:
             return path
         if best.get((cell, axis), INF) < g:
             continue
@@ -145,7 +116,7 @@ def astar(grid: GridMap, leg: Leg, options: Options) -> tuple[XY, ...] | None:
             if g + cost + bend < best.get((nxt, nxt_axis), INF):
                 ng = g + cost + bend
                 best[(nxt, nxt_axis)] = ng
-                h = (abs(leg.goal[0] - nxt[0]) + abs(leg.goal[1] - nxt[1])) * grid.step
+                h = min(abs(c[0] - nxt[0]) + abs(c[1] - nxt[1]) for c in goals) * grid.step
                 heapq.heappush(heap, (ng + h, ng, nxt, nxt_axis, (*path, nxt)))
     return None
 

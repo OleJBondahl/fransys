@@ -30,7 +30,7 @@ from fransys_render import pages as render_pages
 from test_units_worked_example import _PROJECT, io_board
 
 from fransys_layout import lay_out_cables
-from fransys_model.derive import document_scope, sheet_key, unit_release, units
+from fransys_model.derive import SheetKey, document_scope, unit_release, units
 from fransys_model.kernel import Origin, Severity, evolve, make_id
 from fransys_model.layout import SymbolPlacement
 from fransys_model.layout import layout_of as layout_of_model
@@ -268,7 +268,7 @@ def test_a_units_document_title_block_shows_its_current_revision_and_date_end_to
     )
     model_with_doc = evolve(model, put=[doc], origin=_ORIGIN)
     svg = fransys_render.sheets(document_sheets_of(model_with_doc))[
-        sheet_key(doc.id, PageKind.COVER, 0)
+        SheetKey(doc.id, PageKind.COVER, 0)
     ].svg
     values = re.findall(r'font-size="3\.4293"[^>]*>([^<]*)</text>', svg)  # the body-size cells
     assert {"demo-pump-cabinet", "1.2", "2026-01-01"} <= set(values)

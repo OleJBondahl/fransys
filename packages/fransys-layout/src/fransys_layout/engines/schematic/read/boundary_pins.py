@@ -10,9 +10,10 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.defaults import kind_roles
 from fransys_layout.stages.types import Home
-from fransys_model.vocab.membership import boundary, units
+from fransys_model.derive import boundary
+from fransys_model.derive import unit_ids as units
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.vocab.tables import functions as functions_table
-from fransys_model.vocab.unit_index import unit_index
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence

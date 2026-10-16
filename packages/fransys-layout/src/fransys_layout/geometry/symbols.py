@@ -28,6 +28,7 @@ from electrical_symbols import (
     is_generic_box,
 )
 from electrical_symbols import library_version as _electrical_symbols_library_version
+from fransys_layout.core.sides import opposite
 from fransys_model.derive.drawing_text import pole_prefix
 from fransys_model.derive.text_width import marking_widths, text_width
 from fransys_model.kernel import register_enum, value
@@ -70,9 +71,7 @@ class Facing(Enum):
     W = "w"
 
 
-OPPOSITE: Mapping[Facing, Facing] = frozendict(
-    {Facing.N: Facing.S, Facing.E: Facing.W, Facing.S: Facing.N, Facing.W: Facing.E}
-)
+OPPOSITE: Mapping[Facing, Facing] = frozendict({f: Facing[opposite(f.name)] for f in Facing})
 
 
 @value

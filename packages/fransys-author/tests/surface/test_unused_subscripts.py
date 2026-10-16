@@ -6,10 +6,10 @@ import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import Design, Device, design, unit
 
+from fransys_model.checks import check_units
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import freeze, merge
 from fransys_model.vocab import Placement, UnusedBoundary
-from fransys_model.vocab.validators.units import check_units
 
 from ..equivalence.series_parts import pair_library  # noqa: TID252 -- importlib mode puts tests/ on no path
 

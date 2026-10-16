@@ -210,12 +210,16 @@ class Options:
     w_f: float = 1.0
     w_row: float = 0.05
     w_violation: float = 1_000_000.0
-    bend_penalty: int = 8
-    crossing_penalty: int = 16
+    bend_penalty: int = (
+        19  # round(score.WEIGHTS["b"] / WEIGHTS["d"]): the router trades as the scorer does
+    )
+    crossing_penalty: int = 64  # round(score.WEIGHTS["x"] / WEIGHTS["d"])
     reroute_rounds: int = 3
     corner_order: tuple[str, ...] = ("KL", "KR", "BL", "TL", "BR", "TR")
     slack: tuple[int, ...] = (0, 8, 16)
-    marker: Size = field(default_factory=lambda: Size(24, 8))
+    # layout-0305: the reference-marker symbol's keepout box in grid units, relative to its origin;
+    # symdef data that fransys_el passes in, so the core types no size
+    marker: Box | None = None
     cells: tuple[int, int] = (8, 6)
     wire_label_sides: tuple[str, ...] = ("N", "S")
     open_stub: int = 0

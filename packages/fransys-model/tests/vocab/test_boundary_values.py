@@ -14,6 +14,7 @@ from plant import Plant
 
 from fransys_kernel.schema import annotations_of, resolve_target
 from fransys_model import derive, vocab
+from fransys_model.derive import boundary_operating, boundary_rating, function_rating
 from fransys_model.kernel import (
     FreezeError,
     Model,
@@ -32,9 +33,6 @@ from fransys_model.vocab import (
     Operating,
     PartRatingFacet,
     Rating,
-    boundary_operating,
-    boundary_rating,
-    function_rating,
 )
 from fransys_model.vocab.core import Unit
 from fransys_model.vocab.tables import facets_of
@@ -255,10 +253,10 @@ def test_the_readers_do_not_fall_back_to_the_functions_part_rating() -> None:
 
 
 def test_derive_and_vocab_export_the_facet_and_the_readers() -> None:
-    """The consumer read surface lists both readers and re-exports the vocab objects themselves."""
+    """The consumer read surface lists both readers; vocab no longer re-exports them (EL-3 Q2)."""
     for name in ("boundary_rating", "boundary_operating"):
         assert name in derive.__all__
-        assert getattr(derive, name) is getattr(vocab, name)
+        assert name not in vocab.__all__
     assert "BoundaryValuesFacet" in vocab.__all__
 
 

@@ -10,10 +10,15 @@ from typing import TYPE_CHECKING, Any
 
 from fransys_layout.engines.schematic.read.units import boundary_edge_set
 from fransys_layout.stages.types import Home, PortRef, RailEnd
-from fransys_model.derive import bar_items, is_rail_terminal, port_power_kind, terminal_items
+from fransys_model.derive import (
+    bar_items,
+    crosses_unit,
+    is_rail_terminal,
+    port_power_kind,
+    terminal_items,
+)
 from fransys_model.vocab import PowerKind
 from fransys_model.vocab.enums import ConductorKind
-from fransys_model.vocab.membership import crosses_unit
 from fransys_model.vocab.tables import functions as functions_table
 from fransys_model.vocab.tables import ports as ports_table
 

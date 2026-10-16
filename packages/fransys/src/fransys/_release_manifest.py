@@ -7,17 +7,19 @@ from typing import TYPE_CHECKING, Any, cast
 
 from fransys_model.derive import (
     baseline,
-    document_unit,
     function_designation,
+    is_unit_owned_kind,
     manifest_rows,
     numbering_pins,
     port_designation,
-    unit_items,
-    unit_subtree,
-    units,
+    record_key_text,
+    subject_kind,
+    unit_chain_below,
+    unit_key,
+    unit_owned_ids,
 )
-from fransys_model.kernel import Finding, Id, JsonValue, Severity, key_text, write_json
-from fransys_model.vocab import documents, functions, ports
+from fransys_model.kernel import Finding, Id, JsonValue, Severity, write_json
+from fransys_model.vocab import SubjectKind
 
 from ._release_reader import BASELINE_FILES
 
@@ -46,19 +48,15 @@ _WORKSPACE_PACKAGES = (
 
 def _relative_key(model: Model, unit: Id[ModelUnit] | None, subject: Id[ModelUnit]) -> str:
     """`subject`'s key below `unit` (below its own parent when it is `unit` or `unit` is `None`)."""
-    key = units(model)[subject].key
+    key = unit_key(model, subject)
     if unit is None or unit == subject:
         return "/".join(numbering_pins.unit_position(model, subject)[0])
-    return "/".join(key[len(units(model)[unit].key) - 1 :])
+    return "/".join(key[len(unit_key(model, unit)) - 1 :])
 
 
 def _instance_text(model: Model, unit: Id[ModelUnit] | None, subject: Id[ModelUnit]) -> str:
     """The listing's text for instance `subject` from `unit`: `-U1-U3`; a link untagged: its key."""
-    chain: list[Id[ModelUnit]] = []
-    current: Id[ModelUnit] | None = subject
-    while current is not None and current != unit:
-        chain.append(current)
-        current = units(model)[current].parent
+    chain = unit_chain_below(model, unit, subject)
     tags = [numbering_pins.unit_tag(model, link) for link in reversed(chain)]
     texts = [tag for tag in tags if tag is not None]
     if not tags or len(texts) < len(tags):
@@ -72,33 +70,22 @@ def _subject_text(model: Model, unit: Id[ModelUnit] | None, subject: Id[Any]) ->
     No `SchemaError` guard: HARNESS_WITHOUT_TAG (model-0107) makes the refusing shape an ERROR,
     and `_manifest` runs only after release's ERROR gate.
     """
-    if subject.kind == "item":
+    kind = subject_kind(subject)
+    if kind is SubjectKind.ITEM:
         return baseline.unit_designation(model, unit, cast("Id[Item]", subject))
-    if subject.kind == "function":
+    if kind is SubjectKind.FUNCTION:
         function_id: Id[Function] = cast("Id[Function]", subject)
         return function_designation(model, function_id, unit=unit)
-    if subject.kind == "port":
+    if kind is SubjectKind.PORT:
         return port_designation(model, subject, unit=unit)
-    if subject.kind == "unit":
+    if kind is SubjectKind.UNIT:
         return _instance_text(model, unit, cast("Id[ModelUnit]", subject))
-    return key_text(model.tables[subject.kind][subject])
-
-
-_OWNED_KINDS = frozenset({"item", "function", "port", "unit", "document"})
-
-
-def _unit_subject_ids(model: Model, unit: Id[ModelUnit]) -> frozenset[Id[Any]]:
-    """Every id `unit` owns: its subtree's items, functions, ports, units and its documents."""
-    item_ids = unit_items(model, unit)
-    function_ids = {fid for fid, fn in functions(model).items() if fn.item in item_ids}
-    port_ids = {pid for pid, port in ports(model).items() if port.function in function_ids}
-    document_ids = {i for i, r in documents(model).items() if document_unit(model, r) == unit}
-    return frozenset(item_ids) | function_ids | port_ids | unit_subtree(model, unit) | document_ids
+    return record_key_text(model, subject)
 
 
 def _concerns(finding: Finding, owned: frozenset[Id[Any]]) -> bool:
     """Rule D (decision 0104): any subject of an owned kind is inside, or none is of one."""
-    kinded = [s for s in finding.subjects if s.kind in _OWNED_KINDS]
+    kinded = [s for s in finding.subjects if is_unit_owned_kind(s)]
     return not kinded or any(s in owned for s in kinded)
 
 
@@ -109,7 +96,7 @@ def _warning_entries(
 
     `message` is the raw pre-`describe` text, never the resolved one.
     """
-    owned = None if unit is None else _unit_subject_ids(model, unit)
+    owned = None if unit is None else unit_owned_ids(model, unit)
     selected = sorted(
         (
             finding

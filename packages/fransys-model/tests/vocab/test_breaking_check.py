@@ -14,6 +14,16 @@ from fault_plant import breaker, module
 from plant import Plant
 from rating_plant import AC_400, rail, supply
 
+from fransys_model.checks.ratings_breaking import (
+    RATING_BREAKING_BELOW_FAULT,
+    RATING_BREAKING_NO_DATA,
+    check_breaking,
+)
+from fransys_model.checks.ratings_current import (
+    LOAD_ABOVE_LIMIT,
+    LOADS_ABOVE_LIMIT,
+    check_load_draw,
+)
 from fransys_model.kernel import Finding, Model, Severity, make_id
 from fransys_model.vocab import (
     BreakingPoint,
@@ -25,16 +35,6 @@ from fransys_model.vocab import (
 from fransys_model.vocab.enums import Current, FunctionKind
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.templates import FunctionTemplate
-from fransys_model.vocab.validators.ratings_breaking import (
-    RATING_BREAKING_BELOW_FAULT,
-    RATING_BREAKING_NO_DATA,
-    check_breaking,
-)
-from fransys_model.vocab.validators.ratings_current import (
-    LOAD_ABOVE_LIMIT,
-    LOADS_ABOVE_LIMIT,
-    check_load_draw,
-)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

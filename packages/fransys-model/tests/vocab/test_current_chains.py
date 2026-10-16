@@ -26,10 +26,10 @@ from plant import Plant
 from rating_plant import rail, supply
 
 from fransys_model.derive import current_chains
+from fransys_model.derive.facts.current import states as current_states
+from fransys_model.derive.facts.current.graph import Wire
 from fransys_model.kernel import Id, make_id
-from fransys_model.vocab import current_states
 from fransys_model.vocab.core import Function, Item, Port
-from fransys_model.vocab.current_graph import Wire
 from fransys_model.vocab.enums import Current
 from fransys_model.vocab.tables import functions
 

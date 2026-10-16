@@ -2,9 +2,9 @@
 
 from typing import TYPE_CHECKING, cast
 
+from fransys_model.derive.facts.units import boundary, unit_own_roots
 from fransys_model.kernel import SchemaError
 from fransys_model.vocab.enums import Aspect
-from fransys_model.vocab.membership import boundary, unit_own_roots
 from fransys_model.vocab.tables import (
     aspect_nodes,
     functions,
@@ -14,6 +14,7 @@ from fransys_model.vocab.tables import (
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
+from .baseline_keys import instance_key, listing_key
 from .baseline_rules import CURRENT, ListingRules
 from .baseline_unchecked import UNPRINTABLE
 from .designation import (
@@ -25,6 +26,7 @@ from .designation import (
 )
 from .instance_tag import instance_name, instance_tags
 from .lookups import printed_port_name
+from .rows_baseline import BaselineEnd
 from .unit_nodes import SIGNS, chain_up
 
 if TYPE_CHECKING:
@@ -164,25 +166,37 @@ def function_text(
     return f"{unit_designation(model, unit, function.item, rules)}:{function.name}"
 
 
-def _plain_port_text(
+def _plain_port_end(
     model: Model, render_unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
-) -> str:
+) -> BaselineEnd:
     """`port_id` rendered relative to `render_unit`: a plain port, or a terminal's bare text."""
     record = ports(model)[port_id]
     fn = functions(model)[record.function]
     owner = items(model)[fn.item]
+    key = listing_key(model, owner.id)
     if owner.parent is not None and terminal_of(model, owner.id) is not None:
         strip_text = unit_designation(model, render_unit, owner.parent, rules)
-        return f"{strip_text}:{_own_designation(model, owner.id)}"
+        return BaselineEnd(
+            text=f"{strip_text}:{_own_designation(model, owner.id)}", key=key, pin=""
+        )
     text = unit_designation(model, render_unit, owner.id, rules)
     name = printed_port_name(model, port_id, bar_screw=not rules.bar_end_without_screw)
-    return f"{text}:{name}" if name else text
+    return BaselineEnd(text=f"{text}:{name}" if name else text, key=key, pin=name)
 
 
-def _cross_port_text(
+def _nested_end(
+    model: Model, unit: Id[Unit] | None, owner_unit: Id[Unit], end: BaselineEnd, rules: ListingRules
+) -> BaselineEnd:
+    """`end`, read in `owner_unit`, as `unit`'s listing names it: instance prefix and key."""
+    prefix = _instance_prefix(model, unit, owner_unit, rules)
+    key = f"{instance_key(model, unit, owner_unit)}/{end.key}"
+    return BaselineEnd(text=f"{prefix}{end.text}", key=key, pin=end.pin)
+
+
+def cross_port_end(
     model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
-) -> str:
-    """`port_id`'s baseline text for `unit`'s own listing (conductor ends).
+) -> BaselineEnd:
+    """`port_id`'s baseline end for `unit`'s own listing (conductor ends).
 
     Plain against `unit` when its owner item is `unit`'s own; else against the owner's unit,
     prefixed `"<instance>/"` (a mate or conductor end on a nested unit's boundary).
@@ -191,36 +205,50 @@ def _cross_port_text(
     fn = functions(model)[record.function]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return _plain_port_text(model, unit, port_id, rules)
+        return _plain_port_end(model, unit, port_id, rules)
     # `_conductor_unit`'s rule (or, for `unit=None`, the `owner.unit == unit` branch above)
     # guarantees `owner.unit` is a real unit here.
     owner_unit = cast("Id[Unit]", owner.unit)
-    prefix = _instance_prefix(model, unit, owner_unit, rules)
-    return f"{prefix}{_plain_port_text(model, owner_unit, port_id, rules)}"
+    end = _plain_port_end(model, owner_unit, port_id, rules)
+    return _nested_end(model, unit, owner_unit, end, rules)
 
 
-def _cross_function_text(
-    model: Model, unit: Id[Unit] | None, function_id: Id[Function], rules: ListingRules
+def _cross_port_text(
+    model: Model, unit: Id[Unit] | None, port_id: Id[Port], rules: ListingRules
 ) -> str:
-    """`function_id`'s baseline text for `unit`'s own listing (mate ends)."""
+    """`port_id`'s baseline text for `unit`'s own listing (conductor ends)."""
+    return cross_port_end(model, unit, port_id, rules).text
+
+
+def function_end(
+    model: Model, unit: Id[Unit] | None, function: Function, rules: ListingRules
+) -> BaselineEnd:
+    """A function's baseline end in `unit`'s listing: its text, its item's key, its name."""
+    text = function_text(model, unit, function, rules)
+    return BaselineEnd(text=text, key=listing_key(model, function.item), pin=function.name)
+
+
+def cross_function_end(
+    model: Model, unit: Id[Unit] | None, function_id: Id[Function], rules: ListingRules
+) -> BaselineEnd:
+    """`function_id`'s baseline end for `unit`'s own listing (mate ends)."""
     fn = functions(model)[function_id]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return function_text(model, unit, fn, rules)
+        return function_end(model, unit, fn, rules)
     # `_lowest_common_unit` (or, for `unit=None`, the branch above) guarantees a real unit.
     owner_unit = cast("Id[Unit]", owner.unit)
-    prefix = _instance_prefix(model, unit, owner_unit, rules)
-    return f"{prefix}{function_text(model, owner_unit, fn, rules)}"
+    return _nested_end(model, unit, owner_unit, function_end(model, owner_unit, fn, rules), rules)
 
 
-def _net_port_text(
+def net_port_end(
     model: Model,
     unit: Id[Unit] | None,
     direct_nested: frozenset[Id[Unit]],
     port_id: Id[Port],
     rules: ListingRules,
-) -> str | None:
-    """`port_id`'s baseline text for a `nets` row, `None` when it is not a member port of `unit`.
+) -> BaselineEnd | None:
+    """`port_id`'s baseline end for a `nets` row, `None` when it is not a member port of `unit`.
 
     Member: a port on an item of `unit` itself, or on a boundary function of a unit nested in it.
     Anything else (several levels down, or no bearing on `unit`) is left out of the row.
@@ -229,8 +257,8 @@ def _net_port_text(
     fn = functions(model)[record.function]
     owner = items(model)[fn.item]
     if owner.unit == unit:
-        return _plain_port_text(model, unit, port_id, rules)
+        return _plain_port_end(model, unit, port_id, rules)
     if owner.unit in direct_nested and record.function in boundary(model, owner.unit):
-        prefix = _instance_prefix(model, unit, owner.unit, rules)
-        return f"{prefix}{_plain_port_text(model, owner.unit, port_id, rules)}"
+        end = _plain_port_end(model, owner.unit, port_id, rules)
+        return _nested_end(model, unit, owner.unit, end, rules)
     return None

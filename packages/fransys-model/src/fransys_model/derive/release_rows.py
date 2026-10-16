@@ -2,7 +2,7 @@
 
 import hashlib
 
-from fransys_model.vocab.membership import unit_items, unit_subtree
+from fransys_model.derive.facts.units import unit_items, unit_subtree
 from fransys_model.vocab.tables import items, part_libraries, parts, projects, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit

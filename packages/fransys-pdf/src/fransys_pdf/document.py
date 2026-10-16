@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
     PAGE_HEADINGS,
+    SheetKey,
     document_page_kinds,
     harness_cables_for,
-    sheet_key,
 )
 from fransys_model.derive import document_sheet_format as resolve_sheet_format
 from fransys_model.vocab import PageKind, documents
@@ -49,10 +49,10 @@ def _section_prefix(
     record: Document,
     sheet: SheetFormat,
     kind: PageKind,
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """`#set page(margin:, background:)` for every page of `kind` but `SCHEMATIC`."""
-    back = page_background(model, record, sheets, sheet_key(record.id, kind, 0))
+    back = page_background(model, record, sheets, SheetKey(record.id, kind, 0))
     return f"#set page(margin: {text_margin(sheet)}, background: {back})\n{RESTART}"
 
 
@@ -73,7 +73,7 @@ def _text_page(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `sh
     model: Model,
     record: Document,
     pages: tuple[PageKind, ...],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePiece] | None,
 ) -> str:
     if kind is PageKind.COVER:
@@ -97,7 +97,7 @@ def _page_source(  # noqa: PLR0913, PLR0917 -- one branch per `PageKind`, plus `
     svgs: Mapping[str, str],
     pages: tuple[PageKind, ...],
     sheet: SheetFormat,
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePiece] | None,
 ) -> str:
     """The Typst source of one page kind; the two drawing kinds set their own frame."""
@@ -118,7 +118,7 @@ def source(
     model: Model,
     document: Id[Document],
     svgs: Mapping[str, str],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
     bridges: Mapping[str, BridgePiece] | None = None,
 ) -> str:
     """The complete, self-contained Typst source of one document.

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .outputs import Wire
-from .route_env import Drawn, failed, pin_point, row_band, z_wire
+from .route_env import Drawn, Rise, failed, pin_point, row_band, z_wire
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -31,6 +31,10 @@ class Line:
         """A bundle's lane j stands j grid steps below the trunk's first line; a plain fan on it."""
         return self.trunk.y + (self.grid * lane if self.fan.lanes > 1 else 0)
 
+    def member(self, lane: int) -> str:
+        """The net a drop to lane j carries: the member's id in a bundle, else the fan's net."""
+        return self.fan.nets[lane] if self.fan.lanes > 1 else self.net
+
 
 def drop_kind(fan: Fan, a: Attach) -> WireKind:
     """A box pin that drives the trunk rises to it; every other attachment drops."""
@@ -42,7 +46,34 @@ def plain_drop(line: Line, a: Attach, xy: XY, lane: int) -> tuple[Wire, ...]:
     y = line.y_of(lane)
     if xy[1] == y:
         return ()
-    return (Wire(line.net, line.trunk.page, (xy, (xy[0], y)), drop_kind(line.fan, a)),)
+    return (Wire(line.member(lane), line.trunk.page, (xy, (xy[0], y)), drop_kind(line.fan, a)),)
+
+
+def _foreign_body(env: RouteEnv, fan: Fan, x: int, ys: tuple[int, int]) -> bool:
+    """The vertical at x between ys passes a footprint of a symbol the fan is not attached to."""
+    cols = {a.column for a in (*fan.drivers, *fan.legs) if a.column}
+    own = {a.pin.sym for a in (*fan.drivers, *fan.legs)}
+    own |= {
+        c.sym for col in env.columns if col.id in cols for lane in col.lanes for c in lane.cells
+    }
+    top, bottom = min(ys), max(ys)
+    return any(
+        p.footprint.x < x < p.footprint.x + p.footprint.w
+        and p.footprint.y < bottom
+        and top < p.footprint.y + p.footprint.h
+        for sym, p in env.placed.items()
+        if sym not in own
+    )
+
+
+def drop_or_rise(env: RouteEnv, line: Line, a: Attach, xy: XY, lane: int) -> Drawn:
+    """The straight drop, or a rise for A* when its vertical passes a foreign body."""
+    y = line.y_of(lane)
+    if xy[1] != y and _foreign_body(env, line.fan, xy[0], (xy[1], y)):
+        return Drawn(
+            rises=(Rise(line.member(lane), a.pin.sym, xy, (xy[0], y), drop_kind(line.fan, a)),)
+        )
+    return Drawn(wires=plain_drop(line, a, xy, lane))
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +102,7 @@ def _crossed_wire(c: Crossed, a: Attach, xy: XY, at: tuple[int, int, int, int]) 
         level = line.trunk.y + line.grid * (line.fan.lanes + rank)
     depart = own_x + (line.grid if pole_x > own_x else -line.grid)
     ends = (xy, (depart, line.y_of(j)))
-    return z_wire(line.fan.id, line.trunk.page, ends, level, drop_kind(line.fan, a))
+    return z_wire(line.member(j), line.trunk.page, ends, level, drop_kind(line.fan, a))
 
 
 def _room(c: Crossed, atts: Sequence[Held], rank: Mapping[int, int]) -> bool:
@@ -129,25 +160,28 @@ def _placed_attachments(env: RouteEnv, line: Line, row: tuple[int, int]) -> list
 def trunk_wires(env: RouteEnv, trunk: Trunk) -> Drawn:
     """The trunk line, one drop per attachment on its row; a bundle's lane j drops from line j.
 
-    A bundle's trunk and its drops carry the bundle id as their net: one thick line (L4). A
-    function in `fan.crossed` takes its lanes in another pole order; crossed_drops draws it.
+    A bundle's trunk carries the bundle id; each drop carries its member's id (layout-0297, D.7).
+    A function in `fan.crossed` takes its lanes in another pole order; crossed_drops draws it.
     """
     fan = env.fans.get(trunk.fan)
     if fan is None:
         text = f"trunk of fan {trunk.fan} has no fan in the flow, so it is not drawn: report it"
         return Drawn(findings=(failed(env, trunk.fan, text),))
     line = Line(fan, trunk, fan.nets[0] if fan.lanes == 1 else fan.id, env.options.wiring_grid)
-    wires = [
-        Wire(line.net, trunk.page, ((trunk.x0, trunk.y), (trunk.x1, trunk.y)), "trunk", fan.lanes)
-    ]
+    out = Drawn(
+        wires=(
+            Wire(
+                line.net, trunk.page, ((trunk.x0, trunk.y), (trunk.x1, trunk.y)), "trunk", fan.lanes
+            ),
+        )
+    )
     permuted = dict(fan.crossed) if fan.lanes > 1 else {}
     held: dict[tuple[str, bool], list[Held]] = {}
     for a, xy in _placed_attachments(env, line, row_band(env, trunk)):
         if a.pin.sym in permuted:
             held.setdefault((a.pin.sym, xy[1] < trunk.y), []).append((a, xy))
         else:
-            wires.extend(plain_drop(line, a, xy, a.lane))
-    out = Drawn(wires=tuple(wires))
+            out += drop_or_rise(env, line, a, xy, a.lane)
     for (sym, above), atts in sorted(held.items()):
         out += crossed_drops(env, Crossed(line, permuted[sym], above), atts)
     return out

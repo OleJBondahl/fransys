@@ -18,7 +18,7 @@ from fransys.colours import GNYE
 
 from fransys_model.derive import overview_graph
 from fransys_model.derive.baseline import listing
-from fransys_model.vocab.bars import is_bar_port
+from fransys_model.derive.facts.bars import is_bar_port
 from fransys_model.vocab.tables import units
 
 

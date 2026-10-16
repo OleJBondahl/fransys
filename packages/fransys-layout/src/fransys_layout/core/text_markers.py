@@ -52,7 +52,7 @@ def mark_ref(env: MarkEnv, ref: Ref) -> list[Marker]:
     out = []
     for i, (end, st) in enumerate(zip(ends, stands, strict=True)):
         cell = cell_of(*_far(env, ref, stands, end, i), env.area, env.options.cells)
-        out.append(Marker(ref.net, kind_of(ref), end.page, cell, st.x, st.y, st.end))
+        out.append(Marker(ref.net, kind_of(ref), end.page, cell, st.x, st.y, st.end, st.orient))
     return out
 
 

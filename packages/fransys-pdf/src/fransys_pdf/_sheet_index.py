@@ -7,7 +7,7 @@ later page. Every cell links to the sheet's page (NV1), invisibly.
 
 from typing import TYPE_CHECKING
 
-from fransys_model.derive import field_printed, sheet_index_rows, sheet_key
+from fransys_model.derive import SheetKey, field_printed, sheet_index_rows
 from fransys_model.vocab import PageKind
 
 from ._background import physical_page, sheet_of
@@ -29,14 +29,14 @@ def sheet_index_page(
     model: Model,
     record: Document,
     kinds: tuple[PageKind, ...],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """The two-column index table, `""` for fewer than two sheets (empty-list rule)."""
     rows = sheet_index_rows(model, record, kinds)
     if not rows:
         return ""
     sizes = sizes_of(model, record)
-    room = sheet_of(sheets, sheet_key(record.id, PageKind.SHEET_INDEX, 0)).title_room_mm
+    room = sheet_of(sheets, SheetKey(record.id, PageKind.SHEET_INDEX, 0)).title_room_mm
     cells = ["table.header(" + ", ".join(f"strong(text({literal(c)}))" for c in _COLUMNS) + ")"]
     for row in rows:
         page = f"context text(str({physical_page(f'locate(<{row.destination}>)')}))"

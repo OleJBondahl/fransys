@@ -3,10 +3,9 @@
 from typing import TYPE_CHECKING
 
 from fransys_layout.stages.edges import InterfaceEdge
-from fransys_model.derive import connector_at_line_end, natural_key, supply_share
+from fransys_model.derive import boundary, connector_at_line_end, natural_key, supply_share
 from fransys_model.derive.designation import connector_designation
 from fransys_model.layout import Side, SideHint, layout_of
-from fransys_model.vocab.membership import boundary
 from fransys_model.vocab.tables import units
 
 if TYPE_CHECKING:

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def _child_text(row: Change) -> str | None:
-    """`name revision A to B`, `name added` or `name removed` for one `units` row, else `None`."""
+    """`name revision A → B`, `name added` or `name removed` for one `units` row, else `None`."""
     name = row.parts[1]
     if row.change in ("added", "removed") or row.field in ("revision", "version"):
         return f"{name} {baseline.change_clause(row)}"

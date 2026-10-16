@@ -67,6 +67,22 @@ _OWN: tuple[CodeInfo, ...] = (
         page="findings-validators",
     ),
     CodeInfo(
+        code="CHANGES_BY_NAME",
+        severities=(Severity.INFO,),
+        stage="build",
+        who="note",
+        cause=(
+            "The release the next change list starts from was cut before listing version 2, so "
+            "it names no item key. The change list matches by printed designation, and a "
+            "renamed item shows as one removed and one added row."
+        ),
+        fix=(
+            "The next release's change list follows renames; `fr.rebaseline` re-cuts the old "
+            "release now."
+        ),
+        page="findings-validators",
+    ),
+    CodeInfo(
         code="DESIGNATION_MOVED",
         severities=(Severity.ERROR,),
         stage="release",

@@ -9,8 +9,8 @@ stay off every `__all__`; layout reads them directly.
 from typing import Any
 
 from fransys_kernel import render_id
+from fransys_model.derive.facts.units import external, in_reading, is_harness
 from fransys_model.kernel import Id, Model, value
-from fransys_model.vocab.membership import external, in_reading, is_harness
 from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab import Conductor, Function, Item, Port, Unit
 lazy from fransys_model.vocab.facets.cable import OpenCoreFacet

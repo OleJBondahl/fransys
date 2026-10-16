@@ -10,6 +10,7 @@ import fransys_parts
 import pytest
 from fransys_author import Design
 
+from fransys_model.derive import boundary_operating, boundary_rating
 from fransys_model.kernel import Draft, Origin, freeze, make_id, merge
 from fransys_model.vocab import (
     Boundary,
@@ -21,8 +22,6 @@ from fransys_model.vocab import (
     PortRole,
     PortTemplate,
     Rating,
-    boundary_operating,
-    boundary_rating,
 )
 
 _ORIGIN = Origin(file="<catalogue-guards fixture>", line=1, note="test catalogue")

@@ -11,15 +11,16 @@ from fransys_layout.core import Fan, Options, PinRef, Ref, RefEnd, Size, Trunk, 
 from fransys_layout.core.text_cells import cell_of
 from fransys_layout.core.text_ends import MarkEnv, end_stand, hub_xy, pin_stand
 from fransys_layout.core.text_markers import mark_pages, mark_ref
-from fransys_layout.core.values import RefKind
+from fransys_layout.core.values import Box, RefKind
 
 from . import pipeline_fixtures
+from .conftest import MARKER_BOX
 from .text_fixtures import KIND_OF, PLANTS, marker_counts, plan_counts
 
 if TYPE_CHECKING:
     from fransys_layout.core import CutResult, Marker, Orientation, Placement
 
-OPTIONS = Options()
+OPTIONS = Options(marker=MARKER_BOX)
 PIN = PinRef("S", "p")
 STUB = Ref("n", RefKind.STUB, (RefEnd(1, None, PIN),))
 
@@ -39,37 +40,41 @@ def _env(side: str, orient: Orientation, trunks: tuple[Trunk, ...] = ()) -> Mark
 
 
 # the pin's own side, the orientation: the side the marker stands on
-TURNS = [
-    ("E", "R0", (124, 200)),
-    ("W", "R0", (76, 200)),
-    ("N", "R0", (100, 192)),
-    ("S", "R0", (100, 208)),
-    ("E", "R180", (76, 200)),
-    ("W", "R180", (124, 200)),
-    ("N", "R180", (100, 208)),
-    ("S", "R180", (100, 192)),
-    ("E", "MR0", (76, 200)),
-    ("E", "MR180", (124, 200)),
+TURNS = [  # the symbol's tip, its origin, sits at the pin whichever way the marker turns
+    ("E", "R0", (100, 200), "R0"),
+    ("W", "R0", (100, 200), "R180"),
+    ("N", "R0", (100, 200), "R270"),
+    ("S", "R0", (100, 200), "R90"),
+    ("E", "R180", (100, 200), "R180"),
+    ("W", "R180", (100, 200), "R0"),
+    ("N", "R180", (100, 200), "R90"),
+    ("S", "R180", (100, 200), "R270"),
+    ("E", "MR0", (100, 200), "R180"),
+    ("E", "MR180", (100, 200), "R0"),
 ]
 
 
-@pytest.mark.parametrize(("side", "orient", "xy"), TURNS)
-def test_a_pin_marker_stands_one_marker_box_out_on_the_turned_side(side, orient, xy) -> None:
+@pytest.mark.parametrize(("side", "orient", "xy", "turn"), TURNS)
+def test_a_pin_marker_stands_its_origin_so_the_box_touches_the_pin(side, orient, xy, turn) -> None:
     stand = pin_stand(_env(side, orient), PIN, 1, STUB)
     assert (stand.x, stand.y) == xy
-    assert stand.end == PIN
+    assert (stand.end, stand.orient) == (PIN, turn)
 
 
-def test_the_offset_is_the_marker_option_and_not_a_literal() -> None:
-    env = _env("E", "R0")
-    wide = replace(env, options=Options(marker=Size(40, 12)))
-    got = pin_stand(wide, PIN, 1, STUB)
-    assert (got.x, got.y) == (140, 200)
+@pytest.mark.parametrize(
+    ("side", "xy"), [("E", (96, 200)), ("W", (104, 200)), ("S", (100, 196)), ("N", (100, 204))]
+)
+def test_the_near_edge_of_the_marker_option_sits_at_the_pin(side, xy) -> None:
+    """A box that starts 4 inside its origin: the origin backs off, the near edge meets the pin."""
+    env = _env(side, "R0")
+    got = pin_stand(replace(env, options=Options(marker=Box(4, -8, 44, 16))), PIN, 1, STUB)
+    assert (got.x, got.y) == xy
 
 
-def test_an_orientation_with_no_side_map_raises() -> None:
-    with pytest.raises(ValueError, match="no side map"):
-        pin_stand(_env("E", "R90"), PIN, 1, STUB)
+@pytest.mark.parametrize(("side", "orient", "turn"), [("E", "R90", "R90"), ("E", "MR180", "R0")])
+def test_a_quarter_turn_and_a_mirror_have_a_side_map(side, orient, turn) -> None:
+    """Every orientation turns the pin side (layout-0306): E at R90 faces S, E at MR180 faces E."""
+    assert pin_stand(_env(side, orient), PIN, 1, STUB).orient == turn
 
 
 def test_a_pin_that_is_not_placed_raises_naming_the_net_and_kind() -> None:
@@ -168,7 +173,10 @@ def test_a_stub_stands_at_each_boundary_pin_of_the_net(built) -> None:
     assert [m.end for m in stubs] == [PinRef("x", "e"), PinRef("z", "e")]
     for m in stubs:
         px, py = xy[(m.end.sym, m.end.pin)]
-        assert (m.x - px, m.y - py) == (OPTIONS.marker.w, 0)  # an east pin at R0
+        assert (m.x - px, m.y - py) == (
+            -MARKER_BOX.x,
+            0,
+        )  # an east pin at R0: the near edge meets the pin
 
 
 def test_an_arrow_across_pages_names_the_far_ends_cell(built) -> None:

@@ -26,6 +26,7 @@ import pytest
 from fransys_el import OPTIONS
 
 from fransys_layout.engines import lay_out_schematic
+from fransys_model.derive.facts.units import in_unit_subtree
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import freeze
 from fransys_model.layout import (
@@ -39,7 +40,6 @@ from fransys_model.layout import (
     layout_of,
 )
 from fransys_model.vocab.enums import ConductorKind, FunctionKind
-from fransys_model.vocab.membership import in_unit_subtree
 from fransys_model.vocab.tables import conductors, functions, items, ports
 
 if TYPE_CHECKING:

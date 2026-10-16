@@ -8,6 +8,8 @@ from .geometry import (
     cell_footprint,
     column_extent,
     lane_extent,
+    marker_box,
+    marker_box_at,
     pin_xy,
     rotate_box,
     rotate_side,
@@ -18,6 +20,7 @@ from .geometry import (
 from .jsonform import FORMAT, from_plain, to_plain
 from .keys import natural_key
 from .order import order_blocks, order_columns
+from .outline import outline_hull
 from .outputs import (
     Annotations,
     CoreLayout,
@@ -190,10 +193,13 @@ __all__ = (
     "from_plain",
     "lane_extent",
     "mark_pages",
+    "marker_box",
+    "marker_box_at",
     "natural_key",
     "one_row",
     "order_blocks",
     "order_columns",
+    "outline_hull",
     "pin_xy",
     "place_pages",
     "placed_columns",

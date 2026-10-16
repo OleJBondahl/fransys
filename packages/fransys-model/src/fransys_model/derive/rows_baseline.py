@@ -11,6 +11,18 @@ from .rows_removed import RemovedAncestry
 
 
 @value
+class BaselineEnd:
+    """A conductor, mate or net end as the writer sees it: printed `text`, item `key`, `pin` name.
+
+    `pin` is the port name, or the function name for a mate end; `""` when the end has none.
+    """
+
+    text: str
+    key: str
+    pin: str
+
+
+@value
 class BaselineUnit:
     """The `unit` key of a baseline listing: the listed unit's own release facts."""
 
@@ -31,6 +43,7 @@ class BaselineItem:
     external: bool
     position: int | None
     parent: str | None = None
+    key: str | None = None
 
 
 @value
@@ -52,6 +65,8 @@ class BaselineBoundary:
     ports: tuple[str, ...]
     rating: Rating | None
     operating: Operating | None
+    key: str | None = None
+    pin: str | None = None
 
 
 @value
@@ -66,6 +81,10 @@ class BaselineConductor:
     gauge_mm2: str | None
     length_mm: int | None
     label: str | None
+    a_key: str | None = None
+    a_pin: str | None = None
+    b_key: str | None = None
+    b_pin: str | None = None
 
 
 @value
@@ -74,6 +93,10 @@ class BaselineMate:
 
     a: str
     b: str
+    a_key: str | None = None
+    a_pin: str | None = None
+    b_key: str | None = None
+    b_pin: str | None = None
 
 
 @value
@@ -84,6 +107,8 @@ class BaselineNet:
     net_class: str
     potential: str | None
     ports: tuple[str, ...]
+    port_keys: tuple[str, ...] = ()
+    port_pins: tuple[str, ...] = ()
 
 
 @value
@@ -111,7 +136,8 @@ class Change:
     `added`/`removed` row that needs more than its bare identity to be legible (populated only
     for `items` and `boundary`, per the worked example -- every other section's
     `added`/`removed` rows carry `detail=""`; `changed` rows always carry `detail=""` too, since
-    `field`/`before`/`after` already say what changed).
+    `field`/`before`/`after` already say what changed). A `renamed` items or boundary row has
+    `before` the old designation, `after` the new one, `parts == (old, new)` and `subject` the new.
     """
 
     section: str
@@ -132,6 +158,7 @@ class ListingDiff:
     b: BaselineUnit
     changes: tuple[Change, ...]
     ancestry: tuple[RemovedAncestry, ...] = ()
+    keyed: bool = False
 
 
 CHANGE_COLUMNS = ("section", "change", "subject", "field", "before", "after")

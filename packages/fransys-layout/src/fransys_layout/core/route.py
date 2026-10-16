@@ -11,19 +11,22 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .keys import natural_key
+from .occupancy import Occupancy
 from .outputs import PageRoutes, Routes, Wire
-from .route_astar import GridMap, Leg, anchor, astar, simplify, tidy
-from .route_counts import counts, demand
+from .route_counts import counts, crossings_by_net, demand
 from .route_env import Drawn, failed, pin_point, route_envs
+from .route_tree import rise_wire, tree
 from .route_trunk import trunk_wires
 from .route_wires import join_wires, lane_wires, nest_jogs
+from .score_wiring import bundles
+from .values import CrossLink
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .outputs import Placement
     from .route_env import RouteEnv
-    from .values import XY, CrossLink, CutResult, Finding, Options, PlacementProblem
+    from .values import Box, CutResult, Finding, Options, PlacementProblem
 
 WORST = 3  # links ripped up and rerouted per round
 
@@ -33,8 +36,9 @@ class LinkState:
     """The links of one page while they are routed: wires per net, nets given up, findings."""
 
     env: RouteEnv
-    grid: GridMap
+    grid: Occupancy
     routed: dict[str, tuple[Wire, ...]] = field(default_factory=dict)
+    bare: dict[str, tuple[Wire, ...]] = field(default_factory=dict)
     failed: list[str] = field(default_factory=list)
     findings: list[Finding] = field(default_factory=list)
 
@@ -45,83 +49,44 @@ def _fixed_wires(env: RouteEnv) -> Drawn:
     for col in env.columns:
         out += lane_wires(env, col) + join_wires(env, col)
     nested = nest_jogs(env, out.jogs)
-    out = Drawn(out.wires + nested.wires, (), out.findings + nested.findings)
+    out = Drawn(out.wires + nested.wires, (), out.findings + nested.findings, out.rises)
     for trunk in env.trunks:
         out += trunk_wires(env, trunk)
     return out
 
 
-def _grid(env: RouteEnv, fixed: Sequence[Wire]) -> GridMap:
+def _grid(env: RouteEnv, fixed: Sequence[Wire]) -> Occupancy:
     """A map that holds every footprint, wire and pin of the page, so none indexes off it."""
     step = env.options.wiring_grid
     xs = [p.footprint.x + p.footprint.w for p in env.placed.values()]
     ys = [p.footprint.y + p.footprint.h for p in env.placed.values()]
     pts = [pt for w in fixed for pt in w.points]
-    xs += [x for x, _ in pts]
-    ys += [y for _, y in pts]
+    xs += [x for x, _ in pts] + [b.x + b.w for b in env.obstacles]
+    ys += [y for _, y in pts] + [b.y + b.h for b in env.obstacles]
     low = min(
         [p.footprint.x for p in env.placed.values()] + [p.footprint.y for p in env.placed.values()]
     )
     if low < 0:
         msg = f"page {env.page} has a footprint left of or above the origin ({low})"
         raise ValueError(msg)
-    grid = GridMap(max(xs, default=0) // step + 3, max(ys, default=0) // step + 3, step)
-    for p in env.placed.values():
-        grid.block_box(p.footprint)
+    grid = Occupancy(max(xs, default=0) // step + 3, max(ys, default=0) // step + 3, step)
+    for box in (*(p.footprint for p in env.placed.values()), *env.obstacles):
+        grid.mark_box(box)
     for w in fixed:
-        grid.add_wire(w.net, w.points)
+        grid.mark_wire(w.net, w.points)
     return grid
 
 
-def _ends(env: RouteEnv, link: CrossLink) -> list[XY]:
-    return [pt for a in link.ends if (pt := pin_point(env, a.pin.sym, a.pin.pin)) is not None]
-
-
 def _bbox(env: RouteEnv, link: CrossLink) -> int:
-    pts = _ends(env, link)
+    pts = [pt for a in link.ends if (pt := pin_point(env, a.pin.sym, a.pin.pin)) is not None]
     return (max(p[0] for p in pts) - min(p[0] for p in pts)) + (
         max(p[1] for p in pts) - min(p[1] for p in pts)
     )
 
 
-def _legs(env: RouteEnv, link: CrossLink) -> list[tuple[XY, ...]]:
-    """Each end's anchor: its pin, then the grid point outside its footprint where A* starts."""
-    step = env.options.wiring_grid
-    out: list[tuple[XY, ...]] = []
-    for a in link.ends:
-        pin = pin_point(env, a.pin.sym, a.pin.pin)
-        if pin is not None:
-            out.append(anchor(pin, env.placed[a.pin.sym].footprint, step))
-    return out
-
-
-def _cell(p: XY, step: int) -> XY:
-    return (p[0] // step, p[1] // step)
-
-
-def _tree(st: LinkState, link: CrossLink) -> tuple[Wire, ...] | None:
-    """A spanning tree of the net's ends, each to the nearest routed point; None on a dead end."""
-    env, step = st.env, st.env.options.wiring_grid
-    anchors = _legs(env, link)
-    done: list[XY] = [anchors[0][-1]]
-    out: list[Wire] = []
-    for i, goal in enumerate(anchors[1:], 1):
-        start = min(done, key=lambda p: (abs(p[0] - goal[-1][0]) + abs(p[1] - goal[-1][1]), p))
-        cells = (_cell(start, step), _cell(goal[-1], step))
-        path = astar(st.grid, Leg(link.net, *cells, frozenset(cells)), env.options)
-        if path is None:
-            return None
-        pts = simplify(path, step)
-        st.grid.add_wire(link.net, pts)
-        head = anchors[0][:-1] if i == 1 else ()
-        out.append(Wire(link.net, env.page, tidy([*head, *pts, *reversed(goal[:-1])]), "routed"))
-        done.extend(pts)
-    return tuple(out)
-
-
 def _route_one(st: LinkState, link: CrossLink) -> bool:
     """Route one link; on failure its partial wires leave the map and a finding names it."""
-    wires = _tree(st, link)
+    wires = tree(st.env, st.grid, link)
     if wires is None:
         st.grid.remove_net(link.net)
         st.routed.pop(link.net, None)
@@ -139,16 +104,13 @@ def _route_one(st: LinkState, link: CrossLink) -> bool:
     return True
 
 
-def _crossings_of(st: LinkState, fixed: Sequence[Wire], net: str) -> int:
-    others = [*fixed, *(w for n, ws in st.routed.items() if n != net for w in ws)]
-    return counts([*st.routed.get(net, ()), *others]).crossings - counts(others).crossings
-
-
 def _reroute(st: LinkState, fixed: Sequence[Wire], links: Sequence[CrossLink]) -> None:
     """One round: rip up the worst links by crossings and route each again."""
+    wires = [*fixed, *(w for ws in st.routed.values() for w in ws)]
+    by_net = crossings_by_net(wires, bundles(st.env.fans.values()))
     worst = sorted(
         (ln for ln in links if ln.net in st.routed),
-        key=lambda ln: (-_crossings_of(st, fixed, ln.net), natural_key(ln.net)),
+        key=lambda ln: (-by_net.get(ln.net, 0), natural_key(ln.net)),
     )[:WORST]
     for link in worst:
         old = st.routed[link.net]
@@ -158,12 +120,30 @@ def _reroute(st: LinkState, fixed: Sequence[Wire], links: Sequence[CrossLink]) -
             st.failed.remove(link.net)
             st.findings.pop()
             for w in old:
-                st.grid.add_wire(w.net, w.points)
+                st.grid.mark_wire(w.net, w.points)
+
+
+def _row_of(env: RouteEnv, y: int) -> int:
+    return next((i for i, (top, bottom) in enumerate(env.bands) if top <= y <= bottom), -1)
+
+
+def _row_wrapped(env: RouteEnv, linked: frozenset[str]) -> list[CrossLink]:
+    """A fan with no trunk and no arrow whose attachments stand in different rows is a link."""
+    trunked = {t.fan for t in env.trunks}
+    out = []
+    for fan in env.fans.values():
+        net, ends = fan.nets[0], (*fan.drivers, *fan.legs)
+        pts = [pin_point(env, a.pin.sym, a.pin.pin) for a in ends]
+        if fan.lanes != 1 or fan.id in trunked or net in env.cut_nets or net in linked:
+            continue
+        if all(pts) and len({_row_of(env, p[1]) for p in pts if p}) > 1:
+            out.append(CrossLink(net, ends))
+    return out
 
 
 def _links_here(env: RouteEnv) -> tuple[list[CrossLink], list[Finding]]:
     """Cross-links with an end on this page; one cut into references is drawn as references."""
-    todo: list[CrossLink] = []
+    todo: list[CrossLink] = _row_wrapped(env, frozenset(ln.net for ln in env.cross_links))
     out: list[Finding] = []
     for link in env.cross_links:
         here = [a for a in link.ends if a.pin.sym in env.placed]
@@ -181,12 +161,25 @@ def _links_here(env: RouteEnv) -> tuple[list[CrossLink], list[Finding]]:
     return todo, out
 
 
+def _bare_routes(env: RouteEnv, todo: Sequence[CrossLink]) -> dict[str, tuple[Wire, ...]]:
+    """Each link routed alone on footprints and obstacles only: the wires `demand` is read from."""
+    bare = _grid(env, ())
+    out: dict[str, tuple[Wire, ...]] = {}
+    for link in todo:
+        wires = tree(env, bare, link)
+        bare.remove_net(link.net)
+        if wires:
+            out[link.net] = wires
+    return out
+
+
 def _route_links(env: RouteEnv, fixed: Sequence[Wire]) -> LinkState:
     todo, refused = _links_here(env)
     st = LinkState(env, _grid(env, fixed))
     st.findings.extend(refused)
     st.failed.extend(f.subject for f in refused if f.subject)
     todo.sort(key=lambda ln: (_bbox(env, ln), natural_key(ln.net)))
+    st.bare = _bare_routes(env, todo)
     for link in todo:
         _route_one(st, link)
     for _ in range(env.options.reroute_rounds):
@@ -194,20 +187,55 @@ def _route_links(env: RouteEnv, fixed: Sequence[Wire]) -> LinkState:
     return st
 
 
+def _rise_wires(env: RouteEnv, fixed: Drawn) -> tuple[tuple[Wire, ...], tuple[Finding, ...]]:
+    """Each rise by A* to its trunk cell; one that cannot be routed is a finding, never a wire."""
+    if not fixed.rises:
+        return (), ()
+    grid = _grid(env, fixed.wires)
+    wires: list[Wire] = []
+    lost: list[Finding] = []
+    for r in fixed.rises:
+        wire = rise_wire(env, grid, r)
+        if wire is not None:
+            wires.append(wire)
+            continue
+        text = (
+            f"net {r.net} on page {env.page} has no free path from {r.sym} to its trunk at "
+            f"{r.target}, so no wire is drawn for it: move a symbol out of the way, or "
+            "widen the gap beside the trunk"
+        )
+        lost.append(failed(env, r.net, text))
+    return tuple(wires), tuple(lost)
+
+
 def route_page(env: RouteEnv) -> tuple[PageRoutes, tuple[str, ...], tuple[Finding, ...]]:
     """One page's routes, the nets it gave up on, and its findings."""
-    fixed = _fixed_wires(env)
+    drawn = _fixed_wires(env)
+    rises, lost = _rise_wires(env, drawn)
+    fixed = Drawn(drawn.wires + rises, (), drawn.findings + lost)
     st = _route_links(env, fixed.wires)
     wires = fixed.wires + tuple(w for ws in st.routed.values() for w in ws)
-    page = PageRoutes(env.page, wires, demand(wires, env.gaps), counts(wires))
-    return page, tuple(st.failed), fixed.findings + tuple(st.findings)
+    wanted = fixed.wires + tuple(w for ws in st.bare.values() for w in ws)
+    page = PageRoutes(
+        env.page, wires, demand(wanted, env.gaps), counts(wires, bundles(env.fans.values()))
+    )
+    nets = tuple(dict.fromkeys((*(f.subject for f in lost if f.subject), *st.failed)))
+    return page, nets, fixed.findings + tuple(st.findings)
 
 
 def route_pages(
-    placement: Placement, cut: CutResult, problem: PlacementProblem, options: Options
+    placement: Placement,
+    cut: CutResult,
+    problem: PlacementProblem,
+    options: Options,
+    obstacles: Sequence[Box] = (),
 ) -> Routes:
-    """Stage 6: the wires of every placed page, with demand and counts."""
-    results = [route_page(env) for env in route_envs(placement, cut, problem, options)]
+    """Stage 6: the wires of every placed page, with demand and counts.
+
+    `obstacles` are boxes (marker boxes) no wire cell may enter; demand is read from each link
+    routed on footprints and obstacles alone.
+    """
+    results = [route_page(env) for env in route_envs(placement, cut, problem, options, obstacles)]
     return Routes(
         tuple(r[0] for r in results),
         tuple(n for r in results for n in r[1]),

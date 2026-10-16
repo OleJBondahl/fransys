@@ -14,6 +14,11 @@ from typing import TYPE_CHECKING
 from plant import Plant
 from test_plc_allocation_units_model import Site, _bound, _site
 
+from fransys_model.checks.plc import (
+    PLC_BINDING_SIGNAL_MISMATCH,
+    check_plc,
+    check_plc_wiring,
+)
 from fransys_model.derive import plc_channel_rows
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.derive.passes.plc_allocation import PLC_REQUEST_UNSERVABLE, allocate_plc
@@ -21,11 +26,6 @@ from fransys_model.kernel import make_id
 from fransys_model.vocab.enums import SignalType
 from fransys_model.vocab.facets.plc import PlcBindingFacet, PlcRequestFacet
 from fransys_model.vocab.tables import facets_of
-from fransys_model.vocab.validators.plc import (
-    PLC_BINDING_SIGNAL_MISMATCH,
-    check_plc,
-    check_plc_wiring,
-)
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id, Model

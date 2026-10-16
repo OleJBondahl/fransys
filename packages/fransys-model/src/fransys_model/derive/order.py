@@ -13,13 +13,13 @@ from fransys_model.derive.designation import (
     port_designation,
     terminal_of,
 )
+from fransys_model.derive.facts.item_predicates import is_plc_module
 from fransys_model.derive.facts.subjects import subject_kind
 from fransys_model.derive.lookups import position_rank
 from fransys_model.kernel import Finding, Id, Model, SchemaError
 from fransys_model.layout import DrawingSet, HarnessLine, Page, layout_of, page_slice
 from fransys_model.vocab import marking_key
 from fransys_model.vocab.enums import SubjectKind
-from fransys_model.vocab.plc_module import is_plc_module
 from fransys_model.vocab.tables import items
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 

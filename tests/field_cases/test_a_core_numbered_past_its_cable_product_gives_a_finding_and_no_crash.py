@@ -16,11 +16,11 @@ import dataclasses
 import fransys as fr
 from fransys.colours import BK, BN
 
-from fransys_model.derive import cable_rows, core_colour, open_core_rows
+from fransys_model.checks import ALL_VALIDATORS
+from fransys_model.derive import cable_items, cable_rows, core_colour, open_core_rows
 from fransys_model.kernel import Origin, evolve
-from fransys_model.vocab import cable_items, facets_of
+from fransys_model.vocab import facets_of
 from fransys_model.vocab.facets.cable import CoreFacet
-from fransys_model.vocab.validators import ALL_VALIDATORS
 
 _CODE = "CORE_INDEX_PAST_PRODUCT"
 

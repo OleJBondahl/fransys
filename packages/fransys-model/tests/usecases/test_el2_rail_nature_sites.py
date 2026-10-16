@@ -19,12 +19,12 @@ from fransys_model.derive import (
     power_text,
 )
 from fransys_model.derive.baseline_listing import _net_rows
-from fransys_model.derive.baseline_rules import CURRENT
+from fransys_model.derive.baseline_rules import ListingRules
 from fransys_model.derive.stands import stands
 from fransys_model.kernel import freeze
 from fransys_model.vocab.tables import items, nets, ports
 
-_DIGEST = "22eca0bda4ee6826c7fbc7f936206ce83e1dc74e16dd4440efb9613decca826c"
+_DIGEST = "31543ecbb30d1ef8caa898e6c04486a9bbed2126b27035b68a1a0af82267378a"
 
 
 def observed() -> str:
@@ -45,10 +45,10 @@ def observed() -> str:
     lines += [repr((n, power_kind(model, n), power_text(model, n))) for n in sorted(nets(model))]
     lines += [repr((i, is_rail_terminal(model, i))) for i in sorted(items(model))]
     lines.append(repr(sorted(stands(model).items())))
-    lines.append(repr(_net_rows(model, None, CURRENT)))
+    lines.append(repr(_net_rows(model, None, ListingRules(item_keys=False))))
     return "\n".join(lines)
 
 
 def test_the_sites_print_what_they_printed_before_the_switch() -> None:
-    """The digest was taken before any site read a net fact."""
+    """The digest was taken before any site read a net fact (re-taken for the key fields, 0300)."""
     assert sha256(observed().encode()).hexdigest() == _DIGEST

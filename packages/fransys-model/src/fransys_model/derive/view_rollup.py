@@ -15,8 +15,8 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Function, Item, Port, Unit
 
-from .facts.roles import item_role
 from .facts.subjects import subject_kind
+from .kinds import item_role
 from .lookups import effective_placement, item_of_port, unit_chain
 from .overview_field import field_devices
 from .overview_location import location_fold

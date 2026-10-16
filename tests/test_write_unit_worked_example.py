@@ -23,11 +23,10 @@ from _model_build_cover import system_document
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _system_design
 
-from fransys_model.derive import unit_release
+from fransys_model.derive import unit_name_unresolved, unit_release
 from fransys_model.kernel import Id, SchemaError
 from fransys_model.vocab import Document as ModelDocument
 from fransys_model.vocab.tables import units as units_table
-from fransys_model.vocab.unit_by_name import unit_name_unresolved
 
 
 def _only_record(draft) -> ModelDocument:

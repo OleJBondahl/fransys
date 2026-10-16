@@ -3,6 +3,7 @@
 from fransys_model.kernel import SchemaError
 
 from .baseline_ancestry import removed_ancestry
+from .baseline_diff_keyed import keyed_pair, rename_to_b, renamed_first
 from .baseline_diff_units import (
     _boundary_changes,
     _item_changes,
@@ -30,20 +31,36 @@ def diff(a: Listing, b: Listing) -> ListingDiff:
     Raises:
         SchemaError: `a.unit.name != b.unit.name`; differing versions are what it diffs.
     """
-    if a.unit.name != b.unit.name:
-        msg = f"cannot diff listings of different units: {a.unit.name!r} and {b.unit.name!r}"
+    a_unit, b_unit = a.unit, b.unit
+    if a_unit.name != b_unit.name:
+        msg = f"cannot diff listings of different units: {a_unit.name!r} and {b_unit.name!r}"
         raise SchemaError(msg, kind="listing")
-    subject = unit_subject_text(b.unit)
-    changes: list[Change] = [
-        *_unit_changes(a.unit, b.unit),
+    subject = unit_subject_text(b_unit)
+    earlier, keyed = a, keyed_pair(a, b)
+    renamed: list[Change] = []
+    if keyed:
+        a, renamed = rename_to_b(a, b, unit_subject_text(a_unit), subject)
+    items = [
+        *(r for r in renamed if r.section == "items"),
         *_item_changes(a.items, b.items, subject),
-        *_nested_unit_changes(a.units, b.units),
-        *_boundary_changes(a.boundary, b.boundary, subject),
-        *_conductor_changes(a.conductors, b.conductors),
-        *_mate_changes(a.mates, b.mates),
-        *_net_changes(a.nets, b.nets),
     ]
-    rows = tuple(changes)
+    boundary = [
+        *(r for r in renamed if r.section == "boundary"),
+        *_boundary_changes(a.boundary, b.boundary, subject),
+    ]
+    rows = (
+        *_unit_changes(a_unit, b_unit),
+        *sorted(items, key=renamed_first),
+        *_nested_unit_changes(a.units, b.units),
+        *sorted(boundary, key=renamed_first),
+        *_conductor_changes(a.conductors, b.conductors, keyed=keyed),
+        *_mate_changes(a.mates, b.mates, keyed=keyed),
+        *_net_changes(a.nets, b.nets, keyed=keyed),
+    )
     return ListingDiff(
-        a=a.unit, b=b.unit, changes=rows, ancestry=removed_ancestry(a, rows, subject)
+        a=a_unit,
+        b=b_unit,
+        changes=rows,
+        ancestry=removed_ancestry(earlier, rows, subject),
+        keyed=keyed,
     )

@@ -67,7 +67,7 @@ _EXPECTED_SURFACE_MODULES = (
 )
 
 
-def test_surface_modules_is_the_expected_26_entries():
+def test_surface_modules_is_the_expected_27_entries():
     """Every `packages/*` top-level module (`fransys_model` excepted), its nine named
     modules, `fransys.colours` and the author package's two surface modules:
     no more, no fewer.

@@ -25,7 +25,7 @@ from .roles_types import (
 _F = FunctionKind
 _FUNCTION_ROWS: frozendict[FunctionKind, FunctionRole] = frozendict(
     {
-        # vocab/energy_flow.py:9 takes energy; connectivity.py:148 through; formats.py:112 band
+        # facts/energy_flow.py:9 takes energy; connectivity.py:148 through; formats.py:112 band
         _F.COIL: FunctionRole(operator=True, through=True, energy=Energy.IN, band="coil"),
         # accessory_blocks.py:18 plain_contact; contacts.py:150 rest; _rest.py:20, _poles.py:15
         _F.CONTACT_NO: FunctionRole(
@@ -57,13 +57,13 @@ _FUNCTION_ROWS: frozendict[FunctionKind, FunctionRole] = frozendict(
         _F.CONNECTOR: FunctionRole(pin_group=True, box=True),
         # defaults.py:70 KIND_ROLES plc_channel, boxy
         _F.PLC_CHANNEL: FunctionRole(channel=True, box=True),
-        # energy_flow.py:34 a supply gives energy out
+        # derive/facts/energy_flow.py:34 a supply gives energy out
         _F.SUPPLY: FunctionRole(energy=Energy.OUT, band="supply"),
         _F.LOAD: FunctionRole(through=True, energy=Energy.IN, band="load"),
         _F.SENSOR: FunctionRole(band="sensor"),
         _F.ACTUATOR: FunctionRole(through=True, energy=Energy.IN, band="actuator"),
         _F.GENERIC: FunctionRole(),
-        # vocab/bars.py:17 a bar is a function of its own kind
+        # facts/bars.py a bar is a function of its own kind
         _F.BAR: FunctionRole(bar=True),
     }
 )
@@ -73,11 +73,11 @@ _L = LinkKind
 _LINK_ROWS: frozendict[LinkKind, LinkRole] = frozendict(
     {
         # closure.py:26 physical links
-        _L.CONDUCTIVE: LinkRole(joins_net=True),
+        _L.CONDUCTIVE: LinkRole(joins_net=True, passes_rail=True),
         # markings.py:84 pole kinds; contacts.py:61 switched
-        _L.SWITCHED: LinkRole(pole=True, switched=True),
+        _L.SWITCHED: LinkRole(pole=True, switched=True, passes_rail=True),
         # markings.py:84 pole kinds; closure.py:26 a protective link does not join the physical net
-        _L.PROTECTIVE: LinkRole(pole=True, protective=True),
+        _L.PROTECTIVE: LinkRole(pole=True, protective=True, passes_rail=True),
     }
 )
 LINK_ROLES = complete(_LINK_ROWS, LinkKind)
@@ -85,8 +85,8 @@ LINK_ROLES = complete(_LINK_ROWS, LinkKind)
 _I = ItemKind
 _ITEM_ROWS: frozendict[ItemKind, ItemRole] = frozendict(
     {
-        # kinds.py:56 a strip's terminal is held by the strip: no flag of its own
-        _I.TERMINAL: ItemRole(),
+        # kinds.py terminal_items; marker_targets.py:60 first end, page_nav.py:31 _NO_ENTRY
+        _I.TERMINAL: ItemRole(terminal=True),
         # kinds.py:60 strip_set
         _I.STRIP: ItemRole(strip=True),
         # kinds.py:63 an item whose functions are all connectors
@@ -110,8 +110,8 @@ ITEM_ROLES = complete(_ITEM_ROWS, ItemKind)
 _C = ConductorKind
 _CONDUCTOR_ROWS: frozendict[ConductorKind, ConductorRole] = frozendict(
     {
-        # overview_conns.py:25 _PLAIN, contact_lines.py:12 _LANDING
-        _C.WIRE: ConductorRole(carries=True, lands=True),
+        # overview_conns.py:25 _PLAIN, contact_lines.py:12 _LANDING; harness_wires.py a single wire
+        _C.WIRE: ConductorRole(wire=True, carries=True, lands=True),
         _C.CORE: ConductorRole(carries=True, lands=True),
         # wiring.py:74 and unused.py:65 bridge; power.py:126 rail link; G-POT-20 link, never a wire
         _C.JUMPER: ConductorRole(joins_net=True, bridge=True, rail_link=True),

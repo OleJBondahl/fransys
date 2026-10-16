@@ -12,6 +12,7 @@ import pytest
 from cabinet import build_cabinet
 from harness_board import build_harness_board
 
+from fransys_model.checks import ALL_VALIDATORS, check_cables
 from fransys_model.derive import (
     allocate_plc,
     bom_lines,
@@ -22,13 +23,11 @@ from fransys_model.derive import (
 )
 from fransys_model.derive.designation import own_designation_or_none
 from fransys_model.kernel import Id, Model, Severity, dumps, evolve, freeze, merge
-from fransys_model.vocab import ALL_VALIDATORS
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CoreFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
 from fransys_model.vocab.facets.scaling import ScalingFacet
 from fransys_model.vocab.tables import conductors, facets_of, items, ports
-from fransys_model.vocab.validators import check_cables
 
 if TYPE_CHECKING:
     from fransys_model.vocab.core import Item, Port

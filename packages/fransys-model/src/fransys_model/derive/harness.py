@@ -8,12 +8,12 @@ Decision 0027; all built on the same per-cable facts and end discovery.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.item_predicates import cable_items
 from fransys_model.derive.facts.roles import function_role
+from fransys_model.derive.facts.units import cable_children, in_reading
 from fransys_model.kernel import Id, Model, SchemaError
-from fransys_model.vocab.cables import cable_items
 from fransys_model.vocab.facets.cable import CableFacet, CableProductFacet
 from fransys_model.vocab.facets.wire import WireFacet
-from fransys_model.vocab.membership import cable_children, in_reading
 from fransys_model.vocab.tables import (
     facets_of,
     functions,

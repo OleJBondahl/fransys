@@ -6,11 +6,11 @@ See derive-queries.md.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
+from fransys_model.derive.facts.item_predicates import is_plc_module
+from fransys_model.derive.facts.units import external
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
 from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.scaling import ScalingFacet
-from fransys_model.vocab.membership import external
-from fransys_model.vocab.plc_module import is_plc_module
 from fransys_model.vocab.tables import facets_of, functions, items, parts, ports
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Port, Unit

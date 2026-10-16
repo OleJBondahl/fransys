@@ -8,10 +8,10 @@ all contacts (model-0119), or all switches under a holder that states `operated_
 
 from itertools import islice
 
+from fransys_model.derive.facts.units import item_chain
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab.enums import FunctionKind, OperatedBy
-from fransys_model.vocab.membership import item_chain
 from fransys_model.vocab.roles import FUNCTION_ROLES
 from fransys_model.vocab.tables import functions, items, parts
 lazy from fransys_model.vocab.core import Function, Item

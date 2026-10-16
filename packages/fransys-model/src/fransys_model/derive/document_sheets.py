@@ -6,7 +6,6 @@ text from the model alone and pdf looks the same sheet up by the same key.
 
 from collections import Counter
 
-from fransys_kernel import render_id
 from fransys_model.layout import SheetFormat, sheet_for, sheet_format_of
 from fransys_model.vocab import PageKind
 from fransys_model.vocab.tables import documents
@@ -23,7 +22,7 @@ from .harness_blocks import cable_blocks, harness_cables_for, system_has_no_top_
 from .page_headings import DIAGRAM_TITLE, HARNESS_DRAWING_TITLE, PAGE_HEADINGS, SCHEMATIC_TITLE
 from .page_presets import document_page_kinds
 from .page_titles import page_title_forms
-from .rows_sheet import TitleBlockFields
+from .rows_sheet import SheetKey, TitleBlockFields
 from .rows_sheet_pages import DocumentSheets, SheetPage
 from .schematic_subject import has_schematic_subject
 from .sheet_forms import sheet_counter_text
@@ -31,14 +30,7 @@ from .sheet_frame import sheet_frame
 from .sheets import diagram_sheets
 from .title_block import document_facts
 
-__all__ = ["document_sheet_format", "document_sheets", "document_sheets_of", "sheet_key"]
-
-_NONE = "none"
-
-
-def sheet_key(document: Id[Document], kind: PageKind, index: int | str) -> str:
-    """The key of one page background: the document, the page kind and the page's place in it."""
-    return f"{render_id(document)}#{kind.name}#{index}"
+__all__ = ["document_sheet_format", "document_sheets", "document_sheets_of"]
 
 
 def document_sheet_format(
@@ -100,7 +92,7 @@ def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list
         found = ()
     out = [
         SheetPage(
-            key=sheet_key(record.id, kind, i),
+            key=SheetKey(record.id, kind, i),
             kind=kind,
             sheet=sheet,
             fields=fields,
@@ -112,7 +104,7 @@ def _schematic_pages(model: Model, record: Document, sheet: SheetFormat) -> list
         )
     ]
     fallback = _fields(model, record, (SCHEMATIC_TITLE,))
-    key = sheet_key(record.id, kind, _NONE)
+    key = SheetKey(record.id, kind, None)
     return [*out, SheetPage(key=key, kind=kind, sheet=sheet, fields=fallback, where="", group="")]
 
 
@@ -131,13 +123,13 @@ def _harness_pages(
         return []
     blocks = cable_blocks(model, record, cables)
     if not blocks:
-        key = sheet_key(record.id, kind, _NONE)
+        key = SheetKey(record.id, kind, None)
         fallback = _fields(model, record, (HARNESS_DRAWING_TITLE,))
         return [SheetPage(key=key, kind=kind, sheet=sheet, fields=fallback, where="", group="")]
     scope = _harness_scope(model, record)
     return [
         SheetPage(
-            key=sheet_key(record.id, kind, i),
+            key=SheetKey(record.id, kind, i),
             kind=kind,
             sheet=sheet,
             fields=_fields(model, record, (run.heading,), scope=scope),
@@ -154,7 +146,7 @@ def _diagram_pages(model: Model, record: Document) -> list[SheetPage]:
     paper = sheet_for(model, kind)
     return [
         SheetPage(
-            key=sheet_key(record.id, kind, i),
+            key=SheetKey(record.id, kind, i),
             kind=kind,
             sheet=paper,
             fields=_fields(
@@ -184,7 +176,7 @@ def document_sheets(model: Model, document: Id[Document]) -> DocumentSheets:
         else:
             pages.append(
                 SheetPage(
-                    key=sheet_key(document, kind, 0),
+                    key=SheetKey(document, kind, 0),
                     kind=kind,
                     sheet=sheet,
                     fields=_fields(model, record, (PAGE_HEADINGS[kind],)),

@@ -11,6 +11,7 @@ import pytest
 from fransys_layout.core import Options, mark_pages, place_pages
 
 from . import pipeline_fixtures
+from .conftest import MARKER_BOX
 from .cut_respell import back_of, id_sets, make_maps, respell_cut, respell_problem
 from .test_cut_rename import SPELLINGS
 from .text_fixtures import PLANTS
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 
     from fransys_layout.core import Marker
 
-OPTIONS = Options()
+OPTIONS = Options(marker=MARKER_BOX)
 
 
 def _canon(markers: tuple[Marker, ...], back: Callable[[str | None], str | None]) -> list:

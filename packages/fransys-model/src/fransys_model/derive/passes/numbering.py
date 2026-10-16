@@ -18,6 +18,7 @@ from fransys_model.derive.designation import (
     reference_leaves,
     takes_parents_designation,
 )
+from fransys_model.derive.facts.bars import bar_items
 from fransys_model.derive.harness import all_cables, all_unit_cables
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.derive.lone_cable import lone_cable_harness
@@ -30,7 +31,6 @@ from fransys_model.derive.passes.numbering_units import (
 from fransys_model.derive.unit_relative_key import unit_relative_key
 from fransys_model.derive.unit_release import unit_release
 from fransys_model.kernel import Finding, Model, Severity, evolve
-from fransys_model.vocab.bars import bar_items
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.reserved_designation import ReservedDesignationFacet
 from fransys_model.vocab.finding_ref import ref

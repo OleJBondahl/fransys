@@ -30,7 +30,6 @@ from fransys_layout.engines import lay_out_schematic
 from fransys_layout.stages.wire_copies import WireCopies
 from fransys_model.derive import connector_box_lines, page_title, unit_release
 from fransys_model.derive import tag_text as tag_text_module
-from fransys_model.derive.closure import net_of
 from fransys_model.derive.designation import (
     item_designation,
     own_designation_or_none,
@@ -46,6 +45,7 @@ from fransys_model.derive.drawing_text import (
     strip_tag_text,
     unit_tag_text,
 )
+from fransys_model.derive.facts.closure import net_of
 from fransys_model.derive.tag_text import run_point_text
 from fransys_model.kernel import Severity, freeze
 from fransys_model.layout import (

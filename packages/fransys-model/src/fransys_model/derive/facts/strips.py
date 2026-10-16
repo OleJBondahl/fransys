@@ -1,6 +1,6 @@
 """The one reader of a terminal's strip: the parent of a terminal item, else none."""
 
-from fransys_model.vocab.terminals import terminal_items
+from fransys_model.derive.facts.item_predicates import terminal_items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
 

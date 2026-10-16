@@ -17,8 +17,8 @@ from fransys_model.derive import (
     pin_source,
     previous_release,
     release_identity,
+    units_named,
 )
-from fransys_model.vocab import units_named
 
 sys.path.insert(0, str(Path(__file__).parent))
 from release_folders_fixture import build_board, release_board

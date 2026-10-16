@@ -18,6 +18,7 @@ from fransys_model.vocab.enums import (
     NetClass,
     PortRole,
 )
+from fransys_model.vocab.roles import CONDUCTOR_ROLES
 from fransys_model.vocab.tables import conductors, internal_links, nets, ports
 
 MODEL, IDS = roles_plant()
@@ -91,3 +92,9 @@ def test_a_link_rest_is_the_declared_one_else_the_functions() -> None:
         if link.rest is not None:
             assert role.rest is link.rest
         assert role.rest in (None, *LinkRest)
+
+
+def test_the_wire_flag_is_the_wire_kind_alone() -> None:
+    """Oracle: `ConductorRole.wire` equals `kind is WIRE` for every `ConductorKind`."""
+    for kind in every_kind_member(ConductorKind):
+        assert CONDUCTOR_ROLES[kind].wire is (kind is ConductorKind.WIRE)

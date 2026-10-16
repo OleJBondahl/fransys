@@ -369,3 +369,7 @@ _.cut_y  # TESTS electrical-symbols/tests/test_natural.py:75
 _.orient  # FIELDS packages/fransys-model/src/fransys_model/layout/drawn_results.py:40
 _.tint  # FIELDS packages/fransys-model/src/fransys_model/layout/drawn_results.py:47
 _.muted  # FIELDS packages/fransys-model/src/fransys_model/layout/drawn_results.py:48
+_.DIGITAL_IN  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:111
+_.DIGITAL_OUT  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:112
+_.ANALOGUE_IN  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:113
+_.ANALOGUE_OUT  # OTHER fransys-model/src/fransys_model/derive/rows_plc.py:114

@@ -12,10 +12,10 @@ from plant import Plant
 from test_plc_allocation_units_model import Site, _bound, _site
 from test_plc_allocation_wired_model import _plain, _request
 
+from fransys_model.checks.plc import PLC_BINDING_SIGNAL_MISMATCH, check_plc
 from fransys_model.derive.passes._plc_ambiguous import PLC_REQUEST_AMBIGUOUS
 from fransys_model.derive.passes.plc_allocation import allocate_plc
 from fransys_model.vocab.enums import SignalType
-from fransys_model.vocab.validators.plc import PLC_BINDING_SIGNAL_MISMATCH, check_plc
 
 if TYPE_CHECKING:
     from fransys_model.kernel import Id

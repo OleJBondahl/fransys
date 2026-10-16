@@ -5,16 +5,16 @@ See design/derive-queries-structure.md.
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.units import unit_items
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Model, digest_cached
-from fransys_model.vocab.membership import unit_items
 from fransys_model.vocab.tables import conductors, functions, items, mates, parts
 
-from .closure import physical_nets
 from .designation import (
     designation_holder,
     own_designation_or_none,
     printed_designation,
 )
+from .facts.closure import physical_nets
 from .lookups import (
     item_description,
     item_of_port,

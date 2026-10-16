@@ -6,13 +6,13 @@ from pathlib import Path
 
 from plant import Plant
 
+from fransys_model import checks
+from fransys_model.checks.revisions import REVISION_CURRENT_MISSING, check_revisions
 from fransys_model.derive.drawing_text import outline_title
 from fransys_model.derive.numbering_pins import name_findings, name_of
 from fransys_model.kernel import Finding, Id, Severity
-from fransys_model.vocab import validators
 from fransys_model.vocab.finding_ref import REF, ref
 from fransys_model.vocab.tables import items
-from fransys_model.vocab.validators.revisions import REVISION_CURRENT_MISSING, check_revisions
 
 
 def _finding(message: str) -> Finding:
@@ -72,7 +72,7 @@ def test_no_rendered_message_for_a_unit_holds_unit_unit() -> None:
 
 
 def test_no_validator_template_writes_unit_right_before_a_unit_reference() -> None:
-    root = Path(validators.__file__).parent
+    root = Path(checks.__file__).parent
     joined = {path: re.sub(r'"\s*f"', "", path.read_text()) for path in root.glob("*.py")}
     bad = [path.name for path, text in joined.items() if re.search(r"\bunit \{ref\(", text)]
     assert bad == []

@@ -261,7 +261,7 @@ def test_the_options_carry_geometry_for_the_placement_strings_and_no_colours():
     assert o.box_columns is True
     assert o.cells == (8, 6)
     assert o.wire_label_sides == ("N", "S")
-    assert o.marker == values.Size(24, 8)
+    assert o.marker is None  # layout-0305: symdef data, passed in, never typed in the core
     assert "colours" not in {f.name for f in dataclasses.fields(Options)}
 
 

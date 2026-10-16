@@ -7,10 +7,10 @@ from fransys_author import AuthorError
 from fransys_author.surface import CONTROL, GENERIC, SIGNAL, design, unit
 
 from fransys_model.derive import item_designation
+from fransys_model.derive.facts.units import is_harness
 from fransys_model.kernel import freeze, merge
 from fransys_model.vocab import HarnessFacet, NetClass
 from fransys_model.vocab import Item as ModelItem
-from fransys_model.vocab.membership import is_harness
 lazy from fransys_model.kernel import Draft
 
 

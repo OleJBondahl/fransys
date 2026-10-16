@@ -8,7 +8,7 @@ lazy from fransys_model.kernel import Id
 lazy from fransys_model.layout import SheetFormat
 lazy from fransys_model.vocab import PageKind
 
-lazy from .rows_sheet import Sizes, TitleBlockFields
+lazy from .rows_sheet import SheetKey, Sizes, TitleBlockFields
 
 
 @dataclass(frozen=True)  # plain: it holds a record, which a value may not
@@ -19,7 +19,7 @@ class SheetPage:
     for a page whose page-level fields are not checked (a diagram sheet, a no-drawings page).
     """
 
-    key: str
+    key: SheetKey
     kind: PageKind
     sheet: SheetFormat
     fields: TitleBlockFields

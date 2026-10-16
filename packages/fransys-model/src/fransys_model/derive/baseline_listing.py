@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING
 
 from fransys_kernel import decimal_text
+from fransys_model.derive.facts.function_ratings import boundary_operating, boundary_rating
+from fransys_model.derive.facts.units import external, is_sole_unit_root, unit_own_roots
 from fransys_model.vocab.facets.wire import WireFacet
-from fransys_model.vocab.membership import external, is_sole_unit_root, unit_own_roots
-from fransys_model.vocab.rating_readers import boundary_operating, boundary_rating
 from fransys_model.vocab.tables import (
     boundaries as boundaries_table,
 )
@@ -23,12 +23,13 @@ lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit
 
 from .baseline_designation import (
-    _cross_function_text,
-    _cross_port_text,
-    _net_port_text,
-    function_text,
+    cross_function_end,
+    cross_port_end,
+    function_end,
+    net_port_end,
     unit_designation,
 )
+from .baseline_keys import listing_key
 from .baseline_rules import CURRENT, ListingRules
 from .facts.net_facts import net_class_name, net_potential
 from .lone_cable import lone_cable
@@ -38,6 +39,7 @@ from .reports import _conductor_unit, _lowest_common_unit
 from .rows_baseline import (
     BaselineBoundary,
     BaselineConductor,
+    BaselineEnd,
     BaselineItem,
     BaselineMate,
     BaselineNestedUnit,
@@ -98,6 +100,7 @@ def _item_rows(
                 parent=None
                 if item.parent is None
                 else _listing_designation(model, unit, item.parent, rules),
+                key=listing_key(model, item.id) if rules.item_keys else None,
             )
         )
     rows.sort(
@@ -111,6 +114,13 @@ def _item_rows(
         )
     )
     return tuple(rows)
+
+
+def _end_keys(a: BaselineEnd, b: BaselineEnd, rules: ListingRules) -> dict[str, str]:
+    """The `a_key`, `a_pin`, `b_key`, `b_pin` keywords of a conductor or mate; none under v1."""
+    if not rules.item_keys:
+        return {}
+    return {"a_key": a.key, "a_pin": a.pin, "b_key": b.key, "b_pin": b.pin}
 
 
 def _nested_unit_rows(
@@ -155,16 +165,18 @@ def _boundary_rows(
         if record.unit != unit:
             continue
         fn = functions(model)[record.function]
-        designation = function_text(model, unit, fn, rules)
+        end = function_end(model, unit, fn, rules)
         port_names = tuple(
             sorted(p.name for p in ports(model).values() if p.function == record.function)
         )
         rows.append(
             BaselineBoundary(
-                designation=designation,
+                designation=end.text,
                 ports=port_names,
                 rating=boundary_rating(model, record.id),
                 operating=boundary_operating(model, record.id),
+                key=end.key if rules.item_keys else None,
+                pin=end.pin if rules.item_keys else None,
             )
         )
     rows.sort(key=lambda r: (r.designation, r.ports, _repr_key(r.rating), _repr_key(r.operating)))
@@ -179,11 +191,12 @@ def _conductor_rows(
     for conductor in conductors(model).values():
         if _conductor_unit(model, conductor) != unit:
             continue
-        a_text, b_text = sorted(
+        a_end, b_end = sorted(
             (
-                _cross_port_text(model, unit, conductor.a, rules),
-                _cross_port_text(model, unit, conductor.b, rules),
-            )
+                cross_port_end(model, unit, conductor.a, rules),
+                cross_port_end(model, unit, conductor.b, rules),
+            ),
+            key=lambda end: end.text,
         )
         carrier = (
             None
@@ -194,13 +207,14 @@ def _conductor_rows(
         rows.append(
             BaselineConductor(
                 kind=conductor.kind.value,
-                a=a_text,
-                b=b_text,
+                a=a_end.text,
+                b=b_end.text,
                 carrier=carrier,
                 colour=None if facet is None else facet.colour,
                 gauge_mm2=None if facet is None else decimal_text(facet.gauge_mm2),
                 length_mm=None if facet is None else facet.length_mm,
                 label=None if facet is None else facet.label,
+                **_end_keys(a_end, b_end, rules),
             )
         )
     rows.sort(
@@ -228,13 +242,14 @@ def _mate_rows(
         a_unit, b_unit = all_items[fn_a.item].unit, all_items[fn_b.item].unit
         if _lowest_common_unit(model, a_unit, b_unit) != unit:
             continue
-        a_text, b_text = sorted(
+        a_end, b_end = sorted(
             (
-                _cross_function_text(model, unit, record.a, rules),
-                _cross_function_text(model, unit, record.b, rules),
-            )
+                cross_function_end(model, unit, record.a, rules),
+                cross_function_end(model, unit, record.b, rules),
+            ),
+            key=lambda end: end.text,
         )
-        rows.append(BaselineMate(a=a_text, b=b_text))
+        rows.append(BaselineMate(a=a_end.text, b=b_end.text, **_end_keys(a_end, b_end, rules)))
     rows.sort(key=lambda r: (r.a, r.b))
     return tuple(rows)
 
@@ -263,19 +278,22 @@ def _net_rows(model: Model, unit: Id[Unit] | None, rules: ListingRules) -> tuple
     for record in nets(model).values():
         if _net_unit(model, record.ports) != unit:
             continue
-        port_texts = tuple(
-            sorted(
-                text
+        ends = sorted(
+            (
+                end
                 for p in record.ports
-                if (text := _net_port_text(model, unit, direct_nested, p, rules)) is not None
-            )
+                if (end := net_port_end(model, unit, direct_nested, p, rules)) is not None
+            ),
+            key=lambda end: end.text,
         )
         rows.append(
             BaselineNet(
                 name=record.name,
                 net_class=net_class_name(model, record.id),
                 potential=net_potential(model, record.id),
-                ports=port_texts,
+                ports=tuple(end.text for end in ends),
+                port_keys=tuple(end.key for end in ends) if rules.item_keys else (),
+                port_pins=tuple(end.pin for end in ends) if rules.item_keys else (),
             )
         )
     rows.sort(key=lambda r: (_opt_key(r.name), r.net_class, _opt_key(r.potential), r.ports))

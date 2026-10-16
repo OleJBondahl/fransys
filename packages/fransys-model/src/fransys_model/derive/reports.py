@@ -11,6 +11,7 @@ cannot render instead of defaulting it (decision 0021).
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.harness_wires import wire_harnesses
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, SchemaError, digest_cached
 from fransys_model.vocab.enums import ConductorKind
 from fransys_model.vocab.facets.cable import CoreFacet
@@ -18,7 +19,6 @@ from fransys_model.vocab.facets.plc import PlcChannelFacet, PlcRequestFacet
 from fransys_model.vocab.facets.wire import WireFacet
 from fransys_model.vocab.tables import conductors, facets_of, functions, items
 from fransys_model.vocab.tables import units as units_table
-from fransys_model.vocab.wire_harness import wire_harnesses
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor
 lazy from fransys_model.vocab.core import Item, Unit

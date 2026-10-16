@@ -40,6 +40,7 @@ class FunctionRole:
 class LinkRole:
     """What a `LinkKind` does: `pole` for a switched or protective link, `joins_net` if physical.
 
+    `passes_rail` is true if a supply rail spreads across the link (the closure's rail pass).
     `rest` is the link's state at rest; the table leaves it `None` because a link declares it.
     """
 
@@ -47,6 +48,7 @@ class LinkRole:
     joins_net: bool = False
     switched: bool = False
     protective: bool = False
+    passes_rail: bool = False
     rest: LinkRest | None = None
 
 
@@ -66,11 +68,12 @@ def complete[K: Enum, R](table: Mapping[K, R], enum_cls: type[K]) -> Mapping[K, 
 class ItemRole:
     """What an `ItemKind` is, plus the facet-read flags the table leaves false.
 
-    Example: `ITEM_ROLES[ItemKind.STRIP]` has `strip`. `rack`, `external`, `accessory` and
-    `unit_root` come from facets, not from the kind, so every row leaves them false.
+    Example: `ITEM_ROLES[ItemKind.STRIP]` has `strip`; a strip's terminal has `terminal`.
+    `rack`, `external`, `accessory` and `unit_root` come from facets: every row leaves them false.
     """
 
     strip: bool = False
+    terminal: bool = False
     bar_holder: bool = False
     board: bool = False
     cable: bool = False
@@ -91,6 +94,7 @@ class ConductorRole:
     `lands` adds `LEAD` to what `carries`: a device's own lead lands a line but is not a wire.
     """
 
+    wire: bool = False
     carries: bool = False
     lands: bool = False
     joins_net: bool = False

@@ -16,7 +16,7 @@ from listing_golden_cases import _cabinet
 from fransys_model.derive import baseline, unit_release
 from fransys_model.vocab.tables import units
 
-OLD_BAR = baseline.ListingRules(bar_end_without_screw=False)
+OLD_BAR = baseline.ListingRules(bar_end_without_screw=False, item_keys=False)
 NAMES = ("lg-board", "lg-cabinet", "lg-plant")
 
 

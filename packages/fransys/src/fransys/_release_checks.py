@@ -10,6 +10,9 @@ lazy from pathlib import Path
 from fransys_model.derive import (
     baseline,
     current_revision,
+    has_project,
+    listing_interface,
+    listing_revision_text,
     nested_units,
     pin_source,
     previous_release,
@@ -18,7 +21,6 @@ from fransys_model.derive import (
     unit_release,
 )
 from fransys_model.kernel import Finding, Id, Severity
-from fransys_model.vocab import projects
 lazy from fransys_model.derive.numbering_pins import NumberingPins
 
 from . import _revision_pins
@@ -137,14 +139,42 @@ def _since_listing(release: _ReleaseTarget) -> Listing | None:
     return _previous_release_listing(release)
 
 
+def _system_since(model: Model, releases: Path | None) -> Listing | None:
+    """The system's listing `_since_listing` finds, or `None` (no folder or no project)."""
+    if releases is None or not has_project(model):
+        return None
+    return _since_listing(_release_target(model, None, releases))
+
+
 def _changes_since(
     model: Model, releases: Path | None, unit: Id[ModelUnit] | None
 ) -> ListingDiff | None:
-    """The system's `ListingDiff` from the release `_since_listing` finds, or `None`."""
-    if releases is None or unit is not None or not projects(model):
-        return None
-    since = _since_listing(_release_target(model, None, releases))
+    """The system's `ListingDiff` from the release `_system_since` finds, or `None`."""
+    since = None if unit is not None else _system_since(model, releases)
     return None if since is None else baseline.diff(since, baseline.listing(model, None))
+
+
+def changes_by_name_findings(model: Model, releases: Path | None) -> list[Finding]:
+    """`CHANGES_BY_NAME`: the release the next change list starts from has no item keys (CR3).
+
+    The system only, as `_changes_since`; the diff then matches by printed text, so a rename shows
+    as a removed and an added row. A release cut at listing version 2 or later gives none.
+    """
+    since = _system_since(model, releases)
+    label = None if since is None else baseline.keyless_release(since)
+    if label is None:
+        return []
+    return [
+        Finding(
+            code="CHANGES_BY_NAME",
+            severity=Severity.INFO,
+            subjects=(),
+            message=(
+                f"renames are not followed: the listing of {label} has no "
+                "item keys; fr.rebaseline re-cuts it with them"
+            ),
+        )
+    ]
 
 
 def _pin_source(release: _ReleaseTarget, into: Path) -> tuple[Path, NumberingPins] | None:
@@ -166,11 +196,11 @@ def _interface_not_bumped_findings(
     previous = _previous_release_listing(release)
     if previous is None:
         return []
-    if previous.unit.interface != new_listing.unit.interface or previous.boundary == (
+    if listing_interface(previous) != listing_interface(new_listing) or previous.boundary == (
         new_listing.boundary
     ):
         return []
-    previous_revision = revision_text(previous.unit.version, previous.unit.revision)
+    previous_revision = listing_revision_text(previous)
     return [
         Finding(
             code="INTERFACE_NOT_BUMPED",
@@ -178,7 +208,7 @@ def _interface_not_bumped_findings(
             subjects=(unit,),
             message=(
                 f"{release.name} {previous_revision} already has interface "
-                f"{previous.unit.interface!r} with a different boundary"
+                f"{listing_interface(previous)!r} with a different boundary"
             ),
         )
     ]

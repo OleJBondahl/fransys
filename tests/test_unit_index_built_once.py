@@ -12,11 +12,11 @@ from pathlib import Path
 from fransys_model.derive import item_designation, page_title, reference_designation
 from fransys_model.derive import unit_nodes as unit_nodes_module
 from fransys_model.derive.designation import own_nodes
+from fransys_model.derive.facts import units as membership
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.layout import Page
 from fransys_model.layout import layout_of as layout_of_model
-from fransys_model.vocab import membership
 from fransys_model.vocab.tables import items, units
-from fransys_model.vocab.unit_index import unit_index
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:

@@ -19,7 +19,7 @@ def change_identity(section: str, parts: tuple[str, ...]) -> str:
 
 
 def change_clause(row: Change) -> str:
-    """The words for what one `Change` row did: `added`, `removed`, `m A to B` or `m set to B`.
+    """The words for what one `Change` row did: `added`, `removed`, `m A → B` or `m set to B`.
 
     One home for the wording so the change note and the stale-baseline cause never spell it twice.
     """
@@ -27,4 +27,20 @@ def change_clause(row: Change) -> str:
         return row.change
     if not row.before:
         return f"{row.field} set to {row.after}"
-    return f"{row.field} {row.before} to {row.after}"
+    return f"{row.field} {_before_after(row.before, row.after)}"
+
+
+def _before_after(before: str, after: str) -> str:
+    """`before → after`: the one spelling of a change from one value to another."""
+    return f"{before} → {after}"
+
+
+def renamed_text(row: Change) -> str:
+    """The note line of a `renamed` row: both designations from `parts`, never parsed."""
+    old, new = row.parts
+    return f"Renamed `{old}` → `{new}`."
+
+
+def interface_text(before: str, after: str) -> str:
+    """The note line of an interface change: `Interface 1 → 2.`."""
+    return f"Interface {_before_after(before, after)}."

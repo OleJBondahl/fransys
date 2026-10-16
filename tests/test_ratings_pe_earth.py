@@ -17,7 +17,7 @@ import fransys_parts
 import pytest
 from fransys_author import Design
 
-from fransys_model.vocab.validators.ratings import check_ratings
+from fransys_model.checks.ratings import check_ratings
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:

@@ -7,13 +7,13 @@ once per model, cached by digest, instead of once per unit over every item.
 import dataclasses
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.item_predicates import cable_items
+from fransys_model.derive.facts.unit_index import unit_index
+from fransys_model.derive.facts.units import in_reading, is_harness, item_chain, units
 from fransys_model.derive.lookups import effective_placement
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached, parent_chain
-from fransys_model.vocab.cables import cable_items
 from fransys_model.vocab.enums import Aspect
-from fransys_model.vocab.membership import in_reading, is_harness, item_chain, units
 from fransys_model.vocab.tables import aspect_nodes, functions, items, ports
-from fransys_model.vocab.unit_index import unit_index
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

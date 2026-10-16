@@ -3,7 +3,7 @@
 A location document draws no harness (ruling W-CABINET), so the harness items are not listed.
 """
 
-from fransys_model.vocab.membership import is_harness
+from fransys_model.derive.facts.units import is_harness
 from fransys_model.vocab.tables import items as items_table
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Unit

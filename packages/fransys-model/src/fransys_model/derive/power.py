@@ -1,16 +1,15 @@
 """What a physical net is on the drawing: supply, ground, protective earth or none (model-0117)."""
 
+from fransys_model.derive.facts.closure import link_groups, net_of, physical_nets
+from fransys_model.derive.facts.potentials import pe_firsts, physical_potentials
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab import (
     Current,
     Item,
-    LinkKind,
     Net,
     Port,
     PowerKind,
 )
-from fransys_model.vocab.closure import link_groups, net_of, physical_nets
-from fransys_model.vocab.potentials import pe_firsts, physical_potentials
 from fransys_model.vocab.tables import conductors, items, nets, supply_of_potential
 
 from .facts.conductor_facts import is_bonded
@@ -134,7 +133,7 @@ def _bridged(model: Model) -> frozenset[Id[Item]]:
 @digest_cached(DIGEST_CACHE_SIZE)
 def _fused(model: Model) -> frozenset[Id[Item]]:
     """Items whose part has a `protective` link (a fuse in the path), model-0215."""
-    return frozenset(g.item for g in link_groups(model, frozenset({LinkKind.PROTECTIVE})))
+    return frozenset(g.item for g in link_groups(model, lambda role: role.protective))
 
 
 def is_rail_terminal(model: Model, terminal: Id[Item]) -> bool:

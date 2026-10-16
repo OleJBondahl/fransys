@@ -34,6 +34,7 @@ from fransys_layout.stages import LabelRequest
 from fransys_layout.stages.tags import pin_tag
 from fransys_model.derive import is_own_unit_root, item_designation
 from fransys_model.derive.drawing_text import label_text, marker_text
+from fransys_model.derive.facts.units import unit_own_roots
 from fransys_model.derive.queries import connector_rows, terminal_rows, wire_rows
 from fransys_model.derive.wire_ends import ordered_wire_ends
 from fransys_model.kernel import Severity
@@ -46,7 +47,6 @@ from fransys_model.layout import (
     StarKind,
     layout_of,
 )
-from fransys_model.vocab.membership import unit_own_roots
 from fransys_model.vocab.tables import conductors, functions, items, ports, units
 
 _PROJECT: dict[str, Any] = {

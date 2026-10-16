@@ -23,9 +23,9 @@ from scale_units_fixture import (  # noqa: E402
     pump_cabinet,
 )
 
+from fransys_model.checks import units as validators  # noqa: E402
 from fransys_model.derive.numbering_pins import name_findings  # noqa: E402
 from fransys_model.kernel import Severity  # noqa: E402
-from fransys_model.vocab.validators import units as validators  # noqa: E402
 
 
 def _crosses_calls(monkeypatch, model):

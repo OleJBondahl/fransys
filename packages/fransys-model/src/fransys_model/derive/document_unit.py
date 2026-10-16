@@ -1,6 +1,6 @@
 """The one reader of a `Document`'s subject unit, by id or by release name."""
 
-from fransys_model.vocab.unit_by_name import units_named
+from fransys_model.derive.facts.unit_names import units_named
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit
 lazy from fransys_model.vocab.document import Document
@@ -11,7 +11,7 @@ def document_unit(model: Model, document: Document) -> Id[Unit] | None:
 
     `document.unit` wins when set. Else, for a `unit_name`, the one id `units_named` finds;
     `None` for zero or several matches (silently: a pure reader, never a validator) and `None`
-    when the document has neither field set. Never re-derives the match: `vocab.unit_by_name`
+    when the document has neither field set. Never re-derives the match: `derive.facts.unit_names`
     is its only home.
 
     Example: `document_unit(model, Document(unit_name="relay-board", ...))` returns the id of

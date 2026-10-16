@@ -8,10 +8,10 @@ terminal (bridged, three or more ends, wired to a strip) keeps its strip as a bo
 
 from typing import NamedTuple
 
+from fransys_model.derive.facts.item_predicates import terminal_items
+from fransys_model.derive.facts.units import unit_items
 from fransys_model.vocab.enums import ConductorKind
-from fransys_model.vocab.membership import unit_items
 from fransys_model.vocab.tables import conductors, items
-from fransys_model.vocab.terminals import terminal_items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item, Port, Unit
 

@@ -1,7 +1,7 @@
 """`allocate_plc`: a wired request takes its wired channel (model-0083, model-0211).
 
-The wiring walk is `vocab.plc_wiring`, the one `check_plc_wiring` reads. This module only decides,
-from what it reports, which request binds to which channel by wiring and whether an
+The wiring walk is `derive.facts.plc_wiring`, the one `check_plc_wiring` reads. This module
+only decides, from what it reports, which request binds to which channel by wiring and whether an
 unservable request is really open at the boundary of a standalone unit.
 """
 
@@ -9,14 +9,14 @@ import dataclasses
 from collections import Counter
 from typing import TYPE_CHECKING
 
-from fransys_model.derive.lookups import unit_chain
-from fransys_model.vocab.membership import boundary, standalone
-from fransys_model.vocab.plc_wiring import (
+from fransys_model.derive.facts.plc_wiring import (
     direct_neighbours,
     owner_of_port,
     wired_functions,
 )
-from fransys_model.vocab.rail_reach import ports_by_function
+from fransys_model.derive.facts.rail_reach import ports_by_function
+from fransys_model.derive.facts.units import boundary, standalone
+from fransys_model.derive.lookups import unit_chain
 from fransys_model.vocab.tables import items
 
 if TYPE_CHECKING:

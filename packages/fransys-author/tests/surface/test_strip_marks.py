@@ -6,9 +6,9 @@ import pytest
 from fransys_author import AuthorError
 from fransys_author.surface import Design, design, unit
 
+from fransys_model.checks.units import check_units
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import freeze, merge
-from fransys_model.vocab.validators.units import check_units
 
 if TYPE_CHECKING:
     from collections.abc import Callable

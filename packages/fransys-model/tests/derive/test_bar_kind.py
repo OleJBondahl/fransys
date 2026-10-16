@@ -4,10 +4,10 @@ from typing import Any
 
 from plant import Plant
 
+from fransys_model.checks import ALL_VALIDATORS
 from fransys_model.derive import ItemKind, item_kind, port_designation
+from fransys_model.derive.facts.bars import bar_items, is_bar_port
 from fransys_model.kernel import Id, Model, Severity, make_id
-from fransys_model.vocab import ALL_VALIDATORS
-from fransys_model.vocab.bars import bar_items, is_bar_port
 from fransys_model.vocab.core import Function, Port
 from fransys_model.vocab.enums import FunctionKind, PortRole
 from fransys_model.vocab.facets.terminal import TerminalFacet

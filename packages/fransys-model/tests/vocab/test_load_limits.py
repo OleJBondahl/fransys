@@ -11,11 +11,11 @@ from current_plant import device, fuse, hub, wire
 from plant import Plant
 from rating_plant import AC_400, rail, supply
 
+from fransys_model.derive import load_limits
+from fransys_model.derive.facts.current.chains import chains_unordered
 from fransys_model.kernel import Model, make_id
 from fransys_model.vocab import Operating, OperatingFacet
-from fransys_model.vocab.current_chains import chains_unordered
 from fransys_model.vocab.enums import Current, FunctionKind
-from fransys_model.vocab.load_limits import load_limits
 from fransys_model.vocab.templates import FunctionTemplate
 
 _LOAD = Plant.function_id("D", "f")

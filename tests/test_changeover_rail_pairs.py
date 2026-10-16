@@ -7,7 +7,7 @@ throw roles, which gives the false finding, so the silence is not one the check 
 A pole of `q1` itself still sees both supplies across its open gap.
 
 Can-fail probes, each one Edit, run and undone: `link_state` returning `"both"` for every link
-(`vocab/contacts.py`) fails the no-finding tests; a rail's starting condition at an end of a
+(`derive/facts/contacts.py`) fails the no-finding tests; a rail's starting condition at an end of a
 contact link holding that link's state (`_rail_states` in `vocab/closure.py`) fails the pole test.
 """
 
@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
+from fransys_model.checks import ALL_VALIDATORS
+from fransys_model.checks.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
+from fransys_model.derive.facts.closure import rail_pairs
 from fransys_model.kernel import Severity
-from fransys_model.vocab.closure import rail_pairs
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.validators import ALL_VALIDATORS
-from fransys_model.vocab.validators.ratings import RATING_VOLTAGE_BELOW_CIRCUIT, check_ratings
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:

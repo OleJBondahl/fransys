@@ -2,10 +2,10 @@
 
 from decimal import Decimal
 
+from fransys_model.derive.facts.closure import net_of, port_rails
 from fransys_model.derive.facts.net_facts import is_earth_net, net_potential
 from fransys_model.derive.indexes import build_indexes
 from fransys_model.kernel import DIGEST_CACHE_SIZE, digest_cached
-from fransys_model.vocab.closure import net_of, port_rails
 from fransys_model.vocab.enums import Current
 from fransys_model.vocab.tables import nets, supply_systems
 lazy from fransys_model.kernel import Id, Model

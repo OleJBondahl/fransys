@@ -26,18 +26,18 @@ from fransys_layout.stages.resolve import _symbol_for, choice_index, throw_port
 from fransys_layout.stages.slices import by_key
 from fransys_layout.stages.types import Home, MatedFunctions
 from fransys_model.derive import (
+    boundary,
+    cable_items,
     enclosing_boards,
     function_is_reached,
     is_sole_unit_root,
     port_is_reached,
+    unit_ids,
     unit_subtree,
 )
 from fransys_model.derive.designation import port_designation
 from fransys_model.derive.drawing_text import item_tag_text
 from fransys_model.kernel import parent_chain
-from fransys_model.vocab import cable_items
-from fransys_model.vocab.membership import boundary
-from fransys_model.vocab.membership import units as unit_ids
 from fransys_model.vocab.tables import functions as functions_table
 from fransys_model.vocab.tables import items as items_table
 from fransys_model.vocab.tables import mates as mates_table

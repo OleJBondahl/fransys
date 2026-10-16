@@ -2,14 +2,14 @@
 
 from typing import Any
 
+from fransys_model.checks.structure import (
+    ASPECT_CYCLE,
+    check_structure,
+)
 from fransys_model.kernel import Draft, Finding, Id, Model, Origin, Severity, freeze, make_id
 from fransys_model.vocab.aspects import AspectNode, Placement
 from fransys_model.vocab.core import Item
 from fransys_model.vocab.enums import Aspect
-from fransys_model.vocab.validators.structure import (
-    ASPECT_CYCLE,
-    check_structure,
-)
 
 _ORIGIN = Origin(file="test_structure_findings.py", line=1, note="fixture")
 

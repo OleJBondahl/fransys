@@ -4,9 +4,9 @@ Layout and the contact table both call these, so a drawn contact is never listed
 """
 
 from fransys_model.derive.facts.conductor_facts import is_bridge
+from fransys_model.derive.facts.joins import joined_ports
+from fransys_model.derive.facts.units import in_unit_subtree
 from fransys_model.derive.indexes import build_indexes
-from fransys_model.vocab.joins import joined_ports
-from fransys_model.vocab.membership import in_unit_subtree
 from fransys_model.vocab.tables import conductors, functions, items, ports, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Function, Port

@@ -39,23 +39,30 @@ from fransys_wago import modules_xml as modules_xml_of
 
 from fransys_layout import lay_out_cables, lay_out_overview
 from fransys_model.derive import (
+    ALL_VALIDATORS,
     allocate_plc,
     baseline,
     check_side_hints,
     document_sheets_of,
+    document_stems,
     export_set,
     export_set_name,
     gone_or_moved,
+    has_documents,
+    has_project,
     list_context,
     number,
     numbering_pins,
     reference_fragment,
     release_identity,
+    release_names,
     resolve_wire_rows,
     seed_pins,
     stale_patterns,
+    unit_ids,
+    unit_name_unresolved,
     unit_release,
-    units,
+    units_named,
 )
 from fransys_model.derive.numbering_pins import NumberingPins, name_findings
 from fransys_model.derive.order import finding_order_key, findings_in_order
@@ -69,14 +76,6 @@ from fransys_model.kernel import (
     merge,
 )
 from fransys_model.kernel import dumps as model_dumps
-from fransys_model.vocab import (
-    ALL_VALIDATORS,
-    documents,
-    projects,
-    unit_name_unresolved,
-    unit_releases,
-    units_named,
-)
 lazy from fransys_model.kernel import Draft, Model, Origin
 lazy from fransys_model.vocab import Unit as ModelUnit
 
@@ -93,6 +92,7 @@ from ._release_checks import (
     _release_target,
     _ReleaseTarget,
     _since_listing,
+    changes_by_name_findings,
 )
 from ._release_files import release_file_findings
 from ._release_manifest import _manifest
@@ -102,7 +102,7 @@ from ._times import TIMES_FILE, BuildTimes, Timer
 from .documents import engine_subject
 
 if TYPE_CHECKING:
-    from fransys_model.derive import SheetBackground
+    from fransys_model.derive import SheetBackground, SheetKey
     from fransys_model.derive.baseline import ListingDiff
     from fransys_model.vocab import UnitRelease
 
@@ -207,13 +207,13 @@ def _has_error(findings: tuple[Finding, ...]) -> bool:
 
 
 def _has_document(model: Model) -> bool:
-    return bool(documents(model))
+    return has_documents(model)
 
 
 def _unit_sources(model: Model, releases: Path) -> dict[Id[ModelUnit], NumberingPins]:
     """Each unit instance's pin source (`_pin_source`), for those that have one."""
     found: dict[Id[ModelUnit], NumberingPins] = {}
-    for unit in sorted(units(model)):
+    for unit in unit_ids(model):
         target = _ReleaseTarget(identity=release_identity(model, unit), path=Path())
         if (source := _pin_source(target, releases)) is not None:
             found[unit] = source[1]
@@ -285,7 +285,11 @@ def _numbered(model: Model, releases: Path | None) -> tuple[Model, tuple[Finding
     """`model` numbered with pins seeded from `releases`, and the numbering findings."""
     sources = {} if releases is None else _unit_sources(model, releases)
     model, findings = number(_seed_designation_pins(model, sources))
-    return model, (*findings, *_revision_pins.new_findings(model, sources))
+    return model, (
+        *findings,
+        *_revision_pins.new_findings(model, sources),
+        *changes_by_name_findings(model, releases),
+    )
 
 
 def _validated(model: Model, earlier: tuple[Finding, ...]) -> tuple[Finding, ...]:
@@ -352,7 +356,7 @@ _overview = digest_cached(1)(lay_out_overview)
 # read by each document's `source` (render-0019).
 
 
-def _draw_sheets(model: Model) -> frozendict[str, SheetBackground]:
+def _draw_sheets(model: Model) -> frozendict[SheetKey, SheetBackground]:
     """`fransys_render.sheets` of the model's `document_sheets_of`."""
     return fransys_render.sheets(document_sheets_of(model))
 
@@ -436,9 +440,9 @@ def _write_intermediates(model: Model, svgs: dict[str, str], intermediates: Path
         (intermediates / f"netlist-{reference_fragment(model, board)}.net").write_bytes(
             text.encode("utf-8")
         )
-    for document_id, record in documents(model).items():
+    for document_id, stem in document_stems(model):
         source_text = fransys_pdf.source(model, document_id, svgs, _sheets(model), _bridges())
-        (intermediates / f"{record.key[1]}.typ").write_bytes(source_text.encode("utf-8"))
+        (intermediates / f"{stem}.typ").write_bytes(source_text.encode("utf-8"))
 
 
 class _ExportLedger:
@@ -622,7 +626,7 @@ def _clean_stale_exports(out_dir: Path, model: Model, unit: Id[ModelUnit] | None
     """
     set_names = {export_set_name(model, unit)} - {""}
     if unit is None:
-        set_names |= {release.name for release in unit_releases(model).values()}
+        set_names |= set(release_names(model))
     for folder in (out_dir, out_dir / _DATA_DIR):
         for pattern in stale_patterns():
             for path in folder.glob(pattern):
@@ -814,8 +818,8 @@ def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]:
     """
     model = result.model
     subjects: tuple[Id[ModelUnit] | None, ...] = (
-        *sorted(units(model)),
-        *((None,) if projects(model) else ()),
+        *unit_ids(model),
+        *((None,) if has_project(model) else ()),
     )
     findings: list[Finding] = []
     for unit in subjects:

@@ -2,10 +2,10 @@
 
 from plant import Plant
 
+from fransys_model.checks import check_strip_without_tag
 from fransys_model.kernel import make_id
 from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.finding_ref import ref
-from fransys_model.vocab.validators import check_strip_without_tag
 
 
 def _strip(plant: Plant, key: str, *codes: str, tag: str | None = None) -> None:

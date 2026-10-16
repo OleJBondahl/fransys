@@ -7,13 +7,13 @@ from dataclasses import replace
 import pytest
 
 from fransys_layout.core import Column, End, PinRef
-from fransys_layout.core.route_counts import counts
+from fransys_layout.core.route_counts import collinear, counts
 from fransys_layout.core.route_env import Jog, RouteEnv, z_wire
 from fransys_layout.core.route_wires import join_wires, lane_wires, nest_jogs
 
 from .chain_fixtures import facing_chain
 from .place_fixtures import card_with_coils
-from .route_fixtures import envs_of, link_across_box
+from .route_fixtures import envs_of, link_across_box, open_end_env, stub_of
 
 
 def card_env() -> RouteEnv:
@@ -55,6 +55,14 @@ def test_the_stair_with_e6_reversed_crosses_six_times() -> None:
     jogs = sorted(stair(-90), key=lambda j: -j.top[0])
     wires = [z_wire(j.net, 1, (j.top, j.bottom), 100 + grid * (k + 1)) for k, j in enumerate(jogs)]
     assert counts(wires).crossings == 6
+
+
+def test_jogs_with_disjoint_spans_share_one_level_and_overlapping_spans_take_three() -> None:
+    env = card_env()
+    disjoint = [Jog(f"j{k}", (100 + 200 * k, 100), (40 + 200 * k, 200)) for k in range(3)]
+    assert len(set(turns(env, disjoint).values())) == 1
+    overlapping = [Jog(f"j{k}", (100 + 20 * k, 100), (20 + 20 * k, 200)) for k in range(3)]
+    assert len(set(turns(env, overlapping).values())) == 3
 
 
 def test_more_jogs_than_levels_is_a_finding_that_names_the_nets_and_the_fix() -> None:
@@ -136,20 +144,56 @@ def join_column(env: RouteEnv, home_pin: str, member_pin: str, *, foot: bool):
 
 
 @pytest.mark.parametrize(
-    ("foot", "home_pin", "member_pin", "x"),
-    [(False, "s", "n", 269), (True, "n", "s", 438)],
-    ids=["head-one-third", "foot-two-thirds"],
+    ("foot", "home_pin", "member_pin", "source_top"),
+    [(False, "s", "n", True), (True, "n", "s", False)],
+    ids=["head", "foot"],
 )
-def test_a_join_z_steps_a_third_and_two_thirds_across_the_gap(
-    *, foot: bool, home_pin: str, member_pin: str, x: int
+def test_a_join_is_a_z_wire_nested_with_the_jogs_and_its_source_is_the_joined_lane(
+    *, foot: bool, home_pin: str, member_pin: str, source_top: bool
 ) -> None:
     env = card_env()
     col = join_column(env, home_pin, member_pin, foot=foot)
-    (wire,) = join_wires(env, col).wires
+    drawn = join_wires(env, col)
+    (jog,) = drawn.jogs
+    assert (drawn.wires, jog.drawn_as, jog.source_top) == ((), "join", source_top)
+    assert jog.source_x == 650
+    (wire,) = nest_jogs(env, drawn.jogs).wires
     a = (58, 176) if home_pin == "s" else (58, 144)
     m = (650, 144) if member_pin == "n" else (650, 176)
     assert wire.kind == "join"
-    assert wire.points == (a, (x, a[1]), (x, m[1]), m)
+    assert {wire.points[0], wire.points[-1]} == {a, m}
+    assert 144 < wire.points[1][1] < 176
+
+
+def lanes_joining_lane_zero(order: tuple[int, ...] = (0, 1, 2)) -> list[Jog]:
+    """Three member lanes at x 300, 400, 500 join three pins of lane 0 at x 20, 28, 36."""
+    return [Jog(f"j{k}", (300 + 100 * k, 100), (20 + 8 * k, 200), "join") for k in order]
+
+
+def test_three_parallel_lanes_joining_lane_zero_nest_with_no_crossing_and_no_collinear() -> None:
+    env = card_env()
+    drawn = nest_jogs(env, lanes_joining_lane_zero())
+    turn = {w.net: w.points[1][1] for w in drawn.wires}
+    assert turn["j0"] < turn["j1"] < turn["j2"]
+    assert counts(drawn.wires).crossings == 0
+    assert collinear(drawn.wires) == 0
+    assert drawn.findings == ()
+
+
+def test_three_lanes_joining_lane_zero_in_the_reverse_order_cross() -> None:
+    """E6 reversed: the same joins turned the other way round cross (the part C probe)."""
+    env = card_env()
+    grid = env.options.wiring_grid
+    jogs = lanes_joining_lane_zero((2, 1, 0))
+    wires = [z_wire(j.net, 1, (j.top, j.bottom), 100 + grid * (k + 1)) for k, j in enumerate(jogs)]
+    assert counts(wires).crossings > 0
+
+
+def test_a_tie_in_source_x_is_broken_by_destination_x() -> None:
+    env = card_env()
+    jogs = [Jog("a", (100, 100), (40, 200)), Jog("b", (100, 100), (20, 200))]
+    turn = turns(env, jogs)
+    assert turn["b"] < turn["a"]
 
 
 def test_level_join_pins_are_one_run() -> None:
@@ -184,3 +228,36 @@ def test_a_cell_pin_with_no_net_is_reached_by_a_trunk_and_draws_no_lane_wire() -
     drawn = lane_wires(replace(env, net_of=bare), col)
     assert drawn.findings == ()
     assert len(drawn.wires) == len(whole.wires) - 1
+
+
+def stub_points(orient: str = "R0", open_stub: int = 8) -> list[tuple[tuple[int, int], ...]]:
+    env, col = open_end_env(orient, open_stub)
+    return [w.points for w in stub_of(lane_wires(env, col))]
+
+
+def test_an_open_end_draws_a_stub_of_open_stub_out_along_its_side() -> None:
+    assert stub_points() == [((650, 176), (650, 184))]
+
+
+def test_a_turned_symbol_draws_its_stub_along_the_turned_side() -> None:
+    assert stub_points("R180") == [((650, 176), (650, 168))]
+
+
+def test_open_stub_zero_draws_no_stub() -> None:
+    assert stub_points(open_stub=0) == []
+
+
+def test_an_open_end_with_no_pin_draws_nothing() -> None:
+    env, col = open_end_env(has_pin=False)
+    assert stub_of(lane_wires(env, col)) == ()
+
+
+@pytest.mark.parametrize(("sym", "pin"), [("k2", "nope"), ("ghost", "s")])
+def test_an_open_end_naming_a_pin_not_on_the_page_is_a_finding_not_an_empty_stub(
+    sym: str, pin: str
+) -> None:
+    env, col = open_end_env()
+    col = replace(col, feet=(End("open", "dangling", PinRef(sym, pin)),))
+    drawn = lane_wires(env, col)
+    assert stub_of(drawn) == ()
+    assert [f for f in drawn.findings if f"{sym}.{pin}" in f.text]

@@ -7,7 +7,7 @@ renderer never parses a subject text to find the item, unit, conductor or functi
 from typing import Any
 
 from fransys_model.derive.facts.boundary_pins import unit_boundary_functions
-from fransys_model.vocab.membership import is_sole_unit_root, unit_own_roots
+from fransys_model.derive.facts.units import is_sole_unit_root, unit_own_roots
 from fransys_model.vocab.tables import conductors, functions, items, units
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Unit

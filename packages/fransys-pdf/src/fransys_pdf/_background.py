@@ -7,6 +7,8 @@ The boxes they sit in are the symbol's, handed over as values; pdf draws no line
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive import sheet_key_text
+
 from ._labels import LAST_PAGE
 from ._sizes import font_mm, sizes_of
 from ._typst import literal
@@ -14,7 +16,7 @@ from ._typst import literal
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from fransys_model.derive import SheetBackground
+    from fransys_model.derive import SheetBackground, SheetKey
     from fransys_model.kernel import Model
     from fransys_model.vocab import Document
 
@@ -40,19 +42,19 @@ def _place(box: _Box, content: str) -> str:
     )
 
 
-def sheet_of(sheets: Mapping[str, SheetBackground], key: str) -> SheetBackground:
+def sheet_of(sheets: Mapping[SheetKey, SheetBackground], key: SheetKey) -> SheetBackground:
     """The background render drew for page `key`; a missing key is a caller error, never a blank."""
     if key not in sheets:
         msg = (
-            f"no sheet background for {key!r}: pass `fransys_render.sheets` of the same model's "
-            "`derive.document_sheets_of` to `fransys_pdf.source`"
+            f"no sheet background for {sheet_key_text(key)!r}: pass `fransys_render.sheets` of "
+            "the same model's `derive.document_sheets_of` to `fransys_pdf.source`"
         )
         raise KeyError(msg)
     return sheets[key]
 
 
 def page_background(
-    model: Model, record: Document, sheets: Mapping[str, SheetBackground], key: str
+    model: Model, record: Document, sheets: Mapping[SheetKey, SheetBackground], key: SheetKey
 ) -> str:
     """The `#page` background of page `key`: the sheet SVG, the page counter and the logo."""
     sheet = sheet_of(sheets, key)

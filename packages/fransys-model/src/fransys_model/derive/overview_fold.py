@@ -7,10 +7,10 @@ groups opens straight to its devices. Reached as `derive.fold_level` (model-0199
 
 from typing import Any, cast
 
+from fransys_model.derive.facts.units import require
 from fransys_model.kernel import SchemaError
 from fransys_model.layout import OverviewRef, OverviewRefKind
 from fransys_model.vocab.enums import ItemKind
-from fransys_model.vocab.membership import require
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Unit

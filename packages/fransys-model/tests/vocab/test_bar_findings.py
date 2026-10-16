@@ -2,10 +2,10 @@
 
 from plant import Plant
 
+from fransys_model.checks.bars import BAR_NOT_PE, check_bars
 from fransys_model.kernel import Finding, Severity, make_id
 from fransys_model.vocab.core import Port
 from fransys_model.vocab.enums import FunctionKind, PortRole
-from fransys_model.vocab.validators.bars import BAR_NOT_PE, check_bars
 
 
 def _bar(roles: dict[str, PortRole]) -> list[Finding]:

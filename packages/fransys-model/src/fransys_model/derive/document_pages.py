@@ -7,9 +7,9 @@ computed from the model, but each drawing page carries a named destination).
 
 from collections import defaultdict
 
+from fransys_model.derive.facts.units import boundary
 from fransys_model.kernel import Id, value
 from fransys_model.layout import DrawingSet, LinkMarker, Page, Route, SymbolPlacement, layout_of
-from fransys_model.vocab.membership import boundary
 from fransys_model.vocab.tables import documents, functions
 lazy from fransys_model.kernel import Model
 lazy from fransys_model.vocab.core import Item

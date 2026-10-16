@@ -34,6 +34,7 @@ from fransys_el import OPTIONS
 from fransys_layout.engines.schematic import lay_out_schematic, run_stages
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.stages import LinkCase
+from fransys_model.checks.units import UNIT_BOUNDARY_BYPASSED
 from fransys_model.derive import unit_release
 from fransys_model.derive.stub_text import off_stub_text
 from fransys_model.kernel import Severity
@@ -47,7 +48,6 @@ from fransys_model.layout import (
     layout_of,
 )
 from fransys_model.vocab.tables import functions, ports
-from fransys_model.vocab.validators.units import UNIT_BOUNDARY_BYPASSED
 
 _PROJECT: dict[str, Any] = {
     "title": "Cut end rules",

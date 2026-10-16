@@ -6,7 +6,7 @@ only thing in its design and sees no BOUNDARY_UNCONNECTED, where findings.md sai
 fires for a non-standalone unit.
 
 The rule, both ways: a unit is standalone when every item of the model belongs to its subtree
-(`fransys_model.vocab.membership.standalone`). A standalone unit has no neighbour to mate, so
+(`fransys_model.derive.facts.units.standalone`). A standalone unit has no neighbour to mate, so
 nothing is unconnected. One item outside it makes the unit non-standalone, and each of its nine
 boundary functions (the supply and p1 to p8) fires: a wire inside the unit does not cross it.
 The validator was right; the guide row said "top-level" and now says this.

@@ -5,11 +5,12 @@ A rail reaches a port under conditions, the state each contact item on its way m
 and mates need nothing. One item is at rest or operated as a whole. Every plant here is
 hand-built and invented: two rails `A` and `B` of one AC supply and a load with two ports.
 
-Can-fail probes, each one Edit in `vocab/closure.py`, run and undone: `_agree` returning `True`
-fails the no-pair tests (a), (b) and the missing second route (d); `_spread` never rejecting an
-inconsistent condition fails the (e) drop test; a condition on every port of a changeover (a fake
-shared item in a state per rail) fails the open-gap test; dropping the antichain pruning
-(`other <= grown` to `other == grown`, no displacement) fails the pruning test and (d).
+Can-fail probes, each one Edit in `derive/facts/closure.py`, run and undone: `_agree` returning
+`True` fails the no-pair tests (a), (b) and the missing second route (d); `_spread` never
+rejecting an inconsistent condition fails the (e) drop test; a condition on every port of a
+changeover (a fake shared item in a state per rail) fails the open-gap test; dropping the
+antichain pruning (`other <= grown` to `other == grown`, no displacement) fails the pruning
+test and (d).
 """
 
 from typing import TYPE_CHECKING, NamedTuple
@@ -18,13 +19,15 @@ import pytest
 from plant import Plant
 from rating_plant import rail, rated, supply
 
+from fransys_model.checks.ratings import check_ratings
+from fransys_model.derive import rail_pairs
+from fransys_model.derive.facts import closure
 from fransys_model.kernel import make_id
-from fransys_model.vocab import PartRatingFacet, closure, rail_pairs
+from fransys_model.vocab import PartRatingFacet
 from fransys_model.vocab.core import Function
 from fransys_model.vocab.enums import FunctionKind, LinkKind, PartCategory, PortRole
 from fransys_model.vocab.tables import items
 from fransys_model.vocab.templates import FunctionTemplate, Part, PortTemplate
-from fransys_model.vocab.validators.ratings import check_ratings
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence

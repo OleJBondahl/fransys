@@ -1,8 +1,8 @@
 """Fact 5 (PLACEMENT-ENGINE 2.1): the pins that stand a power symbol, with no wire to the rail."""
 
+from fransys_model.derive.facts.closure import physical_nets
 from fransys_model.kernel import DIGEST_CACHE_SIZE, Id, Model, digest_cached
 from fransys_model.vocab import Port, PowerKind
-from fransys_model.vocab.closure import physical_nets
 
 from .power import port_power_kind
 

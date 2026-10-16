@@ -23,6 +23,7 @@ from fransys_layout.core import (
 )
 
 from . import pipeline_fixtures
+from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, box_sym, chain, elem, free, net, side
 from .flow_builders import poles
 
@@ -40,7 +41,7 @@ def marked_of(prob: PlacementProblem, options: Options | None = None) -> tuple[M
     # mark_pages lands with the text markers; imported late so the other plants still load.
     from fransys_layout.core.text_markers import mark_pages
 
-    opts = options or Options()
+    opts = options or Options(marker=MARKER_BOX)
     cut = pipeline_fixtures.cut_of(prob, opts)
     return mark_pages(cut, place_pages(cut, prob, opts), prob, opts)
 

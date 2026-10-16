@@ -16,9 +16,9 @@ lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.connectivity import Conductor, Net
 lazy from fransys_model.vocab.core import Item, Port, Unit
 
-from .closure import physical_nets
 from .designation import terminal_designation, unit_list_context
 from .facts.children import child_items
+from .facts.closure import physical_nets
 from .facts.conductor_facts import is_bridge
 from .facts.roles import port_role
 from .far_ends import far_ends

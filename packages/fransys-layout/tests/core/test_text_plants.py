@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fransys_layout.core import Options, PlacementProblem, RefKind
 
+from .conftest import MARKER_BOX
 from .cut_fixtures import AREA, net, side
 from .text_fixtures import marked_of, plan_of
 
@@ -18,5 +19,5 @@ def test_a_net_cut_twice_links_the_pages_on_either_side_of_the_one_without_a_pin
     plan = plan_of(_net_across_three_pages(), Options())
     (tag,) = (r for r in plan.spec.reference_plan if r.net == "k" and r.kind is RefKind.TAG)
     assert [e.page for e in tag.ends] == [1, 3]
-    markers = marked_of(_net_across_three_pages(), Options())
+    markers = marked_of(_net_across_three_pages(), Options(marker=MARKER_BOX))
     assert [m.page for m in markers if m.net == "k"] == [1, 3]

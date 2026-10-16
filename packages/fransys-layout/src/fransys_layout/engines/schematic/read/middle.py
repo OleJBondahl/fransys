@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 from fransys_layout.stages.middle import MiddleInterface, MiddleUnit
 from fransys_model.derive import connector_box_lines
+from fransys_model.derive import unit_ids as units
 from fransys_model.derive.drawing_text import outline_title
-from fransys_model.vocab.membership import units
 from fransys_model.vocab.tables import ports
 from fransys_model.vocab.tables import units as unit_table
 

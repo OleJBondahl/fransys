@@ -14,6 +14,8 @@ from .score_placement import junction_off_line, loose, pair_cut
 from .score_wiring import wiring
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from .outputs import Scene
 
 # Research E3 sets these. They move into Options when a stage reads Q.
@@ -64,10 +66,13 @@ def _quality(refs: frozendict[str, int], x: int, b: int, d: int, scene: Scene) -
     )
 
 
-def score(scene: Scene) -> Score:
-    """Count every term of `scene`; the crossing counter counts points."""
+def score(scene: Scene, bundle_of: Mapping[str, str] | None = None) -> Score:
+    """Count every term of `scene`; the crossing counter counts points.
+
+    `bundle_of` (score_wiring.bundles) lets a member's drop cross its own bundle's trunk free.
+    """
     refs = frozendict(Counter(R_CLASS[m.kind] for m in scene.markers))
-    terms = wiring(scene.wires)
+    terms = wiring(scene.wires, bundle_of)
     x, b, d = terms["crossings"], terms["excess_bends"], terms["detour_g"]
     flags = placement_flags(scene)
     return Score(

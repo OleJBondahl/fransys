@@ -4,9 +4,9 @@ Private to `cable_drawing`, which re-exports the three public names (model-0159)
 core of the block, with no cable box: it lands on the same pin cells and end boxes as a cable core.
 """
 
+from fransys_model.derive.facts.harness_wires import harnesses_with_wires
 from fransys_model.kernel import Id, Model, value
 from fransys_model.vocab.tables import conductors, items
-from fransys_model.vocab.wire_harness import harnesses_with_wires
 lazy from fransys_model.vocab import Conductor, Item, Port, Unit
 
 from .drawing_text import wire_text

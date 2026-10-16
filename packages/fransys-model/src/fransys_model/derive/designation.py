@@ -13,19 +13,10 @@ from typing import TYPE_CHECKING, Any
 lazy from collections.abc import Iterable
 
 from fransys_model.derive.accessory_blocks import is_contact_block, items_with_a_function_below
+from fransys_model.derive.facts.item_predicates import has_own_designation
+from fransys_model.derive.facts.roles import function_role
 from fransys_model.derive.facts.strips import strip_of
-from fransys_model.derive.indexes import build_indexes
-from fransys_model.derive.instance_tag import dashed, instance_designation, unit_root
-from fransys_model.derive.lone_cable import printing_item
-from fransys_model.derive.lookups import effective_placement, printed_port_name, require, strip_set
-from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
-from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
-from fransys_model.vocab.enums import Aspect, FunctionKind
-from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
-from fransys_model.vocab.facets.connector import ConnectorFacet
-from fransys_model.vocab.facets.pcb import FootprintFacet
-from fransys_model.vocab.facets.terminal import TerminalFacet
-from fransys_model.vocab.membership import (
+from fransys_model.derive.facts.units import (
     designating_ancestors,
     enclosing_boards,
     is_harness,
@@ -34,7 +25,17 @@ from fransys_model.vocab.membership import (
     unit_own_roots,
     unit_subtree,
 )
-from fransys_model.vocab.own_designation import has_own_designation
+from fransys_model.derive.indexes import build_indexes
+from fransys_model.derive.instance_tag import dashed, instance_designation, unit_root
+from fransys_model.derive.lone_cable import printing_item
+from fransys_model.derive.lookups import effective_placement, printed_port_name, require, strip_set
+from fransys_model.derive.unit_nodes import SIGNS, chain_up, own_nodes_by_unit
+from fransys_model.kernel import DIGEST_CACHE_SIZE, SchemaError, digest_cached, key_text
+from fransys_model.vocab.enums import Aspect
+from fransys_model.vocab.facets.assigned_designation import AssignedDesignationFacet
+from fransys_model.vocab.facets.connector import ConnectorFacet
+from fransys_model.vocab.facets.pcb import FootprintFacet
+from fransys_model.vocab.facets.terminal import TerminalFacet
 from fransys_model.vocab.tables import (
     aspect_nodes,
     facets_of,
@@ -376,7 +377,7 @@ def _connector_label(model: Model, function: Function) -> str:
     A function that is no connector prints none; otherwise `connector_label` reads the facet's
     `marking` (`None` when there is no facet) and the function's name.
     """
-    if function.kind is not FunctionKind.CONNECTOR:
+    if not function_role(model, function.id).pin_group:
         return ""
     facet = (
         None if function.template is None else _facet_on(model, function.template, ConnectorFacet)

@@ -1,20 +1,16 @@
 """The typed parts module: one class per part, generated from the loaded libraries."""
 
 import re
-from collections import defaultdict
 
 from fransys_author import AuthorError
 from fransys_parts import load as parts_load
 
+from fransys_model.derive import changeover_functions, part_function_pins, part_records
 from fransys_model.kernel import Model, freeze, merge
 from fransys_model.vocab import (
-    FunctionKind,
     Part,
-    function_templates,
     identifier,
     marking_key,
-    parts,
-    port_templates,
 )
 
 _TRIPLE = '"' * 3
@@ -84,28 +80,6 @@ def _part_class(cls: str, part: Part, functions: list[tuple[str, list[str]]]) ->
     return [*lines, *(_getitem(unique) if unique else []), ""]
 
 
-def _functions_of(model: Model) -> dict[object, list[tuple[str, list[str]]]]:
-    """Each part's functions and pin names, sorted: the frozen tables keep no declaration order."""
-    pins_of = defaultdict(list)
-    for port in port_templates(model).values():
-        pins_of[port.function].append(port.name)
-    for pins in pins_of.values():
-        pins.sort(key=marking_key)
-    by_part = defaultdict(list)
-    for template in function_templates(model).values():
-        by_part[template.part].append((template.name, pins_of[template.id]))
-    return {part: sorted(fns, key=lambda fn: marking_key(fn[0])) for part, fns in by_part.items()}
-
-
-def _changeovers(model: Model) -> set[tuple[object, str]]:
-    """The (part, name) of every changeover function: the one fact is the template's kind."""
-    return {
-        (t.part, t.name)
-        for t in function_templates(model).values()
-        if t.kind is FunctionKind.CONTACT_CO
-    }
-
-
 def _check_unique(mpn: str, kind: str, names: list[str]) -> None:
     """Raise when two raw names of one part or function share a Python identifier."""
     seen: dict[str, str] = {}
@@ -126,7 +100,7 @@ def _check_identifiers(mpn: str, functions: list[tuple[str, list[str]]]) -> None
 
 def _named_parts(model: Model) -> list[tuple[str, Part]]:
     named = sorted(
-        ((_ident(part.mpn), part) for part in parts(model).values()),
+        ((_ident(part.mpn), part) for part in part_records(model)),
         key=lambda item: (item[1].mpn, item[1].manufacturer),
     )
     seen: dict[str, str] = {}
@@ -165,7 +139,7 @@ def parts_module(*sources: str) -> str:
     Does not write a file: `python -m fransys parts-module` does.
     """
     model = _frozen(sources)
-    functions, changeovers = _functions_of(model), _changeovers(model)
+    functions, changeovers = part_function_pins(model), changeover_functions(model)
     body: list[str] = []
     for cls, part in _named_parts(model):
         fns = functions.get(part.id, [])

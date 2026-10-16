@@ -1,16 +1,13 @@
 """A port's exit: its wire leaves one wiring grid along the port's facing."""
 
+from fransys_layout.core.sides import SIDE_STEP
+
 from .symbols import Facing
 from .units import WIRING_GRID, Point
 
-# Facing to the page step of one wiring grid; the one table of the layout package.
+# Facing to the page step of one wiring grid, read from the core's side table (layout-0306).
 FACING_STEP = frozendict(
-    {
-        Facing.N: (0, -WIRING_GRID),
-        Facing.E: (WIRING_GRID, 0),
-        Facing.S: (0, WIRING_GRID),
-        Facing.W: (-WIRING_GRID, 0),
-    }
+    {Facing[side]: (dx * WIRING_GRID, dy * WIRING_GRID) for side, (dx, dy) in SIDE_STEP.items()}
 )
 
 

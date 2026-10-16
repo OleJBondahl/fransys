@@ -1,6 +1,6 @@
 """The functions every part declares, with their effective ratings (decision model-0165)."""
 
-from fransys_model.vocab.rating_readers import part_rating, template_rating
+from fransys_model.derive.facts.function_ratings import part_rating, template_rating
 from fransys_model.vocab.ratings import effective_rating
 from fransys_model.vocab.tables import function_templates, parts
 lazy from fransys_model.kernel import Id, Model

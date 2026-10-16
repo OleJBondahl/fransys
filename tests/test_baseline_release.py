@@ -1387,7 +1387,7 @@ def test_a_second_release_writes_both_change_files_matching_the_independent_diff
     assert expected_diff.changes, "the wire colour change must produce at least one row"
     assert (second_target / "changes.md").read_text(encoding="utf-8") == expected_md
     assert (second_target / "data" / "changes.csv").read_text(encoding="utf-8") == expected_csv
-    assert "colour BU to RD" in expected_md
+    assert "colour BU → RD" in expected_md
 
 
 def test_the_manifest_lists_both_change_files_with_hashes(second_board_scenario):
@@ -1459,8 +1459,8 @@ def test_sk_diff_against_the_current_release_shows_only_the_unreleased_edit(
     assert errors == [], errors
 
     text = fr.diff(result, into, unit=u)
-    assert "colour RD to BK" in text
-    assert "colour BU to RD" not in text
+    assert "colour RD → BK" in text
+    assert "colour BU → RD" not in text
 
 
 def test_sk_diff_against_an_explicit_revision_reads_that_release_directly(
@@ -1484,11 +1484,11 @@ def test_sk_diff_against_an_explicit_revision_reads_that_release_directly(
     default_text = fr.diff(result, into, unit=u)
     against_text = fr.diff(result, into, unit=u, against="1.1")
 
-    assert "colour RD to BK" in default_text
-    assert "colour BU to RD" not in default_text
+    assert "colour RD → BK" in default_text
+    assert "colour BU → RD" not in default_text
 
-    assert "colour BU to BK" in against_text
-    assert "colour RD to BK" not in against_text
+    assert "colour BU → BK" in against_text
+    assert "colour RD → BK" not in against_text
 
 
 def test_a_cross_version_release_gives_a_version_change_row(second_board_scenario):

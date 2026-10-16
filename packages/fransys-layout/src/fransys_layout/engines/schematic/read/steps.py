@@ -59,10 +59,8 @@ from fransys_layout.stages import (
 )
 from fransys_layout.stages.offstubs import OffEnd, PortText, by_location, groups_by_location
 from fransys_layout.stages.types import Home
-from fransys_model.derive import channel_pins
+from fransys_model.derive import boundary, channel_pins, unit_ids
 from fransys_model.kernel import Finding, Id
-from fransys_model.vocab.membership import boundary
-from fransys_model.vocab.membership import units as unit_ids
 from fransys_model.vocab.tables import mates as mates_table
 
 if TYPE_CHECKING:

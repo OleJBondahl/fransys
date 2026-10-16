@@ -7,6 +7,10 @@ arguments. An identity argument that is not a record of that kind in the model r
 
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.bars import is_bar_port
+from fransys_model.derive.facts.item_predicates import terminal_items
+from fransys_model.derive.facts.unit_index import descendants
+from fransys_model.derive.facts.units import item_chain, require
 from fransys_model.kernel import (
     DIGEST_CACHE_SIZE,
     Id,
@@ -15,12 +19,10 @@ from fransys_model.kernel import (
     key_text,
     parent_chain,
 )
-from fransys_model.vocab.bars import is_bar_port
 from fransys_model.vocab.enums import Aspect
 from fransys_model.vocab.facets.connector import ConnectorFacet
 from fransys_model.vocab.facets.plc import PlcBindingFacet
 from fransys_model.vocab.markings import marking_key
-from fransys_model.vocab.membership import item_chain, require
 from fransys_model.vocab.tables import (
     aspect_nodes,
     facets_of,
@@ -31,12 +33,11 @@ from fransys_model.vocab.tables import (
     ports,
     units,
 )
-from fransys_model.vocab.terminals import terminal_items
-from fransys_model.vocab.unit_index import descendants
 lazy from fransys_model.vocab.aspects import AspectNode
 lazy from fransys_model.vocab.core import Item, Port, Unit
 lazy from fransys_model.vocab.templates import FunctionTemplate
 
+from .facts.roles import port_role
 from .facts.strips import strip_of
 from .indexes import build_indexes
 
@@ -266,7 +267,7 @@ def conductors_by_role(
     by_role: dict[PortRole, set[Id[Conductor]]] = {}
     for function in idx.functions_by_item.get(terminal, ()):
         for port in idx.ports_by_function.get(function, ()):
-            role = ports(model)[port].role
+            role = port_role(model, port)
             landed = idx.conductors_by_port.get(port, ())
             if landed:
                 by_role.setdefault(role, set()).update(landed)

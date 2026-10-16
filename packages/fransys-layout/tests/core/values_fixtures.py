@@ -159,7 +159,7 @@ def layout() -> CoreLayout:
         annotations=Annotations(
             (Label("K1", 1, BOX, "TL"),),
             (Table("K1", 1, ("3C", "2:3C"), BOX, 1),),
-            (OutMarker("N1", RefKind.TAG, 1, "3C", 4, 4, PinRef("K1", "1")),),
+            (OutMarker("N1", RefKind.TAG, 1, "3C", 4, 4, PinRef("K1", "1"), "R90"),),
             (WireLabel("N1", 1, BOX),),
         ),
         references=(Ref("N1", RefKind.ARROW, ends),),

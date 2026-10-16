@@ -16,6 +16,7 @@ from .cycle_fixtures import ring_problem
 from .pipeline_fixtures import cut_of, placed_of, routed_of
 from .place_fixtures import card_with_coils, row_group_three
 from .route_fixtures import (
+    by_bundle,
     envs_of,
     link_across_box,
     link_env,
@@ -47,7 +48,7 @@ def all_wires(routes: Routes) -> list[Wire]:
 
 
 def test_every_pin_of_every_net_is_the_end_of_a_wire_of_its_net(planted: PlacementProblem) -> None:
-    reached = pin_reached(routed_of(planted), placed_of(planted), planted)
+    reached = pin_reached(by_bundle(routed_of(planted), planted), placed_of(planted), planted)
     assert reached == {(r.sym, r.pin) for n in planted.nets for r in n.pins}
 
 

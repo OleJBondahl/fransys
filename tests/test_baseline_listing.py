@@ -98,7 +98,7 @@ def test_board_own_listing_matches_the_worked_example_text():
     text = baseline.dumps(baseline.listing(result.model, u.unit_id))
 
     expected = {
-        "listing_version": 1,
+        "listing_version": 2,
         "unit": {"name": "demo-io-board", "version": 1, "revision": 3, "interface": "2"},
         "items": [
             {
@@ -108,6 +108,7 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "installed": True,
                 "external": False,
                 "position": None,
+                "key": "A1",
             },
             {
                 "designation": "=BRD-K1",
@@ -117,6 +118,7 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "external": False,
                 "position": None,
                 "parent": "",
+                "key": "K1",
             },
             {
                 "designation": "=BRD-X1",
@@ -126,11 +128,19 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "external": False,
                 "position": None,
                 "parent": "",
+                "key": "X1",
             },
         ],
         "units": [],
         "boundary": [
-            {"function": "=BRD-X1:x1", "ports": ["1", "2"], "rating": None, "operating": None}
+            {
+                "function": "=BRD-X1:x1",
+                "ports": ["1", "2"],
+                "rating": None,
+                "operating": None,
+                "key": "X1",
+                "pin": "x1",
+            }
         ],
         "conductors": [
             {
@@ -142,6 +152,10 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "gauge_mm2": "0.5",
                 "length_mm": None,
                 "label": None,
+                "a_key": "K1",
+                "a_pin": "A1",
+                "b_key": "X1",
+                "b_pin": "1",
             },
             {
                 "kind": "wire",
@@ -152,6 +166,10 @@ def test_board_own_listing_matches_the_worked_example_text():
                 "gauge_mm2": "0.5",
                 "length_mm": None,
                 "label": None,
+                "a_key": "K1",
+                "a_pin": "A2",
+                "b_key": "X1",
+                "b_pin": "2",
             },
         ],
         "mates": [],
@@ -203,8 +221,8 @@ def test_loads_dumps_round_trip(two_cabinet_system):
 def test_loads_refuses_an_unknown_listing_version(two_cabinet_system):
     result, cab1_id, _board1_id, _cab2_id, _board2_id = two_cabinet_system
     text = baseline.dumps(baseline.listing(result.model, cab1_id))
-    bad = text.replace('"listing_version":1', '"listing_version":2')
-    assert '"listing_version":2' in bad
+    bad = text.replace('"listing_version":2', '"listing_version":3')
+    assert '"listing_version":3' in bad
     with pytest.raises(SchemaVersionError):
         baseline.loads(bad)
 
@@ -312,3 +330,19 @@ def test_two_releases_of_one_unit_in_one_cabinet_give_two_distinct_units_entries
     assert len(cab_listing.units) == 2
     assert all(row.name == "demo-io-board" for row in cab_listing.units)
     assert {(row.version, row.revision) for row in cab_listing.units} == {(1, 5), (2, 1)}
+
+
+def test_loads_reads_a_version_1_text_with_no_keys_and_a_version_2_text_with_them(
+    two_cabinet_system,
+):
+    result, cab1_id, _board1_id, _cab2_id, _board2_id = two_cabinet_system
+    keyed = baseline.listing(result.model, cab1_id)
+    assert all(row.key is not None for row in keyed.items)
+    assert '"listing_version":2' in baseline.dumps(keyed)
+
+    bare = baseline.listing(result.model, cab1_id, baseline.ListingRules(item_keys=False))
+    text = baseline.dumps(bare)
+    assert '"listing_version":1' in text
+    assert '"key"' not in text
+    assert baseline.loads(text) == bare
+    assert all(row.key is None for row in bare.items)

@@ -18,12 +18,11 @@ import fransys_parts
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_units_worked_example import _PROJECT, _system_design, pump_cabinet
 
-from fransys_model.derive import unit_release
+from fransys_model.checks.documents import DOCUMENT_UNIT_UNRESOLVED
+from fransys_model.derive import unit_name_unresolved, unit_release
 from fransys_model.derive.numbering_pins import name_findings
 from fransys_model.kernel import Finding, Severity
 from fransys_model.vocab.tables import units as units_table
-from fransys_model.vocab.unit_by_name import unit_name_unresolved
-from fransys_model.vocab.validators.documents import DOCUMENT_UNIT_UNRESOLVED
 
 
 def _cover(tmp_path, name, text):

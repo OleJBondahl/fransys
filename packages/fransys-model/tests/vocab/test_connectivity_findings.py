@@ -4,18 +4,18 @@ from typing import Any
 
 from plant import Plant
 
+from fransys_model.checks.connectivity import (
+    FUNCTION_HALF_CONNECTED,
+    NET_SHORTED,
+    NET_UNREALISED,
+    check_connectivity,
+)
 from fransys_model.kernel import Finding, Id, Severity, make_id
 from fransys_model.vocab.connectivity import Net
 from fransys_model.vocab.core import Item, Port
 from fransys_model.vocab.enums import FunctionKind, NetClass
 from fransys_model.vocab.finding_ref import ref
 from fransys_model.vocab.tables import ports
-from fransys_model.vocab.validators.connectivity import (
-    FUNCTION_HALF_CONNECTED,
-    NET_SHORTED,
-    NET_UNREALISED,
-    check_connectivity,
-)
 
 
 def _of(plant: Plant, code: str) -> list[Finding]:

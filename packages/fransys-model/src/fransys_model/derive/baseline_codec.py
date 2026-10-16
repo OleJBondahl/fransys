@@ -3,11 +3,22 @@
 import dataclasses
 from decimal import Decimal
 from typing import cast
+lazy from collections.abc import Mapping
 
 from fransys_kernel import JsonValue, decimal_text, read_json, write_json
 from fransys_model.kernel import SchemaError, SchemaVersionError
 from fransys_model.vocab.ratings import BreakingPoint, Operating, Rating
 
+from .baseline_codec_keys import (
+    BOUNDARY_KEYS,
+    END_KEYS,
+    ITEM_KEYS,
+    NET_KEYS,
+    has_item_keys,
+    key_fields,
+    key_kwargs,
+)
+from .baseline_rules import KEYED_LISTING_VERSION
 from .rows_baseline import (
     BaselineBoundary,
     BaselineConductor,
@@ -18,9 +29,6 @@ from .rows_baseline import (
     BaselineUnit,
     Listing,
 )
-
-_LISTING_VERSION = 1
-
 
 # -- dumps / loads (canonical JSON) ----------------------------------------
 
@@ -97,7 +105,7 @@ def _item_dict(i: BaselineItem) -> dict[str, JsonValue]:
     }
     if i.parent is not None:
         row["parent"] = i.parent  # written only when set: an older listing keeps its bytes
-    return row
+    return row | key_fields(i, ITEM_KEYS)
 
 
 def _nested_unit_dict(u: BaselineNestedUnit) -> dict[str, JsonValue]:
@@ -116,7 +124,7 @@ def _boundary_dict(b: BaselineBoundary) -> dict[str, JsonValue]:
         "ports": list(b.ports),
         "rating": _decimal_dict(b.rating),
         "operating": _decimal_dict(b.operating),
-    }
+    } | key_fields(b, BOUNDARY_KEYS)
 
 
 def _conductor_dict(c: BaselineConductor) -> dict[str, JsonValue]:
@@ -129,15 +137,21 @@ def _conductor_dict(c: BaselineConductor) -> dict[str, JsonValue]:
         "gauge_mm2": c.gauge_mm2,
         "length_mm": c.length_mm,
         "label": c.label,
-    }
+    } | key_fields(c, END_KEYS)
 
 
 def _mate_dict(m: BaselineMate) -> dict[str, JsonValue]:
-    return {"a": m.a, "b": m.b}
+    return {"a": m.a, "b": m.b} | key_fields(m, END_KEYS)
 
 
 def _net_dict(n: BaselineNet) -> dict[str, JsonValue]:
-    return {"name": n.name, "class": n.net_class, "potential": n.potential, "ports": list(n.ports)}
+    row: dict[str, JsonValue] = {
+        "name": n.name,
+        "class": n.net_class,
+        "potential": n.potential,
+        "ports": list(n.ports),
+    }
+    return row | key_fields(n, NET_KEYS)
 
 
 def dumps(listing: Listing) -> str:
@@ -150,7 +164,7 @@ def dumps(listing: Listing) -> str:
         The JSON text, which `loads` reads back.
     """
     data: dict[str, JsonValue] = {
-        "listing_version": _LISTING_VERSION,
+        "listing_version": KEYED_LISTING_VERSION if has_item_keys(listing) else 1,
         "unit": _unit_dict(listing.unit),
         "items": [_item_dict(row) for row in listing.items],
         "units": [_nested_unit_dict(row) for row in listing.units],
@@ -204,6 +218,7 @@ def _item_from(value: object) -> BaselineItem:
         external=cast("bool", d["external"]),
         position=cast("int | None", d["position"]),
         parent=cast("str | None", d.get("parent")),
+        **key_kwargs(d, ITEM_KEYS),
     )
 
 
@@ -225,6 +240,7 @@ def _boundary_from(value: object) -> BaselineBoundary:
         ports=cast("tuple[str, ...]", _array(d["ports"])),
         rating=_decimal_value(Rating, d["rating"]),
         operating=_decimal_value(Operating, d["operating"]),
+        **key_kwargs(d, BOUNDARY_KEYS),
     )
 
 
@@ -239,12 +255,13 @@ def _conductor_from(value: object) -> BaselineConductor:
         gauge_mm2=cast("str | None", d["gauge_mm2"]),
         length_mm=cast("int | None", d["length_mm"]),
         label=cast("str | None", d["label"]),
+        **key_kwargs(d, END_KEYS),
     )
 
 
 def _mate_from(value: object) -> BaselineMate:
     d = _mapping(value)
-    return BaselineMate(a=cast("str", d["a"]), b=cast("str", d["b"]))
+    return BaselineMate(a=cast("str", d["a"]), b=cast("str", d["b"]), **key_kwargs(d, END_KEYS))
 
 
 def _net_from(value: object) -> BaselineNet:
@@ -254,6 +271,7 @@ def _net_from(value: object) -> BaselineNet:
         net_class=cast("str", d["class"]),
         potential=cast("str | None", d["potential"]),
         ports=cast("tuple[str, ...]", _array(d["ports"])),
+        **key_kwargs(d, NET_KEYS),
     )
 
 
@@ -268,17 +286,11 @@ def loads(text: str) -> Listing:
 
     Raises:
         SchemaError: the text is not valid canonical JSON, or its envelope is malformed.
-        SchemaVersionError: `text`'s `listing_version` is not `1`, the only shape this build
-            knows.
+        SchemaVersionError: `text`'s `listing_version` is not `1` or `2`, the shapes this build
+            knows; version 2 carries the item keys, which a version-1 listing has not.
     """
     data = _mapping(read_json(text))
-    version = data.get("listing_version")
-    if type(version) is not int:
-        msg = "`listing_version` is missing or not an int"
-        raise SchemaError(msg, kind="listing")
-    if version != _LISTING_VERSION:
-        msg = f"listing_version {version} is not known; this build reads only {_LISTING_VERSION}"
-        raise SchemaVersionError(msg, expected=_LISTING_VERSION, actual=version)
+    _version_of(data)
     return Listing(
         unit=_unit_from(data["unit"]),
         items=tuple(_item_from(d) for d in _array(data["items"])),
@@ -288,6 +300,22 @@ def loads(text: str) -> Listing:
         mates=tuple(_mate_from(d) for d in _array(data["mates"])),
         nets=tuple(_net_from(d) for d in _array(data["nets"])),
     )
+
+
+def _version_of(data: Mapping[str, object]) -> int:
+    version = data.get("listing_version")
+    if type(version) is not int:
+        msg = "`listing_version` is missing or not an int"
+        raise SchemaError(msg, kind="listing")
+    if version not in (1, KEYED_LISTING_VERSION):
+        msg = f"listing_version {version} is not known; this build reads 1 and 2"
+        raise SchemaVersionError(msg, expected=KEYED_LISTING_VERSION, actual=version)
+    return version
+
+
+def stored_version(text: str) -> int:
+    """The `listing_version` of stored listing `text`: 1, or 2 when it carries item keys."""
+    return _version_of(_mapping(read_json(text)))
 
 
 def without_parent(listing: Listing) -> Listing:

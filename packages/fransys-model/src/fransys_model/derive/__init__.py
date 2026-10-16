@@ -1,5 +1,15 @@
 """Derived layer: indexes, closure, designations, passes, queries and rows (design/derive.md)."""
 
+from fransys_model.derive.facts.current.load_limits import LoadLimit, load_limits
+from fransys_model.derive.facts.energy_flow import gives_energy, takes_energy
+from fransys_model.derive.facts.function_ratings import (
+    boundary_operating,
+    boundary_rating,
+    function_operating,
+    function_rating,
+    part_rating,
+)
+from fransys_model.derive.facts.item_predicates import cable_items, is_cable
 from fransys_model.layout import profile_of
 from fransys_model.vocab import (
     Aspect,
@@ -21,19 +31,8 @@ from fransys_model.vocab import (
     SupplySystem,
     Unit,
     UnitRelease,
-    boundary_operating,
-    boundary_rating,
-    cable_items,
-    function_operating,
-    function_rating,
-    is_cable,
-    part_rating,
 )
-from fransys_model.vocab.bars import bar_items, is_bar_port
-from fransys_model.vocab.energy_flow import gives_energy, takes_energy
 from fransys_model.vocab.enums import ItemKind
-from fransys_model.vocab.load_limits import LoadLimit, load_limits
-from fransys_model.vocab.prospective_fault import ProspectiveFault, prospective_fault
 from fransys_model.vocab.tables import (
     aspect_nodes,
     boundaries,
@@ -48,12 +47,14 @@ from fransys_model.vocab.tables import (
     units,
 )
 
+# Lazy: the checks import derive's submodules, so an eager import here would be a cycle.
+lazy from fransys_model.checks import ALL_VALIDATORS
+
 from .accessory_blocks import operated_by, operating_item
 from .actuated import actuated_group, actuator_each_contact, lead_switch
 from .bom import TopLevelScope
 from .box_lines import connector_box_lines
 from .cable_runs import NO_PART, cable_runs
-from .closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
 from .columns import (
     BOM_COLUMNS,
     CABLE_LIST_COLUMNS,
@@ -73,7 +74,7 @@ from .columns import (
     csv_name,
 )
 from .contact_entries import NO_PLACE, contact_list_key
-from .contacts import LinkState, Throws, changeover_throws, link_state, owned_contacts
+from .contacts import LinkState, Throws, changeover_throws, link_state, link_throw, owned_contacts
 from .core_list import core_list_rows
 from .core_pairs import cores_text
 from .current_chains import CurrentBound, CurrentChain, CurrentPosition, LimitRole, current_chains
@@ -107,7 +108,6 @@ from .document_sheets import (
     document_sheet_format,
     document_sheets,
     document_sheets_of,
-    sheet_key,
 )
 from .document_sizes import sizes_of
 from .document_subject import scope_path, subject_label
@@ -122,19 +122,42 @@ from .export_names import (
 )
 from .export_set import export_set, stale_patterns
 from .external import external
+from .facade_reads import (
+    document_ids,
+    document_stems,
+    has_documents,
+    has_project,
+    listing_interface,
+    listing_revision_text,
+    part_function_pins,
+    part_records,
+    release_names,
+    subject_part_mpn,
+    unit_chain_below,
+    unit_ids,
+    unit_key,
+    unit_owned_ids,
+)
+from .facts.bars import bar_items, is_bar_port
 from .facts.boundary_pins import unit_boundary_functions, unit_boundary_pins
 from .facts.children import child_items
+from .facts.closure import PhysicalNet, net_of, physical_nets, port_rails, rail_pairs
+from .facts.fault.prospective import ProspectiveFault, prospective_fault
 from .facts.keep_whole import KeepWhole, keep_whole_sets
 from .facts.mates import mate_port_of, mate_ports
 from .facts.roles import (
+    changeover_functions,
     conductor_role,
     function_role,
-    item_role,
     link_role,
     net_class_role,
     port_role,
 )
 from .facts.strips import strip_of
+from .facts.subjects import is_unit_owned_kind, record_key_text, subject_kind, subject_kind_text
+from .facts.unit_index import unit_index
+from .facts.unit_names import unit_name_unresolved, units_named
+from .facts.units import crosses_unit
 from .finding_marks import finding_marks
 from .frame_labels import frame_labels
 from .harness_blocks import (
@@ -154,7 +177,7 @@ from .jumper_lanes import (
     jumper_lane_count,
     jumper_lanes,
 )
-from .kinds import item_kind, signal_kind
+from .kinds import item_kind, item_role, signal_kind
 from .line_end_fact import connector_at_line_end
 from .line_fact import draws_as_line, line_conductors
 from .line_text import line_designation, line_stub_line
@@ -380,7 +403,15 @@ from .rows_readability import (
     ReadabilityReport,
     ReadabilityUnit,
 )
-from .rows_sheet import FieldOverflow, FrameLabels, Sizes, TitleBlockFields, TitleBlockStrings
+from .rows_sheet import (
+    FieldOverflow,
+    FrameLabels,
+    SheetKey,
+    Sizes,
+    TitleBlockFields,
+    TitleBlockStrings,
+    sheet_key_text,
+)
 from .rows_sheet_index import SheetIndexRow, sheet_index_rows
 from .rows_sheet_pages import (
     DocumentSheets,
@@ -421,6 +452,7 @@ from .view_rollup import place_members, subject_marks, view_lookup
 from .wiring_ends import ends_without_jumpers, strip_side_headings
 
 __all__ = [
+    "ALL_VALIDATORS",
     "BOM_COLUMNS",
     "BRIDGE_PIECES",
     "BRIDGE_PIECE_KEYS",
@@ -558,6 +590,7 @@ __all__ = [
     "SheetBackground",
     "SheetFrame",
     "SheetIndexRow",
+    "SheetKey",
     "SheetPage",
     "SidelessPins",
     "SignalKind",
@@ -614,6 +647,7 @@ __all__ = [
     "cable_title",
     "cell_parts",
     "cell_text",
+    "changeover_functions",
     "changeover_throws",
     "channel_pins",
     "check_side_hints",
@@ -638,6 +672,7 @@ __all__ = [
     "core_colour",
     "core_list_rows",
     "cores_text",
+    "crosses_unit",
     "csv_name",
     "current_chains",
     "current_revision",
@@ -653,11 +688,13 @@ __all__ = [
     "document_drawing_sets",
     "document_export_name",
     "document_facts",
+    "document_ids",
     "document_page_kinds",
     "document_scope",
     "document_sheet_format",
     "document_sheets",
     "document_sheets_of",
+    "document_stems",
     "document_unit",
     "drawing_set_is_replica_only",
     "drawn_pages",
@@ -696,6 +733,8 @@ __all__ = [
     "harness_cables_for",
     "harness_line_ends",
     "harness_wires",
+    "has_documents",
+    "has_project",
     "has_schematic_subject",
     "is_bar_port",
     "is_black_box_item",
@@ -705,6 +744,7 @@ __all__ = [
     "is_rail_terminal",
     "is_replica_only_undrawn",
     "is_sole_unit_root",
+    "is_unit_owned_kind",
     "item_description",
     "item_designation",
     "item_installed",
@@ -727,7 +767,10 @@ __all__ = [
     "line_tabs",
     "link_role",
     "link_state",
+    "link_throw",
     "list_context",
+    "listing_interface",
+    "listing_revision_text",
     "load_limits",
     "location_fold",
     "location_node_designation",
@@ -786,8 +829,10 @@ __all__ = [
     "page_title",
     "page_title_forms",
     "page_wires",
+    "part_function_pins",
     "part_function_rows",
     "part_rating",
+    "part_records",
     "physical_nets",
     "pin_lines",
     "pin_order",
@@ -823,10 +868,12 @@ __all__ = [
     "readability_units",
     "reading_cables",
     "rebaseline_subjects",
+    "record_key_text",
     "reference_designation",
     "reference_fragment",
     "references_off_document",
     "release_identity",
+    "release_names",
     "release_order",
     "requests_harness_pages",
     "resolve_wire_rows",
@@ -841,7 +888,7 @@ __all__ = [
     "sheet_counter_text",
     "sheet_frame",
     "sheet_index_rows",
-    "sheet_key",
+    "sheet_key_text",
     "sheet_text",
     "sheet_title_text",
     "sheets",
@@ -858,8 +905,11 @@ __all__ = [
     "strip_stubs",
     "strip_view",
     "stub_ends",
+    "subject_kind",
+    "subject_kind_text",
     "subject_label",
     "subject_marks",
+    "subject_part_mpn",
     "subtree",
     "supply_share",
     "supply_systems",
@@ -882,11 +932,17 @@ __all__ = [
     "unit_boundary_functions",
     "unit_boundary_pins",
     "unit_cables",
+    "unit_chain_below",
     "unit_connector_items",
+    "unit_ids",
+    "unit_index",
     "unit_items",
+    "unit_key",
     "unit_location",
     "unit_matrix",
+    "unit_name_unresolved",
     "unit_own_drawing",
+    "unit_owned_ids",
     "unit_racks",
     "unit_release",
     "unit_releases",
@@ -894,6 +950,7 @@ __all__ = [
     "unit_subtree",
     "unit_system_designation",
     "units",
+    "units_named",
     "unused_terminals",
     "view_lookup",
     "wire_rows",

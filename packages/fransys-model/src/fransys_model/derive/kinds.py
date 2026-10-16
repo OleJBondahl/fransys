@@ -4,34 +4,36 @@ Reached as `derive.item_kind` and `derive.signal_kind` (model-0197). Both read f
 already have one home and decide nothing a second time.
 """
 
+from dataclasses import replace
 lazy from collections.abc import Callable
 
-from fransys_model.vocab.bars import bar_items
-from fransys_model.vocab.cables import is_cable
-from fransys_model.vocab.enums import FunctionKind, ItemKind, SignalType
-from fransys_model.vocab.membership import is_harness, require
-from fransys_model.vocab.tables import functions, items
-from fransys_model.vocab.terminals import terminal_items
-from fransys_model.vocab.unit_index import unit_index
+from fransys_model.derive.facts.bars import bar_items
+from fransys_model.derive.facts.item_predicates import is_cable, terminal_items
+from fransys_model.derive.facts.unit_index import unit_index
+from fransys_model.derive.facts.units import external, is_harness, require
+from fransys_model.vocab.enums import ItemKind, SignalType
+from fransys_model.vocab.roles import ITEM_ROLES
+from fransys_model.vocab.signal_types import SIGNAL_TYPES
+from fransys_model.vocab.tables import items
 lazy from fransys_model.kernel import Id, Model
 lazy from fransys_model.vocab.core import Item
+lazy from fransys_model.vocab.roles_types import ItemRole
 
+from .designation import takes_parents_designation
+from .facts.children import child_items
+from .facts.roles import function_role
 from .indexes import build_indexes
 from .lookups import strip_set
 from .plc_rack import is_plc_module
 from .rows_plc import SignalKind
 
-__all__ = ["item_kind", "signal_kind"]
+__all__ = ["item_kind", "item_role", "signal_kind"]
 
 _SIGNAL_KINDS = {
-    SignalType.DI: SignalKind.DIGITAL_IN,
-    SignalType.DO: SignalKind.DIGITAL_OUT,
-    SignalType.AI_CURRENT: SignalKind.ANALOGUE_IN,
-    SignalType.AI_VOLTAGE: SignalKind.ANALOGUE_IN,
-    SignalType.AO_CURRENT: SignalKind.ANALOGUE_OUT,
-    SignalType.AO_VOLTAGE: SignalKind.ANALOGUE_OUT,
-    SignalType.RTD: SignalKind.ANALOGUE_IN,
-    SignalType.RELAY: SignalKind.DIGITAL_OUT,
+    signal: SignalKind(
+        f"{'analogue' if row.analogue else 'digital'}_{'out' if row.output else 'in'}"
+    )
+    for signal, row in SIGNAL_TYPES.items()
 }
 
 
@@ -47,7 +49,7 @@ def signal_kind(signal: SignalType) -> SignalKind:
 def _only_connectors(model: Model, item: Id[Item]) -> bool:
     """Whether `item` has functions and every one is a `CONNECTOR` (as `box_lines` reads it)."""
     held = build_indexes(model).functions_by_item.get(item, ())
-    return bool(held) and all(functions(model)[f].kind is FunctionKind.CONNECTOR for f in held)
+    return bool(held) and all(function_role(model, f).pin_group for f in held)
 
 
 # The first test that holds names the kind: a harness wins over its cable, a board over its plugs.
@@ -75,3 +77,21 @@ def item_kind(model: Model, item: Id[Item]) -> ItemKind:
     """
     record = require(items(model).get(item), "item", item)
     return next((kind for kind, test in _TESTS if test(model, record)), ItemKind.DEVICE)
+
+
+def item_role(model: Model, item: Id[Item]) -> ItemRole:
+    """The role of `item`: its `item_kind` row plus the rack, external, accessory, root flags.
+
+    Lives beside `item_kind` so `facts/roles` never imports it back.
+    """
+    record = items(model)[item]
+    role = ITEM_ROLES[item_kind(model, item)]
+    rack = any(is_plc_module(model, items(model)[c]) for c in child_items(model, item))
+    root = any(item in roots for roots in unit_index(model).own_roots.values())
+    return replace(
+        role,
+        rack=rack,
+        external=external(model, item),
+        accessory=takes_parents_designation(model, record.id),
+        unit_root=root,
+    )

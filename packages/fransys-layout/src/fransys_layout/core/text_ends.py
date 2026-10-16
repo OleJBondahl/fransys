@@ -10,9 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .geometry import marker_box_at, rotate_side
 from .keys import natural_key
 from .ref_kind import kind_of
-from .scene_facts import turn_side
+from .route_env import pin_sides
+from .sides import SIDE_STEP
 from .values import RefKind
 
 if TYPE_CHECKING:
@@ -34,7 +36,8 @@ if TYPE_CHECKING:
 
 Key = tuple[tuple[int, int | str], ...]
 PinAt = tuple[int, int, int, "Orientation"]
-_STEP = frozendict({"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)})
+# the symbol at R0 points east; this turn points its box along the pin's turned side
+_FACING: Mapping[str, Orientation] = frozendict({"E": "R0", "S": "R90", "W": "R180", "N": "R270"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +57,7 @@ class Stand:
     x: int
     y: int
     end: PinRef
+    orient: Orientation = "R0"
 
 
 def mark_env(
@@ -71,7 +75,7 @@ def mark_env(
         options,
         problem.area,
         pins,
-        {(s.id, p.id): p.side for s in problem.symbols for p in s.pins},
+        pin_sides(problem),
         trunks,
         {f.id: f for f in cut.flow.fans},
     )
@@ -91,9 +95,12 @@ def pin_stand(env: MarkEnv, pin: PinRef, page: int, ref: Ref) -> Stand:
     if at != page:
         msg = f"marks: {who(ref)} names {pin.sym}.{pin.pin} on page {page}, not {at}"
         raise ValueError(msg)
-    dx, dy = _STEP[turn_side(env.sides[(pin.sym, pin.pin)], orient)]
-    size = env.options.marker
-    return Stand(x + dx * size.w if dx else x, y + dy * size.h if dy else y, pin)
+    side = rotate_side(env.sides[(pin.sym, pin.pin)], orient)
+    turned = _FACING[side]
+    box = marker_box_at(0, 0, env.options, turned)  # the box about an origin of (0, 0)
+    near = {"E": box.x, "W": box.x + box.w, "S": box.y, "N": box.y + box.h}[side]
+    dx, dy = SIDE_STEP[side]
+    return Stand(x - near if dx else x, y - near if dy else y, pin, turned)
 
 
 def _trunk_of(env: MarkEnv, fan: str, end: RefEnd, ref: Ref) -> tuple[Trunk, ...]:

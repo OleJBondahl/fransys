@@ -6,7 +6,7 @@ from enum import Enum
 import pytest
 from plant import Plant
 
-from fransys_model.vocab.energy_flow import gives_energy, takes_energy
+from fransys_model.derive.facts.energy_flow import gives_energy, takes_energy
 from fransys_model.vocab.enums import Energy, FunctionKind, LinkKind, LinkRest
 from fransys_model.vocab.roles import FUNCTION_ROLES, LINK_ROLES
 from fransys_model.vocab.roles_types import FunctionRole, LinkRole, complete
@@ -79,7 +79,8 @@ def test_energy_matches_the_energy_flow_oracle_for_every_kind() -> None:
 
 def test_the_switched_link_does_not_join_the_net() -> None:
     """A switched link is a pole, switched, and outside the physical net; a protective one too."""
-    assert LINK_ROLES[LinkKind.SWITCHED] == LinkRole(pole=True, switched=True)
+    assert LINK_ROLES[LinkKind.SWITCHED] == LinkRole(pole=True, switched=True, passes_rail=True)
+    assert all(row.passes_rail for row in LINK_ROLES.values())
     assert LINK_ROLES[LinkKind.CONDUCTIVE].joins_net
     assert not LINK_ROLES[LinkKind.PROTECTIVE].joins_net
     assert LINK_ROLES[LinkKind.PROTECTIVE].protective

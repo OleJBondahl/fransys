@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from fransys_model.derive.facts import units as membership
+from fransys_model.derive.facts.unit_index import unit_index
 from fransys_model.kernel import Draft, Origin, SchemaError, freeze, make_id
 from fransys_model.vocab import (
     CableFacet,
@@ -21,11 +23,9 @@ from fransys_model.vocab import (
     PcbFacet,
     Unit,
     UnitRelease,
-    membership,
 )
 from fransys_model.vocab.tables import functions, items
 from fransys_model.vocab.tables import units as units_table
-from fransys_model.vocab.unit_index import unit_index
 
 _TESTS_DIR = Path(__file__).resolve().parent
 if str(_TESTS_DIR) not in sys.path:
@@ -214,7 +214,7 @@ def _facts(model):
     }
 
 
-# Every literal below is what the scan `vocab.membership` had before the index answered
+# Every literal below is what the scan `derive.facts.units` had before the index answered
 # (checked with `claude-tools/run_unit_oracle.py`, which runs the old scan against the index).
 
 

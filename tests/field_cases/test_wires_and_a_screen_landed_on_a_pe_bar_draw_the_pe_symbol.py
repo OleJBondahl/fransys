@@ -19,9 +19,9 @@ import pytest
 from fransys.colours import GNYE
 
 from fransys_model.derive import ItemKind, item_kind
+from fransys_model.derive.facts.bars import bar_items, is_bar_port
 from fransys_model.layout import EndBox, EndStyle, PowerSymbol, SymbolPlacement, layout_of
 from fransys_model.vocab import OpenCoreFacet
-from fransys_model.vocab.bars import bar_items, is_bar_port
 from fransys_model.vocab.tables import conductors, facets_of, functions, items, ports
 
 if TYPE_CHECKING:

@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 
 from fransys_model.derive import (
     CableBlockRef,
+    SheetKey,
     cable_blocks,
     cable_runs,
     has_schematic_subject,
-    sheet_key,
     sheet_text,
     system_has_no_top_level_cables,
 )
@@ -74,20 +74,20 @@ def schematic_source(  # noqa: PLR0913, PLR0917 -- the document, its paper, page
     sheet: SheetFormat,
     pages_found: tuple[Page, ...],
     svgs: Mapping[str, str],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """The SCHEMATIC section: full-bleed pages, `n / N` counted per drawing set."""
     kind = PageKind.SCHEMATIC
     if not pages_found or schematic_missing_keys(pages_found, svgs):
         margin = text_margin(sheet)
-        back = page_background(model, record, sheets, sheet_key(record.id, kind, "none"))
+        back = page_background(model, record, sheets, SheetKey(record.id, kind, None))
         return f"#page(margin: {margin}, background: {back})[{RESTART}\n{NO_DRAWINGS}]"
     blocks = []
     outline = outline_sheets(model, pages_found)
     known = {page.id for page in pages_found}
     for index, (page, entry) in enumerate(zip(pages_found, outline, strict=True)):
         image = f'#image(bytes({literal(svgs[render_id(page.id)])}), format: "svg")'
-        back = page_background(model, record, sheets, sheet_key(record.id, kind, index))
+        back = page_background(model, record, sheets, SheetKey(record.id, kind, index))
         numbering, before, links = _sheet_extras(model, sheet, page, entry, known)
         blocks.append(f"#page(margin: 0mm, background: {back}{numbering})[{before}{image}{links}]")
     return "\n#pagebreak()\n".join(blocks)
@@ -106,7 +106,7 @@ def _cable_runs(  # noqa: PLR0913, PLR0917 -- the document, its paper, blocks, d
     sheet: SheetFormat,
     blocks: tuple[CableBlockRef, ...],
     svgs: Mapping[str, str],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """One page run per part (pdf-0020); each run's title block names the part number.
 
@@ -120,7 +120,7 @@ def _cable_runs(  # noqa: PLR0913, PLR0917 -- the document, its paper, blocks, d
             if block.key in svgs
         ]
         line = run.blocks[0].line if run.blocks[0].mpn else run.heading
-        key = sheet_key(record.id, PageKind.HARNESS_DRAWING, index)
+        key = SheetKey(record.id, PageKind.HARNESS_DRAWING, index)
         runs.append(
             run_page(sheet, index, line, page_background(model, record, sheets, key), bodies)
         )
@@ -133,7 +133,7 @@ def harness_drawing_source(  # noqa: PLR0913, PLR0917 -- the document, its paper
     sheet: SheetFormat,
     cables_found: tuple[HarnessCable, ...],
     svgs: Mapping[str, str],
-    sheets: Mapping[str, SheetBackground],
+    sheets: Mapping[SheetKey, SheetBackground],
 ) -> str:
     """Cable block pages, one run per part (pdf-0020, pdf-0022); `""` for SYSTEM with no cable."""
     if system_has_no_top_level_cables(record, cables_found):
@@ -141,7 +141,7 @@ def harness_drawing_source(  # noqa: PLR0913, PLR0917 -- the document, its paper
     blocks = cable_blocks(model, record, cables_found)
     if not blocks:
         margin = text_margin(sheet)
-        key = sheet_key(record.id, PageKind.HARNESS_DRAWING, "none")
+        key = SheetKey(record.id, PageKind.HARNESS_DRAWING, None)
         back = page_background(model, record, sheets, key)
         return f"#page(margin: {margin}, background: {back})[{RESTART}\n{NO_DRAWINGS}]"
     return _cable_runs(model, record, sheet, blocks, svgs, sheets)

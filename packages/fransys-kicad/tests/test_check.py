@@ -1,12 +1,12 @@
 import pytest
 from fransys_kicad import check, netlist
 
+from fransys_model.checks.connectivity import NET_SHORTED, check_connectivity
 from fransys_model.derive import board_netlist
 from fransys_model.derive.designation import item_designation, item_label
 from fransys_model.derive.passes.numbering import number
 from fransys_model.kernel import SchemaError, Severity
 from fransys_model.vocab.tables import items
-from fransys_model.vocab.validators.connectivity import NET_SHORTED, check_connectivity
 
 
 def _codes(findings):

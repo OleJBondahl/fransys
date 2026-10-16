@@ -3,10 +3,10 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from fransys_model.derive.facts.item_predicates import is_cable
 from fransys_model.derive.facts.roles import function_role
+from fransys_model.derive.facts.units import is_harness
 from fransys_model.kernel import Id, Model, SchemaError
-from fransys_model.vocab.cables import is_cable
-from fransys_model.vocab.membership import is_harness
 from fransys_model.vocab.tables import conductors, items, ports
 lazy from fransys_model.vocab.core import Function, Item, Port
 

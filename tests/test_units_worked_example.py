@@ -30,6 +30,13 @@ from fransys_layout.engines.schematic.engine import lay_out_schematic, stage_res
 from fransys_layout.engines.schematic.read import read_inputs
 from fransys_layout.lint.codes import CONNECTION_TO_UNDRAWN
 from fransys_layout.stages import LinkCase
+from fransys_model.checks.units import (
+    BOUNDARY_NOT_IN_UNIT,
+    BOUNDARY_UNCONNECTED,
+    MATE_PORT_MISMATCH,
+    UNIT_BOUNDARY_BYPASSED,
+    UNUSED_CONTRADICTED,
+)
 from fransys_model.derive import boundary as unit_boundary
 from fransys_model.derive import (
     connector_box_lines,
@@ -77,13 +84,6 @@ from fransys_model.vocab.tables import items as items_of
 from fransys_model.vocab.tables import nets as nets_of
 from fransys_model.vocab.tables import ports as ports_of
 from fransys_model.vocab.tables import units as units_table
-from fransys_model.vocab.validators.units import (
-    BOUNDARY_NOT_IN_UNIT,
-    BOUNDARY_UNCONNECTED,
-    MATE_PORT_MISMATCH,
-    UNIT_BOUNDARY_BYPASSED,
-    UNUSED_CONTRADICTED,
-)
 
 _PROJECT: dict[str, Any] = {
     "title": "Pump station",

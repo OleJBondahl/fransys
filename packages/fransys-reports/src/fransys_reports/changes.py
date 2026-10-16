@@ -8,6 +8,8 @@ from fransys_model.derive.baseline import (
     change_clause,
     change_identity,
     change_sections,
+    interface_text,
+    renamed_text,
 )
 
 from .csv import _csv
@@ -27,6 +29,13 @@ def changes_csv(diff: ListingDiff) -> str:
         The CSV text. Same `diff`, same bytes.
     """
     return _csv(diff.changes, CHANGE_COLUMNS)
+
+
+def _bullets(section: str, rows: tuple[Change, ...]) -> list[str]:
+    """The bullets of one `(section, subject)` group: a rename bullet, then the real changes."""
+    renamed = [f"- {renamed_text(row)}" for row in rows if row.change == "renamed"]
+    rest = tuple(row for row in rows if row.change != "renamed")
+    return [*renamed, *([_bullet(section, rest)] if rest else [])]
 
 
 def _bullet(section: str, rows: tuple[Change, ...]) -> str:
@@ -73,12 +82,13 @@ def changes_markdown(diff: ListingDiff) -> str:
     after = revision_text(diff.b.version, diff.b.revision)
     lines = [f"# {diff.a.name}: changes from {before} to {after}"]
     if diff.a.interface != diff.b.interface:
-        lines.extend(["", f"Interface {diff.a.interface} to {diff.b.interface}."])
+        lines.extend(["", interface_text(diff.a.interface, diff.b.interface)])
     sections = change_sections(diff)
     if not sections:
         lines.extend(["", "No changes."])
         return "\n".join(lines)
     for part in sections:
         lines.extend(["", f"## {part.section.title()}", ""])
-        lines.extend(_bullet(part.section, rows) for rows in part.groups)
+        for rows in part.groups:
+            lines.extend(_bullets(part.section, rows))
     return "\n".join(lines)

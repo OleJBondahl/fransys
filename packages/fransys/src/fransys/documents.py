@@ -6,9 +6,10 @@ lazy from pathlib import Path
 from fransys_author import Item, Location, Scope
 from fransys_author.surface import Device
 
+from fransys_model.derive import subject_kind, subject_kind_text
 from fransys_model.kernel import Draft, Id, make_id
 from fransys_model.vocab import Document as ModelDocument
-from fransys_model.vocab import DocumentPreset, PageKind
+from fransys_model.vocab import DocumentPreset, PageKind, SubjectKind
 
 from ._origin import caller_origin
 from ._subjects import unit_of
@@ -24,14 +25,16 @@ def engine_subject(subject: object) -> object:
 def _id_subject_ids(
     subject: Id[Any],
 ) -> tuple[Id[Any] | None, Id[Any] | None, Id[Any] | None, str | None]:
-    if subject.kind == "aspect_node":
+    kind = subject_kind(subject)
+    if kind is SubjectKind.ASPECT_NODE:
         return subject, None, None, None
-    if subject.kind == "item":
+    if kind is SubjectKind.ITEM:
         return None, subject, None, None
-    if subject.kind == "unit":
+    if kind is SubjectKind.UNIT:
         return None, None, subject, None
     msg = (
-        f"a document subject id must be an aspect_node, an item or a unit id, not {subject.kind!r}"
+        "a document subject id must be an aspect_node, an item or a unit id, "
+        f"not {subject_kind_text(subject)!r}"
     )
     raise TypeError(msg)
 

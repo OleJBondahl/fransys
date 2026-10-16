@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/units/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/units/">
       
       
       
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -873,6 +900,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1929,7 +1983,7 @@ units and wires, and it is never split into places.</p>
 The function builds the unit's devices on the design it receives and returns an instance of a
 <code>typing.NamedTuple</code> class, one field per interface device. <code>d.add(fn, "U1")</code> builds the unit into
 your design as instance <code>U1</code> and returns it, typed. Any other return raises. Every device the function creates belongs to that unit.
-<code>@fr.unit(..., wiring={row: value})</code> sets the unit's wire rows (authoring.md, Wire colours). With no <code>wiring=</code> the unit draws the IEC default, never its parent's rows.</p>
+<code>@fr.unit(..., wiring={row: value})</code> sets the unit's wire rows (series.md, Wire colours). With no <code>wiring=</code> the unit draws the IEC default, never its parent's rows.</p>
 <p>The second argument is the instance's printed tag, bare and with no lowercase letter: <code>"U3"</code>,
 never <code>"u3"</code> or <code>"-U3"</code>. It is also the instance's key. A container prints the tag before the
 unit's own designation, so a connector <code>J1</code> of instance <code>U3</code> prints <code>-U3-J1</code>. The unit's own document is unchanged.
@@ -2054,8 +2108,11 @@ functions. A boundary both mated and declared unused still gives <code>UNUSED_CO
 runs at the unit the <code>unused=</code> is on: a function that unit hands up from a nested unit, and wires
 across the nested one, is not contradicted.</p>
 <p>A field typed <code>fr.Terminal</code> names that terminal's one function: <code>unused=("X1",)</code>. A field typed
-<code>fr.Run</code> or <code>fr.TerminalStrip</code> names every boundary terminal it holds. <code>"X1[1].f"</code> on a terminal
-raises. A run or strip with no boundary terminal raises, as a device that is no boundary does.</p>
+<code>fr.Run</code> or <code>fr.TerminalStrip</code>, bare as <code>"X3"</code>, takes every boundary terminal it holds.
+<code>"X3[3]"</code> takes terminal 3 and <code>"X3[3:5]"</code> takes terminals 3 and 4, counted from 1; a number past the
+strip's count raises. For example, <code>unused=("X3[3:5]",)</code> marks terminals 3 and 4 of strip X3. A slice on
+a tuple field raises. <code>"X1[1].f"</code> on a terminal raises, as does <code>".f"</code> on a strip terminal. A run or strip
+with no boundary terminal raises, as a device that is no boundary does.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
@@ -2352,7 +2409,7 @@ documents and lists. A unit's release name is the <code>unit=</code> value. The 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

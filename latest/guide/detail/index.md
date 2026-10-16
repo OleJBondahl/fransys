@@ -76,7 +76,7 @@ d.detail.wire(x8[1].outer, d.device("M1", "DEMO-MOTOR-4KW")["U"], wire=(BK, 1.5)
 ### Fixed terminals
 
 `X1[3]` takes terminal 3 and `.inner` or `.outer` names its side. A series enters a strip at the
-right side by itself. Name a side only when the plan fixes it; `d.series(x1[3].outer, f1.element)` takes it too. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
+right side by itself. `.outer` and `.inner` decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; `d.series(x1[3].outer, f1.element)` takes it too. A series may also start at a pin: `d.series(k1.coil["A1"], a1.di_1)`.
 
 ```python
 import fransys as fr
@@ -92,7 +92,7 @@ d.detail.wire(x1[2].outer, h1[2], wire=(BU, 0.75))
 
 ### One wire to a PE terminal
 
-A cable's green-yellow core is the core way (`authoring.md`, Earth pins). A single wire is a detail.
+A cable's green-yellow core is the core way (`series.md`, Earth pins). A single wire is a detail.
 
 ```python
 import fransys as fr
@@ -108,7 +108,7 @@ d.earth(m1.motor["PE"], pe[1])
 
 ### A PE bar's screws
 
-A bar's function takes its next free screw (`authoring.md`, Earth pins). One wire to a screw is a detail.
+A bar's function takes its next free screw (`series.md`, Earth pins). One wire to a screw is a detail.
 
 ```python
 import fransys as fr

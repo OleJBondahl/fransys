@@ -9,12 +9,18 @@ station that joins them. Every export Fransys produces for it is in `out/`.
 
 ## The station
 
-- A 400 V supply, a main switch, and two pumps, each with its fuses, contactor and overload
-  relay.
-- A 24 V DC control supply and a WAGO 750 PLC rack with digital inputs and outputs.
-- A relay interface board between the PLC outputs and the contactor coils, nested in the cabinet
-  as a unit of its own.
-- Pilot lights, and the field cables to the motors.
+- A 400 V supply, a main switch, and two pumps. Each pump has a 4 A aM, 10x38 fuse, a Schneider
+  LC1D09 contactor and a matching LRD08 overload relay. The main switch isolates, so the fuse
+  has no switch-disconnector.
+- A 24 V DC control supply and a WAGO PFC200 controller (750-82xx) with 750 digital I/O modules.
+  The 0 V of the 24 V supply is GND everywhere, and the PSU's DC output lands only on the rail
+  terminals.
+- A relay interface board between the PLC outputs and the contactor coils: industrial 24 V DC
+  PCB relays with no diode, since the PLC modules handle the coil. It is nested in the cabinet as
+  a unit of its own.
+- Pilot lights, driven by an auxiliary contact on each contactor, and the field cables to the
+  motors.
+- Every part file carries its datasheet rating.
 
 ## What is here
 
@@ -74,43 +80,43 @@ their published datasheets.
 
 [![EX-1-v1.3, page 8](img/all/EX-1-v1.3-p08.png)](img/all/EX-1-v1.3-p08.png)
 
-### pump-cabinet-v1.6.pdf
+### pump-cabinet-v1.7.pdf
 
-[Download the PDF](files/all/pump-cabinet-v1.6.pdf)
+[Download the PDF](files/all/pump-cabinet-v1.7.pdf)
 
-[![pump-cabinet-v1.6, page 1](img/all/pump-cabinet-v1.6-p01.png)](img/all/pump-cabinet-v1.6-p01.png)
+[![pump-cabinet-v1.7, page 1](img/all/pump-cabinet-v1.7-p01.png)](img/all/pump-cabinet-v1.7-p01.png)
 
-[![pump-cabinet-v1.6, page 2](img/all/pump-cabinet-v1.6-p02.png)](img/all/pump-cabinet-v1.6-p02.png)
+[![pump-cabinet-v1.7, page 2](img/all/pump-cabinet-v1.7-p02.png)](img/all/pump-cabinet-v1.7-p02.png)
 
-[![pump-cabinet-v1.6, page 3](img/all/pump-cabinet-v1.6-p03.png)](img/all/pump-cabinet-v1.6-p03.png)
+[![pump-cabinet-v1.7, page 3](img/all/pump-cabinet-v1.7-p03.png)](img/all/pump-cabinet-v1.7-p03.png)
 
-[![pump-cabinet-v1.6, page 4](img/all/pump-cabinet-v1.6-p04.png)](img/all/pump-cabinet-v1.6-p04.png)
+[![pump-cabinet-v1.7, page 4](img/all/pump-cabinet-v1.7-p04.png)](img/all/pump-cabinet-v1.7-p04.png)
 
-[![pump-cabinet-v1.6, page 5](img/all/pump-cabinet-v1.6-p05.png)](img/all/pump-cabinet-v1.6-p05.png)
+[![pump-cabinet-v1.7, page 5](img/all/pump-cabinet-v1.7-p05.png)](img/all/pump-cabinet-v1.7-p05.png)
 
-[![pump-cabinet-v1.6, page 6](img/all/pump-cabinet-v1.6-p06.png)](img/all/pump-cabinet-v1.6-p06.png)
+[![pump-cabinet-v1.7, page 6](img/all/pump-cabinet-v1.7-p06.png)](img/all/pump-cabinet-v1.7-p06.png)
 
-[![pump-cabinet-v1.6, page 7](img/all/pump-cabinet-v1.6-p07.png)](img/all/pump-cabinet-v1.6-p07.png)
+[![pump-cabinet-v1.7, page 7](img/all/pump-cabinet-v1.7-p07.png)](img/all/pump-cabinet-v1.7-p07.png)
 
-[![pump-cabinet-v1.6, page 8](img/all/pump-cabinet-v1.6-p08.png)](img/all/pump-cabinet-v1.6-p08.png)
+[![pump-cabinet-v1.7, page 8](img/all/pump-cabinet-v1.7-p08.png)](img/all/pump-cabinet-v1.7-p08.png)
 
-[![pump-cabinet-v1.6, page 9](img/all/pump-cabinet-v1.6-p09.png)](img/all/pump-cabinet-v1.6-p09.png)
+[![pump-cabinet-v1.7, page 9](img/all/pump-cabinet-v1.7-p09.png)](img/all/pump-cabinet-v1.7-p09.png)
 
-[![pump-cabinet-v1.6, page 10](img/all/pump-cabinet-v1.6-p10.png)](img/all/pump-cabinet-v1.6-p10.png)
+[![pump-cabinet-v1.7, page 10](img/all/pump-cabinet-v1.7-p10.png)](img/all/pump-cabinet-v1.7-p10.png)
 
-### relay-interface-board-v1.3.pdf
+### relay-interface-board-v1.4.pdf
 
-[Download the PDF](files/all/relay-interface-board-v1.3.pdf)
+[Download the PDF](files/all/relay-interface-board-v1.4.pdf)
 
-[![relay-interface-board-v1.3, page 1](img/all/relay-interface-board-v1.3-p01.png)](img/all/relay-interface-board-v1.3-p01.png)
+[![relay-interface-board-v1.4, page 1](img/all/relay-interface-board-v1.4-p01.png)](img/all/relay-interface-board-v1.4-p01.png)
 
-[![relay-interface-board-v1.3, page 2](img/all/relay-interface-board-v1.3-p02.png)](img/all/relay-interface-board-v1.3-p02.png)
+[![relay-interface-board-v1.4, page 2](img/all/relay-interface-board-v1.4-p02.png)](img/all/relay-interface-board-v1.4-p02.png)
 
-[![relay-interface-board-v1.3, page 3](img/all/relay-interface-board-v1.3-p03.png)](img/all/relay-interface-board-v1.3-p03.png)
+[![relay-interface-board-v1.4, page 3](img/all/relay-interface-board-v1.4-p03.png)](img/all/relay-interface-board-v1.4-p03.png)
 
-[![relay-interface-board-v1.3, page 4](img/all/relay-interface-board-v1.3-p04.png)](img/all/relay-interface-board-v1.3-p04.png)
+[![relay-interface-board-v1.4, page 4](img/all/relay-interface-board-v1.4-p04.png)](img/all/relay-interface-board-v1.4-p04.png)
 
-[![relay-interface-board-v1.3, page 5](img/all/relay-interface-board-v1.3-p05.png)](img/all/relay-interface-board-v1.3-p05.png)
+[![relay-interface-board-v1.4, page 5](img/all/relay-interface-board-v1.4-p05.png)](img/all/relay-interface-board-v1.4-p05.png)
 
 - Open the overview page: [EX-1-v1.3-overview.html](files/all/EX-1-v1.3-overview.html)
 
@@ -465,9 +471,9 @@ their published datasheets.
 
 ## out/board/data
 
-### relay-interface-board-v1.3-bom.csv
+### relay-interface-board-v1.4-bom.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-bom.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-bom.csv)
 
 | mpn | revision | manufacturer | description | count | designations |
 | --- | --- | --- | --- | --- | --- |
@@ -475,16 +481,16 @@ their published datasheets.
 | 40.61.9.024.1000 |  | Finder | PCB relay, 1 changeover contact, 16 A, 24 V DC coil | 2 | -K1; -K2 |
 | SKX-RIB-2 |  | this repo | Relay interface board, 2 channels, revision 01 | 1 |  |
 
-### relay-interface-board-v1.3-cables.csv
+### relay-interface-board-v1.4-cables.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-cables.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-cables.csv)
 
 | designation | mpn | description | core_count | gauge_mm2 | length_mm | from_label | to_label | pairs |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-### relay-interface-board-v1.3-connectors.csv
+### relay-interface-board-v1.4-connectors.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-connectors.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-connectors.csv)
 
 | designation | style | pincount | gender | mate_designation | marking | net | mate_port_designation | ends |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -495,16 +501,16 @@ their published datasheets.
 | -J2 | mstb-header-3p | 3 | female |  | 2 |  |  | -K1:14 |
 | -J2 | mstb-header-3p | 3 | female |  | 3 |  |  | -K2:14 |
 
-### relay-interface-board-v1.3-cores.csv
+### relay-interface-board-v1.4-cores.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-cores.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-cores.csv)
 
 | cable | core | colour | pair | end_a | end_b | note |
 | --- | --- | --- | --- | --- | --- | --- |
 
-### relay-interface-board-v1.3-designations.csv
+### relay-interface-board-v1.4-designations.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-designations.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-designations.csv)
 
 | designation | reference | description |
 | --- | --- | --- |
@@ -513,16 +519,16 @@ their published datasheets.
 | -K1 | -K1 | PCB relay, 1 changeover contact, 16 A, 24 V DC coil |
 | -K2 | -K2 | PCB relay, 1 changeover contact, 16 A, 24 V DC coil |
 
-### relay-interface-board-v1.3-plc.csv
+### relay-interface-board-v1.4-plc.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-plc.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-plc.csv)
 
 | pin | channel_name | signal | signal_name | wired_to |
 | --- | --- | --- | --- | --- |
 
-### relay-interface-board-v1.3-wires.csv
+### relay-interface-board-v1.4-wires.csv
 
-[Download the CSV](files/board/data/relay-interface-board-v1.3-wires.csv)
+[Download the CSV](files/board/data/relay-interface-board-v1.4-wires.csv)
 
 | from | to | colour | cross_section_mm2 | label |
 | --- | --- | --- | --- | --- |
@@ -537,25 +543,25 @@ their published datasheets.
 
 ## out/board
 
-### relay-interface-board-v1.3.pdf
+### relay-interface-board-v1.4.pdf
 
-[Download the PDF](files/board/relay-interface-board-v1.3.pdf)
+[Download the PDF](files/board/relay-interface-board-v1.4.pdf)
 
-[![relay-interface-board-v1.3, page 1](img/board/relay-interface-board-v1.3-p01.png)](img/board/relay-interface-board-v1.3-p01.png)
+[![relay-interface-board-v1.4, page 1](img/board/relay-interface-board-v1.4-p01.png)](img/board/relay-interface-board-v1.4-p01.png)
 
-[![relay-interface-board-v1.3, page 2](img/board/relay-interface-board-v1.3-p02.png)](img/board/relay-interface-board-v1.3-p02.png)
+[![relay-interface-board-v1.4, page 2](img/board/relay-interface-board-v1.4-p02.png)](img/board/relay-interface-board-v1.4-p02.png)
 
-[![relay-interface-board-v1.3, page 3](img/board/relay-interface-board-v1.3-p03.png)](img/board/relay-interface-board-v1.3-p03.png)
+[![relay-interface-board-v1.4, page 3](img/board/relay-interface-board-v1.4-p03.png)](img/board/relay-interface-board-v1.4-p03.png)
 
-[![relay-interface-board-v1.3, page 4](img/board/relay-interface-board-v1.3-p04.png)](img/board/relay-interface-board-v1.3-p04.png)
+[![relay-interface-board-v1.4, page 4](img/board/relay-interface-board-v1.4-p04.png)](img/board/relay-interface-board-v1.4-p04.png)
 
-[![relay-interface-board-v1.3, page 5](img/board/relay-interface-board-v1.3-p05.png)](img/board/relay-interface-board-v1.3-p05.png)
+[![relay-interface-board-v1.4, page 5](img/board/relay-interface-board-v1.4-p05.png)](img/board/relay-interface-board-v1.4-p05.png)
 
 ## out/cabinet/data
 
-### pump-cabinet-v1.6-bom.csv
+### pump-cabinet-v1.7-bom.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-bom.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-bom.csv)
 
 | mpn | revision | manufacturer | description | count | designations |
 | --- | --- | --- | --- | --- | --- |
@@ -575,25 +581,25 @@ their published datasheets.
 | LC1D09BD |  | Schneider Electric | TeSys D contactor, 3-pole, AC-3 9 A, 1 NO + 1 NC auxiliary, 24 V DC coil | 2 | -Q11; -Q21 |
 | LRD08 |  | Schneider Electric | TeSys thermal overload relay, class 10A, 2.5-4 A, 1 NO + 1 NC | 2 | -B12; -B22 |
 | QUINT4-PS/1AC/24DC/2.5/SC |  | Phoenix Contact | Power supply, 1-phase, 24 V DC; 2.5 A | 1 | -T1 |
-| SKX-RIB-2 | 1.3 |  | Relay interface board | 1 | -U2 |
+| SKX-RIB-2 | 1.4 |  | Relay interface board | 1 | -U2 |
 
-### pump-cabinet-v1.6-cables.csv
+### pump-cabinet-v1.7-cables.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-cables.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-cables.csv)
 
 | designation | mpn | description | core_count | gauge_mm2 | length_mm | from_label | to_label | pairs |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-### pump-cabinet-v1.6-cores.csv
+### pump-cabinet-v1.7-cores.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-cores.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-cores.csv)
 
 | cable | core | colour | pair | end_a | end_b | note |
 | --- | --- | --- | --- | --- | --- | --- |
 
-### pump-cabinet-v1.6-designations.csv
+### pump-cabinet-v1.7-designations.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-designations.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-designations.csv)
 
 | designation | reference | description |
 | --- | --- | --- |
@@ -662,9 +668,9 @@ their published datasheets.
 | -X3:W:1 | =P1-X3:W:1 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
 | -X3:W:2 | =P2-X3:W:2 | TOPJOB S feed-through terminal block, 2.5 mm2, grey; 24 A; 800 V |
 
-### pump-cabinet-v1.6-plc.csv
+### pump-cabinet-v1.7-plc.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-plc.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-plc.csv)
 
 | pin | channel_name | signal | signal_name | wired_to |
 | --- | --- | --- | --- | --- |
@@ -677,9 +683,9 @@ their published datasheets.
 | -DO1:DO3 | 3 | do |  |  |
 | -DO1:DO4 | 4 | do |  |  |
 
-### pump-cabinet-v1.6-terminals-X01.csv
+### pump-cabinet-v1.7-terminals-X01.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-terminals-X01.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-terminals-X01.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -696,9 +702,9 @@ their published datasheets.
 | -X01:L3:3 | L3 | 3 | -F11:5; -X01:L3:2; -X01:L3:4 |  | 3 |
 | -X01:L3:4 | L3 | 4 | -F21:5; -X01:L3:3 |  | 3 |
 
-### pump-cabinet-v1.6-terminals-X1.csv
+### pump-cabinet-v1.7-terminals-X1.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-terminals-X1.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-terminals-X1.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -708,9 +714,9 @@ their published datasheets.
 | -X1:N:1 | N | 1 | -F01:3 N | +EXT-X0:N:1 |  |
 | -X1:PE:1 | PE | 1 | -X3:PE:1; -X3:PE:2 | +EXT-X0:PE:1 |  |
 
-### pump-cabinet-v1.6-terminals-X2.csv
+### pump-cabinet-v1.7-terminals-X2.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-terminals-X2.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-terminals-X2.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -732,9 +738,9 @@ their published datasheets.
 | -X2:GND:6 | GND | 6 | -Q21:A2; -X2:GND:5; -X2:GND:7 |  | 2 |
 | -X2:GND:7 | GND | 7 | -P2:X2; -X2:GND:6 |  | 2 |
 
-### pump-cabinet-v1.6-terminals-X3.csv
+### pump-cabinet-v1.7-terminals-X3.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-terminals-X3.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-terminals-X3.csv)
 
 | designation | group | index | side_a | side_b | jumper_group |
 | --- | --- | --- | --- | --- | --- |
@@ -747,9 +753,9 @@ their published datasheets.
 | -X3:W:1 | W | 1 | -B12:6/T3 | +EXT-M1:W1 |  |
 | -X3:W:2 | W | 2 | -B22:6/T3 | +EXT-M2:W1 |  |
 
-### pump-cabinet-v1.6-wires.csv
+### pump-cabinet-v1.7-wires.csv
 
-[Download the CSV](files/cabinet/data/pump-cabinet-v1.6-wires.csv)
+[Download the CSV](files/cabinet/data/pump-cabinet-v1.7-wires.csv)
 
 | from | to | colour | cross_section_mm2 | label |
 | --- | --- | --- | --- | --- |
@@ -812,31 +818,31 @@ their published datasheets.
 | -X3:W:1 | -B12:6/T3 | GY | 1.5 | -X3:W:1 -B12:6/T3 |
 | -X3:W:2 | -B22:6/T3 | GY | 1.5 | -X3:W:2 -B22:6/T3 |
 
-- Download: [pump-cabinet-v1.6-wago-U1.xml](files/cabinet/data/pump-cabinet-v1.6-wago-U1.xml)
+- Download: [pump-cabinet-v1.7-wago-U1.xml](files/cabinet/data/pump-cabinet-v1.7-wago-U1.xml)
 
 ## out/cabinet
 
-### pump-cabinet-v1.6.pdf
+### pump-cabinet-v1.7.pdf
 
-[Download the PDF](files/cabinet/pump-cabinet-v1.6.pdf)
+[Download the PDF](files/cabinet/pump-cabinet-v1.7.pdf)
 
-[![pump-cabinet-v1.6, page 1](img/cabinet/pump-cabinet-v1.6-p01.png)](img/cabinet/pump-cabinet-v1.6-p01.png)
+[![pump-cabinet-v1.7, page 1](img/cabinet/pump-cabinet-v1.7-p01.png)](img/cabinet/pump-cabinet-v1.7-p01.png)
 
-[![pump-cabinet-v1.6, page 2](img/cabinet/pump-cabinet-v1.6-p02.png)](img/cabinet/pump-cabinet-v1.6-p02.png)
+[![pump-cabinet-v1.7, page 2](img/cabinet/pump-cabinet-v1.7-p02.png)](img/cabinet/pump-cabinet-v1.7-p02.png)
 
-[![pump-cabinet-v1.6, page 3](img/cabinet/pump-cabinet-v1.6-p03.png)](img/cabinet/pump-cabinet-v1.6-p03.png)
+[![pump-cabinet-v1.7, page 3](img/cabinet/pump-cabinet-v1.7-p03.png)](img/cabinet/pump-cabinet-v1.7-p03.png)
 
-[![pump-cabinet-v1.6, page 4](img/cabinet/pump-cabinet-v1.6-p04.png)](img/cabinet/pump-cabinet-v1.6-p04.png)
+[![pump-cabinet-v1.7, page 4](img/cabinet/pump-cabinet-v1.7-p04.png)](img/cabinet/pump-cabinet-v1.7-p04.png)
 
-[![pump-cabinet-v1.6, page 5](img/cabinet/pump-cabinet-v1.6-p05.png)](img/cabinet/pump-cabinet-v1.6-p05.png)
+[![pump-cabinet-v1.7, page 5](img/cabinet/pump-cabinet-v1.7-p05.png)](img/cabinet/pump-cabinet-v1.7-p05.png)
 
-[![pump-cabinet-v1.6, page 6](img/cabinet/pump-cabinet-v1.6-p06.png)](img/cabinet/pump-cabinet-v1.6-p06.png)
+[![pump-cabinet-v1.7, page 6](img/cabinet/pump-cabinet-v1.7-p06.png)](img/cabinet/pump-cabinet-v1.7-p06.png)
 
-[![pump-cabinet-v1.6, page 7](img/cabinet/pump-cabinet-v1.6-p07.png)](img/cabinet/pump-cabinet-v1.6-p07.png)
+[![pump-cabinet-v1.7, page 7](img/cabinet/pump-cabinet-v1.7-p07.png)](img/cabinet/pump-cabinet-v1.7-p07.png)
 
-[![pump-cabinet-v1.6, page 8](img/cabinet/pump-cabinet-v1.6-p08.png)](img/cabinet/pump-cabinet-v1.6-p08.png)
+[![pump-cabinet-v1.7, page 8](img/cabinet/pump-cabinet-v1.7-p08.png)](img/cabinet/pump-cabinet-v1.7-p08.png)
 
-[![pump-cabinet-v1.6, page 9](img/cabinet/pump-cabinet-v1.6-p09.png)](img/cabinet/pump-cabinet-v1.6-p09.png)
+[![pump-cabinet-v1.7, page 9](img/cabinet/pump-cabinet-v1.7-p09.png)](img/cabinet/pump-cabinet-v1.7-p09.png)
 
-[![pump-cabinet-v1.6, page 10](img/cabinet/pump-cabinet-v1.6-p10.png)](img/cabinet/pump-cabinet-v1.6-p10.png)
+[![pump-cabinet-v1.7, page 10](img/cabinet/pump-cabinet-v1.7-p10.png)](img/cabinet/pump-cabinet-v1.7-p10.png)
 

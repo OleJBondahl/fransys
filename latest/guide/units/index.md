@@ -9,7 +9,7 @@ units and wires, and it is never split into places.
 The function builds the unit's devices on the design it receives and returns an instance of a
 `typing.NamedTuple` class, one field per interface device. `d.add(fn, "U1")` builds the unit into
 your design as instance `U1` and returns it, typed. Any other return raises. Every device the function creates belongs to that unit.
-`@fr.unit(..., wiring={row: value})` sets the unit's wire rows (authoring.md, Wire colours). With no `wiring=` the unit draws the IEC default, never its parent's rows.
+`@fr.unit(..., wiring={row: value})` sets the unit's wire rows (series.md, Wire colours). With no `wiring=` the unit draws the IEC default, never its parent's rows.
 
 The second argument is the instance's printed tag, bare and with no lowercase letter: `"U3"`,
 never `"u3"` or `"-U3"`. It is also the instance's key. A container prints the tag before the
@@ -155,8 +155,11 @@ runs at the unit the `unused=` is on: a function that unit hands up from a neste
 across the nested one, is not contradicted.
 
 A field typed `fr.Terminal` names that terminal's one function: `unused=("X1",)`. A field typed
-`fr.Run` or `fr.TerminalStrip` names every boundary terminal it holds. `"X1[1].f"` on a terminal
-raises. A run or strip with no boundary terminal raises, as a device that is no boundary does.
+`fr.Run` or `fr.TerminalStrip`, bare as `"X3"`, takes every boundary terminal it holds.
+`"X3[3]"` takes terminal 3 and `"X3[3:5]"` takes terminals 3 and 4, counted from 1; a number past the
+strip's count raises. For example, `unused=("X3[3:5]",)` marks terminals 3 and 4 of strip X3. A slice on
+a tuple field raises. `"X1[1].f"` on a terminal raises, as does `".f"` on a strip terminal. A run or strip
+with no boundary terminal raises, as a device that is no boundary does.
 
 ```python
 from typing import NamedTuple

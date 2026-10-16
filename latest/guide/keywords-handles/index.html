@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/keywords-handles/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/keywords-handles/">
       
       
       
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -972,6 +999,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -2135,13 +2189,13 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>signal</code></td>
+<td><a href="../authoring/#how-channels-are-numbered"><code>signal</code></a></td>
 <td>required</td>
 <td>The <code>fr.SignalType</code> of the PLC channel this function needs, such as <code>fr.DI</code>. It picks the channel kind allocated.</td>
 <td><code>k1.coil.plc(fr.DO, "pump-run")</code></td>
 </tr>
 <tr>
-<td><code>name</code></td>
+<td><a href="../authoring/#request-a-plc-channel"><code>name</code></a></td>
 <td>required</td>
 <td>The channel's name. It prints in the PLC lists and on the channel's address.</td>
 <td><code>k1.coil.plc(fr.DO, "pump-run")</code></td>
@@ -2176,13 +2230,13 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 <td><code>ai.scale("bar", (0, 27648), (0, 10))</code></td>
 </tr>
 <tr>
-<td><code>raw</code></td>
+<td><a href="../authoring/#request-a-plc-channel"><code>raw</code></a></td>
 <td>required</td>
 <td>The raw range as two integers.</td>
 <td><code>raw=(0, 27648)</code></td>
 </tr>
 <tr>
-<td><code>eng</code></td>
+<td><a href="../authoring/#request-a-plc-channel"><code>eng</code></a></td>
 <td>required</td>
 <td>The engineering range as two strings or Decimals. Floats are refused.</td>
 <td><code>eng=("0", "10")</code></td>
@@ -2201,13 +2255,13 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>rating</code></td>
+<td><a href="../units/#the-interface"><code>rating</code></a></td>
 <td><code>None</code></td>
 <td>The rating the unit states about this boundary function. <code>None</code> states none.</td>
 <td><code>q1.line.limits(rating=r)</code></td>
 </tr>
 <tr>
-<td><code>operating</code></td>
+<td><a href="../units/#the-interface"><code>operating</code></a></td>
 <td><code>None</code></td>
 <td>The operating envelope the unit states about this boundary function. <code>None</code> states none.</td>
 <td><code>q1.line.limits(operating=o)</code></td>
@@ -2226,13 +2280,13 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>rating</code></td>
+<td><a href="../units/#the-interface"><code>rating</code></a></td>
 <td><code>None</code></td>
 <td>The rating the unit states about this terminal. <code>None</code> states none. The terminal must be in a unit.</td>
 <td><code>x1[1].limits(rating=r)</code></td>
 </tr>
 <tr>
-<td><code>operating</code></td>
+<td><a href="../units/#the-interface"><code>operating</code></a></td>
 <td><code>None</code></td>
 <td>The operating envelope the unit states about this terminal. <code>None</code> states none. Giving neither value raises.</td>
 <td><code>x1[1].limits(operating=o)</code></td>
@@ -2251,31 +2305,31 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>label</code></td>
+<td><a href="../authoring/#bridges"><code>label</code></a></td>
 <td>required</td>
 <td>The run's label. It prints on each terminal of the run. A run labelled <code>"PE"</code> takes the strip's <code>pe=</code> part.</td>
 <td><code>x1.run("24V", 4)</code></td>
 </tr>
 <tr>
-<td><code>count</code></td>
+<td><a href="../authoring/#bridges"><code>count</code></a></td>
 <td><code>None</code></td>
 <td>The number of terminals in the run. With none, the run is bridged and grows as it is used.</td>
 <td><code>x1.run("24V", 4)</code></td>
 </tr>
 <tr>
-<td><code>bridged</code></td>
+<td><a href="../authoring/#bridges"><code>bridged</code></a></td>
 <td><code>False</code></td>
 <td>Bridges the run's terminals with jumpers: <code>True</code> bridges all, <code>(first, last)</code> bridges a range.</td>
 <td><code>x1.run("24V", 4, bridged=True)</code></td>
 </tr>
 <tr>
-<td><code>interface</code></td>
+<td><a href="../units/#the-interface"><code>interface</code></a></td>
 <td><code>False</code></td>
 <td>Marks the run's terminals as the unit's boundary: <code>True</code> marks all, a tuple of terminal numbers marks those.</td>
 <td><code>x1.run("24V", 4, interface=True)</code></td>
 </tr>
 <tr>
-<td><code>unused</code></td>
+<td><a href="../units/#the-interface"><code>unused</code></a></td>
 <td><code>False</code></td>
 <td>Marks the run's terminals as unused: <code>True</code> marks all, a tuple marks those.</td>
 <td><code>x1.run("SPARE", 2, unused=True)</code></td>
@@ -2296,19 +2350,19 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>which</code></td>
+<td><a href="../detail/#w1core"><code>which</code></a></td>
 <td>required</td>
 <td>The core, by colour or by 1-based number.</td>
 <td><code>w1.core(BN, a, b)</code></td>
 </tr>
 <tr>
-<td><code>a</code></td>
+<td><a href="../detail/#w1core"><code>a</code></a></td>
 <td>required</td>
 <td>The first pin of the core. With no <code>b</code>, the core is a shield core.</td>
 <td><code>w1.core(1, x1[1], m1["U"])</code></td>
 </tr>
 <tr>
-<td><code>b</code></td>
+<td><a href="../detail/#w1core"><code>b</code></a></td>
 <td><code>None</code></td>
 <td>The second pin of the core. <code>None</code> is for a shield core only.</td>
 <td><code>w1.core(BN, x1[1], m1["U"])</code></td>
@@ -2367,7 +2421,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>beside</code></td>
+<td><a href="../detail/#layout-profile"><code>beside</code></a></td>
 <td><code>None</code></td>
 <td>A host function: the chain is drawn next to it, joined at each end net it shares. It raises <code>AuthorError</code> when no end net is the host's. <code>None</code> draws the chain alone.</td>
 <td><code>d.layout.chain(a, b, beside=c)</code></td>
@@ -2415,13 +2469,13 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>thing</code></td>
+<td><a href="../detail/#layout-profile"><code>thing</code></a></td>
 <td>required</td>
 <td>The group, function, device, strip or nested unit (what <code>d.add</code> returned) whose drawing pages get the title. One thing takes one title.</td>
 <td><code>d.layout.page_title("pumps", "Pump circuits")</code></td>
 </tr>
 <tr>
-<td><code>text</code></td>
+<td><a href="../detail/#layout-profile"><code>text</code></a></td>
 <td>required</td>
 <td>The title text. The page prints it before its blocks' texts. Empty raises <code>AuthorError</code>.</td>
 <td><code>d.layout.page_title("pumps", "Pump circuits")</code></td>
@@ -2440,13 +2494,13 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
 </thead>
 <tbody>
 <tr>
-<td><code>target</code></td>
+<td><a href="../detail/#layout-profile"><code>target</code></a></td>
 <td>required</td>
 <td>A field of a unit's interface, as <code>u1.bus_in</code>. An interface with no harness line ignores it.</td>
 <td><code>d.layout.side(f1, fr.ABOVE)</code></td>
 </tr>
 <tr>
-<td><code>side</code></td>
+<td><a href="../detail/#layout-profile"><code>side</code></a></td>
 <td>required</td>
 <td><code>fr.ABOVE</code> or <code>fr.BELOW</code>: the edge the interface stands on.</td>
 <td><code>d.layout.side(f1, fr.BELOW)</code></td>
@@ -2524,7 +2578,7 @@ A call that takes only <code>*args</code> has no table, and one sentence says wh
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

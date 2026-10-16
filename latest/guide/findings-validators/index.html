@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/findings-validators/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/findings-validators/">
       
       
       
@@ -406,6 +406,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../detail/" class="md-nav__link">
         
   
@@ -738,6 +765,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1741,6 +1795,30 @@
 <td>Release the nested unit's new revision, then the containing unit again, or find why its content changed.</td>
 </tr>
 <tr>
+<td><a id="baseline_rows_unchecked"></a>BASELINE_ROWS_UNCHECKED</td>
+<td>INFO or ERROR</td>
+<td>release, verify</td>
+<td>consumer</td>
+<td>A stored baseline cut before fransys 0.18.2 holds rows for a contact block that today's numbering cannot print. Every other row is unchanged, and those rows were left out of the comparison. <code>verify</code> notes it (INFO); <code>release</code> of a unit nesting it refuses (ERROR).</td>
+<td>Run <code>fr.rebaseline(result, baselines)</code>, which records them under today's rules.</td>
+</tr>
+<tr>
+<td><a id="baseline_rules_moved"></a>BASELINE_RULES_MOVED</td>
+<td>INFO or ERROR</td>
+<td>release, verify</td>
+<td>consumer</td>
+<td>A stored baseline's content is unchanged, but a later fransys prints its listing differently. <code>verify</code> notes it (INFO); <code>release</code> of a unit nesting it refuses (ERROR).</td>
+<td>Run <code>fr.rebaseline(result, baselines)</code>, which re-cuts it under today's rules.</td>
+</tr>
+<tr>
+<td><a id="baseline_too_old"></a>BASELINE_TOO_OLD</td>
+<td>ERROR</td>
+<td>release, verify</td>
+<td>consumer</td>
+<td>A stored baseline was cut by a fransys older than the oldest release whose listing rules this build knows, or its manifest records no fransys version.</td>
+<td>verify with the fransys release that cut this baseline, or release a new revision of the unit, which stores a baseline under today's rules.</td>
+</tr>
+<tr>
 <td><a id="boundary_not_in_unit"></a>BOUNDARY_NOT_IN_UNIT</td>
 <td>ERROR</td>
 <td>validators</td>
@@ -1763,6 +1841,14 @@
 <td>consumer</td>
 <td>A cable item's core count differs from its product's core-colour count (WARNING when fewer, ERROR when more).</td>
 <td>Wire the missing cores, mark a core you leave unused with <code>w.spare(colour)</code> (or <code>w.spare()</code> for all the rest), or correct the product's <code>core_colours</code> list. A spare or one-ended screen counts as a core.</td>
+</tr>
+<tr>
+<td><a id="changes_by_name"></a>CHANGES_BY_NAME</td>
+<td>INFO</td>
+<td>build</td>
+<td>note</td>
+<td>The release the next change list starts from was cut before listing version 2, so it names no item key. The change list matches by printed designation, and a renamed item shows as one removed and one added row.</td>
+<td>The next release's change list follows renames; <code>fr.rebaseline</code> re-cuts the old release now.</td>
 </tr>
 <tr>
 <td><a id="conductor_on_uninstalled"></a>CONDUCTOR_ON_UNINSTALLED</td>
@@ -2321,7 +2407,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

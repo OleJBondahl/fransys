@@ -10,8 +10,8 @@ The design calls are in `keywords-design.md`, the `fr.*` functions in `keywords-
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `signal` | required | The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. | `k1.coil.plc(fr.DO, "pump-run")` |
-| `name` | required | The channel's name. It prints in the PLC lists and on the channel's address. | `k1.coil.plc(fr.DO, "pump-run")` |
+| [`signal`](../authoring/index.md#how-channels-are-numbered) | required | The `fr.SignalType` of the PLC channel this function needs, such as `fr.DI`. It picks the channel kind allocated. | `k1.coil.plc(fr.DO, "pump-run")` |
+| [`name`](../authoring/index.md#request-a-plc-channel) | required | The channel's name. It prints in the PLC lists and on the channel's address. | `k1.coil.plc(fr.DO, "pump-run")` |
 | `priority` | `0` | A lower number is served first when channels are short. Ties go by the requesting function's key, then its id. | `k1.coil.plc(fr.DO, "pump-run", priority=1)` |
 
 ## `Fn.pole`
@@ -27,32 +27,32 @@ A pin, or a tuple of one device's pins, is a series element at the start or the 
 | keyword | default | effect | example |
 |---|---|---|---|
 | `unit` | required | The engineering unit of the scaled value. It prints in the PLC list. | `ai.scale("bar", (0, 27648), (0, 10))` |
-| `raw` | required | The raw range as two integers. | `raw=(0, 27648)` |
-| `eng` | required | The engineering range as two strings or Decimals. Floats are refused. | `eng=("0", "10")` |
+| [`raw`](../authoring/index.md#request-a-plc-channel) | required | The raw range as two integers. | `raw=(0, 27648)` |
+| [`eng`](../authoring/index.md#request-a-plc-channel) | required | The engineering range as two strings or Decimals. Floats are refused. | `eng=("0", "10")` |
 
 ## `Fn.limits`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `rating` | `None` | The rating the unit states about this boundary function. `None` states none. | `q1.line.limits(rating=r)` |
-| `operating` | `None` | The operating envelope the unit states about this boundary function. `None` states none. | `q1.line.limits(operating=o)` |
+| [`rating`](../units/index.md#the-interface) | `None` | The rating the unit states about this boundary function. `None` states none. | `q1.line.limits(rating=r)` |
+| [`operating`](../units/index.md#the-interface) | `None` | The operating envelope the unit states about this boundary function. `None` states none. | `q1.line.limits(operating=o)` |
 
 ## `Terminal.limits`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `rating` | `None` | The rating the unit states about this terminal. `None` states none. The terminal must be in a unit. | `x1[1].limits(rating=r)` |
-| `operating` | `None` | The operating envelope the unit states about this terminal. `None` states none. Giving neither value raises. | `x1[1].limits(operating=o)` |
+| [`rating`](../units/index.md#the-interface) | `None` | The rating the unit states about this terminal. `None` states none. The terminal must be in a unit. | `x1[1].limits(rating=r)` |
+| [`operating`](../units/index.md#the-interface) | `None` | The operating envelope the unit states about this terminal. `None` states none. Giving neither value raises. | `x1[1].limits(operating=o)` |
 
 ## `TerminalStrip.run`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `label` | required | The run's label. It prints on each terminal of the run. A run labelled `"PE"` takes the strip's `pe=` part. | `x1.run("24V", 4)` |
-| `count` | `None` | The number of terminals in the run. With none, the run is bridged and grows as it is used. | `x1.run("24V", 4)` |
-| `bridged` | `False` | Bridges the run's terminals with jumpers: `True` bridges all, `(first, last)` bridges a range. | `x1.run("24V", 4, bridged=True)` |
-| `interface` | `False` | Marks the run's terminals as the unit's boundary: `True` marks all, a tuple of terminal numbers marks those. | `x1.run("24V", 4, interface=True)` |
-| `unused` | `False` | Marks the run's terminals as unused: `True` marks all, a tuple marks those. | `x1.run("SPARE", 2, unused=True)` |
+| [`label`](../authoring/index.md#bridges) | required | The run's label. It prints on each terminal of the run. A run labelled `"PE"` takes the strip's `pe=` part. | `x1.run("24V", 4)` |
+| [`count`](../authoring/index.md#bridges) | `None` | The number of terminals in the run. With none, the run is bridged and grows as it is used. | `x1.run("24V", 4)` |
+| [`bridged`](../authoring/index.md#bridges) | `False` | Bridges the run's terminals with jumpers: `True` bridges all, `(first, last)` bridges a range. | `x1.run("24V", 4, bridged=True)` |
+| [`interface`](../units/index.md#the-interface) | `False` | Marks the run's terminals as the unit's boundary: `True` marks all, a tuple of terminal numbers marks those. | `x1.run("24V", 4, interface=True)` |
+| [`unused`](../units/index.md#the-interface) | `False` | Marks the run's terminals as unused: `True` marks all, a tuple marks those. | `x1.run("SPARE", 2, unused=True)` |
 
 `TerminalStrip.label` is the strip's label as the design printed it (`"X5"`); `Run.label` is the run's own label (`"PE"`). Both are read-only.
 
@@ -62,9 +62,9 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `which` | required | The core, by colour or by 1-based number. | `w1.core(BN, a, b)` |
-| `a` | required | The first pin of the core. With no `b`, the core is a shield core. | `w1.core(1, x1[1], m1["U"])` |
-| `b` | `None` | The second pin of the core. `None` is for a shield core only. | `w1.core(BN, x1[1], m1["U"])` |
+| [`which`](../detail/index.md#w1core) | required | The core, by colour or by 1-based number. | `w1.core(BN, a, b)` |
+| [`a`](../detail/index.md#w1core) | required | The first pin of the core. With no `b`, the core is a shield core. | `w1.core(1, x1[1], m1["U"])` |
+| [`b`](../detail/index.md#w1core) | `None` | The second pin of the core. `None` is for a shield core only. | `w1.core(BN, x1[1], m1["U"])` |
 
 ## `Cable.spare`
 
@@ -86,7 +86,7 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `beside` | `None` | A host function: the chain is drawn next to it, joined at each end net it shares. It raises `AuthorError` when no end net is the host's. `None` draws the chain alone. | `d.layout.chain(a, b, beside=c)` |
+| [`beside`](../detail/index.md#layout-profile) | `None` | A host function: the chain is drawn next to it, joined at each end net it shares. It raises `AuthorError` when no end net is the host's. `None` draws the chain alone. | `d.layout.chain(a, b, beside=c)` |
 
 ## `d.layout.draw_in`
 
@@ -107,15 +107,15 @@ Use `d.series` through the cable first: it takes the next free core. Use `core` 
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `thing` | required | The group, function, device, strip or nested unit (what `d.add` returned) whose drawing pages get the title. One thing takes one title. | `d.layout.page_title("pumps", "Pump circuits")` |
-| `text` | required | The title text. The page prints it before its blocks' texts. Empty raises `AuthorError`. | `d.layout.page_title("pumps", "Pump circuits")` |
+| [`thing`](../detail/index.md#layout-profile) | required | The group, function, device, strip or nested unit (what `d.add` returned) whose drawing pages get the title. One thing takes one title. | `d.layout.page_title("pumps", "Pump circuits")` |
+| [`text`](../detail/index.md#layout-profile) | required | The title text. The page prints it before its blocks' texts. Empty raises `AuthorError`. | `d.layout.page_title("pumps", "Pump circuits")` |
 
 ## `d.layout.side`
 
 | keyword | default | effect | example |
 |---|---|---|---|
-| `target` | required | A field of a unit's interface, as `u1.bus_in`. An interface with no harness line ignores it. | `d.layout.side(f1, fr.ABOVE)` |
-| `side` | required | `fr.ABOVE` or `fr.BELOW`: the edge the interface stands on. | `d.layout.side(f1, fr.BELOW)` |
+| [`target`](../detail/index.md#layout-profile) | required | A field of a unit's interface, as `u1.bus_in`. An interface with no harness line ignores it. | `d.layout.side(f1, fr.ABOVE)` |
+| [`side`](../detail/index.md#layout-profile) | required | `fr.ABOVE` or `fr.BELOW`: the edge the interface stands on. | `d.layout.side(f1, fr.BELOW)` |
 
 ## `d.layout.symbol`
 

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/reading/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/reading/">
       
       
       
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -884,6 +911,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -2026,13 +2080,14 @@ these.</p>
 <p><code>fransys.derive.connector_facets(model)</code> returns every <code>connector</code> facet, by the function
 template it describes, as a <code>frozendict[Id[FunctionTemplate], ConnectorFacet]</code>.</p>
 <h2 id="rows">Rows</h2>
-<p><code>fransys.derive.bom_lines(model, scope=None)</code> returns the parts list, one <code>BomLine</code> per
+<p><code>fransys.derive.bom_lines(model, scope=None, *, without=())</code> returns the parts list, one <code>BomLine</code> per
 installed, non-external part (by mpn, revision and part), or one line per nested unit when
 <code>scope</code> is a unit. <code>scope</code> narrows what is counted: <code>None</code> for the whole model, an item id for
 that item's subtree, an aspect-node id for what is placed there, a unit id for that unit's
 own items and its directly nested units, or <code>fransys.derive.TOP_LEVEL</code> for items with no
-unit plus one line per top-level unit. <code>TOP_LEVEL</code>'s type, <code>fransys.derive.TopLevelScope</code>,
-is exported only so a script can annotate a variable that holds it.</p>
+unit plus one line per top-level unit. <code>without=</code> names items that an item, aspect-node or
+whole-model scope leaves out; a unit or <code>TOP_LEVEL</code> scope ignores it. <code>TOP_LEVEL</code>'s type,
+<code>fransys.derive.TopLevelScope</code>, is exported only so a script can annotate a variable that holds it.</p>
 <p><code>fransys.derive.NO_PLACE</code> is the text "N/A" a coil's contact table prints after the mark of a
 contact that no conductor reaches, in place of a page position.</p>
 <p><code>fransys.derive.bom_sort_key(model, item)</code> is the sort key <code>bom_lines</code> orders a line's
@@ -2084,8 +2139,8 @@ to render for that unit's own document); their docstrings cover the exact rules.
 text, or its authoring key joined by <code>/</code> when it has none yet.</p>
 <p><code>fransys.derive.node_designation(model, node)</code> renders a node's signed
 designation by aspect: <code>+C1</code> for a location, <code>=G1</code> for a group. It is the segment
-<code>reference_designation</code> prints for an item there. Caution: not for a title block's scope cell, which deliberately keeps
-the bare label.</p>
+<code>reference_designation</code> prints for an item there. A title block's scope cell prints a location's full path,
+such as <code>+R+S1</code>.</p>
 <p><code>fransys.derive.item_of_port(model, port)</code> returns the item whose function owns <code>port</code>, the
 lookup <code>port_designation</code> itself reads through.</p>
 <h2 id="ratings">Ratings</h2>
@@ -2265,7 +2320,7 @@ A pin handle such as <code>housing[1]</code> has an <code>.id</code>; an item is
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/api/fransys/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/api/fransys/">
       
       
       
@@ -404,6 +404,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guide/series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guide/detail/" class="md-nav__link">
         
   
@@ -736,6 +763,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1762,6 +1816,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rebaseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rebaseline
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#release" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2656,6 +2721,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rebaseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        rebaseline
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#release" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3458,6 +3534,18 @@ by a wire, text overlaps, cells alone on a page, and the references the page mak
 adds its pages up. Pure: the same model gives the same rows. The layout runs again on
 <code>result.model</code>, as <code>build</code> ran it, so the cost is about that of the layout.</p>
 <p>Does not write a file, emit anything from <code>write</code>, or raise on findings.</p>
+<h3 id="rebaseline">rebaseline</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">rebaseline</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">BuildResult</span><span class="p">,</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Id</span><span class="p">[</span><span class="n">ModelUnit</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+<p>Output: re-cut every stored baseline the current rules print differently, once.</p>
+<p>Rewrites <code>baseline/listing.json</code> and <code>baseline/manifest.json</code> of each release under
+<code>baselines</code> that <code>verify</code> notes with <code>BASELINE_RULES_MOVED</code> or <code>BASELINE_ROWS_UNCHECKED</code>,
+children before parents, and returns those folders (<code>()</code> when nothing moved). The manifest
+keeps the old digest, listing version and <code>fransys</code> in a <code>rebaselined</code> record. <code>unit=None</code>
+covers every unit and the system with a stored baseline; a unit covers it and the units below.
+Raises <code>BuildErrors</code> and writes nothing when a real row changed (<code>BASELINE_DIFFERS</code>), a
+baseline is too old, or a release file is not as released.</p>
+<p>Does not write an export, <code>model.json</code> or <code>numbering.json</code>.</p>
 <h3 id="release">release</h3>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">release</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">BuildResult</span><span class="p">,</span> <span class="n">into</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">object</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span>
 </code></pre></div>
@@ -3502,8 +3590,10 @@ The text only reads the findings and their <code>CodeInfo</code>; it adds no rul
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">verify</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">BuildResult</span><span class="p">,</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Finding</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </code></pre></div>
 <p>Output: return one <code>BASELINE_DIFFERS</code> <code>ERROR</code> per unit instance, or the system, that drifted.</p>
-<p>Compares the rebuilt listing digest with the stored one under <code>baselines</code>, for every unit
-and for the system when the model holds a <code>Project</code>. The model digest is never compared.
+<p>Compares the rebuilt listing with the stored one under <code>baselines</code>, for every unit and for the
+system when the model holds a <code>Project</code>, under the rules of the <code>fransys</code> that cut it: a rule
+that moved since gives <code>BASELINE_RULES_MOVED</code> (INFO), one too old to know <code>BASELINE_TOO_OLD</code>.
+The model digest is never compared.
 Also re-hashes every release file: <code>RELEASE_FILE_CHANGED</code>, <code>RELEASE_FILE_MISSING</code>.
 Meant for a consumer's test, wherever they want it.</p>
 <p>Does not write files, release or gate <code>write</code>; does not report a unit with no stored baseline.</p>
@@ -3825,7 +3915,7 @@ one and returns the other.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

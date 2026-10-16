@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/layout-numbers/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/layout-numbers/">
       
       
       
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -818,6 +845,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1814,7 +1868,7 @@
 <p>This page lists every keyword of <code>d.layout.profile</code> and every number of <code>d.layout.sheet</code>: what it does, its house value, its effect on the drawing, and when to change it.
 A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol module. A sheet number is in millimetres, except <code>module_mm</code>.</p>
 <h2 id="sheet-numbers">Sheet numbers</h2>
-<p><code>d.layout.sheet(name, **numbers)</code> records a sheet format and returns its handle. Pass the handle to <code>d.layout.profile(sheet=handle)</code>. A profile with no <code>sheet</code> uses the house sheet: A3 landscape, 420 by 297 mm, content box 410 by 267 mm at (5, 5), an 8 by 6 frame, <code>module_mm</code> 2.5. A sheet takes all nine numbers and has no defaults. A missing number or an unknown one raises <code>AuthorError</code>.</p>
+<p><code>d.layout.sheet(name, **numbers)</code> records a sheet format and returns its handle. Pass the handle to <code>d.layout.profile(sheet=handle)</code>. A profile with no <code>sheet</code> uses the house sheet: A3 landscape, 420 by 297 mm, content box 410 by 267 mm at (5, 5), an 8 by 6 frame, <code>module_mm</code> 2.5. A sheet takes all nine numbers and has no defaults. A missing number or an unknown one raises <code>AuthorError</code>. The title-block band is the sheet's height minus twice <code>content_y_mm</code> minus <code>content_height_mm</code>: 20 mm on the house sheet. A smaller <code>content_height_mm</code> gives a taller band. Text of 2.5 mm or more needs a band over 20 mm. A document with no schematic page takes the profile's sheet too.</p>
 <table>
 <thead>
 <tr>
@@ -2051,7 +2105,7 @@ A gap is in grid units <code>G</code>; eight <code>G</code> make one symbol modu
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

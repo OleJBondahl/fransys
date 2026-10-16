@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/">
       
       
       
@@ -602,6 +602,33 @@
   
   
     <li class="md-nav__item">
+      <a href="./series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="./detail/" class="md-nav__link">
         
   
@@ -934,6 +961,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -2177,17 +2231,17 @@ from <code>fransys.colours</code>.</p>
 <tr>
 <td>wire along a current path</td>
 <td><code>d.series(a, b, c, wire=(BU, 0.75))</code></td>
-<td>authoring.md, wire along a current path</td>
+<td>series.md, wire along a current path</td>
 </tr>
 <tr>
 <td>branch inside a series</td>
 <td><code>d.parallel(a, b)</code></td>
-<td>authoring.md, branch inside a series</td>
+<td>series.md, branch inside a series</td>
 </tr>
 <tr>
 <td>a branch across part of a path</td>
 <td>a second <code>d.series(split, ..., join, wire=...)</code></td>
-<td>authoring.md, Branch inside a series</td>
+<td>series.md, Branch inside a series</td>
 </tr>
 <tr>
 <td>a series from one pin, or a branch looped at a fuse's line pins</td>
@@ -2212,7 +2266,7 @@ from <code>fransys.colours</code>.</p>
 <tr>
 <td>add a cable</td>
 <td><code>d.cable("W1", P.X, length_m=)</code> in a <code>d.series</code>, which takes the next free core</td>
-<td>authoring.md, Cables</td>
+<td>series.md, Cables</td>
 </tr>
 <tr>
 <td>a signal pair through a cable, pin for pin</td>
@@ -2227,22 +2281,22 @@ from <code>fransys.colours</code>.</p>
 <tr>
 <td>name a wire colour</td>
 <td><code>from fransys.colours import BU</code>, then <code>wire=(BU, 0.75)</code></td>
-<td>authoring.md, Wire colours</td>
+<td>series.md, Wire colours</td>
 </tr>
 <tr>
 <td>colour wires by what they carry</td>
 <td><code>fr.design(..., wiring=)</code>, <code>@fr.unit(wiring=)</code> or <code>wire={row: ...}</code></td>
-<td>authoring.md, Wire colours</td>
+<td>series.md, Wire colours</td>
 </tr>
 <tr>
 <td>a changeover throw in a series</td>
 <td><code>k1.co_1.no</code>, <code>.nc</code></td>
-<td>authoring.md, A changeover in a series</td>
+<td>series.md, A changeover in a series</td>
 </tr>
 <tr>
 <td>earth pins</td>
 <td><code>d.earth(*pins)</code></td>
-<td>authoring.md, earth pins</td>
+<td>series.md, earth pins</td>
 </tr>
 <tr>
 <td>a named signal net</td>
@@ -2456,7 +2510,8 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
 <h3 id="writing-a-project">Writing a project</h3>
 <ul>
 <li><code>parts.md</code>: loading and linting a part library, the typed parts module, and a part's rating.</li>
-<li><code>authoring.md</code>: places, functions, devices, strips, series, cables, colours and supplies.</li>
+<li><code>authoring.md</code>: places, functions, devices, strips, bridges, supplies and channels.</li>
+<li><code>series.md</code>: series, branches, changeovers, cables, wire colours and earth pins.</li>
 <li><code>units.md</code>: a unit's boundary, its revisions, and nesting one unit inside another.</li>
 <li><code>harnesses.md</code>: adding a harness, and how its cables and plugs print.</li>
 <li><code>documents.md</code>: presets, covers, subjects, and one PDF per drawing.</li>
@@ -2490,6 +2545,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
 </ul>
 <h3 id="moving-from-an-older-release">Moving from an older release</h3>
 <ul>
+<li><code>moving-to-0.20.md</code>: the new <code>fr.rebaseline</code> call for baselines cut by an older release.</li>
 <li><code>moving-to-0.19.md</code>: the detail calls that moved to <code>d.detail</code>, and the rewrite from <code>d.wire</code> to <code>d.series</code>.</li>
 <li><code>moving-to-0.16-and-0.17.md</code>: what may newly stop a 0.15 or 0.16 build, the changed outputs and the new names.</li>
 <li><code>moving-to-0.15.md</code>: each renamed profile and readability name, the new <code>releases=</code> keyword and the system overview's Changes switch.</li>
@@ -2532,7 +2588,7 @@ found an <code>ERROR</code>. A design with no document has nothing to draw, so <
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

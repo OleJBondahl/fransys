@@ -158,6 +158,24 @@ adds its pages up. Pure: the same model gives the same rows. The layout runs aga
 
 Does not write a file, emit anything from `write`, or raise on findings.
 
+### rebaseline
+
+```python
+def rebaseline(result: BuildResult, baselines: Path, *, unit: str | Id[ModelUnit] | None=None) -> tuple[Path, ...]
+```
+
+Output: re-cut every stored baseline the current rules print differently, once.
+
+Rewrites `baseline/listing.json` and `baseline/manifest.json` of each release under
+`baselines` that `verify` notes with `BASELINE_RULES_MOVED` or `BASELINE_ROWS_UNCHECKED`,
+children before parents, and returns those folders (`()` when nothing moved). The manifest
+keeps the old digest, listing version and `fransys` in a `rebaselined` record. `unit=None`
+covers every unit and the system with a stored baseline; a unit covers it and the units below.
+Raises `BuildErrors` and writes nothing when a real row changed (`BASELINE_DIFFERS`), a
+baseline is too old, or a release file is not as released.
+
+Does not write an export, `model.json` or `numbering.json`.
+
 ### release
 
 ```python
@@ -234,8 +252,10 @@ def verify(result: BuildResult, baselines: Path) -> tuple[Finding, ...]
 
 Output: return one `BASELINE_DIFFERS` `ERROR` per unit instance, or the system, that drifted.
 
-Compares the rebuilt listing digest with the stored one under `baselines`, for every unit
-and for the system when the model holds a `Project`. The model digest is never compared.
+Compares the rebuilt listing with the stored one under `baselines`, for every unit and for the
+system when the model holds a `Project`, under the rules of the `fransys` that cut it: a rule
+that moved since gives `BASELINE_RULES_MOVED` (INFO), one too old to know `BASELINE_TOO_OLD`.
+The model digest is never compared.
 Also re-hashes every release file: `RELEASE_FILE_CHANGED`, `RELEASE_FILE_MISSING`.
 Meant for a consumer's test, wherever they want it.
 

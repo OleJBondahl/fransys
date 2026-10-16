@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/keywords-design/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/keywords-design/">
       
       
       
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -1071,6 +1098,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -2339,25 +2393,25 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.device("Q1", P.Q)</code></td>
 </tr>
 <tr>
-<td><code>part</code></td>
+<td><a href="../parts/#the-typed-parts-module"><code>part</code></a></td>
 <td>required</td>
 <td>A part class or an MPN string. <code>None</code> makes an <code>external=True</code> box of <code>pins=</code>, with a tag and no BOM line.</td>
 <td><code>d.device("Q1", "DEMO-MCB-3P")</code></td>
 </tr>
 <tr>
-<td><code>pins</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>pins</code></a></td>
 <td><code>None</code></td>
-<td>Names the pins of a part-less box (<code>part=None</code>). Ignored for a real part.</td>
+<td>Names the pins of a part-less box (<code>part=None</code>); each is an attribute too, <code>ext.U</code> as <code>ext["U"]</code>. Ignored for a real part.</td>
 <td><code>d.device("A1", None, pins=("1", "2"), external=True)</code></td>
 </tr>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>...</code></td>
 <td>Where the device stands. See the <code>place=</code> table in <code>authoring.md</code>.</td>
 <td><code>d.device("Q1", P.Q, place="HOLD")</code></td>
 </tr>
 <tr>
-<td><code>parent</code></td>
+<td><a href="../parts/#an-accessory-in-its-holder"><code>parent</code></a></td>
 <td><code>None</code></td>
 <td>The device, strip or cable that holds this one. An accessory prints its holder's designation and uses no number.</td>
 <td><code>d.device("J1", P.HSG, parent=k1)</code></td>
@@ -2369,13 +2423,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.device(None, P.Q, name="main-breaker")</code></td>
 </tr>
 <tr>
-<td><code>interface</code></td>
+<td><a href="../units/#the-interface"><code>interface</code></a></td>
 <td><code>False</code></td>
 <td>Marks the device's functions as the unit's boundary: <code>True</code> marks all, a tuple of function names marks those.</td>
 <td><code>d.device("X1", P.CONN, interface=True)</code></td>
 </tr>
 <tr>
-<td><code>unused</code></td>
+<td><a href="../units/#the-interface"><code>unused</code></a></td>
 <td><code>False</code></td>
 <td>Marks functions as unused, so no unused-pin finding is raised for them: <code>True</code> marks all, a tuple marks those.</td>
 <td><code>d.device("X1", P.CONN, unused=("x2",))</code></td>
@@ -2387,7 +2441,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.device("K1", P.CTR, mounted_on=q1)</code></td>
 </tr>
 <tr>
-<td><code>joins</code></td>
+<td><a href="../harnesses/#fit-a-housing-on-a-parts-leads"><code>joins</code></a></td>
 <td><code>None</code></td>
 <td>Maps the housing's pins to the parent's pins. A housing fitted on a parent's own leads joins them with no wire. Needs <code>parent=</code> to be a device.</td>
 <td><code>d.device("J1", P.HSG, parent=k1, joins={1: k1.coil["A1"]})</code></td>
@@ -2411,13 +2465,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.device("Q9", P.Q, installed=False)</code></td>
 </tr>
 <tr>
-<td><code>external</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>external</code></a></td>
 <td><code>False</code></td>
 <td><code>True</code> marks the device as supplied by others: no BOM line, and every drawing marks it dashed "(by others)".</td>
 <td><code>d.device("M1", P.MOTOR, external=True)</code></td>
 </tr>
 <tr>
-<td><code>contacts</code></td>
+<td><a href="../harnesses/#add-crimp-contacts"><code>contacts</code></a></td>
 <td><code>None</code></td>
 <td>Fits a contact part in every pin of a housing, or a mapping of pin name to part for mixed contacts.</td>
 <td><code>d.device("P1", P.HSG, parent=w1, contacts="DEMO-CRIMP-M")</code></td>
@@ -2448,7 +2502,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.terminal_strip("X9", None, external=True)</code></td>
 </tr>
 <tr>
-<td><code>count</code></td>
+<td><a href="../authoring/#strips-and-terminals"><code>count</code></a></td>
 <td><code>None</code></td>
 <td>The number of terminals. <code>X1[3]</code> takes terminal 3 and makes it on first use.</td>
 <td><code>d.terminal_strip("X1", P.TB, count=10)</code></td>
@@ -2466,37 +2520,37 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.terminal_strip("X1", P.TB, description="Field strip")</code></td>
 </tr>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>...</code></td>
 <td>Where the strip stands. See the <code>place=</code> table in <code>authoring.md</code>.</td>
 <td><code>d.terminal_strip("X1", P.TB, place="HOLD")</code></td>
 </tr>
 <tr>
-<td><code>pe</code></td>
+<td><a href="../authoring/#strips-and-terminals"><code>pe</code></a></td>
 <td><code>None</code></td>
 <td>The part of the strip's protective-earth terminals. A run labelled <code>"PE"</code> takes it, and raises without one.</td>
 <td><code>d.terminal_strip("X1", P.TB, pe="DEMO-TB-PE-2.5")</code></td>
 </tr>
 <tr>
-<td><code>interface</code></td>
+<td><a href="../authoring/#strips-and-terminals"><code>interface</code></a></td>
 <td><code>False</code></td>
 <td>Marks terminals as the unit's boundary: <code>True</code> marks all, a tuple of terminal numbers marks those.</td>
 <td><code>d.terminal_strip("X1", P.TB, 4, interface=(1, 2))</code></td>
 </tr>
 <tr>
-<td><code>unused</code></td>
+<td><a href="../authoring/#strips-and-terminals"><code>unused</code></a></td>
 <td><code>False</code></td>
 <td>Marks terminals as unused: <code>True</code> marks all, a tuple of terminal numbers marks those.</td>
 <td><code>d.terminal_strip("X1", P.TB, 4, unused=(3, 4))</code></td>
 </tr>
 <tr>
-<td><code>bridged</code></td>
+<td><a href="../authoring/#bridges"><code>bridged</code></a></td>
 <td><code>False</code></td>
 <td>Bridges plain terminals with jumpers: <code>True</code> bridges all, <code>(first, last)</code> a range, a tuple of ranges several.</td>
 <td><code>d.terminal_strip("X4", P.TB, 6, bridged=(2, 6))</code></td>
 </tr>
 <tr>
-<td><code>external</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>external</code></a></td>
 <td><code>False</code></td>
 <td><code>True</code> flags the strip and its terminals as supplied by others.</td>
 <td><code>d.terminal_strip("X9", P.TB, 4, external=True)</code></td>
@@ -2533,13 +2587,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.cable("W1", P.CBL, length_m=5)</code></td>
 </tr>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>...</code></td>
 <td>Where the cable stands. See the <code>place=</code> table in <code>authoring.md</code>.</td>
 <td><code>d.cable("W1", P.CBL, place="HOLD")</code></td>
 </tr>
 <tr>
-<td><code>parent</code></td>
+<td><a href="../series/#cables"><code>parent</code></a></td>
 <td><code>None</code></td>
 <td>The harness that holds the cable.</td>
 <td><code>d.cable("W5", P.CBL, parent=h1)</code></td>
@@ -2582,7 +2636,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.add(board, "U1")</code></td>
 </tr>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>...</code></td>
 <td>Where the instance stands. See the <code>place=</code> table in <code>authoring.md</code>.</td>
 <td><code>d.add(board, "U1", place="HOLD")</code></td>
@@ -2594,7 +2648,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.add(board, None, name="module1")</code></td>
 </tr>
 <tr>
-<td><code>unused</code></td>
+<td><a href="../units/#the-interface"><code>unused</code></a></td>
 <td><code>()</code></td>
 <td>Names interface fields or functions the instance leaves unused, such as <code>"X1"</code> or <code>"X1.x1"</code>.</td>
 <td><code>d.add(board, "U1", unused=("X1.x1",))</code></td>
@@ -2620,31 +2674,31 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.ac_supply("230V", 230, x0[1], n=x0[2])</code></td>
 </tr>
 <tr>
-<td><code>voltage</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>voltage</code></a></td>
 <td>required</td>
 <td>Each phase's RMS voltage to the star point. It is not read from a part.</td>
 <td><code>d.ac_supply("400V", 400, q1["L1"], q1["L2"], q1["L3"])</code></td>
 </tr>
 <tr>
-<td><code>n</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>n</code></a></td>
 <td><code>None</code></td>
 <td>The neutral pin. A series joins N only where an element has a pole for it.</td>
 <td><code>n=q1["N"]</code></td>
 </tr>
 <tr>
-<td><code>names</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>names</code></a></td>
 <td><code>None</code></td>
 <td>Renames the potentials: one name per phase pin in order, then one for <code>n</code>. The rails keep their <code>ac.L1</code> names.</td>
 <td><code>names=("A", "B", "C")</code></td>
 </tr>
 <tr>
-<td><code>earthing</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>earthing</code></a></td>
 <td><code>fr.EARTHED</code></td>
 <td><code>fr.IT</code> declares a floating supply.</td>
 <td><code>earthing=fr.IT</code></td>
 </tr>
 <tr>
-<td><code>fault_current_a</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>fault_current_a</code></a></td>
 <td><code>None</code></td>
 <td>The prospective fault current in amps, positive. The supply becomes a source for the breaking-capacity check.</td>
 <td><code>fault_current_a=10000</code></td>
@@ -2669,55 +2723,55 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.dc_supply("24VDC", psu.output)</code></td>
 </tr>
 <tr>
-<td><code>source</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>source</code></a></td>
 <td><code>None</code></td>
 <td>A device or function whose L+ and L- pins and nominal voltage are the supply. With none, <code>plus</code>, <code>minus</code> and <code>voltage</code> are required.</td>
 <td><code>d.dc_supply("24VDC", g1.output)</code></td>
 </tr>
 <tr>
-<td><code>plus</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>plus</code></a></td>
 <td><code>None</code></td>
 <td>The plus pin, with no <code>source</code>.</td>
 <td><code>plus=x1[1]</code></td>
 </tr>
 <tr>
-<td><code>minus</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>minus</code></a></td>
 <td><code>None</code></td>
 <td>The minus pin, with no <code>source</code>.</td>
 <td><code>minus=x1[2]</code></td>
 </tr>
 <tr>
-<td><code>mid</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>mid</code></a></td>
 <td><code>None</code></td>
 <td>A middle conductor. With it, <code>mid</code> is 0 V and plus and minus are plus and minus the voltage.</td>
 <td><code>mid=x1[3]</code></td>
 </tr>
 <tr>
-<td><code>voltage</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>voltage</code></a></td>
 <td><code>None</code></td>
 <td>The voltage, required with no <code>source</code> or a source whose part states none.</td>
 <td><code>voltage=24</code></td>
 </tr>
 <tr>
-<td><code>names</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>names</code></a></td>
 <td><code>None</code></td>
 <td>Renames the potentials, in the order plus, minus, mid.</td>
 <td><code>names=("P24", "M24")</code></td>
 </tr>
 <tr>
-<td><code>earthing</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>earthing</code></a></td>
 <td><code>fr.EARTHED</code></td>
 <td><code>fr.IT</code> declares a floating supply.</td>
 <td><code>earthing=fr.IT</code></td>
 </tr>
 <tr>
-<td><code>fault_current_a</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>fault_current_a</code></a></td>
 <td><code>None</code></td>
 <td>The prospective fault current in amps, positive. A <code>source</code> refuses it, since the part states its own.</td>
 <td><code>fault_current_a=500</code></td>
 </tr>
 <tr>
-<td><code>fault_time_constant_ms</code></td>
+<td><a href="../authoring/#ac-or-dc-supply-and-rails"><code>fault_time_constant_ms</code></a></td>
 <td><code>None</code></td>
 <td>The fault time constant in milliseconds, positive. A <code>source</code> refuses it.</td>
 <td><code>fault_time_constant_ms=5</code></td>
@@ -2738,13 +2792,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>name</code></a></td>
 <td>required</td>
 <td>The function block's name, printed <code>=name</code>. The devices made inside the <code>with</code> block belong to it, which sets their designation; the <code>d.series</code> a function is written in sets where it draws.</td>
 <td><code>with d.function("RUN", "Pump run"):</code></td>
 </tr>
 <tr>
-<td><code>text</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>text</code></a></td>
 <td>required</td>
 <td>The block's description. It prints on the pages that draw the block.</td>
 <td><code>with d.function("RUN", "Pump run"):</code></td>
@@ -2763,19 +2817,19 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>name</code></a></td>
 <td>required</td>
 <td>The place's bare tag, printed <code>+name</code>.</td>
 <td><code>d.location("HOLD", "Engine hold")</code></td>
 </tr>
 <tr>
-<td><code>text</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>text</code></a></td>
 <td>required</td>
 <td>The place's description.</td>
 <td><code>d.location("HOLD", "Engine hold")</code></td>
 </tr>
 <tr>
-<td><code>within</code></td>
+<td><a href="../authoring/#a-place-inside-a-place"><code>within</code></a></td>
 <td><code>None</code></td>
 <td>The outer place, which must exist. The place then prints <code>+outer+name</code>. <code>None</code> puts it at the root.</td>
 <td><code>d.location("BATT", "Batteries", within="HOLD")</code></td>
@@ -2794,7 +2848,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>tag</code></td>
+<td><a href="../harnesses/#add-a-harness"><code>tag</code></a></td>
 <td><code>None</code></td>
 <td>The part-less harness's printed tag. <code>None</code> numbers it and needs <code>name=</code>.</td>
 <td><code>d.harness("H1")</code></td>
@@ -2806,7 +2860,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.harness(None, name="main-loom")</code></td>
 </tr>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>...</code></td>
 <td>Where the harness stands. <code>None</code> gives it no place. See the <code>place=</code> table in <code>authoring.md</code>.</td>
 <td><code>d.harness("H1", place=None)</code></td>
@@ -2843,7 +2897,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>d.rack("U1", name="plc")</code></td>
 </tr>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>...</code></td>
 <td>Where the rack stands. <code>None</code> gives it no place. See the <code>place=</code> table in <code>authoring.md</code>.</td>
 <td><code>d.rack("U1", place="HOLD")</code></td>
@@ -2868,13 +2922,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>a</code></td>
+<td><a href="../authoring/#plug-a-connector"><code>a</code></a></td>
 <td>required</td>
 <td>The connector to plug in: a device with one function, or that function.</td>
 <td><code>d.mate(j1, j2)</code></td>
 </tr>
 <tr>
-<td><code>b</code></td>
+<td><a href="../authoring/#plug-a-connector"><code>b</code></a></td>
 <td>required</td>
 <td>The connector <code>a</code> plugs into.</td>
 <td><code>d.mate(j1, j2)</code></td>
@@ -2894,7 +2948,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>wire</code></td>
+<td><a href="../series/#colour-by-what-a-wire-carries"><code>wire</code></a></td>
 <td><code>None</code></td>
 <td>The wire of every pole: a size, a table of rows that replaces only those rows, one <code>(colour, size)</code>, or a tuple of them, one per pole in pole order and as long as the series is wide. <code>None</code> uses the rows' defaults, and a row with no size is <code>WIRE_ROW_UNRESOLVED</code>. A series through a cable whose part has a core table needs no <code>wire=</code>.</td>
 <td><code>d.series(dc.plus, k1.aux, h1.lamp, dc.minus, wire=(BU, 0.75))</code>; <code>d.series(x1[1:4], q1.element, wire=((BN, 1.5), (BK, 1.5), (GY, 1.5)))</code></td>
@@ -2914,21 +2968,21 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>a</code></td>
+<td><a href="../detail/#when-a-detail-call-is-right"><code>a</code></a></td>
 <td>required</td>
-<td>The first end: terminals (<code>x8[1:3]</code>, their field side) or a function (<code>b1.sig</code>, its pins in connector order).</td>
+<td>The first end: terminals (<code>x8[1:3]</code>, <code>x8[1]</code>; their field side), a function (<code>b1.sig</code>, its pins in connector order), or pins: one (<code>b1.sig[1]</code>) or a tuple (<code>b1.sig.pins[:2]</code>), as <code>d.series</code> reads them.</td>
 <td><code>x8[1:3]</code></td>
 </tr>
 <tr>
-<td><code>cable</code></td>
+<td><a href="../detail/#when-a-detail-call-is-right"><code>cable</code></a></td>
 <td>required</td>
 <td>The cable between the ends, from <code>d.cable</code>.</td>
 <td><code>w3</code></td>
 </tr>
 <tr>
-<td><code>b</code></td>
+<td><a href="../detail/#when-a-detail-call-is-right"><code>b</code></a></td>
 <td>required</td>
-<td>The second end, with as many pins as <code>a</code>. A strip, a bare port or a device raises.</td>
+<td>The second end, with as many pins as <code>a</code>. A strip or a device raises.</td>
 <td><code>b1.sig</code></td>
 </tr>
 </tbody>
@@ -2949,7 +3003,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>selector</code></td>
+<td><a href="../series/#contacts-that-switch-together"><code>selector</code></a></td>
 <td><code>False</code></td>
 <td><code>True</code> turns a changeover group's throws to the line side, so a series enters at the throws and leaves at the commons, and the group draws turned. <code>False</code> keeps the line at the commons. It raises on a part that already states a selector, and on a group that is not changeovers.</td>
 <td><code>q = d.poles(k1.co_1, k1.co_2, k1.co_3, selector=True)</code></td>
@@ -2968,19 +3022,19 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>title</code></td>
+<td><a href="../authoring/#title-block-revision"><code>title</code></a></td>
 <td>required</td>
 <td>The project title. It prints in every document's title block.</td>
 <td><code>d.project(title="Pump", ...)</code></td>
 </tr>
 <tr>
-<td><code>number</code></td>
+<td><a href="../authoring/#title-block-revision"><code>number</code></a></td>
 <td>required</td>
 <td>The drawing number, printed in the title block.</td>
 <td><code>number="DC-1"</code></td>
 </tr>
 <tr>
-<td><code>customer</code></td>
+<td><a href="../authoring/#title-block-revision"><code>customer</code></a></td>
 <td>required</td>
 <td>The customer, printed in the title block.</td>
 <td><code>customer="Demo Ltd"</code></td>
@@ -2992,13 +3046,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>revision=2</code></td>
 </tr>
 <tr>
-<td><code>author</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>author</code></a></td>
 <td>required</td>
 <td>The author. A project document's Author cell prints it.</td>
 <td><code>author="AB"</code></td>
 </tr>
 <tr>
-<td><code>notice</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>notice</code></a></td>
 <td><code>None</code></td>
 <td>Not accepted: passing it raises <code>AuthorError</code>. The notice moved to <code>fr.document(notice=)</code>.</td>
 <td><code>fr.document(preset, None, cover=c, notice="...")</code></td>
@@ -3023,25 +3077,25 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>revision</code></td>
+<td><a href="../units/#recording-revisions"><code>revision</code></a></td>
 <td>required</td>
 <td>The revision number of this history entry.</td>
 <td><code>d.revision(1, date="2026-01-01", text="first", created="AB")</code></td>
 </tr>
 <tr>
-<td><code>date</code></td>
+<td><a href="../units/#recording-revisions"><code>date</code></a></td>
 <td>required</td>
 <td>The entry's date. The title block shows it for the current revision.</td>
 <td><code>date="2026-01-01"</code></td>
 </tr>
 <tr>
-<td><code>text</code></td>
+<td><a href="../units/#recording-revisions"><code>text</code></a></td>
 <td>required</td>
 <td>What the revision changed.</td>
 <td><code>text="first issue"</code></td>
 </tr>
 <tr>
-<td><code>created</code></td>
+<td><a href="../units/#recording-revisions"><code>created</code></a></td>
 <td>required</td>
 <td>Who made the revision.</td>
 <td><code>created="AB"</code></td>
@@ -3059,7 +3113,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 <td><code>approved="EF"</code></td>
 </tr>
 <tr>
-<td><code>version</code></td>
+<td><a href="../units/#recording-revisions"><code>version</code></a></td>
 <td><code>None</code></td>
 <td>The version the entry belongs to. <code>None</code> takes the project's version, or 1 before <code>d.project</code>.</td>
 <td><code>version=2</code></td>
@@ -3131,19 +3185,19 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>wire</code></td>
+<td><a href="../detail/#ddetailwire"><code>wire</code></a></td>
 <td><code>None</code></td>
 <td>The wire as <code>(colour, size)</code>, a size, or a table of rows, as <code>d.series</code> reads it, except a per-pole tuple.</td>
 <td><code>d.detail.wire(x1[1], h1[1], wire=(BU, 0.75))</code></td>
 </tr>
 <tr>
-<td><code>label</code></td>
+<td><a href="../detail/#ddetailwire"><code>label</code></a></td>
 <td><code>None</code></td>
 <td>Text printed on the wire. <code>None</code> prints none.</td>
 <td><code>label="L1"</code></td>
 </tr>
 <tr>
-<td><code>n</code></td>
+<td><a href="../detail/#ddetailwire"><code>n</code></a></td>
 <td><code>None</code></td>
 <td><code>n=2</code> draws a second wire in parallel between the same two pins. <code>None</code> draws one.</td>
 <td><code>n=2</code></td>
@@ -3163,19 +3217,19 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>src</code></td>
+<td><a href="../detail/#one-point-to-many"><code>src</code></a></td>
 <td>required</td>
 <td>The pin every wire starts at. A strip stands for one terminal, shared by all targets.</td>
 <td><code>d.detail.star(x2[17].outer, (x7[1], x7[4]))</code></td>
 </tr>
 <tr>
-<td><code>targets</code></td>
+<td><a href="../detail/#one-point-to-many"><code>targets</code></a></td>
 <td>required</td>
 <td>A tuple or list of the pins to wire to. One target is <code>d.detail.wire(src, target)</code>.</td>
 <td><code>(x7[1], x7[4], x7[7])</code></td>
 </tr>
 <tr>
-<td><code>wire</code></td>
+<td><a href="../detail/#one-point-to-many"><code>wire</code></a></td>
 <td><code>None</code></td>
 <td>The wire as <code>(colour, size)</code>, a size, or a table of rows, as <code>d.detail.wire</code> reads it.</td>
 <td><code>d.detail.star(x2[17].outer, (x7[1], x7[4]), wire=(BU, 0.75))</code></td>
@@ -3195,13 +3249,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><a href="../detail/#ddetailnet-ddetailbusbar-ddetailrail_bond"><code>name</code></a></td>
 <td>required</td>
 <td>The net's name. It prints on the net in the drawings and the wire list.</td>
 <td><code>d.detail.net("CAN", a[1], b[1])</code></td>
 </tr>
 <tr>
-<td><code>kind</code></td>
+<td><a href="../detail/#ddetailnet-ddetailbusbar-ddetailrail_bond"><code>kind</code></a></td>
 <td><code>fr.CONTROL</code></td>
 <td>The <code>NetClass</code> of the net. It cannot make a <code>PE</code> or <code>POWER</code> net, which earth and supplies own.</td>
 <td><code>d.detail.net("CAN", a[1], b[1], kind=fr.SIGNAL)</code></td>
@@ -3220,13 +3274,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>a</code></td>
+<td><a href="../detail/#ddetailnet-ddetailbusbar-ddetailrail_bond"><code>a</code></a></td>
 <td>required</td>
 <td>The first pin of the busbar, a conductor of kind <code>bus</code>.</td>
 <td><code>d.detail.busbar(x1[1], x1[2])</code></td>
 </tr>
 <tr>
-<td><code>b</code></td>
+<td><a href="../detail/#ddetailnet-ddetailbusbar-ddetailrail_bond"><code>b</code></a></td>
 <td>required</td>
 <td>The second pin. The same pin twice raises.</td>
 <td><code>d.detail.busbar(x1[1], x1[2])</code></td>
@@ -3245,13 +3299,13 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
 </thead>
 <tbody>
 <tr>
-<td><code>a</code></td>
+<td><a href="../detail/#ddetailnet-ddetailbusbar-ddetailrail_bond"><code>a</code></a></td>
 <td>required</td>
 <td>The first pin of the bond, a conductor of kind <code>rail</code>.</td>
 <td><code>d.detail.rail_bond(x1[1], x1[2])</code></td>
 </tr>
 <tr>
-<td><code>b</code></td>
+<td><a href="../detail/#ddetailnet-ddetailbusbar-ddetailrail_bond"><code>b</code></a></td>
 <td>required</td>
 <td>The second pin, of the same rail. The same pin twice raises.</td>
 <td><code>d.detail.rail_bond(x1[1], x1[2])</code></td>
@@ -3293,7 +3347,7 @@ The <code>fr.*</code> functions are in <code>keywords-output.md</code>, the hand
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/findings-pdf/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/findings-pdf/">
       
       
       
@@ -406,6 +406,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../detail/" class="md-nav__link">
         
   
@@ -738,6 +765,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1710,11 +1764,11 @@
 <tbody>
 <tr>
 <td><a id="cover_overflow"></a>COVER_OVERFLOW</td>
-<td>WARNING</td>
-<td>pdf</td>
+<td>ERROR</td>
+<td>write, release</td>
 <td>consumer</td>
-<td>A document's cover text plus revision table are estimated taller than the content box.</td>
-<td>Shorten the cover or revision text.</td>
+<td>A document's cover text plus revision table, measured by Typst at write, are taller than the content box; the write raises and writes nothing.</td>
+<td>Shorten the cover or the revision text.</td>
 </tr>
 <tr>
 <td><a id="document_empty_list"></a>DOCUMENT_EMPTY_LIST</td>
@@ -1765,30 +1819,6 @@
 <td>Rewrite it using only the supported Markdown subset.</td>
 </tr>
 <tr>
-<td><a id="title_block_notice_overflow"></a>TITLE_BLOCK_NOTICE_OVERFLOW</td>
-<td>WARNING</td>
-<td>pdf</td>
-<td>consumer</td>
-<td>The <code>notice</code> text passed to <code>fr.document(notice=)</code> does not fit the notice cell and would be cut.</td>
-<td>Shorten the <code>notice</code> text in <code>fr.document(notice=)</code>.</td>
-</tr>
-<tr>
-<td><a id="title_block_no_room"></a>TITLE_BLOCK_NO_ROOM</td>
-<td>WARNING</td>
-<td>pdf</td>
-<td>consumer</td>
-<td>The sheet format's title-block band is under the required 20mm.</td>
-<td>Use a sheet format with a taller title-block band.</td>
-</tr>
-<tr>
-<td><a id="title_block_text_overflow"></a>TITLE_BLOCK_TEXT_OVERFLOW</td>
-<td>WARNING</td>
-<td>pdf</td>
-<td>consumer</td>
-<td>A one-line title-block field (title, number, customer, revision, date, author, page title, scope or sheet counter) does not fit its cell.</td>
-<td>Shorten the text; for a page title, set a shorter one with <code>d.layout.page_title</code>.</td>
-</tr>
-<tr>
 <td><a id="title_block_unit_identity_missing"></a>TITLE_BLOCK_UNIT_IDENTITY_MISSING</td>
 <td>WARNING</td>
 <td>pdf</td>
@@ -1833,7 +1863,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

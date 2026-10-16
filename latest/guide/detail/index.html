@@ -8,11 +8,11 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/detail/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/detail/">
       
       
       
-        <link rel="prev" href="../authoring/">
+        <link rel="prev" href="../series/">
       
       
         <link rel="next" href="../harnesses/">
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -945,6 +972,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -2152,7 +2206,7 @@ A series of only cables, strips and loads needs no <code>wire=</code>.</p>
 </code></pre></div>
 <h3 id="fixed-terminals">Fixed terminals</h3>
 <p><code>X1[3]</code> takes terminal 3 and <code>.inner</code> or <code>.outer</code> names its side. A series enters a strip at the
-right side by itself. Name a side only when the plan fixes it; <code>d.series(x1[3].outer, f1.element)</code> takes it too. A series may also start at a pin: <code>d.series(k1.coil["A1"], a1.di_1)</code>.</p>
+right side by itself. <code>.outer</code> and <code>.inner</code> decide which column of the terminal CSV a wire lands in. Name a side only when the plan fixes it; <code>d.series(x1[3].outer, f1.element)</code> takes it too. A series may also start at a pin: <code>d.series(k1.coil["A1"], a1.di_1)</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">BU</span>
 
@@ -2164,7 +2218,7 @@ right side by itself. Name a side only when the plan fixes it; <code>d.series(x1
 <span class="n">d</span><span class="o">.</span><span class="n">detail</span><span class="o">.</span><span class="n">wire</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">outer</span><span class="p">,</span> <span class="n">h1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">wire</span><span class="o">=</span><span class="p">(</span><span class="n">BU</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">))</span>
 </code></pre></div>
 <h3 id="one-wire-to-a-pe-terminal">One wire to a PE terminal</h3>
-<p>A cable's green-yellow core is the core way (<code>authoring.md</code>, Earth pins). A single wire is a detail.</p>
+<p>A cable's green-yellow core is the core way (<code>series.md</code>, Earth pins). A single wire is a detail.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">GNYE</span>
 
@@ -2176,7 +2230,7 @@ right side by itself. Name a side only when the plan fixes it; <code>d.series(x1
 <span class="n">d</span><span class="o">.</span><span class="n">earth</span><span class="p">(</span><span class="n">m1</span><span class="o">.</span><span class="n">motor</span><span class="p">[</span><span class="s2">"PE"</span><span class="p">],</span> <span class="n">pe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 </code></pre></div>
 <h3 id="a-pe-bars-screws">A PE bar's screws</h3>
-<p>A bar's function takes its next free screw (<code>authoring.md</code>, Earth pins). One wire to a screw is a detail.</p>
+<p>A bar's function takes its next free screw (<code>series.md</code>, Earth pins). One wire to a screw is a detail.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">fransys</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fransys.colours</span><span class="w"> </span><span class="kn">import</span> <span class="n">GNYE</span>
 
@@ -2406,7 +2460,7 @@ net they share, one or two, else <code>AuthorError</code> names them.</p>
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

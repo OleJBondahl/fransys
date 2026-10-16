@@ -8,14 +8,14 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/keywords-output/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/keywords-output/">
       
       
       
         <link rel="prev" href="../keywords-handles/">
       
       
-        <link rel="next" href="../moving-to-0.19/">
+        <link rel="next" href="../moving-to-0.20/">
       
       
         
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -932,6 +959,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#frrebaseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.rebaseline</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#frparts" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -968,6 +1006,33 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2043,6 +2108,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#frrebaseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>fr.rebaseline</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#frparts" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2114,13 +2190,13 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 </thead>
 <tbody>
 <tr>
-<td><code>place</code></td>
+<td><a href="../authoring/#name-a-place-and-a-function-block"><code>place</code></a></td>
 <td><code>None</code></td>
 <td>Names the first location as a bare tag. With <code>None</code> the design has no location until you call <code>d.location</code>.</td>
 <td><code>fr.design("demo_parts", place="C1")</code></td>
 </tr>
 <tr>
-<td><code>wiring</code></td>
+<td><a href="../series/#colour-by-what-a-wire-carries"><code>wiring</code></a></td>
 <td><code>None</code></td>
 <td>Replaces the default wire colour and size of the rows it names, for this design. Rows not named keep the IEC 60204-1 default.</td>
 <td><code>fr.design("demo_parts", wiring={fr.DC_SUPPLY: (BU, 1.5)})</code></td>
@@ -2145,7 +2221,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>@fr.unit("pump-board", revision=2, ...)</code></td>
 </tr>
 <tr>
-<td><code>revision</code></td>
+<td><a href="../units/#recording-revisions"><code>revision</code></a></td>
 <td>required</td>
 <td>The current revision. It is the last entry of the unit's history.</td>
 <td><code>revision=2</code></td>
@@ -2157,25 +2233,25 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>interface_version=1</code></td>
 </tr>
 <tr>
-<td><code>date</code></td>
+<td><a href="../units/#recording-revisions"><code>date</code></a></td>
 <td>required</td>
 <td>Date of the current revision, as written in its history entry.</td>
 <td><code>date="2026-01-01"</code></td>
 </tr>
 <tr>
-<td><code>text</code></td>
+<td><a href="../units/#recording-revisions"><code>text</code></a></td>
 <td>required</td>
 <td>What the current revision changed, as written in its history entry.</td>
 <td><code>text="added the fuse"</code></td>
 </tr>
 <tr>
-<td><code>by</code></td>
+<td><a href="../units/#recording-revisions"><code>by</code></a></td>
 <td>required</td>
 <td>Who made the current revision. It prints in the history as <code>created</code>.</td>
 <td><code>by="AB"</code></td>
 </tr>
 <tr>
-<td><code>version</code></td>
+<td><a href="../units/#recording-revisions"><code>version</code></a></td>
 <td><code>1</code></td>
 <td>The release version. Revisions count within a version, and <code>fr.release</code> names the folder <code>&lt;version&gt;.&lt;revision&gt;</code>.</td>
 <td><code>version=2</code></td>
@@ -2193,19 +2269,19 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>number="DWG-101"</code></td>
 </tr>
 <tr>
-<td><code>history</code></td>
+<td><a href="../units/#recording-revisions"><code>history</code></a></td>
 <td><code>()</code></td>
 <td>Earlier revisions of the unit. Each entry is a mapping of the <code>d.revision</code> keywords <code>revision</code>, <code>date</code>, <code>text</code> and <code>created</code>.</td>
 <td><code>history=[{"revision": 1, "date": "2025-12-01", "text": "first", "created": "AB"}]</code></td>
 </tr>
 <tr>
-<td><code>class_code</code></td>
+<td><a href="../parts/#class-codes"><code>class_code</code></a></td>
 <td><code>None</code></td>
 <td>One to three capital letters. A floating <code>d.add(fn, None, name=...)</code> numbers from this class. <code>None</code> gives no class, so a floating add raises.</td>
 <td><code>class_code="B"</code></td>
 </tr>
 <tr>
-<td><code>wiring</code></td>
+<td><a href="../series/#colour-by-what-a-wire-carries"><code>wiring</code></a></td>
 <td><code>None</code></td>
 <td>Replaces wire colour and size rows inside this unit's body only. A unit never takes its parent's rows.</td>
 <td><code>wiring={fr.DC_SUPPLY: (BU, 1.5)}</code></td>
@@ -2225,43 +2301,43 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 </thead>
 <tbody>
 <tr>
-<td><code>preset</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>preset</code></a></td>
 <td>required</td>
 <td>The <code>fr.DocumentPreset</code> that fixes the deliverable's default page kinds (documents.md).</td>
 <td><code>fr.document(fr.DocumentPreset.SYSTEM, None, cover=Path("cover.md"))</code></td>
 </tr>
 <tr>
-<td><code>subject</code></td>
+<td><a href="../documents/#subjects"><code>subject</code></a></td>
 <td>required</td>
 <td>What the document is about: what <code>d.location(...)</code> returns, a <code>Device</code>, a unit release name, or <code>None</code> for the system preset. Another value raises <code>TypeError</code>.</td>
 <td><code>fr.document(preset, "pump-board", cover=cover)</code></td>
 </tr>
 <tr>
-<td><code>cover</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>cover</code></a></td>
 <td>required</td>
 <td>The Markdown cover file, stored verbatim. Its stem is the document's key. A missing file raises <code>FileNotFoundError</code>. A <code>&lt;stem&gt;.notes.md</code> beside it becomes the notes page.</td>
 <td><code>cover=Path("cover.md")</code></td>
 </tr>
 <tr>
-<td><code>add</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>add</code></a></td>
 <td><code>()</code></td>
 <td><code>fr.PageKind</code> values added to the preset's default pages.</td>
 <td><code>add=(fr.PageKind.OVERVIEW,)</code></td>
 </tr>
 <tr>
-<td><code>remove</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>remove</code></a></td>
 <td><code>()</code></td>
 <td><code>fr.PageKind</code> values removed from the preset's pages.</td>
 <td><code>remove=(fr.PageKind.NOTES,)</code></td>
 </tr>
 <tr>
-<td><code>logo</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>logo</code></a></td>
 <td><code>None</code></td>
 <td>An SVG file for the title block's logo cell. <code>None</code> leaves the cell empty. A missing file raises.</td>
 <td><code>logo=Path("logo.svg")</code></td>
 </tr>
 <tr>
-<td><code>notice</code></td>
+<td><a href="../documents/#presets-cover-and-notes-text"><code>notice</code></a></td>
 <td><code>''</code></td>
 <td>The title block's IP notice text, printed on every page of this document. Empty leaves the cell empty.</td>
 <td><code>notice="Property of Demo Ltd"</code></td>
@@ -2300,7 +2376,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 </thead>
 <tbody>
 <tr>
-<td><code>releases</code></td>
+<td><a href="../build/#keeping-designations-fixed-across-revisions"><code>releases</code></a></td>
 <td><code>None</code></td>
 <td>A release root. Numbering pins are seeded from the releases stored there, so a released unit keeps its numbers. <code>None</code> numbers freely.</td>
 <td><code>fr.build(d, releases=Path("releases"))</code></td>
@@ -2363,25 +2439,25 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>fr.write(result, Path("out"))</code></td>
 </tr>
 <tr>
-<td><code>out_dir</code></td>
+<td><a href="../build/#export-file-names"><code>out_dir</code></a></td>
 <td>required</td>
 <td>The folder that receives the exports: the CSV reports, WAGO XML, overview and one PDF per document.</td>
 <td><code>fr.write(result, Path("out"))</code></td>
 </tr>
 <tr>
-<td><code>unit</code></td>
+<td><a href="../units/#writing-one-unit"><code>unit</code></a></td>
 <td><code>None</code></td>
 <td>Writes only that unit's own set, with no <code>overview.html</code>. <code>None</code> writes the whole model.</td>
 <td><code>fr.write(result, out, unit="pump-board")</code></td>
 </tr>
 <tr>
-<td><code>intermediates</code></td>
+<td><a href="../build/#export-file-names"><code>intermediates</code></a></td>
 <td><code>None</code></td>
 <td>A folder for SVGs, netlists and <code>.typ</code> sources. <code>None</code> keeps them in memory.</td>
 <td><code>intermediates=Path(".fransys")</code></td>
 </tr>
 <tr>
-<td><code>releases</code></td>
+<td><a href="../build/#export-file-names"><code>releases</code></a></td>
 <td><code>None</code></td>
 <td>A release root. With a stored release of the system there, <code>overview.html</code> marks what changed since it. <code>None</code> marks nothing.</td>
 <td><code>releases=Path("releases")</code></td>
@@ -2406,7 +2482,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>fr.export_names(result)</code></td>
 </tr>
 <tr>
-<td><code>unit</code></td>
+<td><a href="../build/#export-file-names"><code>unit</code></a></td>
 <td><code>None</code></td>
 <td>Names only that unit's exports, as <code>fr.write(unit=)</code> would. <code>None</code> names the whole model's.</td>
 <td><code>fr.export_names(result, unit="pump-board")</code></td>
@@ -2431,13 +2507,13 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <td><code>fr.release(result, Path("releases"))</code></td>
 </tr>
 <tr>
-<td><code>into</code></td>
+<td><a href="../build/#releasing-a-frozen-baseline"><code>into</code></a></td>
 <td>required</td>
 <td>The release root. The call writes <code>&lt;into&gt;/&lt;name&gt;/&lt;version&gt;.&lt;revision&gt;/</code>. An identical stored listing returns the existing path.</td>
 <td><code>fr.release(result, Path("releases"))</code></td>
 </tr>
 <tr>
-<td><code>unit</code></td>
+<td><a href="../build/#releasing-a-frozen-baseline"><code>unit</code></a></td>
 <td><code>None</code></td>
 <td>Releases that unit instead of the system.</td>
 <td><code>fr.release(result, into, unit="pump-board")</code></td>
@@ -2456,7 +2532,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 </thead>
 <tbody>
 <tr>
-<td><code>root</code></td>
+<td><a href="../build/#listing-the-releases"><code>root</code></a></td>
 <td>required</td>
 <td>The release root to read. Returns each release folder in name, version, revision order. A missing root gives <code>()</code>.</td>
 <td><code>fr.releases(Path("releases"))</code></td>
@@ -2514,14 +2590,45 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
 <tr>
 <td><code>result</code></td>
 <td>required</td>
-<td>The rebuilt model. Returns one <code>BASELINE_DIFFERS</code> ERROR per unit instance, or the system, whose listing digest drifted.</td>
+<td>The rebuilt model. Returns one <code>BASELINE_DIFFERS</code> ERROR per unit instance, or the system, whose listing drifted, and an INFO (<code>BASELINE_RULES_MOVED</code>, <code>BASELINE_ROWS_UNCHECKED</code>) for a release cut by an older fransys: <code>fr.rebaseline</code> clears it.</td>
 <td><code>fr.verify(result, Path("releases"))</code></td>
+</tr>
+<tr>
+<td><a href="../build/#checking-a-baseline-stays-true"><code>baselines</code></a></td>
+<td>required</td>
+<td>The release root with the stored baselines. A unit with no stored baseline is not reported.</td>
+<td><code>fr.verify(result, Path("releases"))</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="frrebaseline"><code>fr.rebaseline</code></h2>
+<table>
+<thead>
+<tr>
+<th>keyword</th>
+<th>default</th>
+<th>effect</th>
+<th>example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>result</code></td>
+<td>required</td>
+<td>The rebuilt model. Re-cuts each stored listing the current rules print differently, in <code>listing.json</code> and the manifest only, children before parents. Returns the folders rewritten, <code>()</code> when none. A real change raises <code>BuildErrors</code> with <code>BASELINE_DIFFERS</code> and writes nothing.</td>
+<td><code>fr.rebaseline(result, Path("releases"))</code></td>
 </tr>
 <tr>
 <td><code>baselines</code></td>
 <td>required</td>
-<td>The release root with the stored baselines. A unit with no stored baseline is not reported.</td>
-<td><code>fr.verify(result, Path("releases"))</code></td>
+<td>The release root with the stored baselines.</td>
+<td><code>fr.rebaseline(result, Path("releases"))</code></td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td><code>None</code></td>
+<td><code>None</code> covers every unit and the system with a stored baseline. A unit covers it and the units below.</td>
+<td><code>fr.rebaseline(result, root, unit="pump-board")</code></td>
 </tr>
 </tbody>
 </table>
@@ -2566,7 +2673,7 @@ The design calls are in <code>keywords-design.md</code>, the handle methods and 
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/findings-render/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/findings-render/">
       
       
       
@@ -406,6 +406,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../detail/" class="md-nav__link">
         
   
@@ -738,6 +765,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1709,12 +1763,52 @@
 </thead>
 <tbody>
 <tr>
+<td><a id="align_dropped"></a>ALIGN_DROPPED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>Symbols of a row group or a band rank, mated pins, or the legs of a trunk, cannot stand level because the stacks in their columns contradict it; layout dropped the alignment.</td>
+<td>Shorten the stack, move the members to the same end of their columns, or take the band or mate off one of them (<a href="../drawing/">Drawing well</a>).</td>
+</tr>
+<tr>
+<td><a id="block_not_placed"></a>BLOCK_NOT_PLACED</td>
+<td>ERROR</td>
+<td>render</td>
+<td>Fransys</td>
+<td>A block stands in no row of any page, or a whole block in more than one, so layout draws it by no rule; the message names the block and the stage.</td>
+<td>A Fransys defect: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="card_overfull"></a>CARD_OVERFULL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A box has more attached columns than its card holds; the columns that do not fit stand free of the card.</td>
+<td>Split the box into two boxes, or attach fewer columns to it, so every column fits its card (<a href="../drawing/">Drawing well</a>). If it still fires, a Fransys defect: send the smallest model that shows it.</td>
+</tr>
+<tr>
 <td><a id="chain_broken"></a>CHAIN_BROKEN</td>
 <td>WARNING</td>
 <td>render</td>
 <td>consumer</td>
 <td>A connection between two "pole" cells was severed into a marker pair though its net has only those ports.</td>
 <td>Keep the whole circuit in one function block, so no page break falls inside it (<a href="../drawing/">Drawing well</a>).</td>
+</tr>
+<tr>
+<td><a id="chain_not_drawn"></a>CHAIN_NOT_DRAWN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A box that is one hop of a chain of boxes that CHAIN_REFUSED turned away is drawn on no page; the message names it.</td>
+<td>Fix the shape CHAIN_REFUSED names, so the chain draws as one column of boxes.</td>
+</tr>
+<tr>
+<td><a id="chain_refused"></a>CHAIN_REFUSED</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>Boxes wired box to box do not make a chain that draws as one column: a ring, a box joined to three boxes, a box also wired by a trunk, or pins that do not face. The message names the boxes and the reason.</td>
+<td>Wire each box only to the next, with the pins toward the previous box on the north side and those toward the next on the south side.</td>
 </tr>
 <tr>
 <td><a id="connection_drawn_twice"></a>CONNECTION_DRAWN_TWICE</td>
@@ -1829,6 +1923,14 @@
 <td>A Fransys defect: send the smallest model that shows it. Check first that no authored hint crowds the nets.</td>
 </tr>
 <tr>
+<td><a id="fill_under_min"></a>FILL_UNDER_MIN</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A page is filled less than the minimum because no cut of the blocks fills it more.</td>
+<td>Merge the group with its neighbour or drop its page break, so the page fills (<a href="../drawing/">Drawing well</a>).</td>
+</tr>
+<tr>
 <td><a id="function_unplaced_in_column"></a>FUNCTION_UNPLACED_IN_COLUMN</td>
 <td>INFO</td>
 <td>render</td>
@@ -1843,6 +1945,14 @@
 <td>consumer</td>
 <td>A group of columns is wider than one page, so layout split it between columns.</td>
 <td>Split the block into function blocks that each fit one page (<a href="../drawing/">Drawing well</a>).</td>
+</tr>
+<tr>
+<td><a id="head_off_legs"></a>HEAD_OFF_LEGS</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A trunk is cut by a page and its head stands on the page with fewer of its legs.</td>
+<td>Reorder the groups so the head and most of its legs share a page (<a href="../drawing/">Drawing well</a>).</td>
 </tr>
 <tr>
 <td><a id="join_unaligned"></a>JOIN_UNALIGNED</td>
@@ -1925,6 +2035,22 @@
 <td>A Fransys defect: send the smallest model that shows it. Check first that the cut decision and its markers agree.</td>
 </tr>
 <tr>
+<td><a id="no_block"></a>NO_BLOCK</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A box is drawn but belongs to no block, or to more than one, so layout places it by no rule; the message names it.</td>
+<td>Wire the box, or remove it. If it is wired and still fires, a Fransys defect: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="no_cell"></a>NO_CELL</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A symbol is drawn but stands in no cell of any column, or in more cells than it has elements, so layout places it by no rule; the message names it.</td>
+<td>Attach the symbol to a lane or a box pin, or remove it. If it is wired and still fires, a Fransys defect: send the smallest model that shows it.</td>
+</tr>
+<tr>
 <td><a id="order_hint_undone"></a>ORDER_HINT_UNDONE</td>
 <td>WARNING</td>
 <td>render</td>
@@ -1955,6 +2081,14 @@
 <td>Fransys</td>
 <td>The overview placer found no room plan for one view of the system overview, so the page would have no positions for it.</td>
 <td>A Fransys defect: send the smallest model that shows it.</td>
+</tr>
+<tr>
+<td><a id="page_overflow"></a>PAGE_OVERFLOW</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A row of one block is taller than the page, so it stands on a page of its own.</td>
+<td>Split the block into smaller groups, or use a larger page (<a href="../drawing/">Drawing well</a>). If the block is small, a Fransys defect: send the smallest model that shows it.</td>
 </tr>
 <tr>
 <td><a id="page_overfull"></a>PAGE_OVERFULL</td>
@@ -2109,6 +2243,38 @@
 <td>Raise <code>text_height_mm</code>, or lower <code>min_text_height_mm</code> if the small text is intended (<a href="../drawing/">Drawing well</a>).</td>
 </tr>
 <tr>
+<td><a id="title_block_notice_overflow"></a>TITLE_BLOCK_NOTICE_OVERFLOW</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>The <code>notice</code> text passed to <code>fr.document(notice=)</code> does not fit the notice cell and would be cut.</td>
+<td>Shorten the <code>notice</code> text in <code>fr.document(notice=)</code>.</td>
+</tr>
+<tr>
+<td><a id="title_block_no_room"></a>TITLE_BLOCK_NO_ROOM</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>The sheet format's title-block band is under the required 20mm, or its title block is under the required 97.5mm wide.</td>
+<td>Use a sheet format with a taller title-block band or a wider sheet.</td>
+</tr>
+<tr>
+<td><a id="title_block_stack_overlap"></a>TITLE_BLOCK_STACK_OVERLAP</td>
+<td>ERROR</td>
+<td>render</td>
+<td>consumer</td>
+<td>The profile's text height needs a taller title-block band than the sheet format has, so a title-block label overlaps its value.</td>
+<td>Use a sheet format whose title-block band is at least the named height, or the house text height.</td>
+</tr>
+<tr>
+<td><a id="title_block_text_overflow"></a>TITLE_BLOCK_TEXT_OVERFLOW</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A one-line title-block field (title, number, customer, revision, date, author, page title, scope or sheet counter) does not fit its cell.</td>
+<td>Shorten the text; for a page title, set a shorter one with <code>d.layout.page_title</code>.</td>
+</tr>
+<tr>
 <td><a id="unit_group_split"></a>UNIT_GROUP_SPLIT</td>
 <td>WARNING</td>
 <td>render</td>
@@ -2123,6 +2289,14 @@
 <td>consumer</td>
 <td>A placement's symbol key is not in the installed symbol library.</td>
 <td>Fix the symbol key (rule, choice, or part data), or install a library version with it.</td>
+</tr>
+<tr>
+<td><a id="wider_than_page"></a>WIDER_THAN_PAGE</td>
+<td>WARNING</td>
+<td>render</td>
+<td>consumer</td>
+<td>A row of columns is wider than the page even at its closest spacing.</td>
+<td>Shorten the row, lower the column count of the block, raise the page width or set Options.short_height (<a href="../drawing/">Drawing well</a>).</td>
 </tr>
 <tr>
 <td><a id="wire_not_orthogonal"></a>WIRE_NOT_ORTHOGONAL</td>
@@ -2185,7 +2359,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   

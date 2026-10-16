@@ -1,0 +1,9 @@
+pin,channel_name,signal,signal_name,wired_to
+-DI1:DI1,1,di,P1_OVERLOAD,-B12:98
+-DI1:DI2,2,di,P1_RUNNING,-Q11:14
+-DI1:DI3,3,di,P2_OVERLOAD,-B22:98
+-DI1:DI4,4,di,P2_RUNNING,-Q21:14
+-DO1:DO1,1,do,P1_RUN,-J1:1
+-DO1:DO2,2,do,P2_RUN,-J1:2
+-DO1:DO3,3,do,,
+-DO1:DO4,4,do,,

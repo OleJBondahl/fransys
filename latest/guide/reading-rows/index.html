@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.8/guide/reading-rows/">
+        <link rel="canonical" href="https://olejbondahl.github.io/fransys/0.19.10/guide/reading-rows/">
       
       
       
@@ -387,6 +387,33 @@
     
   
   Authoring a design
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../series/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Wiring a design
 
     
   </span>
@@ -829,6 +856,33 @@
     
   
   Keywords of the fr functions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../moving-to-0.20/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Moving to 0.20
 
     
   </span>
@@ -1863,7 +1917,7 @@
 <li><code>HarnessEnd</code> is one item that a core lands on: a connector housing, a plain device, or a strip of terminals. Fields: <code>item</code>, <code>designation</code>, <code>connector</code>, <code>style</code>, <code>pincount</code>, <code>gender</code>, <code>mpn</code>, <code>pins</code>. The <code>designation</code> is the item's product designation for every end. The connector fields are <code>None</code> for a plain device or a strip. When a core lands on a terminal with a parent, <code>item</code> is the strip, and <code>pins</code> holds one <code>HarnessPin</code> per landed terminal.</li>
 <li><code>HarnessPin</code> is one port of a harness end that a core lands on. Fields: <code>port</code>, <code>marking</code>. The <code>marking</code> is the port's own name. For a terminal in a strip it is the bare <code>group:index</code> text, such as <code>L1:1</code>, without the strip's designation, because the end already prints the strip.</li>
 <li><code>PlcChannelRow</code> is one pin of a PLC channel. Fields: <code>channel</code>, <code>port</code>, <code>pin</code>, <code>channel_name</code>, <code>signal</code>, <code>wired_to</code>, <code>field_device</code>, <code>field_device_designation</code>, <code>signal_name</code>. The <code>pin</code> is the pin's printed designation (<code>-A2:5</code>) and <code>channel_name</code> the channel's own number. The <code>wired_to</code> joins the far ends of that pin's conductors with <code>CELL_SEPARATOR</code>, or is <code>None</code> when nothing is printed. The three field fields are <code>None</code> for a channel with no bound device.</li>
-<li><code>PlcRackChannel</code> is one channel of a rack module, bound or spare. Fields: <code>channel</code>, <code>number</code>, <code>signal</code>, <code>field_device</code>, <code>field_device_designation</code>, <code>signal_name</code>, <code>scaling</code>. The field fields are <code>None</code> for a spare channel. The <code>scaling</code> is <code>None</code> when the bound device has no scaling facet.</li>
+<li><code>PlcRackChannel</code> is one channel of a rack module, bound or spare. Fields: <code>channel</code>, <code>number</code>, <code>signal</code>, <code>field_device</code>, <code>field_device_designation</code>, <code>signal_name</code>, <code>scaling</code>, <code>name_stem</code>. The field fields are <code>None</code> for a spare channel. The <code>scaling</code> is <code>None</code> when the bound device has no scaling facet. The <code>name_stem</code> is the text an output names the channel after: the field device and its signal name, else the module's designation and the channel's index in the module.</li>
 <li><code>PlcRackModule</code> is one PLC module of a rack, with its channels in order. Modules go by <code>position</code>, else by their own tag. Channels with one number go by the function names in the part file, in natural order. A block tag never changes the order of racks, modules or channels (model-0259). Fields: <code>module</code>, <code>designation</code>, <code>mpn</code>, <code>description</code>, <code>position</code>, <code>channels</code>. The <code>mpn</code> and <code>description</code> come from the part. The <code>position</code> is <code>None</code> when the author never gave one.</li>
 <li><code>PlcTable</code> is one table of the PLC list: the channels of one controller or module. Fields: <code>item</code>, <code>designation</code> and <code>rows</code>. <code>item</code> carries the channels, <code>designation</code> is its printed designation and the table's heading, and <code>rows</code> are its <code>PlcChannelRow</code>s in list order, never empty.</li>
 <li><code>BoardNetlist</code> is a board's parts, footprints and nets. Fields: <code>board</code>, <code>board_designation</code>, <code>parts</code>, <code>nets</code> and <code>without_footprint</code>. <code>without_footprint</code> lists the board's parts whose part carries no footprint; a netlist cannot place them, so <code>parts</code> omits them. An accessory prints its holder's designation, so it is never listed.</li>
@@ -1935,7 +1989,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Fransys 0.19.8 documentation
+      Fransys 0.19.10 documentation
     </div>
   
   
